@@ -1,0 +1,72 @@
+{
+  "id": "02_untitled",
+  "title": "Untitled page",
+  "camera": {
+    "position": [
+      10621.214773340043,
+      -6159.24121512361,
+      94269.30430018228
+    ],
+    "target": [
+      -5527,
+      -10484,
+      996
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#42f236",
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      -5527,
+      -10484,
+      996
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 16717,
+    "orbitHeight": 93273,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  },
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "scalarFocusMin": -2,
+      "scalarFocusMax": 4.5,
+      "scalarBlendMin": -2,
+      "scalarBlendMax": 4.5,
+      "opacity": 0.3
+    },
+    "terrain": {
+      "meshSurfaceLiftM": -700
+    }
+  },
+  "visibilityOverrides": {
+    "terrain": true,
+    "transport-roads": true,
+    "hydrography-streams": true,
+    "hydrography-lakes": true,
+    "utah-forge-mt-resistivity-full-density": true
+  }
+}

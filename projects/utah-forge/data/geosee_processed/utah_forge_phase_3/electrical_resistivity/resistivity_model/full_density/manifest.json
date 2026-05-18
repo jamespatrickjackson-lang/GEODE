@@ -1,0 +1,291 @@
+{
+  "schema": "geosee.tiled-pointcloud-preview.v1",
+  "label": "Utah FORGE Phase 3 MT resistivity full-density model",
+  "source": {
+    "dataset": "Utah FORGE Phase 3 MT updated cell-center inversion model",
+    "sourceArchive": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip",
+    "sourceEntry": "FRG200614_mdl17_cellcenter.dat",
+    "classification": "source-derived inversion model full-density visualization",
+    "pointRole": "inversion model cell centers with positive resistivity"
+  },
+  "sourceBounds": {
+    "easting_m": [
+      201896.7,
+      481038
+    ],
+    "northing_m": [
+      4159430,
+      4387319
+    ],
+    "elevation_m": [
+      -122114,
+      3449.131
+    ]
+  },
+  "sceneBounds": {
+    "min": [
+      -139570.65,
+      -113944.5,
+      -122114
+    ],
+    "max": [
+      139570.65,
+      113944.5,
+      3449.131
+    ]
+  },
+  "scenePlacement": {
+    "crs": "scene-local meters",
+    "sourceCrs": "EPSG:26912 NAD83 / UTM Zone 12N",
+    "axisConvention": "X east, Y north, Z up",
+    "sceneOriginUtm": {
+      "easting_m": 341467.35,
+      "northing_m": 4273374.5,
+      "elevation_m": 0
+    },
+    "cropApplied": false,
+    "verticalExaggeration": 1
+  },
+  "attributes": {
+    "scalar": {
+      "name": "log10 resistivity",
+      "unit": "log10(ohm-m)",
+      "sourceField": "resistivity_ohm_m",
+      "min": -2,
+      "max": 4.5,
+      "displayMin": 0.139879,
+      "displayMax": 3.937122,
+      "colorStops": [
+        {
+          "value": 0.139879,
+          "color": "#2cc9ff"
+        },
+        {
+          "value": 2.02983,
+          "color": "#f8dd6d"
+        },
+        {
+          "value": 3.937122,
+          "color": "#ff637a"
+        }
+      ]
+    },
+    "encoding": {
+      "positions": "Float32Array XYZ triplets",
+      "scalarValues": "Float32Array one value per point"
+    }
+  },
+  "tiles": [
+    {
+      "id": "tile_0000",
+      "file": "tiles/tile_0000.positions.bin",
+      "scalarFile": "tiles/tile_0000.scalars.bin",
+      "pointCount": 100000,
+      "sceneBounds": {
+        "min": [
+          -139570.65,
+          -113944.5,
+          1292.02
+        ],
+        "max": [
+          139570.65,
+          113944.5,
+          3449.13
+        ]
+      },
+      "byteType": "float32"
+    },
+    {
+      "id": "tile_0001",
+      "file": "tiles/tile_0001.positions.bin",
+      "scalarFile": "tiles/tile_0001.scalars.bin",
+      "pointCount": 100000,
+      "sceneBounds": {
+        "min": [
+          -139570.65,
+          -113944.5,
+          1225.83
+        ],
+        "max": [
+          139570.65,
+          113944.5,
+          3382.88
+        ]
+      },
+      "byteType": "float32"
+    },
+    {
+      "id": "tile_0002",
+      "file": "tiles/tile_0002.positions.bin",
+      "scalarFile": "tiles/tile_0002.scalars.bin",
+      "pointCount": 100000,
+      "sceneBounds": {
+        "min": [
+          -139570.65,
+          -113944.5,
+          1059.18
+        ],
+        "max": [
+          139570.65,
+          113944.5,
+          3315.57
+        ]
+      },
+      "byteType": "float32"
+    },
+    {
+      "id": "tile_0003",
+      "file": "tiles/tile_0003.positions.bin",
+      "scalarFile": "tiles/tile_0003.scalars.bin",
+      "pointCount": 100000,
+      "sceneBounds": {
+        "min": [
+          -139570.65,
+          -113944.5,
+          698.94
+        ],
+        "max": [
+          139570.65,
+          113944.5,
+          3143.14
+        ]
+      },
+      "byteType": "float32"
+    },
+    {
+      "id": "tile_0004",
+      "file": "tiles/tile_0004.positions.bin",
+      "scalarFile": "tiles/tile_0004.scalars.bin",
+      "pointCount": 100000,
+      "sceneBounds": {
+        "min": [
+          -139570.65,
+          -113944.5,
+          -48.49
+        ],
+        "max": [
+          139570.65,
+          113944.5,
+          2770.4
+        ]
+      },
+      "byteType": "float32"
+    },
+    {
+      "id": "tile_0005",
+      "file": "tiles/tile_0005.positions.bin",
+      "scalarFile": "tiles/tile_0005.scalars.bin",
+      "pointCount": 100000,
+      "sceneBounds": {
+        "min": [
+          -139570.65,
+          -113944.5,
+          -1599.72
+        ],
+        "max": [
+          139570.65,
+          113944.5,
+          1997.04
+        ]
+      },
+      "byteType": "float32"
+    },
+    {
+      "id": "tile_0006",
+      "file": "tiles/tile_0006.positions.bin",
+      "scalarFile": "tiles/tile_0006.scalars.bin",
+      "pointCount": 100000,
+      "sceneBounds": {
+        "min": [
+          -139570.65,
+          -113944.5,
+          -4815.46
+        ],
+        "max": [
+          139570.65,
+          113944.5,
+          391.99
+        ]
+      },
+      "byteType": "float32"
+    },
+    {
+      "id": "tile_0007",
+      "file": "tiles/tile_0007.positions.bin",
+      "scalarFile": "tiles/tile_0007.scalars.bin",
+      "pointCount": 100000,
+      "sceneBounds": {
+        "min": [
+          -139570.65,
+          -113944.5,
+          -11481.94
+        ],
+        "max": [
+          139570.65,
+          113944.5,
+          -2935.32
+        ]
+      },
+      "byteType": "float32"
+    },
+    {
+      "id": "tile_0008",
+      "file": "tiles/tile_0008.positions.bin",
+      "scalarFile": "tiles/tile_0008.scalars.bin",
+      "pointCount": 100000,
+      "sceneBounds": {
+        "min": [
+          -139570.65,
+          -113944.5,
+          -30473.35
+        ],
+        "max": [
+          139570.65,
+          113944.5,
+          -9833.08
+        ]
+      },
+      "byteType": "float32"
+    },
+    {
+      "id": "tile_0009",
+      "file": "tiles/tile_0009.positions.bin",
+      "scalarFile": "tiles/tile_0009.scalars.bin",
+      "pointCount": 100000,
+      "sceneBounds": {
+        "min": [
+          -139570.65,
+          -113944.5,
+          -65061
+        ],
+        "max": [
+          139570.65,
+          113944.5,
+          -29663.71
+        ]
+      },
+      "byteType": "float32"
+    },
+    {
+      "id": "tile_0010",
+      "file": "tiles/tile_0010.positions.bin",
+      "scalarFile": "tiles/tile_0010.scalars.bin",
+      "pointCount": 94624,
+      "sceneBounds": {
+        "min": [
+          -139570.65,
+          -113944.5,
+          -122114
+        ],
+        "max": [
+          139570.65,
+          113944.5,
+          -65061
+        ]
+      },
+      "byteType": "float32"
+    }
+  ],
+  "statsFile": "stats.json",
+  "provenanceFile": "provenance.json"
+}

@@ -1,0 +1,95 @@
+{
+  "id": "02_bench_walkthrough",
+  "title": "Bench Walkthrough",
+  "subtitle": "Close-range drone-style path through the active bench",
+  "renderPreset": "survey-daylight",
+  "camera": {
+    "position": [
+      118.42817290630337,
+      -263.61976084454926,
+      291.9999999999999
+    ],
+    "target": [
+      -6,
+      -24,
+      124
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 42
+  },
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      -6,
+      -24,
+      124
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 270,
+    "orbitHeight": 168,
+    "orbitDirection": -1,
+    "zoomFov": 44,
+    "zoomEnabled": true,
+    "zoomDeltaFov": -4,
+    "zoomStartMs": 600,
+    "zoomEndMs": 4200,
+    "zoomCurve": "cinematic",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  },
+  "transition": {
+    "duration": 2800,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 6500,
+  "layerOverrides": {
+    "case-study-b-demo-shell": {
+      "opacity": 1,
+      "showLabels": true
+    },
+    "bench-conformance-overlay": {
+      "opacity": 0.9,
+      "showLabels": true
+    },
+    "haul-route-equipment-demo": {
+      "opacity": 0.7
+    },
+    "shahbazi-photo-overlay-preview": {
+      "opacity": 0
+    },
+    "shahbazi-camera-frustums": {
+      "color": "#bee2fe"
+    }
+  },
+  "overlayLayout": {
+    "x": 0.01802083333333332,
+    "y": 0.061198243412798004,
+    "width": 0.16295572916666667,
+    "height": 0.20983688833124214
+  },
+  "overlay": {
+    "position": "right",
+    "contentFile": "overlays/02_bench_walkthrough/text.md",
+    "timing": {
+      "fadeMs": 1500,
+      "gapMs": 80,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
+  "accentColor": "#f8d06b",
+  "visibilityOverrides": {
+    "case-study-b-demo-shell": false,
+    "shahbazi-photo-overlay-preview": true,
+    "shahbazi-camera-frustums": true
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "04_planning_governance",
+  "title": "Planning & Governance",
+  "subtitle": "Bench conformance, stockpiles, access, and runoff overlays",
+  "renderPreset": "data-room",
+  "camera": {
+    "position": [
+      -210,
+      150,
+      210
+    ],
+    "target": [
+      -6,
+      -28,
+      126
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 50
+  },
+  "transition": {
+    "duration": 2800,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 6200,
+  "layerOverrides": {
+    "case-study-b-demo-shell": {
+      "opacity": 1,
+      "showLabels": true
+    },
+    "bench-conformance-overlay": {
+      "opacity": 0.78
+    },
+    "stockpile-volume-zones": {
+      "opacity": 0.95,
+      "showLabels": true
+    },
+    "erosion-runoff-planning": {
+      "opacity": 0.9
+    }
+  },
+  "overlayLayout": {
+    "x": 0.045247395833333336,
+    "y": 0.17786700125470517,
+    "width": 0.19360677083333336,
+    "height": 0.19894604767879548
+  },
+  "overlay": {
+    "position": "right",
+    "contentFile": "overlays/04_planning_governance/text.md",
+    "timing": {
+      "fadeMs": 1500,
+      "gapMs": 80,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
+  "accentColor": "#7bd88f",
+  "visibilityOverrides": {
+    "case-study-b-demo-shell": false
+  }
+}

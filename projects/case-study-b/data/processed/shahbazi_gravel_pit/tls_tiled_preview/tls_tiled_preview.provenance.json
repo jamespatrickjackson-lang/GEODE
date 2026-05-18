@@ -1,0 +1,66 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "tls_tiled_preview/manifest.json",
+  "artifactType": "tiled-point-cloud-preview",
+  "projectSlug": "case-study-b",
+  "createdDate": "2026-05-10",
+  "source": {
+    "path": "projects/case-study-b/data/raw/shahbazi_gravel_pit/LaserScan.xyz",
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Unmanned aerial image dataset: Ready for 3D reconstruction. Data in Brief 25, 103962. DOI 10.1016/j.dib.2019.103962",
+    "sourcePointRows": 8308685,
+    "format": "XYZ text",
+    "columns": [
+      "x",
+      "y",
+      "z"
+    ]
+  },
+  "processing": {
+    "script": "prep/build_shahbazi_tls_tiled_preview.mjs",
+    "method": "Deterministic stride sample from valid XYZ rows, split into 4x4 binary float32 scene-coordinate tiles.",
+    "sampleStride": 11,
+    "sampledPointRows": 755335,
+    "tileCount": 16,
+    "sceneTransform": {
+      "mode": "tls-preview-aligned",
+      "horizontalScale": 1,
+      "verticalScale": 1,
+      "zLiftMeters": 115,
+      "note": "Tiled preview keeps TLS metric scale, recenters X/Y, and lifts Z into the existing procedural Case Study B scene."
+    },
+    "sourceBounds": {
+      "min": [
+        193067.61,
+        5025190.73,
+        297.405
+      ],
+      "max": [
+        193117.908,
+        5025273.543,
+        305.576
+      ],
+      "center": [
+        193092.759,
+        5025232.137,
+        301.491
+      ]
+    },
+    "sceneBounds": {
+      "min": [
+        -25.1,
+        -41.367,
+        115.102
+      ],
+      "max": [
+        25.134,
+        41.311,
+        123.148
+      ]
+    }
+  },
+  "reviewStatus": {
+    "readyForDemoPreview": true,
+    "readyForFinalSpatialAnalysis": false,
+    "notes": "This is a higher-density browser preview rail, not a full-resolution Potree/EPT conversion. Full LaserScan.xyz still requires dedicated point-cloud conversion before final use."
+  }
+}

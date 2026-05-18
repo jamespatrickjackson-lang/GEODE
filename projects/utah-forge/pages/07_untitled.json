@@ -1,0 +1,84 @@
+{
+  "id": "07_untitled",
+  "title": "Utah FORGE copy",
+  "subtitle": "Phase 3 MT resistivity preview",
+  "camera": {
+    "position": [
+      -85968.63565936462,
+      193146.95919190222,
+      -5744.474241913995
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 2250,
+    "easing": "easeInOutSine"
+  },
+  "holdDuration": 2000,
+  "overlayLayout": {
+    "x": 0.013085937500000012,
+    "y": 0.06185696361355081,
+    "width": 0.21087239583333334,
+    "height": 0.3120451693851945
+  },
+  "overlay": {
+    "position": "left",
+    "contentFile": "overlays/07_untitled/text.md",
+    "timing": {
+      "fadeMs": 900,
+      "gapMs": 80,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
+  "accentColor": "#00fbff",
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "scalarFocusMin": -2,
+      "scalarFocusMax": 1.340277580475373,
+      "scalarBlendMin": -2,
+      "scalarBlendMax": 1.340277580475373,
+      "scalarEdgeLineWidth": 5.8,
+      "scalarNoiseThreshold": 0.36,
+      "scalarEdgeUpperValue": 1.340277580475373
+    }
+  },
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      6096,
+      3000,
+      -18974
+    ],
+    "orbitSpeedDegPerSec": 3.7,
+    "orbitRadius": 172440,
+    "orbitHeight": 32980,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": true,
+    "zoomDeltaFov": -21,
+    "zoomStartMs": 0,
+    "zoomEndMs": 5100,
+    "zoomCurve": "cinematic",
+    "easeInMs": 1600,
+    "transitionLeadMs": 2750,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "cinematic",
+    "pathAwareBlend": false
+  },
+  "visibilityOverrides": {
+    "utah-forge-mt-top-surface": false
+  }
+}

@@ -1,0 +1,238 @@
+{
+  "project": "utah-forge",
+  "area": "utah_forge_phase_3",
+  "dataset": "electrical_resistivity",
+  "source": "GDR submission 1255 Phase 3 MT Data",
+  "generated": "2026-05-12",
+  "status": "source-inventory-complete-and-app-wired-phase-3-mt-preview",
+  "folder_contract": {
+    "delivered_sources": "projects/utah-forge/data/client_preprocessed/",
+    "geosee_outputs": "projects/utah-forge/data/geosee_processed/"
+  },
+  "files": [
+    {
+      "id": "edi_zip",
+      "label": "FORGE Phase 3 MT EDI package",
+      "role": "MT station source headers and MT response files",
+      "source_url": "https://gdr.openei.org/files/1255/FORGE_MT_190812_EDIs.zip",
+      "path": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_edis/FORGE_MT_190812_EDIs.zip",
+      "size_bytes": 5247282,
+      "sha256": "FF88B73EF65B20742C160920FF1EFB6EF97ED2CED6AB58F90E3BBDFAF10D3C1D"
+    },
+    {
+      "id": "cell_center_zip",
+      "label": "FORGE Phase 3 updated MT model cell-center package",
+      "role": "Source-derived 3D resistivity inversion model payload",
+      "source_url": "https://gdr.openei.org/files/1255/FORGE_MT_mdl17_cellcenter.zip",
+      "path": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip",
+      "size_bytes": 38721309,
+      "sha256": "F49CD90085C4B170ED01B4FC129EB5F0ACDD5FCA710F85997A497774636A82EC"
+    },
+    {
+      "id": "method_pdf",
+      "label": "FORGE Phase 3 geophysics paper/reference PDF",
+      "role": "Reference/provenance/methodology document, not a render payload",
+      "source_url": "https://gdr.openei.org/files/1255/FORGE_Phase3_geophysics.pdf",
+      "path": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/references/FORGE_Phase3_geophysics.pdf",
+      "size_bytes": 4495886,
+      "sha256": "521EC8D69600EBF20E9370AA76D54F4CBC1F0E5E38E3719CC1B1AEC1A96814B5"
+    }
+  ],
+  "archives": {
+    "edi_zip": {
+      "file_count": 366,
+      "directory_count": 1,
+      "extension_counts": {
+        ".edi": 244,
+        ".txt": 122
+      },
+      "uncompressed_bytes": 13431621
+    },
+    "cell_center_zip": {
+      "file_count": 11,
+      "directory_count": 0,
+      "extension_counts": {
+        ".cpg": 1,
+        ".dbf": 1,
+        ".prj": 1,
+        ".sbn": 1,
+        ".sbx": 1,
+        ".shp": 1,
+        ".xml": 2,
+        ".shx": 1,
+        ".txt": 1,
+        ".dat": 1
+      },
+      "uncompressed_bytes": 321650238
+    }
+  },
+  "edi_station_inventory": {
+    "edi_file_count": 244,
+    "survey_txt_count": 122,
+    "unique_physical_station_count": 122,
+    "missing_coordinate_header_count": 0,
+    "missing_coordinate_headers": [],
+    "variants_per_station": [
+      [
+        2,
+        122
+      ]
+    ],
+    "lat_range_decimal_degrees": [
+      38.35828333333333,
+      39.13806666666667
+    ],
+    "lon_range_decimal_degrees": [
+      -113.09938333333334,
+      -112.27666666666667
+    ],
+    "elev_range_m": [
+      1487.0,
+      2485.0
+    ],
+    "sample_stations": [
+      {
+        "station_id": "FRG19001",
+        "variants": {
+          "standard": {
+            "lat": 39.023316666666666,
+            "lon": -112.31708333333333,
+            "elev_m": 1595.0
+          },
+          "bvv": {
+            "lat": 39.023316666666666,
+            "lon": -112.31708333333333,
+            "elev_m": 1595.0
+          }
+        }
+      },
+      {
+        "station_id": "FRG19002",
+        "variants": {
+          "standard": {
+            "lat": 38.93643333333333,
+            "lon": -112.33198333333333,
+            "elev_m": 1603.0
+          },
+          "bvv": {
+            "lat": 38.93643333333333,
+            "lon": -112.33198333333333,
+            "elev_m": 1603.0
+          }
+        }
+      },
+      {
+        "station_id": "FRG19003",
+        "variants": {
+          "standard": {
+            "lat": 38.883383333333335,
+            "lon": -112.35915,
+            "elev_m": 1648.0
+          },
+          "bvv": {
+            "lat": 38.883383333333335,
+            "lon": -112.35915,
+            "elev_m": 1648.0
+          }
+        }
+      },
+      {
+        "station_id": "FRG19004",
+        "variants": {
+          "standard": {
+            "lat": 38.8062,
+            "lon": -112.37256666666666,
+            "elev_m": 1736.0
+          },
+          "bvv": {
+            "lat": 38.8062,
+            "lon": -112.37256666666666,
+            "elev_m": 1736.0
+          }
+        }
+      },
+      {
+        "station_id": "FRG19005",
+        "variants": {
+          "standard": {
+            "lat": 38.731500000000004,
+            "lon": -112.38415,
+            "elev_m": 1967.0
+          },
+          "bvv": {
+            "lat": 38.731500000000004,
+            "lon": -112.38415,
+            "elev_m": 1967.0
+          }
+        }
+      }
+    ]
+  },
+  "model_inventory": {
+    "projection_wkt_prj": "PROJCS[\"NAD_1983_UTM_Zone_12N\",GEOGCS[\"GCS_North_American_1983\",DATUM[\"D_North_American_1983\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"False_Easting\",500000.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",-111.0],PARAMETER[\"Scale_Factor\",0.9996],PARAMETER[\"Latitude_Of_Origin\",0.0],UNIT[\"Meter\",1.0]]",
+    "dat_header": [
+      "FRG200614 - model 17",
+      "Northing (m), Easting (m), Elevation (m), Resistivity (ohmm)",
+      "Nad 83, Inversion parameter center"
+    ],
+    "dat_stats": {
+      "rows": 1094940,
+      "skipped_rows": 0,
+      "zero_or_negative_resistivity_count": 316,
+      "min": {
+        "easting_m": 201896.7,
+        "northing_m": 4159430.0,
+        "elevation_m": -122114.0,
+        "resistivity_ohm_m": 0.0
+      },
+      "max": {
+        "easting_m": 481038.0,
+        "northing_m": 4387319.0,
+        "elevation_m": 3449.131,
+        "resistivity_ohm_m": 31622.78
+      },
+      "horizontal_extent_m": {
+        "east_west": 279141.3,
+        "north_south": 227889.0
+      },
+      "vertical_extent_m": 125563.131
+    },
+    "txt_export_stats": {
+      "rows": 1094940,
+      "skipped_rows": 0,
+      "zero_or_negative_resistivity_count": 316,
+      "min": {
+        "easting_m": 202000.0,
+        "northing_m": 4160000.0,
+        "elevation_m": -122114.0,
+        "resistivity_ohm_m": 0.0
+      },
+      "max": {
+        "easting_m": 481000.0,
+        "northing_m": 4390000.0,
+        "elevation_m": 3450.0,
+        "resistivity_ohm_m": 31622.78
+      },
+      "horizontal_extent_m": {
+        "east_west": 279000.0,
+        "north_south": 230000.0
+      },
+      "vertical_extent_m": 125564.0
+    },
+    "model_payload_candidates": [
+      "FRG200614_mdl17_cellcenter.dat",
+      "FORGE_MT_12_12_2021.txt",
+      "FORGE_MT_12_12_2021.shp"
+    ],
+    "preferred_initial_payload": "FRG200614_mdl17_cellcenter.dat",
+    "reason": "DAT is smaller than the TXT export, has explicit model/header lines, preserves non-rounded coordinates, and contains the same row count as the TXT export."
+  },
+  "issues_for_review": [
+    "The updated cell-center model spans about 279 km east-west by 228 km north-south; this broad frame is intentionally preserved in the current baseline with cropApplied false.",
+    "The model vertical range reaches about -122 km elevation through 3.45 km from the source header's Elevation (m) field; presentation copy should explain this carefully before client-facing use.",
+    "The model includes 316 zero-or-negative resistivity rows, which cannot be log10-colored directly. Current GeoSee previews mask those rows.",
+    "The DAT header says NAD83 but does not name UTM Zone 12N; the included PRJ confirms NAD_1983_UTM_Zone_12N for the shapefile/export package.",
+    "EDI station coordinates are latitude/longitude/elevation, while model files are UTM meters. The current shared scene transform is documented in crs_transform.json."
+  ],
+  "next_step": "Author and tune the Phase 3 MT presentation pages before adding seismic or Southwestern/regional MT."
+}

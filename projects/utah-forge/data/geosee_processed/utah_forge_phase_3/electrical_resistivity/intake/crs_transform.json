@@ -1,0 +1,213 @@
+{
+  "project": "utah-forge",
+  "area": "utah_forge_phase_3",
+  "dataset": "electrical_resistivity",
+  "generated": "2026-05-12",
+  "status": "crs-origin-units-locked-and-app-wired-phase-3-mt-preview",
+  "source_crs": {
+    "horizontal": {
+      "epsg": "EPSG:26912",
+      "label": "NAD83 / UTM zone 12N",
+      "units": "meters",
+      "evidence": [
+        "FORGE_MT_12_12_2021.prj identifies NAD_1983_UTM_Zone_12N with meter units.",
+        "FRG200614_mdl17_cellcenter.dat header states Northing (m), Easting (m), Elevation (m), Resistivity (ohmm), Nad 83."
+      ],
+      "projection_wkt": "PROJCS[\"NAD_1983_UTM_Zone_12N\",GEOGCS[\"GCS_North_American_1983\",DATUM[\"D_North_American_1983\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"False_Easting\",500000.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",-111.0],PARAMETER[\"Scale_Factor\",0.9996],PARAMETER[\"Latitude_Of_Origin\",0.0],UNIT[\"Meter\",1.0]]"
+    },
+    "edi_headers": {
+      "coordinate_format": "latitude/longitude DMS plus elevation in meters",
+      "datum_evidence": "EDI INFO block states DATUM: NAD83 (4m) North America - all Canada and USA subunits.",
+      "conversion": "EPSG:4269 geographic NAD83 to EPSG:26912 projected NAD83 / UTM zone 12N using pyproj."
+    },
+    "vertical": {
+      "units": "meters",
+      "basis": "source elevation/depth basis as supplied; no vertical reinterpretation yet",
+      "needs_review": "Model elevation range reaches -122114 m to 3449.131 m. Treat as true source vertical coordinate until interpretation is confirmed."
+    },
+    "value_units": {
+      "resistivity": "Ohm-m",
+      "display_value": "log10(resistivity_ohm_m) after filtering/masking non-positive values"
+    }
+  },
+  "scene_transform": {
+    "axis_convention": "GeoSee local X east, Y north, Z up",
+    "units": "meters",
+    "scene_origin_utm": {
+      "easting_m": 341467.35,
+      "northing_m": 4273374.5,
+      "elevation_m": 0.0
+    },
+    "local_coordinate_formula": {
+      "x": "source_easting_m - scene_origin_utm.easting_m",
+      "y": "source_northing_m - scene_origin_utm.northing_m",
+      "z": "source_elevation_m - scene_origin_utm.elevation_m"
+    },
+    "scale": {
+      "horizontal": 1.0,
+      "vertical": 1.0,
+      "vertical_exaggeration": 1.0,
+      "crop": "none for Step 3; preserve full source extent in transform outputs"
+    }
+  },
+  "model": {
+    "payload": "FRG200614_mdl17_cellcenter.dat",
+    "header": [
+      "FRG200614 - model 17",
+      "Northing (m), Easting (m), Elevation (m), Resistivity (ohmm)",
+      "Nad 83, Inversion parameter center"
+    ],
+    "bounds_source": {
+      "easting_m": [
+        201896.7,
+        481038.0
+      ],
+      "northing_m": [
+        4159430.0,
+        4387319.0
+      ],
+      "elevation_m": [
+        -122114.0,
+        3449.131
+      ],
+      "resistivity_ohm_m": [
+        0.0,
+        31622.78
+      ]
+    },
+    "bounds_scene_local": {
+      "min": [
+        -139570.64999999997,
+        -113944.5,
+        -122114.0
+      ],
+      "max": [
+        139570.65000000002,
+        113944.5,
+        3449.131
+      ]
+    },
+    "rows": 1094940,
+    "zero_or_negative_resistivity_count": 316
+  },
+  "stations": {
+    "source": "FORGE_MT_190812_EDIs.zip",
+    "unique_physical_station_count": 122,
+    "bounds_source": {
+      "easting_m": [
+        316613.97729202395,
+        389664.485050526
+      ],
+      "northing_m": [
+        4246648.941299268,
+        4332874.134515258
+      ],
+      "elevation_m": [
+        1487.0,
+        2485.0
+      ],
+      "lat": [
+        38.35828333333333,
+        39.13806666666667
+      ],
+      "lon": [
+        -113.09938333333334,
+        -112.27666666666667
+      ]
+    },
+    "bounds_scene_local": {
+      "min": [
+        -24853.37270797603,
+        -26725.558700731955,
+        1487.0
+      ],
+      "max": [
+        48197.135050526005,
+        59499.63451525755,
+        2485.0
+      ]
+    },
+    "station_inside_model_horizontal_bounds": {
+      "easting_inside_count": 122,
+      "northing_inside_count": 122,
+      "both_inside_count": 122,
+      "total": 122
+    },
+    "sample": [
+      {
+        "station_id": "FRG19001",
+        "lon": -112.31708333333333,
+        "lat": 39.023316666666666,
+        "easting_m": 385986.7822889111,
+        "northing_m": 4320189.243165766,
+        "elevation_m": 1595.0,
+        "variant_count": 2,
+        "variants": [
+          "bvv",
+          "standard"
+        ]
+      },
+      {
+        "station_id": "FRG19002",
+        "lon": -112.33198333333333,
+        "lat": 38.93643333333333,
+        "easting_m": 384555.88773423573,
+        "northing_m": 4310565.968155779,
+        "elevation_m": 1603.0,
+        "variant_count": 2,
+        "variants": [
+          "bvv",
+          "standard"
+        ]
+      },
+      {
+        "station_id": "FRG19003",
+        "lon": -112.35915,
+        "lat": 38.883383333333335,
+        "easting_m": 382113.5029660715,
+        "northing_m": 4304713.449257193,
+        "elevation_m": 1648.0,
+        "variant_count": 2,
+        "variants": [
+          "bvv",
+          "standard"
+        ]
+      },
+      {
+        "station_id": "FRG19004",
+        "lon": -112.37256666666666,
+        "lat": 38.8062,
+        "easting_m": 380821.03122189577,
+        "northing_m": 4296165.448533578,
+        "elevation_m": 1736.0,
+        "variant_count": 2,
+        "variants": [
+          "bvv",
+          "standard"
+        ]
+      },
+      {
+        "station_id": "FRG19005",
+        "lon": -112.38415,
+        "lat": 38.731500000000004,
+        "easting_m": 379689.7910901432,
+        "northing_m": 4287890.877345256,
+        "elevation_m": 1967.0,
+        "variant_count": 2,
+        "variants": [
+          "bvv",
+          "standard"
+        ]
+      }
+    ]
+  },
+  "decisions": [
+    "Do not crop data at Step 3.",
+    "Use true 1:1 meter scale.",
+    "Use vertical exaggeration 1.0 only.",
+    "Use model full extent center for horizontal scene origin and elevation 0 for vertical origin.",
+    "Processed station, point-preview, and authored-slice outputs now exist and are wired into the Utah FORGE project.",
+    "Do not wire any future viewer layers until their processed outputs are created and reviewed."
+  ],
+  "next_step": "Author Phase 3 MT presentation pages and review slice readability before adding seismic or Southwestern/regional MT."
+}

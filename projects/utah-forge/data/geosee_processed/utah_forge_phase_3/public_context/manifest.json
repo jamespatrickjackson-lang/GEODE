@@ -1,0 +1,61 @@
+{
+  "schema": "geosee.utah-forge-public-context.v1",
+  "targetCrs": "EPSG:26912",
+  "sourceBoundsRole": "500% XY public context tile around MT full-density bounds",
+  "mtFullDensityBounds": {
+    "easting_m": [
+      201896.7,
+      481038.0
+    ],
+    "northing_m": [
+      4159430.0,
+      4387319.0
+    ]
+  },
+  "xyPaddingFractionEachSide": 2.0,
+  "sourceBounds": {
+    "easting_m": [
+      -356385.9,
+      1039320.6
+    ],
+    "northing_m": [
+      3703652.0,
+      4843097.0
+    ]
+  },
+  "sceneOriginUtm": {
+    "easting_m": 341467.35,
+    "northing_m": 4273374.5,
+    "elevation_m": 0
+  },
+  "terrain": {
+    "file": "terrain_public_context_1000m.tif",
+    "width": 1396,
+    "height": 1140,
+    "resolutionM": 1000,
+    "source": "USGS 3DEP / The National Map elevation service"
+  },
+  "vectors": {
+    "roads": {
+      "file": "roads.geojson",
+      "source": "UGRC Utah Roads / Utah SGID",
+      "rawFeatureCount": 16865,
+      "renderFeatureCount": 151,
+      "simplifyM": 140
+    },
+    "streams": {
+      "file": "hydrography_streams.geojson",
+      "source": "UGRC Utah Streams NHD / Utah SGID",
+      "rawFeatureCount": 56068,
+      "renderFeatureCount": 1101,
+      "simplifyM": 450
+    },
+    "waterbodies": {
+      "file": "hydrography_lakes.geojson",
+      "source": "UGRC Utah Lakes NHD / Utah SGID",
+      "rawFeatureCount": 830,
+      "renderFeatureCount": 795,
+      "simplifyM": 80
+    }
+  }
+}

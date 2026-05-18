@@ -1,0 +1,4572 @@
+{
+  "type": "FeatureCollection",
+  "name": "2024 Scott Geophysics IP Survey Lines",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:26910"
+    }
+  },
+  "properties": {
+    "source": "ARIS 42648, Scott Geophysics IP GPS waypoint files",
+    "sourceDate": "2025-01-31",
+    "sourceOrigin": "Vizsla Copper / Scott Geophysics / ARIS public assessment",
+    "count": 8,
+    "classification": "observation",
+    "notes": "Surveyed IP station lines parsed from Great Plains and Three Firs GPS waypoint files. Intended as plan-view acquisition geometry; chargeability/resistivity pseudo-section curtains should be built from the matching .dat/.ipg files."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "great-plains-3050e",
+        "displayName": "Great Plains IP line 3050E",
+        "target": "Great Plains",
+        "lineName": "3050E",
+        "stationCount": 42,
+        "stationMin": 1400.0,
+        "stationMax": 3600.0,
+        "source": "data/source/Geophysical_Data/ARIS 42648 (2024 work program)/42648Z/Digital Data/Digital Data/Geophysical Data/Scott Geophysics IP/Appendix C - IP Survey Data/GreatPlains/DataFiles/GreatPlainsGPS.txt",
+        "sourceOrigin": "Scott Geophysics / Vizsla Copper / ARIS 42648",
+        "sourceDate": "2025-01-31",
+        "classification": "observation",
+        "stations": [
+          {
+            "waypointId": "3050E 1400N",
+            "station": 1400.0,
+            "easting": 613050.0,
+            "northing": 5781399.0,
+            "elevation": 1087.2
+          },
+          {
+            "waypointId": "3050E 1450N",
+            "station": 1450.0,
+            "easting": 613049.0,
+            "northing": 5781450.0,
+            "elevation": 1083.2
+          },
+          {
+            "waypointId": "3050E 1500N",
+            "station": 1500.0,
+            "easting": 613048.0,
+            "northing": 5781495.0,
+            "elevation": 1085.0
+          },
+          {
+            "waypointId": "3050E 1550N",
+            "station": 1550.0,
+            "easting": 613049.0,
+            "northing": 5781543.0,
+            "elevation": 1087.2
+          },
+          {
+            "waypointId": "3050E 1600N",
+            "station": 1600.0,
+            "easting": 613048.0,
+            "northing": 5781593.0,
+            "elevation": 1086.1
+          },
+          {
+            "waypointId": "3050E 1650N",
+            "station": 1650.0,
+            "easting": 613050.0,
+            "northing": 5781639.0,
+            "elevation": 1085.1
+          },
+          {
+            "waypointId": "3050E 1700N",
+            "station": 1700.0,
+            "easting": 613049.0,
+            "northing": 5781685.0,
+            "elevation": 1084.6
+          },
+          {
+            "waypointId": "3050E 1750N",
+            "station": 1750.0,
+            "easting": 613051.0,
+            "northing": 5781738.0,
+            "elevation": 1082.9
+          },
+          {
+            "waypointId": "3050E 1900N",
+            "station": 1900.0,
+            "easting": 613050.0,
+            "northing": 5781883.0,
+            "elevation": 1075.4
+          },
+          {
+            "waypointId": "3050E 1950N",
+            "station": 1950.0,
+            "easting": 613049.0,
+            "northing": 5781937.0,
+            "elevation": 1077.1
+          },
+          {
+            "waypointId": "3050E 2000N",
+            "station": 2000.0,
+            "easting": 613048.0,
+            "northing": 5781988.0,
+            "elevation": 1077.8
+          },
+          {
+            "waypointId": "3050E 2050N",
+            "station": 2050.0,
+            "easting": 613048.0,
+            "northing": 5782039.0,
+            "elevation": 1076.0
+          },
+          {
+            "waypointId": "3050E 2100N",
+            "station": 2100.0,
+            "easting": 613049.0,
+            "northing": 5782085.0,
+            "elevation": 1077.9
+          },
+          {
+            "waypointId": "3050E 2150N",
+            "station": 2150.0,
+            "easting": 613051.0,
+            "northing": 5782138.0,
+            "elevation": 1079.9
+          },
+          {
+            "waypointId": "3050E 2200N",
+            "station": 2200.0,
+            "easting": 613048.0,
+            "northing": 5782184.0,
+            "elevation": 1080.7
+          },
+          {
+            "waypointId": "3050E 2250N",
+            "station": 2250.0,
+            "easting": 613048.0,
+            "northing": 5782238.0,
+            "elevation": 1082.3
+          },
+          {
+            "waypointId": "3050E 2300N",
+            "station": 2300.0,
+            "easting": 613050.0,
+            "northing": 5782289.0,
+            "elevation": 1082.5
+          },
+          {
+            "waypointId": "3050E 2350N",
+            "station": 2350.0,
+            "easting": 613051.0,
+            "northing": 5782337.0,
+            "elevation": 1083.2
+          },
+          {
+            "waypointId": "3050E 2400N",
+            "station": 2400.0,
+            "easting": 613050.0,
+            "northing": 5782389.0,
+            "elevation": 1083.9
+          },
+          {
+            "waypointId": "3050E 2450N",
+            "station": 2450.0,
+            "easting": 613047.0,
+            "northing": 5782436.0,
+            "elevation": 1082.6
+          },
+          {
+            "waypointId": "3050E 2500N",
+            "station": 2500.0,
+            "easting": 613052.0,
+            "northing": 5782480.0,
+            "elevation": 1084.9
+          },
+          {
+            "waypointId": "3050E 2550N",
+            "station": 2550.0,
+            "easting": 613049.0,
+            "northing": 5782531.0,
+            "elevation": 1084.6
+          },
+          {
+            "waypointId": "3050E 2600N",
+            "station": 2600.0,
+            "easting": 613050.0,
+            "northing": 5782583.0,
+            "elevation": 1085.5
+          },
+          {
+            "waypointId": "3050E 2650N",
+            "station": 2650.0,
+            "easting": 613048.0,
+            "northing": 5782635.0,
+            "elevation": 1088.6
+          },
+          {
+            "waypointId": "3050E 2700N",
+            "station": 2700.0,
+            "easting": 613048.0,
+            "northing": 5782690.0,
+            "elevation": 1089.5
+          },
+          {
+            "waypointId": "3050E 2750N",
+            "station": 2750.0,
+            "easting": 613049.0,
+            "northing": 5782741.0,
+            "elevation": 1091.1
+          },
+          {
+            "waypointId": "3050E 2800N",
+            "station": 2800.0,
+            "easting": 613048.0,
+            "northing": 5782789.0,
+            "elevation": 1092.0
+          },
+          {
+            "waypointId": "3050E 2850N",
+            "station": 2850.0,
+            "easting": 613050.0,
+            "northing": 5782830.0,
+            "elevation": 1089.0
+          },
+          {
+            "waypointId": "3050E 2900N",
+            "station": 2900.0,
+            "easting": 613051.0,
+            "northing": 5782876.0,
+            "elevation": 1089.8
+          },
+          {
+            "waypointId": "3050E 2950N",
+            "station": 2950.0,
+            "easting": 613050.0,
+            "northing": 5782936.0,
+            "elevation": 1092.0
+          },
+          {
+            "waypointId": "3050E 3000N",
+            "station": 3000.0,
+            "easting": 613051.0,
+            "northing": 5782987.0,
+            "elevation": 1090.8
+          },
+          {
+            "waypointId": "3050E 3050N",
+            "station": 3050.0,
+            "easting": 613050.0,
+            "northing": 5783032.0,
+            "elevation": 1091.6
+          },
+          {
+            "waypointId": "3050E 3100N",
+            "station": 3100.0,
+            "easting": 613049.0,
+            "northing": 5783081.0,
+            "elevation": 1092.3
+          },
+          {
+            "waypointId": "3050E 3150N",
+            "station": 3150.0,
+            "easting": 613048.0,
+            "northing": 5783137.0,
+            "elevation": 1093.4
+          },
+          {
+            "waypointId": "3050E 3200N",
+            "station": 3200.0,
+            "easting": 613050.0,
+            "northing": 5783184.0,
+            "elevation": 1093.5
+          },
+          {
+            "waypointId": "3050E 3250N",
+            "station": 3250.0,
+            "easting": 613050.0,
+            "northing": 5783233.0,
+            "elevation": 1092.6
+          },
+          {
+            "waypointId": "3050E 3300N",
+            "station": 3300.0,
+            "easting": 613051.0,
+            "northing": 5783284.0,
+            "elevation": 1092.1
+          },
+          {
+            "waypointId": "3050E 3350N",
+            "station": 3350.0,
+            "easting": 613048.0,
+            "northing": 5783334.0,
+            "elevation": 1093.5
+          },
+          {
+            "waypointId": "3050E 3400N",
+            "station": 3400.0,
+            "easting": 613049.0,
+            "northing": 5783384.0,
+            "elevation": 1093.0
+          },
+          {
+            "waypointId": "3050E 3450N",
+            "station": 3450.0,
+            "easting": 613050.0,
+            "northing": 5783433.0,
+            "elevation": 1092.7
+          },
+          {
+            "waypointId": "3050E 3500N",
+            "station": 3500.0,
+            "easting": 613050.0,
+            "northing": 5783481.0,
+            "elevation": 1093.2
+          },
+          {
+            "waypointId": "3050E 3600N",
+            "station": 3600.0,
+            "easting": 613050.0,
+            "northing": 5783583.0,
+            "elevation": 1093.7
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            613050.0,
+            5781399.0,
+            1087.2
+          ],
+          [
+            613049.0,
+            5781450.0,
+            1083.2
+          ],
+          [
+            613048.0,
+            5781495.0,
+            1085.0
+          ],
+          [
+            613049.0,
+            5781543.0,
+            1087.2
+          ],
+          [
+            613048.0,
+            5781593.0,
+            1086.1
+          ],
+          [
+            613050.0,
+            5781639.0,
+            1085.1
+          ],
+          [
+            613049.0,
+            5781685.0,
+            1084.6
+          ],
+          [
+            613051.0,
+            5781738.0,
+            1082.9
+          ],
+          [
+            613050.0,
+            5781883.0,
+            1075.4
+          ],
+          [
+            613049.0,
+            5781937.0,
+            1077.1
+          ],
+          [
+            613048.0,
+            5781988.0,
+            1077.8
+          ],
+          [
+            613048.0,
+            5782039.0,
+            1076.0
+          ],
+          [
+            613049.0,
+            5782085.0,
+            1077.9
+          ],
+          [
+            613051.0,
+            5782138.0,
+            1079.9
+          ],
+          [
+            613048.0,
+            5782184.0,
+            1080.7
+          ],
+          [
+            613048.0,
+            5782238.0,
+            1082.3
+          ],
+          [
+            613050.0,
+            5782289.0,
+            1082.5
+          ],
+          [
+            613051.0,
+            5782337.0,
+            1083.2
+          ],
+          [
+            613050.0,
+            5782389.0,
+            1083.9
+          ],
+          [
+            613047.0,
+            5782436.0,
+            1082.6
+          ],
+          [
+            613052.0,
+            5782480.0,
+            1084.9
+          ],
+          [
+            613049.0,
+            5782531.0,
+            1084.6
+          ],
+          [
+            613050.0,
+            5782583.0,
+            1085.5
+          ],
+          [
+            613048.0,
+            5782635.0,
+            1088.6
+          ],
+          [
+            613048.0,
+            5782690.0,
+            1089.5
+          ],
+          [
+            613049.0,
+            5782741.0,
+            1091.1
+          ],
+          [
+            613048.0,
+            5782789.0,
+            1092.0
+          ],
+          [
+            613050.0,
+            5782830.0,
+            1089.0
+          ],
+          [
+            613051.0,
+            5782876.0,
+            1089.8
+          ],
+          [
+            613050.0,
+            5782936.0,
+            1092.0
+          ],
+          [
+            613051.0,
+            5782987.0,
+            1090.8
+          ],
+          [
+            613050.0,
+            5783032.0,
+            1091.6
+          ],
+          [
+            613049.0,
+            5783081.0,
+            1092.3
+          ],
+          [
+            613048.0,
+            5783137.0,
+            1093.4
+          ],
+          [
+            613050.0,
+            5783184.0,
+            1093.5
+          ],
+          [
+            613050.0,
+            5783233.0,
+            1092.6
+          ],
+          [
+            613051.0,
+            5783284.0,
+            1092.1
+          ],
+          [
+            613048.0,
+            5783334.0,
+            1093.5
+          ],
+          [
+            613049.0,
+            5783384.0,
+            1093.0
+          ],
+          [
+            613050.0,
+            5783433.0,
+            1092.7
+          ],
+          [
+            613050.0,
+            5783481.0,
+            1093.2
+          ],
+          [
+            613050.0,
+            5783583.0,
+            1093.7
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "great-plains-3850e",
+        "displayName": "Great Plains IP line 3850E",
+        "target": "Great Plains",
+        "lineName": "3850E",
+        "stationCount": 60,
+        "stationMin": 1400.0,
+        "stationMax": 4400.0,
+        "source": "data/source/Geophysical_Data/ARIS 42648 (2024 work program)/42648Z/Digital Data/Digital Data/Geophysical Data/Scott Geophysics IP/Appendix C - IP Survey Data/GreatPlains/DataFiles/GreatPlainsGPS.txt",
+        "sourceOrigin": "Scott Geophysics / Vizsla Copper / ARIS 42648",
+        "sourceDate": "2025-01-31",
+        "classification": "observation",
+        "stations": [
+          {
+            "waypointId": "3850E 1400N",
+            "station": 1400.0,
+            "easting": 613848.0,
+            "northing": 5781397.0,
+            "elevation": 1091.4
+          },
+          {
+            "waypointId": "3850E 1450N",
+            "station": 1450.0,
+            "easting": 613850.0,
+            "northing": 5781447.0,
+            "elevation": 1091.8
+          },
+          {
+            "waypointId": "3850E 1500N",
+            "station": 1500.0,
+            "easting": 613851.0,
+            "northing": 5781499.0,
+            "elevation": 1090.8
+          },
+          {
+            "waypointId": "3850E 1550N",
+            "station": 1550.0,
+            "easting": 613851.0,
+            "northing": 5781548.0,
+            "elevation": 1089.0
+          },
+          {
+            "waypointId": "3850E 1600N",
+            "station": 1600.0,
+            "easting": 613851.0,
+            "northing": 5781596.0,
+            "elevation": 1089.0
+          },
+          {
+            "waypointId": "3850E 1650N",
+            "station": 1650.0,
+            "easting": 613848.0,
+            "northing": 5781646.0,
+            "elevation": 1090.4
+          },
+          {
+            "waypointId": "3850E 1700N",
+            "station": 1700.0,
+            "easting": 613850.0,
+            "northing": 5781699.0,
+            "elevation": 1090.8
+          },
+          {
+            "waypointId": "3850E 1750N",
+            "station": 1750.0,
+            "easting": 613849.0,
+            "northing": 5781745.0,
+            "elevation": 1092.5
+          },
+          {
+            "waypointId": "3850E 1800N",
+            "station": 1800.0,
+            "easting": 613850.0,
+            "northing": 5781796.0,
+            "elevation": 1090.4
+          },
+          {
+            "waypointId": "3850E 1850N",
+            "station": 1850.0,
+            "easting": 613851.0,
+            "northing": 5781844.0,
+            "elevation": 1089.5
+          },
+          {
+            "waypointId": "3850E 1900N",
+            "station": 1900.0,
+            "easting": 613849.0,
+            "northing": 5781898.0,
+            "elevation": 1090.3
+          },
+          {
+            "waypointId": "3850E 1950N",
+            "station": 1950.0,
+            "easting": 613849.0,
+            "northing": 5781947.0,
+            "elevation": 1090.0
+          },
+          {
+            "waypointId": "3850E 2000N",
+            "station": 2000.0,
+            "easting": 613851.0,
+            "northing": 5781995.0,
+            "elevation": 1090.4
+          },
+          {
+            "waypointId": "3850E 2050N",
+            "station": 2050.0,
+            "easting": 613851.0,
+            "northing": 5782048.0,
+            "elevation": 1089.0
+          },
+          {
+            "waypointId": "3850E 2100N",
+            "station": 2100.0,
+            "easting": 613849.0,
+            "northing": 5782098.0,
+            "elevation": 1089.8
+          },
+          {
+            "waypointId": "3850E 2150N",
+            "station": 2150.0,
+            "easting": 613849.0,
+            "northing": 5782146.0,
+            "elevation": 1089.8
+          },
+          {
+            "waypointId": "3850E 2200N",
+            "station": 2200.0,
+            "easting": 613847.0,
+            "northing": 5782197.0,
+            "elevation": 1090.7
+          },
+          {
+            "waypointId": "3850E 2250N",
+            "station": 2250.0,
+            "easting": 613845.0,
+            "northing": 5782248.0,
+            "elevation": 1090.7
+          },
+          {
+            "waypointId": "3850E 2300N",
+            "station": 2300.0,
+            "easting": 613845.0,
+            "northing": 5782297.0,
+            "elevation": 1091.7
+          },
+          {
+            "waypointId": "3850E 2350N",
+            "station": 2350.0,
+            "easting": 613847.0,
+            "northing": 5782345.0,
+            "elevation": 1092.8
+          },
+          {
+            "waypointId": "3850E 2400N",
+            "station": 2400.0,
+            "easting": 613849.0,
+            "northing": 5782397.0,
+            "elevation": 1091.8
+          },
+          {
+            "waypointId": "3850E 2450N",
+            "station": 2450.0,
+            "easting": 613852.0,
+            "northing": 5782448.0,
+            "elevation": 1092.8
+          },
+          {
+            "waypointId": "3850E 2500N",
+            "station": 2500.0,
+            "easting": 613846.0,
+            "northing": 5782497.0,
+            "elevation": 1092.7
+          },
+          {
+            "waypointId": "3850E 2550N",
+            "station": 2550.0,
+            "easting": 613849.0,
+            "northing": 5782544.0,
+            "elevation": 1094.6
+          },
+          {
+            "waypointId": "3850E 2600N",
+            "station": 2600.0,
+            "easting": 613848.0,
+            "northing": 5782597.0,
+            "elevation": 1098.2
+          },
+          {
+            "waypointId": "3850E 2650N",
+            "station": 2650.0,
+            "easting": 613851.0,
+            "northing": 5782648.0,
+            "elevation": 1099.3
+          },
+          {
+            "waypointId": "3850E 2700N",
+            "station": 2700.0,
+            "easting": 613850.0,
+            "northing": 5782697.0,
+            "elevation": 1099.3
+          },
+          {
+            "waypointId": "3850E 2750N",
+            "station": 2750.0,
+            "easting": 613849.0,
+            "northing": 5782743.0,
+            "elevation": 1099.9
+          },
+          {
+            "waypointId": "3850E 2800N",
+            "station": 2800.0,
+            "easting": 613849.0,
+            "northing": 5782793.0,
+            "elevation": 1102.4
+          },
+          {
+            "waypointId": "3850E 2850N",
+            "station": 2850.0,
+            "easting": 613851.0,
+            "northing": 5782845.0,
+            "elevation": 1102.1
+          },
+          {
+            "waypointId": "3850E 2900N",
+            "station": 2900.0,
+            "easting": 613849.0,
+            "northing": 5782895.0,
+            "elevation": 1101.5
+          },
+          {
+            "waypointId": "3850E 2950N",
+            "station": 2950.0,
+            "easting": 613850.0,
+            "northing": 5782944.0,
+            "elevation": 1103.1
+          },
+          {
+            "waypointId": "3850E 3000N",
+            "station": 3000.0,
+            "easting": 613851.0,
+            "northing": 5782995.0,
+            "elevation": 1100.2
+          },
+          {
+            "waypointId": "3850E 3050N",
+            "station": 3050.0,
+            "easting": 613851.0,
+            "northing": 5783045.0,
+            "elevation": 1100.7
+          },
+          {
+            "waypointId": "3850E 3100N",
+            "station": 3100.0,
+            "easting": 613851.0,
+            "northing": 5783095.0,
+            "elevation": 1101.9
+          },
+          {
+            "waypointId": "3850E 3150N",
+            "station": 3150.0,
+            "easting": 613852.0,
+            "northing": 5783144.0,
+            "elevation": 1100.2
+          },
+          {
+            "waypointId": "3850E 3200N",
+            "station": 3200.0,
+            "easting": 613851.0,
+            "northing": 5783196.0,
+            "elevation": 1101.6
+          },
+          {
+            "waypointId": "3850E 3250N",
+            "station": 3250.0,
+            "easting": 613854.0,
+            "northing": 5783243.0,
+            "elevation": 1099.3
+          },
+          {
+            "waypointId": "3850E 3300N",
+            "station": 3300.0,
+            "easting": 613853.0,
+            "northing": 5783295.0,
+            "elevation": 1098.4
+          },
+          {
+            "waypointId": "3850E 3350N",
+            "station": 3350.0,
+            "easting": 613852.0,
+            "northing": 5783345.0,
+            "elevation": 1097.5
+          },
+          {
+            "waypointId": "3850E 3400N",
+            "station": 3400.0,
+            "easting": 613851.0,
+            "northing": 5783397.0,
+            "elevation": 1096.4
+          },
+          {
+            "waypointId": "3850E 3450N",
+            "station": 3450.0,
+            "easting": 613858.0,
+            "northing": 5783443.0,
+            "elevation": 1099.6
+          },
+          {
+            "waypointId": "3850E 3500N",
+            "station": 3500.0,
+            "easting": 613854.0,
+            "northing": 5783491.0,
+            "elevation": 1105.1
+          },
+          {
+            "waypointId": "3850E 3550N",
+            "station": 3550.0,
+            "easting": 613851.0,
+            "northing": 5783545.0,
+            "elevation": 1109.8
+          },
+          {
+            "waypointId": "3850E 3600N",
+            "station": 3600.0,
+            "easting": 613854.0,
+            "northing": 5783595.0,
+            "elevation": 1107.5
+          },
+          {
+            "waypointId": "3850E 3650N",
+            "station": 3650.0,
+            "easting": 613852.0,
+            "northing": 5783641.0,
+            "elevation": 1109.0
+          },
+          {
+            "waypointId": "3850E 3700N",
+            "station": 3700.0,
+            "easting": 613851.0,
+            "northing": 5783691.0,
+            "elevation": 1108.4
+          },
+          {
+            "waypointId": "3850E 3750N",
+            "station": 3750.0,
+            "easting": 613852.0,
+            "northing": 5783742.0,
+            "elevation": 1109.3
+          },
+          {
+            "waypointId": "3850E 3800N",
+            "station": 3800.0,
+            "easting": 613851.0,
+            "northing": 5783793.0,
+            "elevation": 1109.0
+          },
+          {
+            "waypointId": "3850E 3850N",
+            "station": 3850.0,
+            "easting": 613852.0,
+            "northing": 5783841.0,
+            "elevation": 1109.2
+          },
+          {
+            "waypointId": "3850E 3900N",
+            "station": 3900.0,
+            "easting": 613854.0,
+            "northing": 5783892.0,
+            "elevation": 1111.5
+          },
+          {
+            "waypointId": "3850E 3950N",
+            "station": 3950.0,
+            "easting": 613854.0,
+            "northing": 5783942.0,
+            "elevation": 1109.3
+          },
+          {
+            "waypointId": "3850E 4000N",
+            "station": 4000.0,
+            "easting": 613851.0,
+            "northing": 5783991.0,
+            "elevation": 1111.2
+          },
+          {
+            "waypointId": "3850E 4050N",
+            "station": 4050.0,
+            "easting": 613852.0,
+            "northing": 5784043.0,
+            "elevation": 1109.7
+          },
+          {
+            "waypointId": "3850E 4100N",
+            "station": 4100.0,
+            "easting": 613854.0,
+            "northing": 5784089.0,
+            "elevation": 1112.1
+          },
+          {
+            "waypointId": "3850E 4150N",
+            "station": 4150.0,
+            "easting": 613849.0,
+            "northing": 5784141.0,
+            "elevation": 1111.0
+          },
+          {
+            "waypointId": "3850E 4200N",
+            "station": 4200.0,
+            "easting": 613847.0,
+            "northing": 5784188.0,
+            "elevation": 1115.8
+          },
+          {
+            "waypointId": "3850E 4250N",
+            "station": 4250.0,
+            "easting": 613851.0,
+            "northing": 5784239.0,
+            "elevation": 1114.6
+          },
+          {
+            "waypointId": "3850E 4300N",
+            "station": 4300.0,
+            "easting": 613851.0,
+            "northing": 5784289.0,
+            "elevation": 1110.1
+          },
+          {
+            "waypointId": "3850E 4400N",
+            "station": 4400.0,
+            "easting": 613851.0,
+            "northing": 5784390.0,
+            "elevation": 1108.5
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            613848.0,
+            5781397.0,
+            1091.4
+          ],
+          [
+            613850.0,
+            5781447.0,
+            1091.8
+          ],
+          [
+            613851.0,
+            5781499.0,
+            1090.8
+          ],
+          [
+            613851.0,
+            5781548.0,
+            1089.0
+          ],
+          [
+            613851.0,
+            5781596.0,
+            1089.0
+          ],
+          [
+            613848.0,
+            5781646.0,
+            1090.4
+          ],
+          [
+            613850.0,
+            5781699.0,
+            1090.8
+          ],
+          [
+            613849.0,
+            5781745.0,
+            1092.5
+          ],
+          [
+            613850.0,
+            5781796.0,
+            1090.4
+          ],
+          [
+            613851.0,
+            5781844.0,
+            1089.5
+          ],
+          [
+            613849.0,
+            5781898.0,
+            1090.3
+          ],
+          [
+            613849.0,
+            5781947.0,
+            1090.0
+          ],
+          [
+            613851.0,
+            5781995.0,
+            1090.4
+          ],
+          [
+            613851.0,
+            5782048.0,
+            1089.0
+          ],
+          [
+            613849.0,
+            5782098.0,
+            1089.8
+          ],
+          [
+            613849.0,
+            5782146.0,
+            1089.8
+          ],
+          [
+            613847.0,
+            5782197.0,
+            1090.7
+          ],
+          [
+            613845.0,
+            5782248.0,
+            1090.7
+          ],
+          [
+            613845.0,
+            5782297.0,
+            1091.7
+          ],
+          [
+            613847.0,
+            5782345.0,
+            1092.8
+          ],
+          [
+            613849.0,
+            5782397.0,
+            1091.8
+          ],
+          [
+            613852.0,
+            5782448.0,
+            1092.8
+          ],
+          [
+            613846.0,
+            5782497.0,
+            1092.7
+          ],
+          [
+            613849.0,
+            5782544.0,
+            1094.6
+          ],
+          [
+            613848.0,
+            5782597.0,
+            1098.2
+          ],
+          [
+            613851.0,
+            5782648.0,
+            1099.3
+          ],
+          [
+            613850.0,
+            5782697.0,
+            1099.3
+          ],
+          [
+            613849.0,
+            5782743.0,
+            1099.9
+          ],
+          [
+            613849.0,
+            5782793.0,
+            1102.4
+          ],
+          [
+            613851.0,
+            5782845.0,
+            1102.1
+          ],
+          [
+            613849.0,
+            5782895.0,
+            1101.5
+          ],
+          [
+            613850.0,
+            5782944.0,
+            1103.1
+          ],
+          [
+            613851.0,
+            5782995.0,
+            1100.2
+          ],
+          [
+            613851.0,
+            5783045.0,
+            1100.7
+          ],
+          [
+            613851.0,
+            5783095.0,
+            1101.9
+          ],
+          [
+            613852.0,
+            5783144.0,
+            1100.2
+          ],
+          [
+            613851.0,
+            5783196.0,
+            1101.6
+          ],
+          [
+            613854.0,
+            5783243.0,
+            1099.3
+          ],
+          [
+            613853.0,
+            5783295.0,
+            1098.4
+          ],
+          [
+            613852.0,
+            5783345.0,
+            1097.5
+          ],
+          [
+            613851.0,
+            5783397.0,
+            1096.4
+          ],
+          [
+            613858.0,
+            5783443.0,
+            1099.6
+          ],
+          [
+            613854.0,
+            5783491.0,
+            1105.1
+          ],
+          [
+            613851.0,
+            5783545.0,
+            1109.8
+          ],
+          [
+            613854.0,
+            5783595.0,
+            1107.5
+          ],
+          [
+            613852.0,
+            5783641.0,
+            1109.0
+          ],
+          [
+            613851.0,
+            5783691.0,
+            1108.4
+          ],
+          [
+            613852.0,
+            5783742.0,
+            1109.3
+          ],
+          [
+            613851.0,
+            5783793.0,
+            1109.0
+          ],
+          [
+            613852.0,
+            5783841.0,
+            1109.2
+          ],
+          [
+            613854.0,
+            5783892.0,
+            1111.5
+          ],
+          [
+            613854.0,
+            5783942.0,
+            1109.3
+          ],
+          [
+            613851.0,
+            5783991.0,
+            1111.2
+          ],
+          [
+            613852.0,
+            5784043.0,
+            1109.7
+          ],
+          [
+            613854.0,
+            5784089.0,
+            1112.1
+          ],
+          [
+            613849.0,
+            5784141.0,
+            1111.0
+          ],
+          [
+            613847.0,
+            5784188.0,
+            1115.8
+          ],
+          [
+            613851.0,
+            5784239.0,
+            1114.6
+          ],
+          [
+            613851.0,
+            5784289.0,
+            1110.1
+          ],
+          [
+            613851.0,
+            5784390.0,
+            1108.5
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "great-plains-4250e",
+        "displayName": "Great Plains IP line 4250E",
+        "target": "Great Plains",
+        "lineName": "4250E",
+        "stationCount": 60,
+        "stationMin": 1400.0,
+        "stationMax": 4400.0,
+        "source": "data/source/Geophysical_Data/ARIS 42648 (2024 work program)/42648Z/Digital Data/Digital Data/Geophysical Data/Scott Geophysics IP/Appendix C - IP Survey Data/GreatPlains/DataFiles/GreatPlainsGPS.txt",
+        "sourceOrigin": "Scott Geophysics / Vizsla Copper / ARIS 42648",
+        "sourceDate": "2025-01-31",
+        "classification": "observation",
+        "stations": [
+          {
+            "waypointId": "4250E 1400N",
+            "station": 1400.0,
+            "easting": 614247.0,
+            "northing": 5781400.0,
+            "elevation": 1095.5
+          },
+          {
+            "waypointId": "4250E 1450N",
+            "station": 1450.0,
+            "easting": 614245.0,
+            "northing": 5781452.0,
+            "elevation": 1096.4
+          },
+          {
+            "waypointId": "4250E 1500N",
+            "station": 1500.0,
+            "easting": 614249.0,
+            "northing": 5781501.0,
+            "elevation": 1094.8
+          },
+          {
+            "waypointId": "4250E 1550N",
+            "station": 1550.0,
+            "easting": 614249.0,
+            "northing": 5781552.0,
+            "elevation": 1094.1
+          },
+          {
+            "waypointId": "4250E 1600N",
+            "station": 1600.0,
+            "easting": 614250.0,
+            "northing": 5781596.0,
+            "elevation": 1091.7
+          },
+          {
+            "waypointId": "4250E 1650N",
+            "station": 1650.0,
+            "easting": 614246.0,
+            "northing": 5781646.0,
+            "elevation": 1090.4
+          },
+          {
+            "waypointId": "4250E 1700N",
+            "station": 1700.0,
+            "easting": 614246.0,
+            "northing": 5781701.0,
+            "elevation": 1088.7
+          },
+          {
+            "waypointId": "4250E 1750N",
+            "station": 1750.0,
+            "easting": 614249.0,
+            "northing": 5781744.0,
+            "elevation": 1090.7
+          },
+          {
+            "waypointId": "4250E 1800N",
+            "station": 1800.0,
+            "easting": 614248.0,
+            "northing": 5781795.0,
+            "elevation": 1091.0
+          },
+          {
+            "waypointId": "4250E 1850N",
+            "station": 1850.0,
+            "easting": 614247.0,
+            "northing": 5781847.0,
+            "elevation": 1089.9
+          },
+          {
+            "waypointId": "4250E 1900N",
+            "station": 1900.0,
+            "easting": 614247.0,
+            "northing": 5781897.0,
+            "elevation": 1090.5
+          },
+          {
+            "waypointId": "4250E 1950N",
+            "station": 1950.0,
+            "easting": 614248.0,
+            "northing": 5781946.0,
+            "elevation": 1093.9
+          },
+          {
+            "waypointId": "4250E 2000N",
+            "station": 2000.0,
+            "easting": 614246.0,
+            "northing": 5781998.0,
+            "elevation": 1094.4
+          },
+          {
+            "waypointId": "4250E 2050N",
+            "station": 2050.0,
+            "easting": 614245.0,
+            "northing": 5782046.0,
+            "elevation": 1096.4
+          },
+          {
+            "waypointId": "4250E 2100N",
+            "station": 2100.0,
+            "easting": 614249.0,
+            "northing": 5782097.0,
+            "elevation": 1096.3
+          },
+          {
+            "waypointId": "4250E 2150N",
+            "station": 2150.0,
+            "easting": 614248.0,
+            "northing": 5782147.0,
+            "elevation": 1096.7
+          },
+          {
+            "waypointId": "4250E 2200N",
+            "station": 2200.0,
+            "easting": 614246.0,
+            "northing": 5782197.0,
+            "elevation": 1096.8
+          },
+          {
+            "waypointId": "4250E 2250N",
+            "station": 2250.0,
+            "easting": 614250.0,
+            "northing": 5782246.0,
+            "elevation": 1097.6
+          },
+          {
+            "waypointId": "4250E 2300N",
+            "station": 2300.0,
+            "easting": 614246.0,
+            "northing": 5782296.0,
+            "elevation": 1097.6
+          },
+          {
+            "waypointId": "4250E 2350N",
+            "station": 2350.0,
+            "easting": 614249.0,
+            "northing": 5782348.0,
+            "elevation": 1098.1
+          },
+          {
+            "waypointId": "4250E 2400N",
+            "station": 2400.0,
+            "easting": 614247.0,
+            "northing": 5782396.0,
+            "elevation": 1098.4
+          },
+          {
+            "waypointId": "4250E 2450N",
+            "station": 2450.0,
+            "easting": 614248.0,
+            "northing": 5782448.0,
+            "elevation": 1097.3
+          },
+          {
+            "waypointId": "4250E 2500N",
+            "station": 2500.0,
+            "easting": 614251.0,
+            "northing": 5782497.0,
+            "elevation": 1097.2
+          },
+          {
+            "waypointId": "4250E 2550N",
+            "station": 2550.0,
+            "easting": 614248.0,
+            "northing": 5782546.0,
+            "elevation": 1097.8
+          },
+          {
+            "waypointId": "4250E 2600N",
+            "station": 2600.0,
+            "easting": 614250.0,
+            "northing": 5782598.0,
+            "elevation": 1097.9
+          },
+          {
+            "waypointId": "4250E 2650N",
+            "station": 2650.0,
+            "easting": 614250.0,
+            "northing": 5782647.0,
+            "elevation": 1098.0
+          },
+          {
+            "waypointId": "4250E 2700N",
+            "station": 2700.0,
+            "easting": 614248.0,
+            "northing": 5782697.0,
+            "elevation": 1097.8
+          },
+          {
+            "waypointId": "4250E 2750N",
+            "station": 2750.0,
+            "easting": 614253.0,
+            "northing": 5782746.0,
+            "elevation": 1098.4
+          },
+          {
+            "waypointId": "4250E 2800N",
+            "station": 2800.0,
+            "easting": 614249.0,
+            "northing": 5782797.0,
+            "elevation": 1098.1
+          },
+          {
+            "waypointId": "4250E 2850N",
+            "station": 2850.0,
+            "easting": 614249.0,
+            "northing": 5782846.0,
+            "elevation": 1098.8
+          },
+          {
+            "waypointId": "4250E 2900N",
+            "station": 2900.0,
+            "easting": 614248.0,
+            "northing": 5782896.0,
+            "elevation": 1099.9
+          },
+          {
+            "waypointId": "4250E 2950N",
+            "station": 2950.0,
+            "easting": 614248.0,
+            "northing": 5782947.0,
+            "elevation": 1100.8
+          },
+          {
+            "waypointId": "4250E 3000N",
+            "station": 3000.0,
+            "easting": 614247.0,
+            "northing": 5782998.0,
+            "elevation": 1099.9
+          },
+          {
+            "waypointId": "4250E 3050N",
+            "station": 3050.0,
+            "easting": 614248.0,
+            "northing": 5783048.0,
+            "elevation": 1095.5
+          },
+          {
+            "waypointId": "4250E 3100N",
+            "station": 3100.0,
+            "easting": 614250.0,
+            "northing": 5783098.0,
+            "elevation": 1096.4
+          },
+          {
+            "waypointId": "4250E 3150N",
+            "station": 3150.0,
+            "easting": 614246.0,
+            "northing": 5783146.0,
+            "elevation": 1095.8
+          },
+          {
+            "waypointId": "4250E 3200N",
+            "station": 3200.0,
+            "easting": 614245.0,
+            "northing": 5783199.0,
+            "elevation": 1095.6
+          },
+          {
+            "waypointId": "4250E 3250N",
+            "station": 3250.0,
+            "easting": 614247.0,
+            "northing": 5783245.0,
+            "elevation": 1095.3
+          },
+          {
+            "waypointId": "4250E 3300N",
+            "station": 3300.0,
+            "easting": 614248.0,
+            "northing": 5783298.0,
+            "elevation": 1091.2
+          },
+          {
+            "waypointId": "4250E 3350N",
+            "station": 3350.0,
+            "easting": 614245.0,
+            "northing": 5783348.0,
+            "elevation": 1090.7
+          },
+          {
+            "waypointId": "4250E 3400N",
+            "station": 3400.0,
+            "easting": 614248.0,
+            "northing": 5783398.0,
+            "elevation": 1090.4
+          },
+          {
+            "waypointId": "4250E 3450N",
+            "station": 3450.0,
+            "easting": 614247.0,
+            "northing": 5783445.0,
+            "elevation": 1089.8
+          },
+          {
+            "waypointId": "4250E 3500N",
+            "station": 3500.0,
+            "easting": 614247.0,
+            "northing": 5783498.0,
+            "elevation": 1090.8
+          },
+          {
+            "waypointId": "4250E 3550N",
+            "station": 3550.0,
+            "easting": 614248.0,
+            "northing": 5783548.0,
+            "elevation": 1091.5
+          },
+          {
+            "waypointId": "4250E 3600N",
+            "station": 3600.0,
+            "easting": 614249.0,
+            "northing": 5783598.0,
+            "elevation": 1092.7
+          },
+          {
+            "waypointId": "4250E 3650N",
+            "station": 3650.0,
+            "easting": 614252.0,
+            "northing": 5783639.0,
+            "elevation": 1091.5
+          },
+          {
+            "waypointId": "4250E 3700N",
+            "station": 3700.0,
+            "easting": 614247.0,
+            "northing": 5783693.0,
+            "elevation": 1092.3
+          },
+          {
+            "waypointId": "4250E 3750N",
+            "station": 3750.0,
+            "easting": 614248.0,
+            "northing": 5783739.0,
+            "elevation": 1097.0
+          },
+          {
+            "waypointId": "4250E 3800N",
+            "station": 3800.0,
+            "easting": 614250.0,
+            "northing": 5783789.0,
+            "elevation": 1099.8
+          },
+          {
+            "waypointId": "4250E 3850N",
+            "station": 3850.0,
+            "easting": 614249.0,
+            "northing": 5783835.0,
+            "elevation": 1100.6
+          },
+          {
+            "waypointId": "4250E 3900N",
+            "station": 3900.0,
+            "easting": 614250.0,
+            "northing": 5783888.0,
+            "elevation": 1102.7
+          },
+          {
+            "waypointId": "4250E 3950N",
+            "station": 3950.0,
+            "easting": 614251.0,
+            "northing": 5783940.0,
+            "elevation": 1101.9
+          },
+          {
+            "waypointId": "4250E 4000N",
+            "station": 4000.0,
+            "easting": 614247.0,
+            "northing": 5783988.0,
+            "elevation": 1101.1
+          },
+          {
+            "waypointId": "4250E 4050N",
+            "station": 4050.0,
+            "easting": 614247.0,
+            "northing": 5784038.0,
+            "elevation": 1103.6
+          },
+          {
+            "waypointId": "4250E 4100N",
+            "station": 4100.0,
+            "easting": 614250.0,
+            "northing": 5784087.0,
+            "elevation": 1100.1
+          },
+          {
+            "waypointId": "4250E 4150N",
+            "station": 4150.0,
+            "easting": 614250.0,
+            "northing": 5784139.0,
+            "elevation": 1098.3
+          },
+          {
+            "waypointId": "4250E 4200N",
+            "station": 4200.0,
+            "easting": 614250.0,
+            "northing": 5784188.0,
+            "elevation": 1098.4
+          },
+          {
+            "waypointId": "4250E 4250N",
+            "station": 4250.0,
+            "easting": 614250.0,
+            "northing": 5784233.0,
+            "elevation": 1100.1
+          },
+          {
+            "waypointId": "4250E 4300N",
+            "station": 4300.0,
+            "easting": 614253.0,
+            "northing": 5784286.0,
+            "elevation": 1104.1
+          },
+          {
+            "waypointId": "4250E 4400N",
+            "station": 4400.0,
+            "easting": 614250.0,
+            "northing": 5784388.0,
+            "elevation": 1108.2
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            614247.0,
+            5781400.0,
+            1095.5
+          ],
+          [
+            614245.0,
+            5781452.0,
+            1096.4
+          ],
+          [
+            614249.0,
+            5781501.0,
+            1094.8
+          ],
+          [
+            614249.0,
+            5781552.0,
+            1094.1
+          ],
+          [
+            614250.0,
+            5781596.0,
+            1091.7
+          ],
+          [
+            614246.0,
+            5781646.0,
+            1090.4
+          ],
+          [
+            614246.0,
+            5781701.0,
+            1088.7
+          ],
+          [
+            614249.0,
+            5781744.0,
+            1090.7
+          ],
+          [
+            614248.0,
+            5781795.0,
+            1091.0
+          ],
+          [
+            614247.0,
+            5781847.0,
+            1089.9
+          ],
+          [
+            614247.0,
+            5781897.0,
+            1090.5
+          ],
+          [
+            614248.0,
+            5781946.0,
+            1093.9
+          ],
+          [
+            614246.0,
+            5781998.0,
+            1094.4
+          ],
+          [
+            614245.0,
+            5782046.0,
+            1096.4
+          ],
+          [
+            614249.0,
+            5782097.0,
+            1096.3
+          ],
+          [
+            614248.0,
+            5782147.0,
+            1096.7
+          ],
+          [
+            614246.0,
+            5782197.0,
+            1096.8
+          ],
+          [
+            614250.0,
+            5782246.0,
+            1097.6
+          ],
+          [
+            614246.0,
+            5782296.0,
+            1097.6
+          ],
+          [
+            614249.0,
+            5782348.0,
+            1098.1
+          ],
+          [
+            614247.0,
+            5782396.0,
+            1098.4
+          ],
+          [
+            614248.0,
+            5782448.0,
+            1097.3
+          ],
+          [
+            614251.0,
+            5782497.0,
+            1097.2
+          ],
+          [
+            614248.0,
+            5782546.0,
+            1097.8
+          ],
+          [
+            614250.0,
+            5782598.0,
+            1097.9
+          ],
+          [
+            614250.0,
+            5782647.0,
+            1098.0
+          ],
+          [
+            614248.0,
+            5782697.0,
+            1097.8
+          ],
+          [
+            614253.0,
+            5782746.0,
+            1098.4
+          ],
+          [
+            614249.0,
+            5782797.0,
+            1098.1
+          ],
+          [
+            614249.0,
+            5782846.0,
+            1098.8
+          ],
+          [
+            614248.0,
+            5782896.0,
+            1099.9
+          ],
+          [
+            614248.0,
+            5782947.0,
+            1100.8
+          ],
+          [
+            614247.0,
+            5782998.0,
+            1099.9
+          ],
+          [
+            614248.0,
+            5783048.0,
+            1095.5
+          ],
+          [
+            614250.0,
+            5783098.0,
+            1096.4
+          ],
+          [
+            614246.0,
+            5783146.0,
+            1095.8
+          ],
+          [
+            614245.0,
+            5783199.0,
+            1095.6
+          ],
+          [
+            614247.0,
+            5783245.0,
+            1095.3
+          ],
+          [
+            614248.0,
+            5783298.0,
+            1091.2
+          ],
+          [
+            614245.0,
+            5783348.0,
+            1090.7
+          ],
+          [
+            614248.0,
+            5783398.0,
+            1090.4
+          ],
+          [
+            614247.0,
+            5783445.0,
+            1089.8
+          ],
+          [
+            614247.0,
+            5783498.0,
+            1090.8
+          ],
+          [
+            614248.0,
+            5783548.0,
+            1091.5
+          ],
+          [
+            614249.0,
+            5783598.0,
+            1092.7
+          ],
+          [
+            614252.0,
+            5783639.0,
+            1091.5
+          ],
+          [
+            614247.0,
+            5783693.0,
+            1092.3
+          ],
+          [
+            614248.0,
+            5783739.0,
+            1097.0
+          ],
+          [
+            614250.0,
+            5783789.0,
+            1099.8
+          ],
+          [
+            614249.0,
+            5783835.0,
+            1100.6
+          ],
+          [
+            614250.0,
+            5783888.0,
+            1102.7
+          ],
+          [
+            614251.0,
+            5783940.0,
+            1101.9
+          ],
+          [
+            614247.0,
+            5783988.0,
+            1101.1
+          ],
+          [
+            614247.0,
+            5784038.0,
+            1103.6
+          ],
+          [
+            614250.0,
+            5784087.0,
+            1100.1
+          ],
+          [
+            614250.0,
+            5784139.0,
+            1098.3
+          ],
+          [
+            614250.0,
+            5784188.0,
+            1098.4
+          ],
+          [
+            614250.0,
+            5784233.0,
+            1100.1
+          ],
+          [
+            614253.0,
+            5784286.0,
+            1104.1
+          ],
+          [
+            614250.0,
+            5784388.0,
+            1108.2
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "great-plains-4650e",
+        "displayName": "Great Plains IP line 4650E",
+        "target": "Great Plains",
+        "lineName": "4650E",
+        "stationCount": 60,
+        "stationMin": 1400.0,
+        "stationMax": 4400.0,
+        "source": "data/source/Geophysical_Data/ARIS 42648 (2024 work program)/42648Z/Digital Data/Digital Data/Geophysical Data/Scott Geophysics IP/Appendix C - IP Survey Data/GreatPlains/DataFiles/GreatPlainsGPS.txt",
+        "sourceOrigin": "Scott Geophysics / Vizsla Copper / ARIS 42648",
+        "sourceDate": "2025-01-31",
+        "classification": "observation",
+        "stations": [
+          {
+            "waypointId": "4650E 1400N",
+            "station": 1400.0,
+            "easting": 614647.0,
+            "northing": 5781400.0,
+            "elevation": 1127.4
+          },
+          {
+            "waypointId": "4650E 1450N",
+            "station": 1450.0,
+            "easting": 614643.0,
+            "northing": 5781462.0,
+            "elevation": 1128.0
+          },
+          {
+            "waypointId": "4650E 1500N",
+            "station": 1500.0,
+            "easting": 614649.0,
+            "northing": 5781496.0,
+            "elevation": 1129.1
+          },
+          {
+            "waypointId": "4650E 1550N",
+            "station": 1550.0,
+            "easting": 614647.0,
+            "northing": 5781553.0,
+            "elevation": 1130.2
+          },
+          {
+            "waypointId": "4650E 1600N",
+            "station": 1600.0,
+            "easting": 614648.0,
+            "northing": 5781594.0,
+            "elevation": 1130.6
+          },
+          {
+            "waypointId": "4650E 1650N",
+            "station": 1650.0,
+            "easting": 614653.0,
+            "northing": 5781645.0,
+            "elevation": 1131.5
+          },
+          {
+            "waypointId": "4650E 1700N",
+            "station": 1700.0,
+            "easting": 614651.0,
+            "northing": 5781698.0,
+            "elevation": 1131.3
+          },
+          {
+            "waypointId": "4650E 1750N",
+            "station": 1750.0,
+            "easting": 614643.0,
+            "northing": 5781751.0,
+            "elevation": 1132.3
+          },
+          {
+            "waypointId": "4650E 1800N",
+            "station": 1800.0,
+            "easting": 614648.0,
+            "northing": 5781806.0,
+            "elevation": 1131.0
+          },
+          {
+            "waypointId": "4650E 1850N",
+            "station": 1850.0,
+            "easting": 614652.0,
+            "northing": 5781842.0,
+            "elevation": 1130.7
+          },
+          {
+            "waypointId": "4650E 1900N",
+            "station": 1900.0,
+            "easting": 614652.0,
+            "northing": 5781887.0,
+            "elevation": 1130.3
+          },
+          {
+            "waypointId": "4650E 1950N",
+            "station": 1950.0,
+            "easting": 614653.0,
+            "northing": 5781938.0,
+            "elevation": 1128.9
+          },
+          {
+            "waypointId": "4650E 2000N",
+            "station": 2000.0,
+            "easting": 614648.0,
+            "northing": 5781989.0,
+            "elevation": 1128.3
+          },
+          {
+            "waypointId": "4650E 2050N",
+            "station": 2050.0,
+            "easting": 614653.0,
+            "northing": 5782037.0,
+            "elevation": 1127.0
+          },
+          {
+            "waypointId": "4650E 2100N",
+            "station": 2100.0,
+            "easting": 614649.0,
+            "northing": 5782089.0,
+            "elevation": 1126.9
+          },
+          {
+            "waypointId": "4650E 2150N",
+            "station": 2150.0,
+            "easting": 614650.0,
+            "northing": 5782138.0,
+            "elevation": 1126.3
+          },
+          {
+            "waypointId": "4650E 2200N",
+            "station": 2200.0,
+            "easting": 614651.0,
+            "northing": 5782185.0,
+            "elevation": 1121.2
+          },
+          {
+            "waypointId": "4650E 2250N",
+            "station": 2250.0,
+            "easting": 614648.0,
+            "northing": 5782240.0,
+            "elevation": 1119.2
+          },
+          {
+            "waypointId": "4650E 2300N",
+            "station": 2300.0,
+            "easting": 614649.0,
+            "northing": 5782289.0,
+            "elevation": 1120.6
+          },
+          {
+            "waypointId": "4650E 2350N",
+            "station": 2350.0,
+            "easting": 614648.0,
+            "northing": 5782340.0,
+            "elevation": 1122.9
+          },
+          {
+            "waypointId": "4650E 2400N",
+            "station": 2400.0,
+            "easting": 614650.0,
+            "northing": 5782392.0,
+            "elevation": 1124.2
+          },
+          {
+            "waypointId": "4650E 2450N",
+            "station": 2450.0,
+            "easting": 614647.0,
+            "northing": 5782441.0,
+            "elevation": 1123.9
+          },
+          {
+            "waypointId": "4650E 2500N",
+            "station": 2500.0,
+            "easting": 614648.0,
+            "northing": 5782496.0,
+            "elevation": 1122.6
+          },
+          {
+            "waypointId": "4650E 2550N",
+            "station": 2550.0,
+            "easting": 614648.0,
+            "northing": 5782537.0,
+            "elevation": 1122.7
+          },
+          {
+            "waypointId": "4650E 2600N",
+            "station": 2600.0,
+            "easting": 614649.0,
+            "northing": 5782587.0,
+            "elevation": 1121.5
+          },
+          {
+            "waypointId": "4650E 2650N",
+            "station": 2650.0,
+            "easting": 614649.0,
+            "northing": 5782640.0,
+            "elevation": 1120.9
+          },
+          {
+            "waypointId": "4650E 2700N",
+            "station": 2700.0,
+            "easting": 614649.0,
+            "northing": 5782689.0,
+            "elevation": 1120.2
+          },
+          {
+            "waypointId": "4650E 2750N",
+            "station": 2750.0,
+            "easting": 614646.0,
+            "northing": 5782737.0,
+            "elevation": 1121.4
+          },
+          {
+            "waypointId": "4650E 2800N",
+            "station": 2800.0,
+            "easting": 614649.0,
+            "northing": 5782786.0,
+            "elevation": 1122.1
+          },
+          {
+            "waypointId": "4650E 2850N",
+            "station": 2850.0,
+            "easting": 614649.0,
+            "northing": 5782839.0,
+            "elevation": 1119.1
+          },
+          {
+            "waypointId": "4650E 2900N",
+            "station": 2900.0,
+            "easting": 614647.0,
+            "northing": 5782890.0,
+            "elevation": 1115.9
+          },
+          {
+            "waypointId": "4650E 2950N",
+            "station": 2950.0,
+            "easting": 614647.0,
+            "northing": 5782935.0,
+            "elevation": 1114.6
+          },
+          {
+            "waypointId": "4650E 3000N",
+            "station": 3000.0,
+            "easting": 614646.0,
+            "northing": 5782984.0,
+            "elevation": 1112.8
+          },
+          {
+            "waypointId": "4650E 3050N",
+            "station": 3050.0,
+            "easting": 614646.0,
+            "northing": 5783032.0,
+            "elevation": 1108.7
+          },
+          {
+            "waypointId": "4650E 3100N",
+            "station": 3100.0,
+            "easting": 614642.0,
+            "northing": 5783085.0,
+            "elevation": 1111.5
+          },
+          {
+            "waypointId": "4650E 3150N",
+            "station": 3150.0,
+            "easting": 614646.0,
+            "northing": 5783131.0,
+            "elevation": 1113.9
+          },
+          {
+            "waypointId": "4650E 3200N",
+            "station": 3200.0,
+            "easting": 614648.0,
+            "northing": 5783188.0,
+            "elevation": 1112.7
+          },
+          {
+            "waypointId": "4650E 3250N",
+            "station": 3250.0,
+            "easting": 614647.0,
+            "northing": 5783237.0,
+            "elevation": 1112.3
+          },
+          {
+            "waypointId": "4650E 3300N",
+            "station": 3300.0,
+            "easting": 614648.0,
+            "northing": 5783284.0,
+            "elevation": 1110.3
+          },
+          {
+            "waypointId": "4650E 3350N",
+            "station": 3350.0,
+            "easting": 614648.0,
+            "northing": 5783331.0,
+            "elevation": 1109.2
+          },
+          {
+            "waypointId": "4650E 3400N",
+            "station": 3400.0,
+            "easting": 614646.0,
+            "northing": 5783386.0,
+            "elevation": 1105.5
+          },
+          {
+            "waypointId": "4650E 3450N",
+            "station": 3450.0,
+            "easting": 614649.0,
+            "northing": 5783430.0,
+            "elevation": 1106.0
+          },
+          {
+            "waypointId": "4650E 3500N",
+            "station": 3500.0,
+            "easting": 614648.0,
+            "northing": 5783481.0,
+            "elevation": 1101.5
+          },
+          {
+            "waypointId": "4650E 3550N",
+            "station": 3550.0,
+            "easting": 614647.0,
+            "northing": 5783527.0,
+            "elevation": 1100.0
+          },
+          {
+            "waypointId": "4650E 3600N",
+            "station": 3600.0,
+            "easting": 614648.0,
+            "northing": 5783578.0,
+            "elevation": 1099.1
+          },
+          {
+            "waypointId": "4650E 3650N",
+            "station": 3650.0,
+            "easting": 614649.0,
+            "northing": 5783626.0,
+            "elevation": 1096.4
+          },
+          {
+            "waypointId": "4650E 3700N",
+            "station": 3700.0,
+            "easting": 614645.0,
+            "northing": 5783675.0,
+            "elevation": 1095.4
+          },
+          {
+            "waypointId": "4650E 3750N",
+            "station": 3750.0,
+            "easting": 614649.0,
+            "northing": 5783723.0,
+            "elevation": 1104.1
+          },
+          {
+            "waypointId": "4650E 3800N",
+            "station": 3800.0,
+            "easting": 614649.0,
+            "northing": 5783775.0,
+            "elevation": 1106.4
+          },
+          {
+            "waypointId": "4650E 3850N",
+            "station": 3850.0,
+            "easting": 614650.0,
+            "northing": 5783826.0,
+            "elevation": 1108.4
+          },
+          {
+            "waypointId": "4650E 3900N",
+            "station": 3900.0,
+            "easting": 614648.0,
+            "northing": 5783874.0,
+            "elevation": 1109.3
+          },
+          {
+            "waypointId": "4650E 3950N",
+            "station": 3950.0,
+            "easting": 614646.0,
+            "northing": 5783921.0,
+            "elevation": 1104.4
+          },
+          {
+            "waypointId": "4650E 4000N",
+            "station": 4000.0,
+            "easting": 614648.0,
+            "northing": 5783968.0,
+            "elevation": 1103.4
+          },
+          {
+            "waypointId": "4650E 4050N",
+            "station": 4050.0,
+            "easting": 614645.0,
+            "northing": 5784014.0,
+            "elevation": 1104.0
+          },
+          {
+            "waypointId": "4650E 4100N",
+            "station": 4100.0,
+            "easting": 614647.0,
+            "northing": 5784059.0,
+            "elevation": 1103.2
+          },
+          {
+            "waypointId": "4650E 4150N",
+            "station": 4150.0,
+            "easting": 614651.0,
+            "northing": 5784105.0,
+            "elevation": 1102.9
+          },
+          {
+            "waypointId": "4650E 4200N",
+            "station": 4200.0,
+            "easting": 614646.0,
+            "northing": 5784152.0,
+            "elevation": 1104.6
+          },
+          {
+            "waypointId": "4650E 4250N",
+            "station": 4250.0,
+            "easting": 614647.0,
+            "northing": 5784202.0,
+            "elevation": 1105.3
+          },
+          {
+            "waypointId": "4650E 4300N",
+            "station": 4300.0,
+            "easting": 614648.0,
+            "northing": 5784250.0,
+            "elevation": 1102.0
+          },
+          {
+            "waypointId": "4650E 4400N",
+            "station": 4400.0,
+            "easting": 614650.0,
+            "northing": 5784338.0,
+            "elevation": 1097.9
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            614647.0,
+            5781400.0,
+            1127.4
+          ],
+          [
+            614643.0,
+            5781462.0,
+            1128.0
+          ],
+          [
+            614649.0,
+            5781496.0,
+            1129.1
+          ],
+          [
+            614647.0,
+            5781553.0,
+            1130.2
+          ],
+          [
+            614648.0,
+            5781594.0,
+            1130.6
+          ],
+          [
+            614653.0,
+            5781645.0,
+            1131.5
+          ],
+          [
+            614651.0,
+            5781698.0,
+            1131.3
+          ],
+          [
+            614643.0,
+            5781751.0,
+            1132.3
+          ],
+          [
+            614648.0,
+            5781806.0,
+            1131.0
+          ],
+          [
+            614652.0,
+            5781842.0,
+            1130.7
+          ],
+          [
+            614652.0,
+            5781887.0,
+            1130.3
+          ],
+          [
+            614653.0,
+            5781938.0,
+            1128.9
+          ],
+          [
+            614648.0,
+            5781989.0,
+            1128.3
+          ],
+          [
+            614653.0,
+            5782037.0,
+            1127.0
+          ],
+          [
+            614649.0,
+            5782089.0,
+            1126.9
+          ],
+          [
+            614650.0,
+            5782138.0,
+            1126.3
+          ],
+          [
+            614651.0,
+            5782185.0,
+            1121.2
+          ],
+          [
+            614648.0,
+            5782240.0,
+            1119.2
+          ],
+          [
+            614649.0,
+            5782289.0,
+            1120.6
+          ],
+          [
+            614648.0,
+            5782340.0,
+            1122.9
+          ],
+          [
+            614650.0,
+            5782392.0,
+            1124.2
+          ],
+          [
+            614647.0,
+            5782441.0,
+            1123.9
+          ],
+          [
+            614648.0,
+            5782496.0,
+            1122.6
+          ],
+          [
+            614648.0,
+            5782537.0,
+            1122.7
+          ],
+          [
+            614649.0,
+            5782587.0,
+            1121.5
+          ],
+          [
+            614649.0,
+            5782640.0,
+            1120.9
+          ],
+          [
+            614649.0,
+            5782689.0,
+            1120.2
+          ],
+          [
+            614646.0,
+            5782737.0,
+            1121.4
+          ],
+          [
+            614649.0,
+            5782786.0,
+            1122.1
+          ],
+          [
+            614649.0,
+            5782839.0,
+            1119.1
+          ],
+          [
+            614647.0,
+            5782890.0,
+            1115.9
+          ],
+          [
+            614647.0,
+            5782935.0,
+            1114.6
+          ],
+          [
+            614646.0,
+            5782984.0,
+            1112.8
+          ],
+          [
+            614646.0,
+            5783032.0,
+            1108.7
+          ],
+          [
+            614642.0,
+            5783085.0,
+            1111.5
+          ],
+          [
+            614646.0,
+            5783131.0,
+            1113.9
+          ],
+          [
+            614648.0,
+            5783188.0,
+            1112.7
+          ],
+          [
+            614647.0,
+            5783237.0,
+            1112.3
+          ],
+          [
+            614648.0,
+            5783284.0,
+            1110.3
+          ],
+          [
+            614648.0,
+            5783331.0,
+            1109.2
+          ],
+          [
+            614646.0,
+            5783386.0,
+            1105.5
+          ],
+          [
+            614649.0,
+            5783430.0,
+            1106.0
+          ],
+          [
+            614648.0,
+            5783481.0,
+            1101.5
+          ],
+          [
+            614647.0,
+            5783527.0,
+            1100.0
+          ],
+          [
+            614648.0,
+            5783578.0,
+            1099.1
+          ],
+          [
+            614649.0,
+            5783626.0,
+            1096.4
+          ],
+          [
+            614645.0,
+            5783675.0,
+            1095.4
+          ],
+          [
+            614649.0,
+            5783723.0,
+            1104.1
+          ],
+          [
+            614649.0,
+            5783775.0,
+            1106.4
+          ],
+          [
+            614650.0,
+            5783826.0,
+            1108.4
+          ],
+          [
+            614648.0,
+            5783874.0,
+            1109.3
+          ],
+          [
+            614646.0,
+            5783921.0,
+            1104.4
+          ],
+          [
+            614648.0,
+            5783968.0,
+            1103.4
+          ],
+          [
+            614645.0,
+            5784014.0,
+            1104.0
+          ],
+          [
+            614647.0,
+            5784059.0,
+            1103.2
+          ],
+          [
+            614651.0,
+            5784105.0,
+            1102.9
+          ],
+          [
+            614646.0,
+            5784152.0,
+            1104.6
+          ],
+          [
+            614647.0,
+            5784202.0,
+            1105.3
+          ],
+          [
+            614648.0,
+            5784250.0,
+            1102.0
+          ],
+          [
+            614650.0,
+            5784338.0,
+            1097.9
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "great-plains-5050e",
+        "displayName": "Great Plains IP line 5050E",
+        "target": "Great Plains",
+        "lineName": "5050E",
+        "stationCount": 60,
+        "stationMin": 1400.0,
+        "stationMax": 4400.0,
+        "source": "data/source/Geophysical_Data/ARIS 42648 (2024 work program)/42648Z/Digital Data/Digital Data/Geophysical Data/Scott Geophysics IP/Appendix C - IP Survey Data/GreatPlains/DataFiles/GreatPlainsGPS.txt",
+        "sourceOrigin": "Scott Geophysics / Vizsla Copper / ARIS 42648",
+        "sourceDate": "2025-01-31",
+        "classification": "observation",
+        "stations": [
+          {
+            "waypointId": "5050E 1400N",
+            "station": 1400.0,
+            "easting": 615046.0,
+            "northing": 5781398.0,
+            "elevation": 1122.2
+          },
+          {
+            "waypointId": "5050E 1450N",
+            "station": 1450.0,
+            "easting": 615048.0,
+            "northing": 5781451.0,
+            "elevation": 1129.1
+          },
+          {
+            "waypointId": "5050E 1500N",
+            "station": 1500.0,
+            "easting": 615051.0,
+            "northing": 5781496.0,
+            "elevation": 1127.0
+          },
+          {
+            "waypointId": "5050E 1550N",
+            "station": 1550.0,
+            "easting": 615048.0,
+            "northing": 5781549.0,
+            "elevation": 1131.4
+          },
+          {
+            "waypointId": "5050E 1600N",
+            "station": 1600.0,
+            "easting": 615053.0,
+            "northing": 5781596.0,
+            "elevation": 1133.4
+          },
+          {
+            "waypointId": "5050E 1650N",
+            "station": 1650.0,
+            "easting": 615048.0,
+            "northing": 5781641.0,
+            "elevation": 1136.2
+          },
+          {
+            "waypointId": "5050E 1700N",
+            "station": 1700.0,
+            "easting": 615051.0,
+            "northing": 5781693.0,
+            "elevation": 1134.5
+          },
+          {
+            "waypointId": "5050E 1750N",
+            "station": 1750.0,
+            "easting": 615050.0,
+            "northing": 5781739.0,
+            "elevation": 1134.6
+          },
+          {
+            "waypointId": "5050E 1800N",
+            "station": 1800.0,
+            "easting": 615051.0,
+            "northing": 5781792.0,
+            "elevation": 1135.7
+          },
+          {
+            "waypointId": "5050E 1850N",
+            "station": 1850.0,
+            "easting": 615053.0,
+            "northing": 5781839.0,
+            "elevation": 1136.4
+          },
+          {
+            "waypointId": "5050E 1900N",
+            "station": 1900.0,
+            "easting": 615050.0,
+            "northing": 5781891.0,
+            "elevation": 1135.6
+          },
+          {
+            "waypointId": "5050E 1950N",
+            "station": 1950.0,
+            "easting": 615048.0,
+            "northing": 5781941.0,
+            "elevation": 1136.0
+          },
+          {
+            "waypointId": "5050E 2000N",
+            "station": 2000.0,
+            "easting": 615049.0,
+            "northing": 5781993.0,
+            "elevation": 1134.8
+          },
+          {
+            "waypointId": "5050E 2050N",
+            "station": 2050.0,
+            "easting": 615047.0,
+            "northing": 5782042.0,
+            "elevation": 1136.2
+          },
+          {
+            "waypointId": "5050E 2100N",
+            "station": 2100.0,
+            "easting": 615051.0,
+            "northing": 5782091.0,
+            "elevation": 1135.8
+          },
+          {
+            "waypointId": "5050E 2150N",
+            "station": 2150.0,
+            "easting": 615049.0,
+            "northing": 5782140.0,
+            "elevation": 1135.7
+          },
+          {
+            "waypointId": "5050E 2200N",
+            "station": 2200.0,
+            "easting": 615052.0,
+            "northing": 5782191.0,
+            "elevation": 1135.1
+          },
+          {
+            "waypointId": "5050E 2250N",
+            "station": 2250.0,
+            "easting": 615051.0,
+            "northing": 5782240.0,
+            "elevation": 1132.9
+          },
+          {
+            "waypointId": "5050E 2300N",
+            "station": 2300.0,
+            "easting": 615049.0,
+            "northing": 5782292.0,
+            "elevation": 1132.5
+          },
+          {
+            "waypointId": "5050E 2350N",
+            "station": 2350.0,
+            "easting": 615051.0,
+            "northing": 5782340.0,
+            "elevation": 1131.3
+          },
+          {
+            "waypointId": "5050E 2400N",
+            "station": 2400.0,
+            "easting": 615048.0,
+            "northing": 5782391.0,
+            "elevation": 1129.0
+          },
+          {
+            "waypointId": "5050E 2450N",
+            "station": 2450.0,
+            "easting": 615051.0,
+            "northing": 5782439.0,
+            "elevation": 1127.5
+          },
+          {
+            "waypointId": "5050E 2500N",
+            "station": 2500.0,
+            "easting": 615049.0,
+            "northing": 5782490.0,
+            "elevation": 1126.5
+          },
+          {
+            "waypointId": "5050E 2550N",
+            "station": 2550.0,
+            "easting": 615051.0,
+            "northing": 5782539.0,
+            "elevation": 1127.0
+          },
+          {
+            "waypointId": "5050E 2600N",
+            "station": 2600.0,
+            "easting": 615051.0,
+            "northing": 5782591.0,
+            "elevation": 1126.8
+          },
+          {
+            "waypointId": "5050E 2650N",
+            "station": 2650.0,
+            "easting": 615051.0,
+            "northing": 5782636.0,
+            "elevation": 1127.2
+          },
+          {
+            "waypointId": "5050E 2700N",
+            "station": 2700.0,
+            "easting": 615050.0,
+            "northing": 5782690.0,
+            "elevation": 1125.0
+          },
+          {
+            "waypointId": "5050E 2750N",
+            "station": 2750.0,
+            "easting": 615049.0,
+            "northing": 5782743.0,
+            "elevation": 1122.7
+          },
+          {
+            "waypointId": "5050E 2800N",
+            "station": 2800.0,
+            "easting": 615051.0,
+            "northing": 5782791.0,
+            "elevation": 1120.1
+          },
+          {
+            "waypointId": "5050E 2850N",
+            "station": 2850.0,
+            "easting": 615050.0,
+            "northing": 5782839.0,
+            "elevation": 1119.4
+          },
+          {
+            "waypointId": "5050E 2900N",
+            "station": 2900.0,
+            "easting": 615049.0,
+            "northing": 5782888.0,
+            "elevation": 1119.2
+          },
+          {
+            "waypointId": "5050E 2950N",
+            "station": 2950.0,
+            "easting": 615053.0,
+            "northing": 5782940.0,
+            "elevation": 1115.9
+          },
+          {
+            "waypointId": "5050E 3000N",
+            "station": 3000.0,
+            "easting": 615052.0,
+            "northing": 5782989.0,
+            "elevation": 1114.8
+          },
+          {
+            "waypointId": "5050E 3050N",
+            "station": 3050.0,
+            "easting": 615049.0,
+            "northing": 5783039.0,
+            "elevation": 1112.4
+          },
+          {
+            "waypointId": "5050E 3100N",
+            "station": 3100.0,
+            "easting": 615050.0,
+            "northing": 5783089.0,
+            "elevation": 1109.4
+          },
+          {
+            "waypointId": "5050E 3150N",
+            "station": 3150.0,
+            "easting": 615048.0,
+            "northing": 5783138.0,
+            "elevation": 1108.5
+          },
+          {
+            "waypointId": "5050E 3200N",
+            "station": 3200.0,
+            "easting": 615047.0,
+            "northing": 5783189.0,
+            "elevation": 1106.4
+          },
+          {
+            "waypointId": "5050E 3250N",
+            "station": 3250.0,
+            "easting": 615048.0,
+            "northing": 5783239.0,
+            "elevation": 1103.3
+          },
+          {
+            "waypointId": "5050E 3300N",
+            "station": 3300.0,
+            "easting": 615049.0,
+            "northing": 5783286.0,
+            "elevation": 1101.4
+          },
+          {
+            "waypointId": "5050E 3350N",
+            "station": 3350.0,
+            "easting": 615046.0,
+            "northing": 5783334.0,
+            "elevation": 1099.4
+          },
+          {
+            "waypointId": "5050E 3400N",
+            "station": 3400.0,
+            "easting": 615049.0,
+            "northing": 5783387.0,
+            "elevation": 1098.5
+          },
+          {
+            "waypointId": "5050E 3450N",
+            "station": 3450.0,
+            "easting": 615049.0,
+            "northing": 5783437.0,
+            "elevation": 1097.0
+          },
+          {
+            "waypointId": "5050E 3500N",
+            "station": 3500.0,
+            "easting": 615051.0,
+            "northing": 5783482.0,
+            "elevation": 1091.4
+          },
+          {
+            "waypointId": "5050E 3550N",
+            "station": 3550.0,
+            "easting": 615057.0,
+            "northing": 5783537.0,
+            "elevation": 1090.2
+          },
+          {
+            "waypointId": "5050E 3600N",
+            "station": 3600.0,
+            "easting": 615051.0,
+            "northing": 5783581.0,
+            "elevation": 1089.6
+          },
+          {
+            "waypointId": "5050E 3650N",
+            "station": 3650.0,
+            "easting": 615050.0,
+            "northing": 5783635.0,
+            "elevation": 1087.5
+          },
+          {
+            "waypointId": "5050E 3700N",
+            "station": 3700.0,
+            "easting": 615044.0,
+            "northing": 5783682.0,
+            "elevation": 1084.3
+          },
+          {
+            "waypointId": "5050E 3750N",
+            "station": 3750.0,
+            "easting": 615048.0,
+            "northing": 5783730.0,
+            "elevation": 1087.9
+          },
+          {
+            "waypointId": "5050E 3800N",
+            "station": 3800.0,
+            "easting": 615050.0,
+            "northing": 5783780.0,
+            "elevation": 1091.0
+          },
+          {
+            "waypointId": "5050E 3850N",
+            "station": 3850.0,
+            "easting": 615051.0,
+            "northing": 5783832.0,
+            "elevation": 1093.9
+          },
+          {
+            "waypointId": "5050E 3900N",
+            "station": 3900.0,
+            "easting": 615048.0,
+            "northing": 5783883.0,
+            "elevation": 1094.9
+          },
+          {
+            "waypointId": "5050E 3950N",
+            "station": 3950.0,
+            "easting": 615048.0,
+            "northing": 5783929.0,
+            "elevation": 1099.5
+          },
+          {
+            "waypointId": "5050E 4000N",
+            "station": 4000.0,
+            "easting": 615048.0,
+            "northing": 5783977.0,
+            "elevation": 1098.5
+          },
+          {
+            "waypointId": "5050E 4050N",
+            "station": 4050.0,
+            "easting": 615049.0,
+            "northing": 5784030.0,
+            "elevation": 1101.0
+          },
+          {
+            "waypointId": "5050E 4100N",
+            "station": 4100.0,
+            "easting": 615051.0,
+            "northing": 5784075.0,
+            "elevation": 1114.2
+          },
+          {
+            "waypointId": "5050E 4150N",
+            "station": 4150.0,
+            "easting": 615052.0,
+            "northing": 5784124.0,
+            "elevation": 1121.7
+          },
+          {
+            "waypointId": "5050E 4200N",
+            "station": 4200.0,
+            "easting": 615051.0,
+            "northing": 5784174.0,
+            "elevation": 1111.1
+          },
+          {
+            "waypointId": "5050E 4250N",
+            "station": 4250.0,
+            "easting": 615050.0,
+            "northing": 5784224.0,
+            "elevation": 1106.8
+          },
+          {
+            "waypointId": "5050E 4300N",
+            "station": 4300.0,
+            "easting": 615047.0,
+            "northing": 5784268.0,
+            "elevation": 1097.6
+          },
+          {
+            "waypointId": "5050E 4400N",
+            "station": 4400.0,
+            "easting": 615050.0,
+            "northing": 5784372.0,
+            "elevation": 1087.9
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            615046.0,
+            5781398.0,
+            1122.2
+          ],
+          [
+            615048.0,
+            5781451.0,
+            1129.1
+          ],
+          [
+            615051.0,
+            5781496.0,
+            1127.0
+          ],
+          [
+            615048.0,
+            5781549.0,
+            1131.4
+          ],
+          [
+            615053.0,
+            5781596.0,
+            1133.4
+          ],
+          [
+            615048.0,
+            5781641.0,
+            1136.2
+          ],
+          [
+            615051.0,
+            5781693.0,
+            1134.5
+          ],
+          [
+            615050.0,
+            5781739.0,
+            1134.6
+          ],
+          [
+            615051.0,
+            5781792.0,
+            1135.7
+          ],
+          [
+            615053.0,
+            5781839.0,
+            1136.4
+          ],
+          [
+            615050.0,
+            5781891.0,
+            1135.6
+          ],
+          [
+            615048.0,
+            5781941.0,
+            1136.0
+          ],
+          [
+            615049.0,
+            5781993.0,
+            1134.8
+          ],
+          [
+            615047.0,
+            5782042.0,
+            1136.2
+          ],
+          [
+            615051.0,
+            5782091.0,
+            1135.8
+          ],
+          [
+            615049.0,
+            5782140.0,
+            1135.7
+          ],
+          [
+            615052.0,
+            5782191.0,
+            1135.1
+          ],
+          [
+            615051.0,
+            5782240.0,
+            1132.9
+          ],
+          [
+            615049.0,
+            5782292.0,
+            1132.5
+          ],
+          [
+            615051.0,
+            5782340.0,
+            1131.3
+          ],
+          [
+            615048.0,
+            5782391.0,
+            1129.0
+          ],
+          [
+            615051.0,
+            5782439.0,
+            1127.5
+          ],
+          [
+            615049.0,
+            5782490.0,
+            1126.5
+          ],
+          [
+            615051.0,
+            5782539.0,
+            1127.0
+          ],
+          [
+            615051.0,
+            5782591.0,
+            1126.8
+          ],
+          [
+            615051.0,
+            5782636.0,
+            1127.2
+          ],
+          [
+            615050.0,
+            5782690.0,
+            1125.0
+          ],
+          [
+            615049.0,
+            5782743.0,
+            1122.7
+          ],
+          [
+            615051.0,
+            5782791.0,
+            1120.1
+          ],
+          [
+            615050.0,
+            5782839.0,
+            1119.4
+          ],
+          [
+            615049.0,
+            5782888.0,
+            1119.2
+          ],
+          [
+            615053.0,
+            5782940.0,
+            1115.9
+          ],
+          [
+            615052.0,
+            5782989.0,
+            1114.8
+          ],
+          [
+            615049.0,
+            5783039.0,
+            1112.4
+          ],
+          [
+            615050.0,
+            5783089.0,
+            1109.4
+          ],
+          [
+            615048.0,
+            5783138.0,
+            1108.5
+          ],
+          [
+            615047.0,
+            5783189.0,
+            1106.4
+          ],
+          [
+            615048.0,
+            5783239.0,
+            1103.3
+          ],
+          [
+            615049.0,
+            5783286.0,
+            1101.4
+          ],
+          [
+            615046.0,
+            5783334.0,
+            1099.4
+          ],
+          [
+            615049.0,
+            5783387.0,
+            1098.5
+          ],
+          [
+            615049.0,
+            5783437.0,
+            1097.0
+          ],
+          [
+            615051.0,
+            5783482.0,
+            1091.4
+          ],
+          [
+            615057.0,
+            5783537.0,
+            1090.2
+          ],
+          [
+            615051.0,
+            5783581.0,
+            1089.6
+          ],
+          [
+            615050.0,
+            5783635.0,
+            1087.5
+          ],
+          [
+            615044.0,
+            5783682.0,
+            1084.3
+          ],
+          [
+            615048.0,
+            5783730.0,
+            1087.9
+          ],
+          [
+            615050.0,
+            5783780.0,
+            1091.0
+          ],
+          [
+            615051.0,
+            5783832.0,
+            1093.9
+          ],
+          [
+            615048.0,
+            5783883.0,
+            1094.9
+          ],
+          [
+            615048.0,
+            5783929.0,
+            1099.5
+          ],
+          [
+            615048.0,
+            5783977.0,
+            1098.5
+          ],
+          [
+            615049.0,
+            5784030.0,
+            1101.0
+          ],
+          [
+            615051.0,
+            5784075.0,
+            1114.2
+          ],
+          [
+            615052.0,
+            5784124.0,
+            1121.7
+          ],
+          [
+            615051.0,
+            5784174.0,
+            1111.1
+          ],
+          [
+            615050.0,
+            5784224.0,
+            1106.8
+          ],
+          [
+            615047.0,
+            5784268.0,
+            1097.6
+          ],
+          [
+            615050.0,
+            5784372.0,
+            1087.9
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "three-firs-8575e",
+        "displayName": "Three Firs IP line 8575E",
+        "target": "Three Firs",
+        "lineName": "8575E",
+        "stationCount": 28,
+        "stationMin": 750.0,
+        "stationMax": 2150.0,
+        "source": "data/source/Geophysical_Data/ARIS 42648 (2024 work program)/42648Z/Digital Data/Digital Data/Geophysical Data/Scott Geophysics IP/Appendix C - IP Survey Data/3Firs/DataFiles/3Firs_GPS.txt",
+        "sourceOrigin": "Scott Geophysics / Vizsla Copper / ARIS 42648",
+        "sourceDate": "2025-01-31",
+        "classification": "observation",
+        "stations": [
+          {
+            "waypointId": "8575E 750N",
+            "station": 750.0,
+            "easting": 608587.0,
+            "northing": 5786735.0,
+            "elevation": 1002.9
+          },
+          {
+            "waypointId": "8575E 800N",
+            "station": 800.0,
+            "easting": 608561.0,
+            "northing": 5786781.0,
+            "elevation": 1000.2
+          },
+          {
+            "waypointId": "8575E 850N",
+            "station": 850.0,
+            "easting": 608543.0,
+            "northing": 5786820.0,
+            "elevation": 999.0
+          },
+          {
+            "waypointId": "8575E 900N",
+            "station": 900.0,
+            "easting": 608513.0,
+            "northing": 5786866.0,
+            "elevation": 995.3
+          },
+          {
+            "waypointId": "8575E 950N",
+            "station": 950.0,
+            "easting": 608488.0,
+            "northing": 5786904.0,
+            "elevation": 993.9
+          },
+          {
+            "waypointId": "8575E 1000N",
+            "station": 1000.0,
+            "easting": 608464.0,
+            "northing": 5786950.0,
+            "elevation": 993.0
+          },
+          {
+            "waypointId": "8575E 1050N",
+            "station": 1050.0,
+            "easting": 608438.0,
+            "northing": 5786990.0,
+            "elevation": 992.2
+          },
+          {
+            "waypointId": "8575E 1100N",
+            "station": 1100.0,
+            "easting": 608417.0,
+            "northing": 5787034.0,
+            "elevation": 993.5
+          },
+          {
+            "waypointId": "8575E 1150N",
+            "station": 1150.0,
+            "easting": 608393.0,
+            "northing": 5787078.0,
+            "elevation": 992.6
+          },
+          {
+            "waypointId": "8575E 1200N",
+            "station": 1200.0,
+            "easting": 608362.0,
+            "northing": 5787118.0,
+            "elevation": 993.4
+          },
+          {
+            "waypointId": "8575E 1250N",
+            "station": 1250.0,
+            "easting": 608337.0,
+            "northing": 5787160.0,
+            "elevation": 992.3
+          },
+          {
+            "waypointId": "8575E 1300N",
+            "station": 1300.0,
+            "easting": 608315.0,
+            "northing": 5787201.0,
+            "elevation": 993.2
+          },
+          {
+            "waypointId": "8575E 1350N",
+            "station": 1350.0,
+            "easting": 608291.0,
+            "northing": 5787245.0,
+            "elevation": 992.4
+          },
+          {
+            "waypointId": "8575E 1400N",
+            "station": 1400.0,
+            "easting": 608266.0,
+            "northing": 5787288.0,
+            "elevation": 990.1
+          },
+          {
+            "waypointId": "8575E 1450N",
+            "station": 1450.0,
+            "easting": 608246.0,
+            "northing": 5787333.0,
+            "elevation": 992.6
+          },
+          {
+            "waypointId": "8575E 1500N",
+            "station": 1500.0,
+            "easting": 608219.0,
+            "northing": 5787371.0,
+            "elevation": 991.6
+          },
+          {
+            "waypointId": "8575E 1550N",
+            "station": 1550.0,
+            "easting": 608195.0,
+            "northing": 5787417.0,
+            "elevation": 989.8
+          },
+          {
+            "waypointId": "8575E 1600N",
+            "station": 1600.0,
+            "easting": 608170.0,
+            "northing": 5787457.0,
+            "elevation": 992.2
+          },
+          {
+            "waypointId": "8575E 1650N",
+            "station": 1650.0,
+            "easting": 608144.0,
+            "northing": 5787503.0,
+            "elevation": 991.1
+          },
+          {
+            "waypointId": "8575E 1700N",
+            "station": 1700.0,
+            "easting": 608117.0,
+            "northing": 5787545.0,
+            "elevation": 990.6
+          },
+          {
+            "waypointId": "8575E 1750N",
+            "station": 1750.0,
+            "easting": 608092.0,
+            "northing": 5787589.0,
+            "elevation": 991.3
+          },
+          {
+            "waypointId": "8575E 1800N",
+            "station": 1800.0,
+            "easting": 608071.0,
+            "northing": 5787633.0,
+            "elevation": 988.8
+          },
+          {
+            "waypointId": "8575E 1850N",
+            "station": 1850.0,
+            "easting": 608046.0,
+            "northing": 5787671.0,
+            "elevation": 991.2
+          },
+          {
+            "waypointId": "8575E 1900N",
+            "station": 1900.0,
+            "easting": 608018.0,
+            "northing": 5787719.0,
+            "elevation": 993.4
+          },
+          {
+            "waypointId": "8575E 1950N",
+            "station": 1950.0,
+            "easting": 607997.0,
+            "northing": 5787761.0,
+            "elevation": 995.7
+          },
+          {
+            "waypointId": "8575E 2000N",
+            "station": 2000.0,
+            "easting": 607970.0,
+            "northing": 5787803.0,
+            "elevation": 995.7
+          },
+          {
+            "waypointId": "8575E 2050N",
+            "station": 2050.0,
+            "easting": 607950.0,
+            "northing": 5787845.0,
+            "elevation": 996.5
+          },
+          {
+            "waypointId": "8575E 2150N",
+            "station": 2150.0,
+            "easting": 607895.0,
+            "northing": 5787928.0,
+            "elevation": 992.1
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            608587.0,
+            5786735.0,
+            1002.9
+          ],
+          [
+            608561.0,
+            5786781.0,
+            1000.2
+          ],
+          [
+            608543.0,
+            5786820.0,
+            999.0
+          ],
+          [
+            608513.0,
+            5786866.0,
+            995.3
+          ],
+          [
+            608488.0,
+            5786904.0,
+            993.9
+          ],
+          [
+            608464.0,
+            5786950.0,
+            993.0
+          ],
+          [
+            608438.0,
+            5786990.0,
+            992.2
+          ],
+          [
+            608417.0,
+            5787034.0,
+            993.5
+          ],
+          [
+            608393.0,
+            5787078.0,
+            992.6
+          ],
+          [
+            608362.0,
+            5787118.0,
+            993.4
+          ],
+          [
+            608337.0,
+            5787160.0,
+            992.3
+          ],
+          [
+            608315.0,
+            5787201.0,
+            993.2
+          ],
+          [
+            608291.0,
+            5787245.0,
+            992.4
+          ],
+          [
+            608266.0,
+            5787288.0,
+            990.1
+          ],
+          [
+            608246.0,
+            5787333.0,
+            992.6
+          ],
+          [
+            608219.0,
+            5787371.0,
+            991.6
+          ],
+          [
+            608195.0,
+            5787417.0,
+            989.8
+          ],
+          [
+            608170.0,
+            5787457.0,
+            992.2
+          ],
+          [
+            608144.0,
+            5787503.0,
+            991.1
+          ],
+          [
+            608117.0,
+            5787545.0,
+            990.6
+          ],
+          [
+            608092.0,
+            5787589.0,
+            991.3
+          ],
+          [
+            608071.0,
+            5787633.0,
+            988.8
+          ],
+          [
+            608046.0,
+            5787671.0,
+            991.2
+          ],
+          [
+            608018.0,
+            5787719.0,
+            993.4
+          ],
+          [
+            607997.0,
+            5787761.0,
+            995.7
+          ],
+          [
+            607970.0,
+            5787803.0,
+            995.7
+          ],
+          [
+            607950.0,
+            5787845.0,
+            996.5
+          ],
+          [
+            607895.0,
+            5787928.0,
+            992.1
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "three-firs-8650e",
+        "displayName": "Three Firs IP line 8650E",
+        "target": "Three Firs",
+        "lineName": "8650E",
+        "stationCount": 28,
+        "stationMin": 750.0,
+        "stationMax": 2150.0,
+        "source": "data/source/Geophysical_Data/ARIS 42648 (2024 work program)/42648Z/Digital Data/Digital Data/Geophysical Data/Scott Geophysics IP/Appendix C - IP Survey Data/3Firs/DataFiles/3Firs_GPS.txt",
+        "sourceOrigin": "Scott Geophysics / Vizsla Copper / ARIS 42648",
+        "sourceDate": "2025-01-31",
+        "classification": "observation",
+        "stations": [
+          {
+            "waypointId": "8650E 750N",
+            "station": 750.0,
+            "easting": 608694.0,
+            "northing": 5786750.0,
+            "elevation": 1007.4
+          },
+          {
+            "waypointId": "8650E 800N",
+            "station": 800.0,
+            "easting": 608670.0,
+            "northing": 5786795.0,
+            "elevation": 1002.2
+          },
+          {
+            "waypointId": "8650E 850N",
+            "station": 850.0,
+            "easting": 608644.0,
+            "northing": 5786833.0,
+            "elevation": 999.3
+          },
+          {
+            "waypointId": "8650E 900N",
+            "station": 900.0,
+            "easting": 608622.0,
+            "northing": 5786878.0,
+            "elevation": 997.6
+          },
+          {
+            "waypointId": "8650E 950N",
+            "station": 950.0,
+            "easting": 608598.0,
+            "northing": 5786918.0,
+            "elevation": 996.3
+          },
+          {
+            "waypointId": "8650E 1000N",
+            "station": 1000.0,
+            "easting": 608574.0,
+            "northing": 5786960.0,
+            "elevation": 992.2
+          },
+          {
+            "waypointId": "8650E 1050N",
+            "station": 1050.0,
+            "easting": 608550.0,
+            "northing": 5787001.0,
+            "elevation": 992.9
+          },
+          {
+            "waypointId": "8650E 1100N",
+            "station": 1100.0,
+            "easting": 608526.0,
+            "northing": 5787045.0,
+            "elevation": 991.9
+          },
+          {
+            "waypointId": "8650E 1150N",
+            "station": 1150.0,
+            "easting": 608502.0,
+            "northing": 5787088.0,
+            "elevation": 992.7
+          },
+          {
+            "waypointId": "8650E 1200N",
+            "station": 1200.0,
+            "easting": 608475.0,
+            "northing": 5787129.0,
+            "elevation": 992.3
+          },
+          {
+            "waypointId": "8650E 1250N",
+            "station": 1250.0,
+            "easting": 608453.0,
+            "northing": 5787171.0,
+            "elevation": 990.3
+          },
+          {
+            "waypointId": "8650E 1300N",
+            "station": 1300.0,
+            "easting": 608427.0,
+            "northing": 5787211.0,
+            "elevation": 988.5
+          },
+          {
+            "waypointId": "8650E 1350N",
+            "station": 1350.0,
+            "easting": 608405.0,
+            "northing": 5787253.0,
+            "elevation": 989.6
+          },
+          {
+            "waypointId": "8650E 1400N",
+            "station": 1400.0,
+            "easting": 608377.0,
+            "northing": 5787293.0,
+            "elevation": 988.7
+          },
+          {
+            "waypointId": "8650E 1450N",
+            "station": 1450.0,
+            "easting": 608355.0,
+            "northing": 5787336.0,
+            "elevation": 989.3
+          },
+          {
+            "waypointId": "8650E 1500N",
+            "station": 1500.0,
+            "easting": 608333.0,
+            "northing": 5787384.0,
+            "elevation": 988.9
+          },
+          {
+            "waypointId": "8650E 1550N",
+            "station": 1550.0,
+            "easting": 608310.0,
+            "northing": 5787426.0,
+            "elevation": 990.1
+          },
+          {
+            "waypointId": "8650E 1600N",
+            "station": 1600.0,
+            "easting": 608281.0,
+            "northing": 5787463.0,
+            "elevation": 990.4
+          },
+          {
+            "waypointId": "8650E 1650N",
+            "station": 1650.0,
+            "easting": 608262.0,
+            "northing": 5787509.0,
+            "elevation": 992.1
+          },
+          {
+            "waypointId": "8650E 1700N",
+            "station": 1700.0,
+            "easting": 608232.0,
+            "northing": 5787552.0,
+            "elevation": 992.0
+          },
+          {
+            "waypointId": "8650E 1750N",
+            "station": 1750.0,
+            "easting": 608208.0,
+            "northing": 5787594.0,
+            "elevation": 993.7
+          },
+          {
+            "waypointId": "8650E 1800N",
+            "station": 1800.0,
+            "easting": 608181.0,
+            "northing": 5787631.0,
+            "elevation": 993.5
+          },
+          {
+            "waypointId": "8650E 1850N",
+            "station": 1850.0,
+            "easting": 608161.0,
+            "northing": 5787677.0,
+            "elevation": 991.8
+          },
+          {
+            "waypointId": "8650E 1900N",
+            "station": 1900.0,
+            "easting": 608134.0,
+            "northing": 5787725.0,
+            "elevation": 992.5
+          },
+          {
+            "waypointId": "8650E 1950N",
+            "station": 1950.0,
+            "easting": 608106.0,
+            "northing": 5787767.0,
+            "elevation": 994.1
+          },
+          {
+            "waypointId": "8650E 2000N",
+            "station": 2000.0,
+            "easting": 608085.0,
+            "northing": 5787809.0,
+            "elevation": 993.8
+          },
+          {
+            "waypointId": "8650E 2050N",
+            "station": 2050.0,
+            "easting": 608061.0,
+            "northing": 5787847.0,
+            "elevation": 994.6
+          },
+          {
+            "waypointId": "8650E 2150N",
+            "station": 2150.0,
+            "easting": 608009.0,
+            "northing": 5787941.0,
+            "elevation": 991.4
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            608694.0,
+            5786750.0,
+            1007.4
+          ],
+          [
+            608670.0,
+            5786795.0,
+            1002.2
+          ],
+          [
+            608644.0,
+            5786833.0,
+            999.3
+          ],
+          [
+            608622.0,
+            5786878.0,
+            997.6
+          ],
+          [
+            608598.0,
+            5786918.0,
+            996.3
+          ],
+          [
+            608574.0,
+            5786960.0,
+            992.2
+          ],
+          [
+            608550.0,
+            5787001.0,
+            992.9
+          ],
+          [
+            608526.0,
+            5787045.0,
+            991.9
+          ],
+          [
+            608502.0,
+            5787088.0,
+            992.7
+          ],
+          [
+            608475.0,
+            5787129.0,
+            992.3
+          ],
+          [
+            608453.0,
+            5787171.0,
+            990.3
+          ],
+          [
+            608427.0,
+            5787211.0,
+            988.5
+          ],
+          [
+            608405.0,
+            5787253.0,
+            989.6
+          ],
+          [
+            608377.0,
+            5787293.0,
+            988.7
+          ],
+          [
+            608355.0,
+            5787336.0,
+            989.3
+          ],
+          [
+            608333.0,
+            5787384.0,
+            988.9
+          ],
+          [
+            608310.0,
+            5787426.0,
+            990.1
+          ],
+          [
+            608281.0,
+            5787463.0,
+            990.4
+          ],
+          [
+            608262.0,
+            5787509.0,
+            992.1
+          ],
+          [
+            608232.0,
+            5787552.0,
+            992.0
+          ],
+          [
+            608208.0,
+            5787594.0,
+            993.7
+          ],
+          [
+            608181.0,
+            5787631.0,
+            993.5
+          ],
+          [
+            608161.0,
+            5787677.0,
+            991.8
+          ],
+          [
+            608134.0,
+            5787725.0,
+            992.5
+          ],
+          [
+            608106.0,
+            5787767.0,
+            994.1
+          ],
+          [
+            608085.0,
+            5787809.0,
+            993.8
+          ],
+          [
+            608061.0,
+            5787847.0,
+            994.6
+          ],
+          [
+            608009.0,
+            5787941.0,
+            991.4
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "three-firs-9000e",
+        "displayName": "Three Firs IP line 9000E",
+        "target": "Three Firs",
+        "lineName": "9000E",
+        "stationCount": 26,
+        "stationMin": 800.0,
+        "stationMax": 2100.0,
+        "source": "data/source/Geophysical_Data/ARIS 42648 (2024 work program)/42648Z/Digital Data/Digital Data/Geophysical Data/Scott Geophysics IP/Appendix C - IP Survey Data/3Firs/DataFiles/3Firs_GPS.txt",
+        "sourceOrigin": "Scott Geophysics / Vizsla Copper / ARIS 42648",
+        "sourceDate": "2025-01-31",
+        "classification": "observation",
+        "stations": [
+          {
+            "waypointId": "9000E 800N",
+            "station": 800.0,
+            "easting": 609009.0,
+            "northing": 5786789.0,
+            "elevation": 1003.6
+          },
+          {
+            "waypointId": "9000E 850N",
+            "station": 850.0,
+            "easting": 608985.0,
+            "northing": 5786834.0,
+            "elevation": 1003.9
+          },
+          {
+            "waypointId": "9000E 900N",
+            "station": 900.0,
+            "easting": 608959.0,
+            "northing": 5786874.0,
+            "elevation": 1001.7
+          },
+          {
+            "waypointId": "9000E 950N",
+            "station": 950.0,
+            "easting": 608934.0,
+            "northing": 5786914.0,
+            "elevation": 999.1
+          },
+          {
+            "waypointId": "9000E 1000N",
+            "station": 1000.0,
+            "easting": 608910.0,
+            "northing": 5786958.0,
+            "elevation": 998.0
+          },
+          {
+            "waypointId": "9000E 1050N",
+            "station": 1050.0,
+            "easting": 608881.0,
+            "northing": 5786997.0,
+            "elevation": 992.6
+          },
+          {
+            "waypointId": "9000E 1100N",
+            "station": 1100.0,
+            "easting": 608866.0,
+            "northing": 5787046.0,
+            "elevation": 991.6
+          },
+          {
+            "waypointId": "9000E 1150N",
+            "station": 1150.0,
+            "easting": 608836.0,
+            "northing": 5787081.0,
+            "elevation": 990.1
+          },
+          {
+            "waypointId": "9000E 1200N",
+            "station": 1200.0,
+            "easting": 608815.0,
+            "northing": 5787125.0,
+            "elevation": 989.3
+          },
+          {
+            "waypointId": "9000E 1250N",
+            "station": 1250.0,
+            "easting": 608789.0,
+            "northing": 5787169.0,
+            "elevation": 987.4
+          },
+          {
+            "waypointId": "9000E 1300N",
+            "station": 1300.0,
+            "easting": 608764.0,
+            "northing": 5787212.0,
+            "elevation": 986.8
+          },
+          {
+            "waypointId": "9000E 1350N",
+            "station": 1350.0,
+            "easting": 608739.0,
+            "northing": 5787250.0,
+            "elevation": 986.5
+          },
+          {
+            "waypointId": "9000E 1400N",
+            "station": 1400.0,
+            "easting": 608712.0,
+            "northing": 5787296.0,
+            "elevation": 985.6
+          },
+          {
+            "waypointId": "9000E 1450N",
+            "station": 1450.0,
+            "easting": 608688.0,
+            "northing": 5787335.0,
+            "elevation": 986.0
+          },
+          {
+            "waypointId": "9000E 1500N",
+            "station": 1500.0,
+            "easting": 608663.0,
+            "northing": 5787375.0,
+            "elevation": 986.6
+          },
+          {
+            "waypointId": "9000E 1550N",
+            "station": 1550.0,
+            "easting": 608641.0,
+            "northing": 5787422.0,
+            "elevation": 985.7
+          },
+          {
+            "waypointId": "9000E 1600N",
+            "station": 1600.0,
+            "easting": 608614.0,
+            "northing": 5787466.0,
+            "elevation": 985.7
+          },
+          {
+            "waypointId": "9000E 1650N",
+            "station": 1650.0,
+            "easting": 608590.0,
+            "northing": 5787513.0,
+            "elevation": 986.8
+          },
+          {
+            "waypointId": "9000E 1700N",
+            "station": 1700.0,
+            "easting": 608566.0,
+            "northing": 5787552.0,
+            "elevation": 986.9
+          },
+          {
+            "waypointId": "9000E 1750N",
+            "station": 1750.0,
+            "easting": 608538.0,
+            "northing": 5787596.0,
+            "elevation": 983.3
+          },
+          {
+            "waypointId": "9000E 1800N",
+            "station": 1800.0,
+            "easting": 608517.0,
+            "northing": 5787638.0,
+            "elevation": 984.1
+          },
+          {
+            "waypointId": "9000E 1850N",
+            "station": 1850.0,
+            "easting": 608489.0,
+            "northing": 5787678.0,
+            "elevation": 983.6
+          },
+          {
+            "waypointId": "9000E 1900N",
+            "station": 1900.0,
+            "easting": 608465.0,
+            "northing": 5787720.0,
+            "elevation": 983.3
+          },
+          {
+            "waypointId": "9000E 1950N",
+            "station": 1950.0,
+            "easting": 608436.0,
+            "northing": 5787767.0,
+            "elevation": 983.1
+          },
+          {
+            "waypointId": "9000E 2000N",
+            "station": 2000.0,
+            "easting": 608412.0,
+            "northing": 5787812.0,
+            "elevation": 982.6
+          },
+          {
+            "waypointId": "9000E 2100N",
+            "station": 2100.0,
+            "easting": 608367.0,
+            "northing": 5787894.0,
+            "elevation": 983.0
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            609009.0,
+            5786789.0,
+            1003.6
+          ],
+          [
+            608985.0,
+            5786834.0,
+            1003.9
+          ],
+          [
+            608959.0,
+            5786874.0,
+            1001.7
+          ],
+          [
+            608934.0,
+            5786914.0,
+            999.1
+          ],
+          [
+            608910.0,
+            5786958.0,
+            998.0
+          ],
+          [
+            608881.0,
+            5786997.0,
+            992.6
+          ],
+          [
+            608866.0,
+            5787046.0,
+            991.6
+          ],
+          [
+            608836.0,
+            5787081.0,
+            990.1
+          ],
+          [
+            608815.0,
+            5787125.0,
+            989.3
+          ],
+          [
+            608789.0,
+            5787169.0,
+            987.4
+          ],
+          [
+            608764.0,
+            5787212.0,
+            986.8
+          ],
+          [
+            608739.0,
+            5787250.0,
+            986.5
+          ],
+          [
+            608712.0,
+            5787296.0,
+            985.6
+          ],
+          [
+            608688.0,
+            5787335.0,
+            986.0
+          ],
+          [
+            608663.0,
+            5787375.0,
+            986.6
+          ],
+          [
+            608641.0,
+            5787422.0,
+            985.7
+          ],
+          [
+            608614.0,
+            5787466.0,
+            985.7
+          ],
+          [
+            608590.0,
+            5787513.0,
+            986.8
+          ],
+          [
+            608566.0,
+            5787552.0,
+            986.9
+          ],
+          [
+            608538.0,
+            5787596.0,
+            983.3
+          ],
+          [
+            608517.0,
+            5787638.0,
+            984.1
+          ],
+          [
+            608489.0,
+            5787678.0,
+            983.6
+          ],
+          [
+            608465.0,
+            5787720.0,
+            983.3
+          ],
+          [
+            608436.0,
+            5787767.0,
+            983.1
+          ],
+          [
+            608412.0,
+            5787812.0,
+            982.6
+          ],
+          [
+            608367.0,
+            5787894.0,
+            983.0
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,380 @@
+{
+  "id": "woodjam-2026-investor",
+  "name": "Woodjam Project — Investor Story",
+  "client": "Vizsla Copper Corp.",
+  "description": "District-targeting story for the Woodjam copper-gold project, central BC.",
+  "version": "0.1.0",
+  "status": "draft",
+  "audience": "investor",
+  "geoseeVersion": "alpha-0.1",
+  "crs": {
+    "code": "EPSG:26910",
+    "label": "NAD83 / UTM zone 10N"
+  },
+  "bounds": {
+    "min": [
+      592000,
+      5770000,
+      400
+    ],
+    "max": [
+      632000,
+      5810000,
+      1800
+    ]
+  },
+  "sceneOrigin": [
+    612000,
+    5790000,
+    1000
+  ],
+  "layers": [
+    {
+      "id": "terrain",
+      "label": "Topography (MRDEM 30m)",
+      "type": "geotiff",
+      "files": {
+        "raster": "data/terrain_woodjam.tif"
+      },
+      "metadata": {
+        "sourceFile": "MRDEM-30 DTM (NRCan CanElevation Series)",
+        "sourceDate": "2024-01-01",
+        "sourceOrigin": "Natural Resources Canada",
+        "classification": "observation",
+        "confidentiality": "public"
+      }
+    },
+    {
+      "id": "drillholes-2023",
+      "label": "2023 Drilling",
+      "type": "drillhole",
+      "files": {
+        "geojson": "data/drills.geojson"
+      },
+      "metadata": {
+        "sourceFile": "drills.geojson (pre-baked min-curvature traces)",
+        "sourceDate": "2024-08-01",
+        "sourceOrigin": "Vizsla Copper / ARIS public assessment",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "19 holes, ~7500 m, reprojected from EPSG:4326 to EPSG:26910"
+      }
+    },
+    {
+      "id": "drillholes-2024-tf",
+      "label": "2024 Three Firs Collars",
+      "type": "drillhole",
+      "files": {
+        "geojson": "data/drillholes_2024_tf.geojson"
+      },
+      "metadata": {
+        "sourceFile": "Vizsla Copper press release 2024-11-27, Table 2",
+        "sourceDate": "2024-11-27",
+        "sourceOrigin": "Vizsla Copper public release",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "Collar coords only; no downhole survey available"
+      }
+    },
+    {
+      "id": "assay-samples",
+      "label": "Assay Samples",
+      "type": "drillhole",
+      "files": {
+        "geojson": "data/drills.geojson"
+      },
+      "metadata": {
+        "sourceFile": "drillhole_assays.json paired with 2023 drilling traces",
+        "sourceDate": "2024-08-01",
+        "sourceOrigin": "Vizsla Copper / ARIS public assessment",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "Cu assay interval sleeves and caps split into their own visibility layer while sharing the 2023 drillhole trace geometry."
+      }
+    },
+    {
+      "id": "geochem-soils-2024",
+      "label": "2024 GP Soil Geochemistry",
+      "type": "geojson",
+      "files": {
+        "geojson": "data/geochem_soils_2024.geojson"
+      },
+      "metadata": {
+        "sourceFile": "ARIS 42648, Digital Data/Geochemical Data/GP Soil Data/csv file/2024 Soil Samples.csv",
+        "sourceDate": "2025-01-31",
+        "sourceOrigin": "Vizsla Copper / ARIS public assessment",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "GP soil samples rendered as terrain-draped graduated symbols. Default display uses Cu ppm percentile classes; switch element in Customer Data > Geochemical Data > Appearance."
+      }
+    },
+    {
+      "id": "ip-survey-lines-2024",
+      "label": "2024 IP Survey Lines",
+      "type": "line",
+      "files": {
+        "geojson": "data/ip_survey_lines_2024.geojson"
+      },
+      "metadata": {
+        "sourceFile": "ARIS 42648, Digital Data/Geophysical Data/Scott Geophysics IP/Appendix C - IP Survey Data/*/DataFiles/*GPS.txt",
+        "sourceDate": "2025-01-31",
+        "sourceOrigin": "Vizsla Copper / Scott Geophysics / ARIS public assessment",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "Surveyed Great Plains and Three Firs IP station lines parsed from GPS waypoint files. This is acquisition geometry; chargeability and resistivity pseudo-section curtains should be built from the matching .dat/.ipg files."
+      }
+    },
+    {
+      "id": "hyperspectral-coverage-2024",
+      "label": "2024 Hyperspectral Coverage",
+      "type": "drillhole",
+      "files": {
+        "geojson": "data/hyperspectral_coverage_2024.geojson"
+      },
+      "metadata": {
+        "sourceFile": "ARIS 42648, Digital Data/Hyperspectral/20241027_Vizsla-Copper_Three Firs_geoLOGr.pdf and raw spectral CSV archives",
+        "sourceDate": "2025-01-31",
+        "sourceOrigin": "Vizsla Copper / Hyperspectral Intelligence Inc. / ARIS public assessment",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "Three Firs geoLOGr SWIR scan coverage shown as downhole sleeves for TF24-123, TF24-124, and TF24-126. This is coverage geometry only; raw spectra classification/mineral interpretation should be added as a later derived layer."
+      }
+    },
+    {
+      "id": "imagery-lidar-aoi-2024",
+      "label": "2024 LiDAR Acquisition Footprint",
+      "type": "polygon",
+      "files": {
+        "geojson": "data/imagery_lidar_aoi_2024.geojson"
+      },
+      "metadata": {
+        "sourceFile": "ARIS 42648, Digital Data/Imagery Data/Eagle Mapping LiDAR/Viszla Copper - Williams Lake South Report.pdf and Appendix I raw data note",
+        "sourceDate": "2025-01-31",
+        "sourceOrigin": "Vizsla Copper / Eagle Mapping Ltd. / ARIS public assessment",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "The ARIS folder contains the LiDAR report, and Appendix I says raw LiDAR was delivered separately on an external hard drive. The report lists Imagery as none, so this layer is an approximate reported 400 sq. km acquisition footprint guide, not loaded imagery or point-cloud data."
+      }
+    },
+    {
+      "id": "area-outlines",
+      "label": "Area Outlines",
+      "type": "annotation",
+      "files": {},
+      "metadata": {
+        "sourceFile": "Authored in GeoSee editor",
+        "sourceDate": "2026-05-07",
+        "sourceOrigin": "GeoSee project annotation",
+        "classification": "interpretation",
+        "confidentiality": "private",
+        "notes": "Editable ground-parallel ellipse outlines used to rough in target, anomaly, and interpretation boundaries."
+      }
+    },
+    {
+      "id": "ez-gamma-2024",
+      "label": "2024 EZ Gamma surveys",
+      "type": "geojson",
+      "files": {
+        "geojson": "data/ez_gamma_2024.geojson"
+      },
+      "metadata": {
+        "sourceFile": "ARIS 42648, Table 17 and 42648Z/Digital Data/Digital Data/EZ Gamma",
+        "sourceDate": "2025-01-31",
+        "sourceOrigin": "Vizsla Copper / ARIS public assessment",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "Eleven historical Southeast drillholes surveyed October 18-20, 2024 with Reflex EZ-Gamma for natural gamma radiation over upper hole intervals to refine overburden-bedrock contact interpretation. Gamma curves are visual digitizations from the supplied Survey-IQ JPEG strip logs; original JPEGs are retained in data/ez_gamma_images."
+      }
+    },
+    {
+      "id": "three-firs-target",
+      "label": "Three Firs target (draft placeholder)",
+      "type": "geojson",
+      "files": {},
+      "metadata": {
+        "sourceFile": "Inline stub geometry; replace with digitized polygon from Vizsla 40K profile PDFs",
+        "sourceDate": "2026-04-30",
+        "sourceOrigin": "GeoSee internal placeholder",
+        "classification": "interpretation",
+        "confidentiality": "public",
+        "notes": "Stub ellipse anchoring chapter 4 narrative; digitize from Vizsla press release / IP map sheets when available."
+      }
+    },
+    {
+      "id": "great-plains-target",
+      "label": "Great Plains target (draft placeholder)",
+      "type": "geojson",
+      "files": {},
+      "metadata": {
+        "sourceFile": "Inline stub geometry; replace with digitized polygon from Vizsla 40K profile PDFs",
+        "sourceDate": "2026-04-30",
+        "sourceOrigin": "GeoSee internal placeholder",
+        "classification": "interpretation",
+        "confidentiality": "public",
+        "notes": "Stub ellipse approximating ~2km × 2km broad chargeability anomaly south of Southeast resource."
+      }
+    },
+    {
+      "id": "megaton-dcip-anomaly",
+      "label": "Megaton DCIP anomaly (figure-derived draft)",
+      "type": "polygon",
+      "files": {},
+      "metadata": {
+        "sourceFile": "Inline draft geometry interpreted from Vizsla Copper figures 2 and 3",
+        "sourceDate": "2026-05-02",
+        "sourceOrigin": "GeoSee internal placeholder from public Vizsla figures",
+        "classification": "interpretation",
+        "confidentiality": "public",
+        "notes": "Draft terrain-draped ellipse for the Megaton IP/DCIP chargeability anomaly. Replace with digitized chargeability polygon/grid when available."
+      }
+    },
+    {
+      "id": "hydrography-lakes",
+      "label": "Lakes",
+      "type": "polygon",
+      "files": {
+        "geojson": "data/hydrography_lakes.geojson"
+      },
+      "metadata": {
+        "sourceFile": "BC Freshwater Atlas Lakes (WHSE_BASEMAPPING.FWA_LAKES_POLY)",
+        "sourceDate": "2026-04-30",
+        "sourceOrigin": "DataBC public WFS",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "1024 lake polygons within the 40x40 km AOI"
+      }
+    },
+    {
+      "id": "bedrock-geology",
+      "label": "Bedrock geology",
+      "type": "polygon",
+      "files": {
+        "geojson": "data/bedrock_geology.geojson"
+      },
+      "metadata": {
+        "sourceFile": "BC Geological Survey provincial bedrock (BC_bedrock_ll83.shp)",
+        "sourceDate": "2026-05-01",
+        "sourceOrigin": "BCGS Open File 2018-7",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "Clipped to project bounds; 65 polygons across 27 distinct strat units; BCGS canonical colour palette"
+      }
+    },
+    {
+      "id": "claim-boundary",
+      "label": "Property boundary",
+      "type": "line",
+      "files": {
+        "geojson": "data/claim_boundary.geojson"
+      },
+      "metadata": {
+        "sourceFile": "BC mineral tenures (WHSE_MINERAL_TENURE.MTA_ACQUIRED_TENURE_SVW)",
+        "sourceDate": "2026-04-30",
+        "sourceOrigin": "DataBC public WFS",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "Active tenures owned by Vizsla Copper Corp (owner #284856), dissolved into one consolidated boundary"
+      }
+    },
+    {
+      "id": "transport-roads",
+      "label": "Road access",
+      "type": "line",
+      "files": {
+        "geojson": "data/roads.geojson"
+      },
+      "metadata": {
+        "sourceFile": "BC Digital Road Atlas (WHSE_BASEMAPPING.DRA_DGTL_ROAD_ATLAS_MPAR_SP)",
+        "sourceDate": "2026-05-01",
+        "sourceOrigin": "DataBC public WFS",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "7479 road centerline features clipped to the Woodjam 40x40 km AOI for access context."
+      }
+    },
+    {
+      "id": "power-lines",
+      "label": "Power lines",
+      "type": "line",
+      "files": {
+        "geojson": "data/power_lines.geojson"
+      },
+      "metadata": {
+        "sourceFile": "BC Transmission Lines (WHSE_BASEMAPPING.GBA_TRANSMISSION_LINES_SP)",
+        "sourceDate": "2026-05-02",
+        "sourceOrigin": "DataBC public WFS",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "15 transmission-line features clipped to the Woodjam 40x40 km AOI for access context. Voltage is not published in the public dataset."
+      }
+    },
+    {
+      "id": "property-neighbors",
+      "label": "Property neighbors",
+      "type": "geojson",
+      "files": {
+        "geojson": "data/property_neighbors.geojson"
+      },
+      "metadata": {
+        "sourceFile": "OpenStreetMap coordinates via Mapcarta",
+        "sourceDate": "2026-05-02",
+        "sourceOrigin": "OpenStreetMap / Mapcarta",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "Context markers for Mount Polley Mine and Gibraltar Mine. Coordinates are outside the 40x40 km Woodjam terrain tile but are kept at real map positions for regional context."
+      }
+    },
+    {
+      "id": "trees-vri",
+      "label": "VRI forest cover proxy",
+      "disabled": false,
+      "type": "geojson",
+      "files": {
+        "geojson": "data/trees_vri.geojson"
+      },
+      "metadata": {
+        "sourceFile": "VRI Forest Vegetation Composite Polygons and Rank 1 Layer (WHSE_FOREST_VEGETATION.VEG_COMP_LYR_R1_POLY)",
+        "sourceDate": "2026-05-02",
+        "sourceOrigin": "DataBC public ArcGIS Feature Layer",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "VRI Rank 1 forest-cover polygons clipped to the Woodjam 40x40 km AOI, dissolved into one terrain-painted green forest-cover body, not individual tree locations."
+      }
+    },
+    {
+      "id": "hydrography-streams",
+      "label": "Streams & rivers",
+      "type": "line",
+      "files": {
+        "geojson": "data/hydrography_streams.geojson"
+      },
+      "metadata": {
+        "sourceFile": "BC Freshwater Atlas Stream Network (WHSE_BASEMAPPING.FWA_STREAM_NETWORKS_SP)",
+        "sourceDate": "2026-04-30",
+        "sourceOrigin": "DataBC public WFS",
+        "classification": "observation",
+        "confidentiality": "public",
+        "notes": "9410 stream features within the 40x40 km AOI"
+      }
+    }
+  ],
+  "pageOrder": [
+    "01_overview",
+    "02_southeast_cluster",
+    "03_three_firs_collars",
+    "04_untitled"
+  ],
+  "watermark": "Not for engineering use",
+  "created": "2026-04-29T00:00:00Z",
+  "modified": "2026-05-01T16:55:21.173Z",
+  "presentationDefaults": {
+    "transitionDuration": 3000,
+    "transitionEasing": "easeInOutCubic",
+    "holdDuration": 4000,
+    "cameraUp": [
+      0,
+      0,
+      1
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "case-study-b-config",
+  "projectName": "Shahbazi Gravel Pit",
+  "projectSlug": "case-study-b",
+  "projectRoot": "projects/case-study-b",
+  "dataRoot": "projects/case-study-b/data",
+  "dataRefsRoot": "projects/case-study-b/data_refs",
+  "intakeStagingRoot": "projects/case-study-b/intake_staging",
+  "referenceShape": "woodjam",
+  "demoStatus": "folder project with placeholder data references",
+  "audienceLensDefaults": [
+    "Investor",
+    "Public",
+    "Government",
+    "Regulatory"
+  ],
+  "sourceDefaults": {
+    "confidentiality": "private",
+    "sourceStatus": "placeholder-demo",
+    "requiresReviewBeforeApply": true
+  },
+  "publicDataBounds": {
+    "crs": "EPSG:26910",
+    "bounds": [
+      609000,
+      5787000,
+      615000,
+      5792500
+    ]
+  },
+  "notes": "Phase 1 demo configuration only. It does not drive loaders yet; live GeoSee spine remains project.json, environment.json, pages, overlays, and data artifacts."
+}

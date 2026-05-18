@@ -1,0 +1,62 @@
+{
+  "type": "FeatureCollection",
+  "name": "drillholes-2024-tf",
+  "crs_note": "Coordinates in EPSG:26910 (NAD83 / UTM Zone 10N). Project convention per data-manifest.md and decision #012.",
+  "source_note": "Collar coordinates transcribed from Table 2 of Vizsla Copper press release dated 2026-04-29 (sic: actually November 27, 2024) titled 'Vizsla Copper Intersects Mineralized Breccia in Exploration Drilling Near the Three Firs Target, Woodjam Project'. URL: https://vizslacopper.com/news-releases/vizsla-copper-intersects-mineralized-breccia-in-exploration-drilling-near-the-three-firs-target-woodjam-project/",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [608470, 5787687, 977]
+      },
+      "properties": {
+        "id": "TF24-123",
+        "zone": "Three Firs",
+        "collarElevation_m": 977,
+        "totalDepth_m": 405,
+        "azimuth_planned": 221.6,
+        "dip_planned": -60.2,
+        "campaign": "2024",
+        "dataAvailable": "collar only",
+        "comments": "Mineralized clast-bearing polymictic breccia intersected 363.4–405.0 m (41.6 m at EOH); 0.06% Cu, 0.03 g/t Au. Shares collar with TF24-126."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [608448, 5787451, 979]
+      },
+      "properties": {
+        "id": "TF24-124",
+        "zone": "Three Firs",
+        "collarElevation_m": 979,
+        "totalDepth_m": null,
+        "azimuth_planned": 222.3,
+        "dip_planned": -59.8,
+        "campaign": "2024",
+        "dataAvailable": "collar only",
+        "comments": "Three Firs program hole; not discussed in detail in the Nov 27, 2024 press release body text. Total depth not transcribed."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [608470, 5787687, 977]
+      },
+      "properties": {
+        "id": "TF24-126",
+        "zone": "Three Firs",
+        "collarElevation_m": 977,
+        "totalDepth_m": 638,
+        "azimuth_planned": 200.0,
+        "dip_planned": -67.0,
+        "campaign": "2024",
+        "dataAvailable": "collar only",
+        "comments": "Two intervals of polymictic breccia: upper 499.7–527.3 m (27.6 m of 0.18% Cu, 0.13 g/t Au), lower 598.15–638.0 m (39.9 m, sericite-altered). Shares collar with TF24-123."
+      }
+    }
+  ]
+}

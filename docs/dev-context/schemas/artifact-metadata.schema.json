@@ -1,0 +1,528 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geovox.local/schemas/artifact-metadata.schema.json",
+  "title": "GeoVox Artifact Metadata Wrapper",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "artifactId",
+    "project",
+    "dataset",
+    "artifactFamily",
+    "artifactType",
+    "renderRole",
+    "loadClass",
+    "sourceType",
+    "epistemicStatus",
+    "authority",
+    "status",
+    "reviewRequired",
+    "accepted",
+    "paths",
+    "inputs",
+    "producedBy",
+    "crs",
+    "units",
+    "scalar",
+    "processing",
+    "stats",
+    "render",
+    "provenance",
+    "limitations",
+    "relatedLayers",
+    "relatedPages",
+    "review",
+    "notes"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifactId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dataset": {
+      "type": "string"
+    },
+    "artifactFamily": {
+      "type": "string",
+      "enum": [
+        "raw_source",
+        "intermediate_processing",
+        "computed_analytical",
+        "render_ready",
+        "qa_validation",
+        "presentation",
+        "provenance_status_wrapper",
+        "generated_dev_output",
+        "future_placeholder",
+        "unknown"
+      ]
+    },
+    "artifactType": {
+      "type": "string",
+      "enum": [
+        "seismic_product",
+        "mt_resistivity",
+        "scalar_volume",
+        "scalar_slice",
+        "threshold_surface",
+        "top_surface",
+        "isoline",
+        "isoband",
+        "contour",
+        "heat_map",
+        "point_cloud_tile",
+        "mesh_surface",
+        "photo_texture_overlay",
+        "station_marker",
+        "well_path",
+        "terrain",
+        "vector_context",
+        "legend_color_ramp",
+        "stats_manifest",
+        "other"
+      ]
+    },
+    "renderRole": {
+      "type": "string",
+      "enum": [
+        "default_visual",
+        "high_fidelity_client_facing",
+        "technical_credibility",
+        "qa_validation",
+        "optional_advanced",
+        "future_placeholder",
+        "unclear_needs_review"
+      ]
+    },
+    "loadClass": {
+      "type": "string",
+      "enum": [
+        "startup_critical",
+        "first_page_required",
+        "page_required",
+        "preload_near_page",
+        "toggle_on_demand",
+        "high_fidelity_client_facing",
+        "technical_credibility",
+        "qa_validation",
+        "computed_artifact_support",
+        "future_placeholder",
+        "generated_dev_output",
+        "blocked_unknown",
+        "needs_human_review"
+      ]
+    },
+    "sourceType": {
+      "type": "string",
+      "enum": [
+        "source",
+        "client",
+        "public",
+        "processed",
+        "generated",
+        "future",
+        "mixed",
+        "unknown"
+      ]
+    },
+    "epistemicStatus": {
+      "type": "string",
+      "enum": [
+        "observed",
+        "transformed",
+        "derived",
+        "approximate",
+        "inferred",
+        "proposed",
+        "accepted",
+        "rejected",
+        "superseded",
+        "unknown"
+      ]
+    },
+    "authority": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "observed",
+        "needs_review",
+        "reviewed",
+        "accepted",
+        "rejected",
+        "superseded",
+        "blocked",
+        "unknown"
+      ]
+    },
+    "reviewRequired": {
+      "type": "boolean"
+    },
+    "accepted": {
+      "type": "boolean"
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "artifact",
+        "manifest",
+        "provenance"
+      ],
+      "properties": {
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "artifact": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "manifest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provenance": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "supporting": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "producedBy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "script",
+        "tool",
+        "generatedAt"
+      ],
+      "properties": {
+        "script": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tool": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "generatedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "crs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "scene",
+        "transformPath"
+      ],
+      "properties": {
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scene": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "transformPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "horizontal",
+        "vertical",
+        "scalar"
+      ],
+      "properties": {
+        "horizontal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "vertical": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scalar": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "scalar": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "transform": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "range": {
+          "type": [
+            "array",
+            "object",
+            "null"
+          ]
+        },
+        "thresholds": {
+          "type": [
+            "array",
+            "object",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "processing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "parameters": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        },
+        "downsampling": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "masking": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "counts": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        },
+        "bounds": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "colorRamp": {
+          "type": [
+            "string",
+            "object",
+            "null"
+          ]
+        },
+        "legendPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "materialNotes": {
+          "type": "string"
+        },
+        "visualCheckRequired": {
+          "type": "boolean"
+        },
+        "visualCheckReceipt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "notes"
+      ],
+      "properties": {
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "relatedLayers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "relatedPages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requiredBy": {
+          "type": "string"
+        },
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "acceptedBy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "acceptedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "receipt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

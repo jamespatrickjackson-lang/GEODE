@@ -1,0 +1,66 @@
+{
+  "id": "05_public_communication",
+  "title": "Public Communication View",
+  "subtitle": "Landscape context, restoration preview, and viewshed explanation",
+  "renderPreset": "survey-daylight",
+  "camera": {
+    "position": [
+      8.168619941949506,
+      -28.613555700731283,
+      406.50241627256025
+    ],
+    "target": [
+      8.20964604223757,
+      -38.67800519709259,
+      120.17327252905991
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 46
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 6400,
+  "layerOverrides": {
+    "case-study-b-demo-shell": {
+      "opacity": 1,
+      "showLabels": true
+    },
+    "restoration-preview": {
+      "opacity": 0.82,
+      "showLabels": true
+    },
+    "public-viewshed-overlay": {
+      "opacity": 0.64
+    },
+    "erosion-runoff-planning": {
+      "opacity": 0.58
+    }
+  },
+  "cinematicExposure": 1.08,
+  "overlayLayout": {
+    "x": 0.681953125,
+    "y": 0.03234002509410288,
+    "width": 0.2880989583333333,
+    "height": 0.18883312421580928
+  },
+  "overlay": {
+    "position": "left",
+    "contentFile": "overlays/05_public_communication/text.md",
+    "timing": {
+      "fadeMs": 1600,
+      "gapMs": 100,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
+  "accentColor": "#b6e89e",
+  "visibilityOverrides": {
+    "case-study-b-demo-shell": false
+  }
+}

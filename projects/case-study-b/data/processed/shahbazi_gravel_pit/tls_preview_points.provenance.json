@@ -1,0 +1,35 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "tls_preview_points.json",
+  "artifactType": "sampled-point-cloud-preview",
+  "projectSlug": "case-study-b",
+  "createdDate": "2026-05-10",
+  "source": {
+    "path": "projects/case-study-b/data/raw/shahbazi_gravel_pit/LaserScan.xyz",
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Unmanned aerial image dataset: Ready for 3D reconstruction. Data in Brief 25, 103962. DOI 10.1016/j.dib.2019.103962",
+    "sourcePointRows": 8308685,
+    "format": "XYZ text",
+    "columns": ["x", "y", "z"]
+  },
+  "processing": {
+    "script": "prep/build_shahbazi_tls_preview.mjs",
+    "method": "Deterministic stride sample from valid XYZ rows",
+    "sampleStride": 69,
+    "sampledPointRows": 120416,
+    "sourceBounds": {
+      "min": [193067.61, 5025190.73, 297.405],
+      "max": [193117.908, 5025273.543, 305.576]
+    },
+    "sceneTransform": {
+      "mode": "source-centered-preview",
+      "horizontalScale": 1,
+      "verticalScale": 1,
+      "zLiftMeters": 115
+    }
+  },
+  "reviewStatus": {
+    "readyForDemoPreview": true,
+    "readyForFinalSpatialAnalysis": false,
+    "notes": "This is the first real-data visual layer for Case Study B. It preserves metric scale but recenters X/Y and lifts Z for visibility inside the existing procedural quarry scene. Full Potree/EPT conversion and final CRS/orientation review are still required."
+  }
+}

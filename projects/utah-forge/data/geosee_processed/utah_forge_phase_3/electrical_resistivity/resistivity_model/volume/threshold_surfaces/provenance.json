@@ -1,0 +1,14 @@
+{
+  "artifact": "threshold_surfaces/mt_threshold_surfaces_mesh_preview.json",
+  "classification": "source-derived iso-resistivity communication surfaces",
+  "sourceProductId": "mt-resistivity-forge-focused-volume",
+  "sourceVolume": "forge_focused/volume.u8",
+  "sourceMask": "forge_focused/mask.u8",
+  "generatedDate": "2026-05-12",
+  "script": "prep/build_utah_forge_mt_volume_products.mjs",
+  "caveats": [
+    "Source-derived threshold surfaces are fixed visualization meshes generated from the resampled scalar volume.",
+    "They are not faults, horizons, mineralization, ore bodies, targets, or resource estimates.",
+    "Surfaces are decimated for browser preview performance."
+  ]
+}

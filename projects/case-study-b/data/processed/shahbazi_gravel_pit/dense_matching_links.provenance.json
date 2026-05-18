@@ -1,0 +1,47 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "dense_matching_links.geojson",
+  "artifactType": "dense-matching-image-pair-links",
+  "projectSlug": "case-study-b",
+  "createdDate": "2026-05-10",
+  "source": {
+    "primaryPath": "projects/case-study-b/data/raw/shahbazi_gravel_pit/DenseMatching.txt",
+    "supportingPath": "projects/case-study-b/data/processed/shahbazi_gravel_pit/camera_poses.geojson",
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Unmanned aerial image dataset: Ready for 3D reconstruction. Data in Brief 25, 103962. DOI 10.1016/j.dib.2019.103962",
+    "pairRows": 17,
+    "uniqueImageCount": 24,
+    "columns": [
+      "image_id_a",
+      "image_id_b"
+    ]
+  },
+  "processing": {
+    "script": "prep/build_shahbazi_dense_matching_links_geojson.mjs",
+    "method": "Parsed DenseMatching image-pair rows and connected each pair using processed camera-pose scene coordinates.",
+    "sceneTransform": {
+      "mode": "tls-preview-aligned",
+      "horizontalScale": 1,
+      "verticalScale": 1,
+      "zLiftMeters": 115,
+      "note": "Camera positions are centered and lifted with the same transform as the sampled TLS preview."
+    },
+    "sceneBounds": {
+      "min": [
+        -32.983,
+        -25.969,
+        137.62
+      ],
+      "max": [
+        28.87,
+        16.565,
+        188.606
+      ]
+    },
+    "missingPairs": []
+  },
+  "reviewStatus": {
+    "readyForDemoPreview": true,
+    "readyForFinalSpatialAnalysis": false,
+    "notes": "This layer is source QA context for the multi-view stereo subset. It shows image-pair relationships, not surveyed ground geometry."
+  }
+}

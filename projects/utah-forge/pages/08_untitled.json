@@ -1,0 +1,70 @@
+{
+  "id": "08_untitled",
+  "title": "Untitled page",
+  "camera": {
+    "position": [
+      -59727.5089767489,
+      77515.83916639606,
+      -3368.4321245397587
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "visibilityOverrides": {
+    "utah-forge-mt-resistivity-full-density": true,
+    "utah-forge-mt-resistivity-threshold-surfaces": true
+  },
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "opacity": 0.05
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": true,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": false
+      },
+      "mtThresholdSurfaceWireframe": true,
+      "opacity": 0.42
+    }
+  },
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "orbitSpeedDegPerSec": 5.1,
+    "orbitRadius": 104120,
+    "orbitHeight": 15934,
+    "orbitDirection": -1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "example.utah-forge.phase3-seismic-browser",
+  "project": "utah-forge",
+  "dataset": "utah_forge_phase_3/seismic_analysis",
+  "artifactFamily": "render_ready",
+  "artifactType": "seismic_product",
+  "renderRole": "unclear_needs_review",
+  "loadClass": "needs_human_review",
+  "sourceType": "mixed",
+  "epistemicStatus": "proposed",
+  "authority": "Example only, based on docs/dev-context, Utah FORGE DATA_LAYER_STATUS.md, and project manifest evidence; not accepted metadata.",
+  "status": "needs_review",
+  "reviewRequired": true,
+  "accepted": false,
+  "paths": {
+    "source": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source",
+    "artifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/products",
+    "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_manifest.json",
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/provenance.json",
+    "supporting": [
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_demo_recipes.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/inventory/seismic_source_inventory.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/navigation/seismic_navigation.geojson"
+    ]
+  },
+  "inputs": [
+    {
+      "path": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source",
+      "role": "GDR 1015/1141 processed seismic source products",
+      "notes": "Source family observed in project manifest and status docs; individual source-product acceptance requires review."
+    },
+    {
+      "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/navigation/seismic_navigation.geojson",
+      "role": "navigation/placement support",
+      "notes": "Navigation is observed but placement caveats and fallback behavior require review."
+    }
+  ],
+  "producedBy": {
+    "script": "prep/build_utah_forge_seismic_browser.py",
+    "tool": "Python prep script",
+    "generatedAt": null,
+    "notes": "Script observed in docs/dev-context pipeline map; this example did not run it."
+  },
+  "crs": {
+    "source": null,
+    "scene": null,
+    "transformPath": null,
+    "notes": "Source coordinate basis, datum, navigation placement, and scene transform require human review before technical acceptance."
+  },
+  "units": {
+    "horizontal": null,
+    "vertical": null,
+    "scalar": null,
+    "notes": "Seismic domain, amplitude units/windowing, and display units require review."
+  },
+  "scalar": {
+    "transform": null,
+    "range": null,
+    "thresholds": null,
+    "notes": "Environment currently records seismic display controls such as amplitude window and colormap, but this example does not accept them."
+  },
+  "processing": {
+    "method": "Render-transcoded seismic browser products, needs review",
+    "parameters": {},
+    "downsampling": null,
+    "masking": null,
+    "notes": "Docs describe 2D section products and 3D raymarch-capable products; product-level parameters and limitations require review."
+  },
+  "stats": {
+    "counts": {
+      "reportedProductCount": "Layer-Artifact-Classification.md reports 34 seismic products, 4 raymarch-capable products, 30 section-only products, and 66 total sections; needs review."
+    },
+    "bounds": {},
+    "notes": "Counts, bounds, sample domains, amplitude stats, and section metadata should be verified from the seismic manifest before acceptance."
+  },
+  "render": {
+    "colorRamp": "velocity colormap observed in environment; needs review",
+    "legendPath": null,
+    "materialNotes": "Raymarch/section display, opacity, navigation, labels, and MT co-rendering must preserve visual quality and technical credibility.",
+    "visualCheckRequired": true,
+    "visualCheckReceipt": null,
+    "notes": "Seismic is needed and underway. This example does not park, hide, accept, or change seismic behavior."
+  },
+  "provenance": {
+    "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/provenance.json",
+    "notes": "Observed in current manifest/status docs. Older blocked/not-active docs still require supersession review."
+  },
+  "limitations": [
+    "Example only; not accepted project metadata.",
+    "Does not claim technical accuracy because CRS, datum, units, full parameters, and visual check receipt are incomplete.",
+    "Older blocked/not-active seismic docs contradict current active manifest/status evidence and need human review.",
+    "Do not park, hide, downgrade, or simplify seismic by default."
+  ],
+  "relatedLayers": [
+    "utah-forge-phase3-seismic-browser"
+  ],
+  "relatedPages": [
+    "05_untitled"
+  ],
+  "review": {
+    "requiredBy": "human",
+    "questions": [
+      "Which seismic product/mode is the intended default demo behavior?",
+      "What provenance, navigation, unit, amplitude, and datum evidence is required before client-facing acceptance?",
+      "What render-quality receipt proves seismic section/raymarch display and MT co-rendering are acceptable?"
+    ],
+    "acceptedBy": null,
+    "acceptedAt": null,
+    "receipt": null
+  },
+  "notes": "Example wrapper only. Seismic is needed and underway, but this wrapper is not accepted metadata and does not change runtime, visibility, products, or project configuration."
+}

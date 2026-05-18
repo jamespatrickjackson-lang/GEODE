@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "example.utah-forge.mt-resistivity-slices",
+  "project": "utah-forge",
+  "dataset": "utah_forge_phase_3/electrical_resistivity/resistivity_model",
+  "artifactFamily": "render_ready",
+  "artifactType": "scalar_slice",
+  "renderRole": "unclear_needs_review",
+  "loadClass": "page_required",
+  "sourceType": "mixed",
+  "epistemicStatus": "proposed",
+  "authority": "Example only, based on docs/dev-context and Utah FORGE manifest evidence; not accepted metadata.",
+  "status": "needs_review",
+  "reviewRequired": true,
+  "accepted": false,
+  "paths": {
+    "source": null,
+    "artifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/resistivity_slices_mesh_preview.json",
+    "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/manifest.json",
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/resistivity_slices.provenance.json",
+    "supporting": [
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/legend.json"
+    ]
+  },
+  "inputs": [
+    {
+      "path": null,
+      "role": "MT resistivity model input",
+      "notes": "Existing docs refer to MT point preview, full model stats, and station markers as inputs; exact accepted source path requires human review."
+    }
+  ],
+  "producedBy": {
+    "script": "prep/build_utah_forge_mt_resistivity_slices.mjs",
+    "tool": "Node prep script",
+    "generatedAt": null,
+    "notes": "Script observed in docs/dev-context pipeline map; this example did not run it."
+  },
+  "crs": {
+    "source": null,
+    "scene": null,
+    "transformPath": null,
+    "notes": "CRS/source coordinate basis and scene transform require review before technical acceptance."
+  },
+  "units": {
+    "horizontal": null,
+    "vertical": null,
+    "scalar": "log10 resistivity / ohm-m, needs review",
+    "notes": "Scalar unit/transform wording is based on docs and needs human review."
+  },
+  "scalar": {
+    "transform": "log10, needs review",
+    "range": null,
+    "thresholds": null,
+    "notes": "Color ramp, scalar range, and legend linkage must be checked against the slice manifest and legend."
+  },
+  "processing": {
+    "method": "Authored horizontal and vertical resistivity slice mesh preview, needs review",
+    "parameters": {},
+    "downsampling": null,
+    "masking": null,
+    "notes": "Docs mention gridding/interpolation/bin averaging/neighbor fill risks; parameters are not accepted here."
+  },
+  "stats": {
+    "counts": {
+      "reportedSliceCount": "DATA_LAYER_STATUS.md says 6 horizontal slices and 2 vertical sections; needs review."
+    },
+    "bounds": {},
+    "notes": "Output counts/stats/bounds should be verified from artifact manifests before acceptance."
+  },
+  "render": {
+    "colorRamp": "legend.json, needs review",
+    "legendPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/legend.json",
+    "materialNotes": "Slice opacity/material/depth behavior must preserve page presentation and MT/seismic co-rendering quality.",
+    "visualCheckRequired": true,
+    "visualCheckReceipt": null,
+    "notes": "Render role is intentionally unclear_needs_review in this example."
+  },
+  "provenance": {
+    "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/resistivity_slices.provenance.json",
+    "notes": "Observed in docs. Completeness and acceptance require human review."
+  },
+  "limitations": [
+    "Example only; not accepted project metadata.",
+    "Does not claim technical accuracy because CRS, transform, complete parameters, and visual check receipt are incomplete.",
+    "Do not simplify slices, scalar ranges, color ramps, legends, or material/depth behavior as a proxy for bloat reduction."
+  ],
+  "relatedLayers": [
+    "utah-forge-mt-resistivity-slices"
+  ],
+  "relatedPages": [
+    "11_untitled"
+  ],
+  "review": {
+    "requiredBy": "human",
+    "questions": [
+      "Are MT slices client-facing, technical credibility, optional advanced, or mixed?",
+      "What CRS/scene transform/units/parameters must be recorded before acceptance?",
+      "What visual receipt proves the slice color ramp, legend, opacity, and spatial relation are acceptable?"
+    ],
+    "acceptedBy": null,
+    "acceptedAt": null,
+    "receipt": null
+  },
+  "notes": "Example wrapper only. It records observed paths and proposed review questions without accepting the artifact, changing runtime behavior, or changing project data."
+}

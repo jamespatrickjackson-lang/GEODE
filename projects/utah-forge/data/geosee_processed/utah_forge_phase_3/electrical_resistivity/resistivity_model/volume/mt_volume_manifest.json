@@ -1,0 +1,261 @@
+{
+  "schema": "geosee.scalar-volume.v1",
+  "label": "Utah FORGE Phase 3 MT resistivity volumes",
+  "project": "utah-forge",
+  "area": "utah_forge_phase_3",
+  "dataset": "electrical_resistivity",
+  "generatedDate": "2026-05-12",
+  "source": {
+    "archive": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip",
+    "entry": "FRG200614_mdl17_cellcenter.dat",
+    "crs": "EPSG:26912 NAD83 / UTM Zone 12N",
+    "fields": [
+      "northing_m",
+      "easting_m",
+      "elevation_m",
+      "resistivity_ohm_m"
+    ]
+  },
+  "scene": {
+    "crs": "local meters, X east, Y north, Z up",
+    "sceneOriginUtm": {
+      "easting_m": 341467.35,
+      "northing_m": 4273374.5,
+      "elevation_m": 0
+    }
+  },
+  "rowCounts": {
+    "sourceRows": 1094940,
+    "positiveResistivityRows": 1094624,
+    "zeroOrNegativeRows": 316
+  },
+  "scalar": {
+    "name": "log10 resistivity",
+    "unit": "log10 Ohm-m",
+    "sourceRange": [
+      -2,
+      4.5
+    ],
+    "displayRange": [
+      0.139879,
+      3.937122
+    ],
+    "normalizedEncoding": "uint8",
+    "maskEncoding": "uint8 occupancy, 255 occupied and 0 empty"
+  },
+  "products": [
+    {
+      "id": "mt-resistivity-full-extent-volume",
+      "label": "MT resistivity full-extent volume",
+      "description": "Uncropped source-derived scalar volume resampled from every positive MT cell-center inversion row.",
+      "classification": "source-derived MT inversion scalar volume",
+      "domain": "log10 resistivity",
+      "unit": "log10 Ohm-m",
+      "sourceRowsInBounds": 1094579,
+      "dimensions": [
+        80,
+        64,
+        56
+      ],
+      "voxelOrder": "x-fastest, then y, then z",
+      "sceneBounds": {
+        "min": [
+          -139570.65,
+          -113944.5,
+          -122114
+        ],
+        "max": [
+          139570.65,
+          113944.5,
+          3449.131
+        ]
+      },
+      "scalarRange": {
+        "min": -2,
+        "max": 4.5,
+        "displayMin": 0.139879,
+        "displayMax": 3.937122
+      },
+      "files": {
+        "volume": "full_extent/volume.u8",
+        "mask": "full_extent/mask.u8",
+        "stats": "full_extent/stats.json",
+        "provenance": "full_extent/provenance.json"
+      },
+      "displayRecipe": {
+        "opacity": 0.34,
+        "density": 0.54,
+        "sampleSteps": 96,
+        "transferMode": "balanced",
+        "scalarWindow": [
+          0.139879,
+          3.937122
+        ],
+        "maskVisible": true
+      },
+      "caveats": [
+        "Source-derived visualization volume resampled from MT inversion cell centers.",
+        "Empty voxels are transparent through the occupancy mask.",
+        "Not an interpreted geological model, target, or resource estimate."
+      ]
+    },
+    {
+      "id": "mt-resistivity-forge-focused-volume",
+      "label": "MT resistivity FORGE-focused volume",
+      "description": "Meeting-focused scalar volume cropped around the MT station footprint and upper 30 km of the model.",
+      "classification": "source-derived MT inversion scalar volume",
+      "domain": "log10 resistivity",
+      "unit": "log10 Ohm-m",
+      "sourceRowsInBounds": 771889,
+      "dimensions": [
+        96,
+        80,
+        64
+      ],
+      "voxelOrder": "x-fastest, then y, then z",
+      "sceneBounds": {
+        "min": [
+          -32853.373,
+          -34725.559,
+          -30000
+        ],
+        "max": [
+          56197.135,
+          67499.635,
+          3449.131
+        ]
+      },
+      "scalarRange": {
+        "min": -2,
+        "max": 4.5,
+        "displayMin": 0.139879,
+        "displayMax": 3.937122
+      },
+      "files": {
+        "volume": "forge_focused/volume.u8",
+        "mask": "forge_focused/mask.u8",
+        "stats": "forge_focused/stats.json",
+        "provenance": "forge_focused/provenance.json"
+      },
+      "displayRecipe": {
+        "opacity": 0.46,
+        "density": 0.72,
+        "sampleSteps": 112,
+        "transferMode": "balanced",
+        "scalarWindow": [
+          0.139879,
+          3.937122
+        ],
+        "maskVisible": true
+      },
+      "caveats": [
+        "Source-derived visualization volume resampled from MT inversion cell centers.",
+        "Empty voxels are transparent through the occupancy mask.",
+        "Not an interpreted geological model, target, or resource estimate."
+      ]
+    }
+  ],
+  "thresholdSurfaces": {
+    "file": "threshold_surfaces/mt_threshold_surfaces_mesh_preview.json",
+    "provenance": "threshold_surfaces/provenance.json",
+    "sourceProductId": "mt-resistivity-forge-focused-volume",
+    "surfaces": [
+      {
+        "id": "conductive-le-10-ohm-m",
+        "label": "Conductive shell <=10 Ohm-m",
+        "kind": "conductive-threshold-surface",
+        "comparison": "<=",
+        "thresholdOhmM": 10,
+        "thresholdLog10": 1,
+        "color": "#2cc9ff",
+        "candidateBoundaryFaceCount": 10838,
+        "emittedBoundaryFaceCount": 10838,
+        "decimationStride": 1,
+        "matchingVoxelCount": 5259,
+        "meanLog10Resistivity": 0.559173,
+        "meshRange": {
+          "vertexStart": 0,
+          "vertexCount": 43352,
+          "indexStart": 0,
+          "indexCount": 65028
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+      },
+      {
+        "id": "conductive-le-30-ohm-m",
+        "label": "Conductive shell <=30 Ohm-m",
+        "kind": "conductive-threshold-surface",
+        "comparison": "<=",
+        "thresholdOhmM": 30,
+        "thresholdLog10": 1.477121,
+        "color": "#38f0b3",
+        "candidateBoundaryFaceCount": 22906,
+        "emittedBoundaryFaceCount": 11453,
+        "decimationStride": 2,
+        "matchingVoxelCount": 11619,
+        "meanLog10Resistivity": 0.946858,
+        "meshRange": {
+          "vertexStart": 43352,
+          "vertexCount": 45812,
+          "indexStart": 65028,
+          "indexCount": 68718
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+      },
+      {
+        "id": "resistive-ge-1000-ohm-m",
+        "label": "Resistive shell >=1000 Ohm-m",
+        "kind": "resistive-threshold-surface",
+        "comparison": ">=",
+        "thresholdOhmM": 1000,
+        "thresholdLog10": 3,
+        "color": "#ff637a",
+        "candidateBoundaryFaceCount": 47434,
+        "emittedBoundaryFaceCount": 15812,
+        "decimationStride": 3,
+        "matchingVoxelCount": 19087,
+        "meanLog10Resistivity": 3.447784,
+        "meshRange": {
+          "vertexStart": 89164,
+          "vertexCount": 63248,
+          "indexStart": 133746,
+          "indexCount": 94872
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+      }
+    ]
+  },
+  "displayRecipes": [
+    {
+      "id": "mt-volume-investor-focused",
+      "label": "MT focused volume",
+      "productId": "mt-resistivity-forge-focused-volume",
+      "opacity": 0.46,
+      "density": 0.72,
+      "sampleSteps": 112,
+      "transferMode": "balanced",
+      "thresholdSurfaces": [
+        "conductive-le-30-ohm-m",
+        "resistive-ge-1000-ohm-m"
+      ]
+    },
+    {
+      "id": "mt-volume-full-extent-context",
+      "label": "MT full-extent context",
+      "productId": "mt-resistivity-full-extent-volume",
+      "opacity": 0.34,
+      "density": 0.54,
+      "sampleSteps": 96,
+      "transferMode": "soft",
+      "thresholdSurfaces": []
+    }
+  ],
+  "caveats": [
+    "Volumes are source-derived browser resamplings of the MT inversion cell-center model.",
+    "Threshold surfaces are source-derived iso-resistivity communication surfaces, not interpreted geology.",
+    "This dataset is public geothermal demo data and not a mineral resource estimate."
+  ]
+}

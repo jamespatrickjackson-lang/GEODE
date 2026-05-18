@@ -1,0 +1,38 @@
+{
+  "artifact": "mt_stations.geojson",
+  "classification": "measured",
+  "source": {
+    "project": "Utah FORGE",
+    "dataset": "GDR submission 1255 MT EDI archive",
+    "sourceArchive": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_edis/FORGE_MT_190812_EDIs.zip",
+    "sourceArchiveNote": "Delivered source/client file retained under client_preprocessed."
+  },
+  "transform": {
+    "sourceCrs": "EDI LAT/LONG interpreted as NAD83 geographic coordinates",
+    "outputCrs": "EPSG:26912 NAD83 UTM Zone 12N",
+    "sceneOriginUtm": {
+      "easting_m": 341467.35,
+      "northing_m": 4273374.5,
+      "elevation_m": 0
+    },
+    "localAxes": "X east, Y north, Z up",
+    "verticalExaggeration": 1,
+    "cropApplied": false
+  },
+  "processing": {
+    "script": "prep/build_utah_forge_mt_station_markers.mjs",
+    "generatedDate": "2026-05-12",
+    "selectedVariantRule": "standard EDI per station preferred; _bvv retained as variant metadata",
+    "stationCount": 122,
+    "ediFileCount": 244
+  },
+  "output": {
+    "geojson": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/stations/mt_stations.geojson",
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/stations/mt_stations.provenance.json"
+  },
+  "notes": [
+    "This artifact is a station-marker layer only.",
+    "It does not enable or interpret the resistivity inversion model.",
+    "No data crop or vertical exaggeration is applied."
+  ]
+}

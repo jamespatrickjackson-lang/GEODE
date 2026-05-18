@@ -1,0 +1,59 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "ground_control_points.geojson",
+  "artifactType": "normalized-point-markers",
+  "projectSlug": "case-study-b",
+  "createdDate": "2026-05-10",
+  "source": {
+    "path": "projects/case-study-b/data/raw/shahbazi_gravel_pit/GCPs.txt",
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Unmanned aerial image dataset: Ready for 3D reconstruction. Data in Brief 25, 103962. DOI 10.1016/j.dib.2019.103962",
+    "rows": 109,
+    "format": "tab-delimited text",
+    "columns": [
+      "point_id",
+      "x",
+      "y",
+      "z"
+    ]
+  },
+  "processing": {
+    "script": "prep/build_shahbazi_gcp_geojson.mjs",
+    "method": "Parsed source GCP/check point rows and transformed them into Case Study B scene coordinates using the sampled TLS preview transform.",
+    "sceneTransform": {
+      "mode": "tls-preview-aligned",
+      "horizontalScale": 1,
+      "verticalScale": 1,
+      "zLiftMeters": 115,
+      "note": "GCP rows are centered and lifted with the same transform as the sampled TLS preview so the two real layers line up in Case Study B."
+    },
+    "sourceBounds": {
+      "min": [
+        193006.684,
+        5025123.001,
+        297.589
+      ],
+      "max": [
+        193193.633,
+        5025264.279,
+        317.344
+      ]
+    },
+    "sceneBounds": {
+      "min": [
+        -86.075,
+        -109.135,
+        115.184
+      ],
+      "max": [
+        100.874,
+        32.143,
+        134.939
+      ]
+    }
+  },
+  "reviewStatus": {
+    "readyForDemoPreview": true,
+    "readyForFinalSpatialAnalysis": false,
+    "notes": "This layer is a normalized preview of the published control/check point table. It is aligned to the current Shahbazi TLS preview in scene space; final CRS/orientation review is still required before GIS-grade use."
+  }
+}

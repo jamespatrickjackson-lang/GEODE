@@ -1,0 +1,181 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "utah-forge-mt-threshold-surfaces",
+  "project": "utah-forge",
+  "dataset": "utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/threshold_surfaces",
+  "artifactFamily": "render_ready",
+  "artifactType": "threshold_surface",
+  "renderRole": "technical_credibility",
+  "loadClass": "page_required",
+  "sourceType": "mixed",
+  "epistemicStatus": "derived",
+  "authority": "Observed in projects/utah-forge/project.json, page 08, Layer-Artifact-Classification.md, Computed-Artifact-Pipeline.md, DATA_LAYER_STATUS.md, Project-Load-Class-Table.md, and the MT volume/threshold surface manifest/provenance paths.",
+  "status": "needs_review",
+  "reviewRequired": true,
+  "accepted": false,
+  "paths": {
+    "source": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/mt_volume_manifest.json",
+    "artifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/threshold_surfaces/mt_threshold_surfaces_mesh_preview.json",
+    "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/mt_volume_manifest.json",
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/threshold_surfaces/provenance.json",
+    "supporting": [
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/forge_focused/volume.u8",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/forge_focused/mask.u8",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/forge_focused/stats.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/forge_focused/provenance.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json"
+    ]
+  },
+  "inputs": [
+    {
+      "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/mt_volume_manifest.json",
+      "role": "MT scalar volume manifest",
+      "notes": "Threshold surfaces are recorded as source-derived iso-resistivity communication surfaces from the focused MT scalar volume."
+    },
+    {
+      "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/forge_focused/volume.u8",
+      "role": "Focused MT scalar volume product",
+      "notes": "Observed source product for threshold surface generation in the MT volume manifest."
+    }
+  ],
+  "producedBy": {
+    "script": "prep/build_utah_forge_mt_volume_products.mjs",
+    "tool": "Node prep script",
+    "generatedAt": "2026-05-12",
+    "notes": "Script and generated output paths were observed read-only; no script was run in this pass."
+  },
+  "crs": {
+    "source": "EPSG:26912 / NAD83 UTM Zone 12N",
+    "scene": "GeoSee scene-local meters with origin easting 341467.35, northing 4273374.5, elevation 0",
+    "transformPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json",
+    "notes": "CRS and scene origin are observed in manifest/status evidence; threshold surface interpretation still needs human review."
+  },
+  "units": {
+    "horizontal": "meters",
+    "vertical": "meters",
+    "scalar": "ohm-m thresholds with log10 resistivity support",
+    "notes": "Do not change threshold units, scalar transform, or display labels without preserving provenance and limitations."
+  },
+  "scalar": {
+    "transform": "thresholds derived from log10 resistivity / ohm-m values",
+    "range": {
+      "displayMin": 0.139879,
+      "displayMax": 3.937122
+    },
+    "thresholds": [
+      {
+        "surfaceId": "conductive-le-10-ohm-m",
+        "thresholdOhmM": 10,
+        "thresholdLog10": 1,
+        "operator": "<=",
+        "color": "#2cc9ff"
+      },
+      {
+        "surfaceId": "conductive-le-30-ohm-m",
+        "thresholdOhmM": 30,
+        "thresholdLog10": 1.477121,
+        "operator": "<=",
+        "color": "#38f0b3"
+      },
+      {
+        "surfaceId": "resistive-ge-1000-ohm-m",
+        "thresholdOhmM": 1000,
+        "thresholdLog10": 3,
+        "operator": ">=",
+        "color": "#ff637a"
+      }
+    ],
+    "notes": "Threshold values are acceptance-sensitive communication choices; do not alter them without provenance, caveats, and human review."
+  },
+  "processing": {
+    "method": "Source-derived iso-resistivity mesh preview surfaces from the focused MT scalar volume.",
+    "parameters": {
+      "sourceProductId": "mt-resistivity-forge-focused-volume",
+      "surfaces": [
+        {
+          "surfaceId": "conductive-le-10-ohm-m",
+          "candidateBoundaryFaceCount": 10838,
+          "emittedBoundaryFaceCount": 10838,
+          "matchingVoxelCount": 5259,
+          "meanLog10Resistivity": 0.559173,
+          "vertexCount": 43352,
+          "indexCount": 65028
+        },
+        {
+          "surfaceId": "conductive-le-30-ohm-m",
+          "candidateBoundaryFaceCount": 22906,
+          "emittedBoundaryFaceCount": 11453,
+          "decimationStride": 2,
+          "matchingVoxelCount": 11619,
+          "meanLog10Resistivity": 0.946858,
+          "vertexCount": 45812,
+          "indexCount": 68718
+        },
+        {
+          "surfaceId": "resistive-ge-1000-ohm-m",
+          "candidateBoundaryFaceCount": 47434,
+          "emittedBoundaryFaceCount": 15812,
+          "decimationStride": 3,
+          "matchingVoxelCount": 19087,
+          "meanLog10Resistivity": 3.447784,
+          "vertexCount": 63248,
+          "indexCount": 94872
+        }
+      ]
+    },
+    "downsampling": "Observed decimation stride is threshold-specific for some surfaces; do not change decimation without recording technical and visual impact.",
+    "masking": "Derived from the focused volume/mask product; mask handling should be reviewed before acceptance.",
+    "notes": "Threshold surfaces communicate iso-resistivity shells only; they are not accepted geologic interpretations."
+  },
+  "stats": {
+    "counts": {
+      "surfaceCount": 3,
+      "totalVertexCount": 152412,
+      "totalIndexCount": 228618
+    },
+    "bounds": {},
+    "notes": "Surface counts are observed in manifest evidence. Bounds and material/depth review still need a visual receipt."
+  },
+  "render": {
+    "colorRamp": {
+      "conductive-le-10-ohm-m": "#2cc9ff",
+      "conductive-le-30-ohm-m": "#38f0b3",
+      "resistive-ge-1000-ohm-m": "#ff637a"
+    },
+    "legendPath": null,
+    "materialNotes": "Threshold color, opacity, material side, depth behavior, polygon offset, camera/page framing, and labeling require visual review.",
+    "visualCheckRequired": true,
+    "visualCheckReceipt": null,
+    "notes": "Page 08 references the threshold surface layer; runtime/page behavior was not changed."
+  },
+  "provenance": {
+    "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/threshold_surfaces/provenance.json",
+    "notes": "Existing threshold provenance file observed; review completeness before acceptance."
+  },
+  "limitations": [
+    "Not accepted project state.",
+    "Does not approve default visibility, eager loading, lazy loading, or demo use.",
+    "Threshold meaning and caveats are acceptance-sensitive.",
+    "Threshold surfaces must not imply faults, ore bodies, mineralization, targets, reservoir boundaries, resource estimates, or accepted geologic interpretation.",
+    "Scalar threshold values, colors, opacity, material/depth behavior, decimation, and visual receipt require human review.",
+    "Do not simplify threshold surfaces or change color/material/depth behavior as a proxy for bloat reduction."
+  ],
+  "relatedLayers": [
+    "utah-forge-mt-resistivity-threshold-surfaces"
+  ],
+  "relatedPages": [
+    "08_untitled"
+  ],
+  "review": {
+    "requiredBy": "human",
+    "questions": [
+      "Are threshold surfaces client-facing, technical-credibility only, optional advanced, or mixed?",
+      "Are the 10, 30, and 1000 ohm-m thresholds accepted for communication use?",
+      "What caveat/disclosure language and visual receipt are required before showing threshold surfaces to a client?"
+    ],
+    "acceptedBy": null,
+    "acceptedAt": null,
+    "receipt": null
+  },
+  "notes": "Project-local wrapper only. It records threshold artifact identity, caveats, and review gaps without changing runtime/render behavior."
+}

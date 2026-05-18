@@ -1,0 +1,77 @@
+{
+  "type": "FeatureCollection",
+  "name": "2024 Eagle Mapping LiDAR Acquisition Footprint",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:26910"
+    }
+  },
+  "properties": {
+    "source": "ARIS 42648 Imagery Data / Appendix H-I LiDAR materials",
+    "sourceDate": "2025-01-31",
+    "sourceOrigin": "Vizsla Copper / Eagle Mapping Ltd. / ARIS public assessment",
+    "classification": "observation",
+    "notes": "The ARIS package contains the Eagle Mapping LiDAR report and a note that raw LiDAR was delivered externally on a hard drive. The exact AOI boundary is not included; this footprint is an approximate 400 sq. km guide based on the report area."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "imagery-lidar-aoi-2024",
+        "displayName": "2024 Eagle Mapping LiDAR AOI, reported approx.",
+        "label": "2024 LiDAR acquisition footprint",
+        "client": "Vizsla Copper Corporation",
+        "contractor": "Eagle Mapping Ltd.",
+        "project": "Williams Lake South",
+        "flightDates": "2024-08-29 to 2024-08-30",
+        "aircraft": "Cessna T210N",
+        "lidarUnit": "Riegl VQ-780II-S",
+        "reportedAoiSqKm": 400,
+        "pointDensityPpm": 8,
+        "averagePulseDensityPpm": 14,
+        "horizontalAccuracyM": 0.3,
+        "verticalAccuracyM": 0.15,
+        "projection": "UTM 10N NAD83(CSRS)",
+        "epsg": 3157,
+        "imageryDelivered": "none",
+        "rawDataAvailability": "Raw LiDAR referenced as external hard-drive delivery, not included in this ARIS package.",
+        "sourceFile": "Imagery Data/Eagle Mapping LiDAR/Viszla Copper - Williams Lake South Report.pdf",
+        "classification": "observation",
+        "isApproximate": true
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              601475.0,
+              5774670.0,
+              0
+            ],
+            [
+              621475.0,
+              5774670.0,
+              0
+            ],
+            [
+              621475.0,
+              5794670.0,
+              0
+            ],
+            [
+              601475.0,
+              5794670.0,
+              0
+            ],
+            [
+              601475.0,
+              5774670.0,
+              0
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

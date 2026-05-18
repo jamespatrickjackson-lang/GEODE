@@ -1,0 +1,51 @@
+{
+  "id": "03_three_firs_collars",
+  "title": "The Drilling Footprint",
+  "subtitle": "Concealed target, source untested",
+  "camera": {
+    "position": [
+      5727.511424884058,
+      3985.928771000381,
+      1631.9069069706827
+    ],
+    "target": [
+      -3615.204553707405,
+      -481.4416387463234,
+      -1610.892904051577
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 38
+  },
+  "transition": {
+    "duration": 4500,
+    "easing": "easeOutQuart"
+  },
+  "holdDuration": 5000,
+  "overlay": {
+    "position": "right",
+    "contentFile": "overlays/03_three_firs_collars/text.md",
+    "timing": {
+      "fadeMs": 2000,
+      "gapMs": 50,
+      "easing": "linear"
+    },
+    "images": [
+      {
+        "file": "overlays/03_three_firs_collars/vcu_2711_fig_7.500x0-is.png",
+        "caption": "",
+        "position": "below-text"
+      }
+    ]
+  },
+  "layerOverrides": {
+    "drillholes-2023": {
+      "labelColor": "#c2af94",
+      "showLabels": true
+    }
+  },
+  "accentColor": "#7efb9e"
+}

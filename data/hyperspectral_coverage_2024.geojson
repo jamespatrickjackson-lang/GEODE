@@ -1,0 +1,131 @@
+{
+  "type": "FeatureCollection",
+  "name": "2024 Three Firs Hyperspectral Coverage",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:26910"
+    }
+  },
+  "properties": {
+    "source": "ARIS 42648 Hyperspectral geoLOGr report and spectral CSV archives",
+    "sourceDate": "2025-01-31",
+    "sourceOrigin": "Vizsla Copper / Hyperspectral Intelligence Inc. / ARIS public assessment",
+    "count": 3,
+    "classification": "observation",
+    "notes": "Three scanned drill cores totaling 975.45 m of core according to the geoLOGr scanning summary."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tf24-123-hyperspectral-coverage",
+        "displayName": "TF24-123 hyperspectral scan 155.4-405 m",
+        "holeId": "TF24-123",
+        "zone": "Three Firs",
+        "scannedStartDepthM": 155.4,
+        "scannedEndDepthM": 405.0,
+        "scannedLengthM": 249.6,
+        "scannedDate": "2024-08-26",
+        "archiveFile": "Threefirs_TF24-123_B068_spec_clean.zip",
+        "spectralCsvCount": 62,
+        "instrument": "geoLOGr-14",
+        "method": "SWIR reflectance spectroscopy, 900-2500 nm, ~512 channels",
+        "source": "ARIS 42648, 20241027_Vizsla-Copper_Three Firs_geoLOGr.pdf and hyperspectral spectral CSV archives",
+        "sourceDate": "2025-01-31",
+        "sourceOrigin": "Hyperspectral Intelligence Inc. / Vizsla Copper / ARIS public assessment",
+        "classification": "observation",
+        "notes": "Coverage interval only. Raw spectral reflectance CSVs are retained in source; mineral/lithotype classification should be added as a separate derived layer if/when classified values are extracted."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            608418.7251422256,
+            5787629.24773777,
+            842.1492485464685
+          ],
+          [
+            608336.3686139086,
+            5787536.487347471,
+            625.5549913855839
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tf24-124-hyperspectral-coverage",
+        "displayName": "TF24-124 hyperspectral scan 89.9-327.35 m",
+        "holeId": "TF24-124",
+        "zone": "Three Firs",
+        "scannedStartDepthM": 89.9,
+        "scannedEndDepthM": 327.35,
+        "scannedLengthM": 237.45,
+        "scannedDate": "2024-10-13",
+        "archiveFile": "Threefirs_TF24-124_B051_spec_clean.7z",
+        "spectralCsvCount": 59,
+        "instrument": "geoLOGr-14",
+        "method": "SWIR reflectance spectroscopy, 900-2500 nm, ~512 channels",
+        "source": "ARIS 42648, 20241027_Vizsla-Copper_Three Firs_geoLOGr.pdf and hyperspectral spectral CSV archives",
+        "sourceDate": "2025-01-31",
+        "sourceOrigin": "Hyperspectral Intelligence Inc. / Vizsla Copper / ARIS public assessment",
+        "classification": "observation",
+        "notes": "Coverage interval only. Raw spectral reflectance CSVs are retained in source; mineral/lithotype classification should be added as a separate derived layer if/when classified values are extracted."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            608417.5653691954,
+            5787417.552777466,
+            901.3016953043619
+          ],
+          [
+            608337.1793504574,
+            5787329.209696369,
+            696.0796435804548
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tf24-126-hyperspectral-coverage",
+        "displayName": "TF24-126 hyperspectral scan 150.6-639 m",
+        "holeId": "TF24-126",
+        "zone": "Three Firs",
+        "scannedStartDepthM": 150.6,
+        "scannedEndDepthM": 639.0,
+        "scannedLengthM": 488.4,
+        "scannedDate": "2024-10-13",
+        "archiveFile": "Threefirs_TF24-126_B152_spec_clean.7z",
+        "spectralCsvCount": 161,
+        "instrument": "geoLOGr-14",
+        "method": "SWIR reflectance spectroscopy, 900-2500 nm, ~512 channels",
+        "source": "ARIS 42648, 20241027_Vizsla-Copper_Three Firs_geoLOGr.pdf and hyperspectral spectral CSV archives",
+        "sourceDate": "2025-01-31",
+        "sourceOrigin": "Hyperspectral Intelligence Inc. / Vizsla Copper / ARIS public assessment",
+        "classification": "observation",
+        "notes": "Coverage interval only. Raw spectral reflectance CSVs are retained in source; mineral/lithotype classification should be added as a separate derived layer if/when classified values are extracted."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            608449.8741297649,
+            5787631.704625982,
+            838.3719690700625
+          ],
+          [
+            608384.6053713133,
+            5787452.38018594,
+            388.7973986438906
+          ]
+        ]
+      }
+    }
+  ]
+}

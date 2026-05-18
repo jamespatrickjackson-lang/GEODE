@@ -1,0 +1,31 @@
+{
+  "title": "Utah FORGE Phase 3 MT resistivity",
+  "value": "log10 resistivity",
+  "unit": "log10(ohm-m)",
+  "sourceUnit": "ohm-m",
+  "generatedDate": "2026-05-12",
+  "displayRange": {
+    "min": 0.139879,
+    "mid": 2.02983,
+    "max": 3.937122,
+    "method": "2nd to 98th percentile range from model_stats.json, midpoint at median"
+  },
+  "colorStops": [
+    {
+      "value": 0.139879,
+      "color": "#2cc9ff",
+      "label": "low log resistivity"
+    },
+    {
+      "value": 2.02983,
+      "color": "#f8dd6d",
+      "label": "mid log resistivity"
+    },
+    {
+      "value": 3.937122,
+      "color": "#ff637a",
+      "label": "high log resistivity"
+    }
+  ],
+  "provenance": "source-derived inversion model from the updated Phase 3 MT cell-center model"
+}

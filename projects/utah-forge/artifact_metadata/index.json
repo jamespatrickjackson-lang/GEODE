@@ -1,0 +1,137 @@
+{
+  "schemaVersion": "0.1.0",
+  "project": "utah-forge",
+  "purpose": "Project-local artifact metadata index for Utah FORGE. These wrappers document source/provenance/render/load review state only; they do not change runtime behavior, project manifests, page JSON, visibility, rendering, data artifacts, generated outputs, or official DHF/control state.",
+  "coverage": "projects/utah-forge/artifact_metadata/WRAPPER_COVERAGE.md",
+  "status": "needs_review",
+  "reviewRequired": true,
+  "accepted": false,
+  "wrappers": [
+    {
+      "artifactId": "utah-forge-mt-stations",
+      "path": "projects/utah-forge/artifact_metadata/utah-forge-mt-stations.metadata.json",
+      "artifactFamily": "render_ready",
+      "artifactType": "station_marker",
+      "renderRole": "technical_credibility",
+      "loadClass": "qa_validation",
+      "relatedLayers": [
+        "utah-forge-mt-stations"
+      ],
+      "status": "needs_review",
+      "reviewRequired": true,
+      "accepted": false
+    },
+    {
+      "artifactId": "utah-forge-mt-resistivity-slices",
+      "path": "projects/utah-forge/artifact_metadata/utah-forge-mt-resistivity-slices.metadata.json",
+      "artifactFamily": "render_ready",
+      "artifactType": "scalar_slice",
+      "renderRole": "high_fidelity_client_facing",
+      "loadClass": "page_required",
+      "relatedLayers": [
+        "utah-forge-mt-resistivity-slices"
+      ],
+      "status": "needs_review",
+      "reviewRequired": true,
+      "accepted": false
+    },
+    {
+      "artifactId": "utah-forge-phase3-seismic-browser",
+      "path": "projects/utah-forge/artifact_metadata/utah-forge-phase3-seismic-browser.metadata.json",
+      "artifactFamily": "render_ready",
+      "artifactType": "seismic_product",
+      "renderRole": "unclear_needs_review",
+      "loadClass": "needs_human_review",
+      "relatedLayers": [
+        "utah-forge-phase3-seismic-browser"
+      ],
+      "status": "needs_review",
+      "reviewRequired": true,
+      "accepted": false
+    },
+    {
+      "artifactId": "utah-forge-mt-full-density",
+      "path": "projects/utah-forge/artifact_metadata/utah-forge-mt-full-density.metadata.json",
+      "artifactFamily": "render_ready",
+      "artifactType": "point_cloud_tile",
+      "renderRole": "high_fidelity_client_facing",
+      "loadClass": "needs_human_review",
+      "relatedLayers": [
+        "utah-forge-mt-resistivity-full-density"
+      ],
+      "status": "needs_review",
+      "reviewRequired": true,
+      "accepted": false
+    },
+    {
+      "artifactId": "utah-forge-mt-scalar-volume",
+      "path": "projects/utah-forge/artifact_metadata/utah-forge-mt-scalar-volume.metadata.json",
+      "artifactFamily": "render_ready",
+      "artifactType": "scalar_volume",
+      "renderRole": "optional_advanced",
+      "loadClass": "needs_human_review",
+      "relatedLayers": [
+        "utah-forge-mt-resistivity-volume"
+      ],
+      "status": "needs_review",
+      "reviewRequired": true,
+      "accepted": false
+    },
+    {
+      "artifactId": "utah-forge-mt-threshold-surfaces",
+      "path": "projects/utah-forge/artifact_metadata/utah-forge-mt-threshold-surfaces.metadata.json",
+      "artifactFamily": "render_ready",
+      "artifactType": "threshold_surface",
+      "renderRole": "technical_credibility",
+      "loadClass": "page_required",
+      "relatedLayers": [
+        "utah-forge-mt-resistivity-threshold-surfaces"
+      ],
+      "status": "needs_review",
+      "reviewRequired": true,
+      "accepted": false
+    },
+    {
+      "artifactId": "utah-forge-seismic-navigation-provenance",
+      "path": "projects/utah-forge/artifact_metadata/utah-forge-seismic-navigation-provenance.metadata.json",
+      "artifactFamily": "provenance_status_wrapper",
+      "artifactType": "seismic_product",
+      "renderRole": "technical_credibility",
+      "loadClass": "computed_artifact_support",
+      "relatedLayers": [
+        "utah-forge-phase3-seismic-browser"
+      ],
+      "status": "needs_review",
+      "reviewRequired": true,
+      "accepted": false
+    },
+    {
+      "artifactId": "utah-forge-seismic-recipes-presets",
+      "path": "projects/utah-forge/artifact_metadata/utah-forge-seismic-recipes-presets.metadata.json",
+      "artifactFamily": "presentation",
+      "artifactType": "seismic_product",
+      "renderRole": "unclear_needs_review",
+      "loadClass": "needs_human_review",
+      "relatedLayers": [
+        "utah-forge-phase3-seismic-browser"
+      ],
+      "status": "needs_review",
+      "reviewRequired": true,
+      "accepted": false
+    },
+    {
+      "artifactId": "utah-forge-mt-top-surface",
+      "path": "projects/utah-forge/artifact_metadata/utah-forge-mt-top-surface.metadata.json",
+      "artifactFamily": "render_ready",
+      "artifactType": "top_surface",
+      "renderRole": "technical_credibility",
+      "loadClass": "page_required",
+      "relatedLayers": [
+        "utah-forge-mt-top-surface"
+      ],
+      "status": "needs_review",
+      "reviewRequired": true,
+      "accepted": false
+    }
+  ]
+}

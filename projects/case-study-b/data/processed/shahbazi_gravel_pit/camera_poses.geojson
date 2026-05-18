@@ -1,0 +1,5281 @@
+{
+  "type": "FeatureCollection",
+  "name": "Shahbazi UAV camera positions / flight path",
+  "properties": {
+    "schema": "geosee.camera-poses.v1",
+    "sourcePath": "projects/case-study-b/data/raw/shahbazi_gravel_pit/RefinedEOPs.txt",
+    "supportingSources": [
+      "projects/case-study-b/data/raw/shahbazi_gravel_pit/DirectEOPs.txt",
+      "projects/case-study-b/data/raw/shahbazi_gravel_pit/TimeStamps.txt"
+    ],
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+    "sourceCrs": {
+      "label": "NAD83 / MTM Zone 7",
+      "epsg": 32187,
+      "status": "from article source-data table; confirm before final GIS overlay use"
+    },
+    "scenePlacement": {
+      "mode": "tls-preview-aligned",
+      "horizontalScale": 1,
+      "verticalScale": 1,
+      "zLiftMeters": 115,
+      "note": "Camera positions are centered and lifted with the same transform as the sampled TLS preview."
+    },
+    "sourceBounds": {
+      "min": [
+        192991.387,
+        5025125.25,
+        320.025
+      ],
+      "max": [
+        193187.982,
+        5025249.388,
+        372.334
+      ]
+    },
+    "sceneBounds": {
+      "min": [
+        -101.372,
+        -106.887,
+        137.62
+      ],
+      "max": [
+        95.223,
+        17.252,
+        189.929
+      ]
+    },
+    "cameraPoseCount": 158
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "shahbazi-uav-flight-path",
+        "displayName": "Shahbazi UAV camera path",
+        "sourceRole": "refined_exterior_orientation_flight_path",
+        "pointCount": 158,
+        "sourceFile": "RefinedEOPs.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            67.055,
+            -106.461,
+            188.338
+          ],
+          [
+            77,
+            -106.629,
+            188.295
+          ],
+          [
+            86.362,
+            -106.887,
+            188.216
+          ],
+          [
+            89.596,
+            -106.302,
+            188.343
+          ],
+          [
+            90.819,
+            -104.423,
+            188.452
+          ],
+          [
+            89.14,
+            -100.912,
+            188.177
+          ],
+          [
+            85.698,
+            -95.397,
+            188.956
+          ],
+          [
+            80.122,
+            -91.173,
+            189.004
+          ],
+          [
+            71.692,
+            -89.87,
+            187.177
+          ],
+          [
+            62.411,
+            -87.883,
+            187.384
+          ],
+          [
+            52.98,
+            -86.973,
+            188.942
+          ],
+          [
+            42.856,
+            -86.04,
+            189.204
+          ],
+          [
+            32.329,
+            -85.637,
+            189.041
+          ],
+          [
+            22.217,
+            -85.58,
+            188.135
+          ],
+          [
+            11.872,
+            -85.622,
+            187.514
+          ],
+          [
+            1.536,
+            -85.655,
+            187.959
+          ],
+          [
+            -8.665,
+            -85.547,
+            188.24
+          ],
+          [
+            -19.011,
+            -85.332,
+            187.688
+          ],
+          [
+            -29.279,
+            -85.237,
+            187.697
+          ],
+          [
+            -39.387,
+            -85.043,
+            188.222
+          ],
+          [
+            -49.911,
+            -84.552,
+            188.818
+          ],
+          [
+            -60.141,
+            -83.902,
+            188.39
+          ],
+          [
+            -70.533,
+            -83.592,
+            187.452
+          ],
+          [
+            -80.901,
+            -83.739,
+            188.186
+          ],
+          [
+            -91.094,
+            -83.428,
+            188.941
+          ],
+          [
+            -98.859,
+            -83.195,
+            189.929
+          ],
+          [
+            -101.372,
+            -83.979,
+            187.836
+          ],
+          [
+            -100.28,
+            -80.12,
+            187.967
+          ],
+          [
+            -97.106,
+            -75.131,
+            189.744
+          ],
+          [
+            -92.881,
+            -68.936,
+            189.089
+          ],
+          [
+            -86.976,
+            -66.186,
+            189.724
+          ],
+          [
+            -78.824,
+            -64.536,
+            187.238
+          ],
+          [
+            -69.476,
+            -63.09,
+            188.156
+          ],
+          [
+            -60.312,
+            -62.899,
+            188.032
+          ],
+          [
+            -50.133,
+            -62.747,
+            188.078
+          ],
+          [
+            -39.614,
+            -63.338,
+            187.739
+          ],
+          [
+            -28.525,
+            -63.927,
+            187.686
+          ],
+          [
+            -17.489,
+            -64.514,
+            187.601
+          ],
+          [
+            -5.464,
+            -64.772,
+            187.637
+          ],
+          [
+            5.074,
+            -65.216,
+            187.8
+          ],
+          [
+            15.62,
+            -65.706,
+            187.766
+          ],
+          [
+            26.663,
+            -66.195,
+            187.643
+          ],
+          [
+            36.857,
+            -66.459,
+            188.052
+          ],
+          [
+            47.039,
+            -66.798,
+            188.198
+          ],
+          [
+            58.132,
+            -67.072,
+            188.34
+          ],
+          [
+            68.177,
+            -67.459,
+            188.289
+          ],
+          [
+            78.37,
+            -67.648,
+            188.315
+          ],
+          [
+            87.373,
+            -67.975,
+            188.465
+          ],
+          [
+            90.083,
+            -67.94,
+            187.909
+          ],
+          [
+            91.025,
+            -65.863,
+            188.474
+          ],
+          [
+            89.207,
+            -62.279,
+            188.134
+          ],
+          [
+            85.886,
+            -56.684,
+            187.807
+          ],
+          [
+            80.631,
+            -52.341,
+            188.109
+          ],
+          [
+            72.403,
+            -50.466,
+            187.327
+          ],
+          [
+            63.133,
+            -47.9,
+            188.833
+          ],
+          [
+            53.64,
+            -46.214,
+            188.944
+          ],
+          [
+            43.534,
+            -45.579,
+            188.067
+          ],
+          [
+            33.205,
+            -45.468,
+            187.584
+          ],
+          [
+            23.005,
+            -45.367,
+            187.614
+          ],
+          [
+            12.796,
+            -45.259,
+            188.037
+          ],
+          [
+            2.441,
+            -45.115,
+            187.574
+          ],
+          [
+            -7.912,
+            -45.132,
+            187.35
+          ],
+          [
+            -18.085,
+            -44.986,
+            187.482
+          ],
+          [
+            -28.334,
+            -44.704,
+            187.313
+          ],
+          [
+            -38.48,
+            -44.48,
+            188.008
+          ],
+          [
+            -48.575,
+            -44.05,
+            188.225
+          ],
+          [
+            -58.809,
+            -43.482,
+            187.171
+          ],
+          [
+            -68.99,
+            -43.49,
+            186.997
+          ],
+          [
+            -79.211,
+            -43.48,
+            187.349
+          ],
+          [
+            -89.347,
+            -43.29,
+            187.096
+          ],
+          [
+            -97.37,
+            -43.556,
+            188.536
+          ],
+          [
+            -100.028,
+            -43.599,
+            187.587
+          ],
+          [
+            -100.028,
+            -40.635,
+            186.76
+          ],
+          [
+            -97.111,
+            -35.657,
+            188.093
+          ],
+          [
+            -92.995,
+            -29.127,
+            188.956
+          ],
+          [
+            -87.574,
+            -26.232,
+            188.9
+          ],
+          [
+            -79.377,
+            -24.431,
+            187.161
+          ],
+          [
+            -69.384,
+            -22.788,
+            188.552
+          ],
+          [
+            -59.997,
+            -22.997,
+            188.663
+          ],
+          [
+            -50.137,
+            -22.684,
+            188.045
+          ],
+          [
+            -38.88,
+            -22.381,
+            188.127
+          ],
+          [
+            -27.543,
+            -23.247,
+            187.804
+          ],
+          [
+            -17.319,
+            -23.897,
+            187.551
+          ],
+          [
+            -8.075,
+            -25.122,
+            186.825
+          ],
+          [
+            2.401,
+            -25.883,
+            187.805
+          ],
+          [
+            13.745,
+            -25.969,
+            188.606
+          ],
+          [
+            24.406,
+            -26.013,
+            188.108
+          ],
+          [
+            34.526,
+            -26.611,
+            187.138
+          ],
+          [
+            44.44,
+            -26.719,
+            187.258
+          ],
+          [
+            54.752,
+            -26.933,
+            187.765
+          ],
+          [
+            65.323,
+            -27.109,
+            187.879
+          ],
+          [
+            75.729,
+            -27.279,
+            187.436
+          ],
+          [
+            85.625,
+            -27.548,
+            187.276
+          ],
+          [
+            91.128,
+            -27.567,
+            187.172
+          ],
+          [
+            92.515,
+            -26.613,
+            187.406
+          ],
+          [
+            92.127,
+            -23.769,
+            187.868
+          ],
+          [
+            89.466,
+            -18.704,
+            187.193
+          ],
+          [
+            85.391,
+            -12.945,
+            187.66
+          ],
+          [
+            78.482,
+            -11.25,
+            187.313
+          ],
+          [
+            68.874,
+            -8.448,
+            186.003
+          ],
+          [
+            59.409,
+            -6.898,
+            187.442
+          ],
+          [
+            49.561,
+            -5.839,
+            186.419
+          ],
+          [
+            39.129,
+            -5.697,
+            186.772
+          ],
+          [
+            28.87,
+            -5.532,
+            186.637
+          ],
+          [
+            18.483,
+            -5.586,
+            186.725
+          ],
+          [
+            8.256,
+            -5.58,
+            186.593
+          ],
+          [
+            -2.11,
+            -5.505,
+            186.935
+          ],
+          [
+            -12.533,
+            -5.183,
+            186.99
+          ],
+          [
+            -22.774,
+            -4.9,
+            186.751
+          ],
+          [
+            -32.983,
+            -4.746,
+            186.935
+          ],
+          [
+            -43.317,
+            -4.439,
+            187.426
+          ],
+          [
+            -53.665,
+            -4.225,
+            188.001
+          ],
+          [
+            -63.885,
+            -3.861,
+            187.75
+          ],
+          [
+            -73.879,
+            -3.665,
+            187.283
+          ],
+          [
+            -83.685,
+            -3.859,
+            186.613
+          ],
+          [
+            -93.228,
+            -3.739,
+            187.591
+          ],
+          [
+            -97.948,
+            -3.926,
+            188.216
+          ],
+          [
+            -98.753,
+            -2.332,
+            186.784
+          ],
+          [
+            -96.917,
+            2.432,
+            187.31
+          ],
+          [
+            -93.22,
+            8.481,
+            188.519
+          ],
+          [
+            -88.627,
+            13.643,
+            188.742
+          ],
+          [
+            -81.605,
+            14.754,
+            186.252
+          ],
+          [
+            -72.359,
+            17.049,
+            186.888
+          ],
+          [
+            -62.736,
+            17.118,
+            188.268
+          ],
+          [
+            -52.095,
+            17.252,
+            186.67
+          ],
+          [
+            -42.578,
+            16.943,
+            187.365
+          ],
+          [
+            -32.135,
+            16.565,
+            187.243
+          ],
+          [
+            -20.99,
+            16.399,
+            187.129
+          ],
+          [
+            -10.259,
+            15.851,
+            187.406
+          ],
+          [
+            0.434,
+            15.635,
+            187.492
+          ],
+          [
+            11.063,
+            15.314,
+            187.464
+          ],
+          [
+            21.628,
+            14.919,
+            187.192
+          ],
+          [
+            32.481,
+            14.556,
+            187.28
+          ],
+          [
+            42.99,
+            14.302,
+            187.445
+          ],
+          [
+            53.29,
+            14.244,
+            187.613
+          ],
+          [
+            63.529,
+            13.971,
+            187.454
+          ],
+          [
+            73.485,
+            13.781,
+            188.085
+          ],
+          [
+            83.965,
+            13.455,
+            187.627
+          ],
+          [
+            91.411,
+            12.558,
+            187.385
+          ],
+          [
+            93.2,
+            6.772,
+            185.205
+          ],
+          [
+            94.885,
+            -1.733,
+            180.918
+          ],
+          [
+            95.019,
+            -8.807,
+            177.262
+          ],
+          [
+            95.223,
+            -16.829,
+            174.424
+          ],
+          [
+            93.646,
+            -23.65,
+            172.281
+          ],
+          [
+            87.745,
+            -25.409,
+            172.355
+          ],
+          [
+            79.956,
+            -28.004,
+            170.411
+          ],
+          [
+            70.605,
+            -28.366,
+            167.254
+          ],
+          [
+            61.322,
+            -28.396,
+            165.546
+          ],
+          [
+            52.22,
+            -28.337,
+            162.464
+          ],
+          [
+            42.358,
+            -27.738,
+            159.22
+          ],
+          [
+            32.213,
+            -27.187,
+            157.544
+          ],
+          [
+            21.767,
+            -26.405,
+            155.242
+          ],
+          [
+            12.713,
+            -25.263,
+            153.381
+          ],
+          [
+            9.894,
+            -22.145,
+            150.672
+          ],
+          [
+            7.137,
+            -16.913,
+            146.355
+          ],
+          [
+            6.202,
+            -12.918,
+            143.678
+          ],
+          [
+            5.991,
+            -7.913,
+            140.235
+          ],
+          [
+            6.379,
+            -2.515,
+            137.62
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-001",
+        "imageId": 1,
+        "displayName": "Shahbazi image 001 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 150.752965,
+        "omega": -0.613303090733272,
+        "phi": -1.21871012061049,
+        "kappa": -93.0613260243299,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193159.814,
+          "y": 5025125.676,
+          "z": 370.743
+        },
+        "directPositionDeltaM": 2.925
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          67.055,
+          -106.461,
+          188.338
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-002",
+        "imageId": 2,
+        "displayName": "Shahbazi image 002 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 152.218245,
+        "omega": -1.16602620804029,
+        "phi": -0.540554566189639,
+        "kappa": -91.9907596820498,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193169.759,
+          "y": 5025125.507,
+          "z": 370.7
+        },
+        "directPositionDeltaM": 4.52
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77,
+          -106.629,
+          188.295
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-003",
+        "imageId": 3,
+        "displayName": "Shahbazi image 003 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 153.703134,
+        "omega": -1.96451895194502,
+        "phi": -4.36366925300353,
+        "kappa": -39.0745888229975,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193179.121,
+          "y": 5025125.25,
+          "z": 370.621
+        },
+        "directPositionDeltaM": 2.389
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          86.362,
+          -106.887,
+          188.216
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-004",
+        "imageId": 4,
+        "displayName": "Shahbazi image 004 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 155.171511,
+        "omega": 1.39561194394202,
+        "phi": 0.985289890530033,
+        "kappa": 0.655494705084695,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193182.355,
+          "y": 5025125.834,
+          "z": 370.748
+        },
+        "directPositionDeltaM": 2.271
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          89.596,
+          -106.302,
+          188.343
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-005",
+        "imageId": 5,
+        "displayName": "Shahbazi image 005 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 156.626973,
+        "omega": 1.01001421288449,
+        "phi": -2.22125662335081,
+        "kappa": 2.01808088427175,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193183.578,
+          "y": 5025127.713,
+          "z": 370.857
+        },
+        "directPositionDeltaM": 1.695
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          90.819,
+          -104.423,
+          188.452
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-006",
+        "imageId": 6,
+        "displayName": "Shahbazi image 006 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 158.201535,
+        "omega": 1.14763580378069,
+        "phi": -1.28315530770882,
+        "kappa": 3.03209353893829,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193181.899,
+          "y": 5025131.225,
+          "z": 370.582
+        },
+        "directPositionDeltaM": 2.303
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          89.14,
+          -100.912,
+          188.177
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-007",
+        "imageId": 7,
+        "displayName": "Shahbazi image 007 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 159.661163,
+        "omega": 0.842205458096513,
+        "phi": -1.08359167978604,
+        "kappa": 0.320948246406067,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193178.457,
+          "y": 5025136.74,
+          "z": 371.361
+        },
+        "directPositionDeltaM": 4.203
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.698,
+          -95.397,
+          188.956
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-008",
+        "imageId": 8,
+        "displayName": "Shahbazi image 008 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 161.122772,
+        "omega": -0.44406387395735,
+        "phi": 0.491959944428838,
+        "kappa": 68.7456579694887,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193172.881,
+          "y": 5025140.963,
+          "z": 371.409
+        },
+        "directPositionDeltaM": 4.183
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          80.122,
+          -91.173,
+          189.004
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-009",
+        "imageId": 9,
+        "displayName": "Shahbazi image 009 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 162.573536,
+        "omega": 2.0562749097782,
+        "phi": 1.20980884131521,
+        "kappa": 71.8185674147271,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193164.451,
+          "y": 5025142.266,
+          "z": 369.582
+        },
+        "directPositionDeltaM": 3.43
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.692,
+          -89.87,
+          187.177
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-010",
+        "imageId": 10,
+        "displayName": "Shahbazi image 010 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 164.035887,
+        "omega": 0.246124172380091,
+        "phi": 1.43851346650641,
+        "kappa": 73.7340527183727,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193155.17,
+          "y": 5025144.253,
+          "z": 369.789
+        },
+        "directPositionDeltaM": 3.994
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          62.411,
+          -87.883,
+          187.384
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-011",
+        "imageId": 11,
+        "displayName": "Shahbazi image 011 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 165.497086,
+        "omega": 0.95121634129718,
+        "phi": 1.0900948402086,
+        "kappa": 74.5557079677457,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193145.739,
+          "y": 5025145.163,
+          "z": 371.347
+        },
+        "directPositionDeltaM": 3.166
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.98,
+          -86.973,
+          188.942
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-012",
+        "imageId": 12,
+        "displayName": "Shahbazi image 012 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 166.948094,
+        "omega": 1.048628062616,
+        "phi": 0.901708272917153,
+        "kappa": 75.640418112073,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193135.615,
+          "y": 5025146.097,
+          "z": 371.609
+        },
+        "directPositionDeltaM": 2.857
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          42.856,
+          -86.04,
+          189.204
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-013",
+        "imageId": 13,
+        "displayName": "Shahbazi image 013 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 168.409488,
+        "omega": 1.07265347063415,
+        "phi": 0.961840417789648,
+        "kappa": 77.0200359784845,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193125.088,
+          "y": 5025146.5,
+          "z": 371.446
+        },
+        "directPositionDeltaM": 3.87
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.329,
+          -85.637,
+          189.041
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-014",
+        "imageId": 14,
+        "displayName": "Shahbazi image 014 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 169.861018,
+        "omega": 0.996490996298309,
+        "phi": 0.533794546861318,
+        "kappa": 77.1303405282667,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193114.976,
+          "y": 5025146.557,
+          "z": 370.54
+        },
+        "directPositionDeltaM": 3.455
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.217,
+          -85.58,
+          188.135
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-015",
+        "imageId": 15,
+        "displayName": "Shahbazi image 015 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 171.324417,
+        "omega": 0.451015153878383,
+        "phi": 1.15921257668611,
+        "kappa": 76.3508988570909,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193104.631,
+          "y": 5025146.515,
+          "z": 369.919
+        },
+        "directPositionDeltaM": 3.282
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.872,
+          -85.622,
+          187.514
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-016",
+        "imageId": 16,
+        "displayName": "Shahbazi image 016 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 172.776702,
+        "omega": 1.40455516854706,
+        "phi": 0.81116003847577,
+        "kappa": 76.0075348146395,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193094.295,
+          "y": 5025146.481,
+          "z": 370.364
+        },
+        "directPositionDeltaM": 2.181
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.536,
+          -85.655,
+          187.959
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-017",
+        "imageId": 17,
+        "displayName": "Shahbazi image 017 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 174.230728,
+        "omega": 0.827365251853185,
+        "phi": 0.855496027285322,
+        "kappa": 75.314570092458,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193084.094,
+          "y": 5025146.59,
+          "z": 370.645
+        },
+        "directPositionDeltaM": 0.86
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.665,
+          -85.547,
+          188.24
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-018",
+        "imageId": 18,
+        "displayName": "Shahbazi image 018 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 175.695498,
+        "omega": 0.986476298385984,
+        "phi": 1.04346201664852,
+        "kappa": 75.463536721476,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193073.748,
+          "y": 5025146.805,
+          "z": 370.093
+        },
+        "directPositionDeltaM": 5.278
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -19.011,
+          -85.332,
+          187.688
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-019",
+        "imageId": 19,
+        "displayName": "Shahbazi image 019 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 177.153535,
+        "omega": -0.146963567814227,
+        "phi": 0.729183159894804,
+        "kappa": 74.7789876514693,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193063.48,
+          "y": 5025146.899,
+          "z": 370.102
+        },
+        "directPositionDeltaM": 2.644
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -29.279,
+          -85.237,
+          187.697
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-020",
+        "imageId": 20,
+        "displayName": "Shahbazi image 020 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 178.609622,
+        "omega": 0.131651104741421,
+        "phi": 0.464071297877467,
+        "kappa": 74.1181524151305,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193053.372,
+          "y": 5025147.093,
+          "z": 370.627
+        },
+        "directPositionDeltaM": 2.961
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -39.387,
+          -85.043,
+          188.222
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-021",
+        "imageId": 21,
+        "displayName": "Shahbazi image 021 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 180.078545,
+        "omega": 0.532973489964351,
+        "phi": 0.917061970316972,
+        "kappa": 74.0068612360187,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193042.848,
+          "y": 5025147.585,
+          "z": 371.223
+        },
+        "directPositionDeltaM": 2.992
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.911,
+          -84.552,
+          188.818
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-022",
+        "imageId": 22,
+        "displayName": "Shahbazi image 022 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 181.542113,
+        "omega": 0.527657089443266,
+        "phi": 0.647659474587695,
+        "kappa": 75.5593485947761,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193032.618,
+          "y": 5025148.235,
+          "z": 370.795
+        },
+        "directPositionDeltaM": 1.679
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.141,
+          -83.902,
+          188.39
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-023",
+        "imageId": 23,
+        "displayName": "Shahbazi image 023 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 183.012273,
+        "omega": 1.06491190138337,
+        "phi": 0.533624997477372,
+        "kappa": 76.7166210246967,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193022.226,
+          "y": 5025148.544,
+          "z": 369.857
+        },
+        "directPositionDeltaM": 3.398
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.533,
+          -83.592,
+          187.452
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-024",
+        "imageId": 24,
+        "displayName": "Shahbazi image 024 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 184.468653,
+        "omega": 1.07611697817705,
+        "phi": -0.005077889299006,
+        "kappa": 75.8055306937478,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193011.858,
+          "y": 5025148.397,
+          "z": 370.591
+        },
+        "directPositionDeltaM": 2.672
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -80.901,
+          -83.739,
+          188.186
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-025",
+        "imageId": 25,
+        "displayName": "Shahbazi image 025 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 185.91982,
+        "omega": 1.14009533650045,
+        "phi": 1.90607708572329,
+        "kappa": 74.0060023402466,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193001.665,
+          "y": 5025148.708,
+          "z": 371.346
+        },
+        "directPositionDeltaM": 5.425
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -91.094,
+          -83.428,
+          188.941
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-026",
+        "imageId": 26,
+        "displayName": "Shahbazi image 026 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 187.374341,
+        "omega": 2.63833879740029,
+        "phi": 0.761041569369628,
+        "kappa": -1.93254555368142,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192993.9,
+          "y": 5025148.942,
+          "z": 372.334
+        },
+        "directPositionDeltaM": 4.874
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -98.859,
+          -83.195,
+          189.929
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-027",
+        "imageId": 27,
+        "displayName": "Shahbazi image 027 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 188.828387,
+        "omega": -1.43630226793749,
+        "phi": -0.778456059468983,
+        "kappa": -17.184344880455,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192991.387,
+          "y": 5025148.157,
+          "z": 370.241
+        },
+        "directPositionDeltaM": 2.546
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -101.372,
+          -83.979,
+          187.836
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-028",
+        "imageId": 28,
+        "displayName": "Shahbazi image 028 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 190.341979,
+        "omega": 1.96945715590737,
+        "phi": -1.08829723961363,
+        "kappa": -14.9381793382393,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192992.479,
+          "y": 5025152.017,
+          "z": 370.372
+        },
+        "directPositionDeltaM": 3.808
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -100.28,
+          -80.12,
+          187.967
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-029",
+        "imageId": 29,
+        "displayName": "Shahbazi image 029 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 191.806525,
+        "omega": 0.37282460226232,
+        "phi": -1.75990767994342,
+        "kappa": -16.3168933111364,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192995.653,
+          "y": 5025157.006,
+          "z": 372.149
+        },
+        "directPositionDeltaM": 2.173
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -97.106,
+          -75.131,
+          189.744
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-030",
+        "imageId": 30,
+        "displayName": "Shahbazi image 030 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 193.262824,
+        "omega": 3.53164331237707,
+        "phi": -1.91637208304871,
+        "kappa": -36.7597414767524,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192999.878,
+          "y": 5025163.201,
+          "z": 371.494
+        },
+        "directPositionDeltaM": 2.845
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -92.881,
+          -68.936,
+          189.089
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-031",
+        "imageId": 31,
+        "displayName": "Shahbazi image 031 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 194.730546,
+        "omega": -3.49006016209823,
+        "phi": -1.17762361463884,
+        "kappa": -93.3227520777938,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193005.783,
+          "y": 5025165.95,
+          "z": 372.129
+        },
+        "directPositionDeltaM": 3.867
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -86.976,
+          -66.186,
+          189.724
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-032",
+        "imageId": 32,
+        "displayName": "Shahbazi image 032 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 196.186276,
+        "omega": -0.26504430928201,
+        "phi": -2.62120322147796,
+        "kappa": -90.4188348956481,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193013.935,
+          "y": 5025167.601,
+          "z": 369.643
+        },
+        "directPositionDeltaM": 4.722
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -78.824,
+          -64.536,
+          187.238
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-033",
+        "imageId": 33,
+        "displayName": "Shahbazi image 033 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 197.656767,
+        "omega": -1.30469642697692,
+        "phi": -1.67764149311917,
+        "kappa": -91.1128005393612,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193023.283,
+          "y": 5025169.047,
+          "z": 370.561
+        },
+        "directPositionDeltaM": 3.526
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.476,
+          -63.09,
+          188.156
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-034",
+        "imageId": 34,
+        "displayName": "Shahbazi image 034 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 199.121685,
+        "omega": -1.61809265729041,
+        "phi": -1.51488805004848,
+        "kappa": -90.5692455022597,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193032.447,
+          "y": 5025169.238,
+          "z": 370.437
+        },
+        "directPositionDeltaM": 5.44
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.312,
+          -62.899,
+          188.032
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-035",
+        "imageId": 35,
+        "displayName": "Shahbazi image 035 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 200.615952,
+        "omega": -0.123487556231833,
+        "phi": -1.13817516090152,
+        "kappa": -91.3909229374517,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193042.626,
+          "y": 5025169.39,
+          "z": 370.483
+        },
+        "directPositionDeltaM": 2.109
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -50.133,
+          -62.747,
+          188.078
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-036",
+        "imageId": 36,
+        "displayName": "Shahbazi image 036 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 202.075997,
+        "omega": -1.2592860750063,
+        "phi": -1.51454240888474,
+        "kappa": -88.2403545181912,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193053.145,
+          "y": 5025168.798,
+          "z": 370.144
+        },
+        "directPositionDeltaM": 4.089
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -39.614,
+          -63.338,
+          187.739
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-037",
+        "imageId": 37,
+        "displayName": "Shahbazi image 037 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 203.534753,
+        "omega": -1.7201527121405,
+        "phi": -1.50002161399731,
+        "kappa": -87.6836699647731,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193064.234,
+          "y": 5025168.21,
+          "z": 370.091
+        },
+        "directPositionDeltaM": 3.853
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -28.525,
+          -63.927,
+          187.686
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-038",
+        "imageId": 38,
+        "displayName": "Shahbazi image 038 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 205.003735,
+        "omega": -1.90751069161222,
+        "phi": -1.32897565213867,
+        "kappa": -88.6217624362412,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193075.27,
+          "y": 5025167.623,
+          "z": 370.006
+        },
+        "directPositionDeltaM": 2.922
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -17.489,
+          -64.514,
+          187.601
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-039",
+        "imageId": 39,
+        "displayName": "Shahbazi image 039 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 206.615581,
+        "omega": -1.65304979018336,
+        "phi": -1.54210821327201,
+        "kappa": -89.6116129865112,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193087.295,
+          "y": 5025167.364,
+          "z": 370.042
+        },
+        "directPositionDeltaM": 4.261
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.464,
+          -64.772,
+          187.637
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-040",
+        "imageId": 40,
+        "displayName": "Shahbazi image 040 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 208.069544,
+        "omega": -1.8279792802153,
+        "phi": -1.59559598335068,
+        "kappa": -89.7481599049207,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193097.833,
+          "y": 5025166.92,
+          "z": 370.205
+        },
+        "directPositionDeltaM": 3.671
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          5.074,
+          -65.216,
+          187.8
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-041",
+        "imageId": 41,
+        "displayName": "Shahbazi image 041 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 209.536436,
+        "omega": -1.26702844764487,
+        "phi": -0.925530373754658,
+        "kappa": -89.3829016197836,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193108.379,
+          "y": 5025166.43,
+          "z": 370.171
+        },
+        "directPositionDeltaM": 2.755
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.62,
+          -65.706,
+          187.766
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-042",
+        "imageId": 42,
+        "displayName": "Shahbazi image 042 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 211.091068,
+        "omega": -1.85225590409791,
+        "phi": -1.14476649144296,
+        "kappa": -88.9028029389828,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193119.422,
+          "y": 5025165.941,
+          "z": 370.048
+        },
+        "directPositionDeltaM": 2.587
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          26.663,
+          -66.195,
+          187.643
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-043",
+        "imageId": 43,
+        "displayName": "Shahbazi image 043 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 212.560702,
+        "omega": -1.73337059798013,
+        "phi": -1.00735737836659,
+        "kappa": -89.4398988850248,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193129.616,
+          "y": 5025165.677,
+          "z": 370.457
+        },
+        "directPositionDeltaM": 5.575
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.857,
+          -66.459,
+          188.052
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-044",
+        "imageId": 44,
+        "displayName": "Shahbazi image 044 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 214.027699,
+        "omega": -1.87936762400615,
+        "phi": -1.17583812935755,
+        "kappa": -89.8219669711839,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193139.798,
+          "y": 5025165.338,
+          "z": 370.603
+        },
+        "directPositionDeltaM": 2.139
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.039,
+          -66.798,
+          188.198
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-045",
+        "imageId": 45,
+        "displayName": "Shahbazi image 045 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 215.656834,
+        "omega": -1.6848133017722,
+        "phi": -1.10039989932348,
+        "kappa": -90.7799803429078,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193150.891,
+          "y": 5025165.065,
+          "z": 370.745
+        },
+        "directPositionDeltaM": 2.47
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          58.132,
+          -67.072,
+          188.34
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-046",
+        "imageId": 46,
+        "displayName": "Shahbazi image 046 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 217.125419,
+        "omega": -0.947446170137086,
+        "phi": -1.03856589493911,
+        "kappa": -89.6848829892421,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193160.936,
+          "y": 5025164.677,
+          "z": 370.694
+        },
+        "directPositionDeltaM": 3.376
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          68.177,
+          -67.459,
+          188.289
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-047",
+        "imageId": 47,
+        "displayName": "Shahbazi image 047 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 218.576453,
+        "omega": -0.858625827425008,
+        "phi": -1.14181739031115,
+        "kappa": -89.4892493819946,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193171.129,
+          "y": 5025164.488,
+          "z": 370.72
+        },
+        "directPositionDeltaM": 4.62
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.37,
+          -67.648,
+          188.315
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-048",
+        "imageId": 48,
+        "displayName": "Shahbazi image 048 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 220.037639,
+        "omega": -1.84883304872811,
+        "phi": -5.46652903661151,
+        "kappa": -35.6956973248681,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193180.132,
+          "y": 5025164.161,
+          "z": 370.87
+        },
+        "directPositionDeltaM": 4.563
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          87.373,
+          -67.975,
+          188.465
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-049",
+        "imageId": 49,
+        "displayName": "Shahbazi image 049 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 221.503176,
+        "omega": 0.230547023561695,
+        "phi": 0.920200611977288,
+        "kappa": 5.64894015830171,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193182.842,
+          "y": 5025164.197,
+          "z": 370.314
+        },
+        "directPositionDeltaM": 3.137
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          90.083,
+          -67.94,
+          187.909
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-050",
+        "imageId": 50,
+        "displayName": "Shahbazi image 050 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 222.959818,
+        "omega": 1.327889141668,
+        "phi": -2.55604263915522,
+        "kappa": 4.55942653482734,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193183.784,
+          "y": 5025166.274,
+          "z": 370.879
+        },
+        "directPositionDeltaM": 2.902
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          91.025,
+          -65.863,
+          188.474
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-051",
+        "imageId": 51,
+        "displayName": "Shahbazi image 051 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 224.414818,
+        "omega": 1.0215913488767,
+        "phi": -1.88757337828267,
+        "kappa": 5.06998608452866,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193181.966,
+          "y": 5025169.857,
+          "z": 370.539
+        },
+        "directPositionDeltaM": 3.016
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          89.207,
+          -62.279,
+          188.134
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-052",
+        "imageId": 52,
+        "displayName": "Shahbazi image 052 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 225.86701,
+        "omega": 1.49215048582934,
+        "phi": -1.66075538998225,
+        "kappa": 4.99475295920485,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193178.645,
+          "y": 5025175.452,
+          "z": 370.212
+        },
+        "directPositionDeltaM": 5.39
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.886,
+          -56.684,
+          187.807
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-053",
+        "imageId": 53,
+        "displayName": "Shahbazi image 053 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 227.330487,
+        "omega": 0.032690874037228,
+        "phi": 0.345430607305227,
+        "kappa": 66.3060505569753,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193173.39,
+          "y": 5025179.795,
+          "z": 370.514
+        },
+        "directPositionDeltaM": 1.654
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          80.631,
+          -52.341,
+          188.109
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-054",
+        "imageId": 54,
+        "displayName": "Shahbazi image 054 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 228.793155,
+        "omega": 0.814198064625767,
+        "phi": 1.36679732326576,
+        "kappa": 72.8930860962003,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193165.162,
+          "y": 5025181.671,
+          "z": 369.732
+        },
+        "directPositionDeltaM": 4.384
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.403,
+          -50.466,
+          187.327
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-055",
+        "imageId": 55,
+        "displayName": "Shahbazi image 055 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 230.260517,
+        "omega": 0.907167267678465,
+        "phi": 1.05471947128328,
+        "kappa": 74.152267134439,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193155.892,
+          "y": 5025184.237,
+          "z": 371.238
+        },
+        "directPositionDeltaM": 3.529
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          63.133,
+          -47.9,
+          188.833
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-056",
+        "imageId": 56,
+        "displayName": "Shahbazi image 056 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 231.730618,
+        "omega": 1.73675683518119,
+        "phi": 0.86486459341818,
+        "kappa": 75.1876103140979,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193146.399,
+          "y": 5025185.923,
+          "z": 371.349
+        },
+        "directPositionDeltaM": 2.242
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.64,
+          -46.214,
+          188.944
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-057",
+        "imageId": 57,
+        "displayName": "Shahbazi image 057 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 233.189005,
+        "omega": 1.36098134091456,
+        "phi": 1.27330242864934,
+        "kappa": 77.281344815789,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193136.293,
+          "y": 5025186.557,
+          "z": 370.472
+        },
+        "directPositionDeltaM": 3.322
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          43.534,
+          -45.579,
+          188.067
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-058",
+        "imageId": 58,
+        "displayName": "Shahbazi image 058 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 234.658844,
+        "omega": 0.771078388730454,
+        "phi": 0.940587278529493,
+        "kappa": 77.0531820606927,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193125.964,
+          "y": 5025186.669,
+          "z": 369.989
+        },
+        "directPositionDeltaM": 2.326
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          33.205,
+          -45.468,
+          187.584
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-059",
+        "imageId": 59,
+        "displayName": "Shahbazi image 059 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 236.125794,
+        "omega": 1.58149729078366,
+        "phi": 0.792461118271811,
+        "kappa": 78.1850570204249,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193115.764,
+          "y": 5025186.769,
+          "z": 370.019
+        },
+        "directPositionDeltaM": 2.768
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          23.005,
+          -45.367,
+          187.614
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-060",
+        "imageId": 60,
+        "displayName": "Shahbazi image 060 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 237.584388,
+        "omega": 0.956563476616558,
+        "phi": 0.594920902674612,
+        "kappa": 77.0880712424016,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193105.555,
+          "y": 5025186.878,
+          "z": 370.442
+        },
+        "directPositionDeltaM": 0.913
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.796,
+          -45.259,
+          188.037
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-061",
+        "imageId": 61,
+        "displayName": "Shahbazi image 061 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 239.054483,
+        "omega": 1.36788500042185,
+        "phi": 0.879503530540255,
+        "kappa": 76.3506947763559,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193095.2,
+          "y": 5025187.021,
+          "z": 369.979
+        },
+        "directPositionDeltaM": 3.382
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.441,
+          -45.115,
+          187.574
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-062",
+        "imageId": 62,
+        "displayName": "Shahbazi image 062 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 240.520338,
+        "omega": 1.10087101962908,
+        "phi": 0.857167837359597,
+        "kappa": 76.8975841836496,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193084.847,
+          "y": 5025187.004,
+          "z": 369.755
+        },
+        "directPositionDeltaM": 1.805
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7.912,
+          -45.132,
+          187.35
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-063",
+        "imageId": 63,
+        "displayName": "Shahbazi image 063 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 241.977206,
+        "omega": 1.27662690365531,
+        "phi": 0.622312049933423,
+        "kappa": 77.8318880681398,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193074.674,
+          "y": 5025187.15,
+          "z": 369.887
+        },
+        "directPositionDeltaM": 2.368
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -18.085,
+          -44.986,
+          187.482
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-064",
+        "imageId": 64,
+        "displayName": "Shahbazi image 064 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 243.437821,
+        "omega": 1.16029576289823,
+        "phi": 1.40558167045163,
+        "kappa": 79.6444693003565,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193064.425,
+          "y": 5025187.432,
+          "z": 369.718
+        },
+        "directPositionDeltaM": 4.261
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -28.334,
+          -44.704,
+          187.313
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-065",
+        "imageId": 65,
+        "displayName": "Shahbazi image 065 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 244.891751,
+        "omega": 0.601709699629353,
+        "phi": 1.00041378064116,
+        "kappa": 78.9576212870895,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193054.279,
+          "y": 5025187.656,
+          "z": 370.413
+        },
+        "directPositionDeltaM": 2.536
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -38.48,
+          -44.48,
+          188.008
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-066",
+        "imageId": 66,
+        "displayName": "Shahbazi image 066 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 246.359315,
+        "omega": 1.14168215903916,
+        "phi": 1.02185108964864,
+        "kappa": 77.2109510042638,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193044.184,
+          "y": 5025188.086,
+          "z": 370.63
+        },
+        "directPositionDeltaM": 2.469
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -48.575,
+          -44.05,
+          188.225
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-067",
+        "imageId": 67,
+        "displayName": "Shahbazi image 067 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 247.827374,
+        "omega": 1.87945249865791,
+        "phi": 0.158903951591776,
+        "kappa": 78.7456676096205,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193033.95,
+          "y": 5025188.654,
+          "z": 369.576
+        },
+        "directPositionDeltaM": 4.254
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.809,
+          -43.482,
+          187.171
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-068",
+        "imageId": 68,
+        "displayName": "Shahbazi image 068 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 249.283064,
+        "omega": 0.799536603706558,
+        "phi": 0.912493390742055,
+        "kappa": 80.2084350122557,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193023.769,
+          "y": 5025188.647,
+          "z": 369.402
+        },
+        "directPositionDeltaM": 3.237
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.99,
+          -43.49,
+          186.997
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-069",
+        "imageId": 69,
+        "displayName": "Shahbazi image 069 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 250.741087,
+        "omega": 1.38298958664622,
+        "phi": 1.09105057188407,
+        "kappa": 79.8063655289179,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193013.548,
+          "y": 5025188.656,
+          "z": 369.754
+        },
+        "directPositionDeltaM": 4.339
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -79.211,
+          -43.48,
+          187.349
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-070",
+        "imageId": 70,
+        "displayName": "Shahbazi image 070 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 252.209944,
+        "omega": 1.02858155332983,
+        "phi": 0.891085194577127,
+        "kappa": 80.2082753125208,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193003.412,
+          "y": 5025188.847,
+          "z": 369.501
+        },
+        "directPositionDeltaM": 4.952
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -89.347,
+          -43.29,
+          187.096
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-071",
+        "imageId": 71,
+        "displayName": "Shahbazi image 071 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 253.671768,
+        "omega": 1.63566019400354,
+        "phi": 1.91955566798412,
+        "kappa": 7.472809695508,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192995.389,
+          "y": 5025188.58,
+          "z": 370.941
+        },
+        "directPositionDeltaM": 4.09
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -97.37,
+          -43.556,
+          188.536
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-072",
+        "imageId": 72,
+        "displayName": "Shahbazi image 072 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 255.131038,
+        "omega": -0.341649879947318,
+        "phi": -1.222880123117,
+        "kappa": -13.0812312718525,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192992.731,
+          "y": 5025188.537,
+          "z": 369.992
+        },
+        "directPositionDeltaM": 2.169
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -100.028,
+          -43.599,
+          187.587
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-073",
+        "imageId": 73,
+        "displayName": "Shahbazi image 073 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 256.591305,
+        "omega": 1.05463186272415,
+        "phi": -0.412758447981316,
+        "kappa": -14.3344139533793,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192992.731,
+          "y": 5025191.502,
+          "z": 369.165
+        },
+        "directPositionDeltaM": 3.786
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -100.028,
+          -40.635,
+          186.76
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-074",
+        "imageId": 74,
+        "displayName": "Shahbazi image 074 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 258.122458,
+        "omega": 0.781177988993052,
+        "phi": -1.70382364434348,
+        "kappa": -12.2960527964977,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192995.648,
+          "y": 5025196.479,
+          "z": 370.498
+        },
+        "directPositionDeltaM": 1.064
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -97.111,
+          -35.657,
+          188.093
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-075",
+        "imageId": 75,
+        "displayName": "Shahbazi image 075 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 259.59929,
+        "omega": 4.81702593878106,
+        "phi": 0.32454439936469,
+        "kappa": -37.0421001546115,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192999.764,
+          "y": 5025203.01,
+          "z": 371.361
+        },
+        "directPositionDeltaM": 5.219
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -92.995,
+          -29.127,
+          188.956
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-076",
+        "imageId": 76,
+        "displayName": "Shahbazi image 076 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 261.065528,
+        "omega": -3.65954120593923,
+        "phi": -2.11213504498653,
+        "kappa": -97.2003402301705,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193005.185,
+          "y": 5025205.905,
+          "z": 371.305
+        },
+        "directPositionDeltaM": 4.939
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -87.574,
+          -26.232,
+          188.9
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-077",
+        "imageId": 77,
+        "displayName": "Shahbazi image 077 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 262.535749,
+        "omega": 1.32427877112718,
+        "phi": -1.90619507350807,
+        "kappa": -90.4022826665597,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193013.382,
+          "y": 5025207.705,
+          "z": 369.566
+        },
+        "directPositionDeltaM": 4.163
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -79.377,
+          -24.431,
+          187.161
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-078",
+        "imageId": 78,
+        "displayName": "Shahbazi image 078 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 264.003953,
+        "omega": -0.462375578028138,
+        "phi": -2.5902146516287,
+        "kappa": -95.5170808770578,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193023.375,
+          "y": 5025209.349,
+          "z": 370.957
+        },
+        "directPositionDeltaM": 1.441
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.384,
+          -22.788,
+          188.552
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-079",
+        "imageId": 79,
+        "displayName": "Shahbazi image 079 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 265.461048,
+        "omega": -1.36309582389826,
+        "phi": -1.59082870817041,
+        "kappa": -92.7034277882022,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193032.762,
+          "y": 5025209.139,
+          "z": 371.068
+        },
+        "directPositionDeltaM": 3.34
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.997,
+          -22.997,
+          188.663
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-080",
+        "imageId": 80,
+        "displayName": "Shahbazi image 080 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 266.927336,
+        "omega": -1.00978982861125,
+        "phi": -1.61989246748402,
+        "kappa": -92.3056889650224,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193042.622,
+          "y": 5025209.452,
+          "z": 370.45
+        },
+        "directPositionDeltaM": 1.351
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -50.137,
+          -22.684,
+          188.045
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-081",
+        "imageId": 81,
+        "displayName": "Shahbazi image 081 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 268.384676,
+        "omega": -0.433331226970106,
+        "phi": -2.48196736709224,
+        "kappa": -92.9672293880345,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193053.879,
+          "y": 5025209.756,
+          "z": 370.532
+        },
+        "directPositionDeltaM": 2.578
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -38.88,
+          -22.381,
+          188.127
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-082",
+        "imageId": 82,
+        "displayName": "Shahbazi image 082 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 269.837471,
+        "omega": -1.61769419251101,
+        "phi": -2.5446696106671,
+        "kappa": -91.5987742879662,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193065.216,
+          "y": 5025208.89,
+          "z": 370.209
+        },
+        "directPositionDeltaM": 2.746
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -27.543,
+          -23.247,
+          187.804
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-083",
+        "imageId": 83,
+        "displayName": "Shahbazi image 083 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 271.304723,
+        "omega": -0.463834903319023,
+        "phi": -2.3202031059811,
+        "kappa": -90.9641549979927,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193075.44,
+          "y": 5025208.24,
+          "z": 369.956
+        },
+        "directPositionDeltaM": 1.447
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -17.319,
+          -23.897,
+          187.551
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-084",
+        "imageId": 84,
+        "displayName": "Shahbazi image 084 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 272.766507,
+        "omega": -1.3724262951714,
+        "phi": -1.34166494390197,
+        "kappa": -83.4974693223488,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193084.684,
+          "y": 5025207.015,
+          "z": 369.23
+        },
+        "directPositionDeltaM": 1.624
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.075,
+          -25.122,
+          186.825
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-085",
+        "imageId": 85,
+        "displayName": "Shahbazi image 085 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 274.230099,
+        "omega": -1.8816765077094,
+        "phi": -1.25098079399733,
+        "kappa": -88.9817799545479,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193095.16,
+          "y": 5025206.254,
+          "z": 370.21
+        },
+        "directPositionDeltaM": 3.693
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.401,
+          -25.883,
+          187.805
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-086",
+        "imageId": 86,
+        "displayName": "Shahbazi image 086 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 275.681722,
+        "omega": -0.842271749852136,
+        "phi": -2.20157501050828,
+        "kappa": -93.327286258234,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193106.504,
+          "y": 5025206.167,
+          "z": 371.011
+        },
+        "directPositionDeltaM": 0.75
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.745,
+          -25.969,
+          188.606
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-087",
+        "imageId": 87,
+        "displayName": "Shahbazi image 087 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 277.140802,
+        "omega": -0.764382900601973,
+        "phi": -1.51510566029571,
+        "kappa": -94.0416989244429,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193117.165,
+          "y": 5025206.124,
+          "z": 370.513
+        },
+        "directPositionDeltaM": 4.363
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          24.406,
+          -26.013,
+          188.108
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-088",
+        "imageId": 88,
+        "displayName": "Shahbazi image 088 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 278.606694,
+        "omega": -1.4866796090701,
+        "phi": -1.53398761070061,
+        "kappa": -91.0973805630198,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193127.285,
+          "y": 5025205.526,
+          "z": 369.543
+        },
+        "directPositionDeltaM": 3.557
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          34.526,
+          -26.611,
+          187.138
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-089",
+        "imageId": 89,
+        "displayName": "Shahbazi image 089 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 280.064663,
+        "omega": -0.884669735680795,
+        "phi": -1.2735689519107,
+        "kappa": -89.5194209636555,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193137.199,
+          "y": 5025205.417,
+          "z": 369.663
+        },
+        "directPositionDeltaM": 3.854
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          44.44,
+          -26.719,
+          187.258
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-090",
+        "imageId": 90,
+        "displayName": "Shahbazi image 090 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 281.521043,
+        "omega": -1.04870981884888,
+        "phi": -0.911951020826027,
+        "kappa": -91.3993717609976,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193147.511,
+          "y": 5025205.203,
+          "z": 370.17
+        },
+        "directPositionDeltaM": 4.071
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          54.752,
+          -26.933,
+          187.765
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-091",
+        "imageId": 91,
+        "displayName": "Shahbazi image 091 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 282.972331,
+        "omega": -1.48340314556593,
+        "phi": -1.76351694225743,
+        "kappa": -92.8541234939619,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193158.082,
+          "y": 5025205.027,
+          "z": 370.284
+        },
+        "directPositionDeltaM": 3.276
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          65.323,
+          -27.109,
+          187.879
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-092",
+        "imageId": 92,
+        "displayName": "Shahbazi image 092 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 284.434234,
+        "omega": -1.25675464277743,
+        "phi": -1.47891041652941,
+        "kappa": -92.0257817576266,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193168.488,
+          "y": 5025204.858,
+          "z": 369.841
+        },
+        "directPositionDeltaM": 1.394
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.729,
+          -27.279,
+          187.436
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-093",
+        "imageId": 93,
+        "displayName": "Shahbazi image 093 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 285.890084,
+        "omega": -1.83312123579687,
+        "phi": -4.29992056638157,
+        "kappa": -74.6185096051844,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193178.384,
+          "y": 5025204.589,
+          "z": 369.681
+        },
+        "directPositionDeltaM": 3.103
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.625,
+          -27.548,
+          187.276
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-094",
+        "imageId": 94,
+        "displayName": "Shahbazi image 094 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 287.34439,
+        "omega": 0.592399072341193,
+        "phi": -0.904585493498598,
+        "kappa": 7.62650719841849,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193183.887,
+          "y": 5025204.57,
+          "z": 369.577
+        },
+        "directPositionDeltaM": 2.776
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          91.128,
+          -27.567,
+          187.172
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-095",
+        "imageId": 95,
+        "displayName": "Shahbazi image 095 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 288.802239,
+        "omega": 1.36297131843931,
+        "phi": -1.96895431703463,
+        "kappa": 6.33219998735526,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193185.274,
+          "y": 5025205.523,
+          "z": 369.811
+        },
+        "directPositionDeltaM": 3.607
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          92.515,
+          -26.613,
+          187.406
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-096",
+        "imageId": 96,
+        "displayName": "Shahbazi image 096 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 290.271703,
+        "omega": 0.089235502162565,
+        "phi": -1.47721562034127,
+        "kappa": 7.2249647393173,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193184.886,
+          "y": 5025208.368,
+          "z": 370.273
+        },
+        "directPositionDeltaM": 3.354
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          92.127,
+          -23.769,
+          187.868
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-097",
+        "imageId": 97,
+        "displayName": "Shahbazi image 097 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 291.736293,
+        "omega": 1.59380911018745,
+        "phi": -1.66538707083261,
+        "kappa": 7.44140450302058,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193182.225,
+          "y": 5025213.433,
+          "z": 369.598
+        },
+        "directPositionDeltaM": 2.762
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          89.466,
+          -18.704,
+          187.193
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-098",
+        "imageId": 98,
+        "displayName": "Shahbazi image 098 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 293.193869,
+        "omega": 5.38770947116482,
+        "phi": -4.96484751899723,
+        "kappa": 39.2399947256808,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193178.15,
+          "y": 5025219.192,
+          "z": 370.065
+        },
+        "directPositionDeltaM": 4.605
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.391,
+          -12.945,
+          187.66
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-099",
+        "imageId": 99,
+        "displayName": "Shahbazi image 099 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 294.65194,
+        "omega": -0.547851563273693,
+        "phi": 0.791665011999756,
+        "kappa": 73.890740300728,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193171.241,
+          "y": 5025220.886,
+          "z": 369.718
+        },
+        "directPositionDeltaM": 4.13
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.482,
+          -11.25,
+          187.313
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-100",
+        "imageId": 100,
+        "displayName": "Shahbazi image 100 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 296.226837,
+        "omega": 1.75278373051431,
+        "phi": 1.33858822630151,
+        "kappa": 77.0028707095127,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193161.633,
+          "y": 5025223.689,
+          "z": 368.408
+        },
+        "directPositionDeltaM": 5.032
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          68.874,
+          -8.448,
+          186.003
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-101",
+        "imageId": 101,
+        "displayName": "Shahbazi image 101 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 297.692336,
+        "omega": 1.35998754426186,
+        "phi": 0.489332519828371,
+        "kappa": 76.3282967568993,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193152.168,
+          "y": 5025225.238,
+          "z": 369.847
+        },
+        "directPositionDeltaM": 2.897
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          59.409,
+          -6.898,
+          187.442
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-102",
+        "imageId": 102,
+        "displayName": "Shahbazi image 102 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 299.155205,
+        "omega": 2.16063552215615,
+        "phi": 0.989488706384776,
+        "kappa": 78.1240951090413,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193142.32,
+          "y": 5025226.297,
+          "z": 368.824
+        },
+        "directPositionDeltaM": 3.741
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          49.561,
+          -5.839,
+          186.419
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-103",
+        "imageId": 103,
+        "displayName": "Shahbazi image 103 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 300.615664,
+        "omega": 0.81698564981319,
+        "phi": 1.07335066176076,
+        "kappa": 78.9796496947701,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193131.888,
+          "y": 5025226.439,
+          "z": 369.177
+        },
+        "directPositionDeltaM": 0.828
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          39.129,
+          -5.697,
+          186.772
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-104",
+        "imageId": 104,
+        "displayName": "Shahbazi image 104 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 302.08653,
+        "omega": 1.37771786476345,
+        "phi": 0.675611279592864,
+        "kappa": 78.3796758023049,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193121.629,
+          "y": 5025226.604,
+          "z": 369.042
+        },
+        "directPositionDeltaM": 4.188
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.87,
+          -5.532,
+          186.637
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-105",
+        "imageId": 105,
+        "displayName": "Shahbazi image 105 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 303.542677,
+        "omega": 0.890878751243346,
+        "phi": 0.905208846539903,
+        "kappa": 78.9165667391615,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193111.242,
+          "y": 5025226.55,
+          "z": 369.13
+        },
+        "directPositionDeltaM": 4.777
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.483,
+          -5.586,
+          186.725
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-106",
+        "imageId": 106,
+        "displayName": "Shahbazi image 106 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 304.99961,
+        "omega": 1.95542321016488,
+        "phi": 0.993001447727351,
+        "kappa": 78.3362538321234,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193101.015,
+          "y": 5025226.556,
+          "z": 368.998
+        },
+        "directPositionDeltaM": 3.416
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.256,
+          -5.58,
+          186.593
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-107",
+        "imageId": 107,
+        "displayName": "Shahbazi image 107 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 306.45388,
+        "omega": 1.06842103902995,
+        "phi": 0.834147924346452,
+        "kappa": 78.0126156760921,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193090.649,
+          "y": 5025226.631,
+          "z": 369.34
+        },
+        "directPositionDeltaM": 0.761
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -2.11,
+          -5.505,
+          186.935
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-108",
+        "imageId": 108,
+        "displayName": "Shahbazi image 108 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 307.923169,
+        "omega": 0.813703424118508,
+        "phi": 0.970573703012389,
+        "kappa": 79.5848386931592,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193080.226,
+          "y": 5025226.953,
+          "z": 369.395
+        },
+        "directPositionDeltaM": 2.031
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -12.533,
+          -5.183,
+          186.99
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-109",
+        "imageId": 109,
+        "displayName": "Shahbazi image 109 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 309.384778,
+        "omega": 0.378749803194659,
+        "phi": 0.498861284350821,
+        "kappa": 78.8384083479852,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193069.985,
+          "y": 5025227.237,
+          "z": 369.156
+        },
+        "directPositionDeltaM": 1.879
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -22.774,
+          -4.9,
+          186.751
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-110",
+        "imageId": 110,
+        "displayName": "Shahbazi image 110 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 310.836853,
+        "omega": 0.09096856091261,
+        "phi": 0.900428158208521,
+        "kappa": 79.2833938430289,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193059.776,
+          "y": 5025227.39,
+          "z": 369.34
+        },
+        "directPositionDeltaM": 2.897
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -32.983,
+          -4.746,
+          186.935
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-111",
+        "imageId": 111,
+        "displayName": "Shahbazi image 111 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 312.290949,
+        "omega": 1.28064492480912,
+        "phi": 0.897210587743174,
+        "kappa": 78.410474004506,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193049.442,
+          "y": 5025227.697,
+          "z": 369.831
+        },
+        "directPositionDeltaM": 2.417
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -43.317,
+          -4.439,
+          187.426
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-112",
+        "imageId": 112,
+        "displayName": "Shahbazi image 112 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 313.744038,
+        "omega": 1.27380540228033,
+        "phi": 0.804954047887552,
+        "kappa": 78.6325981967002,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193039.094,
+          "y": 5025227.911,
+          "z": 370.406
+        },
+        "directPositionDeltaM": 3.418
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -53.665,
+          -4.225,
+          188.001
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-113",
+        "imageId": 113,
+        "displayName": "Shahbazi image 113 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 315.212065,
+        "omega": 1.59086478214838,
+        "phi": 0.723604019839672,
+        "kappa": 78.2305767235876,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193028.874,
+          "y": 5025228.275,
+          "z": 370.155
+        },
+        "directPositionDeltaM": 2.356
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -63.885,
+          -3.861,
+          187.75
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-114",
+        "imageId": 114,
+        "displayName": "Shahbazi image 114 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 316.677634,
+        "omega": 1.16682292099421,
+        "phi": 0.664909470504284,
+        "kappa": 78.6070560279959,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193018.88,
+          "y": 5025228.471,
+          "z": 369.688
+        },
+        "directPositionDeltaM": 5.133
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.879,
+          -3.665,
+          187.283
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-115",
+        "imageId": 115,
+        "displayName": "Shahbazi image 115 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 318.1483,
+        "omega": 0.835584152428803,
+        "phi": 0.868672380386057,
+        "kappa": 79.1906012615863,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193009.074,
+          "y": 5025228.277,
+          "z": 369.018
+        },
+        "directPositionDeltaM": 2.999
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -83.685,
+          -3.859,
+          186.613
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-116",
+        "imageId": 116,
+        "displayName": "Shahbazi image 116 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 319.616056,
+        "omega": 1.23632964593879,
+        "phi": 2.93152737661121,
+        "kappa": 37.2990611064019,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192999.531,
+          "y": 5025228.398,
+          "z": 369.996
+        },
+        "directPositionDeltaM": 5.516
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -93.228,
+          -3.739,
+          187.591
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-117",
+        "imageId": 117,
+        "displayName": "Shahbazi image 117 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 321.068048,
+        "omega": -0.303755016735381,
+        "phi": -0.892750538427064,
+        "kappa": -13.6440903968532,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192994.811,
+          "y": 5025228.211,
+          "z": 370.621
+        },
+        "directPositionDeltaM": 3.989
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -97.948,
+          -3.926,
+          188.216
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-118",
+        "imageId": 118,
+        "displayName": "Shahbazi image 118 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 322.532298,
+        "omega": 0.771511226842772,
+        "phi": -0.623309757433255,
+        "kappa": -11.7958010671924,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192994.006,
+          "y": 5025229.804,
+          "z": 369.189
+        },
+        "directPositionDeltaM": 5.849
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -98.753,
+          -2.332,
+          186.784
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-119",
+        "imageId": 119,
+        "displayName": "Shahbazi image 119 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 323.993307,
+        "omega": 0.369051581510056,
+        "phi": -1.22145334138023,
+        "kappa": -11.4362179985189,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192995.842,
+          "y": 5025234.569,
+          "z": 369.715
+        },
+        "directPositionDeltaM": 2.934
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -96.917,
+          2.432,
+          187.31
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-120",
+        "imageId": 120,
+        "displayName": "Shahbazi image 120 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 325.451169,
+        "omega": 0.797062891735403,
+        "phi": -2.08553167374344,
+        "kappa": -13.6139222853934,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 192999.539,
+          "y": 5025240.617,
+          "z": 370.924
+        },
+        "directPositionDeltaM": 3.635
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -93.22,
+          8.481,
+          188.519
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-121",
+        "imageId": 121,
+        "displayName": "Shahbazi image 121 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 326.914154,
+        "omega": -0.085910962470878,
+        "phi": -1.04155124275256,
+        "kappa": -92.2389795422376,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193004.132,
+          "y": 5025245.78,
+          "z": 371.147
+        },
+        "directPositionDeltaM": 2.556
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -88.627,
+          13.643,
+          188.742
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-122",
+        "imageId": 122,
+        "displayName": "Shahbazi image 122 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 328.420384,
+        "omega": -2.81128848172396,
+        "phi": -1.33423044775973,
+        "kappa": -88.4706482751352,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193011.154,
+          "y": 5025246.89,
+          "z": 368.657
+        },
+        "directPositionDeltaM": 3.913
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -81.605,
+          14.754,
+          186.252
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-123",
+        "imageId": 123,
+        "displayName": "Shahbazi image 123 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 329.88775,
+        "omega": -0.579913443572883,
+        "phi": -1.92696850037535,
+        "kappa": -88.6155017314199,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193020.4,
+          "y": 5025249.186,
+          "z": 369.293
+        },
+        "directPositionDeltaM": 3.478
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.359,
+          17.049,
+          186.888
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-124",
+        "imageId": 124,
+        "displayName": "Shahbazi image 124 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 331.352049,
+        "omega": -0.920168671549395,
+        "phi": -1.39867329866044,
+        "kappa": -92.4064521351346,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193030.023,
+          "y": 5025249.255,
+          "z": 370.673
+        },
+        "directPositionDeltaM": 2.74
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -62.736,
+          17.118,
+          188.268
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-125",
+        "imageId": 125,
+        "displayName": "Shahbazi image 125 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 332.81371,
+        "omega": 0.017592105832746,
+        "phi": -3.09781248795274,
+        "kappa": -90.5410367780269,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193040.664,
+          "y": 5025249.388,
+          "z": 369.075
+        },
+        "directPositionDeltaM": 2.56
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -52.095,
+          17.252,
+          186.67
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-126",
+        "imageId": 126,
+        "displayName": "Shahbazi image 126 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 334.274534,
+        "omega": -2.24860247892129,
+        "phi": -1.17935207960671,
+        "kappa": -88.8192168315065,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193050.181,
+          "y": 5025249.08,
+          "z": 369.77
+        },
+        "directPositionDeltaM": 2.522
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -42.578,
+          16.943,
+          187.365
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-127",
+        "imageId": 127,
+        "displayName": "Shahbazi image 127 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 335.735946,
+        "omega": -1.34359720941439,
+        "phi": -2.06919010859456,
+        "kappa": -89.9789442830322,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193060.624,
+          "y": 5025248.702,
+          "z": 369.648
+        },
+        "directPositionDeltaM": 4.312
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -32.135,
+          16.565,
+          187.243
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-128",
+        "imageId": 128,
+        "displayName": "Shahbazi image 128 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 337.205786,
+        "omega": -1.54508430363083,
+        "phi": -1.72741485003322,
+        "kappa": -90.3624925113602,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193071.769,
+          "y": 5025248.536,
+          "z": 369.534
+        },
+        "directPositionDeltaM": 4.674
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -20.99,
+          16.399,
+          187.129
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-129",
+        "imageId": 129,
+        "displayName": "Shahbazi image 129 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 338.667819,
+        "omega": -1.88064568338028,
+        "phi": -1.73434836974011,
+        "kappa": -90.5112776128065,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193082.5,
+          "y": 5025247.987,
+          "z": 369.811
+        },
+        "directPositionDeltaM": 2.588
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -10.259,
+          15.851,
+          187.406
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-130",
+        "imageId": 130,
+        "displayName": "Shahbazi image 130 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 340.124354,
+        "omega": -1.09552492633145,
+        "phi": -1.07401702364936,
+        "kappa": -92.1212249565535,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193093.193,
+          "y": 5025247.772,
+          "z": 369.897
+        },
+        "directPositionDeltaM": 4.947
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.434,
+          15.635,
+          187.492
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-131",
+        "imageId": 131,
+        "displayName": "Shahbazi image 131 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 341.586117,
+        "omega": -0.657347209005429,
+        "phi": -1.15412250742135,
+        "kappa": -92.9381676060141,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193103.822,
+          "y": 5025247.45,
+          "z": 369.869
+        },
+        "directPositionDeltaM": 4.244
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.063,
+          15.314,
+          187.464
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-132",
+        "imageId": 132,
+        "displayName": "Shahbazi image 132 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 343.053807,
+        "omega": -1.4200278409655,
+        "phi": -1.3350021975443,
+        "kappa": -92.547781550099,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193114.387,
+          "y": 5025247.056,
+          "z": 369.597
+        },
+        "directPositionDeltaM": 2.521
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.628,
+          14.919,
+          187.192
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-133",
+        "imageId": 133,
+        "displayName": "Shahbazi image 133 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 344.577545,
+        "omega": -1.86496255296956,
+        "phi": -0.87813514752575,
+        "kappa": -89.8709369286352,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193125.24,
+          "y": 5025246.692,
+          "z": 369.685
+        },
+        "directPositionDeltaM": 3.083
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.481,
+          14.556,
+          187.28
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-134",
+        "imageId": 134,
+        "displayName": "Shahbazi image 134 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 346.036671,
+        "omega": -2.0460868833367,
+        "phi": -1.41425163362336,
+        "kappa": -91.7857920100555,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193135.749,
+          "y": 5025246.438,
+          "z": 369.85
+        },
+        "directPositionDeltaM": 2.131
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          42.99,
+          14.302,
+          187.445
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-135",
+        "imageId": 135,
+        "displayName": "Shahbazi image 135 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 347.507684,
+        "omega": -0.708126872277528,
+        "phi": -0.813326849753201,
+        "kappa": -92.8179170813144,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193146.049,
+          "y": 5025246.38,
+          "z": 370.018
+        },
+        "directPositionDeltaM": 5.305
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.29,
+          14.244,
+          187.613
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-136",
+        "imageId": 136,
+        "displayName": "Shahbazi image 136 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 348.973031,
+        "omega": -1.44618434325195,
+        "phi": -0.91658003307733,
+        "kappa": -92.1235837346903,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193156.288,
+          "y": 5025246.108,
+          "z": 369.859
+        },
+        "directPositionDeltaM": 0.292
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          63.529,
+          13.971,
+          187.454
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-137",
+        "imageId": 137,
+        "displayName": "Shahbazi image 137 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 350.435818,
+        "omega": -1.46760328136131,
+        "phi": -0.816587512660786,
+        "kappa": -94.1812587441051,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193166.244,
+          "y": 5025245.918,
+          "z": 370.49
+        },
+        "directPositionDeltaM": 3.248
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.485,
+          13.781,
+          188.085
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-138",
+        "imageId": 138,
+        "displayName": "Shahbazi image 138 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 351.906977,
+        "omega": -0.141980602279033,
+        "phi": -2.52396368790434,
+        "kappa": -93.4848441685321,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193176.724,
+          "y": 5025245.591,
+          "z": 370.032
+        },
+        "directPositionDeltaM": 2.471
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          83.965,
+          13.455,
+          187.627
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-139",
+        "imageId": 139,
+        "displayName": "Shahbazi image 139 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 353.377426,
+        "omega": 2.24339010159761,
+        "phi": 0.840040350392821,
+        "kappa": -175.151599748243,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193184.17,
+          "y": 5025244.695,
+          "z": 369.79
+        },
+        "directPositionDeltaM": 3.893
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          91.411,
+          12.558,
+          187.385
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-140",
+        "imageId": 140,
+        "displayName": "Shahbazi image 140 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 354.839045,
+        "omega": -1.25290230826818,
+        "phi": 1.58238091875222,
+        "kappa": -175.896052495388,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193185.959,
+          "y": 5025238.909,
+          "z": 367.61
+        },
+        "directPositionDeltaM": 4.412
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.2,
+          6.772,
+          185.205
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-141",
+        "imageId": 141,
+        "displayName": "Shahbazi image 141 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 356.291868,
+        "omega": -2.40449365119089,
+        "phi": -0.287034816796526,
+        "kappa": -172.749279229725,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193187.644,
+          "y": 5025230.403,
+          "z": 363.323
+        },
+        "directPositionDeltaM": 2.79
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          94.885,
+          -1.733,
+          180.918
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-142",
+        "imageId": 142,
+        "displayName": "Shahbazi image 142 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 357.752849,
+        "omega": -0.429997497770491,
+        "phi": 1.17577721020282,
+        "kappa": -173.274888585411,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193187.778,
+          "y": 5025223.33,
+          "z": 359.667
+        },
+        "directPositionDeltaM": 4.352
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          95.019,
+          -8.807,
+          177.262
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-143",
+        "imageId": 143,
+        "displayName": "Shahbazi image 143 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 359.219442,
+        "omega": -2.47260361255555,
+        "phi": -2.10540660120832,
+        "kappa": -172.92873848902,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193187.982,
+          "y": 5025215.308,
+          "z": 356.829
+        },
+        "directPositionDeltaM": 2.463
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          95.223,
+          -16.829,
+          174.424
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-144",
+        "imageId": 144,
+        "displayName": "Shahbazi image 144 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 360.801263,
+        "omega": 0.359336873175308,
+        "phi": -0.545629196533966,
+        "kappa": 97.8814278322658,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193186.405,
+          "y": 5025208.487,
+          "z": 354.686
+        },
+        "directPositionDeltaM": 2.301
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.646,
+          -23.65,
+          172.281
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-145",
+        "imageId": 145,
+        "displayName": "Shahbazi image 145 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 362.267233,
+        "omega": -0.490821530586909,
+        "phi": 0.53180075739853,
+        "kappa": 83.6719789253702,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193180.504,
+          "y": 5025206.728,
+          "z": 354.76
+        },
+        "directPositionDeltaM": 1.199
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          87.745,
+          -25.409,
+          172.355
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-146",
+        "imageId": 146,
+        "displayName": "Shahbazi image 146 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 363.730411,
+        "omega": 1.07577723708895,
+        "phi": -0.112235366373178,
+        "kappa": 82.9710172496725,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193172.715,
+          "y": 5025204.133,
+          "z": 352.816
+        },
+        "directPositionDeltaM": 3.616
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.956,
+          -28.004,
+          170.411
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-147",
+        "imageId": 147,
+        "displayName": "Shahbazi image 147 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 365.200601,
+        "omega": 1.39580123754213,
+        "phi": 1.0774394946515,
+        "kappa": 85.3829098312686,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193163.364,
+          "y": 5025203.771,
+          "z": 349.659
+        },
+        "directPositionDeltaM": 2.879
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.605,
+          -28.366,
+          167.254
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-148",
+        "imageId": 148,
+        "displayName": "Shahbazi image 148 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 366.656911,
+        "omega": 0.832224405009509,
+        "phi": 0.397236852889123,
+        "kappa": 84.2411662727195,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193154.081,
+          "y": 5025203.741,
+          "z": 347.951
+        },
+        "directPositionDeltaM": 0.854
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          61.322,
+          -28.396,
+          165.546
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-149",
+        "imageId": 149,
+        "displayName": "Shahbazi image 149 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 368.118275,
+        "omega": 1.07314537106326,
+        "phi": 0.561196650596708,
+        "kappa": 85.8245804652489,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193144.979,
+          "y": 5025203.8,
+          "z": 344.869
+        },
+        "directPositionDeltaM": 3.014
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.22,
+          -28.337,
+          162.464
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-150",
+        "imageId": 150,
+        "displayName": "Shahbazi image 150 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 369.588822,
+        "omega": 1.26047728493598,
+        "phi": 1.01223709581713,
+        "kappa": 86.8031162179278,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193135.117,
+          "y": 5025204.399,
+          "z": 341.625
+        },
+        "directPositionDeltaM": 3.935
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          42.358,
+          -27.738,
+          159.22
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-151",
+        "imageId": 151,
+        "displayName": "Shahbazi image 151 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 371.04279,
+        "omega": 0.145060135180228,
+        "phi": 0.269919151668956,
+        "kappa": 86.9632363682173,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193124.972,
+          "y": 5025204.95,
+          "z": 339.949
+        },
+        "directPositionDeltaM": 2.515
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.213,
+          -27.187,
+          157.544
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-152",
+        "imageId": 152,
+        "displayName": "Shahbazi image 152 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 372.507381,
+        "omega": 1.11503788986196,
+        "phi": 0.916313994468907,
+        "kappa": 85.991717604591,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193114.526,
+          "y": 5025205.732,
+          "z": 337.647
+        },
+        "directPositionDeltaM": 3.723
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.767,
+          -26.405,
+          155.242
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-153",
+        "imageId": 153,
+        "displayName": "Shahbazi image 153 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 373.967905,
+        "omega": -0.46803153371398,
+        "phi": 3.21062397924727,
+        "kappa": 34.9671409128927,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193105.472,
+          "y": 5025206.874,
+          "z": 335.786
+        },
+        "directPositionDeltaM": 2.944
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.713,
+          -25.263,
+          153.381
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-154",
+        "imageId": 154,
+        "displayName": "Shahbazi image 154 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 375.445914,
+        "omega": 1.10393405503327,
+        "phi": -1.56968461478375,
+        "kappa": 13.4055061692357,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193102.653,
+          "y": 5025209.991,
+          "z": 333.077
+        },
+        "directPositionDeltaM": 5.202
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9.894,
+          -22.145,
+          150.672
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-155",
+        "imageId": 155,
+        "displayName": "Shahbazi image 155 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 377.023756,
+        "omega": 2.27650314874061,
+        "phi": 0.75456054080044,
+        "kappa": 13.0227189366345,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193099.896,
+          "y": 5025215.224,
+          "z": 328.76
+        },
+        "directPositionDeltaM": 3.363
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.137,
+          -16.913,
+          146.355
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-156",
+        "imageId": 156,
+        "displayName": "Shahbazi image 156 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 378.495478,
+        "omega": 0.694659511549034,
+        "phi": -0.725118232276583,
+        "kappa": 12.1109000127726,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193098.961,
+          "y": 5025219.219,
+          "z": 326.083
+        },
+        "directPositionDeltaM": 4.406
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.202,
+          -12.918,
+          143.678
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-157",
+        "imageId": 157,
+        "displayName": "Shahbazi image 157 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 379.979643,
+        "omega": 1.7759321866972,
+        "phi": -0.057814323075199,
+        "kappa": 12.1093074857163,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193098.75,
+          "y": 5025224.224,
+          "z": 322.64
+        },
+        "directPositionDeltaM": 2.668
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          5.991,
+          -7.913,
+          140.235
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "image-158",
+        "imageId": 158,
+        "displayName": "Shahbazi image 158 camera",
+        "sourceRole": "refined_exterior_orientation_camera_pose",
+        "timestampSec": 381.449053,
+        "omega": 1.92173250558227,
+        "phi": -0.657419270212251,
+        "kappa": 13.1848264618408,
+        "orientationUnits": "degrees, per source EOP table",
+        "sourceCoordinates": {
+          "x": 193099.138,
+          "y": 5025229.622,
+          "z": 320.025
+        },
+        "directPositionDeltaM": 2.677
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.379,
+          -2.515,
+          137.62
+        ]
+      }
+    }
+  ]
+}

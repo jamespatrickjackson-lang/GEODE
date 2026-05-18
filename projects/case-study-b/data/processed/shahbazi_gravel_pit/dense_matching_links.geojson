@@ -1,0 +1,482 @@
+{
+  "type": "FeatureCollection",
+  "name": "Shahbazi dense-matching image-pair links",
+  "properties": {
+    "schema": "geosee.image-pair-links.v1",
+    "sourcePath": "projects/case-study-b/data/raw/shahbazi_gravel_pit/DenseMatching.txt",
+    "supportingSource": "projects/case-study-b/data/processed/shahbazi_gravel_pit/camera_poses.geojson",
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+    "sourceCrs": {
+      "label": "NAD83 / MTM Zone 7",
+      "epsg": 32187,
+      "status": "from article source-data table; confirm before final GIS overlay use"
+    },
+    "scenePlacement": {
+      "mode": "tls-preview-aligned",
+      "horizontalScale": 1,
+      "verticalScale": 1,
+      "zLiftMeters": 115,
+      "note": "Camera positions are centered and lifted with the same transform as the sampled TLS preview."
+    },
+    "pairCount": 17,
+    "displayedPairCount": 17,
+    "uniqueImageCount": 24,
+    "missingPairCount": 0,
+    "sceneBounds": {
+      "min": [
+        -32.983,
+        -25.969,
+        137.62
+      ],
+      "max": [
+        28.87,
+        16.565,
+        188.606
+      ]
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-01",
+        "displayName": "Dense matching pair 82-83",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 82,
+        "imageB": 83,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -27.543,
+            -23.247,
+            187.804
+          ],
+          [
+            -17.319,
+            -23.897,
+            187.551
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-02",
+        "displayName": "Dense matching pair 83-84",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 83,
+        "imageB": 84,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -17.319,
+            -23.897,
+            187.551
+          ],
+          [
+            -8.075,
+            -25.122,
+            186.825
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-03",
+        "displayName": "Dense matching pair 84-85",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 84,
+        "imageB": 85,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -8.075,
+            -25.122,
+            186.825
+          ],
+          [
+            2.401,
+            -25.883,
+            187.805
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-04",
+        "displayName": "Dense matching pair 85-86",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 85,
+        "imageB": 86,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            2.401,
+            -25.883,
+            187.805
+          ],
+          [
+            13.745,
+            -25.969,
+            188.606
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-05",
+        "displayName": "Dense matching pair 104-105",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 104,
+        "imageB": 105,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            28.87,
+            -5.532,
+            186.637
+          ],
+          [
+            18.483,
+            -5.586,
+            186.725
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-06",
+        "displayName": "Dense matching pair 105-106",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 105,
+        "imageB": 106,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            18.483,
+            -5.586,
+            186.725
+          ],
+          [
+            8.256,
+            -5.58,
+            186.593
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-07",
+        "displayName": "Dense matching pair 106-107",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 106,
+        "imageB": 107,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            8.256,
+            -5.58,
+            186.593
+          ],
+          [
+            -2.11,
+            -5.505,
+            186.935
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-08",
+        "displayName": "Dense matching pair 108-109",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 108,
+        "imageB": 109,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -12.533,
+            -5.183,
+            186.99
+          ],
+          [
+            -22.774,
+            -4.9,
+            186.751
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-09",
+        "displayName": "Dense matching pair 109-110",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 109,
+        "imageB": 110,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -22.774,
+            -4.9,
+            186.751
+          ],
+          [
+            -32.983,
+            -4.746,
+            186.935
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-10",
+        "displayName": "Dense matching pair 127-128",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 127,
+        "imageB": 128,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -32.135,
+            16.565,
+            187.243
+          ],
+          [
+            -20.99,
+            16.399,
+            187.129
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-11",
+        "displayName": "Dense matching pair 128-129",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 128,
+        "imageB": 129,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -20.99,
+            16.399,
+            187.129
+          ],
+          [
+            -10.259,
+            15.851,
+            187.406
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-12",
+        "displayName": "Dense matching pair 129-130",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 129,
+        "imageB": 130,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -10.259,
+            15.851,
+            187.406
+          ],
+          [
+            0.434,
+            15.635,
+            187.492
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-13",
+        "displayName": "Dense matching pair 130-131",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 130,
+        "imageB": 131,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            0.434,
+            15.635,
+            187.492
+          ],
+          [
+            11.063,
+            15.314,
+            187.464
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-14",
+        "displayName": "Dense matching pair 131-132",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 131,
+        "imageB": 132,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            11.063,
+            15.314,
+            187.464
+          ],
+          [
+            21.628,
+            14.919,
+            187.192
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-15",
+        "displayName": "Dense matching pair 153-154",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 153,
+        "imageB": 154,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            12.713,
+            -25.263,
+            153.381
+          ],
+          [
+            9.894,
+            -22.145,
+            150.672
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-16",
+        "displayName": "Dense matching pair 155-156",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 155,
+        "imageB": 156,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            7.137,
+            -16.913,
+            146.355
+          ],
+          [
+            6.202,
+            -12.918,
+            143.678
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dense-match-17",
+        "displayName": "Dense matching pair 157-158",
+        "sourceRole": "dense_matching_image_pair",
+        "imageA": 157,
+        "imageB": 158,
+        "sourceFile": "DenseMatching.txt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            5.991,
+            -7.913,
+            140.235
+          ],
+          [
+            6.379,
+            -2.515,
+            137.62
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,751 @@
+{
+  "id": "environment",
+  "layerStyles": {
+    "terrain": {
+      "renderMode": "elevation-mesh",
+      "verticalExaggeration": 1,
+      "shading": "hillshade",
+      "opacity": 1,
+      "color": "#7a6a4f",
+      "showLabels": false,
+      "affectedByFog": true
+    },
+    "drillholes-2023": {
+      "renderMode": "trace",
+      "color": "#bd9661",
+      "lineWidth": 2,
+      "collarSize": 6,
+      "opacity": 1,
+      "affectedByFog": false,
+      "showLabels": false,
+      "labelColor": "#c2af94"
+    },
+    "assay-samples": {
+      "renderMode": "assay-intervals",
+      "color": "#f04f5f",
+      "opacity": 1,
+      "affectedByFog": false,
+      "showLabels": false,
+      "labelColor": "#f04f5f"
+    },
+    "geochem-soils-2024": {
+      "renderMode": "graduated-symbols",
+      "color": "#d9482f",
+      "opacity": 0.92,
+      "affectedByFog": false,
+      "showLabels": false,
+      "labelColor": "#d9482f",
+      "labelKind": "siteElement",
+      "geochemElement": "cu_ppm",
+      "geochemSymbolMinRadiusM": 45,
+      "geochemSymbolMaxRadiusM": 160,
+      "geochemLiftM": 24,
+      "geochemSymbolThicknessM": 5,
+      "geochemOpacity": 0.92,
+      "geochemUseLogScale": true,
+      "geochemShowOutline": true,
+      "geochemOutlineColor": "#221f1c",
+      "geochemOutlineOpacity": 0.65,
+      "geochemPaletteLow": "#2b6cb0",
+      "geochemPaletteMid": "#f2cf43",
+      "geochemPaletteHigh": "#c92a2a"
+    },
+    "ip-survey-lines-2024": {
+      "renderMode": "survey-lines",
+      "color": "#ffb84d",
+      "lineWidth": 3.2,
+      "opacity": 0.92,
+      "affectedByFog": false,
+      "showLabels": false,
+      "labelColor": "#ffb84d",
+      "labelKind": "siteElement"
+    },
+    "hyperspectral-coverage-2024": {
+      "renderMode": "downhole-coverage",
+      "color": "#b26cff",
+      "opacity": 0.72,
+      "affectedByFog": false,
+      "showLabels": false,
+      "labelColor": "#b26cff",
+      "labelKind": "siteElement",
+      "hyperspectralRadiusM": 18,
+      "hyperspectralEndpointVisible": true,
+      "hyperspectralEndpointRadiusM": 30
+    },
+    "imagery-lidar-aoi-2024": {
+      "renderMode": "reported-aoi-footprint",
+      "color": "#6cc7ff",
+      "outlineColor": "#6cc7ff",
+      "fillOpacity": 0.1,
+      "opacity": 0.95,
+      "lineWidth": 3,
+      "affectedByFog": false,
+      "showLabels": false,
+      "labelColor": "#6cc7ff",
+      "labelKind": "siteElement",
+      "imageryCornerVisible": true,
+      "imageryCornerRadiusM": 95
+    },
+    "area-outlines": {
+      "renderMode": "editable-area-outlines",
+      "color": "#ff8a3d",
+      "opacity": 1,
+      "affectedByFog": false,
+      "showLabels": true,
+      "labelColor": "#ff8a3d",
+      "labelKind": "area"
+    },
+    "drillholes-2024-tf": {
+      "renderMode": "collar-only",
+      "color": "#6fcbd2",
+      "collarSize": 36,
+      "opacity": 1,
+      "affectedByFog": false,
+      "showLabels": false
+    },
+    "ez-gamma-2024": {
+      "renderMode": "downhole-log",
+      "color": "#7fd68e",
+      "lineWidth": 2.4,
+      "gammaTrackOffsetM": 0,
+      "gammaTrackWidthM": 78,
+      "gammaDepthScale": 1,
+      "gammaPanelOpacity": 0,
+      "opacity": 1,
+      "affectedByFog": false,
+      "showLabels": false,
+      "labelColor": "#7fd68e",
+      "gammaSurveyTubeVisible": true,
+      "gammaLoggedOverburdenVisible": false,
+      "gammaSurveyTubeColor": "#ffffff",
+      "gammaSurveyTubeOpacity": 1,
+      "gammaSurveyTubeMode": "dashed",
+      "gammaBedrockIntervalVisible": true,
+      "gammaBedrockIntervalColor": "#212121",
+      "gammaLoggedOverburdenOpacity": 0.22,
+      "gammaBedrockIntervalOpacity": 0.5,
+      "gammaBedrockIntervalRadiusM": 9,
+      "gammaTracesVisible": true,
+      "gammaTraceOpacity": 0.96,
+      "gammaCollarColor": "#ffffff",
+      "gammaCollarVisible": true,
+      "gammaCollarOpacity": 1,
+      "gammaCollarRadiusM": 13,
+      "gammaContact1Opacity": 0.2,
+      "gammaContact2Opacity": 0.36,
+      "gammaContact1Color": "#ffffff",
+      "gammaContact2Color": "#ffffff",
+      "gammaContactRadiusM": 38,
+      "gammaContactThicknessM": 2.4
+    },
+    "three-firs-target": {
+      "color": "#e3547d",
+      "opacity": 0.2,
+      "affectedByFog": true,
+      "showLabels": false,
+      "labelColor": "#e3547d",
+      "labelKind": "landTitle",
+      "labelPointerSide": "right"
+    },
+    "great-plains-target": {
+      "color": "#9a6cff",
+      "opacity": 0.1,
+      "affectedByFog": true,
+      "showLabels": true,
+      "labelKind": "landTitle"
+    },
+    "megaton-dcip-anomaly": {
+      "color": "#ff8a2e",
+      "opacity": 0.42,
+      "affectedByFog": true,
+      "showLabels": true,
+      "labelColor": "#ff8a2e",
+      "labelKind": "landTitle",
+      "labelTextColor": "#fff4e6",
+      "labelOutlineColor": "#ff8a2e",
+      "labelOutlineOpacity": 0.34,
+      "labelFillColor": "#2a2118",
+      "labelFillOpacity": 0.82,
+      "labelPointerSide": "auto"
+    },
+    "hydrography-lakes": {
+      "color": "#4080a0",
+      "outlineColor": "#638892",
+      "opacity": 0,
+      "lineWidth": 3,
+      "affectedByFog": true,
+      "showLabels": false,
+      "fillOpacity": 0.6,
+      "fogDensity": 0.00007
+    },
+    "hydrography-streams": {
+      "color": "#32a2bd",
+      "opacity": 0.2,
+      "lineWidth": 1.75,
+      "affectedByFog": true,
+      "terrainShadowInfluence": 0.09,
+      "fogDensity": 0.00011
+    },
+    "claim-boundary": {
+      "color": "#454545",
+      "opacity": 0.2,
+      "affectedByFog": true,
+      "showLabels": false
+    },
+    "transport-roads": {
+      "color": "#000000",
+      "opacity": 0.1,
+      "lineWidth": 2,
+      "affectedByFog": true,
+      "showLabels": false,
+      "fogDensity": 0.00011999999999999999
+    },
+    "power-lines": {
+      "color": "#ff0000",
+      "opacity": 0.25,
+      "lineWidth": 2,
+      "affectedByFog": true,
+      "showLabels": false,
+      "fogDensity": 0.00005
+    },
+    "property-neighbors": {
+      "color": "#2a2820",
+      "opacity": 0.95,
+      "affectedByFog": true,
+      "showLabels": true,
+      "labelColor": "#2a2820",
+      "fogDensity": 0.00011999999999999999
+    },
+    "trees-vri": {
+      "color": "#50a564",
+      "outlineColor": "#50a564",
+      "fillOpacity": 0.15,
+      "opacity": 0.15,
+      "forestEmbossHeight": 0,
+      "forestEdgeThreshold": 0.5,
+      "forestEdgeSoftness": 0.035,
+      "affectedByFog": true,
+      "showLabels": false,
+      "fogDensity": 0.00011999999999999999
+    },
+    "bedrock-geology": {
+      "opacity": 0.28,
+      "showLabels": false,
+      "geologyColorMap": {},
+      "geologyUnitOverrides": {},
+      "affectedByFog": true
+    }
+  },
+  "sceneOverlays": {
+    "vizsla-district-map": {
+      "path": "data/source/vcu_2711_fig_2_500x0-is.png",
+      "bounds": [
+        270787.6664174545,
+        5006324.15873718,
+        300787.6664174545,
+        5035024.15873718
+      ],
+      "liftMeters": 8,
+      "defaultOpacity": 0.85,
+      "label": "Woodjam district overview",
+      "provenance": {
+        "source": "Vizsla Copper investor figure 2",
+        "classification": "interpretation",
+        "notes": "Regional context map showing Woodjam, Redgold, and neighboring properties. Initial bounds are best-guess; refine by editing the four numbers above."
+      },
+      "enabled": false
+    },
+    "vizsla-property-geology": {
+      "path": "data/source/vcu_2711_fig_3_500x0-is.png",
+      "bounds": [
+        610650.8640496577,
+        5784789.858887281,
+        615650.8640496577,
+        5787449.858887281
+      ],
+      "liftMeters": 6,
+      "defaultOpacity": 1,
+      "label": "Woodjam property geology",
+      "provenance": {
+        "source": "Vizsla Copper investor figure 3",
+        "classification": "interpretation",
+        "notes": "Property-scale geology with named zones, copper deposit outlines, target outlines. Initial bounds are best-guess centred on the drillhole cluster; refine by editing the four numbers above."
+      },
+      "enabled": false,
+      "tint": "#4a4a4a"
+    }
+  },
+  "defaultVisibleLayers": [
+    "hydrography-lakes",
+    "hydrography-streams",
+    "transport-roads",
+    "power-lines",
+    "ez-gamma-2024",
+    "drillholes-2023",
+    "assay-samples",
+    "geochem-soils-2024",
+    "ip-survey-lines-2024",
+    "hyperspectral-coverage-2024",
+    "area-outlines",
+    "drillholes-2024-tf",
+    "terrain",
+    "property-neighbors",
+    "trees-vri"
+  ],
+  "scene": {
+    "background": "#2a2820",
+    "toneMapping": "aces",
+    "exposure": 1.25,
+    "shadows": false,
+    "sun": {
+      "azimuth": 218,
+      "elevation": 30
+    },
+    "lighting": {
+      "enabled": true,
+      "showSceneElements": true,
+      "hemisphere": {
+        "sky": "#c4d4ee",
+        "ground": "#ffffff",
+        "intensity": 2
+      },
+      "directional": {
+        "color": "#a56a12",
+        "intensity": 5.55
+      },
+      "fill": {
+        "color": "#9ab7d8",
+        "intensity": 3,
+        "position": [
+          -3500,
+          3500,
+          3000
+        ]
+      },
+      "rim": {
+        "color": "#ffd9a0",
+        "intensity": 1.12,
+        "position": [
+          0,
+          -6000,
+          1500
+        ]
+      }
+    },
+    "fog": {
+      "color": "#2a2820",
+      "density": 0.000145
+    },
+    "bloom": {
+      "strength": 0,
+      "radius": 0.7,
+      "threshold": 0.82
+    },
+    "drilling": {
+      "assays": {
+        "traceMode": "assay",
+        "showBoreLine": false,
+        "boreLineColor": "#e7dcc4",
+        "boreLineWidthPx": 3.25,
+        "boreLineOpacity": 0.55,
+        "boreLineRenderOrder": 6.8,
+        "showBoreTube": true,
+        "boreTubeColor": "#d8ccb2",
+        "boreTubeOpacity": 0.88,
+        "boreTubeRoughness": 0.64,
+        "boreTubeMetalness": 0.08,
+        "boreTubeEmissiveColor": "#8d826f",
+        "boreTubeEmissive": 0.012,
+        "boreTubeRenderOrder": 5.4,
+        "assayWidthMultiplier": 2.6,
+        "lithologyWidthMultiplier": 2.5,
+        "lithologyOpacity": 0.56,
+        "showAssaySides": true,
+        "showAssayCaps": true,
+        "assaySideOpacity": 1,
+        "assayCapOpacity": 1,
+        "assayCapThicknessM": 1.6,
+        "assaySideRoughness": 0.46,
+        "assayCapRoughness": 0.74,
+        "assayMetalness": 0.02,
+        "assaySideEmissive": 0.018,
+        "assayCapEmissive": 0.012,
+        "assaySideRenderOrder": 6,
+        "assayCapRenderOrder": 6,
+        "showBoreLens": false,
+        "boreLensColor": "#e9dec4",
+        "boreLensOpacity": 0.16,
+        "colorStops": [
+          {
+            "id": "cu-0-2-0-3",
+            "label": "Cu 0.2 to 0.3%",
+            "color": "#d6b04a"
+          },
+          {
+            "id": "cu-0-3-0-4",
+            "label": "Cu 0.3 to 0.4%",
+            "color": "#c7773d"
+          },
+          {
+            "id": "cu-0-4-0-5",
+            "label": "Cu 0.4 to 0.5%",
+            "color": "#b5453f"
+          },
+          {
+            "id": "cu-over-0-5",
+            "label": "Cu over 0.5%",
+            "color": "#7d5aa6"
+          }
+        ],
+        "glow": true
+      }
+    },
+    "topoDetails": {
+      "distanceFadeNear": 5000,
+      "distanceFadeFar": 19000,
+      "farLineScale": 0.67,
+      "farOpacity": 0.28
+    },
+    "vignette": {
+      "strength": 0.95,
+      "smoothness": 0.75
+    },
+    "colorGrade": {
+      "contrast": 1.06,
+      "saturation": 1.03,
+      "tint": "#2a2820"
+    },
+    "terrain": {
+      "rampLow": "#4a4438",
+      "rampMid": "#8a785a",
+      "rampHigh": "#e0d2a0",
+      "elevLowM": 680,
+      "elevHighM": 1800,
+      "hillshadeIntensity": 0.95,
+      "rockHueVariance": 0.04,
+      "shadowSharpness": 0.45,
+      "shadowTint": "#3a3f4d",
+      "gridEnabled": true,
+      "gridColor": "#bababa",
+      "gridOpacity": 0.68,
+      "gridSpacingM": 600,
+      "gridLineWidthM": 2.75,
+      "undersideOpacity": 0
+    },
+    "areaOutlines": [
+      {
+        "id": "area-outline-mov9o484",
+        "label": "Southeast",
+        "center": [
+          613036.6176536265,
+          5788105.674073881
+        ],
+        "radiusX": 700,
+        "radiusY": 925,
+        "rotationDeg": -120,
+        "liftMeters": 0,
+        "fillVisible": false,
+        "fillColor": "#ff8a3d",
+        "fillOpacity": 0.18,
+        "outlineVisible": true,
+        "outlineColor": "#474443",
+        "outlineOpacity": 1,
+        "outlineWidthM": 14,
+        "dashed": true,
+        "outlineMode": "terrain3d",
+        "dashLengthM": 170,
+        "dashGapM": 90,
+        "labelKind": "area"
+      },
+      {
+        "id": "area-outline-movxok5h",
+        "label": "Three Firs",
+        "center": [
+          608723.0109333358,
+          5787001.056077302
+        ],
+        "radiusX": 438.0915589501519,
+        "radiusY": 320.0402861923767,
+        "rotationDeg": 180,
+        "liftMeters": 0,
+        "fillVisible": false,
+        "fillColor": "#ff8a3d",
+        "fillOpacity": 0.18,
+        "outlineVisible": true,
+        "outlineColor": "#474443",
+        "outlineOpacity": 1,
+        "outlineWidthM": 14,
+        "dashed": true,
+        "outlineMode": "terrain3d",
+        "dashLengthM": 170,
+        "dashGapM": 90,
+        "labelKind": "area"
+      },
+      {
+        "id": "area-outline-movym5yz",
+        "label": "Greast Plains",
+        "center": [
+          614135.0365706978,
+          5782791.159430699
+        ],
+        "radiusX": 2174.261506602532,
+        "radiusY": 1497.768878919724,
+        "rotationDeg": -89,
+        "liftMeters": 0,
+        "fillVisible": false,
+        "fillColor": "#ff8a3d",
+        "fillOpacity": 0.18,
+        "outlineVisible": true,
+        "outlineColor": "#2e2e2e",
+        "outlineOpacity": 1,
+        "outlineWidthM": 14,
+        "dashed": true,
+        "outlineMode": "terrain3d",
+        "dashLengthM": 170,
+        "dashGapM": 90,
+        "labelKind": "landTitle"
+      },
+      {
+        "id": "area-outline-movxsyr7",
+        "label": "Takom",
+        "center": [
+          610273.790977545,
+          5788288.166789156
+        ],
+        "radiusX": 492.7800929554928,
+        "radiusY": 322.5427845406126,
+        "rotationDeg": -128,
+        "liftMeters": 0,
+        "fillVisible": false,
+        "fillColor": "#ff8a3d",
+        "fillOpacity": 0.18,
+        "outlineVisible": true,
+        "outlineColor": "#474443",
+        "outlineOpacity": 1,
+        "outlineWidthM": 14,
+        "dashed": true,
+        "outlineMode": "terrain3d",
+        "dashLengthM": 170,
+        "dashGapM": 90,
+        "labelKind": "area"
+      },
+      {
+        "id": "area-outline-movxv8eq",
+        "label": "Megabuck",
+        "center": [
+          610427.6896024807,
+          5790572.453001841
+        ],
+        "radiusX": 422.5187137661319,
+        "radiusY": 322.5427845406126,
+        "rotationDeg": -148,
+        "liftMeters": 0,
+        "fillVisible": false,
+        "fillColor": "#ff8a3d",
+        "fillOpacity": 0.18,
+        "outlineVisible": true,
+        "outlineColor": "#474443",
+        "outlineOpacity": 1,
+        "outlineWidthM": 14,
+        "dashed": true,
+        "outlineMode": "terrain3d",
+        "dashLengthM": 170,
+        "dashGapM": 90,
+        "labelKind": "area"
+      },
+      {
+        "id": "area-outline-movyg6yn",
+        "label": "Deerhorn",
+        "center": [
+          611312.1547451045,
+          5791746.103485675
+        ],
+        "radiusX": 375,
+        "radiusY": 550,
+        "rotationDeg": -180,
+        "liftMeters": 0,
+        "fillVisible": false,
+        "fillColor": "#ff8a3d",
+        "fillOpacity": 0.18,
+        "outlineVisible": true,
+        "outlineColor": "#474443",
+        "outlineOpacity": 1,
+        "outlineWidthM": 14,
+        "dashed": true,
+        "outlineMode": "terrain3d",
+        "dashLengthM": 170,
+        "dashGapM": 90,
+        "labelKind": "area"
+      }
+    ],
+    "lightMode": false,
+    "gui": {
+      "overlay": {
+        "textPadding": 47,
+        "backgroundAlpha": 0.65,
+        "borderAlpha": 0.55,
+        "headingFontFamily": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif"
+      },
+      "labels": {
+        "collisionPadPx": 13,
+        "nearNudgeMaxPx": 0,
+        "nearNudgeMinPx": 0,
+        "fadeFarM": 23500,
+        "maxSpringPx": 35,
+        "nearNudgeScale": 0.35,
+        "farNudgeMinPx": 0,
+        "farNudgeMaxPx": 16,
+        "overlapPenalty": 5,
+        "farNudgeScale": 0,
+        "crossingPenalty": 3500,
+        "styles": {
+          "siteElement": {
+            "pointerVisible": true,
+            "textColor": "#404040",
+            "outlineColor": "#ffffff",
+            "outlineOpacity": 1,
+            "fillColor": "#fafafa",
+            "fillOpacity": 0.65
+          },
+          "landTitle": {
+            "fillColor": "#949494",
+            "pointerVisible": false,
+            "fillOpacity": 0.6,
+            "textColor": "#828282"
+          },
+          "area": {
+            "outlineColor": "#262626",
+            "pointerVisible": false,
+            "fillColor": "#383838",
+            "textColor": "#f5f5f5",
+            "fillOpacity": 0.45,
+            "outlineOpacity": 0.75
+          },
+          "anomaly": {
+            "pointerVisible": true
+          }
+        },
+        "fadeNearM": 19000,
+        "frustumMargin": 1.2,
+        "maxSiteLabelsDesktop": 27,
+        "maxSiteLabelsMobile": 17,
+        "pinGapPx": 15
+      },
+      "navigator": {
+        "useOverride": true,
+        "textColor": "#ffffff",
+        "backgroundAlpha": 0,
+        "backdropBlurPx": 0,
+        "backdropSaturation": 105,
+        "borderAlpha": 0,
+        "topHighlightAlpha": 0,
+        "bottomShadowAlpha": 0,
+        "dividerAlpha": 0,
+        "radius": 999,
+        "shadowAlpha": 0.2,
+        "shadowBlur": 38,
+        "borderWidth": 0,
+        "arrowFillAlpha": 0,
+        "arrowSize": 47,
+        "arrowOutlineAlpha": 0.45,
+        "arrowOutlineWidth": 0.75,
+        "arrowBevel": 1.25,
+        "buttonPaddingY": 7,
+        "gap": 0,
+        "groupPadding": 0,
+        "bottom": 45,
+        "fontSize": 15,
+        "fontWeight": 100,
+        "fontItalic": true
+      },
+      "overlayStyles": [
+        {
+          "id": "overlay-style-1",
+          "label": "Style 1",
+          "overlay": {
+            "textPadding": 47,
+            "backgroundAlpha": 0.65,
+            "borderAlpha": 0.55,
+            "headingFontFamily": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif"
+          },
+          "navigator": {
+            "useOverride": true,
+            "textColor": "#ffffff",
+            "backgroundAlpha": 0,
+            "backdropBlurPx": 0,
+            "backdropSaturation": 105,
+            "borderAlpha": 0,
+            "topHighlightAlpha": 0,
+            "bottomShadowAlpha": 0,
+            "dividerAlpha": 0,
+            "radius": 999,
+            "shadowAlpha": 0.2,
+            "shadowBlur": 38,
+            "borderWidth": 0,
+            "arrowFillAlpha": 0,
+            "arrowSize": 47,
+            "arrowOutlineAlpha": 0.45,
+            "arrowOutlineWidth": 0.75,
+            "arrowBevel": 1.25,
+            "buttonPaddingY": 7,
+            "gap": 0,
+            "groupPadding": 0,
+            "bottom": 45,
+            "fontSize": 15,
+            "fontWeight": 100,
+            "fontItalic": true
+          },
+          "labels": {
+            "collisionPadPx": 13,
+            "nearNudgeMaxPx": 0,
+            "nearNudgeMinPx": 0,
+            "fadeFarM": 23500,
+            "maxSpringPx": 35,
+            "nearNudgeScale": 0.35,
+            "farNudgeMinPx": 0,
+            "farNudgeMaxPx": 16,
+            "overlapPenalty": 5,
+            "farNudgeScale": 0,
+            "crossingPenalty": 3500,
+            "styles": {
+              "siteElement": {
+                "pointerVisible": true,
+                "textColor": "#404040",
+                "outlineColor": "#ffffff",
+                "outlineOpacity": 1,
+                "fillColor": "#fafafa",
+                "fillOpacity": 0.65
+              },
+              "landTitle": {
+                "fillColor": "#949494",
+                "pointerVisible": false,
+                "fillOpacity": 0.6,
+                "textColor": "#828282"
+              },
+              "area": {
+                "outlineColor": "#262626",
+                "pointerVisible": false,
+                "fillColor": "#383838",
+                "textColor": "#f5f5f5",
+                "fillOpacity": 0.45,
+                "outlineOpacity": 0.75
+              },
+              "anomaly": {
+                "pointerVisible": true
+              }
+            },
+            "fadeNearM": 19000,
+            "frustumMargin": 1.2,
+            "maxSiteLabelsDesktop": 27,
+            "maxSiteLabelsMobile": 17,
+            "pinGapPx": 15
+          }
+        }
+      ],
+      "activeOverlayStyleId": "overlay-style-1"
+    },
+    "camera": {
+      "fov": 49
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "03_anomaly_story",
+  "title": "Synthetic Anomaly Story",
+  "subtitle": "Ore-grade hotspot and slope-review cue for demo review",
+  "renderPreset": "data-room",
+  "camera": {
+    "position": [
+      -161.34303100174677,
+      158.5185700735612,
+      310.6304839023704
+    ],
+    "target": [
+      24.212872098528255,
+      -33.83253240560397,
+      92.99189913346721
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 46
+  },
+  "transition": {
+    "duration": 3250,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 5600,
+  "layerOverrides": {
+    "case-study-b-demo-shell": {
+      "opacity": 1,
+      "showLabels": true
+    },
+    "quarry-ore-grade-heatmap": {
+      "opacity": 0.78
+    },
+    "slope-stability-anomaly": {
+      "opacity": 0.92,
+      "showLabels": true
+    },
+    "quarry-drill-traces": {
+      "showLabels": true
+    }
+  },
+  "overlayLayout": {
+    "x": 0.06248697916666665,
+    "y": 0.1683814303638645,
+    "width": 0.15,
+    "height": 0.2154077791718946
+  },
+  "overlay": {
+    "position": "left",
+    "contentFile": "overlays/03_anomaly_story/text.md",
+    "timing": {
+      "fadeMs": 1500,
+      "gapMs": 80,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
+  "accentColor": "#ff637a",
+  "visibilityOverrides": {
+    "case-study-b-demo-shell": false
+  }
+}

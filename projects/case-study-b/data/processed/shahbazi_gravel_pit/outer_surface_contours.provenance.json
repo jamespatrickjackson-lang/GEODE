@@ -1,0 +1,32 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "outer_surface_contours.geojson",
+  "artifactType": "outer-object-point-surface-contours-preview",
+  "projectSlug": "case-study-b",
+  "createdDate": "2026-05-11",
+  "source": {
+    "meshPreview": "projects/case-study-b/data/processed/shahbazi_gravel_pit/outer_surface_mesh_preview.json",
+    "rawSource": "projects/case-study-b/data/raw/shahbazi_gravel_pit/ObjectPoints.txt"
+  },
+  "processing": {
+    "script": "prep/build_shahbazi_outer_surface_preview.mjs",
+    "method": "Triangle-plane contour extraction from the standalone outer surface preview.",
+    "contourIntervalM": 0.5,
+    "contourLevels": 73,
+    "contourSegments": 31040,
+    "boundarySmoothing": {
+      "candidateLoopCount": 2,
+      "smoothedLoopCount": 2,
+      "smoothedVertexCount": 588,
+      "minLoopAreaM2": 16,
+      "iterations": 5,
+      "maxHorizontalShiftM": 1.8,
+      "maxVerticalShiftM": 0.9
+    }
+  },
+  "reviewStatus": {
+    "readyForDemoPreview": true,
+    "readyForFinalSpatialAnalysis": false,
+    "notes": "Contour linework for the outer source-derived surface only."
+  }
+}

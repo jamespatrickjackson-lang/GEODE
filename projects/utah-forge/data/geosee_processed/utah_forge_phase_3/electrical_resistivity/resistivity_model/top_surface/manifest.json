@@ -1,0 +1,53 @@
+{
+  "project": "utah-forge",
+  "area": "utah_forge_phase_3",
+  "dataset": "electrical_resistivity",
+  "artifact": "manifest.json",
+  "generatedDate": "2026-05-12",
+  "classification": "source-derived inversion model preview ground cap",
+  "source": {
+    "dataset": "Utah FORGE Phase 3 MT resistivity model preview",
+    "sourcePreview": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/resistivity_point_preview.json",
+    "classification": "source-derived inversion model preview ground cap",
+    "pointRole": "regular-grid p95 upper-cap samples from the 90,000-point MT resistivity model preview only"
+  },
+  "outputs": {
+    "meshPreview": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/mt_top_surface_mesh_preview.json",
+    "stats": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/stats.json",
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/provenance.json"
+  },
+  "processing": {
+    "script": "prep/build_utah_forge_mt_top_surface.mjs",
+    "generatedDate": "2026-05-12",
+    "method": "Preview-derived approximate ground cap from regular XY bins over the existing Utah FORGE Phase 3 MT resistivity model preview.",
+    "topologyInference": "Cells use p95 scene-Z values, sparse/deep exterior bins are rejected, only the largest connected upper component is retained, one local edge dilation is allowed, and triangles connect only adjacent grid cells.",
+    "gridSizeM": 2500,
+    "topQuantile": 0.95,
+    "minSamplesPerCell": 3,
+    "upperComponentFloorQuantile": 0.1,
+    "dilationFloorQuantile": 0.05,
+    "maxDilationDeltaM": 900,
+    "smoothingPasses": 2,
+    "sourcePreviewPointCount": 90000,
+    "skippedRows": 0,
+    "rawGridCellCount": 2056,
+    "sampledGridCellCount": 1944,
+    "initialUpperCandidateCount": 1750,
+    "largestComponentCellCount": 1126,
+    "dilatedCellCount": 9,
+    "vertexCount": 1135,
+    "retainedQuadCount": 922,
+    "triangleCount": 1844,
+    "upperFloorZ": 829.74,
+    "dilationFloorZ": -1384.28,
+    "colorRole": "standalone elevation/topology surface colors",
+    "notes": [
+      "This is a standalone approximate ground cap generated only from the existing 90,000-point Utah FORGE Phase 3 MT resistivity model preview.",
+      "Only the existing MT resistivity point preview JSON is read by this surface generator.",
+      "It is not connected to the MT scalar trim/feather legend or any resistivity subset decomposition.",
+      "It intentionally avoids raw sparse-column top triangulation because that creates vertical icicle sheets.",
+      "This is not measured ground terrain or interpreted geology.",
+      "No seismic, wells, faults, terrain, infrastructure, or other future data family is processed."
+    ]
+  }
+}

@@ -1,0 +1,380 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_manifest.json",
+  "derivedDate": "2026-05-13",
+  "sourceInventory": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/inventory/seismic_source_inventory.json",
+  "navigation": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/navigation/seismic_navigation.geojson",
+  "productCount": 34,
+  "script": "prep/build_utah_forge_seismic_browser.py",
+  "normalization": {
+    "sourceRoots": {
+      "submission1015": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015",
+      "submission1141": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141"
+    },
+    "normalizedFiles": [
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing.zip",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing.zip",
+        "role": "active-reprocessed-product",
+        "bytes": 885987763,
+        "sha256": "16f26179927e7350884f9b8688d354d8d8d2081d612ab68980678deaeb54962c"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/readme_metadata_seismic (1).txt",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/readme_metadata_seismic (1).txt",
+        "role": "active-reprocessed-product",
+        "bytes": 3026,
+        "sha256": "862e702795967fb957571f49d79f68f29d2dbf3b0428a29fe12ed3c0463ffcb1"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/Reprocessing of FORGE 2D and 3D Reflection Seismic Surveys.pdf",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/Reprocessing of FORGE 2D and 3D Reflection Seismic Surveys.pdf",
+        "role": "active-reprocessed-product",
+        "bytes": 4789784,
+        "sha256": "341efc7ab8752b98ae0d866ca9c44b3fe7b41424c59a6aa950ed21af2ef816da"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/5_03_19_Final_Processing_Report_Forge.pdf",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/5_03_19_Final_Processing_Report_Forge.pdf",
+        "role": "active-reprocessed-product",
+        "bytes": 30678796,
+        "sha256": "3672173baa8a075468d63d8d152d5df1d2d4272e2eae85cc75ef00ba29069dc3"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 153678840,
+        "sha256": "d1e07eb1c0bf27ea28ada3a5c30102cf92f3689083857f6d96031c4a1e39ad62"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/3D Survey/Forge3d_Poststack_Time_Migration_FXYDecon_Stack.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_Poststack_Time_Migration_FXYDecon_Stack.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 235171944,
+        "sha256": "424898aeac0236443cd3a9aeb26f591b7b8574862aecbc6d6f3d2769031e018a"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/3D Survey/Forge3d_PSTM_Stack_Enh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_PSTM_Stack_Enh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 121067944,
+        "sha256": "8395767948d371a7481ea70ab296f8580c287dc6f5f38c5f614854afccc00b2d"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11 _PSTM_UnEnh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11 _PSTM_UnEnh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 6138048,
+        "sha256": "f6ff49d1923574ba5dc4c0b5d37562f9b4a47ae5099bd1c0a98e31d3b52b6747"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_ PSTM_Enh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_ PSTM_Enh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 6138048,
+        "sha256": "c984c13a33aa7008c39342a700c0875c3e73e13295100cb5b150b4a9154243d5"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Enh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Enh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 27409764,
+        "sha256": "3598b63e534d20d392b7dd6d1b0bd8c13d7c43b8420f7c41b1352bb46a48b16f"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Enh_Meters.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Enh_Meters.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 27409764,
+        "sha256": "4289ee121662e4760a996673dc1c4fc5c92c9ac914091d6e8318a20317f6415c"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Interval_Velocity.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Interval_Velocity.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 1407028,
+        "sha256": "cf94bd528858f1815fe887d90c18e67561e14285b7ced14ac9baf4d31a79f410"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_UnEnh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_UnEnh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 27409764,
+        "sha256": "09f21ac1dc3670ec775a79e397558fbe171af5fbab13e98dbb1f932902094231"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_Unmigrated_Time_Stack.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_Unmigrated_Time_Stack.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 6138048,
+        "sha256": "af6998850cf3be9ee101b81a927e952492ce3c73eac09eede47578fe267b1b66"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Enh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Enh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 3622716,
+        "sha256": "83ac29f56dc68801dbfdb5245e0d5c3182f2d0ccfd202c334259fa9637a2e639"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Enh_Meters.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Enh_Meters.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 2147676,
+        "sha256": "12a290be7e120f04d57161ecde7cb436b977bed7979aced6ccd54dc6eb74e003"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Interval_Velocity.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Interval_Velocity.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 737316,
+        "sha256": "3ba4a3b02e3b3eb54df7aef68d37b5c243ae74f7f76403c15b04ac1915fd4652"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_UnEnh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_UnEnh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 3622716,
+        "sha256": "262a9c74cae4033bc42e1cf88e2d5115091d0e8a314f9eb8ba800cd72967d5af"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_UnEnh_Meters.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_UnEnh_Meters.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 2147676,
+        "sha256": "f2b2460be3ffcbfd59d5f320882d5b6e3ff50aace1177b6a8000fc773b6888bc"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSTM_Enh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSTM_Enh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 3958112,
+        "sha256": "5dfd3dcfbabf09e2c647d77de8ea44bb4de14b3b7af41121ad0f251706c11af8"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSTM_UnEnh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSTM_UnEnh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 3958112,
+        "sha256": "31d70ec2e75a27d71d144407062a6e6595f46db3d8f2325f89781d807ce31931"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_Unmigrated_Time_Stack.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_Unmigrated_Time_Stack.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 3886116,
+        "sha256": "b7d539b478e2187e07968433a84c87fa56435a64cebb1daf29822cf2f016b4ec"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Line 301/Line-301_PSDM_UNEnh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line-301_PSDM_UNEnh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 7785924,
+        "sha256": "ccca8ebd424ac49cc163a2a83392e244ea4646cc1b718cac554fed3d6f8a9c54"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Line 301/Line_301_PDM_Enh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PDM_Enh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 7785924,
+        "sha256": "7164078cfd7d9eea73cccf50edc10c4b122f21a0f042d5605c3545e25a7bf19a"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Line 301/Line_301_PSDM_Interval_Velocity.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PSDM_Interval_Velocity.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 428364,
+        "sha256": "e64688f27f2c40ba3a5dd05b466b22e6739cf5a4621b130a61598500a1e312d2"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Line 301/Line_301_PSTM_Stack_Enh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PSTM_Stack_Enh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 5217924,
+        "sha256": "51def8a1363483aacf80d7fa27fd53a27b625aaff1715595b99f923d88253eaf"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Line 301/Line_301_PSTM_Stack_UnEnh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PSTM_Stack_UnEnh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 5217924,
+        "sha256": "1eba0a3da996b69bb0b3705df6d4e5435f1313162586487caf3fcbf4c2b34795"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Line 301/Line_301_Unmigrated_Stack.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_Unmigrated_Stack.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 5217924,
+        "sha256": "f6c60e483c571ace2c4058231605513af46cc00ea56f50af68e1574a55931528"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_Enh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_Enh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 7446508,
+        "sha256": "3c8e37b8c46169566f00a35f1470da95968650593598956edd7bda393b75dbe7"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_Interval_Velocity.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_Interval_Velocity.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 357920,
+        "sha256": "db5e97e39f981be7d6a0c3dfb19a47d4df0bdec45e59828d3d483f6408f17d1a"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_UNEnh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_UNEnh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 7446508,
+        "sha256": "caf6a25bfeb42a68626016e0ba3b4b956558a4c5f707a65ecc4af04c65260608"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_Enh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_Enh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 4990508,
+        "sha256": "7e7ddfe6c48574c7a8d95af2e5aa97657e28b7ffdb54544814e06d81bd82a357"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_UnEnh.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_UnEnh.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 4990508,
+        "sha256": "cb3cf265fd3bd5fb304f0f03199e599140a0376d12d5c010acb49a1092c7611c"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1141 \u2014 gdr.openei.org-submissions-1141/2018-19 Reflection Processing/Line 302/Line_302_Unmigrated_Stack.segy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_Unmigrated_Stack.segy",
+        "role": "active-reprocessed-product",
+        "bytes": 4990508,
+        "sha256": "e6439de7a29a6d4d603d2a44b886679b0dcf74ee397d2404d1e8641f54a1d970"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/2D-and-3D-Files-List.xls",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D-and-3D-Files-List.xls",
+        "role": "active-navigation-or-velocity",
+        "bytes": 31232,
+        "sha256": "2db992ab8fe5e8c73da1783140688b526f29a8ab079d9f5c7cd0b5a39ebc1fa1"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/2D_seismic_data.zip::2D/Processed_Data/Forge2D-301_Migr-Depth.sgy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Migr-Depth.sgy",
+        "role": "extracted-original-processed-2d",
+        "bytes": 2557476,
+        "sha256": "e83e3da200854a8a17334801671a9fb370917d11df0084b838f5c207080539d7"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/2D_seismic_data.zip::2D/Processed_Data/Forge2D-301_Stack_01312018.sgy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Stack_01312018.sgy",
+        "role": "extracted-original-processed-2d",
+        "bytes": 5217924,
+        "sha256": "351e9d509968b2b043ee4ab17eef0f02edcbd92d5349f839b62a4ba22af5cf29"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/2D_seismic_data.zip::2D/Processed_Data/Forge2D-302_Stack.sgy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-302_Stack.sgy",
+        "role": "extracted-original-processed-2d",
+        "bytes": 5217924,
+        "sha256": "242802e007c39453e9daecbd39a11b7daf3c70f4f2b6014090bdc62d23cb5001"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/2D_seismic_data.zip::2D/UofUtah-Forge2D-301-loading-sheet-01312018.pdf",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/UofUtah-Forge2D-301-loading-sheet-01312018.pdf",
+        "role": "extracted-original-processed-2d",
+        "bytes": 38853,
+        "sha256": "89c135cc94d37e124352617b2c641170f6d7620d0f36086075e8a6ae1633d8c7"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/Navigation.zip",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Navigation.zip",
+        "role": "active-navigation-or-velocity",
+        "bytes": 26748,
+        "sha256": "6eed5871c8d43ecbea4cff241514a4c724ca79e02a804557060c3b208e42ec99"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/Velocity.zip",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Velocity.zip",
+        "role": "active-navigation-or-velocity",
+        "bytes": 652901,
+        "sha256": "77928f74c681d820eb85dc6f88414ecec1fd2e36cd68606e04aeae13aedb6d56"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/2D/Forge 2D Receiver Survey NAD83 UTM 12.sp1",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Forge 2D Receiver Survey NAD83 UTM 12.sp1",
+        "role": "active-navigation-or-velocity",
+        "bytes": 26816,
+        "sha256": "a3242b0b0ef09e127c86fb49b1852ed7b54e70ecf8ab83bbe4013ec221207754"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/2D/Forge 2D Source Survey NAD83 UTM 12.sp1",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Forge 2D Source Survey NAD83 UTM 12.sp1",
+        "role": "active-navigation-or-velocity",
+        "bytes": 14188,
+        "sha256": "5f35dc570cd05914d8f7ebaa15a89215781e0633f67d8874e10a85c35b4c9158"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/2D/UofUtah-Forge2D-301-loading-sheet-01312018.pdf",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/UofUtah-Forge2D-301-loading-sheet-01312018.pdf",
+        "role": "active-navigation-or-velocity",
+        "bytes": 38853,
+        "sha256": "89c135cc94d37e124352617b2c641170f6d7620d0f36086075e8a6ae1633d8c7"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/Navigation/Forge-3D-Receiver-Survey-NAD83-UTM12.sp1",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Navigation/Forge-3D-Receiver-Survey-NAD83-UTM12.sp1",
+        "role": "active-navigation-or-velocity",
+        "bytes": 22716,
+        "sha256": "c5bc1b3486511d72b058278a35337c658af5f4e7d86bf2d91567737ac9211413"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/Navigation/Forge-3D-Source-Survey-NAD83-UTM12.sp1",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Navigation/Forge-3D-Source-Survey-NAD83-UTM12.sp1",
+        "role": "active-navigation-or-velocity",
+        "bytes": 91760,
+        "sha256": "546da3ec0149bd7d6a9e2bf8c0500b4072bbb1f3dfb429b76d72fce12bf739e3"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/Velocity/Velocity/Forge3D_velo5D_float_01312018.sgy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Velocity/Velocity/Forge3D_velo5D_float_01312018.sgy",
+        "role": "active-navigation-or-velocity",
+        "bytes": 394056,
+        "sha256": "27e476209a7c6eed34e0e253a28f19248e8d6292dc9d4ed3671e37e88a3810d4"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/Velocity/Velocity/Forge3D_velo5D_float_01312018.txt",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Velocity/Velocity/Forge3D_velo5D_float_01312018.txt",
+        "role": "active-navigation-or-velocity",
+        "bytes": 3322151,
+        "sha256": "e98bcaa8596b8e367bfacbe7e2cbe2e25907fb613568dc2e84dc6f41ace8393a"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/2D/Processed_Data/Forge2D-301_Migr-Depth.sgy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Migr-Depth.sgy",
+        "role": "active-navigation-or-velocity",
+        "bytes": 2557476,
+        "sha256": "e83e3da200854a8a17334801671a9fb370917d11df0084b838f5c207080539d7"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/2D/Processed_Data/Forge2D-301_Stack_01312018.sgy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Stack_01312018.sgy",
+        "role": "active-navigation-or-velocity",
+        "bytes": 5217924,
+        "sha256": "351e9d509968b2b043ee4ab17eef0f02edcbd92d5349f839b62a4ba22af5cf29"
+      },
+      {
+        "source": "projects/utah-forge/data/client_preprocessed/forge_southwestern/Data_staging/From Submission 1015 \u2014 gdr.openei.org-submissions-1015/2D/Processed_Data/Forge2D-302_Stack.sgy",
+        "normalizedPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-302_Stack.sgy",
+        "role": "active-navigation-or-velocity",
+        "bytes": 5217924,
+        "sha256": "242802e007c39453e9daecbd39a11b7daf3c70f4f2b6014090bdc62d23cb5001"
+      }
+    ],
+    "skippedRawGatherFileCount": 333,
+    "notes": [
+      "Active processed products, navigation, velocity, and documentation are normalized into the Phase 3 seismic source slot.",
+      "Raw correlated/uncorrelated shot gathers remain quarantined in their original source staging folders and are not active browser products.",
+      "Existing source copies are never deleted by this script."
+    ]
+  }
+}

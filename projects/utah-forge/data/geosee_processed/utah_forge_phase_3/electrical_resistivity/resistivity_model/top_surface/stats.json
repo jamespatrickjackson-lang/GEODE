@@ -1,0 +1,51 @@
+{
+  "project": "utah-forge",
+  "area": "utah_forge_phase_3",
+  "dataset": "electrical_resistivity",
+  "artifact": "MT preview-derived ground cap stats",
+  "generatedDate": "2026-05-12",
+  "source": {
+    "preview": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/resistivity_point_preview.json",
+    "previewPointCount": 90000
+  },
+  "gridSizeM": 2500,
+  "topQuantile": 0.95,
+  "minSamplesPerCell": 3,
+  "rawGridCellCount": 2056,
+  "sampledGridCellCount": 1944,
+  "initialUpperCandidateCount": 1750,
+  "largestComponentCellCount": 1126,
+  "dilatedCellCount": 9,
+  "smoothingPasses": 2,
+  "vertexCount": 1135,
+  "retainedQuadCount": 922,
+  "triangleCount": 1844,
+  "upperFloorZ": 829.74,
+  "dilationFloorZ": -1384.28,
+  "sourceBounds": {
+    "easting_m": [
+      285217.35,
+      405217.35
+    ],
+    "northing_m": [
+      4227124.5,
+      4317124.5
+    ],
+    "elevation_m": [
+      816.49,
+      3023.47
+    ]
+  },
+  "sceneBounds": {
+    "min": [
+      -56250,
+      -46250,
+      816.49
+    ],
+    "max": [
+      63750,
+      43750,
+      3023.47
+    ]
+  }
+}

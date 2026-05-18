@@ -1,0 +1,85 @@
+{
+  "project": "utah-forge",
+  "area": "utah_forge_phase_3",
+  "dataset": "electrical_resistivity",
+  "artifact": "full-density MT point-cloud stats",
+  "generatedDate": "2026-05-12",
+  "source": {
+    "archive": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip",
+    "entry": "FRG200614_mdl17_cellcenter.dat",
+    "crs": "EPSG:26912 NAD83 / UTM Zone 12N",
+    "fields": [
+      "northing_m",
+      "easting_m",
+      "elevation_m",
+      "resistivity_ohm_m"
+    ]
+  },
+  "rowCount": 1094940,
+  "emittedPointCount": 1094624,
+  "positiveResistivityRowCount": 1094624,
+  "zeroOrNegativeResistivityRowCount": 316,
+  "tileCount": 11,
+  "tilePointTarget": 100000,
+  "log10Resistivity": {
+    "name": "log10 resistivity",
+    "unit": "log10(ohm-m)",
+    "sourceField": "resistivity_ohm_m",
+    "min": -2,
+    "max": 4.5,
+    "displayMin": 0.139879,
+    "displayMax": 3.937122,
+    "colorStops": [
+      {
+        "value": 0.139879,
+        "color": "#2cc9ff"
+      },
+      {
+        "value": 2.02983,
+        "color": "#f8dd6d"
+      },
+      {
+        "value": 3.937122,
+        "color": "#ff637a"
+      }
+    ]
+  },
+  "sourceBounds": {
+    "easting_m": [
+      201896.7,
+      481038
+    ],
+    "northing_m": [
+      4159430,
+      4387319
+    ],
+    "elevation_m": [
+      -122114,
+      3449.131
+    ]
+  },
+  "sceneBounds": {
+    "x_m": [
+      -139570.65,
+      139570.65
+    ],
+    "y_m": [
+      -113944.5,
+      113944.5
+    ],
+    "z_m": [
+      -122114,
+      3449.131
+    ]
+  },
+  "transform": {
+    "sceneOriginUtm": {
+      "easting_m": 341467.35,
+      "northing_m": 4273374.5,
+      "elevation_m": 0
+    },
+    "cropApplied": false,
+    "verticalExaggeration": 1,
+    "localAxes": "X east, Y north, Z up"
+  }
+}

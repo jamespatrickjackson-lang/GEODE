@@ -1,0 +1,69 @@
+{
+  "id": "32_demo_mt_resistivity_slices",
+  "title": "Demo: MT Resistivity Slices",
+  "subtitle": "Source-derived resistivity sections",
+  "camera": {
+    "position": [
+      25717.838323310472,
+      150685.35006563913,
+      45790.48758187788
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 5000,
+  "overlayLayout": {
+    "x": 0.013085937500000012,
+    "y": 0.06185696361355081,
+    "width": 0.21087239583333334,
+    "height": 0.3120451693851945
+  },
+  "overlay": {
+    "position": "left",
+    "contentFile": "overlays/32_demo_mt_resistivity_slices/text.md",
+    "timing": {
+      "fadeMs": 900,
+      "gapMs": 80,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
+  "accentColor": "#9dd0ff",
+  "visibilityOverrides": {
+    "utah-forge-reference-stage": false,
+    "utah-forge-phase3-working-area": true,
+    "terrain": true,
+    "transport-roads": true,
+    "hydrography-streams": true,
+    "hydrography-lakes": true,
+    "utah-forge-phase3-seismic-browser": false,
+    "utah-forge-mt-stations": false,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": true,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-mt-resistivity-slices": true
+  },
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "color": "#cccccc",
+      "opacity": 0.22,
+      "scalarLegendVisible": true,
+      "pointSizePx": 1
+    }
+  }
+}

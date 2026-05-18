@@ -1,0 +1,112 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "tie_point_support_isobands_mesh.json",
+  "artifactType": "derived-tie-point-support-isobands-preview",
+  "projectSlug": "case-study-b",
+  "createdDate": "2026-05-11",
+  "source": {
+    "objectPointPreview": "projects/case-study-b/data/processed/shahbazi_gravel_pit/object_points_preview.json",
+    "rawObjectPoints": "projects/case-study-b/data/raw/shahbazi_gravel_pit/ObjectPoints.txt",
+    "rawTiePoints": "projects/case-study-b/data/raw/shahbazi_gravel_pit/TiePoints.txt",
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Unmanned aerial image dataset: Ready for 3D reconstruction. Data in Brief 25, 103962. DOI 10.1016/j.dib.2019.103962"
+  },
+  "processing": {
+    "script": "prep/build_shahbazi_tie_point_support_isolines_geojson.mjs",
+    "method": "Inverse-distance interpolation of object-point tie observation counts onto a scene-coordinate grid.",
+    "cellSizeM": 1,
+    "searchRadiusM": 10,
+    "minNeighbors": 4,
+    "zOffsetM": 0,
+    "levels": [
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      18,
+      20,
+      22,
+      24
+    ],
+    "gridSize": [
+      257,
+      185
+    ],
+    "validGridNodeCount": 40767,
+    "sourceBounds": {
+      "min": [
+        192958.911,
+        5025099.024,
+        297.143
+      ],
+      "max": [
+        193214.693,
+        5025281.906,
+        348.267
+      ]
+    },
+    "sceneBounds": {
+      "min": [
+        -133.848,
+        -133.112,
+        114.738
+      ],
+      "max": [
+        121.934,
+        49.769,
+        165.862
+      ]
+    },
+    "colorStops": [
+      {
+        "value": 2,
+        "color": [
+          1,
+          0.388,
+          0.478
+        ]
+      },
+      {
+        "value": 8,
+        "color": [
+          0.973,
+          0.867,
+          0.427
+        ]
+      },
+      {
+        "value": 14,
+        "color": [
+          0.412,
+          0.941,
+          0.706
+        ]
+      },
+      {
+        "value": 22,
+        "color": [
+          0.259,
+          0.847,
+          1
+        ]
+      },
+      {
+        "value": 28,
+        "color": [
+          0.545,
+          0.91,
+          1
+        ]
+      }
+    ],
+    "vertexCount": 40767,
+    "triangleCount": 80488
+  },
+  "reviewStatus": {
+    "readyForDemoPreview": true,
+    "readyForFinalSpatialAnalysis": false,
+    "notes": "This is an isoband-style QA infill visualization of tie-point observation support. It is not a measured terrain, pressure, grade, or engineering layer."
+  }
+}

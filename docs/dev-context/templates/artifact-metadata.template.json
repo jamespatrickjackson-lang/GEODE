@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "",
+  "project": "",
+  "dataset": "",
+  "artifactFamily": "unknown",
+  "artifactType": "other",
+  "renderRole": "unclear_needs_review",
+  "loadClass": "needs_human_review",
+  "sourceType": "unknown",
+  "epistemicStatus": "proposed",
+  "authority": "Template only; not accepted project state.",
+  "status": "needs_review",
+  "reviewRequired": true,
+  "accepted": false,
+  "paths": {
+    "source": null,
+    "artifact": null,
+    "manifest": null,
+    "provenance": null,
+    "supporting": []
+  },
+  "inputs": [],
+  "producedBy": {
+    "script": null,
+    "tool": null,
+    "generatedAt": null,
+    "notes": ""
+  },
+  "crs": {
+    "source": null,
+    "scene": null,
+    "transformPath": null,
+    "notes": ""
+  },
+  "units": {
+    "horizontal": null,
+    "vertical": null,
+    "scalar": null,
+    "notes": ""
+  },
+  "scalar": {
+    "transform": null,
+    "range": null,
+    "thresholds": null,
+    "notes": ""
+  },
+  "processing": {
+    "method": null,
+    "parameters": {},
+    "downsampling": null,
+    "masking": null,
+    "notes": ""
+  },
+  "stats": {
+    "counts": {},
+    "bounds": {},
+    "notes": ""
+  },
+  "render": {
+    "colorRamp": null,
+    "legendPath": null,
+    "materialNotes": "",
+    "visualCheckRequired": true,
+    "visualCheckReceipt": null,
+    "notes": ""
+  },
+  "provenance": {
+    "path": null,
+    "notes": ""
+  },
+  "limitations": [
+    "Template only; not accepted project state."
+  ],
+  "relatedLayers": [],
+  "relatedPages": [],
+  "review": {
+    "requiredBy": "human",
+    "questions": [],
+    "acceptedBy": null,
+    "acceptedAt": null,
+    "receipt": null
+  },
+  "notes": "Template only. Fill with observed source evidence or proposed review questions. Do not set accepted=true unless explicitly approved by a human."
+}

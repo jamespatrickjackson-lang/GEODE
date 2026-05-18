@@ -1,0 +1,590 @@
+{
+  "id": "case-study-b-high-fidelity-quarry",
+  "name": "Shahbazi Gravel Pit",
+  "client": "GeoSee Demo",
+  "description": "High-fidelity quarry and gravel pit demonstration focused on close-range walkthrough, synthetic technical overlays, and audience-specific communication modes.",
+  "version": "0.1.0",
+  "status": "demo",
+  "audience": "multi-audience",
+  "geoseeVersion": "alpha-0.1",
+  "crs": {
+    "code": "EPSG:26910",
+    "label": "NAD83 / UTM zone 10N demo coordinates"
+  },
+  "bounds": {
+    "min": [
+      609000,
+      5787000,
+      760
+    ],
+    "max": [
+      615000,
+      5792500,
+      1280
+    ]
+  },
+  "sceneOrigin": [
+    612000,
+    5790000,
+    1000
+  ],
+  "layers": [
+    {
+      "id": "case-study-b-demo-shell",
+      "label": "Shahbazi Gravel Pit demo shell",
+      "type": "geojson",
+      "files": {},
+      "metadata": {
+        "sourceFile": "Procedural GeoSee demo shell",
+        "sourceDate": "2026-05-10",
+        "sourceOrigin": "GeoSee synthetic demo",
+        "classification": "planned",
+        "confidentiality": "public",
+        "placeholder": true,
+        "notes": "Procedural in-app placeholder surface, labelled zones, bench lines, and route geometry. This is not measured quarry data."
+      }
+    },
+    {
+      "id": "terrain",
+      "label": "Terrain / surface model",
+      "disabled": true,
+      "type": "geotiff",
+      "files": {
+        "raster": "projects/case-study-b/data/terrain_surface_model_placeholder.tif"
+      },
+      "metadata": {
+        "sourceFile": "Placeholder DEM / quarry surface model",
+        "sourceDate": "2026-05-10",
+        "sourceOrigin": "GeoSee demo placeholder",
+        "classification": "planned",
+        "confidentiality": "public",
+        "placeholder": true,
+        "notes": "Demo manifest entry only. Replace with surveyed DEM, photogrammetry mesh, or LiDAR-derived surface before treating as observed data."
+      }
+    },
+    {
+      "id": "quarry-imagery-base",
+      "label": "High-resolution imagery / photogrammetry base",
+      "disabled": true,
+      "type": "geotiff",
+      "files": {
+        "raster": "projects/case-study-b/data/high_res_imagery_placeholder.tif"
+      },
+      "metadata": {
+        "sourceFile": "Placeholder orthomosaic / photogrammetry raster",
+        "sourceDate": "2026-05-10",
+        "sourceOrigin": "GeoSee demo placeholder",
+        "classification": "planned",
+        "confidentiality": "private",
+        "placeholder": true,
+        "notes": "Represents the intended close-range visual base for a quarry walkthrough. No measured imagery is included yet."
+      }
+    },
+    {
+      "id": "quarry-lidar-surface",
+      "label": "LiDAR / point-cloud derived surface",
+      "disabled": true,
+      "type": "pointcloud",
+      "files": {
+        "pointcloud": "projects/case-study-b/data/lidar_pointcloud_placeholder.laz",
+        "surface": "projects/case-study-b/data/lidar_surface_placeholder.tif"
+      },
+      "metadata": {
+        "sourceFile": "Placeholder LiDAR / point-cloud surface",
+        "sourceDate": "2026-05-10",
+        "sourceOrigin": "GeoSee demo placeholder",
+        "classification": "planned",
+        "confidentiality": "private",
+        "placeholder": true,
+        "notes": "Demonstrates the intended data slot for close-range surface detail. No point-cloud data is bundled."
+      }
+    },
+    {
+      "id": "quarry-drill-traces",
+      "label": "Synthetic drill collars / traces",
+      "disabled": true,
+      "type": "drillhole",
+      "files": {
+        "geojson": "projects/case-study-b/data/synthetic_drill_traces_placeholder.geojson"
+      },
+      "metadata": {
+        "sourceFile": "Synthetic quarry drill trace placeholder",
+        "sourceDate": "2026-05-10",
+        "sourceOrigin": "GeoSee synthetic demo",
+        "classification": "interpretation",
+        "confidentiality": "private",
+        "placeholder": true,
+        "notes": "Synthetic demonstration geometry only; not measured drilling."
+      }
+    },
+    {
+      "id": "quarry-ore-grade-heatmap",
+      "label": "Synthetic ore-grade heatmap",
+      "disabled": true,
+      "type": "geotiff",
+      "files": {
+        "raster": "projects/case-study-b/data/synthetic_ore_grade_heatmap_placeholder.tif"
+      },
+      "metadata": {
+        "sourceFile": "Synthetic ore-grade heatmap placeholder",
+        "sourceDate": "2026-05-10",
+        "sourceOrigin": "GeoSee synthetic demo",
+        "classification": "interpretation",
+        "confidentiality": "private",
+        "placeholder": true,
+        "notes": "Synthetic hotspot concept for visual storytelling; not source truth."
+      }
+    },
+    {
+      "id": "stockpile-volume-zones",
+      "label": "Stockpile / volume measurement zones",
+      "disabled": true,
+      "type": "polygon",
+      "files": {
+        "geojson": "projects/case-study-b/data/stockpile_volume_zones_placeholder.geojson"
+      },
+      "metadata": {
+        "sourceFile": "Placeholder stockpile zone polygons",
+        "sourceDate": "2026-05-10",
+        "sourceOrigin": "GeoSee demo placeholder",
+        "classification": "planned",
+        "confidentiality": "private",
+        "placeholder": true,
+        "notes": "Intended slot for surveyed stockpile boundaries and volume deltas."
+      }
+    },
+    {
+      "id": "haul-route-equipment-demo",
+      "label": "Haul route / equipment tracking demo",
+      "disabled": true,
+      "type": "line",
+      "files": {
+        "geojson": "projects/case-study-b/data/haul_route_equipment_demo_placeholder.geojson"
+      },
+      "metadata": {
+        "sourceFile": "Placeholder haul route and equipment traces",
+        "sourceDate": "2026-05-10",
+        "sourceOrigin": "GeoSee synthetic demo",
+        "classification": "planned",
+        "confidentiality": "private",
+        "placeholder": true,
+        "notes": "Demonstrates planned operations overlays; not live equipment telemetry."
+      }
+    },
+    {
+      "id": "slope-stability-anomaly",
+      "label": "Slope stability anomaly",
+      "disabled": true,
+      "type": "polygon",
+      "files": {
+        "geojson": "projects/case-study-b/data/slope_stability_anomaly_placeholder.geojson"
+      },
+      "metadata": {
+        "sourceFile": "Synthetic slope anomaly placeholder",
+        "sourceDate": "2026-05-10",
+        "sourceOrigin": "GeoSee synthetic demo",
+        "classification": "interpretation",
+        "confidentiality": "private",
+        "placeholder": true,
+        "notes": "Synthetic planning and review cue. Requires geotechnical review before any operational use."
+      }
+    },
+    {
+      "id": "bench-conformance-overlay",
+      "label": "Bench geometry / conformance overlay",
+      "disabled": true,
+      "type": "polygon",
+      "files": {
+        "geojson": "projects/case-study-b/data/bench_conformance_placeholder.geojson"
+      },
+      "metadata": {
+        "sourceFile": "Placeholder bench conformance polygons",
+        "sourceDate": "2026-05-10",
+        "sourceOrigin": "GeoSee synthetic demo",
+        "classification": "interpretation",
+        "confidentiality": "private",
+        "placeholder": true,
+        "notes": "Compares planned bench geometry to a future measured surface. Current entry is a demo placeholder."
+      }
+    },
+    {
+      "id": "erosion-runoff-planning",
+      "label": "Erosion / runoff planning overlay",
+      "disabled": true,
+      "type": "line",
+      "files": {
+        "geojson": "projects/case-study-b/data/erosion_runoff_planning_placeholder.geojson"
+      },
+      "metadata": {
+        "sourceFile": "Placeholder runoff and erosion planning paths",
+        "sourceDate": "2026-05-10",
+        "sourceOrigin": "GeoSee synthetic demo",
+        "classification": "planned",
+        "confidentiality": "public",
+        "placeholder": true,
+        "notes": "Planning overlay for review discussion only; not a hydrology model."
+      }
+    },
+    {
+      "id": "restoration-preview",
+      "label": "Restoration preview overlay",
+      "disabled": true,
+      "type": "polygon",
+      "files": {
+        "geojson": "projects/case-study-b/data/restoration_preview_placeholder.geojson"
+      },
+      "metadata": {
+        "sourceFile": "Placeholder restoration preview polygons",
+        "sourceDate": "2026-05-10",
+        "sourceOrigin": "GeoSee synthetic demo",
+        "classification": "planned",
+        "confidentiality": "public",
+        "placeholder": true,
+        "notes": "Public-facing restoration concept placeholder, not a permitted reclamation plan."
+      }
+    },
+    {
+      "id": "public-viewshed-overlay",
+      "label": "Viewshed / public communication overlay",
+      "disabled": true,
+      "type": "polygon",
+      "files": {
+        "geojson": "projects/case-study-b/data/viewshed_public_overlay_placeholder.geojson"
+      },
+      "metadata": {
+        "sourceFile": "Placeholder viewshed communication polygons",
+        "sourceDate": "2026-05-10",
+        "sourceOrigin": "GeoSee synthetic demo",
+        "classification": "interpretation",
+        "confidentiality": "public",
+        "placeholder": true,
+        "notes": "Approximate public communication concept only. Requires measured terrain and viewpoint assumptions."
+      }
+    },
+    {
+      "id": "shahbazi-textured-mesh",
+      "label": "Shahbazi textured mesh / glTF",
+      "disabled": true,
+      "type": "gltf",
+      "files": {},
+      "futureTargets": {
+        "gltf": "projects/case-study-b/data/processed/shahbazi_gravel_pit/shahbazi_gravel_pit_textured_mesh.glb"
+      },
+      "metadata": {
+        "sourceFile": "Shahbazi et al. (2019) UAV image dataset, processed derivative target",
+        "sourceDate": "2019",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "classification": "derived",
+        "confidentiality": "public-source",
+        "placeholder": true,
+        "sourceDataIncluded": false,
+        "notes": "Future web-ready textured mesh output. Disabled until source archive is downloaded, processed, reviewed, and the GLB exists."
+      }
+    },
+    {
+      "id": "shahbazi-point-cloud",
+      "label": "Shahbazi reconstructed point cloud",
+      "disabled": true,
+      "type": "pointcloud",
+      "files": {},
+      "futureTargets": {
+        "potree": "projects/case-study-b/data/processed/shahbazi_gravel_pit/point_cloud_potree/metadata.json"
+      },
+      "metadata": {
+        "sourceFile": "Shahbazi et al. (2019) UAV / MVS reconstruction source material",
+        "sourceDate": "2019",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "classification": "derived",
+        "confidentiality": "public-source",
+        "placeholder": true,
+        "sourceDataIncluded": false,
+        "notes": "Future Potree-ready or equivalent point-cloud output. Disabled until processed files exist."
+      }
+    },
+    {
+      "id": "shahbazi-orthomosaic",
+      "label": "Shahbazi orthomosaic / image texture",
+      "disabled": true,
+      "type": "geotiff",
+      "files": {},
+      "futureTargets": {
+        "raster": "projects/case-study-b/data/processed/shahbazi_gravel_pit/orthomosaic.tif"
+      },
+      "metadata": {
+        "sourceFile": "Shahbazi et al. (2019) UAV RGB images",
+        "sourceDate": "2019",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "classification": "derived",
+        "confidentiality": "public-source",
+        "placeholder": true,
+        "sourceDataIncluded": false,
+        "notes": "Future orthomosaic or image texture artifact. Disabled until generated and georeferencing is reviewed."
+      }
+    },
+    {
+      "id": "shahbazi-ground-control",
+      "label": "Shahbazi ground control / check points",
+      "type": "point",
+      "files": {},
+      "previewFiles": {
+        "geojson": "projects/case-study-b/data/processed/shahbazi_gravel_pit/ground_control_points.geojson"
+      },
+      "metadata": {
+        "sourceFile": "projects/case-study-b/data/raw/shahbazi_gravel_pit/GCPs.txt",
+        "sourceDate": "2019",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "classification": "observed",
+        "confidentiality": "public-source",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "notes": "Normalized GeoJSON derived from the local Shahbazi GCP/check point table. It uses the same scene-centering transform as the sampled TLS preview so the two observed layers align for demo review. Final CRS/orientation validation is still required before GIS-grade use."
+      }
+    },
+    {
+      "id": "shahbazi-camera-poses",
+      "label": "Shahbazi UAV camera positions / flight path",
+      "type": "line",
+      "files": {},
+      "previewFiles": {
+        "geojson": "projects/case-study-b/data/processed/shahbazi_gravel_pit/camera_poses.geojson"
+      },
+      "metadata": {
+        "sourceFile": "projects/case-study-b/data/raw/shahbazi_gravel_pit/RefinedEOPs.txt",
+        "sourceDate": "2019",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "classification": "interpretation",
+        "confidentiality": "public-source",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "notes": "Normalized flight-path and camera-position preview derived from the local refined exterior orientation table, with timestamps and direct EOP comparison metadata attached. It is a camera acquisition layer only, not a reconstructed orthomosaic or mesh."
+      }
+    },
+    {
+      "id": "shahbazi-camera-frustums",
+      "label": "Shahbazi sampled camera frustums",
+      "type": "line",
+      "files": {},
+      "previewFiles": {
+        "geojson": "projects/case-study-b/data/processed/shahbazi_gravel_pit/camera_frustums.geojson"
+      },
+      "metadata": {
+        "sourceFile": "projects/case-study-b/data/raw/shahbazi_gravel_pit/RefinedEOPs.txt",
+        "sourceDate": "2019",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "classification": "observed-derived",
+        "confidentiality": "public-source",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "notes": "Sampled visual camera-frustum preview derived from refined exterior and interior orientation tables. Orientation convention is approximate for display and must be verified before metric footprint use."
+      }
+    },
+    {
+      "id": "shahbazi-dense-matching-links",
+      "label": "Shahbazi dense-matching image-pair links",
+      "type": "line",
+      "files": {},
+      "previewFiles": {
+        "geojson": "projects/case-study-b/data/processed/shahbazi_gravel_pit/dense_matching_links.geojson"
+      },
+      "metadata": {
+        "sourceFile": "projects/case-study-b/data/raw/shahbazi_gravel_pit/DenseMatching.txt",
+        "sourceDate": "2019",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "classification": "observed-derived",
+        "confidentiality": "public-source",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "notes": "Source QA layer showing image-pair relationships from DenseMatching.txt, connected through processed camera-pose scene coordinates. These links are not surveyed ground geometry."
+      }
+    },
+    {
+      "id": "shahbazi-object-points",
+      "label": "Shahbazi raw sparse object points / tie-point QA",
+      "disabled": true,
+      "type": "pointcloud",
+      "files": {},
+      "previewFiles": {
+        "preview": "projects/case-study-b/data/processed/shahbazi_gravel_pit/object_points_preview.json"
+      },
+      "metadata": {
+        "sourceFile": "projects/case-study-b/data/raw/shahbazi_gravel_pit/ObjectPoints.txt",
+        "sourceDate": "2019",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "classification": "observed-derived",
+        "confidentiality": "public-source",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "notes": "Raw sparse source object-point preview retained as a provenance and QA artifact. It is not currently meshed into the visible ground surface."
+      }
+    },
+    {
+      "id": "shahbazi-tie-point-support-isolines",
+      "label": "Shahbazi tie-point support isolines",
+      "disabled": true,
+      "type": "line",
+      "files": {},
+      "previewFiles": {
+        "geojson": "projects/case-study-b/data/processed/shahbazi_gravel_pit/tie_point_support_isolines.geojson",
+        "meshPreview": "projects/case-study-b/data/processed/shahbazi_gravel_pit/tie_point_support_isobands_mesh.json"
+      },
+      "metadata": {
+        "sourceFile": "projects/case-study-b/data/raw/shahbazi_gravel_pit/ObjectPoints.txt + TiePoints.txt",
+        "sourceDate": "2019",
+        "derivedArtifactDate": "2026-05-11",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "derivedFrom": "projects/case-study-b/data/processed/shahbazi_gravel_pit/object_points_preview.json",
+        "classification": "observed-derived",
+        "confidentiality": "public-source",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "notes": "Isobar-style QA contour lines derived from sparse object-point tie observation counts. This is a photogrammetry support visualization, not pressure, grade, terrain, or engineering geometry."
+      }
+    },
+    {
+      "id": "shahbazi-tls-subzone",
+      "label": "Shahbazi TLS sampled preview",
+      "type": "pointcloud",
+      "files": {},
+      "previewFiles": {
+        "preview": "projects/case-study-b/data/processed/shahbazi_gravel_pit/tls_preview_points.json"
+      },
+      "futureTargets": {
+        "potree": "projects/case-study-b/data/processed/shahbazi_gravel_pit/tls_subzone_potree/metadata.json"
+      },
+      "metadata": {
+        "sourceFile": "Shahbazi et al. (2019) terrestrial laser scanner point cloud sub-zone",
+        "sourceDate": "2019",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "classification": "observed-derived",
+        "confidentiality": "public-source",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "notes": "Loads a sampled browser preview derived from local LaserScan.xyz. Metric scale is preserved and X/Y are centered into the existing procedural Case Study B scene. The Potree target remains future full-resolution work."
+      }
+    },
+    {
+      "id": "shahbazi-tls-tiled-preview",
+      "label": "Shahbazi TLS tiled preview",
+      "type": "pointcloud",
+      "files": {},
+      "previewFiles": {
+        "previewTiles": "projects/case-study-b/data/processed/shahbazi_gravel_pit/tls_tiled_preview/manifest.json"
+      },
+      "metadata": {
+        "sourceFile": "projects/case-study-b/data/raw/shahbazi_gravel_pit/LaserScan.xyz",
+        "sourceDate": "2019",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "classification": "observed-derived",
+        "confidentiality": "public-source",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "notes": "Higher-density binary tiled browser preview derived from local LaserScan.xyz. This is still a sampled preview rail, not the final full-resolution Potree/EPT point cloud."
+      }
+    },
+    {
+      "id": "shahbazi-tls-surface-preview",
+      "label": "Shahbazi ground surface preview",
+      "type": "mesh",
+      "files": {},
+      "previewFiles": {
+        "outerMeshPreview": "projects/case-study-b/data/processed/shahbazi_gravel_pit/outer_surface_mesh_preview.json",
+        "meshPreview": "projects/case-study-b/data/processed/shahbazi_gravel_pit/tls_surface_mesh_preview.json"
+      },
+      "metadata": {
+        "sourceFile": "projects/case-study-b/data/raw/shahbazi_gravel_pit/ObjectPoints.txt + LaserScan.xyz",
+        "sourceDate": "2019",
+        "derivedArtifactDate": "2026-05-11",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "classification": "observed-derived",
+        "confidentiality": "public-source",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "notes": "Preview-only source-derived surface. The outer surface is IDW interpolation from sparse photogrammetry ObjectPoints.txt, not LiDAR. The separate TLS island surface is derived from LaserScan.xyz. The coarse outer surface is trimmed inside the actual TLS island footprint. The TLS island fills only small enclosed interior display gaps from neighboring TLS cells, and each separate surface has only its boundary loops smoothed to reduce grid-edge chatter. No seam, no island knit, no rectangular TLS cutout, and no combined mesh path are active."
+      }
+    },
+    {
+      "id": "shahbazi-tls-contours",
+      "label": "Shahbazi ground surface contours",
+      "type": "line",
+      "files": {},
+      "previewFiles": {
+        "outerGeojson": "projects/case-study-b/data/processed/shahbazi_gravel_pit/outer_surface_contours.geojson",
+        "geojson": "projects/case-study-b/data/processed/shahbazi_gravel_pit/tls_surface_contours.geojson"
+      },
+      "metadata": {
+        "sourceFile": "projects/case-study-b/data/raw/shahbazi_gravel_pit/ObjectPoints.txt + LaserScan.xyz",
+        "sourceDate": "2019",
+        "derivedArtifactDate": "2026-05-11",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "derivedFrom": "projects/case-study-b/data/processed/shahbazi_gravel_pit/outer_surface_mesh_preview.json + tls_surface_mesh_preview.json",
+        "classification": "observed-derived",
+        "confidentiality": "public-source",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "notes": "Preview contour linework regenerated from the separate source-derived meshes. Outer contours come from the IDW sparse-object-point surface, not LiDAR. TLS contours follow the TLS surface preview after small enclosed interior display-gap fill. No seam contour and no combined contour path are active."
+      }
+    },
+    {
+      "id": "shahbazi-photo-overlay-preview",
+      "label": "Shahbazi projected image preview",
+      "type": "mesh",
+      "files": {},
+      "previewFiles": {
+        "manifest": "projects/case-study-b/data/processed/shahbazi_gravel_pit/photo_overlay_preview/photo_overlay_manifest.json"
+      },
+      "metadata": {
+        "sourceFile": "projects/case-study-b/data/raw/shahbazi_gravel_pit/RawImages + RefinedEOPs.txt + RefinedIOPs.txt",
+        "sourceDate": "2019",
+        "derivedArtifactDate": "2026-05-11",
+        "sourceOrigin": "Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+        "derivedFrom": "Shahbazi UAV images plus current Shahbazi outer/TLS preview surfaces",
+        "classification": "observed-derived",
+        "confidentiality": "public-source",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "notes": "First-pass projected UAV image overlay using six browser-safe downsampled TIFF previews ray-projected onto the current separate Shahbazi outer and TLS surface previews. This is a visual alignment preview only, not an orthomosaic or final photogrammetric texture."
+      }
+    },
+    {
+      "id": "shahbazi-derived-overlays",
+      "label": "Shahbazi derived demo overlays",
+      "disabled": true,
+      "type": "polygon",
+      "files": {},
+      "futureTargets": {
+        "geojson": "projects/case-study-b/data/processed/shahbazi_gravel_pit/derived_demo_overlays.geojson"
+      },
+      "metadata": {
+        "sourceFile": "Future derived overlay targets from reviewed Shahbazi processed outputs",
+        "sourceDate": "not generated",
+        "sourceOrigin": "GeoSee derived demo, pending processing",
+        "classification": "interpretation",
+        "confidentiality": "public-source",
+        "placeholder": true,
+        "sourceDataIncluded": false,
+        "notes": "Future synthetic or interpretive overlays based on processed Shahbazi geometry. Must remain clearly separated from observed source data."
+      }
+    }
+  ],
+  "pageOrder": [
+    "01_overview",
+    "06_untitled",
+    "02_bench_walkthrough",
+    "03_anomaly_story",
+    "04_planning_governance",
+    "05_public_communication"
+  ],
+  "watermark": "Demo placeholders — not for engineering use",
+  "created": "2026-05-10T00:00:00Z",
+  "modified": "2026-05-18T00:40:23.816Z",
+  "presentationDefaults": {
+    "transitionDuration": 2600,
+    "transitionEasing": "easeInOutCubic",
+    "holdDuration": 5000,
+    "cameraUp": [
+      0,
+      0,
+      1
+    ]
+  }
+}

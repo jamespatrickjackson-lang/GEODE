@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "utah-forge-mt-stations",
+  "project": "utah-forge",
+  "dataset": "utah_forge_phase_3/electrical_resistivity/stations",
+  "artifactFamily": "render_ready",
+  "artifactType": "station_marker",
+  "renderRole": "technical_credibility",
+  "loadClass": "qa_validation",
+  "sourceType": "mixed",
+  "epistemicStatus": "transformed",
+  "authority": "Observed in projects/utah-forge/project.json, DATA_LAYER_STATUS.md, data_refs/README.md, Computed-Artifact-Pipeline.md, and existing processed station/provenance files.",
+  "status": "needs_review",
+  "reviewRequired": true,
+  "accepted": false,
+  "paths": {
+    "source": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_edis/FORGE_MT_190812_EDIs.zip",
+    "artifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/stations/mt_stations.geojson",
+    "manifest": null,
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/stations/mt_stations.provenance.json",
+    "supporting": [
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/stations/mt_station_response_qc.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/source_inventory.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_origin_note.md"
+    ]
+  },
+  "inputs": [
+    {
+      "path": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_edis/FORGE_MT_190812_EDIs.zip",
+      "role": "MT EDI station source archive",
+      "notes": "Project metadata identifies this as Utah FORGE GDR submission 1255 MT EDI station files."
+    }
+  ],
+  "producedBy": {
+    "script": "prep/build_utah_forge_mt_station_markers.mjs",
+    "tool": "Node prep script",
+    "generatedAt": "2026-05-12",
+    "notes": "Script observed read-only; no script was run in this pass."
+  },
+  "crs": {
+    "source": "NAD83 geographic LAT/LONG/ELEV headers, needs review",
+    "scene": "EPSG:26912 / NAD83 UTM Zone 12N shifted into GeoSee scene-local meters, needs review",
+    "transformPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json",
+    "notes": "CRS and transform wording is based on project metadata and data_refs guidance; human review still required before acceptance."
+  },
+  "units": {
+    "horizontal": "meters, needs review",
+    "vertical": "meters, needs review",
+    "scalar": null,
+    "notes": "Station markers are positional; visual marker radius is symbolic."
+  },
+  "scalar": {
+    "transform": null,
+    "range": null,
+    "thresholds": null,
+    "notes": "No scalar field is accepted by this wrapper."
+  },
+  "processing": {
+    "method": "Parsed MT EDI LAT/LONG/ELEV headers into station marker GeoJSON, needs review",
+    "parameters": {
+      "selectedVariantRule": "standard EDI per station preferred; _bvv retained as variant metadata, per script evidence",
+      "markerRadius": "symbolic for readability, per project metadata"
+    },
+    "downsampling": null,
+    "masking": null,
+    "notes": "This wrapper records station marker status only, not acceptance of MT response curves or model interpretation."
+  },
+  "stats": {
+    "counts": {
+      "stationFeatureCount": 122
+    },
+    "bounds": {},
+    "notes": "Feature count was read from existing mt_stations.geojson during this docs/metadata pass."
+  },
+  "render": {
+    "colorRamp": null,
+    "legendPath": null,
+    "materialNotes": "Station markers are a technical credibility and QA/validation anchor; marker size/style/default visibility need human review before demo acceptance.",
+    "visualCheckRequired": true,
+    "visualCheckReceipt": null,
+    "notes": "Render-ready does not mean accepted client-facing default."
+  },
+  "provenance": {
+    "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/stations/mt_stations.provenance.json",
+    "notes": "Existing provenance file observed; review completeness before acceptance."
+  },
+  "limitations": [
+    "Not accepted project state.",
+    "Does not approve default visibility or demo use.",
+    "Marker radius is symbolic for readability.",
+    "CRS/transform and station source provenance still require human review before acceptance.",
+    "No runtime, loader, page, visibility, rendering, prep, or data artifact behavior changed."
+  ],
+  "relatedLayers": [
+    "utah-forge-mt-stations"
+  ],
+  "relatedPages": [
+    "11_untitled"
+  ],
+  "review": {
+    "requiredBy": "human",
+    "questions": [
+      "Should MT station markers be QA-only, technical credibility, or client-facing in the next demo path?",
+      "Is the station marker CRS/scene transform accepted?",
+      "What visual receipt proves station marker placement, size, labels, and MT co-rendering are acceptable?"
+    ],
+    "acceptedBy": null,
+    "acceptedAt": null,
+    "receipt": null
+  },
+  "notes": "Project-local wrapper only. It does not replace existing provenance and does not mark the station artifact accepted."
+}

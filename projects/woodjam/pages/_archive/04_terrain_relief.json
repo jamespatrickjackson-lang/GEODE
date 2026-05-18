@@ -1,0 +1,28 @@
+{
+  "id": "04_terrain_relief",
+  "title": "gliug;iugiug;iugh;iu",
+  "subtitle": "Top-down, drillholes hidden",
+  "camera": {
+    "position": [
+      0,
+      -200,
+      9000
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 35
+  },
+  "transition": {
+    "duration": 3500,
+    "easing": "easeOutQuart"
+  },
+  "holdDuration": 3500
+}

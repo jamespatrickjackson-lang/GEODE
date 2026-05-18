@@ -1,0 +1,43 @@
+{
+  "id": "10_untitled",
+  "title": "Untitled page",
+  "camera": {
+    "position": [
+      5627.870980729243,
+      2697.0855251805965,
+      574.5435898088028
+    ],
+    "target": [
+      1525.2969735043125,
+      110.45254826118793,
+      188.93879759774762
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 50
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "overlay": {
+    "position": "right",
+    "contentFile": "overlays/10_untitled/text.md",
+    "images": [
+      {
+        "file": "overlays/10_untitled/vcu_2711_fig_2.500x0-is.png",
+        "caption": "",
+        "position": "below-text"
+      }
+    ]
+  },
+  "overlayLayout": {
+    "x": 0.057306736749594384,
+    "y": 0.3542186097451979,
+    "width": 0.26080584099513254
+  }
+}

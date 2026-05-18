@@ -1,0 +1,45 @@
+{
+  "id": "00_base_gui",
+  "title": "Base GUI",
+  "subtitle": "Starter interface defaults",
+  "camera": {
+    "position": [
+      280,
+      -360,
+      220
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 54
+  },
+  "transition": {
+    "duration": 1200,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 5000,
+  "overlayLayout": {
+    "x": 0.055,
+    "y": 0.07,
+    "width": 0.31,
+    "height": 0.34
+  },
+  "overlay": {
+    "position": "left",
+    "contentFile": "overlays/00_base_gui/text.md",
+    "timing": {
+      "fadeMs": 800,
+      "gapMs": 80,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
+  "accentColor": "#75c7ff"
+}

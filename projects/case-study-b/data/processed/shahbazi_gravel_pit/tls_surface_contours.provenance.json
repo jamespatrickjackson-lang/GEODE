@@ -1,0 +1,26 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "tls_surface_contours.geojson",
+  "artifactType": "derived-tls-surface-contours-preview",
+  "projectSlug": "case-study-b",
+  "createdDate": "2026-05-11",
+  "source": {
+    "meshPreview": "projects/case-study-b/data/processed/shahbazi_gravel_pit/tls_surface_mesh_preview.json",
+    "rawSource": "projects/case-study-b/data/raw/shahbazi_gravel_pit/LaserScan.xyz",
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Unmanned aerial image dataset: Ready for 3D reconstruction. Data in Brief 25, 103962. DOI 10.1016/j.dib.2019.103962"
+  },
+  "processing": {
+    "script": "prep/build_shahbazi_tls_contours_geojson.mjs",
+    "method": "Triangle-plane intersection against the binned observed-cell TLS surface mesh preview.",
+    "contourIntervalM": 0.5,
+    "renderZOffsetM": 0,
+    "contourLevels": 16,
+    "contourSegments": 7929,
+    "sourceGapPolicy": "Contours are emitted only where the TLS surface mesh has faces. The source mesh fills small enclosed interior display gaps but does not extend outside the observed TLS footprint."
+  },
+  "reviewStatus": {
+    "readyForDemoPreview": true,
+    "readyForFinalSpatialAnalysis": false,
+    "notes": "This is legibility linework for the TLS mesh preview, not a final surveyed contour product."
+  }
+}

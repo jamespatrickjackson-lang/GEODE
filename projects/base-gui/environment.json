@@ -1,0 +1,230 @@
+{
+  "id": "environment",
+  "renderPreset": "survey-daylight",
+  "layerStyles": {
+    "base-gui-reference-stage": {
+      "renderMode": "base-gui-reference-stage",
+      "color": "#75c7ff",
+      "opacity": 0.32,
+      "affectedByFog": false,
+      "showLabels": false
+    }
+  },
+  "defaultVisibleLayers": [
+    "base-gui-reference-stage"
+  ],
+  "scene": {
+    "background": "#151819",
+    "toneMapping": "aces",
+    "exposure": 1.08,
+    "shadows": false,
+    "sun": {
+      "azimuth": 115,
+      "elevation": 30,
+      "lockToCamera": false
+    },
+    "fog": {
+      "color": "#151819",
+      "density": 0.00008
+    },
+    "camera": {
+      "fov": 54
+    },
+    "lighting": {
+      "enabled": true,
+      "showSceneElements": true,
+      "hemisphere": {
+        "sky": "#d9e8ff",
+        "ground": "#b9aa91",
+        "intensity": 1.5
+      },
+      "directional": {
+        "color": "#ffe0a8",
+        "intensity": 4.2,
+        "position": [
+          -3000,
+          -2400,
+          3600
+        ],
+        "castShadow": false
+      },
+      "fill": {
+        "color": "#9ab8d8",
+        "intensity": 1.6,
+        "position": [
+          2200,
+          2800,
+          2200
+        ]
+      },
+      "rim": {
+        "color": "#fff0c8",
+        "intensity": 0.8,
+        "position": [
+          0,
+          -4200,
+          1800
+        ]
+      }
+    },
+    "bloom": {
+      "strength": 0,
+      "radius": 0.55,
+      "threshold": 0.86
+    },
+    "terrain": {
+      "rampLow": "#4f4a40",
+      "rampMid": "#8a7e68",
+      "rampHigh": "#d7c69e",
+      "elevLowM": 0,
+      "elevHighM": 120,
+      "hillshadeIntensity": 1.05,
+      "rockHueVariance": 0.05,
+      "shadowSharpness": 0.5,
+      "shadowTint": "#303640",
+      "gridEnabled": false,
+      "gridColor": "#d7d1c7",
+      "gridOpacity": 0.34,
+      "gridSpacingM": 100,
+      "gridLineWidthM": 0.7,
+      "undersideOpacity": 0
+    },
+    "gui": {
+      "overlay": {
+        "backgroundColor": "#121518",
+        "backgroundAlpha": 0.55,
+        "textColor": "#f4f0e8",
+        "secondaryTextColor": "#b6c3cf",
+        "bodyTextColor": "#ebe2d4",
+        "borderColor": "#ffffff",
+        "borderAlpha": 0.2,
+        "borderWidth": 1,
+        "backdropBlurPx": 20,
+        "backdropSaturation": 145,
+        "radius": 12,
+        "textPadding": 30,
+        "bodyFontSize": 14,
+        "headingFontSize": 21,
+        "figureLabelVisible": true,
+        "topHighlightAlpha": 0.7,
+        "bottomShadowAlpha": 0.12,
+        "shadowAlpha": 0.24,
+        "shadowBlur": 80,
+        "shadowOffsetY": 24
+      },
+      "navigator": {
+        "useOverride": true,
+        "textColor": "#ffffff",
+        "backgroundAlpha": 0.1,
+        "borderAlpha": 0.16,
+        "radius": 999,
+        "bottom": 34,
+        "fontSize": 14,
+        "fontWeight": 500
+      },
+      "labels": {
+        "maxSiteLabelsDesktop": 16,
+        "maxSiteLabelsMobile": 8,
+        "fadeNearM": 2500,
+        "fadeFarM": 7500,
+        "styles": {
+          "siteElement": {
+            "textColor": "#f6f1e8",
+            "outlineColor": "#ffffff",
+            "outlineOpacity": 0.42,
+            "fillColor": "#11161b",
+            "fillOpacity": 0.72,
+            "pointerVisible": true
+          },
+          "area": {
+            "textColor": "#f6f1e8",
+            "outlineColor": "#ffffff",
+            "outlineOpacity": 0.36,
+            "fillColor": "#11161b",
+            "fillOpacity": 0.66,
+            "pointerVisible": false
+          },
+          "anomaly": {
+            "textColor": "#ffe4e4",
+            "outlineColor": "#ff7777",
+            "outlineOpacity": 0.6,
+            "fillColor": "#251010",
+            "fillOpacity": 0.75,
+            "pointerVisible": true
+          }
+        }
+      },
+      "overlayStyles": [
+        {
+          "id": "overlay-style-1",
+          "label": "Style 1",
+          "overlay": {
+            "backgroundColor": "#121518",
+            "backgroundAlpha": 0.55,
+            "textColor": "#f4f0e8",
+            "secondaryTextColor": "#b6c3cf",
+            "bodyTextColor": "#ebe2d4",
+            "borderColor": "#ffffff",
+            "borderAlpha": 0.2,
+            "borderWidth": 1,
+            "backdropBlurPx": 20,
+            "backdropSaturation": 145,
+            "radius": 12,
+            "textPadding": 30,
+            "bodyFontSize": 14,
+            "headingFontSize": 21,
+            "figureLabelVisible": true,
+            "topHighlightAlpha": 0.7,
+            "bottomShadowAlpha": 0.12,
+            "shadowAlpha": 0.24,
+            "shadowBlur": 80,
+            "shadowOffsetY": 24
+          },
+          "navigator": {
+            "useOverride": true,
+            "textColor": "#ffffff",
+            "backgroundAlpha": 0.1,
+            "borderAlpha": 0.16,
+            "radius": 999,
+            "bottom": 34,
+            "fontSize": 14,
+            "fontWeight": 500
+          },
+          "labels": {
+            "maxSiteLabelsDesktop": 16,
+            "maxSiteLabelsMobile": 8,
+            "fadeNearM": 2500,
+            "fadeFarM": 7500,
+            "styles": {
+              "siteElement": {
+                "textColor": "#f6f1e8",
+                "outlineColor": "#ffffff",
+                "outlineOpacity": 0.42,
+                "fillColor": "#11161b",
+                "fillOpacity": 0.72,
+                "pointerVisible": true
+              },
+              "area": {
+                "textColor": "#f6f1e8",
+                "outlineColor": "#ffffff",
+                "outlineOpacity": 0.36,
+                "fillColor": "#11161b",
+                "fillOpacity": 0.66,
+                "pointerVisible": false
+              },
+              "anomaly": {
+                "textColor": "#ffe4e4",
+                "outlineColor": "#ff7777",
+                "outlineOpacity": 0.6,
+                "fillColor": "#251010",
+                "fillOpacity": 0.75,
+                "pointerVisible": true
+              }
+            }
+          }
+        }
+      ],
+      "activeOverlayStyleId": "overlay-style-1"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "productId": "mt-resistivity-forge-focused-volume",
+  "label": "MT resistivity FORGE-focused volume",
+  "generatedDate": "2026-05-12",
+  "dimensions": [
+    96,
+    80,
+    64
+  ],
+  "voxelCount": 491520,
+  "occupiedVoxelCount": 82876,
+  "emptyVoxelCount": 408644,
+  "sourceRowsInBounds": 771889,
+  "occupancyFraction": 0.168612,
+  "log10Resistivity": {
+    "min": -1,
+    "p02": 0.432969,
+    "p50": 2.445837,
+    "p98": 3.978851,
+    "max": 4.5,
+    "sourceMin": -2,
+    "sourceMax": 4.5,
+    "displayMin": 0.139879,
+    "displayMax": 3.937122
+  },
+  "sceneBounds": {
+    "min": [
+      -32853.373,
+      -34725.559,
+      -30000
+    ],
+    "max": [
+      56197.135,
+      67499.635,
+      3449.131
+    ]
+  }
+}

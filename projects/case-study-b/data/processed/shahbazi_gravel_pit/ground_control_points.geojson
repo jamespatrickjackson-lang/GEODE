@@ -1,0 +1,2446 @@
+{
+  "type": "FeatureCollection",
+  "name": "Shahbazi ground control / check points",
+  "properties": {
+    "schema": "geosee.point-markers.v1",
+    "sourcePath": "projects/case-study-b/data/raw/shahbazi_gravel_pit/GCPs.txt",
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+    "sourceCrs": {
+      "label": "NAD83 / MTM Zone 7",
+      "epsg": 32187,
+      "status": "from article source-data table; confirm before final GIS overlay use"
+    },
+    "scenePlacement": {
+      "mode": "tls-preview-aligned",
+      "horizontalScale": 1,
+      "verticalScale": 1,
+      "zLiftMeters": 115,
+      "note": "GCP rows are centered and lifted with the same transform as the sampled TLS preview so the two real layers line up in Case Study B."
+    },
+    "sourceBounds": {
+      "min": [
+        193006.684,
+        5025123.001,
+        297.589
+      ],
+      "max": [
+        193193.633,
+        5025264.279,
+        317.344
+      ]
+    },
+    "sceneBounds": {
+      "min": [
+        -86.075,
+        -109.135,
+        115.184
+      ],
+      "max": [
+        100.874,
+        32.143,
+        134.939
+      ]
+    },
+    "pointCount": 109
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -4,
+        "displayName": "Shahbazi GCP/check point -4",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193153.307,
+          "y": 5025156.675,
+          "z": 299.63
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          60.548,
+          -75.462,
+          117.225
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -5,
+        "displayName": "Shahbazi GCP/check point -5",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193126.758,
+          "y": 5025163.661,
+          "z": 304.067
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          33.999,
+          -68.475,
+          121.662
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -6,
+        "displayName": "Shahbazi GCP/check point -6",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193126.023,
+          "y": 5025196.09,
+          "z": 299.021
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          33.264,
+          -36.047,
+          116.616
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -7,
+        "displayName": "Shahbazi GCP/check point -7",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193090.067,
+          "y": 5025183.208,
+          "z": 299.444
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -2.692,
+          -48.929,
+          117.039
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -8,
+        "displayName": "Shahbazi GCP/check point -8",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193073.094,
+          "y": 5025141.189,
+          "z": 301.917
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -19.665,
+          -90.947,
+          119.512
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -9,
+        "displayName": "Shahbazi GCP/check point -9",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193105.232,
+          "y": 5025220.136,
+          "z": 298.978
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.473,
+          -12.001,
+          116.573
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -10,
+        "displayName": "Shahbazi GCP/check point -10",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193094.839,
+          "y": 5025208.802,
+          "z": 302.814
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.08,
+          -23.334,
+          120.409
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -11,
+        "displayName": "Shahbazi GCP/check point -11",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193073.14,
+          "y": 5025231.669,
+          "z": 298.186
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -19.619,
+          -0.468,
+          115.781
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -12,
+        "displayName": "Shahbazi GCP/check point -12",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193046.646,
+          "y": 5025237.772,
+          "z": 298.169
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -46.113,
+          5.635,
+          115.764
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -13,
+        "displayName": "Shahbazi GCP/check point -13",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193034.585,
+          "y": 5025220.009,
+          "z": 300.447
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.174,
+          -12.128,
+          118.042
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -14,
+        "displayName": "Shahbazi GCP/check point -14",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193026.184,
+          "y": 5025191.074,
+          "z": 301.304
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -66.575,
+          -41.062,
+          118.899
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -15,
+        "displayName": "Shahbazi GCP/check point -15",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193048.708,
+          "y": 5025180.458,
+          "z": 311.186
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -44.051,
+          -51.679,
+          128.781
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -16,
+        "displayName": "Shahbazi GCP/check point -16",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193046.447,
+          "y": 5025160.512,
+          "z": 312.868
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -46.312,
+          -71.624,
+          130.463
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -17,
+        "displayName": "Shahbazi GCP/check point -17",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193064.105,
+          "y": 5025185.022,
+          "z": 305.86
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -28.654,
+          -47.115,
+          123.455
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -18,
+        "displayName": "Shahbazi GCP/check point -18",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193059.763,
+          "y": 5025204.389,
+          "z": 304.717
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -32.996,
+          -27.747,
+          122.312
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -19,
+        "displayName": "Shahbazi GCP/check point -19",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193119.453,
+          "y": 5025256.63,
+          "z": 297.782
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          26.694,
+          24.493,
+          115.377
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -20,
+        "displayName": "Shahbazi GCP/check point -20",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193080.77,
+          "y": 5025264.279,
+          "z": 297.589
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -11.989,
+          32.143,
+          115.184
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -21,
+        "displayName": "Shahbazi GCP/check point -21",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193095.326,
+          "y": 5025251.379,
+          "z": 301.069
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.567,
+          19.242,
+          118.664
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -22,
+        "displayName": "Shahbazi GCP/check point -22",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193134.618,
+          "y": 5025123.001,
+          "z": 303.034
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          41.859,
+          -109.135,
+          120.629
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99999,
+        "displayName": "Shahbazi GCP/check point -99999",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193070.391,
+          "y": 5025159.613,
+          "z": 302.33
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -22.368,
+          -72.524,
+          119.925
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99998,
+        "displayName": "Shahbazi GCP/check point -99998",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193047.935,
+          "y": 5025145.688,
+          "z": 313.41
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -44.824,
+          -86.448,
+          131.005
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99997,
+        "displayName": "Shahbazi GCP/check point -99997",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193128.587,
+          "y": 5025171.471,
+          "z": 299.692
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          35.828,
+          -60.666,
+          117.287
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99995,
+        "displayName": "Shahbazi GCP/check point -99995",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193163.287,
+          "y": 5025173.802,
+          "z": 299.322
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.528,
+          -58.334,
+          116.917
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99994,
+        "displayName": "Shahbazi GCP/check point -99994",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193082.382,
+          "y": 5025216.588,
+          "z": 298.765
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -10.377,
+          -15.548,
+          116.36
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99993,
+        "displayName": "Shahbazi GCP/check point -99993",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193114.518,
+          "y": 5025180.358,
+          "z": 299.495
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.759,
+          -51.779,
+          117.09
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99992,
+        "displayName": "Shahbazi GCP/check point -99992",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193021.354,
+          "y": 5025247.277,
+          "z": 303.022
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.405,
+          15.14,
+          120.617
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99990,
+        "displayName": "Shahbazi GCP/check point -99990",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193158.323,
+          "y": 5025218.699,
+          "z": 306.284
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          65.564,
+          -13.437,
+          123.879
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99989,
+        "displayName": "Shahbazi GCP/check point -99989",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193124.584,
+          "y": 5025263.902,
+          "z": 297.646
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          31.825,
+          31.765,
+          115.241
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99988,
+        "displayName": "Shahbazi GCP/check point -99988",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193046.505,
+          "y": 5025205.638,
+          "z": 307.341
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -46.254,
+          -26.498,
+          124.936
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99987,
+        "displayName": "Shahbazi GCP/check point -99987",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193083.234,
+          "y": 5025171.832,
+          "z": 301.887
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9.525,
+          -60.304,
+          119.482
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99986,
+        "displayName": "Shahbazi GCP/check point -99986",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193043.983,
+          "y": 5025191.606,
+          "z": 307.743
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -48.776,
+          -40.531,
+          125.338
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99985,
+        "displayName": "Shahbazi GCP/check point -99985",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193134.981,
+          "y": 5025133.303,
+          "z": 303.227
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          42.222,
+          -98.833,
+          120.822
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99984,
+        "displayName": "Shahbazi GCP/check point -99984",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193088.126,
+          "y": 5025189.515,
+          "z": 299.337
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4.633,
+          -42.622,
+          116.932
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99983,
+        "displayName": "Shahbazi GCP/check point -99983",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193108.764,
+          "y": 5025167.805,
+          "z": 303.334
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.005,
+          -64.332,
+          120.929
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99982,
+        "displayName": "Shahbazi GCP/check point -99982",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193141.852,
+          "y": 5025186.444,
+          "z": 299.13
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          49.093,
+          -45.692,
+          116.725
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99980,
+        "displayName": "Shahbazi GCP/check point -99980",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193139.094,
+          "y": 5025166.781,
+          "z": 303.208
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.335,
+          -65.355,
+          120.803
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99979,
+        "displayName": "Shahbazi GCP/check point -99979",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193052.446,
+          "y": 5025192.6,
+          "z": 305.256
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -40.313,
+          -39.537,
+          122.851
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99977,
+        "displayName": "Shahbazi GCP/check point -99977",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193163.264,
+          "y": 5025212.451,
+          "z": 305.709
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.505,
+          -19.685,
+          123.304
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99975,
+        "displayName": "Shahbazi GCP/check point -99975",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193125.87,
+          "y": 5025133.909,
+          "z": 309.787
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          33.111,
+          -98.228,
+          127.382
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99974,
+        "displayName": "Shahbazi GCP/check point -99974",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193060.96,
+          "y": 5025176.246,
+          "z": 307.53
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -31.799,
+          -55.89,
+          125.125
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99973,
+        "displayName": "Shahbazi GCP/check point -99973",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193052.828,
+          "y": 5025162.403,
+          "z": 311.213
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -39.931,
+          -69.734,
+          128.808
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99971,
+        "displayName": "Shahbazi GCP/check point -99971",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193144.543,
+          "y": 5025209.029,
+          "z": 303.535
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.784,
+          -23.107,
+          121.13
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99970,
+        "displayName": "Shahbazi GCP/check point -99970",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193051.246,
+          "y": 5025202.043,
+          "z": 305.475
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -41.513,
+          -30.094,
+          123.07
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99969,
+        "displayName": "Shahbazi GCP/check point -99969",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193163.464,
+          "y": 5025191.48,
+          "z": 302.722
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.705,
+          -40.656,
+          120.317
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99968,
+        "displayName": "Shahbazi GCP/check point -99968",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193103.822,
+          "y": 5025216.538,
+          "z": 299.152
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.063,
+          -15.599,
+          116.747
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99967,
+        "displayName": "Shahbazi GCP/check point -99967",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193189.913,
+          "y": 5025172.053,
+          "z": 299.752
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          97.154,
+          -60.083,
+          117.347
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99966,
+        "displayName": "Shahbazi GCP/check point -99966",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193108.255,
+          "y": 5025229.855,
+          "z": 298.97
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.496,
+          -2.281,
+          116.565
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99965,
+        "displayName": "Shahbazi GCP/check point -99965",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193095.522,
+          "y": 5025240.439,
+          "z": 303.521
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.763,
+          8.303,
+          121.116
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99964,
+        "displayName": "Shahbazi GCP/check point -99964",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193125.48,
+          "y": 5025184.687,
+          "z": 299.278
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.721,
+          -47.45,
+          116.873
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99963,
+        "displayName": "Shahbazi GCP/check point -99963",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193067.117,
+          "y": 5025157.362,
+          "z": 303.886
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -25.642,
+          -74.775,
+          121.481
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99962,
+        "displayName": "Shahbazi GCP/check point -99962",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193170.099,
+          "y": 5025202.236,
+          "z": 305.678
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.34,
+          -29.901,
+          123.273
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99961,
+        "displayName": "Shahbazi GCP/check point -99961",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193167.274,
+          "y": 5025162.846,
+          "z": 298.925
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.515,
+          -69.291,
+          116.52
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99960,
+        "displayName": "Shahbazi GCP/check point -99960",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193074.595,
+          "y": 5025192.186,
+          "z": 301.361
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -18.164,
+          -39.951,
+          118.956
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99959,
+        "displayName": "Shahbazi GCP/check point -99959",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193072.452,
+          "y": 5025239.991,
+          "z": 297.962
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -20.307,
+          7.855,
+          115.557
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99958,
+        "displayName": "Shahbazi GCP/check point -99958",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193125.494,
+          "y": 5025203.78,
+          "z": 298.811
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.735,
+          -28.356,
+          116.406
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99955,
+        "displayName": "Shahbazi GCP/check point -99955",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193029.088,
+          "y": 5025160.466,
+          "z": 317.344
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -63.671,
+          -71.671,
+          134.939
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99954,
+        "displayName": "Shahbazi GCP/check point -99954",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193031.126,
+          "y": 5025196.205,
+          "z": 301.337
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -61.633,
+          -35.931,
+          118.932
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99953,
+        "displayName": "Shahbazi GCP/check point -99953",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193170.036,
+          "y": 5025216.707,
+          "z": 305.736
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.277,
+          -15.429,
+          123.331
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99952,
+        "displayName": "Shahbazi GCP/check point -99952",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193094.013,
+          "y": 5025191.368,
+          "z": 299.376
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.254,
+          -40.769,
+          116.971
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99951,
+        "displayName": "Shahbazi GCP/check point -99951",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193039.17,
+          "y": 5025158.819,
+          "z": 311.36
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -53.589,
+          -73.317,
+          128.955
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99950,
+        "displayName": "Shahbazi GCP/check point -99950",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193033.752,
+          "y": 5025219.529,
+          "z": 300.44
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.007,
+          -12.607,
+          118.035
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99949,
+        "displayName": "Shahbazi GCP/check point -99949",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193077.32,
+          "y": 5025158.172,
+          "z": 302.282
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -15.439,
+          -73.964,
+          119.877
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99948,
+        "displayName": "Shahbazi GCP/check point -99948",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193164.568,
+          "y": 5025201.768,
+          "z": 305.739
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.809,
+          -30.368,
+          123.334
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99947,
+        "displayName": "Shahbazi GCP/check point -99947",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193020.999,
+          "y": 5025211.118,
+          "z": 307.853
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.76,
+          -21.019,
+          125.448
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99946,
+        "displayName": "Shahbazi GCP/check point -99946",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193142.297,
+          "y": 5025221.2,
+          "z": 299.049
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          49.538,
+          -10.936,
+          116.644
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99945,
+        "displayName": "Shahbazi GCP/check point -99945",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193115.601,
+          "y": 5025241.194,
+          "z": 298.188
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.842,
+          9.058,
+          115.783
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99944,
+        "displayName": "Shahbazi GCP/check point -99944",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193032.038,
+          "y": 5025227.303,
+          "z": 299.491
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.721,
+          -4.833,
+          117.086
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99943,
+        "displayName": "Shahbazi GCP/check point -99943",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193151.666,
+          "y": 5025178.068,
+          "z": 299.273
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          58.907,
+          -54.069,
+          116.868
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99942,
+        "displayName": "Shahbazi GCP/check point -99942",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193014.999,
+          "y": 5025160.634,
+          "z": 315.176
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -77.76,
+          -71.503,
+          132.771
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99941,
+        "displayName": "Shahbazi GCP/check point -99941",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193123.673,
+          "y": 5025154.439,
+          "z": 310.283
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          30.914,
+          -77.697,
+          127.878
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99940,
+        "displayName": "Shahbazi GCP/check point -99940",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193089.59,
+          "y": 5025160.371,
+          "z": 305.055
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.169,
+          -71.765,
+          122.65
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99939,
+        "displayName": "Shahbazi GCP/check point -99939",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193126.616,
+          "y": 5025157.655,
+          "z": 307.194
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          33.857,
+          -74.481,
+          124.789
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99938,
+        "displayName": "Shahbazi GCP/check point -99938",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193006.684,
+          "y": 5025149.631,
+          "z": 313.819
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -86.075,
+          -82.505,
+          131.414
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99937,
+        "displayName": "Shahbazi GCP/check point -99937",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193059.273,
+          "y": 5025156.132,
+          "z": 307.949
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -33.486,
+          -76.004,
+          125.544
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99936,
+        "displayName": "Shahbazi GCP/check point -99936",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193141.774,
+          "y": 5025197.651,
+          "z": 302.209
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          49.015,
+          -34.486,
+          119.804
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99935,
+        "displayName": "Shahbazi GCP/check point -99935",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193114.484,
+          "y": 5025205.602,
+          "z": 298.944
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.725,
+          -26.535,
+          116.539
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99934,
+        "displayName": "Shahbazi GCP/check point -99934",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193125.425,
+          "y": 5025214.773,
+          "z": 298.578
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.666,
+          -17.363,
+          116.173
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99933,
+        "displayName": "Shahbazi GCP/check point -99933",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193161.463,
+          "y": 5025229.257,
+          "z": 308.188
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          68.704,
+          -2.879,
+          125.783
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99932,
+        "displayName": "Shahbazi GCP/check point -99932",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193132.688,
+          "y": 5025181.829,
+          "z": 299.321
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          39.929,
+          -50.308,
+          116.916
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99931,
+        "displayName": "Shahbazi GCP/check point -99931",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193099.454,
+          "y": 5025159.607,
+          "z": 304.171
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.695,
+          -72.53,
+          121.766
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99930,
+        "displayName": "Shahbazi GCP/check point -99930",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193149.276,
+          "y": 5025184.019,
+          "z": 299.187
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          56.517,
+          -48.117,
+          116.782
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99929,
+        "displayName": "Shahbazi GCP/check point -99929",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193012.949,
+          "y": 5025196.944,
+          "z": 311.103
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -79.81,
+          -35.192,
+          128.698
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99928,
+        "displayName": "Shahbazi GCP/check point -99928",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193156.973,
+          "y": 5025207.949,
+          "z": 305.534
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          64.214,
+          -24.187,
+          123.129
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99927,
+        "displayName": "Shahbazi GCP/check point -99927",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193112.106,
+          "y": 5025131.092,
+          "z": 316.139
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          19.347,
+          -101.044,
+          133.734
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99926,
+        "displayName": "Shahbazi GCP/check point -99926",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193025.062,
+          "y": 5025200.408,
+          "z": 301.212
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.697,
+          -31.729,
+          118.807
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99925,
+        "displayName": "Shahbazi GCP/check point -99925",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193022.218,
+          "y": 5025153.084,
+          "z": 316.669
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.541,
+          -79.053,
+          134.264
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99924,
+        "displayName": "Shahbazi GCP/check point -99924",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193175.678,
+          "y": 5025184.287,
+          "z": 299.377
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          82.919,
+          -47.85,
+          116.972
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99923,
+        "displayName": "Shahbazi GCP/check point -99923",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193121.113,
+          "y": 5025207.407,
+          "z": 298.825
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.354,
+          -24.73,
+          116.42
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99922,
+        "displayName": "Shahbazi GCP/check point -99922",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193037.565,
+          "y": 5025174.691,
+          "z": 309.835
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -55.194,
+          -57.446,
+          127.43
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99921,
+        "displayName": "Shahbazi GCP/check point -99921",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193137.394,
+          "y": 5025241.111,
+          "z": 298.51
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          44.635,
+          8.974,
+          116.105
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99920,
+        "displayName": "Shahbazi GCP/check point -99920",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193027.894,
+          "y": 5025174.779,
+          "z": 311.104
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.865,
+          -57.357,
+          128.699
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99919,
+        "displayName": "Shahbazi GCP/check point -99919",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193167.654,
+          "y": 5025182.539,
+          "z": 299.319
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.895,
+          -49.598,
+          116.914
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99917,
+        "displayName": "Shahbazi GCP/check point -99917",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193146.438,
+          "y": 5025171.964,
+          "z": 299.485
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.679,
+          -60.173,
+          117.08
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99916,
+        "displayName": "Shahbazi GCP/check point -99916",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193133.036,
+          "y": 5025197.203,
+          "z": 298.912
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          40.277,
+          -34.934,
+          116.507
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99915,
+        "displayName": "Shahbazi GCP/check point -99915",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193136.727,
+          "y": 5025210.743,
+          "z": 301.851
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          43.968,
+          -21.394,
+          119.446
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99914,
+        "displayName": "Shahbazi GCP/check point -99914",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193150.546,
+          "y": 5025203.774,
+          "z": 304.776
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          57.787,
+          -28.362,
+          122.371
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99913,
+        "displayName": "Shahbazi GCP/check point -99913",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193149.967,
+          "y": 5025166.857,
+          "z": 299.431
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          57.208,
+          -65.28,
+          117.026
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99912,
+        "displayName": "Shahbazi GCP/check point -99912",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193090.014,
+          "y": 5025218.649,
+          "z": 302.358
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -2.745,
+          -13.487,
+          119.953
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99911,
+        "displayName": "Shahbazi GCP/check point -99911",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193102.769,
+          "y": 5025187.426,
+          "z": 299.455
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.01,
+          -44.711,
+          117.05
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99910,
+        "displayName": "Shahbazi GCP/check point -99910",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193103.999,
+          "y": 5025154.05,
+          "z": 309.553
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.24,
+          -78.087,
+          127.148
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99909,
+        "displayName": "Shahbazi GCP/check point -99909",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193018.641,
+          "y": 5025176.272,
+          "z": 311.24
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.118,
+          -55.865,
+          128.835
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99908,
+        "displayName": "Shahbazi GCP/check point -99908",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193087.419,
+          "y": 5025236.44,
+          "z": 304.019
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.34,
+          4.304,
+          121.614
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99907,
+        "displayName": "Shahbazi GCP/check point -99907",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193020.443,
+          "y": 5025169.085,
+          "z": 315.415
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.316,
+          -63.052,
+          133.01
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99906,
+        "displayName": "Shahbazi GCP/check point -99906",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193032.749,
+          "y": 5025180.549,
+          "z": 305.192
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.01,
+          -51.588,
+          122.787
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99905,
+        "displayName": "Shahbazi GCP/check point -99905",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193156.178,
+          "y": 5025188.155,
+          "z": 300.524
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          63.419,
+          -43.981,
+          118.119
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99904,
+        "displayName": "Shahbazi GCP/check point -99904",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193100.184,
+          "y": 5025221.39,
+          "z": 300.188
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.425,
+          -10.747,
+          117.783
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99903,
+        "displayName": "Shahbazi GCP/check point -99903",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193118.192,
+          "y": 5025195.28,
+          "z": 299.137
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          25.433,
+          -36.856,
+          116.732
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99902,
+        "displayName": "Shahbazi GCP/check point -99902",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193193.633,
+          "y": 5025185.995,
+          "z": 299.429
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          100.874,
+          -46.141,
+          117.024
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": -99901,
+        "displayName": "Shahbazi GCP/check point -99901",
+        "sourceRole": "ground_control_or_check_point",
+        "sourceFile": "GCPs.txt",
+        "sourceCoordinates": {
+          "x": 193127.297,
+          "y": 5025224.765,
+          "z": 298.333
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          34.538,
+          -7.372,
+          115.928
+        ]
+      }
+    }
+  ]
+}

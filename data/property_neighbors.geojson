@@ -1,0 +1,50 @@
+{
+  "type": "FeatureCollection",
+  "name": "woodjam_property_neighbors",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:26910"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "mount-polley-mine",
+        "name": "Mount Polley Mine",
+        "operator": "Imperial Metals",
+        "commodity": "copper-gold",
+        "latitude": 52.53895,
+        "longitude": -121.61366,
+        "source": "OpenStreetMap via Mapcarta"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          594023.446,
+          5821887.51
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "gibraltar-mine",
+        "name": "Gibraltar Mine",
+        "operator": "Taseko Mines",
+        "commodity": "copper-molybdenum",
+        "latitude": 52.53451,
+        "longitude": -122.26981,
+        "source": "OpenStreetMap via Mapcarta"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          549528.371,
+          5820741.149
+        ]
+      }
+    }
+  ]
+}

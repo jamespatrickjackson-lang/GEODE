@@ -1,0 +1,128 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "utah-forge-seismic-recipes-presets",
+  "project": "utah-forge",
+  "dataset": "utah_forge_phase_3/seismic_analysis/browser/recipes_presets_exports",
+  "artifactFamily": "presentation",
+  "artifactType": "seismic_product",
+  "renderRole": "unclear_needs_review",
+  "loadClass": "needs_human_review",
+  "sourceType": "generated",
+  "epistemicStatus": "derived",
+  "authority": "Observed in projects/utah-forge/project.json, DATA_LAYER_STATUS.md, Layer-Artifact-Classification.md, Computed-Artifact-Pipeline.md, WRAPPER_COVERAGE.md, seismic_manifest.json, and seismic_demo_recipes.json.",
+  "status": "needs_review",
+  "reviewRequired": true,
+  "accepted": false,
+  "paths": {
+    "source": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_manifest.json",
+    "artifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_demo_recipes.json",
+    "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_manifest.json",
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/provenance.json",
+    "supporting": [
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/products",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/inventory/seismic_source_inventory.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/navigation/seismic_navigation.geojson"
+    ]
+  },
+  "inputs": [
+    {
+      "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_manifest.json",
+      "role": "Seismic browser product manifest",
+      "notes": "Manifest records 34 products plus display recipes, audience presets, capability presets, derived views, interpretation layers, and export layouts."
+    },
+    {
+      "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/products",
+      "role": "Render-ready seismic products referenced by recipes",
+      "notes": "Product folders include section and raymarch-capable volume payloads."
+    }
+  ],
+  "producedBy": {
+    "script": "prep/build_utah_forge_seismic_demo_recipes.mjs",
+    "tool": "Node prep script",
+    "generatedAt": "2026-05-13",
+    "notes": "Script observed read-only; no script was run in this pass."
+  },
+  "crs": {
+    "source": "Seismic browser manifest/navigation-derived basis, needs review",
+    "scene": "GeoSee scene-local placement, needs review",
+    "transformPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/navigation/seismic_navigation.geojson",
+    "notes": "Recipes shape display of products whose placement depends on navigation and manifest product metadata."
+  },
+  "units": {
+    "horizontal": "meters, needs review",
+    "vertical": "product-specific time/depth basis, needs review",
+    "scalar": "seismic amplitude or velocity depending on product/recipe, needs review",
+    "notes": "Recipes mix section/raymarch modes and product domains. Unit and disclosure text require review before acceptance."
+  },
+  "scalar": {
+    "transform": "recipe-level amplitude windowing / colormap / opacity settings, needs review",
+    "range": null,
+    "thresholds": null,
+    "notes": "Observed recipes include display fields such as amplitude window, gamma, colormap, opacity, background cutoff, and sample steps; no setting is accepted here."
+  },
+  "processing": {
+    "method": "Generated seismic display recipes, audience presets, capability presets, derived views, interpretation layers, and export layouts from the seismic browser manifest.",
+    "parameters": {
+      "productCount": 34,
+      "raymarchProductCount": 4,
+      "displayRecipesCount": 8,
+      "audiencePresetsCount": 8,
+      "capabilityPresetsCount": 14,
+      "exportLayoutsCount": 3
+    },
+    "downsampling": "Not directly applicable to recipe metadata; product-level sampling/downsampling is referenced by recipe product choices and remains review-sensitive.",
+    "masking": "Recipe-level background removal/windowing can affect presentation and needs review.",
+    "notes": "Recipes and presets can silently change what the client sees; treat as presentation guidance, not accepted demo scope."
+  },
+  "stats": {
+    "counts": {
+      "productCount": 34,
+      "raymarchProductCount": 4,
+      "displayRecipesCount": 8,
+      "audiencePresetsCount": 8,
+      "capabilityPresetsCount": 14,
+      "exportLayoutsCount": 3
+    },
+    "bounds": {},
+    "notes": "Counts are observed from seismic manifest/recipes evidence. Product-specific bounds and amplitude stats require product review."
+  },
+  "render": {
+    "colorRamp": "Recipe-controlled colormap, commonly blue-white-red or velocity display, needs review",
+    "legendPath": null,
+    "materialNotes": "Seismic product selection, raymarch/section choice, opacity, color/amplitude range, background cutoff, navigation visibility, page/camera behavior, and MT co-render style require visual review.",
+    "visualCheckRequired": true,
+    "visualCheckReceipt": null,
+    "notes": "No recipe defaults, product filtering, page state, or rendering behavior changed."
+  },
+  "provenance": {
+    "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/provenance.json",
+    "notes": "Existing browser provenance observed; recipes/presets still require human review before client-facing acceptance."
+  },
+  "limitations": [
+    "Not accepted project state.",
+    "Recipes and presets are presentation/display guidance, not accepted interpretation by themselves.",
+    "Seismic is needed and underway, not parked.",
+    "Seismic product selection, raymarch/section choice, opacity, color/amplitude range, page/camera behavior, and MT co-render settings need visual review.",
+    "Do not change recipe defaults or product filtering without review.",
+    "Old-doc supersession and client-demo mode still need human review.",
+    "No runtime, loader, page, visibility, rendering, prep, or data artifact behavior changed."
+  ],
+  "relatedLayers": [
+    "utah-forge-phase3-seismic-browser"
+  ],
+  "relatedPages": [
+    "05_untitled"
+  ],
+  "review": {
+    "requiredBy": "human",
+    "questions": [
+      "Which seismic recipe/preset, if any, is intended for the next client-demo path?",
+      "Are recipe product choices, amplitude windows, colormaps, opacity, navigation visibility, and MT style patches acceptable?",
+      "What visual receipt proves the selected recipe preserves beauty, disclosure, and technical credibility?"
+    ],
+    "acceptedBy": null,
+    "acceptedAt": null,
+    "receipt": null
+  },
+  "notes": "Project-local presentation wrapper only. It preserves recipe/preset review state without changing or accepting demo behavior."
+}

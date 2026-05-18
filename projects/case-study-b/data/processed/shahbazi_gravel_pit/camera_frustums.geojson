@@ -1,0 +1,3573 @@
+{
+  "type": "FeatureCollection",
+  "name": "Shahbazi sampled camera frustums",
+  "properties": {
+    "schema": "geosee.camera-frustums.v1",
+    "sourcePath": "projects/case-study-b/data/raw/shahbazi_gravel_pit/RefinedEOPs.txt",
+    "supportingSources": [
+      "projects/case-study-b/data/raw/shahbazi_gravel_pit/RefinedIOPs.txt"
+    ],
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+    "sourceCrs": {
+      "label": "NAD83 / MTM Zone 7",
+      "epsg": 32187,
+      "status": "from article source-data table; confirm before final GIS overlay use"
+    },
+    "cameraModel": {
+      "pixelSizeMm": 0.0074,
+      "imageWidthPx": 4872,
+      "imageHeightPx": 3248,
+      "principalPointOffsetMm": [
+        0.027983482,
+        0.089373269
+      ],
+      "focalLengthMm": 36.01030367,
+      "sensorSizeMm": [
+        36.053,
+        24.035
+      ],
+      "horizontalFovDeg": 53.184,
+      "verticalFovDeg": 36.91
+    },
+    "scenePlacement": {
+      "mode": "tls-preview-aligned",
+      "horizontalScale": 1,
+      "verticalScale": 1,
+      "zLiftMeters": 115,
+      "note": "Frustum vertices are centered and lifted with the same transform as the sampled TLS preview."
+    },
+    "preview": {
+      "sourcePoseCount": 158,
+      "displayStride": 6,
+      "displayedFrustumCount": 28,
+      "displayFrustumLengthM": 42,
+      "orientationStatus": "approximate-preview"
+    },
+    "sourceBounds": {
+      "min": [
+        192972.689,
+        5025106.318,
+        283.479
+      ],
+      "max": [
+        193203.798,
+        5025265.434,
+        372.129
+      ]
+    },
+    "sceneBounds": {
+      "min": [
+        -120.07,
+        -125.819,
+        101.074
+      ],
+      "max": [
+        111.039,
+        33.298,
+        189.724
+      ]
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-001",
+        "imageId": 1,
+        "displayName": "Shahbazi image 001 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": -0.613303090733272,
+        "phi": -1.21871012061049,
+        "kappa": -93.0613260243299,
+        "cameraSourceCoordinates": {
+          "x": 193159.814,
+          "y": 5025125.676,
+          "z": 370.743
+        },
+        "apex": [
+          67.055,
+          -106.461,
+          188.338
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              67.055,
+              -106.461,
+              188.338
+            ],
+            [
+              79.5,
+              -89.825,
+              151.836
+            ]
+          ],
+          [
+            [
+              67.055,
+              -106.461,
+              188.338
+            ],
+            [
+              77.582,
+              -125.819,
+              152.582
+            ]
+          ],
+          [
+            [
+              67.055,
+              -106.461,
+              188.338
+            ],
+            [
+              53.592,
+              -124.508,
+              152.883
+            ]
+          ],
+          [
+            [
+              67.055,
+              -106.461,
+              188.338
+            ],
+            [
+              55.522,
+              -88.558,
+              152.137
+            ]
+          ],
+          [
+            [
+              79.5,
+              -89.825,
+              151.836
+            ],
+            [
+              77.582,
+              -125.819,
+              152.582
+            ]
+          ],
+          [
+            [
+              77.582,
+              -125.819,
+              152.582
+            ],
+            [
+              53.592,
+              -124.508,
+              152.883
+            ]
+          ],
+          [
+            [
+              53.592,
+              -124.508,
+              152.883
+            ],
+            [
+              55.522,
+              -88.558,
+              152.137
+            ]
+          ],
+          [
+            [
+              55.522,
+              -88.558,
+              152.137
+            ],
+            [
+              79.5,
+              -89.825,
+              151.836
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-007",
+        "imageId": 7,
+        "displayName": "Shahbazi image 007 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 0.842205458096513,
+        "phi": -1.08359167978604,
+        "kappa": 0.320948246406067,
+        "cameraSourceCoordinates": {
+          "x": 193178.457,
+          "y": 5025136.74,
+          "z": 371.361
+        },
+        "apex": [
+          85.698,
+          -95.396,
+          188.956
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              85.698,
+              -95.396,
+              188.956
+            ],
+            [
+              68.26,
+              -83.042,
+              152.8
+            ]
+          ],
+          [
+            [
+              85.698,
+              -95.396,
+              188.956
+            ],
+            [
+              104.307,
+              -82.833,
+              153.462
+            ]
+          ],
+          [
+            [
+              85.698,
+              -95.396,
+              188.956
+            ],
+            [
+              104.425,
+              -106.857,
+              153.152
+            ]
+          ],
+          [
+            [
+              85.698,
+              -95.396,
+              188.956
+            ],
+            [
+              68.423,
+              -107.054,
+              152.492
+            ]
+          ],
+          [
+            [
+              68.26,
+              -83.042,
+              152.8
+            ],
+            [
+              104.307,
+              -82.833,
+              153.462
+            ]
+          ],
+          [
+            [
+              104.307,
+              -82.833,
+              153.462
+            ],
+            [
+              104.425,
+              -106.857,
+              153.152
+            ]
+          ],
+          [
+            [
+              104.425,
+              -106.857,
+              153.152
+            ],
+            [
+              68.423,
+              -107.054,
+              152.492
+            ]
+          ],
+          [
+            [
+              68.423,
+              -107.054,
+              152.492
+            ],
+            [
+              68.26,
+              -83.042,
+              152.8
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-013",
+        "imageId": 13,
+        "displayName": "Shahbazi image 013 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 1.07265347063415,
+        "phi": 0.961840417789648,
+        "kappa": 77.0200359784845,
+        "cameraSourceCoordinates": {
+          "x": 193125.088,
+          "y": 5025146.5,
+          "z": 371.446
+        },
+        "apex": [
+          32.329,
+          -85.637,
+          189.041
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              32.329,
+              -85.637,
+              189.041
+            ],
+            [
+              15.866,
+              -100.978,
+              153.578
+            ]
+          ],
+          [
+            [
+              32.329,
+              -85.637,
+              189.041
+            ],
+            [
+              23.956,
+              -65.85,
+              152.953
+            ]
+          ],
+          [
+            [
+              32.329,
+              -85.637,
+              189.041
+            ],
+            [
+              47.359,
+              -71.274,
+              152.547
+            ]
+          ],
+          [
+            [
+              32.329,
+              -85.637,
+              189.041
+            ],
+            [
+              39.266,
+              -106.356,
+              153.172
+            ]
+          ],
+          [
+            [
+              15.866,
+              -100.978,
+              153.578
+            ],
+            [
+              23.956,
+              -65.85,
+              152.953
+            ]
+          ],
+          [
+            [
+              23.956,
+              -65.85,
+              152.953
+            ],
+            [
+              47.359,
+              -71.274,
+              152.547
+            ]
+          ],
+          [
+            [
+              47.359,
+              -71.274,
+              152.547
+            ],
+            [
+              39.266,
+              -106.356,
+              153.172
+            ]
+          ],
+          [
+            [
+              39.266,
+              -106.356,
+              153.172
+            ],
+            [
+              15.866,
+              -100.978,
+              153.578
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-019",
+        "imageId": 19,
+        "displayName": "Shahbazi image 019 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": -0.146963567814227,
+        "phi": 0.729183159894804,
+        "kappa": 74.7789876514693,
+        "cameraSourceCoordinates": {
+          "x": 193063.48,
+          "y": 5025146.899,
+          "z": 370.102
+        },
+        "apex": [
+          -29.279,
+          -85.237,
+          187.697
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -29.279,
+              -85.237,
+              187.697
+            ],
+            [
+              -45.555,
+              -99.987,
+              151.899
+            ]
+          ],
+          [
+            [
+              -29.279,
+              -85.237,
+              187.697
+            ],
+            [
+              -36.097,
+              -65.201,
+              151.42
+            ]
+          ],
+          [
+            [
+              -29.279,
+              -85.237,
+              187.697
+            ],
+            [
+              -12.918,
+              -71.529,
+              151.525
+            ]
+          ],
+          [
+            [
+              -29.279,
+              -85.237,
+              187.697
+            ],
+            [
+              -22.378,
+              -106.27,
+              152.004
+            ]
+          ],
+          [
+            [
+              -45.555,
+              -99.987,
+              151.899
+            ],
+            [
+              -36.097,
+              -65.201,
+              151.42
+            ]
+          ],
+          [
+            [
+              -36.097,
+              -65.201,
+              151.42
+            ],
+            [
+              -12.918,
+              -71.529,
+              151.525
+            ]
+          ],
+          [
+            [
+              -12.918,
+              -71.529,
+              151.525
+            ],
+            [
+              -22.378,
+              -106.27,
+              152.004
+            ]
+          ],
+          [
+            [
+              -22.378,
+              -106.27,
+              152.004
+            ],
+            [
+              -45.555,
+              -99.987,
+              151.899
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-025",
+        "imageId": 25,
+        "displayName": "Shahbazi image 025 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 1.14009533650045,
+        "phi": 1.90607708572329,
+        "kappa": 74.0060023402466,
+        "cameraSourceCoordinates": {
+          "x": 193001.665,
+          "y": 5025148.708,
+          "z": 371.346
+        },
+        "apex": [
+          -91.094,
+          -83.429,
+          188.941
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -91.094,
+              -83.429,
+              188.941
+            ],
+            [
+              -108.542,
+              -98.43,
+              153.805
+            ]
+          ],
+          [
+            [
+              -91.094,
+              -83.429,
+              188.941
+            ],
+            [
+              -98.621,
+              -63.791,
+              152.586
+            ]
+          ],
+          [
+            [
+              -91.094,
+              -83.429,
+              188.941
+            ],
+            [
+              -75.537,
+              -70.446,
+              152.152
+            ]
+          ],
+          [
+            [
+              -91.094,
+              -83.429,
+              188.941
+            ],
+            [
+              -85.46,
+              -105.038,
+              153.371
+            ]
+          ],
+          [
+            [
+              -108.542,
+              -98.43,
+              153.805
+            ],
+            [
+              -98.621,
+              -63.791,
+              152.586
+            ]
+          ],
+          [
+            [
+              -98.621,
+              -63.791,
+              152.586
+            ],
+            [
+              -75.537,
+              -70.446,
+              152.152
+            ]
+          ],
+          [
+            [
+              -75.537,
+              -70.446,
+              152.152
+            ],
+            [
+              -85.46,
+              -105.038,
+              153.371
+            ]
+          ],
+          [
+            [
+              -85.46,
+              -105.038,
+              153.371
+            ],
+            [
+              -108.542,
+              -98.43,
+              153.805
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-031",
+        "imageId": 31,
+        "displayName": "Shahbazi image 031 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": -3.49006016209823,
+        "phi": -1.17762361463884,
+        "kappa": -93.3227520777938,
+        "cameraSourceCoordinates": {
+          "x": 193005.783,
+          "y": 5025165.95,
+          "z": 372.129
+        },
+        "apex": [
+          -86.976,
+          -66.186,
+          189.724
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -86.976,
+              -66.186,
+              189.724
+            ],
+            [
+              -76.278,
+              -49.486,
+              152.701
+            ]
+          ],
+          [
+            [
+              -86.976,
+              -66.186,
+              189.724
+            ],
+            [
+              -78.362,
+              -85.471,
+              153.421
+            ]
+          ],
+          [
+            [
+              -86.976,
+              -66.186,
+              189.724
+            ],
+            [
+              -102.299,
+              -84.03,
+              154.927
+            ]
+          ],
+          [
+            [
+              -86.976,
+              -66.186,
+              189.724
+            ],
+            [
+              -100.204,
+              -48.088,
+              154.207
+            ]
+          ],
+          [
+            [
+              -76.278,
+              -49.486,
+              152.701
+            ],
+            [
+              -78.362,
+              -85.471,
+              153.421
+            ]
+          ],
+          [
+            [
+              -78.362,
+              -85.471,
+              153.421
+            ],
+            [
+              -102.299,
+              -84.03,
+              154.927
+            ]
+          ],
+          [
+            [
+              -102.299,
+              -84.03,
+              154.927
+            ],
+            [
+              -100.204,
+              -48.088,
+              154.207
+            ]
+          ],
+          [
+            [
+              -100.204,
+              -48.088,
+              154.207
+            ],
+            [
+              -76.278,
+              -49.486,
+              152.701
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-037",
+        "imageId": 37,
+        "displayName": "Shahbazi image 037 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": -1.7201527121405,
+        "phi": -1.50002161399731,
+        "kappa": -87.6836699647731,
+        "cameraSourceCoordinates": {
+          "x": 193064.234,
+          "y": 5025168.21,
+          "z": 370.091
+        },
+        "apex": [
+          -28.525,
+          -63.927,
+          187.686
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -28.525,
+              -63.927,
+              187.686
+            ],
+            [
+              -18.386,
+              -46.411,
+              150.884
+            ]
+          ],
+          [
+            [
+              -28.525,
+              -63.927,
+              187.686
+            ],
+            [
+              -16.923,
+              -82.423,
+              151.807
+            ]
+          ],
+          [
+            [
+              -28.525,
+              -63.927,
+              187.686
+            ],
+            [
+              -40.921,
+              -83.35,
+              152.572
+            ]
+          ],
+          [
+            [
+              -28.525,
+              -63.927,
+              187.686
+            ],
+            [
+              -42.368,
+              -47.383,
+              151.649
+            ]
+          ],
+          [
+            [
+              -18.386,
+              -46.411,
+              150.884
+            ],
+            [
+              -16.923,
+              -82.423,
+              151.807
+            ]
+          ],
+          [
+            [
+              -16.923,
+              -82.423,
+              151.807
+            ],
+            [
+              -40.921,
+              -83.35,
+              152.572
+            ]
+          ],
+          [
+            [
+              -40.921,
+              -83.35,
+              152.572
+            ],
+            [
+              -42.368,
+              -47.383,
+              151.649
+            ]
+          ],
+          [
+            [
+              -42.368,
+              -47.383,
+              151.649
+            ],
+            [
+              -18.386,
+              -46.411,
+              150.884
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-043",
+        "imageId": 43,
+        "displayName": "Shahbazi image 043 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": -1.73337059798013,
+        "phi": -1.00735737836659,
+        "kappa": -89.4398988850248,
+        "cameraSourceCoordinates": {
+          "x": 193129.616,
+          "y": 5025165.677,
+          "z": 370.457
+        },
+        "apex": [
+          36.857,
+          -66.459,
+          188.052
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              36.857,
+              -66.459,
+              188.052
+            ],
+            [
+              47.517,
+              -48.946,
+              151.396
+            ]
+          ],
+          [
+            [
+              36.857,
+              -66.459,
+              188.052
+            ],
+            [
+              47.875,
+              -84.992,
+              152.009
+            ]
+          ],
+          [
+            [
+              36.857,
+              -66.459,
+              188.052
+            ],
+            [
+              23.861,
+              -85.191,
+              152.779
+            ]
+          ],
+          [
+            [
+              36.857,
+              -66.459,
+              188.052
+            ],
+            [
+              23.516,
+              -49.19,
+              152.166
+            ]
+          ],
+          [
+            [
+              47.517,
+              -48.946,
+              151.396
+            ],
+            [
+              47.875,
+              -84.992,
+              152.009
+            ]
+          ],
+          [
+            [
+              47.875,
+              -84.992,
+              152.009
+            ],
+            [
+              23.861,
+              -85.191,
+              152.779
+            ]
+          ],
+          [
+            [
+              23.861,
+              -85.191,
+              152.779
+            ],
+            [
+              23.516,
+              -49.19,
+              152.166
+            ]
+          ],
+          [
+            [
+              23.516,
+              -49.19,
+              152.166
+            ],
+            [
+              47.517,
+              -48.946,
+              151.396
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-049",
+        "imageId": 49,
+        "displayName": "Shahbazi image 049 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 0.230547023561695,
+        "phi": 0.920200611977288,
+        "kappa": 5.64894015830171,
+        "cameraSourceCoordinates": {
+          "x": 193182.842,
+          "y": 5025164.197,
+          "z": 370.314
+        },
+        "apex": [
+          90.083,
+          -67.94,
+          187.909
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              90.083,
+              -67.94,
+              187.909
+            ],
+            [
+              70.361,
+              -57.763,
+              152.252
+            ]
+          ],
+          [
+            [
+              90.083,
+              -67.94,
+              187.909
+            ],
+            [
+              106.233,
+              -54.207,
+              151.652
+            ]
+          ],
+          [
+            [
+              90.083,
+              -67.94,
+              187.909
+            ],
+            [
+              108.575,
+              -78.12,
+              151.599
+            ]
+          ],
+          [
+            [
+              90.083,
+              -67.94,
+              187.909
+            ],
+            [
+              72.745,
+              -81.657,
+              152.198
+            ]
+          ],
+          [
+            [
+              70.361,
+              -57.763,
+              152.252
+            ],
+            [
+              106.233,
+              -54.207,
+              151.652
+            ]
+          ],
+          [
+            [
+              106.233,
+              -54.207,
+              151.652
+            ],
+            [
+              108.575,
+              -78.12,
+              151.599
+            ]
+          ],
+          [
+            [
+              108.575,
+              -78.12,
+              151.599
+            ],
+            [
+              72.745,
+              -81.657,
+              152.198
+            ]
+          ],
+          [
+            [
+              72.745,
+              -81.657,
+              152.198
+            ],
+            [
+              70.361,
+              -57.763,
+              152.252
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-055",
+        "imageId": 55,
+        "displayName": "Shahbazi image 055 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 0.907167267678465,
+        "phi": 1.05471947128328,
+        "kappa": 74.152267134439,
+        "cameraSourceCoordinates": {
+          "x": 193155.892,
+          "y": 5025184.237,
+          "z": 371.238
+        },
+        "apex": [
+          63.133,
+          -47.9,
+          188.833
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              63.133,
+              -47.9,
+              188.833
+            ],
+            [
+              46.006,
+              -62.482,
+              153.364
+            ]
+          ],
+          [
+            [
+              63.133,
+              -47.9,
+              188.833
+            ],
+            [
+              55.843,
+              -27.804,
+              152.68
+            ]
+          ],
+          [
+            [
+              63.133,
+              -47.9,
+              188.833
+            ],
+            [
+              78.947,
+              -34.393,
+              152.344
+            ]
+          ],
+          [
+            [
+              63.133,
+              -47.9,
+              188.833
+            ],
+            [
+              69.109,
+              -69.025,
+              153.027
+            ]
+          ],
+          [
+            [
+              46.006,
+              -62.482,
+              153.364
+            ],
+            [
+              55.843,
+              -27.804,
+              152.68
+            ]
+          ],
+          [
+            [
+              55.843,
+              -27.804,
+              152.68
+            ],
+            [
+              78.947,
+              -34.393,
+              152.344
+            ]
+          ],
+          [
+            [
+              78.947,
+              -34.393,
+              152.344
+            ],
+            [
+              69.109,
+              -69.025,
+              153.027
+            ]
+          ],
+          [
+            [
+              69.109,
+              -69.025,
+              153.027
+            ],
+            [
+              46.006,
+              -62.482,
+              153.364
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-061",
+        "imageId": 61,
+        "displayName": "Shahbazi image 061 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 1.36788500042185,
+        "phi": 0.879503530540255,
+        "kappa": 76.3506947763559,
+        "cameraSourceCoordinates": {
+          "x": 193095.2,
+          "y": 5025187.021,
+          "z": 369.979
+        },
+        "apex": [
+          2.441,
+          -45.116,
+          187.574
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              2.441,
+              -45.116,
+              187.574
+            ],
+            [
+              -14.367,
+              -60.169,
+              152.15
+            ]
+          ],
+          [
+            [
+              2.441,
+              -45.116,
+              187.574
+            ],
+            [
+              -5.867,
+              -25.137,
+              151.576
+            ]
+          ],
+          [
+            [
+              2.441,
+              -45.116,
+              187.574
+            ],
+            [
+              17.469,
+              -30.834,
+              151.047
+            ]
+          ],
+          [
+            [
+              2.441,
+              -45.116,
+              187.574
+            ],
+            [
+              8.966,
+              -65.821,
+              151.621
+            ]
+          ],
+          [
+            [
+              -14.367,
+              -60.169,
+              152.15
+            ],
+            [
+              -5.867,
+              -25.137,
+              151.576
+            ]
+          ],
+          [
+            [
+              -5.867,
+              -25.137,
+              151.576
+            ],
+            [
+              17.469,
+              -30.834,
+              151.047
+            ]
+          ],
+          [
+            [
+              17.469,
+              -30.834,
+              151.047
+            ],
+            [
+              8.966,
+              -65.821,
+              151.621
+            ]
+          ],
+          [
+            [
+              8.966,
+              -65.821,
+              151.621
+            ],
+            [
+              -14.367,
+              -60.169,
+              152.15
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-067",
+        "imageId": 67,
+        "displayName": "Shahbazi image 067 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 1.87945249865791,
+        "phi": 0.158903951591776,
+        "kappa": 78.7456676096205,
+        "cameraSourceCoordinates": {
+          "x": 193033.95,
+          "y": 5025188.654,
+          "z": 369.576
+        },
+        "apex": [
+          -58.809,
+          -43.482,
+          187.171
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -58.809,
+              -43.482,
+              187.171
+            ],
+            [
+              -75.198,
+              -58.725,
+              151.631
+            ]
+          ],
+          [
+            [
+              -58.809,
+              -43.482,
+              187.171
+            ],
+            [
+              -68.169,
+              -23.363,
+              151.511
+            ]
+          ],
+          [
+            [
+              -58.809,
+              -43.482,
+              187.171
+            ],
+            [
+              -44.619,
+              -28.075,
+              150.767
+            ]
+          ],
+          [
+            [
+              -58.809,
+              -43.482,
+              187.171
+            ],
+            [
+              -51.653,
+              -63.389,
+              150.887
+            ]
+          ],
+          [
+            [
+              -75.198,
+              -58.725,
+              151.631
+            ],
+            [
+              -68.169,
+              -23.363,
+              151.511
+            ]
+          ],
+          [
+            [
+              -68.169,
+              -23.363,
+              151.511
+            ],
+            [
+              -44.619,
+              -28.075,
+              150.767
+            ]
+          ],
+          [
+            [
+              -44.619,
+              -28.075,
+              150.767
+            ],
+            [
+              -51.653,
+              -63.389,
+              150.887
+            ]
+          ],
+          [
+            [
+              -51.653,
+              -63.389,
+              150.887
+            ],
+            [
+              -75.198,
+              -58.725,
+              151.631
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-073",
+        "imageId": 73,
+        "displayName": "Shahbazi image 073 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 1.05463186272415,
+        "phi": -0.412758447981316,
+        "kappa": -14.3344139533793,
+        "cameraSourceCoordinates": {
+          "x": 192992.731,
+          "y": 5025191.502,
+          "z": 369.165
+        },
+        "apex": [
+          -100.028,
+          -40.634,
+          186.76
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -100.028,
+              -40.634,
+              186.76
+            ],
+            [
+              -114.149,
+              -24.037,
+              150.856
+            ]
+          ],
+          [
+            [
+              -100.028,
+              -40.634,
+              186.76
+            ],
+            [
+              -79.218,
+              -32.956,
+              151.096
+            ]
+          ],
+          [
+            [
+              -100.028,
+              -40.634,
+              186.76
+            ],
+            [
+              -85.184,
+              -56.226,
+              150.697
+            ]
+          ],
+          [
+            [
+              -100.028,
+              -40.634,
+              186.76
+            ],
+            [
+              -120.07,
+              -47.305,
+              150.458
+            ]
+          ],
+          [
+            [
+              -114.149,
+              -24.037,
+              150.856
+            ],
+            [
+              -79.218,
+              -32.956,
+              151.096
+            ]
+          ],
+          [
+            [
+              -79.218,
+              -32.956,
+              151.096
+            ],
+            [
+              -85.184,
+              -56.226,
+              150.697
+            ]
+          ],
+          [
+            [
+              -85.184,
+              -56.226,
+              150.697
+            ],
+            [
+              -120.07,
+              -47.305,
+              150.458
+            ]
+          ],
+          [
+            [
+              -120.07,
+              -47.305,
+              150.458
+            ],
+            [
+              -114.149,
+              -24.037,
+              150.856
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-079",
+        "imageId": 79,
+        "displayName": "Shahbazi image 079 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": -1.36309582389826,
+        "phi": -1.59082870817041,
+        "kappa": -92.7034277882022,
+        "cameraSourceCoordinates": {
+          "x": 193032.762,
+          "y": 5025209.139,
+          "z": 371.068
+        },
+        "apex": [
+          -59.997,
+          -22.997,
+          188.663
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -59.997,
+              -22.997,
+              188.663
+            ],
+            [
+              -48.141,
+              -6.503,
+              151.902
+            ]
+          ],
+          [
+            [
+              -59.997,
+              -22.997,
+              188.663
+            ],
+            [
+              -49.835,
+              -42.503,
+              152.883
+            ]
+          ],
+          [
+            [
+              -59.997,
+              -22.997,
+              188.663
+            ],
+            [
+              -73.826,
+              -41.332,
+              153.497
+            ]
+          ],
+          [
+            [
+              -59.997,
+              -22.997,
+              188.663
+            ],
+            [
+              -72.12,
+              -5.376,
+              152.518
+            ]
+          ],
+          [
+            [
+              -48.141,
+              -6.503,
+              151.902
+            ],
+            [
+              -49.835,
+              -42.503,
+              152.883
+            ]
+          ],
+          [
+            [
+              -49.835,
+              -42.503,
+              152.883
+            ],
+            [
+              -73.826,
+              -41.332,
+              153.497
+            ]
+          ],
+          [
+            [
+              -73.826,
+              -41.332,
+              153.497
+            ],
+            [
+              -72.12,
+              -5.376,
+              152.518
+            ]
+          ],
+          [
+            [
+              -72.12,
+              -5.376,
+              152.518
+            ],
+            [
+              -48.141,
+              -6.503,
+              151.902
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-085",
+        "imageId": 85,
+        "displayName": "Shahbazi image 085 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": -1.8816765077094,
+        "phi": -1.25098079399733,
+        "kappa": -88.9817799545479,
+        "cameraSourceCoordinates": {
+          "x": 193095.16,
+          "y": 5025206.254,
+          "z": 370.21
+        },
+        "apex": [
+          2.401,
+          -25.883,
+          187.805
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              2.401,
+              -25.883,
+              187.805
+            ],
+            [
+              12.829,
+              -8.444,
+              151.047
+            ]
+          ],
+          [
+            [
+              2.401,
+              -25.883,
+              187.805
+            ],
+            [
+              13.476,
+              -44.482,
+              151.813
+            ]
+          ],
+          [
+            [
+              2.401,
+              -25.883,
+              187.805
+            ],
+            [
+              -10.534,
+              -44.87,
+              152.645
+            ]
+          ],
+          [
+            [
+              2.401,
+              -25.883,
+              187.805
+            ],
+            [
+              -11.166,
+              -8.873,
+              151.879
+            ]
+          ],
+          [
+            [
+              12.829,
+              -8.444,
+              151.047
+            ],
+            [
+              13.476,
+              -44.482,
+              151.813
+            ]
+          ],
+          [
+            [
+              13.476,
+              -44.482,
+              151.813
+            ],
+            [
+              -10.534,
+              -44.87,
+              152.645
+            ]
+          ],
+          [
+            [
+              -10.534,
+              -44.87,
+              152.645
+            ],
+            [
+              -11.166,
+              -8.873,
+              151.879
+            ]
+          ],
+          [
+            [
+              -11.166,
+              -8.873,
+              151.879
+            ],
+            [
+              12.829,
+              -8.444,
+              151.047
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-091",
+        "imageId": 91,
+        "displayName": "Shahbazi image 091 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": -1.48340314556593,
+        "phi": -1.76351694225743,
+        "kappa": -92.8541234939619,
+        "cameraSourceCoordinates": {
+          "x": 193158.082,
+          "y": 5025205.027,
+          "z": 370.284
+        },
+        "apex": [
+          65.323,
+          -27.11,
+          187.879
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              65.323,
+              -27.11,
+              187.879
+            ],
+            [
+              77.141,
+              -10.753,
+              151.044
+            ]
+          ],
+          [
+            [
+              65.323,
+              -27.11,
+              187.879
+            ],
+            [
+              75.353,
+              -46.747,
+              152.133
+            ]
+          ],
+          [
+            [
+              65.323,
+              -27.11,
+              187.879
+            ],
+            [
+              51.367,
+              -45.508,
+              152.798
+            ]
+          ],
+          [
+            [
+              65.323,
+              -27.11,
+              187.879
+            ],
+            [
+              53.166,
+              -9.56,
+              151.71
+            ]
+          ],
+          [
+            [
+              77.141,
+              -10.753,
+              151.044
+            ],
+            [
+              75.353,
+              -46.747,
+              152.133
+            ]
+          ],
+          [
+            [
+              75.353,
+              -46.747,
+              152.133
+            ],
+            [
+              51.367,
+              -45.508,
+              152.798
+            ]
+          ],
+          [
+            [
+              51.367,
+              -45.508,
+              152.798
+            ],
+            [
+              53.166,
+              -9.56,
+              151.71
+            ]
+          ],
+          [
+            [
+              53.166,
+              -9.56,
+              151.71
+            ],
+            [
+              77.141,
+              -10.753,
+              151.044
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-097",
+        "imageId": 97,
+        "displayName": "Shahbazi image 097 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 1.59380911018745,
+        "phi": -1.66538707083261,
+        "kappa": 7.44140450302058,
+        "cameraSourceCoordinates": {
+          "x": 193182.225,
+          "y": 5025213.433,
+          "z": 369.598
+        },
+        "apex": [
+          89.466,
+          -18.703,
+          187.193
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              89.466,
+              -18.703,
+              187.193
+            ],
+            [
+              70.93,
+              -8.094,
+              151.029
+            ]
+          ],
+          [
+            [
+              89.466,
+              -18.703,
+              187.193
+            ],
+            [
+              106.664,
+              -3.418,
+              152.056
+            ]
+          ],
+          [
+            [
+              89.466,
+              -18.703,
+              187.193
+            ],
+            [
+              109.771,
+              -27.236,
+              151.431
+            ]
+          ],
+          [
+            [
+              89.466,
+              -18.703,
+              187.193
+            ],
+            [
+              74.079,
+              -31.893,
+              150.405
+            ]
+          ],
+          [
+            [
+              70.93,
+              -8.094,
+              151.029
+            ],
+            [
+              106.664,
+              -3.418,
+              152.056
+            ]
+          ],
+          [
+            [
+              106.664,
+              -3.418,
+              152.056
+            ],
+            [
+              109.771,
+              -27.236,
+              151.431
+            ]
+          ],
+          [
+            [
+              109.771,
+              -27.236,
+              151.431
+            ],
+            [
+              74.079,
+              -31.893,
+              150.405
+            ]
+          ],
+          [
+            [
+              74.079,
+              -31.893,
+              150.405
+            ],
+            [
+              70.93,
+              -8.094,
+              151.029
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-103",
+        "imageId": 103,
+        "displayName": "Shahbazi image 103 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 0.81698564981319,
+        "phi": 1.07335066176076,
+        "kappa": 78.9796496947701,
+        "cameraSourceCoordinates": {
+          "x": 193131.888,
+          "y": 5025226.439,
+          "z": 369.177
+        },
+        "apex": [
+          39.129,
+          -5.697,
+          186.772
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              39.129,
+              -5.697,
+              186.772
+            ],
+            [
+              23.344,
+              -21.692,
+              151.289
+            ]
+          ],
+          [
+            [
+              39.129,
+              -5.697,
+              186.772
+            ],
+            [
+              30.227,
+              13.69,
+              150.594
+            ]
+          ],
+          [
+            [
+              39.129,
+              -5.697,
+              186.772
+            ],
+            [
+              53.804,
+              9.071,
+              150.295
+            ]
+          ],
+          [
+            [
+              39.129,
+              -5.697,
+              186.772
+            ],
+            [
+              46.916,
+              -26.266,
+              150.99
+            ]
+          ],
+          [
+            [
+              23.344,
+              -21.692,
+              151.289
+            ],
+            [
+              30.227,
+              13.69,
+              150.594
+            ]
+          ],
+          [
+            [
+              30.227,
+              13.69,
+              150.594
+            ],
+            [
+              53.804,
+              9.071,
+              150.295
+            ]
+          ],
+          [
+            [
+              53.804,
+              9.071,
+              150.295
+            ],
+            [
+              46.916,
+              -26.266,
+              150.99
+            ]
+          ],
+          [
+            [
+              46.916,
+              -26.266,
+              150.99
+            ],
+            [
+              23.344,
+              -21.692,
+              151.289
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-109",
+        "imageId": 109,
+        "displayName": "Shahbazi image 109 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 0.378749803194659,
+        "phi": 0.498861284350821,
+        "kappa": 78.8384083479852,
+        "cameraSourceCoordinates": {
+          "x": 193069.985,
+          "y": 5025227.237,
+          "z": 369.156
+        },
+        "apex": [
+          -22.774,
+          -4.9,
+          186.751
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -22.774,
+              -4.9,
+              186.751
+            ],
+            [
+              -38.261,
+              -20.56,
+              150.989
+            ]
+          ],
+          [
+            [
+              -22.774,
+              -4.9,
+              186.751
+            ],
+            [
+              -31.289,
+              14.811,
+              150.655
+            ]
+          ],
+          [
+            [
+              -22.774,
+              -4.9,
+              186.751
+            ],
+            [
+              -7.72,
+              10.139,
+              150.54
+            ]
+          ],
+          [
+            [
+              -22.774,
+              -4.9,
+              186.751
+            ],
+            [
+              -14.697,
+              -25.187,
+              150.874
+            ]
+          ],
+          [
+            [
+              -38.261,
+              -20.56,
+              150.989
+            ],
+            [
+              -31.289,
+              14.811,
+              150.655
+            ]
+          ],
+          [
+            [
+              -31.289,
+              14.811,
+              150.655
+            ],
+            [
+              -7.72,
+              10.139,
+              150.54
+            ]
+          ],
+          [
+            [
+              -7.72,
+              10.139,
+              150.54
+            ],
+            [
+              -14.697,
+              -25.187,
+              150.874
+            ]
+          ],
+          [
+            [
+              -14.697,
+              -25.187,
+              150.874
+            ],
+            [
+              -38.261,
+              -20.56,
+              150.989
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-115",
+        "imageId": 115,
+        "displayName": "Shahbazi image 115 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 0.835584152428803,
+        "phi": 0.868672380386057,
+        "kappa": 79.1906012615863,
+        "cameraSourceCoordinates": {
+          "x": 193009.074,
+          "y": 5025228.277,
+          "z": 369.018
+        },
+        "apex": [
+          -83.685,
+          -3.86,
+          186.613
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -83.685,
+              -3.86,
+              186.613
+            ],
+            [
+              -99.399,
+              -19.786,
+              151.068
+            ]
+          ],
+          [
+            [
+              -83.685,
+              -3.86,
+              186.613
+            ],
+            [
+              -92.646,
+              15.626,
+              150.501
+            ]
+          ],
+          [
+            [
+              -83.685,
+              -3.86,
+              186.613
+            ],
+            [
+              -69.051,
+              11.094,
+              150.195
+            ]
+          ],
+          [
+            [
+              -83.685,
+              -3.86,
+              186.613
+            ],
+            [
+              -75.81,
+              -24.271,
+              150.761
+            ]
+          ],
+          [
+            [
+              -99.399,
+              -19.786,
+              151.068
+            ],
+            [
+              -92.646,
+              15.626,
+              150.501
+            ]
+          ],
+          [
+            [
+              -92.646,
+              15.626,
+              150.501
+            ],
+            [
+              -69.051,
+              11.094,
+              150.195
+            ]
+          ],
+          [
+            [
+              -69.051,
+              11.094,
+              150.195
+            ],
+            [
+              -75.81,
+              -24.271,
+              150.761
+            ]
+          ],
+          [
+            [
+              -75.81,
+              -24.271,
+              150.761
+            ],
+            [
+              -99.399,
+              -19.786,
+              151.068
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-121",
+        "imageId": 121,
+        "displayName": "Shahbazi image 121 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": -0.085910962470878,
+        "phi": -1.04155124275256,
+        "kappa": -92.2389795422376,
+        "cameraSourceCoordinates": {
+          "x": 193004.132,
+          "y": 5025245.78,
+          "z": 371.147
+        },
+        "apex": [
+          -88.627,
+          13.644,
+          188.742
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -88.627,
+              13.644,
+              188.742
+            ],
+            [
+              -76.085,
+              30.559,
+              152.402
+            ]
+          ],
+          [
+            [
+              -88.627,
+              13.644,
+              188.742
+            ],
+            [
+              -77.487,
+              -5.463,
+              153.037
+            ]
+          ],
+          [
+            [
+              -88.627,
+              13.644,
+              188.742
+            ],
+            [
+              -101.495,
+              -4.501,
+              153.116
+            ]
+          ],
+          [
+            [
+              -88.627,
+              13.644,
+              188.742
+            ],
+            [
+              -100.082,
+              31.475,
+              152.482
+            ]
+          ],
+          [
+            [
+              -76.085,
+              30.559,
+              152.402
+            ],
+            [
+              -77.487,
+              -5.463,
+              153.037
+            ]
+          ],
+          [
+            [
+              -77.487,
+              -5.463,
+              153.037
+            ],
+            [
+              -101.495,
+              -4.501,
+              153.116
+            ]
+          ],
+          [
+            [
+              -101.495,
+              -4.501,
+              153.116
+            ],
+            [
+              -100.082,
+              31.475,
+              152.482
+            ]
+          ],
+          [
+            [
+              -100.082,
+              31.475,
+              152.482
+            ],
+            [
+              -76.085,
+              30.559,
+              152.402
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-127",
+        "imageId": 127,
+        "displayName": "Shahbazi image 127 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": -1.34359720941439,
+        "phi": -2.06919010859456,
+        "kappa": -89.9789442830322,
+        "cameraSourceCoordinates": {
+          "x": 193060.624,
+          "y": 5025248.702,
+          "z": 369.648
+        },
+        "apex": [
+          -32.135,
+          16.565,
+          187.243
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -32.135,
+              16.565,
+              187.243
+            ],
+            [
+              -21.063,
+              33.298,
+              150.345
+            ]
+          ],
+          [
+            [
+              -32.135,
+              16.565,
+              187.243
+            ],
+            [
+              -21.044,
+              -2.732,
+              151.626
+            ]
+          ],
+          [
+            [
+              -32.135,
+              16.565,
+              187.243
+            ],
+            [
+              -45.064,
+              -2.697,
+              152.232
+            ]
+          ],
+          [
+            [
+              -32.135,
+              16.565,
+              187.243
+            ],
+            [
+              -45.069,
+              33.288,
+              150.952
+            ]
+          ],
+          [
+            [
+              -21.063,
+              33.298,
+              150.345
+            ],
+            [
+              -21.044,
+              -2.732,
+              151.626
+            ]
+          ],
+          [
+            [
+              -21.044,
+              -2.732,
+              151.626
+            ],
+            [
+              -45.064,
+              -2.697,
+              152.232
+            ]
+          ],
+          [
+            [
+              -45.064,
+              -2.697,
+              152.232
+            ],
+            [
+              -45.069,
+              33.288,
+              150.952
+            ]
+          ],
+          [
+            [
+              -45.069,
+              33.288,
+              150.952
+            ],
+            [
+              -21.063,
+              33.298,
+              150.345
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-133",
+        "imageId": 133,
+        "displayName": "Shahbazi image 133 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": -1.86496255296956,
+        "phi": -0.87813514752575,
+        "kappa": -89.8709369286352,
+        "cameraSourceCoordinates": {
+          "x": 193125.24,
+          "y": 5025246.692,
+          "z": 369.685
+        },
+        "apex": [
+          32.481,
+          14.555,
+          187.28
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              32.481,
+              14.555,
+              187.28
+            ],
+            [
+              43.189,
+              32.07,
+              150.639
+            ]
+          ],
+          [
+            [
+              32.481,
+              14.555,
+              187.28
+            ],
+            [
+              43.276,
+              -3.98,
+              151.17
+            ]
+          ],
+          [
+            [
+              32.481,
+              14.555,
+              187.28
+            ],
+            [
+              19.263,
+              -3.998,
+              151.996
+            ]
+          ],
+          [
+            [
+              32.481,
+              14.555,
+              187.28
+            ],
+            [
+              19.189,
+              32.007,
+              151.464
+            ]
+          ],
+          [
+            [
+              43.189,
+              32.07,
+              150.639
+            ],
+            [
+              43.276,
+              -3.98,
+              151.17
+            ]
+          ],
+          [
+            [
+              43.276,
+              -3.98,
+              151.17
+            ],
+            [
+              19.263,
+              -3.998,
+              151.996
+            ]
+          ],
+          [
+            [
+              19.263,
+              -3.998,
+              151.996
+            ],
+            [
+              19.189,
+              32.007,
+              151.464
+            ]
+          ],
+          [
+            [
+              19.189,
+              32.007,
+              151.464
+            ],
+            [
+              43.189,
+              32.07,
+              150.639
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-139",
+        "imageId": 139,
+        "displayName": "Shahbazi image 139 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 2.24339010159761,
+        "phi": 0.840040350392821,
+        "kappa": -175.151599748243,
+        "cameraSourceCoordinates": {
+          "x": 193184.17,
+          "y": 5025244.695,
+          "z": 369.79
+        },
+        "apex": [
+          91.411,
+          12.559,
+          187.385
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              91.411,
+              12.559,
+              187.385
+            ],
+            [
+              111.039,
+              0.85,
+              152.148
+            ]
+          ],
+          [
+            [
+              91.411,
+              12.559,
+              187.385
+            ],
+            [
+              75.12,
+              -2.204,
+              151.599
+            ]
+          ],
+          [
+            [
+              91.411,
+              12.559,
+              187.385
+            ],
+            [
+              73.125,
+              21.724,
+              150.702
+            ]
+          ],
+          [
+            [
+              91.411,
+              12.559,
+              187.385
+            ],
+            [
+              109.002,
+              24.76,
+              151.251
+            ]
+          ],
+          [
+            [
+              111.039,
+              0.85,
+              152.148
+            ],
+            [
+              75.12,
+              -2.204,
+              151.599
+            ]
+          ],
+          [
+            [
+              75.12,
+              -2.204,
+              151.599
+            ],
+            [
+              73.125,
+              21.724,
+              150.702
+            ]
+          ],
+          [
+            [
+              73.125,
+              21.724,
+              150.702
+            ],
+            [
+              109.002,
+              24.76,
+              151.251
+            ]
+          ],
+          [
+            [
+              109.002,
+              24.76,
+              151.251
+            ],
+            [
+              111.039,
+              0.85,
+              152.148
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-145",
+        "imageId": 145,
+        "displayName": "Shahbazi image 145 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": -0.490821530586909,
+        "phi": 0.53180075739853,
+        "kappa": 83.6719789253702,
+        "cameraSourceCoordinates": {
+          "x": 193180.504,
+          "y": 5025206.728,
+          "z": 354.76
+        },
+        "apex": [
+          87.745,
+          -25.408,
+          172.355
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              87.745,
+              -25.408,
+              172.355
+            ],
+            [
+              74.174,
+              -42.401,
+              136.423
+            ]
+          ],
+          [
+            [
+              87.745,
+              -25.408,
+              172.355
+            ],
+            [
+              78.141,
+              -6.567,
+              136.067
+            ]
+          ],
+          [
+            [
+              87.745,
+              -25.408,
+              172.355
+            ],
+            [
+              102.019,
+              -9.236,
+              136.317
+            ]
+          ],
+          [
+            [
+              87.745,
+              -25.408,
+              172.355
+            ],
+            [
+              98.043,
+              -45.022,
+              136.672
+            ]
+          ],
+          [
+            [
+              74.174,
+              -42.401,
+              136.423
+            ],
+            [
+              78.141,
+              -6.567,
+              136.067
+            ]
+          ],
+          [
+            [
+              78.141,
+              -6.567,
+              136.067
+            ],
+            [
+              102.019,
+              -9.236,
+              136.317
+            ]
+          ],
+          [
+            [
+              102.019,
+              -9.236,
+              136.317
+            ],
+            [
+              98.043,
+              -45.022,
+              136.672
+            ]
+          ],
+          [
+            [
+              98.043,
+              -45.022,
+              136.672
+            ],
+            [
+              74.174,
+              -42.401,
+              136.423
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-151",
+        "imageId": 151,
+        "displayName": "Shahbazi image 151 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 0.145060135180228,
+        "phi": 0.269919151668956,
+        "kappa": 86.9632363682173,
+        "cameraSourceCoordinates": {
+          "x": 193124.972,
+          "y": 5025204.95,
+          "z": 339.949
+        },
+        "apex": [
+          32.213,
+          -27.186,
+          157.544
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              32.213,
+              -27.186,
+              157.544
+            ],
+            [
+              19.249,
+              -44.743,
+              121.66
+            ]
+          ],
+          [
+            [
+              32.213,
+              -27.186,
+              157.544
+            ],
+            [
+              21.152,
+              -8.741,
+              121.469
+            ]
+          ],
+          [
+            [
+              32.213,
+              -27.186,
+              157.544
+            ],
+            [
+              45.145,
+              -10.036,
+              121.453
+            ]
+          ],
+          [
+            [
+              32.213,
+              -27.186,
+              157.544
+            ],
+            [
+              43.23,
+              -45.993,
+              121.643
+            ]
+          ],
+          [
+            [
+              19.249,
+              -44.743,
+              121.66
+            ],
+            [
+              21.152,
+              -8.741,
+              121.469
+            ]
+          ],
+          [
+            [
+              21.152,
+              -8.741,
+              121.469
+            ],
+            [
+              45.145,
+              -10.036,
+              121.453
+            ]
+          ],
+          [
+            [
+              45.145,
+              -10.036,
+              121.453
+            ],
+            [
+              43.23,
+              -45.993,
+              121.643
+            ]
+          ],
+          [
+            [
+              43.23,
+              -45.993,
+              121.643
+            ],
+            [
+              19.249,
+              -44.743,
+              121.66
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-157",
+        "imageId": 157,
+        "displayName": "Shahbazi image 157 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 1.7759321866972,
+        "phi": -0.057814323075199,
+        "kappa": 12.1093074857163,
+        "cameraSourceCoordinates": {
+          "x": 193098.75,
+          "y": 5025224.224,
+          "z": 322.64
+        },
+        "apex": [
+          5.991,
+          -7.912,
+          140.235
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              5.991,
+              -7.912,
+              140.235
+            ],
+            [
+              -14.356,
+              1.054,
+              104.603
+            ]
+          ],
+          [
+            [
+              5.991,
+              -7.912,
+              140.235
+            ],
+            [
+              20.893,
+              8.623,
+              104.619
+            ]
+          ],
+          [
+            [
+              5.991,
+              -7.912,
+              140.235
+            ],
+            [
+              25.911,
+              -14.863,
+              103.918
+            ]
+          ],
+          [
+            [
+              5.991,
+              -7.912,
+              140.235
+            ],
+            [
+              -9.298,
+              -22.412,
+              103.903
+            ]
+          ],
+          [
+            [
+              -14.356,
+              1.054,
+              104.603
+            ],
+            [
+              20.893,
+              8.623,
+              104.619
+            ]
+          ],
+          [
+            [
+              20.893,
+              8.623,
+              104.619
+            ],
+            [
+              25.911,
+              -14.863,
+              103.918
+            ]
+          ],
+          [
+            [
+              25.911,
+              -14.863,
+              103.918
+            ],
+            [
+              -9.298,
+              -22.412,
+              103.903
+            ]
+          ],
+          [
+            [
+              -9.298,
+              -22.412,
+              103.903
+            ],
+            [
+              -14.356,
+              1.054,
+              104.603
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "frustum-158",
+        "imageId": 158,
+        "displayName": "Shahbazi image 158 frustum",
+        "sourceRole": "approximate_camera_frustum_preview",
+        "frustumLengthM": 42,
+        "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use.",
+        "omega": 1.92173250558227,
+        "phi": -0.657419270212251,
+        "kappa": 13.1848264618408,
+        "cameraSourceCoordinates": {
+          "x": 193099.138,
+          "y": 5025229.622,
+          "z": 320.025
+        },
+        "apex": [
+          6.379,
+          -2.514,
+          137.62
+        ]
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              6.379,
+              -2.514,
+              137.62
+            ],
+            [
+              -13.79,
+              6.241,
+              101.835
+            ]
+          ],
+          [
+            [
+              6.379,
+              -2.514,
+              137.62
+            ],
+            [
+              21.309,
+              14.471,
+              102.229
+            ]
+          ],
+          [
+            [
+              6.379,
+              -2.514,
+              137.62
+            ],
+            [
+              26.774,
+              -8.914,
+              101.467
+            ]
+          ],
+          [
+            [
+              6.379,
+              -2.514,
+              137.62
+            ],
+            [
+              -8.285,
+              -17.121,
+              101.074
+            ]
+          ],
+          [
+            [
+              -13.79,
+              6.241,
+              101.835
+            ],
+            [
+              21.309,
+              14.471,
+              102.229
+            ]
+          ],
+          [
+            [
+              21.309,
+              14.471,
+              102.229
+            ],
+            [
+              26.774,
+              -8.914,
+              101.467
+            ]
+          ],
+          [
+            [
+              26.774,
+              -8.914,
+              101.467
+            ],
+            [
+              -8.285,
+              -17.121,
+              101.074
+            ]
+          ],
+          [
+            [
+              -8.285,
+              -17.121,
+              101.074
+            ],
+            [
+              -13.79,
+              6.241,
+              101.835
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

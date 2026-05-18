@@ -1,0 +1,94 @@
+Step 1: Place Phase 3 MT Source Files
+Acceptance criteria:
+
+Phase 3 MT EDI files are in:
+projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_edis/
+Updated cell-center model is in:
+projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/
+Any PDFs/readmes/license notes are in references/ or beside the source files.
+Your side check:
+
+Confirm the folders contain the expected files.
+Tell me the file/folder names you placed there.
+Do not rename source files unless we agree.
+Step 2: Source Inventory
+Acceptance criteria:
+
+We produce an inventory of actual files, sizes, formats, and archive contents.
+We identify which files are EDI station inputs and which file is the resistivity model.
+We list anything missing or suspicious.
+Your side check:
+
+Confirm the inventory matches what you expected from the delivery.
+Flag anything that looks like the wrong dataset.
+Step 3: CRS / Origin / Units Lock
+Acceptance criteria:
+
+CRS is confirmed from file headers or metadata.
+Units are confirmed.
+Model bounds are known.
+We define a GeoSee scene origin.
+We document whether z means elevation, depth, or another vertical basis.
+Your side check:
+
+Confirm the site location and scale feel plausible.
+No app rendering yet unless this is clean.
+Step 4: MT Station Markers
+Acceptance criteria:
+
+One marker per physical MT station.
+Duplicate EDI variants are not rendered as duplicate stations.
+Output exists as:
+geosee_processed/.../stations/mt_stations.geojson
+Provenance says measured.
+Your side check:
+
+Open the viewer and confirm station points look spatially sensible.
+Confirm count feels right, expected around 122 if the source matches the brief.
+Step 5: Low-Resolution Resistivity Preview
+Acceptance criteria:
+
+Cell-center model parses.
+rho and log10(rho) are documented.
+Bounds/value ranges are recorded.
+Preview output loads without black screen or browser pain.
+Provenance says source-derived inversion model.
+Your side check:
+
+Confirm the resistivity preview appears in the same area as the stations.
+Confirm it reads as a 3D volume/field, even if rough.
+Step 6: First App Wiring
+Acceptance criteria:
+
+Utah FORGE loads from landing page.
+MT station layer toggles in editor.
+Resistivity preview layer toggles in editor.
+No missing-file console errors.
+npm run build passes.
+Your side check:
+
+Toggle each layer on/off.
+Move camera around and confirm scale/location is not obviously insane.
+Step 7: Demo-Quality Slices
+Acceptance criteria:
+
+Create slice/section outputs from the model.
+Color by log Ohm-m.
+Add legend/range metadata.
+Editor can tune opacity and selected slice/preset.
+Authored pages can show clean slice views.
+Your side check:
+
+Judge it visually: does it look like a credible geophysics presentation, not just data confetti?
+Pick what needs tuning: color, opacity, slice spacing, vertical scale, camera.
+Step 8: Presentation Pass
+Acceptance criteria:
+
+Pages tell a simple story: site arrival, station network, resistivity model, section view, integrated context.
+Measured vs modeled vs planned layers are clear.
+Placeholder/future layers are labeled honestly.
+Build passes.
+Your side check:
+
+Run it like a client demo.
+Tell me where it loses the plot visually or narratively.

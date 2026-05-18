@@ -1,0 +1,105 @@
+{
+  "id": "34_demo_mt_seismic_integration",
+  "title": "Demo: MT + Seismic Integration",
+  "subtitle": "Multi-method view for demo review",
+  "camera": {
+    "position": [
+      -39943.19483319177,
+      -20384.065863269912,
+      15191.005540165686
+    ],
+    "target": [
+      -2988,
+      -9116,
+      -19127
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 5500,
+  "overlayLayout": {
+    "x": 0.013085937500000012,
+    "y": 0.06185696361355081,
+    "width": 0.21087239583333334,
+    "height": 0.3120451693851945
+  },
+  "overlay": {
+    "position": "left",
+    "contentFile": "overlays/34_demo_mt_seismic_integration/text.md",
+    "timing": {
+      "fadeMs": 900,
+      "gapMs": 80,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
+  "accentColor": "#00fbff",
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      -2988,
+      -9116,
+      -19127
+    ],
+    "orbitSpeedDegPerSec": 5,
+    "orbitRadius": 47950,
+    "orbitHeight": 30972,
+    "orbitDirection": -1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": true
+  },
+  "visibilityOverrides": {
+    "utah-forge-reference-stage": false,
+    "utah-forge-phase3-working-area": true,
+    "terrain": true,
+    "transport-roads": true,
+    "hydrography-streams": true,
+    "hydrography-lakes": true,
+    "utah-forge-phase3-seismic-browser": true,
+    "utah-forge-mt-stations": false,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": true,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-mt-resistivity-slices": true
+  },
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "scalarFocusMin": 3.0555553761897336,
+      "scalarFocusMax": 4.5,
+      "scalarBlendMin": 3.0555553761897336,
+      "scalarBlendMax": 4.5,
+      "scalarEdgeLineWidth": 1.3,
+      "scalarEdgeAverage": 1,
+      "scalarEdgeLowerValue": 3.0555553761897336,
+      "scalarNoiseThreshold": 0.65,
+      "opacity": 0.3
+    },
+    "utah-forge-phase3-seismic-browser": {
+      "opacity": 0.42,
+      "seismicProductVisibility": {
+        "gdr-1015-forge3d-velo5d-float-01312018": true
+      }
+    }
+  }
+}

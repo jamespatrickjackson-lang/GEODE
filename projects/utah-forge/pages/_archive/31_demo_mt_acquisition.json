@@ -1,0 +1,68 @@
+{
+  "id": "31_demo_mt_acquisition",
+  "title": "Demo: MT Acquisition Footprint",
+  "subtitle": "Measured MT station network and Phase 3 context",
+  "camera": {
+    "position": [
+      -85968.63565936462,
+      193146.95919190222,
+      -5744.474241913995
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 2400,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 5000,
+  "overlayLayout": {
+    "x": 0.013085937500000012,
+    "y": 0.06185696361355081,
+    "width": 0.21087239583333334,
+    "height": 0.3120451693851945
+  },
+  "overlay": {
+    "position": "left",
+    "contentFile": "overlays/31_demo_mt_acquisition/text.md",
+    "timing": {
+      "fadeMs": 900,
+      "gapMs": 80,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
+  "accentColor": "#35d15a",
+  "visibilityOverrides": {
+    "utah-forge-reference-stage": false,
+    "utah-forge-phase3-working-area": true,
+    "terrain": true,
+    "transport-roads": true,
+    "hydrography-streams": true,
+    "hydrography-lakes": true,
+    "utah-forge-phase3-seismic-browser": false,
+    "utah-forge-mt-stations": true,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-mt-resistivity-slices": false
+  },
+  "layerOverrides": {
+    "utah-forge-mt-stations": {
+      "opacity": 0.82,
+      "pointMarkerRadiusM": 650,
+      "pointMarkerLiftM": 900
+    }
+  }
+}

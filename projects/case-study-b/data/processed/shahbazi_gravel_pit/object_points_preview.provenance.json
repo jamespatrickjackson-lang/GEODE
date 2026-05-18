@@ -1,0 +1,73 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "object_points_preview.json",
+  "artifactType": "sparse-object-point-preview",
+  "projectSlug": "case-study-b",
+  "createdDate": "2026-05-10",
+  "source": {
+    "primaryPath": "projects/case-study-b/data/raw/shahbazi_gravel_pit/ObjectPoints.txt",
+    "supportingPath": "projects/case-study-b/data/raw/shahbazi_gravel_pit/TiePoints.txt",
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Unmanned aerial image dataset: Ready for 3D reconstruction. Data in Brief 25, 103962. DOI 10.1016/j.dib.2019.103962",
+    "objectPointRows": 3682,
+    "tiePointRows": 41346,
+    "columns": {
+      "objectPoints": [
+        "object_point_id",
+        "x",
+        "y",
+        "z"
+      ],
+      "tiePoints": [
+        "image_id",
+        "object_point_id",
+        "image_x",
+        "image_y"
+      ]
+    }
+  },
+  "processing": {
+    "script": "prep/build_shahbazi_object_points_preview.mjs",
+    "method": "Parsed source object points, counted matching image observations from TiePoints.txt, and transformed positions into Case Study B scene coordinates using the sampled TLS preview transform.",
+    "sourceBounds": {
+      "min": [
+        192958.911,
+        5025099.024,
+        297.143
+      ],
+      "max": [
+        193214.693,
+        5025281.906,
+        348.267
+      ]
+    },
+    "sceneBounds": {
+      "min": [
+        -133.848,
+        -133.112,
+        114.738
+      ],
+      "max": [
+        121.934,
+        49.769,
+        165.862
+      ]
+    },
+    "sceneTransform": {
+      "mode": "tls-preview-aligned",
+      "horizontalScale": 1,
+      "verticalScale": 1,
+      "zLiftMeters": 115,
+      "note": "Object points are centered and lifted with the same transform as the sampled TLS preview."
+    },
+    "observationStats": {
+      "min": 2,
+      "max": 28,
+      "mean": 11.23
+    }
+  },
+  "reviewStatus": {
+    "readyForDemoPreview": true,
+    "readyForFinalSpatialAnalysis": false,
+    "notes": "This sparse object-point preview is source-derived QA context for photogrammetry. It is not a dense reconstruction, orthomosaic, DSM, or final mesh."
+  }
+}

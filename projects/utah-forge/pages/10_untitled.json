@@ -1,0 +1,53 @@
+{
+  "id": "10_untitled",
+  "title": "Untitled page copy",
+  "camera": {
+    "position": [
+      -25758.118599762638,
+      267159.49967552704,
+      -35000.79617668223
+    ],
+    "target": [
+      10844.11738335307,
+      -5098.606116313531,
+      -64366.201871915524
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#42f236",
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      10844.11738335307,
+      -5098.606116313531,
+      -64366.201871915524
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 275129.9999999952,
+    "orbitHeight": 13000,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  }
+}

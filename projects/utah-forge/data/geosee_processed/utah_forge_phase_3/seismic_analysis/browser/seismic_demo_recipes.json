@@ -1,0 +1,2342 @@
+{
+  "schema": "geosee.seismic-demo-recipes.v1",
+  "derivedDate": "2026-05-13",
+  "sourceManifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_manifest.json",
+  "productCount": 34,
+  "raymarchProductCount": 4,
+  "disclosureLabels": [
+    "public geothermal demo data",
+    "processed seismic product",
+    "not a mineral resource estimate"
+  ],
+  "productGroups": {
+    "raymarchCapable3d": [
+      {
+        "id": "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack",
+        "label": "3D post-stack time migration FXY decon stack",
+        "surveyKind": "3d",
+        "productKind": "poststack-time-migration",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -14.518112,
+          "max": 8.791553,
+          "p02": -1.364791,
+          "p98": 1.332351
+        },
+        "raymarchVolume": {
+          "dimensions": [
+            64,
+            64,
+            64
+          ],
+          "sampleDomain": {
+            "kind": "time",
+            "unit": "ms",
+            "min": 0,
+            "max": 4000,
+            "verticalScaleMPerUnit": 2
+          },
+          "amplitudeStats": {
+            "min": -14.518112,
+            "max": 8.791553,
+            "p02": -1.2632,
+            "p98": 1.267888,
+            "mean": -0.001542
+          }
+        },
+        "raymarchCapable": true
+      },
+      {
+        "id": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+        "label": "3D anisotropic PSDM depth stack (unenhanced)",
+        "surveyKind": "3d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -5.086039,
+          "max": 4.157359,
+          "p02": -0.73126,
+          "p98": 0.711978
+        },
+        "raymarchVolume": {
+          "dimensions": [
+            64,
+            64,
+            64
+          ],
+          "sampleDomain": {
+            "kind": "depth",
+            "unit": "m",
+            "min": 0,
+            "max": 5000,
+            "verticalScaleMPerUnit": 1
+          },
+          "amplitudeStats": {
+            "min": -4.978597,
+            "max": 3.369965,
+            "p02": -0.706665,
+            "p98": 0.70295,
+            "mean": 0.000275
+          }
+        },
+        "raymarchCapable": true
+      },
+      {
+        "id": "gdr-1141-forge3d-pstm-stack-enh",
+        "label": "3D PSTM time stack (enhanced)",
+        "surveyKind": "3d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -82.433212,
+          "max": 94.843155,
+          "p02": -31.850203,
+          "p98": 43.859882
+        },
+        "raymarchVolume": {
+          "dimensions": [
+            64,
+            64,
+            64
+          ],
+          "sampleDomain": {
+            "kind": "time",
+            "unit": "ms",
+            "min": 0,
+            "max": 4000,
+            "verticalScaleMPerUnit": 2
+          },
+          "amplitudeStats": {
+            "min": -82.433212,
+            "max": 81.001083,
+            "p02": -27.063122,
+            "p98": 26.66184,
+            "mean": -0.084541
+          }
+        },
+        "raymarchCapable": true
+      },
+      {
+        "id": "gdr-1015-forge3d-velo5d-float-01312018",
+        "label": "3D velocity model (time domain)",
+        "surveyKind": "3d",
+        "productKind": "velocity",
+        "domainKind": "velocity-time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1015",
+        "amplitudeStats": {
+          "min": 1594.0625,
+          "max": 5285.773438,
+          "p02": 1626.575439,
+          "p98": 5229.5
+        },
+        "raymarchVolume": {
+          "dimensions": [
+            19,
+            19,
+            64
+          ],
+          "sampleDomain": {
+            "kind": "velocity-time",
+            "unit": "ms",
+            "min": 0,
+            "max": 4000,
+            "verticalScaleMPerUnit": 2
+          },
+          "amplitudeStats": {
+            "min": 1594.0625,
+            "max": 5285.773438,
+            "p02": 1628.478027,
+            "p98": 5229.5,
+            "mean": 4093.349121
+          }
+        },
+        "raymarchCapable": true
+      }
+    ],
+    "lineTheatre": [
+      {
+        "id": "gdr-1141-line-301-pdm-enh",
+        "label": "2D Line 301 PDM depth section (enhanced)",
+        "surveyKind": "2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -2.069506,
+          "max": 2.185434,
+          "p02": -0.601806,
+          "p98": 0.593807
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-302-psdm-enh",
+        "label": "2D Line 302 PSDM depth section (enhanced)",
+        "surveyKind": "2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -3.576588,
+          "max": 3.621507,
+          "p02": -0.656189,
+          "p98": 0.687923
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l5-psdm-enh",
+        "label": "2D legacy Line L5 PSDM depth section (enhanced)",
+        "surveyKind": "legacy-2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -1.590545,
+          "max": 1.725957,
+          "p02": -0.442558,
+          "p98": 0.443282
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l11-psdm-enh",
+        "label": "2D legacy Line L11 PSDM depth section (enhanced)",
+        "surveyKind": "legacy-2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -1.766114,
+          "max": 2.336257,
+          "p02": -0.644733,
+          "p98": 0.638503
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      }
+    ],
+    "allProcessedProducts": [
+      {
+        "id": "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack",
+        "label": "3D post-stack time migration FXY decon stack",
+        "surveyKind": "3d",
+        "productKind": "poststack-time-migration",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -14.518112,
+          "max": 8.791553,
+          "p02": -1.364791,
+          "p98": 1.332351
+        },
+        "raymarchVolume": {
+          "dimensions": [
+            64,
+            64,
+            64
+          ],
+          "sampleDomain": {
+            "kind": "time",
+            "unit": "ms",
+            "min": 0,
+            "max": 4000,
+            "verticalScaleMPerUnit": 2
+          },
+          "amplitudeStats": {
+            "min": -14.518112,
+            "max": 8.791553,
+            "p02": -1.2632,
+            "p98": 1.267888,
+            "mean": -0.001542
+          }
+        },
+        "raymarchCapable": true
+      },
+      {
+        "id": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+        "label": "3D anisotropic PSDM depth stack (unenhanced)",
+        "surveyKind": "3d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -5.086039,
+          "max": 4.157359,
+          "p02": -0.73126,
+          "p98": 0.711978
+        },
+        "raymarchVolume": {
+          "dimensions": [
+            64,
+            64,
+            64
+          ],
+          "sampleDomain": {
+            "kind": "depth",
+            "unit": "m",
+            "min": 0,
+            "max": 5000,
+            "verticalScaleMPerUnit": 1
+          },
+          "amplitudeStats": {
+            "min": -4.978597,
+            "max": 3.369965,
+            "p02": -0.706665,
+            "p98": 0.70295,
+            "mean": 0.000275
+          }
+        },
+        "raymarchCapable": true
+      },
+      {
+        "id": "gdr-1141-forge3d-pstm-stack-enh",
+        "label": "3D PSTM time stack (enhanced)",
+        "surveyKind": "3d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -82.433212,
+          "max": 94.843155,
+          "p02": -31.850203,
+          "p98": 43.859882
+        },
+        "raymarchVolume": {
+          "dimensions": [
+            64,
+            64,
+            64
+          ],
+          "sampleDomain": {
+            "kind": "time",
+            "unit": "ms",
+            "min": 0,
+            "max": 4000,
+            "verticalScaleMPerUnit": 2
+          },
+          "amplitudeStats": {
+            "min": -82.433212,
+            "max": 81.001083,
+            "p02": -27.063122,
+            "p98": 26.66184,
+            "mean": -0.084541
+          }
+        },
+        "raymarchCapable": true
+      },
+      {
+        "id": "gdr-1015-forge3d-velo5d-float-01312018",
+        "label": "3D velocity model (time domain)",
+        "surveyKind": "3d",
+        "productKind": "velocity",
+        "domainKind": "velocity-time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1015",
+        "amplitudeStats": {
+          "min": 1594.0625,
+          "max": 5285.773438,
+          "p02": 1626.575439,
+          "p98": 5229.5
+        },
+        "raymarchVolume": {
+          "dimensions": [
+            19,
+            19,
+            64
+          ],
+          "sampleDomain": {
+            "kind": "velocity-time",
+            "unit": "ms",
+            "min": 0,
+            "max": 4000,
+            "verticalScaleMPerUnit": 2
+          },
+          "amplitudeStats": {
+            "min": 1594.0625,
+            "max": 5285.773438,
+            "p02": 1628.478027,
+            "p98": 5229.5,
+            "mean": 4093.349121
+          }
+        },
+        "raymarchCapable": true
+      },
+      {
+        "id": "gdr-1141-line-301-pdm-enh",
+        "label": "2D Line 301 PDM depth section (enhanced)",
+        "surveyKind": "2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -2.069506,
+          "max": 2.185434,
+          "p02": -0.601806,
+          "p98": 0.593807
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-301-psdm-unenh",
+        "label": "2D Line 301 PSDM depth section (unenhanced)",
+        "surveyKind": "2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -2.47121,
+          "max": 2.460963,
+          "p02": -0.699252,
+          "p98": 0.683169
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1015-forge2d-301-migr-depth",
+        "label": "2D Line 301 migrated depth section",
+        "surveyKind": "2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1015",
+        "amplitudeStats": {
+          "min": -3.560097,
+          "max": 3.489523,
+          "p02": -0.907628,
+          "p98": 0.887408
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-302-psdm-enh",
+        "label": "2D Line 302 PSDM depth section (enhanced)",
+        "surveyKind": "2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -3.576588,
+          "max": 3.621507,
+          "p02": -0.656189,
+          "p98": 0.687923
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-302-psdm-unenh",
+        "label": "2D Line 302 PSDM depth section (unenhanced)",
+        "surveyKind": "2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -4.95767,
+          "max": 4.298369,
+          "p02": -0.704188,
+          "p98": 0.727095
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l11-psdm-enh",
+        "label": "2D legacy Line L11 PSDM depth section (enhanced)",
+        "surveyKind": "legacy-2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -1.766114,
+          "max": 2.336257,
+          "p02": -0.644733,
+          "p98": 0.638503
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l11-psdm-enh-meters",
+        "label": "2D legacy Line L11 PSDM depth section (enhanced, meters)",
+        "surveyKind": "legacy-2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -3.316059,
+          "max": 3.649615,
+          "p02": -1.062479,
+          "p98": 1.107105
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l11-psdm-unenh",
+        "label": "2D legacy Line L11 PSDM depth section (unenhanced)",
+        "surveyKind": "legacy-2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -1.881605,
+          "max": 3.76176,
+          "p02": -0.838173,
+          "p98": 0.862271
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l5-psdm-enh",
+        "label": "2D legacy Line L5 PSDM depth section (enhanced)",
+        "surveyKind": "legacy-2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -1.590545,
+          "max": 1.725957,
+          "p02": -0.442558,
+          "p98": 0.443282
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l5-psdm-enh-meters",
+        "label": "2D legacy Line L5 PSDM depth section (enhanced, meters)",
+        "surveyKind": "legacy-2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -4.164349,
+          "max": 2.512978,
+          "p02": -0.899081,
+          "p98": 0.911141
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l5-psdm-unenh",
+        "label": "2D legacy Line L5 PSDM depth section (unenhanced)",
+        "surveyKind": "legacy-2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -3.216277,
+          "max": 2.967563,
+          "p02": -0.578481,
+          "p98": 0.582544
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l5-psdm-unenh-meters",
+        "label": "2D legacy Line L5 PSDM depth section (unenhanced, meters)",
+        "surveyKind": "legacy-2d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -5.358349,
+          "max": 5.806688,
+          "p02": -1.208692,
+          "p98": 1.187713
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-301-pstm-stack-enh",
+        "label": "2D Line 301 PSTM time stack (enhanced)",
+        "surveyKind": "2d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -11.372896,
+          "max": 8.613849,
+          "p02": -1.821284,
+          "p98": 1.922681
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-301-pstm-stack-unenh",
+        "label": "2D Line 301 PSTM time stack (unenhanced)",
+        "surveyKind": "2d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -12.302876,
+          "max": 13.685453,
+          "p02": -2.835003,
+          "p98": 2.956939
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-301-unmigrated-stack",
+        "label": "2D Line 301 unmigrated time stack",
+        "surveyKind": "2d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -11.923859,
+          "max": 9.367264,
+          "p02": -2.437007,
+          "p98": 2.474391
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-302-pstm-stack-enh",
+        "label": "2D Line 302 PSTM time stack (enhanced)",
+        "surveyKind": "2d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -11.327103,
+          "max": 9.501466,
+          "p02": -2.305079,
+          "p98": 2.361603
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-302-pstm-stack-unenh",
+        "label": "2D Line 302 PSTM time stack (unenhanced)",
+        "surveyKind": "2d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -18.970093,
+          "max": 19.569702,
+          "p02": -3.227523,
+          "p98": 3.348767
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-302-unmigrated-stack",
+        "label": "2D Line 302 unmigrated time stack",
+        "surveyKind": "2d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -8.112523,
+          "max": 7.891978,
+          "p02": -3.11514,
+          "p98": 3.094029
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l11-pstm-enh",
+        "label": "2D legacy Line L11 PSTM time section (enhanced)",
+        "surveyKind": "legacy-2d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -9.132649,
+          "max": 12.041058,
+          "p02": -2.114614,
+          "p98": 2.068316
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l11-pstm-unenh",
+        "label": "2D legacy Line L11 PSTM time section (unenhanced)",
+        "surveyKind": "legacy-2d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -10.017319,
+          "max": 12.583209,
+          "p02": -2.39027,
+          "p98": 2.357194
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l11-unmigrated-time-stack",
+        "label": "2D legacy Line L11 unmigrated time stack",
+        "surveyKind": "legacy-2d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -8.713607,
+          "max": 9.39006,
+          "p02": -2.351139,
+          "p98": 2.364474
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l5-pstm-enh",
+        "label": "2D legacy Line L5 PSTM time section (enhanced)",
+        "surveyKind": "legacy-2d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -4.346985,
+          "max": 5.602103,
+          "p02": -1.456238,
+          "p98": 1.483246
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l5-pstm-unenh",
+        "label": "2D legacy Line L5 PSTM time section (unenhanced)",
+        "surveyKind": "legacy-2d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -11.585196,
+          "max": 10.690771,
+          "p02": -2.241184,
+          "p98": 2.356736
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l5-unmigrated-time-stack",
+        "label": "2D legacy Line L5 unmigrated time stack",
+        "surveyKind": "legacy-2d",
+        "productKind": "pstm",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": -3.575264,
+          "max": 3.978133,
+          "p02": -1.962702,
+          "p98": 1.98545
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1015-forge2d-301-stack-01312018",
+        "label": "2D Line 301 time stack",
+        "surveyKind": "2d",
+        "productKind": "stack",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1015",
+        "amplitudeStats": {
+          "min": -5.911188,
+          "max": 4.94632,
+          "p02": -2.092115,
+          "p98": 2.030893
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1015-forge2d-302-stack",
+        "label": "2D Line 302 time stack",
+        "surveyKind": "2d",
+        "productKind": "stack",
+        "domainKind": "time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1015",
+        "amplitudeStats": {
+          "min": -5.997778,
+          "max": 7.680196,
+          "p02": -1.999769,
+          "p98": 2.051595
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-301-psdm-interval-velocity",
+        "label": "2D Line 301 PSDM interval velocity",
+        "surveyKind": "2d",
+        "productKind": "velocity",
+        "domainKind": "velocity-time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": 1080.004395,
+          "max": 6200.015625,
+          "p02": 1784.855469,
+          "p98": 6157.743164
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-302-psdm-interval-velocity",
+        "label": "2D Line 302 PSDM interval velocity",
+        "surveyKind": "2d",
+        "productKind": "velocity",
+        "domainKind": "velocity-time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": 1840.796143,
+          "max": 6137.054688,
+          "p02": 2195.639404,
+          "p98": 5920.818359
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l11-psdm-interval-velocity",
+        "label": "2D legacy Line L11 PSDM interval velocity",
+        "surveyKind": "legacy-2d",
+        "productKind": "velocity",
+        "domainKind": "velocity-time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": 2530.214844,
+          "max": 22246.046875,
+          "p02": 3589.64624,
+          "p98": 19867.560547
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      },
+      {
+        "id": "gdr-1141-line-l5-psdm-interval-velocity",
+        "label": "2D legacy Line L5 PSDM interval velocity",
+        "surveyKind": "legacy-2d",
+        "productKind": "velocity",
+        "domainKind": "velocity-time",
+        "domainUnit": "ms",
+        "sourceSubmission": "GDR 1141",
+        "amplitudeStats": {
+          "min": 4964.089844,
+          "max": 18000,
+          "p02": 6813.5625,
+          "p98": 18000
+        },
+        "raymarchVolume": null,
+        "raymarchCapable": false
+      }
+    ]
+  },
+  "comparisonPairs": [
+    {
+      "id": "line-301-psdm-enhanced-vs-unenhanced",
+      "label": "Line 301 enhanced vs unenhanced PSDM",
+      "primaryProductId": "gdr-1141-line-301-pdm-enh",
+      "comparisonProductId": "gdr-1141-line-301-psdm-unenh",
+      "purpose": "before/after processing comparison"
+    },
+    {
+      "id": "line-302-psdm-enhanced-vs-unenhanced",
+      "label": "Line 302 enhanced vs unenhanced PSDM",
+      "primaryProductId": "gdr-1141-line-302-psdm-enh",
+      "comparisonProductId": "gdr-1141-line-302-psdm-unenh",
+      "purpose": "before/after processing comparison"
+    },
+    {
+      "id": "line-l5-psdm-enhanced-vs-unenhanced",
+      "label": "Line L5 enhanced vs unenhanced PSDM",
+      "primaryProductId": "gdr-1141-line-l5-psdm-enh",
+      "comparisonProductId": "gdr-1141-line-l5-psdm-unenh",
+      "purpose": "legacy line processing comparison"
+    },
+    {
+      "id": "line-l11-psdm-enhanced-vs-unenhanced",
+      "label": "Line L11 enhanced vs unenhanced PSDM",
+      "primaryProductId": "gdr-1141-line-l11-psdm-enh",
+      "comparisonProductId": "gdr-1141-line-l11-psdm-unenh",
+      "purpose": "legacy line processing comparison"
+    }
+  ],
+  "displayRecipes": [
+    {
+      "id": "investor-story",
+      "label": "Investor Story Mode",
+      "rank": 1,
+      "audience": "investor",
+      "purpose": "Show the survey footprint, one understandable seismic view, and MT coexistence with disclosure labels.",
+      "productIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "renderModes": [
+        "raymarch",
+        "slice"
+      ],
+      "disclosureLabels": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "3d-seismic-showcase",
+      "label": "3D Seismic Showcase",
+      "rank": 2,
+      "audience": "investor / technical",
+      "purpose": "Polish raymarch-capable volumes with preset shots and synchronized slice-through-volume behavior.",
+      "productIds": [
+        "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack",
+        "gdr-1141-forge3d-ani-psdm-stack-unenh",
+        "gdr-1141-forge3d-pstm-stack-enh",
+        "gdr-1015-forge3d-velo5d-float-01312018"
+      ],
+      "renderModes": [
+        "raymarch",
+        "slice"
+      ],
+      "disclosureLabels": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "2d-line-theatre",
+      "label": "2D Line Theatre",
+      "rank": 3,
+      "audience": "technical / investor",
+      "purpose": "Present one georeferenced section curtain at a time with comparison products and provenance.",
+      "productIds": [
+        "gdr-1141-line-301-pdm-enh",
+        "gdr-1141-line-302-psdm-enh",
+        "gdr-1141-line-l5-psdm-enh",
+        "gdr-1141-line-l11-psdm-enh"
+      ],
+      "comparisonPairs": [
+        {
+          "id": "line-301-psdm-enhanced-vs-unenhanced",
+          "label": "Line 301 enhanced vs unenhanced PSDM",
+          "primaryProductId": "gdr-1141-line-301-pdm-enh",
+          "comparisonProductId": "gdr-1141-line-301-psdm-unenh",
+          "purpose": "before/after processing comparison"
+        },
+        {
+          "id": "line-302-psdm-enhanced-vs-unenhanced",
+          "label": "Line 302 enhanced vs unenhanced PSDM",
+          "primaryProductId": "gdr-1141-line-302-psdm-enh",
+          "comparisonProductId": "gdr-1141-line-302-psdm-unenh",
+          "purpose": "before/after processing comparison"
+        },
+        {
+          "id": "line-l5-psdm-enhanced-vs-unenhanced",
+          "label": "Line L5 enhanced vs unenhanced PSDM",
+          "primaryProductId": "gdr-1141-line-l5-psdm-enh",
+          "comparisonProductId": "gdr-1141-line-l5-psdm-unenh",
+          "purpose": "legacy line processing comparison"
+        },
+        {
+          "id": "line-l11-psdm-enhanced-vs-unenhanced",
+          "label": "Line L11 enhanced vs unenhanced PSDM",
+          "primaryProductId": "gdr-1141-line-l11-psdm-enh",
+          "comparisonProductId": "gdr-1141-line-l11-psdm-unenh",
+          "purpose": "legacy line processing comparison"
+        }
+      ],
+      "renderModes": [
+        "slice"
+      ],
+      "disclosureLabels": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "integrated-geophysics",
+      "label": "Geophysical Integration View",
+      "rank": 4,
+      "audience": "investor / technical",
+      "purpose": "Co-render seismic and MT resistivity to demonstrate multi-method spatial integration.",
+      "productIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh",
+        "gdr-1141-forge3d-pstm-stack-enh"
+      ],
+      "renderModes": [
+        "raymarch",
+        "slice"
+      ],
+      "disclosureLabels": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "confidence-provenance",
+      "label": "Confidence And Provenance Mode",
+      "rank": 5,
+      "audience": "data-room",
+      "purpose": "Expose inventory, CRS, processing type, provenance, domain, amplitude stats, and data confidence.",
+      "productIds": [
+        "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack",
+        "gdr-1141-forge3d-ani-psdm-stack-unenh",
+        "gdr-1141-forge3d-pstm-stack-enh",
+        "gdr-1015-forge3d-velo5d-float-01312018",
+        "gdr-1141-line-301-pdm-enh",
+        "gdr-1141-line-301-psdm-unenh",
+        "gdr-1015-forge2d-301-migr-depth",
+        "gdr-1141-line-302-psdm-enh",
+        "gdr-1141-line-302-psdm-unenh",
+        "gdr-1141-line-l11-psdm-enh",
+        "gdr-1141-line-l11-psdm-enh-meters",
+        "gdr-1141-line-l11-psdm-unenh",
+        "gdr-1141-line-l5-psdm-enh",
+        "gdr-1141-line-l5-psdm-enh-meters",
+        "gdr-1141-line-l5-psdm-unenh",
+        "gdr-1141-line-l5-psdm-unenh-meters",
+        "gdr-1141-line-301-pstm-stack-enh",
+        "gdr-1141-line-301-pstm-stack-unenh",
+        "gdr-1141-line-301-unmigrated-stack",
+        "gdr-1141-line-302-pstm-stack-enh",
+        "gdr-1141-line-302-pstm-stack-unenh",
+        "gdr-1141-line-302-unmigrated-stack",
+        "gdr-1141-line-l11-pstm-enh",
+        "gdr-1141-line-l11-pstm-unenh",
+        "gdr-1141-line-l11-unmigrated-time-stack",
+        "gdr-1141-line-l5-pstm-enh",
+        "gdr-1141-line-l5-pstm-unenh",
+        "gdr-1141-line-l5-unmigrated-time-stack",
+        "gdr-1015-forge2d-301-stack-01312018",
+        "gdr-1015-forge2d-302-stack",
+        "gdr-1141-line-301-psdm-interval-velocity",
+        "gdr-1141-line-302-psdm-interval-velocity",
+        "gdr-1141-line-l11-psdm-interval-velocity",
+        "gdr-1141-line-l5-psdm-interval-velocity"
+      ],
+      "renderModes": [
+        "slice"
+      ],
+      "disclosureLabels": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "interpretation-overlays",
+      "label": "Interpretation Overlay System",
+      "rank": 6,
+      "audience": "technical / investor",
+      "purpose": "Reserve reviewed faults, horizons, targets, and annotations as separate interpreted layers.",
+      "productIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "renderModes": [
+        "slice"
+      ],
+      "interpretationLayerIds": [
+        "reviewed-faults",
+        "reviewed-horizons",
+        "target-corridors",
+        "presentation-annotations"
+      ],
+      "disclosureLabels": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "regulatory-export-pack",
+      "label": "Regulatory / QP Export Pack",
+      "rank": 7,
+      "audience": "export",
+      "purpose": "Create static map and section layouts with scale, legend, CRS, source, date, and caveats.",
+      "productIds": [
+        "gdr-1141-line-301-pdm-enh",
+        "gdr-1141-line-302-psdm-enh",
+        "gdr-1141-line-l5-psdm-enh",
+        "gdr-1141-line-l11-psdm-enh"
+      ],
+      "renderModes": [
+        "slice"
+      ],
+      "exportLayoutIds": [
+        "investor-slide-overview",
+        "technical-section-layout",
+        "qp-report-support-layout"
+      ],
+      "disclosureLabels": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "derived-attribute-experiments",
+      "label": "Derived Attribute Experiments",
+      "rank": 8,
+      "audience": "technical",
+      "purpose": "Evaluate experimental amplitude, edge, discontinuity, and horizon-following views without implying unsupported geology.",
+      "productIds": [
+        "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack",
+        "gdr-1141-forge3d-ani-psdm-stack-unenh",
+        "gdr-1141-forge3d-pstm-stack-enh",
+        "gdr-1015-forge3d-velo5d-float-01312018"
+      ],
+      "renderModes": [
+        "slice"
+      ],
+      "derivedViewIds": [
+        "amplitude-strength",
+        "edge-gradient",
+        "coherence-like-discontinuity",
+        "horizon-following-slice"
+      ],
+      "disclosureLabels": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    }
+  ],
+  "audiencePresets": [
+    {
+      "id": "investor-overview-volume",
+      "label": "Investor overview volume",
+      "audienceMode": "investor",
+      "rank": 1,
+      "summary": "Clean 3D volume, survey navigation, and MT coexistence for a first investor pass.",
+      "displayRecipeId": "investor-story",
+      "productId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "renderMode": "raymarch",
+      "sliceAxis": "inline",
+      "sliceFraction": 0.5,
+      "opacity": 0.46,
+      "amplitudeMin": 0.12,
+      "amplitudeMax": 0.9,
+      "amplitudeGamma": 0.85,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.18,
+      "volumeSampleSteps": 112,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": true,
+      "comparisonMode": "overlay",
+      "mtCoRender": "integrated",
+      "removeBackground": false,
+      "mtStylePatch": {
+        "opacity": 0.34,
+        "scalarLegendVisible": true
+      },
+      "cameraShot": "survey-overview",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate",
+        "Uses one representative Phase 3 processed 3D product.",
+        "MT is co-rendered as a separate source-derived inversion visualization."
+      ]
+    },
+    {
+      "id": "investor-clean-slice",
+      "label": "Investor clean slice",
+      "audienceMode": "investor",
+      "rank": 2,
+      "summary": "Readable single inline section for discussions where volume rendering is too dense.",
+      "displayRecipeId": "investor-story",
+      "productId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "inline",
+      "sliceFraction": 0.5,
+      "opacity": 0.7,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "removeBackground": false,
+      "mtStylePatch": {
+        "opacity": 0.08,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "inline-section",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "showcase-time-volume",
+      "label": "3D time volume flythrough",
+      "audienceMode": "technical",
+      "rank": 3,
+      "summary": "Raymarched PSTM time-domain product with time-scaled vertical display.",
+      "displayRecipeId": "3d-seismic-showcase",
+      "productId": "gdr-1141-forge3d-pstm-stack-enh",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-pstm-stack-enh"
+      ],
+      "renderMode": "raymarch",
+      "sliceAxis": "crossline",
+      "sliceFraction": 0.52,
+      "opacity": 0.52,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 0.9,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 112,
+      "timeScale": 3.25,
+      "navigationVisible": true,
+      "sliceThroughVolume": true,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "removeBackground": false,
+      "mtStylePatch": {
+        "opacity": 0.08,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "volume-flythrough",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "line-theatre-301",
+      "label": "Line 301 theatre",
+      "audienceMode": "technical",
+      "rank": 4,
+      "summary": "Curated Line 301 PSDM curtain with enhanced/unenhanced comparison visible.",
+      "displayRecipeId": "2d-line-theatre",
+      "productId": "gdr-1141-line-301-pdm-enh",
+      "visibleProductIds": [
+        "gdr-1141-line-301-pdm-enh",
+        "gdr-1141-line-301-psdm-unenh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "line",
+      "sliceFraction": 0.5,
+      "opacity": 0.72,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonProductId": "gdr-1141-line-301-psdm-unenh",
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "removeBackground": false,
+      "mtStylePatch": {
+        "opacity": 0.05,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "line-301-section",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate",
+        "Displays both enhanced and unenhanced processed products."
+      ]
+    },
+    {
+      "id": "line-theatre-302",
+      "label": "Line 302 theatre",
+      "audienceMode": "technical",
+      "rank": 5,
+      "summary": "Curated Line 302 PSDM curtain with enhanced/unenhanced comparison visible.",
+      "displayRecipeId": "2d-line-theatre",
+      "productId": "gdr-1141-line-302-psdm-enh",
+      "visibleProductIds": [
+        "gdr-1141-line-302-psdm-enh",
+        "gdr-1141-line-302-psdm-unenh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "line",
+      "sliceFraction": 0.5,
+      "opacity": 0.72,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonProductId": "gdr-1141-line-302-psdm-unenh",
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "removeBackground": false,
+      "mtStylePatch": {
+        "opacity": 0.05,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "line-302-section",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate",
+        "Displays both enhanced and unenhanced processed products."
+      ]
+    },
+    {
+      "id": "integrated-geophysics",
+      "label": "Integrated geophysics",
+      "audienceMode": "investor",
+      "rank": 6,
+      "summary": "Seismic plus MT resistivity, tuned to show GeoSee's multi-method value proposition.",
+      "displayRecipeId": "integrated-geophysics",
+      "productId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "sample",
+      "sliceFraction": 0.42,
+      "opacity": 0.58,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "integrated",
+      "removeBackground": false,
+      "mtStylePatch": {
+        "opacity": 0.42,
+        "scalarLegendVisible": true
+      },
+      "cameraShot": "integrated-overview",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate",
+        "Seismic and MT are separate geophysical methods shown together."
+      ]
+    },
+    {
+      "id": "data-room-inventory",
+      "label": "Data room inventory",
+      "audienceMode": "data-room",
+      "rank": 7,
+      "summary": "Provenance-first view for product counts, source submissions, CRS, and confidence badges.",
+      "displayRecipeId": "confidence-provenance",
+      "productId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "inline",
+      "sliceFraction": 0.5,
+      "opacity": 0.62,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "integrated",
+      "removeBackground": false,
+      "mtStylePatch": {
+        "opacity": 0.28,
+        "scalarLegendVisible": true
+      },
+      "cameraShot": "data-room-overview",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate",
+        "Inventory metadata remains browser-ready and source-traceable."
+      ]
+    },
+    {
+      "id": "export-line-301-section",
+      "label": "Export Line 301 section",
+      "audienceMode": "export",
+      "rank": 8,
+      "summary": "PDF-ready Line 301 layout metadata with legend, scale, CRS, source, date, and caveat text.",
+      "displayRecipeId": "regulatory-export-pack",
+      "productId": "gdr-1141-line-301-pdm-enh",
+      "visibleProductIds": [
+        "gdr-1141-line-301-pdm-enh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "line",
+      "sliceFraction": 0.5,
+      "opacity": 0.78,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "removeBackground": false,
+      "mtStylePatch": {
+        "opacity": 0.04,
+        "scalarLegendVisible": false
+      },
+      "exportLayoutId": "qp-report-support-layout",
+      "cameraShot": "report-section",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate",
+        "The export layout is a report-supporting visual, not a compliance certification."
+      ]
+    }
+  ],
+  "capabilityPresets": [
+    {
+      "id": "3d-volume-psdm-depth",
+      "label": "3D PSDM depth volume",
+      "audienceMode": "technical",
+      "rank": 1,
+      "summary": "True 3D PSDM depth product in raymarch volume mode.",
+      "displayRecipeId": "3d-seismic-showcase",
+      "productId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "renderMode": "raymarch",
+      "sliceAxis": "inline",
+      "sliceFraction": 0.5,
+      "opacity": 0.48,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 0.9,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.18,
+      "volumeSampleSteps": 112,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "navigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "3d-volume-products",
+      "mtStylePatch": {
+        "opacity": 0.06,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "psdm-depth-volume",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "3d-volume-pstm-time",
+      "label": "3D PSTM time volume",
+      "audienceMode": "technical",
+      "rank": 2,
+      "summary": "True 3D PSTM time product in raymarch volume mode.",
+      "displayRecipeId": "3d-seismic-showcase",
+      "productId": "gdr-1141-forge3d-pstm-stack-enh",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-pstm-stack-enh"
+      ],
+      "renderMode": "raymarch",
+      "sliceAxis": "crossline",
+      "sliceFraction": 0.5,
+      "opacity": 0.52,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 0.85,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.18,
+      "volumeSampleSteps": 112,
+      "timeScale": 3.25,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "navigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "3d-volume-products",
+      "mtStylePatch": {
+        "opacity": 0.06,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "pstm-time-volume",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "3d-volume-fxydecon",
+      "label": "3D FXY decon volume",
+      "audienceMode": "technical",
+      "rank": 3,
+      "summary": "Post-stack time migration FXY decon product in 3D volume mode.",
+      "displayRecipeId": "3d-seismic-showcase",
+      "productId": "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack"
+      ],
+      "renderMode": "raymarch",
+      "sliceAxis": "inline",
+      "sliceFraction": 0.5,
+      "opacity": 0.52,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 0.9,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.18,
+      "volumeSampleSteps": 112,
+      "timeScale": 3.25,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "navigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "3d-volume-products",
+      "mtStylePatch": {
+        "opacity": 0.06,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "fxydecon-volume",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "3d-velocity-volume",
+      "label": "3D velocity volume",
+      "audienceMode": "technical",
+      "rank": 4,
+      "summary": "GDR 1015 3D velocity-time product in raymarch volume mode.",
+      "displayRecipeId": "3d-seismic-showcase",
+      "productId": "gdr-1015-forge3d-velo5d-float-01312018",
+      "visibleProductIds": [
+        "gdr-1015-forge3d-velo5d-float-01312018"
+      ],
+      "renderMode": "raymarch",
+      "sliceAxis": "sample",
+      "sliceFraction": 0.45,
+      "opacity": 0.48,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1.1,
+      "colormap": "velocity",
+      "backgroundCutoff": 0.14,
+      "volumeSampleSteps": 96,
+      "timeScale": 3,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "navigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "3d-volume-products",
+      "mtStylePatch": {
+        "opacity": 0.06,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "velocity-volume",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "inline-slice",
+      "label": "Inline slice",
+      "audienceMode": "technical",
+      "rank": 5,
+      "summary": "3D product as a standard inline section.",
+      "displayRecipeId": "3d-seismic-showcase",
+      "productId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "inline",
+      "sliceFraction": 0.5,
+      "opacity": 0.7,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "navigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "3d-slice-planes",
+      "mtStylePatch": {
+        "opacity": 0.06,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "inline-slice",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "crossline-slice",
+      "label": "Crossline slice",
+      "audienceMode": "technical",
+      "rank": 6,
+      "summary": "3D product as a standard crossline section.",
+      "displayRecipeId": "3d-seismic-showcase",
+      "productId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "crossline",
+      "sliceFraction": 0.5,
+      "opacity": 0.7,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "navigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "3d-slice-planes",
+      "mtStylePatch": {
+        "opacity": 0.06,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "crossline-slice",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "time-depth-plane",
+      "label": "Time/depth plane",
+      "audienceMode": "technical",
+      "rank": 7,
+      "summary": "Horizontal sample-domain plane through a 3D seismic product.",
+      "displayRecipeId": "3d-seismic-showcase",
+      "productId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "sample",
+      "sliceFraction": 0.42,
+      "opacity": 0.68,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "navigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "3d-slice-planes",
+      "mtStylePatch": {
+        "opacity": 0.06,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "time-depth-plane",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "volume-slice-sync",
+      "label": "Volume + synced slice",
+      "audienceMode": "technical",
+      "rank": 8,
+      "summary": "Raymarched 3D product with the selected slice plane visible.",
+      "displayRecipeId": "3d-seismic-showcase",
+      "productId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "renderMode": "raymarch",
+      "sliceAxis": "inline",
+      "sliceFraction": 0.5,
+      "opacity": 0.5,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 0.85,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.18,
+      "volumeSampleSteps": 112,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": true,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "navigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "volume-slice-sync",
+      "mtStylePatch": {
+        "opacity": 0.06,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "synced-volume-slice",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "line-301-theatre",
+      "label": "Line 301 section theatre",
+      "audienceMode": "technical",
+      "rank": 9,
+      "summary": "Line 301 as a single georeferenced section curtain.",
+      "displayRecipeId": "2d-line-theatre",
+      "productId": "gdr-1141-line-301-pdm-enh",
+      "visibleProductIds": [
+        "gdr-1141-line-301-pdm-enh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "line",
+      "sliceFraction": 0.5,
+      "opacity": 0.74,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "navigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "2d-legacy-section-theatre",
+      "mtStylePatch": {
+        "opacity": 0.05,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "line-301-theatre",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "line-302-theatre",
+      "label": "Line 302 section theatre",
+      "audienceMode": "technical",
+      "rank": 10,
+      "summary": "Line 302 as a single georeferenced section curtain.",
+      "displayRecipeId": "2d-line-theatre",
+      "productId": "gdr-1141-line-302-psdm-enh",
+      "visibleProductIds": [
+        "gdr-1141-line-302-psdm-enh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "line",
+      "sliceFraction": 0.5,
+      "opacity": 0.74,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "navigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "2d-legacy-section-theatre",
+      "mtStylePatch": {
+        "opacity": 0.05,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "line-302-theatre",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "legacy-l5-l11-theatre",
+      "label": "Legacy L5 / L11 theatre",
+      "audienceMode": "technical",
+      "rank": 11,
+      "summary": "Legacy lines L5 and L11 as georeferenced section curtains.",
+      "displayRecipeId": "2d-line-theatre",
+      "productId": "gdr-1141-line-l5-psdm-enh",
+      "visibleProductIds": [
+        "gdr-1141-line-l5-psdm-enh",
+        "gdr-1141-line-l11-psdm-enh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "line",
+      "sliceFraction": 0.5,
+      "opacity": 0.72,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "navigationRoleVisibility": {
+        "sources": false,
+        "receivers": false,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "2d-legacy-section-theatre",
+      "mtStylePatch": {
+        "opacity": 0.05,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "legacy-lines-theatre",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ]
+    },
+    {
+      "id": "enhanced-vs-unenhanced",
+      "label": "Enhanced vs unenhanced",
+      "audienceMode": "technical",
+      "rank": 12,
+      "summary": "Line 301 enhanced and unenhanced processed products overlaid.",
+      "displayRecipeId": "2d-line-theatre",
+      "productId": "gdr-1141-line-301-pdm-enh",
+      "visibleProductIds": [
+        "gdr-1141-line-301-pdm-enh",
+        "gdr-1141-line-301-psdm-unenh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "line",
+      "sliceFraction": 0.5,
+      "opacity": 0.7,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonProductId": "gdr-1141-line-301-psdm-unenh",
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "navigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "processing-comparison",
+      "mtStylePatch": {
+        "opacity": 0.05,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "processing-comparison",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate",
+        "Overlay comparison uses two source-derived processed products."
+      ]
+    },
+    {
+      "id": "survey-geometry",
+      "label": "Survey geometry",
+      "audienceMode": "technical",
+      "rank": 13,
+      "summary": "Source points, receiver points, and survey lines emphasized.",
+      "displayRecipeId": "confidence-provenance",
+      "productId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "sample",
+      "sliceFraction": 0.5,
+      "opacity": 0.45,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "seismic",
+      "navigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "survey-geometry",
+      "mtStylePatch": {
+        "opacity": 0.05,
+        "scalarLegendVisible": false
+      },
+      "cameraShot": "survey-geometry",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate",
+        "Navigation is measured acquisition geometry parsed from SEG-P1."
+      ]
+    },
+    {
+      "id": "integrated-geophysics",
+      "label": "Integrated seismic + MT",
+      "audienceMode": "investor",
+      "rank": 14,
+      "summary": "Seismic section with MT resistivity visible for multi-method context.",
+      "displayRecipeId": "integrated-geophysics",
+      "productId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      "visibleProductIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "renderMode": "slice",
+      "sliceAxis": "sample",
+      "sliceFraction": 0.42,
+      "opacity": 0.58,
+      "amplitudeMin": 0.08,
+      "amplitudeMax": 0.92,
+      "amplitudeGamma": 1,
+      "colormap": "blue-white-red",
+      "backgroundCutoff": 0.16,
+      "volumeSampleSteps": 96,
+      "timeScale": 2,
+      "navigationVisible": true,
+      "sliceThroughVolume": false,
+      "comparisonMode": "overlay",
+      "mtCoRender": "integrated",
+      "navigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "removeBackground": false,
+      "capabilityGroup": "integrated-geophysics",
+      "mtStylePatch": {
+        "opacity": 0.42,
+        "scalarLegendVisible": true
+      },
+      "cameraShot": "integrated-geophysics",
+      "badges": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate"
+      ],
+      "caveats": [
+        "public geothermal demo data",
+        "processed seismic product",
+        "not a mineral resource estimate",
+        "Seismic and MT are separate source-derived geophysical methods."
+      ]
+    }
+  ],
+  "derivedViews": [
+    {
+      "id": "amplitude-strength",
+      "label": "Amplitude strength",
+      "status": "planned-experimental",
+      "basis": "envelope-style magnitude derived from processed amplitude tiles",
+      "reviewStatus": "requires-geophysicist-review",
+      "caveat": "Experimental display aid; not an interpreted structure or target."
+    },
+    {
+      "id": "edge-gradient",
+      "label": "Edge / gradient emphasis",
+      "status": "planned-experimental",
+      "basis": "local amplitude-gradient enhancement on source-derived tiles",
+      "reviewStatus": "requires-geophysicist-review",
+      "caveat": "Experimental continuity cue; not an automatic fault pick."
+    },
+    {
+      "id": "coherence-like-discontinuity",
+      "label": "Coherence-like discontinuity",
+      "status": "planned-experimental",
+      "basis": "neighborhood similarity proxy for discontinuity screening",
+      "reviewStatus": "requires-geophysicist-review",
+      "caveat": "Screening layer only; manual interpretation required before use."
+    },
+    {
+      "id": "horizon-following-slice",
+      "label": "Horizon-following slice",
+      "status": "planned-experimental",
+      "basis": "manually reviewed horizon surface sampled against seismic volume",
+      "reviewStatus": "requires-geophysicist-review",
+      "caveat": "Requires reviewed horizon basis before being shown as interpretation."
+    }
+  ],
+  "interpretationLayers": [
+    {
+      "id": "reviewed-faults",
+      "label": "Reviewed faults",
+      "status": "planned",
+      "geometry": "polyline / surface traces",
+      "author": null,
+      "reviewStatus": "unreviewed",
+      "confidence": "not assigned",
+      "caveat": "No seismic reflector is auto-labeled as a fault or mineralized structure."
+    },
+    {
+      "id": "reviewed-horizons",
+      "label": "Reviewed horizons",
+      "status": "planned",
+      "geometry": "section picks and optional horizon surfaces",
+      "author": null,
+      "reviewStatus": "unreviewed",
+      "confidence": "not assigned",
+      "caveat": "Horizons must be manually reviewed before investor or regulatory display."
+    },
+    {
+      "id": "target-corridors",
+      "label": "Target corridors",
+      "status": "planned",
+      "geometry": "annotation polygons / volumes",
+      "author": null,
+      "reviewStatus": "unreviewed",
+      "confidence": "not assigned",
+      "caveat": "Target corridors are interpreted overlays and must not imply mineralization without review."
+    },
+    {
+      "id": "presentation-annotations",
+      "label": "Presentation annotations",
+      "status": "planned",
+      "geometry": "callouts and labels",
+      "author": null,
+      "reviewStatus": "unreviewed",
+      "confidence": "not assigned",
+      "caveat": "Annotations should distinguish measured, processed, and interpreted content."
+    }
+  ],
+  "exportLayouts": [
+    {
+      "id": "investor-slide-overview",
+      "label": "Investor slide overview",
+      "audience": "investor",
+      "output": "deck-ready screenshot",
+      "includes": [
+        "title",
+        "survey footprint",
+        "legend",
+        "data status badges",
+        "source submission",
+        "caveat text"
+      ],
+      "caveat": "Report-supporting visual only; not a mineral resource estimate or regulatory disclosure package."
+    },
+    {
+      "id": "technical-section-layout",
+      "label": "Technical section layout",
+      "audience": "technical",
+      "output": "PDF-ready section figure",
+      "includes": [
+        "north arrow",
+        "scale bar",
+        "CRS",
+        "time/depth scale",
+        "amplitude legend",
+        "source file provenance"
+      ],
+      "caveat": "Processed seismic display for technical review; interpretation requires qualified professional review."
+    },
+    {
+      "id": "qp-report-support-layout",
+      "label": "QP report support layout",
+      "audience": "regulatory",
+      "output": "report appendix figure",
+      "includes": [
+        "map grid",
+        "legend",
+        "scale bar",
+        "data source",
+        "CRS",
+        "date",
+        "limitations"
+      ],
+      "caveat": "Prepared as report-supporting visualization; it does not by itself satisfy NI 43-101 or S-K 1300 disclosure requirements."
+    }
+  ]
+}

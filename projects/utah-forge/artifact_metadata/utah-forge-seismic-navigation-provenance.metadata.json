@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "utah-forge-seismic-navigation-provenance",
+  "project": "utah-forge",
+  "dataset": "utah_forge_phase_3/seismic_analysis/navigation_inventory_provenance",
+  "artifactFamily": "provenance_status_wrapper",
+  "artifactType": "seismic_product",
+  "renderRole": "technical_credibility",
+  "loadClass": "computed_artifact_support",
+  "sourceType": "mixed",
+  "epistemicStatus": "observed",
+  "authority": "Observed in projects/utah-forge/project.json, DATA_LAYER_STATUS.md, Layer-Artifact-Classification.md, Computed-Artifact-Pipeline.md, Project-Load-Class-Table.md, WRAPPER_COVERAGE.md, and existing seismic inventory/navigation/provenance files.",
+  "status": "needs_review",
+  "reviewRequired": true,
+  "accepted": false,
+  "paths": {
+    "source": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source",
+    "artifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/navigation/seismic_navigation.geojson",
+    "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_manifest.json",
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/provenance.json",
+    "supporting": [
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/inventory/seismic_source_inventory.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_demo_recipes.json"
+    ]
+  },
+  "inputs": [
+    {
+      "path": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source",
+      "role": "GDR 1015 and GDR 1141 processed seismic source products",
+      "notes": "Project metadata identifies GDR submissions 1015 and 1141 as seismic source products."
+    },
+    {
+      "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/inventory/seismic_source_inventory.json",
+      "role": "Source inventory and source disclosure",
+      "notes": "Inventory records active seismic products and source normalization support."
+    },
+    {
+      "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/navigation/seismic_navigation.geojson",
+      "role": "SEG-P1/navigation-derived placement support",
+      "notes": "Observed FeatureCollection with source/receiver/line navigation properties; navigation feature count observed as 1,897."
+    }
+  ],
+  "producedBy": {
+    "script": "prep/build_utah_forge_seismic_browser.py",
+    "tool": "Python prep script",
+    "generatedAt": "2026-05-13",
+    "notes": "Script observed read-only; no script was run in this pass."
+  },
+  "crs": {
+    "source": "EPSG:26912 / NAD83 UTM Zone 12N, observed in navigation feature properties",
+    "scene": "GeoSee scene-local placement, needs review",
+    "transformPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/navigation/seismic_navigation.geojson",
+    "notes": "Navigation supports seismic placement, but datum, fallback placement, section/volume alignment, and client-facing disclosure still need human review."
+  },
+  "units": {
+    "horizontal": "meters, needs review",
+    "vertical": "product-specific time/depth basis, needs review",
+    "scalar": "seismic amplitude or velocity depending on product, needs review",
+    "notes": "Support wrapper does not accept product-specific units or engineering interpretation."
+  },
+  "scalar": {
+    "transform": null,
+    "range": null,
+    "thresholds": null,
+    "notes": "Navigation/inventory/provenance support does not define scalar display acceptance."
+  },
+  "processing": {
+    "method": "Parsed seismic source inventory, navigation, and browser provenance support for the seismic browser product set.",
+    "parameters": {
+      "productCount": 34,
+      "navigationFeatureCount": 1897,
+      "navigationFeatureRoles": [
+        "source",
+        "receiver",
+        "line"
+      ]
+    },
+    "downsampling": "Not applicable to this support wrapper; product-level seismic payload downsampling is handled by seismic browser product metadata.",
+    "masking": "Not applicable to this support wrapper.",
+    "notes": "This wrapper protects source disclosure and placement review for seismic; it does not accept interpretation or demo defaults."
+  },
+  "stats": {
+    "counts": {
+      "productCount": 34,
+      "navigationFeatureCount": 1897
+    },
+    "bounds": {},
+    "notes": "Counts are observed from manifest/navigation evidence. Product-specific bounds and navigation alignment still need review."
+  },
+  "render": {
+    "colorRamp": null,
+    "legendPath": null,
+    "materialNotes": "Navigation visibility, source/receiver/line display, placement disclosure, and seismic/MT co-render context require visual review if shown.",
+    "visualCheckRequired": true,
+    "visualCheckReceipt": null,
+    "notes": "Support metadata only; no render behavior changed."
+  },
+  "provenance": {
+    "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/provenance.json",
+    "notes": "Existing browser provenance observed. Older blocked/not-active seismic docs still need supersession review."
+  },
+  "limitations": [
+    "Not accepted project state.",
+    "Seismic is needed and underway, not parked.",
+    "Source/navigation/provenance support does not by itself accept seismic interpretation.",
+    "Default demo behavior still needs human review.",
+    "Older blocked/not-active seismic docs still need supersession review.",
+    "Visual receipt and placement review are required before client-facing acceptance.",
+    "No runtime, loader, page, visibility, rendering, prep, or data artifact behavior changed."
+  ],
+  "relatedLayers": [
+    "utah-forge-phase3-seismic-browser"
+  ],
+  "relatedPages": [
+    "05_untitled"
+  ],
+  "review": {
+    "requiredBy": "human",
+    "questions": [
+      "Is seismic navigation/provenance adequate for client-facing placement disclosure?",
+      "Which old seismic-blocking docs should be superseded, preserved as historical, or rewritten?",
+      "What visual receipt proves seismic navigation and product placement are spatially credible?"
+    ],
+    "acceptedBy": null,
+    "acceptedAt": null,
+    "receipt": null
+  },
+  "notes": "Project-local support wrapper only. It preserves seismic source/navigation/provenance review state without changing or accepting runtime behavior."
+}

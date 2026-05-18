@@ -1,0 +1,51 @@
+{
+  "id": "01_overview",
+  "title": "Woodjam Site",
+  "subtitle": "Property in Context",
+  "camera": {
+    "position": [
+      1677.4072545208946,
+      2260.9632025023147,
+      1880.2024282653047
+    ],
+    "target": [
+      716.7355578545016,
+      205.98340754928972,
+      328.3250855130167
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 50
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "overlayLayout": {
+    "x": 0.04818435754189944,
+    "y": 0.05901215304600689,
+    "width": 0.24250985655260707,
+    "height": 0.424711353431687
+  },
+  "overlay": {
+    "position": "right",
+    "contentFile": "overlays/01_overview/text.md",
+    "timing": {
+      "fadeMs": 2000,
+      "gapMs": 50,
+      "easing": "linear"
+    },
+    "images": [
+      {
+        "file": "overlays/01_overview/vcu_2711_fig_2.500x0-is.png",
+        "caption": "",
+        "position": "below-text"
+      }
+    ]
+  },
+  "accentColor": "#fe7188"
+}

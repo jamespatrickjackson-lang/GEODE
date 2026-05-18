@@ -1,0 +1,42 @@
+{
+  "id": "11_untitled",
+  "title": "Untitled page",
+  "camera": {
+    "position": [
+      25717.838323310472,
+      150685.35006563913,
+      45790.48758187788
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "visibilityOverrides": {
+    "utah-forge-mt-resistivity-full-density": true,
+    "utah-forge-mt-stations": false,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-mt-resistivity-slices": true,
+    "utah-forge-mt-resistivity-preview": false
+  },
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "color": "#cccccc",
+      "opacity": 0.3,
+      "scalarLegendVisible": true,
+      "pointSizePx": 1
+    }
+  }
+}

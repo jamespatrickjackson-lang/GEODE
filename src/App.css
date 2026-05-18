@@ -1,0 +1,68 @@
+.geosee-landing-button {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(18, 21, 24, 0.55);
+  color: #f4f0e8;
+  backdrop-filter: blur(20px) saturate(145%);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.geosee-landing-button:hover {
+  border-color: rgba(255, 255, 255, 0.36);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.geosee-landing-button:active {
+  border-color: rgba(255, 255, 255, 0.44);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.geosee-landing-button:focus-visible {
+  outline: none;
+  border-color: rgba(244, 240, 232, 0.62);
+  box-shadow: 0 0 0 1px rgba(244, 240, 232, 0.28);
+}
+
+.geosee-landing-button--project {
+  text-align: left;
+}
+
+.geosee-landing-button--secondary {
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.geosee-landing-round-button {
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: rgba(18, 21, 24, 0.55);
+  color: #f4f0e8;
+  backdrop-filter: blur(20px) saturate(145%);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.geosee-landing-round-button:hover {
+  border-color: rgba(255, 255, 255, 0.36);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.geosee-landing-round-button:active {
+  border-color: rgba(255, 255, 255, 0.44);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.geosee-landing-round-button:focus-visible {
+  outline: none;
+  border-color: rgba(244, 240, 232, 0.62);
+  box-shadow: 0 0 0 1px rgba(244, 240, 232, 0.28);
+}

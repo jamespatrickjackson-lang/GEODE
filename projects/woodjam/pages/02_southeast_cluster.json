@@ -1,0 +1,57 @@
+{
+  "id": "02_southeast_cluster",
+  "title": "Geology of the Property",
+  "subtitle": "Tight on the trace bundle, terrain context",
+  "camera": {
+    "position": [
+      1193.7341307959339,
+      -3.9479386999823873,
+      1157.0885213682816
+    ],
+    "target": [
+      1165,
+      -1929,
+      -25
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 49
+  },
+  "transition": {
+    "duration": 3500,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#6eb3f7",
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      1165,
+      -1929,
+      -25
+    ],
+    "orbitSpeedDegPerSec": 10.6,
+    "orbitRadius": 1925,
+    "orbitHeight": 1182,
+    "orbitDirection": -1,
+    "zoomFov": 38,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  },
+  "visibilityOverrides": {
+    "bedrock-geology": false
+  }
+}

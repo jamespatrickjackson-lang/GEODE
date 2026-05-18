@@ -1,0 +1,65 @@
+{
+  "id": "intake_2026-05-16_02-45-23_1kbq3z",
+  "title": "Intake Review: 2026-05-16_02-45-23_1kbq3z",
+  "camera": {
+    "position": [
+      10621.214773340043,
+      -6159.24121512361,
+      94269.30430018228
+    ],
+    "target": [
+      -5527,
+      -10484,
+      996
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#6bc5ff",
+  "intakeLifecycle": {
+    "dropId": "2026-05-16_02-45-23_1kbq3z",
+    "status": "review_page_created",
+    "accepted": false,
+    "reviewRequired": true,
+    "reviewPage": "projects/utah-forge/pages/intake_2026-05-16_02-45-23_1kbq3z.json",
+    "reviewOverlay": "projects/utah-forge/overlays/intake_2026-05-16_02-45-23_1kbq3z/text.md"
+  },
+  "visibilityOverrides": {
+    "terrain": true,
+    "transport-roads": true,
+    "hydrography-streams": true,
+    "hydrography-lakes": true,
+    "utah-forge-phase3-working-area": true,
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-phase3-seismic-browser": false
+  },
+  "layerOverrides": {
+    "terrain": {
+      "meshSurfaceLiftM": -700
+    }
+  },
+  "overlayLayout": {
+    "x": 0.04,
+    "y": 0.08,
+    "width": 0.4
+  },
+  "overlay": {
+    "contentFile": "overlays/intake_2026-05-16_02-45-23_1kbq3z/text.md",
+    "timing": {
+      "fadeMs": 450,
+      "gapMs": 0,
+      "leadMs": 0,
+      "easing": "easeInOutCubic"
+    }
+  },
+  "presenterNotes": "Proposed intake review surface only. The staged Markdown/PDF files are not loaded as layers, accepted, or promoted to project data."
+}

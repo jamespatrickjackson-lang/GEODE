@@ -1,0 +1,6628 @@
+{
+  "type": "FeatureCollection",
+  "name": "Utah FORGE Phase 3 MT stations",
+  "properties": {
+    "schema": "geosee.point-markers.geojson.v1",
+    "classification": "measured",
+    "sourceDataset": "Utah FORGE Phase 3 MT EDI station files",
+    "sourceArchive": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_edis/FORGE_MT_190812_EDIs.zip",
+    "sourceCrs": "EPSG:4269 geographic NAD83 in EDI, converted to EPSG:26912 NAD83 UTM Zone 12N",
+    "sceneCrs": "local meters, X east, Y north, Z up",
+    "sceneOriginUtm": {
+      "easting_m": 341467.35,
+      "northing_m": 4273374.5,
+      "elevation_m": 0
+    },
+    "stationCount": 122,
+    "ediFileCount": 244,
+    "generatedDate": "2026-05-12",
+    "visualMarkerRadiusM": 900,
+    "visualLabelLiftM": 1200,
+    "boundsUtm": {
+      "minEasting_m": 316613.977,
+      "maxEasting_m": 389664.485,
+      "minNorthing_m": 4246648.941,
+      "maxNorthing_m": 4332874.135,
+      "minElevation_m": 1487,
+      "maxElevation_m": 2485
+    },
+    "boundsScene": {
+      "minX_m": -24853.373,
+      "maxX_m": 48197.135,
+      "minY_m": -26725.559,
+      "maxY_m": 59499.635,
+      "minZ_m": 1487,
+      "maxZ_m": 2485
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "FRG19001",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          44519.432,
+          46814.743,
+          1595
+        ]
+      },
+      "properties": {
+        "id": "FRG19001",
+        "displayName": "MT station FRG19001",
+        "stationId": "FRG19001",
+        "pointIndex": 0,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19001_bvv.edi",
+            "relativePath": "EDIs/FRG19001_bvv.edi",
+            "dataId": "Team1_2_sites_190720"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19001.edi",
+            "relativePath": "EDIs/FRG19001.edi",
+            "dataId": "Team2_sites_190720"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 39.02331667,
+          "longitude_deg": -112.31708333,
+          "elevation_m": 1595,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 385986.782,
+          "northing_m": 4320189.243,
+          "elevation_m": 1595
+        },
+        "sceneCoordinates": {
+          "x_m": 44519.432,
+          "y_m": 46814.743,
+          "z_m": 1595
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19002",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          43088.538,
+          37191.468,
+          1603
+        ]
+      },
+      "properties": {
+        "id": "FRG19002",
+        "displayName": "MT station FRG19002",
+        "stationId": "FRG19002",
+        "pointIndex": 1,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19002_bvv.edi",
+            "relativePath": "EDIs/FRG19002_bvv.edi",
+            "dataId": "Team1_2_sites_190720"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19002.edi",
+            "relativePath": "EDIs/FRG19002.edi",
+            "dataId": "Team2_sites_190720"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.93643333,
+          "longitude_deg": -112.33198333,
+          "elevation_m": 1603,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 384555.888,
+          "northing_m": 4310565.968,
+          "elevation_m": 1603
+        },
+        "sceneCoordinates": {
+          "x_m": 43088.538,
+          "y_m": 37191.468,
+          "z_m": 1603
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19003",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          40646.153,
+          31338.949,
+          1648
+        ]
+      },
+      "properties": {
+        "id": "FRG19003",
+        "displayName": "MT station FRG19003",
+        "stationId": "FRG19003",
+        "pointIndex": 2,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19003_bvv.edi",
+            "relativePath": "EDIs/FRG19003_bvv.edi",
+            "dataId": "Team1_2_sites_190720"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19003.edi",
+            "relativePath": "EDIs/FRG19003.edi",
+            "dataId": "Team2_sites_190720"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.88338333,
+          "longitude_deg": -112.35915,
+          "elevation_m": 1648,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 382113.503,
+          "northing_m": 4304713.449,
+          "elevation_m": 1648
+        },
+        "sceneCoordinates": {
+          "x_m": 40646.153,
+          "y_m": 31338.949,
+          "z_m": 1648
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19004",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          39353.681,
+          22790.949,
+          1736
+        ]
+      },
+      "properties": {
+        "id": "FRG19004",
+        "displayName": "MT station FRG19004",
+        "stationId": "FRG19004",
+        "pointIndex": 3,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19004_bvv.edi",
+            "relativePath": "EDIs/FRG19004_bvv.edi",
+            "dataId": "Team2_sites_190721"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19004.edi",
+            "relativePath": "EDIs/FRG19004.edi",
+            "dataId": "Team2_sites_190721"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.8062,
+          "longitude_deg": -112.37256667,
+          "elevation_m": 1736,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 380821.031,
+          "northing_m": 4296165.449,
+          "elevation_m": 1736
+        },
+        "sceneCoordinates": {
+          "x_m": 39353.681,
+          "y_m": 22790.949,
+          "z_m": 1736
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19005",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38222.441,
+          14516.377,
+          1967
+        ]
+      },
+      "properties": {
+        "id": "FRG19005",
+        "displayName": "MT station FRG19005",
+        "stationId": "FRG19005",
+        "pointIndex": 4,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19005_bvv.edi",
+            "relativePath": "EDIs/FRG19005_bvv.edi",
+            "dataId": "FRG19005_bvv"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19005.edi",
+            "relativePath": "EDIs/FRG19005.edi",
+            "dataId": "FRG19005"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.7315,
+          "longitude_deg": -112.38415,
+          "elevation_m": 1967,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 379689.791,
+          "northing_m": 4287890.877,
+          "elevation_m": 1967
+        },
+        "sceneCoordinates": {
+          "x_m": 38222.441,
+          "y_m": 14516.377,
+          "z_m": 1967
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19006",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          39293.722,
+          8831.99,
+          2471
+        ]
+      },
+      "properties": {
+        "id": "FRG19006",
+        "displayName": "MT station FRG19006",
+        "stationId": "FRG19006",
+        "pointIndex": 5,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19006_bvv.edi",
+            "relativePath": "EDIs/FRG19006_bvv.edi",
+            "dataId": "Team2_sites_190721"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19006.edi",
+            "relativePath": "EDIs/FRG19006.edi",
+            "dataId": "Team2_sites_190721"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.68043333,
+          "longitude_deg": -112.37085,
+          "elevation_m": 2471,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 380761.072,
+          "northing_m": 4282206.49,
+          "elevation_m": 2471
+        },
+        "sceneCoordinates": {
+          "x_m": 39293.722,
+          "y_m": 8831.99,
+          "z_m": 2471
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19007",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38576.531,
+          2308.746,
+          2432
+        ]
+      },
+      "properties": {
+        "id": "FRG19007",
+        "displayName": "MT station FRG19007",
+        "stationId": "FRG19007",
+        "pointIndex": 6,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19007_bvv.edi",
+            "relativePath": "EDIs/FRG19007_bvv.edi",
+            "dataId": "Team1_2_sites_190722"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19007.edi",
+            "relativePath": "EDIs/FRG19007.edi",
+            "dataId": "Team2_sites_190722"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.62156667,
+          "longitude_deg": -112.37796667,
+          "elevation_m": 2432,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 380043.881,
+          "northing_m": 4275683.246,
+          "elevation_m": 2432
+        },
+        "sceneCoordinates": {
+          "x_m": 38576.531,
+          "y_m": 2308.746,
+          "z_m": 2432
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19008",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          35694.877,
+          -3417.466,
+          2125
+        ]
+      },
+      "properties": {
+        "id": "FRG19008",
+        "displayName": "MT station FRG19008",
+        "stationId": "FRG19008",
+        "pointIndex": 7,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19008_bvv.edi",
+            "relativePath": "EDIs/FRG19008_bvv.edi",
+            "dataId": "Team1_2_sites_190722"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19008.edi",
+            "relativePath": "EDIs/FRG19008.edi",
+            "dataId": "Team2_sites_190722"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.56958333,
+          "longitude_deg": -112.41005,
+          "elevation_m": 2125,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 377162.227,
+          "northing_m": 4269957.034,
+          "elevation_m": 2125
+        },
+        "sceneCoordinates": {
+          "x_m": 35694.877,
+          "y_m": -3417.466,
+          "z_m": 2125
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19009",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29025.54,
+          -19003.882,
+          2463
+        ]
+      },
+      "properties": {
+        "id": "FRG19009",
+        "displayName": "MT station FRG19009",
+        "stationId": "FRG19009",
+        "pointIndex": 8,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19009_bvv.edi",
+            "relativePath": "EDIs/FRG19009_bvv.edi",
+            "dataId": "Team1_2_sites_190723"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19009.edi",
+            "relativePath": "EDIs/FRG19009.edi",
+            "dataId": "Team2_sites_190723"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.42821667,
+          "longitude_deg": -112.4837,
+          "elevation_m": 2463,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 370492.89,
+          "northing_m": 4254370.618,
+          "elevation_m": 2463
+        },
+        "sceneCoordinates": {
+          "x_m": 29025.54,
+          "y_m": -19003.882,
+          "z_m": 2463
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19010",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          26515.357,
+          -26725.559,
+          2485
+        ]
+      },
+      "properties": {
+        "id": "FRG19010",
+        "displayName": "MT station FRG19010",
+        "stationId": "FRG19010",
+        "pointIndex": 9,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19010_bvv.edi",
+            "relativePath": "EDIs/FRG19010_bvv.edi",
+            "dataId": "Team1_2_sites_190723"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19010.edi",
+            "relativePath": "EDIs/FRG19010.edi",
+            "dataId": "Team2_sites_190723"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.35828333,
+          "longitude_deg": -112.511,
+          "elevation_m": 2485,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 367982.707,
+          "northing_m": 4246648.941,
+          "elevation_m": 2485
+        },
+        "sceneCoordinates": {
+          "x_m": 26515.357,
+          "y_m": -26725.559,
+          "z_m": 2485
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19011",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -23863.179,
+          -4223.046,
+          1579
+        ]
+      },
+      "properties": {
+        "id": "FRG19011",
+        "displayName": "MT station FRG19011",
+        "stationId": "FRG19011",
+        "pointIndex": 10,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19011_bvv.edi",
+            "relativePath": "EDIs/FRG19011_bvv.edi",
+            "dataId": "Team1_2_sites_190720"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19011.edi",
+            "relativePath": "EDIs/FRG19011.edi",
+            "dataId": "Team1_sites_190720"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.5521,
+          "longitude_deg": -113.09315,
+          "elevation_m": 1579,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 317604.171,
+          "northing_m": 4269151.454,
+          "elevation_m": 1579
+        },
+        "sceneCoordinates": {
+          "x_m": -23863.179,
+          "y_m": -4223.046,
+          "z_m": 1579
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19012",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -23036.78,
+          -10533.842,
+          1595
+        ]
+      },
+      "properties": {
+        "id": "FRG19012",
+        "displayName": "MT station FRG19012",
+        "stationId": "FRG19012",
+        "pointIndex": 11,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19012_bvv.edi",
+            "relativePath": "EDIs/FRG19012_bvv.edi",
+            "dataId": "Team1_2_sites_190720"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19012.edi",
+            "relativePath": "EDIs/FRG19012.edi",
+            "dataId": "Team1_sites_190720"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.49543333,
+          "longitude_deg": -113.08203333,
+          "elevation_m": 1595,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 318430.57,
+          "northing_m": 4262840.658,
+          "elevation_m": 1595
+        },
+        "sceneCoordinates": {
+          "x_m": -23036.78,
+          "y_m": -10533.842,
+          "z_m": 1595
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19013",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -23460.017,
+          -16827.323,
+          1628
+        ]
+      },
+      "properties": {
+        "id": "FRG19013",
+        "displayName": "MT station FRG19013",
+        "stationId": "FRG19013",
+        "pointIndex": 12,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19013_bvv.edi",
+            "relativePath": "EDIs/FRG19013_bvv.edi",
+            "dataId": "FRG19013_bvv"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19013.edi",
+            "relativePath": "EDIs/FRG19013.edi",
+            "dataId": "FRG19013"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.43866667,
+          "longitude_deg": -113.08525,
+          "elevation_m": 1628,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 318007.333,
+          "northing_m": 4256547.177,
+          "elevation_m": 1628
+        },
+        "sceneCoordinates": {
+          "x_m": -23460.017,
+          "y_m": -16827.323,
+          "z_m": 1628
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19014",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -24853.373,
+          -23813.048,
+          1636
+        ]
+      },
+      "properties": {
+        "id": "FRG19014",
+        "displayName": "MT station FRG19014",
+        "stationId": "FRG19014",
+        "pointIndex": 13,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19014_bvv.edi",
+            "relativePath": "EDIs/FRG19014_bvv.edi",
+            "dataId": "Team1_2_sites_190720"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19014.edi",
+            "relativePath": "EDIs/FRG19014.edi",
+            "dataId": "Team1_sites_190720"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.37546667,
+          "longitude_deg": -113.09938333,
+          "elevation_m": 1636,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 316613.977,
+          "northing_m": 4249561.452,
+          "elevation_m": 1636
+        },
+        "sceneCoordinates": {
+          "x_m": -24853.373,
+          "y_m": -23813.048,
+          "z_m": 1636
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19015",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48197.135,
+          59499.635,
+          1542
+        ]
+      },
+      "properties": {
+        "id": "FRG19015",
+        "displayName": "MT station FRG19015",
+        "stationId": "FRG19015",
+        "pointIndex": 14,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19015_bvv.edi",
+            "relativePath": "EDIs/FRG19015_bvv.edi",
+            "dataId": "Team1_2_sites_190720"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19015.edi",
+            "relativePath": "EDIs/FRG19015.edi",
+            "dataId": "Team2_sites_190720"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 39.13806667,
+          "longitude_deg": -112.27666667,
+          "elevation_m": 1542,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 389664.485,
+          "northing_m": 4332874.135,
+          "elevation_m": 1542
+        },
+        "sceneCoordinates": {
+          "x_m": 48197.135,
+          "y_m": 59499.635,
+          "z_m": 1542
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19016",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -13240.83,
+          -5584.89,
+          1498
+        ]
+      },
+      "properties": {
+        "id": "FRG19016",
+        "displayName": "MT station FRG19016",
+        "stationId": "FRG19016",
+        "pointIndex": 15,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19016_bvv.edi",
+            "relativePath": "EDIs/FRG19016_bvv.edi",
+            "dataId": "Team1_2_sites_190730"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19016.edi",
+            "relativePath": "EDIs/FRG19016.edi",
+            "dataId": "Team1_sites_190730"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.54195,
+          "longitude_deg": -112.97098333,
+          "elevation_m": 1498,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 328226.52,
+          "northing_m": 4267789.61,
+          "elevation_m": 1498
+        },
+        "sceneCoordinates": {
+          "x_m": -13240.83,
+          "y_m": -5584.89,
+          "z_m": 1498
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19017",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -13004.488,
+          -10162.441,
+          1512
+        ]
+      },
+      "properties": {
+        "id": "FRG19017",
+        "displayName": "MT station FRG19017",
+        "stationId": "FRG19017",
+        "pointIndex": 16,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19017_bvv.edi",
+            "relativePath": "EDIs/FRG19017_bvv.edi",
+            "dataId": "Team1_2_sites_190728"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19017.edi",
+            "relativePath": "EDIs/FRG19017.edi",
+            "dataId": "Team2_sites_190728"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50076667,
+          "longitude_deg": -112.96715,
+          "elevation_m": 1512,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 328462.862,
+          "northing_m": 4263212.059,
+          "elevation_m": 1512
+        },
+        "sceneCoordinates": {
+          "x_m": -13004.488,
+          "y_m": -10162.441,
+          "z_m": 1512
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19018",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -13302.878,
+          -7868.886,
+          1504
+        ]
+      },
+      "properties": {
+        "id": "FRG19018",
+        "displayName": "MT station FRG19018",
+        "stationId": "FRG19018",
+        "pointIndex": 17,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19018_bvv.edi",
+            "relativePath": "EDIs/FRG19018_bvv.edi",
+            "dataId": "FRG19018_bvv"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19018.edi",
+            "relativePath": "EDIs/FRG19018.edi",
+            "dataId": "FRG19018"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.52136667,
+          "longitude_deg": -112.97113333,
+          "elevation_m": 1504,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 328164.472,
+          "northing_m": 4265505.614,
+          "elevation_m": 1504
+        },
+        "sceneCoordinates": {
+          "x_m": -13302.878,
+          "y_m": -7868.886,
+          "z_m": 1504
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19019",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -13414.775,
+          -12141.046,
+          1518
+        ]
+      },
+      "properties": {
+        "id": "FRG19019",
+        "displayName": "MT station FRG19019",
+        "stationId": "FRG19019",
+        "pointIndex": 18,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19019_bvv.edi",
+            "relativePath": "EDIs/FRG19019_bvv.edi",
+            "dataId": "Team1_2_sites_190727"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19019.edi",
+            "relativePath": "EDIs/FRG19019.edi",
+            "dataId": "Team2_sites_190727"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.48286667,
+          "longitude_deg": -112.97136667,
+          "elevation_m": 1518,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 328052.575,
+          "northing_m": 4261233.454,
+          "elevation_m": 1518
+        },
+        "sceneCoordinates": {
+          "x_m": -13414.775,
+          "y_m": -12141.046,
+          "z_m": 1518
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19020",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -13702.787,
+          -16213.262,
+          1523
+        ]
+      },
+      "properties": {
+        "id": "FRG19020",
+        "displayName": "MT station FRG19020",
+        "stationId": "FRG19020",
+        "pointIndex": 19,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19020_bvv.edi",
+            "relativePath": "EDIs/FRG19020_bvv.edi",
+            "dataId": "Team1_2_sites_190726"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19020.edi",
+            "relativePath": "EDIs/FRG19020.edi",
+            "dataId": "Team2_sites_190726"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.44613333,
+          "longitude_deg": -112.97366667,
+          "elevation_m": 1523,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 327764.563,
+          "northing_m": 4257161.238,
+          "elevation_m": 1523
+        },
+        "sceneCoordinates": {
+          "x_m": -13702.787,
+          "y_m": -16213.262,
+          "z_m": 1523
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19021",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6673.145,
+          -16729.03,
+          1726
+        ]
+      },
+      "properties": {
+        "id": "FRG19021",
+        "displayName": "MT station FRG19021",
+        "stationId": "FRG19021",
+        "pointIndex": 20,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19021_bvv.edi",
+            "relativePath": "EDIs/FRG19021_bvv.edi",
+            "dataId": "Team1_2_sites_190725"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19021.edi",
+            "relativePath": "EDIs/FRG19021.edi",
+            "dataId": "Team2_sites_190725"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.44281667,
+          "longitude_deg": -112.89303333,
+          "elevation_m": 1726,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334794.205,
+          "northing_m": 4256645.47,
+          "elevation_m": 1726
+        },
+        "sceneCoordinates": {
+          "x_m": -6673.145,
+          "y_m": -16729.03,
+          "z_m": 1726
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19022",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -10146.512,
+          -15256.152,
+          1607
+        ]
+      },
+      "properties": {
+        "id": "FRG19022",
+        "displayName": "MT station FRG19022",
+        "stationId": "FRG19022",
+        "pointIndex": 21,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19022_bvv.edi",
+            "relativePath": "EDIs/FRG19022_bvv.edi",
+            "dataId": "Team1_2_sites_190725"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19022.edi",
+            "relativePath": "EDIs/FRG19022.edi",
+            "dataId": "Team2_sites_190725"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.45543333,
+          "longitude_deg": -112.93316667,
+          "elevation_m": 1607,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 331320.838,
+          "northing_m": 4258118.348,
+          "elevation_m": 1607
+        },
+        "sceneCoordinates": {
+          "x_m": -10146.512,
+          "y_m": -15256.152,
+          "z_m": 1607
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19023",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7786.283,
+          -15105.509,
+          1669
+        ]
+      },
+      "properties": {
+        "id": "FRG19023",
+        "displayName": "MT station FRG19023",
+        "stationId": "FRG19023",
+        "pointIndex": 22,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19023_bvv.edi",
+            "relativePath": "EDIs/FRG19023_bvv.edi",
+            "dataId": "Team1_2_sites_190726"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19023.edi",
+            "relativePath": "EDIs/FRG19023.edi",
+            "dataId": "Team2_sites_190726"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.45723333,
+          "longitude_deg": -112.90616667,
+          "elevation_m": 1669,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 333681.067,
+          "northing_m": 4258268.991,
+          "elevation_m": 1669
+        },
+        "sceneCoordinates": {
+          "x_m": -7786.283,
+          "y_m": -15105.509,
+          "z_m": 1669
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19024",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8225.863,
+          -18060.696,
+          1682
+        ]
+      },
+      "properties": {
+        "id": "FRG19024",
+        "displayName": "MT station FRG19024",
+        "stationId": "FRG19024",
+        "pointIndex": 23,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19024_bvv.edi",
+            "relativePath": "EDIs/FRG19024_bvv.edi",
+            "dataId": "Team1_2_sites_190724"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19024.edi",
+            "relativePath": "EDIs/FRG19024.edi",
+            "dataId": "Team2_sites_190724"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.43053333,
+          "longitude_deg": -112.9105,
+          "elevation_m": 1682,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 333241.487,
+          "northing_m": 4255313.804,
+          "elevation_m": 1682
+        },
+        "sceneCoordinates": {
+          "x_m": -8225.863,
+          "y_m": -18060.696,
+          "z_m": 1682
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19025",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5260.31,
+          -17953.255,
+          1785
+        ]
+      },
+      "properties": {
+        "id": "FRG19025",
+        "displayName": "MT station FRG19025",
+        "stationId": "FRG19025",
+        "pointIndex": 24,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19025_bvv.edi",
+            "relativePath": "EDIs/FRG19025_bvv.edi",
+            "dataId": "Team1_2_sites_190725"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19025.edi",
+            "relativePath": "EDIs/FRG19025.edi",
+            "dataId": "Team2_sites_190725"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.43205,
+          "longitude_deg": -112.87656667,
+          "elevation_m": 1785,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336207.04,
+          "northing_m": 4255421.245,
+          "elevation_m": 1785
+        },
+        "sceneCoordinates": {
+          "x_m": -5260.31,
+          "y_m": -17953.255,
+          "z_m": 1785
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19026",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -10998.564,
+          -13780.095,
+          1567
+        ]
+      },
+      "properties": {
+        "id": "FRG19026",
+        "displayName": "MT station FRG19026",
+        "stationId": "FRG19026",
+        "pointIndex": 25,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19026_bvv.edi",
+            "relativePath": "EDIs/FRG19026_bvv.edi",
+            "dataId": "Team1_2_sites_190726"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19026.edi",
+            "relativePath": "EDIs/FRG19026.edi",
+            "dataId": "Team2_sites_190726"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.46856667,
+          "longitude_deg": -112.94328333,
+          "elevation_m": 1567,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 330468.786,
+          "northing_m": 4259594.405,
+          "elevation_m": 1567
+        },
+        "sceneCoordinates": {
+          "x_m": -10998.564,
+          "y_m": -13780.095,
+          "z_m": 1567
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19027",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7945.557,
+          -13523.839,
+          1646
+        ]
+      },
+      "properties": {
+        "id": "FRG19027",
+        "displayName": "MT station FRG19027",
+        "stationId": "FRG19027",
+        "pointIndex": 26,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19027_bvv.edi",
+            "relativePath": "EDIs/FRG19027_bvv.edi",
+            "dataId": "Team1_2_sites_190729"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19027.edi",
+            "relativePath": "EDIs/FRG19027.edi",
+            "dataId": "Team2_sites_190729"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.47145,
+          "longitude_deg": -112.90836667,
+          "elevation_m": 1646,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 333521.793,
+          "northing_m": 4259850.661,
+          "elevation_m": 1646
+        },
+        "sceneCoordinates": {
+          "x_m": -7945.557,
+          "y_m": -13523.839,
+          "z_m": 1646
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19028R",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8602.177,
+          -16698.41,
+          1658
+        ]
+      },
+      "properties": {
+        "id": "FRG19028R",
+        "displayName": "MT station FRG19028R",
+        "stationId": "FRG19028R",
+        "pointIndex": 27,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19028R_bvv.edi",
+            "relativePath": "EDIs/FRG19028R_bvv.edi",
+            "dataId": "Team1_2_sites_190805"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19028R.edi",
+            "relativePath": "EDIs/FRG19028R.edi",
+            "dataId": "Team2_sites_190805"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.44273333,
+          "longitude_deg": -112.91513333,
+          "elevation_m": 1658,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 332865.173,
+          "northing_m": 4256676.09,
+          "elevation_m": 1658
+        },
+        "sceneCoordinates": {
+          "x_m": -8602.177,
+          "y_m": -16698.41,
+          "z_m": 1658
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19029R",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6170.825,
+          -14302.424,
+          1707
+        ]
+      },
+      "properties": {
+        "id": "FRG19029R",
+        "displayName": "MT station FRG19029R",
+        "stationId": "FRG19029R",
+        "pointIndex": 28,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19029R_bvv.edi",
+            "relativePath": "EDIs/FRG19029R_bvv.edi",
+            "dataId": "Team1_2_sites_190805"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19029R.edi",
+            "relativePath": "EDIs/FRG19029R.edi",
+            "dataId": "Team2_sites_190805"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.46476667,
+          "longitude_deg": -112.88785,
+          "elevation_m": 1707,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 335296.525,
+          "northing_m": 4259072.076,
+          "elevation_m": 1707
+        },
+        "sceneCoordinates": {
+          "x_m": -6170.825,
+          "y_m": -14302.424,
+          "z_m": 1707
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19030",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3889.142,
+          -12259.858,
+          1801
+        ]
+      },
+      "properties": {
+        "id": "FRG19030",
+        "displayName": "MT station FRG19030",
+        "stationId": "FRG19030",
+        "pointIndex": 29,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19030_bvv.edi",
+            "relativePath": "EDIs/FRG19030_bvv.edi",
+            "dataId": "Team1_2_sites_190803"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19030.edi",
+            "relativePath": "EDIs/FRG19030.edi",
+            "dataId": "Team2_sites_190803"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.48358333,
+          "longitude_deg": -112.86218333,
+          "elevation_m": 1801,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 337578.208,
+          "northing_m": 4261114.642,
+          "elevation_m": 1801
+        },
+        "sceneCoordinates": {
+          "x_m": -3889.142,
+          "y_m": -12259.858,
+          "z_m": 1801
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19031",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3576.813,
+          -5517.98,
+          1709
+        ]
+      },
+      "properties": {
+        "id": "FRG19031",
+        "displayName": "MT station FRG19031",
+        "stationId": "FRG19031",
+        "pointIndex": 30,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19031_bvv.edi",
+            "relativePath": "EDIs/FRG19031_bvv.edi",
+            "dataId": "Team1_2_sites_190729"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19031.edi",
+            "relativePath": "EDIs/FRG19031.edi",
+            "dataId": "FRG19031"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.54436667,
+          "longitude_deg": -112.86016667,
+          "elevation_m": 1709,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 337890.537,
+          "northing_m": 4267856.52,
+          "elevation_m": 1709
+        },
+        "sceneCoordinates": {
+          "x_m": -3576.813,
+          "y_m": -5517.98,
+          "z_m": 1709
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19032",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3226.747,
+          -2433.119,
+          1685
+        ]
+      },
+      "properties": {
+        "id": "FRG19032",
+        "displayName": "MT station FRG19032",
+        "stationId": "FRG19032",
+        "pointIndex": 31,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19032_bvv.edi",
+            "relativePath": "EDIs/FRG19032_bvv.edi",
+            "dataId": "Team1_2_sites_190727"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19032.edi",
+            "relativePath": "EDIs/FRG19032.edi",
+            "dataId": "Team1_sites_190727"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.57221667,
+          "longitude_deg": -112.85686667,
+          "elevation_m": 1685,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 338240.603,
+          "northing_m": 4270941.381,
+          "elevation_m": 1685
+        },
+        "sceneCoordinates": {
+          "x_m": -3226.747,
+          "y_m": -2433.119,
+          "z_m": 1685
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19033",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4993.878,
+          -2967.12,
+          1603
+        ]
+      },
+      "properties": {
+        "id": "FRG19033",
+        "displayName": "MT station FRG19033",
+        "stationId": "FRG19033",
+        "pointIndex": 32,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19033_bvv.edi",
+            "relativePath": "EDIs/FRG19033_bvv.edi",
+            "dataId": "Team1_2_sites_190727"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19033.edi",
+            "relativePath": "EDIs/FRG19033.edi",
+            "dataId": "Team1_sites_190727"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.56708333,
+          "longitude_deg": -112.87701667,
+          "elevation_m": 1603,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336473.472,
+          "northing_m": 4270407.38,
+          "elevation_m": 1603
+        },
+        "sceneCoordinates": {
+          "x_m": -4993.878,
+          "y_m": -2967.12,
+          "z_m": 1603
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19034",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7405.29,
+          -2960.048,
+          1535
+        ]
+      },
+      "properties": {
+        "id": "FRG19034",
+        "displayName": "MT station FRG19034",
+        "stationId": "FRG19034",
+        "pointIndex": 33,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19034_bvv.edi",
+            "relativePath": "EDIs/FRG19034_bvv.edi",
+            "dataId": "Team1_2_sites_190727"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19034.edi",
+            "relativePath": "EDIs/FRG19034.edi",
+            "dataId": "Team1_sites_190727"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.5667,
+          "longitude_deg": -112.90468333,
+          "elevation_m": 1535,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334062.06,
+          "northing_m": 4270414.452,
+          "elevation_m": 1535
+        },
+        "sceneCoordinates": {
+          "x_m": -7405.29,
+          "y_m": -2960.048,
+          "z_m": 1535
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19035",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10284.206,
+          -10624.721,
+          1970
+        ]
+      },
+      "properties": {
+        "id": "FRG19035",
+        "displayName": "MT station FRG19035",
+        "stationId": "FRG19035",
+        "pointIndex": 34,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19035_bvv.edi",
+            "relativePath": "EDIs/FRG19035_bvv.edi",
+            "dataId": "Team1_2_sites_190724"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19035.edi",
+            "relativePath": "EDIs/FRG19035.edi",
+            "dataId": "Team2_sites_190724"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50078333,
+          "longitude_deg": -112.7001,
+          "elevation_m": 1970,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 351751.556,
+          "northing_m": 4262749.779,
+          "elevation_m": 1970
+        },
+        "sceneCoordinates": {
+          "x_m": 10284.206,
+          "y_m": -10624.721,
+          "z_m": 1970
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19036",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9822.023,
+          -14619.947,
+          2237
+        ]
+      },
+      "properties": {
+        "id": "FRG19036",
+        "displayName": "MT station FRG19036",
+        "stationId": "FRG19036",
+        "pointIndex": 35,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19036_bvv.edi",
+            "relativePath": "EDIs/FRG19036_bvv.edi",
+            "dataId": "Team1_2_sites_190723"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19036.edi",
+            "relativePath": "EDIs/FRG19036.edi",
+            "dataId": "Team2_sites_190723.1"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.46471667,
+          "longitude_deg": -112.70455,
+          "elevation_m": 2237,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 351289.373,
+          "northing_m": 4258754.553,
+          "elevation_m": 2237
+        },
+        "sceneCoordinates": {
+          "x_m": 9822.023,
+          "y_m": -14619.947,
+          "z_m": 2237
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19037",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9910.535,
+          -19591.115,
+          2196
+        ]
+      },
+      "properties": {
+        "id": "FRG19037",
+        "displayName": "MT station FRG19037",
+        "stationId": "FRG19037",
+        "pointIndex": 36,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19037_bvv.edi",
+            "relativePath": "EDIs/FRG19037_bvv.edi",
+            "dataId": "Team1_2_sites_190723"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19037.edi",
+            "relativePath": "EDIs/FRG19037.edi",
+            "dataId": "Team2_sites_190723.1"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.41995,
+          "longitude_deg": -112.70248333,
+          "elevation_m": 2196,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 351377.885,
+          "northing_m": 4253783.385,
+          "elevation_m": 2196
+        },
+        "sceneCoordinates": {
+          "x_m": 9910.535,
+          "y_m": -19591.115,
+          "z_m": 2196
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19038",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7223.241,
+          -6659.063,
+          1582
+        ]
+      },
+      "properties": {
+        "id": "FRG19038",
+        "displayName": "MT station FRG19038",
+        "stationId": "FRG19038",
+        "pointIndex": 37,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19038_bvv.edi",
+            "relativePath": "EDIs/FRG19038_bvv.edi",
+            "dataId": "Team1_2_sites_190730"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19038.edi",
+            "relativePath": "EDIs/FRG19038.edi",
+            "dataId": "Team1_sites_190730"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.53341667,
+          "longitude_deg": -112.90171667,
+          "elevation_m": 1582,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334244.109,
+          "northing_m": 4266715.437,
+          "elevation_m": 1582
+        },
+        "sceneCoordinates": {
+          "x_m": -7223.241,
+          "y_m": -6659.063,
+          "z_m": 1582
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19039",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -10933.62,
+          -7745.38,
+          1519
+        ]
+      },
+      "properties": {
+        "id": "FRG19039",
+        "displayName": "MT station FRG19039",
+        "stationId": "FRG19039",
+        "pointIndex": 38,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19039_bvv.edi",
+            "relativePath": "EDIs/FRG19039_bvv.edi",
+            "dataId": "Team1_2_sites_190804"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19039.edi",
+            "relativePath": "EDIs/FRG19039.edi",
+            "dataId": "Team1_sites_190804"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.52293333,
+          "longitude_deg": -112.944,
+          "elevation_m": 1519,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 330533.73,
+          "northing_m": 4265629.12,
+          "elevation_m": 1519
+        },
+        "sceneCoordinates": {
+          "x_m": -10933.62,
+          "y_m": -7745.38,
+          "z_m": 1519
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19040",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6965.025,
+          -8161.363,
+          1612
+        ]
+      },
+      "properties": {
+        "id": "FRG19040",
+        "displayName": "MT station FRG19040",
+        "stationId": "FRG19040",
+        "pointIndex": 39,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19040_bvv.edi",
+            "relativePath": "EDIs/FRG19040_bvv.edi",
+            "dataId": "Team1_2_sites_190802"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19040.edi",
+            "relativePath": "EDIs/FRG19040.edi",
+            "dataId": "Team1_sites_190802"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.51993333,
+          "longitude_deg": -112.8984,
+          "elevation_m": 1612,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334502.325,
+          "northing_m": 4265213.137,
+          "elevation_m": 1612
+        },
+        "sceneCoordinates": {
+          "x_m": -6965.025,
+          "y_m": -8161.363,
+          "z_m": 1612
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19041",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7655.372,
+          -10328.691,
+          1621
+        ]
+      },
+      "properties": {
+        "id": "FRG19041",
+        "displayName": "MT station FRG19041",
+        "stationId": "FRG19041",
+        "pointIndex": 40,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19041_bvv.edi",
+            "relativePath": "EDIs/FRG19041_bvv.edi",
+            "dataId": "Team1_2_sites_190731"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19041.edi",
+            "relativePath": "EDIs/FRG19041.edi",
+            "dataId": "FRG19041"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50028333,
+          "longitude_deg": -112.9058,
+          "elevation_m": 1621,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 333811.978,
+          "northing_m": 4263045.809,
+          "elevation_m": 1621
+        },
+        "sceneCoordinates": {
+          "x_m": -7655.372,
+          "y_m": -10328.691,
+          "z_m": 1621
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19042R",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -11570.99,
+          -12302.455,
+          1543
+        ]
+      },
+      "properties": {
+        "id": "FRG19042R",
+        "displayName": "MT station FRG19042R",
+        "stationId": "FRG19042R",
+        "pointIndex": 41,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19042R_bvv.edi",
+            "relativePath": "EDIs/FRG19042R_bvv.edi",
+            "dataId": "Team1_2_sites_190805"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19042R.edi",
+            "relativePath": "EDIs/FRG19042R.edi",
+            "dataId": "Team2_sites_190805"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.48176667,
+          "longitude_deg": -112.9502,
+          "elevation_m": 1543,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 329896.36,
+          "northing_m": 4261072.045,
+          "elevation_m": 1543
+        },
+        "sceneCoordinates": {
+          "x_m": -11570.99,
+          "y_m": -12302.455,
+          "z_m": 1543
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19043",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8542.491,
+          -12290.187,
+          1615
+        ]
+      },
+      "properties": {
+        "id": "FRG19043",
+        "displayName": "MT station FRG19043",
+        "stationId": "FRG19043",
+        "pointIndex": 42,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19043_bvv.edi",
+            "relativePath": "EDIs/FRG19043_bvv.edi",
+            "dataId": "Team1_2_sites_190729"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19043.edi",
+            "relativePath": "EDIs/FRG19043.edi",
+            "dataId": "Team2_sites_190729"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.48245,
+          "longitude_deg": -112.9155,
+          "elevation_m": 1615,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 332924.859,
+          "northing_m": 4261084.313,
+          "elevation_m": 1615
+        },
+        "sceneCoordinates": {
+          "x_m": -8542.491,
+          "y_m": -12290.187,
+          "z_m": 1615
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19044",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6757.464,
+          -11775.727,
+          1675
+        ]
+      },
+      "properties": {
+        "id": "FRG19044",
+        "displayName": "MT station FRG19044",
+        "stationId": "FRG19044",
+        "pointIndex": 43,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19044_bvv.edi",
+            "relativePath": "EDIs/FRG19044_bvv.edi",
+            "dataId": "Team1_2_sites_190731"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19044.edi",
+            "relativePath": "EDIs/FRG19044.edi",
+            "dataId": "Team2_sites_190731"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.48741667,
+          "longitude_deg": -112.89516667,
+          "elevation_m": 1675,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334709.886,
+          "northing_m": 4261598.773,
+          "elevation_m": 1675
+        },
+        "sceneCoordinates": {
+          "x_m": -6757.464,
+          "y_m": -11775.727,
+          "z_m": 1675
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19045",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -14596.389,
+          -19191.793,
+          1517
+        ]
+      },
+      "properties": {
+        "id": "FRG19045",
+        "displayName": "MT station FRG19045",
+        "stationId": "FRG19045",
+        "pointIndex": 44,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19045_bvv.edi",
+            "relativePath": "EDIs/FRG19045_bvv.edi",
+            "dataId": "Team1_2_sites_190728"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19045.edi",
+            "relativePath": "EDIs/FRG19045.edi",
+            "dataId": "Team2_sites_190728"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.41913333,
+          "longitude_deg": -112.98316667,
+          "elevation_m": 1517,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 326870.961,
+          "northing_m": 4254182.707,
+          "elevation_m": 1517
+        },
+        "sceneCoordinates": {
+          "x_m": -14596.389,
+          "y_m": -19191.793,
+          "z_m": 1517
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19046R",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9923.53,
+          -20032.987,
+          1624
+        ]
+      },
+      "properties": {
+        "id": "FRG19046R",
+        "displayName": "MT station FRG19046R",
+        "stationId": "FRG19046R",
+        "pointIndex": 45,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19046R_bvv.edi",
+            "relativePath": "EDIs/FRG19046R_bvv.edi",
+            "dataId": "Team1_2_sites_190805"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19046R.edi",
+            "relativePath": "EDIs/FRG19046R.edi",
+            "dataId": "Team2_sites_190805"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.41245,
+          "longitude_deg": -112.92946667,
+          "elevation_m": 1624,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 331543.82,
+          "northing_m": 4253341.513,
+          "elevation_m": 1624
+        },
+        "sceneCoordinates": {
+          "x_m": -9923.53,
+          "y_m": -20032.987,
+          "z_m": 1624
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19047",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3292.878,
+          -10602.903,
+          1797
+        ]
+      },
+      "properties": {
+        "id": "FRG19047",
+        "displayName": "MT station FRG19047",
+        "stationId": "FRG19047",
+        "pointIndex": 46,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19047_bvv.edi",
+            "relativePath": "EDIs/FRG19047_bvv.edi",
+            "dataId": "FRG19047"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19047.edi",
+            "relativePath": "EDIs/FRG19047.edi",
+            "dataId": "FRG19047"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.49861667,
+          "longitude_deg": -112.85573333,
+          "elevation_m": 1797,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 338174.472,
+          "northing_m": 4262771.597,
+          "elevation_m": 1797
+        },
+        "sceneCoordinates": {
+          "x_m": -3292.878,
+          "y_m": -10602.903,
+          "z_m": 1797
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19048",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7823.885,
+          -4927.594,
+          1546
+        ]
+      },
+      "properties": {
+        "id": "FRG19048",
+        "displayName": "MT station FRG19048",
+        "stationId": "FRG19048",
+        "pointIndex": 47,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19048_bvv.edi",
+            "relativePath": "EDIs/FRG19048_bvv.edi",
+            "dataId": "Team1_2_sites_190728"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19048.edi",
+            "relativePath": "EDIs/FRG19048.edi",
+            "dataId": "Team1_sites_190728"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.5489,
+          "longitude_deg": -112.90901667,
+          "elevation_m": 1546,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 333643.465,
+          "northing_m": 4268446.906,
+          "elevation_m": 1546
+        },
+        "sceneCoordinates": {
+          "x_m": -7823.885,
+          "y_m": -4927.594,
+          "z_m": 1546
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19049",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8143.021,
+          -7555.934,
+          1562
+        ]
+      },
+      "properties": {
+        "id": "FRG19049",
+        "displayName": "MT station FRG19049",
+        "stationId": "FRG19049",
+        "pointIndex": 48,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19049_bvv.edi",
+            "relativePath": "EDIs/FRG19049_bvv.edi",
+            "dataId": "Team1_2_sites_190731"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19049.edi",
+            "relativePath": "EDIs/FRG19049.edi",
+            "dataId": "Team1_sites_190731"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.52516667,
+          "longitude_deg": -112.91205,
+          "elevation_m": 1562,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 333324.329,
+          "northing_m": 4265818.566,
+          "elevation_m": 1562
+        },
+        "sceneCoordinates": {
+          "x_m": -8143.021,
+          "y_m": -7555.934,
+          "z_m": 1562
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19050",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6552.744,
+          -7553.686,
+          1620
+        ]
+      },
+      "properties": {
+        "id": "FRG19050",
+        "displayName": "MT station FRG19050",
+        "stationId": "FRG19050",
+        "pointIndex": 49,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19050_bvv.edi",
+            "relativePath": "EDIs/FRG19050_bvv.edi",
+            "dataId": "Team1_2_sites_190731"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19050.edi",
+            "relativePath": "EDIs/FRG19050.edi",
+            "dataId": "Team1_sites_190731"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.52548333,
+          "longitude_deg": -112.89381667,
+          "elevation_m": 1620,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334914.606,
+          "northing_m": 4265820.814,
+          "elevation_m": 1620
+        },
+        "sceneCoordinates": {
+          "x_m": -6552.744,
+          "y_m": -7553.686,
+          "z_m": 1620
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19051",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6029.494,
+          -8546.994,
+          1661
+        ]
+      },
+      "properties": {
+        "id": "FRG19051",
+        "displayName": "MT station FRG19051",
+        "stationId": "FRG19051",
+        "pointIndex": 50,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19051_bvv.edi",
+            "relativePath": "EDIs/FRG19051_bvv.edi",
+            "dataId": "Team1_2_sites_190801"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19051.edi",
+            "relativePath": "EDIs/FRG19051.edi",
+            "dataId": "Team1_sites_190801"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.51663333,
+          "longitude_deg": -112.88758333,
+          "elevation_m": 1661,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 335437.856,
+          "northing_m": 4264827.506,
+          "elevation_m": 1661
+        },
+        "sceneCoordinates": {
+          "x_m": -6029.494,
+          "y_m": -8546.994,
+          "z_m": 1661
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19052",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8089.646,
+          -8274.998,
+          1582
+        ]
+      },
+      "properties": {
+        "id": "FRG19052",
+        "displayName": "MT station FRG19052",
+        "stationId": "FRG19052",
+        "pointIndex": 51,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19052_bvv.edi",
+            "relativePath": "EDIs/FRG19052_bvv.edi",
+            "dataId": "Team1_2_sites_190803"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19052.edi",
+            "relativePath": "EDIs/FRG19052.edi",
+            "dataId": "Team1_sites_190803"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.5187,
+          "longitude_deg": -112.91126667,
+          "elevation_m": 1582,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 333377.704,
+          "northing_m": 4265099.502,
+          "elevation_m": 1582
+        },
+        "sceneCoordinates": {
+          "x_m": -8089.646,
+          "y_m": -8274.998,
+          "z_m": 1582
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19053",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4741.339,
+          -8397.544,
+          1714
+        ]
+      },
+      "properties": {
+        "id": "FRG19053",
+        "displayName": "MT station FRG19053",
+        "stationId": "FRG19053",
+        "pointIndex": 52,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19053_bvv.edi",
+            "relativePath": "EDIs/FRG19053_bvv.edi",
+            "dataId": "Team1_2_sites_190801"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19053.edi",
+            "relativePath": "EDIs/FRG19053.edi",
+            "dataId": "Team1_sites_190801"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.51821667,
+          "longitude_deg": -112.87285,
+          "elevation_m": 1714,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336726.011,
+          "northing_m": 4264976.956,
+          "elevation_m": 1714
+        },
+        "sceneCoordinates": {
+          "x_m": -4741.339,
+          "y_m": -8397.544,
+          "z_m": 1714
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19054",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3721.835,
+          -7082.29,
+          1734
+        ]
+      },
+      "properties": {
+        "id": "FRG19054",
+        "displayName": "MT station FRG19054",
+        "stationId": "FRG19054",
+        "pointIndex": 53,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19054_bvv.edi",
+            "relativePath": "EDIs/FRG19054_bvv.edi",
+            "dataId": "Team1_2_sites_190730"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19054.edi",
+            "relativePath": "EDIs/FRG19054.edi",
+            "dataId": "Team1_sites_190730"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.53025,
+          "longitude_deg": -112.86146667,
+          "elevation_m": 1734,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 337745.515,
+          "northing_m": 4266292.21,
+          "elevation_m": 1734
+        },
+        "sceneCoordinates": {
+          "x_m": -3721.835,
+          "y_m": -7082.29,
+          "z_m": 1734
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19055",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4874.975,
+          -7108.821,
+          1678
+        ]
+      },
+      "properties": {
+        "id": "FRG19055",
+        "displayName": "MT station FRG19055",
+        "stationId": "FRG19055",
+        "pointIndex": 54,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19055_bvv.edi",
+            "relativePath": "EDIs/FRG19055_bvv.edi",
+            "dataId": "Team1_2_sites_190730"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19055.edi",
+            "relativePath": "EDIs/FRG19055.edi",
+            "dataId": "Team1_sites_190730"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.5298,
+          "longitude_deg": -112.87468333,
+          "elevation_m": 1678,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336592.375,
+          "northing_m": 4266265.679,
+          "elevation_m": 1678
+        },
+        "sceneCoordinates": {
+          "x_m": -4874.975,
+          "y_m": -7108.821,
+          "z_m": 1678
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19056",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5936.751,
+          -6365.456,
+          1625
+        ]
+      },
+      "properties": {
+        "id": "FRG19056",
+        "displayName": "MT station FRG19056",
+        "stationId": "FRG19056",
+        "pointIndex": 55,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19056_bvv.edi",
+            "relativePath": "EDIs/FRG19056_bvv.edi",
+            "dataId": "Team1_2_sites_190729"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19056.edi",
+            "relativePath": "EDIs/FRG19056.edi",
+            "dataId": "Team1_sites_190729"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.5363,
+          "longitude_deg": -112.88703333,
+          "elevation_m": 1625,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 335530.599,
+          "northing_m": 4267009.044,
+          "elevation_m": 1625
+        },
+        "sceneCoordinates": {
+          "x_m": -5936.751,
+          "y_m": -6365.456,
+          "z_m": 1625
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19057",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6628.563,
+          -5661.032,
+          1588
+        ]
+      },
+      "properties": {
+        "id": "FRG19057",
+        "displayName": "MT station FRG19057",
+        "stationId": "FRG19057",
+        "pointIndex": 56,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19057_bvv.edi",
+            "relativePath": "EDIs/FRG19057_bvv.edi",
+            "dataId": "Team1_2_sites_190729"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19057.edi",
+            "relativePath": "EDIs/FRG19057.edi",
+            "dataId": "Team1_sites_190729"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.54251667,
+          "longitude_deg": -112.89513333,
+          "elevation_m": 1588,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334838.787,
+          "northing_m": 4267713.468,
+          "elevation_m": 1588
+        },
+        "sceneCoordinates": {
+          "x_m": -6628.563,
+          "y_m": -5661.032,
+          "z_m": 1588
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19058",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5954.709,
+          -4409.236,
+          1603
+        ]
+      },
+      "properties": {
+        "id": "FRG19058",
+        "displayName": "MT station FRG19058",
+        "stationId": "FRG19058",
+        "pointIndex": 57,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19058_bvv.edi",
+            "relativePath": "EDIs/FRG19058_bvv.edi",
+            "dataId": "Team1_2_sites_190728"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19058.edi",
+            "relativePath": "EDIs/FRG19058.edi",
+            "dataId": "Team1_sites_190728"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.55391667,
+          "longitude_deg": -112.8877,
+          "elevation_m": 1603,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 335512.641,
+          "northing_m": 4268965.264,
+          "elevation_m": 1603
+        },
+        "sceneCoordinates": {
+          "x_m": -5954.709,
+          "y_m": -4409.236,
+          "z_m": 1603
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19059",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3834.571,
+          -4039.876,
+          1682
+        ]
+      },
+      "properties": {
+        "id": "FRG19059",
+        "displayName": "MT station FRG19059",
+        "stationId": "FRG19059",
+        "pointIndex": 58,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19059_bvv.edi",
+            "relativePath": "EDIs/FRG19059_bvv.edi",
+            "dataId": "Team1_2_sites_190728"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19059.edi",
+            "relativePath": "EDIs/FRG19059.edi",
+            "dataId": "Team1_sites_190728"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.55763333,
+          "longitude_deg": -112.86346667,
+          "elevation_m": 1682,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 337632.779,
+          "northing_m": 4269334.624,
+          "elevation_m": 1682
+        },
+        "sceneCoordinates": {
+          "x_m": -3834.571,
+          "y_m": -4039.876,
+          "z_m": 1682
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19060",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -2661.661,
+          -11609.232,
+          1869
+        ]
+      },
+      "properties": {
+        "id": "FRG19060",
+        "displayName": "MT station FRG19060",
+        "stationId": "FRG19060",
+        "pointIndex": 59,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19060_bvv.edi",
+            "relativePath": "EDIs/FRG19060_bvv.edi",
+            "dataId": "Team1_2_sites_190803"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19060.edi",
+            "relativePath": "EDIs/FRG19060.edi",
+            "dataId": "Team2_sites_190803"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.48966667,
+          "longitude_deg": -112.84826667,
+          "elevation_m": 1869,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 338805.689,
+          "northing_m": 4261765.268,
+          "elevation_m": 1869
+        },
+        "sceneCoordinates": {
+          "x_m": -2661.661,
+          "y_m": -11609.232,
+          "z_m": 1869
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19061",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6862.707,
+          -8768.549,
+          1630
+        ]
+      },
+      "properties": {
+        "id": "FRG19061",
+        "displayName": "MT station FRG19061",
+        "stationId": "FRG19061",
+        "pointIndex": 60,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19061_bvv.edi",
+            "relativePath": "EDIs/FRG19061_bvv.edi",
+            "dataId": "Team1_2_sites_190802"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19061.edi",
+            "relativePath": "EDIs/FRG19061.edi",
+            "dataId": "Team1_sites_190802"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.51448333,
+          "longitude_deg": -112.89708333,
+          "elevation_m": 1630,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334604.643,
+          "northing_m": 4264605.951,
+          "elevation_m": 1630
+        },
+        "sceneCoordinates": {
+          "x_m": -6862.707,
+          "y_m": -8768.549,
+          "z_m": 1630
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19062",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7643.344,
+          -8905.992,
+          1599
+        ]
+      },
+      "properties": {
+        "id": "FRG19062",
+        "displayName": "MT station FRG19062",
+        "stationId": "FRG19062",
+        "pointIndex": 61,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19062_bvv.edi",
+            "relativePath": "EDIs/FRG19062_bvv.edi",
+            "dataId": "Team1_2_sites_190803"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19062.edi",
+            "relativePath": "EDIs/FRG19062.edi",
+            "dataId": "Team1_sites_190803"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.5131,
+          "longitude_deg": -112.906,
+          "elevation_m": 1599,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 333824.006,
+          "northing_m": 4264468.508,
+          "elevation_m": 1599
+        },
+        "sceneCoordinates": {
+          "x_m": -7643.344,
+          "y_m": -8905.992,
+          "z_m": 1599
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19063",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7660.204,
+          -9649.499,
+          1613
+        ]
+      },
+      "properties": {
+        "id": "FRG19063",
+        "displayName": "MT station FRG19063",
+        "stationId": "FRG19063",
+        "pointIndex": 62,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19063_bvv.edi",
+            "relativePath": "EDIs/FRG19063_bvv.edi",
+            "dataId": "Team1_2_sites_190803"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19063.edi",
+            "relativePath": "EDIs/FRG19063.edi",
+            "dataId": "Team1_sites_190803"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.5064,
+          "longitude_deg": -112.90601667,
+          "elevation_m": 1613,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 333807.146,
+          "northing_m": 4263725.001,
+          "elevation_m": 1613
+        },
+        "sceneCoordinates": {
+          "x_m": -7660.204,
+          "y_m": -9649.499,
+          "z_m": 1613
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19064",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6806.058,
+          -9617.191,
+          1629
+        ]
+      },
+      "properties": {
+        "id": "FRG19064",
+        "displayName": "MT station FRG19064",
+        "stationId": "FRG19064",
+        "pointIndex": 63,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19064_bvv.edi",
+            "relativePath": "EDIs/FRG19064_bvv.edi",
+            "dataId": "Team1_2_sites_190803"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19064.edi",
+            "relativePath": "EDIs/FRG19064.edi",
+            "dataId": "Team1_sites_190803"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50685,
+          "longitude_deg": -112.89623333,
+          "elevation_m": 1629,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334661.292,
+          "northing_m": 4263757.309,
+          "elevation_m": 1629
+        },
+        "sceneCoordinates": {
+          "x_m": -6806.058,
+          "y_m": -9617.191,
+          "z_m": 1629
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19065",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6906.608,
+          -10262.749,
+          1646
+        ]
+      },
+      "properties": {
+        "id": "FRG19065",
+        "displayName": "MT station FRG19065",
+        "stationId": "FRG19065",
+        "pointIndex": 64,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19065_bvv.edi",
+            "relativePath": "EDIs/FRG19065_bvv.edi",
+            "dataId": "Team1_2_sites_190801"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19065.edi",
+            "relativePath": "EDIs/FRG19065.edi",
+            "dataId": "Team2_sites_190801"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50101667,
+          "longitude_deg": -112.89723333,
+          "elevation_m": 1646,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334560.742,
+          "northing_m": 4263111.751,
+          "elevation_m": 1646
+        },
+        "sceneCoordinates": {
+          "x_m": -6906.608,
+          "y_m": -10262.749,
+          "z_m": 1646
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19066",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7124.87,
+          -10974.342,
+          1647
+        ]
+      },
+      "properties": {
+        "id": "FRG19066",
+        "displayName": "MT station FRG19066",
+        "stationId": "FRG19066",
+        "pointIndex": 65,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19066_bvv.edi",
+            "relativePath": "EDIs/FRG19066_bvv.edi",
+            "dataId": "Team1_2_sites_190731"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19066.edi",
+            "relativePath": "EDIs/FRG19066.edi",
+            "dataId": "Team2_sites_190731"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.49456667,
+          "longitude_deg": -112.89956667,
+          "elevation_m": 1647,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334342.48,
+          "northing_m": 4262400.158,
+          "elevation_m": 1647
+        },
+        "sceneCoordinates": {
+          "x_m": -7124.87,
+          "y_m": -10974.342,
+          "z_m": 1647
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19067",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6424.782,
+          -10944.355,
+          1675
+        ]
+      },
+      "properties": {
+        "id": "FRG19067",
+        "displayName": "MT station FRG19067",
+        "stationId": "FRG19067",
+        "pointIndex": 66,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19067_bvv.edi",
+            "relativePath": "EDIs/FRG19067_bvv.edi",
+            "dataId": "Team1_2_sites_190801"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19067.edi",
+            "relativePath": "EDIs/FRG19067.edi",
+            "dataId": "Team2_sites_190801"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.49496667,
+          "longitude_deg": -112.89155,
+          "elevation_m": 1675,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 335042.568,
+          "northing_m": 4262430.145,
+          "elevation_m": 1675
+        },
+        "sceneCoordinates": {
+          "x_m": -6424.782,
+          "y_m": -10944.355,
+          "z_m": 1675
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19068",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6107.229,
+          -9642.667,
+          1676
+        ]
+      },
+      "properties": {
+        "id": "FRG19068",
+        "displayName": "MT station FRG19068",
+        "stationId": "FRG19068",
+        "pointIndex": 67,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19068_bvv.edi",
+            "relativePath": "EDIs/FRG19068_bvv.edi",
+            "dataId": "Team1_2_sites_190802"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19068.edi",
+            "relativePath": "EDIs/FRG19068.edi",
+            "dataId": "Team1_sites_190802"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50675,
+          "longitude_deg": -112.88821667,
+          "elevation_m": 1676,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 335360.121,
+          "northing_m": 4263731.833,
+          "elevation_m": 1676
+        },
+        "sceneCoordinates": {
+          "x_m": -6107.229,
+          "y_m": -9642.667,
+          "z_m": 1676
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19069",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4613.25,
+          -9961.848,
+          1712
+        ]
+      },
+      "properties": {
+        "id": "FRG19069",
+        "displayName": "MT station FRG19069",
+        "stationId": "FRG19069",
+        "pointIndex": 68,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19069_bvv.edi",
+            "relativePath": "EDIs/FRG19069_bvv.edi",
+            "dataId": "Team1_2_sites_190804"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19069.edi",
+            "relativePath": "EDIs/FRG19069.edi",
+            "dataId": "Team2_sites_190804"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50415,
+          "longitude_deg": -112.87101667,
+          "elevation_m": 1712,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336854.1,
+          "northing_m": 4263412.652,
+          "elevation_m": 1712
+        },
+        "sceneCoordinates": {
+          "x_m": -4613.25,
+          "y_m": -9961.848,
+          "z_m": 1712
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19070",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6279.094,
+          -10294.169,
+          1671
+        ]
+      },
+      "properties": {
+        "id": "FRG19070",
+        "displayName": "MT station FRG19070",
+        "stationId": "FRG19070",
+        "pointIndex": 69,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19070_bvv.edi",
+            "relativePath": "EDIs/FRG19070_bvv.edi",
+            "dataId": "Team1_2_sites_190802"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19070.edi",
+            "relativePath": "EDIs/FRG19070.edi",
+            "dataId": "Team2_sites_190802"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50085,
+          "longitude_deg": -112.89003333,
+          "elevation_m": 1671,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 335188.256,
+          "northing_m": 4263080.331,
+          "elevation_m": 1671
+        },
+        "sceneCoordinates": {
+          "x_m": -6279.094,
+          "y_m": -10294.169,
+          "z_m": 1671
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19071",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5062.591,
+          -10962.99,
+          1746
+        ]
+      },
+      "properties": {
+        "id": "FRG19071",
+        "displayName": "MT station FRG19071",
+        "stationId": "FRG19071",
+        "pointIndex": 70,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19071_bvv.edi",
+            "relativePath": "EDIs/FRG19071_bvv.edi",
+            "dataId": "Team1_2_sites_190802"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19071.edi",
+            "relativePath": "EDIs/FRG19071.edi",
+            "dataId": "Team2_sites_190802"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.49505,
+          "longitude_deg": -112.87593333,
+          "elevation_m": 1746,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336404.759,
+          "northing_m": 4262411.51,
+          "elevation_m": 1746
+        },
+        "sceneCoordinates": {
+          "x_m": -5062.591,
+          "y_m": -10962.99,
+          "z_m": 1746
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19072",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5303.1,
+          -9851.57,
+          1684
+        ]
+      },
+      "properties": {
+        "id": "FRG19072",
+        "displayName": "MT station FRG19072",
+        "stationId": "FRG19072",
+        "pointIndex": 71,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19072_bvv.edi",
+            "relativePath": "EDIs/FRG19072_bvv.edi",
+            "dataId": "Team1_2_sites_190804"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19072.edi",
+            "relativePath": "EDIs/FRG19072.edi",
+            "dataId": "Team2_sites_190804"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50501667,
+          "longitude_deg": -112.87895,
+          "elevation_m": 1684,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336164.25,
+          "northing_m": 4263522.93,
+          "elevation_m": 1684
+        },
+        "sceneCoordinates": {
+          "x_m": -5303.1,
+          "y_m": -9851.57,
+          "z_m": 1684
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19073",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5131.472,
+          -8780.015,
+          1704
+        ]
+      },
+      "properties": {
+        "id": "FRG19073",
+        "displayName": "MT station FRG19073",
+        "stationId": "FRG19073",
+        "pointIndex": 72,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19073_bvv.edi",
+            "relativePath": "EDIs/FRG19073_bvv.edi",
+            "dataId": "Team1_2_sites_190801"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19073.edi",
+            "relativePath": "EDIs/FRG19073.edi",
+            "dataId": "Team1_sites_190801"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.5147,
+          "longitude_deg": -112.87723333,
+          "elevation_m": 1704,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336335.878,
+          "northing_m": 4264594.485,
+          "elevation_m": 1704
+        },
+        "sceneCoordinates": {
+          "x_m": -5131.472,
+          "y_m": -8780.015,
+          "z_m": 1704
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19074",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5169.007,
+          -11902.649,
+          1748
+        ]
+      },
+      "properties": {
+        "id": "FRG19074",
+        "displayName": "MT station FRG19074",
+        "stationId": "FRG19074",
+        "pointIndex": 73,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19074_bvv.edi",
+            "relativePath": "EDIs/FRG19074_bvv.edi",
+            "dataId": "Team1_2_sites_190802"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19074.edi",
+            "relativePath": "EDIs/FRG19074.edi",
+            "dataId": "Team2_sites_190802"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.48656667,
+          "longitude_deg": -112.87693333,
+          "elevation_m": 1748,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336298.343,
+          "northing_m": 4261471.851,
+          "elevation_m": 1748
+        },
+        "sceneCoordinates": {
+          "x_m": -5169.007,
+          "y_m": -11902.649,
+          "z_m": 1748
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19075",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5464.614,
+          -12348.101,
+          1739
+        ]
+      },
+      "properties": {
+        "id": "FRG19075",
+        "displayName": "MT station FRG19075",
+        "stationId": "FRG19075",
+        "pointIndex": 74,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19075_bvv.edi",
+            "relativePath": "EDIs/FRG19075_bvv.edi",
+            "dataId": "Team1_2_sites_190801"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19075.edi",
+            "relativePath": "EDIs/FRG19075.edi",
+            "dataId": "Team2_sites_190801"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.4825,
+          "longitude_deg": -112.88021667,
+          "elevation_m": 1739,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336002.736,
+          "northing_m": 4261026.399,
+          "elevation_m": 1739
+        },
+        "sceneCoordinates": {
+          "x_m": -5464.614,
+          "y_m": -12348.101,
+          "z_m": 1739
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19076",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5961.158,
+          -12021.531,
+          1713
+        ]
+      },
+      "properties": {
+        "id": "FRG19076",
+        "displayName": "MT station FRG19076",
+        "stationId": "FRG19076",
+        "pointIndex": 75,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19076_bvv.edi",
+            "relativePath": "EDIs/FRG19076_bvv.edi",
+            "dataId": "Team1_2_sites_190801"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19076.edi",
+            "relativePath": "EDIs/FRG19076.edi",
+            "dataId": "Team2_sites_190801"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.48535,
+          "longitude_deg": -112.88598333,
+          "elevation_m": 1713,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 335506.192,
+          "northing_m": 4261352.969,
+          "elevation_m": 1713
+        },
+        "sceneCoordinates": {
+          "x_m": -5961.158,
+          "y_m": -12021.531,
+          "z_m": 1713
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19077",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6327.533,
+          -12369.284,
+          1696
+        ]
+      },
+      "properties": {
+        "id": "FRG19077",
+        "displayName": "MT station FRG19077",
+        "stationId": "FRG19077",
+        "pointIndex": 76,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19077_bvv.edi",
+            "relativePath": "EDIs/FRG19077_bvv.edi",
+            "dataId": "Team1_2_sites_190731"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19077.edi",
+            "relativePath": "EDIs/FRG19077.edi",
+            "dataId": "Team2_sites_190731"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.48215,
+          "longitude_deg": -112.8901,
+          "elevation_m": 1696,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 335139.817,
+          "northing_m": 4261005.216,
+          "elevation_m": 1696
+        },
+        "sceneCoordinates": {
+          "x_m": -6327.533,
+          "y_m": -12369.284,
+          "z_m": 1696
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19078",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7398.893,
+          -12552.604,
+          1651
+        ]
+      },
+      "properties": {
+        "id": "FRG19078",
+        "displayName": "MT station FRG19078",
+        "stationId": "FRG19078",
+        "pointIndex": 77,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19078_bvv.edi",
+            "relativePath": "EDIs/FRG19078_bvv.edi",
+            "dataId": "Team1_2_sites_190730"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19078.edi",
+            "relativePath": "EDIs/FRG19078.edi",
+            "dataId": "Team2_sites_190730"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.4803,
+          "longitude_deg": -112.90233333,
+          "elevation_m": 1651,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334068.457,
+          "northing_m": 4260821.896,
+          "elevation_m": 1651
+        },
+        "sceneCoordinates": {
+          "x_m": -7398.893,
+          "y_m": -12552.604,
+          "z_m": 1651
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19079",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7970.979,
+          -11032.696,
+          1615
+        ]
+      },
+      "properties": {
+        "id": "FRG19079",
+        "displayName": "MT station FRG19079",
+        "stationId": "FRG19079",
+        "pointIndex": 78,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19079_bvv.edi",
+            "relativePath": "EDIs/FRG19079_bvv.edi",
+            "dataId": "Team1_2_sites_190730"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19079.edi",
+            "relativePath": "EDIs/FRG19079.edi",
+            "dataId": "Team2_sites_190730"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.49388333,
+          "longitude_deg": -112.90925,
+          "elevation_m": 1615,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 333496.371,
+          "northing_m": 4262341.804,
+          "elevation_m": 1615
+        },
+        "sceneCoordinates": {
+          "x_m": -7970.979,
+          "y_m": -11032.696,
+          "z_m": 1615
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19080",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7466.197,
+          -11727.795,
+          1645
+        ]
+      },
+      "properties": {
+        "id": "FRG19080",
+        "displayName": "MT station FRG19080",
+        "stationId": "FRG19080",
+        "pointIndex": 79,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19080_bvv.edi",
+            "relativePath": "EDIs/FRG19080_bvv.edi",
+            "dataId": "Team1_2_sites_190730"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19080.edi",
+            "relativePath": "EDIs/FRG19080.edi",
+            "dataId": "Team2_sites_190730"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.48771667,
+          "longitude_deg": -112.9033,
+          "elevation_m": 1645,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334001.153,
+          "northing_m": 4261646.705,
+          "elevation_m": 1645
+        },
+        "sceneCoordinates": {
+          "x_m": -7466.197,
+          "y_m": -11727.795,
+          "z_m": 1645
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19081",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1754.265,
+          -10374.744,
+          1930
+        ]
+      },
+      "properties": {
+        "id": "FRG19081",
+        "displayName": "MT station FRG19081",
+        "stationId": "FRG19081",
+        "pointIndex": 80,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19081_bvv.edi",
+            "relativePath": "EDIs/FRG19081_bvv.edi",
+            "dataId": "Team1_2_sites_190804"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19081.edi",
+            "relativePath": "EDIs/FRG19081.edi",
+            "dataId": "Team2_sites_190804"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50095,
+          "longitude_deg": -112.83815,
+          "elevation_m": 1930,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 339713.085,
+          "northing_m": 4262999.756,
+          "elevation_m": 1930
+        },
+        "sceneCoordinates": {
+          "x_m": -1754.265,
+          "y_m": -10374.744,
+          "z_m": 1930
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19082",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1345.872,
+          -11259.938,
+          1942
+        ]
+      },
+      "properties": {
+        "id": "FRG19082",
+        "displayName": "MT station FRG19082",
+        "stationId": "FRG19082",
+        "pointIndex": 81,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19082_bvv.edi",
+            "relativePath": "EDIs/FRG19082_bvv.edi",
+            "dataId": "Team1_2_sites_190724"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19082.edi",
+            "relativePath": "EDIs/FRG19082.edi",
+            "dataId": "Team2_sites_190724"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.49305,
+          "longitude_deg": -112.83326667,
+          "elevation_m": 1942,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 340121.478,
+          "northing_m": 4262114.562,
+          "elevation_m": 1942
+        },
+        "sceneCoordinates": {
+          "x_m": -1345.872,
+          "y_m": -11259.938,
+          "z_m": 1942
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19083",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -11749.275,
+          -10148.471,
+          1525
+        ]
+      },
+      "properties": {
+        "id": "FRG19083",
+        "displayName": "MT station FRG19083",
+        "stationId": "FRG19083",
+        "pointIndex": 82,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19083_bvv.edi",
+            "relativePath": "EDIs/FRG19083_bvv.edi",
+            "dataId": "Team1_2_sites_190727"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19083.edi",
+            "relativePath": "EDIs/FRG19083.edi",
+            "dataId": "Team2_sites_190727"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50113333,
+          "longitude_deg": -112.95276667,
+          "elevation_m": 1525,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 329718.075,
+          "northing_m": 4263226.029,
+          "elevation_m": 1525
+        },
+        "sceneCoordinates": {
+          "x_m": -11749.275,
+          "y_m": -10148.471,
+          "z_m": 1525
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19084",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5735.005,
+          -10849.334,
+          1704
+        ]
+      },
+      "properties": {
+        "id": "FRG19084",
+        "displayName": "MT station FRG19084",
+        "stationId": "FRG19084",
+        "pointIndex": 83,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19084_bvv.edi",
+            "relativePath": "EDIs/FRG19084_bvv.edi",
+            "dataId": "Team1_2_sites_190802"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19084.edi",
+            "relativePath": "EDIs/FRG19084.edi",
+            "dataId": "Team2_sites_190802"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.49595,
+          "longitude_deg": -112.88366667,
+          "elevation_m": 1704,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 335732.345,
+          "northing_m": 4262525.166,
+          "elevation_m": 1704
+        },
+        "sceneCoordinates": {
+          "x_m": -5735.005,
+          "y_m": -10849.334,
+          "z_m": 1704
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19085",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4745.803,
+          -9402.195,
+          1738
+        ]
+      },
+      "properties": {
+        "id": "FRG19085",
+        "displayName": "MT station FRG19085",
+        "stationId": "FRG19085",
+        "pointIndex": 84,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19085_bvv.edi",
+            "relativePath": "EDIs/FRG19085_bvv.edi",
+            "dataId": "Team1_2_sites_190804"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19085.edi",
+            "relativePath": "EDIs/FRG19085.edi",
+            "dataId": "FRG19085"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50916667,
+          "longitude_deg": -112.87266667,
+          "elevation_m": 1738,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336721.547,
+          "northing_m": 4263972.305,
+          "elevation_m": 1738
+        },
+        "sceneCoordinates": {
+          "x_m": -4745.803,
+          "y_m": -9402.195,
+          "z_m": 1738
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19086",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4092.393,
+          -8654.978,
+          1749
+        ]
+      },
+      "properties": {
+        "id": "FRG19086",
+        "displayName": "MT station FRG19086",
+        "stationId": "FRG19086",
+        "pointIndex": 85,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19086_bvv.edi",
+            "relativePath": "EDIs/FRG19086_bvv.edi",
+            "dataId": "Team1_2_sites_190801"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19086.edi",
+            "relativePath": "EDIs/FRG19086.edi",
+            "dataId": "Team1_sites_190801"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.51601667,
+          "longitude_deg": -112.86535,
+          "elevation_m": 1749,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 337374.957,
+          "northing_m": 4264719.522,
+          "elevation_m": 1749
+        },
+        "sceneCoordinates": {
+          "x_m": -4092.393,
+          "y_m": -8654.978,
+          "z_m": 1749
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19087",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4986.534,
+          -10370.577,
+          1738
+        ]
+      },
+      "properties": {
+        "id": "FRG19087",
+        "displayName": "MT station FRG19087",
+        "stationId": "FRG19087",
+        "pointIndex": 86,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19087_bvv.edi",
+            "relativePath": "EDIs/FRG19087_bvv.edi",
+            "dataId": "Team1_2_sites_190803"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19087.edi",
+            "relativePath": "EDIs/FRG19087.edi",
+            "dataId": "Team2_sites_190803"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.5004,
+          "longitude_deg": -112.8752,
+          "elevation_m": 1738,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336480.816,
+          "northing_m": 4263003.923,
+          "elevation_m": 1738
+        },
+        "sceneCoordinates": {
+          "x_m": -4986.534,
+          "y_m": -10370.577,
+          "z_m": 1738
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19088",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9508.947,
+          -8643.215,
+          1556
+        ]
+      },
+      "properties": {
+        "id": "FRG19088",
+        "displayName": "MT station FRG19088",
+        "stationId": "FRG19088",
+        "pointIndex": 87,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19088_bvv.edi",
+            "relativePath": "EDIs/FRG19088_bvv.edi",
+            "dataId": "Team1_2_sites_190804"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19088.edi",
+            "relativePath": "EDIs/FRG19088.edi",
+            "dataId": "Team1_sites_190804"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.51511667,
+          "longitude_deg": -112.92745,
+          "elevation_m": 1556,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 331958.403,
+          "northing_m": 4264731.285,
+          "elevation_m": 1556
+        },
+        "sceneCoordinates": {
+          "x_m": -9508.947,
+          "y_m": -8643.215,
+          "z_m": 1556
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19089",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8532.001,
+          -10249.421,
+          1590
+        ]
+      },
+      "properties": {
+        "id": "FRG19089",
+        "displayName": "MT station FRG19089",
+        "stationId": "FRG19089",
+        "pointIndex": 88,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19089_bvv.edi",
+            "relativePath": "EDIs/FRG19089_bvv.edi",
+            "dataId": "Team1_2_sites_190730"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19089.edi",
+            "relativePath": "EDIs/FRG19089.edi",
+            "dataId": "Team2_sites_190730"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50083333,
+          "longitude_deg": -112.91586667,
+          "elevation_m": 1590,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 332935.349,
+          "northing_m": 4263125.079,
+          "elevation_m": 1590
+        },
+        "sceneCoordinates": {
+          "x_m": -8532.001,
+          "y_m": -10249.421,
+          "z_m": 1590
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19090",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9638.089,
+          -10226.312,
+          1561
+        ]
+      },
+      "properties": {
+        "id": "FRG19090",
+        "displayName": "MT station FRG19090",
+        "stationId": "FRG19090",
+        "pointIndex": 89,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19090_bvv.edi",
+            "relativePath": "EDIs/FRG19090_bvv.edi",
+            "dataId": "Team1_2_sites_190729"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19090.edi",
+            "relativePath": "EDIs/FRG19090.edi",
+            "dataId": "Team2_sites_190729"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50083333,
+          "longitude_deg": -112.92855,
+          "elevation_m": 1561,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 331829.261,
+          "northing_m": 4263148.188,
+          "elevation_m": 1561
+        },
+        "sceneCoordinates": {
+          "x_m": -9638.089,
+          "y_m": -10226.312,
+          "z_m": 1561
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19091",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -14068.673,
+          -10150.719,
+          1508
+        ]
+      },
+      "properties": {
+        "id": "FRG19091",
+        "displayName": "MT station FRG19091",
+        "stationId": "FRG19091",
+        "pointIndex": 90,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19091_bvv.edi",
+            "relativePath": "EDIs/FRG19091_bvv.edi",
+            "dataId": "Team1_2_sites_190728"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19091.edi",
+            "relativePath": "EDIs/FRG19091.edi",
+            "dataId": "FRG19091"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50066667,
+          "longitude_deg": -112.97935,
+          "elevation_m": 1508,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 327398.677,
+          "northing_m": 4263223.781,
+          "elevation_m": 1508
+        },
+        "sceneCoordinates": {
+          "x_m": -14068.673,
+          "y_m": -10150.719,
+          "z_m": 1508
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19092",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -15378.091,
+          -10181.656,
+          1504
+        ]
+      },
+      "properties": {
+        "id": "FRG19092",
+        "displayName": "MT station FRG19092",
+        "stationId": "FRG19092",
+        "pointIndex": 91,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19092_bvv.edi",
+            "relativePath": "EDIs/FRG19092_bvv.edi",
+            "dataId": "Team1_2_sites_190722"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19092.edi",
+            "relativePath": "EDIs/FRG19092.edi",
+            "dataId": "Team1_sites_190722"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50013333,
+          "longitude_deg": -112.99435,
+          "elevation_m": 1504,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 326089.259,
+          "northing_m": 4263192.844,
+          "elevation_m": 1504
+        },
+        "sceneCoordinates": {
+          "x_m": -15378.091,
+          "y_m": -10181.656,
+          "z_m": 1504
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19093",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1513.749,
+          -889.224,
+          1769
+        ]
+      },
+      "properties": {
+        "id": "FRG19093",
+        "displayName": "MT station FRG19093",
+        "stationId": "FRG19093",
+        "pointIndex": 92,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19093_bvv.edi",
+            "relativePath": "EDIs/FRG19093_bvv.edi",
+            "dataId": "Team1_2_sites_190726"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19093.edi",
+            "relativePath": "EDIs/FRG19093.edi",
+            "dataId": "Team1_sites_190726"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.58643333,
+          "longitude_deg": -112.83756667,
+          "elevation_m": 1769,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 339953.601,
+          "northing_m": 4272485.276,
+          "elevation_m": 1769
+        },
+        "sceneCoordinates": {
+          "x_m": -1513.749,
+          "y_m": -889.224,
+          "z_m": 1769
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19094",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -2994.778,
+          -944.568,
+          1677
+        ]
+      },
+      "properties": {
+        "id": "FRG19094",
+        "displayName": "MT station FRG19094",
+        "stationId": "FRG19094",
+        "pointIndex": 93,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19094_bvv.edi",
+            "relativePath": "EDIs/FRG19094_bvv.edi",
+            "dataId": "Team1_2_sites_190726"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19094.edi",
+            "relativePath": "EDIs/FRG19094.edi",
+            "dataId": "Team1_sites_190726"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.58566667,
+          "longitude_deg": -112.85455,
+          "elevation_m": 1677,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 338472.572,
+          "northing_m": 4272429.932,
+          "elevation_m": 1677
+        },
+        "sceneCoordinates": {
+          "x_m": -2994.778,
+          "y_m": -944.568,
+          "z_m": 1677
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19095",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7355.682,
+          -847.91,
+          1523
+        ]
+      },
+      "properties": {
+        "id": "FRG19095",
+        "displayName": "MT station FRG19095",
+        "stationId": "FRG19095",
+        "pointIndex": 94,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19095_bvv.edi",
+            "relativePath": "EDIs/FRG19095_bvv.edi",
+            "dataId": "Team1_2_sites_190725"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19095.edi",
+            "relativePath": "EDIs/FRG19095.edi",
+            "dataId": "Team1_sites_190725"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.58573333,
+          "longitude_deg": -112.90461667,
+          "elevation_m": 1523,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334111.668,
+          "northing_m": 4272526.59,
+          "elevation_m": 1523
+        },
+        "sceneCoordinates": {
+          "x_m": -7355.682,
+          "y_m": -847.91,
+          "z_m": 1523
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19096",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4533.008,
+          -954.064,
+          1601
+        ]
+      },
+      "properties": {
+        "id": "FRG19096",
+        "displayName": "MT station FRG19096",
+        "stationId": "FRG19096",
+        "pointIndex": 95,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19096_bvv.edi",
+            "relativePath": "EDIs/FRG19096_bvv.edi",
+            "dataId": "Team1_2_sites_190726"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19096.edi",
+            "relativePath": "EDIs/FRG19096.edi",
+            "dataId": "Team1_sites_190726"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.5853,
+          "longitude_deg": -112.8722,
+          "elevation_m": 1601,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336934.342,
+          "northing_m": 4272420.436,
+          "elevation_m": 1601
+        },
+        "sceneCoordinates": {
+          "x_m": -4533.008,
+          "y_m": -954.064,
+          "z_m": 1601
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19097",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8826.756,
+          -769.153,
+          1518
+        ]
+      },
+      "properties": {
+        "id": "FRG19097",
+        "displayName": "MT station FRG19097",
+        "stationId": "FRG19097",
+        "pointIndex": 96,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19097_bvv.edi",
+            "relativePath": "EDIs/FRG19097_bvv.edi",
+            "dataId": "Team1_2_sites_190726"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19097.edi",
+            "relativePath": "EDIs/FRG19097.edi",
+            "dataId": "Team1_sites_190726"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.58616667,
+          "longitude_deg": -112.92151667,
+          "elevation_m": 1518,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 332640.594,
+          "northing_m": 4272605.347,
+          "elevation_m": 1518
+        },
+        "sceneCoordinates": {
+          "x_m": -8826.756,
+          "y_m": -769.153,
+          "z_m": 1518
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19098",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -13848.524,
+          -534.814,
+          1488
+        ]
+      },
+      "properties": {
+        "id": "FRG19098",
+        "displayName": "MT station FRG19098",
+        "stationId": "FRG19098",
+        "pointIndex": 97,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19098_bvv.edi",
+            "relativePath": "EDIs/FRG19098_bvv.edi",
+            "dataId": "Team1_2_sites_190723"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19098.edi",
+            "relativePath": "EDIs/FRG19098.edi",
+            "dataId": "Team1_sites_190723"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.58731667,
+          "longitude_deg": -112.9792,
+          "elevation_m": 1488,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 327618.826,
+          "northing_m": 4272839.686,
+          "elevation_m": 1488
+        },
+        "sceneCoordinates": {
+          "x_m": -13848.524,
+          "y_m": -534.814,
+          "z_m": 1488
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19099",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -12077.07,
+          -693.079,
+          1492
+        ]
+      },
+      "properties": {
+        "id": "FRG19099",
+        "displayName": "MT station FRG19099",
+        "stationId": "FRG19099",
+        "pointIndex": 98,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19099_bvv.edi",
+            "relativePath": "EDIs/FRG19099_bvv.edi",
+            "dataId": "Team1_2_sites_190727"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19099.edi",
+            "relativePath": "EDIs/FRG19099.edi",
+            "dataId": "FRG19099"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.58623333,
+          "longitude_deg": -112.95883333,
+          "elevation_m": 1492,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 329390.28,
+          "northing_m": 4272681.421,
+          "elevation_m": 1492
+        },
+        "sceneCoordinates": {
+          "x_m": -12077.07,
+          "y_m": -693.079,
+          "z_m": 1492
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19100",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5033.69,
+          7358.883,
+          1543
+        ]
+      },
+      "properties": {
+        "id": "FRG19100",
+        "displayName": "MT station FRG19100",
+        "stationId": "FRG19100",
+        "pointIndex": 99,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19100_bvv.edi",
+            "relativePath": "EDIs/FRG19100_bvv.edi",
+            "dataId": "Team1_2_sites_190805"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19100.edi",
+            "relativePath": "EDIs/FRG19100.edi",
+            "dataId": "Team1_sites_190805"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.66008333,
+          "longitude_deg": -112.8799,
+          "elevation_m": 1543,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 336433.66,
+          "northing_m": 4280733.383,
+          "elevation_m": 1543
+        },
+        "sceneCoordinates": {
+          "x_m": -5033.69,
+          "y_m": 7358.883,
+          "z_m": 1543
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19101",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -20782.148,
+          -10255.146,
+          1544
+        ]
+      },
+      "properties": {
+        "id": "FRG19101",
+        "displayName": "MT station FRG19101",
+        "stationId": "FRG19101",
+        "pointIndex": 100,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19101_bvv.edi",
+            "relativePath": "EDIs/FRG19101_bvv.edi",
+            "dataId": "Team1_sites_190721"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19101.edi",
+            "relativePath": "EDIs/FRG19101.edi",
+            "dataId": "Team1_sites_190721"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.4984,
+          "longitude_deg": -113.05626667,
+          "elevation_m": 1544,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 320685.202,
+          "northing_m": 4263119.354,
+          "elevation_m": 1544
+        },
+        "sceneCoordinates": {
+          "x_m": -20782.148,
+          "y_m": -10255.146,
+          "z_m": 1544
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19102RR",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -20675.349,
+          -7233.723,
+          1522
+        ]
+      },
+      "properties": {
+        "id": "FRG19102RR",
+        "displayName": "MT station FRG19102RR",
+        "stationId": "FRG19102RR",
+        "pointIndex": 101,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19102RR_bvv.edi",
+            "relativePath": "EDIs/FRG19102RR_bvv.edi",
+            "dataId": "Team1_2_sites_190805"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19102RR.edi",
+            "relativePath": "EDIs/FRG19102RR.edi",
+            "dataId": "Team1_sites_190805"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.52563333,
+          "longitude_deg": -113.05581667,
+          "elevation_m": 1522,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 320792.001,
+          "northing_m": 4266140.777,
+          "elevation_m": 1522
+        },
+        "sceneCoordinates": {
+          "x_m": -20675.349,
+          "y_m": -7233.723,
+          "z_m": 1522
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19103",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -17361.078,
+          -7638.382,
+          1513
+        ]
+      },
+      "properties": {
+        "id": "FRG19103",
+        "displayName": "MT station FRG19103",
+        "stationId": "FRG19103",
+        "pointIndex": 102,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19103_bvv.edi",
+            "relativePath": "EDIs/FRG19103_bvv.edi",
+            "dataId": "Team1_2_sites_190723"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19103.edi",
+            "relativePath": "EDIs/FRG19103.edi",
+            "dataId": "Team1_sites_190723"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.52265,
+          "longitude_deg": -113.01771667,
+          "elevation_m": 1513,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 324106.272,
+          "northing_m": 4265736.118,
+          "elevation_m": 1513
+        },
+        "sceneCoordinates": {
+          "x_m": -17361.078,
+          "y_m": -7638.382,
+          "z_m": 1513
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19104",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -18754.451,
+          -449.774,
+          1490
+        ]
+      },
+      "properties": {
+        "id": "FRG19104",
+        "displayName": "MT station FRG19104",
+        "stationId": "FRG19104",
+        "pointIndex": 103,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19104_bvv.edi",
+            "relativePath": "EDIs/FRG19104_bvv.edi",
+            "dataId": "Team1_2_sites_190722"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19104.edi",
+            "relativePath": "EDIs/FRG19104.edi",
+            "dataId": "Team1_sites_190722"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.58711667,
+          "longitude_deg": -113.03551667,
+          "elevation_m": 1490,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 322712.899,
+          "northing_m": 4272924.726,
+          "elevation_m": 1490
+        },
+        "sceneCoordinates": {
+          "x_m": -18754.451,
+          "y_m": -449.774,
+          "z_m": 1490
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19105",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -20790.59,
+          -3226.513,
+          1511
+        ]
+      },
+      "properties": {
+        "id": "FRG19105",
+        "displayName": "MT station FRG19105",
+        "stationId": "FRG19105",
+        "pointIndex": 104,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19105_bvv.edi",
+            "relativePath": "EDIs/FRG19105_bvv.edi",
+            "dataId": "Team1_sites_190721"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19105.edi",
+            "relativePath": "EDIs/FRG19105.edi",
+            "dataId": "Team1_sites_190721"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.5617,
+          "longitude_deg": -113.05816667,
+          "elevation_m": 1511,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 320676.76,
+          "northing_m": 4270147.987,
+          "elevation_m": 1511
+        },
+        "sceneCoordinates": {
+          "x_m": -20790.59,
+          "y_m": -3226.513,
+          "z_m": 1511
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19106",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6462.663,
+          1605.758,
+          1530
+        ]
+      },
+      "properties": {
+        "id": "FRG19106",
+        "displayName": "MT station FRG19106",
+        "stationId": "FRG19106",
+        "pointIndex": 105,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19106_bvv.edi",
+            "relativePath": "EDIs/FRG19106_bvv.edi",
+            "dataId": "Team1_2_sites_190725"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19106.edi",
+            "relativePath": "EDIs/FRG19106.edi",
+            "dataId": "Team1_sites_190725"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.608,
+          "longitude_deg": -112.89495,
+          "elevation_m": 1530,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 335004.687,
+          "northing_m": 4274980.258,
+          "elevation_m": 1530
+        },
+        "sceneCoordinates": {
+          "x_m": -6462.663,
+          "y_m": 1605.758,
+          "z_m": 1530
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19107",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9611.324,
+          1634.374,
+          1502
+        ]
+      },
+      "properties": {
+        "id": "FRG19107",
+        "displayName": "MT station FRG19107",
+        "stationId": "FRG19107",
+        "pointIndex": 106,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19107_bvv.edi",
+            "relativePath": "EDIs/FRG19107_bvv.edi",
+            "dataId": "Team1_2_sites_190724"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19107.edi",
+            "relativePath": "EDIs/FRG19107.edi",
+            "dataId": "Team1_sites_190724"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.60766667,
+          "longitude_deg": -112.9311,
+          "elevation_m": 1502,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 331856.026,
+          "northing_m": 4275008.874,
+          "elevation_m": 1502
+        },
+        "sceneCoordinates": {
+          "x_m": -9611.324,
+          "y_m": 1634.374,
+          "z_m": 1502
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19108",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -12768.777,
+          1662.567,
+          1491
+        ]
+      },
+      "properties": {
+        "id": "FRG19108",
+        "displayName": "MT station FRG19108",
+        "stationId": "FRG19108",
+        "pointIndex": 107,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19108_bvv.edi",
+            "relativePath": "EDIs/FRG19108_bvv.edi",
+            "dataId": "Team1_2_sites_190724"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19108.edi",
+            "relativePath": "EDIs/FRG19108.edi",
+            "dataId": "Team1_sites_190724"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.60731667,
+          "longitude_deg": -112.96735,
+          "elevation_m": 1491,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 328698.573,
+          "northing_m": 4275037.067,
+          "elevation_m": 1491
+        },
+        "sceneCoordinates": {
+          "x_m": -12768.777,
+          "y_m": 1662.567,
+          "z_m": 1491
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19109",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4190.065,
+          1908.886,
+          1571
+        ]
+      },
+      "properties": {
+        "id": "FRG19109",
+        "displayName": "MT station FRG19109",
+        "stationId": "FRG19109",
+        "pointIndex": 108,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19109_bvv.edi",
+            "relativePath": "EDIs/FRG19109_bvv.edi",
+            "dataId": "Team1_2_sites_190725"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19109.edi",
+            "relativePath": "EDIs/FRG19109.edi",
+            "dataId": "Team1_sites_190725"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.61115,
+          "longitude_deg": -112.86893333,
+          "elevation_m": 1571,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 337277.285,
+          "northing_m": 4275283.386,
+          "elevation_m": 1571
+        },
+        "sceneCoordinates": {
+          "x_m": -4190.065,
+          "y_m": 1908.886,
+          "z_m": 1571
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19110",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9826.709,
+          -3150.036,
+          1512
+        ]
+      },
+      "properties": {
+        "id": "FRG19110",
+        "displayName": "MT station FRG19110",
+        "stationId": "FRG19110",
+        "pointIndex": 109,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19110_bvv.edi",
+            "relativePath": "EDIs/FRG19110_bvv.edi",
+            "dataId": "Team1_2_sites_190728"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19110.edi",
+            "relativePath": "EDIs/FRG19110.edi",
+            "dataId": "Team1_sites_190728"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.56453333,
+          "longitude_deg": -112.93241667,
+          "elevation_m": 1512,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 331640.641,
+          "northing_m": 4270224.464,
+          "elevation_m": 1512
+        },
+        "sceneCoordinates": {
+          "x_m": -9826.709,
+          "y_m": -3150.036,
+          "z_m": 1512
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19111",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -12737.38,
+          -3382.511,
+          1493
+        ]
+      },
+      "properties": {
+        "id": "FRG19111",
+        "displayName": "MT station FRG19111",
+        "stationId": "FRG19111",
+        "pointIndex": 110,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19111_bvv.edi",
+            "relativePath": "EDIs/FRG19111_bvv.edi",
+            "dataId": "Team1_2_sites_190729"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19111.edi",
+            "relativePath": "EDIs/FRG19111.edi",
+            "dataId": "Team1_sites_190729"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.56188333,
+          "longitude_deg": -112.96575,
+          "elevation_m": 1493,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 328729.97,
+          "northing_m": 4269991.989,
+          "elevation_m": 1493
+        },
+        "sceneCoordinates": {
+          "x_m": -12737.38,
+          "y_m": -3382.511,
+          "z_m": 1493
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19112",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -16580.816,
+          -2936.654,
+          1487
+        ]
+      },
+      "properties": {
+        "id": "FRG19112",
+        "displayName": "MT station FRG19112",
+        "stationId": "FRG19112",
+        "pointIndex": 111,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19112_bvv.edi",
+            "relativePath": "EDIs/FRG19112_bvv.edi",
+            "dataId": "Team1_2_sites_190723"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19112.edi",
+            "relativePath": "EDIs/FRG19112.edi",
+            "dataId": "Team1_sites_190723"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.56515,
+          "longitude_deg": -113.00995,
+          "elevation_m": 1487,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 324886.534,
+          "northing_m": 4270437.846,
+          "elevation_m": 1487
+        },
+        "sceneCoordinates": {
+          "x_m": -16580.816,
+          "y_m": -2936.654,
+          "z_m": 1487
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19113",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8950.681,
+          -6347.434,
+          1541
+        ]
+      },
+      "properties": {
+        "id": "FRG19113",
+        "displayName": "MT station FRG19113",
+        "stationId": "FRG19113",
+        "pointIndex": 112,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19113_bvv.edi",
+            "relativePath": "EDIs/FRG19113_bvv.edi",
+            "dataId": "Team1_2_sites_190731"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19113.edi",
+            "relativePath": "EDIs/FRG19113.edi",
+            "dataId": "Team1_sites_190731"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.5359,
+          "longitude_deg": -112.9216,
+          "elevation_m": 1541,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 332516.669,
+          "northing_m": 4267027.066,
+          "elevation_m": 1541
+        },
+        "sceneCoordinates": {
+          "x_m": -8950.681,
+          "y_m": -6347.434,
+          "z_m": 1541
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19114",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9888.162,
+          -12234.312,
+          1579
+        ]
+      },
+      "properties": {
+        "id": "FRG19114",
+        "displayName": "MT station FRG19114",
+        "stationId": "FRG19114",
+        "pointIndex": 113,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19114_bvv.edi",
+            "relativePath": "EDIs/FRG19114_bvv.edi",
+            "dataId": "Team1_2_sites_190728"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19114.edi",
+            "relativePath": "EDIs/FRG19114.edi",
+            "dataId": "Team2_sites_190728"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.4827,
+          "longitude_deg": -112.93093333,
+          "elevation_m": 1579,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 331579.188,
+          "northing_m": 4261140.188,
+          "elevation_m": 1579
+        },
+        "sceneCoordinates": {
+          "x_m": -9888.162,
+          "y_m": -12234.312,
+          "z_m": 1579
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19115",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8882.543,
+          -11230.227,
+          1592
+        ]
+      },
+      "properties": {
+        "id": "FRG19115",
+        "displayName": "MT station FRG19115",
+        "stationId": "FRG19115",
+        "pointIndex": 114,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19115_bvv.edi",
+            "relativePath": "EDIs/FRG19115_bvv.edi",
+            "dataId": "Team1_2_sites_190729"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19115.edi",
+            "relativePath": "EDIs/FRG19115.edi",
+            "dataId": "Team2_sites_190729"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.49193333,
+          "longitude_deg": -112.91965,
+          "elevation_m": 1592,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 332584.807,
+          "northing_m": 4262144.273,
+          "elevation_m": 1592
+        },
+        "sceneCoordinates": {
+          "x_m": -8882.543,
+          "y_m": -11230.227,
+          "z_m": 1592
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19116",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8689.515,
+          -9365.349,
+          1579
+        ]
+      },
+      "properties": {
+        "id": "FRG19116",
+        "displayName": "MT station FRG19116",
+        "stationId": "FRG19116",
+        "pointIndex": 115,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19116_bvv.edi",
+            "relativePath": "EDIs/FRG19116_bvv.edi",
+            "dataId": "Team1_2_sites_190804"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19116.edi",
+            "relativePath": "EDIs/FRG19116.edi",
+            "dataId": "Team1_sites_190804"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50876667,
+          "longitude_deg": -112.91788333,
+          "elevation_m": 1579,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 332777.835,
+          "northing_m": 4264009.151,
+          "elevation_m": 1579
+        },
+        "sceneCoordinates": {
+          "x_m": -8689.515,
+          "y_m": -9365.349,
+          "z_m": 1579
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19117",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -10502.011,
+          -11270.297,
+          1551
+        ]
+      },
+      "properties": {
+        "id": "FRG19117",
+        "displayName": "MT station FRG19117",
+        "stationId": "FRG19117",
+        "pointIndex": 116,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19117_bvv.edi",
+            "relativePath": "EDIs/FRG19117_bvv.edi",
+            "dataId": "Team1_2_sites_190727"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19117.edi",
+            "relativePath": "EDIs/FRG19117.edi",
+            "dataId": "Team2_sites_190727"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.49126667,
+          "longitude_deg": -112.9382,
+          "elevation_m": 1551,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 330965.339,
+          "northing_m": 4262104.203,
+          "elevation_m": 1551
+        },
+        "sceneCoordinates": {
+          "x_m": -10502.011,
+          "y_m": -11270.297,
+          "z_m": 1551
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19118",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -10428.931,
+          -9319.642,
+          1538
+        ]
+      },
+      "properties": {
+        "id": "FRG19118",
+        "displayName": "MT station FRG19118",
+        "stationId": "FRG19118",
+        "pointIndex": 117,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19118_bvv.edi",
+            "relativePath": "EDIs/FRG19118_bvv.edi",
+            "dataId": "Team1_2_sites_190804"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19118.edi",
+            "relativePath": "EDIs/FRG19118.edi",
+            "dataId": "Team1_sites_190804"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.50885,
+          "longitude_deg": -112.93783333,
+          "elevation_m": 1538,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 331038.419,
+          "northing_m": 4264054.858,
+          "elevation_m": 1538
+        },
+        "sceneCoordinates": {
+          "x_m": -10428.931,
+          "y_m": -9319.642,
+          "z_m": 1538
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19119",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -16622.144,
+          -12547.282,
+          1510
+        ]
+      },
+      "properties": {
+        "id": "FRG19119",
+        "displayName": "MT station FRG19119",
+        "stationId": "FRG19119",
+        "pointIndex": 118,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19119_bvv.edi",
+            "relativePath": "EDIs/FRG19119_bvv.edi",
+            "dataId": "Team1_2_sites_190722"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19119.edi",
+            "relativePath": "EDIs/FRG19119.edi",
+            "dataId": "Team1_sites_190722"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.47858333,
+          "longitude_deg": -113.00801667,
+          "elevation_m": 1510,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 324845.206,
+          "northing_m": 4260827.218,
+          "elevation_m": 1510
+        },
+        "sceneCoordinates": {
+          "x_m": -16622.144,
+          "y_m": -12547.282,
+          "z_m": 1510
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19120",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9504.111,
+          -7510.863,
+          1547
+        ]
+      },
+      "properties": {
+        "id": "FRG19120",
+        "displayName": "MT station FRG19120",
+        "stationId": "FRG19120",
+        "pointIndex": 119,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19120_bvv.edi",
+            "relativePath": "EDIs/FRG19120_bvv.edi",
+            "dataId": "Team1_2_sites_190731"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19120.edi",
+            "relativePath": "EDIs/FRG19120.edi",
+            "dataId": "Team1_sites_190731"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.52531667,
+          "longitude_deg": -112.92766667,
+          "elevation_m": 1547,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 331963.239,
+          "northing_m": 4265863.637,
+          "elevation_m": 1547
+        },
+        "sceneCoordinates": {
+          "x_m": -9504.111,
+          "y_m": -7510.863,
+          "z_m": 1547
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19121",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -20312.101,
+          -14027.788,
+          1541
+        ]
+      },
+      "properties": {
+        "id": "FRG19121",
+        "displayName": "MT station FRG19121",
+        "stationId": "FRG19121",
+        "pointIndex": 120,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19121_bvv.edi",
+            "relativePath": "EDIs/FRG19121_bvv.edi",
+            "dataId": "Team1_sites_190721"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19121.edi",
+            "relativePath": "EDIs/FRG19121.edi",
+            "dataId": "Team1_sites_190721"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.46451667,
+          "longitude_deg": -113.04991667,
+          "elevation_m": 1541,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 321155.249,
+          "northing_m": 4259346.712,
+          "elevation_m": 1541
+        },
+        "sceneCoordinates": {
+          "x_m": -20312.101,
+          "y_m": -14027.788,
+          "z_m": 1541
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "FRG19122",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6640.564,
+          -9206.116,
+          1642
+        ]
+      },
+      "properties": {
+        "id": "FRG19122",
+        "displayName": "MT station FRG19122",
+        "stationId": "FRG19122",
+        "pointIndex": 121,
+        "sourceRole": "mt_station",
+        "classification": "measured",
+        "provenanceClass": "measured",
+        "selectedVariant": "standard",
+        "variantCount": 2,
+        "variants": [
+          {
+            "variant": "bvv",
+            "fileName": "FRG19122_bvv.edi",
+            "relativePath": "EDIs/FRG19122_bvv.edi",
+            "dataId": "Team1_2_sites_190802"
+          },
+          {
+            "variant": "standard",
+            "fileName": "FRG19122.edi",
+            "relativePath": "EDIs/FRG19122.edi",
+            "dataId": "Team1_sites_190802"
+          }
+        ],
+        "sourceCoordinates": {
+          "latitude_deg": 38.51058333,
+          "longitude_deg": -112.89443333,
+          "elevation_m": 1642,
+          "datum": "NAD83"
+        },
+        "sourceUtm": {
+          "epsg": "EPSG:26912",
+          "easting_m": 334826.786,
+          "northing_m": 4264168.384,
+          "elevation_m": 1642
+        },
+        "sceneCoordinates": {
+          "x_m": -6640.564,
+          "y_m": -9206.116,
+          "z_m": 1642
+        }
+      }
+    }
+  ]
+}

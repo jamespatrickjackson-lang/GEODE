@@ -1,0 +1,597 @@
+{
+  "schema": "geosee.tiled-pointcloud-preview.v1",
+  "label": "Shahbazi TLS tiled preview",
+  "source": {
+    "file": "projects/case-study-b/data/raw/shahbazi_gravel_pit/LaserScan.xyz",
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Data in Brief 25, 103962, DOI 10.1016/j.dib.2019.103962",
+    "sourcePointCount": 8308685,
+    "sampleStride": 11,
+    "sampledPointCount": 755335
+  },
+  "crs": {
+    "label": "NAD83 / MTM Zone 7",
+    "epsg": 32187,
+    "status": "from article source-data table; confirm against full processing outputs before GIS overlay use"
+  },
+  "sourceBounds": {
+    "min": [
+      193067.61,
+      5025190.73,
+      297.405
+    ],
+    "max": [
+      193117.908,
+      5025273.543,
+      305.576
+    ],
+    "center": [
+      193092.759,
+      5025232.137,
+      301.491
+    ]
+  },
+  "scenePlacement": {
+    "mode": "tls-preview-aligned",
+    "horizontalScale": 1,
+    "verticalScale": 1,
+    "zLiftMeters": 115,
+    "note": "Tiled preview keeps TLS metric scale, recenters X/Y, and lifts Z into the existing procedural Case Study B scene."
+  },
+  "sceneBounds": {
+    "min": [
+      -25.1,
+      -41.367,
+      115.102
+    ],
+    "max": [
+      25.134,
+      41.311,
+      123.148
+    ]
+  },
+  "encoding": {
+    "tileFormat": "float32-little-endian",
+    "columns": [
+      "x_scene_m",
+      "y_scene_m",
+      "z_scene_m"
+    ]
+  },
+  "tiling": {
+    "gridSize": [
+      4,
+      4
+    ],
+    "tileCount": 16
+  },
+  "tiles": [
+    {
+      "id": "tile_00_00",
+      "file": "tile_00_00.bin",
+      "grid": [
+        0,
+        0
+      ],
+      "pointCount": 1248,
+      "sourceBounds": {
+        "min": [
+          193077.41,
+          5025202.253,
+          298.827
+        ],
+        "max": [
+          193080.184,
+          5025211.432,
+          299.053
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          -15.349,
+          -29.884,
+          116.422
+        ],
+        "max": [
+          -12.575,
+          -20.704,
+          116.648
+        ]
+      }
+    },
+    {
+      "id": "tile_00_01",
+      "file": "tile_00_01.bin",
+      "grid": [
+        1,
+        0
+      ],
+      "pointCount": 76640,
+      "sourceBounds": {
+        "min": [
+          193080.186,
+          5025190.769,
+          298.846
+        ],
+        "max": [
+          193092.759,
+          5025211.431,
+          303.027
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          -12.573,
+          -41.367,
+          116.441
+        ],
+        "max": [
+          0,
+          -20.706,
+          120.622
+        ]
+      }
+    },
+    {
+      "id": "tile_00_02",
+      "file": "tile_00_02.bin",
+      "grid": [
+        2,
+        0
+      ],
+      "pointCount": 78898,
+      "sourceBounds": {
+        "min": [
+          193092.759,
+          5025191.574,
+          299.103
+        ],
+        "max": [
+          193105.332,
+          5025211.433,
+          303.369
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          0,
+          -40.563,
+          116.698
+        ],
+        "max": [
+          12.573,
+          -20.703,
+          120.964
+        ]
+      }
+    },
+    {
+      "id": "tile_00_03",
+      "file": "tile_00_03.bin",
+      "grid": [
+        3,
+        0
+      ],
+      "pointCount": 55129,
+      "sourceBounds": {
+        "min": [
+          193105.334,
+          5025196.239,
+          298.827
+        ],
+        "max": [
+          193117.678,
+          5025211.432,
+          300.005
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          12.575,
+          -35.897,
+          116.422
+        ],
+        "max": [
+          24.919,
+          -20.704,
+          117.6
+        ]
+      }
+    },
+    {
+      "id": "tile_01_00",
+      "file": "tile_01_00.bin",
+      "grid": [
+        0,
+        1
+      ],
+      "pointCount": 41212,
+      "sourceBounds": {
+        "min": [
+          193071.227,
+          5025211.439,
+          298.159
+        ],
+        "max": [
+          193080.184,
+          5025232.136,
+          299.2
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          -21.532,
+          -20.697,
+          115.754
+        ],
+        "max": [
+          -12.575,
+          0,
+          116.795
+        ]
+      }
+    },
+    {
+      "id": "tile_01_01",
+      "file": "tile_01_01.bin",
+      "grid": [
+        1,
+        1
+      ],
+      "pointCount": 63562,
+      "sourceBounds": {
+        "min": [
+          193080.185,
+          5025211.434,
+          298.335
+        ],
+        "max": [
+          193092.759,
+          5025232.136,
+          305.06
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          -12.574,
+          -20.703,
+          115.93
+        ],
+        "max": [
+          0,
+          0,
+          122.655
+        ]
+      }
+    },
+    {
+      "id": "tile_01_02",
+      "file": "tile_01_02.bin",
+      "grid": [
+        2,
+        1
+      ],
+      "pointCount": 49930,
+      "sourceBounds": {
+        "min": [
+          193092.759,
+          5025211.433,
+          298.913
+        ],
+        "max": [
+          193105.333,
+          5025232.136,
+          305.239
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          0,
+          -20.703,
+          116.508
+        ],
+        "max": [
+          12.574,
+          0,
+          122.834
+        ]
+      }
+    },
+    {
+      "id": "tile_01_03",
+      "file": "tile_01_03.bin",
+      "grid": [
+        3,
+        1
+      ],
+      "pointCount": 100008,
+      "sourceBounds": {
+        "min": [
+          193105.334,
+          5025211.434,
+          298.36
+        ],
+        "max": [
+          193117.883,
+          5025232.136,
+          300.84
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          12.575,
+          -20.703,
+          115.955
+        ],
+        "max": [
+          25.124,
+          0,
+          118.435
+        ]
+      }
+    },
+    {
+      "id": "tile_02_00",
+      "file": "tile_02_00.bin",
+      "grid": [
+        0,
+        2
+      ],
+      "pointCount": 59512,
+      "sourceBounds": {
+        "min": [
+          193067.659,
+          5025232.14,
+          297.726
+        ],
+        "max": [
+          193080.184,
+          5025252.839,
+          300.023
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          -25.1,
+          0.004,
+          115.321
+        ],
+        "max": [
+          -12.575,
+          20.703,
+          117.618
+        ]
+      }
+    },
+    {
+      "id": "tile_02_01",
+      "file": "tile_02_01.bin",
+      "grid": [
+        1,
+        2
+      ],
+      "pointCount": 68361,
+      "sourceBounds": {
+        "min": [
+          193080.185,
+          5025232.137,
+          298.45
+        ],
+        "max": [
+          193092.759,
+          5025252.839,
+          305.137
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          -12.574,
+          0,
+          116.045
+        ],
+        "max": [
+          0,
+          20.702,
+          122.732
+        ]
+      }
+    },
+    {
+      "id": "tile_02_02",
+      "file": "tile_02_02.bin",
+      "grid": [
+        2,
+        2
+      ],
+      "pointCount": 54703,
+      "sourceBounds": {
+        "min": [
+          193092.76,
+          5025232.137,
+          298
+        ],
+        "max": [
+          193105.332,
+          5025252.839,
+          305.553
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          0.001,
+          0,
+          115.595
+        ],
+        "max": [
+          12.573,
+          20.702,
+          123.148
+        ]
+      }
+    },
+    {
+      "id": "tile_02_03",
+      "file": "tile_02_03.bin",
+      "grid": [
+        3,
+        2
+      ],
+      "pointCount": 13560,
+      "sourceBounds": {
+        "min": [
+          193105.334,
+          5025232.137,
+          298.059
+        ],
+        "max": [
+          193117.893,
+          5025252.826,
+          300.7
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          12.575,
+          0,
+          115.654
+        ],
+        "max": [
+          25.134,
+          20.69,
+          118.295
+        ]
+      }
+    },
+    {
+      "id": "tile_03_00",
+      "file": "tile_03_00.bin",
+      "grid": [
+        0,
+        3
+      ],
+      "pointCount": 599,
+      "sourceBounds": {
+        "min": [
+          193074.834,
+          5025252.855,
+          297.707
+        ],
+        "max": [
+          193080.18,
+          5025259.885,
+          299.257
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          -17.925,
+          20.718,
+          115.302
+        ],
+        "max": [
+          -12.579,
+          27.749,
+          116.852
+        ]
+      }
+    },
+    {
+      "id": "tile_03_01",
+      "file": "tile_03_01.bin",
+      "grid": [
+        1,
+        3
+      ],
+      "pointCount": 36675,
+      "sourceBounds": {
+        "min": [
+          193080.203,
+          5025252.841,
+          297.507
+        ],
+        "max": [
+          193092.759,
+          5025273.448,
+          301.288
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          -12.556,
+          20.704,
+          115.102
+        ],
+        "max": [
+          0,
+          41.311,
+          118.883
+        ]
+      }
+    },
+    {
+      "id": "tile_03_02",
+      "file": "tile_03_02.bin",
+      "grid": [
+        2,
+        3
+      ],
+      "pointCount": 54281,
+      "sourceBounds": {
+        "min": [
+          193092.759,
+          5025252.841,
+          297.509
+        ],
+        "max": [
+          193105.333,
+          5025272.357,
+          301.322
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          0,
+          20.705,
+          115.104
+        ],
+        "max": [
+          12.574,
+          40.22,
+          118.917
+        ]
+      }
+    },
+    {
+      "id": "tile_03_03",
+      "file": "tile_03_03.bin",
+      "grid": [
+        3,
+        3
+      ],
+      "pointCount": 1017,
+      "sourceBounds": {
+        "min": [
+          193105.334,
+          5025252.84,
+          297.986
+        ],
+        "max": [
+          193107.857,
+          5025257.78,
+          298.179
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          12.575,
+          20.704,
+          115.581
+        ],
+        "max": [
+          15.098,
+          25.644,
+          115.774
+        ]
+      }
+    }
+  ]
+}

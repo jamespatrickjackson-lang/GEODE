@@ -1,0 +1,62 @@
+{
+  "id": "base-gui-template",
+  "name": "Base GUI Template",
+  "client": "GeoSee",
+  "description": "Empty starter project for editing the shared GUI, overlay, navigator, label, lighting, and environment defaults.",
+  "version": "0.1.0",
+  "status": "template",
+  "audience": "authoring",
+  "geoseeVersion": "alpha-0.1",
+  "crs": {
+    "code": "LOCAL",
+    "label": "Local authoring coordinates"
+  },
+  "bounds": {
+    "min": [
+      -100,
+      -100,
+      -20
+    ],
+    "max": [
+      100,
+      100,
+      120
+    ]
+  },
+  "sceneOrigin": [
+    0,
+    0,
+    0
+  ],
+  "layers": [
+    {
+      "id": "base-gui-reference-stage",
+      "label": "Base GUI reference stage (placeholder)",
+      "type": "mesh",
+      "files": {},
+      "metadata": {
+        "sourceFile": "Procedural GeoSee base GUI scaffold",
+        "sourceDate": "2026-05-11",
+        "sourceOrigin": "GeoSee template",
+        "classification": "planned",
+        "confidentiality": "public",
+        "placeholder": true,
+        "notes": "Non-data visual scaffold for editing base GUI/environment defaults. Not project data."
+      }
+    }
+  ],
+  "pageOrder": [
+    "00_base_gui"
+  ],
+  "presentationDefaults": {
+    "transitionDuration": 1200,
+    "transitionEasing": "easeInOutCubic",
+    "holdDuration": 5000,
+    "cameraUp": [
+      0,
+      0,
+      1
+    ]
+  },
+  "watermark": "GeoSee"
+}

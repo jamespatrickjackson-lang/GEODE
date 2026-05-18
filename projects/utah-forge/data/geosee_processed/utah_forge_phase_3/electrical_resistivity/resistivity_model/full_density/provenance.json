@@ -1,0 +1,114 @@
+{
+  "artifact": "full-density tiled MT resistivity point cloud",
+  "classification": "source-derived inversion model full-density visualization",
+  "source": {
+    "project": "Utah FORGE",
+    "dataset": "GDR submission 1255 updated MT model cell-center package",
+    "sourceArchive": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip",
+    "sourceEntry": "FRG200614_mdl17_cellcenter.dat",
+    "sourceArchiveNote": "Delivered source/client file retained under client_preprocessed."
+  },
+  "transform": {
+    "crs": "scene-local meters",
+    "sourceCrs": "EPSG:26912 NAD83 / UTM Zone 12N",
+    "axisConvention": "X east, Y north, Z up",
+    "sceneOriginUtm": {
+      "easting_m": 341467.35,
+      "northing_m": 4273374.5,
+      "elevation_m": 0
+    },
+    "cropApplied": false,
+    "verticalExaggeration": 1
+  },
+  "processing": {
+    "script": "prep/build_utah_forge_mt_resistivity_full_density.mjs",
+    "generatedDate": "2026-05-12",
+    "valueTransform": "log10(resistivity_ohm_m)",
+    "zeroOrNegativeRule": "masked from full-density tile output because log10 is undefined",
+    "sourceRows": 1094940,
+    "emittedPoints": 1094624,
+    "maskedRows": 316,
+    "tileCount": 11,
+    "tilePointTarget": 100000,
+    "cropApplied": false,
+    "verticalExaggeration": 1
+  },
+  "outputs": {
+    "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json",
+    "stats": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/stats.json",
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/provenance.json",
+    "tiles": [
+      {
+        "id": "tile_0000",
+        "positions": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0000.positions.bin",
+        "scalars": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0000.scalars.bin",
+        "pointCount": 100000
+      },
+      {
+        "id": "tile_0001",
+        "positions": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0001.positions.bin",
+        "scalars": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0001.scalars.bin",
+        "pointCount": 100000
+      },
+      {
+        "id": "tile_0002",
+        "positions": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0002.positions.bin",
+        "scalars": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0002.scalars.bin",
+        "pointCount": 100000
+      },
+      {
+        "id": "tile_0003",
+        "positions": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0003.positions.bin",
+        "scalars": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0003.scalars.bin",
+        "pointCount": 100000
+      },
+      {
+        "id": "tile_0004",
+        "positions": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0004.positions.bin",
+        "scalars": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0004.scalars.bin",
+        "pointCount": 100000
+      },
+      {
+        "id": "tile_0005",
+        "positions": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0005.positions.bin",
+        "scalars": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0005.scalars.bin",
+        "pointCount": 100000
+      },
+      {
+        "id": "tile_0006",
+        "positions": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0006.positions.bin",
+        "scalars": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0006.scalars.bin",
+        "pointCount": 100000
+      },
+      {
+        "id": "tile_0007",
+        "positions": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0007.positions.bin",
+        "scalars": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0007.scalars.bin",
+        "pointCount": 100000
+      },
+      {
+        "id": "tile_0008",
+        "positions": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0008.positions.bin",
+        "scalars": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0008.scalars.bin",
+        "pointCount": 100000
+      },
+      {
+        "id": "tile_0009",
+        "positions": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0009.positions.bin",
+        "scalars": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0009.scalars.bin",
+        "pointCount": 100000
+      },
+      {
+        "id": "tile_0010",
+        "positions": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0010.positions.bin",
+        "scalars": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/tiles/tile_0010.scalars.bin",
+        "pointCount": 94624
+      }
+    ]
+  },
+  "limitations": [
+    "This renders all positive-resistivity model cell centers, not a volumetric voxel surface.",
+    "The source model's deep negative elevation extent is preserved and still needs careful narration before client-facing story work.",
+    "No seismic, Southwestern/regional MT, wells, faults, terrain, or infrastructure data is included in this artifact."
+  ]
+}

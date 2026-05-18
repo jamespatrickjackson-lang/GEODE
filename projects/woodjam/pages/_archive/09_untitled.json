@@ -1,0 +1,57 @@
+{
+  "id": "09_untitled",
+  "title": "Untitled page",
+  "camera": {
+    "position": [
+      -2082.449521122797,
+      -1192.0719726647578,
+      9798.845625319515
+    ],
+    "target": [
+      -2021.7437276506844,
+      -733.910354474195,
+      1045.9668090902958
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 50
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "overlayLayout": {
+    "x": 0.017217946357046113,
+    "y": 0.03470571290645896,
+    "width": 0.2672958355868037
+  },
+  "overlay": {
+    "position": "right",
+    "contentFile": "overlays/09_untitled/text.md",
+    "images": [
+      {
+        "file": "overlays/09_untitled/vcu_2711_fig_2.500x0-is.png",
+        "caption": "",
+        "position": "below-text"
+      }
+    ]
+  },
+  "visibilityOverrides": {
+    "hydrography-streams": true,
+    "hydrography-lakes": true
+  },
+  "layerOverrides": {
+    "hydrography-streams": {
+      "color": "#424242",
+      "opacity": 0.25
+    },
+    "hydrography-lakes": {
+      "color": "#383c43",
+      "opacity": 0.65
+    }
+  }
+}

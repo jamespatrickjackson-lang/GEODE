@@ -1,0 +1,124 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "utah-forge-mt-resistivity-slices",
+  "project": "utah-forge",
+  "dataset": "utah_forge_phase_3/electrical_resistivity/resistivity_model/slices",
+  "artifactFamily": "render_ready",
+  "artifactType": "scalar_slice",
+  "renderRole": "high_fidelity_client_facing",
+  "loadClass": "page_required",
+  "sourceType": "mixed",
+  "epistemicStatus": "derived",
+  "authority": "Observed in projects/utah-forge/project.json, DATA_LAYER_STATUS.md, Computed-Artifact-Pipeline.md, Project-Load-Class-Table.md, and existing slice manifest/legend/provenance files.",
+  "status": "needs_review",
+  "reviewRequired": true,
+  "accepted": false,
+  "paths": {
+    "source": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip",
+    "artifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/resistivity_slices_mesh_preview.json",
+    "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/manifest.json",
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/resistivity_slices.provenance.json",
+    "supporting": [
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/legend.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/model_stats.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/model_provenance.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/stations/mt_stations.geojson",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json"
+    ]
+  },
+  "inputs": [
+    {
+      "path": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip",
+      "role": "Updated MT model cell-center inversion package",
+      "notes": "Project metadata identifies this as Utah FORGE GDR submission 1255 updated MT model cell-center inversion package."
+    },
+    {
+      "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/stations/mt_stations.geojson",
+      "role": "Station context / centroid support",
+      "notes": "Build script and pipeline docs indicate station markers support vertical slice placement."
+    }
+  ],
+  "producedBy": {
+    "script": "prep/build_utah_forge_mt_resistivity_slices.mjs",
+    "tool": "Node prep script",
+    "generatedAt": "2026-05-12",
+    "notes": "Script observed read-only; no script was run in this pass."
+  },
+  "crs": {
+    "source": "EPSG:26912 / NAD83 UTM Zone 12N, needs review",
+    "scene": "GeoSee scene-local meters, needs review",
+    "transformPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json",
+    "notes": "CRS/source coordinate basis is supported by Utah MT intake docs and project metadata, but per-artifact acceptance remains human review."
+  },
+  "units": {
+    "horizontal": "meters, needs review",
+    "vertical": "meters, true 1:1 vertical scale per project metadata, needs review",
+    "scalar": "log10 resistivity in Ohm-m, needs review",
+    "notes": "Do not change scalar units, transform, or vertical scale without preserving legend/provenance."
+  },
+  "scalar": {
+    "transform": "log10 resistivity",
+    "range": null,
+    "thresholds": null,
+    "notes": "Legend and manifest exist; exact scalar range and color stops must be reviewed from files before acceptance."
+  },
+  "processing": {
+    "method": "Authored horizontal and vertical resistivity slice preview from full uncropped updated MT cell-center inversion model",
+    "parameters": {
+      "horizontalSliceCount": 6,
+      "verticalSectionCount": 2,
+      "sourceCellCenterBinAveraging": true,
+      "limitedNeighborFill": true,
+      "verticalScale": "1:1 meters"
+    },
+    "downsampling": "Display mesh preview generated from source cell-center model; exact simplification/mesh parameters require review.",
+    "masking": "Needs review from manifest/provenance.",
+    "notes": "Docs state horizontal slices average source model rows inside elevation windows and vertical sections average rows inside lateral windows through the MT station centroid."
+  },
+  "stats": {
+    "counts": {
+      "sliceCount": 8,
+      "horizontalSliceCount": 6,
+      "verticalSectionCount": 2
+    },
+    "bounds": {},
+    "notes": "Slice count was read from existing manifest/status evidence. Bounds and scalar ranges still need review."
+  },
+  "render": {
+    "colorRamp": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/legend.json",
+    "legendPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/legend.json",
+    "materialNotes": "Slice opacity, depth behavior, color ramp, labels/status, and MT/seismic co-rendering quality must be visually checked before client-facing acceptance.",
+    "visualCheckRequired": true,
+    "visualCheckReceipt": "docs/dev-context/Verification-Receipts/VER-2026-05-15-004-utah-forge-demo-walkthrough-v0.md",
+    "notes": "Render-ready and page-referenced, but not accepted demo scope."
+  },
+  "provenance": {
+    "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/resistivity_slices.provenance.json",
+    "notes": "Existing provenance file observed; review completeness before acceptance."
+  },
+  "limitations": [
+    "Not accepted project state.",
+    "Does not approve default visibility or demo use.",
+    "CRS, transform, slice parameters, scalar range, color ramp, and visual check receipt require human review.",
+    "Do not simplify slices, scalar ranges, color ramps, legends, material/depth behavior, or vertical scale as a proxy for bloat reduction.",
+    "No runtime, loader, page, visibility, rendering, prep, or data artifact behavior changed."
+  ],
+  "relatedLayers": [
+    "utah-forge-mt-resistivity-slices"
+  ],
+  "relatedPages": [
+    "11_untitled"
+  ],
+  "review": {
+    "requiredBy": "human",
+    "questions": [
+      "Are MT slices accepted as the clean client-facing MT presentation layer?",
+      "Are the slice windows, scalar range, legend, color ramp, and 1:1 vertical scale accepted?",
+      "What visual receipt proves slices preserve spatial relation, color meaning, camera polish, and MT/seismic co-rendering quality?"
+    ],
+    "acceptedBy": null,
+    "acceptedAt": null,
+    "receipt": null
+  },
+  "notes": "Project-local wrapper only. It preserves traceability and review questions without changing or accepting the artifact."
+}

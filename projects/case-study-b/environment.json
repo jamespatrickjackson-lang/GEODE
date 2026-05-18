@@ -1,0 +1,500 @@
+{
+  "id": "environment",
+  "renderPreset": "survey-daylight",
+  "layerStyles": {
+    "case-study-b-demo-shell": {
+      "renderMode": "procedural-demo-shell",
+      "color": "#75c7ff",
+      "opacity": 1,
+      "affectedByFog": false,
+      "showLabels": true,
+      "labelKind": "area",
+      "labelColor": "#d8efff",
+      "labelTextColor": "#f7fbff",
+      "labelOutlineColor": "#9ed8ff",
+      "labelOutlineOpacity": 0.52,
+      "labelFillColor": "#111820",
+      "labelFillOpacity": 0.72,
+      "labelPointerVisible": true
+    },
+    "terrain": {
+      "renderMode": "high-fidelity-surface-placeholder",
+      "verticalExaggeration": 1,
+      "shading": "hillshade",
+      "opacity": 1,
+      "color": "#6b6254",
+      "affectedByFog": true,
+      "showLabels": false
+    },
+    "quarry-imagery-base": {
+      "renderMode": "orthomosaic-placeholder",
+      "color": "#f0eadc",
+      "opacity": 0.92,
+      "affectedByFog": false,
+      "showLabels": false
+    },
+    "quarry-lidar-surface": {
+      "renderMode": "point-cloud-derived-surface-placeholder",
+      "color": "#94b7c7",
+      "opacity": 0.72,
+      "affectedByFog": false,
+      "showLabels": false
+    },
+    "shahbazi-tls-subzone": {
+      "renderMode": "sampled-tls-point-cloud-preview",
+      "color": "#42d8ff",
+      "opacity": 0.95,
+      "pointSizePx": 4.25,
+      "affectedByFog": false,
+      "showLabels": true,
+      "labelKind": "area",
+      "labelColor": "#69f0b4",
+      "labelTextColor": "#f7fbff",
+      "labelOutlineColor": "#69f0b4",
+      "labelOutlineOpacity": 0.58,
+      "labelFillColor": "#0d1519",
+      "labelFillOpacity": 0.74,
+      "labelPointerVisible": true
+    },
+    "shahbazi-tls-tiled-preview": {
+      "renderMode": "tiled-tls-point-cloud-preview",
+      "color": "#ffa8a8",
+      "opacity": 0.15,
+      "pointSizePx": 6,
+      "affectedByFog": false,
+      "showLabels": false
+    },
+    "shahbazi-tls-surface-preview": {
+      "renderMode": "binned-tls-surface-mesh-preview",
+      "color": "#ffffff",
+      "opacity": 1,
+      "affectedByFog": false,
+      "showLabels": false,
+      "surfaceGradientMidpoint": 0.1,
+      "surfaceGradientHighColor": "#f7f2de",
+      "surfaceGradientMidColor": "#bfbfbf",
+      "surfaceGradientLowColor": "#e0e0e0",
+      "surfaceGradientContrast": 1
+    },
+    "shahbazi-tls-contours": {
+      "renderMode": "derived-tls-surface-contours",
+      "color": "#a1a1a1",
+      "opacity": 0.95,
+      "lineWidth": 4.25,
+      "contourLiftM": 0.45,
+      "affectedByFog": false,
+      "showLabels": false,
+      "contourDistanceFadeFarM": 530,
+      "contourFarLineScale": 0.41,
+      "contourFarOpacity": 1,
+      "contourDistanceFadeNearM": 60
+    },
+    "shahbazi-photo-overlay-preview": {
+      "renderMode": "projected-uav-image-preview",
+      "opacity": 0.8,
+      "affectedByFog": false,
+      "showLabels": false,
+      "fogDensity": 0.00057
+    },
+    "shahbazi-ground-control": {
+      "renderMode": "source-ground-control-points",
+      "color": "#f4d35e",
+      "opacity": 0.72,
+      "affectedByFog": false,
+      "showLabels": false,
+      "labelKind": "siteElement",
+      "labelColor": "#f4d35e",
+      "labelTextColor": "#fffbe0",
+      "labelOutlineColor": "#f4d35e",
+      "labelOutlineOpacity": 0.76,
+      "labelFillColor": "#17140a",
+      "labelFillOpacity": 0.78,
+      "labelPointerVisible": true
+    },
+    "shahbazi-camera-poses": {
+      "renderMode": "source-camera-flight-path",
+      "color": "#ff8585",
+      "opacity": 0.75,
+      "lineWidth": 2.5,
+      "affectedByFog": false,
+      "showLabels": false,
+      "labelKind": "siteElement",
+      "labelColor": "#85c7ff",
+      "labelTextColor": "#eef8ff",
+      "labelOutlineColor": "#85c7ff",
+      "labelOutlineOpacity": 0.7,
+      "labelFillColor": "#0b1319",
+      "labelFillOpacity": 0.78,
+      "labelPointerVisible": true,
+      "fogDensity": 0.00031
+    },
+    "shahbazi-camera-frustums": {
+      "renderMode": "sampled-camera-frustum-preview",
+      "color": "#8ee8ff",
+      "opacity": 0.38,
+      "lineWidth": 1.1,
+      "affectedByFog": false,
+      "showLabels": false,
+      "labelKind": "siteElement",
+      "labelColor": "#8ee8ff",
+      "labelTextColor": "#effcff",
+      "labelOutlineColor": "#8ee8ff",
+      "labelOutlineOpacity": 0.7,
+      "labelFillColor": "#0b1519",
+      "labelFillOpacity": 0.76,
+      "labelPointerVisible": true
+    },
+    "shahbazi-dense-matching-links": {
+      "renderMode": "source-dense-matching-image-pairs",
+      "color": "#7a8aff",
+      "opacity": 0.35,
+      "lineWidth": 4,
+      "affectedByFog": false,
+      "showLabels": false,
+      "labelKind": "siteElement",
+      "labelColor": "#ff7ad9",
+      "labelTextColor": "#fff1fb",
+      "labelOutlineColor": "#ff7ad9",
+      "labelOutlineOpacity": 0.7,
+      "labelFillColor": "#1b0a16",
+      "labelFillOpacity": 0.76,
+      "labelPointerVisible": true
+    },
+    "shahbazi-object-points": {
+      "renderMode": "source-sparse-object-points",
+      "color": "#ffffff",
+      "opacity": 0.58,
+      "pointSizePx": 2.1,
+      "affectedByFog": false,
+      "showLabels": false
+    },
+    "shahbazi-tie-point-support-isolines": {
+      "renderMode": "derived-tie-point-support-isolines",
+      "color": "#23323a",
+      "opacity": 0.72,
+      "lineWidth": 1.35,
+      "affectedByFog": false,
+      "showLabels": false
+    },
+    "quarry-drill-traces": {
+      "renderMode": "synthetic-drill-traces",
+      "color": "#f8d06b",
+      "opacity": 1,
+      "lineWidth": 2.6,
+      "affectedByFog": false,
+      "showLabels": true,
+      "labelColor": "#f8d06b"
+    },
+    "quarry-ore-grade-heatmap": {
+      "renderMode": "synthetic-heatmap-placeholder",
+      "color": "#ff4f6a",
+      "opacity": 0.66,
+      "affectedByFog": false,
+      "showLabels": false
+    },
+    "stockpile-volume-zones": {
+      "renderMode": "volume-zones-placeholder",
+      "color": "#7bd88f",
+      "outlineColor": "#d7ffe0",
+      "fillOpacity": 0.18,
+      "opacity": 0.86,
+      "affectedByFog": false,
+      "showLabels": true,
+      "labelColor": "#7bd88f",
+      "labelKind": "area"
+    },
+    "haul-route-equipment-demo": {
+      "renderMode": "haul-route-placeholder",
+      "color": "#ffb24a",
+      "opacity": 0.88,
+      "lineWidth": 3,
+      "affectedByFog": false,
+      "showLabels": false
+    },
+    "slope-stability-anomaly": {
+      "renderMode": "synthetic-anomaly-placeholder",
+      "color": "#e84e4e",
+      "outlineColor": "#ffd2d2",
+      "fillOpacity": 0.24,
+      "opacity": 0.92,
+      "affectedByFog": false,
+      "showLabels": true,
+      "labelColor": "#ff8f8f",
+      "labelKind": "anomaly"
+    },
+    "bench-conformance-overlay": {
+      "renderMode": "bench-conformance-placeholder",
+      "color": "#67d7ff",
+      "outlineColor": "#d6f6ff",
+      "fillOpacity": 0.12,
+      "opacity": 0.82,
+      "affectedByFog": false,
+      "showLabels": true,
+      "labelColor": "#67d7ff",
+      "labelKind": "area"
+    },
+    "erosion-runoff-planning": {
+      "renderMode": "runoff-planning-placeholder",
+      "color": "#4fb6ff",
+      "opacity": 0.78,
+      "lineWidth": 2.4,
+      "affectedByFog": false,
+      "showLabels": false
+    },
+    "restoration-preview": {
+      "renderMode": "restoration-preview-placeholder",
+      "color": "#8fcf72",
+      "outlineColor": "#d8ffd0",
+      "fillOpacity": 0.2,
+      "opacity": 0.72,
+      "affectedByFog": true,
+      "showLabels": true,
+      "labelColor": "#b6e89e",
+      "labelKind": "area"
+    },
+    "public-viewshed-overlay": {
+      "renderMode": "viewshed-placeholder",
+      "color": "#cdbbff",
+      "outlineColor": "#eee6ff",
+      "fillOpacity": 0.16,
+      "opacity": 0.68,
+      "affectedByFog": true,
+      "showLabels": false
+    }
+  },
+  "defaultVisibleLayers": [
+    "shahbazi-tls-surface-preview",
+    "shahbazi-camera-poses",
+    "shahbazi-photo-overlay-preview",
+    "shahbazi-tls-contours"
+  ],
+  "scene": {
+    "background": "#d8dde0",
+    "toneMapping": "aces",
+    "exposure": 1.1,
+    "shadows": false,
+    "sun": {
+      "azimuth": 94,
+      "elevation": 30,
+      "lockToCamera": true
+    },
+    "fog": {
+      "color": "#d8dde0",
+      "density": 0.000145
+    },
+    "camera": {
+      "fov": 70
+    },
+    "lighting": {
+      "enabled": true,
+      "showSceneElements": true,
+      "hemisphere": {
+        "sky": "#d9e8ff",
+        "ground": "#b9aa91",
+        "intensity": 1.16
+      },
+      "directional": {
+        "color": "#ffe0a8",
+        "intensity": 3.75,
+        "position": [
+          -3000,
+          -2400,
+          3600
+        ],
+        "castShadow": false
+      },
+      "fill": {
+        "color": "#9ab8d8",
+        "intensity": 1.16,
+        "position": [
+          2200,
+          2800,
+          2200
+        ]
+      },
+      "rim": {
+        "color": "#fff0c8",
+        "intensity": 0.02,
+        "position": [
+          0,
+          -4200,
+          1800
+        ]
+      }
+    },
+    "bloom": {
+      "strength": 0,
+      "radius": 0.55,
+      "threshold": 0.86
+    },
+    "terrain": {
+      "rampLow": "#4f4a40",
+      "rampMid": "#8a7e68",
+      "rampHigh": "#d7c69e",
+      "elevLowM": 760,
+      "elevHighM": 1280,
+      "hillshadeIntensity": 1.05,
+      "rockHueVariance": 0.05,
+      "shadowSharpness": 0.5,
+      "shadowTint": "#303640",
+      "gridEnabled": true,
+      "gridColor": "#d7d1c7",
+      "gridOpacity": 0.34,
+      "gridSpacingM": 100,
+      "gridLineWidthM": 0.7,
+      "undersideOpacity": 0
+    },
+    "gui": {
+      "overlay": {
+        "backgroundColor": "#121518",
+        "backgroundAlpha": 0.45,
+        "textColor": "#f4f0e8",
+        "secondaryTextColor": "#b6c3cf",
+        "bodyTextColor": "#ebe2d4",
+        "borderColor": "#ffffff",
+        "borderAlpha": 0.25,
+        "borderWidth": 1,
+        "backdropBlurPx": 14,
+        "backdropSaturation": 200,
+        "radius": 12,
+        "textPadding": 30,
+        "bodyFontSize": 14,
+        "headingFontSize": 21,
+        "figureLabelVisible": true,
+        "topHighlightAlpha": 0.2,
+        "bottomShadowAlpha": 0.25,
+        "shadowAlpha": 0.45,
+        "shadowBlur": 68,
+        "shadowOffsetY": 19
+      },
+      "navigator": {
+        "useOverride": true,
+        "textColor": "#ffffff",
+        "backgroundAlpha": 0.1,
+        "borderAlpha": 0.16,
+        "radius": 999,
+        "bottom": 34,
+        "fontSize": 14,
+        "fontWeight": 500
+      },
+      "labels": {
+        "maxSiteLabelsDesktop": 16,
+        "maxSiteLabelsMobile": 8,
+        "fadeNearM": 2500,
+        "fadeFarM": 7500,
+        "styles": {
+          "siteElement": {
+            "textColor": "#f6f1e8",
+            "outlineColor": "#ffffff",
+            "outlineOpacity": 0.42,
+            "fillColor": "#11161b",
+            "fillOpacity": 0.72,
+            "pointerVisible": true
+          },
+          "area": {
+            "textColor": "#f6f1e8",
+            "outlineColor": "#ffffff",
+            "outlineOpacity": 0.36,
+            "fillColor": "#11161b",
+            "fillOpacity": 0.66,
+            "pointerVisible": false
+          },
+          "anomaly": {
+            "textColor": "#ffe4e4",
+            "outlineColor": "#ff7777",
+            "outlineOpacity": 0.6,
+            "fillColor": "#251010",
+            "fillOpacity": 0.75,
+            "pointerVisible": true
+          }
+        }
+      },
+      "overlayStyles": [
+        {
+          "id": "overlay-style-1",
+          "label": "Style 1",
+          "overlay": {
+            "backgroundColor": "#121518",
+            "backgroundAlpha": 0.45,
+            "textColor": "#f4f0e8",
+            "secondaryTextColor": "#b6c3cf",
+            "bodyTextColor": "#ebe2d4",
+            "borderColor": "#ffffff",
+            "borderAlpha": 0.25,
+            "borderWidth": 1,
+            "backdropBlurPx": 14,
+            "backdropSaturation": 200,
+            "radius": 12,
+            "textPadding": 30,
+            "bodyFontSize": 14,
+            "headingFontSize": 21,
+            "figureLabelVisible": true,
+            "topHighlightAlpha": 0.2,
+            "bottomShadowAlpha": 0.25,
+            "shadowAlpha": 0.45,
+            "shadowBlur": 68,
+            "shadowOffsetY": 19
+          },
+          "navigator": {
+            "useOverride": true,
+            "textColor": "#ffffff",
+            "backgroundAlpha": 0.1,
+            "borderAlpha": 0.16,
+            "radius": 999,
+            "bottom": 34,
+            "fontSize": 14,
+            "fontWeight": 500
+          },
+          "labels": {
+            "maxSiteLabelsDesktop": 16,
+            "maxSiteLabelsMobile": 8,
+            "fadeNearM": 2500,
+            "fadeFarM": 7500,
+            "styles": {
+              "siteElement": {
+                "textColor": "#f6f1e8",
+                "outlineColor": "#ffffff",
+                "outlineOpacity": 0.42,
+                "fillColor": "#11161b",
+                "fillOpacity": 0.72,
+                "pointerVisible": true
+              },
+              "area": {
+                "textColor": "#f6f1e8",
+                "outlineColor": "#ffffff",
+                "outlineOpacity": 0.36,
+                "fillColor": "#11161b",
+                "fillOpacity": 0.66,
+                "pointerVisible": false
+              },
+              "anomaly": {
+                "textColor": "#ffe4e4",
+                "outlineColor": "#ff7777",
+                "outlineOpacity": 0.6,
+                "fillColor": "#251010",
+                "fillOpacity": 0.75,
+                "pointerVisible": true
+              }
+            }
+          }
+        }
+      ],
+      "activeOverlayStyleId": "overlay-style-1"
+    },
+    "audienceLensNotes": {
+      "investor": "Dark, focused, high contrast; emphasize surface fidelity, productive zones, volumes, and operational clarity.",
+      "public": "Lighter landscape/context-first presentation; emphasize site walk, restoration preview, and viewshed context.",
+      "government": "Neutral, map-like presentation; emphasize access, stockpiles, runoff planning, and public-source trace.",
+      "regulatory": "Restrained source/provenance-forward presentation; emphasize uncertainty, review status, conformance, and gaps."
+    },
+    "vignette": {
+      "strength": 0.95
+    },
+    "colorGrade": {
+      "contrast": 1.11
+    },
+    "ambientOcclusion": {
+      "enabled": true
+    }
+  }
+}

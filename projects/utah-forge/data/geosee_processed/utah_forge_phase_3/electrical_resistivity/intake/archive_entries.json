@@ -1,0 +1,2652 @@
+{
+  "FORGE_MT_190812_EDIs.zip": [
+    {
+      "name": "EDIs/",
+      "is_dir": true,
+      "compressed_bytes": 0,
+      "uncompressed_bytes": 0,
+      "extension": null
+    },
+    {
+      "name": "EDIs/FRG19001.edi",
+      "is_dir": false,
+      "compressed_bytes": 21045,
+      "uncompressed_bytes": 54758,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19001_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21092,
+      "uncompressed_bytes": 54778,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19001_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19002.edi",
+      "is_dir": false,
+      "compressed_bytes": 21058,
+      "uncompressed_bytes": 54757,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19002_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21023,
+      "uncompressed_bytes": 54782,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19002_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19003.edi",
+      "is_dir": false,
+      "compressed_bytes": 21163,
+      "uncompressed_bytes": 54752,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19003_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21192,
+      "uncompressed_bytes": 54784,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19003_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 336,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19004.edi",
+      "is_dir": false,
+      "compressed_bytes": 21190,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19004_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21127,
+      "uncompressed_bytes": 54781,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19004_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19005.edi",
+      "is_dir": false,
+      "compressed_bytes": 21115,
+      "uncompressed_bytes": 54758,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19005_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21124,
+      "uncompressed_bytes": 54766,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19005_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 342,
+      "uncompressed_bytes": 554,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19006.edi",
+      "is_dir": false,
+      "compressed_bytes": 21159,
+      "uncompressed_bytes": 54780,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19006_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21128,
+      "uncompressed_bytes": 54786,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19006_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19007.edi",
+      "is_dir": false,
+      "compressed_bytes": 21162,
+      "uncompressed_bytes": 54775,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19007_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21152,
+      "uncompressed_bytes": 54781,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19007_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19008.edi",
+      "is_dir": false,
+      "compressed_bytes": 21098,
+      "uncompressed_bytes": 54783,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19008_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21131,
+      "uncompressed_bytes": 54789,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19008_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19009.edi",
+      "is_dir": false,
+      "compressed_bytes": 21159,
+      "uncompressed_bytes": 54772,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19009_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21144,
+      "uncompressed_bytes": 54778,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19009_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19010.edi",
+      "is_dir": false,
+      "compressed_bytes": 21147,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19010_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21170,
+      "uncompressed_bytes": 54780,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19010_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19011.edi",
+      "is_dir": false,
+      "compressed_bytes": 21147,
+      "uncompressed_bytes": 54764,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19011_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21143,
+      "uncompressed_bytes": 54783,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19011_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19012.edi",
+      "is_dir": false,
+      "compressed_bytes": 21131,
+      "uncompressed_bytes": 54762,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19012_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21111,
+      "uncompressed_bytes": 54786,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19012_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19013.edi",
+      "is_dir": false,
+      "compressed_bytes": 21023,
+      "uncompressed_bytes": 54032,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19013_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21073,
+      "uncompressed_bytes": 54768,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19013_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19014.edi",
+      "is_dir": false,
+      "compressed_bytes": 21214,
+      "uncompressed_bytes": 54765,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19014_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21274,
+      "uncompressed_bytes": 54783,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19014_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19015.edi",
+      "is_dir": false,
+      "compressed_bytes": 21111,
+      "uncompressed_bytes": 54770,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19015_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21140,
+      "uncompressed_bytes": 54787,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19015_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19016.edi",
+      "is_dir": false,
+      "compressed_bytes": 21241,
+      "uncompressed_bytes": 54764,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19016_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21230,
+      "uncompressed_bytes": 54764,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19016_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19017.edi",
+      "is_dir": false,
+      "compressed_bytes": 21092,
+      "uncompressed_bytes": 54771,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19017_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21144,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19017_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19018.edi",
+      "is_dir": false,
+      "compressed_bytes": 21090,
+      "uncompressed_bytes": 54756,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19018_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21161,
+      "uncompressed_bytes": 54761,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19018_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 336,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19019.edi",
+      "is_dir": false,
+      "compressed_bytes": 21082,
+      "uncompressed_bytes": 54778,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19019_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21072,
+      "uncompressed_bytes": 54784,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19019_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19020.edi",
+      "is_dir": false,
+      "compressed_bytes": 21185,
+      "uncompressed_bytes": 54766,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19020_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21157,
+      "uncompressed_bytes": 54767,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19020_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19021.edi",
+      "is_dir": false,
+      "compressed_bytes": 21053,
+      "uncompressed_bytes": 54775,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19021_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21039,
+      "uncompressed_bytes": 54778,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19021_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19022.edi",
+      "is_dir": false,
+      "compressed_bytes": 21016,
+      "uncompressed_bytes": 54776,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19022_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21133,
+      "uncompressed_bytes": 54779,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19022_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19023.edi",
+      "is_dir": false,
+      "compressed_bytes": 21135,
+      "uncompressed_bytes": 54775,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19023_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21110,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19023_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19024.edi",
+      "is_dir": false,
+      "compressed_bytes": 21029,
+      "uncompressed_bytes": 54772,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19024_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21071,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19024_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19025.edi",
+      "is_dir": false,
+      "compressed_bytes": 21068,
+      "uncompressed_bytes": 54783,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19025_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21058,
+      "uncompressed_bytes": 54788,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19025_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 341,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19026.edi",
+      "is_dir": false,
+      "compressed_bytes": 21103,
+      "uncompressed_bytes": 54767,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19026_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21183,
+      "uncompressed_bytes": 54776,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19026_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19027.edi",
+      "is_dir": false,
+      "compressed_bytes": 21105,
+      "uncompressed_bytes": 54763,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19027_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21106,
+      "uncompressed_bytes": 54766,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19027_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19028R.edi",
+      "is_dir": false,
+      "compressed_bytes": 21037,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19028R_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21196,
+      "uncompressed_bytes": 54780,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19028_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19029R.edi",
+      "is_dir": false,
+      "compressed_bytes": 21144,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19029R_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21278,
+      "uncompressed_bytes": 54779,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19029_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19030.edi",
+      "is_dir": false,
+      "compressed_bytes": 21027,
+      "uncompressed_bytes": 54770,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19030_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21051,
+      "uncompressed_bytes": 54771,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19030_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19031.edi",
+      "is_dir": false,
+      "compressed_bytes": 21131,
+      "uncompressed_bytes": 54747,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19031_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21105,
+      "uncompressed_bytes": 54772,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19031_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19032.edi",
+      "is_dir": false,
+      "compressed_bytes": 21277,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19032_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21354,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19032_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19033.edi",
+      "is_dir": false,
+      "compressed_bytes": 21039,
+      "uncompressed_bytes": 54775,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19033_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21071,
+      "uncompressed_bytes": 54779,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19033_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19034.edi",
+      "is_dir": false,
+      "compressed_bytes": 20994,
+      "uncompressed_bytes": 54769,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19034_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21051,
+      "uncompressed_bytes": 54775,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19034_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19035.edi",
+      "is_dir": false,
+      "compressed_bytes": 21133,
+      "uncompressed_bytes": 54768,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19035_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21115,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19035_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 336,
+      "uncompressed_bytes": 554,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19036.edi",
+      "is_dir": false,
+      "compressed_bytes": 21117,
+      "uncompressed_bytes": 54776,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19036_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21165,
+      "uncompressed_bytes": 54780,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19036_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19037.edi",
+      "is_dir": false,
+      "compressed_bytes": 21093,
+      "uncompressed_bytes": 54775,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19037_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21120,
+      "uncompressed_bytes": 54778,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19037_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19038.edi",
+      "is_dir": false,
+      "compressed_bytes": 21132,
+      "uncompressed_bytes": 54764,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19038_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21145,
+      "uncompressed_bytes": 54770,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19038_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19039.edi",
+      "is_dir": false,
+      "compressed_bytes": 21146,
+      "uncompressed_bytes": 54770,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19039_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21133,
+      "uncompressed_bytes": 54776,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19039_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19040.edi",
+      "is_dir": false,
+      "compressed_bytes": 21064,
+      "uncompressed_bytes": 54771,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19040_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21048,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19040_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19041.edi",
+      "is_dir": false,
+      "compressed_bytes": 21110,
+      "uncompressed_bytes": 54758,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19041_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21124,
+      "uncompressed_bytes": 54772,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19041_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19042R.edi",
+      "is_dir": false,
+      "compressed_bytes": 21114,
+      "uncompressed_bytes": 54778,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19042R_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21171,
+      "uncompressed_bytes": 54783,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19042_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19043.edi",
+      "is_dir": false,
+      "compressed_bytes": 21097,
+      "uncompressed_bytes": 54767,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19043_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21128,
+      "uncompressed_bytes": 54771,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19043_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19044.edi",
+      "is_dir": false,
+      "compressed_bytes": 21086,
+      "uncompressed_bytes": 54775,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19044_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21139,
+      "uncompressed_bytes": 54780,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19044_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 341,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19045.edi",
+      "is_dir": false,
+      "compressed_bytes": 21103,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19045_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21072,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19045_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19046R.edi",
+      "is_dir": false,
+      "compressed_bytes": 21009,
+      "uncompressed_bytes": 54767,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19046R_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21197,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19046_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19047.edi",
+      "is_dir": false,
+      "compressed_bytes": 21055,
+      "uncompressed_bytes": 54760,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19047_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21142,
+      "uncompressed_bytes": 54762,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19047_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19048.edi",
+      "is_dir": false,
+      "compressed_bytes": 21016,
+      "uncompressed_bytes": 54768,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19048_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21043,
+      "uncompressed_bytes": 54772,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19048_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19049.edi",
+      "is_dir": false,
+      "compressed_bytes": 21073,
+      "uncompressed_bytes": 54768,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19049_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21084,
+      "uncompressed_bytes": 54771,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19049_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19050.edi",
+      "is_dir": false,
+      "compressed_bytes": 21119,
+      "uncompressed_bytes": 54768,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19050_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21113,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19050_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19051.edi",
+      "is_dir": false,
+      "compressed_bytes": 21075,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19051_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21046,
+      "uncompressed_bytes": 54778,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19051_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19052.edi",
+      "is_dir": false,
+      "compressed_bytes": 21006,
+      "uncompressed_bytes": 54767,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19052_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21150,
+      "uncompressed_bytes": 54767,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19052_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 336,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19053.edi",
+      "is_dir": false,
+      "compressed_bytes": 21098,
+      "uncompressed_bytes": 54771,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19053_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21091,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19053_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19054.edi",
+      "is_dir": false,
+      "compressed_bytes": 21090,
+      "uncompressed_bytes": 54769,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19054_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21084,
+      "uncompressed_bytes": 54776,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19054_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19055.edi",
+      "is_dir": false,
+      "compressed_bytes": 21111,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19055_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21083,
+      "uncompressed_bytes": 54779,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19055_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19056.edi",
+      "is_dir": false,
+      "compressed_bytes": 21029,
+      "uncompressed_bytes": 54767,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19056_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21084,
+      "uncompressed_bytes": 54766,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19056_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19057.edi",
+      "is_dir": false,
+      "compressed_bytes": 21061,
+      "uncompressed_bytes": 54769,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19057_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21063,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19057_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19058.edi",
+      "is_dir": false,
+      "compressed_bytes": 20992,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19058_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21010,
+      "uncompressed_bytes": 54780,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19058_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19059.edi",
+      "is_dir": false,
+      "compressed_bytes": 21021,
+      "uncompressed_bytes": 54772,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19059_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21023,
+      "uncompressed_bytes": 54778,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19059_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19060.edi",
+      "is_dir": false,
+      "compressed_bytes": 21097,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19060_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21108,
+      "uncompressed_bytes": 54775,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19060_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19061.edi",
+      "is_dir": false,
+      "compressed_bytes": 21090,
+      "uncompressed_bytes": 54765,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19061_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21077,
+      "uncompressed_bytes": 54767,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19061_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19062.edi",
+      "is_dir": false,
+      "compressed_bytes": 21065,
+      "uncompressed_bytes": 54772,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19062_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21099,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19062_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19063.edi",
+      "is_dir": false,
+      "compressed_bytes": 21053,
+      "uncompressed_bytes": 54780,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19063_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21071,
+      "uncompressed_bytes": 54782,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19063_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19064.edi",
+      "is_dir": false,
+      "compressed_bytes": 21094,
+      "uncompressed_bytes": 54779,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19064_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21056,
+      "uncompressed_bytes": 54784,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19064_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19065.edi",
+      "is_dir": false,
+      "compressed_bytes": 21097,
+      "uncompressed_bytes": 54764,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19065_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21019,
+      "uncompressed_bytes": 54770,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19065_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19066.edi",
+      "is_dir": false,
+      "compressed_bytes": 21130,
+      "uncompressed_bytes": 54771,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19066_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21104,
+      "uncompressed_bytes": 54776,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19066_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19067.edi",
+      "is_dir": false,
+      "compressed_bytes": 21044,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19067_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21093,
+      "uncompressed_bytes": 54779,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19067_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19068.edi",
+      "is_dir": false,
+      "compressed_bytes": 21038,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19068_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21107,
+      "uncompressed_bytes": 54778,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19068_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 341,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19069.edi",
+      "is_dir": false,
+      "compressed_bytes": 21165,
+      "uncompressed_bytes": 54775,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19069_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21144,
+      "uncompressed_bytes": 54780,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19069_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19070.edi",
+      "is_dir": false,
+      "compressed_bytes": 21041,
+      "uncompressed_bytes": 54780,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19070_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21064,
+      "uncompressed_bytes": 54786,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19070_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19071.edi",
+      "is_dir": false,
+      "compressed_bytes": 21098,
+      "uncompressed_bytes": 54772,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19071_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21087,
+      "uncompressed_bytes": 54776,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19071_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19072.edi",
+      "is_dir": false,
+      "compressed_bytes": 21095,
+      "uncompressed_bytes": 54776,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19072_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21149,
+      "uncompressed_bytes": 54783,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19072_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19073.edi",
+      "is_dir": false,
+      "compressed_bytes": 21061,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19073_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21022,
+      "uncompressed_bytes": 54780,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19073_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19074.edi",
+      "is_dir": false,
+      "compressed_bytes": 21148,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19074_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21091,
+      "uncompressed_bytes": 54779,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19074_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 310,
+      "uncompressed_bytes": 514,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19075.edi",
+      "is_dir": false,
+      "compressed_bytes": 21112,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19075_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21143,
+      "uncompressed_bytes": 54783,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19075_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19076.edi",
+      "is_dir": false,
+      "compressed_bytes": 21075,
+      "uncompressed_bytes": 54768,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19076_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21091,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19076_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19077.edi",
+      "is_dir": false,
+      "compressed_bytes": 21125,
+      "uncompressed_bytes": 54771,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19077_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21156,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19077_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19078.edi",
+      "is_dir": false,
+      "compressed_bytes": 21111,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19078_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21128,
+      "uncompressed_bytes": 54779,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19078_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19079.edi",
+      "is_dir": false,
+      "compressed_bytes": 21120,
+      "uncompressed_bytes": 54778,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19079_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21150,
+      "uncompressed_bytes": 54784,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19079_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19080.edi",
+      "is_dir": false,
+      "compressed_bytes": 21158,
+      "uncompressed_bytes": 54772,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19080_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21130,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19080_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19081.edi",
+      "is_dir": false,
+      "compressed_bytes": 21105,
+      "uncompressed_bytes": 54780,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19081_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21120,
+      "uncompressed_bytes": 54786,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19081_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19082.edi",
+      "is_dir": false,
+      "compressed_bytes": 21119,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19082_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21127,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19082_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19083.edi",
+      "is_dir": false,
+      "compressed_bytes": 20980,
+      "uncompressed_bytes": 54778,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19083_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21061,
+      "uncompressed_bytes": 54781,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19083_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19084.edi",
+      "is_dir": false,
+      "compressed_bytes": 21038,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19084_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21092,
+      "uncompressed_bytes": 54781,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19084_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19085.edi",
+      "is_dir": false,
+      "compressed_bytes": 21098,
+      "uncompressed_bytes": 54766,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19085_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21112,
+      "uncompressed_bytes": 54780,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19085_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19086.edi",
+      "is_dir": false,
+      "compressed_bytes": 21064,
+      "uncompressed_bytes": 54766,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19086_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21090,
+      "uncompressed_bytes": 54772,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19086_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 341,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19087.edi",
+      "is_dir": false,
+      "compressed_bytes": 21090,
+      "uncompressed_bytes": 54766,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19087_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21098,
+      "uncompressed_bytes": 54771,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19087_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 336,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19088.edi",
+      "is_dir": false,
+      "compressed_bytes": 21164,
+      "uncompressed_bytes": 54779,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19088_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21109,
+      "uncompressed_bytes": 54785,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19088_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19089.edi",
+      "is_dir": false,
+      "compressed_bytes": 21127,
+      "uncompressed_bytes": 54770,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19089_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21174,
+      "uncompressed_bytes": 54775,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19089_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19090.edi",
+      "is_dir": false,
+      "compressed_bytes": 21204,
+      "uncompressed_bytes": 54759,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19090_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21132,
+      "uncompressed_bytes": 54762,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19090_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19091.edi",
+      "is_dir": false,
+      "compressed_bytes": 21007,
+      "uncompressed_bytes": 54755,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19091_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21039,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19091_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19092.edi",
+      "is_dir": false,
+      "compressed_bytes": 21085,
+      "uncompressed_bytes": 54765,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19092_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21111,
+      "uncompressed_bytes": 54766,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19092_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19093.edi",
+      "is_dir": false,
+      "compressed_bytes": 21221,
+      "uncompressed_bytes": 54770,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19093_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21208,
+      "uncompressed_bytes": 54776,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19093_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19094.edi",
+      "is_dir": false,
+      "compressed_bytes": 21343,
+      "uncompressed_bytes": 54761,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19094_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21289,
+      "uncompressed_bytes": 54766,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19094_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19095.edi",
+      "is_dir": false,
+      "compressed_bytes": 21057,
+      "uncompressed_bytes": 54758,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19095_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21039,
+      "uncompressed_bytes": 54762,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19095_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19096.edi",
+      "is_dir": false,
+      "compressed_bytes": 21017,
+      "uncompressed_bytes": 54765,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19096_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21085,
+      "uncompressed_bytes": 54769,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19096_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19097.edi",
+      "is_dir": false,
+      "compressed_bytes": 21076,
+      "uncompressed_bytes": 54761,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19097_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21040,
+      "uncompressed_bytes": 54766,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19097_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19098.edi",
+      "is_dir": false,
+      "compressed_bytes": 21109,
+      "uncompressed_bytes": 54760,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19098_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21126,
+      "uncompressed_bytes": 54764,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19098_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19099.edi",
+      "is_dir": false,
+      "compressed_bytes": 21148,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19099_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21138,
+      "uncompressed_bytes": 54789,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19099_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 341,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19100.edi",
+      "is_dir": false,
+      "compressed_bytes": 21142,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19100_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21205,
+      "uncompressed_bytes": 54780,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19100_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19101.edi",
+      "is_dir": false,
+      "compressed_bytes": 21192,
+      "uncompressed_bytes": 54781,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19101_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21139,
+      "uncompressed_bytes": 54785,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19101_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19102RR.edi",
+      "is_dir": false,
+      "compressed_bytes": 21091,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19102RR_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21228,
+      "uncompressed_bytes": 54779,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19102_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19103.edi",
+      "is_dir": false,
+      "compressed_bytes": 21073,
+      "uncompressed_bytes": 54763,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19103_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21078,
+      "uncompressed_bytes": 54761,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19103_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 336,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19104.edi",
+      "is_dir": false,
+      "compressed_bytes": 21167,
+      "uncompressed_bytes": 54769,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19104_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21066,
+      "uncompressed_bytes": 54770,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19104_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19105.edi",
+      "is_dir": false,
+      "compressed_bytes": 21139,
+      "uncompressed_bytes": 54770,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19105_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21202,
+      "uncompressed_bytes": 54772,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19105_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19106.edi",
+      "is_dir": false,
+      "compressed_bytes": 21040,
+      "uncompressed_bytes": 54765,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19106_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21037,
+      "uncompressed_bytes": 54768,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19106_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19107.edi",
+      "is_dir": false,
+      "compressed_bytes": 21054,
+      "uncompressed_bytes": 54762,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19107_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21124,
+      "uncompressed_bytes": 54766,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19107_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19108.edi",
+      "is_dir": false,
+      "compressed_bytes": 21152,
+      "uncompressed_bytes": 54765,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19108_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21125,
+      "uncompressed_bytes": 54769,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19108_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 555,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19109.edi",
+      "is_dir": false,
+      "compressed_bytes": 20995,
+      "uncompressed_bytes": 54771,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19109_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 20988,
+      "uncompressed_bytes": 54776,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19109_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19110.edi",
+      "is_dir": false,
+      "compressed_bytes": 21067,
+      "uncompressed_bytes": 54765,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19110_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21052,
+      "uncompressed_bytes": 54770,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19110_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 341,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19111.edi",
+      "is_dir": false,
+      "compressed_bytes": 21105,
+      "uncompressed_bytes": 54756,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19111_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21157,
+      "uncompressed_bytes": 54758,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19111_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 341,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19112.edi",
+      "is_dir": false,
+      "compressed_bytes": 21102,
+      "uncompressed_bytes": 54765,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19112_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21164,
+      "uncompressed_bytes": 54766,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19112_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19113.edi",
+      "is_dir": false,
+      "compressed_bytes": 21080,
+      "uncompressed_bytes": 54772,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19113_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21058,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19113_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19114.edi",
+      "is_dir": false,
+      "compressed_bytes": 21097,
+      "uncompressed_bytes": 54769,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19114_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21121,
+      "uncompressed_bytes": 54774,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19114_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 338,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19115.edi",
+      "is_dir": false,
+      "compressed_bytes": 21112,
+      "uncompressed_bytes": 54763,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19115_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21153,
+      "uncompressed_bytes": 54767,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19115_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19116.edi",
+      "is_dir": false,
+      "compressed_bytes": 21112,
+      "uncompressed_bytes": 54771,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19116_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21132,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19116_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 557,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19117.edi",
+      "is_dir": false,
+      "compressed_bytes": 21169,
+      "uncompressed_bytes": 54775,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19117_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21210,
+      "uncompressed_bytes": 54778,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19117_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 339,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19118.edi",
+      "is_dir": false,
+      "compressed_bytes": 21076,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19118_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21094,
+      "uncompressed_bytes": 54775,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19118_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19119.edi",
+      "is_dir": false,
+      "compressed_bytes": 20979,
+      "uncompressed_bytes": 54775,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19119_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21050,
+      "uncompressed_bytes": 54778,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19119_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 337,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19120.edi",
+      "is_dir": false,
+      "compressed_bytes": 20983,
+      "uncompressed_bytes": 54769,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19120_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21046,
+      "uncompressed_bytes": 54772,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19120_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 340,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19121.edi",
+      "is_dir": false,
+      "compressed_bytes": 21248,
+      "uncompressed_bytes": 54750,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19121_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21286,
+      "uncompressed_bytes": 54751,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19121_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 342,
+      "uncompressed_bytes": 556,
+      "extension": ".txt"
+    },
+    {
+      "name": "EDIs/FRG19122.edi",
+      "is_dir": false,
+      "compressed_bytes": 21035,
+      "uncompressed_bytes": 54773,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19122_bvv.edi",
+      "is_dir": false,
+      "compressed_bytes": 21021,
+      "uncompressed_bytes": 54777,
+      "extension": ".edi"
+    },
+    {
+      "name": "EDIs/FRG19122_srvy.txt",
+      "is_dir": false,
+      "compressed_bytes": 341,
+      "uncompressed_bytes": 558,
+      "extension": ".txt"
+    }
+  ],
+  "FORGE_MT_mdl17_cellcenter.zip": [
+    {
+      "name": "FORGE_MT_12_12_2021.cpg",
+      "is_dir": false,
+      "compressed_bytes": 5,
+      "uncompressed_bytes": 5,
+      "extension": ".cpg"
+    },
+    {
+      "name": "FORGE_MT_12_12_2021.dbf",
+      "is_dir": false,
+      "compressed_bytes": 6557633,
+      "uncompressed_bytes": 84310542,
+      "extension": ".dbf"
+    },
+    {
+      "name": "FORGE_MT_12_12_2021.prj",
+      "is_dir": false,
+      "compressed_bytes": 268,
+      "uncompressed_bytes": 425,
+      "extension": ".prj"
+    },
+    {
+      "name": "FORGE_MT_12_12_2021.sbn",
+      "is_dir": false,
+      "compressed_bytes": 2225523,
+      "uncompressed_bytes": 9360060,
+      "extension": ".sbn"
+    },
+    {
+      "name": "FORGE_MT_12_12_2021.sbx",
+      "is_dir": false,
+      "compressed_bytes": 34094,
+      "uncompressed_bytes": 92964,
+      "extension": ".sbx"
+    },
+    {
+      "name": "FORGE_MT_12_12_2021.shp",
+      "is_dir": false,
+      "compressed_bytes": 4607914,
+      "uncompressed_bytes": 48177460,
+      "extension": ".shp"
+    },
+    {
+      "name": "FORGE_MT_12_12_2021.shp.xml",
+      "is_dir": false,
+      "compressed_bytes": 2155,
+      "uncompressed_bytes": 7349,
+      "extension": ".xml"
+    },
+    {
+      "name": "FORGE_MT_12_12_2021.shx",
+      "is_dir": false,
+      "compressed_bytes": 1653633,
+      "uncompressed_bytes": 8759620,
+      "extension": ".shx"
+    },
+    {
+      "name": "FORGE_MT_12_12_2021.txt",
+      "is_dir": false,
+      "compressed_bytes": 9962766,
+      "uncompressed_bytes": 105330532,
+      "extension": ".txt"
+    },
+    {
+      "name": "FORGE_MT_12_12_2021.txt.xml",
+      "is_dir": false,
+      "compressed_bytes": 2161,
+      "uncompressed_bytes": 7349,
+      "extension": ".xml"
+    },
+    {
+      "name": "FRG200614_mdl17_cellcenter.dat",
+      "is_dir": false,
+      "compressed_bytes": 13673367,
+      "uncompressed_bytes": 65603932,
+      "extension": ".dat"
+    }
+  ]
+}

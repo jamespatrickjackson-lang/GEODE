@@ -1,0 +1,65 @@
+{
+  "id": "01_overview",
+  "title": "Quarry Arrival",
+  "subtitle": "Reference folder project for a high-fidelity site demo",
+  "renderPreset": "boardroom",
+  "camera": {
+    "position": [
+      122.39490793276578,
+      166.77299301072367,
+      217.4455058575253
+    ],
+    "target": [
+      11.658688509301317,
+      -45.98425853351677,
+      116.10310869804037
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 46
+  },
+  "transition": {
+    "duration": 2600,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 5000,
+  "layerOverrides": {
+    "case-study-b-demo-shell": {
+      "opacity": 1,
+      "showLabels": true
+    },
+    "terrain": {
+      "opacity": 1
+    },
+    "quarry-imagery-base": {
+      "opacity": 0.9
+    },
+    "shahbazi-photo-overlay-preview": {
+      "opacity": 0
+    }
+  },
+  "overlayLayout": {
+    "x": 0.039049479166666665,
+    "y": 0.05055207026348807,
+    "width": 0.1780282738095238,
+    "height": 0.1960017319598913
+  },
+  "overlay": {
+    "position": "left",
+    "contentFile": "overlays/01_overview/text.md",
+    "timing": {
+      "fadeMs": 1600,
+      "gapMs": 80,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
+  "accentColor": "#75c7ff",
+  "visibilityOverrides": {
+    "case-study-b-demo-shell": false,
+    "shahbazi-photo-overlay-preview": true
+  }
+}

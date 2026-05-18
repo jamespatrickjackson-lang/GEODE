@@ -1,0 +1,27 @@
+{
+  "id": "06_untitled",
+  "title": "Untitled page",
+  "camera": {
+    "position": [
+      1285.213622052544,
+      -4704.082161475737,
+      2165.1793522979933
+    ],
+    "target": [
+      505.107798895395,
+      -2282.438081367545,
+      89.45729472170623
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 40
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000
+}

@@ -1,0 +1,227 @@
+{
+  "project": "utah-forge",
+  "area": "utah_forge_phase_3",
+  "dataset": "electrical_resistivity",
+  "artifact": "manifest.json",
+  "generatedDate": "2026-05-12",
+  "classification": "source-derived inversion model",
+  "source": {
+    "archive": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip",
+    "entry": "FRG200614_mdl17_cellcenter.dat",
+    "sourceRows": 1094940,
+    "positiveRows": 1094624,
+    "maskedRows": 316
+  },
+  "transform": {
+    "sourceCrs": "EPSG:26912 NAD83 / UTM Zone 12N",
+    "sceneOriginUtm": {
+      "easting_m": 341467.35,
+      "northing_m": 4273374.5,
+      "elevation_m": 0
+    },
+    "localAxes": "X east, Y north, Z up",
+    "cropApplied": false,
+    "verticalExaggeration": 1
+  },
+  "outputs": {
+    "meshPreview": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/resistivity_slices_mesh_preview.json",
+    "legend": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/legend.json",
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/resistivity_slices.provenance.json"
+  },
+  "slices": [
+    {
+      "id": "horizontal_elev_1500m",
+      "label": "Horizontal MT slice +1500 m elevation",
+      "kind": "horizontal-elevation-slice",
+      "targetElevationM": 1500,
+      "sourceWindow": {
+        "halfWindowM": 180,
+        "note": "Rows inside this elevation window are averaged into the authored horizontal slice."
+      },
+      "grid": {
+        "columns": 126,
+        "rows": 104,
+        "validCells": 2671,
+        "triangles": 3492
+      },
+      "meshRange": {
+        "vertexStart": 0,
+        "vertexCount": 2671,
+        "indexStart": 0,
+        "indexCount": 10476
+      }
+    },
+    {
+      "id": "horizontal_elev_0m",
+      "label": "Horizontal MT slice 0 m elevation",
+      "kind": "horizontal-elevation-slice",
+      "targetElevationM": 0,
+      "sourceWindow": {
+        "halfWindowM": 450,
+        "note": "Rows inside this elevation window are averaged into the authored horizontal slice."
+      },
+      "grid": {
+        "columns": 126,
+        "rows": 104,
+        "validCells": 2671,
+        "triangles": 3492
+      },
+      "meshRange": {
+        "vertexStart": 2671,
+        "vertexCount": 2671,
+        "indexStart": 10476,
+        "indexCount": 10476
+      }
+    },
+    {
+      "id": "horizontal_elev_minus2500m",
+      "label": "Horizontal MT slice -2500 m elevation",
+      "kind": "horizontal-elevation-slice",
+      "targetElevationM": -2500,
+      "sourceWindow": {
+        "halfWindowM": 850,
+        "note": "Rows inside this elevation window are averaged into the authored horizontal slice."
+      },
+      "grid": {
+        "columns": 126,
+        "rows": 104,
+        "validCells": 2671,
+        "triangles": 3492
+      },
+      "meshRange": {
+        "vertexStart": 5342,
+        "vertexCount": 2671,
+        "indexStart": 20952,
+        "indexCount": 10476
+      }
+    },
+    {
+      "id": "horizontal_elev_minus5000m",
+      "label": "Horizontal MT slice -5000 m elevation",
+      "kind": "horizontal-elevation-slice",
+      "targetElevationM": -5000,
+      "sourceWindow": {
+        "halfWindowM": 1300,
+        "note": "Rows inside this elevation window are averaged into the authored horizontal slice."
+      },
+      "grid": {
+        "columns": 126,
+        "rows": 104,
+        "validCells": 2671,
+        "triangles": 3492
+      },
+      "meshRange": {
+        "vertexStart": 8013,
+        "vertexCount": 2671,
+        "indexStart": 31428,
+        "indexCount": 10476
+      }
+    },
+    {
+      "id": "horizontal_elev_minus10000m",
+      "label": "Horizontal MT slice -10000 m elevation",
+      "kind": "horizontal-elevation-slice",
+      "targetElevationM": -10000,
+      "sourceWindow": {
+        "halfWindowM": 2600,
+        "note": "Rows inside this elevation window are averaged into the authored horizontal slice."
+      },
+      "grid": {
+        "columns": 126,
+        "rows": 104,
+        "validCells": 2671,
+        "triangles": 3492
+      },
+      "meshRange": {
+        "vertexStart": 10684,
+        "vertexCount": 2671,
+        "indexStart": 41904,
+        "indexCount": 10476
+      }
+    },
+    {
+      "id": "horizontal_elev_minus25000m",
+      "label": "Horizontal MT slice -25000 m elevation",
+      "kind": "horizontal-elevation-slice",
+      "targetElevationM": -25000,
+      "sourceWindow": {
+        "halfWindowM": 6500,
+        "note": "Rows inside this elevation window are averaged into the authored horizontal slice."
+      },
+      "grid": {
+        "columns": 126,
+        "rows": 104,
+        "validCells": 2671,
+        "triangles": 3492
+      },
+      "meshRange": {
+        "vertexStart": 13355,
+        "vertexCount": 2671,
+        "indexStart": 52380,
+        "indexCount": 10476
+      }
+    },
+    {
+      "id": "vertical_ew_station_centroid",
+      "label": "East-west MT resistivity section through station centroid",
+      "kind": "vertical-section",
+      "sectionLine": {
+        "orientation": "east-west",
+        "fixedY": -6738.565,
+        "xMin": -139570.65,
+        "xMax": 139570.65
+      },
+      "sourceWindow": {
+        "halfWidthM": 4500,
+        "note": "Rows within this northing window are averaged into the authored section plane."
+      },
+      "grid": {
+        "columns": 150,
+        "rows": 136,
+        "validCells": 2590,
+        "triangles": 2596
+      },
+      "meshRange": {
+        "vertexStart": 16026,
+        "vertexCount": 2590,
+        "indexStart": 62856,
+        "indexCount": 7788
+      }
+    },
+    {
+      "id": "vertical_ns_station_centroid",
+      "label": "North-south MT resistivity section through station centroid",
+      "kind": "vertical-section",
+      "sectionLine": {
+        "orientation": "north-south",
+        "fixedX": -4282.363,
+        "yMin": -113944.5,
+        "yMax": 113944.5
+      },
+      "sourceWindow": {
+        "halfWidthM": 4500,
+        "note": "Rows within this easting window are averaged into the authored section plane."
+      },
+      "grid": {
+        "columns": 150,
+        "rows": 136,
+        "validCells": 2314,
+        "triangles": 2346
+      },
+      "meshRange": {
+        "vertexStart": 18616,
+        "vertexCount": 2314,
+        "indexStart": 70644,
+        "indexCount": 7038
+      }
+    }
+  ],
+  "notes": [
+    "These slices are authored presentation sections generated from the full source model bounds.",
+    "No source model crop is applied.",
+    "Vertical scale remains true 1:1 meters.",
+    "Horizontal slices average source model rows inside a documented elevation window.",
+    "Vertical sections average source model rows inside a documented lateral window through the MT station centroid.",
+    "This is a display preview for GeoSee; the full model source remains in client_preprocessed."
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "utah-forge-mt-top-surface",
+  "project": "utah-forge",
+  "dataset": "utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface",
+  "artifactFamily": "render_ready",
+  "artifactType": "top_surface",
+  "renderRole": "technical_credibility",
+  "loadClass": "page_required",
+  "sourceType": "mixed",
+  "epistemicStatus": "approximate",
+  "authority": "Observed in projects/utah-forge/project.json, DATA_LAYER_STATUS.md, Layer-Artifact-Classification.md, Computed-Artifact-Pipeline.md, Project-Load-Class-Table.md, WRAPPER_COVERAGE.md, and the MT top_surface manifest/stats/provenance files.",
+  "status": "needs_review",
+  "reviewRequired": true,
+  "accepted": false,
+  "paths": {
+    "source": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/resistivity_point_preview.json",
+    "artifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/mt_top_surface_mesh_preview.json",
+    "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/manifest.json",
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/provenance.json",
+    "supporting": [
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/stats.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json"
+    ]
+  },
+  "inputs": [
+    {
+      "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/resistivity_point_preview.json",
+      "role": "90,000-point MT resistivity model preview",
+      "notes": "Observed manifest/provenance states the top surface reads only the existing MT resistivity point preview JSON."
+    }
+  ],
+  "producedBy": {
+    "script": "prep/build_utah_forge_mt_top_surface.mjs",
+    "tool": "Node prep script",
+    "generatedAt": "2026-05-12",
+    "notes": "Script observed read-only; no script was run in this pass."
+  },
+  "crs": {
+    "source": "EPSG:26912 / NAD83 UTM Zone 12N",
+    "scene": "scene-local meters, X east, Y north, Z up, origin easting 341467.35, northing 4273374.5, elevation 0",
+    "transformPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json",
+    "notes": "Provenance records source CRS and scene-local transform. Acceptance still requires spatial/visual review."
+  },
+  "units": {
+    "horizontal": "meters",
+    "vertical": "meters",
+    "scalar": null,
+    "notes": "Top surface is an approximate support mesh, not a scalar resistivity color/legend artifact."
+  },
+  "scalar": {
+    "transform": null,
+    "range": null,
+    "thresholds": null,
+    "notes": "Manifest states this is not connected to the MT scalar trim/feather legend or resistivity subset decomposition."
+  },
+  "processing": {
+    "method": "Preview-derived approximate ground cap from regular XY bins over the existing Utah FORGE Phase 3 MT resistivity model preview.",
+    "parameters": {
+      "gridSizeM": 2500,
+      "topQuantile": 0.95,
+      "minSamplesPerCell": 3,
+      "upperComponentFloorQuantile": 0.1,
+      "dilationFloorQuantile": 0.05,
+      "maxDilationDeltaM": 900,
+      "smoothingPasses": 2,
+      "sourcePreviewPointCount": 90000,
+      "rawGridCellCount": 2056,
+      "sampledGridCellCount": 1944,
+      "initialUpperCandidateCount": 1750,
+      "largestComponentCellCount": 1126,
+      "dilatedCellCount": 9,
+      "vertexCount": 1135,
+      "retainedQuadCount": 922,
+      "triangleCount": 1844,
+      "upperFloorZ": 829.74,
+      "dilationFloorZ": -1384.28
+    },
+    "downsampling": "Derived from the 90,000-point MT preview, not the full-density model. Grid/bin and smoothing parameters are review-sensitive.",
+    "masking": "Sparse/deep exterior bins are rejected; only the largest connected upper component is retained, with one local edge dilation allowed.",
+    "notes": "Surface intentionally avoids sparse-column top triangulation because that creates vertical icicle sheets."
+  },
+  "stats": {
+    "counts": {
+      "sourcePreviewPointCount": 90000,
+      "rawGridCellCount": 2056,
+      "sampledGridCellCount": 1944,
+      "initialUpperCandidateCount": 1750,
+      "largestComponentCellCount": 1126,
+      "dilatedCellCount": 9,
+      "vertexCount": 1135,
+      "retainedQuadCount": 922,
+      "triangleCount": 1844
+    },
+    "bounds": {
+      "sourceBounds": {
+        "easting_m": [
+          285217.35,
+          405217.35
+        ],
+        "northing_m": [
+          4227124.5,
+          4317124.5
+        ],
+        "elevation_m": [
+          816.49,
+          3023.47
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          -56250,
+          -46250,
+          816.49
+        ],
+        "max": [
+          63750,
+          43750,
+          3023.47
+        ]
+      }
+    },
+    "notes": "Counts and bounds are observed in top_surface stats/provenance evidence."
+  },
+  "render": {
+    "colorRamp": "standalone elevation/topology surface colors, needs review",
+    "legendPath": null,
+    "materialNotes": "Material/depth behavior, opacity, spatial alignment, camera/page framing, and caveat visibility require visual review.",
+    "visualCheckRequired": true,
+    "visualCheckReceipt": null,
+    "notes": "No material, depth, opacity, visibility, page, or runtime behavior changed."
+  },
+  "provenance": {
+    "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/provenance.json",
+    "notes": "Existing provenance says ready for demo preview but not final spatial analysis. This wrapper does not promote acceptance."
+  },
+  "limitations": [
+    "Not accepted project state.",
+    "Ground cap/top surface is preview-derived support surface, not measured terrain.",
+    "Do not represent as measured terrain, interpreted geology, wells, faults, seismic, target, resource estimate, or accepted surface interpretation.",
+    "Material/depth behavior, opacity, spatial alignment, caveat language, and visual receipt require review.",
+    "Default/page role requires human review.",
+    "Do not simplify, recolor, hide, or promote this surface without review."
+  ],
+  "relatedLayers": [
+    "utah-forge-mt-top-surface"
+  ],
+  "relatedPages": [
+    "04_untitled",
+    "07_untitled",
+    "11_untitled"
+  ],
+  "review": {
+    "requiredBy": "human",
+    "questions": [
+      "Should the MT top surface be client-facing, technical-credibility only, optional advanced, or page support?",
+      "What caveat language is required so it is not mistaken for measured terrain or interpreted geology?",
+      "What visual receipt proves material/depth behavior, opacity, spatial alignment, and camera/page role are acceptable?"
+    ],
+    "acceptedBy": null,
+    "acceptedAt": null,
+    "receipt": null
+  },
+  "notes": "Project-local wrapper only. It records approximate top-surface identity, caveats, and review gaps without changing runtime/render behavior."
+}

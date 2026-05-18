@@ -1,0 +1,57 @@
+{
+  "id": "04_untitled",
+  "title": "Reading the Core",
+  "camera": {
+    "position": [
+      704.7174383748711,
+      490.5521659495814,
+      426.39263020759023
+    ],
+    "target": [
+      3116.792275794108,
+      -872.9328437512127,
+      -472.6822069959334
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 50
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "overlay": {
+    "position": "right",
+    "contentFile": "overlays/04_untitled/text.md",
+    "timing": {
+      "fadeMs": 2000,
+      "gapMs": 50,
+      "easing": "linear"
+    },
+    "images": [
+      {
+        "file": "overlays/04_untitled/vcu_2711_fig_4.500x0-is.jpg",
+        "caption": "",
+        "position": "below-text"
+      }
+    ]
+  },
+  "layerOverrides": {
+    "drillholes-2023": {
+      "showLabels": true
+    },
+    "bedrock-geology": {
+      "color": "#cccccc",
+      "labelColor": "#cccccc",
+      "opacity": 0.1
+    }
+  },
+  "visibilityOverrides": {
+    "bedrock-geology": true
+  },
+  "accentColor": "#ffd166"
+}

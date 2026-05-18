@@ -1,0 +1,65 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "camera_poses.geojson",
+  "artifactType": "normalized-camera-poses-and-flight-path",
+  "projectSlug": "case-study-b",
+  "createdDate": "2026-05-10",
+  "source": {
+    "primaryPath": "projects/case-study-b/data/raw/shahbazi_gravel_pit/RefinedEOPs.txt",
+    "supportingPaths": [
+      "projects/case-study-b/data/raw/shahbazi_gravel_pit/DirectEOPs.txt",
+      "projects/case-study-b/data/raw/shahbazi_gravel_pit/TimeStamps.txt"
+    ],
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Unmanned aerial image dataset: Ready for 3D reconstruction. Data in Brief 25, 103962. DOI 10.1016/j.dib.2019.103962",
+    "rows": 158,
+    "columns": [
+      "image_id",
+      "x",
+      "y",
+      "z",
+      "omega",
+      "phi",
+      "kappa"
+    ]
+  },
+  "processing": {
+    "script": "prep/build_shahbazi_camera_poses_geojson.mjs",
+    "method": "Parsed refined exterior orientation rows, joined timestamps and direct EOP comparison values, and transformed positions into Case Study B scene coordinates using the sampled TLS preview transform.",
+    "sceneTransform": {
+      "mode": "tls-preview-aligned",
+      "horizontalScale": 1,
+      "verticalScale": 1,
+      "zLiftMeters": 115,
+      "note": "Camera positions are centered and lifted with the same transform as the sampled TLS preview."
+    },
+    "sourceBounds": {
+      "min": [
+        192991.387,
+        5025125.25,
+        320.025
+      ],
+      "max": [
+        193187.982,
+        5025249.388,
+        372.334
+      ]
+    },
+    "sceneBounds": {
+      "min": [
+        -101.372,
+        -106.887,
+        137.62
+      ],
+      "max": [
+        95.223,
+        17.252,
+        189.929
+      ]
+    }
+  },
+  "reviewStatus": {
+    "readyForDemoPreview": true,
+    "readyForFinalSpatialAnalysis": false,
+    "notes": "This layer shows the published camera positions and a flight-path preview. It does not reconstruct imagery or camera frustums yet; final CRS/orientation review remains required."
+  }
+}

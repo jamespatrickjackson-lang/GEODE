@@ -1,0 +1,72 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "camera_frustums.geojson",
+  "artifactType": "sampled-camera-frustum-preview",
+  "projectSlug": "case-study-b",
+  "createdDate": "2026-05-10",
+  "source": {
+    "primaryPath": "projects/case-study-b/data/raw/shahbazi_gravel_pit/RefinedEOPs.txt",
+    "supportingPath": "projects/case-study-b/data/raw/shahbazi_gravel_pit/RefinedIOPs.txt",
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Unmanned aerial image dataset: Ready for 3D reconstruction. Data in Brief 25, 103962. DOI 10.1016/j.dib.2019.103962",
+    "eopRows": 158,
+    "iopModel": {
+      "pixelSizeMm": 0.0074,
+      "imageWidthPx": 4872,
+      "imageHeightPx": 3248,
+      "principalPointOffsetMm": [
+        0.027983482,
+        0.089373269
+      ],
+      "focalLengthMm": 36.01030367,
+      "sensorSizeMm": [
+        36.053,
+        24.035
+      ],
+      "horizontalFovDeg": 53.184,
+      "verticalFovDeg": 36.91
+    }
+  },
+  "processing": {
+    "script": "prep/build_shahbazi_camera_frustums_geojson.mjs",
+    "method": "Built sampled display frustums from refined exterior and interior orientation parameters, using a capped display length and the same scene transform as the TLS preview.",
+    "displayStride": 6,
+    "displayedFrustumCount": 28,
+    "sceneTransform": {
+      "mode": "tls-preview-aligned",
+      "horizontalScale": 1,
+      "verticalScale": 1,
+      "zLiftMeters": 115,
+      "note": "Frustum vertices are centered and lifted with the same transform as the sampled TLS preview."
+    },
+    "sourceBounds": {
+      "min": [
+        192972.689,
+        5025106.318,
+        283.479
+      ],
+      "max": [
+        193203.798,
+        5025265.434,
+        372.129
+      ]
+    },
+    "sceneBounds": {
+      "min": [
+        -120.07,
+        -125.819,
+        101.074
+      ],
+      "max": [
+        111.039,
+        33.298,
+        189.724
+      ]
+    },
+    "orientationConvention": "Preview uses Rz(kappa) * Ry(phi) * Rx(omega), negative camera Z as forward. Verify convention before metric use."
+  },
+  "reviewStatus": {
+    "readyForDemoPreview": true,
+    "readyForFinalSpatialAnalysis": false,
+    "notes": "This is a sampled visual QA layer for camera acquisition geometry. It is not a final photogrammetric camera model or image footprint product."
+  }
+}

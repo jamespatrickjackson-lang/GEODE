@@ -1,0 +1,66 @@
+{
+  "id": "04_untitled",
+  "title": "Untitled page copy",
+  "camera": {
+    "position": [
+      -88734.90318739192,
+      -88943.7167018159,
+      30138.474109371047
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "scalarFocusMin": 2.694444193332294,
+      "scalarFocusMax": 4.5,
+      "scalarBlendMin": 3.619791464880117,
+      "scalarBlendMax": 4.5,
+      "scalarEdgeLineWidth": 1.3,
+      "scalarEdgeAverage": 0.59
+    },
+    "utah-forge-mt-top-surface": {
+      "opacity": 0
+    }
+  },
+  "accentColor": "#f27826",
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 127832,
+    "orbitHeight": 49112,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  }
+}

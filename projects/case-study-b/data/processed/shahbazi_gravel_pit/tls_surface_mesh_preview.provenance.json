@@ -1,0 +1,98 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "tls_surface_mesh_preview.json",
+  "artifactType": "binned-tls-surface-mesh-preview",
+  "projectSlug": "case-study-b",
+  "createdDate": "2026-05-11",
+  "source": {
+    "path": "projects/case-study-b/data/raw/shahbazi_gravel_pit/LaserScan.xyz",
+    "citation": "Shahbazi, Menard, Sohn, Theau (2019), Unmanned aerial image dataset: Ready for 3D reconstruction. Data in Brief 25, 103962. DOI 10.1016/j.dib.2019.103962",
+    "sourcePointRows": 8308685,
+    "format": "XYZ text",
+    "columns": [
+      "x",
+      "y",
+      "z"
+    ]
+  },
+  "processing": {
+    "script": "prep/build_shahbazi_tls_surface_mesh_preview.mjs",
+    "method": "Binned height-field mesh using maximum observed TLS Z per populated grid cell, with small enclosed interior no-data gaps filled from neighboring TLS cells.",
+    "cellSizeM": 0.45,
+    "minPointsPerCell": 3,
+    "gridSize": [
+      113,
+      186
+    ],
+    "validCellCount": 14044,
+    "triangleCount": 27496,
+    "triangleWinding": "counter-clockwise from +Z / upward-facing for app FrontSide rendering",
+    "winding": {
+      "flippedTriangleCount": 5
+    },
+    "interiorGapFill": {
+      "method": "Small enclosed no-data cells are filled from surrounding TLS cell heights before meshing.",
+      "candidateComponentCount": 14,
+      "filledComponentCount": 12,
+      "filledCellCount": 26,
+      "largestFilledComponentCells": 8,
+      "maxComponentCells": 140,
+      "maxComponentSpanCells": 16,
+      "maxComponentSpanM": 7.2,
+      "searchRadiusCells": 7,
+      "searchRadiusM": 3.15,
+      "minBorderSamples": 4
+    },
+    "boundarySmoothing": {
+      "candidateLoopCount": 1,
+      "smoothedLoopCount": 1,
+      "smoothedVertexCount": 588,
+      "minLoopAreaM2": 4,
+      "iterations": 5,
+      "maxHorizontalShiftM": 0.518,
+      "maxVerticalShiftM": 0.338
+    },
+    "fillPolicy": "Small enclosed interior no-data gaps are filled from neighboring TLS heights before meshing. Mesh faces are still not extended outside the observed TLS footprint. Exterior boundary loops are spline-smoothed in scene space to remove binned-grid edge chatter without stitching to the outer surface.",
+    "sceneTransform": {
+      "mode": "tls-preview-aligned",
+      "horizontalScale": 1,
+      "verticalScale": 1,
+      "zLiftMeters": 115,
+      "note": "Surface preview keeps TLS metric scale, recenters X/Y, and lifts Z into the existing procedural Case Study B scene."
+    },
+    "sourceBounds": {
+      "min": [
+        193067.835,
+        5025190.955,
+        297.521
+      ],
+      "max": [
+        193117.785,
+        5025273.755,
+        305.576
+      ],
+      "center": [
+        193092.759,
+        5025232.137,
+        301.491
+      ]
+    },
+    "sceneBounds": {
+      "min": [
+        -24.901,
+        -41.116,
+        115.132
+      ],
+      "max": [
+        25.026,
+        41.618,
+        123.171
+      ]
+    }
+  },
+  "reviewStatus": {
+    "readyForDemoPreview": true,
+    "readyForFinalSpatialAnalysis": false,
+    "notes": "This is a TLS-derived preview, not a final DEM, photogrammetry mesh, or engineered surface. It fills only small enclosed interior display gaps and does not extend the mesh outside the observed TLS footprint."
+  }
+}

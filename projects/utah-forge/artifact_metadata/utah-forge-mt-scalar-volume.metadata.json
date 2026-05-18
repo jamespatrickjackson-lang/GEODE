@@ -1,0 +1,160 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "utah-forge-mt-scalar-volume",
+  "project": "utah-forge",
+  "dataset": "utah_forge_phase_3/electrical_resistivity/resistivity_model/volume",
+  "artifactFamily": "render_ready",
+  "artifactType": "scalar_volume",
+  "renderRole": "optional_advanced",
+  "loadClass": "needs_human_review",
+  "sourceType": "mixed",
+  "epistemicStatus": "derived",
+  "authority": "Observed in projects/utah-forge/project.json, Layer-Artifact-Classification.md, Computed-Artifact-Pipeline.md, DATA_LAYER_STATUS.md, Project-Load-Class-Table.md, and the MT volume manifest/product stats/provenance paths.",
+  "status": "needs_review",
+  "reviewRequired": true,
+  "accepted": false,
+  "paths": {
+    "source": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip",
+    "artifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume",
+    "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/mt_volume_manifest.json",
+    "provenance": null,
+    "supporting": [
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/forge_focused/volume.u8",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/forge_focused/mask.u8",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/forge_focused/stats.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/forge_focused/provenance.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/full_extent/volume.u8",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/full_extent/mask.u8",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/full_extent/stats.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/full_extent/provenance.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/stations/mt_station_response_qc.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json"
+    ]
+  },
+  "inputs": [
+    {
+      "path": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip",
+      "role": "Updated MT model cell-center inversion package",
+      "notes": "Project metadata identifies this as Utah FORGE GDR submission 1255 updated MT model cell-center inversion package."
+    },
+    {
+      "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/model_stats.json",
+      "role": "Model stats support",
+      "notes": "Observed as upstream/supporting stats for MT model products."
+    },
+    {
+      "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/stations/mt_station_response_qc.json",
+      "role": "Station response QC support",
+      "notes": "Observed support file for volume review."
+    }
+  ],
+  "producedBy": {
+    "script": "prep/build_utah_forge_mt_volume_products.mjs",
+    "tool": "Node prep script",
+    "generatedAt": "2026-05-12",
+    "notes": "Script and generated output paths were observed read-only; no script was run in this pass."
+  },
+  "crs": {
+    "source": "EPSG:26912 / NAD83 UTM Zone 12N",
+    "scene": "GeoSee scene-local meters with origin easting 341467.35, northing 4273374.5, elevation 0",
+    "transformPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json",
+    "notes": "CRS and scene origin are observed in manifest/status evidence; per-product bounds and acceptance still need human review."
+  },
+  "units": {
+    "horizontal": "meters",
+    "vertical": "meters",
+    "scalar": "normalized uint8 encoding of log10 resistivity in ohm-m",
+    "notes": "Source scalar is log10 resistivity; render payload is normalized uint8 with mask payloads."
+  },
+  "scalar": {
+    "transform": "log10 resistivity normalized to uint8 volume payload",
+    "range": {
+      "sourceMin": -2,
+      "sourceMax": 4.5,
+      "displayMin": 0.139879,
+      "displayMax": 3.937122
+    },
+    "thresholds": null,
+    "notes": "Transfer function, scalar window, mask visibility, and product-specific render meaning require human review before acceptance."
+  },
+  "processing": {
+    "method": "Browser-ready Data3DTexture scalar volume and mask payloads generated from positive MT cell-center model rows.",
+    "parameters": {
+      "productCount": 2,
+      "products": [
+        {
+          "productId": "mt-resistivity-full-extent-volume",
+          "dimensions": [
+            80,
+            64,
+            56
+          ],
+          "sourceRowsInBounds": 1094579,
+          "sampleSteps": 96
+        },
+        {
+          "productId": "mt-resistivity-forge-focused-volume",
+          "dimensions": [
+            96,
+            80,
+            64
+          ],
+          "sourceRowsInBounds": 771889,
+          "sampleSteps": 112
+        }
+      ],
+      "rowCount": 1094940,
+      "positiveResistivityRowCount": 1094624,
+      "zeroOrNegativeResistivityRowCount": 316
+    },
+    "downsampling": "Volume resampling/gridding is recorded through product dimensions and source row counts; do not alter dimensions, sample steps, or transfer behavior without review.",
+    "masking": "Mask payloads record empty/occupied voxels; mask handling and visibility require visual and technical review.",
+    "notes": "Volume products are high-complexity MT artifacts and should be loaded/presented intentionally, not removed or simplified."
+  },
+  "stats": {
+    "counts": {
+      "productCount": 2,
+      "rowCount": 1094940,
+      "positiveResistivityRowCount": 1094624,
+      "zeroOrNegativeResistivityRowCount": 316
+    },
+    "bounds": {},
+    "notes": "Product-specific stats files exist for focused and full-extent products; bounds require review from those files before acceptance."
+  },
+  "render": {
+    "colorRamp": "MT volume manifest display recipes, needs review",
+    "legendPath": null,
+    "materialNotes": "Raymarch sampling, opacity, density, mask visibility, scalar window, transfer mode, bounds, and MT/seismic co-rendering require a visual receipt.",
+    "visualCheckRequired": true,
+    "visualCheckReceipt": null,
+    "notes": "No volume sampling, transfer function, mask, scalar range, color ramp, material, page, or runtime behavior changed."
+  },
+  "provenance": {
+    "path": null,
+    "notes": "Root volume manifest observed; product-level provenance files exist for focused and full-extent volume products. Decide whether a root wrapper or per-product wrappers are required."
+  },
+  "limitations": [
+    "Not accepted project state.",
+    "Does not approve default visibility, eager loading, lazy loading, or demo use.",
+    "Transfer function, mask behavior, bounds, scalar range, raymarch sampling, and visual receipt need human review.",
+    "Do not change volume sampling, mask payloads, scalar range, color ramp, opacity, density, or camera/page framing without review.",
+    "Scalar volume role remains unresolved: optional advanced, high-fidelity client-facing, QA/technical, or mixed.",
+    "This artifact is not interpreted geology, target, resource estimate, or accepted geologic interpretation."
+  ],
+  "relatedLayers": [
+    "utah-forge-mt-resistivity-volume"
+  ],
+  "relatedPages": [],
+  "review": {
+    "requiredBy": "human",
+    "questions": [
+      "Should the MT scalar volume be optional advanced, high-fidelity client-facing, QA/technical, or mixed?",
+      "Which product should be client-facing: focused volume, full-extent context, both, or neither by default?",
+      "What visual receipt proves raymarch sampling, mask behavior, opacity, scalar range, and co-rendering quality are preserved?"
+    ],
+    "acceptedBy": null,
+    "acceptedAt": null,
+    "receipt": null
+  },
+  "notes": "Project-local wrapper only. It records scalar-volume identity and review gaps without changing runtime/render behavior."
+}
