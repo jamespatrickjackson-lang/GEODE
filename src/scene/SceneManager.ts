@@ -60,6 +60,10 @@ import {
   UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
   UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
+import {
+  UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS,
+  UTAH_FORGE_GRATICULE_EDGE_STYLE_FIELDS,
+} from "../projectModules/utahForge/crossfadeFields";
 
 // Fade duration matches the markdown overlay panel (OverlayDisplay's
 // FADE_MS) so chapter transitions feel coherent across UI surfaces.
@@ -109,23 +113,6 @@ const WORKING_AREA_FOCUS_DEFAULT_TARGET_LAYER_IDS = [
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 ] as const;
 const WORKING_AREA_FOCUS_RENDER_ORDER = 4575;
-const UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS = new Set([
-  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
-  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
-  UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
-  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
-  UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
-]);
-const UTAH_FORGE_GRATICULE_EDGE_STYLE_FIELDS = [
-  "graticuleEdgeFadeAware",
-  "graticuleEdgeFadeStrength",
-  "graticuleEdgeLineColor",
-  "graticuleEdgeLineWidth",
-  "graticuleEdgeLabelColor",
-  "graticuleEdgeLabelVisible",
-  "graticuleEdgeLabelOffsetM",
-  "graticuleEdgeLabelGapM",
-] as const satisfies readonly (keyof EditableStyle)[];
 const TOPO_GRATICULE_MINOR_SCALE = 0.8;
 const SCENE_SECTION_AXIS_NORMALS = {
   x: new THREE.Vector3(1, 0, 0),
