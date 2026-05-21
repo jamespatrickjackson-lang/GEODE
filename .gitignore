@@ -11,3 +11,16 @@ desktop.ini
 # Intake-staging audits are historical/QA artifacts; the directory's own
 # BUILD_DIRECTIVE.md flags them do_not_use_for_software_build.
 projects/utah-forge/intake_staging/audits/
+
+# Raw deliveries, photogrammetry inputs, and survey appendix duplicates
+# were moved to C:\GeoSee_Archive\ on 2026-05-21. The app does not load
+# from these paths; prep/ scripts can re-read them from the archive if
+# needed. See C:\GeoSee_Archive\README.md.
+projects/case-study-b/data/raw/
+projects/utah-forge/data/client_preprocessed/forge_southwestern/
+projects/utah-forge/data/client_preprocessed/Unsorted data/
+projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/
+data/source/Geophysical_Data/
+data/source/trees_vri/
+data/source/Images/
+docs/woodjam/
