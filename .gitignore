@@ -1,7 +1,13 @@
 node_modules/
 dist/
+dist-tsbuild/
+*.tsbuildinfo
 *.log
 playwright-report/
 test-results/
 .DS_Store
 desktop.ini
+
+# Intake-staging audits are historical/QA artifacts; the directory's own
+# BUILD_DIRECTIVE.md flags them do_not_use_for_software_build.
+projects/utah-forge/intake_staging/audits/
