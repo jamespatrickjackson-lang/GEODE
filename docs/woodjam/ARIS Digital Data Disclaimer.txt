@@ -1,0 +1,4 @@
+The BC Geological Survey provides ARIS Digital Data for mineral assessment reports on 
+an 'as-is' basis in the format and entirety as submitted to government by industry. 
+The Survey is not responsible for the completeness, quality, accuracy, or reliability of the data. 
+Please note that specialized software may be required to open and view the digital data.
