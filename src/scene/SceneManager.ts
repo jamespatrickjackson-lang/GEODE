@@ -47,6 +47,19 @@ import type { SceneOverlayDef } from "../pages/types";
 import { DEFAULT_ASSAY_COLOR_STOPS } from "../loaders/assayPalette";
 import { SCENE_ORIGIN, utmToScene } from "../constants";
 import { disposeObjectTree } from "./disposeObjectTree";
+import {
+  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_MT_STATIONS_LAYER_ID,
+  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+  UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
+  UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+  UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+  UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
+  UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
+} from "../projectModules/utahForge/layerIds";
 
 // Fade duration matches the markdown overlay panel (OverlayDisplay's
 // FADE_MS) so chapter transitions feel coherent across UI surfaces.
@@ -84,22 +97,6 @@ const TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M = -85_000;
 const CASE_STUDY_B_DEMO_SHELL_LAYER_ID = "case-study-b-demo-shell";
 const SHAHBAZI_GROUND_SURFACE_LAYER_ID = "shahbazi-tls-surface-preview";
 const SHAHBAZI_GROUND_CONTOUR_LAYER_ID = "shahbazi-tls-contours";
-const UTAH_FORGE_MT_STATIONS_LAYER_ID = "utah-forge-mt-stations";
-const UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID =
-  "utah-forge-mt-resistivity-full-density";
-const UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID =
-  "utah-forge-mt-resistivity-volume";
-const UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID =
-  "utah-forge-mt-resistivity-threshold-surfaces";
-const UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID = "utah-forge-mt-top-surface";
-const UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID =
-  "utah-forge-mt-resistivity-slices";
-const UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID = "utah-forge-phase3-seismic-browser";
-const UTAH_FORGE_SCENE_SECTION_LAYER_ID = "utah-forge-scene-section-planes";
-const UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID =
-  "utah-forge-phase3-working-area";
-const UTAH_FORGE_TOPO_GRATICULE_LAYER_ID = "utah-forge-topo-graticule";
-const UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID = "utah-forge-working-area-focus";
 const WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY = 0.15;
 const WORKING_AREA_FOCUS_DEFAULT_BOUNDS = {
   min: new THREE.Vector3(-8041.4, -12617.6, -6200),

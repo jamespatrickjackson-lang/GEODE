@@ -23,13 +23,15 @@ import {
 } from "./styles";
 import type { SceneHandle } from "../scene";
 import type { EditableStyle } from "../pages/types";
+import {
+  UTAH_FORGE_MT_STATIONS_LAYER_ID,
+  UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+} from "../projectModules/utahForge/layerIds";
 
 const SIDEBAR_WIDTH = 512;
 const FLOATING_PANEL_MARGIN = 44;
 const BOTTOM_HUD_SAFE_ZONE = 112;
-const UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID = "utah-forge-phase3-seismic-browser";
-const UTAH_FORGE_SCENE_SECTION_LAYER_ID = "utah-forge-scene-section-planes";
-const UTAH_FORGE_MT_STATIONS_LAYER_ID = "utah-forge-mt-stations";
 
 interface PanelPosition {
   x: number;

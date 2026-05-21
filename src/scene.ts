@@ -14,11 +14,11 @@ import { buildPostprocessing } from "./scene/postprocessing";
 import { setHoverTooltip } from "./ui/HoverTooltip";
 import type { Pose, ProjectLayerSpec, SceneOverlayDef, Vec3 } from "./pages/types";
 import { debugLog } from "./utils/debugLog";
+import { UTAH_FORGE_MT_STATIONS_LAYER_ID } from "./projectModules/utahForge/layerIds";
 
 // Z-up convention for the whole scene.
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
-const UTAH_FORGE_MT_STATIONS_LAYER_ID = "utah-forge-mt-stations";
 const CAMERA_NEAR_M = 5;
 const CAMERA_FAR_M = 5_000_000;
 

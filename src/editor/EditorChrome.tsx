@@ -27,21 +27,17 @@ import {
   audienceLensById,
   type AudienceLensId,
 } from "../audience/audienceLenses";
-
-const UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID =
-  "utah-forge-mt-resistivity-full-density";
-const UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID =
-  "utah-forge-mt-resistivity-slices";
-const UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID =
-  "utah-forge-mt-resistivity-preview";
-const UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID =
-  "utah-forge-mt-resistivity-volume";
-const UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID =
-  "utah-forge-mt-resistivity-threshold-surfaces";
-const UTAH_FORGE_MT_STATIONS_LAYER_ID = "utah-forge-mt-stations";
-const UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID = "utah-forge-phase3-seismic-browser";
-const UTAH_FORGE_SCENE_SECTION_LAYER_ID = "utah-forge-scene-section-planes";
-const UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID = "utah-forge-working-area-focus";
+import {
+  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_MT_STATIONS_LAYER_ID,
+  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+  UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+  UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
+} from "../projectModules/utahForge/layerIds";
 
 const MT_SCALAR_WINDOW_FIELDS = [
   "scalarFocusMin",

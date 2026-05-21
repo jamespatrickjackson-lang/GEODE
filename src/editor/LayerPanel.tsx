@@ -34,6 +34,20 @@ import type { SceneHandle } from "../scene";
 import { DEFAULT_ASSAY_COLOR_STOPS } from "../loaders/assayPalette";
 import { SCENE_ORIGIN } from "../constants";
 import { appAssetUrl } from "../projects/projectPathsRuntime";
+import {
+  UTAH_FORGE_MT_STATIONS_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+  UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+  UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+  UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
+  UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
+} from "../projectModules/utahForge/layerIds";
 
 const CLASSIFICATIONS = [
   "observation",
@@ -226,24 +240,6 @@ const CASE_STUDY_B_CUSTOMER_LAYER_GROUPS = [
   },
 ] as const satisfies readonly LayerGroupDef[];
 
-const UTAH_FORGE_MT_STATIONS_LAYER_ID = "utah-forge-mt-stations";
-const UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID =
-  "utah-forge-mt-resistivity-full-density";
-const UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID = "utah-forge-mt-top-surface";
-const UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID =
-  "utah-forge-mt-resistivity-preview";
-const UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID =
-  "utah-forge-mt-resistivity-slices";
-const UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID =
-  "utah-forge-mt-resistivity-volume";
-const UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID =
-  "utah-forge-mt-resistivity-threshold-surfaces";
-const UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID = "utah-forge-phase3-seismic-browser";
-const UTAH_FORGE_SCENE_SECTION_LAYER_ID = "utah-forge-scene-section-planes";
-const UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID =
-  "utah-forge-phase3-working-area";
-const UTAH_FORGE_TOPO_GRATICULE_LAYER_ID = "utah-forge-topo-graticule";
-const UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID = "utah-forge-working-area-focus";
 const WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY = 0.15;
 const WORKING_AREA_FOCUS_DEFAULT_TARGET_LAYER_IDS = [
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
