@@ -11,17 +11,19 @@
 // arrays against the same shape.
 //
 // TLS_SURFACE / TLS_CONTOUR layer IDs are Shahbazi-specific assets the
-// case-study-b demo references for surface backdrop. They will move to
-// projectModules/shahbazi/layerIds.ts in step 1.6.
+// case-study-b demo references for surface backdrop. Imported from the
+// Shahbazi project module via import-as aliases so call sites below stay
+// readable.
 
 import type {
   AudienceLensConfig,
   AudienceLensId,
 } from "../../audience/audienceLenses";
 import { CASE_STUDY_B_DEMO_SHELL_LAYER_ID as DEMO_SHELL_LAYER_ID } from "./layerIds";
-
-const TLS_SURFACE_LAYER_ID = "shahbazi-tls-surface-preview";
-const TLS_CONTOUR_LAYER_ID = "shahbazi-tls-contours";
+import {
+  SHAHBAZI_GROUND_SURFACE_LAYER_ID as TLS_SURFACE_LAYER_ID,
+  SHAHBAZI_GROUND_CONTOUR_LAYER_ID as TLS_CONTOUR_LAYER_ID,
+} from "../shahbazi/layerIds";
 
 export const CASE_STUDY_B_AUDIENCE_LENSES: AudienceLensConfig[] = [
   {

@@ -53,6 +53,10 @@ import {
   WORKING_AREA_FOCUS_DEFAULT_TARGET_LAYER_IDS,
 } from "../projectModules/utahForge/workingAreaFocus";
 import { CASE_STUDY_B_CONTROL_LAYER_IDS } from "../projectModules/caseStudyB/layerIds";
+import {
+  SHAHBAZI_GROUND_CONTOUR_LAYER_ID,
+  SHAHBAZI_GROUND_SURFACE_LAYER_ID,
+} from "../projectModules/shahbazi/layerIds";
 
 const CLASSIFICATIONS = [
   "observation",
@@ -65,8 +69,6 @@ const CONFIDENTIALITIES = ["public", "private"] as const;
 
 type LayerDataSection = "public" | "publicTopo" | "customer";
 
-const SHAHBAZI_GROUND_SURFACE_LAYER_ID = "shahbazi-tls-surface-preview";
-const SHAHBAZI_GROUND_CONTOUR_LAYER_ID = "shahbazi-tls-contours";
 const SURFACE_GRADIENT_DEFAULT_LOW = "#2cc9ff";
 const SURFACE_GRADIENT_DEFAULT_MID = "#69f0b4";
 const SURFACE_GRADIENT_DEFAULT_HIGH = "#f8dd6d";

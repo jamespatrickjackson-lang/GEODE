@@ -14,6 +14,7 @@ import {
   type ProjectCatalogEntry,
 } from "./projects/projectCatalogRuntime";
 import { debugLog } from "./utils/debugLog";
+import { SHAHBAZI_VIEWER_BACKGROUND } from "./projectModules/shahbazi/ui";
 import "./App.css";
 
 type LoadState = "landing" | "loading" | "loaded";
@@ -712,7 +713,6 @@ function GearIcon() {
 
 const TECHNICAL_MONO_FONT =
   '"SFMono-Regular", Consolas, "Liberation Mono", monospace';
-const SHAHBAZI_VIEWER_BACKGROUND = "#151819";
 const LANDING_OVERLAY_TEXT = "#f4f0e8";
 const LANDING_IMAGE_STORAGE_KEY = "geosee.landingImageProfile.v1";
 

@@ -71,6 +71,10 @@ import {
 } from "../projectModules/utahForge/workingAreaFocus";
 import { CASE_STUDY_B_DEMO_SHELL_LAYER_ID } from "../projectModules/caseStudyB/layerIds";
 import { CASE_STUDY_B_DEMO_LAYER_ALIASES } from "../projectModules/caseStudyB/demoLayerAliases";
+import {
+  SHAHBAZI_GROUND_CONTOUR_LAYER_ID,
+  SHAHBAZI_GROUND_SURFACE_LAYER_ID,
+} from "../projectModules/shahbazi/layerIds";
 
 // Fade duration matches the markdown overlay panel (OverlayDisplay's
 // FADE_MS) so chapter transitions feel coherent across UI surfaces.
@@ -105,8 +109,6 @@ const PUBLIC_SURFACE_CLIP_RENDER_ORDER = 4550;
 const TOPO_MAP_BRANDING_DEFAULT_ANCHOR: TopoMapBrandingAnchor = "south-east";
 const TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M = 0;
 const TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M = -85_000;
-const SHAHBAZI_GROUND_SURFACE_LAYER_ID = "shahbazi-tls-surface-preview";
-const SHAHBAZI_GROUND_CONTOUR_LAYER_ID = "shahbazi-tls-contours";
 const WORKING_AREA_FOCUS_RENDER_ORDER = 4575;
 const TOPO_GRATICULE_MINOR_SCALE = 0.8;
 const SCENE_SECTION_AXIS_NORMALS = {
