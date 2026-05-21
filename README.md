@@ -16,10 +16,12 @@ for what this exists to test.
 ## Stack
 
 - **Renderer:** Three.js
-- **App shell:** TBD (Svelte or React)
+- **App shell:** React (Vite, TypeScript)
 - **Data:** CSV, GeoJSON, glTF, GeoTIFF
 - **Hosting:** static builds, self-hosted, password-gated
 - **Video export:** headless Chromium recording → MP4
+
+See `CLAUDE.md` "Locked decisions" for full stack rationale.
 
 ## Repo layout
 
