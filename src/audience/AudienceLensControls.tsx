@@ -16,9 +16,10 @@ import {
   vibrancyLabel,
   vibrancySecondaryLabel,
 } from "../editor/styles";
-
-const CASE_STUDY_B_SLUG = "case-study-b";
-const DEMO_SHELL_LAYER_ID = "case-study-b-demo-shell";
+import {
+  CASE_STUDY_B_SLUG,
+  CASE_STUDY_B_DEMO_SHELL_LAYER_ID as DEMO_SHELL_LAYER_ID,
+} from "../projectModules/caseStudyB/layerIds";
 
 interface Props {
   sceneHandle: SceneHandle;

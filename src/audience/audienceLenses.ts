@@ -4,6 +4,7 @@ import type {
   PresentationPage,
   SceneProperties,
 } from "../pages/types";
+import { CASE_STUDY_B_DEMO_SHELL_LAYER_ID as DEMO_SHELL_LAYER_ID } from "../projectModules/caseStudyB/layerIds";
 
 export type AudienceLensId =
   | "investor"
@@ -23,7 +24,6 @@ export interface AudienceLensConfig {
   summary: string;
 }
 
-const DEMO_SHELL_LAYER_ID = "case-study-b-demo-shell";
 const TLS_SURFACE_LAYER_ID = "shahbazi-tls-surface-preview";
 const TLS_CONTOUR_LAYER_ID = "shahbazi-tls-contours";
 

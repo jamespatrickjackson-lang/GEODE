@@ -69,6 +69,8 @@ import {
   WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY,
   WORKING_AREA_FOCUS_DEFAULT_TARGET_LAYER_IDS,
 } from "../projectModules/utahForge/workingAreaFocus";
+import { CASE_STUDY_B_DEMO_SHELL_LAYER_ID } from "../projectModules/caseStudyB/layerIds";
+import { CASE_STUDY_B_DEMO_LAYER_ALIASES } from "../projectModules/caseStudyB/demoLayerAliases";
 
 // Fade duration matches the markdown overlay panel (OverlayDisplay's
 // FADE_MS) so chapter transitions feel coherent across UI surfaces.
@@ -103,7 +105,6 @@ const PUBLIC_SURFACE_CLIP_RENDER_ORDER = 4550;
 const TOPO_MAP_BRANDING_DEFAULT_ANCHOR: TopoMapBrandingAnchor = "south-east";
 const TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M = 0;
 const TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M = -85_000;
-const CASE_STUDY_B_DEMO_SHELL_LAYER_ID = "case-study-b-demo-shell";
 const SHAHBAZI_GROUND_SURFACE_LAYER_ID = "shahbazi-tls-surface-preview";
 const SHAHBAZI_GROUND_CONTOUR_LAYER_ID = "shahbazi-tls-contours";
 const WORKING_AREA_FOCUS_RENDER_ORDER = 4575;
@@ -158,61 +159,6 @@ const DEFAULT_CONTOUR_DISTANCE_FADE_FAR_M = 420;
 const DEFAULT_CONTOUR_FAR_LINE_SCALE = 0.28;
 const DEFAULT_CONTOUR_FAR_OPACITY = 0.72;
 const DEFAULT_CONTOUR_LIFT_M = 0;
-const CASE_STUDY_B_DEMO_LAYER_ALIASES: Record<
-  string,
-  {
-    all?: boolean;
-    zoneIds?: readonly string[];
-    objectNames?: readonly string[];
-    applyColor?: boolean;
-  }
-> = {
-  "quarry-imagery-base": {
-    objectNames: ["case-study-b-demo-surface"],
-    applyColor: true,
-  },
-  "quarry-lidar-surface": {
-    objectNames: ["case-study-b-demo-grid"],
-    applyColor: true,
-  },
-  "bench-conformance-overlay": {
-    zoneIds: ["bench-walkthrough"],
-    objectNames: ["case-study-b-demo-bench-lines"],
-    applyColor: true,
-  },
-  "haul-route-equipment-demo": {
-    objectNames: ["case-study-b-demo-haul-route"],
-    applyColor: true,
-  },
-  "stockpile-volume-zones": {
-    zoneIds: ["stockpile-volume-zone"],
-    applyColor: true,
-  },
-  "quarry-drill-traces": {
-    objectNames: ["case-study-b-demo-drill-traces"],
-    applyColor: true,
-  },
-  "quarry-ore-grade-heatmap": {
-    zoneIds: ["ore-grade-hotspot"],
-    applyColor: true,
-  },
-  "slope-stability-anomaly": {
-    zoneIds: ["slope-stability-anomaly"],
-    applyColor: true,
-  },
-  "erosion-runoff-planning": {
-    objectNames: ["case-study-b-demo-runoff-lines"],
-    applyColor: true,
-  },
-  "restoration-preview": {
-    zoneIds: ["restoration-preview"],
-    applyColor: true,
-  },
-  "public-viewshed-overlay": {
-    zoneIds: ["public-viewpoint"],
-    applyColor: true,
-  },
-};
 const STUDIO_HANDLE_SCREEN_SCALE_DISTANCE_M = 4200;
 const STUDIO_HANDLE_MIN_SCALE = 0.55;
 const STUDIO_HANDLE_MAX_SCALE = 7.5;

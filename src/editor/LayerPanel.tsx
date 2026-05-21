@@ -52,6 +52,7 @@ import {
   WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY,
   WORKING_AREA_FOCUS_DEFAULT_TARGET_LAYER_IDS,
 } from "../projectModules/utahForge/workingAreaFocus";
+import { CASE_STUDY_B_CONTROL_LAYER_IDS } from "../projectModules/caseStudyB/layerIds";
 
 const CLASSIFICATIONS = [
   "observation",
@@ -445,21 +446,6 @@ const UTAH_FORGE_RESISTIVITY_SLICE_OPTIONS = [
   { id: "vertical_ew_station_centroid", label: "E-W centroid section" },
   { id: "vertical_ns_station_centroid", label: "N-S centroid section" },
 ] as const;
-
-const CASE_STUDY_B_CONTROL_LAYER_IDS = new Set<string>([
-  "case-study-b-demo-shell",
-  "quarry-imagery-base",
-  "quarry-lidar-surface",
-  "bench-conformance-overlay",
-  "haul-route-equipment-demo",
-  "stockpile-volume-zones",
-  "quarry-drill-traces",
-  "quarry-ore-grade-heatmap",
-  "slope-stability-anomaly",
-  "erosion-runoff-planning",
-  "restoration-preview",
-  "public-viewshed-overlay",
-]);
 
 function layerHasRenderableControl(layer: ProjectLayerSpec): boolean {
   if ((layer as { disabled?: boolean }).disabled !== true) return true;
