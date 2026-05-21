@@ -1,0 +1,77 @@
+{
+  "id": "49_seismic_fence_panels",
+  "title": "Seismic Fence Panels",
+  "subtitle": "Proposed / needs_review rendered seismic section products",
+  "camera": {
+    "position": [
+      -72734.67301267442,
+      -10579.26309022274,
+      -6006.157920848738
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#75c7ff",
+  "visibilityOverrides": {
+    "utah-forge-phase3-working-area": true,
+    "terrain": false,
+    "transport-roads": false,
+    "hydrography-streams": false,
+    "hydrography-lakes": false,
+    "utah-forge-phase3-seismic-browser": true,
+    "utah-forge-mt-stations": false,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-mt-resistivity-slices": false
+  },
+  "layerOverrides": {
+    "utah-forge-phase3-seismic-browser": {
+      "opacity": 0.7,
+      "seismicProductId": "gdr-1141-line-301-pdm-enh",
+      "seismicProductVisibility": {
+        "gdr-1141-line-301-pdm-enh": true
+      },
+      "seismicRenderMode": "slice",
+      "seismicSliceAxis": "line",
+      "seismicSliceFraction": 0.5,
+      "seismicAmplitudeMin": 0.08,
+      "seismicAmplitudeMax": 0.92,
+      "seismicColormap": "blue-white-red",
+      "seismicTimeScale": 1,
+      "seismicNavigationVisible": true,
+      "seismicNavigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "seismicRemoveBackground": true,
+      "sectionIsoEnabled": false
+    },
+    "utah-forge-mt-resistivity-full-density": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-slices": {
+      "scalarLegendVisible": false
+    }
+  }
+}

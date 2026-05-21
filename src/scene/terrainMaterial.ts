@@ -33,6 +33,17 @@ export interface TerrainMaterialParams {
   rampHigh?: string;
   elevLowM?: number;
   elevHighM?: number;
+  elevationOffsetM?: number;
+  surfaceElevationEnabled?: boolean;
+  surfaceElevationLegendVisible?: boolean;
+  surfaceElevationMinM?: number;
+  surfaceElevationMaxM?: number;
+  surfaceElevationColors?: string[];
+  surfaceElevationColorPositions?: number[];
+  surfaceElevationMidpoints?: number[];
+  surfaceElevationTransitionSoftness?: number;
+  surfaceElevationColorBlend?: number;
+  surfaceElevationReverse?: boolean;
   hillshadeIntensity?: number;
   rockHueVariance?: number;
   // Shadow / hillshade definition. 0 = soft Gouraud-style gradient
@@ -46,6 +57,9 @@ export interface TerrainMaterialParams {
   // This prevents the far mesh edge from reading as a hard black,
   // saw-toothed horizon when fog is disabled or the camera pulls back.
   edgeFadeDistanceM?: number;
+  edgeFadeShape?: "square" | "rounded-square" | "circle";
+  edgeFadeInsetM?: number;
+  edgeFadeCornerRadiusM?: number;
   // Color of shadowed areas. Pure black makes shadows muddy under
   // bloom; a slight cool tint reads as atmospheric.
   shadowTint?: string;
@@ -71,7 +85,10 @@ export interface TerrainMaterialHandle {
   setParams(p: TerrainMaterialParams): void;
   setTerrainFogEnabled(enabled: boolean): void;
   setTerrainFogDensity(density: number): void;
-  setTerrainBounds(boundsMin: [number, number], boundsMax: [number, number]): void;
+  setTerrainBounds(
+    boundsMin: [number, number],
+    boundsMax: [number, number],
+  ): void;
   // Lake painting: lakes are NOT rendered as separate meshes any more.
   // A rasterized polygon mask is overlaid onto terrain pixels by the
   // fragment shader, recoloring them to lake color where the mask is
@@ -142,6 +159,7 @@ export interface TerrainMaterialHandle {
   setForestFogDensity(density: number): void;
   setPublicClip(
     enabled: boolean,
+    shape: "box" | "circle",
     center: THREE.Vector3,
     halfSize: THREE.Vector3,
     rotationZRad: number,
@@ -149,6 +167,87 @@ export interface TerrainMaterialHandle {
 }
 
 export type TargetSlotId = "target-three-firs" | "target-great-plains";
+
+const DEFAULT_SURFACE_ELEVATION_COLORS = [
+  "#5147b8",
+  "#2e8fd8",
+  "#4fc3c7",
+  "#93d66b",
+  "#fff24d",
+] as const;
+const DEFAULT_SURFACE_ELEVATION_POSITIONS = [0, 0.25, 0.5, 0.75, 1] as const;
+const DEFAULT_SURFACE_ELEVATION_MIDPOINTS = [0.5, 0.5, 0.5, 0.5] as const;
+const SURFACE_ELEVATION_STOP_GAP = 0.01;
+
+function makeSurfaceElevationColors(colors?: string[]): THREE.Color[] {
+  return Array.from({ length: 5 }, (_, index) => {
+    return new THREE.Color(
+      colors?.[index] ?? DEFAULT_SURFACE_ELEVATION_COLORS[index],
+    );
+  });
+}
+
+function applySurfaceElevationColors(
+  target: THREE.Color[],
+  colors: string[] | undefined,
+): void {
+  for (let index = 0; index < 5; index += 1) {
+    target[index].set(
+      colors?.[index] ?? DEFAULT_SURFACE_ELEVATION_COLORS[index],
+    );
+  }
+}
+
+function makeSurfaceElevationPositions(values?: number[]): number[] {
+  let previous = 0;
+  return Array.from({ length: 5 }, (_, index) => {
+    const fallback = DEFAULT_SURFACE_ELEVATION_POSITIONS[index];
+    const raw =
+      typeof values?.[index] === "number" && Number.isFinite(values[index])
+        ? values[index]
+        : fallback;
+    const remaining = 4 - index;
+    const min = index === 0 ? 0 : previous + SURFACE_ELEVATION_STOP_GAP;
+    const max = 1 - remaining * SURFACE_ELEVATION_STOP_GAP;
+    const next = THREE.MathUtils.clamp(raw, min, max);
+    previous = next;
+    return next;
+  });
+}
+
+function applySurfaceElevationPositions(
+  target: number[],
+  values: number[] | undefined,
+): void {
+  const next = makeSurfaceElevationPositions(values);
+  for (let index = 0; index < 5; index += 1) target[index] = next[index];
+}
+
+function makeSurfaceElevationMidpoints(values?: number[]): number[] {
+  return Array.from({ length: 4 }, (_, index) => {
+    const raw =
+      typeof values?.[index] === "number" && Number.isFinite(values[index])
+        ? values[index]
+        : DEFAULT_SURFACE_ELEVATION_MIDPOINTS[index];
+    return THREE.MathUtils.clamp(raw, 0.05, 0.95);
+  });
+}
+
+function applySurfaceElevationMidpoints(
+  target: number[],
+  values: number[] | undefined,
+): void {
+  const next = makeSurfaceElevationMidpoints(values);
+  for (let index = 0; index < 4; index += 1) target[index] = next[index];
+}
+
+function edgeFadeShapeValue(
+  shape: TerrainMaterialParams["edgeFadeShape"],
+): number {
+  if (shape === "rounded-square") return 1;
+  if (shape === "circle") return 2;
+  return 0;
+}
 
 export function buildTerrainMaterial(
   initial: TerrainMaterialParams = {},
@@ -160,6 +259,40 @@ export function buildTerrainMaterial(
     uRampHigh: { value: new THREE.Color(initial.rampHigh ?? "#c4b58c") },
     uElevLow: { value: initial.elevLowM ?? 800 },
     uElevHigh: { value: initial.elevHighM ?? 1450 },
+    uElevationOffsetM: { value: initial.elevationOffsetM ?? 1000 },
+    uSurfaceElevationEnabled: {
+      value: initial.surfaceElevationEnabled === true ? 1 : 0,
+    },
+    uSurfaceElevationMin: { value: initial.surfaceElevationMinM ?? 1500 },
+    uSurfaceElevationMax: { value: initial.surfaceElevationMaxM ?? 3500 },
+    uSurfaceElevationColors: {
+      value: makeSurfaceElevationColors(initial.surfaceElevationColors),
+    },
+    uSurfaceElevationPositions: {
+      value: makeSurfaceElevationPositions(
+        initial.surfaceElevationColorPositions,
+      ),
+    },
+    uSurfaceElevationMidpoints: {
+      value: makeSurfaceElevationMidpoints(initial.surfaceElevationMidpoints),
+    },
+    uSurfaceElevationTransitionSoftness: {
+      value: THREE.MathUtils.clamp(
+        initial.surfaceElevationTransitionSoftness ?? 1,
+        0,
+        1,
+      ),
+    },
+    uSurfaceElevationColorBlend: {
+      value: THREE.MathUtils.clamp(
+        initial.surfaceElevationColorBlend ?? 1,
+        0,
+        1,
+      ),
+    },
+    uSurfaceElevationReverse: {
+      value: initial.surfaceElevationReverse === true ? 1 : 0,
+    },
     uHillshade: { value: initial.hillshadeIntensity ?? 0.9 },
     uHueVariance: { value: initial.rockHueVariance ?? 0.06 },
     uSunDir: { value: new THREE.Vector3(0.6, -0.4, 0.7).normalize() },
@@ -172,6 +305,11 @@ export function buildTerrainMaterial(
     uShadowSharpness: { value: initial.shadowSharpness ?? 0.45 },
     uFacetStrength: { value: initial.facetStrength ?? 0.12 },
     uEdgeFadeDistance: { value: initial.edgeFadeDistanceM ?? 0 },
+    uEdgeFadeShape: { value: edgeFadeShapeValue(initial.edgeFadeShape) },
+    uEdgeFadeInset: { value: Math.max(0, initial.edgeFadeInsetM ?? 0) },
+    uEdgeFadeCornerRadius: {
+      value: Math.max(0, initial.edgeFadeCornerRadiusM ?? 0),
+    },
     uTerrainBoundsMin: { value: new THREE.Vector2(-1, -1) },
     uTerrainBoundsMax: { value: new THREE.Vector2(1, 1) },
     uShadowTint: { value: new THREE.Color(initial.shadowTint ?? "#3a3f4d") },
@@ -245,6 +383,7 @@ export function buildTerrainMaterial(
     uForestFogEnabled: { value: 1 },
     uForestFogFar: { value: fogDensityToFar(initial.fogDensity ?? 0.00018) },
     uPublicClipEnabled: { value: 0 },
+    uPublicClipShape: { value: 0 },
     uPublicClipCenter: { value: new THREE.Vector3(0, 0, 0) },
     uPublicClipHalfSize: { value: new THREE.Vector3(1, 1, 1) },
     uPublicClipCosSin: { value: new THREE.Vector2(1, 0) },
@@ -276,6 +415,16 @@ export function buildTerrainMaterial(
       uniform vec3 uRampHigh;
       uniform float uElevLow;
       uniform float uElevHigh;
+      uniform float uElevationOffsetM;
+      uniform float uSurfaceElevationEnabled;
+      uniform float uSurfaceElevationMin;
+      uniform float uSurfaceElevationMax;
+      uniform vec3 uSurfaceElevationColors[5];
+      uniform float uSurfaceElevationPositions[5];
+      uniform float uSurfaceElevationMidpoints[4];
+      uniform float uSurfaceElevationTransitionSoftness;
+      uniform float uSurfaceElevationColorBlend;
+      uniform float uSurfaceElevationReverse;
       uniform float uHillshade;
       uniform float uHueVariance;
       uniform vec3 uSunDir;
@@ -283,6 +432,9 @@ export function buildTerrainMaterial(
       uniform float uShadowSharpness;
       uniform float uFacetStrength;
       uniform float uEdgeFadeDistance;
+      uniform float uEdgeFadeShape;
+      uniform float uEdgeFadeInset;
+      uniform float uEdgeFadeCornerRadius;
       uniform vec2 uTerrainBoundsMin;
       uniform vec2 uTerrainBoundsMax;
       uniform vec3 uShadowTint;
@@ -342,6 +494,7 @@ export function buildTerrainMaterial(
       uniform float uForestFogEnabled;
       uniform float uForestFogFar;
       uniform float uPublicClipEnabled;
+      uniform float uPublicClipShape;
       uniform vec3 uPublicClipCenter;
       uniform vec3 uPublicClipHalfSize;
       uniform vec2 uPublicClipCosSin;
@@ -373,6 +526,89 @@ export function buildTerrainMaterial(
         return 1.0 - smoothstep(halfWidth, halfWidth + aa, distToLine);
       }
 
+      float surfaceElevationEase(float x) {
+        float clamped = clamp(x, 0.0, 1.0);
+        float stepped = step(0.5, clamped);
+        float smoothed = smoothstep(0.0, 1.0, clamped);
+        float softness = clamp(uSurfaceElevationTransitionSoftness, 0.0, 1.0);
+        if (softness < 0.5) {
+          return mix(stepped, clamped, softness * 2.0);
+        }
+        return mix(clamped, smoothed, (softness - 0.5) * 2.0);
+      }
+
+      float surfaceElevationMidpointBias(float x, float midpoint) {
+        float m = clamp(midpoint, 0.05, 0.95);
+        if (x < m) {
+          return 0.5 * x / max(m, 0.0001);
+        }
+        return 0.5 + 0.5 * (x - m) / max(1.0 - m, 0.0001);
+      }
+
+      vec3 surfaceElevationRampSegment(
+        float t,
+        float left,
+        float right,
+        vec3 leftColor,
+        vec3 rightColor,
+        float midpoint
+      ) {
+        float localT = (t - left) / max(right - left, 0.0001);
+        float biasedT = surfaceElevationMidpointBias(localT, midpoint);
+        return mix(leftColor, rightColor, surfaceElevationEase(biasedT));
+      }
+
+      vec3 surfaceElevationRamp(float t) {
+        float x = clamp(t, 0.0, 1.0);
+        float p0 = clamp(uSurfaceElevationPositions[0], 0.0, 1.0);
+        float p1 = clamp(uSurfaceElevationPositions[1], p0 + 0.0001, 1.0);
+        float p2 = clamp(uSurfaceElevationPositions[2], p1 + 0.0001, 1.0);
+        float p3 = clamp(uSurfaceElevationPositions[3], p2 + 0.0001, 1.0);
+        float p4 = clamp(uSurfaceElevationPositions[4], p3 + 0.0001, 1.0);
+        if (x <= p0) return uSurfaceElevationColors[0];
+        if (x < p1) {
+          return surfaceElevationRampSegment(
+            x,
+            p0,
+            p1,
+            uSurfaceElevationColors[0],
+            uSurfaceElevationColors[1],
+            uSurfaceElevationMidpoints[0]
+          );
+        }
+        if (x < p2) {
+          return surfaceElevationRampSegment(
+            x,
+            p1,
+            p2,
+            uSurfaceElevationColors[1],
+            uSurfaceElevationColors[2],
+            uSurfaceElevationMidpoints[1]
+          );
+        }
+        if (x < p3) {
+          return surfaceElevationRampSegment(
+            x,
+            p2,
+            p3,
+            uSurfaceElevationColors[2],
+            uSurfaceElevationColors[3],
+            uSurfaceElevationMidpoints[2]
+          );
+        }
+        if (x < p4) {
+          return surfaceElevationRampSegment(
+            x,
+            p3,
+            p4,
+            uSurfaceElevationColors[3],
+            uSurfaceElevationColors[4],
+            uSurfaceElevationMidpoints[3]
+          );
+        }
+        return uSurfaceElevationColors[4];
+      }
+
       void main() {
         if (uPublicClipEnabled > 0.5) {
           vec3 rel = vWorldPos - uPublicClipCenter;
@@ -381,24 +617,54 @@ export function buildTerrainMaterial(
             dot(rel.xy, vec2(-uPublicClipCosSin.y, uPublicClipCosSin.x))
           );
           vec3 localPos = vec3(localXY, rel.z);
-          if (
-            abs(localPos.x) > uPublicClipHalfSize.x ||
-            abs(localPos.y) > uPublicClipHalfSize.y ||
-            abs(localPos.z) > uPublicClipHalfSize.z
-          ) {
+          if (abs(localPos.z) > uPublicClipHalfSize.z) {
             discard;
+          }
+          if (uPublicClipShape > 0.5) {
+            float radius = min(uPublicClipHalfSize.x, uPublicClipHalfSize.y);
+            if (length(localPos.xy) > radius) {
+              discard;
+            }
+          } else {
+            if (
+              abs(localPos.x) > uPublicClipHalfSize.x ||
+              abs(localPos.y) > uPublicClipHalfSize.y
+            ) {
+              discard;
+            }
           }
         }
 
         // Elevation ramp.
-        float elev = vWorldPos.z + 1000.0;
-        float t = clamp((elev - uElevLow) / (uElevHigh - uElevLow), 0.0, 1.0);
+        float elev = vWorldPos.z + uElevationOffsetM;
+        float t = clamp(
+          (elev - uElevLow) / max(0.0001, uElevHigh - uElevLow),
+          0.0,
+          1.0
+        );
         vec3 base;
         if (t < 0.5) {
           base = mix(uRampLow, uRampMid, smoothstep(0.0, 1.0, t * 2.0));
         } else {
           base = mix(uRampMid, uRampHigh,
                      smoothstep(0.0, 1.0, (t - 0.5) * 2.0));
+        }
+        vec3 topoBase = base;
+        if (uSurfaceElevationEnabled > 0.5) {
+          float elevationT = clamp(
+            (elev - uSurfaceElevationMin) /
+              max(0.0001, uSurfaceElevationMax - uSurfaceElevationMin),
+            0.0,
+            1.0
+          );
+          if (uSurfaceElevationReverse > 0.5) {
+            elevationT = 1.0 - elevationT;
+          }
+          base = mix(
+            topoBase,
+            surfaceElevationRamp(elevationT),
+            clamp(uSurfaceElevationColorBlend, 0.0, 1.0)
+          );
         }
         float n = noise(vWorldPos.xy * 0.0015) - 0.5;
         base *= 1.0 + n * uHueVariance;
@@ -623,11 +889,35 @@ export function buildTerrainMaterial(
         }
 
         if (uEdgeFadeDistance > 1.0) {
-          float edgeDist = min(
-            min(vWorldPos.x - uTerrainBoundsMin.x, uTerrainBoundsMax.x - vWorldPos.x),
-            min(vWorldPos.y - uTerrainBoundsMin.y, uTerrainBoundsMax.y - vWorldPos.y)
+          vec2 terrainCenter = (uTerrainBoundsMin + uTerrainBoundsMax) * 0.5;
+          vec2 terrainHalfSize = max(
+            (uTerrainBoundsMax - uTerrainBoundsMin) * 0.5 - vec2(max(uEdgeFadeInset, 0.0)),
+            vec2(1.0)
           );
-          float edgeFade = smoothstep(0.0, uEdgeFadeDistance, edgeDist);
+          vec2 localPos = vWorldPos.xy - terrainCenter;
+          float insideDist;
+          if (uEdgeFadeShape > 1.5) {
+            float radius = min(terrainHalfSize.x, terrainHalfSize.y);
+            insideDist = radius - length(localPos);
+          } else if (uEdgeFadeShape > 0.5) {
+            float radius = clamp(
+              uEdgeFadeCornerRadius,
+              0.0,
+              max(0.0, min(terrainHalfSize.x, terrainHalfSize.y) - 1.0)
+            );
+            vec2 q = abs(localPos) - (terrainHalfSize - vec2(radius));
+            float signedDist =
+              length(max(q, vec2(0.0))) +
+              min(max(q.x, q.y), 0.0) -
+              radius;
+            insideDist = -signedDist;
+          } else {
+            insideDist = min(
+              terrainHalfSize.x - abs(localPos.x),
+              terrainHalfSize.y - abs(localPos.y)
+            );
+          }
+          float edgeFade = smoothstep(0.0, uEdgeFadeDistance, insideDist);
           surface = mix(uFogColor, surface, clamp(edgeFade, 0.0, 1.0));
         }
 
@@ -667,6 +957,49 @@ export function buildTerrainMaterial(
       if (typeof p.elevLowM === "number") uniforms.uElevLow.value = p.elevLowM;
       if (typeof p.elevHighM === "number")
         uniforms.uElevHigh.value = p.elevHighM;
+      if (typeof p.elevationOffsetM === "number")
+        uniforms.uElevationOffsetM.value = p.elevationOffsetM;
+      if (typeof p.surfaceElevationEnabled === "boolean")
+        uniforms.uSurfaceElevationEnabled.value = p.surfaceElevationEnabled
+          ? 1
+          : 0;
+      if (typeof p.surfaceElevationMinM === "number")
+        uniforms.uSurfaceElevationMin.value = p.surfaceElevationMinM;
+      if (typeof p.surfaceElevationMaxM === "number")
+        uniforms.uSurfaceElevationMax.value = p.surfaceElevationMaxM;
+      if (Array.isArray(p.surfaceElevationColors)) {
+        applySurfaceElevationColors(
+          uniforms.uSurfaceElevationColors.value,
+          p.surfaceElevationColors,
+        );
+      }
+      if (Array.isArray(p.surfaceElevationColorPositions)) {
+        applySurfaceElevationPositions(
+          uniforms.uSurfaceElevationPositions.value,
+          p.surfaceElevationColorPositions,
+        );
+      }
+      if (Array.isArray(p.surfaceElevationMidpoints)) {
+        applySurfaceElevationMidpoints(
+          uniforms.uSurfaceElevationMidpoints.value,
+          p.surfaceElevationMidpoints,
+        );
+      }
+      if (typeof p.surfaceElevationTransitionSoftness === "number") {
+        uniforms.uSurfaceElevationTransitionSoftness.value =
+          THREE.MathUtils.clamp(p.surfaceElevationTransitionSoftness, 0, 1);
+      }
+      if (typeof p.surfaceElevationColorBlend === "number") {
+        uniforms.uSurfaceElevationColorBlend.value = THREE.MathUtils.clamp(
+          p.surfaceElevationColorBlend,
+          0,
+          1,
+        );
+      }
+      if (typeof p.surfaceElevationReverse === "boolean")
+        uniforms.uSurfaceElevationReverse.value = p.surfaceElevationReverse
+          ? 1
+          : 0;
       if (typeof p.hillshadeIntensity === "number")
         uniforms.uHillshade.value = p.hillshadeIntensity;
       if (typeof p.rockHueVariance === "number")
@@ -677,6 +1010,15 @@ export function buildTerrainMaterial(
         uniforms.uFacetStrength.value = p.facetStrength;
       if (typeof p.edgeFadeDistanceM === "number")
         uniforms.uEdgeFadeDistance.value = Math.max(0, p.edgeFadeDistanceM);
+      if (typeof p.edgeFadeShape === "string")
+        uniforms.uEdgeFadeShape.value = edgeFadeShapeValue(p.edgeFadeShape);
+      if (typeof p.edgeFadeInsetM === "number")
+        uniforms.uEdgeFadeInset.value = Math.max(0, p.edgeFadeInsetM);
+      if (typeof p.edgeFadeCornerRadiusM === "number")
+        uniforms.uEdgeFadeCornerRadius.value = Math.max(
+          0,
+          p.edgeFadeCornerRadiusM,
+        );
       if (p.shadowTint) uniforms.uShadowTint.value.set(p.shadowTint);
       if (typeof p.gridEnabled === "boolean")
         uniforms.uGridEnabled.value = p.gridEnabled ? 1 : 0;
@@ -833,8 +1175,9 @@ export function buildTerrainMaterial(
     setForestFogDensity(density) {
       uniforms.uForestFogFar.value = fogDensityToFar(density);
     },
-    setPublicClip(enabled, center, halfSize, rotationZRad) {
+    setPublicClip(enabled, shape, center, halfSize, rotationZRad) {
       uniforms.uPublicClipEnabled.value = enabled ? 1 : 0;
+      uniforms.uPublicClipShape.value = shape === "circle" ? 1 : 0;
       uniforms.uPublicClipCenter.value.copy(center);
       uniforms.uPublicClipHalfSize.value.copy(halfSize);
       uniforms.uPublicClipCosSin.value.set(

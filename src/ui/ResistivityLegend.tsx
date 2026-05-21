@@ -6,6 +6,7 @@ import type {
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useEditor } from "../editor/EditorContext";
+import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import {
   FROSTED_HAIRLINE,
   TECHNICAL_MONO_FONT,
@@ -91,6 +92,14 @@ const subtitleStyle: CSSProperties = {
   lineHeight: 1.25,
 };
 
+const targetNoticeStyle: CSSProperties = {
+  marginTop: 7,
+  color: vibrancyLabel,
+  fontSize: 10,
+  lineHeight: 1.25,
+  fontWeight: 700,
+};
+
 const rampStyle: CSSProperties = {
   height: 13,
   marginTop: 12,
@@ -145,6 +154,25 @@ const fineControlsStyle: CSSProperties = {
   gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
   gap: 8,
   marginTop: 10,
+};
+
+const targetSelectorStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(74px, 1fr))",
+  gap: 5,
+  marginTop: 9,
+};
+
+const targetButtonBaseStyle: CSSProperties = {
+  border: "1px solid rgba(255, 255, 255, 0.18)",
+  borderRadius: 6,
+  background: "rgba(255, 255, 255, 0.07)",
+  color: vibrancySecondaryLabel,
+  fontFamily: TECHNICAL_MONO_FONT,
+  fontSize: 9,
+  lineHeight: 1.1,
+  padding: "5px 6px",
+  cursor: "pointer",
 };
 
 const fineControlLabelStyle: CSSProperties = {
@@ -499,18 +527,43 @@ function edgeHandleStyle(leftPercent: number, color: string): CSSProperties {
   };
 }
 
-function activeScalarLayer(
-  visible: Set<string>,
-): "volume" | "full-density" | "slices" | "preview" | null {
-  if (visible.has(MT_RESISTIVITY_VOLUME_LAYER_ID)) return "volume";
-  if (visible.has(MT_RESISTIVITY_FULL_DENSITY_LAYER_ID)) return "full-density";
-  if (visible.has(MT_RESISTIVITY_SLICES_LAYER_ID)) return "slices";
-  if (visible.has(MT_RESISTIVITY_PREVIEW_LAYER_ID)) return "preview";
-  return null;
+type ScalarLegendLayer = "volume" | "full-density" | "slices" | "preview";
+
+function scalarLegendLayerLabel(layer: ScalarLegendLayer): string {
+  if (layer === "volume") return "Volume";
+  if (layer === "full-density") return "Full density";
+  if (layer === "slices") return "Slices";
+  return "Preview";
 }
 
-export function ResistivityLegend() {
-  const { state, sceneHandle, setPageLayerOverride } = useEditor();
+function scalarLegendLayerSubtitle(layer: ScalarLegendLayer): string {
+  if (layer === "volume") return "Scalar volume";
+  if (layer === "full-density") return "Full-density model";
+  if (layer === "slices") return "Authored slices";
+  return "Point preview";
+}
+
+function scalarLegendTargetLabel(layer: ScalarLegendLayer): string {
+  if (layer === "volume") return "MT volume";
+  if (layer === "full-density") return "MT full-density points";
+  if (layer === "slices") return "MT authored slices";
+  return "MT point preview";
+}
+
+function activeScalarLayers(visible: Set<string>): ScalarLegendLayer[] {
+  const layers: ScalarLegendLayer[] = [];
+  if (visible.has(MT_RESISTIVITY_FULL_DENSITY_LAYER_ID)) {
+    layers.push("full-density");
+  }
+  if (visible.has(MT_RESISTIVITY_VOLUME_LAYER_ID)) layers.push("volume");
+  if (visible.has(MT_RESISTIVITY_SLICES_LAYER_ID)) layers.push("slices");
+  if (visible.has(MT_RESISTIVITY_PREVIEW_LAYER_ID)) layers.push("preview");
+  return layers;
+}
+
+export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
+  const { state, sceneHandle, setEnvLayerStyle, setPageLayerOverride } =
+    useEditor();
   const { pages, currentIndex, targetIndex, transitionProgress } = usePageController();
   const rootRef = useRef<HTMLElement | null>(null);
   const rampRef = useRef<HTMLDivElement | null>(null);
@@ -520,6 +573,9 @@ export function ResistivityLegend() {
     left: EDGE_POPOVER_MARGIN_PX,
     top: EDGE_POPOVER_MARGIN_PX,
   });
+  const [selectedLayer, setSelectedLayer] = useState<ScalarLegendLayer | null>(
+    null,
+  );
   useEffect(() => {
     if (!edgePopoverOpen) return;
     const update = () => {
@@ -537,11 +593,23 @@ export function ResistivityLegend() {
   }, [edgePopoverOpen]);
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
 
-  const page = pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
+  const controllerPage = pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
+  const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
+  const selectedPage =
+    !editingEnvironment && targetIndex === null && state.selectedPageId
+      ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
+      : null;
+  const page = targetIndex !== null ? controllerPage : selectedPage ?? controllerPage;
   if (!page) return null;
 
-  const visible = effectiveVisibility(state.environment, page);
-  const activeLayer = activeScalarLayer(visible);
+  const visible = editingEnvironment
+    ? new Set(state.environment.defaultVisibleLayers)
+    : effectiveVisibility(state.environment, page);
+  const visibleScalarLayers = activeScalarLayers(visible);
+  const activeLayer =
+    selectedLayer && visibleScalarLayers.includes(selectedLayer)
+      ? selectedLayer
+      : visibleScalarLayers[0] ?? null;
   if (!activeLayer) return null;
   const thresholdLayerVisible = visible.has(MT_THRESHOLD_SURFACES_LAYER_ID);
 
@@ -553,11 +621,15 @@ export function ResistivityLegend() {
       : activeLayer === "slices"
       ? MT_RESISTIVITY_SLICES_LAYER_ID
       : MT_RESISTIVITY_PREVIEW_LAYER_ID;
-  const targetStyle = effectiveStyle(state.environment, page, layerId);
+  const targetStyle = editingEnvironment
+    ? state.environment.layerStyles[layerId] ?? {}
+    : effectiveStyle(state.environment, page, layerId);
   const currentPage = pages[currentIndex] ?? page;
-  const currentStyle = effectiveStyle(state.environment, currentPage, layerId);
+  const currentStyle = editingEnvironment
+    ? targetStyle
+    : effectiveStyle(state.environment, currentPage, layerId);
   const style =
-    targetIndex !== null
+    !editingEnvironment && targetIndex !== null
       ? interpolatedScalarLegendStyle(
           currentStyle,
           targetStyle,
@@ -611,6 +683,13 @@ export function ResistivityLegend() {
     0,
     1,
   );
+  const inclusionMode =
+    activeLayer === "full-density" && style.scalarInclusionMode !== "thresholded"
+      ? "all-valid"
+      : style.scalarInclusionMode === "thresholded"
+        ? "thresholded"
+        : "all-valid";
+  const thresholdControlsActive = true;
   const edgeAverage = clamp(styleNumber(style, "scalarEdgeAverage", 0.45), 0, 1);
   const edgeFillOffset = clamp(
     styleNumber(style, "scalarEdgeFillOffset", 0),
@@ -698,11 +777,19 @@ export function ResistivityLegend() {
       patch.scalarVolumeThresholdMax = nextTrimMax;
     }
     sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
-    setPageLayerOverride(page.id, layerId, patch);
+    if (editingEnvironment) {
+      setEnvLayerStyle(layerId, patch);
+    } else {
+      setPageLayerOverride(page.id, layerId, patch);
+    }
   };
   const setScalarRenderPatch = (patch: Partial<EditableStyle>) => {
     sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
-    setPageLayerOverride(page.id, layerId, patch);
+    if (editingEnvironment) {
+      setEnvLayerStyle(layerId, patch);
+    } else {
+      setPageLayerOverride(page.id, layerId, patch);
+    }
   };
   const setEdgeValue = (handle: EdgeHandle, value: number) => {
     const patch: Partial<EditableStyle> =
@@ -710,7 +797,11 @@ export function ResistivityLegend() {
         ? { scalarEdgeLowerValue: clamp(value, trimMin, Math.max(trimMin, blendMin)) }
         : { scalarEdgeUpperValue: clamp(value, Math.min(blendMax, trimMax), trimMax) };
     sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
-    setPageLayerOverride(page.id, layerId, patch);
+    if (editingEnvironment) {
+      setEnvLayerStyle(layerId, patch);
+    } else {
+      setPageLayerOverride(page.id, layerId, patch);
+    }
   };
   const nearestHandleForValue = (value: number): SpectralHandle => {
     const candidates: Array<{ handle: SpectralHandle; value: number }> = [
@@ -747,8 +838,9 @@ export function ResistivityLegend() {
       };
       window.addEventListener("pointermove", onMove);
       window.addEventListener("pointerup", onUp, { once: true });
-    };
+  };
   const beginTrackPlacement = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!thresholdControlsActive) return;
     if ((event.target as HTMLElement).closest("button")) return;
     const value = valueFromClientX(event.clientX);
     if (value === null) return;
@@ -830,11 +922,9 @@ export function ResistivityLegend() {
   const volumeOpacity = clamp(styleNumber(style, "scalarVolumeOpacity", 0.48), 0, 1);
   const volumeDensity = clamp(styleNumber(style, "scalarVolumeDensity", 0.72), 0, 2);
   const volumeSamples = clamp(styleNumber(style, "scalarVolumeSampleSteps", 112), 24, 192);
-  const thresholdStyle = effectiveStyle(
-    state.environment,
-    page,
-    MT_THRESHOLD_SURFACES_LAYER_ID,
-  );
+  const thresholdStyle = editingEnvironment
+    ? state.environment.layerStyles[MT_THRESHOLD_SURFACES_LAYER_ID] ?? {}
+    : effectiveStyle(state.environment, page, MT_THRESHOLD_SURFACES_LAYER_ID);
   const thresholdVisibility =
     typeof thresholdStyle.mtThresholdSurfaceVisibility === "object" &&
     thresholdStyle.mtThresholdSurfaceVisibility !== null
@@ -842,7 +932,11 @@ export function ResistivityLegend() {
       : {};
   const setVolumePatch = (patch: Partial<EditableStyle>) => {
     sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
-    setPageLayerOverride(page.id, layerId, patch);
+    if (editingEnvironment) {
+      setEnvLayerStyle(layerId, patch);
+    } else {
+      setPageLayerOverride(page.id, layerId, patch);
+    }
   };
   const setThresholdVisibility = (surfaceId: string, visibleSurface: boolean) => {
     const patch: Partial<EditableStyle> = {
@@ -855,7 +949,11 @@ export function ResistivityLegend() {
       ...thresholdStyle,
       ...patch,
     });
-    setPageLayerOverride(page.id, MT_THRESHOLD_SURFACES_LAYER_ID, patch);
+    if (editingEnvironment) {
+      setEnvLayerStyle(MT_THRESHOLD_SURFACES_LAYER_ID, patch);
+    } else {
+      setPageLayerOverride(page.id, MT_THRESHOLD_SURFACES_LAYER_ID, patch);
+    }
   };
   const thresholdSurfaceLegend = thresholdLayerVisible ? (
     <div style={footerStyle}>
@@ -899,27 +997,62 @@ export function ResistivityLegend() {
       ref={rootRef}
       style={{
         ...rootBaseStyle,
-        left: inset,
-        bottom: inset + 34,
+        ...(stacked
+          ? { position: "relative" }
+          : { left: inset, bottom: inset + 34 }),
       }}
       aria-label="Utah FORGE MT resistivity color legend"
     >
       <h2 style={titleStyle}>MT resistivity</h2>
       <div style={subtitleStyle}>
-        {activeLayer === "volume"
-          ? "Scalar volume"
-          : activeLayer === "full-density"
-          ? "Full-density model"
-          : activeLayer === "slices"
-            ? "Authored slices"
-            : "Point preview"} -
-        log10 resistivity
+        {scalarLegendLayerSubtitle(activeLayer)} - log10 resistivity
       </div>
+      <div style={targetNoticeStyle}>
+        Scalar controls target: {scalarLegendTargetLabel(activeLayer)}
+      </div>
+      {visibleScalarLayers.length > 1 ? (
+        <div style={targetSelectorStyle} aria-label="MT resistivity legend target">
+          {visibleScalarLayers.map((layer) => {
+            const selected = layer === activeLayer;
+            return (
+              <button
+                key={layer}
+                type="button"
+                data-testid={`resistivity-legend-target-${layer}`}
+                title={`Control ${scalarLegendLayerSubtitle(layer).toLowerCase()}`}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={() => setSelectedLayer(layer)}
+                style={{
+                  ...targetButtonBaseStyle,
+                  border: selected
+                    ? "1px solid rgba(255, 255, 255, 0.55)"
+                    : targetButtonBaseStyle.border,
+                  background: selected
+                    ? "rgba(255, 255, 255, 0.18)"
+                    : targetButtonBaseStyle.background,
+                  color: selected ? vibrancyLabel : vibrancySecondaryLabel,
+                }}
+              >
+                {scalarLegendLayerLabel(layer)}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+      {activeLayer === "full-density" ? (
+        <div style={subtitleStyle}>
+          {inclusionMode === "thresholded"
+            ? "Trim, feather, and noise may filter drawn points."
+            : "Trim, feather, and noise adjust emphasis; all valid points stay drawn."}
+        </div>
+      ) : null}
       <div
         ref={rampRef}
         style={rampWrapStyle}
         data-testid="resistivity-legend-track"
-        onPointerDown={beginTrackPlacement}
+        onPointerDown={
+          thresholdControlsActive ? beginTrackPlacement : undefined
+        }
       >
         <div
           style={{
@@ -938,71 +1071,79 @@ export function ResistivityLegend() {
             )}%, ${highColor} 100%)`,
           }}
         >
-          <span
-            style={{
-              ...rampMaskStyle,
-              left: 0,
-              width: `${trimMinPercent}%`,
-            }}
-          />
-          <span
-            style={{
-              ...rampMaskStyle,
-              left: `${trimMaxPercent}%`,
-              right: 0,
-            }}
-          />
-          {blendMinPercent > trimMinPercent ? (
-            <span
-              style={{
-                position: "absolute",
-                left: `${trimMinPercent}%`,
-                width: `${blendMinPercent - trimMinPercent}%`,
-                top: 0,
-                bottom: 0,
-                background:
-                  "linear-gradient(90deg, rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0))",
-              }}
-            />
-          ) : null}
-          {trimMaxPercent > blendMaxPercent ? (
-            <span
-              style={{
-                position: "absolute",
-                left: `${blendMaxPercent}%`,
-                width: `${trimMaxPercent - blendMaxPercent}%`,
-                top: 0,
-                bottom: 0,
-                background:
-                  "linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.58))",
-              }}
-            />
+          {thresholdControlsActive ? (
+            <>
+              <span
+                style={{
+                  ...rampMaskStyle,
+                  left: 0,
+                  width: `${trimMinPercent}%`,
+                }}
+              />
+              <span
+                style={{
+                  ...rampMaskStyle,
+                  left: `${trimMaxPercent}%`,
+                  right: 0,
+                }}
+              />
+              {blendMinPercent > trimMinPercent ? (
+                <span
+                  style={{
+                    position: "absolute",
+                    left: `${trimMinPercent}%`,
+                    width: `${blendMinPercent - trimMinPercent}%`,
+                    top: 0,
+                    bottom: 0,
+                    background:
+                      "linear-gradient(90deg, rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0))",
+                  }}
+                />
+              ) : null}
+              {trimMaxPercent > blendMaxPercent ? (
+                <span
+                  style={{
+                    position: "absolute",
+                    left: `${blendMaxPercent}%`,
+                    width: `${trimMaxPercent - blendMaxPercent}%`,
+                    top: 0,
+                    bottom: 0,
+                    background:
+                      "linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.58))",
+                  }}
+                />
+              ) : null}
+            </>
           ) : null}
         </div>
-        {handleButton(
-          "focusMin",
-          "Trim minimum handle",
-          displayPercentForOverlappedHandles(trimMinPercent, -1, lowOverlap),
-          true,
-        )}
-        {handleButton(
-          "blendMin",
-          "Feather minimum handle",
-          displayPercentForOverlappedHandles(blendMinPercent, 1, lowOverlap),
-          false,
-        )}
-        {handleButton(
-          "blendMax",
-          "Feather maximum handle",
-          displayPercentForOverlappedHandles(blendMaxPercent, -1, highOverlap),
-          false,
-        )}
-        {handleButton(
-          "focusMax",
-          "Trim maximum handle",
-          displayPercentForOverlappedHandles(trimMaxPercent, 1, highOverlap),
-          true,
-        )}
+        {thresholdControlsActive ? (
+          <>
+            {handleButton(
+              "focusMin",
+              "Trim minimum handle",
+              displayPercentForOverlappedHandles(trimMinPercent, -1, lowOverlap),
+              true,
+            )}
+            {handleButton(
+              "blendMin",
+              "Feather minimum handle",
+              displayPercentForOverlappedHandles(blendMinPercent, 1, lowOverlap),
+              false,
+            )}
+            {handleButton(
+              "blendMax",
+              "Feather maximum handle",
+              displayPercentForOverlappedHandles(blendMaxPercent, -1, highOverlap),
+              false,
+            )}
+            {handleButton(
+              "focusMax",
+              "Trim maximum handle",
+              displayPercentForOverlappedHandles(trimMaxPercent, 1, highOverlap),
+              true,
+            )}
+          </>
+        ) : null}
         <button
           type="button"
           aria-label="Lower edge line value"
@@ -1158,29 +1299,31 @@ export function ResistivityLegend() {
                 style={fineControlRangeStyle}
               />
             </label>
-            <label style={{ ...fineControlLabelStyle, ...edgePopoverFullRowStyle }}>
-              Noise {Math.round(noiseThreshold * 100)}%
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.01}
-                value={noiseThreshold}
-                data-testid="resistivity-legend-noise-threshold"
-                title="Hide scalar points without lateral support"
-                onPointerDown={(event) => event.stopPropagation()}
-                onChange={(event) =>
-                  setScalarRenderPatch({
-                    scalarNoiseThreshold: clamp(
-                      Number.parseFloat(event.currentTarget.value),
-                      0,
-                      1,
-                    ),
-                  })
-                }
-                style={fineControlRangeStyle}
-              />
-            </label>
+            {thresholdControlsActive ? (
+              <label style={{ ...fineControlLabelStyle, ...edgePopoverFullRowStyle }}>
+                Noise {Math.round(noiseThreshold * 100)}%
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={noiseThreshold}
+                  data-testid="resistivity-legend-noise-threshold"
+                  title="Hide scalar points without lateral support"
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onChange={(event) =>
+                    setScalarRenderPatch({
+                      scalarNoiseThreshold: clamp(
+                        Number.parseFloat(event.currentTarget.value),
+                        0,
+                        1,
+                      ),
+                    })
+                  }
+                  style={fineControlRangeStyle}
+                />
+              </label>
+            ) : null}
           </div>
         </div>
             ),

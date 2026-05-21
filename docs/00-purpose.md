@@ -1,5 +1,8 @@
 # Purpose
 
+> Candidate-stale orientation note, 2026-05-20:
+> This root purpose doc predates current Utah FORGE MT/seismic/topo software-build work. For active build context, start with `docs/dev-context/Active-Build-Context.md` and current project/source files. Statements below that frame Utah FORGE as foundation-only or as having no real ingested technical data are historical unless confirmed against current `projects/utah-forge/project.json`, `environment.json`, generated artifacts, and tests.
+
 Last updated: 2026-05-12
 
 ## What GeoSee Is

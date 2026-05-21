@@ -13,7 +13,7 @@ import {
   vibrancySecondaryLabel,
   vibrancyTertiaryLabel,
 } from "./styles";
-import { writeFile } from "./save";
+import { convertBrandingAsset, writeFile } from "./save";
 import {
   effectiveStyle,
   isStyleFieldOverridden,
@@ -242,12 +242,38 @@ const UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID = "utah-forge-phase3-seismic-browser";
 const UTAH_FORGE_SCENE_SECTION_LAYER_ID = "utah-forge-scene-section-planes";
 const UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID =
   "utah-forge-phase3-working-area";
+const UTAH_FORGE_TOPO_GRATICULE_LAYER_ID = "utah-forge-topo-graticule";
+const UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID = "utah-forge-working-area-focus";
+const WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY = 0.15;
+const WORKING_AREA_FOCUS_DEFAULT_TARGET_LAYER_IDS = [
+  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+] as const;
 const UTAH_FORGE_SCALAR_LAYER_IDS = new Set<string>([
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
 ]);
+
+function scalarControlTargetLabel(layerId: string): string {
+  if (layerId === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID) {
+    return "MT full-density points";
+  }
+  if (layerId === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID) {
+    return "MT volume";
+  }
+  if (layerId === UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID) {
+    return "MT authored slices";
+  }
+  if (layerId === UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID) {
+    return "MT point preview";
+  }
+  return "this scalar layer";
+}
+
 const SCALAR_RAMP_FIELDS = [
   "scalarColorLow",
   "scalarColorMid",
@@ -258,6 +284,7 @@ const SCALAR_RAMP_FIELDS = [
   "scalarDisplayMax",
   "scalarFocusMin",
   "scalarFocusMax",
+  "scalarInclusionMode",
   "scalarMidpoint",
   "scalarContrast",
   "scalarEdgeHighlight",
@@ -282,7 +309,8 @@ const SCALAR_RAMP_FIELDS = [
   "sectionIsoFillOffset",
   "sectionIsoSourceOpacity",
 ] as const satisfies readonly (keyof EditableStyle)[];
-const SCALAR_LEGEND_FIELD = "scalarLegendVisible" as const satisfies keyof EditableStyle;
+const SCALAR_LEGEND_FIELD =
+  "scalarLegendVisible" as const satisfies keyof EditableStyle;
 const MT_TOP_SURFACE_FIELDS = [
   "meshSurfaceLiftM",
   "meshWireframe",
@@ -404,13 +432,15 @@ const UTAH_FORGE_PUBLIC_TOPO_LAYER_GROUPS = [
     title: "Topo layers",
     ids: [
       "terrain",
+      UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
       "transport-roads",
       "hydrography-streams",
       "hydrography-lakes",
     ],
   },
 ] as const satisfies readonly LayerGroupDef[];
-const UTAH_FORGE_CUSTOMER_LAYER_GROUPS = [] as const satisfies readonly LayerGroupDef[];
+const UTAH_FORGE_CUSTOMER_LAYER_GROUPS =
+  [] as const satisfies readonly LayerGroupDef[];
 
 const UTAH_FORGE_RESISTIVITY_SLICE_OPTIONS = [
   { id: "horizontal_elev_1500m", label: "+1500 m horizontal" },
@@ -507,19 +537,50 @@ const PUBLIC_LAYER_IDS: Set<string> = new Set(
 );
 const PUBLIC_SURFACE_CONTEXT_LAYER_IDS: Set<string> = new Set([
   "terrain",
+  UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
   "transport-roads",
   "hydrography-streams",
   "hydrography-lakes",
 ]);
 const PUBLIC_SURFACE_LAYER_IDS = [
   "terrain",
+  UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
   "transport-roads",
   "hydrography-streams",
   "hydrography-lakes",
 ] as const;
+const SURFACE_ELEVATION_DEFAULT_MIN_M = 1500;
+const SURFACE_ELEVATION_DEFAULT_MAX_M = 3500;
+const SURFACE_ELEVATION_DEFAULT_COLORS = [
+  "#5147b8",
+  "#2e8fd8",
+  "#4fc3c7",
+  "#93d66b",
+  "#fff24d",
+] as const;
+const SURFACE_ELEVATION_DEFAULT_POSITIONS = [0, 0.25, 0.5, 0.75, 1] as const;
+const SURFACE_ELEVATION_DEFAULT_MIDPOINTS = [0.5, 0.5, 0.5, 0.5] as const;
+const SURFACE_ELEVATION_DEFAULT_SOFTNESS = 1;
+const SURFACE_ELEVATION_DEFAULT_BLEND = 1;
+const SURFACE_ELEVATION_STOP_GAP = 0.01;
+const TOPO_MAP_BRANDING_DEFAULT_ANCHOR = "south-east";
+const TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M = 0;
+const TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M = -85_000;
+const TITLE_BLOCK_UPLOAD_ACCEPT =
+  ".png,.jpg,.jpeg,.webp,.gif,.svg,.pdf,.eps,image/png,image/jpeg,image/webp,image/gif,image/svg+xml,application/pdf,application/postscript";
+const TITLE_BLOCK_DIRECT_IMAGE_EXTENSIONS = new Set([
+  "png",
+  "jpg",
+  "jpeg",
+  "webp",
+  "gif",
+  "svg",
+]);
+const TITLE_BLOCK_CONVERTED_EXTENSIONS = new Set(["pdf", "eps"]);
 type PublicTopoMaterialPresetId =
   | "custom"
   | "soft-topo"
+  | "surface-elevation"
   | "desert-relief"
   | "paper-map"
   | "grey-relief"
@@ -544,8 +605,43 @@ const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
       shadowSharpness: 0.28,
       facetStrength: 0.04,
       edgeFadeDistanceM: 90_000,
+      edgeFadeShape: "square",
+      edgeFadeInsetM: 0,
+      edgeFadeCornerRadiusM: 0,
       rockHueVariance: 0.03,
       shadowTint: "#3f4650",
+      surfaceElevationEnabled: false,
+    },
+  },
+  {
+    value: "surface-elevation",
+    label: "Surface elevation",
+    patch: {
+      materialPreset: "surface-elevation",
+      rampLow: "#575145",
+      rampMid: "#958a72",
+      rampHigh: "#d9cba3",
+      elevLowM: 0,
+      elevHighM: 180,
+      hillshadeIntensity: 0.86,
+      shadowSharpness: 0.34,
+      facetStrength: 0.04,
+      edgeFadeDistanceM: 90_000,
+      edgeFadeShape: "square",
+      edgeFadeInsetM: 0,
+      edgeFadeCornerRadiusM: 0,
+      rockHueVariance: 0,
+      shadowTint: "#303640",
+      surfaceElevationEnabled: true,
+      surfaceElevationLegendVisible: true,
+      surfaceElevationMinM: SURFACE_ELEVATION_DEFAULT_MIN_M,
+      surfaceElevationMaxM: SURFACE_ELEVATION_DEFAULT_MAX_M,
+      surfaceElevationColors: [...SURFACE_ELEVATION_DEFAULT_COLORS],
+      surfaceElevationColorPositions: [...SURFACE_ELEVATION_DEFAULT_POSITIONS],
+      surfaceElevationMidpoints: [...SURFACE_ELEVATION_DEFAULT_MIDPOINTS],
+      surfaceElevationTransitionSoftness: SURFACE_ELEVATION_DEFAULT_SOFTNESS,
+      surfaceElevationColorBlend: SURFACE_ELEVATION_DEFAULT_BLEND,
+      surfaceElevationReverse: false,
     },
   },
   {
@@ -562,8 +658,12 @@ const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
       shadowSharpness: 0.5,
       facetStrength: 0.12,
       edgeFadeDistanceM: 80_000,
+      edgeFadeShape: "square",
+      edgeFadeInsetM: 0,
+      edgeFadeCornerRadiusM: 0,
       rockHueVariance: 0.05,
       shadowTint: "#303640",
+      surfaceElevationEnabled: false,
     },
   },
   {
@@ -580,8 +680,12 @@ const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
       shadowSharpness: 0.18,
       facetStrength: 0.02,
       edgeFadeDistanceM: 120_000,
+      edgeFadeShape: "square",
+      edgeFadeInsetM: 0,
+      edgeFadeCornerRadiusM: 0,
       rockHueVariance: 0.015,
       shadowTint: "#56524a",
+      surfaceElevationEnabled: false,
     },
   },
   {
@@ -598,8 +702,12 @@ const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
       shadowSharpness: 0.38,
       facetStrength: 0.06,
       edgeFadeDistanceM: 85_000,
+      edgeFadeShape: "square",
+      edgeFadeInsetM: 0,
+      edgeFadeCornerRadiusM: 0,
       rockHueVariance: 0.005,
       shadowTint: "#3f464f",
+      surfaceElevationEnabled: false,
     },
   },
   {
@@ -616,8 +724,12 @@ const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
       shadowSharpness: 0.72,
       facetStrength: 0.22,
       edgeFadeDistanceM: 70_000,
+      edgeFadeShape: "square",
+      edgeFadeInsetM: 0,
+      edgeFadeCornerRadiusM: 0,
       rockHueVariance: 0.07,
       shadowTint: "#262b34",
+      surfaceElevationEnabled: false,
     },
   },
 ];
@@ -630,6 +742,7 @@ const CUSTOMER_LAYER_IDS: Set<string> = new Set(
 );
 
 const LINE_WIDTH_LAYER_DEFAULTS: Record<string, number> = {
+  [UTAH_FORGE_TOPO_GRATICULE_LAYER_ID]: 1.15,
   "hydrography-lakes": 1,
   "hydrography-streams": 1,
   "transport-roads": 2,
@@ -697,9 +810,7 @@ function labelTextControlValue(style: EditableStyle): string {
 function normalizeLabelKind(
   value: EditableStyle["labelKind"] | undefined,
 ): NonNullable<EditableStyle["labelKind"]> {
-  return value === "landTitle" ||
-    value === "area" ||
-    value === "anomaly"
+  return value === "landTitle" || value === "area" || value === "anomaly"
     ? value
     : "siteElement";
 }
@@ -806,7 +917,7 @@ export function LayerPanel({
   const isEnv = state.selectedPageId === ENVIRONMENT_SENTINEL;
   const currentPage = isEnv
     ? null
-    : state.pages.find((p) => p.id === state.selectedPageId) ?? null;
+    : (state.pages.find((p) => p.id === state.selectedPageId) ?? null);
   const { currentIndex, isTransitioning, targetIndex } = usePageController();
   const selectedPageIndex = currentPage
     ? state.pages.findIndex((p) => p.id === currentPage.id)
@@ -850,7 +961,8 @@ export function LayerPanel({
     const isShahbaziGroundContours =
       layer.id === SHAHBAZI_GROUND_CONTOUR_LAYER_ID;
     const isPointCloud = layer.type === "pointcloud";
-    const isUtahForgeStationMarkers = layer.id === UTAH_FORGE_MT_STATIONS_LAYER_ID;
+    const isUtahForgeStationMarkers =
+      layer.id === UTAH_FORGE_MT_STATIONS_LAYER_ID;
     const isUtahForgeScalarLayer = UTAH_FORGE_SCALAR_LAYER_IDS.has(layer.id);
     const isUtahForgeFullDensityScalarLayer =
       layer.id === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID;
@@ -864,9 +976,12 @@ export function LayerPanel({
       layer.id === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID;
     const isUtahForgeSeismicBrowser =
       layer.id === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID;
+    const isUtahForgeTopoGraticule =
+      layer.id === UTAH_FORGE_TOPO_GRATICULE_LAYER_ID;
     const isPublicTerrainSurface = layer.id === "terrain";
-    const isPublicSurfaceContextLayer =
-      PUBLIC_SURFACE_CONTEXT_LAYER_IDS.has(layer.id);
+    const isPublicSurfaceContextLayer = PUBLIC_SURFACE_CONTEXT_LAYER_IDS.has(
+      layer.id,
+    );
     const isLakes = layer.id === "hydrography-lakes";
     const hasInfillAndOutline = isLakes || isImageryLidar;
     const isStreams = layer.id === "hydrography-streams";
@@ -884,7 +999,8 @@ export function LayerPanel({
           currentPage,
           UTAH_FORGE_SCENE_SECTION_LAYER_ID,
         )
-      : state.environment.layerStyles[UTAH_FORGE_SCENE_SECTION_LAYER_ID] ?? {};
+      : (state.environment.layerStyles[UTAH_FORGE_SCENE_SECTION_LAYER_ID] ??
+        {});
     const effectiveAffectedByFog = effectiveLayerStyle.affectedByFog !== false;
     const surfaceGradientOverridden =
       currentPage !== null &&
@@ -1000,1835 +1116,2170 @@ export function LayerPanel({
 
           {effectiveLayerVisible ? (
             <>
-          {!isAreaOutlines ? (
-            <details style={nestedDetailsStyle}>
-            <summary style={panelStyles.summary}>Appearance</summary>
-            <div style={detailsContentStyle}>
-              {!isUtahForgeSeismicBrowser && !isPublicTerrainSurface && isEnv ? (
-                <EnvStyleRow
-                  label={hasInfillAndOutline ? "Infill color" : "Color"}
-                  inputType="color"
-                  value={(envStyle.color as string) ?? "#cccccc"}
-                  onChange={(v) => setEnvLayerStyle(layer.id, { color: v })}
-                />
-              ) : !isUtahForgeSeismicBrowser && !isPublicTerrainSurface && currentPage ? (
-                <PageStyleRow
-                  label={hasInfillAndOutline ? "Infill color" : "Color"}
-                  inputType="color"
-                  inheritedValue={
-                    effectiveStyle(state.environment, currentPage, layer.id)
-                      .color as string | undefined
-                  }
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "color",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]?.color as
-                      | string
-                      | undefined
-                  }
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, { color: v })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(currentPage.id, layer.id, "color")
-                  }
-                />
-              ) : null}
-
-              {hasInfillAndOutline && isEnv ? (
-                <EnvStyleRow
-                  label="Infill opacity"
-                  inputType="range"
-                  value={String(
-                    (envStyle.fillOpacity as number | undefined) ??
-                      (envStyle.opacity as number | undefined) ??
-                      1,
-                  )}
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, {
-                      fillOpacity: parseFloat(v),
-                    })
-                  }
-                />
-              ) : hasInfillAndOutline && currentPage ? (
-                <PageStyleRow
-                  label="Infill opacity"
-                  inputType="range"
-                  inheritedValue={String(
-                    (effectiveStyle(state.environment, currentPage, layer.id)
-                      .fillOpacity as number | undefined) ??
-                      (effectiveStyle(state.environment, currentPage, layer.id)
-                        .opacity as number | undefined) ??
-                      1,
-                  )}
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "fillOpacity",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]?.fillOpacity !==
-                    undefined
-                      ? String(currentPage.layerOverrides[layer.id].fillOpacity)
-                      : undefined
-                  }
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      fillOpacity: parseFloat(v),
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "fillOpacity",
-                    )
-                  }
-                />
-              ) : null}
-
-              {hasInfillAndOutline && isEnv ? (
-                <EnvStyleRow
-                  label="Outline color"
-                  inputType="color"
-                  value={
-                    (envStyle.outlineColor as string | undefined) ??
-                    (envStyle.color as string | undefined) ??
-                    "#111111"
-                  }
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, { outlineColor: v })
-                  }
-                />
-              ) : hasInfillAndOutline && currentPage ? (
-                <PageStyleRow
-                  label="Outline color"
-                  inputType="color"
-                  inheritedValue={
-                    ((effectiveStyle(
-                      state.environment,
-                      currentPage,
-                      layer.id,
-                    ).outlineColor as string | undefined) ??
-                      (effectiveStyle(state.environment, currentPage, layer.id)
-                        .color as string | undefined))
-                  }
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "outlineColor",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]?.outlineColor as
-                      | string
-                      | undefined
-                  }
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      outlineColor: v,
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "outlineColor",
-                    )
-                  }
-                />
-              ) : null}
-
-              {isEnv ? (
-                <EnvStyleRow
-                  label={hasInfillAndOutline ? "Outline opacity" : "Opacity"}
-                  inputType="range"
-                  value={String((envStyle.opacity as number | undefined) ?? 1)}
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, { opacity: parseFloat(v) })
-                  }
-                />
-              ) : currentPage ? (
-                <PageStyleRow
-                  label={hasInfillAndOutline ? "Outline opacity" : "Opacity"}
-                  inputType="range"
-                  inheritedValue={String(
-                    (effectiveStyle(state.environment, currentPage, layer.id)
-                      .opacity as number | undefined) ?? 1,
-                  )}
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "opacity",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]?.opacity !==
-                    undefined
-                      ? String(currentPage.layerOverrides[layer.id].opacity)
-                      : undefined
-                  }
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      opacity: parseFloat(v),
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(currentPage.id, layer.id, "opacity")
-                  }
-                />
-              ) : null}
-
-              {isShahbaziGroundSurface ? (
-                <SurfaceGradientControls
-                  style={isEnv ? envStyle : effectiveLayerStyle}
-                  disabled={!isEnv && !surfaceGradientOverridden}
-                  isPageOverride={!isEnv}
-                  overridden={surfaceGradientOverridden}
-                  onToggleOverride={
-                    currentPage
-                      ? (enabled) => {
-                          if (enabled) {
-                            setPageLayerOverride(
-                              currentPage.id,
-                              layer.id,
-                              surfaceGradientPatchFromStyle(
-                                effectiveLayerStyle,
-                              ),
-                            );
-                          } else {
-                            for (const field of SURFACE_GRADIENT_FIELDS) {
-                              clearPageLayerOverride(
-                                currentPage.id,
-                                layer.id,
-                                field,
-                              );
-                            }
-                          }
-                        }
-                      : undefined
-                  }
-                  onChange={(patch) => {
-                    if (isEnv) {
-                      setEnvLayerStyle(layer.id, patch);
-                    } else if (currentPage) {
-                      setPageLayerOverride(currentPage.id, layer.id, patch);
-                    }
-                  }}
-                />
-              ) : null}
-
-              {isUtahForgeScalarLayer ? (
-                <ScalarRampControls
-                  style={isEnv ? envStyle : effectiveLayerStyle}
-                  disabled={!isEnv && !scalarRampOverridden}
-                  isPageOverride={!isEnv}
-                  overridden={scalarRampOverridden}
-                  onToggleOverride={
-                    currentPage
-                      ? (enabled) => {
-                          if (enabled) {
-                            setPageLayerOverride(
-                              currentPage.id,
-                              layer.id,
-                              scalarRampPatchFromStyle(effectiveLayerStyle),
-                            );
-                          } else {
-                            for (const field of SCALAR_RAMP_FIELDS) {
-                              clearPageLayerOverride(
-                                currentPage.id,
-                                layer.id,
-                                field,
-                              );
-                            }
-                          }
-                        }
-                      : undefined
-                  }
-                  onChange={(patch) => {
-                    if (isEnv) {
-                      setEnvLayerStyle(layer.id, patch);
-                    } else if (currentPage) {
-                      setPageLayerOverride(currentPage.id, layer.id, patch);
-                    }
-                  }}
-                />
-              ) : null}
-
-              {isUtahForgeTopSurface ? (
-                <MtTopSurfaceControls
-                  style={isEnv ? envStyle : effectiveLayerStyle}
-                  disabled={!isEnv && !mtTopSurfaceOverridden}
-                  isPageOverride={!isEnv}
-                  overridden={mtTopSurfaceOverridden}
-                  onToggleOverride={
-                    currentPage
-                      ? (enabled) => {
-                          if (enabled) {
-                            setPageLayerOverride(
-                              currentPage.id,
-                              layer.id,
-                              mtTopSurfacePatchFromStyle(effectiveLayerStyle),
-                            );
-                          } else {
-                            for (const field of MT_TOP_SURFACE_FIELDS) {
-                              clearPageLayerOverride(
-                                currentPage.id,
-                                layer.id,
-                                field,
-                              );
-                            }
-                          }
-                        }
-                      : undefined
-                  }
-                  onChange={(patch) => {
-                    if (isEnv) {
-                      setEnvLayerStyle(layer.id, patch);
-                    } else if (currentPage) {
-                      setPageLayerOverride(currentPage.id, layer.id, patch);
-                    }
-                  }}
-                />
-              ) : null}
-
-              {isUtahForgeScalarLayer ? (
-                <LayerBooleanStyleControl
-                  label="Value legend"
-                  field={SCALAR_LEGEND_FIELD}
-                  fallback={true}
-                  style={isEnv ? envStyle : effectiveLayerStyle}
-                  isEnv={isEnv}
-                  currentPage={currentPage}
-                  layerId={layer.id}
-                  setEnvLayerStyle={setEnvLayerStyle}
-                  setPageLayerOverride={setPageLayerOverride}
-                  clearPageLayerOverride={clearPageLayerOverride}
-                />
-              ) : null}
-
-              {isUtahForgeFullDensityScalarLayer ? (
-                <LayerNumberStyleControl
-                  label="Distance light"
-                  field="scalarDistanceLightStrength"
-                  fallback={0.35}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  decimals={2}
-                  style={isEnv ? envStyle : effectiveLayerStyle}
-                  isEnv={isEnv}
-                  currentPage={currentPage}
-                  layerId={layer.id}
-                  setEnvLayerStyle={setEnvLayerStyle}
-                  setPageLayerOverride={setPageLayerOverride}
-                  clearPageLayerOverride={clearPageLayerOverride}
-                />
-              ) : null}
-
-              {isUtahForgeStationMarkers ? (
-                <>
-                  <PointMarkerControls
-                    style={isEnv ? envStyle : effectiveLayerStyle}
-                    isEnv={isEnv}
-                    currentPage={currentPage}
-                    layerId={layer.id}
-                    setEnvLayerStyle={setEnvLayerStyle}
-                    setPageLayerOverride={setPageLayerOverride}
-                    clearPageLayerOverride={clearPageLayerOverride}
-                  />
-                  <MtStationQcControls
-                    layer={layer}
-                    style={isEnv ? envStyle : effectiveLayerStyle}
-                    isEnv={isEnv}
-                    currentPage={currentPage}
-                    layerId={layer.id}
-                    setEnvLayerStyle={setEnvLayerStyle}
-                    setPageLayerOverride={setPageLayerOverride}
-                    clearPageLayerOverride={clearPageLayerOverride}
-                  />
-                </>
-              ) : null}
-
-              {isPointCloud && isEnv ? (
-                <EnvStyleRow
-                  label="Point size"
-                  inputType="range"
-                  value={String((envStyle.pointSizePx as number | undefined) ?? 4)}
-                  min={1}
-                  max={12}
-                  step={0.25}
-                  decimals={2}
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, {
-                      pointSizePx: parseFloat(v),
-                    })
-                  }
-                />
-              ) : isPointCloud && currentPage ? (
-                <PageStyleRow
-                  label="Point size"
-                  inputType="range"
-                  inheritedValue={String(
-                    (effectiveStyle(state.environment, currentPage, layer.id)
-                      .pointSizePx as number | undefined) ?? 4,
-                  )}
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "pointSizePx",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]?.pointSizePx !==
-                    undefined
-                      ? String(currentPage.layerOverrides[layer.id].pointSizePx)
-                      : undefined
-                  }
-                  min={1}
-                  max={12}
-                  step={0.25}
-                  decimals={2}
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      pointSizePx: parseFloat(v),
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "pointSizePx",
-                    )
-                  }
-                />
-              ) : null}
-
-              {isTrees && isEnv ? (
-                <EnvStyleRow
-                  label="Edge cut"
-                  inputType="range"
-                  value={String(
-                    (envStyle.forestEdgeThreshold as number | undefined) ??
-                      0.5,
-                  )}
-                  min={0.05}
-                  max={0.95}
-                  step={0.01}
-                  decimals={2}
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, {
-                      forestEdgeThreshold: parseFloat(v),
-                    })
-                  }
-                />
-              ) : isTrees && currentPage ? (
-                <PageStyleRow
-                  label="Edge cut"
-                  inputType="range"
-                  inheritedValue={String(
-                    (effectiveLayerStyle.forestEdgeThreshold as
-                      | number
-                      | undefined) ?? 0.5,
-                  )}
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "forestEdgeThreshold",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]
-                      ?.forestEdgeThreshold !== undefined
-                      ? String(
-                          currentPage.layerOverrides[layer.id]
-                            .forestEdgeThreshold,
-                        )
-                      : undefined
-                  }
-                  fallbackValue="0.5"
-                  min={0.05}
-                  max={0.95}
-                  step={0.01}
-                  decimals={2}
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      forestEdgeThreshold: parseFloat(v),
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "forestEdgeThreshold",
-                    )
-                  }
-                />
-              ) : null}
-
-              {isTrees && isEnv ? (
-                <EnvStyleRow
-                  label="Edge soft"
-                  inputType="range"
-                  value={String(
-                    (envStyle.forestEdgeSoftness as number | undefined) ??
-                      0.035,
-                  )}
-                  min={0}
-                  max={0.25}
-                  step={0.005}
-                  decimals={3}
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, {
-                      forestEdgeSoftness: parseFloat(v),
-                    })
-                  }
-                />
-              ) : isTrees && currentPage ? (
-                <PageStyleRow
-                  label="Edge soft"
-                  inputType="range"
-                  inheritedValue={String(
-                    (effectiveLayerStyle.forestEdgeSoftness as
-                      | number
-                      | undefined) ?? 0.035,
-                  )}
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "forestEdgeSoftness",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]
-                      ?.forestEdgeSoftness !== undefined
-                      ? String(
-                          currentPage.layerOverrides[layer.id]
-                            .forestEdgeSoftness,
-                        )
-                      : undefined
-                  }
-                  fallbackValue="0.035"
-                  min={0}
-                  max={0.25}
-                  step={0.005}
-                  decimals={3}
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      forestEdgeSoftness: parseFloat(v),
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "forestEdgeSoftness",
-                    )
-                  }
-                />
-              ) : null}
-
-              {!isPublicSurfaceContextLayer && isEnv ? (
-                <EnvAffectedByFogRow
-                  value={envAffectedByFog}
-                  onToggle={() =>
-                    setEnvLayerStyle(layer.id, {
-                      affectedByFog: !envAffectedByFog,
-                    })
-                  }
-                />
-              ) : !isPublicSurfaceContextLayer && currentPage ? (
-                <PageAffectedByFogRow
-                  page={currentPage}
-                  layerId={layer.id}
-                  envValue={envStyle.affectedByFog !== false}
-                  onSet={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      affectedByFog: v,
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "affectedByFog",
-                    )
-                  }
-                />
-              ) : null}
-
-              {!isPublicSurfaceContextLayer && envAffectedByFog && isEnv ? (
-                <EnvStyleRow
-                  label="Fog dens."
-                  inputType="range"
-                  value={String(
-                    ((envStyle.fogDensity as number | undefined) ??
-                      globalFogDensity) * 10000,
-                  )}
-                  min={FOG_DENSITY_UI_MIN}
-                  max={FOG_DENSITY_UI_MAX}
-                  step={FOG_DENSITY_UI_STEP}
-                  decimals={2}
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, {
-                      fogDensity: parseFloat(v) / 10000,
-                    })
-                  }
-                />
-              ) : !isPublicSurfaceContextLayer && effectiveAffectedByFog && currentPage ? (
-                <PageStyleRow
-                  label="Fog dens."
-                  inputType="range"
-                  inheritedValue={String(
-                    ((effectiveStyle(state.environment, currentPage, layer.id)
-                      .fogDensity as number | undefined) ?? globalFogDensity) *
-                      10000,
-                  )}
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "fogDensity",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]?.fogDensity !==
-                    undefined
-                      ? String(
-                          (currentPage.layerOverrides[layer.id]
-                            .fogDensity as number) * 10000,
-                        )
-                      : undefined
-                  }
-                  fallbackValue={String(globalFogDensity * 10000)}
-                  min={FOG_DENSITY_UI_MIN}
-                  max={FOG_DENSITY_UI_MAX}
-                  step={FOG_DENSITY_UI_STEP}
-                  decimals={2}
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      fogDensity: parseFloat(v) / 10000,
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "fogDensity",
-                    )
-                  }
-                />
-              ) : null}
-
-              {supportsLineWidth && !isEzGamma && isEnv ? (
-                <EnvStyleRow
-                  label="Line width"
-                  inputType="range"
-                  value={String(
-                    (envStyle.lineWidth as number | undefined) ??
-                      lineWidthDefault,
-                  )}
-                  min={0.5}
-                  max={6}
-                  step={0.25}
-                  decimals={2}
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, { lineWidth: parseFloat(v) })
-                  }
-                />
-              ) : supportsLineWidth && !isEzGamma && currentPage ? (
-                <PageStyleRow
-                  label="Line width"
-                  inputType="range"
-                  inheritedValue={String(
-                    (effectiveStyle(state.environment, currentPage, layer.id)
-                      .lineWidth as number | undefined) ?? lineWidthDefault,
-                  )}
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "lineWidth",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]?.lineWidth !==
-                    undefined
-                      ? String(currentPage.layerOverrides[layer.id].lineWidth)
-                      : undefined
-                  }
-                  fallbackValue={String(lineWidthDefault)}
-                  min={0.5}
-                  max={6}
-                  step={0.25}
-                  decimals={2}
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      lineWidth: parseFloat(v),
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "lineWidth",
-                    )
-                  }
-                />
-              ) : null}
-
-              {isShahbaziGroundContours
-                ? CONTOUR_DISTANCE_STYLE_CONTROLS.map((control) =>
+              {!isAreaOutlines ? (
+                <details style={nestedDetailsStyle}>
+                  <summary style={panelStyles.summary}>Appearance</summary>
+                  <div style={detailsContentStyle}>
+                    {!isUtahForgeSeismicBrowser &&
+                    !isPublicTerrainSurface &&
                     isEnv ? (
                       <EnvStyleRow
-                        key={control.field}
-                        label={control.label}
-                        inputType="range"
-                        value={String(
-                          styleNumber(
-                            envStyle,
-                            control.field,
-                            control.fallback,
-                          ),
-                        )}
-                        min={control.min}
-                        max={control.max}
-                        step={control.step}
-                        decimals={control.decimals}
+                        label={hasInfillAndOutline ? "Infill color" : "Color"}
+                        inputType="color"
+                        value={(envStyle.color as string) ?? "#cccccc"}
                         onChange={(v) =>
-                          setEnvLayerStyle(layer.id, {
-                            [control.field]: parseFloat(v),
-                          } as Partial<EditableStyle>)
+                          setEnvLayerStyle(layer.id, { color: v })
                         }
                       />
-                    ) : currentPage ? (
+                    ) : !isUtahForgeSeismicBrowser &&
+                      !isPublicTerrainSurface &&
+                      currentPage ? (
                       <PageStyleRow
-                        key={control.field}
-                        label={control.label}
-                        inputType="range"
-                        inheritedValue={String(
-                          styleNumber(
-                            effectiveLayerStyle,
-                            control.field,
-                            control.fallback,
-                          ),
-                        )}
+                        label={hasInfillAndOutline ? "Infill color" : "Color"}
+                        inputType="color"
+                        inheritedValue={
+                          effectiveStyle(
+                            state.environment,
+                            currentPage,
+                            layer.id,
+                          ).color as string | undefined
+                        }
                         isOverridden={isStyleFieldOverridden(
                           currentPage,
                           layer.id,
-                          control.field,
+                          "color",
                         )}
                         overrideValue={
-                          currentPage.layerOverrides?.[layer.id]?.[
-                            control.field
-                          ] !== undefined
-                            ? String(
-                                currentPage.layerOverrides[layer.id][
-                                  control.field
-                                ],
-                              )
-                            : undefined
+                          currentPage.layerOverrides?.[layer.id]?.color as
+                            | string
+                            | undefined
                         }
-                        fallbackValue={String(control.fallback)}
-                        min={control.min}
-                        max={control.max}
-                        step={control.step}
-                        decimals={control.decimals}
                         onOverride={(v) =>
                           setPageLayerOverride(currentPage.id, layer.id, {
-                            [control.field]: parseFloat(v),
-                          } as Partial<EditableStyle>)
+                            color: v,
+                          })
                         }
                         onClear={() =>
                           clearPageLayerOverride(
                             currentPage.id,
                             layer.id,
-                            control.field,
+                            "color",
                           )
                         }
                       />
-                    ) : null,
-                  )
-                : null}
+                    ) : null}
 
-              {isEzGamma && isEnv ? (
-                <EnvStyleRow
-                  label="Track offset"
-                  inputType="range"
-                  value={String(
-                    (envStyle.gammaTrackOffsetM as number | undefined) ?? 36,
-                  )}
-                  min={0}
-                  max={220}
-                  step={5}
-                  decimals={0}
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, {
-                      gammaTrackOffsetM: parseFloat(v),
-                    })
-                  }
-                />
-              ) : isEzGamma && currentPage ? (
-                <PageStyleRow
-                  label="Track offset"
-                  inputType="range"
-                  inheritedValue={String(
-                    (effectiveLayerStyle.gammaTrackOffsetM as
-                      | number
-                      | undefined) ?? 36,
-                  )}
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "gammaTrackOffsetM",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]
-                      ?.gammaTrackOffsetM !== undefined
-                      ? String(
-                          currentPage.layerOverrides[layer.id]
-                            .gammaTrackOffsetM,
-                        )
-                      : undefined
-                  }
-                  fallbackValue="36"
-                  min={0}
-                  max={220}
-                  step={5}
-                  decimals={0}
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      gammaTrackOffsetM: parseFloat(v),
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "gammaTrackOffsetM",
-                    )
-                  }
-                />
-              ) : null}
-
-              {isEzGamma && isEnv ? (
-                <EnvStyleRow
-                  label="Track width"
-                  inputType="range"
-                  value={String(
-                    (envStyle.gammaTrackWidthM as number | undefined) ?? 78,
-                  )}
-                  min={20}
-                  max={220}
-                  step={5}
-                  decimals={0}
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, {
-                      gammaTrackWidthM: parseFloat(v),
-                    })
-                  }
-                />
-              ) : isEzGamma && currentPage ? (
-                <PageStyleRow
-                  label="Track width"
-                  inputType="range"
-                  inheritedValue={String(
-                    (effectiveLayerStyle.gammaTrackWidthM as
-                      | number
-                      | undefined) ?? 78,
-                  )}
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "gammaTrackWidthM",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]
-                      ?.gammaTrackWidthM !== undefined
-                      ? String(
-                          currentPage.layerOverrides[layer.id]
-                            .gammaTrackWidthM,
-                        )
-                      : undefined
-                  }
-                  fallbackValue="78"
-                  min={20}
-                  max={220}
-                  step={5}
-                  decimals={0}
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      gammaTrackWidthM: parseFloat(v),
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "gammaTrackWidthM",
-                    )
-                  }
-                />
-              ) : null}
-
-              {isEzGamma && isEnv ? (
-                <EnvStyleRow
-                  label="Depth scale"
-                  inputType="range"
-                  value={String(
-                    (envStyle.gammaDepthScale as number | undefined) ?? 1,
-                  )}
-                  min={0.2}
-                  max={1.8}
-                  step={0.05}
-                  decimals={2}
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, {
-                      gammaDepthScale: parseFloat(v),
-                    })
-                  }
-                />
-              ) : isEzGamma && currentPage ? (
-                <PageStyleRow
-                  label="Depth scale"
-                  inputType="range"
-                  inheritedValue={String(
-                    (effectiveLayerStyle.gammaDepthScale as
-                      | number
-                      | undefined) ?? 1,
-                  )}
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "gammaDepthScale",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]?.gammaDepthScale !==
-                    undefined
-                      ? String(
-                          currentPage.layerOverrides[layer.id].gammaDepthScale,
-                        )
-                      : undefined
-                  }
-                  fallbackValue="1"
-                  min={0.2}
-                  max={1.8}
-                  step={0.05}
-                  decimals={2}
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      gammaDepthScale: parseFloat(v),
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "gammaDepthScale",
-                    )
-                  }
-                />
-              ) : null}
-
-              {isEzGamma && isEnv ? (
-                <EnvStyleRow
-                  label="Panel opacity"
-                  inputType="range"
-                  value={String(
-                    (envStyle.gammaPanelOpacity as number | undefined) ?? 0,
-                  )}
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  decimals={2}
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, {
-                      gammaPanelOpacity: parseFloat(v),
-                    })
-                  }
-                />
-              ) : isEzGamma && currentPage ? (
-                <PageStyleRow
-                  label="Panel opacity"
-                  inputType="range"
-                  inheritedValue={String(
-                    (effectiveLayerStyle.gammaPanelOpacity as
-                      | number
-                      | undefined) ?? 0,
-                  )}
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "gammaPanelOpacity",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]
-                      ?.gammaPanelOpacity !== undefined
-                      ? String(
-                          currentPage.layerOverrides[layer.id]
-                            .gammaPanelOpacity,
-                        )
-                      : undefined
-                  }
-                  fallbackValue="0"
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  decimals={2}
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      gammaPanelOpacity: parseFloat(v),
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "gammaPanelOpacity",
-                    )
-                  }
-                />
-              ) : null}
-
-              {isEzGamma ? (
-                <EzGammaStyleControls
-                  style={isEnv ? envStyle : effectiveLayerStyle}
-                  onChange={(patch) => {
-                    if (isEnv) {
-                      setEnvLayerStyle(layer.id, patch);
-                    } else if (currentPage) {
-                      setPageLayerOverride(currentPage.id, layer.id, patch);
-                    }
-                  }}
-                />
-              ) : null}
-
-              {isGeochem ? (
-                <GeochemStyleControls
-                  style={isEnv ? envStyle : effectiveLayerStyle}
-                  onChange={(patch) => {
-                    if (isEnv) {
-                      setEnvLayerStyle(layer.id, patch);
-                    } else if (currentPage) {
-                      setPageLayerOverride(currentPage.id, layer.id, patch);
-                    }
-                  }}
-                />
-              ) : null}
-
-              {isHyperspectral ? (
-                <HyperspectralStyleControls
-                  style={isEnv ? envStyle : effectiveLayerStyle}
-                  onChange={(patch) => {
-                    if (isEnv) {
-                      setEnvLayerStyle(layer.id, patch);
-                    } else if (currentPage) {
-                      setPageLayerOverride(currentPage.id, layer.id, patch);
-                    }
-                  }}
-                />
-              ) : null}
-
-              {isImageryLidar ? (
-                <ImageryLidarStyleControls
-                  style={isEnv ? envStyle : effectiveLayerStyle}
-                  onChange={(patch) => {
-                    if (isEnv) {
-                      setEnvLayerStyle(layer.id, patch);
-                    } else if (currentPage) {
-                      setPageLayerOverride(currentPage.id, layer.id, patch);
-                    }
-                  }}
-                />
-              ) : null}
-
-              {isAreaOutlines && isEnv ? (
-                <AreaOutlinesControls
-                  outlines={state.environment.scene?.areaOutlines ?? []}
-                  viewCenter={[
-                    Math.round(
-                      sceneHandle.controls.target.x + SCENE_ORIGIN.easting,
-                    ),
-                    Math.round(
-                      sceneHandle.controls.target.y + SCENE_ORIGIN.northing,
-                    ),
-                  ]}
-                  onChange={(outlines) =>
-                    setEnvScene({
-                      areaOutlines: outlines,
-                    })
-                  }
-                />
-              ) : null}
-
-              {isStreams && isEnv ? (
-                <EnvStyleRow
-                  label="Terrain shade"
-                  inputType="range"
-                  value={String(
-                    (envStyle.terrainShadowInfluence as number | undefined) ??
-                      0.09,
-                  )}
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  decimals={2}
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, {
-                      terrainShadowInfluence: parseFloat(v),
-                    })
-                  }
-                />
-              ) : isStreams && currentPage ? (
-                <PageStyleRow
-                  label="Terrain shade"
-                  inputType="range"
-                  inheritedValue={String(
-                    (effectiveStyle(state.environment, currentPage, layer.id)
-                      .terrainShadowInfluence as number | undefined) ?? 0.09,
-                  )}
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "terrainShadowInfluence",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]
-                      ?.terrainShadowInfluence !== undefined
-                      ? String(
-                          currentPage.layerOverrides[layer.id]
-                            .terrainShadowInfluence,
-                        )
-                      : undefined
-                  }
-                  fallbackValue="0.09"
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  decimals={2}
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      terrainShadowInfluence: parseFloat(v),
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "terrainShadowInfluence",
-                    )
-                  }
-                />
-              ) : null}
-            </div>
-            </details>
-          ) : (
-            <div style={detailsContentStyle}>
-              {isEnv ? (
-                <AreaOutlinesControls
-                  outlines={state.environment.scene?.areaOutlines ?? []}
-                  viewCenter={[
-                    Math.round(
-                      sceneHandle.controls.target.x + SCENE_ORIGIN.easting,
-                    ),
-                    Math.round(
-                      sceneHandle.controls.target.y + SCENE_ORIGIN.northing,
-                    ),
-                  ]}
-                  onChange={(outlines) =>
-                    setEnvScene({
-                      areaOutlines: outlines,
-                    })
-                  }
-                />
-              ) : null}
-            </div>
-          )}
-
-          {isUtahForgeResistivitySlices ? (
-            <ResistivitySliceControls
-              style={isEnv ? envStyle : effectiveLayerStyle}
-              isEnv={isEnv}
-              currentPage={currentPage}
-              layerId={layer.id}
-              setEnvLayerStyle={setEnvLayerStyle}
-              setPageLayerOverride={setPageLayerOverride}
-              clearPageLayerOverride={clearPageLayerOverride}
-            />
-          ) : null}
-
-          {isUtahForgeMtVolume ? (
-            <MtVolumeControls
-              layer={layer}
-              style={isEnv ? envStyle : effectiveLayerStyle}
-              disabled={!isEnv && !mtVolumeOverridden}
-              isEnv={isEnv}
-              currentPage={currentPage}
-              layerId={layer.id}
-              sceneSectionStyle={effectiveSceneSectionStyle}
-              sceneHandle={sceneHandle}
-              setEnvLayerStyle={setEnvLayerStyle}
-              setPageLayerOverride={setPageLayerOverride}
-              clearPageLayerOverride={clearPageLayerOverride}
-              onToggleOverride={
-                currentPage
-                  ? (enabled) => {
-                      if (enabled) {
-                        setPageLayerOverride(
-                          currentPage.id,
+                    {hasInfillAndOutline && isEnv ? (
+                      <EnvStyleRow
+                        label="Infill opacity"
+                        inputType="range"
+                        value={String(
+                          (envStyle.fillOpacity as number | undefined) ??
+                            (envStyle.opacity as number | undefined) ??
+                            1,
+                        )}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, {
+                            fillOpacity: parseFloat(v),
+                          })
+                        }
+                      />
+                    ) : hasInfillAndOutline && currentPage ? (
+                      <PageStyleRow
+                        label="Infill opacity"
+                        inputType="range"
+                        inheritedValue={String(
+                          (effectiveStyle(
+                            state.environment,
+                            currentPage,
+                            layer.id,
+                          ).fillOpacity as number | undefined) ??
+                            (effectiveStyle(
+                              state.environment,
+                              currentPage,
+                              layer.id,
+                            ).opacity as number | undefined) ??
+                            1,
+                        )}
+                        isOverridden={isStyleFieldOverridden(
+                          currentPage,
                           layer.id,
-                          mtVolumePatchFromStyle(effectiveLayerStyle),
-                        );
-                      } else {
-                        for (const field of MT_VOLUME_FIELDS) {
+                          "fillOpacity",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]
+                            ?.fillOpacity !== undefined
+                            ? String(
+                                currentPage.layerOverrides[layer.id]
+                                  .fillOpacity,
+                              )
+                            : undefined
+                        }
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            fillOpacity: parseFloat(v),
+                          })
+                        }
+                        onClear={() =>
                           clearPageLayerOverride(
                             currentPage.id,
                             layer.id,
-                            field,
-                          );
+                            "fillOpacity",
+                          )
                         }
-                      }
-                    }
-                  : undefined
-              }
-            />
-          ) : null}
+                      />
+                    ) : null}
 
-          {isUtahForgeMtThresholdSurfaces ? (
-            <MtThresholdSurfaceControls
-              layer={layer}
-              style={isEnv ? envStyle : effectiveLayerStyle}
-              disabled={!isEnv && !mtThresholdSurfaceOverridden}
-              isEnv={isEnv}
-              currentPage={currentPage}
-              layerId={layer.id}
-              setEnvLayerStyle={setEnvLayerStyle}
-              setPageLayerOverride={setPageLayerOverride}
-              clearPageLayerOverride={clearPageLayerOverride}
-              onToggleOverride={
-                currentPage
-                  ? (enabled) => {
-                      if (enabled) {
-                        setPageLayerOverride(
-                          currentPage.id,
+                    {hasInfillAndOutline && isEnv ? (
+                      <EnvStyleRow
+                        label="Outline color"
+                        inputType="color"
+                        value={
+                          (envStyle.outlineColor as string | undefined) ??
+                          (envStyle.color as string | undefined) ??
+                          "#111111"
+                        }
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, { outlineColor: v })
+                        }
+                      />
+                    ) : hasInfillAndOutline && currentPage ? (
+                      <PageStyleRow
+                        label="Outline color"
+                        inputType="color"
+                        inheritedValue={
+                          (effectiveStyle(
+                            state.environment,
+                            currentPage,
+                            layer.id,
+                          ).outlineColor as string | undefined) ??
+                          (effectiveStyle(
+                            state.environment,
+                            currentPage,
+                            layer.id,
+                          ).color as string | undefined)
+                        }
+                        isOverridden={isStyleFieldOverridden(
+                          currentPage,
                           layer.id,
-                          mtThresholdSurfacePatchFromStyle(effectiveLayerStyle),
-                        );
-                      } else {
-                        for (const field of MT_THRESHOLD_SURFACE_FIELDS) {
+                          "outlineColor",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]
+                            ?.outlineColor as string | undefined
+                        }
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            outlineColor: v,
+                          })
+                        }
+                        onClear={() =>
                           clearPageLayerOverride(
                             currentPage.id,
                             layer.id,
-                            field,
-                          );
+                            "outlineColor",
+                          )
                         }
-                      }
-                    }
-                  : undefined
-              }
-            />
-          ) : null}
+                      />
+                    ) : null}
 
-          {isUtahForgeSeismicBrowser ? (
-            <SeismicBrowserControls
-              layer={layer}
-              style={isEnv ? envStyle : effectiveLayerStyle}
-              disabled={!isEnv && currentPage === null}
-              isEnv={isEnv}
-              currentPage={currentPage}
-              layerId={layer.id}
-              overridden={seismicBrowserOverridden}
-              sceneSectionStyle={effectiveSceneSectionStyle}
-              sceneHandle={sceneHandle}
-              onToggleOverride={
-                currentPage
-                  ? (enabled) => {
-                      if (enabled) {
-                        setPageLayerOverride(
-                          currentPage.id,
+                    {isEnv ? (
+                      <EnvStyleRow
+                        label={
+                          hasInfillAndOutline ? "Outline opacity" : "Opacity"
+                        }
+                        inputType="range"
+                        value={String(
+                          (envStyle.opacity as number | undefined) ?? 1,
+                        )}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, { opacity: parseFloat(v) })
+                        }
+                      />
+                    ) : currentPage ? (
+                      <PageStyleRow
+                        label={
+                          hasInfillAndOutline ? "Outline opacity" : "Opacity"
+                        }
+                        inputType="range"
+                        inheritedValue={String(
+                          (effectiveStyle(
+                            state.environment,
+                            currentPage,
+                            layer.id,
+                          ).opacity as number | undefined) ?? 1,
+                        )}
+                        isOverridden={isStyleFieldOverridden(
+                          currentPage,
                           layer.id,
-                          seismicBrowserPatchFromStyle(
-                            effectiveLayerStyle,
-                            layer,
+                          "opacity",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]?.opacity !==
+                          undefined
+                            ? String(
+                                currentPage.layerOverrides[layer.id].opacity,
+                              )
+                            : undefined
+                        }
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            opacity: parseFloat(v),
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "opacity",
+                          )
+                        }
+                      />
+                    ) : null}
+
+                    {isShahbaziGroundSurface ? (
+                      <SurfaceGradientControls
+                        style={isEnv ? envStyle : effectiveLayerStyle}
+                        disabled={!isEnv && !surfaceGradientOverridden}
+                        isPageOverride={!isEnv}
+                        overridden={surfaceGradientOverridden}
+                        onToggleOverride={
+                          currentPage
+                            ? (enabled) => {
+                                if (enabled) {
+                                  setPageLayerOverride(
+                                    currentPage.id,
+                                    layer.id,
+                                    surfaceGradientPatchFromStyle(
+                                      effectiveLayerStyle,
+                                    ),
+                                  );
+                                } else {
+                                  for (const field of SURFACE_GRADIENT_FIELDS) {
+                                    clearPageLayerOverride(
+                                      currentPage.id,
+                                      layer.id,
+                                      field,
+                                    );
+                                  }
+                                }
+                              }
+                            : undefined
+                        }
+                        onChange={(patch) => {
+                          if (isEnv) {
+                            setEnvLayerStyle(layer.id, patch);
+                          } else if (currentPage) {
+                            setPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              patch,
+                            );
+                          }
+                        }}
+                      />
+                    ) : null}
+
+                    {isUtahForgeScalarLayer ? (
+                      <ScalarRampControls
+                        style={isEnv ? envStyle : effectiveLayerStyle}
+                        targetLabel={scalarControlTargetLabel(layer.id)}
+                        fullDensityMode={isUtahForgeFullDensityScalarLayer}
+                        disabled={!isEnv && !scalarRampOverridden}
+                        isPageOverride={!isEnv}
+                        overridden={scalarRampOverridden}
+                        volumeThresholdMode={isUtahForgeMtVolume}
+                        onToggleOverride={
+                          currentPage
+                            ? (enabled) => {
+                                if (enabled) {
+                                  setPageLayerOverride(
+                                    currentPage.id,
+                                    layer.id,
+                                    scalarRampPatchFromStyle(
+                                      effectiveLayerStyle,
+                                    ),
+                                  );
+                                } else {
+                                  for (const field of SCALAR_RAMP_FIELDS) {
+                                    clearPageLayerOverride(
+                                      currentPage.id,
+                                      layer.id,
+                                      field,
+                                    );
+                                  }
+                                }
+                              }
+                            : undefined
+                        }
+                        onChange={(patch) => {
+                          if (isEnv) {
+                            setEnvLayerStyle(layer.id, patch);
+                          } else if (currentPage) {
+                            setPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              patch,
+                            );
+                          }
+                        }}
+                      />
+                    ) : null}
+
+                    {isUtahForgeTopSurface ? (
+                      <MtTopSurfaceControls
+                        style={isEnv ? envStyle : effectiveLayerStyle}
+                        disabled={!isEnv && !mtTopSurfaceOverridden}
+                        isPageOverride={!isEnv}
+                        overridden={mtTopSurfaceOverridden}
+                        onToggleOverride={
+                          currentPage
+                            ? (enabled) => {
+                                if (enabled) {
+                                  setPageLayerOverride(
+                                    currentPage.id,
+                                    layer.id,
+                                    mtTopSurfacePatchFromStyle(
+                                      effectiveLayerStyle,
+                                    ),
+                                  );
+                                } else {
+                                  for (const field of MT_TOP_SURFACE_FIELDS) {
+                                    clearPageLayerOverride(
+                                      currentPage.id,
+                                      layer.id,
+                                      field,
+                                    );
+                                  }
+                                }
+                              }
+                            : undefined
+                        }
+                        onChange={(patch) => {
+                          if (isEnv) {
+                            setEnvLayerStyle(layer.id, patch);
+                          } else if (currentPage) {
+                            setPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              patch,
+                            );
+                          }
+                        }}
+                      />
+                    ) : null}
+
+                    {isUtahForgeScalarLayer ? (
+                      <LayerBooleanStyleControl
+                        label="Value legend"
+                        field={SCALAR_LEGEND_FIELD}
+                        fallback={true}
+                        style={isEnv ? envStyle : effectiveLayerStyle}
+                        isEnv={isEnv}
+                        currentPage={currentPage}
+                        layerId={layer.id}
+                        setEnvLayerStyle={setEnvLayerStyle}
+                        setPageLayerOverride={setPageLayerOverride}
+                        clearPageLayerOverride={clearPageLayerOverride}
+                      />
+                    ) : null}
+
+                    {isUtahForgeFullDensityScalarLayer ? (
+                      <LayerNumberStyleControl
+                        label="Distance light"
+                        field="scalarDistanceLightStrength"
+                        fallback={0.35}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        decimals={2}
+                        style={isEnv ? envStyle : effectiveLayerStyle}
+                        isEnv={isEnv}
+                        currentPage={currentPage}
+                        layerId={layer.id}
+                        setEnvLayerStyle={setEnvLayerStyle}
+                        setPageLayerOverride={setPageLayerOverride}
+                        clearPageLayerOverride={clearPageLayerOverride}
+                      />
+                    ) : null}
+
+                    {isUtahForgeFullDensityScalarLayer ? (
+                      <ScalarPointDrawReadout
+                        sceneHandle={sceneHandle}
+                        layerId={layer.id}
+                        inclusionMode={
+                          effectiveLayerStyle.scalarInclusionMode ===
+                          "thresholded"
+                            ? "thresholded"
+                            : "all-valid"
+                        }
+                      />
+                    ) : null}
+
+                    {isUtahForgeStationMarkers ? (
+                      <>
+                        <PointMarkerControls
+                          style={isEnv ? envStyle : effectiveLayerStyle}
+                          isEnv={isEnv}
+                          currentPage={currentPage}
+                          layerId={layer.id}
+                          setEnvLayerStyle={setEnvLayerStyle}
+                          setPageLayerOverride={setPageLayerOverride}
+                          clearPageLayerOverride={clearPageLayerOverride}
+                        />
+                        <MtStationQcControls
+                          layer={layer}
+                          style={isEnv ? envStyle : effectiveLayerStyle}
+                          isEnv={isEnv}
+                          currentPage={currentPage}
+                          layerId={layer.id}
+                          setEnvLayerStyle={setEnvLayerStyle}
+                          setPageLayerOverride={setPageLayerOverride}
+                          clearPageLayerOverride={clearPageLayerOverride}
+                        />
+                      </>
+                    ) : null}
+
+                    {isPointCloud && isEnv ? (
+                      <EnvStyleRow
+                        label="Point size"
+                        inputType="range"
+                        value={String(
+                          (envStyle.pointSizePx as number | undefined) ?? 4,
+                        )}
+                        min={1}
+                        max={12}
+                        step={0.25}
+                        decimals={2}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, {
+                            pointSizePx: parseFloat(v),
+                          })
+                        }
+                      />
+                    ) : isPointCloud && currentPage ? (
+                      <PageStyleRow
+                        label="Point size"
+                        inputType="range"
+                        inheritedValue={String(
+                          (effectiveStyle(
+                            state.environment,
+                            currentPage,
+                            layer.id,
+                          ).pointSizePx as number | undefined) ?? 4,
+                        )}
+                        isOverridden={isStyleFieldOverridden(
+                          currentPage,
+                          layer.id,
+                          "pointSizePx",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]
+                            ?.pointSizePx !== undefined
+                            ? String(
+                                currentPage.layerOverrides[layer.id]
+                                  .pointSizePx,
+                              )
+                            : undefined
+                        }
+                        min={1}
+                        max={12}
+                        step={0.25}
+                        decimals={2}
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            pointSizePx: parseFloat(v),
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "pointSizePx",
+                          )
+                        }
+                      />
+                    ) : null}
+
+                    {isTrees && isEnv ? (
+                      <EnvStyleRow
+                        label="Edge cut"
+                        inputType="range"
+                        value={String(
+                          (envStyle.forestEdgeThreshold as
+                            | number
+                            | undefined) ?? 0.5,
+                        )}
+                        min={0.05}
+                        max={0.95}
+                        step={0.01}
+                        decimals={2}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, {
+                            forestEdgeThreshold: parseFloat(v),
+                          })
+                        }
+                      />
+                    ) : isTrees && currentPage ? (
+                      <PageStyleRow
+                        label="Edge cut"
+                        inputType="range"
+                        inheritedValue={String(
+                          (effectiveLayerStyle.forestEdgeThreshold as
+                            | number
+                            | undefined) ?? 0.5,
+                        )}
+                        isOverridden={isStyleFieldOverridden(
+                          currentPage,
+                          layer.id,
+                          "forestEdgeThreshold",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]
+                            ?.forestEdgeThreshold !== undefined
+                            ? String(
+                                currentPage.layerOverrides[layer.id]
+                                  .forestEdgeThreshold,
+                              )
+                            : undefined
+                        }
+                        fallbackValue="0.5"
+                        min={0.05}
+                        max={0.95}
+                        step={0.01}
+                        decimals={2}
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            forestEdgeThreshold: parseFloat(v),
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "forestEdgeThreshold",
+                          )
+                        }
+                      />
+                    ) : null}
+
+                    {isTrees && isEnv ? (
+                      <EnvStyleRow
+                        label="Edge soft"
+                        inputType="range"
+                        value={String(
+                          (envStyle.forestEdgeSoftness as number | undefined) ??
+                            0.035,
+                        )}
+                        min={0}
+                        max={0.25}
+                        step={0.005}
+                        decimals={3}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, {
+                            forestEdgeSoftness: parseFloat(v),
+                          })
+                        }
+                      />
+                    ) : isTrees && currentPage ? (
+                      <PageStyleRow
+                        label="Edge soft"
+                        inputType="range"
+                        inheritedValue={String(
+                          (effectiveLayerStyle.forestEdgeSoftness as
+                            | number
+                            | undefined) ?? 0.035,
+                        )}
+                        isOverridden={isStyleFieldOverridden(
+                          currentPage,
+                          layer.id,
+                          "forestEdgeSoftness",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]
+                            ?.forestEdgeSoftness !== undefined
+                            ? String(
+                                currentPage.layerOverrides[layer.id]
+                                  .forestEdgeSoftness,
+                              )
+                            : undefined
+                        }
+                        fallbackValue="0.035"
+                        min={0}
+                        max={0.25}
+                        step={0.005}
+                        decimals={3}
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            forestEdgeSoftness: parseFloat(v),
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "forestEdgeSoftness",
+                          )
+                        }
+                      />
+                    ) : null}
+
+                    {!isPublicSurfaceContextLayer && isEnv ? (
+                      <EnvAffectedByFogRow
+                        value={envAffectedByFog}
+                        onToggle={() =>
+                          setEnvLayerStyle(layer.id, {
+                            affectedByFog: !envAffectedByFog,
+                          })
+                        }
+                      />
+                    ) : !isPublicSurfaceContextLayer && currentPage ? (
+                      <PageAffectedByFogRow
+                        page={currentPage}
+                        layerId={layer.id}
+                        envValue={envStyle.affectedByFog !== false}
+                        onSet={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            affectedByFog: v,
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "affectedByFog",
+                          )
+                        }
+                      />
+                    ) : null}
+
+                    {!isPublicSurfaceContextLayer &&
+                    envAffectedByFog &&
+                    isEnv ? (
+                      <EnvStyleRow
+                        label="Fog dens."
+                        inputType="range"
+                        value={String(
+                          ((envStyle.fogDensity as number | undefined) ??
+                            globalFogDensity) * 10000,
+                        )}
+                        min={FOG_DENSITY_UI_MIN}
+                        max={FOG_DENSITY_UI_MAX}
+                        step={FOG_DENSITY_UI_STEP}
+                        decimals={2}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, {
+                            fogDensity: parseFloat(v) / 10000,
+                          })
+                        }
+                      />
+                    ) : !isPublicSurfaceContextLayer &&
+                      effectiveAffectedByFog &&
+                      currentPage ? (
+                      <PageStyleRow
+                        label="Fog dens."
+                        inputType="range"
+                        inheritedValue={String(
+                          ((effectiveStyle(
+                            state.environment,
+                            currentPage,
+                            layer.id,
+                          ).fogDensity as number | undefined) ??
+                            globalFogDensity) * 10000,
+                        )}
+                        isOverridden={isStyleFieldOverridden(
+                          currentPage,
+                          layer.id,
+                          "fogDensity",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]?.fogDensity !==
+                          undefined
+                            ? String(
+                                (currentPage.layerOverrides[layer.id]
+                                  .fogDensity as number) * 10000,
+                              )
+                            : undefined
+                        }
+                        fallbackValue={String(globalFogDensity * 10000)}
+                        min={FOG_DENSITY_UI_MIN}
+                        max={FOG_DENSITY_UI_MAX}
+                        step={FOG_DENSITY_UI_STEP}
+                        decimals={2}
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            fogDensity: parseFloat(v) / 10000,
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "fogDensity",
+                          )
+                        }
+                      />
+                    ) : null}
+
+                    {supportsLineWidth && !isEzGamma && isEnv ? (
+                      <EnvStyleRow
+                        label="Line width"
+                        inputType="range"
+                        value={String(
+                          (envStyle.lineWidth as number | undefined) ??
+                            lineWidthDefault,
+                        )}
+                        min={0.5}
+                        max={6}
+                        step={0.25}
+                        decimals={2}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, {
+                            lineWidth: parseFloat(v),
+                          })
+                        }
+                      />
+                    ) : supportsLineWidth && !isEzGamma && currentPage ? (
+                      <PageStyleRow
+                        label="Line width"
+                        inputType="range"
+                        inheritedValue={String(
+                          (effectiveStyle(
+                            state.environment,
+                            currentPage,
+                            layer.id,
+                          ).lineWidth as number | undefined) ??
+                            lineWidthDefault,
+                        )}
+                        isOverridden={isStyleFieldOverridden(
+                          currentPage,
+                          layer.id,
+                          "lineWidth",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]?.lineWidth !==
+                          undefined
+                            ? String(
+                                currentPage.layerOverrides[layer.id].lineWidth,
+                              )
+                            : undefined
+                        }
+                        fallbackValue={String(lineWidthDefault)}
+                        min={0.5}
+                        max={6}
+                        step={0.25}
+                        decimals={2}
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            lineWidth: parseFloat(v),
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "lineWidth",
+                          )
+                        }
+                      />
+                    ) : null}
+
+                    {isUtahForgeTopoGraticule ? (
+                      <>
+                        <LayerBooleanStyleControl
+                          label="Labels"
+                          field="graticuleLabelVisible"
+                          fallback={true}
+                          style={isEnv ? envStyle : effectiveLayerStyle}
+                          isEnv={isEnv}
+                          currentPage={currentPage}
+                          layerId={layer.id}
+                          setEnvLayerStyle={setEnvLayerStyle}
+                          setPageLayerOverride={setPageLayerOverride}
+                          clearPageLayerOverride={clearPageLayerOverride}
+                        />
+                        <LayerNumberStyleControl
+                          label="Label size"
+                          field="graticuleLabelSizeM"
+                          fallback={9000}
+                          min={1500}
+                          max={60000}
+                          step={500}
+                          decimals={0}
+                          style={isEnv ? envStyle : effectiveLayerStyle}
+                          isEnv={isEnv}
+                          currentPage={currentPage}
+                          layerId={layer.id}
+                          setEnvLayerStyle={setEnvLayerStyle}
+                          setPageLayerOverride={setPageLayerOverride}
+                          clearPageLayerOverride={clearPageLayerOverride}
+                        />
+                        <LayerNumberStyleControl
+                          label="Surface lift"
+                          field="graticuleLiftM"
+                          fallback={24}
+                          min={0}
+                          max={500}
+                          step={4}
+                          decimals={0}
+                          style={isEnv ? envStyle : effectiveLayerStyle}
+                          isEnv={isEnv}
+                          currentPage={currentPage}
+                          layerId={layer.id}
+                          setEnvLayerStyle={setEnvLayerStyle}
+                          setPageLayerOverride={setPageLayerOverride}
+                          clearPageLayerOverride={clearPageLayerOverride}
+                        />
+                        <LayerBooleanStyleControl
+                          label="Edge fade aware"
+                          field="graticuleEdgeFadeAware"
+                          fallback={true}
+                          style={isEnv ? envStyle : effectiveLayerStyle}
+                          isEnv={isEnv}
+                          currentPage={currentPage}
+                          layerId={layer.id}
+                          setEnvLayerStyle={setEnvLayerStyle}
+                          setPageLayerOverride={setPageLayerOverride}
+                          clearPageLayerOverride={clearPageLayerOverride}
+                        />
+                        <LayerNumberStyleControl
+                          label="Edge strength"
+                          field="graticuleEdgeFadeStrength"
+                          fallback={1}
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          decimals={2}
+                          style={isEnv ? envStyle : effectiveLayerStyle}
+                          isEnv={isEnv}
+                          currentPage={currentPage}
+                          layerId={layer.id}
+                          setEnvLayerStyle={setEnvLayerStyle}
+                          setPageLayerOverride={setPageLayerOverride}
+                          clearPageLayerOverride={clearPageLayerOverride}
+                          testId="topo-graticule-edge-strength"
+                        />
+                        <LayerColorStyleControl
+                          label="Edge line"
+                          field="graticuleEdgeLineColor"
+                          fallback="#ffffff"
+                          style={isEnv ? envStyle : effectiveLayerStyle}
+                          isEnv={isEnv}
+                          currentPage={currentPage}
+                          layerId={layer.id}
+                          setEnvLayerStyle={setEnvLayerStyle}
+                          setPageLayerOverride={setPageLayerOverride}
+                          clearPageLayerOverride={clearPageLayerOverride}
+                          testId="topo-graticule-edge-line-color"
+                        />
+                        <LayerNumberStyleControl
+                          label="Edge line weight"
+                          field="graticuleEdgeLineWidth"
+                          fallback={4.75}
+                          min={0.1}
+                          max={32}
+                          step={0.25}
+                          decimals={2}
+                          style={isEnv ? envStyle : effectiveLayerStyle}
+                          isEnv={isEnv}
+                          currentPage={currentPage}
+                          layerId={layer.id}
+                          setEnvLayerStyle={setEnvLayerStyle}
+                          setPageLayerOverride={setPageLayerOverride}
+                          clearPageLayerOverride={clearPageLayerOverride}
+                          testId="topo-graticule-edge-line-width"
+                        />
+                        <LayerColorStyleControl
+                          label="Edge label"
+                          field="graticuleEdgeLabelColor"
+                          fallback="#ffffff"
+                          style={isEnv ? envStyle : effectiveLayerStyle}
+                          isEnv={isEnv}
+                          currentPage={currentPage}
+                          layerId={layer.id}
+                          setEnvLayerStyle={setEnvLayerStyle}
+                          setPageLayerOverride={setPageLayerOverride}
+                          clearPageLayerOverride={clearPageLayerOverride}
+                          testId="topo-graticule-edge-label-color"
+                        />
+                        <LayerBooleanStyleControl
+                          label="Fade labels"
+                          field="graticuleEdgeLabelVisible"
+                          fallback={true}
+                          style={isEnv ? envStyle : effectiveLayerStyle}
+                          isEnv={isEnv}
+                          currentPage={currentPage}
+                          layerId={layer.id}
+                          setEnvLayerStyle={setEnvLayerStyle}
+                          setPageLayerOverride={setPageLayerOverride}
+                          clearPageLayerOverride={clearPageLayerOverride}
+                        />
+                        <LayerNumberStyleControl
+                          label="Label offset"
+                          field="graticuleEdgeLabelOffsetM"
+                          fallback={90000}
+                          min={0}
+                          max={160000}
+                          step={1000}
+                          decimals={0}
+                          style={isEnv ? envStyle : effectiveLayerStyle}
+                          isEnv={isEnv}
+                          currentPage={currentPage}
+                          layerId={layer.id}
+                          setEnvLayerStyle={setEnvLayerStyle}
+                          setPageLayerOverride={setPageLayerOverride}
+                          clearPageLayerOverride={clearPageLayerOverride}
+                          testId="topo-graticule-edge-label-offset"
+                        />
+                        <LayerNumberStyleControl
+                          label="Label gap"
+                          field="graticuleEdgeLabelGapM"
+                          fallback={22000}
+                          min={-100000}
+                          max={100000}
+                          step={1000}
+                          decimals={0}
+                          style={isEnv ? envStyle : effectiveLayerStyle}
+                          isEnv={isEnv}
+                          currentPage={currentPage}
+                          layerId={layer.id}
+                          setEnvLayerStyle={setEnvLayerStyle}
+                          setPageLayerOverride={setPageLayerOverride}
+                          clearPageLayerOverride={clearPageLayerOverride}
+                          testId="topo-graticule-edge-label-gap"
+                        />
+                      </>
+                    ) : null}
+
+                    {isShahbaziGroundContours
+                      ? CONTOUR_DISTANCE_STYLE_CONTROLS.map((control) =>
+                          isEnv ? (
+                            <EnvStyleRow
+                              key={control.field}
+                              label={control.label}
+                              inputType="range"
+                              value={String(
+                                styleNumber(
+                                  envStyle,
+                                  control.field,
+                                  control.fallback,
+                                ),
+                              )}
+                              min={control.min}
+                              max={control.max}
+                              step={control.step}
+                              decimals={control.decimals}
+                              onChange={(v) =>
+                                setEnvLayerStyle(layer.id, {
+                                  [control.field]: parseFloat(v),
+                                } as Partial<EditableStyle>)
+                              }
+                            />
+                          ) : currentPage ? (
+                            <PageStyleRow
+                              key={control.field}
+                              label={control.label}
+                              inputType="range"
+                              inheritedValue={String(
+                                styleNumber(
+                                  effectiveLayerStyle,
+                                  control.field,
+                                  control.fallback,
+                                ),
+                              )}
+                              isOverridden={isStyleFieldOverridden(
+                                currentPage,
+                                layer.id,
+                                control.field,
+                              )}
+                              overrideValue={
+                                currentPage.layerOverrides?.[layer.id]?.[
+                                  control.field
+                                ] !== undefined
+                                  ? String(
+                                      currentPage.layerOverrides[layer.id][
+                                        control.field
+                                      ],
+                                    )
+                                  : undefined
+                              }
+                              fallbackValue={String(control.fallback)}
+                              min={control.min}
+                              max={control.max}
+                              step={control.step}
+                              decimals={control.decimals}
+                              onOverride={(v) =>
+                                setPageLayerOverride(currentPage.id, layer.id, {
+                                  [control.field]: parseFloat(v),
+                                } as Partial<EditableStyle>)
+                              }
+                              onClear={() =>
+                                clearPageLayerOverride(
+                                  currentPage.id,
+                                  layer.id,
+                                  control.field,
+                                )
+                              }
+                            />
+                          ) : null,
+                        )
+                      : null}
+
+                    {isEzGamma && isEnv ? (
+                      <EnvStyleRow
+                        label="Track offset"
+                        inputType="range"
+                        value={String(
+                          (envStyle.gammaTrackOffsetM as number | undefined) ??
+                            36,
+                        )}
+                        min={0}
+                        max={220}
+                        step={5}
+                        decimals={0}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, {
+                            gammaTrackOffsetM: parseFloat(v),
+                          })
+                        }
+                      />
+                    ) : isEzGamma && currentPage ? (
+                      <PageStyleRow
+                        label="Track offset"
+                        inputType="range"
+                        inheritedValue={String(
+                          (effectiveLayerStyle.gammaTrackOffsetM as
+                            | number
+                            | undefined) ?? 36,
+                        )}
+                        isOverridden={isStyleFieldOverridden(
+                          currentPage,
+                          layer.id,
+                          "gammaTrackOffsetM",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]
+                            ?.gammaTrackOffsetM !== undefined
+                            ? String(
+                                currentPage.layerOverrides[layer.id]
+                                  .gammaTrackOffsetM,
+                              )
+                            : undefined
+                        }
+                        fallbackValue="36"
+                        min={0}
+                        max={220}
+                        step={5}
+                        decimals={0}
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            gammaTrackOffsetM: parseFloat(v),
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "gammaTrackOffsetM",
+                          )
+                        }
+                      />
+                    ) : null}
+
+                    {isEzGamma && isEnv ? (
+                      <EnvStyleRow
+                        label="Track width"
+                        inputType="range"
+                        value={String(
+                          (envStyle.gammaTrackWidthM as number | undefined) ??
+                            78,
+                        )}
+                        min={20}
+                        max={220}
+                        step={5}
+                        decimals={0}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, {
+                            gammaTrackWidthM: parseFloat(v),
+                          })
+                        }
+                      />
+                    ) : isEzGamma && currentPage ? (
+                      <PageStyleRow
+                        label="Track width"
+                        inputType="range"
+                        inheritedValue={String(
+                          (effectiveLayerStyle.gammaTrackWidthM as
+                            | number
+                            | undefined) ?? 78,
+                        )}
+                        isOverridden={isStyleFieldOverridden(
+                          currentPage,
+                          layer.id,
+                          "gammaTrackWidthM",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]
+                            ?.gammaTrackWidthM !== undefined
+                            ? String(
+                                currentPage.layerOverrides[layer.id]
+                                  .gammaTrackWidthM,
+                              )
+                            : undefined
+                        }
+                        fallbackValue="78"
+                        min={20}
+                        max={220}
+                        step={5}
+                        decimals={0}
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            gammaTrackWidthM: parseFloat(v),
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "gammaTrackWidthM",
+                          )
+                        }
+                      />
+                    ) : null}
+
+                    {isEzGamma && isEnv ? (
+                      <EnvStyleRow
+                        label="Depth scale"
+                        inputType="range"
+                        value={String(
+                          (envStyle.gammaDepthScale as number | undefined) ?? 1,
+                        )}
+                        min={0.2}
+                        max={1.8}
+                        step={0.05}
+                        decimals={2}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, {
+                            gammaDepthScale: parseFloat(v),
+                          })
+                        }
+                      />
+                    ) : isEzGamma && currentPage ? (
+                      <PageStyleRow
+                        label="Depth scale"
+                        inputType="range"
+                        inheritedValue={String(
+                          (effectiveLayerStyle.gammaDepthScale as
+                            | number
+                            | undefined) ?? 1,
+                        )}
+                        isOverridden={isStyleFieldOverridden(
+                          currentPage,
+                          layer.id,
+                          "gammaDepthScale",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]
+                            ?.gammaDepthScale !== undefined
+                            ? String(
+                                currentPage.layerOverrides[layer.id]
+                                  .gammaDepthScale,
+                              )
+                            : undefined
+                        }
+                        fallbackValue="1"
+                        min={0.2}
+                        max={1.8}
+                        step={0.05}
+                        decimals={2}
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            gammaDepthScale: parseFloat(v),
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "gammaDepthScale",
+                          )
+                        }
+                      />
+                    ) : null}
+
+                    {isEzGamma && isEnv ? (
+                      <EnvStyleRow
+                        label="Panel opacity"
+                        inputType="range"
+                        value={String(
+                          (envStyle.gammaPanelOpacity as number | undefined) ??
+                            0,
+                        )}
+                        min={0}
+                        max={1}
+                        step={0.05}
+                        decimals={2}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, {
+                            gammaPanelOpacity: parseFloat(v),
+                          })
+                        }
+                      />
+                    ) : isEzGamma && currentPage ? (
+                      <PageStyleRow
+                        label="Panel opacity"
+                        inputType="range"
+                        inheritedValue={String(
+                          (effectiveLayerStyle.gammaPanelOpacity as
+                            | number
+                            | undefined) ?? 0,
+                        )}
+                        isOverridden={isStyleFieldOverridden(
+                          currentPage,
+                          layer.id,
+                          "gammaPanelOpacity",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]
+                            ?.gammaPanelOpacity !== undefined
+                            ? String(
+                                currentPage.layerOverrides[layer.id]
+                                  .gammaPanelOpacity,
+                              )
+                            : undefined
+                        }
+                        fallbackValue="0"
+                        min={0}
+                        max={1}
+                        step={0.05}
+                        decimals={2}
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            gammaPanelOpacity: parseFloat(v),
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "gammaPanelOpacity",
+                          )
+                        }
+                      />
+                    ) : null}
+
+                    {isEzGamma ? (
+                      <EzGammaStyleControls
+                        style={isEnv ? envStyle : effectiveLayerStyle}
+                        onChange={(patch) => {
+                          if (isEnv) {
+                            setEnvLayerStyle(layer.id, patch);
+                          } else if (currentPage) {
+                            setPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              patch,
+                            );
+                          }
+                        }}
+                      />
+                    ) : null}
+
+                    {isGeochem ? (
+                      <GeochemStyleControls
+                        style={isEnv ? envStyle : effectiveLayerStyle}
+                        onChange={(patch) => {
+                          if (isEnv) {
+                            setEnvLayerStyle(layer.id, patch);
+                          } else if (currentPage) {
+                            setPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              patch,
+                            );
+                          }
+                        }}
+                      />
+                    ) : null}
+
+                    {isHyperspectral ? (
+                      <HyperspectralStyleControls
+                        style={isEnv ? envStyle : effectiveLayerStyle}
+                        onChange={(patch) => {
+                          if (isEnv) {
+                            setEnvLayerStyle(layer.id, patch);
+                          } else if (currentPage) {
+                            setPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              patch,
+                            );
+                          }
+                        }}
+                      />
+                    ) : null}
+
+                    {isImageryLidar ? (
+                      <ImageryLidarStyleControls
+                        style={isEnv ? envStyle : effectiveLayerStyle}
+                        onChange={(patch) => {
+                          if (isEnv) {
+                            setEnvLayerStyle(layer.id, patch);
+                          } else if (currentPage) {
+                            setPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              patch,
+                            );
+                          }
+                        }}
+                      />
+                    ) : null}
+
+                    {isAreaOutlines && isEnv ? (
+                      <AreaOutlinesControls
+                        outlines={state.environment.scene?.areaOutlines ?? []}
+                        viewCenter={[
+                          Math.round(
+                            sceneHandle.controls.target.x +
+                              SCENE_ORIGIN.easting,
                           ),
-                        );
-                      } else {
-                        for (const field of SEISMIC_BROWSER_FIELDS) {
+                          Math.round(
+                            sceneHandle.controls.target.y +
+                              SCENE_ORIGIN.northing,
+                          ),
+                        ]}
+                        onChange={(outlines) =>
+                          setEnvScene({
+                            areaOutlines: outlines,
+                          })
+                        }
+                      />
+                    ) : null}
+
+                    {isStreams && isEnv ? (
+                      <EnvStyleRow
+                        label="Terrain shade"
+                        inputType="range"
+                        value={String(
+                          (envStyle.terrainShadowInfluence as
+                            | number
+                            | undefined) ?? 0.09,
+                        )}
+                        min={0}
+                        max={1}
+                        step={0.05}
+                        decimals={2}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, {
+                            terrainShadowInfluence: parseFloat(v),
+                          })
+                        }
+                      />
+                    ) : isStreams && currentPage ? (
+                      <PageStyleRow
+                        label="Terrain shade"
+                        inputType="range"
+                        inheritedValue={String(
+                          (effectiveStyle(
+                            state.environment,
+                            currentPage,
+                            layer.id,
+                          ).terrainShadowInfluence as number | undefined) ??
+                            0.09,
+                        )}
+                        isOverridden={isStyleFieldOverridden(
+                          currentPage,
+                          layer.id,
+                          "terrainShadowInfluence",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]
+                            ?.terrainShadowInfluence !== undefined
+                            ? String(
+                                currentPage.layerOverrides[layer.id]
+                                  .terrainShadowInfluence,
+                              )
+                            : undefined
+                        }
+                        fallbackValue="0.09"
+                        min={0}
+                        max={1}
+                        step={0.05}
+                        decimals={2}
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            terrainShadowInfluence: parseFloat(v),
+                          })
+                        }
+                        onClear={() =>
                           clearPageLayerOverride(
                             currentPage.id,
                             layer.id,
-                            field,
-                          );
+                            "terrainShadowInfluence",
+                          )
                         }
+                      />
+                    ) : null}
+                  </div>
+                </details>
+              ) : (
+                <div style={detailsContentStyle}>
+                  {isEnv ? (
+                    <AreaOutlinesControls
+                      outlines={state.environment.scene?.areaOutlines ?? []}
+                      viewCenter={[
+                        Math.round(
+                          sceneHandle.controls.target.x + SCENE_ORIGIN.easting,
+                        ),
+                        Math.round(
+                          sceneHandle.controls.target.y + SCENE_ORIGIN.northing,
+                        ),
+                      ]}
+                      onChange={(outlines) =>
+                        setEnvScene({
+                          areaOutlines: outlines,
+                        })
                       }
-                    }
-                  : undefined
-              }
-              setEnvLayerStyle={setEnvLayerStyle}
-              setPageLayerOverride={setPageLayerOverride}
-            />
-          ) : null}
+                    />
+                  ) : null}
+                </div>
+              )}
 
-          {isTrees ? (
-            <details style={nestedDetailsStyle}>
-            <summary style={panelStyles.summary}>Emboss</summary>
-            <div style={detailsContentStyle}>
-              {isEnv ? (
-                <EnvStyleRow
-                  label="Height"
-                  inputType="range"
-                  value={String(
-                    (envStyle.forestEmbossHeight as number | undefined) ?? 0,
-                  )}
-                  min={0}
-                  max={100}
-                  step={1}
-                  decimals={0}
-                  onChange={(v) =>
-                    setEnvLayerStyle(layer.id, {
-                      forestEmbossHeight: parseFloat(v),
-                    })
-                  }
+              {isUtahForgeResistivitySlices ? (
+                <ResistivitySliceControls
+                  style={isEnv ? envStyle : effectiveLayerStyle}
+                  isEnv={isEnv}
+                  currentPage={currentPage}
+                  layerId={layer.id}
+                  setEnvLayerStyle={setEnvLayerStyle}
+                  setPageLayerOverride={setPageLayerOverride}
+                  clearPageLayerOverride={clearPageLayerOverride}
                 />
-              ) : currentPage ? (
-                <PageStyleRow
-                  label="Height"
-                  inputType="range"
-                  inheritedValue={String(
-                    (effectiveLayerStyle.forestEmbossHeight as
-                      | number
-                      | undefined) ?? 0,
-                  )}
-                  isOverridden={isStyleFieldOverridden(
-                    currentPage,
-                    layer.id,
-                    "forestEmbossHeight",
-                  )}
-                  overrideValue={
-                    currentPage.layerOverrides?.[layer.id]
-                      ?.forestEmbossHeight !== undefined
-                      ? String(
-                          currentPage.layerOverrides[layer.id]
-                            .forestEmbossHeight,
-                        )
+              ) : null}
+
+              {isUtahForgeMtVolume ? (
+                <MtVolumeControls
+                  layer={layer}
+                  style={isEnv ? envStyle : effectiveLayerStyle}
+                  disabled={!isEnv && !mtVolumeOverridden}
+                  isEnv={isEnv}
+                  currentPage={currentPage}
+                  layerId={layer.id}
+                  sceneSectionStyle={effectiveSceneSectionStyle}
+                  sceneHandle={sceneHandle}
+                  setEnvLayerStyle={setEnvLayerStyle}
+                  setPageLayerOverride={setPageLayerOverride}
+                  clearPageLayerOverride={clearPageLayerOverride}
+                  onToggleOverride={
+                    currentPage
+                      ? (enabled) => {
+                          if (enabled) {
+                            setPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              mtVolumePatchFromStyle(effectiveLayerStyle),
+                            );
+                          } else {
+                            for (const field of MT_VOLUME_FIELDS) {
+                              clearPageLayerOverride(
+                                currentPage.id,
+                                layer.id,
+                                field,
+                              );
+                            }
+                          }
+                        }
                       : undefined
                   }
-                  fallbackValue="0"
-                  min={0}
-                  max={100}
-                  step={1}
-                  decimals={0}
-                  onOverride={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      forestEmbossHeight: parseFloat(v),
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "forestEmbossHeight",
-                    )
+                />
+              ) : null}
+
+              {isUtahForgeMtThresholdSurfaces ? (
+                <MtThresholdSurfaceControls
+                  layer={layer}
+                  style={isEnv ? envStyle : effectiveLayerStyle}
+                  disabled={!isEnv && !mtThresholdSurfaceOverridden}
+                  isEnv={isEnv}
+                  currentPage={currentPage}
+                  layerId={layer.id}
+                  setEnvLayerStyle={setEnvLayerStyle}
+                  setPageLayerOverride={setPageLayerOverride}
+                  clearPageLayerOverride={clearPageLayerOverride}
+                  onToggleOverride={
+                    currentPage
+                      ? (enabled) => {
+                          if (enabled) {
+                            setPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              mtThresholdSurfacePatchFromStyle(
+                                effectiveLayerStyle,
+                              ),
+                            );
+                          } else {
+                            for (const field of MT_THRESHOLD_SURFACE_FIELDS) {
+                              clearPageLayerOverride(
+                                currentPage.id,
+                                layer.id,
+                                field,
+                              );
+                            }
+                          }
+                        }
+                      : undefined
                   }
                 />
               ) : null}
-            </div>
-            </details>
-          ) : null}
 
-          {!isAreaOutlines ? (
-            <details style={nestedDetailsStyle}>
-            <summary style={panelStyles.summary}>Labels</summary>
-            <div style={detailsContentStyle}>
-              {isEnv ? (
-                <>
-                  <EnvStyleRow
-                    label="Text color"
-                    inputType="color"
-                    value={labelTextControlValue(envStyle)}
-                    onChange={(v) =>
-                      setEnvLayerStyle(layer.id, { labelTextColor: v })
-                    }
-                  />
-                  <EnvStyleRow
-                    label="Text opacity"
-                    inputType="range"
-                    value={String(
-                      (envStyle.labelTextOpacity as number | undefined) ?? 1,
-                    )}
-                    onChange={(v) =>
-                      setEnvLayerStyle(layer.id, {
-                        labelTextOpacity: parseFloat(v),
-                      })
-                    }
-                  />
-                  <EnvStyleRow
-                    label="Outline color"
-                    inputType="color"
-                    value={labelOutlineColorControlValue(envStyle)}
-                    onChange={(v) =>
-                      setEnvLayerStyle(layer.id, { labelOutlineColor: v })
-                    }
-                  />
-                  <EnvStyleRow
-                    label="Outline opacity"
-                    inputType="range"
-                    value={String(labelOutlineOpacityControlValue(envStyle))}
-                    onChange={(v) =>
-                      setEnvLayerStyle(layer.id, {
-                        labelOutlineOpacity: parseFloat(v),
-                      })
-                    }
-                  />
-                  <EnvStyleRow
-                    label="Fill color"
-                    inputType="color"
-                    value={labelFillColorControlValue(envStyle)}
-                    onChange={(v) =>
-                      setEnvLayerStyle(layer.id, { labelFillColor: v })
-                    }
-                  />
-                  <EnvStyleRow
-                    label="Fill opacity"
-                    inputType="range"
-                    value={String(labelFillOpacityControlValue(envStyle))}
-                    onChange={(v) =>
-                      setEnvLayerStyle(layer.id, {
-                        labelFillOpacity: parseFloat(v),
-                      })
-                    }
-                  />
-                </>
-              ) : currentPage ? (
-                <>
-                  <PageStyleRow
-                    label="Text color"
-                    inputType="color"
-                    inheritedValue={labelTextControlValue(
-                      effectiveStyle(state.environment, currentPage, layer.id),
-                    )}
-                    isOverridden={isStyleFieldOverridden(
-                      currentPage,
-                      layer.id,
-                      "labelTextColor",
-                    )}
-                    overrideValue={
-                      currentPage.layerOverrides?.[layer.id]
-                        ?.labelTextColor as string | undefined
-                    }
-                    onOverride={(v) =>
-                      setPageLayerOverride(currentPage.id, layer.id, {
-                        labelTextColor: v,
-                      })
-                    }
-                    onClear={() =>
-                      clearPageLayerOverride(
-                        currentPage.id,
-                        layer.id,
-                        "labelTextColor",
-                      )
-                    }
-                  />
-                  <PageStyleRow
-                    label="Text opacity"
-                    inputType="range"
-                    inheritedValue={String(
-                      (effectiveStyle(state.environment, currentPage, layer.id)
-                        .labelTextOpacity as number | undefined) ?? 1,
-                    )}
-                    isOverridden={isStyleFieldOverridden(
-                      currentPage,
-                      layer.id,
-                      "labelTextOpacity",
-                    )}
-                    overrideValue={
-                      currentPage.layerOverrides?.[layer.id]
-                        ?.labelTextOpacity !== undefined
-                        ? String(
-                            currentPage.layerOverrides[layer.id]
-                              .labelTextOpacity,
-                          )
-                        : undefined
-                    }
-                    onOverride={(v) =>
-                      setPageLayerOverride(currentPage.id, layer.id, {
-                        labelTextOpacity: parseFloat(v),
-                      })
-                    }
-                    onClear={() =>
-                      clearPageLayerOverride(
-                        currentPage.id,
-                        layer.id,
-                        "labelTextOpacity",
-                      )
-                    }
-                  />
-                  <PageStyleRow
-                    label="Outline color"
-                    inputType="color"
-                    inheritedValue={labelOutlineColorControlValue(
-                      effectiveStyle(state.environment, currentPage, layer.id),
-                    )}
-                    isOverridden={isStyleFieldOverridden(
-                      currentPage,
-                      layer.id,
-                      "labelOutlineColor",
-                    )}
-                    overrideValue={
-                      currentPage.layerOverrides?.[layer.id]
-                        ?.labelOutlineColor as string | undefined
-                    }
-                    onOverride={(v) =>
-                      setPageLayerOverride(currentPage.id, layer.id, {
-                        labelOutlineColor: v,
-                      })
-                    }
-                    onClear={() =>
-                      clearPageLayerOverride(
-                        currentPage.id,
-                        layer.id,
-                        "labelOutlineColor",
-                      )
-                    }
-                  />
-                  <PageStyleRow
-                    label="Outline opacity"
-                    inputType="range"
-                    inheritedValue={String(
-                      labelOutlineOpacityControlValue(
-                        effectiveStyle(
-                          state.environment,
+              {isUtahForgeSeismicBrowser ? (
+                <SeismicBrowserControls
+                  layer={layer}
+                  style={isEnv ? envStyle : effectiveLayerStyle}
+                  disabled={!isEnv && currentPage === null}
+                  isEnv={isEnv}
+                  currentPage={currentPage}
+                  layerId={layer.id}
+                  overridden={seismicBrowserOverridden}
+                  sceneSectionStyle={effectiveSceneSectionStyle}
+                  sceneHandle={sceneHandle}
+                  onToggleOverride={
+                    currentPage
+                      ? (enabled) => {
+                          if (enabled) {
+                            setPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              seismicBrowserPatchFromStyle(
+                                effectiveLayerStyle,
+                                layer,
+                              ),
+                            );
+                          } else {
+                            for (const field of SEISMIC_BROWSER_FIELDS) {
+                              clearPageLayerOverride(
+                                currentPage.id,
+                                layer.id,
+                                field,
+                              );
+                            }
+                          }
+                        }
+                      : undefined
+                  }
+                  setEnvLayerStyle={setEnvLayerStyle}
+                  setPageLayerOverride={setPageLayerOverride}
+                />
+              ) : null}
+
+              {isTrees ? (
+                <details style={nestedDetailsStyle}>
+                  <summary style={panelStyles.summary}>Emboss</summary>
+                  <div style={detailsContentStyle}>
+                    {isEnv ? (
+                      <EnvStyleRow
+                        label="Height"
+                        inputType="range"
+                        value={String(
+                          (envStyle.forestEmbossHeight as number | undefined) ??
+                            0,
+                        )}
+                        min={0}
+                        max={100}
+                        step={1}
+                        decimals={0}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, {
+                            forestEmbossHeight: parseFloat(v),
+                          })
+                        }
+                      />
+                    ) : currentPage ? (
+                      <PageStyleRow
+                        label="Height"
+                        inputType="range"
+                        inheritedValue={String(
+                          (effectiveLayerStyle.forestEmbossHeight as
+                            | number
+                            | undefined) ?? 0,
+                        )}
+                        isOverridden={isStyleFieldOverridden(
                           currentPage,
                           layer.id,
-                        ),
-                      ),
-                    )}
-                    isOverridden={isStyleFieldOverridden(
-                      currentPage,
-                      layer.id,
-                      "labelOutlineOpacity",
-                    )}
-                    overrideValue={
-                      currentPage.layerOverrides?.[layer.id]
-                        ?.labelOutlineOpacity !== undefined
-                        ? String(
-                            currentPage.layerOverrides[layer.id]
-                              .labelOutlineOpacity,
+                          "forestEmbossHeight",
+                        )}
+                        overrideValue={
+                          currentPage.layerOverrides?.[layer.id]
+                            ?.forestEmbossHeight !== undefined
+                            ? String(
+                                currentPage.layerOverrides[layer.id]
+                                  .forestEmbossHeight,
+                              )
+                            : undefined
+                        }
+                        fallbackValue="0"
+                        min={0}
+                        max={100}
+                        step={1}
+                        decimals={0}
+                        onOverride={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            forestEmbossHeight: parseFloat(v),
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "forestEmbossHeight",
                           )
-                        : undefined
-                    }
-                    fallbackValue={
-                      effectiveStyle(state.environment, currentPage, layer.id)
-                        .labelKind === "landTitle"
-                        ? String(LAND_TITLE_LABEL_OUTLINE_OPACITY_DEFAULT)
-                        : "1"
-                    }
-                    onOverride={(v) =>
-                      setPageLayerOverride(currentPage.id, layer.id, {
-                        labelOutlineOpacity: parseFloat(v),
-                      })
-                    }
-                    onClear={() =>
-                      clearPageLayerOverride(
-                        currentPage.id,
-                        layer.id,
-                        "labelOutlineOpacity",
-                      )
-                    }
-                  />
-                  <PageStyleRow
-                    label="Fill color"
-                    inputType="color"
-                    inheritedValue={labelFillColorControlValue(
-                      effectiveStyle(state.environment, currentPage, layer.id),
-                    )}
-                    isOverridden={isStyleFieldOverridden(
-                      currentPage,
-                      layer.id,
-                      "labelFillColor",
-                    )}
-                    overrideValue={
-                      currentPage.layerOverrides?.[layer.id]
-                        ?.labelFillColor as string | undefined
-                    }
-                    fallbackValue={
-                      effectiveStyle(state.environment, currentPage, layer.id)
-                        .labelKind === "landTitle"
-                        ? LAND_TITLE_LABEL_FILL_DEFAULT
-                        : "#14161c"
-                    }
-                    onOverride={(v) =>
-                      setPageLayerOverride(currentPage.id, layer.id, {
-                        labelFillColor: v,
-                      })
-                    }
-                    onClear={() =>
-                      clearPageLayerOverride(
-                        currentPage.id,
-                        layer.id,
-                        "labelFillColor",
-                      )
-                    }
-                  />
-                  <PageStyleRow
-                    label="Fill opacity"
-                    inputType="range"
-                    inheritedValue={String(
-                      labelFillOpacityControlValue(
-                        effectiveStyle(
-                          state.environment,
-                          currentPage,
-                          layer.id,
-                        ),
-                      ),
-                    )}
-                    isOverridden={isStyleFieldOverridden(
-                      currentPage,
-                      layer.id,
-                      "labelFillOpacity",
-                    )}
-                    overrideValue={
-                      currentPage.layerOverrides?.[layer.id]
-                        ?.labelFillOpacity !== undefined
-                        ? String(
-                            currentPage.layerOverrides[layer.id]
-                              .labelFillOpacity,
+                        }
+                      />
+                    ) : null}
+                  </div>
+                </details>
+              ) : null}
+
+              {!isAreaOutlines ? (
+                <details style={nestedDetailsStyle}>
+                  <summary style={panelStyles.summary}>Labels</summary>
+                  <div style={detailsContentStyle}>
+                    {isEnv ? (
+                      <>
+                        <EnvStyleRow
+                          label="Text color"
+                          inputType="color"
+                          value={labelTextControlValue(envStyle)}
+                          onChange={(v) =>
+                            setEnvLayerStyle(layer.id, { labelTextColor: v })
+                          }
+                        />
+                        <EnvStyleRow
+                          label="Text opacity"
+                          inputType="range"
+                          value={String(
+                            (envStyle.labelTextOpacity as number | undefined) ??
+                              1,
+                          )}
+                          onChange={(v) =>
+                            setEnvLayerStyle(layer.id, {
+                              labelTextOpacity: parseFloat(v),
+                            })
+                          }
+                        />
+                        <EnvStyleRow
+                          label="Outline color"
+                          inputType="color"
+                          value={labelOutlineColorControlValue(envStyle)}
+                          onChange={(v) =>
+                            setEnvLayerStyle(layer.id, { labelOutlineColor: v })
+                          }
+                        />
+                        <EnvStyleRow
+                          label="Outline opacity"
+                          inputType="range"
+                          value={String(
+                            labelOutlineOpacityControlValue(envStyle),
+                          )}
+                          onChange={(v) =>
+                            setEnvLayerStyle(layer.id, {
+                              labelOutlineOpacity: parseFloat(v),
+                            })
+                          }
+                        />
+                        <EnvStyleRow
+                          label="Fill color"
+                          inputType="color"
+                          value={labelFillColorControlValue(envStyle)}
+                          onChange={(v) =>
+                            setEnvLayerStyle(layer.id, { labelFillColor: v })
+                          }
+                        />
+                        <EnvStyleRow
+                          label="Fill opacity"
+                          inputType="range"
+                          value={String(labelFillOpacityControlValue(envStyle))}
+                          onChange={(v) =>
+                            setEnvLayerStyle(layer.id, {
+                              labelFillOpacity: parseFloat(v),
+                            })
+                          }
+                        />
+                      </>
+                    ) : currentPage ? (
+                      <>
+                        <PageStyleRow
+                          label="Text color"
+                          inputType="color"
+                          inheritedValue={labelTextControlValue(
+                            effectiveStyle(
+                              state.environment,
+                              currentPage,
+                              layer.id,
+                            ),
+                          )}
+                          isOverridden={isStyleFieldOverridden(
+                            currentPage,
+                            layer.id,
+                            "labelTextColor",
+                          )}
+                          overrideValue={
+                            currentPage.layerOverrides?.[layer.id]
+                              ?.labelTextColor as string | undefined
+                          }
+                          onOverride={(v) =>
+                            setPageLayerOverride(currentPage.id, layer.id, {
+                              labelTextColor: v,
+                            })
+                          }
+                          onClear={() =>
+                            clearPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              "labelTextColor",
+                            )
+                          }
+                        />
+                        <PageStyleRow
+                          label="Text opacity"
+                          inputType="range"
+                          inheritedValue={String(
+                            (effectiveStyle(
+                              state.environment,
+                              currentPage,
+                              layer.id,
+                            ).labelTextOpacity as number | undefined) ?? 1,
+                          )}
+                          isOverridden={isStyleFieldOverridden(
+                            currentPage,
+                            layer.id,
+                            "labelTextOpacity",
+                          )}
+                          overrideValue={
+                            currentPage.layerOverrides?.[layer.id]
+                              ?.labelTextOpacity !== undefined
+                              ? String(
+                                  currentPage.layerOverrides[layer.id]
+                                    .labelTextOpacity,
+                                )
+                              : undefined
+                          }
+                          onOverride={(v) =>
+                            setPageLayerOverride(currentPage.id, layer.id, {
+                              labelTextOpacity: parseFloat(v),
+                            })
+                          }
+                          onClear={() =>
+                            clearPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              "labelTextOpacity",
+                            )
+                          }
+                        />
+                        <PageStyleRow
+                          label="Outline color"
+                          inputType="color"
+                          inheritedValue={labelOutlineColorControlValue(
+                            effectiveStyle(
+                              state.environment,
+                              currentPage,
+                              layer.id,
+                            ),
+                          )}
+                          isOverridden={isStyleFieldOverridden(
+                            currentPage,
+                            layer.id,
+                            "labelOutlineColor",
+                          )}
+                          overrideValue={
+                            currentPage.layerOverrides?.[layer.id]
+                              ?.labelOutlineColor as string | undefined
+                          }
+                          onOverride={(v) =>
+                            setPageLayerOverride(currentPage.id, layer.id, {
+                              labelOutlineColor: v,
+                            })
+                          }
+                          onClear={() =>
+                            clearPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              "labelOutlineColor",
+                            )
+                          }
+                        />
+                        <PageStyleRow
+                          label="Outline opacity"
+                          inputType="range"
+                          inheritedValue={String(
+                            labelOutlineOpacityControlValue(
+                              effectiveStyle(
+                                state.environment,
+                                currentPage,
+                                layer.id,
+                              ),
+                            ),
+                          )}
+                          isOverridden={isStyleFieldOverridden(
+                            currentPage,
+                            layer.id,
+                            "labelOutlineOpacity",
+                          )}
+                          overrideValue={
+                            currentPage.layerOverrides?.[layer.id]
+                              ?.labelOutlineOpacity !== undefined
+                              ? String(
+                                  currentPage.layerOverrides[layer.id]
+                                    .labelOutlineOpacity,
+                                )
+                              : undefined
+                          }
+                          fallbackValue={
+                            effectiveStyle(
+                              state.environment,
+                              currentPage,
+                              layer.id,
+                            ).labelKind === "landTitle"
+                              ? String(LAND_TITLE_LABEL_OUTLINE_OPACITY_DEFAULT)
+                              : "1"
+                          }
+                          onOverride={(v) =>
+                            setPageLayerOverride(currentPage.id, layer.id, {
+                              labelOutlineOpacity: parseFloat(v),
+                            })
+                          }
+                          onClear={() =>
+                            clearPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              "labelOutlineOpacity",
+                            )
+                          }
+                        />
+                        <PageStyleRow
+                          label="Fill color"
+                          inputType="color"
+                          inheritedValue={labelFillColorControlValue(
+                            effectiveStyle(
+                              state.environment,
+                              currentPage,
+                              layer.id,
+                            ),
+                          )}
+                          isOverridden={isStyleFieldOverridden(
+                            currentPage,
+                            layer.id,
+                            "labelFillColor",
+                          )}
+                          overrideValue={
+                            currentPage.layerOverrides?.[layer.id]
+                              ?.labelFillColor as string | undefined
+                          }
+                          fallbackValue={
+                            effectiveStyle(
+                              state.environment,
+                              currentPage,
+                              layer.id,
+                            ).labelKind === "landTitle"
+                              ? LAND_TITLE_LABEL_FILL_DEFAULT
+                              : "#14161c"
+                          }
+                          onOverride={(v) =>
+                            setPageLayerOverride(currentPage.id, layer.id, {
+                              labelFillColor: v,
+                            })
+                          }
+                          onClear={() =>
+                            clearPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              "labelFillColor",
+                            )
+                          }
+                        />
+                        <PageStyleRow
+                          label="Fill opacity"
+                          inputType="range"
+                          inheritedValue={String(
+                            labelFillOpacityControlValue(
+                              effectiveStyle(
+                                state.environment,
+                                currentPage,
+                                layer.id,
+                              ),
+                            ),
+                          )}
+                          isOverridden={isStyleFieldOverridden(
+                            currentPage,
+                            layer.id,
+                            "labelFillOpacity",
+                          )}
+                          overrideValue={
+                            currentPage.layerOverrides?.[layer.id]
+                              ?.labelFillOpacity !== undefined
+                              ? String(
+                                  currentPage.layerOverrides[layer.id]
+                                    .labelFillOpacity,
+                                )
+                              : undefined
+                          }
+                          fallbackValue={
+                            effectiveStyle(
+                              state.environment,
+                              currentPage,
+                              layer.id,
+                            ).labelKind === "landTitle"
+                              ? String(LAND_TITLE_LABEL_FILL_OPACITY_DEFAULT)
+                              : "0.72"
+                          }
+                          onOverride={(v) =>
+                            setPageLayerOverride(currentPage.id, layer.id, {
+                              labelFillOpacity: parseFloat(v),
+                            })
+                          }
+                          onClear={() =>
+                            clearPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              "labelFillOpacity",
+                            )
+                          }
+                        />
+                      </>
+                    ) : null}
+
+                    {isEnv ? (
+                      <EnvLabelKindRow
+                        value={normalizeLabelKind(envStyle.labelKind)}
+                        onChange={(v) =>
+                          setEnvLayerStyle(layer.id, { labelKind: v })
+                        }
+                      />
+                    ) : currentPage ? (
+                      <PageLabelKindRow
+                        page={currentPage}
+                        layerId={layer.id}
+                        envValue={normalizeLabelKind(envStyle.labelKind)}
+                        onSet={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            labelKind: v,
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "labelKind",
                           )
-                        : undefined
-                    }
-                    fallbackValue={
-                      effectiveStyle(state.environment, currentPage, layer.id)
-                        .labelKind === "landTitle"
-                        ? String(LAND_TITLE_LABEL_FILL_OPACITY_DEFAULT)
-                        : "0.72"
-                    }
-                    onOverride={(v) =>
-                      setPageLayerOverride(currentPage.id, layer.id, {
-                        labelFillOpacity: parseFloat(v),
-                      })
-                    }
-                    onClear={() =>
-                      clearPageLayerOverride(
-                        currentPage.id,
-                        layer.id,
-                        "labelFillOpacity",
-                      )
-                    }
-                  />
-                </>
+                        }
+                      />
+                    ) : null}
+
+                    {isEnv ? (
+                      <EnvLabelPointerVisibleRow
+                        value={labelPointerVisibleControlValue(envStyle)}
+                        onToggle={() =>
+                          setEnvLayerStyle(layer.id, {
+                            labelPointerVisible:
+                              !labelPointerVisibleControlValue(envStyle),
+                          })
+                        }
+                      />
+                    ) : currentPage ? (
+                      <PageLabelPointerVisibleRow
+                        page={currentPage}
+                        layerId={layer.id}
+                        envValue={labelPointerVisibleControlValue(envStyle)}
+                        onSet={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            labelPointerVisible: v,
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "labelPointerVisible",
+                          )
+                        }
+                      />
+                    ) : null}
+
+                    {(
+                      isEnv
+                        ? normalizeLabelKind(envStyle.labelKind) ===
+                            "landTitle" &&
+                          labelPointerVisibleControlValue(envStyle)
+                        : currentPage &&
+                          normalizeLabelKind(
+                            effectiveStyle(
+                              state.environment,
+                              currentPage,
+                              layer.id,
+                            ).labelKind,
+                          ) === "landTitle" &&
+                          labelPointerVisibleControlValue(
+                            effectiveStyle(
+                              state.environment,
+                              currentPage,
+                              layer.id,
+                            ),
+                          )
+                    ) ? (
+                      isEnv ? (
+                        <EnvLabelPointerSideRow
+                          value={
+                            envStyle.labelPointerSide === "left" ||
+                            envStyle.labelPointerSide === "right"
+                              ? envStyle.labelPointerSide
+                              : "auto"
+                          }
+                          onChange={(v) =>
+                            setEnvLayerStyle(layer.id, { labelPointerSide: v })
+                          }
+                        />
+                      ) : currentPage ? (
+                        <PageLabelPointerSideRow
+                          page={currentPage}
+                          layerId={layer.id}
+                          envValue={
+                            envStyle.labelPointerSide === "left" ||
+                            envStyle.labelPointerSide === "right"
+                              ? envStyle.labelPointerSide
+                              : "auto"
+                          }
+                          onSet={(v) =>
+                            setPageLayerOverride(currentPage.id, layer.id, {
+                              labelPointerSide: v,
+                            })
+                          }
+                          onClear={() =>
+                            clearPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              "labelPointerSide",
+                            )
+                          }
+                        />
+                      ) : null
+                    ) : null}
+
+                    {isEnv ? (
+                      <EnvShowLabelsRow
+                        value={envStyle.showLabels === true}
+                        onToggle={() =>
+                          setEnvLayerStyle(layer.id, {
+                            showLabels: !(envStyle.showLabels === true),
+                          })
+                        }
+                      />
+                    ) : currentPage ? (
+                      <PageShowLabelsRow
+                        page={currentPage}
+                        layerId={layer.id}
+                        envValue={envStyle.showLabels === true}
+                        onSet={(v) =>
+                          setPageLayerOverride(currentPage.id, layer.id, {
+                            showLabels: v,
+                          })
+                        }
+                        onClear={() =>
+                          clearPageLayerOverride(
+                            currentPage.id,
+                            layer.id,
+                            "showLabels",
+                          )
+                        }
+                      />
+                    ) : null}
+                  </div>
+                </details>
               ) : null}
 
-              {isEnv ? (
-                <EnvLabelKindRow
-                  value={normalizeLabelKind(envStyle.labelKind)}
-                  onChange={(v) => setEnvLayerStyle(layer.id, { labelKind: v })}
-                />
-              ) : currentPage ? (
-                <PageLabelKindRow
-                  page={currentPage}
-                  layerId={layer.id}
-                  envValue={normalizeLabelKind(envStyle.labelKind)}
-                  onSet={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      labelKind: v,
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "labelKind",
-                    )
-                  }
-                />
-              ) : null}
+              <details style={nestedDetailsStyle}>
+                <summary style={panelStyles.summary}>Provenance</summary>
+                <div style={detailsContentStyle}>
+                  <div style={nestedControlRowStyle}>
+                    <label style={nestedFieldLabelStyle}>Source file</label>
+                    <input
+                      type="text"
+                      value={meta.sourceFile ?? ""}
+                      onChange={(e) =>
+                        setLayerProvenance(layer.id, {
+                          sourceFile: e.target.value,
+                        })
+                      }
+                      style={panelStyles.textInput}
+                    />
+                  </div>
+                  <div style={nestedControlRowStyle}>
+                    <label style={nestedFieldLabelStyle}>Source date</label>
+                    <input
+                      type="text"
+                      value={meta.sourceDate ?? ""}
+                      placeholder="YYYY-MM-DD or source range"
+                      onChange={(e) =>
+                        setLayerProvenance(layer.id, {
+                          sourceDate: e.target.value,
+                        })
+                      }
+                      style={panelStyles.textInput}
+                    />
+                  </div>
+                  <div style={nestedControlRowStyle}>
+                    <label style={nestedFieldLabelStyle}>Origin</label>
+                    <input
+                      type="text"
+                      value={meta.sourceOrigin ?? ""}
+                      onChange={(e) =>
+                        setLayerProvenance(layer.id, {
+                          sourceOrigin: e.target.value,
+                        })
+                      }
+                      style={panelStyles.textInput}
+                    />
+                  </div>
+                  <div style={nestedControlRowStyle}>
+                    <label style={nestedFieldLabelStyle}>Classification</label>
+                    <select
+                      value={meta.classification ?? "observation"}
+                      onChange={(e) =>
+                        setLayerProvenance(layer.id, {
+                          classification: e.target.value,
+                        })
+                      }
+                    >
+                      {CLASSIFICATIONS.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={nestedControlRowStyle}>
+                    <label style={nestedFieldLabelStyle}>Confidentiality</label>
+                    <select
+                      value={meta.confidentiality ?? "public"}
+                      onChange={(e) =>
+                        setLayerProvenance(layer.id, {
+                          confidentiality: e.target.value,
+                        })
+                      }
+                    >
+                      {CONFIDENTIALITIES.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </details>
 
-              {isEnv ? (
-                <EnvLabelPointerVisibleRow
-                  value={labelPointerVisibleControlValue(envStyle)}
-                  onToggle={() =>
-                    setEnvLayerStyle(layer.id, {
-                      labelPointerVisible:
-                        !labelPointerVisibleControlValue(envStyle),
-                    })
-                  }
-                />
-              ) : currentPage ? (
-                <PageLabelPointerVisibleRow
-                  page={currentPage}
-                  layerId={layer.id}
-                  envValue={labelPointerVisibleControlValue(envStyle)}
-                  onSet={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      labelPointerVisible: v,
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "labelPointerVisible",
-                    )
-                  }
-                />
-              ) : null}
-
-              {(isEnv
-                ? normalizeLabelKind(envStyle.labelKind) === "landTitle" &&
-                  labelPointerVisibleControlValue(envStyle)
-                : currentPage &&
-                  normalizeLabelKind(
-                    effectiveStyle(state.environment, currentPage, layer.id)
-                      .labelKind,
-                  ) === "landTitle" &&
-                  labelPointerVisibleControlValue(
-                    effectiveStyle(state.environment, currentPage, layer.id),
-                  )) ? (
-                isEnv ? (
-                  <EnvLabelPointerSideRow
-                    value={
-                      envStyle.labelPointerSide === "left" ||
-                      envStyle.labelPointerSide === "right"
-                        ? envStyle.labelPointerSide
-                        : "auto"
-                    }
-                    onChange={(v) =>
-                      setEnvLayerStyle(layer.id, { labelPointerSide: v })
-                    }
-                  />
-                ) : currentPage ? (
-                  <PageLabelPointerSideRow
-                    page={currentPage}
-                    layerId={layer.id}
-                    envValue={
-                      envStyle.labelPointerSide === "left" ||
-                      envStyle.labelPointerSide === "right"
-                        ? envStyle.labelPointerSide
-                        : "auto"
-                    }
-                    onSet={(v) =>
-                      setPageLayerOverride(currentPage.id, layer.id, {
-                        labelPointerSide: v,
-                      })
-                    }
-                    onClear={() =>
-                      clearPageLayerOverride(
-                        currentPage.id,
-                        layer.id,
-                        "labelPointerSide",
-                      )
-                    }
-                  />
-                ) : null
-              ) : null}
-
-              {isEnv ? (
-                <EnvShowLabelsRow
-                  value={envStyle.showLabels === true}
-                  onToggle={() =>
-                    setEnvLayerStyle(layer.id, {
-                      showLabels: !(envStyle.showLabels === true),
-                    })
-                  }
-                />
-              ) : currentPage ? (
-                <PageShowLabelsRow
-                  page={currentPage}
-                  layerId={layer.id}
-                  envValue={envStyle.showLabels === true}
-                  onSet={(v) =>
-                    setPageLayerOverride(currentPage.id, layer.id, {
-                      showLabels: v,
-                    })
-                  }
-                  onClear={() =>
-                    clearPageLayerOverride(
-                      currentPage.id,
-                      layer.id,
-                      "showLabels",
-                    )
-                  }
-                />
-              ) : null}
-            </div>
-            </details>
-          ) : null}
-
-          <details style={nestedDetailsStyle}>
-            <summary style={panelStyles.summary}>Provenance</summary>
-            <div style={detailsContentStyle}>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Source file</label>
-                <input
-                  type="text"
-                  value={meta.sourceFile ?? ""}
-                  onChange={(e) =>
-                    setLayerProvenance(layer.id, {
-                      sourceFile: e.target.value,
-                    })
-                  }
-                  style={panelStyles.textInput}
-                />
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Source date</label>
-                <input
-                  type="text"
-                  value={meta.sourceDate ?? ""}
-                  placeholder="YYYY-MM-DD or source range"
-                  onChange={(e) =>
-                    setLayerProvenance(layer.id, {
-                      sourceDate: e.target.value,
-                    })
-                  }
-                  style={panelStyles.textInput}
-                />
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Origin</label>
-                <input
-                  type="text"
-                  value={meta.sourceOrigin ?? ""}
-                  onChange={(e) =>
-                    setLayerProvenance(layer.id, {
-                      sourceOrigin: e.target.value,
-                    })
-                  }
-                  style={panelStyles.textInput}
-                />
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Classification</label>
-                <select
-                  value={meta.classification ?? "observation"}
-                  onChange={(e) =>
-                    setLayerProvenance(layer.id, {
-                      classification: e.target.value,
-                    })
-                  }
-                >
-                  {CLASSIFICATIONS.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Confidentiality</label>
-                <select
-                  value={meta.confidentiality ?? "public"}
-                  onChange={(e) =>
-                    setLayerProvenance(layer.id, {
-                      confidentiality: e.target.value,
-                    })
-                  }
-                >
-                  {CONFIDENTIALITIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </details>
-
-          {isGeology && isEnv && <GeologySubUnitsPanel layerStyle={envStyle} />}
+              {isGeology && isEnv && (
+                <GeologySubUnitsPanel layerStyle={envStyle} />
+              )}
             </>
           ) : null}
         </div>
@@ -2842,7 +3293,7 @@ export function LayerPanel({
       ? CASE_STUDY_B_PUBLIC_LAYER_GROUPS
       : state.projectSlug === "utah-forge"
         ? UTAH_FORGE_PUBLIC_LAYER_GROUPS
-      : PUBLIC_LAYER_GROUPS;
+        : PUBLIC_LAYER_GROUPS;
   const projectPublicTopoLayerGroups =
     state.projectSlug === "utah-forge"
       ? UTAH_FORGE_PUBLIC_TOPO_LAYER_GROUPS
@@ -2852,7 +3303,7 @@ export function LayerPanel({
       ? CASE_STUDY_B_CUSTOMER_LAYER_GROUPS
       : state.projectSlug === "utah-forge"
         ? UTAH_FORGE_CUSTOMER_LAYER_GROUPS
-      : CUSTOMER_LAYER_GROUPS;
+        : CUSTOMER_LAYER_GROUPS;
   const projectLayerGroups = [
     ...projectPublicLayerGroups,
     ...projectPublicTopoLayerGroups,
@@ -2870,7 +3321,8 @@ export function LayerPanel({
   const otherLayers = state.manifest.layers.filter(
     (layer) =>
       layerHasRenderableControl(layer) &&
-      !groupedIds.has(layer.id) && layerDataSection(layer) === section,
+      !groupedIds.has(layer.id) &&
+      layerDataSection(layer) === section,
   );
   const utahForgeSeismicLayer =
     state.projectSlug === "utah-forge"
@@ -2879,16 +3331,36 @@ export function LayerPanel({
   const sceneSectionStyle =
     state.projectSlug === "utah-forge"
       ? isEnv
-        ? state.environment.layerStyles[UTAH_FORGE_SCENE_SECTION_LAYER_ID] ?? {}
+        ? (state.environment.layerStyles[UTAH_FORGE_SCENE_SECTION_LAYER_ID] ??
+          {})
         : currentPage
           ? effectiveStyle(
               state.environment,
               currentPage,
               UTAH_FORGE_SCENE_SECTION_LAYER_ID,
             )
-          : state.environment.layerStyles[UTAH_FORGE_SCENE_SECTION_LAYER_ID] ?? {}
+          : (state.environment.layerStyles[UTAH_FORGE_SCENE_SECTION_LAYER_ID] ??
+            {})
       : {};
   const sceneSectionDisabled =
+    state.projectSlug === "utah-forge" && !isEnv && currentPage === null;
+  const workingAreaFocusStyle =
+    state.projectSlug === "utah-forge"
+      ? isEnv
+        ? (state.environment.layerStyles[
+            UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID
+          ] ?? {})
+        : currentPage
+          ? effectiveStyle(
+              state.environment,
+              currentPage,
+              UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
+            )
+          : (state.environment.layerStyles[
+              UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID
+            ] ?? {})
+      : {};
+  const workingAreaFocusDisabled =
     state.projectSlug === "utah-forge" && !isEnv && currentPage === null;
 
   return (
@@ -2944,10 +3416,10 @@ export function LayerPanel({
             : undefined;
         const seismicLayerStyle = seismicLayer
           ? isEnv
-            ? state.environment.layerStyles[seismicLayer.id] ?? {}
+            ? (state.environment.layerStyles[seismicLayer.id] ?? {})
             : currentPage
               ? effectiveStyle(state.environment, currentPage, seismicLayer.id)
-              : state.environment.layerStyles[seismicLayer.id] ?? {}
+              : (state.environment.layerStyles[seismicLayer.id] ?? {})
           : {};
         const seismicCapabilityDisabled = !isEnv && currentPage === null;
         if (layers.length === 0) return null;
@@ -2983,6 +3455,20 @@ export function LayerPanel({
               />
             ) : null}
             {state.projectSlug === "utah-forge" &&
+            section === "public" &&
+            group.title === "Working area" ? (
+              <WorkingAreaFocusContainer
+                allLayers={state.manifest.layers}
+                style={workingAreaFocusStyle}
+                disabled={workingAreaFocusDisabled}
+                isEnv={isEnv}
+                currentPage={currentPage}
+                setEnvLayerStyle={setEnvLayerStyle}
+                setPageLayerOverride={setPageLayerOverride}
+                sceneHandle={sceneHandle}
+              />
+            ) : null}
+            {state.projectSlug === "utah-forge" &&
             section === "publicTopo" &&
             group.title === "Topo layers" ? (
               <PublicSurfaceGroupControls
@@ -2998,6 +3484,7 @@ export function LayerPanel({
                 setPageLayerOverride={setPageLayerOverride}
                 clearPageLayerOverride={clearPageLayerOverride}
                 setEnvScene={setEnvScene}
+                projectRoot={state.projectRoot}
               />
             ) : null}
             {group.title === "Topo layers" && (
@@ -3133,11 +3620,7 @@ function LayerGroupFogControl({
   environment: EnvironmentSetup;
   globalFogDensity: number;
   onSetEnv: (layerId: string, affectedByFog: boolean) => void;
-  onSetPage: (
-    pageId: string,
-    layerId: string,
-    affectedByFog: boolean,
-  ) => void;
+  onSetPage: (pageId: string, layerId: string, affectedByFog: boolean) => void;
   onSetEnvDensity: (layerId: string, fogDensity: number) => void;
   onSetPageDensity: (
     pageId: string,
@@ -3207,15 +3690,17 @@ function LayerGroupFogControl({
           value={densityUi}
           disabled={allOff || disabled}
           onChange={(e) => setDensity(parseFloat(e.target.value))}
-          style={{
-            flex: 1,
-            opacity: allOff || disabled ? 0.42 : 1,
-            "--editor-slider-fill": `${
-              ((densityUi - FOG_DENSITY_UI_MIN) /
-                (FOG_DENSITY_UI_MAX - FOG_DENSITY_UI_MIN)) *
-              100
-            }%`,
-          } as React.CSSProperties}
+          style={
+            {
+              flex: 1,
+              opacity: allOff || disabled ? 0.42 : 1,
+              "--editor-slider-fill": `${
+                ((densityUi - FOG_DENSITY_UI_MIN) /
+                  (FOG_DENSITY_UI_MAX - FOG_DENSITY_UI_MIN)) *
+                100
+              }%`,
+            } as React.CSSProperties
+          }
         />
         <span style={sliderNumberReadoutStyle}>{densityUi.toFixed(2)}</span>
         <span style={densityMixed ? overrideTagActiveStyle : overrideTagStyle}>
@@ -3238,9 +3723,7 @@ function TopoDetailDistancePanel({
   const far = topo.distanceFadeFar ?? 19000;
   const farLineScale = topo.farLineScale ?? 0.67;
   const farOpacity = topo.farOpacity ?? 0.2;
-  const setTopo = (
-    patch: NonNullable<SceneProperties["topoDetails"]>,
-  ) => {
+  const setTopo = (patch: NonNullable<SceneProperties["topoDetails"]>) => {
     setEnvScene({
       topoDetails: {
         ...topo,
@@ -3335,10 +3818,12 @@ function TopoDistanceSlider({
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        style={{
-          flex: 1,
-          "--editor-slider-fill": `${fill}%`,
-        } as React.CSSProperties}
+        style={
+          {
+            flex: 1,
+            "--editor-slider-fill": `${fill}%`,
+          } as React.CSSProperties
+        }
       />
       <span style={sliderNumberReadoutStyle}>
         {value.toFixed(decimals)}
@@ -3444,9 +3929,7 @@ function DrillingAssayPanel({
     (stop) => colorStopMap.get(stop.id) ?? stop,
   );
   const setAssays = (
-    patch: NonNullable<
-      NonNullable<SceneProperties["drilling"]>["assays"]
-    >,
+    patch: NonNullable<NonNullable<SceneProperties["drilling"]>["assays"]>,
   ) => {
     setEnvScene({
       drilling: {
@@ -3602,9 +4085,7 @@ function DrillingAssayPanel({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>
-            {boreWidth.toFixed(1)}
-          </span>
+          <span style={sliderNumberReadoutStyle}>{boreWidth.toFixed(1)}</span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Assay width</label>
@@ -3624,9 +4105,7 @@ function DrillingAssayPanel({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>
-            {assayWidth.toFixed(1)}
-          </span>
+          <span style={sliderNumberReadoutStyle}>{assayWidth.toFixed(1)}</span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Lith width</label>
@@ -3775,9 +4254,7 @@ function DrillingAssayPanel({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {metalness.toFixed(2)}
-            </span>
+            <span style={sliderNumberReadoutStyle}>{metalness.toFixed(2)}</span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Side lift</label>
@@ -3915,8 +4392,8 @@ function DrillingAssayPanel({
           ))}
         </div>
         <div style={drillingAssayHintStyle}>
-          Assay intervals are loaded from drillhole_assays.json; lithology
-          bands are loaded from drillhole_lithology.json.
+          Assay intervals are loaded from drillhole_assays.json; lithology bands
+          are loaded from drillhole_lithology.json.
         </div>
       </div>
     </details>
@@ -3992,12 +4469,8 @@ function PageEnvironmentOverridePanel({
         value={page.sunLockToCamera === true}
         overridden={page.sunLockToCamera !== undefined}
         onEnable={() => setPageField(page.id, { sunLockToCamera: true })}
-        onClear={() =>
-          setPageField(page.id, { sunLockToCamera: undefined })
-        }
-        onChange={(value) =>
-          setPageField(page.id, { sunLockToCamera: value })
-        }
+        onClear={() => setPageField(page.id, { sunLockToCamera: undefined })}
+        onChange={(value) => setPageField(page.id, { sunLockToCamera: value })}
       />
     </LayerGroup>
   );
@@ -4119,11 +4592,13 @@ function PageMoodOverrideRow({
         value={value}
         disabled={!overridden}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        style={{
-          flex: 1,
-          opacity: overridden ? 1 : 0.4,
-          "--editor-slider-fill": `${((value - min) / (max - min)) * 100}%`,
-        } as React.CSSProperties}
+        style={
+          {
+            flex: 1,
+            opacity: overridden ? 1 : 0.4,
+            "--editor-slider-fill": `${((value - min) / (max - min)) * 100}%`,
+          } as React.CSSProperties
+        }
       />
       <span style={sliderNumberReadoutStyle}>{value.toFixed(2)}</span>
       <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
@@ -4684,8 +5159,8 @@ function SceneOverlayRow({
                 value={def.provenance.classification}
                 onChange={(e) =>
                   setEnvSceneOverlayProvenance(id, {
-                    classification:
-                      e.target.value as (typeof CLASSIFICATIONS_OVERLAY)[number],
+                    classification: e.target
+                      .value as (typeof CLASSIFICATIONS_OVERLAY)[number],
                   })
                 }
               >
@@ -4808,7 +5283,9 @@ function ToggleButton({
       title={title}
       style={{
         ...treeToggleButtonStyle,
-        ...(active ? treeToggleButtonActiveStyle : treeToggleButtonInactiveStyle),
+        ...(active
+          ? treeToggleButtonActiveStyle
+          : treeToggleButtonInactiveStyle),
       }}
     >
       <span
@@ -4907,8 +5384,7 @@ function PageLabelKindRow({
   const overridden = isStyleFieldOverridden(page, layerId, "labelKind");
   const overrideVal = page.layerOverrides?.[layerId]?.labelKind;
   const effective =
-    overridden &&
-    (overrideVal === "landTitle" || overrideVal === "siteElement")
+    overridden && (overrideVal === "landTitle" || overrideVal === "siteElement")
       ? overrideVal
       : envValue;
   return (
@@ -5199,6 +5675,7 @@ function EnvStyleRow({
   max = 1,
   step = 0.05,
   decimals = 2,
+  testId,
   onChange,
 }: {
   label: string;
@@ -5208,6 +5685,7 @@ function EnvStyleRow({
   max?: number;
   step?: number;
   decimals?: number;
+  testId?: string;
   onChange: (v: string) => void;
 }) {
   const rangeValue = parseFloat(value);
@@ -5227,11 +5705,14 @@ function EnvStyleRow({
             max={max}
             step={step}
             value={value}
+            data-testid={testId}
             onChange={(e) => onChange(e.target.value)}
-            style={{
-              flex: 1,
-              "--editor-slider-fill": `${fill}%`,
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                "--editor-slider-fill": `${fill}%`,
+              } as React.CSSProperties
+            }
           />
           <span style={sliderNumberReadoutStyle}>
             {safeValue.toFixed(decimals)}
@@ -5242,6 +5723,7 @@ function EnvStyleRow({
           type="number"
           value={value}
           step={step}
+          data-testid={testId}
           onChange={(e) => onChange(e.target.value)}
           style={{ flex: 1 }}
         />
@@ -5249,6 +5731,7 @@ function EnvStyleRow({
         <input
           type="color"
           value={value}
+          data-testid={testId}
           onChange={(e) => onChange(e.target.value)}
         />
       )}
@@ -5275,16 +5758,8 @@ function surfaceGradientPatchFromStyle(
       "surfaceGradientHighColor",
       SURFACE_GRADIENT_DEFAULT_HIGH,
     ),
-    surfaceGradientMidpoint: styleNumber(
-      style,
-      "surfaceGradientMidpoint",
-      0.5,
-    ),
-    surfaceGradientContrast: styleNumber(
-      style,
-      "surfaceGradientContrast",
-      1,
-    ),
+    surfaceGradientMidpoint: styleNumber(style, "surfaceGradientMidpoint", 0.5),
+    surfaceGradientContrast: styleNumber(style, "surfaceGradientContrast", 1),
   };
 }
 
@@ -5316,16 +5791,10 @@ function scalarRampPatchFromStyle(
       "scalarDisplayMax",
       styleNumber(style, "scalarDisplayMax", 3.937122),
     ),
-    scalarFocusMin: styleNumber(
-      style,
-      "scalarFocusMin",
-      SCALAR_SOURCE_MIN,
-    ),
-    scalarFocusMax: styleNumber(
-      style,
-      "scalarFocusMax",
-      SCALAR_SOURCE_MAX,
-    ),
+    scalarFocusMin: styleNumber(style, "scalarFocusMin", SCALAR_SOURCE_MIN),
+    scalarFocusMax: styleNumber(style, "scalarFocusMax", SCALAR_SOURCE_MAX),
+    scalarInclusionMode:
+      style.scalarInclusionMode === "thresholded" ? "thresholded" : "all-valid",
     scalarMidpoint: styleNumber(style, "scalarMidpoint", 0.5),
     scalarContrast: styleNumber(style, "scalarContrast", 1),
   };
@@ -5399,7 +5868,11 @@ function mtVolumePatchFromStyle(style: EditableStyle): Partial<EditableStyle> {
       "scalarVolumeThresholdMax",
       SCALAR_SOURCE_MAX,
     ),
-    scalarVolumeMaskVisible: styleBoolean(style, "scalarVolumeMaskVisible", true),
+    scalarVolumeMaskVisible: styleBoolean(
+      style,
+      "scalarVolumeMaskVisible",
+      true,
+    ),
     scalarLegendVisible: styleBoolean(style, "scalarLegendVisible", true),
     opacity: styleNumber(style, "opacity", 0.48),
   };
@@ -5525,7 +5998,10 @@ function seismicColormapFromValue(
 }
 
 function isVelocityProduct(product: SeismicProductOption | undefined): boolean {
-  return product?.productKind === "velocity" || product?.domainKind === "velocity-time";
+  return (
+    product?.productKind === "velocity" ||
+    product?.domainKind === "velocity-time"
+  );
 }
 
 function seismicWindowValueLabel(
@@ -5542,8 +6018,11 @@ function seismicWindowValueLabel(
   return `${Math.round(min + (max - min) * normalized).toLocaleString()} m/s`;
 }
 
-function seismicProductOptions(layer: ProjectLayerSpec): SeismicProductOption[] {
-  const rawProducts = (layer.metadata as Record<string, unknown>).seismicProducts;
+function seismicProductOptions(
+  layer: ProjectLayerSpec,
+): SeismicProductOption[] {
+  const rawProducts = (layer.metadata as Record<string, unknown>)
+    .seismicProducts;
   if (!Array.isArray(rawProducts)) return [];
   return rawProducts
     .map((raw): SeismicProductOption | null => {
@@ -5556,13 +6035,21 @@ function seismicProductOptions(layer: ProjectLayerSpec): SeismicProductOption[] 
         id: product.id,
         label: seismicIndustryLabel(product.label),
         surveyKind:
-          typeof product.surveyKind === "string" ? product.surveyKind : undefined,
+          typeof product.surveyKind === "string"
+            ? product.surveyKind
+            : undefined,
         productKind:
-          typeof product.productKind === "string" ? product.productKind : undefined,
+          typeof product.productKind === "string"
+            ? product.productKind
+            : undefined,
         domainKind:
-          typeof product.domainKind === "string" ? product.domainKind : undefined,
+          typeof product.domainKind === "string"
+            ? product.domainKind
+            : undefined,
         domainUnit:
-          typeof product.domainUnit === "string" ? product.domainUnit : undefined,
+          typeof product.domainUnit === "string"
+            ? product.domainUnit
+            : undefined,
         sourceSubmission:
           typeof product.sourceSubmission === "string"
             ? product.sourceSubmission
@@ -5634,8 +6121,7 @@ function seismicAudiencePresets(
               (id): id is string => typeof id === "string",
             )
           : undefined,
-        renderMode:
-          preset.renderMode === "raymarch" ? "raymarch" : "slice",
+        renderMode: preset.renderMode === "raymarch" ? "raymarch" : "slice",
         sliceAxis:
           preset.sliceAxis === "crossline" ||
           preset.sliceAxis === "sample" ||
@@ -5646,7 +6132,8 @@ function seismicAudiencePresets(
           typeof preset.sliceFraction === "number"
             ? preset.sliceFraction
             : undefined,
-        opacity: typeof preset.opacity === "number" ? preset.opacity : undefined,
+        opacity:
+          typeof preset.opacity === "number" ? preset.opacity : undefined,
         amplitudeMin:
           typeof preset.amplitudeMin === "number"
             ? preset.amplitudeMin
@@ -5696,7 +6183,9 @@ function seismicAudiencePresets(
         cameraShot:
           typeof preset.cameraShot === "string" ? preset.cameraShot : undefined,
         badges: Array.isArray(preset.badges)
-          ? preset.badges.filter((badge): badge is string => typeof badge === "string")
+          ? preset.badges.filter(
+              (badge): badge is string => typeof badge === "string",
+            )
           : undefined,
         caveats: Array.isArray(preset.caveats)
           ? preset.caveats.filter(
@@ -5741,7 +6230,9 @@ function seismicExportLayouts(
         label: layout.label,
         output: typeof layout.output === "string" ? layout.output : undefined,
         includes: Array.isArray(layout.includes)
-          ? layout.includes.filter((item): item is string => typeof item === "string")
+          ? layout.includes.filter(
+              (item): item is string => typeof item === "string",
+            )
           : undefined,
         caveat: typeof layout.caveat === "string" ? layout.caveat : undefined,
       };
@@ -5770,7 +6261,9 @@ function seismicPresetPatch(
       ? preset.productId
       : fallbackProductId;
   const visibleIds = new Set(
-    (preset.visibleProductIds ?? [productId]).filter((id) => productIds.has(id)),
+    (preset.visibleProductIds ?? [productId]).filter((id) =>
+      productIds.has(id),
+    ),
   );
   if (visibleIds.size === 0 && productId) visibleIds.add(productId);
   const product = products.find((candidate) => candidate.id === productId);
@@ -5913,7 +6406,11 @@ function seismicBrowserPatchFromStyle(
       "seismicRemoveBackground",
       false,
     ),
-    seismicBackgroundCutoff: styleNumber(style, "seismicBackgroundCutoff", 0.16),
+    seismicBackgroundCutoff: styleNumber(
+      style,
+      "seismicBackgroundCutoff",
+      0.16,
+    ),
     seismicVolumeSampleSteps: styleNumber(
       style,
       "seismicVolumeSampleSteps",
@@ -5940,7 +6437,9 @@ function seismicBrowserPatchFromStyle(
         ? style.seismicComparisonProductId
         : undefined,
     seismicComparisonMode:
-      style.seismicComparisonMode === "side-by-side" ? "side-by-side" : "overlay",
+      style.seismicComparisonMode === "side-by-side"
+        ? "side-by-side"
+        : "overlay",
     seismicComparisonSpacingM: styleNumber(
       style,
       "seismicComparisonSpacingM",
@@ -6014,6 +6513,372 @@ function SeismicCapabilityLayerItem({
   );
 }
 
+type WorkingAreaFocusCapability = "two-zone" | "fallback" | "unsupported";
+
+interface WorkingAreaFocusLayerOption {
+  id: string;
+  label: string;
+  capability: WorkingAreaFocusCapability;
+  capabilityLabel: string;
+}
+
+function workingAreaFocusCapabilityForLayer(
+  layerId: string,
+): Pick<WorkingAreaFocusLayerOption, "capability" | "capabilityLabel"> {
+  if (layerId === UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID) {
+    return {
+      capability: "unsupported",
+      capabilityLabel: "boundary only",
+    };
+  }
+  if (
+    layerId === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID ||
+    layerId === UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID ||
+    layerId === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID ||
+    layerId === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID
+  ) {
+    return {
+      capability: "two-zone",
+      capabilityLabel: "two-zone",
+    };
+  }
+  return {
+    capability: "fallback",
+    capabilityLabel: "material fallback",
+  };
+}
+
+function workingAreaFocusLayerOptions(
+  allLayers: ProjectLayerSpec[],
+): WorkingAreaFocusLayerOption[] {
+  const byId = new Map(allLayers.map((layer) => [layer.id, layer]));
+  return [
+    UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+    UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+    UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
+    UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+    UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+    UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+    UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+    UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
+    UTAH_FORGE_MT_STATIONS_LAYER_ID,
+    "utah-forge-reference-stage",
+    "terrain",
+    "transport-roads",
+    "hydrography-streams",
+    "hydrography-lakes",
+  ]
+    .map((id) => {
+      const layer = byId.get(id);
+      if (!layer) return null;
+      const capability = workingAreaFocusCapabilityForLayer(id);
+      return {
+        id,
+        label:
+          id === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID
+            ? "Seismic browser / survey geometry"
+            : editorLayerLabel(layer),
+        ...capability,
+      };
+    })
+    .filter((layer): layer is WorkingAreaFocusLayerOption => layer !== null);
+}
+
+function workingAreaFocusDefaultTargets(
+  options: WorkingAreaFocusLayerOption[],
+): string[] {
+  const optionIds = new Set(options.map((option) => option.id));
+  return WORKING_AREA_FOCUS_DEFAULT_TARGET_LAYER_IDS.filter((id) =>
+    optionIds.has(id),
+  );
+}
+
+function workingAreaFocusTargetSet(
+  style: EditableStyle,
+  options: WorkingAreaFocusLayerOption[],
+): Set<string> {
+  const configured = Array.isArray(style.workingAreaFocusTargetLayerIds)
+    ? style.workingAreaFocusTargetLayerIds.filter(
+        (id) => typeof id === "string",
+      )
+    : workingAreaFocusDefaultTargets(options);
+  const supportedIds = new Set(
+    options
+      .filter((option) => option.capability !== "unsupported")
+      .map((option) => option.id),
+  );
+  return new Set(configured.filter((id) => supportedIds.has(id)));
+}
+
+function workingAreaFocusOpacityForLayer(
+  style: EditableStyle,
+  layerId: string,
+): number {
+  const value = style.workingAreaFocusOutsideOpacityByLayerId?.[layerId];
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.max(0, Math.min(1, value))
+    : WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY;
+}
+
+function completeWorkingAreaFocusOpacityMap(
+  style: EditableStyle,
+  options: WorkingAreaFocusLayerOption[],
+  patch: Record<string, number> = {},
+): Record<string, number> {
+  return Object.fromEntries(
+    options
+      .filter((option) => option.capability !== "unsupported")
+      .map((option) => [
+        option.id,
+        Math.max(
+          0,
+          Math.min(
+            1,
+            typeof patch[option.id] === "number"
+              ? patch[option.id]
+              : workingAreaFocusOpacityForLayer(style, option.id),
+          ),
+        ),
+      ]),
+  );
+}
+
+function WorkingAreaFocusContainer({
+  allLayers,
+  style,
+  disabled,
+  isEnv,
+  currentPage,
+  setEnvLayerStyle,
+  setPageLayerOverride,
+  sceneHandle,
+}: {
+  allLayers: ProjectLayerSpec[];
+  style: EditableStyle;
+  disabled: boolean;
+  isEnv: boolean;
+  currentPage: PresentationPage | null;
+  setEnvLayerStyle: LayerStyleSetter;
+  setPageLayerOverride: PageStyleSetter;
+  sceneHandle: SceneHandle;
+}) {
+  const layerOptions = workingAreaFocusLayerOptions(allLayers);
+  const targetLayerIds = workingAreaFocusTargetSet(style, layerOptions);
+  const enabled = styleBoolean(style, "workingAreaFocusEnabled", false);
+  const mode =
+    style.workingAreaFocusMode === "inside-only"
+      ? "inside-only"
+      : "outside-context";
+  const helperVisible = styleBoolean(
+    style,
+    "workingAreaFocusHelperVisible",
+    true,
+  );
+  const liveStyleRef = useRef(style);
+  useEffect(() => {
+    liveStyleRef.current = style;
+  }, [style]);
+
+  const commit = (patch: Partial<EditableStyle>) => {
+    if (disabled) return;
+    const base = liveStyleRef.current;
+    const merged = {
+      ...base,
+      workingAreaFocusBoundsLayerId:
+        base.workingAreaFocusBoundsLayerId ??
+        UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+      workingAreaFocusOutsideOpacityByLayerId:
+        completeWorkingAreaFocusOpacityMap(base, layerOptions),
+      ...patch,
+    };
+    liveStyleRef.current = merged;
+    sceneHandle.manager.applyStyle(
+      UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
+      merged,
+    );
+    if (isEnv) {
+      setEnvLayerStyle(UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID, patch);
+    } else if (currentPage) {
+      setPageLayerOverride(
+        currentPage.id,
+        UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
+        patch,
+      );
+    }
+  };
+
+  const commitTargetLayerIds = (nextTargets: Set<string>) => {
+    commit({
+      workingAreaFocusTargetLayerIds: Array.from(nextTargets),
+      workingAreaFocusOutsideOpacityByLayerId:
+        completeWorkingAreaFocusOpacityMap(liveStyleRef.current, layerOptions),
+    });
+  };
+
+  const toggleLayerTarget = (id: string, checked: boolean) => {
+    const next = new Set(targetLayerIds);
+    if (checked) next.add(id);
+    else next.delete(id);
+    commitTargetLayerIds(next);
+  };
+
+  const updateOutsideOpacity = (id: string, value: number) => {
+    commit({
+      workingAreaFocusOutsideOpacityByLayerId:
+        completeWorkingAreaFocusOpacityMap(liveStyleRef.current, layerOptions, {
+          [id]: value,
+        }),
+    });
+  };
+
+  return (
+    <SeismicCapabilityLayerItem
+      title="Working area focus"
+      type="clip"
+      testId="working-area-focus-container"
+      inactive={!enabled}
+    >
+      <div style={detailsContentStyle}>
+        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+          <span style={nestedFieldLabelStyle}>Enable focus</span>
+          <input
+            data-testid="working-area-focus-enabled"
+            type="checkbox"
+            disabled={disabled}
+            checked={enabled}
+            onChange={(event) =>
+              commit({
+                workingAreaFocusEnabled: event.target.checked,
+                workingAreaFocusMode: mode,
+                workingAreaFocusBoundsLayerId:
+                  UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+                workingAreaFocusTargetLayerIds: Array.from(targetLayerIds),
+                workingAreaFocusOutsideOpacityByLayerId:
+                  completeWorkingAreaFocusOpacityMap(
+                    liveStyleRef.current,
+                    layerOptions,
+                  ),
+              })
+            }
+          />
+        </label>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Mode</label>
+          <select
+            data-testid="working-area-focus-mode"
+            disabled={disabled}
+            value={mode}
+            onChange={(event) =>
+              commit({
+                workingAreaFocusMode:
+                  event.target.value === "inside-only"
+                    ? "inside-only"
+                    : "outside-context",
+                workingAreaFocusOutsideOpacityByLayerId:
+                  completeWorkingAreaFocusOpacityMap(
+                    liveStyleRef.current,
+                    layerOptions,
+                  ),
+              })
+            }
+            style={{ flex: 1 }}
+          >
+            <option value="outside-context">Dim outside</option>
+            <option value="inside-only">Hide outside</option>
+          </select>
+        </div>
+        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+          <span style={nestedFieldLabelStyle}>Show box</span>
+          <input
+            data-testid="working-area-focus-helper-visible"
+            type="checkbox"
+            disabled={disabled}
+            checked={helperVisible}
+            onChange={(event) =>
+              commit({ workingAreaFocusHelperVisible: event.target.checked })
+            }
+          />
+        </label>
+        <details open style={nestedDetailsStyle}>
+          <summary style={panelStyles.summary}>Affected layers</summary>
+          <div style={detailsContentStyle}>
+            {layerOptions.map((layer) => {
+              const supported = layer.capability !== "unsupported";
+              const checked = supported && targetLayerIds.has(layer.id);
+              const opacity = workingAreaFocusOpacityForLayer(style, layer.id);
+              const sliderDisabled =
+                disabled || !supported || !checked || mode === "inside-only";
+              return (
+                <div
+                  key={layer.id}
+                  style={{
+                    marginBottom: 6,
+                    opacity: supported ? 1 : 0.48,
+                  }}
+                >
+                  <label
+                    style={{
+                      ...compactCheckboxRowStyle,
+                      cursor: supported ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    <input
+                      data-testid={`working-area-focus-target-${layer.id}`}
+                      type="checkbox"
+                      disabled={disabled || !supported}
+                      checked={checked}
+                      onChange={(event) =>
+                        toggleLayerTarget(layer.id, event.target.checked)
+                      }
+                    />
+                    <span>
+                      {layer.label}
+                      <span style={{ color: vibrancyTertiaryLabel }}>
+                        {" "}
+                        {layer.capabilityLabel}
+                      </span>
+                    </span>
+                  </label>
+                  {supported ? (
+                    <div style={{ ...nestedControlRowStyle, paddingLeft: 18 }}>
+                      <label style={nestedFieldLabelStyle}>Outside</label>
+                      <input
+                        data-testid={`working-area-focus-opacity-${layer.id}`}
+                        type="range"
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        disabled={sliderDisabled}
+                        value={opacity}
+                        onChange={(event) =>
+                          updateOutsideOpacity(
+                            layer.id,
+                            parseFloat(event.target.value),
+                          )
+                        }
+                        style={
+                          {
+                            flex: 1,
+                            opacity: sliderDisabled ? 0.45 : 1,
+                            "--editor-slider-fill": `${opacity * 100}%`,
+                          } as React.CSSProperties
+                        }
+                      />
+                      <span style={sliderNumberReadoutStyle}>
+                        {mode === "inside-only" ? "0.00" : opacity.toFixed(2)}
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </details>
+      </div>
+    </SeismicCapabilityLayerItem>
+  );
+}
+
 function SceneSectionPlanesContainer({
   seismicLayer,
   allLayers,
@@ -6036,8 +6901,9 @@ function SceneSectionPlanesContainer({
   sceneHandle: SceneHandle;
 }) {
   const products = seismicLayer ? seismicProductOptions(seismicLayer) : [];
-  const defaultProductId =
-    seismicLayer ? seismicDefaultProductId(seismicLayer) : products[0]?.id ?? "";
+  const defaultProductId = seismicLayer
+    ? seismicDefaultProductId(seismicLayer)
+    : (products[0]?.id ?? "");
   const enabled = styleBoolean(style, "sceneSectionEnabled", false);
   const mode = "cutaway";
   const targetScope =
@@ -6081,7 +6947,11 @@ function SceneSectionPlanesContainer({
     if (isEnv) {
       setEnvLayerStyle(UTAH_FORGE_SCENE_SECTION_LAYER_ID, patch);
     } else if (currentPage) {
-      setPageLayerOverride(currentPage.id, UTAH_FORGE_SCENE_SECTION_LAYER_ID, patch);
+      setPageLayerOverride(
+        currentPage.id,
+        UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+        patch,
+      );
     }
   };
   const setPlanePatch = (
@@ -6133,7 +7003,7 @@ function SceneSectionPlanesContainer({
             ? "3D MT resistivity volume"
             : layer.id === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID
               ? "3D MT threshold surfaces"
-          : editorLayerLabel(layer),
+              : editorLayerLabel(layer),
       supported:
         layer.id !== UTAH_FORGE_MT_STATIONS_LAYER_ID ||
         targetScope === "all-visible",
@@ -6169,7 +7039,9 @@ function SceneSectionPlanesContainer({
         <summary
           style={{
             ...panelStyles.summary,
-            color: isActiveAxis ? vibrancySecondaryLabel : panelStyles.summary.color,
+            color: isActiveAxis
+              ? vibrancySecondaryLabel
+              : panelStyles.summary.color,
           }}
         >
           {range.label}
@@ -6211,12 +7083,16 @@ function SceneSectionPlanesContainer({
               onChange={(e) =>
                 setPlanePatch(axis, { positionM: parseFloat(e.target.value) })
               }
-              style={{
-                flex: 1,
-                "--editor-slider-fill": `${Math.max(0, Math.min(100, fill))}%`,
-              } as React.CSSProperties}
+              style={
+                {
+                  flex: 1,
+                  "--editor-slider-fill": `${Math.max(0, Math.min(100, fill))}%`,
+                } as React.CSSProperties
+              }
             />
-            <span style={sliderNumberReadoutStyle}>{Math.round(position)} m</span>
+            <span style={sliderNumberReadoutStyle}>
+              {Math.round(position)} m
+            </span>
           </div>
           <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
             <span style={nestedFieldLabelStyle}>Flip side</span>
@@ -6225,7 +7101,9 @@ function SceneSectionPlanesContainer({
               type="checkbox"
               disabled={controlDisabled || !planeEnabled}
               checked={plane.invert === true}
-              onChange={(e) => setPlanePatch(axis, { invert: e.target.checked })}
+              onChange={(e) =>
+                setPlanePatch(axis, { invert: e.target.checked })
+              }
             />
           </label>
           <button
@@ -6368,10 +7246,17 @@ function SceneSectionPlanesContainer({
                   data-testid={`scene-section-target-layer-${layer.id}`}
                   type="checkbox"
                   disabled={
-                    disabled || targetScope === "all-visible" || !layer.supported
+                    disabled ||
+                    targetScope === "all-visible" ||
+                    !layer.supported
                   }
-                  checked={targetScope === "all-visible" || targetLayerIds.has(layer.id)}
-                  onChange={(e) => toggleLayerTarget(layer.id, e.target.checked)}
+                  checked={
+                    targetScope === "all-visible" ||
+                    targetLayerIds.has(layer.id)
+                  }
+                  onChange={(e) =>
+                    toggleLayerTarget(layer.id, e.target.checked)
+                  }
                 />
                 <span>{layer.label}</span>
               </label>
@@ -6487,7 +7372,8 @@ function SeismicCapabilityLayerContainers({
       ? style.seismicNavigationRoleVisibility
       : {};
   const navigationSourcesVisible = navigationRoleVisibility.sources !== false;
-  const navigationReceiversVisible = navigationRoleVisibility.receivers !== false;
+  const navigationReceiversVisible =
+    navigationRoleVisibility.receivers !== false;
   const navigationLinesVisible = navigationRoleVisibility.lines !== false;
   const currentCapabilityPresetId =
     typeof style.seismicCapabilityPresetId === "string"
@@ -6519,7 +7405,9 @@ function SeismicCapabilityLayerContainers({
     commitLayerStyle(layerId, patch);
   };
   const selectedOnlyVisibility = (id: string) =>
-    Object.fromEntries(products.map((product) => [product.id, product.id === id]));
+    Object.fromEntries(
+      products.map((product) => [product.id, product.id === id]),
+    );
   const setProductVisible = (id: string, visible: boolean) => {
     commit({
       seismicProductVisibility: {
@@ -6562,7 +7450,9 @@ function SeismicCapabilityLayerContainers({
     });
   };
   const applyCapabilityPreset = (presetId: string) => {
-    const preset = capabilityPresets.find((candidate) => candidate.id === presetId);
+    const preset = capabilityPresets.find(
+      (candidate) => candidate.id === presetId,
+    );
     if (!preset) return;
     commit(seismicPresetPatch(preset, products, productId));
     if (preset.mtStylePatch) {
@@ -6645,263 +7535,303 @@ function SeismicCapabilityLayerContainers({
     const windowMinLabel = isVelocityProduct(product) ? "Vel min" : "Amp min";
     const windowMaxLabel = isVelocityProduct(product) ? "Vel max" : "Amp max";
     return (
-    <details style={nestedDetailsStyle}>
-      <summary style={panelStyles.summary}>Product variables</summary>
-      <div style={detailsContentStyle}>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Slice</label>
-          <select
-            data-testid={`seismic-capability-slice-axis-${product.id}`}
-            value={productControlActive(product) ? sliceAxis : "inline"}
-            disabled={disabled || !productControlActive(product)}
-            onChange={(e) =>
-              commit({
-                seismicSliceAxis: e.target.value as NonNullable<
-                  EditableStyle["seismicSliceAxis"]
-                >,
-              })
-            }
-            style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-          >
-            <option value="inline">Inline</option>
-            <option value="crossline">Crossline</option>
-            <option value="sample">Time/depth plane</option>
-          </select>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Position</label>
-          <input
-            data-testid={`seismic-capability-slice-position-${product.id}`}
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={sliceFraction}
-            disabled={disabled || !productControlActive(product)}
-            onChange={(e) =>
-              commit({ seismicSliceFraction: parseFloat(e.target.value) })
-            }
-            style={{
-              flex: 1,
-              opacity: productControlActive(product) ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${sliceFraction * 100}%`,
-            } as React.CSSProperties}
-          />
-          <span style={sliderNumberReadoutStyle}>{sliceFraction.toFixed(2)}</span>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Opacity</label>
-          <input
-            data-testid={`seismic-capability-opacity-${product.id}`}
-            type="range"
-            min={0}
-            max={1}
-            step={0.02}
-            value={seismicOpacity}
-            disabled={disabled || !productControlActive(product)}
-            onChange={(e) => commit({ opacity: parseFloat(e.target.value) })}
-            style={{
-              flex: 1,
-              opacity: productControlActive(product) ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${seismicOpacity * 100}%`,
-            } as React.CSSProperties}
-          />
-          <span style={sliderNumberReadoutStyle}>{seismicOpacity.toFixed(2)}</span>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>{windowMinLabel}</label>
-          <input
-            data-testid={`seismic-capability-amplitude-min-${product.id}`}
-            type="range"
-            min={0}
-            max={0.98}
-            step={0.01}
-            value={amplitudeMin}
-            disabled={disabled || !productControlActive(product)}
-            onChange={(e) =>
-              commit({ seismicAmplitudeMin: parseFloat(e.target.value) })
-            }
-            style={{
-              flex: 1,
-              opacity: productControlActive(product) ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${amplitudeMin * 100}%`,
-            } as React.CSSProperties}
-          />
-          <span style={sliderNumberReadoutStyle}>
-            {seismicWindowValueLabel(product, amplitudeMin)}
-          </span>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>{windowMaxLabel}</label>
-          <input
-            data-testid={`seismic-capability-amplitude-max-${product.id}`}
-            type="range"
-            min={0.02}
-            max={1}
-            step={0.01}
-            value={amplitudeMax}
-            disabled={disabled || !productControlActive(product)}
-            onChange={(e) =>
-              commit({ seismicAmplitudeMax: parseFloat(e.target.value) })
-            }
-            style={{
-              flex: 1,
-              opacity: productControlActive(product) ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${amplitudeMax * 100}%`,
-            } as React.CSSProperties}
-          />
-          <span style={sliderNumberReadoutStyle}>
-            {seismicWindowValueLabel(product, amplitudeMax)}
-          </span>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Gain curve</label>
-          <input
-            data-testid={`seismic-capability-amplitude-gamma-${product.id}`}
-            type="range"
-            min={0.35}
-            max={2.5}
-            step={0.05}
-            value={amplitudeGamma}
-            disabled={disabled || !productControlActive(product)}
-            onInput={(e) =>
-              commit({
-                seismicAmplitudeGamma: parseFloat(
-                  (e.currentTarget as HTMLInputElement).value,
-                ),
-              })
-            }
-            onChange={(e) =>
-              commit({ seismicAmplitudeGamma: parseFloat(e.target.value) })
-            }
-            style={{
-              flex: 1,
-              opacity: productControlActive(product) ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${((amplitudeGamma - 0.35) / 2.15) * 100}%`,
-            } as React.CSSProperties}
-          />
-          <span style={sliderNumberReadoutStyle}>{amplitudeGamma.toFixed(2)}</span>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Palette</label>
-          <select
-            data-testid={`seismic-capability-colormap-${product.id}`}
-            value={colormap}
-            disabled={disabled || !productControlActive(product)}
-            onChange={(e) =>
-              commit({
-                seismicColormap: seismicColormapFromValue(e.target.value),
-              })
-            }
-            style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-          >
-            <option value="blue-white-red">Blue-white-red</option>
-            <option value="grayscale">Grayscale</option>
-            <option value="velocity">Velocity</option>
-          </select>
-        </div>
-        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-          <span style={nestedFieldLabelStyle}>White bg</span>
-          <input
-            data-testid={`seismic-capability-remove-background-${product.id}`}
-            type="checkbox"
-            checked={removeBackground}
-            disabled={disabled || !productControlActive(product)}
-            onChange={(e) => commit({ seismicRemoveBackground: e.target.checked })}
-            style={{ opacity: controlOpacity }}
-          />
-          <span
-            style={{
-              flex: 1,
-              color: vibrancyTertiaryLabel,
-              fontSize: 11,
-              opacity: controlOpacity,
-            }}
-          >
-            remove neutral fill
-          </span>
-        </label>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Zero mute</label>
-          <input
-            data-testid={`seismic-capability-background-cutoff-${product.id}`}
-            type="range"
-            min={0}
-            max={0.45}
-            step={0.01}
-            value={backgroundCutoff}
-            disabled={
-              disabled || !productControlActive(product) || !removeBackground
-            }
-            onChange={(e) =>
-              commit({ seismicBackgroundCutoff: parseFloat(e.target.value) })
-            }
-            style={{
-              flex: 1,
-              opacity:
-                productControlActive(product) && removeBackground
-                  ? controlOpacity
-                  : 0.35,
-              "--editor-slider-fill": `${(backgroundCutoff / 0.45) * 100}%`,
-            } as React.CSSProperties}
-          />
-          <span style={sliderNumberReadoutStyle}>
-            {backgroundCutoff.toFixed(2)}
-          </span>
-        </div>
-        {product.raymarchCapable ? (
+      <details style={nestedDetailsStyle}>
+        <summary style={panelStyles.summary}>Product variables</summary>
+        <div style={detailsContentStyle}>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Ray steps</label>
+            <label style={nestedFieldLabelStyle}>Slice</label>
+            <select
+              data-testid={`seismic-capability-slice-axis-${product.id}`}
+              value={productControlActive(product) ? sliceAxis : "inline"}
+              disabled={disabled || !productControlActive(product)}
+              onChange={(e) =>
+                commit({
+                  seismicSliceAxis: e.target.value as NonNullable<
+                    EditableStyle["seismicSliceAxis"]
+                  >,
+                })
+              }
+              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+            >
+              <option value="inline">Inline</option>
+              <option value="crossline">Crossline</option>
+              <option value="sample">Time/depth plane</option>
+            </select>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Position</label>
             <input
-              data-testid={`seismic-capability-volume-sample-steps-${product.id}`}
+              data-testid={`seismic-capability-slice-position-${product.id}`}
               type="range"
-              min={24}
-              max={160}
-              step={8}
-              value={volumeSampleSteps}
+              min={0}
+              max={1}
+              step={0.01}
+              value={sliceFraction}
+              disabled={disabled || !productControlActive(product)}
+              onChange={(e) =>
+                commit({ seismicSliceFraction: parseFloat(e.target.value) })
+              }
+              style={
+                {
+                  flex: 1,
+                  opacity: productControlActive(product)
+                    ? controlOpacity
+                    : 0.35,
+                  "--editor-slider-fill": `${sliceFraction * 100}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>
+              {sliceFraction.toFixed(2)}
+            </span>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Opacity</label>
+            <input
+              data-testid={`seismic-capability-opacity-${product.id}`}
+              type="range"
+              min={0}
+              max={1}
+              step={0.02}
+              value={seismicOpacity}
+              disabled={disabled || !productControlActive(product)}
+              onChange={(e) => commit({ opacity: parseFloat(e.target.value) })}
+              style={
+                {
+                  flex: 1,
+                  opacity: productControlActive(product)
+                    ? controlOpacity
+                    : 0.35,
+                  "--editor-slider-fill": `${seismicOpacity * 100}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>
+              {seismicOpacity.toFixed(2)}
+            </span>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>{windowMinLabel}</label>
+            <input
+              data-testid={`seismic-capability-amplitude-min-${product.id}`}
+              type="range"
+              min={0}
+              max={0.98}
+              step={0.01}
+              value={amplitudeMin}
+              disabled={disabled || !productControlActive(product)}
+              onChange={(e) =>
+                commit({ seismicAmplitudeMin: parseFloat(e.target.value) })
+              }
+              style={
+                {
+                  flex: 1,
+                  opacity: productControlActive(product)
+                    ? controlOpacity
+                    : 0.35,
+                  "--editor-slider-fill": `${amplitudeMin * 100}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>
+              {seismicWindowValueLabel(product, amplitudeMin)}
+            </span>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>{windowMaxLabel}</label>
+            <input
+              data-testid={`seismic-capability-amplitude-max-${product.id}`}
+              type="range"
+              min={0.02}
+              max={1}
+              step={0.01}
+              value={amplitudeMax}
+              disabled={disabled || !productControlActive(product)}
+              onChange={(e) =>
+                commit({ seismicAmplitudeMax: parseFloat(e.target.value) })
+              }
+              style={
+                {
+                  flex: 1,
+                  opacity: productControlActive(product)
+                    ? controlOpacity
+                    : 0.35,
+                  "--editor-slider-fill": `${amplitudeMax * 100}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>
+              {seismicWindowValueLabel(product, amplitudeMax)}
+            </span>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Gain curve</label>
+            <input
+              data-testid={`seismic-capability-amplitude-gamma-${product.id}`}
+              type="range"
+              min={0.35}
+              max={2.5}
+              step={0.05}
+              value={amplitudeGamma}
               disabled={disabled || !productControlActive(product)}
               onInput={(e) =>
                 commit({
-                  seismicVolumeSampleSteps: parseFloat(
+                  seismicAmplitudeGamma: parseFloat(
                     (e.currentTarget as HTMLInputElement).value,
                   ),
                 })
               }
               onChange={(e) =>
-                commit({ seismicVolumeSampleSteps: parseFloat(e.target.value) })
+                commit({ seismicAmplitudeGamma: parseFloat(e.target.value) })
               }
+              style={
+                {
+                  flex: 1,
+                  opacity: productControlActive(product)
+                    ? controlOpacity
+                    : 0.35,
+                  "--editor-slider-fill": `${((amplitudeGamma - 0.35) / 2.15) * 100}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>
+              {amplitudeGamma.toFixed(2)}
+            </span>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Palette</label>
+            <select
+              data-testid={`seismic-capability-colormap-${product.id}`}
+              value={colormap}
+              disabled={disabled || !productControlActive(product)}
+              onChange={(e) =>
+                commit({
+                  seismicColormap: seismicColormapFromValue(e.target.value),
+                })
+              }
+              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+            >
+              <option value="blue-white-red">Blue-white-red</option>
+              <option value="grayscale">Grayscale</option>
+              <option value="velocity">Velocity</option>
+            </select>
+          </div>
+          <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+            <span style={nestedFieldLabelStyle}>White bg</span>
+            <input
+              data-testid={`seismic-capability-remove-background-${product.id}`}
+              type="checkbox"
+              checked={removeBackground}
+              disabled={disabled || !productControlActive(product)}
+              onChange={(e) =>
+                commit({ seismicRemoveBackground: e.target.checked })
+              }
+              style={{ opacity: controlOpacity }}
+            />
+            <span
               style={{
                 flex: 1,
-                opacity: productControlActive(product) ? controlOpacity : 0.35,
-                "--editor-slider-fill": `${((volumeSampleSteps - 24) / 136) * 100}%`,
-              } as React.CSSProperties}
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                opacity: controlOpacity,
+              }}
+            >
+              remove neutral fill
+            </span>
+          </label>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Zero mute</label>
+            <input
+              data-testid={`seismic-capability-background-cutoff-${product.id}`}
+              type="range"
+              min={0}
+              max={0.45}
+              step={0.01}
+              value={backgroundCutoff}
+              disabled={
+                disabled || !productControlActive(product) || !removeBackground
+              }
+              onChange={(e) =>
+                commit({ seismicBackgroundCutoff: parseFloat(e.target.value) })
+              }
+              style={
+                {
+                  flex: 1,
+                  opacity:
+                    productControlActive(product) && removeBackground
+                      ? controlOpacity
+                      : 0.35,
+                  "--editor-slider-fill": `${(backgroundCutoff / 0.45) * 100}%`,
+                } as React.CSSProperties
+              }
             />
-            <span style={sliderNumberReadoutStyle}>{volumeSampleSteps}</span>
+            <span style={sliderNumberReadoutStyle}>
+              {backgroundCutoff.toFixed(2)}
+            </span>
           </div>
-        ) : null}
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Time scale</label>
-          <input
-            data-testid={`seismic-capability-time-scale-${product.id}`}
-            type="range"
-            min={0.25}
-            max={8}
-            step={0.25}
-            value={timeScale}
-            disabled={disabled || !productControlActive(product)}
-            onChange={(e) =>
-              commit({ seismicTimeScale: parseFloat(e.target.value) })
-            }
-            style={{
-              flex: 1,
-              opacity: productControlActive(product) ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${((timeScale - 0.25) / 7.75) * 100}%`,
-            } as React.CSSProperties}
-          />
-          <span style={sliderNumberReadoutStyle}>{timeScale.toFixed(2)}</span>
+          {product.raymarchCapable ? (
+            <div style={nestedControlRowStyle}>
+              <label style={nestedFieldLabelStyle}>Ray steps</label>
+              <input
+                data-testid={`seismic-capability-volume-sample-steps-${product.id}`}
+                type="range"
+                min={24}
+                max={160}
+                step={8}
+                value={volumeSampleSteps}
+                disabled={disabled || !productControlActive(product)}
+                onInput={(e) =>
+                  commit({
+                    seismicVolumeSampleSteps: parseFloat(
+                      (e.currentTarget as HTMLInputElement).value,
+                    ),
+                  })
+                }
+                onChange={(e) =>
+                  commit({
+                    seismicVolumeSampleSteps: parseFloat(e.target.value),
+                  })
+                }
+                style={
+                  {
+                    flex: 1,
+                    opacity: productControlActive(product)
+                      ? controlOpacity
+                      : 0.35,
+                    "--editor-slider-fill": `${((volumeSampleSteps - 24) / 136) * 100}%`,
+                  } as React.CSSProperties
+                }
+              />
+              <span style={sliderNumberReadoutStyle}>{volumeSampleSteps}</span>
+            </div>
+          ) : null}
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Time scale</label>
+            <input
+              data-testid={`seismic-capability-time-scale-${product.id}`}
+              type="range"
+              min={0.25}
+              max={8}
+              step={0.25}
+              value={timeScale}
+              disabled={disabled || !productControlActive(product)}
+              onChange={(e) =>
+                commit({ seismicTimeScale: parseFloat(e.target.value) })
+              }
+              style={
+                {
+                  flex: 1,
+                  opacity: productControlActive(product)
+                    ? controlOpacity
+                    : 0.35,
+                  "--editor-slider-fill": `${((timeScale - 0.25) / 7.75) * 100}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>{timeScale.toFixed(2)}</span>
+          </div>
         </div>
-      </div>
-    </details>
+      </details>
     );
   };
 
@@ -6924,7 +7854,9 @@ function SeismicCapabilityLayerContainers({
                 type="checkbox"
                 checked={productVisible}
                 disabled={disabled}
-                onChange={(e) => setProductVisible(product.id, e.target.checked)}
+                onChange={(e) =>
+                  setProductVisible(product.id, e.target.checked)
+                }
                 style={{ opacity: controlOpacity }}
               />
               <span
@@ -6940,7 +7872,7 @@ function SeismicCapabilityLayerContainers({
                     ? renderMode === "raymarch"
                       ? "active volume"
                       : "active slice"
-                    : product.domainKind ?? "processed product"
+                    : (product.domainKind ?? "processed product")
                   : "inactive"}
               </span>
             </label>
@@ -7050,7 +7982,9 @@ function SeismicCapabilityLayerContainers({
             onChange={(e) =>
               commit({
                 seismicComparisonMode:
-                  e.target.value === "side-by-side" ? "side-by-side" : "overlay",
+                  e.target.value === "side-by-side"
+                    ? "side-by-side"
+                    : "overlay",
               })
             }
             style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
@@ -7072,11 +8006,14 @@ function SeismicCapabilityLayerContainers({
             onChange={(e) =>
               commit({ seismicComparisonSpacingM: parseFloat(e.target.value) })
             }
-            style={{
-              flex: 1,
-              opacity: comparisonMode === "side-by-side" ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${(comparisonSpacingM / 3000) * 100}%`,
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity:
+                  comparisonMode === "side-by-side" ? controlOpacity : 0.35,
+                "--editor-slider-fill": `${(comparisonSpacingM / 3000) * 100}%`,
+              } as React.CSSProperties
+            }
           />
           <span style={sliderNumberReadoutStyle}>
             {comparisonSpacingM.toFixed(0)} m
@@ -7140,13 +8077,17 @@ function SeismicCapabilityLayerContainers({
             value={seismicOpacity}
             disabled={disabled}
             onChange={(e) => commit({ opacity: parseFloat(e.target.value) })}
-            style={{
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${seismicOpacity * 100}%`,
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity: controlOpacity,
+                "--editor-slider-fill": `${seismicOpacity * 100}%`,
+              } as React.CSSProperties
+            }
           />
-          <span style={sliderNumberReadoutStyle}>{seismicOpacity.toFixed(2)}</span>
+          <span style={sliderNumberReadoutStyle}>
+            {seismicOpacity.toFixed(2)}
+          </span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Palette</label>
@@ -7179,13 +8120,17 @@ function SeismicCapabilityLayerContainers({
             onChange={(e) =>
               commit({ seismicAmplitudeGamma: parseFloat(e.target.value) })
             }
-            style={{
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${((amplitudeGamma - 0.35) / 2.15) * 100}%`,
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity: controlOpacity,
+                "--editor-slider-fill": `${((amplitudeGamma - 0.35) / 2.15) * 100}%`,
+              } as React.CSSProperties
+            }
           />
-          <span style={sliderNumberReadoutStyle}>{amplitudeGamma.toFixed(2)}</span>
+          <span style={sliderNumberReadoutStyle}>
+            {amplitudeGamma.toFixed(2)}
+          </span>
         </div>
         <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
           <span style={nestedFieldLabelStyle}>White bg</span>
@@ -7194,7 +8139,9 @@ function SeismicCapabilityLayerContainers({
             type="checkbox"
             checked={removeBackground}
             disabled={disabled}
-            onChange={(e) => commit({ seismicRemoveBackground: e.target.checked })}
+            onChange={(e) =>
+              commit({ seismicRemoveBackground: e.target.checked })
+            }
             style={{ opacity: controlOpacity }}
           />
           <span
@@ -7221,11 +8168,13 @@ function SeismicCapabilityLayerContainers({
             onChange={(e) =>
               commit({ seismicBackgroundCutoff: parseFloat(e.target.value) })
             }
-            style={{
-              flex: 1,
-              opacity: removeBackground ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${(backgroundCutoff / 0.45) * 100}%`,
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity: removeBackground ? controlOpacity : 0.35,
+                "--editor-slider-fill": `${(backgroundCutoff / 0.45) * 100}%`,
+              } as React.CSSProperties
+            }
           />
           <span style={sliderNumberReadoutStyle}>
             {backgroundCutoff.toFixed(2)}
@@ -7244,11 +8193,15 @@ function SeismicCapabilityLayerContainers({
             onChange={(e) =>
               commit({ seismicVolumeSampleSteps: parseFloat(e.target.value) })
             }
-            style={{
-              flex: 1,
-              opacity: selectedProduct?.raymarchCapable ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${((volumeSampleSteps - 24) / 136) * 100}%`,
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity: selectedProduct?.raymarchCapable
+                  ? controlOpacity
+                  : 0.35,
+                "--editor-slider-fill": `${((volumeSampleSteps - 24) / 136) * 100}%`,
+              } as React.CSSProperties
+            }
           />
           <span style={sliderNumberReadoutStyle}>{volumeSampleSteps}</span>
         </div>
@@ -7266,7 +8219,9 @@ function SeismicCapabilityLayerContainers({
             type="checkbox"
             checked={navigationVisible}
             disabled={disabled}
-            onChange={(e) => commit({ seismicNavigationVisible: e.target.checked })}
+            onChange={(e) =>
+              commit({ seismicNavigationVisible: e.target.checked })
+            }
             style={{ opacity: controlOpacity }}
           />
           <span style={{ flex: 1 }} />
@@ -7290,13 +8245,21 @@ function SeismicCapabilityLayerContainers({
           </button>
         </div>
         {[
-          { role: "sources" as const, label: "Sources", checked: navigationSourcesVisible },
+          {
+            role: "sources" as const,
+            label: "Sources",
+            checked: navigationSourcesVisible,
+          },
           {
             role: "receivers" as const,
             label: "Receivers",
             checked: navigationReceiversVisible,
           },
-          { role: "lines" as const, label: "Lines", checked: navigationLinesVisible },
+          {
+            role: "lines" as const,
+            label: "Lines",
+            checked: navigationLinesVisible,
+          },
         ].map((item) => (
           <label
             key={item.role}
@@ -7308,7 +8271,9 @@ function SeismicCapabilityLayerContainers({
               type="checkbox"
               checked={item.checked}
               disabled={disabled}
-              onChange={(e) => setNavigationRoleVisible(item.role, e.target.checked)}
+              onChange={(e) =>
+                setNavigationRoleVisible(item.role, e.target.checked)
+              }
               style={{ opacity: controlOpacity }}
             />
             <span style={{ flex: 1 }} />
@@ -7507,11 +8472,13 @@ function SurfaceGradientControls({
               surfaceGradientMidpoint: parseFloat(e.target.value),
             })
           }
-          style={{
-            flex: 1,
-            opacity: controlOpacity,
-            "--editor-slider-fill": `${midpointFill}%`,
-          } as React.CSSProperties}
+          style={
+            {
+              flex: 1,
+              opacity: controlOpacity,
+              "--editor-slider-fill": `${midpointFill}%`,
+            } as React.CSSProperties
+          }
         />
         <span style={sliderNumberReadoutStyle}>{midpoint.toFixed(2)}</span>
       </div>
@@ -7529,11 +8496,13 @@ function SurfaceGradientControls({
               surfaceGradientContrast: parseFloat(e.target.value),
             })
           }
-          style={{
-            flex: 1,
-            opacity: controlOpacity,
-            "--editor-slider-fill": `${contrastFill}%`,
-          } as React.CSSProperties}
+          style={
+            {
+              flex: 1,
+              opacity: controlOpacity,
+              "--editor-slider-fill": `${contrastFill}%`,
+            } as React.CSSProperties
+          }
         />
         <span style={sliderNumberReadoutStyle}>{contrast.toFixed(2)}</span>
       </div>
@@ -7612,11 +8581,13 @@ function MtTopSurfaceControls({
           onChange={(e) =>
             onChange({ meshSurfaceLiftM: parseFloat(e.target.value) })
           }
-          style={{
-            flex: 1,
-            opacity: controlOpacity,
-            "--editor-slider-fill": `${liftFill}%`,
-          } as React.CSSProperties}
+          style={
+            {
+              flex: 1,
+              opacity: controlOpacity,
+              "--editor-slider-fill": `${liftFill}%`,
+            } as React.CSSProperties
+          }
         />
         <span style={sliderNumberReadoutStyle}>{lift.toFixed(0)} m</span>
       </div>
@@ -7643,11 +8614,13 @@ function MtTopSurfaceControls({
           onChange={(e) =>
             onChange({ meshRoughness: parseFloat(e.target.value) })
           }
-          style={{
-            flex: 1,
-            opacity: controlOpacity,
-            "--editor-slider-fill": `${roughness * 100}%`,
-          } as React.CSSProperties}
+          style={
+            {
+              flex: 1,
+              opacity: controlOpacity,
+              "--editor-slider-fill": `${roughness * 100}%`,
+            } as React.CSSProperties
+          }
         />
         <span style={sliderNumberReadoutStyle}>{roughness.toFixed(2)}</span>
       </div>
@@ -7663,11 +8636,13 @@ function MtTopSurfaceControls({
           onChange={(e) =>
             onChange({ meshMetalness: parseFloat(e.target.value) })
           }
-          style={{
-            flex: 1,
-            opacity: controlOpacity,
-            "--editor-slider-fill": `${metalness * 100}%`,
-          } as React.CSSProperties}
+          style={
+            {
+              flex: 1,
+              opacity: controlOpacity,
+              "--editor-slider-fill": `${metalness * 100}%`,
+            } as React.CSSProperties
+          }
         />
         <span style={sliderNumberReadoutStyle}>{metalness.toFixed(2)}</span>
       </div>
@@ -7681,12 +8656,18 @@ interface MtVolumeProductOption {
   description?: string;
 }
 
-function mtVolumeProductOptions(layer: ProjectLayerSpec): MtVolumeProductOption[] {
+function mtVolumeProductOptions(
+  layer: ProjectLayerSpec,
+): MtVolumeProductOption[] {
   const raw = (layer.metadata as { volumeProducts?: unknown }).volumeProducts;
   if (Array.isArray(raw)) {
     const options: MtVolumeProductOption[] = [];
     for (const item of raw) {
-      const product = item as { id?: unknown; label?: unknown; description?: unknown };
+      const product = item as {
+        id?: unknown;
+        label?: unknown;
+        description?: unknown;
+      };
       if (typeof product.id !== "string") continue;
       options.push({
         id: product.id,
@@ -7695,7 +8676,9 @@ function mtVolumeProductOptions(layer: ProjectLayerSpec): MtVolumeProductOption[
             ? prefixMtDimension(product.label, "3D")
             : prefixMtDimension(product.id, "3D"),
         description:
-          typeof product.description === "string" ? product.description : undefined,
+          typeof product.description === "string"
+            ? product.description
+            : undefined,
       });
     }
     if (options.length > 0) return options;
@@ -7807,7 +8790,8 @@ function IsobandControls({
   const activePlane = scenePlanes[activeAxis] ?? {};
   const axisRange = isobandAxisRange(activeAxis);
   const planePosition =
-    typeof activePlane.positionM === "number" && Number.isFinite(activePlane.positionM)
+    typeof activePlane.positionM === "number" &&
+    Number.isFinite(activePlane.positionM)
       ? activePlane.positionM
       : isobandDefaultPlanePosition(activeAxis);
   const controlOpacity = disabled ? 0.4 : 1;
@@ -7838,7 +8822,11 @@ function IsobandControls({
     if (isEnv) {
       setEnvLayerStyle(UTAH_FORGE_SCENE_SECTION_LAYER_ID, patch);
     } else if (currentPage) {
-      setPageLayerOverride(currentPage.id, UTAH_FORGE_SCENE_SECTION_LAYER_ID, patch);
+      setPageLayerOverride(
+        currentPage.id,
+        UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+        patch,
+      );
     }
   };
   const ensureScenePlane = (axis: "x" | "y" | "z") => {
@@ -7954,11 +8942,13 @@ function IsobandControls({
                     },
                   })
                 }
-                style={{
-                  flex: 1,
-                  opacity: controlOpacity,
-                  "--editor-slider-fill": `${planeFill}%`,
-                } as React.CSSProperties}
+                style={
+                  {
+                    flex: 1,
+                    opacity: controlOpacity,
+                    "--editor-slider-fill": `${planeFill}%`,
+                  } as React.CSSProperties
+                }
               />
               <span style={sliderNumberReadoutStyle}>
                 {Math.round(planePosition)} m
@@ -7978,15 +8968,21 @@ function IsobandControls({
             value={sourceOpacity}
             disabled={disabled || !enabled}
             onChange={(event) =>
-              commit({ sectionIsoSourceOpacity: parseFloat(event.target.value) })
+              commit({
+                sectionIsoSourceOpacity: parseFloat(event.target.value),
+              })
             }
-            style={{
-              flex: 1,
-              opacity: enabled ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${sourceOpacity * 100}%`,
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity: enabled ? controlOpacity : 0.35,
+                "--editor-slider-fill": `${sourceOpacity * 100}%`,
+              } as React.CSSProperties
+            }
           />
-          <span style={sliderNumberReadoutStyle}>{sourceOpacity.toFixed(2)}</span>
+          <span style={sliderNumberReadoutStyle}>
+            {sourceOpacity.toFixed(2)}
+          </span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Bands</label>
@@ -8000,14 +8996,18 @@ function IsobandControls({
             disabled={disabled || !enabled}
             onChange={(event) =>
               commit({
-                sectionIsoLevelCount: Math.round(parseFloat(event.target.value)),
+                sectionIsoLevelCount: Math.round(
+                  parseFloat(event.target.value),
+                ),
               })
             }
-            style={{
-              flex: 1,
-              opacity: enabled ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${((bandCount - 2) / 30) * 100}%`,
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity: enabled ? controlOpacity : 0.35,
+                "--editor-slider-fill": `${((bandCount - 2) / 30) * 100}%`,
+              } as React.CSSProperties
+            }
           />
           <span style={sliderNumberReadoutStyle}>{bandCount}</span>
         </div>
@@ -8028,11 +9028,13 @@ function IsobandControls({
                 sectionIsoMax: Math.max(isoMax, next + 0.001),
               });
             }}
-            style={{
-              flex: 1,
-              opacity: enabled ? controlOpacity : 0.35,
-              "--editor-slider-fill": rangeFill(isoMin),
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity: enabled ? controlOpacity : 0.35,
+                "--editor-slider-fill": rangeFill(isoMin),
+              } as React.CSSProperties
+            }
           />
           <span style={sliderNumberReadoutStyle}>
             {rangeKind === "seismic" ? isoMin.toFixed(2) : isoMin.toFixed(2)}
@@ -8055,11 +9057,13 @@ function IsobandControls({
                 sectionIsoMax: next,
               });
             }}
-            style={{
-              flex: 1,
-              opacity: enabled ? controlOpacity : 0.35,
-              "--editor-slider-fill": rangeFill(isoMax),
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity: enabled ? controlOpacity : 0.35,
+                "--editor-slider-fill": rangeFill(isoMax),
+              } as React.CSSProperties
+            }
           />
           <span style={sliderNumberReadoutStyle}>{isoMax.toFixed(2)}</span>
         </div>
@@ -8090,11 +9094,13 @@ function IsobandControls({
             onChange={(event) =>
               commit({ sectionIsoBandOpacity: parseFloat(event.target.value) })
             }
-            style={{
-              flex: 1,
-              opacity: enabled && bandsVisible ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${(bandOpacity / 0.85) * 100}%`,
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity: enabled && bandsVisible ? controlOpacity : 0.35,
+                "--editor-slider-fill": `${(bandOpacity / 0.85) * 100}%`,
+              } as React.CSSProperties
+            }
           />
           <span style={sliderNumberReadoutStyle}>
             {Math.round(bandOpacity * 100)}%
@@ -8113,11 +9119,13 @@ function IsobandControls({
             onChange={(event) =>
               commit({ sectionIsoFillOffset: parseFloat(event.target.value) })
             }
-            style={{
-              flex: 1,
-              opacity: enabled && bandsVisible ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${((fillOffset + 1) / 2) * 100}%`,
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity: enabled && bandsVisible ? controlOpacity : 0.35,
+                "--editor-slider-fill": `${((fillOffset + 1) / 2) * 100}%`,
+              } as React.CSSProperties
+            }
           />
           <span style={sliderNumberReadoutStyle}>
             {Math.round(fillOffset * 100)}%
@@ -8172,11 +9180,13 @@ function IsobandControls({
             onChange={(event) =>
               commit({ sectionIsoLineWidth: parseFloat(event.target.value) })
             }
-            style={{
-              flex: 1,
-              opacity: enabled && linesVisible ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${(lineWidth / 12) * 100}%`,
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity: enabled && linesVisible ? controlOpacity : 0.35,
+                "--editor-slider-fill": `${(lineWidth / 12) * 100}%`,
+              } as React.CSSProperties
+            }
           />
           <span style={sliderNumberReadoutStyle}>{lineWidth.toFixed(1)}</span>
         </div>
@@ -8212,12 +9222,21 @@ function MtVolumeControls({
   clearPageLayerOverride: PageStyleClearer;
 }) {
   const options = mtVolumeProductOptions(layer);
-  const fallbackProduct = options[0]?.id ?? "mt-resistivity-forge-focused-volume";
-  const selected = options.some((option) => option.id === style.scalarVolumeProductId)
+  const fallbackProduct =
+    options[0]?.id ?? "mt-resistivity-forge-focused-volume";
+  const selected = options.some(
+    (option) => option.id === style.scalarVolumeProductId,
+  )
     ? (style.scalarVolumeProductId as string)
     : fallbackProduct;
-  const opacity = Math.max(0, Math.min(1, styleNumber(style, "scalarVolumeOpacity", 0.48)));
-  const density = Math.max(0, Math.min(2, styleNumber(style, "scalarVolumeDensity", 0.72)));
+  const opacity = Math.max(
+    0,
+    Math.min(1, styleNumber(style, "scalarVolumeOpacity", 0.48)),
+  );
+  const density = Math.max(
+    0,
+    Math.min(2, styleNumber(style, "scalarVolumeDensity", 0.72)),
+  );
   const sampleSteps = Math.max(
     24,
     Math.min(192, styleNumber(style, "scalarVolumeSampleSteps", 112)),
@@ -8256,138 +9275,151 @@ function MtVolumeControls({
 
   return (
     <>
-    <details style={nestedDetailsStyle}>
-      <summary style={panelStyles.summary}>3D volume products</summary>
-      <div style={detailsContentStyle}>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Volume</label>
-          {!isEnv ? (
+      <details style={nestedDetailsStyle}>
+        <summary style={panelStyles.summary}>3D volume products</summary>
+        <div style={detailsContentStyle}>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Volume</label>
+            {!isEnv ? (
+              <input
+                type="checkbox"
+                checked={!disabled}
+                onChange={(e) => onToggleOverride?.(e.target.checked)}
+                title="Override environment MT volume controls for this page"
+              />
+            ) : null}
+            <select
+              data-testid="mt-volume-product-select"
+              value={selected}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({
+                  scalarVolumeProductId: e.target.value,
+                  scalarVolumeRenderMode: "raymarch",
+                })
+              }
+              style={{ flex: 1, opacity: controlOpacity }}
+            >
+              {options.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Opacity</label>
             <input
-              type="checkbox"
-              checked={!disabled}
-              onChange={(e) => onToggleOverride?.(e.target.checked)}
-              title="Override environment MT volume controls for this page"
+              data-testid="mt-volume-opacity"
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={opacity}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({
+                  scalarVolumeOpacity: parseFloat(e.target.value),
+                  opacity: parseFloat(e.target.value),
+                })
+              }
+              style={
+                {
+                  flex: 1,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": `${opacity * 100}%`,
+                } as React.CSSProperties
+              }
             />
-          ) : null}
-          <select
-            data-testid="mt-volume-product-select"
-            value={selected}
-            disabled={disabled}
-            onChange={(e) =>
-              commit({
-                scalarVolumeProductId: e.target.value,
-                scalarVolumeRenderMode: "raymarch",
-              })
-            }
-            style={{ flex: 1, opacity: controlOpacity }}
-          >
-            {options.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            <span style={sliderNumberReadoutStyle}>{opacity.toFixed(2)}</span>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Density</label>
+            <input
+              data-testid="mt-volume-density"
+              type="range"
+              min={0}
+              max={2}
+              step={0.01}
+              value={density}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({ scalarVolumeDensity: parseFloat(e.target.value) })
+              }
+              style={
+                {
+                  flex: 1,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": `${(density / 2) * 100}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>{density.toFixed(2)}</span>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Samples</label>
+            <input
+              data-testid="mt-volume-samples"
+              type="range"
+              min={24}
+              max={192}
+              step={4}
+              value={sampleSteps}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({ scalarVolumeSampleSteps: parseFloat(e.target.value) })
+              }
+              style={
+                {
+                  flex: 1,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": `${((sampleSteps - 24) / (192 - 24)) * 100}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>
+              {sampleSteps.toFixed(0)}
+            </span>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Transfer</label>
+            <select
+              data-testid="mt-volume-transfer"
+              value={transferMode}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({
+                  scalarVolumeTransferMode: e.target
+                    .value as EditableStyle["scalarVolumeTransferMode"],
+                })
+              }
+              style={{ flex: 1, opacity: controlOpacity }}
+            >
+              <option value="soft">Soft</option>
+              <option value="balanced">Balanced</option>
+              <option value="dense">Dense</option>
+            </select>
+          </div>
+          <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+            <span style={nestedFieldLabelStyle}>Mask</span>
+            <input
+              data-testid="mt-volume-mask-visible"
+              type="checkbox"
+              checked={maskVisible}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({ scalarVolumeMaskVisible: e.target.checked })
+              }
+              style={{ opacity: controlOpacity }}
+            />
+            <span
+              style={{ flex: 1, color: vibrancyTertiaryLabel, fontSize: 11 }}
+            >
+              hide empty voxels
+            </span>
+          </label>
         </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Opacity</label>
-          <input
-            data-testid="mt-volume-opacity"
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={opacity}
-            disabled={disabled}
-            onChange={(e) =>
-              commit({
-                scalarVolumeOpacity: parseFloat(e.target.value),
-                opacity: parseFloat(e.target.value),
-              })
-            }
-            style={{
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${opacity * 100}%`,
-            } as React.CSSProperties}
-          />
-          <span style={sliderNumberReadoutStyle}>{opacity.toFixed(2)}</span>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Density</label>
-          <input
-            data-testid="mt-volume-density"
-            type="range"
-            min={0}
-            max={2}
-            step={0.01}
-            value={density}
-            disabled={disabled}
-            onChange={(e) =>
-              commit({ scalarVolumeDensity: parseFloat(e.target.value) })
-            }
-            style={{
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${(density / 2) * 100}%`,
-            } as React.CSSProperties}
-          />
-          <span style={sliderNumberReadoutStyle}>{density.toFixed(2)}</span>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Samples</label>
-          <input
-            data-testid="mt-volume-samples"
-            type="range"
-            min={24}
-            max={192}
-            step={4}
-            value={sampleSteps}
-            disabled={disabled}
-            onChange={(e) =>
-              commit({ scalarVolumeSampleSteps: parseFloat(e.target.value) })
-            }
-            style={{
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${((sampleSteps - 24) / (192 - 24)) * 100}%`,
-            } as React.CSSProperties}
-          />
-          <span style={sliderNumberReadoutStyle}>{sampleSteps.toFixed(0)}</span>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Transfer</label>
-          <select
-            data-testid="mt-volume-transfer"
-            value={transferMode}
-            disabled={disabled}
-            onChange={(e) =>
-              commit({
-                scalarVolumeTransferMode: e.target.value as EditableStyle["scalarVolumeTransferMode"],
-              })
-            }
-            style={{ flex: 1, opacity: controlOpacity }}
-          >
-            <option value="soft">Soft</option>
-            <option value="balanced">Balanced</option>
-            <option value="dense">Dense</option>
-          </select>
-        </div>
-        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-          <span style={nestedFieldLabelStyle}>Mask</span>
-          <input
-            data-testid="mt-volume-mask-visible"
-            type="checkbox"
-            checked={maskVisible}
-            disabled={disabled}
-            onChange={(e) => commit({ scalarVolumeMaskVisible: e.target.checked })}
-            style={{ opacity: controlOpacity }}
-          />
-          <span style={{ flex: 1, color: vibrancyTertiaryLabel, fontSize: 11 }}>
-            hide empty voxels
-          </span>
-        </label>
-      </div>
-    </details>
+      </details>
       <details style={nestedDetailsStyle}>
         <summary style={panelStyles.summary}>3D cut window</summary>
         <div style={detailsContentStyle}>
@@ -8408,13 +9440,17 @@ function MtVolumeControls({
                   scalarVolumeThresholdMax: Math.max(thresholdMax, next + 0.01),
                 });
               }}
-              style={{
-                flex: 1,
-                opacity: controlOpacity,
-                "--editor-slider-fill": fill(thresholdMin),
-              } as React.CSSProperties}
+              style={
+                {
+                  flex: 1,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": fill(thresholdMin),
+                } as React.CSSProperties
+              }
             />
-            <span style={sliderNumberReadoutStyle}>{thresholdMin.toFixed(2)}</span>
+            <span style={sliderNumberReadoutStyle}>
+              {thresholdMin.toFixed(2)}
+            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Max log10</label>
@@ -8433,13 +9469,17 @@ function MtVolumeControls({
                   scalarVolumeThresholdMax: next,
                 });
               }}
-              style={{
-                flex: 1,
-                opacity: controlOpacity,
-                "--editor-slider-fill": fill(thresholdMax),
-              } as React.CSSProperties}
+              style={
+                {
+                  flex: 1,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": fill(thresholdMax),
+                } as React.CSSProperties
+              }
             />
-            <span style={sliderNumberReadoutStyle}>{thresholdMax.toFixed(2)}</span>
+            <span style={sliderNumberReadoutStyle}>
+              {thresholdMax.toFixed(2)}
+            </span>
           </div>
         </div>
       </details>
@@ -8466,8 +9506,11 @@ interface MtThresholdSurfaceOption {
   label: string;
 }
 
-function mtThresholdSurfaceOptions(layer: ProjectLayerSpec): MtThresholdSurfaceOption[] {
-  const raw = (layer.metadata as { thresholdSurfaces?: unknown }).thresholdSurfaces;
+function mtThresholdSurfaceOptions(
+  layer: ProjectLayerSpec,
+): MtThresholdSurfaceOption[] {
+  const raw = (layer.metadata as { thresholdSurfaces?: unknown })
+    .thresholdSurfaces;
   if (Array.isArray(raw)) {
     const options = raw
       .map((item) => {
@@ -8475,7 +9518,8 @@ function mtThresholdSurfaceOptions(layer: ProjectLayerSpec): MtThresholdSurfaceO
         return typeof surface.id === "string"
           ? {
               id: surface.id,
-              label: typeof surface.label === "string" ? surface.label : surface.id,
+              label:
+                typeof surface.label === "string" ? surface.label : surface.id,
             }
           : null;
       })
@@ -8581,7 +9625,9 @@ function MtThresholdSurfaceControls({
             type="checkbox"
             checked={wireframe}
             disabled={disabled}
-            onChange={(e) => commit({ mtThresholdSurfaceWireframe: e.target.checked })}
+            onChange={(e) =>
+              commit({ mtThresholdSurfaceWireframe: e.target.checked })
+            }
             style={{ opacity: controlOpacity }}
           />
           <span style={{ flex: 1 }} />
@@ -8597,11 +9643,13 @@ function MtThresholdSurfaceControls({
             value={opacity}
             disabled={disabled}
             onChange={(e) => commit({ opacity: parseFloat(e.target.value) })}
-            style={{
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${opacity * 100}%`,
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity: controlOpacity,
+                "--editor-slider-fill": `${opacity * 100}%`,
+              } as React.CSSProperties
+            }
           />
           <span style={sliderNumberReadoutStyle}>{opacity.toFixed(2)}</span>
         </div>
@@ -8758,7 +9806,8 @@ function SeismicBrowserControls({
       ? style.seismicNavigationRoleVisibility
       : {};
   const navigationSourcesVisible = navigationRoleVisibility.sources !== false;
-  const navigationReceiversVisible = navigationRoleVisibility.receivers !== false;
+  const navigationReceiversVisible =
+    navigationRoleVisibility.receivers !== false;
   const navigationLinesVisible = navigationRoleVisibility.lines !== false;
   const [technicalOpen, setTechnicalOpen] = useState(false);
 
@@ -8828,7 +9877,9 @@ function SeismicBrowserControls({
     }
   };
   const applyCapabilityPreset = (presetId: string) => {
-    const preset = capabilityPresets.find((candidate) => candidate.id === presetId);
+    const preset = capabilityPresets.find(
+      (candidate) => candidate.id === presetId,
+    );
     if (!preset) return;
     commit(seismicPresetPatch(preset, products, productId));
     if (preset.mtStylePatch) {
@@ -8839,14 +9890,17 @@ function SeismicBrowserControls({
     }
   };
   const selectedOnlyVisibility = (id: string) =>
-    Object.fromEntries(products.map((product) => [product.id, product.id === id]));
+    Object.fromEntries(
+      products.map((product) => [product.id, product.id === id]),
+    );
   const setCapabilityForProduct = (
     product: SeismicProductOption,
     mode: "slice" | "raymarch",
     syncSlice: boolean,
   ) => {
     if (!product.id) return;
-    const renderMode = mode === "raymarch" && product.raymarchCapable ? "raymarch" : "slice";
+    const renderMode =
+      mode === "raymarch" && product.raymarchCapable ? "raymarch" : "slice";
     commit({
       seismicCapabilityPresetId: `${product.id}-${renderMode}${
         syncSlice ? "-sync" : ""
@@ -8862,7 +9916,9 @@ function SeismicBrowserControls({
             : sliceAxis
           : "line",
       seismicSliceThroughVolume:
-        renderMode === "raymarch" && syncSlice && product.raymarchCapable === true,
+        renderMode === "raymarch" &&
+        syncSlice &&
+        product.raymarchCapable === true,
       seismicNavigationVisible: true,
       seismicNavigationRoleVisibility: {
         sources: true,
@@ -8874,7 +9930,9 @@ function SeismicBrowserControls({
   const applyAudienceMode = (
     value: NonNullable<EditableStyle["seismicAudienceMode"]>,
   ) => {
-    const preset = presets.find((candidate) => candidate.audienceMode === value);
+    const preset = presets.find(
+      (candidate) => candidate.audienceMode === value,
+    );
     if (preset) {
       applyPreset(preset.id);
       return;
@@ -8941,11 +9999,14 @@ function SeismicBrowserControls({
     },
     {},
   );
-  const surveyCounts = products.reduce<Record<string, number>>((counts, product) => {
-    const key = product.surveyKind ?? "unknown";
-    counts[key] = (counts[key] ?? 0) + 1;
-    return counts;
-  }, {});
+  const surveyCounts = products.reduce<Record<string, number>>(
+    (counts, product) => {
+      const key = product.surveyKind ?? "unknown";
+      counts[key] = (counts[key] ?? 0) + 1;
+      return counts;
+    },
+    {},
+  );
   const raymarchProducts = products.filter(
     (product) => product.raymarchCapable === true,
   );
@@ -8986,51 +10047,138 @@ function SeismicBrowserControls({
       : "";
   return (
     <>
-    <details style={nestedDetailsStyle}>
-      <summary style={panelStyles.summary}>Seismic browser</summary>
-      <div style={detailsContentStyle}>
-        {presets.length > 0 ? (
-          <>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Audience</label>
-              <select
-                data-testid="seismic-audience-mode-select"
-                value={audienceMode}
-                disabled={disabled}
-                onChange={(e) =>
-                  applyAudienceMode(
-                    e.target.value as NonNullable<
-                      EditableStyle["seismicAudienceMode"]
-                    >,
-                  )
-                }
-                style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+      <details style={nestedDetailsStyle}>
+        <summary style={panelStyles.summary}>Seismic browser</summary>
+        <div style={detailsContentStyle}>
+          {presets.length > 0 ? (
+            <>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Audience</label>
+                <select
+                  data-testid="seismic-audience-mode-select"
+                  value={audienceMode}
+                  disabled={disabled}
+                  onChange={(e) =>
+                    applyAudienceMode(
+                      e.target.value as NonNullable<
+                        EditableStyle["seismicAudienceMode"]
+                      >,
+                    )
+                  }
+                  style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+                >
+                  {SEISMIC_AUDIENCE_MODE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Preset</label>
+                <select
+                  data-testid="seismic-audience-preset-select"
+                  value={selectedPreset?.id ?? ""}
+                  disabled={disabled}
+                  onChange={(e) => applyPreset(e.target.value)}
+                  style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+                >
+                  {presets.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div
+                data-testid="seismic-preset-summary"
+                style={{
+                  margin: "4px 0 8px 0",
+                  padding: "2px 0 4px 0",
+                  color: vibrancyTertiaryLabel,
+                  fontSize: 11,
+                  lineHeight: 1.35,
+                  opacity: controlOpacity,
+                }}
               >
-                {SEISMIC_AUDIENCE_MODE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Preset</label>
-              <select
-                data-testid="seismic-audience-preset-select"
-                value={selectedPreset?.id ?? ""}
-                disabled={disabled}
-                onChange={(e) => applyPreset(e.target.value)}
-                style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+                <div style={{ color: vibrancySecondaryLabel, fontWeight: 750 }}>
+                  {selectedPreset?.summary ?? "Curated seismic demo view"}
+                </div>
+                <div style={{ marginTop: 4 }}>
+                  {disclosureLabels.join(" / ")}
+                </div>
+                {selectedPreset?.cameraShot ? (
+                  <div style={{ marginTop: 4 }}>
+                    Camera shot: {selectedPreset.cameraShot}
+                  </div>
+                ) : null}
+                {selectedPreset?.caveats &&
+                selectedPreset.caveats.length > 0 ? (
+                  <div style={{ marginTop: 4 }}>
+                    {selectedPreset.caveats.slice(0, 2).join(" / ")}
+                  </div>
+                ) : null}
+              </div>
+            </>
+          ) : null}
+
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Controls</label>
+            {!isEnv ? (
+              <input
+                type="checkbox"
+                checked={overridden}
+                onChange={(e) => onToggleOverride?.(e.target.checked)}
+                title="Override environment seismic browser variables for this page"
+              />
+            ) : null}
+            <span
+              style={{
+                flex: 1,
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                opacity: controlOpacity,
+              }}
+            >
+              {selectedProductVisible
+                ? selectedProduct?.raymarchCapable
+                  ? "3D volume"
+                  : "section curtain"
+                : "hidden"}
+            </span>
+            {!isEnv ? (
+              <span
+                style={overridden ? overrideTagActiveStyle : overrideTagStyle}
               >
-                {presets.map((preset) => (
-                  <option key={preset.id} value={preset.id}>
-                    {preset.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+                {overridden ? "overridden" : "inherited"}
+              </span>
+            ) : null}
+          </div>
+
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>MT view</label>
+            <select
+              data-testid="seismic-mt-co-render-select"
+              value={mtCoRender}
+              disabled={disabled}
+              onChange={(e) =>
+                setMtCoRender(
+                  e.target.value as NonNullable<
+                    EditableStyle["seismicMtCoRender"]
+                  >,
+                )
+              }
+              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+            >
+              <option value="seismic">Seismic only</option>
+              <option value="mt">MT only</option>
+              <option value="integrated">Integrated</option>
+            </select>
+          </div>
+
+          {audienceMode === "data-room" ? (
             <div
-              data-testid="seismic-preset-summary"
+              data-testid="seismic-data-room-summary"
               style={{
                 margin: "4px 0 8px 0",
                 padding: "2px 0 4px 0",
@@ -9040,775 +10188,127 @@ function SeismicBrowserControls({
                 opacity: controlOpacity,
               }}
             >
-              <div style={{ color: vibrancySecondaryLabel, fontWeight: 750 }}>
-                {selectedPreset?.summary ?? "Curated seismic demo view"}
+              <div>Products: {products.length}</div>
+              <div>
+                Survey:{" "}
+                {Object.entries(surveyCounts)
+                  .map(([key, count]) => `${key} ${count}`)
+                  .join(" / ")}
               </div>
-              <div style={{ marginTop: 4 }}>{disclosureLabels.join(" / ")}</div>
-              {selectedPreset?.cameraShot ? (
-                <div style={{ marginTop: 4 }}>
-                  Camera shot: {selectedPreset.cameraShot}
-                </div>
-              ) : null}
-              {selectedPreset?.caveats && selectedPreset.caveats.length > 0 ? (
-                <div style={{ marginTop: 4 }}>
-                  {selectedPreset.caveats.slice(0, 2).join(" / ")}
-                </div>
-              ) : null}
-            </div>
-          </>
-        ) : null}
-
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Controls</label>
-          {!isEnv ? (
-            <input
-              type="checkbox"
-              checked={overridden}
-              onChange={(e) => onToggleOverride?.(e.target.checked)}
-              title="Override environment seismic browser variables for this page"
-            />
-          ) : null}
-          <span
-            style={{
-              flex: 1,
-              color: vibrancyTertiaryLabel,
-              fontSize: 11,
-              opacity: controlOpacity,
-            }}
-          >
-            {selectedProductVisible
-              ? selectedProduct?.raymarchCapable
-                ? "3D volume"
-                : "section curtain"
-              : "hidden"}
-          </span>
-          {!isEnv ? (
-            <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-              {overridden ? "overridden" : "inherited"}
-            </span>
-          ) : null}
-        </div>
-
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>MT view</label>
-          <select
-            data-testid="seismic-mt-co-render-select"
-            value={mtCoRender}
-            disabled={disabled}
-            onChange={(e) =>
-              setMtCoRender(
-                e.target.value as NonNullable<
-                  EditableStyle["seismicMtCoRender"]
-                >,
-              )
-            }
-            style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-          >
-            <option value="seismic">Seismic only</option>
-            <option value="mt">MT only</option>
-            <option value="integrated">Integrated</option>
-          </select>
-        </div>
-
-        {audienceMode === "data-room" ? (
-          <div
-            data-testid="seismic-data-room-summary"
-            style={{
-              margin: "4px 0 8px 0",
-              padding: "2px 0 4px 0",
-              color: vibrancyTertiaryLabel,
-              fontSize: 11,
-              lineHeight: 1.35,
-              opacity: controlOpacity,
-            }}
-          >
-            <div>Products: {products.length}</div>
-            <div>
-              Survey:{" "}
-              {Object.entries(surveyCounts)
-                .map(([key, count]) => `${key} ${count}`)
-                .join(" / ")}
-            </div>
-            <div>
-              Type:{" "}
-              {Object.entries(productKindCounts)
-                .map(([key, count]) => `${key} ${count}`)
-                .join(" / ")}
-            </div>
-            <div>
-              Selected: {selectedProduct?.sourceSubmission ?? "source"} /{" "}
-              {selectedProduct?.productKind ?? "processed"} /{" "}
-              {selectedProduct?.domainUnit ?? "domain"}
-            </div>
-            <div>Confidence: measured navigation / processed seismic product</div>
-          </div>
-        ) : null}
-
-        {audienceMode === "export" ? (
-          <div
-            data-testid="seismic-export-summary"
-            style={{
-              margin: "4px 0 8px 0",
-              padding: "2px 0 4px 0",
-              color: vibrancyTertiaryLabel,
-              fontSize: 11,
-              lineHeight: 1.35,
-              opacity: controlOpacity,
-            }}
-          >
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Layout</label>
-              <select
-                data-testid="seismic-export-layout-select"
-                value={exportLayoutId ?? ""}
-                disabled={disabled || exportLayouts.length === 0}
-                onChange={(e) =>
-                  commit({ seismicExportLayoutId: e.target.value })
-                }
-                style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-              >
-                {exportLayouts.map((layout) => (
-                  <option key={layout.id} value={layout.id}>
-                    {layout.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              {selectedExportLayout?.output ?? "PDF-ready report visual"}
-            </div>
-            <div>
-              {(selectedExportLayout?.includes ?? [
-                "legend",
-                "scale",
-                "CRS",
-                "source",
-              ]).join(" / ")}
-            </div>
-            <div>
-              {selectedExportLayout?.caveat ??
-                "Report-supporting visual, not a compliance certification."}
-            </div>
-          </div>
-        ) : null}
-
-      </div>
-    </details>
-
-        {false ? (
-          <>
-        <details
-          data-testid="seismic-capability-3d-products"
-          style={nestedDetailsStyle}
-          open
-        >
-          <summary style={panelStyles.summary}>3D volume products</summary>
-          <div style={detailsContentStyle}>
-            {raymarchProducts.map((product) => (
-              <div key={product.id} style={{ ...nestedControlRowStyle, gap: 6 }}>
-                <label
-                  style={{
-                    ...nestedFieldLabelStyle,
-                    flex: 1,
-                    minWidth: 0,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                  title={product.label}
-                >
-                  {product.label}
-                </label>
-                {[
-                  {
-                    label: "Volume",
-                    testId: `seismic-capability-volume-${product.id}`,
-                    onClick: () => setCapabilityForProduct(product, "raymarch", false),
-                  },
-                  {
-                    label: "Slice",
-                    testId: `seismic-capability-slice-${product.id}`,
-                    onClick: () => setCapabilityForProduct(product, "slice", false),
-                  },
-                  {
-                    label: "Sync",
-                    testId: `seismic-capability-sync-${product.id}`,
-                    onClick: () => setCapabilityForProduct(product, "raymarch", true),
-                  },
-                ].map((action) => (
-                  <button
-                    key={action.testId}
-                    type="button"
-                    data-testid={action.testId}
-                    disabled={disabled}
-                    onClick={action.onClick}
-                    style={{
-                      ...panelStyles.iconButton,
-                      width: "auto",
-                      padding: "3px 7px",
-                      fontSize: 10,
-                      opacity: controlOpacity,
-                    }}
-                  >
-                    {action.label}
-                  </button>
-                ))}
+              <div>
+                Type:{" "}
+                {Object.entries(productKindCounts)
+                  .map(([key, count]) => `${key} ${count}`)
+                  .join(" / ")}
               </div>
-            ))}
-          </div>
-        </details>
+              <div>
+                Selected: {selectedProduct?.sourceSubmission ?? "source"} /{" "}
+                {selectedProduct?.productKind ?? "processed"} /{" "}
+                {selectedProduct?.domainUnit ?? "domain"}
+              </div>
+              <div>
+                Confidence: measured navigation / processed seismic product
+              </div>
+            </div>
+          ) : null}
 
-        <details
-          data-testid="seismic-capability-slice-planes"
-          style={nestedDetailsStyle}
-          open
-        >
-          <summary style={panelStyles.summary}>3D slice planes</summary>
-          <div style={detailsContentStyle}>
-            <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
-              <label style={nestedFieldLabelStyle}>Plane</label>
-              {[
-                { id: "inline-slice", label: "Inline" },
-                { id: "crossline-slice", label: "Crossline" },
-                { id: "time-depth-plane", label: "Time/depth" },
-              ].map((action) => (
-                <button
-                  key={action.id}
-                  type="button"
-                  data-testid={`seismic-capability-${action.id}`}
-                  disabled={disabled}
-                  onClick={() => applyCapabilityPreset(action.id)}
-                  style={{
-                    ...panelStyles.iconButton,
-                    width: "auto",
-                    padding: "3px 7px",
-                    fontSize: 10,
-                    opacity: controlOpacity,
-                  }}
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Position</label>
-              <input
-                data-testid="seismic-capability-slice-position"
-                type="range"
-                min={0}
-                max={1}
-                step={0.01}
-                value={sliceFraction}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({ seismicSliceFraction: parseFloat(e.target.value) })
-                }
-                style={{
-                  flex: 1,
-                  opacity: controlOpacity,
-                  "--editor-slider-fill": `${sliceFraction * 100}%`,
-                } as React.CSSProperties}
-              />
-              <span style={sliderNumberReadoutStyle}>
-                {sliceFraction.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        </details>
-
-        <details
-          data-testid="seismic-capability-volume-sync"
-          style={nestedDetailsStyle}
-          open
-        >
-          <summary style={panelStyles.summary}>Volume + slice sync</summary>
-          <div style={detailsContentStyle}>
-            <div style={{ ...nestedControlRowStyle, gap: 6 }}>
-              <label style={nestedFieldLabelStyle}>Synced view</label>
-              <button
-                type="button"
-                data-testid="seismic-capability-volume-slice-sync"
-                disabled={disabled}
-                onClick={() => applyCapabilityPreset("volume-slice-sync")}
-                style={{
-                  ...panelStyles.iconButton,
-                  width: "auto",
-                  padding: "3px 7px",
-                  fontSize: 10,
-                  opacity: controlOpacity,
-                }}
-              >
-                Apply
-              </button>
-              <span
-                style={{
-                  flex: 1,
-                  color: vibrancyTertiaryLabel,
-                  fontSize: 11,
-                  opacity: controlOpacity,
-                }}
-              >
-                volume plus movable cut plane
-              </span>
-            </div>
-          </div>
-        </details>
-
-        <details
-          data-testid="seismic-capability-line-theatre"
-          style={nestedDetailsStyle}
-          open
-        >
-          <summary style={panelStyles.summary}>2D / legacy section theatre</summary>
-          <div style={detailsContentStyle}>
-            <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
-              <label style={nestedFieldLabelStyle}>Curtain</label>
-              {lineTheatreActions.map((action) => (
-                <button
-                  key={action.id}
-                  type="button"
-                  data-testid={`seismic-capability-${action.id}`}
-                  disabled={disabled}
-                  onClick={() => applyCapabilityPreset(action.id)}
-                  style={{
-                    ...panelStyles.iconButton,
-                    width: "auto",
-                    padding: "3px 7px",
-                    fontSize: 10,
-                    opacity: controlOpacity,
-                  }}
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </details>
-
-        <details
-          data-testid="seismic-capability-processing-comparison"
-          style={nestedDetailsStyle}
-          open
-        >
-          <summary style={panelStyles.summary}>Processing comparison</summary>
-          <div style={detailsContentStyle}>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Mode</label>
-              <select
-                data-testid="seismic-comparison-mode-select"
-                value={comparisonMode}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({
-                    seismicComparisonMode:
-                      e.target.value === "side-by-side"
-                        ? "side-by-side"
-                        : "overlay",
-                  })
-                }
-                style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-              >
-                <option value="overlay">Overlay</option>
-                <option value="side-by-side">Side-by-side</option>
-              </select>
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Spacing</label>
-              <input
-                data-testid="seismic-comparison-spacing"
-                type="range"
-                min={0}
-                max={3000}
-                step={50}
-                value={comparisonSpacingM}
-                disabled={disabled || comparisonMode !== "side-by-side"}
-                onChange={(e) =>
-                  commit({
-                    seismicComparisonSpacingM: parseFloat(e.target.value),
-                  })
-                }
-                style={{
-                  flex: 1,
-                  opacity: comparisonMode === "side-by-side" ? controlOpacity : 0.35,
-                  "--editor-slider-fill": `${(comparisonSpacingM / 3000) * 100}%`,
-                } as React.CSSProperties}
-              />
-              <span style={sliderNumberReadoutStyle}>
-                {comparisonSpacingM.toFixed(0)} m
-              </span>
-            </div>
-            <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
-              <label style={nestedFieldLabelStyle}>Pair</label>
-              {comparisonActions.map((action) => (
-                <button
-                  key={action.label}
-                  type="button"
-                  data-testid={`seismic-comparison-pair-${action.label.toLowerCase()}`}
-                  disabled={disabled}
-                  onClick={() =>
-                    commit({
-                      seismicCapabilityPresetId:
-                        action.label === "301"
-                          ? "enhanced-vs-unenhanced"
-                          : `enhanced-vs-unenhanced-${action.label.toLowerCase()}`,
-                      seismicProductId: action.primary,
-                      seismicProductVisibility: Object.fromEntries(
-                        products.map((product) => [
-                          product.id,
-                          product.id === action.primary ||
-                            product.id === action.compare,
-                        ]),
-                      ),
-                      seismicRenderMode: "slice",
-                      seismicSliceAxis: "line",
-                      seismicComparisonProductId: action.compare,
-                      seismicComparisonMode: comparisonMode,
-                    })
-                  }
-                  style={{
-                    ...panelStyles.iconButton,
-                    width: "auto",
-                    padding: "3px 7px",
-                    fontSize: 10,
-                    opacity: controlOpacity,
-                  }}
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </details>
-
-        <details
-          data-testid="seismic-capability-display-cleanup"
-          style={nestedDetailsStyle}
-          open
-        >
-          <summary style={panelStyles.summary}>Display cleanup</summary>
-          <div style={detailsContentStyle}>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Opacity</label>
-              <input
-                data-testid="seismic-capability-opacity"
-                type="range"
-                min={0}
-                max={1}
-                step={0.02}
-                value={seismicOpacity}
-                disabled={disabled}
-                onChange={(e) => commit({ opacity: parseFloat(e.target.value) })}
-                style={{
-                  flex: 1,
-                  opacity: controlOpacity,
-                  "--editor-slider-fill": `${seismicOpacity * 100}%`,
-                } as React.CSSProperties}
-              />
-              <span style={sliderNumberReadoutStyle}>
-                {seismicOpacity.toFixed(2)}
-              </span>
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>
-                {isVelocityProduct(selectedProduct) ? "Vel min" : "Amp min"}
-              </label>
-              <input
-                data-testid="seismic-capability-amplitude-min"
-                type="range"
-                min={0}
-                max={0.98}
-                step={0.01}
-                value={amplitudeMin}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({ seismicAmplitudeMin: parseFloat(e.target.value) })
-                }
-                style={{
-                  flex: 1,
-                  opacity: controlOpacity,
-                  "--editor-slider-fill": `${amplitudeMin * 100}%`,
-                } as React.CSSProperties}
-              />
-              <span style={sliderNumberReadoutStyle}>
-                {seismicWindowValueLabel(selectedProduct, amplitudeMin)}
-              </span>
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>
-                {isVelocityProduct(selectedProduct) ? "Vel max" : "Amp max"}
-              </label>
-              <input
-                data-testid="seismic-capability-amplitude-max"
-                type="range"
-                min={0.02}
-                max={1}
-                step={0.01}
-                value={amplitudeMax}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({ seismicAmplitudeMax: parseFloat(e.target.value) })
-                }
-                style={{
-                  flex: 1,
-                  opacity: controlOpacity,
-                  "--editor-slider-fill": `${amplitudeMax * 100}%`,
-                } as React.CSSProperties}
-              />
-              <span style={sliderNumberReadoutStyle}>
-                {seismicWindowValueLabel(selectedProduct, amplitudeMax)}
-              </span>
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Palette</label>
-              <select
-                data-testid="seismic-capability-colormap-select"
-                value={colormap}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({
-                    seismicColormap: seismicColormapFromValue(e.target.value),
-                  })
-                }
-                style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-              >
-                <option value="blue-white-red">Blue-white-red</option>
-                <option value="grayscale">Grayscale</option>
-                <option value="velocity">Velocity</option>
-              </select>
-            </div>
-            <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-              <span style={nestedFieldLabelStyle}>White bg</span>
-              <input
-                data-testid="seismic-capability-remove-background"
-                type="checkbox"
-                checked={removeBackground}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({ seismicRemoveBackground: e.target.checked })
-                }
-                style={{ opacity: controlOpacity }}
-              />
-              <span
-                style={{
-                  flex: 1,
-                  color: vibrancyTertiaryLabel,
-                  fontSize: 11,
-                  opacity: controlOpacity,
-                }}
-              >
-                remove neutral fill
-              </span>
-            </label>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Time scale</label>
-              <input
-                data-testid="seismic-capability-time-scale"
-                type="range"
-                min={0.25}
-                max={8}
-                step={0.25}
-                value={timeScale}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({ seismicTimeScale: parseFloat(e.target.value) })
-                }
-                style={{
-                  flex: 1,
-                  opacity: controlOpacity,
-                  "--editor-slider-fill": `${
-                    ((timeScale - 0.25) / 7.75) * 100
-                  }%`,
-                } as React.CSSProperties}
-              />
-              <span style={sliderNumberReadoutStyle}>{timeScale.toFixed(2)}</span>
-            </div>
-          </div>
-        </details>
-
-        <details
-          data-testid="seismic-capability-survey-geometry"
-          style={nestedDetailsStyle}
-          open
-        >
-          <summary style={panelStyles.summary}>Survey geometry</summary>
-          <div style={detailsContentStyle}>
-            <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
-              <label style={nestedFieldLabelStyle}>Preset</label>
-              <button
-                type="button"
-                data-testid="seismic-capability-survey-geometry-preset"
-                disabled={disabled}
-                onClick={() => applyCapabilityPreset("survey-geometry")}
-                style={{
-                  ...panelStyles.iconButton,
-                  width: "auto",
-                  padding: "3px 7px",
-                  fontSize: 10,
-                  opacity: controlOpacity,
-                }}
-              >
-                Show survey
-              </button>
-            </div>
-            {[
-              {
-                role: "sources" as const,
-                label: "Sources",
-                checked: navigationSourcesVisible,
-              },
-              {
-                role: "receivers" as const,
-                label: "Receivers",
-                checked: navigationReceiversVisible,
-              },
-              {
-                role: "lines" as const,
-                label: "Lines",
-                checked: navigationLinesVisible,
-              },
-            ].map((item) => (
-              <label
-                key={item.role}
-                style={{ ...nestedControlRowStyle, cursor: "pointer" }}
-              >
-                <span style={nestedFieldLabelStyle}>{item.label}</span>
-                <input
-                  data-testid={`seismic-navigation-role-${item.role}`}
-                  type="checkbox"
-                  checked={item.checked}
-                  disabled={disabled}
+          {audienceMode === "export" ? (
+            <div
+              data-testid="seismic-export-summary"
+              style={{
+                margin: "4px 0 8px 0",
+                padding: "2px 0 4px 0",
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                lineHeight: 1.35,
+                opacity: controlOpacity,
+              }}
+            >
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Layout</label>
+                <select
+                  data-testid="seismic-export-layout-select"
+                  value={exportLayoutId ?? ""}
+                  disabled={disabled || exportLayouts.length === 0}
                   onChange={(e) =>
-                    setNavigationRoleVisible(item.role, e.target.checked)
+                    commit({ seismicExportLayoutId: e.target.value })
                   }
-                  style={{ opacity: controlOpacity }}
-                />
-                <span style={{ flex: 1 }} />
-              </label>
-            ))}
-          </div>
-        </details>
-
-        <details
-          data-testid="seismic-capability-integrated-geophysics"
-          style={nestedDetailsStyle}
-          open
-        >
-          <summary style={panelStyles.summary}>Integrated geophysics</summary>
-          <div style={detailsContentStyle}>
-            <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
-              <label style={nestedFieldLabelStyle}>View</label>
-              {[
-                {
-                  label: "Seismic",
-                  testId: "seismic-capability-seismic-only",
-                  onClick: () => setMtCoRender("seismic"),
-                },
-                {
-                  label: "MT",
-                  testId: "seismic-capability-mt-only",
-                  onClick: () => setMtCoRender("mt"),
-                },
-                {
-                  label: "Integrated",
-                  testId: "seismic-capability-integrated",
-                  onClick: () => applyCapabilityPreset("integrated-geophysics"),
-                },
-              ].map((action) => (
-                <button
-                  key={action.testId}
-                  type="button"
-                  data-testid={action.testId}
-                  disabled={disabled}
-                  onClick={action.onClick}
-                  style={{
-                    ...panelStyles.iconButton,
-                    width: "auto",
-                    padding: "3px 7px",
-                    fontSize: 10,
-                    opacity: controlOpacity,
-                  }}
+                  style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
                 >
-                  {action.label}
-                </button>
-              ))}
+                  {exportLayouts.map((layout) => (
+                    <option key={layout.id} value={layout.id}>
+                      {layout.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                {selectedExportLayout?.output ?? "PDF-ready report visual"}
+              </div>
+              <div>
+                {(
+                  selectedExportLayout?.includes ?? [
+                    "legend",
+                    "scale",
+                    "CRS",
+                    "source",
+                  ]
+                ).join(" / ")}
+              </div>
+              <div>
+                {selectedExportLayout?.caveat ??
+                  "Report-supporting visual, not a compliance certification."}
+              </div>
             </div>
-          </div>
-        </details>
+          ) : null}
+        </div>
+      </details>
 
-        <details
-          data-testid="seismic-capability-data-confidence"
-          style={nestedDetailsStyle}
-          open
-        >
-          <summary style={panelStyles.summary}>Data confidence</summary>
-          <div
-            style={{
-              ...detailsContentStyle,
-              color: vibrancyTertiaryLabel,
-              fontSize: 11,
-              lineHeight: 1.35,
-            }}
+      {false ? (
+        <>
+          <details
+            data-testid="seismic-capability-3d-products"
+            style={nestedDetailsStyle}
+            open
           >
-            <div>Products: {products.length} processed GUI products</div>
-            <div>3D raymarch-capable: {raymarchProducts.length}</div>
-            <div>
-              Active capability: {currentCapabilityPresetId || "manual controls"}
-            </div>
-            <div>{SEISMIC_DEMO_DISCLOSURE_LABELS.join(" / ")}</div>
-          </div>
-        </details>
-          </>
-        ) : null}
-
-        <details
-          data-testid="seismic-technical-controls"
-          style={nestedDetailsStyle}
-          open={technicalOpen}
-          onToggle={(event) =>
-            setTechnicalOpen((event.currentTarget as HTMLDetailsElement).open)
-          }
-        >
-          <summary style={panelStyles.summary}>Technical controls</summary>
-          <div style={detailsContentStyle}>
-            <details style={nestedDetailsStyle}>
-              <summary style={panelStyles.summary}>
-                Product visibility ({visibleProductCount}/{products.length})
-              </summary>
-              <div style={detailsContentStyle}>
+            <summary style={panelStyles.summary}>3D volume products</summary>
+            <div style={detailsContentStyle}>
+              {raymarchProducts.map((product) => (
                 <div
-                  style={{
-                    ...nestedControlRowStyle,
-                    gap: 6,
-                    flexWrap: "wrap",
-                  }}
+                  key={product.id}
+                  style={{ ...nestedControlRowStyle, gap: 6 }}
                 >
-                  <label style={nestedFieldLabelStyle}>Visibility</label>
+                  <label
+                    style={{
+                      ...nestedFieldLabelStyle,
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                    title={product.label}
+                  >
+                    {product.label}
+                  </label>
                   {[
                     {
-                      label: "Show all",
-                      testId: "seismic-products-show-all",
-                      onClick: () => setVisibilityForProducts(() => true),
-                    },
-                    {
-                      label: "Hide all",
-                      testId: "seismic-products-hide-all",
-                      onClick: () => setVisibilityForProducts(() => false),
-                    },
-                    {
-                      label: "3D only",
-                      testId: "seismic-products-show-3d-only",
+                      label: "Volume",
+                      testId: `seismic-capability-volume-${product.id}`,
                       onClick: () =>
-                        setVisibilityForProducts(
-                          (product) => product.surveyKind === "3d",
-                        ),
+                        setCapabilityForProduct(product, "raymarch", false),
                     },
                     {
-                      label: "2D only",
-                      testId: "seismic-products-show-2d-only",
+                      label: "Slice",
+                      testId: `seismic-capability-slice-${product.id}`,
                       onClick: () =>
-                        setVisibilityForProducts(
-                          (product) => product.surveyKind !== "3d",
-                        ),
+                        setCapabilityForProduct(product, "slice", false),
+                    },
+                    {
+                      label: "Sync",
+                      testId: `seismic-capability-sync-${product.id}`,
+                      onClick: () =>
+                        setCapabilityForProduct(product, "raymarch", true),
                     },
                   ].map((action) => (
                     <button
@@ -9829,144 +10329,360 @@ function SeismicBrowserControls({
                     </button>
                   ))}
                 </div>
-                {products.map((product) => {
-                  const selected = product.id === productId;
-                  return (
-                    <div
-                      key={product.id}
-                      style={{
-                        ...nestedControlRowStyle,
-                        borderRadius: 6,
-                        background: selected
-                          ? "rgba(244, 240, 232, 0.08)"
-                          : "transparent",
-                      }}
-                    >
-                      <input
-                        data-testid={`seismic-product-visible-${product.id}`}
-                        type="checkbox"
-                        checked={productVisibility[product.id] === true}
-                        disabled={disabled}
-                        onChange={(e) =>
-                          setProductVisible(product.id, e.target.checked)
-                        }
-                        title="Show or hide this product"
-                        style={{ opacity: controlOpacity }}
-                      />
-                      <button
-                        type="button"
-                        data-testid={`seismic-product-row-${product.id}`}
-                        disabled={disabled}
-                        onClick={() => selectProduct(product.id)}
-                        style={{
-                          flex: 1,
-                          minWidth: 0,
-                          appearance: "none",
-                          border: "none",
-                          background: "transparent",
-                          color: selected ? vibrancyLabel : vibrancyTertiaryLabel,
-                          font: "inherit",
-                          fontSize: 11,
-                          fontWeight: selected ? 800 : 650,
-                          textAlign: "left",
-                          cursor: disabled ? "default" : "pointer",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          opacity: controlOpacity,
-                        }}
-                        title={product.label}
-                      >
-                        {product.label}
-                      </button>
-                      <span
-                        style={{
-                          color: vibrancyTertiaryLabel,
-                          fontSize: 11,
-                          opacity: controlOpacity,
-                          minWidth: 54,
-                          textAlign: "right",
-                        }}
-                      >
-                        {product.raymarchCapable
-                          ? "3D"
-                          : product.surveyKind ?? "2D"}
-                        {product.domainUnit ? ` / ${product.domainUnit}` : ""}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </details>
+              ))}
+            </div>
+          </details>
 
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Product</label>
-              <select
-                data-testid="seismic-product-select"
-                value={productId}
-                disabled={disabled || products.length === 0}
-                onChange={(e) => selectProduct(e.target.value)}
-                style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+          <details
+            data-testid="seismic-capability-slice-planes"
+            style={nestedDetailsStyle}
+            open
+          >
+            <summary style={panelStyles.summary}>3D slice planes</summary>
+            <div style={detailsContentStyle}>
+              <div
+                style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}
               >
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.label}
-                  </option>
+                <label style={nestedFieldLabelStyle}>Plane</label>
+                {[
+                  { id: "inline-slice", label: "Inline" },
+                  { id: "crossline-slice", label: "Crossline" },
+                  { id: "time-depth-plane", label: "Time/depth" },
+                ].map((action) => (
+                  <button
+                    key={action.id}
+                    type="button"
+                    data-testid={`seismic-capability-${action.id}`}
+                    disabled={disabled}
+                    onClick={() => applyCapabilityPreset(action.id)}
+                    style={{
+                      ...panelStyles.iconButton,
+                      width: "auto",
+                      padding: "3px 7px",
+                      fontSize: 10,
+                      opacity: controlOpacity,
+                    }}
+                  >
+                    {action.label}
+                  </button>
                 ))}
-              </select>
-            </div>
-
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Compare</label>
-              <select
-                data-testid="seismic-comparison-product-select"
-                value={comparisonProductId ?? "none"}
-                disabled={disabled}
-                onChange={(e) => setComparisonProduct(e.target.value)}
-                style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-              >
-                <option value="none">None</option>
-                {products
-                  .filter((product) => product.id !== productId)
-                  .map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.label}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Mode</label>
-              <select
-                data-testid="seismic-render-mode-select"
-                value={renderMode}
-                disabled={disabled || !selectedProduct?.raymarchCapable}
-                onChange={(e) =>
-                  commit({
-                    seismicRenderMode:
-                      e.target.value === "raymarch" ? "raymarch" : "slice",
-                  })
-                }
-                style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-              >
-                <option value="slice">Slice</option>
-                {selectedProduct?.raymarchCapable ? (
-                  <option value="raymarch">Raymarch</option>
-                ) : null}
-              </select>
-            </div>
-
-            {selectedProduct?.raymarchCapable ? (
-              <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-                <span style={nestedFieldLabelStyle}>Sync slice</span>
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Position</label>
                 <input
-                  data-testid="seismic-slice-through-volume"
-                  type="checkbox"
-                  checked={sliceThroughVolume}
+                  data-testid="seismic-capability-slice-position"
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={sliceFraction}
                   disabled={disabled}
                   onChange={(e) =>
-                    commit({ seismicSliceThroughVolume: e.target.checked })
+                    commit({ seismicSliceFraction: parseFloat(e.target.value) })
+                  }
+                  style={
+                    {
+                      flex: 1,
+                      opacity: controlOpacity,
+                      "--editor-slider-fill": `${sliceFraction * 100}%`,
+                    } as React.CSSProperties
+                  }
+                />
+                <span style={sliderNumberReadoutStyle}>
+                  {sliceFraction.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </details>
+
+          <details
+            data-testid="seismic-capability-volume-sync"
+            style={nestedDetailsStyle}
+            open
+          >
+            <summary style={panelStyles.summary}>Volume + slice sync</summary>
+            <div style={detailsContentStyle}>
+              <div style={{ ...nestedControlRowStyle, gap: 6 }}>
+                <label style={nestedFieldLabelStyle}>Synced view</label>
+                <button
+                  type="button"
+                  data-testid="seismic-capability-volume-slice-sync"
+                  disabled={disabled}
+                  onClick={() => applyCapabilityPreset("volume-slice-sync")}
+                  style={{
+                    ...panelStyles.iconButton,
+                    width: "auto",
+                    padding: "3px 7px",
+                    fontSize: 10,
+                    opacity: controlOpacity,
+                  }}
+                >
+                  Apply
+                </button>
+                <span
+                  style={{
+                    flex: 1,
+                    color: vibrancyTertiaryLabel,
+                    fontSize: 11,
+                    opacity: controlOpacity,
+                  }}
+                >
+                  volume plus movable cut plane
+                </span>
+              </div>
+            </div>
+          </details>
+
+          <details
+            data-testid="seismic-capability-line-theatre"
+            style={nestedDetailsStyle}
+            open
+          >
+            <summary style={panelStyles.summary}>
+              2D / legacy section theatre
+            </summary>
+            <div style={detailsContentStyle}>
+              <div
+                style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}
+              >
+                <label style={nestedFieldLabelStyle}>Curtain</label>
+                {lineTheatreActions.map((action) => (
+                  <button
+                    key={action.id}
+                    type="button"
+                    data-testid={`seismic-capability-${action.id}`}
+                    disabled={disabled}
+                    onClick={() => applyCapabilityPreset(action.id)}
+                    style={{
+                      ...panelStyles.iconButton,
+                      width: "auto",
+                      padding: "3px 7px",
+                      fontSize: 10,
+                      opacity: controlOpacity,
+                    }}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </details>
+
+          <details
+            data-testid="seismic-capability-processing-comparison"
+            style={nestedDetailsStyle}
+            open
+          >
+            <summary style={panelStyles.summary}>Processing comparison</summary>
+            <div style={detailsContentStyle}>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Mode</label>
+                <select
+                  data-testid="seismic-comparison-mode-select"
+                  value={comparisonMode}
+                  disabled={disabled}
+                  onChange={(e) =>
+                    commit({
+                      seismicComparisonMode:
+                        e.target.value === "side-by-side"
+                          ? "side-by-side"
+                          : "overlay",
+                    })
+                  }
+                  style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+                >
+                  <option value="overlay">Overlay</option>
+                  <option value="side-by-side">Side-by-side</option>
+                </select>
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Spacing</label>
+                <input
+                  data-testid="seismic-comparison-spacing"
+                  type="range"
+                  min={0}
+                  max={3000}
+                  step={50}
+                  value={comparisonSpacingM}
+                  disabled={disabled || comparisonMode !== "side-by-side"}
+                  onChange={(e) =>
+                    commit({
+                      seismicComparisonSpacingM: parseFloat(e.target.value),
+                    })
+                  }
+                  style={
+                    {
+                      flex: 1,
+                      opacity:
+                        comparisonMode === "side-by-side"
+                          ? controlOpacity
+                          : 0.35,
+                      "--editor-slider-fill": `${(comparisonSpacingM / 3000) * 100}%`,
+                    } as React.CSSProperties
+                  }
+                />
+                <span style={sliderNumberReadoutStyle}>
+                  {comparisonSpacingM.toFixed(0)} m
+                </span>
+              </div>
+              <div
+                style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}
+              >
+                <label style={nestedFieldLabelStyle}>Pair</label>
+                {comparisonActions.map((action) => (
+                  <button
+                    key={action.label}
+                    type="button"
+                    data-testid={`seismic-comparison-pair-${action.label.toLowerCase()}`}
+                    disabled={disabled}
+                    onClick={() =>
+                      commit({
+                        seismicCapabilityPresetId:
+                          action.label === "301"
+                            ? "enhanced-vs-unenhanced"
+                            : `enhanced-vs-unenhanced-${action.label.toLowerCase()}`,
+                        seismicProductId: action.primary,
+                        seismicProductVisibility: Object.fromEntries(
+                          products.map((product) => [
+                            product.id,
+                            product.id === action.primary ||
+                              product.id === action.compare,
+                          ]),
+                        ),
+                        seismicRenderMode: "slice",
+                        seismicSliceAxis: "line",
+                        seismicComparisonProductId: action.compare,
+                        seismicComparisonMode: comparisonMode,
+                      })
+                    }
+                    style={{
+                      ...panelStyles.iconButton,
+                      width: "auto",
+                      padding: "3px 7px",
+                      fontSize: 10,
+                      opacity: controlOpacity,
+                    }}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </details>
+
+          <details
+            data-testid="seismic-capability-display-cleanup"
+            style={nestedDetailsStyle}
+            open
+          >
+            <summary style={panelStyles.summary}>Display cleanup</summary>
+            <div style={detailsContentStyle}>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Opacity</label>
+                <input
+                  data-testid="seismic-capability-opacity"
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.02}
+                  value={seismicOpacity}
+                  disabled={disabled}
+                  onChange={(e) =>
+                    commit({ opacity: parseFloat(e.target.value) })
+                  }
+                  style={
+                    {
+                      flex: 1,
+                      opacity: controlOpacity,
+                      "--editor-slider-fill": `${seismicOpacity * 100}%`,
+                    } as React.CSSProperties
+                  }
+                />
+                <span style={sliderNumberReadoutStyle}>
+                  {seismicOpacity.toFixed(2)}
+                </span>
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>
+                  {isVelocityProduct(selectedProduct) ? "Vel min" : "Amp min"}
+                </label>
+                <input
+                  data-testid="seismic-capability-amplitude-min"
+                  type="range"
+                  min={0}
+                  max={0.98}
+                  step={0.01}
+                  value={amplitudeMin}
+                  disabled={disabled}
+                  onChange={(e) =>
+                    commit({ seismicAmplitudeMin: parseFloat(e.target.value) })
+                  }
+                  style={
+                    {
+                      flex: 1,
+                      opacity: controlOpacity,
+                      "--editor-slider-fill": `${amplitudeMin * 100}%`,
+                    } as React.CSSProperties
+                  }
+                />
+                <span style={sliderNumberReadoutStyle}>
+                  {seismicWindowValueLabel(selectedProduct, amplitudeMin)}
+                </span>
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>
+                  {isVelocityProduct(selectedProduct) ? "Vel max" : "Amp max"}
+                </label>
+                <input
+                  data-testid="seismic-capability-amplitude-max"
+                  type="range"
+                  min={0.02}
+                  max={1}
+                  step={0.01}
+                  value={amplitudeMax}
+                  disabled={disabled}
+                  onChange={(e) =>
+                    commit({ seismicAmplitudeMax: parseFloat(e.target.value) })
+                  }
+                  style={
+                    {
+                      flex: 1,
+                      opacity: controlOpacity,
+                      "--editor-slider-fill": `${amplitudeMax * 100}%`,
+                    } as React.CSSProperties
+                  }
+                />
+                <span style={sliderNumberReadoutStyle}>
+                  {seismicWindowValueLabel(selectedProduct, amplitudeMax)}
+                </span>
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Palette</label>
+                <select
+                  data-testid="seismic-capability-colormap-select"
+                  value={colormap}
+                  disabled={disabled}
+                  onChange={(e) =>
+                    commit({
+                      seismicColormap: seismicColormapFromValue(e.target.value),
+                    })
+                  }
+                  style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+                >
+                  <option value="blue-white-red">Blue-white-red</option>
+                  <option value="grayscale">Grayscale</option>
+                  <option value="velocity">Velocity</option>
+                </select>
+              </div>
+              <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+                <span style={nestedFieldLabelStyle}>White bg</span>
+                <input
+                  data-testid="seismic-capability-remove-background"
+                  type="checkbox"
+                  checked={removeBackground}
+                  disabled={disabled}
+                  onChange={(e) =>
+                    commit({ seismicRemoveBackground: e.target.checked })
                   }
                   style={{ opacity: controlOpacity }}
                 />
@@ -9978,344 +10694,811 @@ function SeismicBrowserControls({
                     opacity: controlOpacity,
                   }}
                 >
-                  through volume
+                  remove neutral fill
                 </span>
               </label>
-            ) : null}
-
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Slice</label>
-              <select
-                data-testid="seismic-slice-axis-select"
-                value={sliceAxis}
-                disabled={
-                  disabled || (renderMode === "raymarch" && !sliceThroughVolume)
-                }
-                onChange={(e) =>
-                  commit({
-                    seismicSliceAxis: e.target.value as NonNullable<
-                      EditableStyle["seismicSliceAxis"]
-                    >,
-                  })
-                }
-                style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-              >
-                {selectedProduct?.surveyKind === "3d" ? (
-                  <>
-                    <option value="inline">Inline</option>
-                    <option value="crossline">Crossline</option>
-                    <option value="sample">Time/depth plane</option>
-                  </>
-                ) : (
-                  <option value="line">2D line</option>
-                )}
-              </select>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Time scale</label>
+                <input
+                  data-testid="seismic-capability-time-scale"
+                  type="range"
+                  min={0.25}
+                  max={8}
+                  step={0.25}
+                  value={timeScale}
+                  disabled={disabled}
+                  onChange={(e) =>
+                    commit({ seismicTimeScale: parseFloat(e.target.value) })
+                  }
+                  style={
+                    {
+                      flex: 1,
+                      opacity: controlOpacity,
+                      "--editor-slider-fill": `${
+                        ((timeScale - 0.25) / 7.75) * 100
+                      }%`,
+                    } as React.CSSProperties
+                  }
+                />
+                <span style={sliderNumberReadoutStyle}>
+                  {timeScale.toFixed(2)}
+                </span>
+              </div>
             </div>
+          </details>
 
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Position</label>
-              <input
-                data-testid="seismic-slice-fraction"
-                type="range"
-                min={0}
-                max={1}
-                step={0.01}
-                value={sliceFraction}
-                disabled={
-                  disabled || (renderMode === "raymarch" && !sliceThroughVolume)
-                }
-                onChange={(e) =>
-                  commit({ seismicSliceFraction: parseFloat(e.target.value) })
-                }
+          <details
+            data-testid="seismic-capability-survey-geometry"
+            style={nestedDetailsStyle}
+            open
+          >
+            <summary style={panelStyles.summary}>Survey geometry</summary>
+            <div style={detailsContentStyle}>
+              <div
+                style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}
+              >
+                <label style={nestedFieldLabelStyle}>Preset</label>
+                <button
+                  type="button"
+                  data-testid="seismic-capability-survey-geometry-preset"
+                  disabled={disabled}
+                  onClick={() => applyCapabilityPreset("survey-geometry")}
+                  style={{
+                    ...panelStyles.iconButton,
+                    width: "auto",
+                    padding: "3px 7px",
+                    fontSize: 10,
+                    opacity: controlOpacity,
+                  }}
+                >
+                  Show survey
+                </button>
+              </div>
+              {[
+                {
+                  role: "sources" as const,
+                  label: "Sources",
+                  checked: navigationSourcesVisible,
+                },
+                {
+                  role: "receivers" as const,
+                  label: "Receivers",
+                  checked: navigationReceiversVisible,
+                },
+                {
+                  role: "lines" as const,
+                  label: "Lines",
+                  checked: navigationLinesVisible,
+                },
+              ].map((item) => (
+                <label
+                  key={item.role}
+                  style={{ ...nestedControlRowStyle, cursor: "pointer" }}
+                >
+                  <span style={nestedFieldLabelStyle}>{item.label}</span>
+                  <input
+                    data-testid={`seismic-navigation-role-${item.role}`}
+                    type="checkbox"
+                    checked={item.checked}
+                    disabled={disabled}
+                    onChange={(e) =>
+                      setNavigationRoleVisible(item.role, e.target.checked)
+                    }
+                    style={{ opacity: controlOpacity }}
+                  />
+                  <span style={{ flex: 1 }} />
+                </label>
+              ))}
+            </div>
+          </details>
+
+          <details
+            data-testid="seismic-capability-integrated-geophysics"
+            style={nestedDetailsStyle}
+            open
+          >
+            <summary style={panelStyles.summary}>Integrated geophysics</summary>
+            <div style={detailsContentStyle}>
+              <div
+                style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}
+              >
+                <label style={nestedFieldLabelStyle}>View</label>
+                {[
+                  {
+                    label: "Seismic",
+                    testId: "seismic-capability-seismic-only",
+                    onClick: () => setMtCoRender("seismic"),
+                  },
+                  {
+                    label: "MT",
+                    testId: "seismic-capability-mt-only",
+                    onClick: () => setMtCoRender("mt"),
+                  },
+                  {
+                    label: "Integrated",
+                    testId: "seismic-capability-integrated",
+                    onClick: () =>
+                      applyCapabilityPreset("integrated-geophysics"),
+                  },
+                ].map((action) => (
+                  <button
+                    key={action.testId}
+                    type="button"
+                    data-testid={action.testId}
+                    disabled={disabled}
+                    onClick={action.onClick}
+                    style={{
+                      ...panelStyles.iconButton,
+                      width: "auto",
+                      padding: "3px 7px",
+                      fontSize: 10,
+                      opacity: controlOpacity,
+                    }}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </details>
+
+          <details
+            data-testid="seismic-capability-data-confidence"
+            style={nestedDetailsStyle}
+            open
+          >
+            <summary style={panelStyles.summary}>Data confidence</summary>
+            <div
+              style={{
+                ...detailsContentStyle,
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                lineHeight: 1.35,
+              }}
+            >
+              <div>Products: {products.length} processed GUI products</div>
+              <div>3D raymarch-capable: {raymarchProducts.length}</div>
+              <div>
+                Active capability:{" "}
+                {currentCapabilityPresetId || "manual controls"}
+              </div>
+              <div>{SEISMIC_DEMO_DISCLOSURE_LABELS.join(" / ")}</div>
+            </div>
+          </details>
+        </>
+      ) : null}
+
+      <details
+        data-testid="seismic-technical-controls"
+        style={nestedDetailsStyle}
+        open={technicalOpen}
+        onToggle={(event) =>
+          setTechnicalOpen((event.currentTarget as HTMLDetailsElement).open)
+        }
+      >
+        <summary style={panelStyles.summary}>Technical controls</summary>
+        <div style={detailsContentStyle}>
+          <details style={nestedDetailsStyle}>
+            <summary style={panelStyles.summary}>
+              Product visibility ({visibleProductCount}/{products.length})
+            </summary>
+            <div style={detailsContentStyle}>
+              <div
                 style={{
+                  ...nestedControlRowStyle,
+                  gap: 6,
+                  flexWrap: "wrap",
+                }}
+              >
+                <label style={nestedFieldLabelStyle}>Visibility</label>
+                {[
+                  {
+                    label: "Show all",
+                    testId: "seismic-products-show-all",
+                    onClick: () => setVisibilityForProducts(() => true),
+                  },
+                  {
+                    label: "Hide all",
+                    testId: "seismic-products-hide-all",
+                    onClick: () => setVisibilityForProducts(() => false),
+                  },
+                  {
+                    label: "3D only",
+                    testId: "seismic-products-show-3d-only",
+                    onClick: () =>
+                      setVisibilityForProducts(
+                        (product) => product.surveyKind === "3d",
+                      ),
+                  },
+                  {
+                    label: "2D only",
+                    testId: "seismic-products-show-2d-only",
+                    onClick: () =>
+                      setVisibilityForProducts(
+                        (product) => product.surveyKind !== "3d",
+                      ),
+                  },
+                ].map((action) => (
+                  <button
+                    key={action.testId}
+                    type="button"
+                    data-testid={action.testId}
+                    disabled={disabled}
+                    onClick={action.onClick}
+                    style={{
+                      ...panelStyles.iconButton,
+                      width: "auto",
+                      padding: "3px 7px",
+                      fontSize: 10,
+                      opacity: controlOpacity,
+                    }}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+              {products.map((product) => {
+                const selected = product.id === productId;
+                return (
+                  <div
+                    key={product.id}
+                    style={{
+                      ...nestedControlRowStyle,
+                      borderRadius: 6,
+                      background: selected
+                        ? "rgba(244, 240, 232, 0.08)"
+                        : "transparent",
+                    }}
+                  >
+                    <input
+                      data-testid={`seismic-product-visible-${product.id}`}
+                      type="checkbox"
+                      checked={productVisibility[product.id] === true}
+                      disabled={disabled}
+                      onChange={(e) =>
+                        setProductVisible(product.id, e.target.checked)
+                      }
+                      title="Show or hide this product"
+                      style={{ opacity: controlOpacity }}
+                    />
+                    <button
+                      type="button"
+                      data-testid={`seismic-product-row-${product.id}`}
+                      disabled={disabled}
+                      onClick={() => selectProduct(product.id)}
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        appearance: "none",
+                        border: "none",
+                        background: "transparent",
+                        color: selected ? vibrancyLabel : vibrancyTertiaryLabel,
+                        font: "inherit",
+                        fontSize: 11,
+                        fontWeight: selected ? 800 : 650,
+                        textAlign: "left",
+                        cursor: disabled ? "default" : "pointer",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        opacity: controlOpacity,
+                      }}
+                      title={product.label}
+                    >
+                      {product.label}
+                    </button>
+                    <span
+                      style={{
+                        color: vibrancyTertiaryLabel,
+                        fontSize: 11,
+                        opacity: controlOpacity,
+                        minWidth: 54,
+                        textAlign: "right",
+                      }}
+                    >
+                      {product.raymarchCapable
+                        ? "3D"
+                        : (product.surveyKind ?? "2D")}
+                      {product.domainUnit ? ` / ${product.domainUnit}` : ""}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </details>
+
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Product</label>
+            <select
+              data-testid="seismic-product-select"
+              value={productId}
+              disabled={disabled || products.length === 0}
+              onChange={(e) => selectProduct(e.target.value)}
+              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+            >
+              {products.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Compare</label>
+            <select
+              data-testid="seismic-comparison-product-select"
+              value={comparisonProductId ?? "none"}
+              disabled={disabled}
+              onChange={(e) => setComparisonProduct(e.target.value)}
+              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+            >
+              <option value="none">None</option>
+              {products
+                .filter((product) => product.id !== productId)
+                .map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.label}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Mode</label>
+            <select
+              data-testid="seismic-render-mode-select"
+              value={renderMode}
+              disabled={disabled || !selectedProduct?.raymarchCapable}
+              onChange={(e) =>
+                commit({
+                  seismicRenderMode:
+                    e.target.value === "raymarch" ? "raymarch" : "slice",
+                })
+              }
+              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+            >
+              <option value="slice">Slice</option>
+              {selectedProduct?.raymarchCapable ? (
+                <option value="raymarch">Raymarch</option>
+              ) : null}
+            </select>
+          </div>
+
+          {selectedProduct?.raymarchCapable ? (
+            <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+              <span style={nestedFieldLabelStyle}>Sync slice</span>
+              <input
+                data-testid="seismic-slice-through-volume"
+                type="checkbox"
+                checked={sliceThroughVolume}
+                disabled={disabled}
+                onChange={(e) =>
+                  commit({ seismicSliceThroughVolume: e.target.checked })
+                }
+                style={{ opacity: controlOpacity }}
+              />
+              <span
+                style={{
+                  flex: 1,
+                  color: vibrancyTertiaryLabel,
+                  fontSize: 11,
+                  opacity: controlOpacity,
+                }}
+              >
+                through volume
+              </span>
+            </label>
+          ) : null}
+
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Slice</label>
+            <select
+              data-testid="seismic-slice-axis-select"
+              value={sliceAxis}
+              disabled={
+                disabled || (renderMode === "raymarch" && !sliceThroughVolume)
+              }
+              onChange={(e) =>
+                commit({
+                  seismicSliceAxis: e.target.value as NonNullable<
+                    EditableStyle["seismicSliceAxis"]
+                  >,
+                })
+              }
+              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+            >
+              {selectedProduct?.surveyKind === "3d" ? (
+                <>
+                  <option value="inline">Inline</option>
+                  <option value="crossline">Crossline</option>
+                  <option value="sample">Time/depth plane</option>
+                </>
+              ) : (
+                <option value="line">2D line</option>
+              )}
+            </select>
+          </div>
+
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Position</label>
+            <input
+              data-testid="seismic-slice-fraction"
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={sliceFraction}
+              disabled={
+                disabled || (renderMode === "raymarch" && !sliceThroughVolume)
+              }
+              onChange={(e) =>
+                commit({ seismicSliceFraction: parseFloat(e.target.value) })
+              }
+              style={
+                {
                   flex: 1,
                   opacity: controlOpacity,
                   "--editor-slider-fill": `${sliceFraction * 100}%`,
-                } as React.CSSProperties}
-              />
-              <span style={sliderNumberReadoutStyle}>
-                {sliceFraction.toFixed(2)}
-              </span>
-            </div>
-
-            <IsobandControls
-              style={style}
-              disabled={disabled}
-              isEnv={isEnv}
-              currentPage={currentPage}
-              layerId={layerId}
-              rangeKind="seismic"
-              volumePlanes={
-                selectedProduct?.raymarchCapable === true && renderMode === "raymarch"
+                } as React.CSSProperties
               }
-              sceneSectionStyle={sceneSectionStyle}
-              sceneHandle={sceneHandle}
-              setEnvLayerStyle={setEnvLayerStyle}
-              setPageLayerOverride={setPageLayerOverride}
             />
+            <span style={sliderNumberReadoutStyle}>
+              {sliceFraction.toFixed(2)}
+            </span>
+          </div>
 
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>
-                {isVelocityProduct(selectedProduct) ? "Vel min" : "Amp min"}
-              </label>
-              <input
-                data-testid="seismic-amplitude-min"
-                type="range"
-                min={0}
-                max={0.98}
-                step={0.01}
-                value={amplitudeMin}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({ seismicAmplitudeMin: parseFloat(e.target.value) })
-                }
-                style={{
+          <IsobandControls
+            style={style}
+            disabled={disabled}
+            isEnv={isEnv}
+            currentPage={currentPage}
+            layerId={layerId}
+            rangeKind="seismic"
+            volumePlanes={
+              selectedProduct?.raymarchCapable === true &&
+              renderMode === "raymarch"
+            }
+            sceneSectionStyle={sceneSectionStyle}
+            sceneHandle={sceneHandle}
+            setEnvLayerStyle={setEnvLayerStyle}
+            setPageLayerOverride={setPageLayerOverride}
+          />
+
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>
+              {isVelocityProduct(selectedProduct) ? "Vel min" : "Amp min"}
+            </label>
+            <input
+              data-testid="seismic-amplitude-min"
+              type="range"
+              min={0}
+              max={0.98}
+              step={0.01}
+              value={amplitudeMin}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({ seismicAmplitudeMin: parseFloat(e.target.value) })
+              }
+              style={
+                {
                   flex: 1,
                   opacity: controlOpacity,
                   "--editor-slider-fill": `${amplitudeMin * 100}%`,
-                } as React.CSSProperties}
-              />
-              <span style={sliderNumberReadoutStyle}>
-                {seismicWindowValueLabel(selectedProduct, amplitudeMin)}
-              </span>
-            </div>
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>
+              {seismicWindowValueLabel(selectedProduct, amplitudeMin)}
+            </span>
+          </div>
 
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>
-                {isVelocityProduct(selectedProduct) ? "Vel max" : "Amp max"}
-              </label>
-              <input
-                data-testid="seismic-amplitude-max"
-                type="range"
-                min={0.02}
-                max={1}
-                step={0.01}
-                value={amplitudeMax}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({ seismicAmplitudeMax: parseFloat(e.target.value) })
-                }
-                style={{
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>
+              {isVelocityProduct(selectedProduct) ? "Vel max" : "Amp max"}
+            </label>
+            <input
+              data-testid="seismic-amplitude-max"
+              type="range"
+              min={0.02}
+              max={1}
+              step={0.01}
+              value={amplitudeMax}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({ seismicAmplitudeMax: parseFloat(e.target.value) })
+              }
+              style={
+                {
                   flex: 1,
                   opacity: controlOpacity,
                   "--editor-slider-fill": `${amplitudeMax * 100}%`,
-                } as React.CSSProperties}
-              />
-              <span style={sliderNumberReadoutStyle}>
-                {seismicWindowValueLabel(selectedProduct, amplitudeMax)}
-              </span>
-            </div>
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>
+              {seismicWindowValueLabel(selectedProduct, amplitudeMax)}
+            </span>
+          </div>
 
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Gain curve</label>
-              <input
-                data-testid="seismic-amplitude-gamma"
-                type="range"
-                min={0.35}
-                max={2.5}
-                step={0.05}
-                value={amplitudeGamma}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({ seismicAmplitudeGamma: parseFloat(e.target.value) })
-                }
-                style={{
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Gain curve</label>
+            <input
+              data-testid="seismic-amplitude-gamma"
+              type="range"
+              min={0.35}
+              max={2.5}
+              step={0.05}
+              value={amplitudeGamma}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({ seismicAmplitudeGamma: parseFloat(e.target.value) })
+              }
+              style={
+                {
                   flex: 1,
                   opacity: controlOpacity,
                   "--editor-slider-fill": `${
                     ((amplitudeGamma - 0.35) / 2.15) * 100
                   }%`,
-                } as React.CSSProperties}
-              />
-              <span style={sliderNumberReadoutStyle}>
-                {amplitudeGamma.toFixed(2)}
-              </span>
-            </div>
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>
+              {amplitudeGamma.toFixed(2)}
+            </span>
+          </div>
 
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Palette</label>
-              <select
-                data-testid="seismic-colormap-select"
-                value={colormap}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({
-                    seismicColormap: seismicColormapFromValue(e.target.value),
-                  })
-                }
-                style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-              >
-                <option value="blue-white-red">Blue-white-red</option>
-                <option value="grayscale">Grayscale</option>
-                <option value="velocity">Velocity</option>
-              </select>
-            </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Palette</label>
+            <select
+              data-testid="seismic-colormap-select"
+              value={colormap}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({
+                  seismicColormap: seismicColormapFromValue(e.target.value),
+                })
+              }
+              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+            >
+              <option value="blue-white-red">Blue-white-red</option>
+              <option value="grayscale">Grayscale</option>
+              <option value="velocity">Velocity</option>
+            </select>
+          </div>
 
-            <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-              <span style={nestedFieldLabelStyle}>Legend</span>
-              <input
-                data-testid="seismic-legend-visible"
-                type="checkbox"
-                checked={legendVisible}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({ seismicLegendVisible: e.target.checked })
-                }
-                style={{ opacity: controlOpacity }}
-              />
-              <span
-                style={{
-                  flex: 1,
-                  color: vibrancyTertiaryLabel,
-                  fontSize: 11,
-                  opacity: controlOpacity,
-                }}
-              >
-                amplitude controls
-              </span>
-            </label>
+          <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+            <span style={nestedFieldLabelStyle}>Legend</span>
+            <input
+              data-testid="seismic-legend-visible"
+              type="checkbox"
+              checked={legendVisible}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({ seismicLegendVisible: e.target.checked })
+              }
+              style={{ opacity: controlOpacity }}
+            />
+            <span
+              style={{
+                flex: 1,
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                opacity: controlOpacity,
+              }}
+            >
+              amplitude controls
+            </span>
+          </label>
 
-            <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-              <span style={nestedFieldLabelStyle}>White bg</span>
-              <input
-                data-testid="seismic-remove-background"
-                type="checkbox"
-                checked={removeBackground}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({ seismicRemoveBackground: e.target.checked })
-                }
-                style={{ opacity: controlOpacity }}
-              />
-              <span
-                style={{
-                  flex: 1,
-                  color: vibrancyTertiaryLabel,
-                  fontSize: 11,
-                  opacity: controlOpacity,
-                }}
-              >
-                remove neutral fill
-              </span>
-            </label>
+          <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+            <span style={nestedFieldLabelStyle}>White bg</span>
+            <input
+              data-testid="seismic-remove-background"
+              type="checkbox"
+              checked={removeBackground}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({ seismicRemoveBackground: e.target.checked })
+              }
+              style={{ opacity: controlOpacity }}
+            />
+            <span
+              style={{
+                flex: 1,
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                opacity: controlOpacity,
+              }}
+            >
+              remove neutral fill
+            </span>
+          </label>
 
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Zero mute</label>
-              <input
-                data-testid="seismic-background-cutoff"
-                type="range"
-                min={0}
-                max={0.45}
-                step={0.01}
-                value={backgroundCutoff}
-                disabled={disabled || !removeBackground}
-                onChange={(e) =>
-                  commit({ seismicBackgroundCutoff: parseFloat(e.target.value) })
-                }
-                style={{
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Zero mute</label>
+            <input
+              data-testid="seismic-background-cutoff"
+              type="range"
+              min={0}
+              max={0.45}
+              step={0.01}
+              value={backgroundCutoff}
+              disabled={disabled || !removeBackground}
+              onChange={(e) =>
+                commit({ seismicBackgroundCutoff: parseFloat(e.target.value) })
+              }
+              style={
+                {
                   flex: 1,
                   opacity: removeBackground ? controlOpacity : 0.35,
                   "--editor-slider-fill": `${(backgroundCutoff / 0.45) * 100}%`,
-                } as React.CSSProperties}
-              />
-              <span style={sliderNumberReadoutStyle}>
-                {backgroundCutoff.toFixed(2)}
-              </span>
-            </div>
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>
+              {backgroundCutoff.toFixed(2)}
+            </span>
+          </div>
 
-            {selectedProduct?.raymarchCapable ? (
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Ray steps</label>
-                <input
-                  data-testid="seismic-volume-sample-steps"
-                  type="range"
-                  min={24}
-                  max={160}
-                  step={8}
-                  value={volumeSampleSteps}
-                  disabled={disabled}
-                  onChange={(e) =>
-                    commit({
-                      seismicVolumeSampleSteps: parseFloat(e.target.value),
-                    })
-                  }
-                  style={{
+          {selectedProduct?.raymarchCapable ? (
+            <div style={nestedControlRowStyle}>
+              <label style={nestedFieldLabelStyle}>Ray steps</label>
+              <input
+                data-testid="seismic-volume-sample-steps"
+                type="range"
+                min={24}
+                max={160}
+                step={8}
+                value={volumeSampleSteps}
+                disabled={disabled}
+                onChange={(e) =>
+                  commit({
+                    seismicVolumeSampleSteps: parseFloat(e.target.value),
+                  })
+                }
+                style={
+                  {
                     flex: 1,
                     opacity: controlOpacity,
                     "--editor-slider-fill": `${
                       ((volumeSampleSteps - 24) / 136) * 100
                     }%`,
-                  } as React.CSSProperties}
-                />
-                <span style={sliderNumberReadoutStyle}>{volumeSampleSteps}</span>
-              </div>
-            ) : null}
-
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Time scale</label>
-              <input
-                data-testid="seismic-time-scale"
-                type="range"
-                min={0.25}
-                max={8}
-                step={0.25}
-                value={timeScale}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({ seismicTimeScale: parseFloat(e.target.value) })
+                  } as React.CSSProperties
                 }
-                style={{
+              />
+              <span style={sliderNumberReadoutStyle}>{volumeSampleSteps}</span>
+            </div>
+          ) : null}
+
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Time scale</label>
+            <input
+              data-testid="seismic-time-scale"
+              type="range"
+              min={0.25}
+              max={8}
+              step={0.25}
+              value={timeScale}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({ seismicTimeScale: parseFloat(e.target.value) })
+              }
+              style={
+                {
                   flex: 1,
                   opacity: controlOpacity,
                   "--editor-slider-fill": `${
                     ((timeScale - 0.25) / 7.75) * 100
                   }%`,
-                } as React.CSSProperties}
-              />
-              <span style={sliderNumberReadoutStyle}>{timeScale.toFixed(2)}</span>
-            </div>
-
-            <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-              <span style={nestedFieldLabelStyle}>Navigation</span>
-              <input
-                data-testid="seismic-navigation-visible"
-                type="checkbox"
-                checked={navigationVisible}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({ seismicNavigationVisible: e.target.checked })
-                }
-                style={{ opacity: controlOpacity }}
-              />
-              <span
-                style={{
-                  flex: 1,
-                  color: vibrancyTertiaryLabel,
-                  fontSize: 11,
-                  opacity: controlOpacity,
-                }}
-              >
-                source/receiver lines
-              </span>
-            </label>
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>{timeScale.toFixed(2)}</span>
           </div>
-        </details>
+
+          <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+            <span style={nestedFieldLabelStyle}>Navigation</span>
+            <input
+              data-testid="seismic-navigation-visible"
+              type="checkbox"
+              checked={navigationVisible}
+              disabled={disabled}
+              onChange={(e) =>
+                commit({ seismicNavigationVisible: e.target.checked })
+              }
+              style={{ opacity: controlOpacity }}
+            />
+            <span
+              style={{
+                flex: 1,
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                opacity: controlOpacity,
+              }}
+            >
+              source/receiver lines
+            </span>
+          </label>
+        </div>
+      </details>
     </>
+  );
+}
+
+function ScalarPointDrawReadout({
+  sceneHandle,
+  layerId,
+  inclusionMode,
+}: {
+  sceneHandle: SceneHandle;
+  layerId: string;
+  inclusionMode: "all-valid" | "thresholded";
+}) {
+  const group = sceneHandle.manager.getLayer(layerId);
+  let sourceCount = 0;
+  let drawnCount = 0;
+
+  group?.traverse((object) => {
+    const geometry = (
+      object as {
+        geometry?: {
+          getAttribute?: (name: string) => { count?: number } | undefined;
+          getIndex?: () => { count?: number } | null;
+          userData?: Record<string, unknown>;
+        };
+      }
+    ).geometry;
+    const positionCount = geometry?.getAttribute?.("position")?.count;
+    if (typeof positionCount !== "number" || positionCount <= 0) return;
+    if (!geometry?.userData?.scalarValues) return;
+
+    sourceCount += positionCount;
+    const indexCount = geometry.getIndex?.()?.count;
+    drawnCount += typeof indexCount === "number" ? indexCount : positionCount;
+  });
+
+  const hasPoints = sourceCount > 0;
+  const allDrawn = hasPoints && sourceCount === drawnCount;
+
+  return (
+    <div style={nestedControlRowStyle}>
+      <label style={nestedFieldLabelStyle}>Draw QA</label>
+      <span
+        style={{
+          flex: 1,
+          color: allDrawn ? vibrancyLabel : "#ffbf6b",
+          fontSize: 11,
+          lineHeight: 1.35,
+        }}
+      >
+        {hasPoints
+          ? `Drawn ${drawnCount.toLocaleString()} / ${sourceCount.toLocaleString()} points (${inclusionMode})`
+          : `Waiting for scalar point tiles (${inclusionMode})`}
+      </span>
+    </div>
   );
 }
 
 function ScalarRampControls({
   style,
+  targetLabel,
+  fullDensityMode = false,
   disabled,
   isPageOverride,
   overridden,
+  volumeThresholdMode = false,
   onToggleOverride,
   onChange,
 }: {
   style: EditableStyle;
+  targetLabel: string;
+  fullDensityMode?: boolean;
   disabled: boolean;
   isPageOverride: boolean;
   overridden: boolean;
+  volumeThresholdMode?: boolean;
   onToggleOverride?: (enabled: boolean) => void;
   onChange: (patch: Partial<EditableStyle>) => void;
 }) {
@@ -10333,41 +11516,39 @@ function ScalarRampControls({
   );
   const colorMax = Math.min(
     sourceMax,
-    Math.max(
-      styleNumber(style, "scalarDisplayMax", 3.937122),
-      colorMin + 0.01,
-    ),
+    Math.max(styleNumber(style, "scalarDisplayMax", 3.937122), colorMin + 0.01),
   );
   const trimMin = Math.max(
     sourceMin,
     Math.min(
       sourceMax - 0.01,
-      styleNumber(style, "scalarFocusMin", sourceMin),
+      volumeThresholdMode
+        ? styleNumber(
+            style,
+            "scalarVolumeThresholdMin",
+            styleNumber(style, "scalarFocusMin", sourceMin),
+          )
+        : styleNumber(style, "scalarFocusMin", sourceMin),
     ),
   );
   const trimMax = Math.max(
     trimMin + 0.01,
     Math.min(
       sourceMax,
-      styleNumber(style, "scalarFocusMax", sourceMax),
+      volumeThresholdMode
+        ? styleNumber(
+            style,
+            "scalarVolumeThresholdMax",
+            styleNumber(style, "scalarFocusMax", sourceMax),
+          )
+        : styleNumber(style, "scalarFocusMax", sourceMax),
     ),
   );
   const blendMin = Math.max(
     trimMin,
-    Math.min(
-      trimMax - 0.01,
-      styleNumber(
-        style,
-        "scalarBlendMin",
-        colorMin,
-      ),
-    ),
+    Math.min(trimMax - 0.01, styleNumber(style, "scalarBlendMin", colorMin)),
   );
-  const rawBlendMax = styleNumber(
-    style,
-    "scalarBlendMax",
-    colorMax,
-  );
+  const rawBlendMax = styleNumber(style, "scalarBlendMax", colorMax);
   const blendMax = Math.min(trimMax, Math.max(rawBlendMax, blendMin + 0.01));
   const midpoint = Math.max(
     0.05,
@@ -10382,6 +11563,13 @@ function ScalarRampControls({
     0,
     Math.min(100, ((contrast - 0.35) / (3 - 0.35)) * 100),
   );
+  const inclusionMode =
+    fullDensityMode && style.scalarInclusionMode !== "thresholded"
+      ? "all-valid"
+      : style.scalarInclusionMode === "thresholded"
+        ? "thresholded"
+        : "all-valid";
+  const thresholdControlsVisible = true;
   const controlOpacity = disabled ? 0.4 : 1;
   const sourceRange = Math.max(0.01, sourceMax - sourceMin);
   const blendMinFill = Math.max(
@@ -10420,6 +11608,63 @@ function ScalarRampControls({
   return (
     <>
       <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>Target</label>
+        <span
+          style={{
+            flex: 1,
+            color: vibrancyLabel,
+            fontSize: 11,
+            fontWeight: 700,
+            lineHeight: 1.3,
+            opacity: controlOpacity,
+          }}
+        >
+          Scalar controls target: {targetLabel}
+        </span>
+      </div>
+      {fullDensityMode ? (
+        <>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Inclusion</label>
+            <select
+              value={inclusionMode}
+              disabled={disabled}
+              onChange={(e) =>
+                onChange({
+                  scalarInclusionMode:
+                    e.target.value === "thresholded"
+                      ? "thresholded"
+                      : "all-valid",
+                })
+              }
+              style={{
+                flex: 1,
+                opacity: controlOpacity,
+              }}
+            >
+              <option value="all-valid">All valid points</option>
+              <option value="thresholded">Threshold/filter points</option>
+            </select>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Mode note</label>
+            <span
+              style={{
+                flex: 1,
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                lineHeight: 1.35,
+                opacity: controlOpacity,
+              }}
+            >
+              {inclusionMode === "thresholded"
+                ? "Trim, feather, and noise can filter drawn points."
+                : "Trim, feather, and noise change visual emphasis; all valid points stay drawn."}
+            </span>
+          </div>
+        </>
+      ) : null}
+      <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>Spectrum</label>
         {isPageOverride ? (
           <input
@@ -10450,72 +11695,80 @@ function ScalarRampControls({
               overflow: "hidden",
             }}
           >
-            <span
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: `${trimMinFill}%`,
-                background: "rgba(0, 0, 0, 0.58)",
-              }}
-            />
-            <span
-              style={{
-                position: "absolute",
-                left: `${trimMaxFill}%`,
-                right: 0,
-                top: 0,
-                bottom: 0,
-                background: "rgba(0, 0, 0, 0.58)",
-              }}
-            />
-            {blendMinFill > trimMinFill ? (
-              <span
-                style={{
-                  position: "absolute",
-                  left: `${trimMinFill}%`,
-                  width: `${blendMinFill - trimMinFill}%`,
-                  top: 0,
-                  bottom: 0,
-                  background:
-                    "linear-gradient(90deg, rgba(0, 0, 0, 0.54), rgba(0, 0, 0, 0))",
-                }}
-              />
-            ) : null}
-            {trimMaxFill > blendMaxFill ? (
-              <span
-                style={{
-                  position: "absolute",
-                  left: `${blendMaxFill}%`,
-                  width: `${trimMaxFill - blendMaxFill}%`,
-                  top: 0,
-                  bottom: 0,
-                  background:
-                    "linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.54))",
-                }}
-              />
+            {thresholdControlsVisible ? (
+              <>
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: `${trimMinFill}%`,
+                    background: "rgba(0, 0, 0, 0.58)",
+                  }}
+                />
+                <span
+                  style={{
+                    position: "absolute",
+                    left: `${trimMaxFill}%`,
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    background: "rgba(0, 0, 0, 0.58)",
+                  }}
+                />
+                {blendMinFill > trimMinFill ? (
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: `${trimMinFill}%`,
+                      width: `${blendMinFill - trimMinFill}%`,
+                      top: 0,
+                      bottom: 0,
+                      background:
+                        "linear-gradient(90deg, rgba(0, 0, 0, 0.54), rgba(0, 0, 0, 0))",
+                    }}
+                  />
+                ) : null}
+                {trimMaxFill > blendMaxFill ? (
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: `${blendMaxFill}%`,
+                      width: `${trimMaxFill - blendMaxFill}%`,
+                      top: 0,
+                      bottom: 0,
+                      background:
+                        "linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.54))",
+                    }}
+                  />
+                ) : null}
+              </>
             ) : null}
           </div>
-          {[trimMinFill, blendMinFill, blendMaxFill, trimMaxFill].map((left, index) => (
-            <span
-              key={`${index}-${left.toFixed(1)}`}
-              style={{
-                position: "absolute",
-                left: `${left}%`,
-                top: 0,
-                width: index === 0 || index === 3 ? 7 : 5,
-                height: index === 0 || index === 3 ? 18 : 14,
-                borderRadius: 999,
-                transform: "translateX(-50%)",
-                background:
-                  index === 0 || index === 3
-                    ? "rgba(255, 255, 255, 0.92)"
-                    : "rgba(255, 255, 255, 0.42)",
-                boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.45)",
-              }}
-            />
-          ))}
+          {thresholdControlsVisible
+            ? [trimMinFill, blendMinFill, blendMaxFill, trimMaxFill].map(
+                (left, index) => (
+                  <span
+                    key={`${index}-${left.toFixed(1)}`}
+                    style={{
+                      position: "absolute",
+                      left: `${left}%`,
+                      top: 0,
+                      width: index === 0 || index === 3 ? 7 : 5,
+                      height: index === 0 || index === 3 ? 18 : 14,
+                      borderRadius: 999,
+                      transform: "translateX(-50%)",
+                      background:
+                        index === 0 || index === 3
+                          ? "rgba(255, 255, 255, 0.92)"
+                          : "rgba(255, 255, 255, 0.42)",
+                      boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.45)",
+                    }}
+                  />
+                ),
+              )
+            : null}
         </div>
         {isPageOverride ? (
           <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
@@ -10556,128 +11809,212 @@ function ScalarRampControls({
           />
         </div>
       </div>
-      <div style={nestedControlRowStyle}>
-        <label style={nestedFieldLabelStyle}>Trim min</label>
-        <input
-          type="range"
-          aria-label="Scalar trim minimum"
-          min={sourceMin}
-          max={sourceMax}
-          step={0.01}
-          value={trimMin}
-          disabled={disabled}
-          onChange={(e) => {
-            const next = Math.min(
-              parseFloat(e.target.value),
-              trimMax - 0.01,
-            );
-            const nextTrimMin = Math.max(sourceMin, next);
-            const nextBlendMin = Math.max(blendMin, nextTrimMin);
-            const nextBlendMax = Math.min(
-              trimMax,
-              Math.max(blendMax, nextBlendMin + 0.01),
-            );
-            onChange({
-              scalarFocusMin: nextTrimMin,
-              scalarBlendMin: nextBlendMin,
-              scalarBlendMax: nextBlendMax,
-            });
-          }}
-          style={{
-            flex: 1,
-            opacity: controlOpacity,
-            "--editor-slider-fill": `${trimMinFill}%`,
-          } as React.CSSProperties}
-        />
-        <span style={sliderNumberReadoutStyle}>{trimMin.toFixed(2)}</span>
-      </div>
-      <div style={nestedControlRowStyle}>
-        <label style={nestedFieldLabelStyle}>Trim max</label>
-        <input
-          type="range"
-          aria-label="Scalar trim maximum"
-          min={sourceMin}
-          max={sourceMax}
-          step={0.01}
-          value={trimMax}
-          disabled={disabled}
-          onChange={(e) => {
-            const next = Math.max(
-              parseFloat(e.target.value),
-              trimMin + 0.01,
-            );
-            const nextTrimMax = Math.min(sourceMax, next);
-            const nextBlendMax = Math.min(blendMax, nextTrimMax);
-            const nextBlendMin = Math.max(
-              trimMin,
-              Math.min(blendMin, nextBlendMax - 0.01),
-            );
-            onChange({
-              scalarFocusMax: nextTrimMax,
-              scalarBlendMin: nextBlendMin,
-              scalarBlendMax: nextBlendMax,
-            });
-          }}
-          style={{
-            flex: 1,
-            opacity: controlOpacity,
-            "--editor-slider-fill": `${trimMaxFill}%`,
-          } as React.CSSProperties}
-        />
-        <span style={sliderNumberReadoutStyle}>{trimMax.toFixed(2)}</span>
-      </div>
-      <div style={nestedControlRowStyle}>
-        <label style={nestedFieldLabelStyle}>Feather min</label>
-        <input
-          type="range"
-          aria-label="Scalar feather minimum"
-          min={sourceMin}
-          max={sourceMax}
-          step={0.01}
-          value={blendMin}
-          disabled={disabled}
-          onChange={(e) =>
-            onChange({
-              scalarBlendMin: Math.max(
-                trimMin,
-                Math.min(parseFloat(e.target.value), blendMax - 0.01),
-              ),
-            })
-          }
-          style={{
-            flex: 1,
-            opacity: controlOpacity,
-            "--editor-slider-fill": valueFill(blendMin),
-          } as React.CSSProperties}
-        />
-        <span style={sliderNumberReadoutStyle}>{blendMin.toFixed(2)}</span>
-      </div>
-      <div style={nestedControlRowStyle}>
-        <label style={nestedFieldLabelStyle}>Feather max</label>
-        <input
-          type="range"
-          aria-label="Scalar feather maximum"
-          min={sourceMin}
-          max={sourceMax}
-          step={0.01}
-          value={blendMax}
-          disabled={disabled}
-          onChange={(e) =>
-            onChange({
-              scalarBlendMax: Math.min(
-                trimMax,
-                Math.max(parseFloat(e.target.value), blendMin + 0.01),
-              ),
-            })
-          }
-          style={{
-            flex: 1,
-            opacity: controlOpacity,
-            "--editor-slider-fill": valueFill(blendMax),
-          } as React.CSSProperties}
-        />
-        <span style={sliderNumberReadoutStyle}>{blendMax.toFixed(2)}</span>
-      </div>
+      {thresholdControlsVisible ? (
+        <>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>
+              {volumeThresholdMode ? "Cut min" : "Trim min"}
+            </label>
+            <input
+              type="range"
+              aria-label={
+                volumeThresholdMode
+                  ? "Scalar volume cut minimum"
+                  : "Scalar trim minimum"
+              }
+              min={sourceMin}
+              max={sourceMax}
+              step={0.01}
+              value={trimMin}
+              disabled={disabled}
+              onChange={(e) => {
+                const next = Math.min(
+                  parseFloat(e.target.value),
+                  trimMax - 0.01,
+                );
+                const nextTrimMin = Math.max(sourceMin, next);
+                const nextBlendMin = Math.max(blendMin, nextTrimMin);
+                const nextBlendMax = Math.min(
+                  trimMax,
+                  Math.max(blendMax, nextBlendMin + 0.01),
+                );
+                onChange({
+                  scalarFocusMin: nextTrimMin,
+                  ...(volumeThresholdMode
+                    ? {
+                        scalarVolumeThresholdMin: nextTrimMin,
+                        scalarVolumeThresholdMax: trimMax,
+                      }
+                    : {}),
+                  scalarBlendMin: nextBlendMin,
+                  scalarBlendMax: nextBlendMax,
+                });
+              }}
+              style={
+                {
+                  flex: 1,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": `${trimMinFill}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>{trimMin.toFixed(2)}</span>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>
+              {volumeThresholdMode ? "Cut max" : "Trim max"}
+            </label>
+            <input
+              type="range"
+              aria-label={
+                volumeThresholdMode
+                  ? "Scalar volume cut maximum"
+                  : "Scalar trim maximum"
+              }
+              min={sourceMin}
+              max={sourceMax}
+              step={0.01}
+              value={trimMax}
+              disabled={disabled}
+              onChange={(e) => {
+                const next = Math.max(
+                  parseFloat(e.target.value),
+                  trimMin + 0.01,
+                );
+                const nextTrimMax = Math.min(sourceMax, next);
+                const nextBlendMax = Math.min(blendMax, nextTrimMax);
+                const nextBlendMin = Math.max(
+                  trimMin,
+                  Math.min(blendMin, nextBlendMax - 0.01),
+                );
+                onChange({
+                  scalarFocusMax: nextTrimMax,
+                  ...(volumeThresholdMode
+                    ? {
+                        scalarVolumeThresholdMin: trimMin,
+                        scalarVolumeThresholdMax: nextTrimMax,
+                      }
+                    : {}),
+                  scalarBlendMin: nextBlendMin,
+                  scalarBlendMax: nextBlendMax,
+                });
+              }}
+              style={
+                {
+                  flex: 1,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": `${trimMaxFill}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>{trimMax.toFixed(2)}</span>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Feather min</label>
+            <input
+              type="range"
+              aria-label="Scalar feather minimum"
+              min={sourceMin}
+              max={sourceMax}
+              step={0.01}
+              value={blendMin}
+              disabled={disabled}
+              onChange={(e) =>
+                onChange({
+                  scalarBlendMin: Math.max(
+                    trimMin,
+                    Math.min(parseFloat(e.target.value), blendMax - 0.01),
+                  ),
+                })
+              }
+              style={
+                {
+                  flex: 1,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": valueFill(blendMin),
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>{blendMin.toFixed(2)}</span>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Feather max</label>
+            <input
+              type="range"
+              aria-label="Scalar feather maximum"
+              min={sourceMin}
+              max={sourceMax}
+              step={0.01}
+              value={blendMax}
+              disabled={disabled}
+              onChange={(e) =>
+                onChange({
+                  scalarBlendMax: Math.min(
+                    trimMax,
+                    Math.max(parseFloat(e.target.value), blendMin + 0.01),
+                  ),
+                })
+              }
+              style={
+                {
+                  flex: 1,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": valueFill(blendMax),
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>{blendMax.toFixed(2)}</span>
+          </div>
+          {fullDensityMode ? (
+            <div style={nestedControlRowStyle}>
+              <label style={nestedFieldLabelStyle}>Noise</label>
+              <input
+                type="range"
+                aria-label="Scalar noise threshold"
+                min={0}
+                max={1}
+                step={0.01}
+                value={styleNumber(style, "scalarNoiseThreshold", 0)}
+                disabled={disabled}
+                onChange={(e) =>
+                  onChange({ scalarNoiseThreshold: parseFloat(e.target.value) })
+                }
+                style={
+                  {
+                    flex: 1,
+                    opacity: controlOpacity,
+                    "--editor-slider-fill": `${Math.round(
+                      styleNumber(style, "scalarNoiseThreshold", 0) * 100,
+                    )}%`,
+                  } as React.CSSProperties
+                }
+              />
+              <span style={sliderNumberReadoutStyle}>
+                {Math.round(
+                  styleNumber(style, "scalarNoiseThreshold", 0) * 100,
+                )}
+                %
+              </span>
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Trim</label>
+          <span
+            style={{
+              flex: 1,
+              color: vibrancyTertiaryLabel,
+              fontSize: 11,
+              lineHeight: 1.35,
+              opacity: controlOpacity,
+            }}
+          >
+            All-valid mode draws every valid source point. Trim, feather, and
+            noise controls are available in Threshold/filter points mode.
+          </span>
+        </div>
+      )}
       <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>Midpoint</label>
         <input
@@ -10690,11 +12027,13 @@ function ScalarRampControls({
           onChange={(e) =>
             onChange({ scalarMidpoint: parseFloat(e.target.value) })
           }
-          style={{
-            flex: 1,
-            opacity: controlOpacity,
-            "--editor-slider-fill": `${midpointFill}%`,
-          } as React.CSSProperties}
+          style={
+            {
+              flex: 1,
+              opacity: controlOpacity,
+              "--editor-slider-fill": `${midpointFill}%`,
+            } as React.CSSProperties
+          }
         />
         <span style={sliderNumberReadoutStyle}>{midpoint.toFixed(2)}</span>
       </div>
@@ -10710,11 +12049,13 @@ function ScalarRampControls({
           onChange={(e) =>
             onChange({ scalarContrast: parseFloat(e.target.value) })
           }
-          style={{
-            flex: 1,
-            opacity: controlOpacity,
-            "--editor-slider-fill": `${contrastFill}%`,
-          } as React.CSSProperties}
+          style={
+            {
+              flex: 1,
+              opacity: controlOpacity,
+              "--editor-slider-fill": `${contrastFill}%`,
+            } as React.CSSProperties
+          }
         />
         <span style={sliderNumberReadoutStyle}>{contrast.toFixed(2)}</span>
       </div>
@@ -10722,7 +12063,10 @@ function ScalarRampControls({
   );
 }
 
-type LayerStyleSetter = (layerId: string, patch: Partial<EditableStyle>) => void;
+type LayerStyleSetter = (
+  layerId: string,
+  patch: Partial<EditableStyle>,
+) => void;
 type PageStyleSetter = (
   pageId: string,
   layerId: string,
@@ -10749,6 +12093,7 @@ function LayerNumberStyleControl({
   setEnvLayerStyle,
   setPageLayerOverride,
   clearPageLayerOverride,
+  testId,
 }: {
   label: string;
   field: keyof EditableStyle;
@@ -10764,6 +12109,7 @@ function LayerNumberStyleControl({
   setEnvLayerStyle: LayerStyleSetter;
   setPageLayerOverride: PageStyleSetter;
   clearPageLayerOverride: PageStyleClearer;
+  testId?: string;
 }) {
   if (isEnv) {
     return (
@@ -10775,7 +12121,10 @@ function LayerNumberStyleControl({
         max={max}
         step={step}
         decimals={decimals}
-        onChange={(value) => setEnvLayerStyle(layerId, { [field]: parseFloat(value) })}
+        testId={testId}
+        onChange={(value) =>
+          setEnvLayerStyle(layerId, { [field]: parseFloat(value) })
+        }
       />
     );
   }
@@ -10873,6 +12222,163 @@ function LayerBooleanStyleControl({
   );
 }
 
+function LayerColorStyleControl({
+  label,
+  field,
+  fallback,
+  style,
+  isEnv,
+  currentPage,
+  layerId,
+  setEnvLayerStyle,
+  setPageLayerOverride,
+  clearPageLayerOverride,
+  testId,
+}: {
+  label: string;
+  field: keyof EditableStyle;
+  fallback: string;
+  style: EditableStyle;
+  isEnv: boolean;
+  currentPage: PresentationPage | null;
+  layerId: string;
+  setEnvLayerStyle: LayerStyleSetter;
+  setPageLayerOverride: PageStyleSetter;
+  clearPageLayerOverride: PageStyleClearer;
+  testId?: string;
+}) {
+  const value = styleString(style, field, fallback);
+  if (isEnv) {
+    return (
+      <EnvStyleRow
+        label={label}
+        inputType="color"
+        value={value}
+        testId={testId}
+        onChange={(next) => setEnvLayerStyle(layerId, { [field]: next })}
+      />
+    );
+  }
+  if (!currentPage) return null;
+  return (
+    <PageStyleRow
+      label={label}
+      inputType="color"
+      inheritedValue={value}
+      isOverridden={isStyleFieldOverridden(currentPage, layerId, field)}
+      overrideValue={
+        currentPage.layerOverrides?.[layerId]?.[field] !== undefined
+          ? String(currentPage.layerOverrides[layerId][field])
+          : undefined
+      }
+      fallbackValue={fallback}
+      onOverride={(next) =>
+        setPageLayerOverride(currentPage.id, layerId, { [field]: next })
+      }
+      onClear={() => clearPageLayerOverride(currentPage.id, layerId, field)}
+    />
+  );
+}
+
+function surfaceElevationDefaultPatch(): NonNullable<
+  SceneProperties["terrain"]
+> {
+  return {
+    materialPreset: "surface-elevation",
+    surfaceElevationEnabled: true,
+    surfaceElevationLegendVisible: true,
+    surfaceElevationMinM: SURFACE_ELEVATION_DEFAULT_MIN_M,
+    surfaceElevationMaxM: SURFACE_ELEVATION_DEFAULT_MAX_M,
+    surfaceElevationColors: [...SURFACE_ELEVATION_DEFAULT_COLORS],
+    surfaceElevationColorPositions: [...SURFACE_ELEVATION_DEFAULT_POSITIONS],
+    surfaceElevationMidpoints: [...SURFACE_ELEVATION_DEFAULT_MIDPOINTS],
+    surfaceElevationTransitionSoftness: SURFACE_ELEVATION_DEFAULT_SOFTNESS,
+    surfaceElevationColorBlend: SURFACE_ELEVATION_DEFAULT_BLEND,
+    surfaceElevationReverse: false,
+    edgeFadeShape: "square",
+    edgeFadeInsetM: 0,
+    edgeFadeCornerRadiusM: 0,
+  };
+}
+
+function surfaceElevationColorsFromTerrain(
+  terrain: NonNullable<SceneProperties["terrain"]>,
+): string[] {
+  const colors = Array.isArray(terrain.surfaceElevationColors)
+    ? terrain.surfaceElevationColors
+    : [];
+  return Array.from(
+    { length: 5 },
+    (_, index) => colors[index] ?? SURFACE_ELEVATION_DEFAULT_COLORS[index],
+  );
+}
+
+function surfaceElevationPositionsFromTerrain(
+  terrain: NonNullable<SceneProperties["terrain"]>,
+): number[] {
+  const values = Array.isArray(terrain.surfaceElevationColorPositions)
+    ? terrain.surfaceElevationColorPositions
+    : [];
+  let previous = 0;
+  return Array.from({ length: 5 }, (_, index) => {
+    const raw =
+      typeof values[index] === "number" && Number.isFinite(values[index])
+        ? values[index]
+        : SURFACE_ELEVATION_DEFAULT_POSITIONS[index];
+    const remaining = 4 - index;
+    const min = index === 0 ? 0 : previous + SURFACE_ELEVATION_STOP_GAP;
+    const max = 1 - remaining * SURFACE_ELEVATION_STOP_GAP;
+    const next = Math.min(max, Math.max(min, raw));
+    previous = next;
+    return next;
+  });
+}
+
+function surfaceElevationMidpointsFromTerrain(
+  terrain: NonNullable<SceneProperties["terrain"]>,
+): number[] {
+  const values = Array.isArray(terrain.surfaceElevationMidpoints)
+    ? terrain.surfaceElevationMidpoints
+    : [];
+  return Array.from({ length: 4 }, (_, index) => {
+    const raw =
+      typeof values[index] === "number" && Number.isFinite(values[index])
+        ? values[index]
+        : SURFACE_ELEVATION_DEFAULT_MIDPOINTS[index];
+    return Math.min(0.95, Math.max(0.05, raw));
+  });
+}
+
+function surfaceElevationTickLabel(
+  minM: number,
+  maxM: number,
+  index: number,
+): string {
+  return Math.round(minM + ((maxM - minM) * index) / 4).toLocaleString();
+}
+
+function surfaceElevationGradientCss(
+  colors: string[],
+  positions: number[],
+  midpoints: number[],
+): string {
+  const parts: string[] = [];
+  for (let index = 0; index < colors.length; index += 1) {
+    const position = Math.min(1, Math.max(0, positions[index] ?? index / 4));
+    if (index > 0) {
+      const left = Math.min(1, Math.max(0, positions[index - 1] ?? 0));
+      const midpoint = Math.min(
+        0.95,
+        Math.max(0.05, midpoints[index - 1] ?? 0.5),
+      );
+      const hint = left + (position - left) * midpoint;
+      parts.push(`${(hint * 100).toFixed(1)}%`);
+    }
+    parts.push(`${colors[index]} ${(position * 100).toFixed(1)}%`);
+  }
+  return `linear-gradient(90deg, ${parts.join(", ")})`;
+}
+
 function PublicSurfaceGroupControls({
   style,
   scene,
@@ -10882,6 +12388,7 @@ function PublicSurfaceGroupControls({
   setPageLayerOverride,
   clearPageLayerOverride,
   setEnvScene,
+  projectRoot,
 }: {
   style: EditableStyle;
   scene: SceneProperties;
@@ -10891,8 +12398,13 @@ function PublicSurfaceGroupControls({
   setPageLayerOverride: PageStyleSetter;
   clearPageLayerOverride: PageStyleClearer;
   setEnvScene: (patch: Partial<SceneProperties>) => void;
+  projectRoot: string;
 }) {
   const terrain = scene.terrain ?? {};
+  const [brandingUploadError, setBrandingUploadError] = useState<string | null>(
+    null,
+  );
+  const [brandingUploading, setBrandingUploading] = useState(false);
   const layerId = "terrain";
   const setTerrain = (patch: NonNullable<SceneProperties["terrain"]>) => {
     if (!isEnv) return;
@@ -10910,12 +12422,132 @@ function PublicSurfaceGroupControls({
   const sceneFog = scene.fog ?? {};
   const sceneFogEnabled = sceneFog.enabled !== false;
   const sceneFogDensity = sceneFog.density ?? DEFAULT_FOG_DENSITY;
-  const sceneFogReachKm =
-    3 / Math.max(sceneFogDensity, 0.000001) / 1000;
+  const sceneFogReachKm = 3 / Math.max(sceneFogDensity, 0.000001) / 1000;
   const topoFogDensity =
     typeof style.fogDensity === "number" ? style.fogDensity : sceneFogDensity;
   const topoFogReachKm = 3 / Math.max(topoFogDensity, 0.000001) / 1000;
   const topoFogIncluded = style.affectedByFog !== false;
+  const surfaceElevationMinM =
+    typeof terrain.surfaceElevationMinM === "number"
+      ? terrain.surfaceElevationMinM
+      : SURFACE_ELEVATION_DEFAULT_MIN_M;
+  const surfaceElevationMaxM =
+    typeof terrain.surfaceElevationMaxM === "number"
+      ? terrain.surfaceElevationMaxM
+      : SURFACE_ELEVATION_DEFAULT_MAX_M;
+  const surfaceElevationColors = surfaceElevationColorsFromTerrain(terrain);
+  const surfaceElevationPositions =
+    surfaceElevationPositionsFromTerrain(terrain);
+  const surfaceElevationMidpoints =
+    surfaceElevationMidpointsFromTerrain(terrain);
+  const surfaceElevationTransitionSoftness =
+    typeof terrain.surfaceElevationTransitionSoftness === "number"
+      ? terrain.surfaceElevationTransitionSoftness
+      : SURFACE_ELEVATION_DEFAULT_SOFTNESS;
+  const surfaceElevationColorBlend =
+    typeof terrain.surfaceElevationColorBlend === "number"
+      ? terrain.surfaceElevationColorBlend
+      : SURFACE_ELEVATION_DEFAULT_BLEND;
+  const surfaceElevationGradient = surfaceElevationGradientCss(
+    surfaceElevationColors,
+    surfaceElevationPositions,
+    surfaceElevationMidpoints,
+  );
+  const edgeFadeShape =
+    terrain.edgeFadeShape === "rounded-square" ||
+    terrain.edgeFadeShape === "circle"
+      ? terrain.edgeFadeShape
+      : "square";
+  const topoMapBranding = terrain.topoMapBranding ?? {};
+  const setTopoMapBranding = (
+    patch: NonNullable<NonNullable<SceneProperties["terrain"]>["topoMapBranding"]>,
+  ) => {
+    setEnvScene({
+      terrain: {
+        ...terrain,
+        topoMapBranding: { ...topoMapBranding, ...patch },
+      },
+    });
+  };
+  const onTopoMapBrandingLogoFile = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const originalName = file.name || "title-block-logo";
+    const ext = originalName.split(".").pop()?.toLowerCase() ?? "";
+    if (
+      !TITLE_BLOCK_DIRECT_IMAGE_EXTENSIONS.has(ext) &&
+      !TITLE_BLOCK_CONVERTED_EXTENSIONS.has(ext)
+    ) {
+      setBrandingUploadError(
+        "Choose PNG, JPG, WebP, GIF, SVG, PDF, or EPS.",
+      );
+      event.target.value = "";
+      return;
+    }
+    setBrandingUploading(true);
+    setBrandingUploadError(null);
+    try {
+      const buf = await file.arrayBuffer();
+      const b64 = arrayBufferToBase64(buf);
+      const fileName = originalName.replace(/[^a-zA-Z0-9._-]/g, "_");
+      if (TITLE_BLOCK_CONVERTED_EXTENSIONS.has(ext)) {
+        const stem = fileName.replace(/\.[^.]+$/, "") || "title-block-logo";
+        const sourcePath = `${projectRoot}/branding/source/${fileName}`;
+        const outputPath = `${projectRoot}/branding/generated/${stem}.png`;
+        await writeFile(sourcePath, b64, { encoding: "base64" });
+        await convertBrandingAsset({
+          sourcePath,
+          outputPath,
+          sourceFormat: ext,
+        });
+        setTopoMapBranding({
+          logoPath: outputPath,
+          logoRenderablePath: outputPath,
+          logoSourcePath: sourcePath,
+          logoSourceFormat: ext,
+          visible: true,
+        });
+      } else {
+        const path = `${projectRoot}/branding/${fileName}`;
+        await writeFile(path, b64, { encoding: "base64" });
+        setTopoMapBranding({
+          logoPath: path,
+          logoRenderablePath: path,
+          logoSourcePath: path,
+          logoSourceFormat: ext,
+          visible: true,
+        });
+      }
+    } catch (error) {
+      setBrandingUploadError(String((error as Error).message ?? error));
+    } finally {
+      setBrandingUploading(false);
+      event.target.value = "";
+    }
+  };
+  const setSurfaceElevationColor = (index: number, value: string) => {
+    const nextColors = [...surfaceElevationColors];
+    nextColors[index] = value;
+    setTerrain({ surfaceElevationColors: nextColors });
+  };
+  const setSurfaceElevationPosition = (index: number, value: number) => {
+    const nextPositions = [...surfaceElevationPositions];
+    const lower =
+      index === 0 ? 0 : nextPositions[index - 1] + SURFACE_ELEVATION_STOP_GAP;
+    const upper =
+      index === nextPositions.length - 1
+        ? 1
+        : nextPositions[index + 1] - SURFACE_ELEVATION_STOP_GAP;
+    nextPositions[index] = Math.min(Math.max(value, lower), upper);
+    setTerrain({ surfaceElevationColorPositions: nextPositions });
+  };
+  const setSurfaceElevationMidpoint = (index: number, value: number) => {
+    const nextMidpoints = [...surfaceElevationMidpoints];
+    nextMidpoints[index] = Math.min(Math.max(value, 0.05), 0.95);
+    setTerrain({ surfaceElevationMidpoints: nextMidpoints });
+  };
   const selectedPreset: PublicTopoMaterialPresetId =
     PUBLIC_TOPO_MATERIAL_PRESETS.some(
       (preset) => preset.value === terrain.materialPreset,
@@ -10931,6 +12563,25 @@ function PublicSurfaceGroupControls({
       }
     }
   };
+  const publicSurfaceLayerControlProps = {
+    ...layerControlProps,
+    setEnvLayerStyle: (_layerId: string, patch: Partial<EditableStyle>) =>
+      setPublicTopoLayerStyle(patch),
+    setPageLayerOverride: (
+      _pageId: string,
+      _layerId: string,
+      patch: Partial<EditableStyle>,
+    ) => setPublicTopoLayerStyle(patch),
+    clearPageLayerOverride: (
+      pageId: string,
+      _layerId: string,
+      field: keyof EditableStyle,
+    ) => {
+      for (const id of PUBLIC_SURFACE_LAYER_IDS) {
+        clearPageLayerOverride(pageId, id, field);
+      }
+    },
+  };
   const setSceneFog = (patch: NonNullable<SceneProperties["fog"]>) => {
     if (!isEnv) return;
     setEnvScene({ fog: { ...sceneFog, ...patch } });
@@ -10943,15 +12594,13 @@ function PublicSurfaceGroupControls({
       setTerrain({ materialPreset: "custom" });
       return;
     }
-    setTerrain(preset.patch);
+    setTerrain({ surfaceElevationEnabled: false, ...preset.patch });
   };
 
   return (
     <>
       <details style={drillingAssayDetailsStyle}>
-        <summary style={drillingAssaySummaryStyle}>
-          Topo map transform
-        </summary>
+        <summary style={drillingAssaySummaryStyle}>Topo map transform</summary>
         <div style={detailsContentStyle}>
           <LayerNumberStyleControl
             label="Lift +/-"
@@ -10965,7 +12614,532 @@ function PublicSurfaceGroupControls({
           />
         </div>
       </details>
-      <PublicSurfaceClipControls {...layerControlProps} />
+      <PublicSurfaceClipControls {...publicSurfaceLayerControlProps} />
+      <details style={drillingAssayDetailsStyle} open>
+        <summary style={drillingAssaySummaryStyle}>Title block</summary>
+        <div style={detailsContentStyle}>
+              <EzGammaCheckboxRow
+                label="Visible"
+                checked={topoMapBranding.visible === true}
+                testId="topo-map-branding-visible"
+                onChange={(checked) => setTopoMapBranding({ visible: checked })}
+              />
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Logo file</label>
+                <input
+                  data-testid="topo-map-branding-logo-file"
+                  type="file"
+                  accept={TITLE_BLOCK_UPLOAD_ACCEPT}
+                  disabled={brandingUploading}
+                  onChange={onTopoMapBrandingLogoFile}
+                  style={{ flex: 1, minWidth: 0, fontSize: 11 }}
+                />
+              </div>
+              {topoMapBranding.logoPath ? (
+                <div style={{ ...panelStyles.muted, fontSize: 11 }}>
+                  {(
+                    topoMapBranding.logoSourcePath ??
+                    topoMapBranding.logoPath
+                  )
+                    .split("/")
+                    .at(-1)}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTopoMapBranding({
+                        logoPath: "",
+                        logoRenderablePath: "",
+                        logoSourcePath: "",
+                        logoSourceFormat: "",
+                      })
+                    }
+                    style={{
+                      ...panelStyles.iconButton,
+                      width: "auto",
+                      minHeight: 0,
+                      marginLeft: 8,
+                      padding: "1px 6px",
+                      fontSize: 10,
+                    }}
+                  >
+                    Clear
+                  </button>
+                </div>
+              ) : null}
+              {brandingUploadError ? (
+                <div
+                  style={{
+                    color: "rgba(255, 111, 127, 0.9)",
+                    fontSize: 11,
+                  }}
+                >
+                  {brandingUploadError}
+                </div>
+              ) : null}
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Heading</label>
+                <input
+                  data-testid="topo-map-branding-heading"
+                  type="text"
+                  value={topoMapBranding.heading ?? ""}
+                  onChange={(event) =>
+                    setTopoMapBranding({ heading: event.currentTarget.value })
+                  }
+                  style={{ flex: 1, minWidth: 0 }}
+                />
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Subheading</label>
+                <input
+                  data-testid="topo-map-branding-subheading"
+                  type="text"
+                  value={topoMapBranding.subheading ?? ""}
+                  onChange={(event) =>
+                    setTopoMapBranding({ subheading: event.currentTarget.value })
+                  }
+                  style={{ flex: 1, minWidth: 0 }}
+                />
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Layout</label>
+                <select
+                  data-testid="topo-map-branding-layout"
+                  value={topoMapBranding.layout ?? "horizontal"}
+                  onChange={(event) =>
+                    setTopoMapBranding({
+                      layout: event.currentTarget
+                        .value as NonNullable<
+                        NonNullable<
+                          SceneProperties["terrain"]
+                        >["topoMapBranding"]
+                      >["layout"],
+                    })
+                  }
+                  style={{ flex: 1 }}
+                >
+                  <option value="horizontal">Horizontal</option>
+                  <option value="stacked">Stacked</option>
+                </select>
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Logo pos.</label>
+                <select
+                  data-testid="topo-map-branding-logo-placement"
+                  value={topoMapBranding.logoPlacement ?? "before"}
+                  onChange={(event) =>
+                    setTopoMapBranding({
+                      logoPlacement: event.currentTarget
+                        .value as NonNullable<
+                        NonNullable<
+                          SceneProperties["terrain"]
+                        >["topoMapBranding"]
+                      >["logoPlacement"],
+                    })
+                  }
+                  style={{ flex: 1 }}
+                >
+                  <option value="before">Before text</option>
+                  <option value="after">After text</option>
+                </select>
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Logo fit</label>
+                <select
+                  data-testid="topo-map-branding-logo-fit"
+                  value={topoMapBranding.logoFit ?? "contain"}
+                  onChange={(event) =>
+                    setTopoMapBranding({
+                      logoFit: event.currentTarget
+                        .value as NonNullable<
+                        NonNullable<
+                          SceneProperties["terrain"]
+                        >["topoMapBranding"]
+                      >["logoFit"],
+                    })
+                  }
+                  style={{ flex: 1 }}
+                >
+                  <option value="contain">Contain</option>
+                  <option value="cover">Cover</option>
+                  <option value="stretch">Stretch</option>
+                </select>
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Font</label>
+                <select
+                  data-testid="topo-map-branding-font-family"
+                  value={topoMapBranding.fontFamily ?? "mono"}
+                  onChange={(event) =>
+                    setTopoMapBranding({
+                      fontFamily: event.currentTarget
+                        .value as NonNullable<
+                        NonNullable<
+                          SceneProperties["terrain"]
+                        >["topoMapBranding"]
+                      >["fontFamily"],
+                    })
+                  }
+                  style={{ flex: 1 }}
+                >
+                  <option value="mono">Mono</option>
+                  <option value="sans">Sans</option>
+                  <option value="serif">Serif</option>
+                  <option value="condensed">Condensed</option>
+                </select>
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Text align</label>
+                <select
+                  data-testid="topo-map-branding-text-align"
+                  value={topoMapBranding.textAlign ?? "left"}
+                  onChange={(event) =>
+                    setTopoMapBranding({
+                      textAlign: event.currentTarget
+                        .value as NonNullable<
+                        NonNullable<
+                          SceneProperties["terrain"]
+                        >["topoMapBranding"]
+                      >["textAlign"],
+                    })
+                  }
+                  style={{ flex: 1 }}
+                >
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Anchor</label>
+                <select
+                  data-testid="topo-map-branding-anchor"
+                  value={
+                    topoMapBranding.anchor ?? TOPO_MAP_BRANDING_DEFAULT_ANCHOR
+                  }
+                  onChange={(event) =>
+                    setTopoMapBranding({
+                      anchor: event.currentTarget
+                        .value as NonNullable<
+                        NonNullable<
+                          SceneProperties["terrain"]
+                        >["topoMapBranding"]
+                      >["anchor"],
+                    })
+                  }
+                  style={{ flex: 1 }}
+                >
+                  <option value="south-west">South west</option>
+                  <option value="south-east">South east</option>
+                  <option value="north-west">North west</option>
+                  <option value="north-east">North east</option>
+                </select>
+              </div>
+              <EnvStyleRow
+                label="Offset X"
+                inputType="range"
+                value={String(
+                  topoMapBranding.offsetXM ??
+                    TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M,
+                )}
+                min={-600000}
+                max={600000}
+                step={5000}
+                decimals={0}
+                testId="topo-map-branding-offset-x"
+                onChange={(v) =>
+                  setTopoMapBranding({ offsetXM: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Offset Y"
+                inputType="range"
+                value={String(
+                  topoMapBranding.offsetYM ??
+                    TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M,
+                )}
+                min={-600000}
+                max={600000}
+                step={5000}
+                decimals={0}
+                testId="topo-map-branding-offset-y"
+                onChange={(v) =>
+                  setTopoMapBranding({ offsetYM: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Rotation"
+                inputType="range"
+                value={String(topoMapBranding.rotationDeg ?? 0)}
+                min={-180}
+                max={180}
+                step={1}
+                decimals={0}
+                testId="topo-map-branding-rotation"
+                onChange={(v) =>
+                  setTopoMapBranding({ rotationDeg: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Lift"
+                inputType="range"
+                value={String(topoMapBranding.liftM ?? 260)}
+                min={0}
+                max={2000}
+                step={25}
+                decimals={0}
+                testId="topo-map-branding-lift"
+                onChange={(v) => setTopoMapBranding({ liftM: parseFloat(v) })}
+              />
+              <EnvStyleRow
+                label="Logo width"
+                inputType="range"
+                value={String(topoMapBranding.logoWidthM ?? 46000)}
+                min={0}
+                max={160000}
+                step={1000}
+                decimals={0}
+                testId="topo-map-branding-logo-width"
+                onChange={(v) =>
+                  setTopoMapBranding({ logoWidthM: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Logo gap"
+                inputType="range"
+                value={String(topoMapBranding.logoGapM ?? 16000)}
+                min={-50000}
+                max={80000}
+                step={1000}
+                decimals={0}
+                testId="topo-map-branding-logo-gap"
+                onChange={(v) =>
+                  setTopoMapBranding({ logoGapM: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Heading size"
+                inputType="range"
+                value={String(topoMapBranding.headingSizeM ?? 18000)}
+                min={2000}
+                max={240000}
+                step={1000}
+                decimals={0}
+                testId="topo-map-branding-heading-size"
+                onChange={(v) =>
+                  setTopoMapBranding({ headingSizeM: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Subhead size"
+                inputType="range"
+                value={String(topoMapBranding.subheadingSizeM ?? 10500)}
+                min={1500}
+                max={180000}
+                step={500}
+                decimals={0}
+                testId="topo-map-branding-subheading-size"
+                onChange={(v) =>
+                  setTopoMapBranding({ subheadingSizeM: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Head weight"
+                inputType="range"
+                value={String(topoMapBranding.headingWeight ?? 800)}
+                min={100}
+                max={900}
+                step={100}
+                decimals={0}
+                testId="topo-map-branding-heading-weight"
+                onChange={(v) =>
+                  setTopoMapBranding({ headingWeight: parseFloat(v) })
+                }
+              />
+              <EzGammaCheckboxRow
+                label="Head italic"
+                checked={topoMapBranding.headingItalic === true}
+                testId="topo-map-branding-heading-italic"
+                onChange={(checked) =>
+                  setTopoMapBranding({ headingItalic: checked })
+                }
+              />
+              <EnvStyleRow
+                label="Sub weight"
+                inputType="range"
+                value={String(topoMapBranding.subheadingWeight ?? 500)}
+                min={100}
+                max={900}
+                step={100}
+                decimals={0}
+                testId="topo-map-branding-subheading-weight"
+                onChange={(v) =>
+                  setTopoMapBranding({ subheadingWeight: parseFloat(v) })
+                }
+              />
+              <EzGammaCheckboxRow
+                label="Sub italic"
+                checked={topoMapBranding.subheadingItalic === true}
+                testId="topo-map-branding-subheading-italic"
+                onChange={(checked) =>
+                  setTopoMapBranding({ subheadingItalic: checked })
+                }
+              />
+              <EnvStyleRow
+                label="Line gap"
+                inputType="range"
+                value={String(topoMapBranding.lineGapM ?? 2500)}
+                min={-30000}
+                max={50000}
+                step={500}
+                decimals={0}
+                testId="topo-map-branding-line-gap"
+                onChange={(v) =>
+                  setTopoMapBranding({ lineGapM: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Text color"
+                inputType="color"
+                value={topoMapBranding.textColor ?? "#ffffff"}
+                testId="topo-map-branding-text-color"
+                onChange={(v) => setTopoMapBranding({ textColor: v })}
+              />
+              <EnvStyleRow
+                label="Block opacity"
+                inputType="range"
+                value={String(topoMapBranding.opacity ?? 0.92)}
+                min={0}
+                max={1}
+                step={0.02}
+                decimals={2}
+                testId="topo-map-branding-opacity"
+                onChange={(v) =>
+                  setTopoMapBranding({ opacity: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Logo opacity"
+                inputType="range"
+                value={String(topoMapBranding.logoOpacity ?? topoMapBranding.opacity ?? 0.92)}
+                min={0}
+                max={1}
+                step={0.02}
+                decimals={2}
+                testId="topo-map-branding-logo-opacity"
+                onChange={(v) =>
+                  setTopoMapBranding({ logoOpacity: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Text opacity"
+                inputType="range"
+                value={String(topoMapBranding.textOpacity ?? topoMapBranding.opacity ?? 0.92)}
+                min={0}
+                max={1}
+                step={0.02}
+                decimals={2}
+                testId="topo-map-branding-text-opacity"
+                onChange={(v) =>
+                  setTopoMapBranding({ textOpacity: parseFloat(v) })
+                }
+              />
+              <EzGammaCheckboxRow
+                label="Background"
+                checked={topoMapBranding.backgroundEnabled === true}
+                testId="topo-map-branding-background-enabled"
+                onChange={(checked) =>
+                  setTopoMapBranding({ backgroundEnabled: checked })
+                }
+              />
+              <EnvStyleRow
+                label="Bg color"
+                inputType="color"
+                value={topoMapBranding.backgroundColor ?? "#050607"}
+                testId="topo-map-branding-background-color"
+                onChange={(v) => setTopoMapBranding({ backgroundColor: v })}
+              />
+              <EnvStyleRow
+                label="Bg opacity"
+                inputType="range"
+                value={String(topoMapBranding.backgroundOpacity ?? 0.36)}
+                min={0}
+                max={1}
+                step={0.02}
+                decimals={2}
+                testId="topo-map-branding-background-opacity"
+                onChange={(v) =>
+                  setTopoMapBranding({ backgroundOpacity: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Bg pad X"
+                inputType="range"
+                value={String(topoMapBranding.backgroundPaddingXM ?? 12000)}
+                min={0}
+                max={180000}
+                step={1000}
+                decimals={0}
+                testId="topo-map-branding-background-padding-x"
+                onChange={(v) =>
+                  setTopoMapBranding({ backgroundPaddingXM: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Bg pad Y"
+                inputType="range"
+                value={String(topoMapBranding.backgroundPaddingYM ?? 8000)}
+                min={0}
+                max={180000}
+                step={1000}
+                decimals={0}
+                testId="topo-map-branding-background-padding-y"
+                onChange={(v) =>
+                  setTopoMapBranding({ backgroundPaddingYM: parseFloat(v) })
+                }
+              />
+              <EzGammaCheckboxRow
+                label="Outline"
+                checked={topoMapBranding.outlineEnabled === true}
+                testId="topo-map-branding-outline-enabled"
+                onChange={(checked) =>
+                  setTopoMapBranding({ outlineEnabled: checked })
+                }
+              />
+              <EnvStyleRow
+                label="Outline color"
+                inputType="color"
+                value={topoMapBranding.outlineColor ?? "#ffffff"}
+                testId="topo-map-branding-outline-color"
+                onChange={(v) => setTopoMapBranding({ outlineColor: v })}
+              />
+              <EnvStyleRow
+                label="Outline opacity"
+                inputType="range"
+                value={String(topoMapBranding.outlineOpacity ?? 0.8)}
+                min={0}
+                max={1}
+                step={0.02}
+                decimals={2}
+                testId="topo-map-branding-outline-opacity"
+                onChange={(v) =>
+                  setTopoMapBranding({ outlineOpacity: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Outline width"
+                inputType="range"
+                value={String(topoMapBranding.outlineWidthM ?? 2500)}
+                min={250}
+                max={50000}
+                step={250}
+                decimals={0}
+                testId="topo-map-branding-outline-width"
+                onChange={(v) =>
+                  setTopoMapBranding({ outlineWidthM: parseFloat(v) })
+                }
+              />
+        </div>
+      </details>
       <details style={drillingAssayDetailsStyle}>
         <summary style={drillingAssaySummaryStyle}>Topo fog</summary>
         <div style={detailsContentStyle}>
@@ -11062,8 +13236,238 @@ function PublicSurfaceGroupControls({
                 label="Material"
                 value={selectedPreset}
                 options={PUBLIC_TOPO_MATERIAL_PRESETS}
+                testId="topo-material-preset"
                 onChange={setTopoMaterialPreset}
               />
+              <EzGammaCheckboxRow
+                label="Surface color"
+                checked={terrain.surfaceElevationEnabled === true}
+                testId="topo-surface-elevation-enabled"
+                onChange={(checked) =>
+                  setTerrain({
+                    materialPreset: checked
+                      ? "surface-elevation"
+                      : terrain.materialPreset === "surface-elevation"
+                        ? "soft-topo"
+                        : terrain.materialPreset,
+                    surfaceElevationEnabled: checked,
+                    surfaceElevationLegendVisible:
+                      checked &&
+                      terrain.surfaceElevationLegendVisible !== false,
+                    surfaceElevationMinM,
+                    surfaceElevationMaxM,
+                    surfaceElevationColors,
+                    surfaceElevationColorPositions: surfaceElevationPositions,
+                    surfaceElevationMidpoints,
+                    surfaceElevationTransitionSoftness,
+                    surfaceElevationColorBlend,
+                    surfaceElevationReverse:
+                      terrain.surfaceElevationReverse === true,
+                  })
+                }
+              />
+              <EzGammaCheckboxRow
+                label="Elev. legend"
+                checked={terrain.surfaceElevationLegendVisible !== false}
+                testId="topo-surface-elevation-legend-visible"
+                onChange={(checked) =>
+                  setTerrain({ surfaceElevationLegendVisible: checked })
+                }
+              />
+              <EzGammaCheckboxRow
+                label="Reverse ramp"
+                checked={terrain.surfaceElevationReverse === true}
+                testId="topo-surface-elevation-reverse"
+                onChange={(checked) =>
+                  setTerrain({ surfaceElevationReverse: checked })
+                }
+              />
+              <div style={nestedControlRowStyle}>
+                <span style={nestedFieldLabelStyle}>PDF palette</span>
+                <button
+                  type="button"
+                  data-testid="topo-surface-elevation-reset"
+                  onClick={() => setTerrain(surfaceElevationDefaultPatch())}
+                  style={{
+                    flex: 1,
+                    border: "1px solid rgba(255, 255, 255, 0.22)",
+                    borderRadius: 6,
+                    background: "rgba(255, 255, 255, 0.08)",
+                    color: vibrancySecondaryLabel,
+                    font: "inherit",
+                    padding: "4px 8px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Reset 1500-3500 m
+                </button>
+              </div>
+              <EnvStyleRow
+                label="Elev. min"
+                inputType="range"
+                value={String(surfaceElevationMinM)}
+                min={-500}
+                max={4500}
+                step={25}
+                decimals={0}
+                testId="topo-surface-elevation-min"
+                onChange={(v) =>
+                  setTerrain({ surfaceElevationMinM: parseFloat(v) })
+                }
+              />
+              <EnvStyleRow
+                label="Elev. max"
+                inputType="range"
+                value={String(surfaceElevationMaxM)}
+                min={0}
+                max={5000}
+                step={25}
+                decimals={0}
+                testId="topo-surface-elevation-max"
+                onChange={(v) =>
+                  setTerrain({ surfaceElevationMaxM: parseFloat(v) })
+                }
+              />
+              <div style={nestedControlRowStyle}>
+                <span style={nestedFieldLabelStyle}>Gradient</span>
+                <div
+                  data-testid="topo-surface-gradient-rail"
+                  style={{
+                    position: "relative",
+                    flex: 1,
+                    height: 30,
+                    minWidth: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: "10px 0 7px",
+                      borderRadius: 999,
+                      background: surfaceElevationGradient,
+                      border: "1px solid rgba(255, 255, 255, 0.28)",
+                      boxShadow: "inset 0 0 0 1px rgba(0, 0, 0, 0.18)",
+                    }}
+                  />
+                  {surfaceElevationMidpoints.map((midpoint, index) => {
+                    const left = surfaceElevationPositions[index];
+                    const right = surfaceElevationPositions[index + 1];
+                    const position = left + (right - left) * midpoint;
+                    return (
+                      <span
+                        key={`surface-elevation-midpoint-${index}`}
+                        data-testid={`topo-surface-gradient-midpoint-${index}`}
+                        title={`Transition spread ${index + 1}-${index + 2}`}
+                        style={{
+                          position: "absolute",
+                          left: `${position * 100}%`,
+                          top: 5,
+                          width: 5,
+                          height: 22,
+                          borderRadius: 3,
+                          transform: "translateX(-50%)",
+                          background: "rgba(255, 255, 255, 0.78)",
+                          border: "1px solid rgba(17, 20, 24, 0.62)",
+                          boxShadow: "0 1px 5px rgba(0, 0, 0, 0.28)",
+                        }}
+                      />
+                    );
+                  })}
+                  {surfaceElevationColors.map((color, index) => (
+                    <span
+                      key={`surface-elevation-stop-${index}`}
+                      data-testid={`topo-surface-gradient-stop-${index}`}
+                      title={`Color stop ${index + 1}`}
+                      style={{
+                        position: "absolute",
+                        left: `${surfaceElevationPositions[index] * 100}%`,
+                        top: 2,
+                        width: 11,
+                        height: 11,
+                        transform: "translateX(-50%) rotate(45deg)",
+                        borderRadius: 2,
+                        background: color,
+                        border: "1px solid rgba(255, 255, 255, 0.86)",
+                        boxShadow: "0 1px 6px rgba(0, 0, 0, 0.36)",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+              {surfaceElevationPositions.map((position, index) => (
+                <EnvStyleRow
+                  key={`surface-elevation-position-${index}`}
+                  label={`Stop ${index + 1} pos`}
+                  inputType="range"
+                  value={String(position)}
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  decimals={2}
+                  testId={`topo-surface-elevation-position-${index}`}
+                  onChange={(v) =>
+                    setSurfaceElevationPosition(index, parseFloat(v))
+                  }
+                />
+              ))}
+              {surfaceElevationMidpoints.map((midpoint, index) => (
+                <EnvStyleRow
+                  key={`surface-elevation-midpoint-${index}`}
+                  label={`Spread ${index + 1}-${index + 2}`}
+                  inputType="range"
+                  value={String(midpoint)}
+                  min={0.05}
+                  max={0.95}
+                  step={0.01}
+                  decimals={2}
+                  testId={`topo-surface-elevation-midpoint-${index}`}
+                  onChange={(v) =>
+                    setSurfaceElevationMidpoint(index, parseFloat(v))
+                  }
+                />
+              ))}
+              <EnvStyleRow
+                label="Ramp softness"
+                inputType="range"
+                value={String(surfaceElevationTransitionSoftness)}
+                min={0}
+                max={1}
+                step={0.05}
+                decimals={2}
+                testId="topo-surface-elevation-softness"
+                onChange={(v) =>
+                  setTerrain({
+                    surfaceElevationTransitionSoftness: parseFloat(v),
+                  })
+                }
+              />
+              <EnvStyleRow
+                label="Color blend"
+                inputType="range"
+                value={String(surfaceElevationColorBlend)}
+                min={0}
+                max={1}
+                step={0.05}
+                decimals={2}
+                testId="topo-surface-elevation-color-blend"
+                onChange={(v) =>
+                  setTerrain({ surfaceElevationColorBlend: parseFloat(v) })
+                }
+              />
+              {surfaceElevationColors.map((color, index) => (
+                <EnvStyleRow
+                  key={`surface-elevation-color-${index}`}
+                  label={`${surfaceElevationTickLabel(
+                    surfaceElevationMinM,
+                    surfaceElevationMaxM,
+                    index,
+                  )} m`}
+                  inputType="color"
+                  value={color}
+                  testId={`topo-surface-elevation-color-${index}`}
+                  onChange={(v) => setSurfaceElevationColor(index, v)}
+                />
+              ))}
               <EnvStyleRow
                 label="Ramp low"
                 inputType="color"
@@ -11145,6 +13549,50 @@ function PublicSurfaceGroupControls({
                 onChange={(v) =>
                   setTerrain({ edgeFadeDistanceM: parseFloat(v) })
                 }
+                testId="topo-edge-fade-distance"
+              />
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Edge shape</label>
+                <select
+                  data-testid="topo-edge-fade-shape"
+                  value={edgeFadeShape}
+                  onChange={(event) =>
+                    setTerrain({
+                      edgeFadeShape: event.currentTarget.value as NonNullable<
+                        SceneProperties["terrain"]
+                      >["edgeFadeShape"],
+                    })
+                  }
+                  style={{ flex: 1 }}
+                >
+                  <option value="square">Square</option>
+                  <option value="rounded-square">Rounded square</option>
+                  <option value="circle">Circle</option>
+                </select>
+              </div>
+              <EnvStyleRow
+                label="Edge distance"
+                inputType="range"
+                value={String(terrain.edgeFadeInsetM ?? 0)}
+                min={0}
+                max={250_000}
+                step={5_000}
+                decimals={0}
+                onChange={(v) => setTerrain({ edgeFadeInsetM: parseFloat(v) })}
+                testId="topo-edge-fade-inset"
+              />
+              <EnvStyleRow
+                label="Corner radius"
+                inputType="range"
+                value={String(terrain.edgeFadeCornerRadiusM ?? 0)}
+                min={0}
+                max={250_000}
+                step={5_000}
+                decimals={0}
+                onChange={(v) =>
+                  setTerrain({ edgeFadeCornerRadiusM: parseFloat(v) })
+                }
+                testId="topo-edge-fade-corner-radius"
               />
               <EnvStyleRow
                 label="Hue variance"
@@ -11209,6 +13657,28 @@ function PublicSurfaceClipControls({
           fallback={false}
           {...numberProps}
         />
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Shape</label>
+          <select
+            data-testid="public-surface-clip-shape"
+            value={style.publicSurfaceClipShape === "circle" ? "circle" : "box"}
+            onChange={(event) => {
+              const value =
+                event.currentTarget.value === "circle" ? "circle" : "box";
+              if (isEnv) {
+                setEnvLayerStyle(layerId, { publicSurfaceClipShape: value });
+              } else if (currentPage) {
+                setPageLayerOverride(currentPage.id, layerId, {
+                  publicSurfaceClipShape: value,
+                });
+              }
+            }}
+            style={{ flex: 1 }}
+          >
+            <option value="circle">Circle inside box</option>
+            <option value="box">Box</option>
+          </select>
+        </div>
         <LayerNumberStyleControl
           label="X center"
           field="publicSurfaceClipCenterX"
@@ -11444,7 +13914,7 @@ function MtStationQcControls({
   const selectedStationId =
     typeof style.mtStationQcSelectedStationId === "string"
       ? style.mtStationQcSelectedStationId
-      : qc?.stations?.[0]?.stationId ?? "";
+      : (qc?.stations?.[0]?.stationId ?? "");
   const selected = qc?.stations?.find(
     (station) => station.stationId === selectedStationId,
   );
@@ -11459,60 +13929,62 @@ function MtStationQcControls({
   return (
     <details style={nestedDetailsStyle}>
       <summary style={panelStyles.summary}>2D MT station response / QC</summary>
-        <div style={detailsContentStyle}>
-          <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Station</label>
-            <select
-              data-testid="mt-station-qc-select"
-              value={selectedStationId}
-              onChange={(e) =>
-                commit({ mtStationQcSelectedStationId: e.target.value })
-              }
-              style={{ flex: 1 }}
-            >
-              {(qc?.stations ?? []).map((station) => (
-                <option key={station.stationId} value={station.stationId}>
-                  {station.stationId}
-                </option>
-              ))}
-            </select>
-          </div>
+      <div style={detailsContentStyle}>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Station</label>
+          <select
+            data-testid="mt-station-qc-select"
+            value={selectedStationId}
+            onChange={(e) =>
+              commit({ mtStationQcSelectedStationId: e.target.value })
+            }
+            style={{ flex: 1 }}
+          >
+            {(qc?.stations ?? []).map((station) => (
+              <option key={station.stationId} value={station.stationId}>
+                {station.stationId}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div style={miniInfoGridStyle}>
+          <span>Stations</span>
+          <strong>{qc?.stationCount ?? "--"}</strong>
+          <span>EDI files</span>
+          <strong>{qc?.ediFileCount ?? "--"}</strong>
+          <span>Freq. range</span>
+          <strong>
+            {qc?.frequencyHzRange
+              ? `${qc.frequencyHzRange[0].toExponential(2)}-${qc.frequencyHzRange[1].toFixed(2)} Hz`
+              : "--"}
+          </strong>
+          <span>Curves</span>
+          <strong>{qc?.responseCurveStations ?? 0}</strong>
+        </div>
+        {selected ? (
           <div style={miniInfoGridStyle}>
-            <span>Stations</span>
-            <strong>{qc?.stationCount ?? "--"}</strong>
-            <span>EDI files</span>
-            <strong>{qc?.ediFileCount ?? "--"}</strong>
-            <span>Freq. range</span>
+            <span>Selected</span>
+            <strong>{selected.stationId}</strong>
+            <span>Variants</span>
             <strong>
-              {qc?.frequencyHzRange
-                ? `${qc.frequencyHzRange[0].toExponential(2)}-${qc.frequencyHzRange[1].toFixed(2)} Hz`
+              {selected.qc?.variantCount ?? selected.variants?.length ?? "--"}
+            </strong>
+            <span>Spectra</span>
+            <strong>{selected.qc?.spectraBlockCount ?? "--"}</strong>
+            <span>Coverage</span>
+            <strong>
+              {selected.qc?.frequencyHzMin && selected.qc?.frequencyHzMax
+                ? `${selected.qc.frequencyHzMin.toExponential(2)}-${selected.qc.frequencyHzMax.toFixed(2)} Hz`
                 : "--"}
             </strong>
-            <span>Curves</span>
-            <strong>{qc?.responseCurveStations ?? 0}</strong>
           </div>
-          {selected ? (
-            <div style={miniInfoGridStyle}>
-              <span>Selected</span>
-              <strong>{selected.stationId}</strong>
-              <span>Variants</span>
-              <strong>{selected.qc?.variantCount ?? selected.variants?.length ?? "--"}</strong>
-              <span>Spectra</span>
-              <strong>{selected.qc?.spectraBlockCount ?? "--"}</strong>
-              <span>Coverage</span>
-              <strong>
-                {selected.qc?.frequencyHzMin && selected.qc?.frequencyHzMax
-                  ? `${selected.qc.frequencyHzMin.toExponential(2)}-${selected.qc.frequencyHzMax.toFixed(2)} Hz`
-                  : "--"}
-              </strong>
-            </div>
-          ) : null}
-          <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
-            {selected?.qc?.responseCurveStatus ??
-              loadError ??
-              "Spectra metadata is parsed; apparent resistivity/phase curves are shown only when directly present in source EDI."}
-          </div>
+        ) : null}
+        <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
+          {selected?.qc?.responseCurveStatus ??
+            loadError ??
+            "Spectra metadata is parsed; apparent resistivity/phase curves are shown only when directly present in source EDI."}
         </div>
+      </div>
     </details>
   );
 }
@@ -11692,11 +14164,13 @@ function EnvSelectRow<T extends string>({
   label,
   value,
   options,
+  testId,
   onChange,
 }: {
   label: string;
   value: T;
   options: readonly { value: T; label: string }[];
+  testId?: string;
   onChange: (v: T) => void;
 }) {
   return (
@@ -11704,6 +14178,7 @@ function EnvSelectRow<T extends string>({
       <label style={nestedFieldLabelStyle}>{label}</label>
       <select
         value={value}
+        data-testid={testId}
         onChange={(e) => onChange(e.target.value as T)}
         style={{ flex: 1 }}
       >
@@ -11747,10 +14222,12 @@ function styleBoolean(
 function EzGammaCheckboxRow({
   label,
   checked,
+  testId,
   onChange,
 }: {
   label: string;
   checked: boolean;
+  testId?: string;
   onChange: (checked: boolean) => void;
 }) {
   return (
@@ -11759,6 +14236,7 @@ function EzGammaCheckboxRow({
       <input
         type="checkbox"
         checked={checked}
+        data-testid={testId}
         onChange={(e) => onChange(e.target.checked)}
       />
     </label>
@@ -11902,9 +14380,7 @@ function GeochemStyleControls({
           <EnvStyleRow
             label="Min radius"
             inputType="range"
-            value={String(
-              styleNumber(style, "geochemSymbolMinRadiusM", 45),
-            )}
+            value={String(styleNumber(style, "geochemSymbolMinRadiusM", 45))}
             min={5}
             max={300}
             step={5}
@@ -11916,9 +14392,7 @@ function GeochemStyleControls({
           <EnvStyleRow
             label="Max radius"
             inputType="range"
-            value={String(
-              styleNumber(style, "geochemSymbolMaxRadiusM", 160),
-            )}
+            value={String(styleNumber(style, "geochemSymbolMaxRadiusM", 160))}
             min={20}
             max={600}
             step={5}
@@ -11935,16 +14409,12 @@ function GeochemStyleControls({
             max={220}
             step={2}
             decimals={0}
-            onChange={(value) =>
-              onChange({ geochemLiftM: parseFloat(value) })
-            }
+            onChange={(value) => onChange({ geochemLiftM: parseFloat(value) })}
           />
           <EnvStyleRow
             label="Thick"
             inputType="range"
-            value={String(
-              styleNumber(style, "geochemSymbolThicknessM", 5),
-            )}
+            value={String(styleNumber(style, "geochemSymbolThicknessM", 5))}
             min={0.5}
             max={45}
             step={0.5}
@@ -12055,11 +14525,7 @@ function HyperspectralStyleControls({
           />
           <EzGammaCheckboxRow
             label="Endpoints"
-            checked={styleBoolean(
-              style,
-              "hyperspectralEndpointVisible",
-              true,
-            )}
+            checked={styleBoolean(style, "hyperspectralEndpointVisible", true)}
             onChange={(checked) =>
               onChange({ hyperspectralEndpointVisible: checked })
             }
@@ -12833,8 +15299,8 @@ function PageStyleRow({
 }) {
   const fallback = fallbackValue ?? (inputType === "range" ? "1" : "#cccccc");
   const value = isOverridden
-    ? overrideValue ?? inheritedValue ?? fallback
-    : inheritedValue ?? fallback;
+    ? (overrideValue ?? inheritedValue ?? fallback)
+    : (inheritedValue ?? fallback);
   const rangeValue = parseFloat(value);
   const safeValue = Number.isFinite(rangeValue) ? rangeValue : min;
   const fill = Math.max(
@@ -12868,11 +15334,13 @@ function PageStyleRow({
             value={value}
             disabled={!isOverridden}
             onChange={(e) => onOverride(e.target.value)}
-            style={{
-              flex: 1,
-              opacity: isOverridden ? 1 : 0.4,
-              "--editor-slider-fill": `${fill}%`,
-            } as React.CSSProperties}
+            style={
+              {
+                flex: 1,
+                opacity: isOverridden ? 1 : 0.4,
+                "--editor-slider-fill": `${fill}%`,
+              } as React.CSSProperties
+            }
           />
           <span style={sliderNumberReadoutStyle}>
             {safeValue.toFixed(decimals)}
@@ -12913,11 +15381,7 @@ interface GeologyUnitOverrides {
   [code: string]: { visible?: boolean; opacity?: number };
 }
 
-function GeologySubUnitsPanel({
-  layerStyle,
-}: {
-  layerStyle: EditableStyle;
-}) {
+function GeologySubUnitsPanel({ layerStyle }: { layerStyle: EditableStyle }) {
   const { sceneHandle, setEnvLayerStyle } = useEditor();
   const [units, setUnits] = useState<
     Array<{ code: string; displayName: string; defaultColor: string }>
@@ -13007,7 +15471,9 @@ function GeologySubUnitsPanel({
                 style={{
                   flex: 1,
                   fontSize: 11,
-                  color: visible ? vibrancySecondaryLabel : vibrancyTertiaryLabel,
+                  color: visible
+                    ? vibrancySecondaryLabel
+                    : vibrancyTertiaryLabel,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",

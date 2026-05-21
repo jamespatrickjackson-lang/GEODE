@@ -1,0 +1,66 @@
+{
+  "id": "40_geophysics_product_overview",
+  "title": "Geophysics Product Overview",
+  "subtitle": "Proposed / needs_review seismic + resistivity walkthrough",
+  "camera": {
+    "position": [
+      25717.838323311036,
+      150685.35006564358,
+      45790.487581879715
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#75c7ff",
+  "visibilityOverrides": {
+    "utah-forge-phase3-working-area": true,
+    "terrain": true,
+    "transport-roads": true,
+    "hydrography-streams": true,
+    "hydrography-lakes": true,
+    "utah-forge-phase3-seismic-browser": false,
+    "utah-forge-mt-stations": true,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-mt-resistivity-slices": false
+  },
+  "layerOverrides": {
+    "utah-forge-mt-stations": {
+      "opacity": 0.72,
+      "showLabels": false
+    },
+    "terrain": {
+      "opacity": 0.38
+    },
+    "utah-forge-phase3-seismic-browser": {
+      "opacity": 0,
+      "seismicLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-full-density": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-slices": {
+      "scalarLegendVisible": false
+    }
+  }
+}

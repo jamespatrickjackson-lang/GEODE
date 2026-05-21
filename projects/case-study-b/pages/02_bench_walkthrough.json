@@ -2,7 +2,7 @@
   "id": "02_bench_walkthrough",
   "title": "Bench Walkthrough",
   "subtitle": "Close-range drone-style path through the active bench",
-  "renderPreset": "survey-daylight",
+  "renderPreset": "boardroom",
   "camera": {
     "position": [
       118.42817290630337,

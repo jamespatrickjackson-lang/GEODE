@@ -15,10 +15,18 @@ const SEISMIC_DEMO_RECIPES_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_demo_recipes.json";
 const MT_VOLUME_MANIFEST_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/mt_volume_manifest.json";
+const MT_FULL_DENSITY_MANIFEST_PATH =
+  "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json";
+const MT_FULL_DENSITY_PAGE06_INDEXED_POINTS = 375_355;
+const MT_FULL_DENSITY_PAGE04_INDEXED_POINTS = 137_776;
+const MT_FULL_DENSITY_PAGE05_INDEXED_POINTS = 138_859;
 const MT_THRESHOLD_SURFACES_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/threshold_surfaces/mt_threshold_surfaces_mesh_preview.json";
 const MT_STATION_QC_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/stations/mt_station_response_qc.json";
+const UTAH_FORGE_ENVIRONMENT_PATH = "projects/utah-forge/environment.json";
+const UTAH_FORGE_PAGE06_PATH = "projects/utah-forge/pages/06_untitled.json";
+const UTAH_FORGE_PAGE12_PATH = "projects/utah-forge/pages/12_untitled.json";
 const PUBLIC_CONTEXT_DIR =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context";
 const PUBLIC_CONTEXT_MANIFEST_PATH = `${PUBLIC_CONTEXT_DIR}/manifest.json`;
@@ -103,19 +111,51 @@ function forgeLayerItem(page: Page, label: string): Locator {
     .first();
 }
 
-async function ensureForgeLayerVisible(page: Page, label: string): Promise<void> {
+async function ensureForgeLayerVisible(
+  page: Page,
+  label: string,
+): Promise<void> {
   await setForgeLayerVisible(page, label, true);
+}
+
+async function selectForgePageRow(page: Page, rowLabel: string): Promise<void> {
+  const row = page
+    .locator('[data-dev-note*="panelStyles.pageRow"]')
+    .filter({ hasText: rowLabel })
+    .first();
+  await expect(row).toBeVisible();
+  await row.evaluate((el) => {
+    if (el instanceof HTMLElement) el.click();
+  });
+}
+
+async function selectNextForgePage(page: Page): Promise<void> {
+  const nextButton = page.getByRole("button", { name: "Next page" });
+  await expect(nextButton).toBeEnabled({ timeout: 30_000 });
+  await page.evaluate(() => {
+    const controller = (
+      window as unknown as {
+        __pageController?: { next?: () => void };
+      }
+    ).__pageController;
+    if (!controller?.next) {
+      throw new Error("PageController debug handle is unavailable");
+    }
+    controller.next();
+  });
 }
 
 async function hidePublicContextLayers(page: Page): Promise<void> {
   await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          getLayer?: (id: string) => { visible: boolean } | undefined;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) => { visible: boolean } | undefined;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     for (const id of [
       "terrain",
       "transport-roads",
@@ -132,7 +172,9 @@ async function revealSeismicCapabilityProduct(
   page: Page,
   productId: string,
 ): Promise<void> {
-  const productItem = page.getByTestId(`seismic-capability-product-${productId}`);
+  const productItem = page.getByTestId(
+    `seismic-capability-product-${productId}`,
+  );
   await productItem
     .getByTestId(`seismic-capability-product-visible-${productId}`)
     .setChecked(true);
@@ -232,6 +274,74 @@ type MtVolumeSceneState = {
   selectedStationId: string | null;
 };
 
+type MtFullDensityPointSceneState = {
+  layerVisible: boolean;
+  pointObjects: number;
+  visiblePointObjects: number;
+  totalPointCount: number;
+  indexedVisiblePointCount: number;
+  scalarFocusVisibleCount: number | null;
+  firstTileId: string | null;
+  firstScalarDisplayMin: number | null;
+  firstScalarDisplayMax: number | null;
+  firstMaterial: {
+    opacity: number | null;
+    size: number | null;
+    transparent: boolean | null;
+    vertexColors: boolean | null;
+    depthTest: boolean | null;
+    depthWrite: boolean | null;
+  } | null;
+};
+
+type UtahForgeRuntimePresentationState = {
+  activeRenderPresetId: string | null;
+  rendererExposure: number | null;
+  clearColor: string | null;
+  sceneBackground: string | null;
+  fogColor: string | null;
+  fogDensity: number | null;
+};
+
+type TransitionSnapshotState = {
+  count: number;
+  byLayer: Record<string, number>;
+  maxOpacityByLayer: Record<string, number>;
+};
+
+type ResistivityLegendHandleState = {
+  focusMin: number;
+  focusMax: number;
+  blendMin: number;
+  blendMax: number;
+};
+
+type PageControllerDebugState = {
+  currentIndex: number;
+  currentPageId: string | null;
+  targetIndex: number | null;
+  targetPageId?: string | null;
+  transitionProgress: number;
+  isTransitioning: boolean;
+  transitionContext?: {
+    sourcePageId: string | null;
+    targetPageId: string | null;
+    reason: string;
+    sourcePose: { position: number[]; target: number[]; fov: number };
+    targetPose: { position: number[]; target: number[]; fov: number };
+  } | null;
+  sceneTransition?: {
+    active: boolean;
+    sourcePageId: string | null;
+    targetPageId: string | null;
+    reason: string | null;
+    activeDataTransitionCount: number;
+    snapshotCount: number;
+    scalarTweenCount: number;
+    layerTweenCount: number;
+  } | null;
+};
+
 type SectionIsoSceneState = {
   targets: Array<{
     targetKey: string;
@@ -258,36 +368,44 @@ type SectionIsoSceneState = {
 
 async function seismicSceneState(page: Page): Promise<SeismicSceneState> {
   return page.evaluate(() => {
-    const sceneHandle = (window as unknown as {
-      __scene?: {
-        manager?: {
-          getLayer?: (id: string) => {
-            visible: boolean;
-            userData: Record<string, unknown>;
-            traverse: (fn: (obj: {
-              visible: boolean;
-              userData?: Record<string, unknown>;
-              geometry?: {
-                getAttribute?: (name: string) => {
-                  count: number;
-                  getZ?: (index: number) => number;
-                  getX?: (index: number) => number;
-                  getY?: (index: number) => number;
-                };
-              };
-              material?: {
-                opacity?: unknown;
-                uniforms?: Record<string, { value: unknown }>;
-              } | Array<{
-                opacity?: unknown;
-                uniforms?: Record<string, { value: unknown }>;
-              }>;
-              position?: { x: number; y: number; z: number };
-            }) => void) => void;
-          } | undefined;
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) =>
+              | {
+                  visible: boolean;
+                  userData: Record<string, unknown>;
+                  traverse: (
+                    fn: (obj: {
+                      visible: boolean;
+                      userData?: Record<string, unknown>;
+                      geometry?: {
+                        getAttribute?: (name: string) => {
+                          count: number;
+                          getZ?: (index: number) => number;
+                          getX?: (index: number) => number;
+                          getY?: (index: number) => number;
+                        };
+                      };
+                      material?:
+                        | {
+                            opacity?: unknown;
+                            uniforms?: Record<string, { value: unknown }>;
+                          }
+                        | Array<{
+                            opacity?: unknown;
+                            uniforms?: Record<string, { value: unknown }>;
+                          }>;
+                      position?: { x: number; y: number; z: number };
+                    }) => void,
+                  ) => void;
+                }
+              | undefined;
+          };
         };
-      };
-    }).__scene;
+      }
+    ).__scene;
     const layer = sceneHandle?.manager?.getLayer?.(
       "utah-forge-phase3-seismic-browser",
     );
@@ -313,7 +431,11 @@ async function seismicSceneState(page: Page): Promise<SeismicSceneState> {
         comparisonSpacingM: null,
         sliceThroughVolume: false,
         removeBackground: false,
-        navigationRoleVisibility: { sources: false, receivers: false, lines: false },
+        navigationRoleVisibility: {
+          sources: false,
+          receivers: false,
+          lines: false,
+        },
         mtFullDensityOpacity: null,
         firstVisibleSectionZ: null,
         firstVisibleSectionColor: null,
@@ -507,42 +629,60 @@ async function seismicSceneState(page: Page): Promise<SeismicSceneState> {
 
 async function sceneSectionState(page: Page): Promise<SceneSectionState> {
   return page.evaluate(() => {
-    const sceneHandle = (window as unknown as {
-      __scene?: {
-        manager?: {
-          getLayer?: (id: string) => {
-            traverse: (fn: (obj: {
-              visible: boolean;
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) =>
+              | {
+                  traverse: (
+                    fn: (obj: {
+                      visible: boolean;
+                      userData?: Record<string, unknown>;
+                      material?:
+                        | {
+                            clippingPlanes?: Array<{
+                              normal?: {
+                                x?: unknown;
+                                y?: unknown;
+                                z?: unknown;
+                              };
+                              constant?: unknown;
+                            }> | null;
+                            uniforms?: Record<string, { value: unknown }>;
+                          }
+                        | Array<{
+                            clippingPlanes?: Array<{
+                              normal?: {
+                                x?: unknown;
+                                y?: unknown;
+                                z?: unknown;
+                              };
+                              constant?: unknown;
+                            }> | null;
+                            uniforms?: Record<string, { value: unknown }>;
+                          }>;
+                    }) => void,
+                  ) => void;
+                }
+              | undefined;
+            listSceneSectionPlanePickables?: () => Array<{
+              name?: string;
               userData?: Record<string, unknown>;
-              material?: {
-                clippingPlanes?: Array<{
-                  normal?: { x?: unknown; y?: unknown; z?: unknown };
-                  constant?: unknown;
-                }> | null;
-                uniforms?: Record<string, { value: unknown }>;
-              } | Array<{
-                clippingPlanes?: Array<{
-                  normal?: { x?: unknown; y?: unknown; z?: unknown };
-                  constant?: unknown;
-                }> | null;
-                uniforms?: Record<string, { value: unknown }>;
-              }>;
-            }) => void) => void;
-          } | undefined;
-          listSceneSectionPlanePickables?: () => Array<{
-            name?: string;
-            userData?: Record<string, unknown>;
-          }>;
+            }>;
+          };
         };
-      };
-    }).__scene;
+      }
+    ).__scene;
     const manager = sceneHandle?.manager;
-    const seismicLayer = manager?.getLayer?.("utah-forge-phase3-seismic-browser");
-    const mtLayer = manager?.getLayer?.("utah-forge-mt-resistivity-full-density");
+    const seismicLayer = manager?.getLayer?.(
+      "utah-forge-phase3-seismic-browser",
+    );
+    const mtLayer = manager?.getLayer?.(
+      "utah-forge-mt-resistivity-full-density",
+    );
     const helperPickables = manager?.listSceneSectionPlanePickables?.() ?? [];
-    const vectorToArray = (
-      value: unknown,
-    ): [number, number, number] | null => {
+    const vectorToArray = (value: unknown): [number, number, number] | null => {
       if (typeof value !== "object" || value === null) return null;
       const vector = value as { x?: unknown; y?: unknown; z?: unknown };
       const clean = (n: number) => (Object.is(n, -0) ? 0 : n);
@@ -627,7 +767,9 @@ async function sceneSectionState(page: Page): Promise<SceneSectionState> {
 
     return {
       helperPickables: helperPickables.length,
-      helperPickableNames: helperPickables.map((pickable) => pickable.name ?? ""),
+      helperPickableNames: helperPickables.map(
+        (pickable) => pickable.name ?? "",
+      ),
       helperPickableAxes: helperPickables.map((pickable) =>
         typeof pickable.userData?.sceneSectionAxis === "string"
           ? pickable.userData.sceneSectionAxis
@@ -640,7 +782,9 @@ async function sceneSectionState(page: Page): Promise<SceneSectionState> {
       ),
       helperPickableDirections: helperPickables
         .map((pickable) => pickable.userData?.sceneSectionPlaneHandleDirection)
-        .filter((direction): direction is number => typeof direction === "number"),
+        .filter(
+          (direction): direction is number => typeof direction === "number",
+        ),
       firstVisibleVolumeSectionUniforms,
       mtClippedMaterials,
       mtFirstClippingPlane,
@@ -648,29 +792,899 @@ async function sceneSectionState(page: Page): Promise<SceneSectionState> {
   });
 }
 
+type WorkingAreaFocusSceneState = {
+  focus: {
+    enabled: boolean;
+    mode: string;
+    boundsLayerId: string;
+    targetLayerIds: string[];
+    outsideOpacityByLayerId: Record<string, number>;
+    helperVisible: boolean;
+    helperRenderable: boolean;
+    boundsMin: [number, number, number];
+    boundsMax: [number, number, number];
+  } | null;
+  layers: Record<
+    string,
+    {
+      materialCount: number;
+      focusedMaterialCount: number;
+      unsupportedMaterialCount: number;
+      firstOutsideOpacity: number | null;
+      firstUniformOutsideOpacity: number | null;
+      firstUniformEnabled: number | null;
+    }
+  >;
+};
+
+async function workingAreaFocusSceneState(
+  page: Page,
+): Promise<WorkingAreaFocusSceneState> {
+  return page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getWorkingAreaFocusDebugState?: () => WorkingAreaFocusSceneState["focus"];
+            getLayer?: (id: string) =>
+              | {
+                  traverse: (
+                    fn: (obj: {
+                      material?:
+                        | {
+                            userData?: Record<string, unknown>;
+                            uniforms?: Record<string, { value: unknown }>;
+                          }
+                        | Array<{
+                            userData?: Record<string, unknown>;
+                            uniforms?: Record<string, { value: unknown }>;
+                          }>;
+                    }) => void,
+                  ) => void;
+                }
+              | undefined;
+          };
+        };
+      }
+    ).__scene;
+    const manager = sceneHandle?.manager;
+    const layerIds = [
+      "utah-forge-mt-resistivity-full-density",
+      "utah-forge-mt-resistivity-preview",
+      "utah-forge-mt-resistivity-volume",
+      "utah-forge-phase3-seismic-browser",
+    ];
+    const layers: WorkingAreaFocusSceneState["layers"] = {};
+    for (const layerId of layerIds) {
+      let materialCount = 0;
+      let focusedMaterialCount = 0;
+      let unsupportedMaterialCount = 0;
+      let firstOutsideOpacity: number | null = null;
+      let firstUniformOutsideOpacity: number | null = null;
+      let firstUniformEnabled: number | null = null;
+      manager?.getLayer?.(layerId)?.traverse((obj) => {
+        const materials = Array.isArray(obj.material)
+          ? obj.material
+          : obj.material
+            ? [obj.material]
+            : [];
+        for (const material of materials) {
+          materialCount += 1;
+          if (material.userData?.workingAreaFocusEnabled === true) {
+            focusedMaterialCount += 1;
+            if (
+              firstOutsideOpacity === null &&
+              typeof material.userData.workingAreaFocusOutsideOpacity ===
+                "number"
+            ) {
+              firstOutsideOpacity =
+                material.userData.workingAreaFocusOutsideOpacity;
+            }
+          }
+          if (material.userData?.workingAreaFocusUnsupported === true) {
+            unsupportedMaterialCount += 1;
+          }
+          const uniforms = material.uniforms ?? {};
+          if (
+            firstUniformOutsideOpacity === null &&
+            typeof uniforms.uWorkingAreaFocusOutsideOpacity?.value === "number"
+          ) {
+            firstUniformOutsideOpacity =
+              uniforms.uWorkingAreaFocusOutsideOpacity.value;
+          }
+          if (
+            firstUniformEnabled === null &&
+            typeof uniforms.uWorkingAreaFocusEnabled?.value === "number"
+          ) {
+            firstUniformEnabled = uniforms.uWorkingAreaFocusEnabled.value;
+          }
+        }
+      });
+      layers[layerId] = {
+        materialCount,
+        focusedMaterialCount,
+        unsupportedMaterialCount,
+        firstOutsideOpacity,
+        firstUniformOutsideOpacity,
+        firstUniformEnabled,
+      };
+    }
+    return {
+      focus: manager?.getWorkingAreaFocusDebugState?.() ?? null,
+      layers,
+    };
+  });
+}
+
+type TerrainMaterialSceneState = {
+  materialCount: number;
+  surfaceElevationEnabled: number | null;
+  surfaceElevationMinM: number | null;
+  surfaceElevationMaxM: number | null;
+  surfaceElevationReverse: number | null;
+  elevationOffsetM: number | null;
+  publicClipEnabled: number | null;
+  publicClipShape: number | null;
+  edgeFadeDistanceM: number | null;
+  edgeFadeShape: number | null;
+  edgeFadeInsetM: number | null;
+  edgeFadeCornerRadiusM: number | null;
+  surfaceElevationColors: string[];
+  surfaceElevationPositions: number[];
+  surfaceElevationMidpoints: number[];
+  surfaceElevationTransitionSoftness: number | null;
+  surfaceElevationColorBlend: number | null;
+};
+
+async function terrainMaterialSceneState(
+  page: Page,
+): Promise<TerrainMaterialSceneState> {
+  return page.evaluate(() => {
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) =>
+              | {
+                  traverse: (
+                    fn: (obj: {
+                      material?:
+                        | {
+                            uniforms?: Record<string, { value: unknown }>;
+                          }
+                        | Array<{
+                            uniforms?: Record<string, { value: unknown }>;
+                          }>;
+                    }) => void,
+                  ) => void;
+                }
+              | undefined;
+          };
+        };
+      }
+    ).__scene?.manager;
+    let materialCount = 0;
+    let surfaceElevationEnabled: number | null = null;
+    let surfaceElevationMinM: number | null = null;
+    let surfaceElevationMaxM: number | null = null;
+    let surfaceElevationReverse: number | null = null;
+    let elevationOffsetM: number | null = null;
+    let publicClipEnabled: number | null = null;
+    let publicClipShape: number | null = null;
+    let edgeFadeDistanceM: number | null = null;
+    let edgeFadeShape: number | null = null;
+    let edgeFadeInsetM: number | null = null;
+    let edgeFadeCornerRadiusM: number | null = null;
+    let surfaceElevationColors: string[] = [];
+    let surfaceElevationPositions: number[] = [];
+    let surfaceElevationMidpoints: number[] = [];
+    let surfaceElevationTransitionSoftness: number | null = null;
+    let surfaceElevationColorBlend: number | null = null;
+    manager?.getLayer?.("terrain")?.traverse((obj) => {
+      const materials = Array.isArray(obj.material)
+        ? obj.material
+        : obj.material
+          ? [obj.material]
+          : [];
+      for (const material of materials) {
+        const uniforms = material.uniforms ?? {};
+        if (typeof uniforms.uSurfaceElevationEnabled?.value !== "number") {
+          continue;
+        }
+        materialCount += 1;
+        surfaceElevationEnabled = uniforms.uSurfaceElevationEnabled.value;
+        surfaceElevationMinM =
+          typeof uniforms.uSurfaceElevationMin?.value === "number"
+            ? uniforms.uSurfaceElevationMin.value
+            : null;
+        surfaceElevationMaxM =
+          typeof uniforms.uSurfaceElevationMax?.value === "number"
+            ? uniforms.uSurfaceElevationMax.value
+            : null;
+        surfaceElevationReverse =
+          typeof uniforms.uSurfaceElevationReverse?.value === "number"
+            ? uniforms.uSurfaceElevationReverse.value
+            : null;
+        elevationOffsetM =
+          typeof uniforms.uElevationOffsetM?.value === "number"
+            ? uniforms.uElevationOffsetM.value
+            : null;
+        publicClipEnabled =
+          typeof uniforms.uPublicClipEnabled?.value === "number"
+            ? uniforms.uPublicClipEnabled.value
+            : null;
+        publicClipShape =
+          typeof uniforms.uPublicClipShape?.value === "number"
+            ? uniforms.uPublicClipShape.value
+            : null;
+        edgeFadeDistanceM =
+          typeof uniforms.uEdgeFadeDistance?.value === "number"
+            ? uniforms.uEdgeFadeDistance.value
+            : null;
+        edgeFadeShape =
+          typeof uniforms.uEdgeFadeShape?.value === "number"
+            ? uniforms.uEdgeFadeShape.value
+            : null;
+        edgeFadeInsetM =
+          typeof uniforms.uEdgeFadeInset?.value === "number"
+            ? uniforms.uEdgeFadeInset.value
+            : null;
+        edgeFadeCornerRadiusM =
+          typeof uniforms.uEdgeFadeCornerRadius?.value === "number"
+            ? uniforms.uEdgeFadeCornerRadius.value
+            : null;
+        const colorValues = Array.isArray(
+          uniforms.uSurfaceElevationColors?.value,
+        )
+          ? uniforms.uSurfaceElevationColors.value
+          : [];
+        surfaceElevationColors = colorValues
+          .map((color) =>
+            typeof color?.getHexString === "function"
+              ? `#${color.getHexString()}`
+              : null,
+          )
+          .filter((color): color is string => typeof color === "string");
+        const positionValues = Array.isArray(
+          uniforms.uSurfaceElevationPositions?.value,
+        )
+          ? uniforms.uSurfaceElevationPositions.value
+          : [];
+        surfaceElevationPositions = positionValues.filter(
+          (value): value is number => typeof value === "number",
+        );
+        const midpointValues = Array.isArray(
+          uniforms.uSurfaceElevationMidpoints?.value,
+        )
+          ? uniforms.uSurfaceElevationMidpoints.value
+          : [];
+        surfaceElevationMidpoints = midpointValues.filter(
+          (value): value is number => typeof value === "number",
+        );
+        surfaceElevationTransitionSoftness =
+          typeof uniforms.uSurfaceElevationTransitionSoftness?.value ===
+          "number"
+            ? uniforms.uSurfaceElevationTransitionSoftness.value
+            : null;
+        surfaceElevationColorBlend =
+          typeof uniforms.uSurfaceElevationColorBlend?.value === "number"
+            ? uniforms.uSurfaceElevationColorBlend.value
+            : null;
+      }
+    });
+    return {
+      materialCount,
+      surfaceElevationEnabled,
+      surfaceElevationMinM,
+      surfaceElevationMaxM,
+      surfaceElevationReverse,
+      elevationOffsetM,
+      publicClipEnabled,
+      publicClipShape,
+      edgeFadeDistanceM,
+      edgeFadeShape,
+      edgeFadeInsetM,
+      edgeFadeCornerRadiusM,
+      surfaceElevationColors,
+      surfaceElevationPositions,
+      surfaceElevationMidpoints,
+      surfaceElevationTransitionSoftness,
+      surfaceElevationColorBlend,
+    };
+  });
+}
+
+type TopoGraticuleSceneState = {
+  layerVisible: boolean | null;
+  lineObjectCount: number;
+  interiorLineObjectCount: number;
+  dashedInteriorLineObjectCount: number;
+  leaderLineObjectCount: number;
+  dashedLeaderLineObjectCount: number;
+  labelObjectCount: number;
+  visibleLabelCount: number;
+  visibleLabelWithoutLeaderCount: number;
+  firstLabelScaleX: number | null;
+  firstLabelPosition: { x: number; y: number; z: number } | null;
+  firstLabelRotationDeg: number | null;
+  firstLabelColor: string | null;
+  firstLineClippingPlanes: number | null;
+  firstLineEdgeEnabled: boolean | null;
+  firstLineEdgeStrength: number | null;
+  firstLineEdgeShape: string | null;
+  firstLineEdgeDistanceM: number | null;
+  firstLineEdgeLineColor: string | null;
+  generatedBounds: {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+  } | null;
+  terrainBounds: {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+  } | null;
+  minLabelInsideDistance: number | null;
+  graticuleInnerTrimInsideDistance: number | null;
+  graticuleLabelOffsetM: number | null;
+  graticuleLabelGapM: number | null;
+  interiorSegmentCount: number | null;
+  dashedInteriorSegmentCount: number | null;
+  leaderSegmentCount: number | null;
+  dashedLeaderSegmentCount: number | null;
+  maxLabelTangentErrorDeg: number | null;
+  northLabelOutsideCount: number;
+  westLabelOutsideCount: number;
+};
+
+type TitleBlockSceneState = {
+  groupExists: boolean;
+  groupRotationDeg: number | null;
+  groupPosition: { x: number; y: number; z: number } | null;
+  contentWidthM: number | null;
+  contentHeightM: number | null;
+  logoCount: number;
+  logoHasMap: boolean;
+  logoWidthM: number | null;
+  logoHeightM: number | null;
+  headingCount: number;
+  subheadingCount: number;
+  backgroundCount: number;
+  outlineCount: number;
+  textDepthTest: boolean | null;
+  textToneMapped: boolean | null;
+  textFog: boolean | null;
+  textColor: string | null;
+};
+
+async function topoGraticuleSceneState(
+  page: Page,
+): Promise<TopoGraticuleSceneState> {
+  return page.evaluate(() => {
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) =>
+              | {
+                  visible: boolean;
+                  traverse: (
+                    fn: (obj: {
+                      visible?: boolean;
+                      userData?: Record<string, unknown>;
+                      scale?: { x: number };
+                      position?: { x: number; y: number; z: number };
+                      rotation?: { z: number };
+                      material?:
+                        | {
+                            clippingPlanes?: unknown[] | null;
+                            color?: { getHexString?: () => string };
+                            userData?: Record<string, unknown>;
+                          }
+                        | Array<{
+                            clippingPlanes?: unknown[] | null;
+                            color?: { getHexString?: () => string };
+                            userData?: Record<string, unknown>;
+                          }>;
+                    }) => void,
+                  ) => void;
+                }
+              | undefined;
+          };
+        };
+      }
+    ).__scene?.manager;
+    const normalizeAngle = (angle: number) => {
+      let next = angle;
+      while (next > Math.PI / 2) next -= Math.PI;
+      while (next < -Math.PI / 2) next += Math.PI;
+      return next;
+    };
+    const finiteBounds = (value: unknown) => {
+      const bounds = value as
+        | {
+            minX?: unknown;
+            minY?: unknown;
+            maxX?: unknown;
+            maxY?: unknown;
+          }
+        | undefined;
+      return typeof bounds?.minX === "number" &&
+        typeof bounds.minY === "number" &&
+        typeof bounds.maxX === "number" &&
+        typeof bounds.maxY === "number" &&
+        Number.isFinite(bounds.minX) &&
+        Number.isFinite(bounds.minY) &&
+        Number.isFinite(bounds.maxX) &&
+        Number.isFinite(bounds.maxY)
+        ? {
+            minX: bounds.minX,
+            minY: bounds.minY,
+            maxX: bounds.maxX,
+            maxY: bounds.maxY,
+          }
+        : null;
+    };
+    const terrain = manager?.getLayer?.("terrain");
+    const layer = manager?.getLayer?.("utah-forge-topo-graticule");
+    let terrainBounds: TopoGraticuleSceneState["terrainBounds"] = null;
+    terrain?.traverse((obj) => {
+      if (terrainBounds) return;
+      const uniforms = (
+        obj.userData?.terrainHandle as
+          | {
+              material?: {
+                uniforms?: Record<string, { value?: unknown }>;
+              };
+            }
+          | undefined
+      )?.material?.uniforms;
+      const min = uniforms?.uTerrainBoundsMin?.value as
+        | { x?: unknown; y?: unknown }
+        | undefined;
+      const max = uniforms?.uTerrainBoundsMax?.value as
+        | { x?: unknown; y?: unknown }
+        | undefined;
+      if (
+        typeof min?.x === "number" &&
+        typeof min.y === "number" &&
+        typeof max?.x === "number" &&
+        typeof max.y === "number"
+      ) {
+        terrainBounds = {
+          minX: min.x,
+          minY: min.y,
+          maxX: max.x,
+          maxY: max.y,
+        };
+      }
+    });
+    let lineObjectCount = 0;
+    let interiorLineObjectCount = 0;
+    let dashedInteriorLineObjectCount = 0;
+    let leaderLineObjectCount = 0;
+    let dashedLeaderLineObjectCount = 0;
+    let labelObjectCount = 0;
+    let visibleLabelCount = 0;
+    let visibleLabelWithoutLeaderCount = 0;
+    let firstLabelScaleX: number | null = null;
+    let firstLabelPosition: { x: number; y: number; z: number } | null = null;
+    let firstLabelRotationDeg: number | null = null;
+    let firstLabelColor: string | null = null;
+    let firstLineClippingPlanes: number | null = null;
+    let firstLineEdgeEnabled: boolean | null = null;
+    let firstLineEdgeStrength: number | null = null;
+    let firstLineEdgeShape: string | null = null;
+    let firstLineEdgeDistanceM: number | null = null;
+    let firstLineEdgeLineColor: string | null = null;
+    let generatedBounds: TopoGraticuleSceneState["generatedBounds"] = null;
+    let minLabelInsideDistance: number | null = null;
+    let graticuleInnerTrimInsideDistance: number | null = null;
+    let graticuleLabelOffsetM: number | null = null;
+    let graticuleLabelGapM: number | null = null;
+    let interiorSegmentCount: number | null = null;
+    let dashedInteriorSegmentCount: number | null = null;
+    let leaderSegmentCount: number | null = null;
+    let dashedLeaderSegmentCount: number | null = null;
+    let maxLabelTangentErrorDeg: number | null = null;
+    let northLabelOutsideCount = 0;
+    let westLabelOutsideCount = 0;
+    layer?.traverse((obj) => {
+      if (obj.userData?.topoGraticule === true) {
+        const trim = obj.userData?.topoGraticuleInnerTrimInsideDistance;
+        const offset = obj.userData?.topoGraticuleLabelOffsetM;
+        const gap = obj.userData?.topoGraticuleLabelGapM;
+        const interiorCount = obj.userData?.topoGraticuleInteriorSegmentCount;
+        const dashedInteriorCount =
+          obj.userData?.topoGraticuleDashedInteriorSegmentCount;
+        const leaderCount = obj.userData?.topoGraticuleLeaderSegmentCount;
+        const dashedLeaderCount =
+          obj.userData?.topoGraticuleDashedLeaderSegmentCount;
+        graticuleInnerTrimInsideDistance =
+          typeof trim === "number" ? trim : graticuleInnerTrimInsideDistance;
+        graticuleLabelOffsetM =
+          typeof offset === "number" ? offset : graticuleLabelOffsetM;
+        graticuleLabelGapM =
+          typeof gap === "number" ? gap : graticuleLabelGapM;
+        interiorSegmentCount =
+          typeof interiorCount === "number"
+            ? interiorCount
+            : interiorSegmentCount;
+        dashedInteriorSegmentCount =
+          typeof dashedInteriorCount === "number"
+            ? dashedInteriorCount
+            : dashedInteriorSegmentCount;
+        leaderSegmentCount =
+          typeof leaderCount === "number" ? leaderCount : leaderSegmentCount;
+        dashedLeaderSegmentCount =
+          typeof dashedLeaderCount === "number"
+            ? dashedLeaderCount
+            : dashedLeaderSegmentCount;
+      }
+      if (obj.userData?.topoGraticuleLines === true) {
+        lineObjectCount += 1;
+        if (obj.userData?.topoGraticuleLineRole === "interior") {
+          interiorLineObjectCount += 1;
+        }
+        if (obj.userData?.topoGraticuleLineRole === "interior-dashed") {
+          dashedInteriorLineObjectCount += 1;
+        }
+        if (obj.userData?.topoGraticuleLineRole === "leader") {
+          leaderLineObjectCount += 1;
+        }
+        if (obj.userData?.topoGraticuleLineRole === "leader-dashed") {
+          dashedLeaderLineObjectCount += 1;
+        }
+        generatedBounds =
+          generatedBounds ??
+          finiteBounds(obj.userData?.topoGraticuleGeneratedBounds);
+        const material = Array.isArray(obj.material)
+          ? obj.material[0]
+          : obj.material;
+        const edgeSettings = material?.userData
+          ?.topoGraticuleEdgeFadeSettings as
+          | {
+              enabled?: boolean;
+              strength?: number;
+              edgeFadeShape?: string;
+              edgeFadeDistanceM?: number;
+              lineColor?: string;
+            }
+          | undefined;
+        if (firstLineEdgeEnabled === null) {
+          firstLineEdgeEnabled =
+            typeof edgeSettings?.enabled === "boolean"
+              ? edgeSettings.enabled
+              : null;
+          firstLineEdgeStrength =
+            typeof edgeSettings?.strength === "number"
+              ? edgeSettings.strength
+              : null;
+          firstLineEdgeShape =
+            typeof edgeSettings?.edgeFadeShape === "string"
+              ? edgeSettings.edgeFadeShape
+              : null;
+          firstLineEdgeDistanceM =
+            typeof edgeSettings?.edgeFadeDistanceM === "number"
+              ? edgeSettings.edgeFadeDistanceM
+              : null;
+          firstLineEdgeLineColor =
+            typeof edgeSettings?.lineColor === "string"
+              ? edgeSettings.lineColor
+              : null;
+        }
+        if (firstLineClippingPlanes === null) {
+          firstLineClippingPlanes = Array.isArray(material?.clippingPlanes)
+            ? material.clippingPlanes.length
+            : 0;
+        }
+      }
+      if (obj.userData?.topoGraticuleLabel === true) {
+        labelObjectCount += 1;
+        if (obj.visible !== false) {
+          visibleLabelCount += 1;
+          if (obj.userData?.topoGraticuleLabelHasLeader === false) {
+            visibleLabelWithoutLeaderCount += 1;
+          }
+        }
+        if (firstLabelScaleX === null && typeof obj.scale?.x === "number") {
+          firstLabelScaleX = obj.scale.x;
+        }
+        if (firstLabelPosition === null && obj.position) {
+          firstLabelPosition = {
+            x: obj.position.x,
+            y: obj.position.y,
+            z: obj.position.z,
+          };
+        }
+        if (
+          firstLabelRotationDeg === null &&
+          typeof obj.rotation?.z === "number"
+        ) {
+          firstLabelRotationDeg = (obj.rotation.z * 180) / Math.PI;
+        }
+        const insideDistance =
+          obj.userData?.topoGraticuleActiveLabelInsideDistance;
+        if (typeof insideDistance === "number") {
+          minLabelInsideDistance =
+            minLabelInsideDistance === null
+              ? insideDistance
+              : Math.min(minLabelInsideDistance, insideDistance);
+          if (
+            insideDistance < 0 &&
+            obj.userData?.topoGraticuleLabelPreference === "north"
+          ) {
+            northLabelOutsideCount += 1;
+          }
+          if (
+            insideDistance < 0 &&
+            obj.userData?.topoGraticuleLabelPreference === "west"
+          ) {
+            westLabelOutsideCount += 1;
+          }
+        }
+        const tangent = obj.userData?.topoGraticuleActiveLabelTangent as
+          | { x?: unknown; y?: unknown }
+          | undefined;
+        if (
+          typeof tangent?.x === "number" &&
+          typeof tangent.y === "number" &&
+          typeof obj.rotation?.z === "number"
+        ) {
+          const tangentAngle = normalizeAngle(
+            Math.atan2(tangent.y, tangent.x),
+          );
+          const labelAngle = normalizeAngle(obj.rotation.z);
+          const errorDeg =
+            (Math.abs(normalizeAngle(labelAngle - tangentAngle)) * 180) /
+            Math.PI;
+          maxLabelTangentErrorDeg =
+            maxLabelTangentErrorDeg === null
+              ? errorDeg
+              : Math.max(maxLabelTangentErrorDeg, errorDeg);
+        }
+        const material = Array.isArray(obj.material)
+          ? obj.material[0]
+          : obj.material;
+        if (
+          firstLabelColor === null &&
+          material?.color?.getHexString
+        ) {
+          firstLabelColor = `#${material.color.getHexString()}`;
+        }
+      }
+    });
+    return {
+      layerVisible: layer?.visible ?? null,
+      lineObjectCount,
+      interiorLineObjectCount,
+      dashedInteriorLineObjectCount,
+      leaderLineObjectCount,
+      dashedLeaderLineObjectCount,
+      labelObjectCount,
+      visibleLabelCount,
+      visibleLabelWithoutLeaderCount,
+      firstLabelScaleX,
+      firstLabelPosition,
+      firstLabelRotationDeg,
+      firstLabelColor,
+      firstLineClippingPlanes,
+      firstLineEdgeEnabled,
+      firstLineEdgeStrength,
+      firstLineEdgeShape,
+      firstLineEdgeDistanceM,
+      firstLineEdgeLineColor,
+      generatedBounds,
+      terrainBounds,
+      minLabelInsideDistance,
+      graticuleInnerTrimInsideDistance,
+      graticuleLabelOffsetM,
+      graticuleLabelGapM,
+      interiorSegmentCount,
+      dashedInteriorSegmentCount,
+      leaderSegmentCount,
+      dashedLeaderSegmentCount,
+      maxLabelTangentErrorDeg,
+      northLabelOutsideCount,
+      westLabelOutsideCount,
+    };
+  });
+}
+
+async function titleBlockSceneState(
+  page: Page,
+): Promise<TitleBlockSceneState> {
+  return page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          scene?: {
+            traverse: (
+              fn: (obj: {
+                name?: string;
+                userData?: Record<string, unknown>;
+                position?: { x: number; y: number; z: number };
+                rotation?: { z: number };
+                visible?: boolean;
+                geometry?: {
+                  parameters?: { width?: number; height?: number };
+                };
+                material?:
+                  | {
+                      map?: unknown;
+                      depthTest?: boolean;
+                      toneMapped?: boolean;
+                      fog?: boolean;
+                      color?: { getHexString?: () => string };
+                    }
+                  | Array<{
+                      map?: unknown;
+                      depthTest?: boolean;
+                      toneMapped?: boolean;
+                      fog?: boolean;
+                      color?: { getHexString?: () => string };
+                    }>;
+              }) => void,
+            ) => void;
+          };
+        };
+      }
+    ).__scene;
+    let groupExists = false;
+    let groupRotationDeg: number | null = null;
+    let groupPosition: TitleBlockSceneState["groupPosition"] = null;
+    let contentWidthM: number | null = null;
+    let contentHeightM: number | null = null;
+    let logoCount = 0;
+    let logoHasMap = false;
+    let logoWidthM: number | null = null;
+    let logoHeightM: number | null = null;
+    let headingCount = 0;
+    let subheadingCount = 0;
+    let backgroundCount = 0;
+    let outlineCount = 0;
+    let textDepthTest: boolean | null = null;
+    let textToneMapped: boolean | null = null;
+    let textFog: boolean | null = null;
+    let textColor: string | null = null;
+
+    sceneHandle?.scene?.traverse((obj) => {
+      if (obj.name === "__topo_map_branding__") {
+        groupExists = true;
+        groupRotationDeg =
+          typeof obj.rotation?.z === "number"
+            ? (obj.rotation.z * 180) / Math.PI
+            : null;
+        groupPosition = obj.position
+          ? { x: obj.position.x, y: obj.position.y, z: obj.position.z }
+          : null;
+      }
+      if (obj.userData?.topoMapBrandingContent === true) {
+        contentWidthM =
+          typeof obj.userData.topoMapBrandingContentWidthM === "number"
+            ? obj.userData.topoMapBrandingContentWidthM
+            : contentWidthM;
+        contentHeightM =
+          typeof obj.userData.topoMapBrandingContentHeightM === "number"
+            ? obj.userData.topoMapBrandingContentHeightM
+            : contentHeightM;
+      }
+      const role = obj.userData?.topoMapBrandingRole;
+      const material = Array.isArray(obj.material)
+        ? obj.material[0]
+        : obj.material;
+      if (role === "logo" && obj.visible !== false) {
+        logoCount += 1;
+        logoHasMap = logoHasMap || Boolean(material?.map);
+        logoWidthM =
+          typeof obj.geometry?.parameters?.width === "number"
+            ? obj.geometry.parameters.width
+            : logoWidthM;
+        logoHeightM =
+          typeof obj.geometry?.parameters?.height === "number"
+            ? obj.geometry.parameters.height
+            : logoHeightM;
+      }
+      if (role === "heading") headingCount += 1;
+      if (role === "subheading") subheadingCount += 1;
+      if (role === "background") backgroundCount += 1;
+      if (role === "outline") outlineCount += 1;
+      if ((role === "heading" || role === "subheading") && material) {
+        textDepthTest =
+          typeof material.depthTest === "boolean"
+            ? material.depthTest
+            : textDepthTest;
+        textToneMapped =
+          typeof material.toneMapped === "boolean"
+            ? material.toneMapped
+            : textToneMapped;
+        textFog = typeof material.fog === "boolean" ? material.fog : textFog;
+        textColor =
+          typeof material.color?.getHexString === "function"
+            ? `#${material.color.getHexString()}`
+            : textColor;
+      }
+    });
+
+    return {
+      groupExists,
+      groupRotationDeg,
+      groupPosition,
+      contentWidthM,
+      contentHeightM,
+      logoCount,
+      logoHasMap,
+      logoWidthM,
+      logoHeightM,
+      headingCount,
+      subheadingCount,
+      backgroundCount,
+      outlineCount,
+      textDepthTest,
+      textToneMapped,
+      textFog,
+      textColor,
+    };
+  });
+}
+
+function tinyPdfBase64(): string {
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 120 60] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
+    "<< /Length 44 >>\nstream\nBT /F1 16 Tf 12 28 Td (Title Block) Tj ET\nendstream",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+  ];
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+  for (let index = 0; index < objects.length; index += 1) {
+    offsets.push(Buffer.byteLength(pdf, "utf8"));
+    pdf += `${index + 1} 0 obj\n${objects[index]}\nendobj\n`;
+  }
+  const xrefOffset = Buffer.byteLength(pdf, "utf8");
+  pdf += `xref\n0 ${objects.length + 1}\n`;
+  pdf += "0000000000 65535 f \n";
+  for (const offset of offsets.slice(1)) {
+    pdf += `${String(offset).padStart(10, "0")} 00000 n \n`;
+  }
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+  return Buffer.from(pdf, "utf8").toString("base64");
+}
+
 async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState> {
   return page.evaluate(() => {
-    const sceneHandle = (window as unknown as {
-      __scene?: {
-        manager?: {
-          getLayer?: (id: string) => {
-            visible: boolean;
-            userData: Record<string, unknown>;
-            traverse: (fn: (obj: {
-              visible: boolean;
-              userData?: Record<string, unknown>;
-              material?: {
-                wireframe?: boolean;
-                uniforms?: Record<string, { value: unknown }>;
-              } | Array<{
-                wireframe?: boolean;
-                uniforms?: Record<string, { value: unknown }>;
-              }>;
-            }) => void) => void;
-          } | undefined;
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) =>
+              | {
+                  visible: boolean;
+                  userData: Record<string, unknown>;
+                  traverse: (
+                    fn: (obj: {
+                      visible: boolean;
+                      userData?: Record<string, unknown>;
+                      material?:
+                        | {
+                            wireframe?: boolean;
+                            uniforms?: Record<string, { value: unknown }>;
+                          }
+                        | Array<{
+                            wireframe?: boolean;
+                            uniforms?: Record<string, { value: unknown }>;
+                          }>;
+                    }) => void,
+                  ) => void;
+                }
+              | undefined;
+          };
         };
-      };
-    }).__scene;
+      }
+    ).__scene;
     const manager = sceneHandle?.manager;
     const volumeLayer = manager?.getLayer?.("utah-forge-mt-resistivity-volume");
     const thresholdLayer = manager?.getLayer?.(
@@ -689,7 +1703,9 @@ async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState> {
       const productId = obj.userData.scalarVolumeProductId;
       if (typeof productId === "string") visibleProductIds.push(productId);
       if (!firstVisibleUniforms) {
-        const material = Array.isArray(obj.material) ? obj.material[0] : obj.material;
+        const material = Array.isArray(obj.material)
+          ? obj.material[0]
+          : obj.material;
         const uniforms = material?.uniforms ?? {};
         firstVisibleUniforms = {
           opacity:
@@ -734,10 +1750,14 @@ async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState> {
     const visibleThresholdSurfaceIds: string[] = [];
     let thresholdWireframe: boolean | null = null;
     thresholdLayer?.traverse((obj) => {
-      if (obj.userData?.mtThresholdSurfacePreview !== true || !obj.visible) return;
+      if (obj.userData?.mtThresholdSurfacePreview !== true || !obj.visible)
+        return;
       const surfaceId = obj.userData.mtThresholdSurfaceId;
-      if (typeof surfaceId === "string") visibleThresholdSurfaceIds.push(surfaceId);
-      const material = Array.isArray(obj.material) ? obj.material[0] : obj.material;
+      if (typeof surfaceId === "string")
+        visibleThresholdSurfaceIds.push(surfaceId);
+      const material = Array.isArray(obj.material)
+        ? obj.material[0]
+        : obj.material;
       if (typeof material?.wireframe === "boolean") {
         thresholdWireframe = material.wireframe;
       }
@@ -763,65 +1783,478 @@ async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState> {
   });
 }
 
+async function mtFullDensityPointSceneState(
+  page: Page,
+): Promise<MtFullDensityPointSceneState> {
+  return page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) =>
+              | {
+                  visible: boolean;
+                  traverse: (
+                    fn: (obj: {
+                      visible: boolean;
+                      userData?: Record<string, unknown>;
+                      geometry?: {
+                        index?: { count: number } | null;
+                        userData?: Record<string, unknown>;
+                        getAttribute?: (
+                          name: string,
+                        ) => { count: number } | undefined;
+                      };
+                      material?:
+                        | {
+                            opacity?: number;
+                            size?: number;
+                            transparent?: boolean;
+                            vertexColors?: boolean;
+                            depthTest?: boolean;
+                            depthWrite?: boolean;
+                          }
+                        | Array<{
+                            opacity?: number;
+                            size?: number;
+                            transparent?: boolean;
+                            vertexColors?: boolean;
+                            depthTest?: boolean;
+                            depthWrite?: boolean;
+                          }>;
+                    }) => void,
+                  ) => void;
+                }
+              | undefined;
+          };
+        };
+      }
+    ).__scene;
+    const layer = sceneHandle?.manager?.getLayer?.(
+      "utah-forge-mt-resistivity-full-density",
+    );
+    let pointObjects = 0;
+    let visiblePointObjects = 0;
+    let totalPointCount = 0;
+    let indexedVisiblePointCount = 0;
+    let scalarFocusVisibleCount: number | null = null;
+    let firstTileId: string | null = null;
+    let firstScalarDisplayMin: number | null = null;
+    let firstScalarDisplayMax: number | null = null;
+    let firstMaterial: MtFullDensityPointSceneState["firstMaterial"] = null;
+
+    layer?.traverse((obj) => {
+      if (obj.userData?.tiledPointCloudTile !== true) return;
+      pointObjects += 1;
+      const positionCount =
+        obj.geometry?.getAttribute?.("position")?.count ?? 0;
+      totalPointCount +=
+        typeof obj.userData.pointCount === "number"
+          ? obj.userData.pointCount
+          : positionCount;
+      if (!obj.visible) return;
+      visiblePointObjects += 1;
+      indexedVisiblePointCount += obj.geometry?.index?.count ?? positionCount;
+      if (scalarFocusVisibleCount === null) {
+        scalarFocusVisibleCount =
+          typeof obj.geometry?.userData?.scalarFocusVisibleCount === "number"
+            ? obj.geometry.userData.scalarFocusVisibleCount
+            : null;
+      }
+      if (firstTileId === null && typeof obj.userData.tileId === "string") {
+        firstTileId = obj.userData.tileId;
+      }
+      if (firstScalarDisplayMin === null || firstScalarDisplayMax === null) {
+        const scalar = obj.geometry?.userData?.scalar;
+        if (typeof scalar === "object" && scalar !== null) {
+          const scalarRecord = scalar as Record<string, unknown>;
+          firstScalarDisplayMin =
+            typeof scalarRecord.displayMin === "number"
+              ? scalarRecord.displayMin
+              : null;
+          firstScalarDisplayMax =
+            typeof scalarRecord.displayMax === "number"
+              ? scalarRecord.displayMax
+              : null;
+        }
+      }
+      if (!firstMaterial) {
+        const material = Array.isArray(obj.material)
+          ? obj.material[0]
+          : obj.material;
+        firstMaterial = material
+          ? {
+              opacity:
+                typeof material.opacity === "number" ? material.opacity : null,
+              size: typeof material.size === "number" ? material.size : null,
+              transparent:
+                typeof material.transparent === "boolean"
+                  ? material.transparent
+                  : null,
+              vertexColors:
+                typeof material.vertexColors === "boolean"
+                  ? material.vertexColors
+                  : null,
+              depthTest:
+                typeof material.depthTest === "boolean"
+                  ? material.depthTest
+                  : null,
+              depthWrite:
+                typeof material.depthWrite === "boolean"
+                  ? material.depthWrite
+                  : null,
+            }
+          : null;
+      }
+    });
+
+    return {
+      layerVisible: layer?.visible ?? false,
+      pointObjects,
+      visiblePointObjects,
+      totalPointCount,
+      indexedVisiblePointCount,
+      scalarFocusVisibleCount,
+      firstTileId,
+      firstScalarDisplayMin,
+      firstScalarDisplayMax,
+      firstMaterial,
+    };
+  });
+}
+
+async function utahForgeRuntimePresentationState(
+  page: Page,
+): Promise<UtahForgeRuntimePresentationState> {
+  return page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          scene?: {
+            background?: { getHexString?: () => string };
+            fog?: {
+              color?: { getHexString?: () => string };
+              density?: number;
+            } | null;
+          };
+          renderer?: {
+            toneMappingExposure?: number;
+            getClearColor?: (target: unknown) => unknown;
+          };
+          manager?: {
+            lastAppliedRenderPresetId?: string | null;
+          };
+        };
+      }
+    ).__scene;
+    const colorHex = (
+      value: { getHexString?: () => string } | null | undefined,
+    ) =>
+      typeof value?.getHexString === "function"
+        ? `#${value.getHexString()}`
+        : null;
+    const clearTarget = {
+      hex: null as string | null,
+      copy(color: { getHexString?: () => string }) {
+        this.hex = colorHex(color);
+        return this;
+      },
+    };
+    sceneHandle?.renderer?.getClearColor?.(clearTarget);
+    return {
+      activeRenderPresetId:
+        sceneHandle?.manager?.lastAppliedRenderPresetId ?? null,
+      rendererExposure:
+        typeof sceneHandle?.renderer?.toneMappingExposure === "number"
+          ? sceneHandle.renderer.toneMappingExposure
+          : null,
+      clearColor: clearTarget.hex,
+      sceneBackground: colorHex(sceneHandle?.scene?.background),
+      fogColor: colorHex(sceneHandle?.scene?.fog?.color),
+      fogDensity:
+        typeof sceneHandle?.scene?.fog?.density === "number"
+          ? sceneHandle.scene.fog.density
+          : null,
+    };
+  });
+}
+
+async function transitionSnapshotState(
+  page: Page,
+): Promise<TransitionSnapshotState> {
+  return page.evaluate(() => {
+    const scene = (
+      window as unknown as {
+        __scene?: {
+          scene?: {
+            children?: Array<{
+              visible?: boolean;
+              userData?: Record<string, unknown>;
+              traverse?: (
+                fn: (obj: {
+                  visible?: boolean;
+                  material?:
+                    | {
+                        opacity?: number;
+                        uniforms?: Record<string, { value: unknown }>;
+                      }
+                    | Array<{
+                        opacity?: number;
+                        uniforms?: Record<string, { value: unknown }>;
+                      }>;
+                }) => void,
+              ) => void;
+            }>;
+          };
+        };
+      }
+    ).__scene?.scene;
+    const byLayer: Record<string, number> = {};
+    const maxOpacityByLayer: Record<string, number> = {};
+    for (const child of scene?.children ?? []) {
+      const layerId =
+        typeof child.userData?.transitionSnapshotForLayer === "string"
+          ? child.userData.transitionSnapshotForLayer
+          : null;
+      if (!layerId) continue;
+      byLayer[layerId] = (byLayer[layerId] ?? 0) + 1;
+      maxOpacityByLayer[layerId] = Math.max(
+        maxOpacityByLayer[layerId] ?? 0,
+        child.visible === false ? 0 : 0,
+      );
+      child.traverse?.((obj) => {
+        if (obj.visible === false) return;
+        const materials = Array.isArray(obj.material)
+          ? obj.material
+          : obj.material
+            ? [obj.material]
+            : [];
+        for (const material of materials) {
+          const uniformOpacity = material.uniforms?.uOpacity?.value;
+          const opacity =
+            typeof uniformOpacity === "number"
+              ? uniformOpacity
+              : typeof material.opacity === "number"
+                ? material.opacity
+                : 0;
+          maxOpacityByLayer[layerId] = Math.max(
+            maxOpacityByLayer[layerId] ?? 0,
+            opacity,
+          );
+        }
+      });
+    }
+    return {
+      count: Object.values(byLayer).reduce((total, count) => total + count, 0),
+      byLayer,
+      maxOpacityByLayer,
+    };
+  });
+}
+
+async function runForgeDataTransitionProbe(
+  page: Page,
+  environment: Record<string, unknown>,
+  fromPage: Record<string, unknown>,
+  toPage: Record<string, unknown>,
+  durationMs = 3000,
+): Promise<void> {
+  await page.evaluate(
+    ({ environmentSpec, fromPageSpec, toPageSpec, duration }) => {
+      const manager = (
+        window as unknown as {
+          __scene?: {
+            manager?: {
+              applyEffectiveVisibilityForPage?: (
+                environment: unknown,
+                page: unknown,
+              ) => void;
+              applyEffectiveStylesForPage?: (
+                environment: unknown,
+                page: unknown,
+              ) => void;
+              applyPageScene?: (page: unknown) => void;
+              transitionEffectiveLayersForPage?: (
+                environment: unknown,
+                fromPage: unknown,
+                toPage: unknown,
+                durationMs: number,
+                easing: string,
+                scalarDurationMs: number,
+                scalarEasing: string,
+              ) => void;
+            };
+          };
+        }
+      ).__scene?.manager;
+      if (!manager?.transitionEffectiveLayersForPage) {
+        throw new Error("SceneManager transition API is unavailable");
+      }
+      manager.applyEffectiveVisibilityForPage?.(environmentSpec, fromPageSpec);
+      manager.applyEffectiveStylesForPage?.(environmentSpec, fromPageSpec);
+      manager.applyPageScene?.(fromPageSpec);
+      manager.transitionEffectiveLayersForPage(
+        environmentSpec,
+        fromPageSpec,
+        toPageSpec,
+        duration,
+        "easeInOutCubic",
+        duration,
+        "easeInOutCubic",
+      );
+    },
+    {
+      environmentSpec: environment,
+      fromPageSpec: fromPage,
+      toPageSpec: toPage,
+      duration: durationMs,
+    },
+  );
+}
+
+async function pageControllerState(
+  page: Page,
+): Promise<PageControllerDebugState> {
+  return page.evaluate(() => {
+    const controller = (
+      window as unknown as {
+        __pageController?: { getState?: () => PageControllerDebugState };
+      }
+    ).__pageController;
+    if (!controller?.getState) {
+      throw new Error("PageController debug handle is unavailable");
+    }
+    return controller.getState();
+  });
+}
+
+async function expectPageTransitionProgress(
+  page: Page,
+  currentIndex: number,
+  targetIndex: number,
+): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        const state = await pageControllerState(page);
+        return (
+          state.currentIndex === currentIndex &&
+          state.targetIndex === targetIndex &&
+          state.isTransitioning &&
+          state.transitionProgress > 0 &&
+          state.transitionProgress < 1
+        );
+      },
+      { timeout: 2_000, intervals: [50, 100, 200] },
+    )
+    .toBe(true);
+}
+
+async function resistivityLegendHandleState(
+  page: Page,
+): Promise<ResistivityLegendHandleState> {
+  const read = async (testId: string) => {
+    const value = await page.getByTestId(testId).getAttribute("aria-valuenow");
+    return Number.parseFloat(value ?? "NaN");
+  };
+  return {
+    focusMin: await read("resistivity-legend-focusMin"),
+    focusMax: await read("resistivity-legend-focusMax"),
+    blendMin: await read("resistivity-legend-blendMin"),
+    blendMax: await read("resistivity-legend-blendMax"),
+  };
+}
+
+function expectProgressedToward(value: number, from: number, to: number): void {
+  expect(Number.isFinite(value)).toBe(true);
+  if (Math.abs(from - to) < 0.000001) {
+    expect(value).toBeCloseTo(to);
+    return;
+  }
+  if (to > from) {
+    expect(value).toBeGreaterThan(from);
+    expect(value).toBeLessThanOrEqual(to);
+  } else {
+    expect(value).toBeLessThan(from);
+    expect(value).toBeGreaterThanOrEqual(to);
+  }
+}
+
 async function sectionIsoSceneState(
   page: Page,
   groupFilter = "mt-slices",
 ): Promise<SectionIsoSceneState> {
   return page.evaluate((groupFilterArg) => {
-    const sceneHandle = (window as unknown as {
-      __scene?: {
-        manager?: {
-          getLayer?: (id: string) => {
-            visible: boolean;
-            traverse: (fn: (obj: {
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) =>
+              | {
+                  visible: boolean;
+                  traverse: (
+                    fn: (obj: {
+                      visible: boolean;
+                      name?: string;
+                      userData?: Record<string, unknown>;
+                      geometry?: {
+                        getAttribute?: (
+                          name: string,
+                        ) => { count: number } | undefined;
+                      };
+                      material?:
+                        | {
+                            opacity?: unknown;
+                            uniforms?: Record<string, { value: unknown }>;
+                          }
+                        | Array<{
+                            opacity?: unknown;
+                            uniforms?: Record<string, { value: unknown }>;
+                          }>;
+                      traverse?: (
+                        fn: (child: {
+                          name?: string;
+                          userData?: Record<string, unknown>;
+                          geometry?: {
+                            getAttribute?: (
+                              name: string,
+                            ) => { count: number } | undefined;
+                          };
+                          material?:
+                            | {
+                                opacity?: unknown;
+                                uniforms?: Record<string, { value: unknown }>;
+                              }
+                            | Array<{
+                                opacity?: unknown;
+                                uniforms?: Record<string, { value: unknown }>;
+                              }>;
+                        }) => void,
+                      ) => void;
+                    }) => void,
+                  ) => void;
+                }
+              | undefined;
+            listScalarSectionIsoTargets?: () => Array<{
+              targetKey: string;
+              layerId: string;
+              sectionId: string;
+              label: string;
+              group?: string;
               visible: boolean;
-              name?: string;
-              userData?: Record<string, unknown>;
-              geometry?: {
-                getAttribute?: (name: string) => { count: number } | undefined;
-              };
-              material?: {
-                opacity?: unknown;
-                uniforms?: Record<string, { value: unknown }>;
-              } | Array<{
-                opacity?: unknown;
-                uniforms?: Record<string, { value: unknown }>;
-              }>;
-              traverse?: (fn: (child: {
-                name?: string;
-                userData?: Record<string, unknown>;
-                geometry?: {
-                  getAttribute?: (name: string) => { count: number } | undefined;
-                };
-                material?: {
-                  opacity?: unknown;
-                  uniforms?: Record<string, { value: unknown }>;
-                } | Array<{
-                  opacity?: unknown;
-                  uniforms?: Record<string, { value: unknown }>;
-                }>;
-              }) => void) => void;
-            }) => void) => void;
-          } | undefined;
-          listScalarSectionIsoTargets?: () => Array<{
-            targetKey: string;
-            layerId: string;
-            sectionId: string;
-            label: string;
-            group?: string;
-            visible: boolean;
-          }>;
-          listSectionIsoTargets?: () => Array<{
-            targetKey: string;
-            layerId: string;
-            sectionId: string;
-            label: string;
-            group: string;
-            visible: boolean;
-          }>;
+            }>;
+            listSectionIsoTargets?: () => Array<{
+              targetKey: string;
+              layerId: string;
+              sectionId: string;
+              label: string;
+              group: string;
+              visible: boolean;
+            }>;
+          };
         };
-      };
-    }).__scene;
+      }
+    ).__scene;
     const manager = sceneHandle?.manager;
     const targets = (
       manager?.listSectionIsoTargets?.() ??
@@ -831,7 +2264,9 @@ async function sectionIsoSceneState(
       groupFilterArg ? (target.group ?? "mt-slices") === groupFilterArg : true,
     );
     const targetKeys = new Set(targets.map((target) => target.targetKey));
-    const layerIds = Array.from(new Set(targets.map((target) => target.layerId)));
+    const layerIds = Array.from(
+      new Set(targets.map((target) => target.layerId)),
+    );
     let lineOverlayCount = 0;
     let bandOverlayCount = 0;
     let firstLineVertexCount: number | null = null;
@@ -890,18 +2325,24 @@ async function sectionIsoSceneState(
         const root = obj.userData?.scalarSectionIsoOverlayRoot as
           | {
               userData?: Record<string, unknown>;
-              traverse?: (fn: (child: {
-                name?: string;
-                userData?: Record<string, unknown>;
-                geometry?: {
-                  getAttribute?: (name: string) => { count: number } | undefined;
-                };
-                material?: {
-                  uniforms?: Record<string, { value: unknown }>;
-                } | Array<{
-                  uniforms?: Record<string, { value: unknown }>;
-                }>;
-              }) => void) => void;
+              traverse?: (
+                fn: (child: {
+                  name?: string;
+                  userData?: Record<string, unknown>;
+                  geometry?: {
+                    getAttribute?: (
+                      name: string,
+                    ) => { count: number } | undefined;
+                  };
+                  material?:
+                    | {
+                        uniforms?: Record<string, { value: unknown }>;
+                      }
+                    | Array<{
+                        uniforms?: Record<string, { value: unknown }>;
+                      }>;
+                }) => void,
+              ) => void;
             }
           | undefined;
         if (!root?.traverse) return;
@@ -926,29 +2367,28 @@ async function sectionIsoSceneState(
               ? child.material[0]
               : child.material;
             const uniforms = material?.uniforms ?? {};
-            firstBandUniforms =
-              firstBandUniforms ?? {
-                isoMin:
-                  typeof uniforms.uIsoMin?.value === "number"
-                    ? uniforms.uIsoMin.value
-                    : null,
-                isoMax:
-                  typeof uniforms.uIsoMax?.value === "number"
-                    ? uniforms.uIsoMax.value
-                    : null,
-                levelCount:
-                  typeof uniforms.uLevelCount?.value === "number"
-                    ? uniforms.uLevelCount.value
-                    : null,
-                opacity:
-                  typeof uniforms.uOpacity?.value === "number"
-                    ? uniforms.uOpacity.value
-                    : null,
-                fillOffset:
-                  typeof uniforms.uFillOffset?.value === "number"
-                    ? uniforms.uFillOffset.value
-                    : null,
-              };
+            firstBandUniforms = firstBandUniforms ?? {
+              isoMin:
+                typeof uniforms.uIsoMin?.value === "number"
+                  ? uniforms.uIsoMin.value
+                  : null,
+              isoMax:
+                typeof uniforms.uIsoMax?.value === "number"
+                  ? uniforms.uIsoMax.value
+                  : null,
+              levelCount:
+                typeof uniforms.uLevelCount?.value === "number"
+                  ? uniforms.uLevelCount.value
+                  : null,
+              opacity:
+                typeof uniforms.uOpacity?.value === "number"
+                  ? uniforms.uOpacity.value
+                  : null,
+              fillOffset:
+                typeof uniforms.uFillOffset?.value === "number"
+                  ? uniforms.uFillOffset.value
+                  : null,
+            };
           }
         });
       });
@@ -983,13 +2423,18 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
   const mtVolumeLayer = project.layers.find(
     (layer) => layer.id === "utah-forge-mt-resistivity-volume",
   );
+  const mtFullDensityLayer = project.layers.find(
+    (layer) => layer.id === "utah-forge-mt-resistivity-full-density",
+  );
   const mtThresholdLayer = project.layers.find(
     (layer) => layer.id === "utah-forge-mt-resistivity-threshold-surfaces",
   );
   const workingAreaLayer = project.layers.find(
     (layer) => layer.id === "utah-forge-phase3-working-area",
   );
-  const publicTerrainLayer = project.layers.find((layer) => layer.id === "terrain");
+  const publicTerrainLayer = project.layers.find(
+    (layer) => layer.id === "terrain",
+  );
   const publicRoadsLayer = project.layers.find(
     (layer) => layer.id === "transport-roads",
   );
@@ -1012,7 +2457,9 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
       }
     | undefined;
   expect(seismicLayer?.type).toBe("seismic");
-  expect(seismicLayer?.previewFiles?.seismicManifest).toBe(SEISMIC_MANIFEST_PATH);
+  expect(seismicLayer?.previewFiles?.seismicManifest).toBe(
+    SEISMIC_MANIFEST_PATH,
+  );
   expect(seismicLayer?.previewFiles?.seismicDemoRecipes).toBe(
     SEISMIC_DEMO_RECIPES_PATH,
   );
@@ -1022,7 +2469,9 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
     `${PUBLIC_CONTEXT_DIR}/terrain_public_context_1000m.tif`,
   );
   expect(publicRoadsLayer?.type).toBe("line");
-  expect(publicRoadsLayer?.files?.geojson).toBe(`${PUBLIC_CONTEXT_DIR}/roads.geojson`);
+  expect(publicRoadsLayer?.files?.geojson).toBe(
+    `${PUBLIC_CONTEXT_DIR}/roads.geojson`,
+  );
   expect(publicStreamsLayer?.type).toBe("line");
   expect(publicStreamsLayer?.files?.geojson).toBe(
     `${PUBLIC_CONTEXT_DIR}/hydrography_streams.geojson`,
@@ -1051,12 +2500,10 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
     expect(geoTransform?.sceneOriginUtm?.easting_m).toBeCloseTo(341467.35, 2);
     expect(geoTransform?.sceneOriginUtm?.northing_m).toBeCloseTo(4273374.5, 2);
     expect(geoTransform?.bounds?.min?.slice(0, 2)).toEqual([
-      -356385.9,
-      3703652,
+      -356385.9, 3703652,
     ]);
     expect(geoTransform?.bounds?.max?.slice(0, 2)).toEqual([
-      1039320.6,
-      4843097,
+      1039320.6, 4843097,
     ]);
   }
   expect(workingArea?.footprintWidthM).toBe(4200);
@@ -1067,6 +2514,10 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
   expect(mtVolumeLayer?.type).toBe("volume");
   expect(mtVolumeLayer?.previewFiles?.scalarVolumeManifest).toBe(
     MT_VOLUME_MANIFEST_PATH,
+  );
+  expect(mtFullDensityLayer?.type).toBe("pointcloud");
+  expect(mtFullDensityLayer?.previewFiles?.previewTiles).toBe(
+    MT_FULL_DENSITY_MANIFEST_PATH,
   );
   expect(mtThresholdLayer?.type).toBe("mesh");
   expect(mtThresholdLayer?.previewFiles?.meshPreview).toBe(
@@ -1079,20 +2530,59 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
     }
   }
   const environment = readJsonFile<{
+    renderPreset?: string;
+    customRenderPresets?: Array<{
+      id: string;
+      label: string;
+      source?: string;
+      scenePatch?: {
+        background?: string;
+        exposure?: number;
+        fog?: { enabled?: boolean; color?: string; density?: number };
+        bloom?: { strength?: number; radius?: number; threshold?: number };
+        vignette?: { strength?: number; smoothness?: number };
+        ambientOcclusion?: { enabled?: boolean };
+      };
+    }>;
+    scene?: {
+      background?: string;
+      exposure?: number;
+      fog?: { enabled?: boolean; color?: string; density?: number };
+      bloom?: { strength?: number; radius?: number; threshold?: number };
+      vignette?: { strength?: number; smoothness?: number };
+      ambientOcclusion?: { enabled?: boolean };
+    };
     layerStyles: Record<string, Record<string, unknown>>;
     defaultVisibleLayers: string[];
   }>("projects/utah-forge/environment.json");
-  expect(environment.defaultVisibleLayers).toContain(
-    "utah-forge-phase3-working-area",
+  expect(environment.renderPreset).toBe("utah-forge-reference-cinematic-dark");
+  expect(environment.defaultVisibleLayers).toEqual([
+    "utah-forge-mt-resistivity-full-density",
+    "utah-forge-phase3-seismic-browser",
+  ]);
+  expect(environment.scene).toMatchObject({
+    background: "#383838",
+    exposure: 1.08,
+    fog: { enabled: true, color: "#383838", density: 0.00008 },
+    bloom: { strength: 0, radius: 0.55, threshold: 0.86 },
+    vignette: { strength: 0.95, smoothness: 0.65 },
+    ambientOcclusion: { enabled: true },
+  });
+  const utahReferencePreset = environment.customRenderPresets?.find(
+    (preset) => preset.id === "utah-forge-reference-cinematic-dark",
   );
-  expect(environment.defaultVisibleLayers).toEqual(
-    expect.arrayContaining([
-      "terrain",
-      "transport-roads",
-      "hydrography-streams",
-      "hydrography-lakes",
-    ]),
-  );
+  expect(utahReferencePreset).toMatchObject({
+    label: "Utah FORGE Reference Cinematic Dark",
+    source: "user",
+    scenePatch: {
+      background: "#383838",
+      exposure: 1.08,
+      fog: { enabled: true, color: "#383838", density: 0.00008 },
+      bloom: { strength: 0, radius: 0.55, threshold: 0.86 },
+      vignette: { strength: 0.95, smoothness: 0.65 },
+      ambientOcclusion: { enabled: true },
+    },
+  });
   for (const path of [
     `${PUBLIC_CONTEXT_DIR}/terrain_public_context_1000m.tif`,
     `${PUBLIC_CONTEXT_DIR}/roads.geojson`,
@@ -1117,47 +2607,154 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
   );
   expect(publicContextManifest.targetCrs).toBe("EPSG:26912");
   expect(publicContextManifest.sourceBounds.easting_m).toEqual([
-    -356385.9,
-    1039320.6,
+    -356385.9, 1039320.6,
   ]);
   expect(publicContextManifest.sourceBounds.northing_m).toEqual([
-    3703652,
-    4843097,
+    3703652, 4843097,
   ]);
   expect(publicContextManifest.terrain.resolutionM).toBe(1000);
   expect(publicContextManifest.terrain.width).toBeGreaterThan(1000);
   expect(publicContextManifest.terrain.height).toBeGreaterThan(900);
-  expect(publicContextManifest.vectors.roads.renderFeatureCount).toBeGreaterThan(0);
-  expect(publicContextManifest.vectors.streams.renderFeatureCount).toBeGreaterThan(
-    0,
-  );
+  expect(
+    publicContextManifest.vectors.roads.renderFeatureCount,
+  ).toBeGreaterThan(0);
+  expect(
+    publicContextManifest.vectors.streams.renderFeatureCount,
+  ).toBeGreaterThan(0);
   expect(
     publicContextManifest.vectors.waterbodies.renderFeatureCount,
   ).toBeGreaterThan(0);
-  expect(environment.layerStyles["utah-forge-phase3-working-area"]).toMatchObject({
+  expect(
+    environment.layerStyles["utah-forge-phase3-working-area"],
+  ).toMatchObject({
     color: "#ffffff",
     opacity: 0.92,
     lineWidth: 2.4,
     affectedByFog: false,
   });
-  expect(environment.layerStyles["utah-forge-scene-section-planes"]).toMatchObject({
+  expect(
+    environment.layerStyles["utah-forge-scene-section-planes"],
+  ).toMatchObject({
     sceneSectionEnabled: false,
     sceneSectionMode: "cutaway",
-    sceneSectionTargetScope: "all-visible",
+    sceneSectionTargetScope: "selected-targets",
   });
   expect(
     environment.layerStyles["utah-forge-scene-section-planes"]
       .sceneSectionTargetLayerIds,
-  ).toEqual(
-    expect.arrayContaining([
-      "utah-forge-mt-resistivity-volume",
-      "utah-forge-mt-resistivity-full-density",
-    ]),
-  );
-  expect(environment.layerStyles["utah-forge-mt-resistivity-volume"]).toMatchObject({
+  ).toEqual(["utah-forge-mt-resistivity-volume"]);
+  expect(
+    environment.layerStyles["utah-forge-mt-resistivity-volume"],
+  ).toMatchObject({
     scalarVolumeProductId: "mt-resistivity-forge-focused-volume",
     scalarVolumeRenderMode: "raymarch",
     scalarVolumeMaskVisible: true,
+  });
+  const mtFullDensityStyle =
+    environment.layerStyles["utah-forge-mt-resistivity-full-density"];
+  expect(mtFullDensityStyle).toMatchObject({
+    opacity: 0.3,
+    pointSizePx: 1,
+    scalarBlendMin: 0.139879,
+    scalarBlendMax: 3.937122,
+    scalarDisplayMin: 0.139879,
+    scalarDisplayMax: 3.937122,
+    scalarFocusMin: -2,
+    scalarFocusMax: 4.5,
+    scalarContrast: 1.05,
+    scalarDistanceLightStrength: 0.35,
+  });
+  expect(mtFullDensityStyle["scalarInclusionMode"]).toBeUndefined();
+  const thresholdedPages = [
+    ["04_untitled", 2.694444193332294, 4.5, 3.619791464880117, 4.5],
+    ["05_untitled", 3.0555553761897336, 4.5, 3.0555553761897336, 4.5],
+    [
+      "06_untitled",
+      1.3177084813101363,
+      2.2656248520231967,
+      1.3177084813101363,
+      2.2656248520231967,
+    ],
+  ] as const;
+  for (const [
+    pageId,
+    focusMin,
+    focusMax,
+    blendMin,
+    blendMax,
+  ] of thresholdedPages) {
+    const pageSpec = readJsonFile<{
+      layerOverrides?: Record<string, Record<string, unknown>>;
+    }>(`projects/utah-forge/pages/${pageId}.json`);
+    const override =
+      pageSpec.layerOverrides?.["utah-forge-mt-resistivity-full-density"];
+    expect(override).toMatchObject({
+      scalarFocusMin: focusMin,
+      scalarFocusMax: focusMax,
+      scalarBlendMin: blendMin,
+      scalarBlendMax: blendMax,
+      scalarInclusionMode: "thresholded",
+    });
+    expect(override?.opacity).toBeUndefined();
+    expect(override?.pointSizePx).toBeUndefined();
+  }
+  for (const pageId of ["08_untitled"]) {
+    const pageSpec = readJsonFile<{
+      layerOverrides?: Record<string, Record<string, unknown>>;
+    }>(`projects/utah-forge/pages/${pageId}.json`);
+    expect(
+      pageSpec.layerOverrides?.["utah-forge-mt-resistivity-full-density"],
+    ).toBeUndefined();
+  }
+  const page05Spec = readJsonFile<{
+    camera: { position: number[] };
+    dynamicCamera?: Record<string, unknown>;
+  }>("projects/utah-forge/pages/05_untitled.json");
+  expect(page05Spec.camera.position).toEqual([
+    -28879.73795742467, -32469.208165290154, 11845.116116638794,
+  ]);
+  expect(page05Spec.dynamicCamera).toMatchObject({
+    orbitSpeedDegPerSec: 4,
+    orbitRadius: 34868,
+    pathAwareBlend: false,
+  });
+  for (const pageId of ["04_untitled", "06_untitled"]) {
+    const pageSpec = readJsonFile<{
+      layerOverrides?: Record<string, Record<string, unknown>>;
+    }>(`projects/utah-forge/pages/${pageId}.json`);
+    expect(
+      pageSpec.layerOverrides?.["utah-forge-phase3-seismic-browser"],
+    ).toMatchObject({
+      opacity: 0.42,
+      seismicProductId: "gdr-1015-forge3d-velo5d-float-01312018",
+      seismicProductVisibility: {
+        "gdr-1015-forge3d-velo5d-float-01312018": true,
+      },
+      seismicRenderMode: "raymarch",
+      seismicSliceAxis: "inline",
+      seismicSliceThroughVolume: false,
+      seismicColormap: "velocity",
+    });
+  }
+  const volumeOverviewPage = readJsonFile<{
+    layerOverrides?: Record<string, Record<string, unknown>>;
+  }>("projects/utah-forge/pages/12_untitled.json");
+  expect(
+    volumeOverviewPage.layerOverrides?.[
+      "utah-forge-mt-resistivity-full-density"
+    ],
+  ).toMatchObject({
+    opacity: 0.48,
+    pointSizePx: 1.25,
+    scalarInclusionMode: "all-valid",
+  });
+  expect(
+    volumeOverviewPage.layerOverrides?.["utah-forge-mt-resistivity-volume"],
+  ).toMatchObject({
+    opacity: 0.28,
+    scalarVolumeOpacity: 0.28,
+    scalarVolumeDensity: 0.42,
+    scalarVolumeSampleSteps: 96,
   });
   const mtVolumeManifest = readJsonFile<{
     schema: string;
@@ -1169,7 +2766,11 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
     }>;
     thresholdSurfaces: {
       file: string;
-      surfaces: Array<{ id: string; thresholdOhmM: number; meshRange: unknown }>;
+      surfaces: Array<{
+        id: string;
+        thresholdOhmM: number;
+        meshRange: unknown;
+      }>;
     };
   }>(MT_VOLUME_MANIFEST_PATH);
   expect(mtVolumeManifest.schema).toBe("geosee.scalar-volume.v1");
@@ -1181,7 +2782,10 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
   );
   for (const product of mtVolumeManifest.products) {
     expect(product.classification).toContain("source-derived");
-    const voxelCount = product.dimensions.reduce((acc, value) => acc * value, 1);
+    const voxelCount = product.dimensions.reduce(
+      (acc, value) => acc * value,
+      1,
+    );
     const volumePath = resolve(
       process.cwd(),
       "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume",
@@ -1203,7 +2807,9 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
     "threshold_surfaces/mt_threshold_surfaces_mesh_preview.json",
   );
   expect(mtVolumeManifest.thresholdSurfaces.surfaces).toHaveLength(3);
-  expect(mtVolumeManifest.thresholdSurfaces.surfaces.map((surface) => surface.id)).toEqual(
+  expect(
+    mtVolumeManifest.thresholdSurfaces.surfaces.map((surface) => surface.id),
+  ).toEqual(
     expect.arrayContaining([
       "conductive-le-10-ohm-m",
       "conductive-le-30-ohm-m",
@@ -1211,7 +2817,9 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
     ]),
   );
   const thresholdMesh = readJsonFile<{
-    processing: { thresholdSurfaces: Array<{ id: string; meshRange: unknown }> };
+    processing: {
+      thresholdSurfaces: Array<{ id: string; meshRange: unknown }>;
+    };
     vertices: number[];
     indices: number[];
   }>(MT_THRESHOLD_SURFACES_PATH);
@@ -1245,14 +2853,18 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
     ["hydrography-streams", "data/hydrography_streams.geojson"],
     ["hydrography-lakes", "data/hydrography_lakes.geojson"],
   ] as const) {
-    const layer = woodjamProject.layers.find((candidate) => candidate.id === id);
+    const layer = woodjamProject.layers.find(
+      (candidate) => candidate.id === id,
+    );
     expect(Object.values(layer?.files ?? {})).toContain(file);
     expect(layer?.metadata?.geoTransform).toBeUndefined();
   }
   const projectProductLabels =
-    (seismicLayer?.metadata?.seismicProducts as Array<{
-      label?: string;
-    }> | undefined) ?? [];
+    (seismicLayer?.metadata?.seismicProducts as
+      | Array<{
+          label?: string;
+        }>
+      | undefined) ?? [];
   for (const product of projectProductLabels) {
     expect(product.label ?? "").not.toMatch(/Forge\s*3D|Forge3d/i);
   }
@@ -1266,10 +2878,20 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
       sourceSubmission: string;
       surveyKind: string;
       productKind: string;
-      amplitudeStats?: { min?: number; max?: number; p02?: number; p98?: number };
+      amplitudeStats?: {
+        min?: number;
+        max?: number;
+        p02?: number;
+        p98?: number;
+      };
       sections: Array<{
         amplitudeFile: string;
-        amplitudeStats?: { min?: number; max?: number; p02?: number; p98?: number };
+        amplitudeStats?: {
+          min?: number;
+          max?: number;
+          p02?: number;
+          p98?: number;
+        };
       }>;
       raymarchVolume?: { file: string; dimensions: number[] } | null;
       provenance?: Record<string, unknown>;
@@ -1313,11 +2935,25 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
   expect(manifest.navigation.pointCount).toBeGreaterThan(1_000);
   expect(manifest.crs.primarySourceCrs).toContain("EPSG:26912");
   expect(manifest.crs.legacySourceCrs).toContain("EPSG:32043");
-  expect(manifest.products.some((product) => product.surveyKind === "3d")).toBe(true);
-  expect(manifest.products.some((product) => product.surveyKind === "legacy-2d")).toBe(true);
-  expect(manifest.products.some((product) => product.sourceSubmission === "GDR 1015")).toBe(true);
-  expect(manifest.products.some((product) => product.sourceSubmission === "GDR 1141")).toBe(true);
-  expect(manifest.products.some((product) => product.productKind === "velocity")).toBe(true);
+  expect(manifest.products.some((product) => product.surveyKind === "3d")).toBe(
+    true,
+  );
+  expect(
+    manifest.products.some((product) => product.surveyKind === "legacy-2d"),
+  ).toBe(true);
+  expect(
+    manifest.products.some(
+      (product) => product.sourceSubmission === "GDR 1015",
+    ),
+  ).toBe(true);
+  expect(
+    manifest.products.some(
+      (product) => product.sourceSubmission === "GDR 1141",
+    ),
+  ).toBe(true);
+  expect(
+    manifest.products.some((product) => product.productKind === "velocity"),
+  ).toBe(true);
   expect(
     manifest.products.filter((product) => Boolean(product.raymarchVolume)),
   ).toHaveLength(4);
@@ -1457,7 +3093,9 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
       ).toBe(true);
     }
     if (product.raymarchVolume) {
-      expect(product.raymarchVolume.dimensions.every((dim) => dim > 1)).toBe(true);
+      expect(product.raymarchVolume.dimensions.every((dim) => dim > 1)).toBe(
+        true,
+      );
       expect(
         existsSync(
           resolve(
@@ -1471,16 +3109,21 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
   }
 
   const navigation = readJsonFile<{
-    features: Array<{ geometry?: { type?: string }; properties?: { role?: string } }>;
+    features: Array<{
+      geometry?: { type?: string };
+      properties?: { role?: string };
+    }>;
   }>(SEISMIC_NAVIGATION_PATH);
   expect(navigation.features.length).toBeGreaterThan(1_000);
   expect(
-    navigation.features.filter((feature) => feature.properties?.role === "source")
-      .length,
+    navigation.features.filter(
+      (feature) => feature.properties?.role === "source",
+    ).length,
   ).toBeGreaterThan(500);
   expect(
-    navigation.features.filter((feature) => feature.properties?.role === "receiver")
-      .length,
+    navigation.features.filter(
+      (feature) => feature.properties?.role === "receiver",
+    ).length,
   ).toBeGreaterThan(400);
   expect(
     navigation.features.filter(
@@ -1527,7 +3170,9 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
       | undefined
   )?.find((product) => product.id === "gdr-1015-forge3d-velo5d-float-01312018");
   expect(projectVelocityProduct?.amplitudeStats?.p98).toBeGreaterThan(5_000);
-  expect(projectVelocityProduct?.raymarchVolume?.dimensions).toEqual([19, 19, 64]);
+  expect(projectVelocityProduct?.raymarchVolume?.dimensions).toEqual([
+    19, 19, 64,
+  ]);
   const inventory = readJsonFile<{
     normalization: { skippedRawGatherFileCount: number };
   }>(SEISMIC_INVENTORY_PATH);
@@ -1581,7 +3226,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   await expect(page.locator("body")).toContainText("Ray steps");
   await expect(page.locator("body")).toContainText("Navigation");
   await expect(page.locator("body")).toContainText("Audience");
-  await expect(page.locator("body")).toContainText("public geothermal demo data");
+  await expect(page.locator("body")).toContainText(
+    "public geothermal demo data",
+  );
   await expect(page.locator("body")).toContainText(
     "not a mineral resource estimate",
   );
@@ -1597,7 +3244,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   await expect(page.locator("body")).toContainText(
     "3D velocity model (time domain)",
   );
-  await expect(page.locator("body")).toContainText("2D / legacy section theatre");
+  await expect(page.locator("body")).toContainText(
+    "2D / legacy section theatre",
+  );
   await expect(page.locator("body")).toContainText("Processing comparison");
   await expect(page.locator("body")).toContainText("Display cleanup");
   await expect(page.locator("body")).toContainText("Survey geometry");
@@ -1610,7 +3259,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
     "all-visible",
   );
   await expect(page.getByTestId("seismic-audience-mode-select")).toBeVisible();
-  await expect(page.getByTestId("seismic-audience-preset-select")).toBeVisible();
+  await expect(
+    page.getByTestId("seismic-audience-preset-select"),
+  ).toBeVisible();
 
   await expect
     .poll(() =>
@@ -1661,9 +3312,7 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       }
       return summaries;
     });
-  expect(capabilityAncestorSummaries).not.toContain(
-    "Seismic browser seismic",
-  );
+  expect(capabilityAncestorSummaries).not.toContain("Seismic browser seismic");
   expect(capabilityAncestorSummaries).not.toContain("Appearance");
   expect(capabilityAncestorSummaries).not.toContain("Seismic browser");
   await expect(page.locator("body")).toContainText("Product visibility");
@@ -1721,7 +3370,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       visibleProductIds: [],
     });
 
-  await page.getByTestId("seismic-product-row-gdr-1141-forge3d-pstm-stack-enh").click();
+  await page
+    .getByTestId("seismic-product-row-gdr-1141-forge3d-pstm-stack-enh")
+    .click();
   await expect(page.getByTestId("seismic-product-select")).toHaveValue(
     "gdr-1141-forge3d-pstm-stack-enh",
   );
@@ -1796,7 +3447,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       removeBackground: true,
     });
   await expect
-    .poll(async () => (await seismicSceneState(page)).firstVisibleSectionMinAlpha)
+    .poll(
+      async () => (await seismicSceneState(page)).firstVisibleSectionMinAlpha,
+    )
     .toBeLessThan(0.5);
 
   await page.getByTestId("seismic-navigation-visible").setChecked(false);
@@ -1856,7 +3509,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
     el.dispatchEvent(new Event("input", { bubbles: true }));
   });
   await expect
-    .poll(async () => (await seismicSceneState(page)).firstVisibleVolumeUniforms)
+    .poll(
+      async () => (await seismicSceneState(page)).firstVisibleVolumeUniforms,
+    )
     .toMatchObject({
       amplitudeGamma: 1.35,
       sampleSteps: 128,
@@ -1879,14 +3534,16 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
     valueSetter?.call(el, "-2400");
     el.dispatchEvent(new Event("input", { bubbles: true }));
   });
-  await expect.poll(() => sceneSectionState(page)).toMatchObject({
-    helperPickables: 2,
-    firstVisibleVolumeSectionUniforms: {
-      enabled: 1,
-      mode: 0,
-      planeCount: 1,
-    },
-  });
+  await expect
+    .poll(() => sceneSectionState(page))
+    .toMatchObject({
+      helperPickables: 2,
+      firstVisibleVolumeSectionUniforms: {
+        enabled: 1,
+        mode: 0,
+        planeCount: 1,
+      },
+    });
   let sectionState = await sceneSectionState(page);
   expect(sectionState.firstVisibleVolumeSectionUniforms?.positions?.[0]).toBe(
     -2400,
@@ -1939,18 +3596,22 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   );
   await expect(sectionLegend).toBeVisible();
   await expect(sectionLegend).toContainText("Cutaway clip");
-  await expect(page.getByTestId("scene-section-legend-z-enabled")).toBeChecked();
+  await expect(
+    page.getByTestId("scene-section-legend-z-enabled"),
+  ).toBeChecked();
 
   await page.getByTestId("scene-section-legend-x-enabled").setChecked(true);
   await page.getByTestId("scene-section-legend-y-enabled").setChecked(true);
-  await expect.poll(() => sceneSectionState(page)).toMatchObject({
-    helperPickables: 6,
-    firstVisibleVolumeSectionUniforms: {
-      enabled: 1,
-      mode: 0,
-      planeCount: 3,
-    },
-  });
+  await expect
+    .poll(() => sceneSectionState(page))
+    .toMatchObject({
+      helperPickables: 6,
+      firstVisibleVolumeSectionUniforms: {
+        enabled: 1,
+        mode: 0,
+        planeCount: 3,
+      },
+    });
   sectionState = await sceneSectionState(page);
   expect([...sectionState.helperPickableAxes].sort()).toEqual([
     "x",
@@ -1960,11 +3621,13 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
     "z",
     "z",
   ]);
-  expect(sectionState.helperPickableKinds.every((kind) => kind === "push-pull")).toBe(
-    true,
-  );
+  expect(
+    sectionState.helperPickableKinds.every((kind) => kind === "push-pull"),
+  ).toBe(true);
   expect(sectionState.mtClippedMaterials).toBeGreaterThan(0);
-  await page.getByTestId("scene-section-target-scope").selectOption("all-visible");
+  await page
+    .getByTestId("scene-section-target-scope")
+    .selectOption("all-visible");
   await expect(page.getByTestId("scene-section-target-scope")).toHaveValue(
     "all-visible",
   );
@@ -2011,10 +3674,16 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
     );
   }
 
-  await page.getByTestId("seismic-product-row-gdr-1015-forge2d-301-migr-depth").click();
-  await expect(page.getByTestId("seismic-render-mode-select")).toHaveValue("slice");
+  await page
+    .getByTestId("seismic-product-row-gdr-1015-forge2d-301-migr-depth")
+    .click();
+  await expect(page.getByTestId("seismic-render-mode-select")).toHaveValue(
+    "slice",
+  );
   await expect(page.getByTestId("seismic-render-mode-select")).toBeDisabled();
-  await expect(page.getByTestId("seismic-slice-axis-select")).toHaveValue("line");
+  await expect(page.getByTestId("seismic-slice-axis-select")).toHaveValue(
+    "line",
+  );
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
@@ -2053,9 +3722,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   await expect(page.getByTestId("seismic-audience-mode-select")).toHaveValue(
     "technical",
   );
-  await expect(page.getByTestId("seismic-comparison-product-select")).toHaveValue(
-    "gdr-1141-line-301-psdm-unenh",
-  );
+  await expect(
+    page.getByTestId("seismic-comparison-product-select"),
+  ).toHaveValue("gdr-1141-line-301-psdm-unenh");
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
@@ -2070,7 +3739,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       visibleSectionAxes: ["line"],
     });
 
-  await page.getByTestId("seismic-audience-mode-select").selectOption("data-room");
+  await page
+    .getByTestId("seismic-audience-mode-select")
+    .selectOption("data-room");
   await expect(page.getByTestId("seismic-data-room-summary")).toContainText(
     "Products: 34",
   );
@@ -2123,7 +3794,10 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       });
     if (productId === "gdr-1015-forge3d-velo5d-float-01312018") {
       await expect
-        .poll(async () => (await seismicSceneState(page)).firstVisibleVolumeUniforms)
+        .poll(
+          async () =>
+            (await seismicSceneState(page)).firstVisibleVolumeUniforms,
+        )
         .toMatchObject({ colormap: 2 });
       await expect(
         page
@@ -2163,7 +3837,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
 
   const firstRaymarchProductId = "gdr-1141-forge3d-ani-psdm-stack-unenh";
   await revealSeismicCapabilityProduct(page, firstRaymarchProductId);
-  await page.getByTestId(`seismic-capability-slice-${firstRaymarchProductId}`).click();
+  await page
+    .getByTestId(`seismic-capability-slice-${firstRaymarchProductId}`)
+    .click();
   await page
     .getByTestId(`seismic-capability-slice-axis-${firstRaymarchProductId}`)
     .selectOption("inline");
@@ -2188,7 +3864,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
     .poll(async () => (await seismicSceneState(page)).capabilityPresetId)
     .toBe(`${firstRaymarchProductId}-slice`);
 
-  await page.getByTestId(`seismic-capability-sync-${firstRaymarchProductId}`).click();
+  await page
+    .getByTestId(`seismic-capability-sync-${firstRaymarchProductId}`)
+    .click();
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
@@ -2202,7 +3880,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       sliceThroughVolume: true,
     });
   await page
-    .getByTestId(`seismic-capability-remove-background-${firstRaymarchProductId}`)
+    .getByTestId(
+      `seismic-capability-remove-background-${firstRaymarchProductId}`,
+    )
     .setChecked(true);
   await page
     .getByTestId(`seismic-capability-amplitude-gamma-${firstRaymarchProductId}`)
@@ -2217,7 +3897,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       el.dispatchEvent(new Event("change", { bubbles: true }));
     });
   await page
-    .getByTestId(`seismic-capability-background-cutoff-${firstRaymarchProductId}`)
+    .getByTestId(
+      `seismic-capability-background-cutoff-${firstRaymarchProductId}`,
+    )
     .evaluate((input) => {
       const el = input as HTMLInputElement;
       const valueSetter = Object.getOwnPropertyDescriptor(
@@ -2242,7 +3924,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       el.dispatchEvent(new Event("change", { bubbles: true }));
     });
   await expect
-    .poll(async () => (await seismicSceneState(page)).firstVisibleVolumeUniforms)
+    .poll(
+      async () => (await seismicSceneState(page)).firstVisibleVolumeUniforms,
+    )
     .toMatchObject({
       amplitudeGamma: 0.65,
       backgroundCutoff: 0.28,
@@ -2302,7 +3986,9 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       comparisonMode: "overlay",
     });
 
-  await page.getByTestId("seismic-comparison-mode-select").selectOption("side-by-side");
+  await page
+    .getByTestId("seismic-comparison-mode-select")
+    .selectOption("side-by-side");
   await page.getByTestId("seismic-comparison-spacing").evaluate((input) => {
     const el = input as HTMLInputElement;
     const valueSetter = Object.getOwnPropertyDescriptor(
@@ -2336,9 +4022,11 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   await expect
     .poll(async () => {
       const state = await seismicSceneState(page);
-      return state.visibleNavigationByRole.sources > 0 &&
+      return (
+        state.visibleNavigationByRole.sources > 0 &&
         state.visibleNavigationByRole.receivers > 0 &&
-        state.visibleNavigationByRole.lines > 0;
+        state.visibleNavigationByRole.lines > 0
+      );
     })
     .toBe(true);
   await page.getByTestId("seismic-navigation-role-sources").setChecked(false);
@@ -2377,6 +4065,918 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   expect(consoleErrors).toEqual([]);
 });
 
+test("Utah FORGE working area focus clips outside context with page-local controls", async ({
+  page,
+}) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  page.on("pageerror", (error) => {
+    consoleErrors.push(error.message);
+  });
+
+  await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
+  await hidePublicContextLayers(page);
+  await expect(page.locator("canvas")).toHaveCount(1);
+  await selectForgePageRow(page, "01.");
+  await page.getByRole("button", { name: "FORGE Data" }).click();
+  await page.getByRole("button", { name: "Working area" }).click();
+  await page
+    .getByRole("button", { name: "Scene section planes" })
+    .click()
+    .catch(() => {});
+  await page.locator("details").evaluateAll((details) => {
+    for (const detail of details) {
+      (detail as HTMLDetailsElement).open = true;
+    }
+  });
+
+  await expect(page.getByTestId("working-area-focus-container")).toBeVisible();
+  await expect(page.getByTestId("working-area-focus-enabled")).toBeVisible();
+  await expect(page.getByTestId("working-area-focus-mode")).toHaveValue(
+    "outside-context",
+  );
+  await expect(
+    page.getByTestId(
+      "working-area-focus-opacity-utah-forge-mt-resistivity-full-density",
+    ),
+  ).toBeVisible();
+
+  await page.getByTestId("working-area-focus-enabled").setChecked(true);
+  await page
+    .getByTestId("working-area-focus-mode")
+    .selectOption("outside-context");
+  await page
+    .getByTestId(
+      "working-area-focus-opacity-utah-forge-mt-resistivity-full-density",
+    )
+    .evaluate((input) => {
+      const el = input as HTMLInputElement;
+      const valueSetter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      valueSetter?.call(el, "0.15");
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+  await expect
+    .poll(() => workingAreaFocusSceneState(page))
+    .toMatchObject({
+      focus: {
+        enabled: true,
+        mode: "outside-context",
+        boundsLayerId: "utah-forge-phase3-working-area",
+        targetLayerIds: expect.arrayContaining([
+          "utah-forge-mt-resistivity-full-density",
+          "utah-forge-mt-resistivity-volume",
+          "utah-forge-phase3-seismic-browser",
+        ]),
+        outsideOpacityByLayerId: {
+          "utah-forge-mt-resistivity-full-density": 0.15,
+        },
+      },
+    });
+  let focusState = await workingAreaFocusSceneState(page);
+  expect(
+    focusState.layers["utah-forge-mt-resistivity-volume"].firstUniformEnabled,
+  ).toBe(1);
+  expect(
+    focusState.layers["utah-forge-mt-resistivity-volume"]
+      .firstUniformOutsideOpacity,
+  ).toBeCloseTo(0.15, 2);
+  expect(
+    focusState.layers["utah-forge-phase3-seismic-browser"].firstUniformEnabled,
+  ).toBe(1);
+
+  await page.getByTestId("working-area-focus-mode").selectOption("inside-only");
+  await expect
+    .poll(async () => {
+      const state = await workingAreaFocusSceneState(page);
+      return state.focus?.outsideOpacityByLayerId[
+        "utah-forge-mt-resistivity-full-density"
+      ];
+    })
+    .toBe(0);
+  focusState = await workingAreaFocusSceneState(page);
+  expect(
+    focusState.layers["utah-forge-mt-resistivity-volume"]
+      .firstUniformOutsideOpacity,
+  ).toBe(0);
+
+  await page.getByTestId("scene-section-enabled").setChecked(true);
+  await page.getByTestId("scene-section-plane-z-enabled").setChecked(true);
+  await expect.poll(() => sceneSectionState(page)).not.toBeNull();
+  await expect
+    .poll(async () => {
+      const state = await workingAreaFocusSceneState(page);
+      return state.layers["utah-forge-mt-resistivity-volume"]
+        .firstUniformEnabled;
+    })
+    .toBe(1);
+
+  const globalSettingsRow = page
+    .locator('[data-dev-note*="Global Settings is an editor-only pseudo-page"]')
+    .filter({ hasText: "Global Settings" });
+  await expect(globalSettingsRow).toHaveCount(1);
+  await globalSettingsRow.click();
+  await expect(
+    page.getByTestId("working-area-focus-enabled"),
+  ).not.toBeChecked();
+  await selectForgePageRow(page, "01.");
+  await expect(page.getByTestId("working-area-focus-enabled")).toBeChecked();
+
+  const environment = readJsonFile<Record<string, unknown>>(
+    UTAH_FORGE_ENVIRONMENT_PATH,
+  );
+  const basePage = readJsonFile<Record<string, unknown>>(
+    UTAH_FORGE_PAGE06_PATH,
+  );
+  const baseOverrides =
+    typeof basePage.layerOverrides === "object" &&
+    basePage.layerOverrides !== null
+      ? (basePage.layerOverrides as Record<string, unknown>)
+      : {};
+  const focusedOverride = {
+    workingAreaFocusEnabled: true,
+    workingAreaFocusMode: "outside-context",
+    workingAreaFocusBoundsLayerId: "utah-forge-phase3-working-area",
+    workingAreaFocusTargetLayerIds: [
+      "utah-forge-mt-resistivity-full-density",
+      "utah-forge-mt-resistivity-volume",
+      "utah-forge-phase3-seismic-browser",
+    ],
+    workingAreaFocusOutsideOpacityByLayerId: {
+      "utah-forge-mt-resistivity-full-density": 0.15,
+      "utah-forge-mt-resistivity-volume": 0.15,
+      "utah-forge-phase3-seismic-browser": 0.15,
+    },
+    workingAreaFocusHelperVisible: true,
+  };
+  const unfocusedPage = {
+    ...basePage,
+    id: "working-area-focus-transition-from",
+    layerOverrides: {
+      ...baseOverrides,
+      "utah-forge-working-area-focus": {
+        ...focusedOverride,
+        workingAreaFocusEnabled: false,
+      },
+    },
+  };
+  const focusedPage = {
+    ...basePage,
+    id: "working-area-focus-transition-to",
+    layerOverrides: {
+      ...baseOverrides,
+      "utah-forge-working-area-focus": focusedOverride,
+    },
+  };
+  await runForgeDataTransitionProbe(
+    page,
+    environment,
+    unfocusedPage,
+    focusedPage,
+    1200,
+  );
+  await page.waitForTimeout(250);
+  const midTransitionFocus = await workingAreaFocusSceneState(page);
+  const midOutside =
+    midTransitionFocus.focus?.outsideOpacityByLayerId[
+      "utah-forge-mt-resistivity-volume"
+    ];
+  expect(midOutside).toBeGreaterThan(0.15);
+  expect(midOutside).toBeLessThan(1);
+  await expect
+    .poll(async () => {
+      const state = await workingAreaFocusSceneState(page);
+      return state.focus?.outsideOpacityByLayerId[
+        "utah-forge-mt-resistivity-volume"
+      ];
+    })
+    .toBeCloseTo(0.15, 2);
+
+  expect(consoleErrors).toEqual([]);
+});
+
+test("Utah FORGE topo editor exposes surface elevation coloring", async ({
+  page,
+}) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  page.on("pageerror", (error) => {
+    consoleErrors.push(error.message);
+  });
+
+  await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
+  await expect(page.locator("canvas")).toHaveCount(1);
+  await openForgeDataEditorContainers(page);
+
+  const globalSettingsRow = page
+    .locator('[data-dev-note*="Global Settings is an editor-only pseudo-page"]')
+    .filter({ hasText: "Global Settings" });
+  await expect(globalSettingsRow).toHaveCount(1);
+  await globalSettingsRow.click();
+  await openForgeDataEditorContainers(page);
+  await page.locator("details").evaluateAll((details) => {
+    for (const detail of details) {
+      (detail as HTMLDetailsElement).open = true;
+    }
+  });
+
+  await expect(page.getByTestId("topo-material-preset")).toContainText(
+    "Surface elevation",
+  );
+  await page.getByTestId("topo-material-preset").selectOption("soft-topo");
+  await expect
+    .poll(() =>
+      terrainMaterialSceneState(page).then(
+        (state) => state.surfaceElevationEnabled,
+      ),
+    )
+    .toBe(0);
+  const beforeCanvas = await page.locator("canvas").screenshot();
+
+  await page
+    .getByTestId("topo-material-preset")
+    .selectOption("surface-elevation");
+  await expect(
+    page.getByTestId("topo-surface-elevation-enabled"),
+  ).toBeChecked();
+  await expect(page.getByTestId("topo-surface-elevation-min")).toHaveValue(
+    "1500",
+  );
+  await expect(page.getByTestId("topo-surface-elevation-max")).toHaveValue(
+    "3500",
+  );
+  await expect
+    .poll(() => terrainMaterialSceneState(page))
+    .toMatchObject({
+      materialCount: 1,
+      surfaceElevationEnabled: 1,
+      surfaceElevationMinM: 1500,
+      surfaceElevationMaxM: 3500,
+      surfaceElevationReverse: 0,
+      elevationOffsetM: 0,
+      surfaceElevationColors: [
+        "#5147b8",
+        "#2e8fd8",
+        "#4fc3c7",
+        "#93d66b",
+        "#fff24d",
+      ],
+      surfaceElevationPositions: [0, 0.25, 0.5, 0.75, 1],
+      surfaceElevationMidpoints: [0.5, 0.5, 0.5, 0.5],
+      surfaceElevationTransitionSoftness: 1,
+      surfaceElevationColorBlend: 1,
+    });
+
+  const legend = page.getByTestId("surface-elevation-legend");
+  await expect(legend).toBeVisible();
+  await expect(legend).toContainText("Surface Elevation (m)");
+  for (const label of ["1500", "2000", "2500", "3000", "3500"]) {
+    await expect(legend).toContainText(label);
+  }
+  const enabledCanvas = await page.locator("canvas").screenshot();
+  expect(changedByteCount(beforeCanvas, enabledCanvas)).toBeGreaterThan(1000);
+
+  await page.getByTestId("topo-surface-elevation-reverse").setChecked(true);
+  await expect
+    .poll(() =>
+      terrainMaterialSceneState(page).then(
+        (state) => state.surfaceElevationReverse,
+      ),
+    )
+    .toBe(1);
+  await expect(page.getByTestId("surface-elevation-legend-ramp")).toHaveCSS(
+    "background-image",
+    /#fff24d|rgb\(255,\s*242,\s*77\)/,
+  );
+
+  await page.getByTestId("topo-material-preset").selectOption("soft-topo");
+  await expect
+    .poll(() =>
+      terrainMaterialSceneState(page).then(
+        (state) => state.surfaceElevationEnabled,
+      ),
+    )
+    .toBe(0);
+  await expect(page.getByTestId("surface-elevation-legend")).toHaveCount(0);
+  const restoredCanvas = await page.locator("canvas").screenshot();
+  expect(restoredCanvas.length).toBeGreaterThan(1000);
+
+  expect(consoleErrors).toEqual([]);
+});
+
+test("Utah FORGE topo editor exposes surface elevation gradient controls", async ({
+  page,
+}) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  page.on("pageerror", (error) => {
+    consoleErrors.push(error.message);
+  });
+  const setInputValue = async (locator: Locator, value: string) => {
+    await locator.evaluate((input, nextValue) => {
+      const el = input as HTMLInputElement;
+      const valueSetter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      valueSetter?.call(el, nextValue);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }, value);
+  };
+
+  await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
+  await expect(page.locator("canvas")).toHaveCount(1);
+  await openForgeDataEditorContainers(page);
+
+  const globalSettingsRow = page
+    .locator('[data-dev-note*="Global Settings is an editor-only pseudo-page"]')
+    .filter({ hasText: "Global Settings" });
+  await expect(globalSettingsRow).toHaveCount(1);
+  await globalSettingsRow.click();
+  await openForgeDataEditorContainers(page);
+  await page.locator("details").evaluateAll((details) => {
+    for (const detail of details) {
+      (detail as HTMLDetailsElement).open = true;
+    }
+  });
+
+  await page
+    .getByTestId("topo-material-preset")
+    .selectOption("surface-elevation");
+  await expect(page.getByTestId("topo-surface-gradient-rail")).toBeVisible();
+  await expect(
+    page.locator('[data-testid^="topo-surface-gradient-stop-"]'),
+  ).toHaveCount(5);
+  await expect(
+    page.locator('[data-testid^="topo-surface-gradient-midpoint-"]'),
+  ).toHaveCount(4);
+  await expect(page.getByTestId("topo-surface-elevation-softness")).toHaveValue(
+    "1",
+  );
+  await expect(
+    page.getByTestId("topo-surface-elevation-color-blend"),
+  ).toHaveValue("1");
+
+  const beforeLegendBackground = await page
+    .getByTestId("surface-elevation-legend-ramp")
+    .evaluate((el) => getComputedStyle(el).backgroundImage);
+
+  await setInputValue(
+    page.getByTestId("topo-surface-elevation-position-1"),
+    "0.35",
+  );
+  await setInputValue(
+    page.getByTestId("topo-surface-elevation-midpoint-1"),
+    "0.25",
+  );
+  await setInputValue(
+    page.getByTestId("topo-surface-elevation-softness"),
+    "0.55",
+  );
+  await setInputValue(
+    page.getByTestId("topo-surface-elevation-color-blend"),
+    "0.65",
+  );
+
+  await expect
+    .poll(async () => {
+      const state = await terrainMaterialSceneState(page);
+      return {
+        position1: state.surfaceElevationPositions[1],
+        midpoint1: state.surfaceElevationMidpoints[1],
+        softness: state.surfaceElevationTransitionSoftness,
+        blend: state.surfaceElevationColorBlend,
+      };
+    })
+    .toMatchObject({
+      position1: 0.35,
+      midpoint1: 0.25,
+      softness: 0.55,
+      blend: 0.65,
+    });
+
+  const afterLegendBackground = await page
+    .getByTestId("surface-elevation-legend-ramp")
+    .evaluate((el) => getComputedStyle(el).backgroundImage);
+  expect(afterLegendBackground).not.toBe(beforeLegendBackground);
+
+  const canvas = await page.locator("canvas").screenshot();
+  expect(canvas.length).toBeGreaterThan(1000);
+  expect(consoleErrors).toEqual([]);
+});
+
+test("Utah FORGE topo editor exposes edge fade shape controls", async ({
+  page,
+}) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  page.on("pageerror", (error) => {
+    consoleErrors.push(error.message);
+  });
+  const setInputValue = async (locator: Locator, value: string) => {
+    await locator.evaluate((input, nextValue) => {
+      const el = input as HTMLInputElement;
+      const valueSetter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      valueSetter?.call(el, nextValue);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }, value);
+  };
+
+  await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
+  await expect(page.locator("canvas")).toHaveCount(1);
+  await openForgeDataEditorContainers(page);
+
+  const globalSettingsRow = page
+    .locator('[data-dev-note*="Global Settings is an editor-only pseudo-page"]')
+    .filter({ hasText: "Global Settings" });
+  await expect(globalSettingsRow).toHaveCount(1);
+  await globalSettingsRow.click();
+  await openForgeDataEditorContainers(page);
+  await page.locator("details").evaluateAll((details) => {
+    for (const detail of details) {
+      (detail as HTMLDetailsElement).open = true;
+    }
+  });
+
+  await expect(page.getByTestId("topo-edge-fade-shape")).toHaveValue(
+    "rounded-square",
+  );
+  await expect(page.getByTestId("topo-edge-fade-distance")).toHaveValue(
+    "25000",
+  );
+  await expect(page.getByTestId("topo-edge-fade-inset")).toHaveValue("0");
+  await expect(page.getByTestId("topo-edge-fade-corner-radius")).toHaveValue(
+    "55000",
+  );
+  await expect(page.getByText("Edge fade aware")).toBeVisible();
+  await expect(page.getByTestId("topo-graticule-edge-strength")).toHaveValue(
+    "1",
+  );
+  await expect(page.getByTestId("topo-graticule-edge-line-color")).toHaveValue(
+    "#ffffff",
+  );
+  await expect(page.getByTestId("topo-graticule-edge-label-color")).toHaveValue(
+    "#ffffff",
+  );
+  await expect(page.getByTestId("topo-graticule-edge-label-offset")).toHaveValue(
+    "90000",
+  );
+  await expect(page.getByTestId("topo-graticule-edge-label-gap")).toHaveValue(
+    "22000",
+  );
+  await expect
+    .poll(() => terrainMaterialSceneState(page))
+    .toMatchObject({
+      edgeFadeDistanceM: 25000,
+      edgeFadeShape: 1,
+      edgeFadeInsetM: 0,
+      edgeFadeCornerRadiusM: 55000,
+    });
+  await expect
+    .poll(() => topoGraticuleSceneState(page))
+    .toMatchObject({
+      firstLineEdgeEnabled: true,
+      firstLineEdgeStrength: 1,
+      firstLineEdgeShape: "rounded-square",
+      firstLineEdgeDistanceM: 25000,
+      firstLineEdgeLineColor: "#ffffff",
+      firstLabelColor: "#ffffff",
+    });
+
+  await page.getByTestId("topo-edge-fade-shape").selectOption("circle");
+  await setInputValue(page.getByTestId("topo-edge-fade-inset"), "50000");
+  await expect
+    .poll(() => terrainMaterialSceneState(page))
+    .toMatchObject({
+      edgeFadeShape: 2,
+      edgeFadeInsetM: 50000,
+    });
+  await expect
+    .poll(() => topoGraticuleSceneState(page))
+    .toMatchObject({
+      firstLineEdgeShape: "circle",
+    });
+
+  await page.getByTestId("topo-edge-fade-shape").selectOption("rounded-square");
+  await setInputValue(
+    page.getByTestId("topo-edge-fade-corner-radius"),
+    "30000",
+  );
+  await expect
+    .poll(() => terrainMaterialSceneState(page))
+    .toMatchObject({
+      edgeFadeShape: 1,
+      edgeFadeInsetM: 50000,
+      edgeFadeCornerRadiusM: 30000,
+    });
+  await expect
+    .poll(() => topoGraticuleSceneState(page))
+    .toMatchObject({
+      firstLineEdgeShape: "rounded-square",
+    });
+
+  const canvas = await page.locator("canvas").screenshot();
+  expect(canvas.length).toBeGreaterThan(1000);
+  expect(consoleErrors).toEqual([]);
+});
+
+test("Utah FORGE topo editor exposes circular clipping and graticule layer", async ({
+  page,
+}) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  page.on("pageerror", (error) => {
+    consoleErrors.push(error.message);
+  });
+
+  await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
+  await expect(page.locator("canvas")).toHaveCount(1);
+  await openForgeDataEditorContainers(page);
+
+  const globalSettingsRow = page
+    .locator('[data-dev-note*="Global Settings is an editor-only pseudo-page"]')
+    .filter({ hasText: "Global Settings" });
+  await expect(globalSettingsRow).toHaveCount(1);
+  await globalSettingsRow.click();
+  await openForgeDataEditorContainers(page);
+  await page.locator("details").evaluateAll((details) => {
+    for (const detail of details) {
+      (detail as HTMLDetailsElement).open = true;
+    }
+  });
+
+  const graticuleItem = forgeLayerItem(page, "Longitude / latitude grid");
+  await expect(graticuleItem).toBeVisible();
+  await setForgeLayerVisible(page, "Longitude / latitude grid", true);
+  await expect
+    .poll(() => topoGraticuleSceneState(page))
+    .toMatchObject({
+      layerVisible: true,
+      lineObjectCount: 4,
+      interiorLineObjectCount: 1,
+      dashedInteriorLineObjectCount: 1,
+      leaderLineObjectCount: 1,
+      dashedLeaderLineObjectCount: 1,
+    });
+  const enabledGraticule = await topoGraticuleSceneState(page);
+  expect(enabledGraticule.labelObjectCount).toBeGreaterThan(0);
+  expect(enabledGraticule.visibleLabelCount).toBeGreaterThan(0);
+  expect(enabledGraticule.firstLabelScaleX).toBeGreaterThan(0);
+  expect(enabledGraticule.interiorSegmentCount ?? 0).toBeGreaterThan(0);
+  expect(enabledGraticule.dashedInteriorSegmentCount ?? 0).toBeGreaterThan(0);
+  expect(enabledGraticule.leaderSegmentCount ?? 0).toBeGreaterThan(0);
+  expect(enabledGraticule.dashedLeaderSegmentCount ?? 0).toBeGreaterThan(0);
+  expect(enabledGraticule.graticuleInnerTrimInsideDistance).toBe(25000);
+  expect(enabledGraticule.graticuleLabelOffsetM).toBe(90000);
+  expect(enabledGraticule.graticuleLabelGapM).toBe(22000);
+  expect(enabledGraticule.visibleLabelWithoutLeaderCount).toBe(0);
+  expect(enabledGraticule.generatedBounds).not.toBeNull();
+  expect(enabledGraticule.terrainBounds).not.toBeNull();
+  expect(enabledGraticule.generatedBounds?.minX).toBeLessThan(
+    enabledGraticule.terrainBounds?.minX ?? -Infinity,
+  );
+  expect(enabledGraticule.generatedBounds?.maxX).toBeGreaterThan(
+    enabledGraticule.terrainBounds?.maxX ?? Infinity,
+  );
+  expect(enabledGraticule.generatedBounds?.minY).toBeLessThan(
+    enabledGraticule.terrainBounds?.minY ?? -Infinity,
+  );
+  expect(enabledGraticule.generatedBounds?.maxY).toBeGreaterThan(
+    enabledGraticule.terrainBounds?.maxY ?? Infinity,
+  );
+  expect(enabledGraticule.northLabelOutsideCount).toBeGreaterThan(0);
+  expect(enabledGraticule.westLabelOutsideCount).toBeGreaterThan(0);
+  expect(enabledGraticule.minLabelInsideDistance).toBeLessThan(-1000);
+  expect(enabledGraticule.maxLabelTangentErrorDeg).toBeLessThan(0.1);
+
+  const shapeSelect = page.getByTestId("public-surface-clip-shape").first();
+  await expect(shapeSelect).toHaveValue("circle");
+  const clippingDetails = page
+    .locator("details")
+    .filter({ hasText: "Topo map clipping" })
+    .first();
+  await clippingDetails
+    .locator('input[type="checkbox"]')
+    .first()
+    .setChecked(true);
+  await shapeSelect.selectOption("circle");
+  await expect
+    .poll(() => terrainMaterialSceneState(page))
+    .toMatchObject({
+      publicClipEnabled: 1,
+      publicClipShape: 1,
+    });
+  await expect
+    .poll(() =>
+      topoGraticuleSceneState(page).then(
+        (state) => state.firstLineClippingPlanes,
+      ),
+    )
+    .toBe(0);
+
+  const clippedCanvas = await page.locator("canvas").screenshot();
+  expect(clippedCanvas.length).toBeGreaterThan(1000);
+  expect(consoleErrors).toEqual([]);
+});
+
+test("Utah FORGE topo title block renders flat and exposes controls", async ({
+  page,
+}) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  page.on("pageerror", (error) => {
+    consoleErrors.push(error.message);
+  });
+
+  await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
+  await expect(page.locator("canvas")).toHaveCount(1);
+  await openForgeDataEditorContainers(page);
+
+  const globalSettingsRow = page
+    .locator('[data-dev-note*="Global Settings is an editor-only pseudo-page"]')
+    .filter({ hasText: "Global Settings" });
+  await expect(globalSettingsRow).toHaveCount(1);
+  await globalSettingsRow.click();
+  await openForgeDataEditorContainers(page);
+  await page.locator("details").evaluateAll((details) => {
+    for (const detail of details) {
+      (detail as HTMLDetailsElement).open = true;
+    }
+  });
+
+  await expect(page.locator("summary").filter({ hasText: "Title block" })).toBeVisible();
+  await expect(page.getByTestId("topo-map-branding-heading-size")).toHaveAttribute(
+    "max",
+    "240000",
+  );
+  await expect(
+    page.getByTestId("topo-map-branding-subheading-size"),
+  ).toHaveAttribute("max", "180000");
+  await expect(page.getByTestId("topo-map-branding-offset-x")).toHaveAttribute(
+    "min",
+    "-600000",
+  );
+  await expect(page.getByTestId("topo-map-branding-layout")).toHaveValue(
+    "horizontal",
+  );
+  await page.getByTestId("topo-map-branding-layout").selectOption("stacked");
+  await page.getByTestId("topo-map-branding-font-family").selectOption("sans");
+  await page.getByTestId("topo-map-branding-text-align").selectOption("center");
+  await expect(page.getByTestId("topo-map-branding-layout")).toHaveValue(
+    "stacked",
+  );
+
+  await page.evaluate(async () => {
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            applyEnvironment?: (env: Record<string, unknown>) => void;
+          };
+          camera?: {
+            position: { x: number; y: number; z: number };
+            lookAt: (x: number, y: number, z: number) => void;
+            updateMatrixWorld: (force?: boolean) => void;
+          };
+        };
+      }
+    ).__scene;
+    const env = (await fetch("/projects/utah-forge/environment.json").then((r) =>
+      r.json(),
+    )) as Record<string, unknown> & {
+      scene?: { terrain?: Record<string, unknown> };
+    };
+    const svgLogo =
+      "data:image/svg+xml;charset=utf-8," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="200" height="100" fill="#00c2ff"/><circle cx="50" cy="50" r="32" fill="#ffffff"/></svg>',
+      );
+    sceneHandle?.manager?.applyEnvironment?.({
+      ...env,
+      scene: {
+        ...(env.scene ?? {}),
+        terrain: {
+          ...(env.scene?.terrain ?? {}),
+          topoMapBranding: {
+            visible: true,
+            logoPath: svgLogo,
+            heading: "Client Title",
+            subheading: "FORGE map block",
+            anchor: "north-east",
+            offsetXM: 420000,
+            offsetYM: 160000,
+            rotationDeg: 12,
+            liftM: 320,
+            logoWidthM: 60000,
+            logoGapM: 12000,
+            headingSizeM: 72000,
+            subheadingSizeM: 30000,
+            layout: "stacked",
+            logoPlacement: "before",
+            logoFit: "contain",
+            fontFamily: "sans",
+            textAlign: "center",
+            textColor: "#ff00aa",
+            opacity: 0.96,
+            backgroundEnabled: false,
+            outlineEnabled: false,
+          },
+        },
+      },
+    });
+    sceneHandle?.camera?.updateMatrixWorld(true);
+  });
+
+  await expect
+    .poll(() => titleBlockSceneState(page))
+    .toMatchObject({
+      groupExists: true,
+      logoCount: 1,
+      logoHasMap: true,
+      headingCount: 1,
+      subheadingCount: 1,
+      backgroundCount: 0,
+      outlineCount: 0,
+      textDepthTest: false,
+      textToneMapped: false,
+      textFog: false,
+      textColor: "#ff00aa",
+    });
+  const beforeMove = await titleBlockSceneState(page);
+  expect(beforeMove.logoWidthM).toBe(60000);
+  expect(beforeMove.logoHeightM ?? 0).toBeGreaterThan(20000);
+  expect(beforeMove.contentWidthM ?? 0).toBeGreaterThan(60000);
+  expect(Math.abs(beforeMove.groupPosition?.x ?? 0)).toBeGreaterThan(200000);
+
+  await page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          camera?: {
+            position: { x: number; y: number; z: number };
+            lookAt: (x: number, y: number, z: number) => void;
+            updateMatrixWorld: (force?: boolean) => void;
+          };
+        };
+      }
+    ).__scene;
+    if (!sceneHandle?.camera) return;
+    sceneHandle.camera.position.x += 120000;
+    sceneHandle.camera.position.y -= 80000;
+    sceneHandle.camera.lookAt(0, 0, 0);
+    sceneHandle.camera.updateMatrixWorld(true);
+  });
+  await page.waitForTimeout(250);
+  const afterMove = await titleBlockSceneState(page);
+  expect(afterMove.groupRotationDeg ?? 0).toBeCloseTo(
+    beforeMove.groupRotationDeg ?? 0,
+    3,
+  );
+
+  const pngLogoPath =
+    "projects/utah-forge/branding/generated/pw-title-block-render.png";
+  await page.request.post("/api/write-file", {
+    data: {
+      path: pngLogoPath,
+      content:
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=",
+      encoding: "base64",
+    },
+  });
+  await page.evaluate(async (logoPath) => {
+    const env = (await fetch("/projects/utah-forge/environment.json").then((r) =>
+      r.json(),
+    )) as Record<string, unknown> & {
+      scene?: { terrain?: Record<string, unknown> };
+    };
+    (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            applyEnvironment?: (env: Record<string, unknown>) => void;
+          };
+        };
+      }
+    ).__scene?.manager?.applyEnvironment?.({
+      ...env,
+      scene: {
+        ...(env.scene ?? {}),
+        terrain: {
+          ...(env.scene?.terrain ?? {}),
+          topoMapBranding: {
+            visible: true,
+            logoPath,
+            heading: "PNG logo",
+            backgroundEnabled: false,
+            outlineEnabled: true,
+            logoWidthM: 40000,
+            headingSizeM: 240000,
+          },
+        },
+      },
+    });
+  }, pngLogoPath);
+  await expect
+    .poll(() => titleBlockSceneState(page).then((state) => state.logoHasMap))
+    .toBe(true);
+  const pngState = await titleBlockSceneState(page);
+  expect(pngState.outlineCount).toBe(4);
+  expect(pngState.backgroundCount).toBe(0);
+  expect(pngState.logoWidthM).toBe(40000);
+  await page.request.post("/api/delete-file", { data: { path: pngLogoPath } });
+
+  const canvas = await page.locator("canvas").screenshot();
+  expect(canvas.length).toBeGreaterThan(1000);
+  expect(consoleErrors).toEqual([]);
+});
+
+test("Utah FORGE title block converts PDF logo sources when Poppler is available", async ({
+  page,
+}) => {
+  await page.goto("/?project=utah-forge", { waitUntil: "domcontentloaded" });
+  const sourcePath = "projects/utah-forge/branding/source/pw-title-block.pdf";
+  const outputPath = "projects/utah-forge/branding/generated/pw-title-block.png";
+  await page.request.post("/api/write-file", {
+    data: {
+      path: sourcePath,
+      content: tinyPdfBase64(),
+      encoding: "base64",
+    },
+  });
+  const response = await page.request.post("/api/convert-branding-asset", {
+    data: { sourcePath, outputPath, sourceFormat: "pdf" },
+  });
+  if (!response.ok()) {
+    const errorText = await response.text();
+    await page.request.post("/api/delete-file", { data: { path: sourcePath } });
+    test.skip(true, `PDF conversion unavailable: ${errorText}`);
+  }
+  expect(response.ok()).toBe(true);
+  const generated = await page.request.get(`/${outputPath}`);
+  expect(generated.ok()).toBe(true);
+  expect(generated.headers()["content-type"]).toContain("image/png");
+  await page.request.post("/api/delete-file", { data: { path: sourcePath } });
+  await page.request.post("/api/delete-file", { data: { path: outputPath } });
+});
+
+test("Utah FORGE title block converts EPS logo sources when ImageMagick is available", async ({
+  page,
+}) => {
+  await page.goto("/?project=utah-forge", { waitUntil: "domcontentloaded" });
+  const sourcePath = "projects/utah-forge/branding/source/pw-title-block.eps";
+  const outputPath = "projects/utah-forge/branding/generated/pw-title-block-eps.png";
+  const eps = `%!PS-Adobe-3.0 EPSF-3.0
+%%BoundingBox: 0 0 120 60
+/Helvetica findfont 18 scalefont setfont
+0 0 0 setrgbcolor
+12 28 moveto
+(Title Block) show
+showpage
+%%EOF
+`;
+  await page.request.post("/api/write-file", {
+    data: {
+      path: sourcePath,
+      content: Buffer.from(eps, "utf8").toString("base64"),
+      encoding: "base64",
+    },
+  });
+  const response = await page.request.post("/api/convert-branding-asset", {
+    data: { sourcePath, outputPath, sourceFormat: "eps" },
+  });
+  if (!response.ok()) {
+    const errorText = await response.text();
+    await page.request.post("/api/delete-file", { data: { path: sourcePath } });
+    test.skip(true, `EPS conversion unavailable: ${errorText}`);
+  }
+  expect(response.ok()).toBe(true);
+  const generated = await page.request.get(`/${outputPath}`);
+  expect(generated.ok()).toBe(true);
+  expect(generated.headers()["content-type"]).toContain("image/png");
+  await page.request.post("/api/delete-file", { data: { path: sourcePath } });
+  await page.request.post("/api/delete-file", { data: { path: outputPath } });
+});
+
 test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", async ({
   page,
 }) => {
@@ -2402,17 +5002,22 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
     .filter({ hasText: "2D MT resistivity slices" })
     .first();
   await expect(slicesLayerItem).toBeVisible();
-  await slicesLayerItem.locator('input[type="checkbox"]').first().setChecked(true);
+  await slicesLayerItem
+    .locator('input[type="checkbox"]')
+    .first()
+    .setChecked(true);
 
   await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          getLayer?: (id: string) => { visible: boolean } | undefined;
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) => { visible: boolean } | undefined;
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     const layer = manager?.getLayer?.("utah-forge-mt-resistivity-slices");
     if (layer) layer.visible = true;
     manager?.applyStyle?.("utah-forge-mt-resistivity-slices", {
@@ -2440,7 +5045,9 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
   });
 
   await expect
-    .poll(() => sectionIsoSceneState(page).then((state) => state.targets.length))
+    .poll(() =>
+      sectionIsoSceneState(page).then((state) => state.targets.length),
+    )
     .toBeGreaterThan(0);
   const initialIsoState = await sectionIsoSceneState(page);
   expect(initialIsoState.targets.length).toBeGreaterThanOrEqual(2);
@@ -2453,10 +5060,7 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
     }
   });
 
-  const setInputValue = async (
-    locator: Locator,
-    value: string,
-  ) => {
+  const setInputValue = async (locator: Locator, value: string) => {
     await locator.evaluate((input, nextValue) => {
       const el = input as HTMLInputElement;
       const valueSetter = Object.getOwnPropertyDescriptor(
@@ -2468,7 +5072,9 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
     }, value);
   };
 
-  await expect(slicesLayerItem.getByTestId("layer-isobands-controls")).toBeVisible();
+  await expect(
+    slicesLayerItem.getByTestId("layer-isobands-controls"),
+  ).toBeVisible();
   await slicesLayerItem.getByTestId("layer-isobands-enabled").setChecked(true);
   await expect
     .poll(() =>
@@ -2488,7 +5094,9 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
     "0.35",
   );
   await expect
-    .poll(() => sectionIsoSceneState(page).then((state) => state.firstSourceOpacity))
+    .poll(() =>
+      sectionIsoSceneState(page).then((state) => state.firstSourceOpacity),
+    )
     .toBeCloseTo(0.273, 2);
   await slicesLayerItem.getByTestId("layer-isobands-enabled").setChecked(false);
   await expect
@@ -2550,9 +5158,13 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
 
   await page.getByTestId("section-iso-bands-visible").setChecked(false);
   await expect
-    .poll(() => sectionIsoSceneState(page).then((state) => state.bandOverlayCount))
+    .poll(() =>
+      sectionIsoSceneState(page).then((state) => state.bandOverlayCount),
+    )
     .toBe(0);
-  expect((await sectionIsoSceneState(page)).lineOverlayCount).toBeGreaterThan(0);
+  expect((await sectionIsoSceneState(page)).lineOverlayCount).toBeGreaterThan(
+    0,
+  );
 
   await page.getByTestId("section-iso-toggle").setChecked(false);
   await expect
@@ -2586,14 +5198,16 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
   await hidePublicContextLayers(page);
 
   await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          getLayer?: (id: string) => { visible: boolean } | undefined;
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) => { visible: boolean } | undefined;
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     const seismic = manager?.getLayer?.("utah-forge-phase3-seismic-browser");
     if (seismic) seismic.visible = true;
     manager?.applyStyle?.("utah-forge-phase3-seismic-browser", {
@@ -2632,16 +5246,20 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
     .toBeGreaterThan(0);
   const seismicBaseVisibility = await seismicSceneState(page);
   expect(seismicBaseVisibility.visibleSections).toBeGreaterThan(0);
-  expect((await sectionIsoSceneState(page, "seismic-sections")).lineOverlayCount).toBe(0);
+  expect(
+    (await sectionIsoSceneState(page, "seismic-sections")).lineOverlayCount,
+  ).toBe(0);
 
   await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-phase3-seismic-browser", {
       seismicRenderMode: "slice",
       seismicSliceAxis: "inline",
@@ -2687,13 +5305,15 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
 
   const disabledSeismicTarget = seismicIsoState.overlayTargets[0];
   await page.evaluate((targetKey) => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-phase3-seismic-browser", {
       seismicRenderMode: "slice",
       seismicSliceAxis: "inline",
@@ -2725,17 +5345,21 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
     .toBe(false);
 
   await expect
-    .poll(() => mtVolumeSceneState(page).then((state) => state.totalVolumeCount))
+    .poll(() =>
+      mtVolumeSceneState(page).then((state) => state.totalVolumeCount),
+    )
     .toBe(2);
   await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          getLayer?: (id: string) => { visible: boolean } | undefined;
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) => { visible: boolean } | undefined;
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     const volume = manager?.getLayer?.("utah-forge-mt-resistivity-volume");
     if (volume) volume.visible = true;
     manager?.applyStyle?.("utah-forge-scene-section-planes", {
@@ -2806,13 +5430,15 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
 
   const disabledVolumeTarget = volumeIsoState.overlayTargets[0];
   await page.evaluate((targetKey) => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-mt-resistivity-volume", {
       scalarVolumeProductId: "mt-resistivity-forge-focused-volume",
       scalarVolumeRenderMode: "raymarch",
@@ -2846,13 +5472,15 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
     .toBe(false);
 
   await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-scene-section-planes", {
       sceneSectionEnabled: true,
       sceneSectionMode: "cutaway",
@@ -2893,22 +5521,24 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
   await expect
     .poll(() =>
       sectionIsoSceneState(page, "mt-volume-cuts").then((state) =>
-        state.overlayPlanePositions.some((position) =>
-          Math.abs(position - -4500) < 1,
+        state.overlayPlanePositions.some(
+          (position) => Math.abs(position - -4500) < 1,
         ),
       ),
     )
     .toBe(true);
 
   await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          getLayer?: (id: string) => { visible: boolean } | undefined;
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) => { visible: boolean } | undefined;
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     const seismic = manager?.getLayer?.("utah-forge-phase3-seismic-browser");
     if (seismic) seismic.visible = true;
     manager?.applyStyle?.("utah-forge-scene-section-planes", {
@@ -2966,18 +5596,22 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
       levelCount: 32,
       sourceOpacity: 0,
     });
-  expect((await seismicSceneState(page)).firstVisibleVolumeUniforms).toMatchObject({
+  expect(
+    (await seismicSceneState(page)).firstVisibleVolumeUniforms,
+  ).toMatchObject({
     opacity: 0,
   });
 
   await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-scene-section-planes", {
       sceneSectionEnabled: true,
       sceneSectionMode: "cutaway",
@@ -3016,21 +5650,23 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
   await expect
     .poll(() =>
       sectionIsoSceneState(page, "seismic-volume-cuts").then((state) =>
-        state.overlayPlanePositions.some((position) =>
-          Math.abs(position - -500) < 1,
+        state.overlayPlanePositions.some(
+          (position) => Math.abs(position - -500) < 1,
         ),
       ),
     )
     .toBe(true);
 
   await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-mt-resistivity-volume", {
       scalarVolumeProductId: "mt-resistivity-forge-focused-volume",
       sectionIsoEnabled: false,
@@ -3071,9 +5707,416 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
   expect(consoleErrors).toEqual([]);
 });
 
+test("Utah FORGE full-density MT point cloud renders all-valid and thresholded states", async ({
+  page,
+}) => {
+  const mtFullDensityManifest = readJsonFile<{
+    tiles: Array<{
+      id: string;
+      pointCount: number;
+      file: string;
+      scalarFile: string;
+    }>;
+  }>(MT_FULL_DENSITY_MANIFEST_PATH);
+  const expectedFullDensityPointCount = mtFullDensityManifest.tiles.reduce(
+    (total, tile) => total + tile.pointCount,
+    0,
+  );
+  const consoleErrors: string[] = [];
+  const failedResponses: string[] = [];
+  const loadedUrls: string[] = [];
+
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      consoleErrors.push(message.text());
+    }
+  });
+  page.on("pageerror", (error) => {
+    consoleErrors.push(error.message);
+  });
+  page.on("response", (response) => {
+    const url = response.url();
+    if (url.includes("resistivity_model/full_density")) {
+      loadedUrls.push(url);
+    }
+    if (response.status() >= 400) {
+      failedResponses.push(`${response.status()} ${url}`);
+    }
+  });
+
+  await page.goto("/?project=utah-forge", {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(page.locator("body")).toContainText("Utah FORGE");
+  await expect(page.locator("canvas")).toHaveCount(1);
+
+  await expect
+    .poll(() =>
+      loadedUrls.some((url) =>
+        url.endsWith(
+          `/projects/utah-forge/${MT_FULL_DENSITY_MANIFEST_PATH.replace(
+            "projects/utah-forge/",
+            "",
+          )}`,
+        ),
+      ),
+    )
+    .toBe(true);
+  await expect
+    .poll(
+      () =>
+        loadedUrls.filter((url) =>
+          url.includes("/resistivity_model/full_density/tiles/"),
+        ).length,
+      { timeout: 60_000 },
+    )
+    .toBeGreaterThanOrEqual(mtFullDensityManifest.tiles.length * 2);
+
+  await expect
+    .poll(() => utahForgeRuntimePresentationState(page), { timeout: 60_000 })
+    .toMatchObject({
+      activeRenderPresetId: "utah-forge-reference-cinematic-dark",
+      rendererExposure: 1.08,
+      clearColor: "#383838",
+      sceneBackground: "#383838",
+      fogColor: "#383838",
+      fogDensity: 0.00008,
+    });
+
+  await expect
+    .poll(() => mtFullDensityPointSceneState(page), { timeout: 60_000 })
+    .toMatchObject({
+      layerVisible: true,
+      pointObjects: mtFullDensityManifest.tiles.length,
+      visiblePointObjects: mtFullDensityManifest.tiles.length,
+      totalPointCount: expectedFullDensityPointCount,
+      indexedVisiblePointCount: expectedFullDensityPointCount,
+      firstTileId: mtFullDensityManifest.tiles[0].id,
+      firstMaterial: {
+        opacity: 0.3,
+        size: 1,
+        transparent: true,
+        vertexColors: true,
+        depthTest: true,
+        depthWrite: false,
+      },
+    });
+
+  await selectForgePageRow(page, "01.");
+  await expect
+    .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
+    .toMatchObject({
+      layerVisible: true,
+      pointObjects: mtFullDensityManifest.tiles.length,
+      visiblePointObjects: mtFullDensityManifest.tiles.length,
+      totalPointCount: expectedFullDensityPointCount,
+      indexedVisiblePointCount: expectedFullDensityPointCount,
+      firstTileId: mtFullDensityManifest.tiles[0].id,
+      firstMaterial: {
+        opacity: 0.48,
+        size: 1.25,
+        transparent: true,
+        vertexColors: true,
+        depthTest: true,
+        depthWrite: false,
+      },
+    });
+
+  await selectForgePageRow(page, "02.");
+  await expect
+    .poll(() => utahForgeRuntimePresentationState(page), { timeout: 60_000 })
+    .toMatchObject({
+      activeRenderPresetId: "utah-forge-reference-cinematic-dark",
+      rendererExposure: 1.08,
+      clearColor: "#383838",
+      sceneBackground: "#383838",
+      fogColor: "#383838",
+      fogDensity: 0.00008,
+    });
+  await expect
+    .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
+    .toMatchObject({
+      layerVisible: true,
+      pointObjects: mtFullDensityManifest.tiles.length,
+      visiblePointObjects: mtFullDensityManifest.tiles.length,
+      totalPointCount: expectedFullDensityPointCount,
+      indexedVisiblePointCount: MT_FULL_DENSITY_PAGE06_INDEXED_POINTS,
+      firstTileId: mtFullDensityManifest.tiles[0].id,
+      firstMaterial: {
+        opacity: 0.3,
+        size: 1,
+        transparent: true,
+        vertexColors: true,
+        depthTest: true,
+        depthWrite: false,
+      },
+    });
+
+  const unexpectedFailedResponses = failedResponses.filter(
+    (failure) => !failure.includes("/api/read-file"),
+  );
+  const onlyPreviewReadFile404s =
+    failedResponses.length > 0 && unexpectedFailedResponses.length === 0;
+  const unexpectedConsoleErrors = consoleErrors.filter(
+    (error) =>
+      !(
+        onlyPreviewReadFile404s &&
+        error.includes(
+          "Failed to load resource: the server responded with a status of 404",
+        )
+      ),
+  );
+  expect(unexpectedFailedResponses).toEqual([]);
+  expect(unexpectedConsoleErrors).toEqual([]);
+});
+
+test("Utah FORGE data layers follow page camera transitions", async ({
+  page,
+}, testInfo) => {
+  const mtFullDensityManifest = readJsonFile<{
+    tiles: Array<{
+      id: string;
+      pointCount: number;
+      file: string;
+      scalarFile: string;
+    }>;
+  }>(MT_FULL_DENSITY_MANIFEST_PATH);
+  const forgeEnvironment = readJsonFile<Record<string, unknown>>(
+    UTAH_FORGE_ENVIRONMENT_PATH,
+  );
+  const page06Spec = readJsonFile<Record<string, unknown>>(
+    UTAH_FORGE_PAGE06_PATH,
+  );
+  const page12Spec = readJsonFile<Record<string, unknown>>(
+    UTAH_FORGE_PAGE12_PATH,
+  );
+  const expectedFullDensityPointCount = mtFullDensityManifest.tiles.reduce(
+    (total, tile) => total + tile.pointCount,
+    0,
+  );
+  const consoleErrors: string[] = [];
+
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      consoleErrors.push(message.text());
+    }
+  });
+  page.on("pageerror", (error) => {
+    consoleErrors.push(error.message);
+  });
+
+  await page.goto("/?project=utah-forge", {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(page.locator("body")).toContainText("Utah FORGE");
+  await expect(page.locator("canvas")).toHaveCount(1);
+  const legend = page
+    .locator('[aria-label="Utah FORGE MT resistivity color legend"]')
+    .filter({ hasText: "MT resistivity" })
+    .first();
+  await expect(legend).toBeVisible();
+  await expect
+    .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
+    .toMatchObject({
+      layerVisible: true,
+      pointObjects: mtFullDensityManifest.tiles.length,
+      totalPointCount: expectedFullDensityPointCount,
+    });
+
+  await selectForgePageRow(page, "01.");
+  const row01Handles = await resistivityLegendHandleState(page);
+  await selectNextForgePage(page);
+  await expectPageTransitionProgress(page, 0, 1);
+  await page.waitForTimeout(1600);
+  const row01ToRow02MidHandles = await resistivityLegendHandleState(page);
+  await expect
+    .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
+    .toMatchObject({
+      indexedVisiblePointCount: MT_FULL_DENSITY_PAGE06_INDEXED_POINTS,
+      firstMaterial: {
+        opacity: 0.3,
+        size: 1,
+      },
+    });
+  const row02Handles = await resistivityLegendHandleState(page);
+  expectProgressedToward(
+    row01ToRow02MidHandles.focusMin,
+    row01Handles.focusMin,
+    row02Handles.focusMin,
+  );
+  await page.waitForTimeout(2400);
+  await expect
+    .poll(() => transitionSnapshotState(page).then((state) => state.count))
+    .toBe(0);
+
+  const row02ForRequiredRoute = await resistivityLegendHandleState(page);
+  await selectNextForgePage(page);
+  await expectPageTransitionProgress(page, 1, 2);
+  await page.waitForTimeout(1600);
+  const row02ToRow03MidHandles = await resistivityLegendHandleState(page);
+  await expect
+    .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
+    .toMatchObject({
+      indexedVisiblePointCount: MT_FULL_DENSITY_PAGE04_INDEXED_POINTS,
+    });
+  const row03Handles = await resistivityLegendHandleState(page);
+  expectProgressedToward(
+    row02ToRow03MidHandles.focusMin,
+    row02ForRequiredRoute.focusMin,
+    row03Handles.focusMin,
+  );
+  await page.waitForTimeout(2400);
+
+  await selectNextForgePage(page);
+  await page.waitForTimeout(100);
+  await expect
+    .poll(
+      async () => {
+        const state = await pageControllerState(page);
+        return (
+          state.currentIndex === 2 &&
+          state.targetIndex === 3 &&
+          state.isTransitioning
+        );
+      },
+      { timeout: 1_500, intervals: [50, 100, 200] },
+    )
+    .toBe(true);
+  await page.waitForTimeout(1500);
+  let row03ToRow04MidHandles = await resistivityLegendHandleState(page);
+  await expect
+    .poll(
+      async () => {
+        row03ToRow04MidHandles = await resistivityLegendHandleState(page);
+        return row03ToRow04MidHandles.focusMin;
+      },
+      { timeout: 3_000, intervals: [100, 200, 400] },
+    )
+    .toBeGreaterThan(row03Handles.focusMin);
+  await expect
+    .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
+    .toMatchObject({
+      indexedVisiblePointCount: MT_FULL_DENSITY_PAGE05_INDEXED_POINTS,
+    });
+  const row04Handles = await resistivityLegendHandleState(page);
+  expectProgressedToward(
+    row03ToRow04MidHandles.focusMin,
+    row03Handles.focusMin,
+    row04Handles.focusMin,
+  );
+
+  await page.waitForTimeout(2200);
+  await expect
+    .poll(() => transitionSnapshotState(page).then((state) => state.count))
+    .toBe(0);
+
+  const beforeInterruptState = await pageControllerState(page);
+  const firstInterruptTargetIndex =
+    beforeInterruptState.currentIndex === 0 ? 1 : 0;
+  const secondInterruptTargetIndex = firstInterruptTargetIndex === 1 ? 2 : 1;
+  const pageIdByIndex = ["12_untitled", "06_untitled", "04_untitled"];
+  await page.evaluate(
+    ({ firstTargetIndex, secondTargetIndex }) =>
+      new Promise<void>((resolve) => {
+        const controller = (
+          window as unknown as {
+            __pageController?: { goto?: (index: number) => void };
+          }
+        ).__pageController;
+        controller?.goto?.(firstTargetIndex);
+        window.setTimeout(() => {
+          controller?.goto?.(secondTargetIndex);
+          resolve();
+        }, 50);
+      }),
+    {
+      firstTargetIndex: firstInterruptTargetIndex,
+      secondTargetIndex: secondInterruptTargetIndex,
+    },
+  );
+  const firstTargetPageId = pageIdByIndex[firstInterruptTargetIndex];
+  const secondTargetPageId = pageIdByIndex[secondInterruptTargetIndex];
+  await expect
+    .poll(async () => {
+      const state = await pageControllerState(page);
+      return (
+        state.targetIndex === secondInterruptTargetIndex &&
+        state.transitionContext?.reason === "interrupted" &&
+        state.transitionContext?.sourcePageId === firstTargetPageId &&
+        state.transitionContext?.targetPageId === secondTargetPageId
+      );
+    })
+    .toBe(true);
+  await expect
+    .poll(
+      async () => {
+        const state = await pageControllerState(page);
+        return (
+          state.currentIndex === secondInterruptTargetIndex &&
+          state.currentPageId === secondTargetPageId &&
+          state.targetIndex === null &&
+          !state.isTransitioning
+        );
+      },
+      { timeout: 6_000 },
+    )
+    .toBe(true);
+
+  await runForgeDataTransitionProbe(
+    page,
+    forgeEnvironment,
+    page06Spec,
+    page12Spec,
+  );
+  await expect
+    .poll(
+      () =>
+        transitionSnapshotState(page).then(
+          (state) => state.byLayer["utah-forge-phase3-seismic-browser"] ?? 0,
+        ),
+      { timeout: 3_000 },
+    )
+    .toBeGreaterThan(0);
+  const page06ToPage12Snapshots = await transitionSnapshotState(page);
+  expect(
+    page06ToPage12Snapshots.byLayer["utah-forge-phase3-seismic-browser"] ?? 0,
+  ).toBeGreaterThan(0);
+  await page.screenshot({
+    path: testInfo.outputPath("utah-forge-page06-to-page12-crossfade-mid.png"),
+    fullPage: false,
+  });
+  await expect
+    .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
+    .toMatchObject({
+      indexedVisiblePointCount: expectedFullDensityPointCount,
+    });
+  await expect
+    .poll(() => seismicSceneState(page), { timeout: 90_000 })
+    .toMatchObject({
+      layerVisible: false,
+    });
+  await expect
+    .poll(() => transitionSnapshotState(page).then((state) => state.count))
+    .toBe(0);
+
+  expect(consoleErrors).toEqual([]);
+});
+
 test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", async ({
   page,
 }) => {
+  const mtFullDensityManifest = readJsonFile<{
+    tiles: Array<{
+      id: string;
+      pointCount: number;
+      file: string;
+      scalarFile: string;
+    }>;
+  }>(MT_FULL_DENSITY_MANIFEST_PATH);
+  const expectedFullDensityPointCount = mtFullDensityManifest.tiles.reduce(
+    (total, tile) => total + tile.pointCount,
+    0,
+  );
   const consoleErrors: string[] = [];
   const loadedUrls: string[] = [];
 
@@ -3137,30 +6180,46 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     )
     .toBe(true);
   await expect(page.locator('[aria-label^="Scale "]')).toBeVisible();
+  for (const label of [
+    "Public terrain surface",
+    "Public roads",
+    "Public streams and rivers",
+    "Public waterbodies",
+  ]) {
+    await ensureForgeLayerVisible(page, label);
+  }
   const publicContextScene = await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          getLayer?: (id: string) => {
-            visible: boolean;
-            traverse: (fn: (obj: {
-              visible: boolean;
-              name?: string;
-              position?: { x: number; y: number; z: number };
-              geometry?: {
-                computeBoundingBox?: () => void;
-                boundingBox?: {
-                  min: { x: number; y: number; z: number };
-                  max: { x: number; y: number; z: number };
-                } | null;
-                getAttribute?: (name: string) => { count: number } | undefined;
-              };
-              userData?: Record<string, unknown>;
-            }) => void) => void;
-          } | undefined;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) =>
+              | {
+                  visible: boolean;
+                  traverse: (
+                    fn: (obj: {
+                      visible: boolean;
+                      name?: string;
+                      position?: { x: number; y: number; z: number };
+                      geometry?: {
+                        computeBoundingBox?: () => void;
+                        boundingBox?: {
+                          min: { x: number; y: number; z: number };
+                          max: { x: number; y: number; z: number };
+                        } | null;
+                        getAttribute?: (
+                          name: string,
+                        ) => { count: number } | undefined;
+                      };
+                      userData?: Record<string, unknown>;
+                    }) => void,
+                  ) => void;
+                }
+              | undefined;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     const terrain = manager?.getLayer?.("terrain");
     const roads = manager?.getLayer?.("transport-roads");
     const streams = manager?.getLayer?.("hydrography-streams");
@@ -3183,10 +6242,16 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     const countRenderableChildren = (
       layer:
         | {
-            traverse: (fn: (obj: {
-              visible: boolean;
-              geometry?: { getAttribute?: (name: string) => { count: number } | undefined };
-            }) => void) => void;
+            traverse: (
+              fn: (obj: {
+                visible: boolean;
+                geometry?: {
+                  getAttribute?: (
+                    name: string,
+                  ) => { count: number } | undefined;
+                };
+              }) => void,
+            ) => void;
           }
         | undefined,
     ) => {
@@ -3250,18 +6315,18 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   await expect(page.locator("body")).toContainText("Distance light");
   await expect(page.locator("body")).toContainText("Point size");
   await expect(page.locator("body")).toContainText("Value legend");
-  await expect(page.locator("body")).toContainText(
-    "3D MT resistivity volume",
-  );
+  await expect(page.locator("body")).toContainText("3D MT resistivity volume");
   await expect(page.locator("body")).toContainText("3D volume products");
   await expect(page.locator("body")).toContainText("3D cut window");
+  await expect(page.locator("body")).toContainText("3D MT threshold surfaces");
   await expect(page.locator("body")).toContainText(
-    "3D MT threshold surfaces",
+    "2D MT station response / QC",
   );
-  await expect(page.locator("body")).toContainText("2D MT station response / QC");
   await expect(page.getByTestId("mt-volume-product-select")).toHaveCount(1);
   await expect(page.getByTestId("mt-volume-opacity")).toHaveCount(1);
-  await expect(page.getByTestId("mt-threshold-conductive-le-30-ohm-m")).toHaveCount(1);
+  await expect(
+    page.getByTestId("mt-threshold-conductive-le-30-ohm-m"),
+  ).toHaveCount(1);
   await expect(page.getByTestId("mt-station-qc-select")).toHaveCount(1);
 
   await expect
@@ -3270,14 +6335,16 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     )
     .toBe(2);
   await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          getLayer?: (id: string) => { visible: boolean } | undefined;
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) => { visible: boolean } | undefined;
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     const volume = manager?.getLayer?.("utah-forge-mt-resistivity-volume");
     if (volume) volume.visible = true;
     manager?.applyStyle?.("utah-forge-mt-resistivity-volume", {
@@ -3339,13 +6406,15 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   });
 
   await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-mt-resistivity-volume", {
       scalarVolumeProductId: "mt-resistivity-full-extent-volume",
       scalarVolumeOpacity: 0.37,
@@ -3373,13 +6442,15 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   });
 
   await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-mt-resistivity-threshold-surfaces", {
       opacity: 0.35,
       mtThresholdSurfaceVisibility: {
@@ -3392,7 +6463,10 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   });
   mtVolumeState = await mtVolumeSceneState(page);
   expect(mtVolumeState.visibleThresholdSurfaceIds).toEqual(
-    expect.arrayContaining(["conductive-le-10-ohm-m", "resistive-ge-1000-ohm-m"]),
+    expect.arrayContaining([
+      "conductive-le-10-ohm-m",
+      "resistive-ge-1000-ohm-m",
+    ]),
   );
   expect(mtVolumeState.visibleThresholdSurfaceIds).not.toContain(
     "conductive-le-30-ohm-m",
@@ -3400,13 +6474,15 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   expect(mtVolumeState.thresholdWireframe).toBe(true);
 
   await page.evaluate(() => {
-    const manager = (window as unknown as {
-      __scene?: {
-        manager?: {
-          applyStyle?: (id: string, style: Record<string, unknown>) => void;
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
         };
-      };
-    }).__scene?.manager;
+      }
+    ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-scene-section-planes", {
       sceneSectionEnabled: true,
       sceneSectionMode: "cutaway",
@@ -3438,16 +6514,23 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
       }),
     );
   });
-  await expect(page.getByTestId("mt-station-qc-select")).toHaveValue("FRG19001");
+  await expect(page.getByTestId("mt-station-qc-select")).toHaveValue(
+    "FRG19001",
+  );
   await expect
-    .poll(() => mtVolumeSceneState(page).then((state) => state.selectedStationId))
+    .poll(() =>
+      mtVolumeSceneState(page).then((state) => state.selectedStationId),
+    )
     .toBe("FRG19001");
 
   await expect
     .poll(() =>
       loadedUrls.some((url) =>
         url.endsWith(
-          "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json",
+          `/projects/utah-forge/${MT_FULL_DENSITY_MANIFEST_PATH.replace(
+            "projects/utah-forge/",
+            "",
+          )}`,
         ),
       ),
     )
@@ -3461,6 +6544,34 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
       ),
     )
     .toBe(true);
+  await expect
+    .poll(() => mtFullDensityPointSceneState(page), { timeout: 60_000 })
+    .toMatchObject({
+      layerVisible: true,
+      pointObjects: mtFullDensityManifest.tiles.length,
+      visiblePointObjects: mtFullDensityManifest.tiles.length,
+      totalPointCount: expectedFullDensityPointCount,
+      indexedVisiblePointCount: expectedFullDensityPointCount,
+      firstTileId: mtFullDensityManifest.tiles[0].id,
+      firstMaterial: {
+        opacity: 0.3,
+        size: 1,
+        transparent: true,
+        vertexColors: true,
+      },
+    });
+  await expect
+    .poll(() => utahForgeRuntimePresentationState(page), { timeout: 60_000 })
+    .toMatchObject({
+      activeRenderPresetId: "utah-forge-reference-cinematic-dark",
+      rendererExposure: 1.08,
+      clearColor: "#383838",
+      sceneBackground: "#383838",
+      fogColor: "#383838",
+      fogDensity: 0.00008,
+    });
+  const mtFullDensityScene = await mtFullDensityPointSceneState(page);
+  expect(mtFullDensityScene.scalarFocusVisibleCount).toBeGreaterThan(0);
   await expect
     .poll(() =>
       loadedUrls.some((url) =>
@@ -3484,7 +6595,9 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   );
   expect(topSurfaceStatsResponse.ok()).toBe(true);
   const topSurfaceStats = await topSurfaceStatsResponse.json();
-  expect(topSurfaceStats.source?.preview).toContain("resistivity_point_preview.json");
+  expect(topSurfaceStats.source?.preview).toContain(
+    "resistivity_point_preview.json",
+  );
   expect(topSurfaceStats.source?.previewPointCount).toBe(90_000);
   expect(topSurfaceStats.gridSizeM).toBe(2_500);
   expect(topSurfaceStats.topQuantile).toBe(0.95);
@@ -3534,7 +6647,9 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     await page.mouse.up();
     await expect
       .poll(() =>
-        page.getByTestId("resistivity-legend-focusMin").getAttribute("aria-valuenow"),
+        page
+          .getByTestId("resistivity-legend-focusMin")
+          .getAttribute("aria-valuenow"),
       )
       .not.toBe(initialFocusMinValue);
 
@@ -3544,7 +6659,9 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     await page.getByTestId("resistivity-legend-focusMax").press("ArrowLeft");
     await expect
       .poll(() =>
-        page.getByTestId("resistivity-legend-focusMax").getAttribute("aria-valuenow"),
+        page
+          .getByTestId("resistivity-legend-focusMax")
+          .getAttribute("aria-valuenow"),
       )
       .not.toBe(focusMaxBeforeKey);
 
@@ -3559,7 +6676,9 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     await page.mouse.up();
     await expect
       .poll(() =>
-        page.getByTestId("resistivity-legend-focusMax").getAttribute("aria-valuenow"),
+        page
+          .getByTestId("resistivity-legend-focusMax")
+          .getAttribute("aria-valuenow"),
       )
       .not.toBe(initialFocusMaxValue);
     await expect(legend).toContainText("1.38 Ohm-m");
@@ -3567,20 +6686,24 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   }
 
   const afterGlobalTrimCanvas = await page.locator("canvas").screenshot();
-  expect(changedByteCount(beforeTrimCanvas, afterGlobalTrimCanvas)).toBeGreaterThan(
-    1000,
-  );
+  expect(
+    changedByteCount(beforeTrimCanvas, afterGlobalTrimCanvas),
+  ).toBeGreaterThan(1000);
   const globalLegendAfterDrag = await legend.innerText();
   await page.waitForTimeout(700);
   await expect.poll(() => legend.innerText()).toBe(globalLegendAfterDrag);
   const afterGlobalWaitCanvas = await page.locator("canvas").screenshot();
-  expect(changedByteCount(beforeTrimCanvas, afterGlobalWaitCanvas)).toBeGreaterThan(
-    1000,
-  );
+  expect(
+    changedByteCount(beforeTrimCanvas, afterGlobalWaitCanvas),
+  ).toBeGreaterThan(1000);
 
   const beforeNoiseCanvas = await page.locator("canvas").screenshot();
-  await page.getByTestId("resistivity-legend-edge-lower").dispatchEvent("dblclick");
-  await expect(page.getByTestId("resistivity-legend-edge-popout")).toBeVisible();
+  await page
+    .getByTestId("resistivity-legend-edge-lower")
+    .dispatchEvent("dblclick");
+  await expect(
+    page.getByTestId("resistivity-legend-edge-popout"),
+  ).toBeVisible();
   await page
     .getByTestId("resistivity-legend-edge-highlight")
     .evaluate((input) => {
@@ -3625,7 +6748,9 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
       valueSetter?.call(el, "-0.55");
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
-  await page.getByTestId("resistivity-legend-edge-line-style").selectOption("dashed");
+  await page
+    .getByTestId("resistivity-legend-edge-line-style")
+    .selectOption("dashed");
   await expect(page.locator("body")).toContainText("Line 4.2px");
   await expect(page.locator("body")).toContainText("Avg 72%");
   await expect(page.locator("body")).toContainText("Fill -55%");
@@ -3670,7 +6795,9 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     await page.mouse.up();
     await expect
       .poll(() =>
-        page.getByTestId("resistivity-legend-focusMin").getAttribute("aria-valuenow"),
+        page
+          .getByTestId("resistivity-legend-focusMin")
+          .getAttribute("aria-valuenow"),
       )
       .not.toBe(pageFocusMinBefore);
     const pageLegendAfterDrag = await legend.innerText();
@@ -3678,11 +6805,13 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     await expect.poll(() => legend.innerText()).toBe(pageLegendAfterDrag);
   }
   const afterPageTrimCanvas = await page.locator("canvas").screenshot();
-  expect(changedByteCount(afterGlobalWaitCanvas, afterPageTrimCanvas)).toBeGreaterThan(
-    1000,
-  );
+  expect(
+    changedByteCount(afterGlobalWaitCanvas, afterPageTrimCanvas),
+  ).toBeGreaterThan(1000);
 
-  const beforeCameraTransitionCanvas = await page.locator("canvas").screenshot();
+  const beforeCameraTransitionCanvas = await page
+    .locator("canvas")
+    .screenshot();
   const secondPageRow = page
     .locator('[data-dev-note*="panelStyles.pageRow"]')
     .filter({ hasText: "02." });

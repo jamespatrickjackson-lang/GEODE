@@ -20,7 +20,7 @@
     "fov": 52
   },
   "transition": {
-    "duration": 3000,
+    "duration": 5000,
     "easing": "easeInOutCubic"
   },
   "holdDuration": 4000,
@@ -29,9 +29,6 @@
     "utah-forge-mt-resistivity-threshold-surfaces": true
   },
   "layerOverrides": {
-    "utah-forge-mt-resistivity-full-density": {
-      "opacity": 0.05
-    },
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "mtThresholdSurfaceVisibility": {
         "conductive-le-10-ohm-m": true,
@@ -40,6 +37,56 @@
       },
       "mtThresholdSurfaceWireframe": true,
       "opacity": 0.42
+    },
+    "utah-forge-phase3-seismic-browser": {
+      "seismicProductVisibility": {
+        "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack": false,
+        "gdr-1141-forge3d-ani-psdm-stack-unenh": false,
+        "gdr-1141-forge3d-pstm-stack-enh": false,
+        "gdr-1015-forge3d-velo5d-float-01312018": true,
+        "gdr-1141-line-301-pdm-enh": false,
+        "gdr-1141-line-301-psdm-unenh": false,
+        "gdr-1015-forge2d-301-migr-depth": false,
+        "gdr-1141-line-302-psdm-enh": false,
+        "gdr-1141-line-302-psdm-unenh": false,
+        "gdr-1141-line-l11-psdm-enh": false,
+        "gdr-1141-line-l11-psdm-enh-meters": false,
+        "gdr-1141-line-l11-psdm-unenh": false,
+        "gdr-1141-line-l5-psdm-enh": false,
+        "gdr-1141-line-l5-psdm-enh-meters": false,
+        "gdr-1141-line-l5-psdm-unenh": false,
+        "gdr-1141-line-l5-psdm-unenh-meters": false,
+        "gdr-1141-line-301-pstm-stack-enh": false,
+        "gdr-1141-line-301-pstm-stack-unenh": false,
+        "gdr-1141-line-301-unmigrated-stack": false,
+        "gdr-1141-line-302-pstm-stack-enh": false,
+        "gdr-1141-line-302-pstm-stack-unenh": false,
+        "gdr-1141-line-302-unmigrated-stack": false,
+        "gdr-1141-line-l11-pstm-enh": false,
+        "gdr-1141-line-l11-pstm-unenh": false,
+        "gdr-1141-line-l11-unmigrated-time-stack": false,
+        "gdr-1141-line-l5-pstm-enh": false,
+        "gdr-1141-line-l5-pstm-unenh": false,
+        "gdr-1141-line-l5-unmigrated-time-stack": false,
+        "gdr-1015-forge2d-301-stack-01312018": false,
+        "gdr-1015-forge2d-302-stack": false,
+        "gdr-1141-line-301-psdm-interval-velocity": false,
+        "gdr-1141-line-302-psdm-interval-velocity": false,
+        "gdr-1141-line-l11-psdm-interval-velocity": false,
+        "gdr-1141-line-l5-psdm-interval-velocity": false
+      },
+      "seismicCapabilityPresetId": "gdr-1015-forge3d-velo5d-float-01312018-raymarch",
+      "seismicProductId": "gdr-1015-forge3d-velo5d-float-01312018",
+      "seismicRenderMode": "raymarch",
+      "seismicColormap": "velocity",
+      "seismicSliceAxis": "inline",
+      "seismicSliceThroughVolume": false,
+      "seismicNavigationVisible": true,
+      "seismicNavigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      }
     }
   },
   "dynamicCamera": {
@@ -51,20 +98,20 @@
       -3222,
       -18974
     ],
-    "orbitSpeedDegPerSec": 5.1,
-    "orbitRadius": 104120,
-    "orbitHeight": 15934,
+    "orbitSpeedDegPerSec": 9.2,
+    "orbitRadius": 140800,
+    "orbitHeight": 15970,
     "orbitDirection": -1,
     "zoomFov": 52,
-    "zoomEnabled": false,
-    "zoomDeltaFov": 0,
-    "zoomStartMs": 0,
-    "zoomEndMs": 2500,
-    "zoomCurve": "smooth",
+    "zoomEnabled": true,
+    "zoomDeltaFov": -23.5,
+    "zoomStartMs": 6300,
+    "zoomEndMs": 20000,
+    "zoomCurve": "cinematic",
     "easeInMs": 1600,
     "transitionLeadMs": 1600,
     "transitionExitMs": 900,
-    "transitionBlendCurve": "smooth",
+    "transitionBlendCurve": "cinematic",
     "pathAwareBlend": false
   }
 }

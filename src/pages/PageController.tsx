@@ -38,7 +38,7 @@ interface PageControllerValue {
   transitionProgress: number;
   isTransitioning: boolean;
   freelookActive: boolean;
-  goto: (index: number) => void;
+  goto: (index: number, reason?: NavigationReason) => void;
   next: () => void;
   prev: () => void;
   resetToPose: () => void;
@@ -47,6 +47,23 @@ interface PageControllerValue {
 }
 
 const PageControllerContext = createContext<PageControllerValue | null>(null);
+
+type NavigationReason =
+  | "page-click"
+  | "keyboard"
+  | "programmatic"
+  | "freelook"
+  | "interrupted";
+
+interface SceneTransitionContext {
+  sourcePageId: string | null;
+  targetPageId: string | null;
+  reason: NavigationReason;
+  startMs: number;
+  durationMs: number;
+  sourcePose: Pose;
+  targetPose: Pose;
+}
 
 export type PreviewLayerOverrideFields = Readonly<
   Record<string, readonly (keyof EditableStyle)[]>
@@ -481,12 +498,14 @@ export function PageControllerProvider({
     durationMs: number;
     easing: PresentationPage["transition"]["easing"];
   } | null>(null);
+  const activeSceneTransitionRef = useRef<SceneTransitionContext | null>(null);
   const transitionProgressRef = useRef(1);
   const currentCameraKeyRef = useRef<string | null>(null);
   const isTransitioningRef = useRef(false);
   const suppressControlsChangeRef = useRef(false);
   const pagesRef = useRef(pages);
   const currentIndexRef = useRef(currentIndex);
+  const targetIndexRef = useRef<number | null>(targetIndex);
   const freelookActiveRef = useRef(freelookActive);
   const presentationStateTransformRef = useRef(presentationStateTransform);
   // Mirror env into a ref so the goto closure picks up the latest env
@@ -496,6 +515,7 @@ export function PageControllerProvider({
   presentationStateTransformRef.current = presentationStateTransform;
   pagesRef.current = pages;
   currentIndexRef.current = currentIndex;
+  targetIndexRef.current = targetIndex;
   freelookActiveRef.current = freelookActive;
 
   const resolvePresentationState = useCallback(
@@ -711,6 +731,9 @@ export function PageControllerProvider({
   useEffect(() => {
     const page = pages[currentIndex];
     if (!page) return;
+    if (isTransitioningRef.current) {
+      return;
+    }
     const resolved = resolvePresentationState(page, environment);
     // applyEnvironment first so terrain shader uniforms / sun direction
     // are current before styles/visibility evaluate against them.
@@ -769,58 +792,32 @@ export function PageControllerProvider({
   ]);
 
   const goto = useCallback(
-    (index: number) => {
+    (index: number, reason: NavigationReason = "page-click") => {
       if (index < 0 || index >= pages.length) return;
-      if (index === currentIndex && !freelookActive) return;
+      const activeTargetIndex = targetIndexRef.current;
+      if (isTransitioningRef.current && index === activeTargetIndex) return;
+      if (
+        !isTransitioningRef.current &&
+        index === currentIndexRef.current &&
+        !freelookActiveRef.current
+      ) {
+        return;
+      }
       const target = pages[index];
       const tweener = tweenerRef.current;
       if (!tweener) return;
-      const source = pages[currentIndex];
+      const wasTransitioning = isTransitioningRef.current;
+      const wasFreelook = freelookActiveRef.current;
+      const sourceIndex = wasTransitioning
+        ? activeTargetIndex ?? currentIndexRef.current
+        : currentIndexRef.current;
+      const source = pages[sourceIndex] ?? pages[currentIndexRef.current];
       const sourceResolved = resolvePresentationState(source);
       const targetResolved = resolvePresentationState(target);
       const targetPose = poseWithEnvironmentCamera(
         targetResolved.page.camera,
         targetResolved.environment,
       );
-
-      // Layer changes fade during the camera move instead of snapping between
-      // decision; deltas now compose env ∪ page per #023).
-      const layerFadeMs = Math.min(
-        target.transition.duration,
-        Math.max(0, target.overlay?.timing?.fadeMs ?? 800),
-      );
-      sceneHandle.manager.transitionEffectiveLayersForPage(
-        targetResolved.environment,
-        sourceResolved.page,
-        targetResolved.page,
-        layerFadeMs,
-        target.overlay?.timing?.easing ?? target.transition.easing,
-        target.transition.duration,
-        target.transition.easing,
-      );
-      // Per-page mood (cinematicExposure / bloomBoost) flips at start too.
-      sceneHandle.manager.applyPageScene(targetResolved.page);
-      // Scene overlays: fade leaving overlays out NOW (so they're not
-      // visible mid-tween over the wrong terrain) but defer fade-ins to
-      // the camera-arrival callback below.
-      sceneHandle.manager.applySceneOverlaysAtTransitionStart(
-        targetResolved.environment,
-        targetResolved.page,
-      );
-
-      setIsTransitioning(true);
-      setTargetIndex(index);
-      setTransitionProgress(0);
-      transitionProgressRef.current = 0;
-      setFreelookActive(false);
-      sceneHandle.setPageCameraMarker(null);
-      const transitionStartMs = performance.now();
-      const transitionDuration = target.transition.duration;
-      pageTransitionRef.current = {
-        startMs: transitionStartMs,
-        durationMs: transitionDuration,
-        easing: target.transition.easing,
-      };
       const currentPose: Pose = {
         position: [
           sceneHandle.camera.position.x,
@@ -839,13 +836,71 @@ export function PageControllerProvider({
         ],
         fov: sceneHandle.camera.fov,
       };
+      const transitionReason: NavigationReason = wasTransitioning
+        ? "interrupted"
+        : wasFreelook
+          ? "freelook"
+          : reason;
+      const transitionStartMs = performance.now();
+      const transitionDuration = target.transition.duration;
+
+      isTransitioningRef.current = true;
+      targetIndexRef.current = index;
+      activeSceneTransitionRef.current = {
+        sourcePageId: source?.id ?? null,
+        targetPageId: target.id,
+        reason: transitionReason,
+        startMs: transitionStartMs,
+        durationMs: transitionDuration,
+        sourcePose: currentPose,
+        targetPose,
+      };
+      setIsTransitioning(true);
+      setTargetIndex(index);
+      setTransitionProgress(0);
+      transitionProgressRef.current = 0;
+      freelookActiveRef.current = false;
+      setFreelookActive(false);
+      sceneHandle.setPageCameraMarker(null);
+
+      // Data-layer changes follow the page camera transition. Text overlays
+      // keep their own fade timing; scene data uses page timing by default.
+      const layerFadeMs = Math.max(0, transitionDuration);
+      sceneHandle.manager.transitionEffectiveLayersForPage(
+        targetResolved.environment,
+        sourceResolved.page,
+        targetResolved.page,
+        layerFadeMs,
+        target.transition.easing,
+        transitionDuration,
+        target.transition.easing,
+        transitionReason,
+      );
+      // Per-page mood (cinematicExposure / bloomBoost) flips at start too.
+      sceneHandle.manager.applyPageScene(targetResolved.page);
+      // Scene overlays: fade leaving overlays out NOW (so they're not
+      // visible mid-tween over the wrong terrain) but defer fade-ins to
+      // the camera-arrival callback below.
+      sceneHandle.manager.applySceneOverlaysAtTransitionStart(
+        targetResolved.environment,
+        targetResolved.page,
+      );
+
+      pageTransitionRef.current = {
+        startMs: transitionStartMs,
+        durationMs: transitionDuration,
+        easing: target.transition.easing,
+      };
       const transitionPathDistance = posePathDistance(currentPose, targetPose);
+      const sourceForDynamic =
+        wasTransitioning || wasFreelook ? null : sourceResolved.page;
       const sourceOrbitBlendMs =
-        source?.dynamicCamera?.pathAwareBlend === true &&
+        sourceForDynamic?.dynamicCamera?.pathAwareBlend === true &&
+        source &&
         dynamicOrbitBlendMsRef.current?.pageId === source.id
           ? dynamicOrbitBlendMsRef.current.value
           : dynamicOrbitBlendMs(
-              source?.dynamicCamera,
+              sourceForDynamic?.dynamicCamera,
               transitionDuration,
               transitionPathDistance,
             );
@@ -855,9 +910,9 @@ export function PageControllerProvider({
         transitionPathDistance,
       );
       const sourceExitMs =
-        dynamicOrbitEnabled(source?.dynamicCamera) && !freelookActive
+        sourceForDynamic && dynamicOrbitEnabled(sourceForDynamic.dynamicCamera)
           ? dynamicTransitionExitMs(
-              source.dynamicCamera,
+              sourceForDynamic.dynamicCamera,
               transitionDuration,
               transitionPathDistance,
             )
@@ -878,7 +933,7 @@ export function PageControllerProvider({
           ? targetOrbitLeadMs
           : target.transition.duration;
       const sourceBasePose =
-        source && sourceExitMs > 0
+        sourceForDynamic && sourceExitMs > 0
           ? dynamicBasePoseRef.current ??
             arrivalPoseRef.current ??
             poseWithEnvironmentCamera(
@@ -897,13 +952,15 @@ export function PageControllerProvider({
               startMs: transitionStartMs,
               durationMs: transitionDuration,
               from:
-                source && sourceBasePose && sourceExitMs > 0
+                sourceForDynamic && sourceBasePose && sourceExitMs > 0
                   ? {
                       page: sourceResolved.page,
                       basePose: sourceBasePose,
                       startMs: sourceStartMs,
                       rampMs: sourceExitMs,
-                      curve: transitionBlendCurve(source.dynamicCamera),
+                      curve: transitionBlendCurve(
+                        sourceForDynamic.dynamicCamera,
+                      ),
                       orbitBlendMs: sourceOrbitBlendMs,
                     }
                   : undefined,
@@ -971,9 +1028,13 @@ export function PageControllerProvider({
           if (!transitionDynamic?.to) dynamicOrbitBlendMsRef.current = null;
           transitionDynamicRef.current = null;
           pageTransitionRef.current = null;
+          activeSceneTransitionRef.current = null;
           transitionProgressRef.current = 1;
           setTransitionProgress(1);
           currentCameraKeyRef.current = `${target.id}:${poseKey(target.camera)}`;
+          currentIndexRef.current = index;
+          targetIndexRef.current = null;
+          isTransitioningRef.current = false;
           setCurrentIndex(index);
           setIsTransitioning(false);
           setTargetIndex(null);
@@ -985,23 +1046,29 @@ export function PageControllerProvider({
         },
       );
     },
-    [pages, currentIndex, freelookActive, sceneHandle, resolvePresentationState],
+    [pages, sceneHandle, resolvePresentationState],
   );
 
   const next = useCallback(() => {
     if (pages.length === 0) return;
-    goto(findVisiblePageIndex(pages, currentIndex, 1));
-  }, [goto, currentIndex, pages]);
+    const baseIndex = targetIndexRef.current ?? currentIndexRef.current;
+    goto(findVisiblePageIndex(pages, baseIndex, 1), "keyboard");
+  }, [goto, pages]);
   const prev = useCallback(() => {
     if (pages.length === 0) return;
-    goto(findVisiblePageIndex(pages, currentIndex, -1));
-  }, [goto, currentIndex, pages]);
+    const baseIndex = targetIndexRef.current ?? currentIndexRef.current;
+    goto(findVisiblePageIndex(pages, baseIndex, -1), "keyboard");
+  }, [goto, pages]);
 
   const tweenToPose = useCallback(
     (pose: PresentationPage["camera"]) => {
       const tweener = tweenerRef.current;
       if (!tweener) return;
       const targetPose = poseWithEnvironmentCamera(pose, environmentRef.current);
+      isTransitioningRef.current = true;
+      targetIndexRef.current = null;
+      activeSceneTransitionRef.current = null;
+      freelookActiveRef.current = false;
       setIsTransitioning(true);
       setTargetIndex(null);
       setTransitionProgress(1);
@@ -1025,6 +1092,8 @@ export function PageControllerProvider({
         currentCameraKeyRef.current = page
           ? `${page.id}:${poseKey(page.camera)}`
           : null;
+        isTransitioningRef.current = false;
+        targetIndexRef.current = null;
         setIsTransitioning(false);
         setTargetIndex(null);
         sceneHandle.setRaycastEnabled(true);
@@ -1037,11 +1106,15 @@ export function PageControllerProvider({
     const arrival = arrivalPoseRef.current;
     const tweener = tweenerRef.current;
     if (!arrival || !tweener) return;
-      setIsTransitioning(true);
-      setTargetIndex(null);
-      setTransitionProgress(1);
-      transitionProgressRef.current = 1;
-      setFreelookActive(false);
+    isTransitioningRef.current = true;
+    targetIndexRef.current = null;
+    activeSceneTransitionRef.current = null;
+    freelookActiveRef.current = false;
+    setIsTransitioning(true);
+    setTargetIndex(null);
+    setTransitionProgress(1);
+    transitionProgressRef.current = 1;
+    setFreelookActive(false);
     sceneHandle.setPageCameraMarker(null);
     dynamicPageIdRef.current = null;
     dynamicStartMsRef.current = null;
@@ -1059,6 +1132,8 @@ export function PageControllerProvider({
       currentCameraKeyRef.current = page
         ? `${page.id}:${poseKey(page.camera)}`
         : null;
+      isTransitioningRef.current = false;
+      targetIndexRef.current = null;
       setIsTransitioning(false);
       setTargetIndex(null);
       sceneHandle.setRaycastEnabled(true);
@@ -1094,6 +1169,40 @@ export function PageControllerProvider({
   ]);
 
   useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const debugHandle = {
+      goto,
+      next,
+      prev,
+      getState: () => ({
+        currentIndex: currentIndexRef.current,
+        currentPageId: pagesRef.current[currentIndexRef.current]?.id ?? null,
+        targetIndex: targetIndexRef.current,
+        targetPageId:
+          targetIndexRef.current !== null
+            ? pagesRef.current[targetIndexRef.current]?.id ?? null
+            : null,
+        transitionProgress: transitionProgressRef.current,
+        isTransitioning: isTransitioningRef.current,
+        transitionContext: activeSceneTransitionRef.current,
+        sceneTransition:
+          typeof sceneHandle.manager.getTransitionDebugState === "function"
+            ? sceneHandle.manager.getTransitionDebugState()
+            : null,
+      }),
+    };
+    const debugWindow = window as unknown as {
+      __pageController?: typeof debugHandle;
+    };
+    debugWindow.__pageController = debugHandle;
+    return () => {
+      if (debugWindow.__pageController === debugHandle) {
+        delete debugWindow.__pageController;
+      }
+    };
+  }, [goto, next, prev, sceneHandle.manager]);
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // Don't hijack keys when the user is typing into an editable element.
       // Without this, Home/End/PageUp/PageDown/Arrow inside a textarea or
@@ -1119,11 +1228,11 @@ export function PageControllerProvider({
       } else if (e.key === "Home") {
         e.preventDefault();
         const index = firstVisiblePageIndex(pages);
-        if (index >= 0) goto(index);
+        if (index >= 0) goto(index, "keyboard");
       } else if (e.key === "End") {
         e.preventDefault();
         const index = lastVisiblePageIndex(pages);
-        if (index >= 0) goto(index);
+        if (index >= 0) goto(index, "keyboard");
       }
     };
     window.addEventListener("keydown", onKey);

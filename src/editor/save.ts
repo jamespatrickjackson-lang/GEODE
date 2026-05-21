@@ -78,6 +78,25 @@ export async function deleteFile(path: string): Promise<void> {
   }
 }
 
+export async function convertBrandingAsset(opts: {
+  sourcePath: string;
+  outputPath: string;
+  sourceFormat: string;
+}): Promise<{ outputPath: string }> {
+  const res = await fetch("/api/convert-branding-asset", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(opts),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(
+      `convertBrandingAsset ${opts.sourcePath}: ${err.error ?? res.statusText}`,
+    );
+  }
+  return (await res.json()) as { outputPath: string };
+}
+
 export const PROJECT_ROOT = "projects/woodjam";
 export const projectJsonPath = (projectRoot = PROJECT_ROOT) =>
   `${projectRoot}/project.json`;

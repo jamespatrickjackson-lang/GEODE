@@ -31,6 +31,7 @@ import {
   loadThreeFirsTarget,
 } from "../loaders/loadTargets";
 import { loadTerrain } from "../loaders/loadTerrain";
+import { loadTopoGraticule } from "../loaders/loadTopoGraticule";
 import { loadTiledPointCloudPreview } from "../loaders/loadTiledPointCloudPreview";
 import { loadTreesVri } from "../loaders/loadTreesVri";
 import { SURFACE_RENDER_ORDER } from "../loaders/surfaceRenderPolicy";
@@ -74,7 +75,9 @@ function fileOrLegacyPath(
   fileKey: string,
   fallback: string,
 ): string {
-  return layerFiles(spec)[fileKey] ?? (spec as { path?: string }).path ?? fallback;
+  return (
+    layerFiles(spec)[fileKey] ?? (spec as { path?: string }).path ?? fallback
+  );
 }
 
 function layerGeoTransform(spec: ProjectLayerSpec) {
@@ -136,8 +139,7 @@ function workingAreaSceneBounds(spec: ProjectLayerSpec): {
 } {
   const metadata = spec.metadata as Record<string, unknown>;
   const workingArea =
-    metadata.phase3WorkingArea &&
-    typeof metadata.phase3WorkingArea === "object"
+    metadata.phase3WorkingArea && typeof metadata.phase3WorkingArea === "object"
       ? (metadata.phase3WorkingArea as Record<string, unknown>)
       : null;
   const sceneBounds =
@@ -183,7 +185,9 @@ function boxSegmentPositions(min: Vec3, max: Vec3): number[] {
   return edges.flatMap(([a, b]) => [...corners[a], ...corners[b]]);
 }
 
-function loadUtahForgePhase3WorkingArea(spec: ProjectLayerSpec): THREE.Object3D {
+function loadUtahForgePhase3WorkingArea(
+  spec: ProjectLayerSpec,
+): THREE.Object3D {
   const label = spec.label || "Phase 3 working area";
   const bounds = workingAreaSceneBounds(spec);
   const geometry = new LineSegmentsGeometry();
@@ -234,26 +238,45 @@ const layerLoaders: LayerLoaderHandler[] = [
     load: (context) =>
       context.onLoaded(loadUtahForgePhase3WorkingArea(context.spec)),
   },
+  {
+    id: "utah-forge-topo-graticule",
+    matches: (spec) => spec.id === "utah-forge-topo-graticule",
+    load: (context) =>
+      loadObject(
+        context,
+        "loadTopoGraticule",
+        loadTopoGraticule(
+          context.spec.metadata,
+          layerGeoTransform(context.spec),
+        ),
+      ),
+  },
   ...registerBaseGuiLoaders(loadReferenceStage),
   ...registerUtahForgeReferenceLoaders(loadReferenceStage),
   {
     id: "seismic-browser",
-    matches: (spec) => spec.type === "seismic" && !!layerFiles(spec).seismicManifest,
+    matches: (spec) =>
+      spec.type === "seismic" && !!layerFiles(spec).seismicManifest,
     load: (context) =>
       loadObject(
         context,
         `loadSeismicBrowser (${context.spec.id})`,
-        loadSeismicBrowser(layerDataPath(context, context.files.seismicManifest)),
+        loadSeismicBrowser(
+          layerDataPath(context, context.files.seismicManifest),
+        ),
       ),
   },
   {
     id: "scalar-volume",
-    matches: (spec) => spec.type === "volume" && !!layerFiles(spec).scalarVolumeManifest,
+    matches: (spec) =>
+      spec.type === "volume" && !!layerFiles(spec).scalarVolumeManifest,
     load: (context) =>
       loadObject(
         context,
         `loadScalarVolume (${context.spec.id})`,
-        loadScalarVolume(layerDataPath(context, context.files.scalarVolumeManifest)),
+        loadScalarVolume(
+          layerDataPath(context, context.files.scalarVolumeManifest),
+        ),
       ),
   },
   {
@@ -293,10 +316,13 @@ const layerLoaders: LayerLoaderHandler[] = [
     load: (context) => {
       const { spec } = context;
       Promise.all([
-        loadMeshPreview(layerDataPath(context, context.files.outerMeshPreview), {
-          depthPolicy: "depth-occluding-preview",
-          renderOrder: SURFACE_RENDER_ORDER.outerMeshPreview,
-        }),
+        loadMeshPreview(
+          layerDataPath(context, context.files.outerMeshPreview),
+          {
+            depthPolicy: "depth-occluding-preview",
+            renderOrder: SURFACE_RENDER_ORDER.outerMeshPreview,
+          },
+        ),
         loadMeshPreview(layerDataPath(context, context.files.meshPreview), {
           depthPolicy: "depth-occluding-preview",
           renderOrder: SURFACE_RENDER_ORDER.meshPreview,
@@ -354,7 +380,10 @@ const layerLoaders: LayerLoaderHandler[] = [
           context.onLoaded(combined);
         })
         .catch((error) =>
-          console.error(`load tie-point support layer (${spec.id}) failed:`, error),
+          console.error(
+            `load tie-point support layer (${spec.id}) failed:`,
+            error,
+          ),
         );
     },
   },
@@ -368,7 +397,9 @@ const layerLoaders: LayerLoaderHandler[] = [
         context.files.geojson,
       ].filter((file): file is string => typeof file === "string");
       Promise.all(
-        contourFiles.map((file) => loadLineStrings(layerDataPath(context, file))),
+        contourFiles.map((file) =>
+          loadLineStrings(layerDataPath(context, file)),
+        ),
       )
         .then((lineGroups) => {
           const combined = new THREE.Group();
@@ -391,15 +422,12 @@ const layerLoaders: LayerLoaderHandler[] = [
       loadObject(
         context,
         `loadPhotoOverlayPreview (${context.spec.id})`,
-        loadPhotoOverlayPreview(
-          layerDataPath(context, context.files.manifest),
-        ),
+        loadPhotoOverlayPreview(layerDataPath(context, context.files.manifest)),
       ),
   },
   {
     id: "point-markers",
-    matches: (spec) =>
-      spec.type === "point" && !!layerFiles(spec).geojson,
+    matches: (spec) => spec.type === "point" && !!layerFiles(spec).geojson,
     load: (context) =>
       loadObject(
         context,
@@ -421,8 +449,7 @@ const layerLoaders: LayerLoaderHandler[] = [
   {
     id: "shahbazi-dense-matching-links",
     matches: (spec) =>
-      spec.id === "shahbazi-dense-matching-links" &&
-      !!layerFiles(spec).geojson,
+      spec.id === "shahbazi-dense-matching-links" && !!layerFiles(spec).geojson,
     load: (context) =>
       loadObject(
         context,
@@ -443,7 +470,8 @@ const layerLoaders: LayerLoaderHandler[] = [
   },
   {
     id: "drillholes-2023",
-    matches: (spec) => spec.id === "drillholes-2023" && !!layerFiles(spec).geojson,
+    matches: (spec) =>
+      spec.id === "drillholes-2023" && !!layerFiles(spec).geojson,
     load: (context) => {
       const { manager, spec } = context;
       loadDrills(layerDataPath(context, context.files.geojson))
@@ -459,12 +487,15 @@ const layerLoaders: LayerLoaderHandler[] = [
           }
           context.onLoaded(obj);
         })
-        .catch((error) => console.error(`loadDrills (${spec.id}) failed:`, error));
+        .catch((error) =>
+          console.error(`loadDrills (${spec.id}) failed:`, error),
+        );
     },
   },
   {
     id: "empty-editor-layer",
-    matches: (spec) => spec.id === "assay-samples" || spec.id === "area-outlines",
+    matches: (spec) =>
+      spec.id === "assay-samples" || spec.id === "area-outlines",
     load: () => undefined,
   },
   {
@@ -480,7 +511,8 @@ const layerLoaders: LayerLoaderHandler[] = [
   },
   {
     id: "ez-gamma-2024",
-    matches: (spec) => spec.id === "ez-gamma-2024" && !!layerFiles(spec).geojson,
+    matches: (spec) =>
+      spec.id === "ez-gamma-2024" && !!layerFiles(spec).geojson,
     load: (context) =>
       loadObject(
         context,
@@ -513,8 +545,7 @@ const layerLoaders: LayerLoaderHandler[] = [
   {
     id: "hyperspectral-coverage-2024",
     matches: (spec) =>
-      spec.id === "hyperspectral-coverage-2024" &&
-      !!layerFiles(spec).geojson,
+      spec.id === "hyperspectral-coverage-2024" && !!layerFiles(spec).geojson,
     load: (context) =>
       loadObject(
         context,
@@ -568,7 +599,8 @@ const layerLoaders: LayerLoaderHandler[] = [
       )
         .then((group) => {
           context.onLoaded(group);
-          if (group.geologyHandle) context.manager.registerGeology(group.geologyHandle);
+          if (group.geologyHandle)
+            context.manager.registerGeology(group.geologyHandle);
         })
         .catch((error) => console.error("loadGeology failed:", error));
     },
@@ -583,7 +615,11 @@ const layerLoaders: LayerLoaderHandler[] = [
         loadClaim(
           layerDataPath(
             context,
-            fileOrLegacyPath(context.spec, "geojson", "/data/claim_boundary.geojson"),
+            fileOrLegacyPath(
+              context.spec,
+              "geojson",
+              "/data/claim_boundary.geojson",
+            ),
           ),
         ),
       ),
@@ -660,7 +696,11 @@ const layerLoaders: LayerLoaderHandler[] = [
         loadPowerLines(
           layerDataPath(
             context,
-            fileOrLegacyPath(context.spec, "geojson", "/data/power_lines.geojson"),
+            fileOrLegacyPath(
+              context.spec,
+              "geojson",
+              "/data/power_lines.geojson",
+            ),
           ),
         ),
       ),
@@ -694,7 +734,11 @@ const layerLoaders: LayerLoaderHandler[] = [
         loadTreesVri(
           layerDataPath(
             context,
-            fileOrLegacyPath(context.spec, "geojson", "/data/trees_vri.geojson"),
+            fileOrLegacyPath(
+              context.spec,
+              "geojson",
+              "/data/trees_vri.geojson",
+            ),
           ),
         ),
       ),

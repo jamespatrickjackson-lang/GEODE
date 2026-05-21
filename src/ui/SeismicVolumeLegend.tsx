@@ -266,7 +266,7 @@ function velocityValueLabel(
 
 type AmplitudeHandle = "min" | "max";
 
-export function SeismicVolumeLegend() {
+export function SeismicVolumeLegend({ stacked = false }: { stacked?: boolean }) {
   const { state, sceneHandle, setEnvLayerStyle, setPageLayerOverride } =
     useEditor();
   const { pages, currentIndex, targetIndex } = usePageController();
@@ -279,7 +279,7 @@ export function SeismicVolumeLegend() {
     !editingEnvironment && state.selectedPageId
       ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
       : null;
-  const page = selectedPage ?? controllerPage;
+  const page = targetIndex !== null ? controllerPage : selectedPage ?? controllerPage;
   const visible = editingEnvironment
     ? new Set(state.environment.defaultVisibleLayers)
     : page
@@ -389,7 +389,13 @@ export function SeismicVolumeLegend() {
     };
 
   return (
-    <aside style={rootStyle} aria-label="Utah FORGE seismic volume legend">
+    <aside
+      style={{
+        ...rootStyle,
+        ...(stacked ? { position: "relative", left: "auto", bottom: "auto" } : {}),
+      }}
+      aria-label="Utah FORGE seismic volume legend"
+    >
       <h2 style={titleStyle}>{isVelocity ? "Seismic velocity" : "Seismic amplitude"}</h2>
       <div style={subtitleStyle}>
         {displayMode} - {isVelocity ? "interval velocity model" : "source-normalized amplitude"}

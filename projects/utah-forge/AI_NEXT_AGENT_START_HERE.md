@@ -1,5 +1,8 @@
 # AI Next Agent Start Here - Utah FORGE
 
+> Candidate-stale orientation note, 2026-05-20:
+> This file predates the current Utah FORGE software-build state. Use `docs/dev-context/Active-Build-Context.md`, `projects/utah-forge/project.json`, `projects/utah-forge/environment.json`, current page JSON, current overlays, and tests as the active authority. Statements below that say seismic is blocked, Utah FORGE is MT-only, or a task is the current Stage 2 focus are historical unless confirmed against current project files and the latest human request.
+
 Updated: 2026-05-12
 
 This is the handoff file for the next AI agent or developer. Read this before changing code or data.

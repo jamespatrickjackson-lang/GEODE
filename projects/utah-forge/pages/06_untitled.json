@@ -30,9 +30,34 @@
       "scalarFocusMax": 2.2656248520231967,
       "scalarBlendMin": 1.3177084813101363,
       "scalarBlendMax": 2.2656248520231967,
+      "scalarInclusionMode": "thresholded",
       "scalarEdgeLineWidth": 3,
       "scalarNoiseThreshold": 0.6,
       "scalarEdgeAverage": 0.75
+    },
+    "utah-forge-phase3-seismic-browser": {
+      "opacity": 0.42,
+      "seismicProductId": "gdr-1015-forge3d-velo5d-float-01312018",
+      "seismicProductVisibility": {
+        "gdr-1015-forge3d-velo5d-float-01312018": true
+      },
+      "seismicRenderMode": "raymarch",
+      "seismicSliceAxis": "inline",
+      "seismicSliceFraction": 0.5,
+      "seismicAmplitudeMin": 0.08,
+      "seismicAmplitudeMax": 1,
+      "seismicColormap": "velocity",
+      "seismicTimeScale": 2,
+      "seismicSliceThroughVolume": false,
+      "seismicNavigationVisible": true,
+      "seismicNavigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "seismicRemoveBackground": true,
+      "seismicCapabilityPresetId": "gdr-1015-forge3d-velo5d-float-01312018-raymarch",
+      "sectionIsoEnabled": false
     }
   },
   "accentColor": "#ffcd42",

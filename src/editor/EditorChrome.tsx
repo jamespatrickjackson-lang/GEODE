@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import type { SceneHandle } from "../scene";
 import {
   PageControllerProvider,
@@ -17,6 +18,7 @@ import { AssayLegend } from "../ui/AssayLegend";
 import { ResistivityLegend } from "../ui/ResistivityLegend";
 import { SectionIsoLegend } from "../ui/SectionIsoLegend";
 import { SeismicVolumeLegend } from "../ui/SeismicVolumeLegend";
+import { SurfaceElevationLegend } from "../ui/SurfaceElevationLegend";
 import { SceneSectionLegend } from "../ui/SceneSectionLegend";
 import { ScaleBar } from "../ui/ScaleBar";
 import {
@@ -39,6 +41,7 @@ const UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID =
 const UTAH_FORGE_MT_STATIONS_LAYER_ID = "utah-forge-mt-stations";
 const UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID = "utah-forge-phase3-seismic-browser";
 const UTAH_FORGE_SCENE_SECTION_LAYER_ID = "utah-forge-scene-section-planes";
+const UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID = "utah-forge-working-area-focus";
 
 const MT_SCALAR_WINDOW_FIELDS = [
   "scalarFocusMin",
@@ -81,6 +84,23 @@ const MT_VOLUME_PREVIEW_FIELDS = [
   "scalarVolumeMaskVisible",
   "scalarLegendVisible",
   "opacity",
+] as const;
+
+const MT_FULL_DENSITY_PREVIEW_FIELDS = [
+  "scalarInclusionMode",
+  "scalarDistanceLightStrength",
+  "sectionIsoEnabled",
+  "sectionIsoLinesVisible",
+  "sectionIsoBandsVisible",
+  "sectionIsoTargetIds",
+  "sectionIsoMin",
+  "sectionIsoMax",
+  "sectionIsoLevelCount",
+  "sectionIsoLineWidth",
+  "sectionIsoLineStyle",
+  "sectionIsoBandOpacity",
+  "sectionIsoFillOffset",
+  "sectionIsoSourceOpacity",
 ] as const;
 
 const MT_THRESHOLD_PREVIEW_FIELDS = [
@@ -141,8 +161,30 @@ const SCENE_SECTION_PREVIEW_FIELDS = [
   "sceneSectionLegendVisible",
 ] as const;
 
+const WORKING_AREA_FOCUS_PREVIEW_FIELDS = [
+  "workingAreaFocusEnabled",
+  "workingAreaFocusMode",
+  "workingAreaFocusBoundsLayerId",
+  "workingAreaFocusTargetLayerIds",
+  "workingAreaFocusOutsideOpacityByLayerId",
+  "workingAreaFocusHelperVisible",
+] as const;
+
+const utahForgeLegendStackStyle: CSSProperties = {
+  position: "absolute",
+  zIndex: 11,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-start",
+  gap: 12,
+  maxHeight: "calc(100vh - 104px)",
+  overflowY: "auto",
+  pointerEvents: "none",
+};
+
 const UTAH_FORGE_PREVIEW_LAYER_OVERRIDE_FIELDS: PreviewLayerOverrideFields = {
-  [UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID]: MT_SCALAR_WINDOW_FIELDS,
+  [UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID]:
+    MT_FULL_DENSITY_PREVIEW_FIELDS,
   [UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID]: MT_SCALAR_WINDOW_FIELDS,
   [UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID]: MT_SCALAR_WINDOW_FIELDS,
   [UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID]: MT_VOLUME_PREVIEW_FIELDS,
@@ -150,6 +192,7 @@ const UTAH_FORGE_PREVIEW_LAYER_OVERRIDE_FIELDS: PreviewLayerOverrideFields = {
   [UTAH_FORGE_MT_STATIONS_LAYER_ID]: MT_STATION_PREVIEW_FIELDS,
   [UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID]: SEISMIC_BROWSER_PREVIEW_FIELDS,
   [UTAH_FORGE_SCENE_SECTION_LAYER_ID]: SCENE_SECTION_PREVIEW_FIELDS,
+  [UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID]: WORKING_AREA_FOCUS_PREVIEW_FIELDS,
 };
 
 export function EditorChrome({
@@ -162,6 +205,10 @@ export function EditorChrome({
   const { state } = useEditor();
   const [activeAudienceLens, setActiveAudienceLens] =
     useState<AudienceLensId>("investor");
+  const gui = state.environment.scene?.gui ?? {};
+  const navigator = gui.navigator ?? {};
+  const legendInset =
+    navigator.useOverride === true ? (navigator.bottom ?? 34) : 34;
   const presentationStateTransform = useCallback(
     (
       environment: typeof state.environment,
@@ -204,14 +251,29 @@ export function EditorChrome({
         activeAudienceLens={activeAudienceLens}
         onAudienceLensChange={setActiveAudienceLens}
       />
-      <LightModeToggle
-        sceneHandle={sceneHandle}
-        onReturnHome={onReturnHome}
-      />
+      <LightModeToggle sceneHandle={sceneHandle} onReturnHome={onReturnHome} />
       <AssayLegend sceneHandle={sceneHandle} />
-      <ResistivityLegend />
-      <SectionIsoLegend />
-      <SeismicVolumeLegend />
+      {state.projectSlug === "utah-forge" ? (
+        <div
+          style={{
+            ...utahForgeLegendStackStyle,
+            left: legendInset,
+            bottom: legendInset + 34,
+          }}
+        >
+          <SeismicVolumeLegend stacked />
+          <SectionIsoLegend stacked />
+          <ResistivityLegend stacked />
+          <SurfaceElevationLegend stacked />
+        </div>
+      ) : (
+        <>
+          <ResistivityLegend />
+          <SectionIsoLegend />
+          <SeismicVolumeLegend />
+          <SurfaceElevationLegend />
+        </>
+      )}
       <SceneSectionLegend />
       <SceneLabels sceneHandle={sceneHandle} />
       <PresenterLogo />

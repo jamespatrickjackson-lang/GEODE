@@ -1,0 +1,70 @@
+{
+  "id": "45_resistivity_isosurfaces",
+  "title": "Resistivity Isosurfaces",
+  "subtitle": "Proposed / needs_review fixed MT threshold surfaces",
+  "camera": {
+    "position": [
+      -59727.5089767489,
+      77515.83916639606,
+      -3368.4321245397587
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 5000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#ff637a",
+  "visibilityOverrides": {
+    "utah-forge-phase3-working-area": true,
+    "terrain": false,
+    "transport-roads": false,
+    "hydrography-streams": false,
+    "hydrography-lakes": false,
+    "utah-forge-phase3-seismic-browser": false,
+    "utah-forge-mt-stations": false,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": true,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-mt-resistivity-slices": false
+  },
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "opacity": 0.24,
+      "pointSizePx": 1,
+      "scalarInclusionMode": "all-valid"
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": true,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": true
+      },
+      "mtThresholdSurfaceWireframe": false,
+      "opacity": 0.46
+    },
+    "utah-forge-phase3-seismic-browser": {
+      "opacity": 0,
+      "seismicLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-slices": {
+      "scalarLegendVisible": false
+    }
+  }
+}

@@ -281,7 +281,7 @@ function defaultDisplayMax(
   return styleNumber(style, "scalarDisplayMax", fallback);
 }
 
-export function SectionIsoLegend() {
+export function SectionIsoLegend({ stacked = false }: { stacked?: boolean }) {
   const {
     state,
     sceneHandle,
@@ -354,7 +354,7 @@ export function SectionIsoLegend() {
     !editingEnvironment && state.selectedPageId
       ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
       : null;
-  const page = selectedPage ?? controllerPage;
+  const page = targetIndex !== null ? controllerPage : selectedPage ?? controllerPage;
   const style = editingEnvironment
     ? state.environment.layerStyles[layerId] ?? {}
     : page
@@ -429,8 +429,9 @@ export function SectionIsoLegend() {
       ref={rootRef}
       style={{
         ...rootStyle,
-        left: inset,
-        bottom: inset + 194,
+        ...(stacked
+          ? { position: "relative" }
+          : { left: inset, bottom: inset + 194 }),
       }}
       aria-label="Scalar section ISO legend"
       data-testid="section-iso-legend"

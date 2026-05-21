@@ -1,5 +1,8 @@
 # Utah FORGE Data
 
+> Candidate-stale orientation note, 2026-05-20:
+> This README predates current Utah FORGE software-build state. Use `docs/dev-context/Active-Build-Context.md`, `projects/utah-forge/project.json`, `projects/utah-forge/environment.json`, current generated artifacts, and tests as active authority. Statements below that say seismic analysis is not active or must not be wired are historical unless confirmed against current project files and the latest human request.
+
 Updated: 2026-05-12
 
 This folder holds Utah FORGE delivered source/client data and GeoSee-ready derived outputs.

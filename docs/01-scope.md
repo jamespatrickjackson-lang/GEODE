@@ -1,5 +1,8 @@
 # Scope
 
+> Candidate-stale orientation note, 2026-05-20:
+> This scope doc predates current Utah FORGE MT/seismic/topo software-build work. For active build context, start with `docs/dev-context/Active-Build-Context.md` and current project/source files. Statements below that describe Utah FORGE as foundation-only, empty, or without real ingested technical data are historical unless confirmed against current `projects/utah-forge/project.json`, `environment.json`, generated artifacts, and tests.
+
 Last updated: 2026-05-12
 
 This document records what the current GeoSee alpha is allowed to do, what it already does, and what remains out of scope.

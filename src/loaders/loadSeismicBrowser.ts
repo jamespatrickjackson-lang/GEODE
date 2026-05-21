@@ -204,6 +204,10 @@ uniform vec3 uSceneSectionNormals[3];
 uniform float uSceneSectionPositions[3];
 uniform float uSceneSectionThickness[3];
 uniform int uSceneSectionInvert[3];
+uniform int uWorkingAreaFocusEnabled;
+uniform vec3 uWorkingAreaFocusBoundsMin;
+uniform vec3 uWorkingAreaFocusBoundsMax;
+uniform float uWorkingAreaFocusOutsideOpacity;
 varying vec3 vColor;
 varying float vAlpha;
 varying vec3 vWorldPosition;
@@ -222,9 +226,17 @@ bool sceneSectionAllows(vec3 position) {
   return true;
 }
 
+float workingAreaFocusAlpha(vec3 position) {
+  if (uWorkingAreaFocusEnabled == 0) return 1.0;
+  bool inside =
+    all(greaterThanEqual(position, uWorkingAreaFocusBoundsMin)) &&
+    all(lessThanEqual(position, uWorkingAreaFocusBoundsMax));
+  return inside ? 1.0 : clamp(uWorkingAreaFocusOutsideOpacity, 0.0, 1.0);
+}
+
 void main() {
   if (!sceneSectionAllows(vWorldPosition)) discard;
-  float alpha = clamp(vAlpha * uOpacity, 0.0, 1.0);
+  float alpha = clamp(vAlpha * uOpacity, 0.0, 1.0) * workingAreaFocusAlpha(vWorldPosition);
   if (alpha <= 0.01) discard;
   gl_FragColor = vec4(vColor, alpha);
 }
@@ -372,6 +384,10 @@ async function buildSectionMesh(
       uSceneSectionPositions: { value: [0, 0, 0] },
       uSceneSectionThickness: { value: [1, 1, 1] },
       uSceneSectionInvert: { value: [0, 0, 0] },
+      uWorkingAreaFocusEnabled: { value: 0 },
+      uWorkingAreaFocusBoundsMin: { value: new THREE.Vector3() },
+      uWorkingAreaFocusBoundsMax: { value: new THREE.Vector3() },
+      uWorkingAreaFocusOutsideOpacity: { value: 1 },
     },
     vertexColors: true,
     transparent: true,
@@ -442,6 +458,10 @@ uniform vec3 uSceneSectionNormals[3];
 uniform float uSceneSectionPositions[3];
 uniform float uSceneSectionThickness[3];
 uniform int uSceneSectionInvert[3];
+uniform int uWorkingAreaFocusEnabled;
+uniform vec3 uWorkingAreaFocusBoundsMin;
+uniform vec3 uWorkingAreaFocusBoundsMax;
+uniform float uWorkingAreaFocusOutsideOpacity;
 
 in vec3 vWorldPosition;
 out vec4 fragColor;
@@ -501,6 +521,14 @@ bool sceneSectionAllows(vec3 position) {
   return true;
 }
 
+float workingAreaFocusAlpha(vec3 position) {
+  if (uWorkingAreaFocusEnabled == 0) return 1.0;
+  bool inside =
+    all(greaterThanEqual(position, uWorkingAreaFocusBoundsMin)) &&
+    all(lessThanEqual(position, uWorkingAreaFocusBoundsMax));
+  return inside ? 1.0 : clamp(uWorkingAreaFocusOutsideOpacity, 0.0, 1.0);
+}
+
 void main() {
   vec3 rayDirection = normalize(vWorldPosition - cameraPosition);
   vec2 hit = intersectBox(cameraPosition, rayDirection);
@@ -521,12 +549,17 @@ void main() {
       t += stepSize;
       continue;
     }
+    float focusAlpha = workingAreaFocusAlpha(position);
+    if (focusAlpha <= 0.0001) {
+      t += stepSize;
+      continue;
+    }
     vec3 uvw = (position - uBoundsMin) / (uBoundsMax - uBoundsMin);
     float amplitude = texture(uVolume, clamp(uvw, vec3(0.0), vec3(1.0))).r;
     float rampT = clamp((amplitude - uAmplitudeMin) / (windowMax - uAmplitudeMin), 0.0, 1.0);
     float displayT = shapedAmplitude(rampT);
     float contrast = abs(displayT - 0.5) * 2.0;
-    float alpha = smoothstep(0.06, 0.92, contrast) * uOpacity * 0.085;
+    float alpha = smoothstep(0.06, 0.92, contrast) * uOpacity * 0.085 * focusAlpha;
     if (uRemoveBackground == 1) {
       float muteHigh = min(0.96, max(0.62, uBackgroundCutoff + 0.22));
       alpha *= smoothstep(uBackgroundCutoff, muteHigh, contrast);
@@ -604,6 +637,10 @@ async function buildRaymarchMesh(
       uSceneSectionPositions: { value: [0, 0, 0] },
       uSceneSectionThickness: { value: [1, 1, 1] },
       uSceneSectionInvert: { value: [0, 0, 0] },
+      uWorkingAreaFocusEnabled: { value: 0 },
+      uWorkingAreaFocusBoundsMin: { value: new THREE.Vector3() },
+      uWorkingAreaFocusBoundsMax: { value: new THREE.Vector3() },
+      uWorkingAreaFocusOutsideOpacity: { value: 1 },
     },
     side: THREE.BackSide,
     transparent: true,

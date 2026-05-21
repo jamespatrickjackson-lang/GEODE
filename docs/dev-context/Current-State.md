@@ -1,5 +1,8 @@
 # Current State
 
+> Orientation note, 2026-05-20:
+> For current software-build work, start with `docs/dev-context/Active-Build-Context.md` and `docs/dev-context/Active-Build-Queue.md`. This file remains a state ledger and contradiction record, not the shortest active task orientation.
+
 Last populated: 2026-05-15
 
 ## Authority
@@ -11,6 +14,8 @@ Last populated: 2026-05-15
 ## Current Human Priority
 
 - Observed: Current priority is GeoVox data/system/app structural refinement before further implementation.
+- Observed: Current operating mode is software-build mode. Normal work should start from the requested subsystem and current source/project files, not from Utah FORGE intake directives or staged drops.
+- Observed: Intake remains a dormant Add to Project capability. It should only steer agent work when the human explicitly asks for intake, staged files, a drop, a directive, a review route, or Add to Project behavior.
 - Observed: Processware/SRI implementation is parked for now and should not be implemented in the app during this refinement step.
 - Observed: Seismic is needed and underway; do not assume seismic should be parked, hidden, removed, or downgraded.
 - Observed: Rendering beauty and high-quality client-data visualization are non-negotiable.
@@ -19,6 +24,16 @@ Last populated: 2026-05-15
 - Observed: Updated time-pressure/demo goals will arrive later; scope remains under refinement and is not locked.
 - Observed: `Data-System-App-Refinement-Plan.md` records the current proposed structural refinement plan.
 - Observed: `Conceptual-Frame-Geovox-Lab-Processware-Breadcrumbs.md` now exists as context only, not active scope, not official DHF, and not an accepted product requirement.
+
+## Intelligence Layer Current State
+
+- Observed: `docs/dev-context/Intelligence-Layer-Current-State.md` is now the active orientation doc for the Utah FORGE intelligence layer.
+- Observed: The canonical intake-review model remains available only for explicit intake work: `intake_manifest.json` / `intake_context.md` -> `INTAKE_REVIEW.json/.md` -> `LATEST_INTAKE_REVIEW.json` -> optional `USER_CONTEXT_RESPONSE.json/.md` -> later separate route execution.
+- Observed: Intake test artifacts and active intake page surfaces have been purged from the Utah FORGE active project surface so they do not distract normal software-build work.
+- Observed: `AI_REVIEW`, `LATEST_AI_REVIEW`, and `INTAKE_SWITCHBOARD` are compatibility aliases only.
+- Observed: `AGENT_TRAILHEAD`, `BUILD_DIRECTIVE`, and `INTENT_BINDINGS` are historical trace only, not active authority.
+- Observed: Pre-canonical planning docs were archived under `docs/dev-context/Archive/intake-intelligence-precanonical-2026-05-20/`.
+- Unverified / needs human review: This current model is not accepted product scope until a human records acceptance in `Acceptance-Register.md`.
 
 ## What Is Real Now
 
@@ -111,56 +126,12 @@ Observed next valid move: create a bounded Data/System/App Refinement Plan revie
 
 ## Utah FORGE Intake Test State
 
-Last updated: 2026-05-17
+Last updated: 2026-05-20
 
-### Verified From Repo
+Status: quarantined / not active build context.
 
-Evidence read:
+The prior Utah FORGE intake tests are over. Active test drops, archived test drops, sample intake vocabulary, latest intake pointers, intake review pages, and intake overlays have been removed from the active project surface.
 
-- `projects/utah-forge/intake_staging/drops/2026-05-16_02-45-23_1kbq3z/BUILD_DIRECTIVE.md`
-- `projects/utah-forge/intake_staging/drops/2026-05-16_02-45-23_1kbq3z/intake_context.md`
-- `projects/utah-forge/intake_staging/drops/2026-05-16_02-45-23_1kbq3z/intake_manifest.json`
-- `projects/utah-forge/intake_staging/drops/2026-05-16_02-45-23_1kbq3z/source_inventory.json`
-- `projects/utah-forge/intake_staging/drops/2026-05-16_02-45-23_1kbq3z/source_inventory.md`
-- `projects/utah-forge/intake_staging/drops/2026-05-16_02-45-23_1kbq3z/processing_plan.md`
-- `projects/utah-forge/intake_staging/drops/2026-05-16_02-45-23_1kbq3z/proposed_next_steps.md`
-- `projects/utah-forge/intake_staging/drops/2026-05-16_02-45-23_1kbq3z/proposed_page_update_plan.md`
-- `projects/utah-forge/pages/intake_2026-05-16_02-45-23_1kbq3z.json`
-- `projects/utah-forge/overlays/intake_2026-05-16_02-45-23_1kbq3z/text.md`
-- `projects/utah-forge/project.json`
+The Add to Project UI remains available as a dormant capability. It is not the problem. The operating rule is that agents should not read or follow intake drops, `BUILD_DIRECTIVE`, `LATEST_INTAKE_REVIEW`, `AI_REVIEW`, or switchboard files during normal software-build work unless the human explicitly asks for intake work.
 
-### Utah FORGE Intake Test State
-
-| Field | Repo evidence |
-| --- | --- |
-| Drop ID | `2026-05-16_02-45-23_1kbq3z` |
-| Project | `utah-forge` |
-| Mode | `source_inventory_plus_review_page` |
-| Manifest status | `review_page_created` |
-| Manifest processingStatus | `review_page_created` |
-| accepted | `false` |
-| reviewRequired | `true` |
-| Files inventoried count | `6` |
-| Source inventory exists | yes, `source_inventory.json` and `source_inventory.md` |
-| PDF review outputs exist | yes, `pdf_review/pdf_index.json` and `pdf_review/pdf_index.md` |
-| Review page exists | yes, `projects/utah-forge/pages/intake_2026-05-16_02-45-23_1kbq3z.json` |
-| Review overlay exists | yes, `projects/utah-forge/overlays/intake_2026-05-16_02-45-23_1kbq3z/text.md` |
-| PageOrder entry exists | yes, `project.json` includes `intake_2026-05-16_02-45-23_1kbq3z` |
-| Project data processing performed | `false`, reported by `source_inventory.json` |
-| Computed artifact created | `false`, reported by `source_inventory.json` |
-
-### Accepted Vs Proposed Boundary
-
-The drop is staged review state only. Repository files report `accepted: false`, `reviewRequired: true`, and `status: proposed` for the source inventory and PDF review outputs.
-
-### Known Placeholders / Unaccepted Material
-
-- Canonical PDF is unknown.
-- No user context was supplied with the drop, as recorded in `intake_context.md`.
-- Source/report links and licensing claims remain unverified.
-- The proposed page update plan is not accepted work.
-- Existing Utah FORGE demo pages were not changed by the proposed page update plan, according to `proposed_page_update_plan.md`.
-
-### Immediate Next Valid Move
-
-Human chooses whether to select a canonical PDF, archive/reject/supersede the drop, verify source/licensing claims, approve a bounded page-update proposal, or leave the intake state as review-only.
+No intake artifact is accepted project truth. If intake is resumed later, treat it as a new explicit task with fresh staged evidence.

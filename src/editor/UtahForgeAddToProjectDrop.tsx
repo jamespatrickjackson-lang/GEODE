@@ -1,13 +1,15 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
-import { writeFilesBatch } from "./save";
+import { readFile, writeFilesBatch } from "./save";
 import { TECHNICAL_MONO_FONT } from "./styles";
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 const MAX_TOTAL_SIZE = 75 * 1024 * 1024;
 const UTAH_FORGE_PROJECT_ROOT = "projects/utah-forge";
-const NEXT_CODEX_PROMPT = "read build directive";
+const LATEST_INTAKE_REVIEW_PATH = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/LATEST_INTAKE_REVIEW.json`;
+const LATEST_AI_REVIEW_PATH = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/LATEST_AI_REVIEW.json`;
+const NEXT_CODEX_PROMPT = "run intake trailhead";
 type IntakeEntrypoint = "editor-header" | "home-project-list";
 
 interface Props {
@@ -37,7 +39,104 @@ interface LastDrop {
   folderPath: string;
   manifestPath: string;
   contextPath: string;
-  buildDirectivePath: string;
+}
+
+type AiReviewStatus =
+  | "questions_required"
+  | "route_options_ready"
+  | "plan_proposed"
+  | "blocked_needs_trace"
+  | string;
+type ResponseMode = "answer" | "agree" | "disregard" | "refine";
+
+interface AiReviewQuestion {
+  id: string;
+  kind: string;
+  question: string;
+  whyItMatters: string;
+  sourcePath: string;
+  responseModeHint?: string;
+  requiredBefore?: string;
+}
+
+interface AiReviewPlan {
+  summary?: string;
+  steps?: string[];
+  filesLikelyTouched?: string[];
+  filesForbidden?: string[];
+  verification?: string[];
+  remainingUnresolveds?: string[];
+  nextGate?: string;
+}
+
+interface AiReviewRouteCandidate {
+  id?: string;
+  routeId?: string;
+  normalizedRouteId?: string;
+  label?: string;
+  input?: string;
+  possibleRoute?: string;
+  approvalNeeded?: string;
+  blocker?: string;
+  requiredQuestionIds?: string[];
+}
+
+interface AiReviewPayload {
+  kind: string;
+  dropId: string;
+  project: string;
+  status: AiReviewStatus;
+  accepted: false;
+  reviewRequired: true;
+  sourceTracePaths?: string[];
+  questions: AiReviewQuestion[];
+  plan: AiReviewPlan | null;
+  routeCandidates?: AiReviewRouteCandidate[];
+  boundary?: Record<string, unknown>;
+  nextUiAction?: string;
+  nextSmokeCall?: string;
+}
+
+interface ResponseDraft {
+  questionId: string;
+  mode: ResponseMode;
+  answer: string;
+  selectedRouteId: string;
+  stillBlocked: boolean;
+  notes: string;
+}
+
+interface UserContextResponsePayload {
+  schemaVersion: string;
+  kind: "geosee.intake.context-confirmation";
+  dropId: string;
+  project: string;
+  createdAt: string;
+  responseSource: "ui";
+  status: "context_confirmed";
+  accepted: false;
+  reviewRequired: true;
+  answers: Array<{
+    questionId: string;
+    kind: string;
+    question: string;
+    answer: string;
+    meaning: string;
+    selectedOption: string;
+    selectedRouteId: string;
+    freeText: string;
+    createdAt: string;
+  }>;
+  selectedRouteId?: string;
+  notes?: string;
+  nextCodexPrompt: string;
+}
+
+interface LatestAiReviewPointer {
+  dropId?: string;
+  intakeReviewPath?: string;
+  aiReviewPath?: string;
+  status?: string;
 }
 
 export function UtahForgeAddToProjectDrop({
@@ -55,6 +154,12 @@ export function UtahForgeAddToProjectDrop({
   const [error, setError] = useState<string | null>(null);
   const [lastDrop, setLastDrop] = useState<LastDrop | null>(null);
   const [pendingDropId, setPendingDropId] = useState<string | null>(null);
+  const [reviewDropId, setReviewDropId] = useState("");
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [reviewSourcePath, setReviewSourcePath] = useState<string | null>(null);
+  const [aiReview, setAiReview] = useState<AiReviewPayload | null>(null);
+  const [responseDrafts, setResponseDrafts] = useState<ResponseDraft[]>([]);
+  const [responseMessage, setResponseMessage] = useState<string | null>(null);
 
   const totalSize = useMemo(
     () => files.reduce((sum, file) => sum + file.size, 0),
@@ -69,6 +174,41 @@ export function UtahForgeAddToProjectDrop({
     projectRoot === UTAH_FORGE_PROJECT_ROOT;
   const targetDropId = pendingDropId ?? "<dropId>";
   const targetFolderPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${targetDropId}`;
+  const activeReviewDropId = reviewDropId.trim() || lastDrop?.dropId || "";
+  const canLoadReview = !busy && !reviewBusy && isSafeDropId(activeReviewDropId);
+  const canSaveResponses =
+    !busy &&
+    !reviewBusy &&
+    aiReview !== null &&
+    responseDrafts.length > 0 &&
+    isSafeDropId(aiReview.dropId);
+
+  useEffect(() => {
+    if (!open || reviewDropId.trim() || lastDrop?.dropId) return;
+    let cancelled = false;
+    void readFile(LATEST_INTAKE_REVIEW_PATH)
+      .then((content) => {
+        if (cancelled || !content) return readFile(LATEST_AI_REVIEW_PATH);
+        return content;
+      })
+      .then((content) => {
+        if (cancelled || !content) return;
+        const pointer = JSON.parse(content) as LatestAiReviewPointer;
+        if (pointer.dropId && isSafeDropId(pointer.dropId)) {
+          setReviewDropId(pointer.dropId);
+          setResponseMessage(
+            `Loaded latest reviewed drop pointer: ${pointer.dropId}`,
+          );
+        }
+      })
+      .catch(() => {
+        // The pointer is optional. Missing/invalid pointer should leave the
+        // intake staging flow unchanged.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [lastDrop?.dropId, open, reviewDropId]);
 
   if (!open) return null;
 
@@ -84,6 +224,7 @@ export function UtahForgeAddToProjectDrop({
     }
     setFiles(selected);
     setError(null);
+    setResponseMessage(null);
   };
 
   const closeAndReset = () => {
@@ -95,6 +236,11 @@ export function UtahForgeAddToProjectDrop({
     setError(null);
     setLastDrop(null);
     setPendingDropId(null);
+    setReviewDropId("");
+    setAiReview(null);
+    setReviewSourcePath(null);
+    setResponseDrafts([]);
+    setResponseMessage(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
     onClose();
   };
@@ -112,7 +258,6 @@ export function UtahForgeAddToProjectDrop({
     const folderPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${dropId}`;
     const manifestPath = `${folderPath}/intake_manifest.json`;
     const contextPath = `${folderPath}/intake_context.md`;
-    const buildDirectivePath = `${folderPath}/BUILD_DIRECTIVE.md`;
 
     try {
       const prepared = prepareFiles(files, folderPath);
@@ -147,7 +292,6 @@ export function UtahForgeAddToProjectDrop({
         userContext,
         prepared.map(({ entry }) => entry),
       );
-      const buildDirective = createDropBuildDirective(dropId);
       await writeFilesBatch([
         ...rawWrites,
         {
@@ -160,19 +304,18 @@ export function UtahForgeAddToProjectDrop({
           content: contextNote,
           encoding: "utf8",
         },
-        {
-          path: buildDirectivePath,
-          content: buildDirective,
-          encoding: "utf8",
-        },
       ]);
       setLastDrop({
         dropId,
         folderPath,
         manifestPath,
         contextPath,
-        buildDirectivePath,
       });
+      setReviewDropId(dropId);
+      setAiReview(null);
+      setReviewSourcePath(null);
+      setResponseDrafts([]);
+      setResponseMessage(null);
       setMessage("Files staged. They are unprocessed and require review.");
       setFiles([]);
       setUserContext("");
@@ -187,6 +330,147 @@ export function UtahForgeAddToProjectDrop({
       setMessage(null);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const loadAiReview = async () => {
+    const dropId = activeReviewDropId;
+    if (!isSafeDropId(dropId)) {
+      setError("Enter a safe drop ID before loading intake review.");
+      return;
+    }
+    setReviewBusy(true);
+    setError(null);
+    setResponseMessage(null);
+    try {
+      const intakeReviewPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${dropId}/INTAKE_REVIEW.json`;
+      const aiReviewPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${dropId}/AI_REVIEW.json`;
+      const switchboardPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${dropId}/INTAKE_SWITCHBOARD.json`;
+      const intakeReviewText = await readFile(intakeReviewPath);
+      const aiReviewText = intakeReviewText ? null : await readFile(aiReviewPath);
+      const sourcePath = intakeReviewText ? intakeReviewPath : aiReviewText ? aiReviewPath : switchboardPath;
+      const reviewText = intakeReviewText ?? aiReviewText ?? (await readFile(switchboardPath));
+      if (!reviewText) {
+        setAiReview(null);
+        setReviewSourcePath(null);
+        setResponseDrafts([]);
+        setResponseMessage("Run `run intake trailhead` first. No AI review file was found for this drop.");
+        return;
+      }
+      const parsed = JSON.parse(reviewText) as unknown;
+      const normalized = normalizeAiReview(parsed, dropId);
+      setAiReview(normalized);
+      setReviewSourcePath(sourcePath);
+      setResponseDrafts(
+        normalized.questions.map((question) => ({
+          questionId: question.id,
+          mode: "answer",
+          answer: "",
+          selectedRouteId: "",
+          stillBlocked: true,
+          notes: "",
+        })),
+      );
+      setResponseMessage(
+        intakeReviewText
+          ? "Loaded INTAKE_REVIEW.json."
+          : aiReviewText
+          ? "Loaded AI_REVIEW.json."
+          : "Loaded legacy INTAKE_SWITCHBOARD.json fallback.",
+      );
+    } catch (err) {
+      setAiReview(null);
+      setReviewSourcePath(null);
+      setResponseDrafts([]);
+      setError(
+        `Failed to load intake review. ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    } finally {
+      setReviewBusy(false);
+    }
+  };
+
+  const loadLatestReviewedDrop = async () => {
+    setReviewBusy(true);
+    setError(null);
+    setResponseMessage(null);
+    try {
+      const content = (await readFile(LATEST_INTAKE_REVIEW_PATH)) ?? (await readFile(LATEST_AI_REVIEW_PATH));
+      if (!content) {
+        setResponseMessage("No latest intake review pointer found. Run `run intake trailhead` first.");
+        return;
+      }
+      const pointer = JSON.parse(content) as LatestAiReviewPointer;
+      if (!pointer.dropId || !isSafeDropId(pointer.dropId)) {
+        setError("Latest intake review pointer does not contain a safe drop ID.");
+        return;
+      }
+      setReviewDropId(pointer.dropId);
+      setResponseMessage(`Filled latest reviewed drop: ${pointer.dropId}`);
+    } catch (err) {
+      setError(
+        `Failed to load latest reviewed drop pointer. ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    } finally {
+      setReviewBusy(false);
+    }
+  };
+
+  const updateResponseDraft = (
+    questionId: string,
+    patch: Partial<ResponseDraft>,
+  ) => {
+    setResponseDrafts((drafts) =>
+      drafts.map((draft) =>
+        draft.questionId === questionId ? { ...draft, ...patch } : draft,
+      ),
+    );
+  };
+
+  const saveUserContextResponse = async () => {
+    if (!canSaveResponses || !aiReview || !reviewSourcePath) return;
+    setReviewBusy(true);
+    setError(null);
+    setResponseMessage(null);
+    const createdAt = new Date().toISOString();
+    const responseJsonPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${aiReview.dropId}/USER_CONTEXT_RESPONSE.json`;
+    const responseMdPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${aiReview.dropId}/USER_CONTEXT_RESPONSE.md`;
+    const payload = createUserContextResponse(
+      aiReview,
+      responseDrafts,
+      createdAt,
+    );
+    try {
+      await writeFilesBatch([
+        {
+          path: responseJsonPath,
+          content: `${JSON.stringify(payload, null, 2)}\n`,
+          encoding: "utf8",
+        },
+        {
+          path: responseMdPath,
+          content: createUserContextResponseMarkdown(
+            payload,
+            aiReview,
+          ),
+          encoding: "utf8",
+        },
+      ]);
+      setResponseMessage(
+        `Context response saved: ${responseJsonPath}. Next: ${NEXT_CODEX_PROMPT}. No processing has occurred.`,
+      );
+    } catch (err) {
+      setError(
+        `Failed to save user response trace. ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    } finally {
+      setReviewBusy(false);
     }
   };
 
@@ -311,7 +595,8 @@ export function UtahForgeAddToProjectDrop({
                   <li>raw/</li>
                   <li>intake_manifest.json</li>
                   <li>intake_context.md</li>
-                  <li>BUILD_DIRECTIVE.md</li>
+                  <li>INTAKE_REVIEW after appraisal</li>
+                  <li>USER_CONTEXT_RESPONSE only if questions are present</li>
                 </ul>
               </div>
               <div>
@@ -342,6 +627,257 @@ export function UtahForgeAddToProjectDrop({
           </div>
         )}
 
+        <section style={reviewPanelStyle} aria-label="Intake review">
+          <div style={fileListHeaderStyle}>Intake Review</div>
+          <div style={helperStyle}>
+            Load the intake review after Codex/API has run{" "}
+            <code>run intake trailhead</code>. The review shows the actual
+            dropped input, the concise plan, and questions only when something
+            blocks the next step.
+          </div>
+          <div style={reviewLoadRowStyle}>
+            <label style={{ ...fieldStyle, marginTop: 0, flex: 1 }}>
+              <span style={labelStyle}>Drop ID</span>
+              <input
+                value={reviewDropId}
+                onChange={(event) => {
+                  setReviewDropId(event.currentTarget.value);
+                  setResponseMessage(null);
+                }}
+                placeholder={lastDrop?.dropId ?? "2026-05-18_01-03-27_128bzd"}
+                style={inputStyle}
+                disabled={busy || reviewBusy}
+              />
+            </label>
+            <button
+              type="button"
+              style={{
+                ...secondaryButtonStyle,
+                alignSelf: "end",
+                opacity: reviewBusy ? 0.58 : 1,
+              }}
+              onClick={() => void loadLatestReviewedDrop()}
+              disabled={busy || reviewBusy}
+              title="Fill the latest AI-reviewed intake drop ID"
+            >
+              Use Latest
+            </button>
+            <button
+              type="button"
+              style={{
+                ...secondaryButtonStyle,
+                alignSelf: "end",
+                opacity: canLoadReview ? 1 : 0.58,
+                cursor: canLoadReview ? "pointer" : "not-allowed",
+              }}
+              onClick={() => void loadAiReview()}
+              disabled={!canLoadReview}
+            >
+              {reviewBusy ? "Loading..." : "Load Intake Review"}
+            </button>
+          </div>
+          {reviewSourcePath && (
+            <>
+              <div style={codeLabelStyle}>Review source</div>
+              <code style={codeStyle}>{reviewSourcePath}</code>
+            </>
+          )}
+          {aiReview && (
+            <div style={reviewContentStyle}>
+              <div style={reviewStatusRowStyle}>
+                <span style={badgeStyle}>{aiReview.status}</span>
+                <span>{aiReview.questions.length} question(s)</span>
+              </div>
+              {aiReview.questions.length > 0 ? (
+                <div style={questionListStyle}>
+                  {aiReview.questions.map((question) => {
+                    const draft = responseDrafts.find(
+                      (candidate) => candidate.questionId === question.id,
+                    );
+                    const routeOptions = routeOptionsForQuestion(
+                      aiReview,
+                      question,
+                    );
+                    return (
+                      <article key={question.id} style={questionCardStyle}>
+                        <div style={questionMetaStyle}>
+                          <strong>{question.id}</strong>
+                          <span>{question.kind}</span>
+                        </div>
+                        <div style={questionTextStyle}>{question.question}</div>
+                        <div style={questionWhyStyle}>
+                          {question.whyItMatters}
+                        </div>
+                        <div style={codeLabelStyle}>Source</div>
+                        <code style={inlineCodeStyle}>{question.sourcePath}</code>
+                        {draft && (
+                          <div style={answerGridStyle}>
+                            <label style={fieldStyle}>
+                              <span style={labelStyle}>Confirmation option</span>
+                              <select
+                                value={draft.mode}
+                                onChange={(event) =>
+                                  updateResponseDraft(question.id, {
+                                    mode: event.currentTarget
+                                      .value as ResponseMode,
+                                    selectedRouteId:
+                                      event.currentTarget.value === "agree" &&
+                                      !draft.selectedRouteId &&
+                                      routeOptions.length === 1
+                                        ? routeOptions[0].routeId
+                                        : draft.selectedRouteId,
+                                  })
+                                }
+                                style={inputStyle}
+                                disabled={reviewBusy}
+                              >
+                                <option value="answer">answer</option>
+                                <option value="agree">agree routeable</option>
+                                <option value="disregard">disregard / park</option>
+                                <option value="refine">refine</option>
+                              </select>
+                            </label>
+                            <label style={fieldStyle}>
+                              <span style={labelStyle}>Selected route</span>
+                              {routeOptions.length > 0 ? (
+                                <select
+                                  value={draft.selectedRouteId}
+                                  onChange={(event) =>
+                                    updateResponseDraft(question.id, {
+                                      selectedRouteId:
+                                        event.currentTarget.value,
+                                    })
+                                  }
+                                  style={inputStyle}
+                                  disabled={reviewBusy}
+                                >
+                                  <option value="">select route token</option>
+                                  {routeOptions.map((option) => (
+                                    <option
+                                      key={`${question.id}-${option.routeId}`}
+                                      value={option.routeId}
+                                    >
+                                      {option.routeId}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  value={draft.selectedRouteId}
+                                  onChange={(event) =>
+                                    updateResponseDraft(question.id, {
+                                      selectedRouteId:
+                                        event.currentTarget.value,
+                                    })
+                                  }
+                                  placeholder="optional route id"
+                                  style={inputStyle}
+                                  disabled={reviewBusy}
+                                />
+                              )}
+                            </label>
+                            {routeOptions.length > 0 && (
+                              <div
+                                style={{
+                                  ...questionWhyStyle,
+                                  gridColumn: "1 / -1",
+                                }}
+                              >
+                                Route options:{" "}
+                                {routeOptions
+                                  .map(
+                                    (option) =>
+                                      `${option.routeId} (${option.label})`,
+                                  )
+                                  .join("; ")}
+                              </div>
+                            )}
+                            <label style={{ ...fieldStyle, gridColumn: "1 / -1" }}>
+                              <span style={labelStyle}>Context confirmation</span>
+                              <textarea
+                                value={draft.answer}
+                                onChange={(event) =>
+                                  updateResponseDraft(question.id, {
+                                    answer: event.currentTarget.value,
+                                  })
+                                }
+                                placeholder="Confirm context, answer the question, or explain the route choice."
+                                style={{ ...textareaStyle, minHeight: 70 }}
+                                disabled={reviewBusy}
+                              />
+                            </label>
+                            <label style={{ ...fieldStyle, gridColumn: "1 / -1" }}>
+                              <span style={labelStyle}>Notes</span>
+                              <input
+                                value={draft.notes}
+                                onChange={(event) =>
+                                  updateResponseDraft(question.id, {
+                                    notes: event.currentTarget.value,
+                                  })
+                                }
+                                placeholder="optional trace note"
+                                style={inputStyle}
+                                disabled={reviewBusy}
+                              />
+                            </label>
+                            <label style={checkboxLabelStyle}>
+                              <input
+                                type="checkbox"
+                                checked={draft.stillBlocked}
+                                onChange={(event) =>
+                                  updateResponseDraft(question.id, {
+                                    stillBlocked:
+                                      event.currentTarget.checked,
+                                  })
+                                }
+                                disabled={reviewBusy}
+                              />
+                              still blocked
+                            </label>
+                          </div>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={messageStyle}>
+                  No blocking questions were returned. Review the page/plan
+                  and choose the next human action outside this first pass.
+                </div>
+              )}
+              {aiReview.plan && (
+                <div style={planBoxStyle}>
+                  <div style={fileListHeaderStyle}>Proposed Plan</div>
+                  <div style={helperStyle}>{aiReview.plan.summary}</div>
+                  <ul style={compactListStyle}>
+                    {(aiReview.plan.steps ?? []).map((step) => (
+                      <li key={step}>{step}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {aiReview.questions.length > 0 && (
+              <div style={reviewActionsStyle}>
+                <button
+                  type="button"
+                  style={{
+                    ...primaryButtonStyle,
+                    opacity: canSaveResponses ? 1 : 0.58,
+                    cursor: canSaveResponses ? "pointer" : "not-allowed",
+                  }}
+                  onClick={() => void saveUserContextResponse()}
+                  disabled={!canSaveResponses}
+                >
+                  {reviewBusy ? "Saving..." : "Save Context Response"}
+                </button>
+              </div>
+              )}
+            </div>
+          )}
+          {responseMessage && <div style={messageStyle}>{responseMessage}</div>}
+        </section>
+
         <div style={actionsStyle}>
           <button
             type="button"
@@ -367,6 +903,301 @@ export function UtahForgeAddToProjectDrop({
       </section>
     </div>
   );
+}
+
+function normalizeAiReview(value: unknown, fallbackDropId: string): AiReviewPayload {
+  const raw = isRecord(value) ? value : {};
+  const rawQuestions = Array.isArray(raw.questions)
+    ? raw.questions
+    : Array.isArray(raw.unresolvedFirst)
+      ? raw.unresolvedFirst
+      : [];
+  const questions: AiReviewQuestion[] = rawQuestions
+    .filter(isRecord)
+    .map((question, index) => ({
+      id: stringValue(question.id) || `Q-${String(index + 1).padStart(3, "0")}`,
+      kind: stringValue(question.kind) || "unresolved",
+      question:
+        stringValue(question.question) ||
+        stringValue(question.humanQuestion) ||
+        "Review this unresolved item.",
+      whyItMatters: stringValue(question.whyItMatters),
+      sourcePath:
+        stringValue(question.sourcePath) ||
+        stringValue(question.source) ||
+        "unknown",
+      responseModeHint: stringValue(question.responseModeHint),
+      requiredBefore: stringValue(question.requiredBefore),
+    }));
+  return {
+    kind:
+      stringValue(raw.kind) === "geosee.intake.ai-review"
+        ? "geosee.intake.ai-review"
+        : "geosee.intake.ai-review",
+    dropId: stringValue(raw.dropId) || fallbackDropId,
+    project: stringValue(raw.project) || "utah-forge",
+    status:
+      stringValue(raw.status) ||
+      (questions.length > 0 ? "questions_required" : "plan_proposed"),
+    accepted: false,
+    reviewRequired: true,
+    sourceTracePaths: Array.isArray(raw.sourceTracePaths)
+      ? raw.sourceTracePaths.map(String)
+      : [],
+    questions,
+    plan: Array.isArray(raw.plan)
+      ? {
+          summary: stringValue(raw.summary),
+          steps: raw.plan.map(String),
+        }
+      : isRecord(raw.plan) ? (raw.plan as AiReviewPlan) : null,
+    routeCandidates: Array.isArray(raw.routeCandidates)
+      ? normalizeRouteCandidates(raw.routeCandidates)
+      : Array.isArray(raw.routes)
+        ? normalizeRouteCandidates(raw.routes)
+        : [],
+    boundary: isRecord(raw.boundary) ? raw.boundary : {},
+    nextUiAction: stringValue(raw.nextUiAction),
+    nextSmokeCall: stringValue(raw.nextSmokeCall) || NEXT_CODEX_PROMPT,
+  };
+}
+
+function createUserContextResponse(
+  aiReview: AiReviewPayload,
+  drafts: ResponseDraft[],
+  createdAt: string,
+): UserContextResponsePayload {
+  const questionById = new Map(
+    aiReview.questions.map((question) => [question.id, question]),
+  );
+  return {
+    schemaVersion: "0.1.0",
+    kind: "geosee.intake.context-confirmation",
+    dropId: aiReview.dropId,
+    project: aiReview.project,
+    createdAt,
+    responseSource: "ui",
+    status: "context_confirmed",
+    accepted: false,
+    reviewRequired: true,
+    answers: drafts.map((draft) => {
+      const question = questionById.get(draft.questionId);
+      const boundRouteId = question
+        ? selectedRouteIdForDraft(aiReview, question, draft)
+        : draft.selectedRouteId.trim();
+      return {
+        questionId: draft.questionId,
+        kind: question?.kind ?? "",
+        question: question?.question ?? "",
+        answer: draft.answer || draft.mode,
+        meaning: meaningForResponseMode(draft.mode),
+        selectedOption: boundRouteId || draft.mode,
+        selectedRouteId: boundRouteId,
+        freeText: draft.notes,
+        createdAt,
+      };
+    }),
+    selectedRouteId: firstSelectedRouteId(aiReview, drafts),
+    notes: "",
+    nextCodexPrompt: NEXT_CODEX_PROMPT,
+  };
+}
+
+function createUserContextResponseMarkdown(
+  payload: UserContextResponsePayload,
+  aiReview: AiReviewPayload,
+): string {
+  const questionById = new Map(
+    aiReview.questions.map((question) => [question.id, question]),
+  );
+  const rows = payload.answers
+    .map((answer) => {
+      const question = questionById.get(answer.questionId);
+      return `| ${escapeMarkdown(answer.questionId)} | ${escapeMarkdown(
+        question?.question ?? answer.question,
+      )} | ${escapeMarkdown(answer.answer)} | ${escapeMarkdown(
+        answer.selectedOption,
+      )} | ${escapeMarkdown(
+        answer.selectedRouteId,
+      )} | ${escapeMarkdown(answer.freeText)} |`;
+    })
+    .join("\n");
+  return `# Context Confirmation: ${payload.dropId}
+
+Status: context_confirmed
+
+- createdAt: ${payload.createdAt}
+- responseSource: ui
+- selectedRouteId: ${payload.selectedRouteId || "none"}
+- accepted: false
+- reviewRequired: true
+- next command: ${payload.nextCodexPrompt}
+
+This confirms route/context for the next deterministic gate. It is not acceptance, validation, certification, final interpretation, project mutation, route execution, or runner authorization.
+
+| question id | question | answer | selected option | selected route | free text |
+| --- | --- | --- | --- | --- | --- |
+${rows || "| none | none | none | none | none | no context confirmations recorded |"}
+
+## Boundary
+
+No processing has occurred. No PDF review, page, overlay, project config, environment config, layer, data, computed artifact, or accepted state was created by this response.
+
+## Rule
+
+Freeform answers remain context unless a later gate binds them to a requirements/spec/risk-bounded route.
+`;
+}
+
+function firstSelectedRouteId(
+  aiReview: AiReviewPayload,
+  drafts: ResponseDraft[],
+): string | undefined {
+  for (const draft of drafts) {
+    const question = aiReview.questions.find(
+      (candidate) => candidate.id === draft.questionId,
+    );
+    const routeId = question
+      ? selectedRouteIdForDraft(aiReview, question, draft)
+      : draft.selectedRouteId.trim();
+    if (routeId) return routeId;
+  }
+  return undefined;
+}
+
+function selectedRouteIdForDraft(
+  aiReview: AiReviewPayload,
+  question: AiReviewQuestion,
+  draft: ResponseDraft,
+): string {
+  const explicitRouteId = draft.selectedRouteId.trim();
+  if (explicitRouteId) return explicitRouteId;
+  const options = routeOptionsForQuestion(aiReview, question);
+  const affirmativePdfRoute = options.find(
+    (option) => option.routeId === "generate_pdf_review",
+  );
+  if (
+    affirmativePdfRoute &&
+    question.kind === "missing_review_source" &&
+    (draft.mode === "agree" || /^\s*y(es)?\b/i.test(draft.answer))
+  ) {
+    return affirmativePdfRoute.routeId;
+  }
+  if (options.length !== 1) return "";
+  if (draft.mode === "agree") return options[0].routeId;
+  if (/^\s*y(es)?\b/i.test(draft.answer)) return options[0].routeId;
+  return "";
+}
+
+function routeOptionsForQuestion(
+  aiReview: AiReviewPayload,
+  question: AiReviewQuestion,
+): Array<{ routeId: string; label: string }> {
+  const candidates = aiReview.routeCandidates ?? [];
+  const matches = candidates
+    .filter((candidate) => routeCandidateMatchesQuestion(candidate, question))
+    .map((candidate) => ({
+      routeId: routeIdForCandidate(candidate),
+      label:
+        candidate.label ||
+        candidate.possibleRoute ||
+        candidate.input ||
+        candidate.approvalNeeded ||
+        "route",
+    }))
+    .filter((candidate) => candidate.routeId);
+  const seen = new Set<string>();
+  return matches.filter((candidate) => {
+    if (seen.has(candidate.routeId)) return false;
+    seen.add(candidate.routeId);
+    return true;
+  });
+}
+
+function routeCandidateMatchesQuestion(
+  candidate: AiReviewRouteCandidate,
+  question: AiReviewQuestion,
+): boolean {
+  if (candidate.requiredQuestionIds?.includes(question.id)) return true;
+  const routeId = routeIdForCandidate(candidate);
+  const haystack = [
+    candidate.id,
+    routeId,
+    candidate.label,
+    candidate.input,
+    candidate.possibleRoute,
+    candidate.approvalNeeded,
+    candidate.blocker,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  if (question.kind === "missing_review_source") {
+    return (
+      routeId === "generate_pdf_review" ||
+      haystack.includes("pdf_review") ||
+      haystack.includes("pdf review")
+    );
+  }
+  if (question.kind === "duplicate_or_supersession") {
+    return routeId === "hold_unresolveds" || haystack.includes("hold");
+  }
+  return false;
+}
+
+function normalizeRouteCandidates(value: unknown[]): AiReviewRouteCandidate[] {
+  return value.filter(isRecord).map((candidate) => ({
+    id: stringValue(candidate.id),
+    routeId: stringValue(candidate.routeId),
+    normalizedRouteId: stringValue(candidate.normalizedRouteId),
+    label: stringValue(candidate.label),
+    input: stringValue(candidate.input),
+    possibleRoute: stringValue(candidate.possibleRoute),
+    approvalNeeded: stringValue(candidate.approvalNeeded),
+    blocker: stringValue(candidate.blocker),
+    requiredQuestionIds: Array.isArray(candidate.requiredQuestionIds)
+      ? candidate.requiredQuestionIds.map(String)
+      : [],
+  }));
+}
+
+function routeIdForCandidate(candidate: AiReviewRouteCandidate): string {
+  return (
+    candidate.normalizedRouteId ||
+    candidate.routeId ||
+    normalizeLegacyRouteId(candidate.id || "")
+  );
+}
+
+function normalizeLegacyRouteId(routeId: string): string {
+  if (routeId === "ROUTE-001") return "hold_unresolveds";
+  if (routeId === "ROUTE-002") return "generate_pdf_review";
+  return routeId;
+}
+
+function meaningForResponseMode(mode: ResponseMode): string {
+  if (mode === "agree") {
+    return "Human indicates the route/context may be considered routeable by a later gate.";
+  }
+  if (mode === "disregard") {
+    return "Human indicates the item should be parked or disregarded by a later gate.";
+  }
+  if (mode === "refine") {
+    return "Human indicates the model should revise the route/context before execution.";
+  }
+  return "Human supplied context for a later deterministic route check.";
+}
+
+function isSafeDropId(dropId: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_[a-z0-9]+$/i.test(dropId);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function stringValue(value: unknown): string {
+  return typeof value === "string" ? value : "";
 }
 
 function validateFileLimits(files: File[]): string | null {
@@ -536,98 +1367,11 @@ These files are staged only. They are not processed, accepted, interpreted, or a
 - They have not created computed artifacts.
 - They have not changed \`project.json\`, \`environment.json\`, pages, overlays, loaders, render settings, seismic products, MT products, scalar ranges, or color ramps.
 
-## Next safe Codex instruction
+## Suggested smoke/API call
 
 ${NEXT_CODEX_PROMPT}
-`;
-}
 
-function createDropBuildDirective(dropId: string): string {
-  return `# Intake Drop Build Directive
-
-## Drop ID
-
-${dropId}
-
-## Project
-
-utah-forge
-
-## Mode
-
-source_inventory_plus_review_page
-
-## Intelligence Layer Trigger
-
-Manual test trigger:
-
-\`\`\`text
-read build directive
-\`\`\`
-
-For this test, the human manually sends this trigger to Codex. Codex acts as the temporary intelligence layer / API stand-in.
-
-In a future implementation, this may be replaced by an API call or agent event.
-
-## Input files
-
-Refer to:
-
-- intake_manifest.json
-- intake_context.md
-- raw/
-
-## Codex task
-
-Create source inventory outputs:
-
-- source_inventory.json
-- source_inventory.md
-- proposed_next_steps.md
-
-If the directive run explicitly proceeds in \`source_inventory_plus_review_page\` mode, Codex may also create a staged review surface:
-
-- projects/utah-forge/pages/intake_${dropId}.json
-- projects/utah-forge/overlays/intake_${dropId}/text.md
-- project.json pageOrder update only to add intake_${dropId}
-
-The review page is proposed / needs_review only. It does not accept, process, or promote the staged files.
-
-## Instructions
-
-- read intake_manifest.json
-- read intake_context.md
-- inspect raw/ filenames and lightweight metadata
-- classify each file by likely family and format
-- identify risks and missing context
-- propose next processing steps
-- do not process data
-- do not move files
-- do not create computed artifacts
-- do not update environment.json or geosee_processed
-- do not update project.json, pages, or overlays except for the explicitly allowed intake review page outputs above
-- do not create layers from dropped files
-- do not mark anything accepted
-
-## Forbidden outputs
-
-- no data processing
-- no computed artifacts
-- no layers from dropped files
-- no geosee_processed writes
-- no accepted interpretation
-
-## Output status
-
-All outputs must use:
-
-- status: proposed
-- accepted: false
-- reviewRequired: true
-
-## Next human decision
-
-Human decides whether to process, ignore, ask for more context, or promote to a project data workflow.
+This is a suggested smoke/API call recorded for trace. It is not a repo-local directive, authority file, or blocker.
 `;
 }
 
@@ -750,6 +1494,18 @@ const textareaStyle: React.CSSProperties = {
   lineHeight: 1.4,
 };
 
+const inputStyle: React.CSSProperties = {
+  minHeight: 32,
+  boxSizing: "border-box",
+  padding: "7px 9px",
+  border: "1px solid rgba(255, 255, 255, 0.22)",
+  borderRadius: 8,
+  background: "rgba(0, 0, 0, 0.18)",
+  color: "rgba(244, 240, 232, 0.94)",
+  fontFamily: TECHNICAL_MONO_FONT,
+  fontSize: 12,
+};
+
 const limitsStyle: React.CSSProperties = {
   marginTop: 10,
   color: "rgba(244, 240, 232, 0.64)",
@@ -818,6 +1574,105 @@ const compactListStyle: React.CSSProperties = {
   color: "rgba(244, 240, 232, 0.72)",
   fontSize: 11,
   lineHeight: 1.45,
+};
+
+const reviewPanelStyle: React.CSSProperties = {
+  marginTop: 14,
+  padding: 12,
+  border: "1px solid rgba(107, 197, 255, 0.22)",
+  borderRadius: 10,
+  background: "rgba(107, 197, 255, 0.055)",
+};
+
+const reviewLoadRowStyle: React.CSSProperties = {
+  display: "flex",
+  gap: 10,
+  alignItems: "flex-end",
+  marginTop: 10,
+};
+
+const reviewContentStyle: React.CSSProperties = {
+  marginTop: 12,
+  display: "grid",
+  gap: 12,
+};
+
+const reviewStatusRowStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 10,
+  alignItems: "center",
+  color: "rgba(244, 240, 232, 0.72)",
+  fontSize: 11,
+};
+
+const questionListStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 10,
+};
+
+const questionCardStyle: React.CSSProperties = {
+  padding: 11,
+  border: "1px solid rgba(255, 255, 255, 0.16)",
+  borderRadius: 9,
+  background: "rgba(0, 0, 0, 0.12)",
+};
+
+const questionMetaStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 10,
+  color: "rgba(202, 232, 255, 0.9)",
+  fontSize: 11,
+};
+
+const questionTextStyle: React.CSSProperties = {
+  marginTop: 8,
+  fontSize: 12,
+  lineHeight: 1.45,
+  color: "rgba(244, 240, 232, 0.94)",
+};
+
+const questionWhyStyle: React.CSSProperties = {
+  marginTop: 7,
+  color: "rgba(244, 240, 232, 0.68)",
+  fontSize: 11,
+  lineHeight: 1.45,
+};
+
+const inlineCodeStyle: React.CSSProperties = {
+  display: "block",
+  marginTop: 5,
+  color: "rgba(244, 240, 232, 0.74)",
+  fontSize: 10,
+  overflowWrap: "anywhere",
+};
+
+const answerGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: 9,
+  marginTop: 10,
+};
+
+const checkboxLabelStyle: React.CSSProperties = {
+  display: "inline-flex",
+  gap: 7,
+  alignItems: "center",
+  color: "rgba(244, 240, 232, 0.74)",
+  fontSize: 11,
+};
+
+const planBoxStyle: React.CSSProperties = {
+  padding: 10,
+  border: "1px solid rgba(113, 214, 154, 0.2)",
+  borderRadius: 8,
+  background: "rgba(113, 214, 154, 0.075)",
+};
+
+const reviewActionsStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "flex-end",
 };
 
 const errorStyle: React.CSSProperties = {

@@ -1,6 +1,6 @@
 {
   "id": "environment",
-  "renderPreset": "cinematic-dark",
+  "renderPreset": "user-3",
   "layerStyles": {
     "utah-forge-reference-stage": {
       "renderMode": "utah-forge-reference-stage",
@@ -16,6 +16,26 @@
       "affectedByFog": false,
       "showLabels": false
     },
+    "utah-forge-working-area-focus": {
+      "workingAreaFocusEnabled": false,
+      "workingAreaFocusMode": "outside-context",
+      "workingAreaFocusBoundsLayerId": "utah-forge-phase3-working-area",
+      "workingAreaFocusTargetLayerIds": [
+        "utah-forge-mt-resistivity-full-density",
+        "utah-forge-mt-resistivity-preview",
+        "utah-forge-mt-resistivity-volume",
+        "utah-forge-phase3-seismic-browser"
+      ],
+      "workingAreaFocusOutsideOpacityByLayerId": {
+        "utah-forge-mt-resistivity-full-density": 0.15,
+        "utah-forge-mt-resistivity-preview": 0.15,
+        "utah-forge-mt-resistivity-volume": 0.15,
+        "utah-forge-phase3-seismic-browser": 0.15
+      },
+      "workingAreaFocusHelperVisible": true,
+      "affectedByFog": false,
+      "showLabels": false
+    },
     "terrain": {
       "renderMode": "elevation-mesh",
       "opacity": 0.42,
@@ -28,6 +48,26 @@
       "publicSurfaceClipSizeY": 484100,
       "publicSurfaceClipSizeZ": 12600,
       "publicSurfaceClipRotationZDeg": -20,
+      "publicSurfaceClipShape": "circle",
+      "affectedByFog": false,
+      "showLabels": false,
+      "fogDensity": 0.00002
+    },
+    "utah-forge-topo-graticule": {
+      "color": "#212121",
+      "opacity": 0.62,
+      "lineWidth": 4.75,
+      "graticuleLabelVisible": true,
+      "graticuleLabelSizeM": 29000,
+      "graticuleLiftM": 244,
+      "graticuleEdgeFadeAware": true,
+      "graticuleEdgeFadeStrength": 1,
+      "graticuleEdgeLineColor": "#d4d4d4",
+      "graticuleEdgeLineWidth": 2.85,
+      "graticuleEdgeLabelColor": "#d6d6d6",
+      "graticuleEdgeLabelVisible": true,
+      "graticuleEdgeLabelOffsetM": 31000,
+      "graticuleEdgeLabelGapM": -32000,
       "affectedByFog": false,
       "showLabels": false,
       "fogDensity": 0.00002
@@ -73,8 +113,8 @@
       "scalarColorLow": "#2cc9ff",
       "scalarColorMid": "#f8dd6d",
       "scalarColorHigh": "#ff637a",
-      "scalarBlendMin": 0.139879,
-      "scalarBlendMax": 3.937122,
+      "scalarBlendMin": -2,
+      "scalarBlendMax": 4.5,
       "scalarDisplayMin": 0.139879,
       "scalarDisplayMax": 3.937122,
       "scalarFocusMin": -2,
@@ -196,8 +236,8 @@
       "showLabels": false
     },
     "utah-forge-phase3-seismic-browser": {
-      "opacity": 0.42,
-      "seismicProductId": "gdr-1015-forge3d-velo5d-float-01312018",
+      "opacity": 1,
+      "seismicProductId": "gdr-1141-forge3d-pstm-stack-enh",
       "seismicProductVisibility": {
         "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack": false,
         "gdr-1141-forge3d-ani-psdm-stack-unenh": false,
@@ -235,33 +275,41 @@
         "gdr-1141-line-l5-psdm-interval-velocity": false
       },
       "seismicRenderMode": "raymarch",
-      "seismicSliceAxis": "inline",
-      "seismicSliceFraction": 0.5,
+      "seismicSliceAxis": "crossline",
+      "seismicSliceFraction": 0.52,
       "seismicAmplitudeMin": 0.08,
-      "seismicAmplitudeMax": 1,
-      "seismicColormap": "velocity",
-      "seismicTimeScale": 2,
+      "seismicAmplitudeMax": 0.92,
+      "seismicColormap": "blue-white-red",
+      "seismicTimeScale": 3.25,
       "seismicNavigationVisible": true,
       "seismicLegendVisible": true,
       "affectedByFog": false,
       "showLabels": false,
-      "seismicCapabilityPresetId": "gdr-1015-forge3d-velo5d-float-01312018-raymarch",
-      "seismicSliceThroughVolume": false,
+      "seismicSliceThroughVolume": true,
       "seismicNavigationRoleVisibility": {
         "sources": true,
         "receivers": true,
         "lines": true
       },
-      "seismicRemoveBackground": true
+      "seismicRemoveBackground": false,
+      "seismicAudienceMode": "technical",
+      "seismicAudiencePresetId": "showcase-time-volume",
+      "seismicDisplayRecipeId": "3d-seismic-showcase",
+      "seismicAmplitudeGamma": 1.05,
+      "seismicBackgroundCutoff": 0.16,
+      "seismicVolumeSampleSteps": 72,
+      "seismicComparisonMode": "overlay",
+      "seismicMtCoRender": "seismic",
+      "sectionIsoEnabled": false
     },
     "utah-forge-scene-section-planes": {
       "sceneSectionEnabled": false,
       "sceneSectionMode": "cutaway",
-      "sceneSectionTargetScope": "all-visible",
+      "sceneSectionTargetScope": "selected-targets",
       "sceneSectionActiveAxis": "x",
       "sceneSectionPlanes": {
         "x": {
-          "enabled": true,
+          "enabled": false,
           "positionM": -3535.1243091098167,
           "invert": false
         },
@@ -277,8 +325,7 @@
         }
       },
       "sceneSectionTargetLayerIds": [
-        "utah-forge-mt-resistivity-volume",
-        "utah-forge-mt-resistivity-full-density"
+        "utah-forge-mt-resistivity-volume"
       ],
       "sceneSectionTargetProductIds": [
         "gdr-1141-forge3d-ani-psdm-stack-unenh"
@@ -290,17 +337,13 @@
     }
   },
   "defaultVisibleLayers": [
-    "utah-forge-phase3-working-area",
-    "transport-roads",
-    "hydrography-streams",
-    "hydrography-lakes",
-    "utah-forge-mt-resistivity-full-density",
-    "utah-forge-phase3-seismic-browser"
+    "utah-forge-topo-graticule",
+    "terrain"
   ],
   "scene": {
-    "background": "#d6d6d6",
+    "background": "#383838",
     "toneMapping": "aces",
-    "exposure": 0.35,
+    "exposure": 1.08,
     "shadows": false,
     "sun": {
       "azimuth": 284,
@@ -309,8 +352,8 @@
     },
     "fog": {
       "enabled": true,
-      "color": "#d6d6d6",
-      "density": 0.000005940594059405941
+      "color": "#383838",
+      "density": 0.00008
     },
     "topoDetails": {
       "distanceFadeNear": 60000,
@@ -364,24 +407,61 @@
       "threshold": 0.86
     },
     "terrain": {
-      "materialPreset": "soft-topo",
+      "materialPreset": "surface-elevation",
       "rampLow": "#575145",
       "rampMid": "#958a72",
       "rampHigh": "#d9cba3",
       "elevLowM": 0,
       "elevHighM": 180,
+      "surfaceElevationEnabled": true,
+      "surfaceElevationLegendVisible": true,
+      "surfaceElevationMinM": 1500,
+      "surfaceElevationMaxM": 3500,
+      "surfaceElevationColors": [
+        "#ffffff",
+        "#2e8fd8",
+        "#4fc3c7",
+        "#93d66b",
+        "#fff24d"
+      ],
+      "surfaceElevationColorPositions": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "surfaceElevationMidpoints": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "surfaceElevationTransitionSoftness": 1,
+      "surfaceElevationColorBlend": 1,
+      "surfaceElevationReverse": false,
       "hillshadeIntensity": 0.86,
       "rockHueVariance": 0.03,
       "shadowSharpness": 0.34,
-      "facetStrength": 0.04,
-      "edgeFadeDistanceM": 90000,
+      "facetStrength": 0.2,
+      "edgeFadeDistanceM": 25000,
+      "edgeFadeShape": "rounded-square",
+      "edgeFadeInsetM": 0,
+      "edgeFadeCornerRadiusM": 55000,
       "shadowTint": "#303640",
       "gridEnabled": false,
       "gridColor": "#d7d1c7",
       "gridOpacity": 0.34,
       "gridSpacingM": 100,
       "gridLineWidthM": 0.7,
-      "undersideOpacity": 0
+      "undersideOpacity": 0,
+      "topoMapBranding": {
+        "visible": true,
+        "logoPath": "projects/utah-forge/branding/fig2_wrong_vs_right__1_.png",
+        "offsetYM": -10000,
+        "offsetXM": 250000,
+        "heading": "hello"
+      }
     },
     "gui": {
       "overlay": {
@@ -521,7 +601,7 @@
       "activeOverlayStyleId": "overlay-style-1"
     },
     "vignette": {
-      "strength": 0.18,
+      "strength": 0.95,
       "smoothness": 0.65
     },
     "ambientOcclusion": {
@@ -529,6 +609,54 @@
     }
   },
   "customRenderPresets": [
+    {
+      "id": "utah-forge-reference-cinematic-dark",
+      "label": "Utah FORGE Reference Cinematic Dark",
+      "source": "user",
+      "createdAt": "2026-05-19T00:00:00.000Z",
+      "background": "#383838",
+      "terrainMode": "matte",
+      "contourMode": "subtle",
+      "publicDataMode": "minimal",
+      "labelDensity": "low",
+      "fog": {
+        "enabled": true,
+        "color": "#383838",
+        "density": 0.00008
+      },
+      "lighting": {
+        "ambientIntensity": 0,
+        "sunIntensity": 1.6,
+        "rimIntensity": 0.48,
+        "lockSunToCamera": false
+      },
+      "effects": {
+        "dataGlow": 0,
+        "lineHalo": 0,
+        "atmosphere": 0.00008
+      },
+      "scenePatch": {
+        "background": "#383838",
+        "exposure": 1.08,
+        "fog": {
+          "enabled": true,
+          "color": "#383838",
+          "density": 0.00008
+        },
+        "bloom": {
+          "strength": 0,
+          "radius": 0.55,
+          "threshold": 0.86
+        },
+        "vignette": {
+          "strength": 0.95,
+          "smoothness": 0.65
+        },
+        "ambientOcclusion": {
+          "enabled": true
+        }
+      }
+    },
     {
       "id": "user-1",
       "label": "User 1",
@@ -616,6 +744,9 @@
           "shadowSharpness": 0.34,
           "facetStrength": 0.04,
           "edgeFadeDistanceM": 90000,
+          "edgeFadeShape": "square",
+          "edgeFadeInsetM": 0,
+          "edgeFadeCornerRadiusM": 0,
           "shadowTint": "#303640",
           "gridEnabled": false,
           "gridColor": "#d7d1c7",
@@ -905,6 +1036,9 @@
           "shadowSharpness": 0.34,
           "facetStrength": 0.04,
           "edgeFadeDistanceM": 90000,
+          "edgeFadeShape": "square",
+          "edgeFadeInsetM": 0,
+          "edgeFadeCornerRadiusM": 0,
           "shadowTint": "#303640",
           "gridEnabled": false,
           "gridColor": "#d7d1c7",
@@ -1076,6 +1210,329 @@
           "color": "#ffffff",
           "opacity": 0.92,
           "lineWidth": 2.4,
+          "affectedByFog": false,
+          "showLabels": false
+        },
+        "transport-roads": {
+          "color": "#5a4f3d",
+          "opacity": 0.8,
+          "lineWidth": 2.1,
+          "affectedByFog": false,
+          "fogDensity": 0.00002,
+          "showLabels": false
+        },
+        "hydrography-streams": {
+          "color": "#3d9db8",
+          "opacity": 0.48,
+          "lineWidth": 1.05,
+          "affectedByFog": false,
+          "fogDensity": 0.00002,
+          "showLabels": false
+        },
+        "hydrography-lakes": {
+          "color": "#385a65",
+          "outlineColor": "#69a6bd",
+          "fillOpacity": 0.28,
+          "opacity": 0.6,
+          "lineWidth": 1.8,
+          "affectedByFog": false,
+          "fogDensity": 0.00002,
+          "showLabels": false
+        }
+      }
+    },
+    {
+      "id": "user-3",
+      "label": "User 3",
+      "source": "user",
+      "createdAt": "2026-05-21T06:40:12.678Z",
+      "background": "#383838",
+      "terrainMode": "matte",
+      "contourMode": "subtle",
+      "publicDataMode": "standard",
+      "labelDensity": "medium",
+      "fog": {
+        "enabled": true,
+        "color": "#383838",
+        "density": 0.00008
+      },
+      "lighting": {
+        "ambientIntensity": 0,
+        "sunIntensity": 1.6,
+        "rimIntensity": 0.48,
+        "lockSunToCamera": false
+      },
+      "effects": {
+        "dataGlow": 0,
+        "lineHalo": 0,
+        "atmosphere": 0.00008
+      },
+      "scenePatch": {
+        "background": "#383838",
+        "fog": {
+          "enabled": true,
+          "color": "#383838",
+          "density": 0.00008
+        },
+        "sun": {
+          "azimuth": 284,
+          "elevation": 30,
+          "lockToCamera": false
+        },
+        "lighting": {
+          "enabled": true,
+          "showSceneElements": true,
+          "hemisphere": {
+            "sky": "#d9e8ff",
+            "ground": "#b9aa91",
+            "intensity": 0
+          },
+          "directional": {
+            "color": "#ffe0a8",
+            "intensity": 1.6,
+            "position": [
+              -3000,
+              -2400,
+              3600
+            ],
+            "castShadow": false
+          },
+          "fill": {
+            "color": "#9ab8d8",
+            "intensity": 3,
+            "position": [
+              2200,
+              2800,
+              2200
+            ]
+          },
+          "rim": {
+            "color": "#fff0c8",
+            "intensity": 0.48,
+            "position": [
+              0,
+              -4200,
+              1800
+            ]
+          }
+        },
+        "terrain": {
+          "materialPreset": "surface-elevation",
+          "rampLow": "#575145",
+          "rampMid": "#958a72",
+          "rampHigh": "#d9cba3",
+          "elevLowM": 0,
+          "elevHighM": 180,
+          "surfaceElevationEnabled": true,
+          "surfaceElevationLegendVisible": true,
+          "surfaceElevationMinM": 1500,
+          "surfaceElevationMaxM": 3500,
+          "surfaceElevationColors": [
+            "#ffffff",
+            "#2e8fd8",
+            "#4fc3c7",
+            "#93d66b",
+            "#fff24d"
+          ],
+          "surfaceElevationColorPositions": [
+            0,
+            0.25,
+            0.5,
+            0.75,
+            1
+          ],
+          "surfaceElevationMidpoints": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "surfaceElevationTransitionSoftness": 1,
+          "surfaceElevationColorBlend": 1,
+          "surfaceElevationReverse": false,
+          "hillshadeIntensity": 0.86,
+          "rockHueVariance": 0.03,
+          "shadowSharpness": 0.34,
+          "facetStrength": 0.2,
+          "edgeFadeDistanceM": 25000,
+          "edgeFadeShape": "rounded-square",
+          "edgeFadeInsetM": 0,
+          "edgeFadeCornerRadiusM": 55000,
+          "shadowTint": "#303640",
+          "gridEnabled": false,
+          "gridColor": "#d7d1c7",
+          "gridOpacity": 0.34,
+          "gridSpacingM": 100,
+          "gridLineWidthM": 0.7,
+          "undersideOpacity": 0
+        },
+        "topoDetails": {
+          "distanceFadeNear": 60000,
+          "distanceFadeFar": 420000,
+          "farLineScale": 0.72,
+          "farOpacity": 0.42
+        },
+        "toneMapping": "aces",
+        "exposure": 1.08,
+        "bloom": {
+          "strength": 0,
+          "radius": 0.55,
+          "threshold": 0.86
+        },
+        "ambientOcclusion": {
+          "enabled": true
+        },
+        "vignette": {
+          "strength": 0.95,
+          "smoothness": 0.65
+        },
+        "gui": {
+          "overlay": {
+            "backgroundColor": "#121518",
+            "backgroundAlpha": 0.55,
+            "textColor": "#f4f0e8",
+            "secondaryTextColor": "#b6c3cf",
+            "bodyTextColor": "#ebe2d4",
+            "borderColor": "#ffffff",
+            "borderAlpha": 0.2,
+            "borderWidth": 1,
+            "backdropBlurPx": 20,
+            "backdropSaturation": 145,
+            "radius": 12,
+            "textPadding": 30,
+            "bodyFontSize": 14,
+            "headingFontSize": 21,
+            "figureLabelVisible": true,
+            "topHighlightAlpha": 0.7,
+            "bottomShadowAlpha": 0.12,
+            "shadowAlpha": 0.24,
+            "shadowBlur": 80,
+            "shadowOffsetY": 24
+          },
+          "navigator": {
+            "useOverride": true,
+            "textColor": "#ffffff",
+            "backgroundAlpha": 0.1,
+            "borderAlpha": 0.16,
+            "radius": 999,
+            "bottom": 34,
+            "fontSize": 14,
+            "fontWeight": 500
+          },
+          "labels": {
+            "maxSiteLabelsDesktop": 16,
+            "maxSiteLabelsMobile": 8,
+            "fadeNearM": 2500,
+            "fadeFarM": 7500,
+            "styles": {
+              "siteElement": {
+                "textColor": "#f6f1e8",
+                "outlineColor": "#ffffff",
+                "outlineOpacity": 0.42,
+                "fillColor": "#11161b",
+                "fillOpacity": 0.72,
+                "pointerVisible": true
+              },
+              "area": {
+                "textColor": "#f6f1e8",
+                "outlineColor": "#ffffff",
+                "outlineOpacity": 0.36,
+                "fillColor": "#11161b",
+                "fillOpacity": 0.66,
+                "pointerVisible": false
+              },
+              "anomaly": {
+                "textColor": "#ffe4e4",
+                "outlineColor": "#ff7777",
+                "outlineOpacity": 0.6,
+                "fillColor": "#251010",
+                "fillOpacity": 0.75,
+                "pointerVisible": true
+              }
+            }
+          },
+          "overlayStyles": [
+            {
+              "id": "overlay-style-1",
+              "label": "Style 1",
+              "overlay": {
+                "backgroundColor": "#121518",
+                "backgroundAlpha": 0.55,
+                "textColor": "#f4f0e8",
+                "secondaryTextColor": "#b6c3cf",
+                "bodyTextColor": "#ebe2d4",
+                "borderColor": "#ffffff",
+                "borderAlpha": 0.2,
+                "borderWidth": 1,
+                "backdropBlurPx": 20,
+                "backdropSaturation": 145,
+                "radius": 12,
+                "textPadding": 30,
+                "bodyFontSize": 14,
+                "headingFontSize": 21,
+                "figureLabelVisible": true,
+                "topHighlightAlpha": 0.7,
+                "bottomShadowAlpha": 0.12,
+                "shadowAlpha": 0.24,
+                "shadowBlur": 80,
+                "shadowOffsetY": 24
+              },
+              "navigator": {
+                "useOverride": true,
+                "textColor": "#ffffff",
+                "backgroundAlpha": 0.1,
+                "borderAlpha": 0.16,
+                "radius": 999,
+                "bottom": 34,
+                "fontSize": 14,
+                "fontWeight": 500
+              },
+              "labels": {
+                "maxSiteLabelsDesktop": 16,
+                "maxSiteLabelsMobile": 8,
+                "fadeNearM": 2500,
+                "fadeFarM": 7500,
+                "styles": {
+                  "siteElement": {
+                    "textColor": "#f6f1e8",
+                    "outlineColor": "#ffffff",
+                    "outlineOpacity": 0.42,
+                    "fillColor": "#11161b",
+                    "fillOpacity": 0.72,
+                    "pointerVisible": true
+                  },
+                  "area": {
+                    "textColor": "#f6f1e8",
+                    "outlineColor": "#ffffff",
+                    "outlineOpacity": 0.36,
+                    "fillColor": "#11161b",
+                    "fillOpacity": 0.66,
+                    "pointerVisible": false
+                  },
+                  "anomaly": {
+                    "textColor": "#ffe4e4",
+                    "outlineColor": "#ff7777",
+                    "outlineOpacity": 0.6,
+                    "fillColor": "#251010",
+                    "fillOpacity": 0.75,
+                    "pointerVisible": true
+                  }
+                }
+              }
+            }
+          ],
+          "activeOverlayStyleId": "overlay-style-1"
+        }
+      },
+      "layerStylePatchesByLayerId": {
+        "utah-forge-phase3-working-area": {
+          "color": "#ffffff",
+          "opacity": 0.92,
+          "lineWidth": 2.4,
+          "affectedByFog": false,
+          "showLabels": false
+        },
+        "utah-forge-working-area-focus": {
           "affectedByFog": false,
           "showLabels": false
         },

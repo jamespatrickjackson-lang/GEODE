@@ -1,0 +1,76 @@
+{
+  "id": "48_basement_top_granite_surface",
+  "title": "Interpreted Basement / Top-of-Granite Surface",
+  "subtitle": "Proposed / needs_review context page; gridded surface missing",
+  "camera": {
+    "position": [
+      -88734.90318739192,
+      -88943.7167018159,
+      30138.474109371047
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#ffffff",
+  "visibilityOverrides": {
+    "utah-forge-phase3-working-area": true,
+    "terrain": true,
+    "transport-roads": false,
+    "hydrography-streams": false,
+    "hydrography-lakes": false,
+    "utah-forge-phase3-seismic-browser": true,
+    "utah-forge-mt-stations": false,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-mt-resistivity-slices": false
+  },
+  "layerOverrides": {
+    "utah-forge-phase3-seismic-browser": {
+      "opacity": 0.5,
+      "seismicProductId": "gdr-1141-forge3d-pstm-stack-enh",
+      "seismicProductVisibility": {
+        "gdr-1141-forge3d-pstm-stack-enh": true
+      },
+      "seismicRenderMode": "raymarch",
+      "seismicSliceAxis": "crossline",
+      "seismicSliceFraction": 0.52,
+      "seismicAmplitudeMin": 0.08,
+      "seismicAmplitudeMax": 0.92,
+      "seismicColormap": "blue-white-red",
+      "seismicTimeScale": 3.25,
+      "seismicSliceThroughVolume": true,
+      "seismicNavigationVisible": true,
+      "seismicRemoveBackground": true,
+      "sectionIsoEnabled": false
+    },
+    "terrain": {
+      "opacity": 0.24
+    },
+    "utah-forge-mt-resistivity-full-density": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-slices": {
+      "scalarLegendVisible": false
+    }
+  }
+}

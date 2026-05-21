@@ -111,7 +111,7 @@ export function SceneSectionLegend() {
     !editingEnvironment && state.selectedPageId
       ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
       : null;
-  const page = selectedPage ?? controllerPage;
+  const page = targetIndex !== null ? controllerPage : selectedPage ?? controllerPage;
   const style = editingEnvironment
     ? state.environment.layerStyles[SCENE_SECTION_LAYER_ID] ?? {}
     : page

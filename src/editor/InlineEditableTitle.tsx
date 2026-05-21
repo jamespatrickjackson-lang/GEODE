@@ -77,13 +77,16 @@ export function InlineEditableTitle({
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
         style={{
+          fontFamily: "inherit",
+          fontSize: "inherit",
+          fontWeight: "inherit",
+          lineHeight: "inherit",
           ...textStyle,
           background: "transparent",
           border: "none",
           outline: "none",
           padding: 0,
           margin: 0,
-          font: "inherit",
           color: "inherit",
           width: "100%",
         }}

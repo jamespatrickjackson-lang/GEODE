@@ -49,6 +49,8 @@ Use this checklist before treating a cinematic render preset or tuned page as de
 - Context layers remain supportive.
 - QA/future/placeholder layers are hidden unless the page purpose calls for them.
 - High-fidelity or full-density layers are treated as valuable evidence, not bloat.
+- Utah FORGE full-density MT review views should show the side walls and shell points from oblique camera angles; focus/blend/color windows must not remove full-density source points unless an explicit thresholded inclusion mode is selected.
+- Switching cinematic presets must not change full-density MT draw inclusion. Presets may affect scene mood and public context, but not whether source MT points are emitted.
 
 ## Provenance Clarity
 - Source-derived, preview, synthetic, placeholder, and review-required states remain honest.

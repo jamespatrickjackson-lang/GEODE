@@ -3,9 +3,9 @@
   "title": "Untitled page",
   "camera": {
     "position": [
-      -39943.19483319177,
-      -20384.065863269912,
-      15191.005540165686
+      -28879.73795742467,
+      -32469.208165290154,
+      11845.116116638794
     ],
     "target": [
       -2988,
@@ -30,11 +30,11 @@
       "scalarFocusMax": 4.5,
       "scalarBlendMin": 3.0555553761897336,
       "scalarBlendMax": 4.5,
+      "scalarInclusionMode": "thresholded",
       "scalarEdgeLineWidth": 1.3,
       "scalarEdgeAverage": 1,
       "scalarEdgeLowerValue": 3.0555553761897336,
-      "scalarNoiseThreshold": 0.65,
-      "opacity": 0.3
+      "scalarNoiseThreshold": 0.65
     },
     "utah-forge-phase3-seismic-browser": {
       "opacity": 0

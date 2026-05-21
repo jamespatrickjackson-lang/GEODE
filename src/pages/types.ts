@@ -114,6 +114,21 @@ export interface EditableStyle {
   publicSurfaceClipSizeY?: number;
   publicSurfaceClipSizeZ?: number;
   publicSurfaceClipRotationZDeg?: number;
+  publicSurfaceClipShape?: "box" | "circle";
+  // Terrain-draped longitude/latitude grid controls. Used by the Utah FORGE
+  // topomap graticule layer; coordinates are generated from project CRS and
+  // rendered as visual reference only.
+  graticuleLabelVisible?: boolean;
+  graticuleLabelSizeM?: number;
+  graticuleLiftM?: number;
+  graticuleEdgeFadeAware?: boolean;
+  graticuleEdgeFadeStrength?: number;
+  graticuleEdgeLineColor?: string;
+  graticuleEdgeLineWidth?: number;
+  graticuleEdgeLabelColor?: string;
+  graticuleEdgeLabelVisible?: boolean;
+  graticuleEdgeLabelOffsetM?: number;
+  graticuleEdgeLabelGapM?: number;
   // Generic scalar preview controls for source-derived point clouds and slice
   // meshes. Used by Utah FORGE MT resistivity previews; values remain in
   // source units, only the display ramp/range changes.
@@ -126,6 +141,10 @@ export interface EditableStyle {
   scalarDisplayMax?: number;
   scalarFocusMin?: number;
   scalarFocusMax?: number;
+  // Source point inclusion is separate from scalar display/focus styling.
+  // "all-valid" keeps source points drawable while visual windows adjust color
+  // and emphasis; "thresholded" permits scalar windows/noise to filter draws.
+  scalarInclusionMode?: "all-valid" | "thresholded";
   scalarMidpoint?: number;
   scalarContrast?: number;
   scalarEdgeHighlight?: number;
@@ -215,7 +234,10 @@ export interface EditableStyle {
   // so environment defaults and page overrides can author walkthrough cuts.
   sceneSectionEnabled?: boolean;
   sceneSectionMode?: "cutaway";
-  sceneSectionTargetScope?: "selected-targets" | "all-visible" | "active-selection";
+  sceneSectionTargetScope?:
+    | "selected-targets"
+    | "all-visible"
+    | "active-selection";
   sceneSectionActiveAxis?: "x" | "y" | "z";
   sceneSectionPlanes?: {
     x?: SceneSectionPlaneState;
@@ -226,6 +248,14 @@ export interface EditableStyle {
   sceneSectionTargetProductIds?: string[];
   sceneSectionHelperVisible?: boolean;
   sceneSectionLegendVisible?: boolean;
+  // Utah FORGE working-area focus clip. Stored as a virtual layer style so the
+  // editor can author page-local site-of-interest masking without mutating data.
+  workingAreaFocusEnabled?: boolean;
+  workingAreaFocusMode?: "inside-only" | "outside-context";
+  workingAreaFocusBoundsLayerId?: string;
+  workingAreaFocusTargetLayerIds?: string[];
+  workingAreaFocusOutsideOpacityByLayerId?: Record<string, number>;
+  workingAreaFocusHelperVisible?: boolean;
   // Whether scene fog should affect this layer. Defaults true. Terrain and
   // terrain-composited masks use shader uniforms; ordinary meshes/lines use
   // their material fog flag.
@@ -697,11 +727,24 @@ export interface SceneProperties {
     rampHigh?: string;
     elevLowM?: number;
     elevHighM?: number;
+    surfaceElevationEnabled?: boolean;
+    surfaceElevationLegendVisible?: boolean;
+    surfaceElevationMinM?: number;
+    surfaceElevationMaxM?: number;
+    surfaceElevationColors?: string[];
+    surfaceElevationColorPositions?: number[];
+    surfaceElevationMidpoints?: number[];
+    surfaceElevationTransitionSoftness?: number;
+    surfaceElevationColorBlend?: number;
+    surfaceElevationReverse?: boolean;
     hillshadeIntensity?: number;
     rockHueVariance?: number;
     shadowSharpness?: number;
     facetStrength?: number;
     edgeFadeDistanceM?: number;
+    edgeFadeShape?: "square" | "rounded-square" | "circle";
+    edgeFadeInsetM?: number;
+    edgeFadeCornerRadiusM?: number;
     shadowTint?: string;
     gridEnabled?: boolean;
     gridColor?: string;
@@ -709,6 +752,47 @@ export interface SceneProperties {
     gridSpacingM?: number;
     gridLineWidthM?: number;
     undersideOpacity?: number;
+    topoMapBranding?: {
+      visible?: boolean;
+      logoPath?: string;
+      logoSourcePath?: string;
+      logoRenderablePath?: string;
+      logoSourceFormat?: string;
+      heading?: string;
+      subheading?: string;
+      anchor?: "south-west" | "south-east" | "north-west" | "north-east";
+      layout?: "horizontal" | "stacked";
+      logoPlacement?: "before" | "after";
+      logoFit?: "contain" | "cover" | "stretch";
+      offsetXM?: number;
+      offsetYM?: number;
+      rotationDeg?: number;
+      liftM?: number;
+      logoWidthM?: number;
+      logoGapM?: number;
+      logoOpacity?: number;
+      headingSizeM?: number;
+      subheadingSizeM?: number;
+      lineGapM?: number;
+      textColor?: string;
+      textOpacity?: number;
+      fontFamily?: "mono" | "sans" | "serif" | "condensed";
+      headingWeight?: number;
+      subheadingWeight?: number;
+      headingItalic?: boolean;
+      subheadingItalic?: boolean;
+      textAlign?: "left" | "center" | "right";
+      backgroundEnabled?: boolean;
+      backgroundColor?: string;
+      backgroundOpacity?: number;
+      backgroundPaddingXM?: number;
+      backgroundPaddingYM?: number;
+      outlineEnabled?: boolean;
+      outlineColor?: string;
+      outlineOpacity?: number;
+      outlineWidthM?: number;
+      opacity?: number;
+    };
   };
 
   areaOutlines?: AreaOutlineDef[];
@@ -716,10 +800,7 @@ export interface SceneProperties {
   [k: string]: unknown;
 }
 
-export type CinematicTerrainMode =
-  | "matte"
-  | "relief"
-  | "ghost";
+export type CinematicTerrainMode = "matte" | "relief" | "ghost";
 
 export type CinematicContourMode =
   | "off"
@@ -741,11 +822,7 @@ export type CinematicPublicDataIntensity =
   | "standard"
   | "high-contrast";
 
-export type CinematicLabelDensity =
-  | "off"
-  | "low"
-  | "medium"
-  | "high";
+export type CinematicLabelDensity = "off" | "low" | "medium" | "high";
 
 export type CinematicLayerStyleTarget =
   | "roads"

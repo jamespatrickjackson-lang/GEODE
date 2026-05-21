@@ -1,5 +1,6 @@
 import type { Plugin, ViteDevServer } from "vite";
 import { promises as fs } from "node:fs";
+import { spawn } from "node:child_process";
 import { dirname, isAbsolute, normalize, posix, resolve, sep } from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
@@ -45,6 +46,12 @@ interface CopyBody {
 
 interface DeleteBody {
   path: string;
+}
+
+interface ConvertBrandingAssetBody {
+  sourcePath: string;
+  outputPath: string;
+  sourceFormat?: string;
 }
 
 function badRequest(res: ServerResponse, msg: string, status = 400) {
@@ -126,6 +133,103 @@ async function refuseUnlessRegularOrMissing(absolute: string): Promise<void> {
   }
 }
 
+async function runAssetTool(
+  command: string,
+  args: string[],
+): Promise<void> {
+  const result = await new Promise<{
+    code: number | null;
+    error?: NodeJS.ErrnoException;
+    stderr: string;
+  }>((resolveRun) => {
+    const child = spawn(command, args, {
+      windowsHide: true,
+      stdio: ["ignore", "ignore", "pipe"],
+    });
+    let stderr = "";
+    child.stderr.on("data", (chunk) => {
+      stderr += String(chunk);
+    });
+    child.on("error", (error: NodeJS.ErrnoException) => {
+      resolveRun({ code: null, error, stderr });
+    });
+    child.on("close", (code) => {
+      resolveRun({ code, stderr });
+    });
+  });
+
+  if (result.error) {
+    throw new Error(
+      `${command} unavailable: ${result.error.message || result.error.code}`,
+    );
+  }
+  if (result.code !== 0) {
+    throw new Error(
+      `${command} failed${result.stderr ? `: ${result.stderr.trim()}` : ""}`,
+    );
+  }
+}
+
+async function convertBrandingAsset(
+  projectRoot: string,
+  body: ConvertBrandingAssetBody,
+): Promise<{ outputPath: string }> {
+  const sourceAbs = resolveSafePath(projectRoot, body.sourcePath);
+  const outputAbs = resolveSafePath(projectRoot, body.outputPath);
+  const sourceStats = await fs.lstat(sourceAbs);
+  if (!sourceStats.isFile()) throw new Error("sourcePath is not a regular file");
+  await refuseUnlessRegularOrMissing(outputAbs);
+  await fs.mkdir(dirname(outputAbs), { recursive: true });
+
+  const sourceFormat =
+    (typeof body.sourceFormat === "string" ? body.sourceFormat : "")
+      .trim()
+      .toLowerCase()
+      .replace(/^\./, "") ||
+    (sourceAbs.toLowerCase().endsWith(".eps")
+      ? "eps"
+      : sourceAbs.toLowerCase().endsWith(".pdf")
+        ? "pdf"
+        : "");
+  if (!outputAbs.toLowerCase().endsWith(".png")) {
+    throw new Error("outputPath must be a .png file");
+  }
+
+  await fs.rm(outputAbs, { force: true });
+  if (sourceFormat === "pdf") {
+    const prefix = outputAbs.slice(0, -4);
+    await runAssetTool("pdftoppm", [
+      "-f",
+      "1",
+      "-l",
+      "1",
+      "-png",
+      "-singlefile",
+      sourceAbs,
+      prefix,
+    ]);
+  } else if (sourceFormat === "eps") {
+    await runAssetTool("magick", [
+      "-density",
+      "300",
+      sourceAbs,
+      "-background",
+      "none",
+      "-alpha",
+      "on",
+      outputAbs,
+    ]);
+  } else {
+    throw new Error("sourceFormat must be pdf or eps");
+  }
+
+  const outputStats = await fs.lstat(outputAbs).catch(() => null);
+  if (!outputStats?.isFile()) {
+    throw new Error("conversion completed but did not create output");
+  }
+  return { outputPath: body.outputPath };
+}
+
 export function authorWritePlugin(): Plugin {
   return {
     name: "author-write",
@@ -171,6 +275,8 @@ export function authorWritePlugin(): Plugin {
               gif: "image/gif",
               webp: "image/webp",
               svg: "image/svg+xml",
+              pdf: "application/pdf",
+              eps: "application/postscript",
               md: "text/markdown",
               json: "application/json",
             };
@@ -301,6 +407,12 @@ export function authorWritePlugin(): Plugin {
               if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
             }
             ok(res);
+            return;
+          }
+
+          if (url === "/api/convert-branding-asset") {
+            const body = await readJsonBody<ConvertBrandingAssetBody>(req);
+            ok(res, await convertBrandingAsset(projectRoot, body));
             return;
           }
 

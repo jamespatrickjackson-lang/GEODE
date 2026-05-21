@@ -1,0 +1,60 @@
+{
+  "id": "99_unresolved_missing_tools",
+  "title": "Unresolved / Missing Tools",
+  "subtitle": "Proposed / needs_review implementation checkpoint",
+  "camera": {
+    "position": [
+      1304910.7218927606,
+      1026464.2763902751,
+      1381959.320128334
+    ],
+    "target": [
+      117683.41105116872,
+      -88479.90696301646,
+      -74674.76445674823
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#ff637a",
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      117683.41105116872,
+      -88479.90696301646,
+      -74674.76445674823
+    ],
+    "orbitSpeedDegPerSec": 5.8,
+    "orbitRadius": 1837191.6564012945,
+    "orbitHeight": 1182843.5626178428,
+    "orbitDirection": -1,
+    "zoomFov": 52,
+    "zoomEnabled": true,
+    "zoomDeltaFov": -1,
+    "zoomStartMs": 250,
+    "zoomEndMs": 4000,
+    "zoomCurve": "cinematic",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": true
+  },
+  "overlayLayout": {
+    "x": 0.039843749999999956,
+    "y": 0.03749058971141782,
+    "width": 0.2022916666666667,
+    "height": 0.4330771720244863
+  }
+}

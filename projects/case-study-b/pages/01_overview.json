@@ -60,6 +60,7 @@
   "accentColor": "#75c7ff",
   "visibilityOverrides": {
     "case-study-b-demo-shell": false,
-    "shahbazi-photo-overlay-preview": true
+    "shahbazi-photo-overlay-preview": true,
+    "shahbazi-tls-tiled-preview": true
   }
 }

@@ -1,0 +1,98 @@
+{
+  "id": "42_resistivity_volume_overview",
+  "title": "3D Resistivity Volume Overview",
+  "subtitle": "Proposed / needs_review Phase 3 MT inversion volume",
+  "camera": {
+    "position": [
+      -25758.118599762638,
+      267159.49967552704,
+      -35000.79617668223
+    ],
+    "target": [
+      10844.11738335307,
+      -5098.606116313531,
+      -64366.201871915524
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutSine"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#42f236",
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      10844.11738335307,
+      -5098.606116313531,
+      -64366.201871915524
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 275129.9999999952,
+    "orbitHeight": 13000,
+    "orbitDirection": -1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  },
+  "visibilityOverrides": {
+    "utah-forge-phase3-working-area": true,
+    "terrain": false,
+    "transport-roads": false,
+    "hydrography-streams": false,
+    "hydrography-lakes": false,
+    "utah-forge-phase3-seismic-browser": false,
+    "utah-forge-mt-stations": true,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": true,
+    "utah-forge-mt-resistivity-volume": true,
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-mt-resistivity-slices": false
+  },
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "opacity": 0.48,
+      "pointSizePx": 1.25,
+      "scalarInclusionMode": "all-valid"
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "opacity": 0.28,
+      "scalarVolumeOpacity": 0.28,
+      "scalarVolumeDensity": 0.42,
+      "scalarVolumeSampleSteps": 96,
+      "scalarVolumeThresholdMin": -2,
+      "scalarVolumeThresholdMax": 4.5,
+      "scalarVolumeProductId": "mt-resistivity-forge-focused-volume",
+      "scalarLegendVisible": true,
+      "scalarFocusMin": -2,
+      "scalarFocusMax": 4.5,
+      "scalarBlendMin": 0.139879,
+      "scalarBlendMax": 3.937122
+    },
+    "utah-forge-mt-stations": {
+      "opacity": 0.5,
+      "showLabels": false
+    },
+    "utah-forge-phase3-seismic-browser": {
+      "opacity": 0,
+      "seismicLegendVisible": false
+    }
+  }
+}

@@ -1,4 +1,6 @@
 @echo off
+rem Human-facing launcher. Agents should not run this file because it force-kills
+rem any process listening on port 5173, which may be the user's live app session.
 setlocal
 
 cd /d "%~dp0"
@@ -26,11 +28,19 @@ if errorlevel 1 (
   exit /b 1
 )
 
+echo Checking for existing server on port 5173...
+for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":5173 .*LISTENING"') do (
+  echo Found process listening on port 5173: PID %%P
+  taskkill /PID %%P /F >nul 2>nul
+)
+
+echo Waiting for port 5173 to free up...
+:waitPort
 powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing '%APP_URL%' -TimeoutSec 2 | Out-Null; exit 0 } catch { exit 1 }"
 if not errorlevel 1 (
-  echo GeoSee is already running.
-  start "" "%APP_URL%"
-  exit /b 0
+  echo Another process is still using %APP_URL%. Waiting...
+  timeout /t 1 /nobreak >nul
+  goto waitPort
 )
 
 if not exist "node_modules\" (

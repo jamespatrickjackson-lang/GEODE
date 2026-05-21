@@ -1,7 +1,7 @@
 {
   "id": "07_untitled",
-  "title": "Utah FORGE copy",
-  "subtitle": "Phase 3 MT resistivity preview",
+  "title": "04 - MT Station Network",
+  "subtitle": "Measured acquisition points from the Phase 3 MT survey",
   "camera": {
     "position": [
       -85968.63565936462,
@@ -28,8 +28,8 @@
   "overlayLayout": {
     "x": 0.013085937500000012,
     "y": 0.06185696361355081,
-    "width": 0.21087239583333334,
-    "height": 0.3120451693851945
+    "width": 0.28,
+    "height": 0.34
   },
   "overlay": {
     "position": "left",
@@ -43,14 +43,15 @@
   },
   "accentColor": "#00fbff",
   "layerOverrides": {
-    "utah-forge-mt-resistivity-full-density": {
-      "scalarFocusMin": -2,
-      "scalarFocusMax": 1.340277580475373,
-      "scalarBlendMin": -2,
-      "scalarBlendMax": 1.340277580475373,
-      "scalarEdgeLineWidth": 5.8,
-      "scalarNoiseThreshold": 0.36,
-      "scalarEdgeUpperValue": 1.340277580475373
+    "terrain": {
+      "meshSurfaceLiftM": -700,
+      "opacity": 0.42
+    },
+    "utah-forge-mt-stations": {
+      "opacity": 0.82,
+      "pointMarkerRadiusM": 500,
+      "pointMarkerLiftM": 750,
+      "showLabels": true
     }
   },
   "dynamicCamera": {
@@ -79,6 +80,18 @@
     "pathAwareBlend": false
   },
   "visibilityOverrides": {
-    "utah-forge-mt-top-surface": false
+    "utah-forge-phase3-working-area": true,
+    "terrain": true,
+    "transport-roads": true,
+    "hydrography-streams": true,
+    "hydrography-lakes": true,
+    "utah-forge-mt-stations": true,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-phase3-seismic-browser": false
   }
 }

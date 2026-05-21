@@ -1,0 +1,79 @@
+{
+  "id": "47_seismic_footprint_velocity_support",
+  "title": "Seismic Footprint / Velocity Support",
+  "subtitle": "Proposed / needs_review velocity support layer",
+  "camera": {
+    "position": [
+      -72734.67301267442,
+      -10579.26309022274,
+      -6006.157920848738
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#ffcd42",
+  "visibilityOverrides": {
+    "utah-forge-phase3-working-area": true,
+    "terrain": false,
+    "transport-roads": false,
+    "hydrography-streams": false,
+    "hydrography-lakes": false,
+    "utah-forge-phase3-seismic-browser": true,
+    "utah-forge-mt-stations": false,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-mt-resistivity-slices": false
+  },
+  "layerOverrides": {
+    "utah-forge-phase3-seismic-browser": {
+      "opacity": 0.42,
+      "seismicProductId": "gdr-1015-forge3d-velo5d-float-01312018",
+      "seismicProductVisibility": {
+        "gdr-1015-forge3d-velo5d-float-01312018": true
+      },
+      "seismicRenderMode": "raymarch",
+      "seismicSliceAxis": "inline",
+      "seismicSliceFraction": 0.5,
+      "seismicAmplitudeMin": 0.08,
+      "seismicAmplitudeMax": 1,
+      "seismicColormap": "velocity",
+      "seismicTimeScale": 2,
+      "seismicSliceThroughVolume": false,
+      "seismicNavigationVisible": true,
+      "seismicNavigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "seismicRemoveBackground": true,
+      "seismicCapabilityPresetId": "gdr-1015-forge3d-velo5d-float-01312018-raymarch",
+      "sectionIsoEnabled": false
+    },
+    "utah-forge-mt-resistivity-full-density": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-slices": {
+      "scalarLegendVisible": false
+    }
+  }
+}

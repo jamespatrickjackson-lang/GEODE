@@ -29,6 +29,8 @@ Links:
 - [Current-State.md](Current-State.md)
 - [Open-Loops.md](Open-Loops.md)
 - [GeoVox-Spine.md](GeoVox-Spine.md)
+- [Agent-Drift-Anchors.md](Agent-Drift-Anchors.md)
+- [System-Requirements/Intake-Intelligence-Layer-Requirements.md](System-Requirements/Intake-Intelligence-Layer-Requirements.md)
 - [Change-Receipts/TEMPLATE.md](Change-Receipts/TEMPLATE.md)
 - [Change-Receipts/2026-05-16-utah-forge-intake-review-page.md](Change-Receipts/2026-05-16-utah-forge-intake-review-page.md)
 
@@ -40,6 +42,7 @@ Links:
 | `Open-Loops.md` | Known unresolved questions and follow-ups. |
 | `Scope-Refinement.md` | Scope-shaping rules and candidate backlog framing. |
 | `GeoVox-Spine.md` | Stable conceptual spine for product/data/control-plane thinking. |
+| `System-Requirements/` | Long-term system requirements and context-injection records; not implementation authorization. |
 | `Code-Map.md` | Observed code structure map. |
 | `Dataset-Map.md` | Observed project and dataset map. |
 | `Doc-Register.md` | Status register for docs and handoff-like records. |

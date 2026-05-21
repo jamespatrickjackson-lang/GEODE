@@ -199,16 +199,6 @@ function surfaceReferencePoint(
   return null;
 }
 
-function reservesBottomLeftLegendSpace(
-  layerStyles: Record<string, Record<string, unknown> | undefined>,
-): boolean {
-  return [
-    "utah-forge-mt-resistivity-full-density",
-    "utah-forge-mt-resistivity-volume",
-    "utah-forge-mt-resistivity-slices",
-  ].some((id) => layerStyles[id]?.scalarLegendVisible !== false);
-}
-
 function projectToScreenPx(
   sceneHandle: SceneHandle,
   point: THREE.Vector3,
@@ -295,7 +285,6 @@ export function ScaleBar({ sceneHandle }: { sceneHandle: SceneHandle }) {
   const { state } = useEditor();
   const [scale, setScale] = useState<ScaleState | null>(null);
   const gui = state.environment.scene?.gui ?? {};
-  const layerStyles = state.environment.layerStyles ?? {};
   const guiOverlay = gui.overlay ?? {};
   const guiNavigator = gui.navigator ?? {};
   const navigatorOverride = guiNavigator.useOverride === true;
@@ -306,7 +295,6 @@ export function ScaleBar({ sceneHandle }: { sceneHandle: SceneHandle }) {
   const borderSource = navigatorOverride
     ? guiNavigator.borderColor ?? guiOverlay.borderColor ?? "#ffffff"
     : guiOverlay.borderColor ?? "#ffffff";
-  const reservedBottom = reservesBottomLeftLegendSpace(layerStyles) ? 154 : 0;
 
   useEffect(() => {
     let previous = "";
@@ -333,7 +321,7 @@ export function ScaleBar({ sceneHandle }: { sceneHandle: SceneHandle }) {
   const rootStyle: React.CSSProperties = {
     ...rootBaseStyle,
     left: inset,
-    bottom: inset + reservedBottom,
+    bottom: inset,
     color: textColor,
   };
 const rowStyle: React.CSSProperties = {

@@ -183,7 +183,9 @@ export async function loadTerrain(
   const transform = resolveGeoSceneTransform(options);
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Terrain request failed ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Terrain request failed ${response.status} ${response.statusText}`,
+    );
   }
   const tiff = await fromArrayBuffer(await response.arrayBuffer());
   const image = await tiff.getImage();
@@ -265,7 +267,9 @@ export async function loadTerrain(
   // to match the Sky shader's sun position so highlights agree across the
   // scene. The handle is parked on mesh.userData so SceneManager can find
   // it without piercing the mesh's material type.
-  const terrainHandle = buildTerrainMaterial();
+  const terrainHandle = buildTerrainMaterial({
+    elevationOffsetM: transform.origin.elevation,
+  });
   const [minSceneX, minSceneY] = utmToSceneWithTransform(
     transform,
     bbox[0],
@@ -409,10 +413,7 @@ export async function loadTerrain(
   subscribeOverlayMask((slot, info) => {
     if (slot === "lake") {
       terrainHandle.setLakeMask(info.texture, info.boundsMin, info.boundsMax);
-    } else if (
-      slot === "target-three-firs" ||
-      slot === "target-great-plains"
-    ) {
+    } else if (slot === "target-three-firs" || slot === "target-great-plains") {
       terrainHandle.setTargetMask(
         slot,
         info.texture,
@@ -428,11 +429,7 @@ export async function loadTerrain(
         info.boundsMax,
       );
     } else if (slot === "trees-vri") {
-      terrainHandle.setForestMask(
-        info.texture,
-        info.boundsMin,
-        info.boundsMax,
-      );
+      terrainHandle.setForestMask(info.texture, info.boundsMin, info.boundsMax);
     }
   });
 

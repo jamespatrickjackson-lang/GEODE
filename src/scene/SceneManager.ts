@@ -40,6 +40,7 @@ import type { GeologyHandle } from "../loaders/loadGeology";
 import {
   setDistanceAttenuatedLineWidth,
   setTerrainShadowInfluence,
+  setTopoGraticuleEdgeFade,
 } from "../loaders/topoLineMaterial";
 import { getHeightSampler } from "./heightSampler";
 import type { SceneOverlayDef } from "../pages/types";
@@ -61,10 +62,12 @@ const TOPO_DISTANCE_LINE_LAYER_IDS = [
 ] as const;
 const PUBLIC_SURFACE_LAYER_IDS = new Set([
   "terrain",
+  "utah-forge-topo-graticule",
   "transport-roads",
   "hydrography-streams",
   "hydrography-lakes",
 ]);
+const PUBLIC_SURFACE_CLIP_CIRCLE_SEGMENTS = 48;
 const PUBLIC_SURFACE_CLIP_DEFAULTS = {
   centerX: 0,
   centerY: 0,
@@ -75,6 +78,9 @@ const PUBLIC_SURFACE_CLIP_DEFAULTS = {
   rotationZDeg: 0,
 } as const;
 const PUBLIC_SURFACE_CLIP_RENDER_ORDER = 4550;
+const TOPO_MAP_BRANDING_DEFAULT_ANCHOR: TopoMapBrandingAnchor = "south-east";
+const TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M = 0;
+const TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M = -85_000;
 const CASE_STUDY_B_DEMO_SHELL_LAYER_ID = "case-study-b-demo-shell";
 const SHAHBAZI_GROUND_SURFACE_LAYER_ID = "shahbazi-tls-surface-preview";
 const SHAHBAZI_GROUND_CONTOUR_LAYER_ID = "shahbazi-tls-contours";
@@ -90,6 +96,40 @@ const UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID =
   "utah-forge-mt-resistivity-slices";
 const UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID = "utah-forge-phase3-seismic-browser";
 const UTAH_FORGE_SCENE_SECTION_LAYER_ID = "utah-forge-scene-section-planes";
+const UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID =
+  "utah-forge-phase3-working-area";
+const UTAH_FORGE_TOPO_GRATICULE_LAYER_ID = "utah-forge-topo-graticule";
+const UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID = "utah-forge-working-area-focus";
+const WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY = 0.15;
+const WORKING_AREA_FOCUS_DEFAULT_BOUNDS = {
+  min: new THREE.Vector3(-8041.4, -12617.6, -6200),
+  max: new THREE.Vector3(-3841.4, -8417.6, 2045.3),
+} as const;
+const WORKING_AREA_FOCUS_DEFAULT_TARGET_LAYER_IDS = [
+  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  "utah-forge-mt-resistivity-preview",
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+] as const;
+const WORKING_AREA_FOCUS_RENDER_ORDER = 4575;
+const UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS = new Set([
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+  UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
+]);
+const UTAH_FORGE_GRATICULE_EDGE_STYLE_FIELDS = [
+  "graticuleEdgeFadeAware",
+  "graticuleEdgeFadeStrength",
+  "graticuleEdgeLineColor",
+  "graticuleEdgeLineWidth",
+  "graticuleEdgeLabelColor",
+  "graticuleEdgeLabelVisible",
+  "graticuleEdgeLabelOffsetM",
+  "graticuleEdgeLabelGapM",
+] as const satisfies readonly (keyof EditableStyle)[];
+const TOPO_GRATICULE_MINOR_SCALE = 0.8;
 const SCENE_SECTION_AXIS_NORMALS = {
   x: new THREE.Vector3(1, 0, 0),
   y: new THREE.Vector3(0, 1, 0),
@@ -266,7 +306,8 @@ function styleAffectedByFog(style: EditableStyle): boolean {
 }
 
 function styleFogDensity(style: EditableStyle, fallback: number): number {
-  return typeof style.fogDensity === "number" && Number.isFinite(style.fogDensity)
+  return typeof style.fogDensity === "number" &&
+    Number.isFinite(style.fogDensity)
     ? clampRange(style.fogDensity, 0.000001, 0.002)
     : fallback;
 }
@@ -374,10 +415,441 @@ function styleNumber(
     : fallback;
 }
 
+type TerrainEdgeFadeShape = "square" | "rounded-square" | "circle";
+
+interface TerrainEdgeFadeState {
+  boundsMin: THREE.Vector2;
+  boundsMax: THREE.Vector2;
+  shape: TerrainEdgeFadeShape;
+  fadeDistanceM: number;
+  insetM: number;
+  cornerRadiusM: number;
+}
+
+interface TopoGraticuleLabelCandidate {
+  position: THREE.Vector3;
+  tangent: THREE.Vector3;
+}
+
+interface TopoGraticuleSourceLine {
+  kind: "lat" | "lon";
+  value: number;
+  preference: "west" | "north";
+  candidates: TopoGraticuleLabelCandidate[];
+}
+
+interface TopoGraticuleLabelTarget {
+  position: THREE.Vector3;
+  anchor: THREE.Vector3;
+  tangent: THREE.Vector3;
+  outward: THREE.Vector3;
+  insideDistance: number;
+  minor: boolean;
+}
+
+type TopoMapBrandingAnchor =
+  | "south-west"
+  | "south-east"
+  | "north-west"
+  | "north-east";
+
+interface TopoMapBrandingTextMesh extends THREE.Mesh {
+  userData: THREE.Mesh["userData"] & {
+    topoMapBrandingTexture?: THREE.Texture;
+  };
+}
+
+function terrainEdgeShape(
+  shape: NonNullable<SceneProperties["terrain"]>["edgeFadeShape"],
+): TerrainEdgeFadeShape {
+  if (shape === "rounded-square" || shape === "circle") return shape;
+  return "square";
+}
+
+function terrainEdgeInsideDistance(
+  point: THREE.Vector3,
+  edge: TerrainEdgeFadeState,
+): number {
+  const centerX = (edge.boundsMin.x + edge.boundsMax.x) * 0.5;
+  const centerY = (edge.boundsMin.y + edge.boundsMax.y) * 0.5;
+  const halfX = Math.max(
+    1,
+    (edge.boundsMax.x - edge.boundsMin.x) * 0.5 - edge.insetM,
+  );
+  const halfY = Math.max(
+    1,
+    (edge.boundsMax.y - edge.boundsMin.y) * 0.5 - edge.insetM,
+  );
+  const localX = point.x - centerX;
+  const localY = point.y - centerY;
+  if (edge.shape === "circle") {
+    return Math.min(halfX, halfY) - Math.hypot(localX, localY);
+  }
+  if (edge.shape === "rounded-square") {
+    const radius = clampRange(
+      edge.cornerRadiusM,
+      0,
+      Math.max(0, Math.min(halfX, halfY) - 1),
+    );
+    const qx = Math.abs(localX) - (halfX - radius);
+    const qy = Math.abs(localY) - (halfY - radius);
+    const outside = Math.hypot(Math.max(qx, 0), Math.max(qy, 0));
+    const inside = Math.min(Math.max(qx, qy), 0);
+    return -(outside + inside - radius);
+  }
+  return Math.min(halfX - Math.abs(localX), halfY - Math.abs(localY));
+}
+
+function terrainEdgePreferenceScore(
+  point: THREE.Vector3,
+  edge: TerrainEdgeFadeState,
+  preference: "west" | "north",
+): number {
+  const centerX = (edge.boundsMin.x + edge.boundsMax.x) * 0.5;
+  const centerY = (edge.boundsMin.y + edge.boundsMax.y) * 0.5;
+  return preference === "west" ? centerX - point.x : point.y - centerY;
+}
+
+function coerceVector3(value: unknown): THREE.Vector3 | null {
+  if (value instanceof THREE.Vector3) return value.clone();
+  const vector = value as { x?: unknown; y?: unknown; z?: unknown } | null;
+  if (
+    vector &&
+    typeof vector.x === "number" &&
+    typeof vector.y === "number" &&
+    typeof vector.z === "number" &&
+    Number.isFinite(vector.x) &&
+    Number.isFinite(vector.y) &&
+    Number.isFinite(vector.z)
+  ) {
+    return new THREE.Vector3(vector.x, vector.y, vector.z);
+  }
+  return null;
+}
+
+function topoGraticuleLabelCandidate(
+  value: unknown,
+): TopoGraticuleLabelCandidate | null {
+  const position = coerceVector3(value);
+  if (position) {
+    return {
+      position,
+      tangent: new THREE.Vector3(1, 0, 0),
+    };
+  }
+  const record = value as
+    | { position?: unknown; tangent?: unknown }
+    | null
+    | undefined;
+  const candidatePosition = coerceVector3(record?.position);
+  if (!candidatePosition) return null;
+  const tangent = coerceVector3(record?.tangent) ?? new THREE.Vector3(1, 0, 0);
+  tangent.z = 0;
+  if (tangent.lengthSq() <= 0.000001) tangent.set(1, 0, 0);
+  else tangent.normalize();
+  return {
+    position: candidatePosition,
+    tangent,
+  };
+}
+
+function topoGraticuleSourceLine(value: unknown): TopoGraticuleSourceLine | null {
+  const record = value as
+    | {
+        kind?: unknown;
+        value?: unknown;
+        preference?: unknown;
+        candidates?: unknown;
+      }
+    | null
+    | undefined;
+  if (!record) return null;
+  const kind = record.kind === "lat" ? "lat" : record.kind === "lon" ? "lon" : null;
+  const valueNumber =
+    typeof record.value === "number" && Number.isFinite(record.value)
+      ? record.value
+      : NaN;
+  const preference =
+    record.preference === "north"
+      ? "north"
+      : record.preference === "west"
+        ? "west"
+        : null;
+  if (!kind || !preference || !Array.isArray(record.candidates)) return null;
+  const candidates = record.candidates
+    .map((candidate) => topoGraticuleLabelCandidate(candidate))
+    .filter((candidate): candidate is TopoGraticuleLabelCandidate =>
+      Boolean(candidate),
+    );
+  if (candidates.length < 2) return null;
+  return { kind, value: valueNumber, preference, candidates };
+}
+
+function normalizeFullGroundTextAngle(angle: number): number {
+  let next = angle;
+  while (next > Math.PI) next -= Math.PI * 2;
+  while (next < -Math.PI) next += Math.PI * 2;
+  return next;
+}
+
+function topoGraticuleLineKey(
+  kind: "lat" | "lon",
+  value: number,
+  preference: "west" | "north",
+): string {
+  const valueKey = Number.isFinite(value) ? value.toFixed(6) : "unknown";
+  return `${kind}:${valueKey}:${preference}`;
+}
+
+function topoGraticuleLabelKey(obj: THREE.Object3D): string | null {
+  const kind =
+    obj.userData?.topoGraticuleLineKind === "lat"
+      ? "lat"
+      : obj.userData?.topoGraticuleLineKind === "lon"
+        ? "lon"
+        : null;
+  const value = obj.userData?.topoGraticuleLineValue;
+  const preference =
+    obj.userData?.topoGraticuleLabelPreference === "north"
+      ? "north"
+      : obj.userData?.topoGraticuleLabelPreference === "west"
+        ? "west"
+        : null;
+  if (!kind || !preference || typeof value !== "number") return null;
+  return topoGraticuleLineKey(kind, value, preference);
+}
+
+function topoGraticuleIsHalfDegree(value: number): boolean {
+  if (!Number.isFinite(value)) return false;
+  const doubled = Math.abs(value) * 2;
+  const rounded = Math.round(doubled);
+  return Math.abs(doubled - rounded) < 0.0001 && rounded % 2 === 1;
+}
+
+function terrainEdgeStraightSideEligible(
+  point: THREE.Vector3,
+  edge: TerrainEdgeFadeState,
+  preference: "west" | "north",
+): boolean {
+  if (edge.shape !== "rounded-square") return true;
+  const centerX = (edge.boundsMin.x + edge.boundsMax.x) * 0.5;
+  const centerY = (edge.boundsMin.y + edge.boundsMax.y) * 0.5;
+  const halfX = Math.max(
+    1,
+    (edge.boundsMax.x - edge.boundsMin.x) * 0.5 - edge.insetM,
+  );
+  const halfY = Math.max(
+    1,
+    (edge.boundsMax.y - edge.boundsMin.y) * 0.5 - edge.insetM,
+  );
+  const radius = clampRange(
+    edge.cornerRadiusM,
+    0,
+    Math.max(0, Math.min(halfX, halfY) - 1),
+  );
+  if (radius <= 0) return true;
+  const localX = point.x - centerX;
+  const localY = point.y - centerY;
+  const tolerance = Math.max(2000, Math.min(edge.fadeDistanceM * 0.25, radius * 0.2));
+  if (preference === "north") {
+    return localY >= 0 && Math.abs(localX) <= halfX - radius + tolerance;
+  }
+  return localX <= 0 && Math.abs(localY) <= halfY - radius + tolerance;
+}
+
+function topoGraticuleReadableTangent(
+  direction: THREE.Vector3,
+  preference: "west" | "north",
+): THREE.Vector3 {
+  const readable = direction.clone();
+  readable.z = 0;
+  if (readable.lengthSq() <= 0.000001) {
+    readable.set(preference === "north" ? 0 : 1, preference === "north" ? 1 : 0, 0);
+  } else {
+    readable.normalize();
+  }
+  if (preference === "north" && readable.y < 0) readable.multiplyScalar(-1);
+  if (preference === "west" && readable.x < 0) readable.multiplyScalar(-1);
+  return readable;
+}
+
+function topoGraticuleEdgeTextBasis(preference: "west" | "north"): {
+  tangent: THREE.Vector3;
+  outward: THREE.Vector3;
+} {
+  return preference === "north"
+    ? {
+        tangent: new THREE.Vector3(0, 1, 0),
+        outward: new THREE.Vector3(0, 1, 0),
+      }
+    : {
+        tangent: new THREE.Vector3(1, 0, 0),
+        outward: new THREE.Vector3(-1, 0, 0),
+      };
+}
+
+function topoGraticuleReadableAngle(
+  direction: THREE.Vector3,
+  preference: "west" | "north",
+): number {
+  const tangent = topoGraticuleReadableTangent(direction, preference);
+  return normalizeFullGroundTextAngle(Math.atan2(tangent.y, tangent.x));
+}
+
+function edgeOutwardLineTangent(
+  candidate: TopoGraticuleLabelCandidate,
+  edge: TerrainEdgeFadeState,
+): THREE.Vector3 {
+  const step = 1000;
+  const plus = candidate.position
+    .clone()
+    .addScaledVector(candidate.tangent, step);
+  const minus = candidate.position
+    .clone()
+    .addScaledVector(candidate.tangent, -step);
+  const plusInside = terrainEdgeInsideDistance(plus, edge);
+  const minusInside = terrainEdgeInsideDistance(minus, edge);
+  const direction = candidate.tangent.clone();
+  if (plusInside > minusInside) direction.multiplyScalar(-1);
+  direction.z = 0;
+  if (direction.lengthSq() <= 0.000001) direction.set(1, 0, 0);
+  else direction.normalize();
+  return direction;
+}
+
 interface PointDistanceLightShader {
   uniforms: Record<string, { value: number }>;
   vertexShader: string;
   fragmentShader: string;
+}
+
+interface WorkingAreaFocusShader {
+  uniforms: Record<string, { value: unknown }>;
+  vertexShader: string;
+  fragmentShader: string;
+}
+
+function setWorkingAreaFocusShaderUniforms(
+  uniforms: Record<string, { value: unknown }> | undefined,
+  enabled: boolean,
+  boundsMin: THREE.Vector3,
+  boundsMax: THREE.Vector3,
+  outsideOpacity: number,
+): void {
+  if (!uniforms) return;
+  const ensure = <T>(key: string, value: T) => {
+    if (!uniforms[key]) uniforms[key] = { value };
+    return uniforms[key] as { value: T };
+  };
+  ensure<number>("uWorkingAreaFocusEnabled", 0).value = enabled ? 1 : 0;
+  ensure<THREE.Vector3>(
+    "uWorkingAreaFocusBoundsMin",
+    new THREE.Vector3(),
+  ).value.copy(boundsMin);
+  ensure<THREE.Vector3>(
+    "uWorkingAreaFocusBoundsMax",
+    new THREE.Vector3(),
+  ).value.copy(boundsMax);
+  ensure<number>("uWorkingAreaFocusOutsideOpacity", 1).value =
+    clamp01(outsideOpacity);
+}
+
+function applyWorkingAreaFocusBuiltInMaterial(
+  material: THREE.Material,
+  enabled: boolean,
+  boundsMin: THREE.Vector3,
+  boundsMax: THREE.Vector3,
+  outsideOpacity: number,
+): void {
+  material.userData.workingAreaFocusEnabled = enabled;
+  material.userData.workingAreaFocusBoundsMin = boundsMin.clone();
+  material.userData.workingAreaFocusBoundsMax = boundsMax.clone();
+  material.userData.workingAreaFocusOutsideOpacity = clamp01(outsideOpacity);
+
+  if (material.userData.workingAreaFocusPatched !== true) {
+    const previousOnBeforeCompile = material.onBeforeCompile.bind(material);
+    const previousKey = material.customProgramCacheKey.bind(material);
+    material.onBeforeCompile = (shader, renderer) => {
+      previousOnBeforeCompile(shader, renderer);
+      const patchedShader = shader as WorkingAreaFocusShader;
+      setWorkingAreaFocusShaderUniforms(
+        patchedShader.uniforms,
+        material.userData.workingAreaFocusEnabled === true,
+        (material.userData.workingAreaFocusBoundsMin as THREE.Vector3) ??
+          WORKING_AREA_FOCUS_DEFAULT_BOUNDS.min,
+        (material.userData.workingAreaFocusBoundsMax as THREE.Vector3) ??
+          WORKING_AREA_FOCUS_DEFAULT_BOUNDS.max,
+        typeof material.userData.workingAreaFocusOutsideOpacity === "number"
+          ? material.userData.workingAreaFocusOutsideOpacity
+          : 1,
+      );
+      if (
+        patchedShader.vertexShader.includes("void main() {") &&
+        patchedShader.fragmentShader.includes("diffuseColor")
+      ) {
+        patchedShader.vertexShader = patchedShader.vertexShader.replace(
+          "void main() {",
+          [
+            "varying vec3 vWorkingAreaFocusWorldPosition;",
+            "void main() {",
+            "  vWorkingAreaFocusWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;",
+          ].join("\n"),
+        );
+        patchedShader.fragmentShader = patchedShader.fragmentShader.replace(
+          "void main() {",
+          [
+            "uniform int uWorkingAreaFocusEnabled;",
+            "uniform vec3 uWorkingAreaFocusBoundsMin;",
+            "uniform vec3 uWorkingAreaFocusBoundsMax;",
+            "uniform float uWorkingAreaFocusOutsideOpacity;",
+            "varying vec3 vWorkingAreaFocusWorldPosition;",
+            "float workingAreaFocusAlpha(vec3 position) {",
+            "  if (uWorkingAreaFocusEnabled == 0) return 1.0;",
+            "  bool inside = all(greaterThanEqual(position, uWorkingAreaFocusBoundsMin)) && all(lessThanEqual(position, uWorkingAreaFocusBoundsMax));",
+            "  return inside ? 1.0 : clamp(uWorkingAreaFocusOutsideOpacity, 0.0, 1.0);",
+            "}",
+            "void main() {",
+          ].join("\n"),
+        );
+        const alphaPatch = [
+          "float workingAreaFocusLayerAlpha = workingAreaFocusAlpha(vWorkingAreaFocusWorldPosition);",
+          "diffuseColor.a *= workingAreaFocusLayerAlpha;",
+          "if (diffuseColor.a <= 0.001) discard;",
+        ].join("\n");
+        if (
+          patchedShader.fragmentShader.includes("#include <alphatest_fragment>")
+        ) {
+          patchedShader.fragmentShader = patchedShader.fragmentShader.replace(
+            "#include <alphatest_fragment>",
+            `${alphaPatch}\n#include <alphatest_fragment>`,
+          );
+        } else {
+          patchedShader.fragmentShader = patchedShader.fragmentShader.replace(
+            "#include <dithering_fragment>",
+            `${alphaPatch}\n#include <dithering_fragment>`,
+          );
+        }
+      }
+      material.userData.workingAreaFocusShader = patchedShader;
+    };
+    material.customProgramCacheKey = () =>
+      `${previousKey()}|geosee-working-area-focus-v1`;
+    material.userData.workingAreaFocusPatched = true;
+    material.needsUpdate = true;
+  }
+
+  const shader = material.userData.workingAreaFocusShader as
+    | WorkingAreaFocusShader
+    | undefined;
+  if (shader) {
+    setWorkingAreaFocusShaderUniforms(
+      shader.uniforms,
+      enabled,
+      boundsMin,
+      boundsMax,
+      outsideOpacity,
+    );
+  }
 }
 
 function applyPointDistanceLightMaterial(
@@ -445,8 +917,9 @@ function applyPointDistanceLightMaterial(
     material.needsUpdate = true;
   }
 
-  const shader = material.userData
-    .pointDistanceLightShader as PointDistanceLightShader | undefined;
+  const shader = material.userData.pointDistanceLightShader as
+    | PointDistanceLightShader
+    | undefined;
   if (shader) {
     shader.uniforms.uPointDistanceLightStrength.value = clampedStrength;
     shader.uniforms.uPointDistanceLightNear.value = POINT_DISTANCE_LIGHT_NEAR_M;
@@ -469,7 +942,11 @@ function surfaceGradientColorAt(
     target.lerpColors(lowColor, midColor, clamp01(localT));
   } else {
     const highRange = Math.max(0.0001, 1 - midpoint);
-    target.lerpColors(midColor, highColor, clamp01((shaped - midpoint) / highRange));
+    target.lerpColors(
+      midColor,
+      highColor,
+      clamp01((shaped - midpoint) / highRange),
+    );
   }
   return target;
 }
@@ -513,7 +990,9 @@ function seismicColorAt(
   const t =
     signed === 0
       ? 0.5
-      : clamp01(0.5 + Math.sign(signed) * Math.pow(Math.abs(signed), gamma) * 0.5);
+      : clamp01(
+          0.5 + Math.sign(signed) * Math.pow(Math.abs(signed), gamma) * 0.5,
+        );
   if (colormap === "grayscale") {
     return target.setRGB(t, t, t);
   }
@@ -569,7 +1048,9 @@ function seismicBackgroundAlphaAt(
   const t =
     signed === 0
       ? 0.5
-      : clamp01(0.5 + Math.sign(signed) * Math.pow(Math.abs(signed), gamma) * 0.5);
+      : clamp01(
+          0.5 + Math.sign(signed) * Math.pow(Math.abs(signed), gamma) * 0.5,
+        );
   const contrast = Math.abs(t - 0.5) * 2;
   const cutoff = clampRange(backgroundCutoff, 0, 0.45);
   return THREE.MathUtils.smoothstep(
@@ -579,9 +1060,10 @@ function seismicBackgroundAlphaAt(
   );
 }
 
-function scalarDefaultRange(
-  geometry: THREE.BufferGeometry,
-): { min: number; max: number } {
+function scalarDefaultRange(geometry: THREE.BufferGeometry): {
+  min: number;
+  max: number;
+} {
   const scalar = geometry.userData.scalar as
     | { displayMin?: number; displayMax?: number; min?: number; max?: number }
     | undefined;
@@ -600,28 +1082,33 @@ function scalarDefaultRange(
   return max > min ? { min, max } : { min, max: min + 1 };
 }
 
-function scalarSourceRange(
-  geometry: THREE.BufferGeometry,
-): { min: number; max: number } {
+function scalarSourceRange(geometry: THREE.BufferGeometry): {
+  min: number;
+  max: number;
+} {
   const scalar = geometry.userData.scalar as
     | { min?: number; max?: number; displayMin?: number; displayMax?: number }
     | undefined;
   const min =
     typeof scalar?.min === "number" && Number.isFinite(scalar.min)
       ? scalar.min
-      : typeof scalar?.displayMin === "number" && Number.isFinite(scalar.displayMin)
+      : typeof scalar?.displayMin === "number" &&
+          Number.isFinite(scalar.displayMin)
         ? scalar.displayMin
         : 0;
   const max =
     typeof scalar?.max === "number" && Number.isFinite(scalar.max)
       ? scalar.max
-      : typeof scalar?.displayMax === "number" && Number.isFinite(scalar.displayMax)
+      : typeof scalar?.displayMax === "number" &&
+          Number.isFinite(scalar.displayMax)
         ? scalar.displayMax
         : min + 1;
   return max > min ? { min, max } : { min, max: min + 1 };
 }
 
-function geometryOriginalIndex(geometry: THREE.BufferGeometry): Uint32Array | null {
+function geometryOriginalIndex(
+  geometry: THREE.BufferGeometry,
+): Uint32Array | null {
   const existing = geometry.userData.scalarOriginalIndex as
     | { index: Uint32Array | null }
     | undefined;
@@ -702,7 +1189,9 @@ function supportCellKey(ix: number, iy: number, iz: number): number {
   return (ix + 32768) * 4294967296 + (iy + 32768) * 65536 + iz + 32768;
 }
 
-function scalarLateralSupport(geometry: THREE.BufferGeometry): Float32Array | null {
+function scalarLateralSupport(
+  geometry: THREE.BufferGeometry,
+): Float32Array | null {
   const position = geometry.getAttribute("position");
   if (!(position instanceof THREE.BufferAttribute)) return null;
   const cached = geometry.userData.scalarLateralSupport as
@@ -866,7 +1355,8 @@ function orderScalarEdgePaths(
       if (!cell) continue;
       const degree = scalarEdgeCellNeighbors(cell, cells).length;
       const endpointBonus = degree <= 1 ? -100_000 : 0;
-      const score = endpointBonus + degree * 100 + cell.x * 0.0001 + cell.y * 0.0001;
+      const score =
+        endpointBonus + degree * 100 + cell.x * 0.0001 + cell.y * 0.0001;
       if (score < startScore) {
         start = cell;
         startScore = score;
@@ -881,15 +1371,19 @@ function orderScalarEdgePaths(
       path.push(scalarEdgePointFromCell(current));
       unused.delete(current.key);
 
-      const candidates: ScalarEdgeCell[] = scalarEdgeCellNeighbors(current, cells).filter((neighbor) =>
-        unused.has(neighbor.key),
-      );
+      const candidates: ScalarEdgeCell[] = scalarEdgeCellNeighbors(
+        current,
+        cells,
+      ).filter((neighbor) => unused.has(neighbor.key));
       if (candidates.length === 0) break;
 
       let best: ScalarEdgeCell = candidates[0];
       let bestScore = -Infinity;
       for (const candidate of candidates) {
-        const distance = Math.max(1, scalarEdgeCellDistance(current, candidate));
+        const distance = Math.max(
+          1,
+          scalarEdgeCellDistance(current, candidate),
+        );
         let score = -distance;
         if (previous) {
           const inX = current.x - previous.x;
@@ -898,7 +1392,10 @@ function orderScalarEdgePaths(
           const outY = candidate.y - current.y;
           const inLength = Math.max(1, Math.hypot(inX, inY));
           const outLength = Math.max(1, Math.hypot(outX, outY));
-          score += ((inX / inLength) * (outX / outLength) + (inY / inLength) * (outY / outLength)) * 10_000;
+          score +=
+            ((inX / inLength) * (outX / outLength) +
+              (inY / inLength) * (outY / outLength)) *
+            10_000;
         }
         if (score > bestScore) {
           best = candidate;
@@ -1038,7 +1535,10 @@ function updateScalarEdgeLineOverlay(
     ) {
       continue;
     }
-    if (options.supportValues && options.supportValues[i] < options.noiseThreshold) {
+    if (
+      options.supportValues &&
+      options.supportValues[i] < options.noiseThreshold
+    ) {
       continue;
     }
 
@@ -1108,10 +1608,18 @@ function updateScalarEdgeLineOverlay(
 
   const boundaryCells = new Map<string, ScalarEdgeCell>();
   for (const cell of cells.values()) {
-    const leftMissing = !cells.has(scalarEdgeGridKey(cell.ix - 1, cell.iy, cell.iz));
-    const rightMissing = !cells.has(scalarEdgeGridKey(cell.ix + 1, cell.iy, cell.iz));
-    const downMissing = !cells.has(scalarEdgeGridKey(cell.ix, cell.iy - 1, cell.iz));
-    const upMissing = !cells.has(scalarEdgeGridKey(cell.ix, cell.iy + 1, cell.iz));
+    const leftMissing = !cells.has(
+      scalarEdgeGridKey(cell.ix - 1, cell.iy, cell.iz),
+    );
+    const rightMissing = !cells.has(
+      scalarEdgeGridKey(cell.ix + 1, cell.iy, cell.iz),
+    );
+    const downMissing = !cells.has(
+      scalarEdgeGridKey(cell.ix, cell.iy - 1, cell.iz),
+    );
+    const upMissing = !cells.has(
+      scalarEdgeGridKey(cell.ix, cell.iy + 1, cell.iz),
+    );
     if (leftMissing || rightMissing || downMissing || upMissing) {
       boundaryCells.set(cell.key, cell);
     }
@@ -1134,7 +1642,10 @@ function updateScalarEdgeLineOverlay(
   const indices: number[] = [];
   const baseHalfWidthM = options.edgeLineWidth * 45;
   const dashed = options.edgeLineStyle === "dashed";
-  const dashCycleM = Math.max(SCALAR_EDGE_LINE_XY_BIN_M * 1.1, baseHalfWidthM * 18);
+  const dashCycleM = Math.max(
+    SCALAR_EDGE_LINE_XY_BIN_M * 1.1,
+    baseHalfWidthM * 18,
+  );
   const appendSegment = (a: ScalarEdgePathPoint, b: ScalarEdgePathPoint) => {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
@@ -1225,8 +1736,14 @@ function updateScalarEdgeLineOverlay(
   }
 
   const lineGeometry = new THREE.BufferGeometry();
-  lineGeometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  lineGeometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  lineGeometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(positions, 3),
+  );
+  lineGeometry.setAttribute(
+    "color",
+    new THREE.Float32BufferAttribute(colors, 3),
+  );
   lineGeometry.setIndex(indices);
   lineGeometry.computeBoundingSphere();
   line.geometry.dispose();
@@ -1245,7 +1762,11 @@ interface ScalarSectionIsoOptions {
   selectedTargetIds: Record<string, boolean>;
   targetKey?: string;
   alphaValues?: Float32Array | number[];
-  colorMode?: "scalar" | "seismic-blue-white-red" | "seismic-grayscale" | "seismic-velocity";
+  colorMode?:
+    | "scalar"
+    | "seismic-blue-white-red"
+    | "seismic-grayscale"
+    | "seismic-velocity";
   amplitudeGamma?: number;
   skipSceneSectionClipping?: boolean;
   isoMin: number;
@@ -1287,8 +1808,12 @@ function scalarSectionMeshLabel(obj: THREE.Object3D): string {
   const slice = data.resistivitySlice as
     | { label?: unknown; id?: unknown }
     | undefined;
-  if (typeof slice?.label === "string" && slice.label.trim()) return slice.label;
-  if (typeof data.scalarSectionLabel === "string" && data.scalarSectionLabel.trim()) {
+  if (typeof slice?.label === "string" && slice.label.trim())
+    return slice.label;
+  if (
+    typeof data.scalarSectionLabel === "string" &&
+    data.scalarSectionLabel.trim()
+  ) {
     return data.scalarSectionLabel;
   }
   if (typeof data.displayName === "string" && data.displayName.trim()) {
@@ -1301,7 +1826,8 @@ function scalarSectionMeshLabel(obj: THREE.Object3D): string {
 
 function scalarSectionMeshKind(obj: THREE.Object3D): string {
   const data = obj.userData ?? {};
-  if (typeof data.resistivitySliceKind === "string") return data.resistivitySliceKind;
+  if (typeof data.resistivitySliceKind === "string")
+    return data.resistivitySliceKind;
   if (typeof data.scalarSectionKind === "string") return data.scalarSectionKind;
   return "section";
 }
@@ -1313,7 +1839,8 @@ function seismicSectionMeshId(obj: THREE.Object3D): string | null {
       ? data.seismicSectionId
       : null;
   const axis =
-    typeof data.seismicSectionAxis === "string" && data.seismicSectionAxis.trim()
+    typeof data.seismicSectionAxis === "string" &&
+    data.seismicSectionAxis.trim()
       ? data.seismicSectionAxis
       : null;
   if (sectionId && axis) return `${axis}-${sectionId}`;
@@ -1333,7 +1860,8 @@ function seismicSectionTargetKey(layerId: string, obj: THREE.Object3D): string {
 function seismicSectionMeshLabel(obj: THREE.Object3D): string {
   const data = obj.userData ?? {};
   const productLabel =
-    typeof data.seismicProductLabel === "string" && data.seismicProductLabel.trim()
+    typeof data.seismicProductLabel === "string" &&
+    data.seismicProductLabel.trim()
       ? data.seismicProductLabel
       : "Seismic";
   const sectionId =
@@ -1341,7 +1869,8 @@ function seismicSectionMeshLabel(obj: THREE.Object3D): string {
       ? data.seismicSectionId
       : "";
   const axis =
-    typeof data.seismicSectionAxis === "string" && data.seismicSectionAxis.trim()
+    typeof data.seismicSectionAxis === "string" &&
+    data.seismicSectionAxis.trim()
       ? data.seismicSectionAxis
       : "section";
   return sectionId
@@ -1357,7 +1886,10 @@ function seismicSectionMeshKind(obj: THREE.Object3D): string {
   return `seismic ${axis}`;
 }
 
-function mtVolumeCutSectionId(productId: string, axis: SceneSectionAxis): string {
+function mtVolumeCutSectionId(
+  productId: string,
+  axis: SceneSectionAxis,
+): string {
   return `${productId}-${axis}-section`;
 }
 
@@ -1434,10 +1966,14 @@ function sectionIsoTriangleSuppressed(
 }
 
 function sectionIsoAttributeValues(
-  attribute: THREE.BufferAttribute | THREE.InterleavedBufferAttribute | undefined,
+  attribute:
+    | THREE.BufferAttribute
+    | THREE.InterleavedBufferAttribute
+    | undefined,
   count: number,
 ): Float32Array | undefined {
-  if (!attribute || attribute.itemSize < 1 || attribute.count < count) return undefined;
+  if (!attribute || attribute.itemSize < 1 || attribute.count < count)
+    return undefined;
   const values = new Float32Array(count);
   for (let i = 0; i < count; i += 1) values[i] = attribute.getX(i);
   return values;
@@ -1511,12 +2047,18 @@ function sectionIsoColorAt(
   }
   const fillOffset = clampRange(options.fillOffset, -1, 1);
   if (Math.abs(fillOffset) > 0.0001) {
-    target.lerp(fillOffset < 0 ? new THREE.Color(1, 1, 1) : new THREE.Color(0, 0, 0), Math.abs(fillOffset));
+    target.lerp(
+      fillOffset < 0 ? new THREE.Color(1, 1, 1) : new THREE.Color(0, 0, 0),
+      Math.abs(fillOffset),
+    );
   }
   return target;
 }
 
-function addUniqueIsoPoint(points: THREE.Vector3[], point: THREE.Vector3): void {
+function addUniqueIsoPoint(
+  points: THREE.Vector3[],
+  point: THREE.Vector3,
+): void {
   for (const existing of points) {
     if (existing.distanceToSquared(point) < 0.01) return;
   }
@@ -1558,7 +2100,9 @@ function sectionIsoTriangleIntersections(
   addEdge(ic, ia);
 }
 
-function farthestIsoPair(points: THREE.Vector3[]): [THREE.Vector3, THREE.Vector3] | null {
+function farthestIsoPair(
+  points: THREE.Vector3[],
+): [THREE.Vector3, THREE.Vector3] | null {
   if (points.length < 2) return null;
   let bestA = points[0];
   let bestB = points[1];
@@ -1601,10 +2145,18 @@ function appendSectionIsoRibbonSegment(
   const p3 = b.clone().add(lift).sub(side);
   const base = positions.length / 3;
   positions.push(
-    p0.x, p0.y, p0.z,
-    p1.x, p1.y, p1.z,
-    p2.x, p2.y, p2.z,
-    p3.x, p3.y, p3.z,
+    p0.x,
+    p0.y,
+    p0.z,
+    p1.x,
+    p1.y,
+    p1.z,
+    p2.x,
+    p2.y,
+    p2.z,
+    p3.x,
+    p3.y,
+    p3.z,
   );
   for (let i = 0; i < 4; i += 1) {
     colors.push(color.r, color.g, color.b);
@@ -1624,12 +2176,24 @@ function appendSectionIsoRibbon(
   dashed: boolean,
 ): void {
   if (!dashed) {
-    appendSectionIsoRibbonSegment(positions, colors, indices, a, b, normal, color, halfWidthM);
+    appendSectionIsoRibbonSegment(
+      positions,
+      colors,
+      indices,
+      a,
+      b,
+      normal,
+      color,
+      halfWidthM,
+    );
     return;
   }
   const length = a.distanceTo(b);
   if (length < 1) return;
-  const direction = b.clone().sub(a).multiplyScalar(1 / length);
+  const direction = b
+    .clone()
+    .sub(a)
+    .multiplyScalar(1 / length);
   const dashLength = Math.max(halfWidthM * 8, 220);
   const gapLength = Math.max(halfWidthM * 4, 140);
   const cycle = dashLength + gapLength;
@@ -1668,8 +2232,15 @@ function buildSectionIsoLineGeometry(
     Math.ceil(triangleCount / SECTION_ISO_MAX_TRIANGLES),
   );
 
-  const levels = sectionIsoLevels(options.isoMin, options.isoMax, options.levelCount);
-  const halfWidthM = Math.max(6, options.lineWidth * SECTION_ISO_LINE_WIDTH_M_PER_PX * 0.5);
+  const levels = sectionIsoLevels(
+    options.isoMin,
+    options.isoMax,
+    options.levelCount,
+  );
+  const halfWidthM = Math.max(
+    6,
+    options.lineWidth * SECTION_ISO_LINE_WIDTH_M_PER_PX * 0.5,
+  );
   const positions: number[] = [];
   const colors: number[] = [];
   const indices: number[] = [];
@@ -1681,8 +2252,7 @@ function buildSectionIsoLineGeometry(
   const color = new THREE.Color();
   const dashed = options.lineStyle === "dashed";
 
-  triangleLoop:
-  for (let i = 0; i < triangleLimit; i += 3 * triangleStride) {
+  triangleLoop: for (let i = 0; i < triangleLimit; i += 3 * triangleStride) {
     const ia = sourceIndex[i];
     const ib = sourceIndex[i + 1];
     const ic = sourceIndex[i + 2];
@@ -1698,7 +2268,15 @@ function buildSectionIsoLineGeometry(
     if (normal.lengthSq() < 0.000001) continue;
 
     for (const level of levels) {
-      sectionIsoTriangleIntersections(position, values, ia, ib, ic, level, intersections);
+      sectionIsoTriangleIntersections(
+        position,
+        values,
+        ia,
+        ib,
+        ic,
+        level,
+        intersections,
+      );
       const pair = farthestIsoPair(intersections);
       if (!pair) continue;
       sectionIsoColorAt(level, options, color);
@@ -1721,14 +2299,19 @@ function buildSectionIsoLineGeometry(
 
   if (positions.length === 0) return null;
   const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(positions, 3),
+  );
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   geometry.setIndex(indices);
   geometry.computeBoundingSphere();
   return geometry;
 }
 
-function makeSectionIsoBandMaterial(options: ScalarSectionIsoOptions): THREE.ShaderMaterial {
+function makeSectionIsoBandMaterial(
+  options: ScalarSectionIsoOptions,
+): THREE.ShaderMaterial {
   const fillOffset = clampRange(options.fillOffset, -1, 1);
   const material = new THREE.ShaderMaterial({
     transparent: true,
@@ -1760,7 +2343,9 @@ function makeSectionIsoBandMaterial(options: ScalarSectionIsoOptions): THREE.Sha
                 ? 1
                 : 0,
       },
-      uAmplitudeGamma: { value: clampRange(options.amplitudeGamma ?? 1, 0.35, 2.5) },
+      uAmplitudeGamma: {
+        value: clampRange(options.amplitudeGamma ?? 1, 0.35, 2.5),
+      },
       uLiftM: { value: SECTION_ISO_LIFT_M * 0.55 },
       uLowColor: { value: options.lowColor.clone() },
       uMidColor: { value: options.midColor.clone() },
@@ -1874,7 +2459,9 @@ function buildSectionIsoBandMesh(
   if (!(position instanceof THREE.BufferAttribute)) return null;
   const geometry = obj.geometry.clone();
   const scalarValues =
-    values instanceof Float32Array ? new Float32Array(values) : Float32Array.from(values);
+    values instanceof Float32Array
+      ? new Float32Array(values)
+      : Float32Array.from(values);
   if (scalarValues.length !== position.count) return null;
   const alphaValues =
     options.alphaValues && options.alphaValues.length === position.count
@@ -1882,8 +2469,14 @@ function buildSectionIsoBandMesh(
         ? new Float32Array(options.alphaValues)
         : Float32Array.from(options.alphaValues)
       : new Float32Array(position.count).fill(1);
-  geometry.setAttribute("sectionIsoScalar", new THREE.Float32BufferAttribute(scalarValues, 1));
-  geometry.setAttribute("sectionIsoAlpha", new THREE.Float32BufferAttribute(alphaValues, 1));
+  geometry.setAttribute(
+    "sectionIsoScalar",
+    new THREE.Float32BufferAttribute(scalarValues, 1),
+  );
+  geometry.setAttribute(
+    "sectionIsoAlpha",
+    new THREE.Float32BufferAttribute(alphaValues, 1),
+  );
   if (!geometry.getAttribute("normal")) geometry.computeVertexNormals();
   const mesh = new THREE.Mesh(geometry, makeSectionIsoBandMaterial(options));
   mesh.name = "scalar-section-iso-band-overlay";
@@ -1904,7 +2497,8 @@ function updateScalarSectionIsoOverlay(
   values: Float32Array | number[],
   options: ScalarSectionIsoOptions,
 ): void {
-  const targetKey = options.targetKey ?? scalarSectionTargetKey(options.layerId, obj);
+  const targetKey =
+    options.targetKey ?? scalarSectionTargetKey(options.layerId, obj);
   const targetSelected = options.selectedTargetIds[targetKey] !== false;
   const enabled =
     options.enabled &&
@@ -1999,14 +2593,7 @@ function applyScalarFocusIndex(
     let count = 0;
     for (let i = 0; i < position.count; i += 1) {
       if (
-        scalarValueIsVisible(
-          values,
-          i,
-          trimMin,
-          blendMin,
-          blendMax,
-          trimMax,
-        ) &&
+        scalarValueIsVisible(values, i, trimMin, blendMin, blendMax, trimMax) &&
         (!supportValues || supportValues[i] >= noiseThreshold)
       ) {
         scratch[count] = i;
@@ -2027,14 +2614,7 @@ function applyScalarFocusIndex(
     const b = sourceIndex[i + 1];
     const c = sourceIndex[i + 2];
     const weight =
-      (scalarVisibilityWeight(
-        values,
-        a,
-        trimMin,
-        blendMin,
-        blendMax,
-        trimMax,
-      ) +
+      (scalarVisibilityWeight(values, a, trimMin, blendMin, blendMax, trimMax) +
         scalarVisibilityWeight(
           values,
           b,
@@ -2052,7 +2632,10 @@ function applyScalarFocusIndex(
           trimMax,
         )) /
       3;
-    if (weight >= 1 || (weight > 0 && deterministicScalarSample(i / 3) <= weight)) {
+    if (
+      weight >= 1 ||
+      (weight > 0 && deterministicScalarSample(i / 3) <= weight)
+    ) {
       scratch[count] = a;
       scratch[count + 1] = b;
       scratch[count + 2] = c;
@@ -2063,7 +2646,9 @@ function applyScalarFocusIndex(
   geometry.userData.scalarFocusVisibleCount = count / 3;
 }
 
-function shaderMaterialHasThreeFogUniforms(material: THREE.ShaderMaterial): boolean {
+function shaderMaterialHasThreeFogUniforms(
+  material: THREE.ShaderMaterial,
+): boolean {
   const uniforms = material.uniforms as Record<string, { value: unknown }>;
   return !!uniforms?.fogColor && (!!uniforms.fogDensity || !!uniforms.fogNear);
 }
@@ -2157,6 +2742,32 @@ function easeProgress(t: number, easing: EasingName): number {
   }
 }
 
+function scalarInclusionFilterActive(
+  layerId: string,
+  style: EditableStyle,
+  filterActive: boolean,
+): boolean {
+  const inclusionMode = style.scalarInclusionMode;
+  if (inclusionMode === "thresholded") return filterActive;
+  if (
+    inclusionMode === "all-valid" ||
+    layerId === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID
+  ) {
+    return false;
+  }
+  return filterActive;
+}
+
+function scalarFullDensityAllValidMode(
+  layerId: string,
+  style: EditableStyle,
+): boolean {
+  return (
+    layerId === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID &&
+    style.scalarInclusionMode !== "thresholded"
+  );
+}
+
 interface LayerOpacityTween {
   from: number;
   to: number;
@@ -2168,12 +2779,52 @@ interface LayerOpacityTween {
 interface LayerTransitionSnapshot extends LayerOpacityTween {
   id: string;
   group: THREE.Group;
+  style?: EditableStyle;
 }
 
 interface ScalarStyleTween extends LayerOpacityTween {
   id: string;
   fromStyle: EditableStyle;
   toStyle: EditableStyle;
+}
+
+interface WorkingAreaFocusStyleTween {
+  fromStyle: EditableStyle;
+  toStyle: EditableStyle;
+  startMs: number;
+  durationMs: number;
+  easing: EasingName;
+}
+
+type NavigationReason =
+  | "page-click"
+  | "keyboard"
+  | "programmatic"
+  | "freelook"
+  | "interrupted";
+
+type LayerTransitionKind =
+  | "continuous"
+  | "discrete-crossfade"
+  | "full-density-scalar"
+  | "none";
+
+interface ResolvedLayerRenderState {
+  id: string;
+  visible: boolean;
+  opacity: number;
+  style: EditableStyle;
+}
+
+interface SceneTransitionContext {
+  sourcePageId: string;
+  targetPageId: string;
+  reason: NavigationReason;
+  startMs: number;
+  durationMs: number;
+  easing: EasingName;
+  layerKinds: Record<string, LayerTransitionKind>;
+  sourceLayers: Map<string, ResolvedLayerRenderState>;
 }
 
 const SCALAR_TRANSITION_STYLE_FIELDS: readonly (keyof EditableStyle)[] = [
@@ -2192,6 +2843,10 @@ const SCALAR_TRANSITION_STYLE_FIELDS: readonly (keyof EditableStyle)[] = [
   "scalarEdgeFillOffset",
   "scalarNoiseThreshold",
   "scalarDistanceLightStrength",
+  "scalarVolumeThresholdMin",
+  "scalarVolumeThresholdMax",
+  "scalarVolumeOpacity",
+  "scalarVolumeDensity",
   "sectionIsoMin",
   "sectionIsoMax",
   "sectionIsoLevelCount",
@@ -2209,27 +2864,33 @@ function scalarStyleNumber(
   if (typeof value === "number" && Number.isFinite(value)) return value;
 
   const displayMin =
-    typeof style.scalarDisplayMin === "number" && Number.isFinite(style.scalarDisplayMin)
+    typeof style.scalarDisplayMin === "number" &&
+    Number.isFinite(style.scalarDisplayMin)
       ? style.scalarDisplayMin
       : 0.139879;
   const displayMax =
-    typeof style.scalarDisplayMax === "number" && Number.isFinite(style.scalarDisplayMax)
+    typeof style.scalarDisplayMax === "number" &&
+    Number.isFinite(style.scalarDisplayMax)
       ? style.scalarDisplayMax
       : 3.937122;
   const focusMin =
-    typeof style.scalarFocusMin === "number" && Number.isFinite(style.scalarFocusMin)
+    typeof style.scalarFocusMin === "number" &&
+    Number.isFinite(style.scalarFocusMin)
       ? style.scalarFocusMin
       : -2;
   const focusMax =
-    typeof style.scalarFocusMax === "number" && Number.isFinite(style.scalarFocusMax)
+    typeof style.scalarFocusMax === "number" &&
+    Number.isFinite(style.scalarFocusMax)
       ? style.scalarFocusMax
       : 4.5;
   const blendMin =
-    typeof style.scalarBlendMin === "number" && Number.isFinite(style.scalarBlendMin)
+    typeof style.scalarBlendMin === "number" &&
+    Number.isFinite(style.scalarBlendMin)
       ? style.scalarBlendMin
       : displayMin;
   const blendMax =
-    typeof style.scalarBlendMax === "number" && Number.isFinite(style.scalarBlendMax)
+    typeof style.scalarBlendMax === "number" &&
+    Number.isFinite(style.scalarBlendMax)
       ? style.scalarBlendMax
       : displayMax;
 
@@ -2269,6 +2930,79 @@ function scalarTransitionStyleChanged(
       Math.abs(from - to) > 0.000001
     );
   });
+}
+
+function styleFieldChanged(
+  fromStyle: EditableStyle,
+  toStyle: EditableStyle,
+  field: keyof EditableStyle,
+): boolean {
+  return (
+    JSON.stringify(fromStyle[field] ?? null) !==
+    JSON.stringify(toStyle[field] ?? null)
+  );
+}
+
+function styleFieldsChanged(
+  fromStyle: EditableStyle,
+  toStyle: EditableStyle,
+  fields: readonly (keyof EditableStyle)[],
+): boolean {
+  return fields.some((field) => styleFieldChanged(fromStyle, toStyle, field));
+}
+
+function forgeDiscreteDataStyleChanged(
+  layerId: string,
+  fromStyle: EditableStyle,
+  toStyle: EditableStyle,
+): boolean {
+  if (!UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS.has(layerId)) return false;
+  if (layerId === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID) {
+    return styleFieldsChanged(fromStyle, toStyle, [
+      "scalarVolumeProductId",
+      "scalarVolumeRenderMode",
+      "scalarVolumeTransferMode",
+      "scalarVolumeMaskVisible",
+    ]);
+  }
+  if (layerId === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID) {
+    return styleFieldsChanged(fromStyle, toStyle, [
+      "mtThresholdSurfaceVisibility",
+      "mtThresholdSurfaceWireframe",
+    ]);
+  }
+  if (layerId === UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID) {
+    return styleFieldsChanged(fromStyle, toStyle, [
+      "resistivityHorizontalSlicesVisible",
+      "resistivityVerticalSectionsVisible",
+      "resistivitySliceVisibility",
+    ]);
+  }
+  if (layerId === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) {
+    return styleFieldsChanged(fromStyle, toStyle, [
+      "seismicProductId",
+      "seismicProductVisibility",
+      "seismicRenderMode",
+      "seismicSliceAxis",
+      "seismicSliceFraction",
+      "seismicSliceThroughVolume",
+      "seismicComparisonProductId",
+      "seismicComparisonMode",
+      "seismicComparisonSpacingM",
+      "seismicNavigationVisible",
+      "seismicNavigationRoleVisibility",
+      "sectionIsoEnabled",
+      "sectionIsoTargetIds",
+    ]);
+  }
+  if (layerId === UTAH_FORGE_TOPO_GRATICULE_LAYER_ID) {
+    return styleFieldsChanged(
+      fromStyle,
+      toStyle,
+      UTAH_FORGE_GRATICULE_EDGE_STYLE_FIELDS,
+    );
+  }
+  return false;
 }
 
 interface TerrainGridHandle {
@@ -2377,9 +3111,26 @@ interface PublicSurfaceClipRuntime {
 
 interface PublicSurfaceClipBox {
   enabled: boolean;
+  shape: "box" | "circle";
   center: THREE.Vector3;
   halfSize: THREE.Vector3;
   rotationZRad: number;
+}
+
+interface WorkingAreaFocusRuntime {
+  group: THREE.Group;
+  line: LineSegments2;
+}
+
+interface WorkingAreaFocusState {
+  enabled: boolean;
+  mode: "inside-only" | "outside-context";
+  boundsLayerId: string;
+  boundsMin: THREE.Vector3;
+  boundsMax: THREE.Vector3;
+  targetLayerIds: Set<string>;
+  outsideOpacityByLayerId: Map<string, number>;
+  helperVisible: boolean;
 }
 
 export interface PageCameraMarkerSpec {
@@ -2457,7 +3208,10 @@ export class SceneManager {
   private globalPageCameraMarkers = new Map<string, PageCameraMarkerRuntime>();
   private sceneSectionRuntime: SceneSectionRuntime | null = null;
   private publicSurfaceClipRuntime: PublicSurfaceClipRuntime | null = null;
+  private workingAreaFocusRuntime: WorkingAreaFocusRuntime | null = null;
   private lastSceneSectionStyle: EditableStyle = {};
+  private lastWorkingAreaFocusStyle: EditableStyle = {};
+  private currentWorkingAreaFocusStyle: EditableStyle = {};
   private sceneSectionClippingActive = false;
   private publicSurfaceClippingActive = false;
   private appliedLayerStyles = new Map<string, EditableStyle>();
@@ -2474,8 +3228,16 @@ export class SceneManager {
   private sunLockToCamera = false;
   private pendingCameraSunCapture = false;
   private lastSunConfigKey = "";
-  private readonly cameraLocalSunDir = new THREE.Vector3(0.6, -0.4, 0.7).normalize();
-  private readonly pendingCameraSunWorldDir = new THREE.Vector3(0.6, -0.4, 0.7).normalize();
+  private readonly cameraLocalSunDir = new THREE.Vector3(
+    0.6,
+    -0.4,
+    0.7,
+  ).normalize();
+  private readonly pendingCameraSunWorldDir = new THREE.Vector3(
+    0.6,
+    -0.4,
+    0.7,
+  ).normalize();
   private readonly cameraSunRight = new THREE.Vector3();
   private readonly cameraSunUp = new THREE.Vector3();
   private readonly cameraSunBack = new THREE.Vector3();
@@ -2505,6 +3267,8 @@ export class SceneManager {
   private layerTweens = new Map<string, LayerOpacityTween>();
   private scalarStyleTweens = new Map<string, ScalarStyleTween>();
   private layerTransitionSnapshots = new Map<string, LayerTransitionSnapshot>();
+  private workingAreaFocusTween: WorkingAreaFocusStyleTween | null = null;
+  private activeSceneTransitionContext: SceneTransitionContext | null = null;
   private materialBaseOpacity = new WeakMap<THREE.Material, number>();
   private currentVisibleLayerIds: ReadonlySet<string> | null = null;
   // Scene overlay registry: one handle per env.sceneOverlays entry.
@@ -2536,6 +3300,9 @@ export class SceneManager {
   private geologyHandle: GeologyHandle | null = null;
   private environmentScenePreviewPatch: Partial<SceneProperties> | null = null;
   private lastAppliedRenderPresetId: string | null = null;
+  private currentTerrainScene: NonNullable<SceneProperties["terrain"]> = {};
+  private topoMapBrandingGroup: THREE.Group | null = null;
+  private topoMapBrandingLogoLoadSeq = 0;
 
   constructor(
     private scene: THREE.Scene,
@@ -2556,7 +3323,8 @@ export class SceneManager {
       this.orbitCenterHandle.group.visible = enabled;
     }
     if (this.sceneSectionRuntime) {
-      const helperVisible = this.lastSceneSectionStyle.sceneSectionHelperVisible !== false;
+      const helperVisible =
+        this.lastSceneSectionStyle.sceneSectionHelperVisible !== false;
       this.sceneSectionRuntime.group.visible =
         enabled &&
         this.lastSceneSectionStyle.sceneSectionEnabled === true &&
@@ -2565,6 +3333,13 @@ export class SceneManager {
     if (this.publicSurfaceClipRuntime) {
       this.publicSurfaceClipRuntime.group.visible =
         enabled && this.publicSurfaceClippingActive;
+    }
+    if (this.workingAreaFocusRuntime) {
+      const focusState = this.workingAreaFocusState(
+        this.lastWorkingAreaFocusStyle,
+      );
+      this.workingAreaFocusRuntime.group.visible =
+        enabled && focusState.enabled && focusState.helperVisible;
     }
     this.updateAreaOutlineHandleVisibility();
     this.updatePageCameraMarkerVisibility();
@@ -2580,8 +3355,9 @@ export class SceneManager {
     const terrainGroup = this.layers.get("terrain");
     if (terrainGroup) {
       terrainGroup.traverse((obj) => {
-        const handle = (obj as THREE.Mesh).userData
-          ?.terrainHandle as TerrainMaterialHandle | undefined;
+        const handle = (obj as THREE.Mesh).userData?.terrainHandle as
+          | TerrainMaterialHandle
+          | undefined;
         handle?.setSunDirection(this.currentSunDir);
       });
     }
@@ -2776,7 +3552,10 @@ export class SceneManager {
     const labelColor = kind === "target" ? "#ffcc66" : "#ffffff";
     const targetRing = new THREE.Mesh(
       new THREE.TorusGeometry(185 * scale, 7 * scale, 8, 48),
-      this.makeLightingHandleMaterial(labelColor, kind === "target" ? 0.85 : 0.35),
+      this.makeLightingHandleMaterial(
+        labelColor,
+        kind === "target" ? 0.85 : 0.35,
+      ),
     );
     targetRing.rotation.x = Math.PI / 2;
     targetRing.position.z = 8 * scale;
@@ -2992,8 +3771,7 @@ export class SceneManager {
   }
 
   private updatePageCameraMarkerVisibility(): void {
-    const showGlobal =
-      this.editorMode && this.globalPageCameraMarkers.size > 0;
+    const showGlobal = this.editorMode && this.globalPageCameraMarkers.size > 0;
     for (const marker of this.globalPageCameraMarkers.values()) {
       marker.group.visible = showGlobal;
     }
@@ -3002,7 +3780,9 @@ export class SceneManager {
     }
   }
 
-  private createOrbitCenterHandle(position: THREE.Vector3): OrbitCenterHandleRuntime {
+  private createOrbitCenterHandle(
+    position: THREE.Vector3,
+  ): OrbitCenterHandleRuntime {
     const group = new THREE.Group();
     group.name = "__dynamic_camera_orbit_center__";
     group.position.copy(position);
@@ -3107,10 +3887,7 @@ export class SceneManager {
       direction === -1 ? Math.PI : 0;
   }
 
-  setDynamicCameraOrbitCenter(
-    point: Vec3 | null,
-    direction: 1 | -1 = 1,
-  ): void {
+  setDynamicCameraOrbitCenter(point: Vec3 | null, direction: 1 | -1 = 1): void {
     if (!point) {
       if (this.orbitCenterHandle) {
         this.scene.remove(this.orbitCenterHandle.group);
@@ -3220,8 +3997,8 @@ export class SceneManager {
     const [px, py, pz] = source.position ?? [0, -3500, 2500];
     const [tx, ty, tz] = source.target ?? [0, 0, 0];
     const type = source.type ?? "spot";
-    const intensity = (source.intensity ?? 1) *
-      (source.gain ?? presentationLightGain(type));
+    const intensity =
+      (source.intensity ?? 1) * (source.gain ?? presentationLightGain(type));
 
     if (type === "point") {
       const light = new THREE.PointLight(
@@ -3239,7 +4016,13 @@ export class SceneManager {
       hardenStudioHelperTree(helper);
       helperGroup.add(helper);
       this.envLightRuntimes.set(source.id, { type, light, helper });
-      this.addLightingStudioHandle(source.id, "position", light.position, color, helperGroup);
+      this.addLightingStudioHandle(
+        source.id,
+        "position",
+        light.position,
+        color,
+        helperGroup,
+      );
       return;
     }
 
@@ -3265,8 +4048,20 @@ export class SceneManager {
       hardenStudioHelperTree(helper);
       helperGroup.add(helper);
       this.envLightRuntimes.set(source.id, { type, light, target, helper });
-      this.addLightingStudioHandle(source.id, "position", light.position, color, helperGroup);
-      this.addLightingStudioHandle(source.id, "target", target.position, color, helperGroup);
+      this.addLightingStudioHandle(
+        source.id,
+        "position",
+        light.position,
+        color,
+        helperGroup,
+      );
+      this.addLightingStudioHandle(
+        source.id,
+        "target",
+        target.position,
+        color,
+        helperGroup,
+      );
       return;
     }
 
@@ -3290,8 +4085,20 @@ export class SceneManager {
         target: light.target,
         helper,
       });
-      this.addLightingStudioHandle(source.id, "position", light.position, color, helperGroup);
-      this.addLightingStudioHandle(source.id, "target", light.target.position, color, helperGroup);
+      this.addLightingStudioHandle(
+        source.id,
+        "position",
+        light.position,
+        color,
+        helperGroup,
+      );
+      this.addLightingStudioHandle(
+        source.id,
+        "target",
+        light.target.position,
+        color,
+        helperGroup,
+      );
       return;
     }
 
@@ -3322,8 +4129,20 @@ export class SceneManager {
       target: light.target,
       helper,
     });
-    this.addLightingStudioHandle(source.id, "position", light.position, color, helperGroup);
-    this.addLightingStudioHandle(source.id, "target", light.target.position, color, helperGroup);
+    this.addLightingStudioHandle(
+      source.id,
+      "position",
+      light.position,
+      color,
+      helperGroup,
+    );
+    this.addLightingStudioHandle(
+      source.id,
+      "target",
+      light.target.position,
+      color,
+      helperGroup,
+    );
   }
 
   listLightingHandlePickables(): THREE.Object3D[] {
@@ -3336,7 +4155,9 @@ export class SceneManager {
     sourceId: string,
     kind: LightingHandleKind,
   ): THREE.Vector3 | null {
-    const handle = this.envLightHandles.get(this.lightingHandleKey(sourceId, kind));
+    const handle = this.envLightHandles.get(
+      this.lightingHandleKey(sourceId, kind),
+    );
     return handle ? handle.group.position.clone() : null;
   }
 
@@ -3345,7 +4166,9 @@ export class SceneManager {
     kind: LightingHandleKind,
     position: THREE.Vector3,
   ): void {
-    const handle = this.envLightHandles.get(this.lightingHandleKey(sourceId, kind));
+    const handle = this.envLightHandles.get(
+      this.lightingHandleKey(sourceId, kind),
+    );
     const runtime = this.envLightRuntimes.get(sourceId);
     if (!handle || !runtime) return;
     handle.group.position.copy(position);
@@ -3385,7 +4208,12 @@ export class SceneManager {
     for (const id of Object.keys(CASE_STUDY_B_DEMO_LAYER_ALIASES)) {
       this.applyCaseStudyBDemoLayerAlias(id, this.styleForLayer(id));
     }
+    this.applyTopoGraticuleStyle(
+      UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
+      this.styleForLayer(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID),
+    );
     this.reapplySceneSectionPlanes();
+    this.reapplyWorkingAreaFocus();
   }
 
   private targetOpacityForLayer(
@@ -3425,7 +4253,80 @@ export class SceneManager {
     return opacity ?? 1;
   }
 
-  private applyRenderOpacityToTree(root: THREE.Object3D, opacity: number): void {
+  private currentRenderOpacityForTree(
+    root: THREE.Object3D,
+    fallback: number,
+  ): number {
+    if (!root.visible) return 0;
+    let opacity: number | null = null;
+    root.traverse((obj) => {
+      if (!obj.visible) return;
+      const mat = (
+        obj as THREE.Object3D & {
+          material?: THREE.Material | THREE.Material[];
+        }
+      ).material;
+      if (!mat) return;
+      const mats = Array.isArray(mat) ? mat : [mat];
+      for (const material of mats) {
+        if (material.userData?.ignoreLayerStyle === true) continue;
+        const shaderOpacity =
+          material instanceof THREE.ShaderMaterial &&
+          typeof material.uniforms?.uOpacity?.value === "number"
+            ? material.uniforms.uOpacity.value
+            : null;
+        const next =
+          typeof shaderOpacity === "number" && Number.isFinite(shaderOpacity)
+            ? shaderOpacity
+            : material.opacity;
+        if (typeof next !== "number" || !Number.isFinite(next)) continue;
+        opacity = Math.max(opacity ?? 0, next);
+      }
+    });
+    return clamp01(opacity ?? fallback);
+  }
+
+  private captureLayerRenderStates(
+    environment: EnvironmentSetup,
+    page: PresentationPage,
+    layerIds: ReadonlySet<string>,
+  ): Map<string, ResolvedLayerRenderState> {
+    const visibleSet = effectiveVisibility(environment, page);
+    const states = new Map<string, ResolvedLayerRenderState>();
+    for (const id of layerIds) {
+      const fallbackStyle = effectiveStyle(environment, page, id);
+      const appliedStyle = this.appliedLayerStyles.get(id) ?? fallbackStyle;
+      const fallbackOpacity = visibleSet.has(id)
+        ? this.targetOpacityForLayer(environment, page, id)
+        : 0;
+      const group = this.layers.get(id);
+      const opacity = group
+        ? this.currentRenderOpacityForTree(group, fallbackOpacity)
+        : fallbackOpacity;
+      const snapshot = this.layerTransitionSnapshots.get(id);
+      const snapshotOpacity = snapshot
+        ? this.currentRenderOpacityForTree(snapshot.group, snapshot.from)
+        : 0;
+      const useSnapshot =
+        !!snapshot &&
+        snapshotOpacity > opacity + 0.001 &&
+        snapshot.style !== undefined;
+      states.set(id, {
+        id,
+        visible: group
+          ? (group.visible && opacity > 0.001) || snapshotOpacity > 0.001
+          : visibleSet.has(id) && fallbackOpacity > 0.001,
+        opacity: Math.max(opacity, snapshotOpacity),
+        style: { ...(useSnapshot ? snapshot.style! : appliedStyle) },
+      });
+    }
+    return states;
+  }
+
+  private applyRenderOpacityToTree(
+    root: THREE.Object3D,
+    opacity: number,
+  ): void {
     const next = clamp01(opacity);
     root.visible = next > 0.001;
     root.traverse((obj) => {
@@ -3438,7 +4339,6 @@ export class SceneManager {
       for (const m of mats) {
         if (m.userData?.ignoreLayerStyle === true) continue;
         this.baseOpacityForMaterial(m);
-        if (m.userData?.preserveMaterialOpacity === true) continue;
         m.opacity = next;
         m.transparent = m.userData?.forceTransparent === true || next < 1;
         if (m instanceof THREE.ShaderMaterial && m.uniforms.uOpacity) {
@@ -3469,7 +4369,8 @@ export class SceneManager {
     let found = false;
     group.traverse((obj) => {
       if (found) return;
-      if (!(obj instanceof THREE.Mesh) && !(obj instanceof THREE.Points)) return;
+      if (!(obj instanceof THREE.Mesh) && !(obj instanceof THREE.Points))
+        return;
       const values = obj.geometry.userData.scalarValues as
         | Float32Array
         | number[]
@@ -3479,31 +4380,122 @@ export class SceneManager {
     return found;
   }
 
+  private layerSupportsScalarStyleTween(
+    id: string,
+    group: THREE.Group,
+  ): boolean {
+    return (
+      this.layerHasScalarPreviewData(group) ||
+      id === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID
+    );
+  }
+
+  private cloneTransitionUserData(
+    userData: Record<string, unknown> | undefined,
+  ): Record<string, unknown> {
+    const next: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(userData ?? {})) {
+      if (
+        value === null ||
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean"
+      ) {
+        next[key] = value;
+      } else if (
+        Array.isArray(value) &&
+        value.every(
+          (item) =>
+            item === null ||
+            typeof item === "string" ||
+            typeof item === "number" ||
+            typeof item === "boolean",
+        )
+      ) {
+        next[key] = [...value];
+      }
+    }
+    return next;
+  }
+
+  private cloneTransitionGeometry(
+    geometry: THREE.BufferGeometry,
+  ): THREE.BufferGeometry {
+    const originalUserData = geometry.userData;
+    geometry.userData = {};
+    try {
+      const clone = geometry.clone();
+      clone.userData = {};
+      return clone;
+    } finally {
+      geometry.userData = originalUserData;
+    }
+  }
+
+  private cloneTransitionMaterial(material: THREE.Material): THREE.Material {
+    const originalUserData = material.userData;
+    material.userData = this.cloneTransitionUserData(originalUserData);
+    try {
+      const clone = material.clone();
+      clone.userData = this.cloneTransitionUserData(originalUserData);
+      return clone;
+    } finally {
+      material.userData = originalUserData;
+    }
+  }
+
+  private cloneTransitionObjectTree(
+    id: string,
+    source: THREE.Object3D,
+  ): THREE.Object3D {
+    const originalUserData = source.userData;
+    source.userData = this.cloneTransitionUserData(originalUserData);
+    let snapshot: THREE.Object3D;
+    try {
+      snapshot = source.clone(false);
+    } finally {
+      source.userData = originalUserData;
+    }
+    snapshot.userData = {
+      ...this.cloneTransitionUserData(originalUserData),
+      transitionSnapshotForLayer: id,
+    };
+    const sourceRenderable = source as THREE.Object3D & {
+      geometry?: THREE.BufferGeometry;
+      material?: THREE.Material | THREE.Material[];
+    };
+    const snapshotRenderable = snapshot as THREE.Object3D & {
+      geometry?: THREE.BufferGeometry;
+      material?: THREE.Material | THREE.Material[];
+    };
+    if (sourceRenderable.geometry) {
+      snapshotRenderable.geometry = this.cloneTransitionGeometry(
+        sourceRenderable.geometry,
+      );
+    }
+    if (sourceRenderable.material) {
+      snapshotRenderable.material = Array.isArray(sourceRenderable.material)
+        ? sourceRenderable.material.map((material) =>
+            this.cloneTransitionMaterial(material),
+          )
+        : this.cloneTransitionMaterial(sourceRenderable.material);
+    }
+    for (const child of source.children) {
+      snapshot.add(this.cloneTransitionObjectTree(id, child));
+    }
+    return snapshot;
+  }
+
   private cloneLayerTransitionSnapshot(
     id: string,
     source: THREE.Group,
   ): THREE.Group {
-    const snapshot = source.clone(true) as THREE.Group;
+    const snapshot = this.cloneTransitionObjectTree(id, source) as THREE.Group;
     snapshot.name = `${id}-transition-snapshot`;
     snapshot.userData = {
       ...snapshot.userData,
       transitionSnapshotForLayer: id,
     };
-    snapshot.traverse((obj) => {
-      obj.userData = { ...obj.userData, transitionSnapshotForLayer: id };
-      const renderable = obj as THREE.Object3D & {
-        geometry?: THREE.BufferGeometry;
-        material?: THREE.Material | THREE.Material[];
-      };
-      if (renderable.geometry) {
-        renderable.geometry = renderable.geometry.clone();
-      }
-      if (renderable.material) {
-        renderable.material = Array.isArray(renderable.material)
-          ? renderable.material.map((material) => material.clone())
-          : renderable.material.clone();
-      }
-    });
     this.scene.add(snapshot);
     return snapshot;
   }
@@ -3536,8 +4528,9 @@ export class SceneManager {
     const terrainGroup = this.layers.get("terrain");
     if (!terrainGroup) return;
     terrainGroup.traverse((obj) => {
-      const handle = (obj as THREE.Mesh).userData
-        ?.terrainHandle as TerrainMaterialHandle | undefined;
+      const handle = (obj as THREE.Mesh).userData?.terrainHandle as
+        | TerrainMaterialHandle
+        | undefined;
       if (!handle) return;
       switch (layerId) {
         case "hydrography-lakes":
@@ -3586,8 +4579,9 @@ export class SceneManager {
     if (!terrainGroup) return;
     const enabled = this.envFogEnabled && affectedByFog;
     terrainGroup.traverse((obj) => {
-      const handle = (obj as THREE.Mesh).userData
-        ?.terrainHandle as TerrainMaterialHandle | undefined;
+      const handle = (obj as THREE.Mesh).userData?.terrainHandle as
+        | TerrainMaterialHandle
+        | undefined;
       if (!handle) return;
       switch (layerId) {
         case "terrain":
@@ -3648,12 +4642,16 @@ export class SceneManager {
       return ids;
     }
     const configured = Array.isArray(style.sceneSectionTargetProductIds)
-      ? style.sceneSectionTargetProductIds.filter((id) => typeof id === "string")
+      ? style.sceneSectionTargetProductIds.filter(
+          (id) => typeof id === "string",
+        )
       : [];
     if (style.sceneSectionTargetScope === "active-selection") {
       return new Set(selected ? [selected] : configured);
     }
-    return new Set(configured.length > 0 ? configured : selected ? [selected] : []);
+    return new Set(
+      configured.length > 0 ? configured : selected ? [selected] : [],
+    );
   }
 
   private sceneSectionLayerIds(style: EditableStyle): Set<string> {
@@ -3680,7 +4678,9 @@ export class SceneManager {
     );
   }
 
-  private resolveSceneSectionPlanes(style: EditableStyle): ResolvedSceneSectionPlane[] {
+  private resolveSceneSectionPlanes(
+    style: EditableStyle,
+  ): ResolvedSceneSectionPlane[] {
     const planes = style.sceneSectionPlanes ?? {};
     const axes: SceneSectionAxis[] = ["x", "y", "z"];
     return axes.map((axis) => {
@@ -3699,9 +4699,13 @@ export class SceneManager {
     });
   }
 
-  private sceneSectionActivePlanes(style: EditableStyle): ResolvedSceneSectionPlane[] {
+  private sceneSectionActivePlanes(
+    style: EditableStyle,
+  ): ResolvedSceneSectionPlane[] {
     if (style.sceneSectionEnabled !== true) return [];
-    return this.resolveSceneSectionPlanes(style).filter((plane) => plane.enabled);
+    return this.resolveSceneSectionPlanes(style).filter(
+      (plane) => plane.enabled,
+    );
   }
 
   private sceneSectionObjectTargeted(
@@ -3716,7 +4720,8 @@ export class SceneManager {
     if (layerId === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) {
       const productId = obj.userData?.seismicProductId;
       if (typeof productId === "string") return productTargets.has(productId);
-      if (obj.userData?.seismicNavigation === true) return layerTargets.has(layerId);
+      if (obj.userData?.seismicNavigation === true)
+        return layerTargets.has(layerId);
       return layerTargets.has(layerId);
     }
     return layerTargets.has(layerId);
@@ -3743,7 +4748,7 @@ export class SceneManager {
     targeted: boolean,
   ): void {
     const uniforms = material.uniforms;
-    const ensure = <T,>(key: string, value: T) => {
+    const ensure = <T>(key: string, value: T) => {
       if (!uniforms[key]) uniforms[key] = { value };
       return uniforms[key] as { value: T };
     };
@@ -3753,12 +4758,19 @@ export class SceneManager {
     ensure<number>("uSceneSectionPlaneCount", 0).value = targeted
       ? planes.length
       : 0;
-    const normalUniform = ensure<THREE.Vector3[]>(
-      "uSceneSectionNormals",
-      [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()],
+    const normalUniform = ensure<THREE.Vector3[]>("uSceneSectionNormals", [
+      new THREE.Vector3(),
+      new THREE.Vector3(),
+      new THREE.Vector3(),
+    ]);
+    const positionUniform = ensure<number[]>(
+      "uSceneSectionPositions",
+      [0, 0, 0],
     );
-    const positionUniform = ensure<number[]>("uSceneSectionPositions", [0, 0, 0]);
-    const thicknessUniform = ensure<number[]>("uSceneSectionThickness", [1, 1, 1]);
+    const thicknessUniform = ensure<number[]>(
+      "uSceneSectionThickness",
+      [1, 1, 1],
+    );
     const invertUniform = ensure<number[]>("uSceneSectionInvert", [0, 0, 0]);
     const normals = normalUniform.value;
     const positions = positionUniform.value;
@@ -3791,7 +4803,15 @@ export class SceneManager {
       return;
     }
     const active = targeted && clippingPlanes.length > 0;
-    material.clippingPlanes = active ? clippingPlanes : null;
+    const publicSurfaceClipPlanes = Array.isArray(
+      material.userData?.publicSurfaceClipPlanes,
+    )
+      ? (material.userData.publicSurfaceClipPlanes as THREE.Plane[])
+      : [];
+    const combinedPlanes = active
+      ? [...publicSurfaceClipPlanes, ...clippingPlanes]
+      : publicSurfaceClipPlanes;
+    material.clippingPlanes = combinedPlanes.length > 0 ? combinedPlanes : null;
     material.clipIntersection = false;
     material.needsUpdate = true;
   }
@@ -3954,17 +4974,9 @@ export class SceneManager {
           ? new THREE.Vector3(0, 1, 0)
           : new THREE.Vector3(0, 0, 1);
       const width =
-        plane.axis === "x"
-          ? size.y
-          : plane.axis === "y"
-            ? size.x
-            : size.x;
+        plane.axis === "x" ? size.y : plane.axis === "y" ? size.x : size.x;
       const height =
-        plane.axis === "x"
-          ? size.z
-          : plane.axis === "y"
-            ? size.z
-            : size.y;
+        plane.axis === "x" ? size.z : plane.axis === "y" ? size.z : size.y;
       const paddedWidth = Math.max(
         SCENE_SECTION_MIN_HELPER_SIZE_M,
         width * SCENE_SECTION_HELPER_PADDING,
@@ -4141,8 +5153,9 @@ export class SceneManager {
 
     for (const [layerId, group] of this.layers) {
       group.traverse((obj) => {
-        const material = (obj as { material?: THREE.Material | THREE.Material[] })
-          .material;
+        const material = (
+          obj as { material?: THREE.Material | THREE.Material[] }
+        ).material;
         if (!material) return;
         const targeted = this.sceneSectionObjectTargeted(
           layerId,
@@ -4153,16 +5166,16 @@ export class SceneManager {
         );
         const materials = Array.isArray(material) ? material : [material];
         for (const m of materials) {
-          this.applySceneSectionMaterial(
-            m,
-            planes,
-            targeted,
-            clippingPlanes,
-          );
+          this.applySceneSectionMaterial(m, planes, targeted, clippingPlanes);
         }
       });
     }
-    this.rebuildSceneSectionHelpers(style, planes, layerTargets, productTargets);
+    this.rebuildSceneSectionHelpers(
+      style,
+      planes,
+      layerTargets,
+      productTargets,
+    );
     this.updateMtVolumeCutIsoOverlays(
       this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID),
     );
@@ -4172,7 +5185,9 @@ export class SceneManager {
   }
 
   private reapplySceneSectionPlanes(): void {
-    this.applySceneSectionPlanes(this.styleForLayer(UTAH_FORGE_SCENE_SECTION_LAYER_ID));
+    this.applySceneSectionPlanes(
+      this.styleForLayer(UTAH_FORGE_SCENE_SECTION_LAYER_ID),
+    );
   }
 
   listSceneSectionPlanePickables(): THREE.Object3D[] {
@@ -4185,9 +5200,9 @@ export class SceneManager {
   }
 
   getSceneSectionPlaneScalar(axis: SceneSectionAxis): number | null {
-    const plane = this.resolveSceneSectionPlanes(this.lastSceneSectionStyle).find(
-      (candidate) => candidate.axis === axis,
-    );
+    const plane = this.resolveSceneSectionPlanes(
+      this.lastSceneSectionStyle,
+    ).find((candidate) => candidate.axis === axis);
     return plane ? plane.positionM : null;
   }
 
@@ -4281,8 +5296,15 @@ export class SceneManager {
 
   private applyTerrainLiftStyle(layerId: string, style: EditableStyle): void {
     if (layerId !== "terrain" && !PUBLIC_SURFACE_LAYER_IDS.has(layerId)) return;
-    const terrainStyle = layerId === "terrain" ? style : this.styleForLayer("terrain");
-    const liftM = styleNumber(terrainStyle, "meshSurfaceLiftM", 0, -12000, 12000);
+    const terrainStyle =
+      layerId === "terrain" ? style : this.styleForLayer("terrain");
+    const liftM = styleNumber(
+      terrainStyle,
+      "meshSurfaceLiftM",
+      0,
+      -12000,
+      12000,
+    );
     for (const publicLayerId of PUBLIC_SURFACE_LAYER_IDS) {
       const group = this.layers.get(publicLayerId);
       if (!group) continue;
@@ -4337,6 +5359,7 @@ export class SceneManager {
     );
     return {
       enabled: style.publicSurfaceClipEnabled === true,
+      shape: style.publicSurfaceClipShape === "circle" ? "circle" : "box",
       center: new THREE.Vector3(
         styleNumber(
           style,
@@ -4400,18 +5423,86 @@ export class SceneManager {
         point,
       );
     };
+    const zPlanes = [
+      makePlane(zAxis.clone().negate(), zAxis, box.halfSize.z),
+      makePlane(zAxis, zAxis, -box.halfSize.z),
+    ];
+    if (box.shape === "circle") {
+      const radius = Math.min(box.halfSize.x, box.halfSize.y);
+      const radialPlanes: THREE.Plane[] = [];
+      for (let i = 0; i < PUBLIC_SURFACE_CLIP_CIRCLE_SEGMENTS; i += 1) {
+        const theta = (i / PUBLIC_SURFACE_CLIP_CIRCLE_SEGMENTS) * Math.PI * 2;
+        const outward = xAxis
+          .clone()
+          .multiplyScalar(Math.cos(theta))
+          .addScaledVector(yAxis, Math.sin(theta))
+          .normalize();
+        const point = box.center.clone().addScaledVector(outward, radius);
+        radialPlanes.push(
+          new THREE.Plane().setFromNormalAndCoplanarPoint(
+            outward.clone().negate(),
+            point,
+          ),
+        );
+      }
+      return [...radialPlanes, ...zPlanes];
+    }
     return [
       makePlane(xAxis.clone().negate(), xAxis, box.halfSize.x),
       makePlane(xAxis, xAxis, -box.halfSize.x),
       makePlane(yAxis.clone().negate(), yAxis, box.halfSize.y),
       makePlane(yAxis, yAxis, -box.halfSize.y),
-      makePlane(zAxis.clone().negate(), zAxis, box.halfSize.z),
-      makePlane(zAxis, zAxis, -box.halfSize.z),
+      ...zPlanes,
     ];
   }
 
-  private publicSurfaceClipSegmentPositions(box: PublicSurfaceClipBox): number[] {
+  private publicSurfaceClipSegmentPositions(
+    box: PublicSurfaceClipBox,
+  ): number[] {
     const { xAxis, yAxis, zAxis } = this.publicSurfaceClipAxes(box);
+    if (box.shape === "circle") {
+      const positions: number[] = [];
+      const radius = Math.min(box.halfSize.x, box.halfSize.y);
+      const point = (theta: number, zSign: number) =>
+        box.center
+          .clone()
+          .addScaledVector(xAxis, Math.cos(theta) * radius)
+          .addScaledVector(yAxis, Math.sin(theta) * radius)
+          .addScaledVector(zAxis, zSign * box.halfSize.z);
+      for (let i = 0; i < PUBLIC_SURFACE_CLIP_CIRCLE_SEGMENTS; i += 1) {
+        const a = (i / PUBLIC_SURFACE_CLIP_CIRCLE_SEGMENTS) * Math.PI * 2;
+        const b = ((i + 1) / PUBLIC_SURFACE_CLIP_CIRCLE_SEGMENTS) * Math.PI * 2;
+        const bottomA = point(a, -1);
+        const bottomB = point(b, -1);
+        const topA = point(a, 1);
+        const topB = point(b, 1);
+        positions.push(
+          bottomA.x,
+          bottomA.y,
+          bottomA.z,
+          bottomB.x,
+          bottomB.y,
+          bottomB.z,
+          topA.x,
+          topA.y,
+          topA.z,
+          topB.x,
+          topB.y,
+          topB.z,
+        );
+        if (i % 6 === 0) {
+          positions.push(
+            bottomA.x,
+            bottomA.y,
+            bottomA.z,
+            topA.x,
+            topA.y,
+            topA.z,
+          );
+        }
+      }
+      return positions;
+    }
     const corner = (sx: number, sy: number, sz: number) =>
       box.center
         .clone()
@@ -4506,23 +5597,38 @@ export class SceneManager {
     for (const layerId of PUBLIC_SURFACE_LAYER_IDS) {
       const group = this.layers.get(layerId);
       if (!group) continue;
+      const graticuleUsesTerrainEdgeFrame =
+        layerId === UTAH_FORGE_TOPO_GRATICULE_LAYER_ID &&
+        this.styleForLayer(layerId).graticuleEdgeFadeAware !== false;
       group.traverse((obj) => {
-        const handle = (obj as THREE.Mesh).userData
-          ?.terrainHandle as TerrainMaterialHandle | undefined;
+        const handle = (obj as THREE.Mesh).userData?.terrainHandle as
+          | TerrainMaterialHandle
+          | undefined;
         handle?.setPublicClip(
           box.enabled,
+          box.shape,
           box.center,
           box.halfSize,
           box.rotationZRad,
         );
 
-        const material = (obj as { material?: THREE.Material | THREE.Material[] })
-          .material;
+        const material = (
+          obj as { material?: THREE.Material | THREE.Material[] }
+        ).material;
         if (!material) return;
         const materials = Array.isArray(material) ? material : [material];
         for (const m of materials) {
           if (m.userData?.publicSurfaceClipHelper === true) continue;
-          m.clippingPlanes = box.enabled ? planes : null;
+          const terrainShaderHandlesClip =
+            box.shape === "circle" && m.userData?.terrainMaterial === true;
+          const publicSurfaceClipPlanes =
+            box.enabled &&
+            !terrainShaderHandlesClip &&
+            !graticuleUsesTerrainEdgeFrame
+              ? planes
+              : null;
+          m.userData.publicSurfaceClipPlanes = publicSurfaceClipPlanes;
+          m.clippingPlanes = publicSurfaceClipPlanes;
           m.clipIntersection = false;
           m.needsUpdate = true;
         }
@@ -4531,7 +5637,1498 @@ export class SceneManager {
     this.rebuildPublicSurfaceClipHelper(box);
   }
 
-  private applyTerrainCompositeStyle(layerId: string, style: EditableStyle): void {
+  private resolveTerrainEdgeFadeState(): TerrainEdgeFadeState | null {
+    const terrainGroup = this.layers.get("terrain");
+    let boundsMin: THREE.Vector2 | null = null;
+    let boundsMax: THREE.Vector2 | null = null;
+    terrainGroup?.traverse((obj) => {
+      if (boundsMin && boundsMax) return;
+      const handle = (obj as THREE.Mesh).userData?.terrainHandle as
+        | TerrainMaterialHandle
+        | undefined;
+      const uniforms = handle?.material.uniforms as
+        | Record<string, { value: unknown }>
+        | undefined;
+      const min = uniforms?.uTerrainBoundsMin?.value as
+        | THREE.Vector2
+        | undefined;
+      const max = uniforms?.uTerrainBoundsMax?.value as
+        | THREE.Vector2
+        | undefined;
+      if (min && max) {
+        boundsMin = min.clone();
+        boundsMax = max.clone();
+      }
+    });
+    if (!boundsMin || !boundsMax) return null;
+    const terrain = this.currentTerrainScene;
+    return {
+      boundsMin,
+      boundsMax,
+      shape: terrainEdgeShape(terrain.edgeFadeShape),
+      fadeDistanceM: Math.max(0, terrain.edgeFadeDistanceM ?? 0),
+      insetM: Math.max(0, terrain.edgeFadeInsetM ?? 0),
+      cornerRadiusM: Math.max(0, terrain.edgeFadeCornerRadiusM ?? 0),
+    };
+  }
+
+  private topoGraticuleThresholdCrossing(
+    a: TopoGraticuleLabelCandidate,
+    b: TopoGraticuleLabelCandidate,
+    edge: TerrainEdgeFadeState,
+    threshold: number,
+  ): TopoGraticuleLabelCandidate | null {
+    const aValue = terrainEdgeInsideDistance(a.position, edge) - threshold;
+    const bValue = terrainEdgeInsideDistance(b.position, edge) - threshold;
+    if (Math.abs(aValue) <= 0.0001) return a;
+    if (Math.abs(bValue) <= 0.0001) return b;
+    if (aValue * bValue > 0) return null;
+    const t = clampRange(aValue / (aValue - bValue), 0, 1);
+    const position = a.position.clone().lerp(b.position, t);
+    const tangent = b.position.clone().sub(a.position);
+    tangent.z = 0;
+    if (tangent.lengthSq() <= 0.000001) tangent.copy(a.tangent);
+    if (tangent.lengthSq() <= 0.000001) tangent.set(1, 0, 0);
+    else tangent.normalize();
+    return { position, tangent };
+  }
+
+  private topoGraticulePreferredCrossing(
+    candidates: TopoGraticuleLabelCandidate[],
+    edge: TerrainEdgeFadeState,
+    preference: "west" | "north",
+    threshold: number,
+  ): TopoGraticuleLabelCandidate | null {
+    let best: TopoGraticuleLabelCandidate | null = null;
+    let bestScore = -Infinity;
+    for (let index = 1; index < candidates.length; index += 1) {
+      const crossing = this.topoGraticuleThresholdCrossing(
+        candidates[index - 1],
+        candidates[index],
+        edge,
+        threshold,
+      );
+      if (!crossing) continue;
+      const score = terrainEdgePreferenceScore(
+        crossing.position,
+        edge,
+        preference,
+      );
+      if (score > bestScore) {
+        bestScore = score;
+        best = crossing;
+      }
+    }
+    return best;
+  }
+
+  private pushTopoGraticuleSegment(
+    positions: number[],
+    a: THREE.Vector3,
+    b: THREE.Vector3,
+  ): void {
+    positions.push(a.x, a.y, a.z, b.x, b.y, b.z);
+  }
+
+  private topoMapBrandingAnchorPoint(
+    anchor: TopoMapBrandingAnchor,
+  ): THREE.Vector3 | null {
+    const terrainStyle = this.styleForLayer("terrain");
+    const publicSurfaceFrameAuthored =
+      typeof terrainStyle.publicSurfaceClipCenterX === "number" ||
+      typeof terrainStyle.publicSurfaceClipCenterY === "number" ||
+      typeof terrainStyle.publicSurfaceClipSizeX === "number" ||
+      typeof terrainStyle.publicSurfaceClipSizeY === "number" ||
+      typeof terrainStyle.publicSurfaceClipRotationZDeg === "number";
+    if (publicSurfaceFrameAuthored) {
+      const box = this.publicSurfaceClipBox(terrainStyle);
+      const { xAxis, yAxis } = this.publicSurfaceClipAxes(box);
+      const west = anchor.includes("west");
+      const south = anchor.includes("south");
+      return box.center
+        .clone()
+        .addScaledVector(xAxis, west ? -box.halfSize.x : box.halfSize.x)
+        .addScaledVector(yAxis, south ? -box.halfSize.y : box.halfSize.y);
+    }
+
+    const edge = this.resolveTerrainEdgeFadeState();
+    if (!edge) return null;
+    const centerX = (edge.boundsMin.x + edge.boundsMax.x) * 0.5;
+    const centerY = (edge.boundsMin.y + edge.boundsMax.y) * 0.5;
+    const halfX = Math.max(
+      1,
+      (edge.boundsMax.x - edge.boundsMin.x) * 0.5 - edge.insetM,
+    );
+    const halfY = Math.max(
+      1,
+      (edge.boundsMax.y - edge.boundsMin.y) * 0.5 - edge.insetM,
+    );
+    const west = anchor.includes("west");
+    const south = anchor.includes("south");
+    return new THREE.Vector3(
+      centerX + (west ? -halfX : halfX),
+      centerY + (south ? -halfY : halfY),
+      0,
+    );
+  }
+
+  private topoMapBrandingFrameRotationRad(): number {
+    const terrainStyle = this.styleForLayer("terrain");
+    const publicSurfaceFrameAuthored =
+      typeof terrainStyle.publicSurfaceClipCenterX === "number" ||
+      typeof terrainStyle.publicSurfaceClipCenterY === "number" ||
+      typeof terrainStyle.publicSurfaceClipSizeX === "number" ||
+      typeof terrainStyle.publicSurfaceClipSizeY === "number" ||
+      typeof terrainStyle.publicSurfaceClipRotationZDeg === "number";
+    return publicSurfaceFrameAuthored
+      ? this.publicSurfaceClipBox(terrainStyle).rotationZRad
+      : 0;
+  }
+
+  private topoMapBrandingAssetUrl(path: string): string {
+    const trimmed = path.trim();
+    if (
+      /^https?:\/\//i.test(trimmed) ||
+      trimmed.startsWith("data:") ||
+      trimmed.startsWith("blob:") ||
+      trimmed.startsWith("/")
+    ) {
+      return trimmed;
+    }
+    return this.overlayResolveAssetPath(trimmed);
+  }
+
+  private createTopoMapBrandingText(
+    text: string,
+    sizeM: number,
+    color: string,
+    opacity: number,
+    weight: number,
+    fontFamily: string,
+    italic: boolean,
+  ): { mesh: TopoMapBrandingTextMesh; widthM: number; heightM: number } {
+    const clean = text.trim();
+    const canvas = document.createElement("canvas");
+    const measureCanvas = document.createElement("canvas");
+    const measureCtx = measureCanvas.getContext("2d");
+    const font = `${italic ? "italic " : ""}${weight} 96px ${fontFamily}`;
+    if (measureCtx) measureCtx.font = font;
+    const measuredWidth = measureCtx?.measureText(clean).width ?? 512;
+    canvas.width = Math.max(512, Math.min(4096, Math.ceil(measuredWidth + 96)));
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = font;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(clean, 36, canvas.height / 2);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    const widthM = sizeM * Math.max(2.6, clean.length * 0.66);
+    const geometry = new THREE.PlaneGeometry(widthM, sizeM);
+    const material = new THREE.MeshBasicMaterial({
+      color,
+      map: texture,
+      transparent: true,
+      opacity,
+      depthTest: false,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    material.toneMapped = false;
+    material.fog = false;
+    material.userData.forceTransparent = true;
+    const mesh = new THREE.Mesh(geometry, material) as TopoMapBrandingTextMesh;
+    mesh.renderOrder = 4564;
+    mesh.userData.topoMapBranding = true;
+    mesh.userData.topoMapBrandingTexture = texture;
+    return { mesh, widthM, heightM: sizeM };
+  }
+
+  private disposeTopoMapBrandingGroup(): void {
+    if (!this.topoMapBrandingGroup) return;
+    this.topoMapBrandingGroup.parent?.remove(this.topoMapBrandingGroup);
+    this.topoMapBrandingGroup.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      mesh.geometry?.dispose?.();
+      const materials = Array.isArray(mesh.material)
+        ? mesh.material
+        : mesh.material
+          ? [mesh.material]
+          : [];
+      for (const material of materials) {
+        const map = (material as THREE.MeshBasicMaterial).map;
+        map?.dispose();
+        material.dispose();
+      }
+      const texture = (obj as TopoMapBrandingTextMesh).userData
+        ?.topoMapBrandingTexture;
+      texture?.dispose();
+    });
+    this.topoMapBrandingGroup = null;
+  }
+
+  private rebuildTopoMapBranding(sp: SceneProperties): void {
+    this.disposeTopoMapBrandingGroup();
+    const terrain = sp.terrain ?? {};
+    const branding = terrain.topoMapBranding ?? {};
+    if (branding.visible !== true) return;
+    const heading =
+      typeof branding.heading === "string" ? branding.heading.trim() : "";
+    const subheading =
+      typeof branding.subheading === "string"
+        ? branding.subheading.trim()
+        : "";
+    const logoPath =
+      typeof branding.logoRenderablePath === "string" &&
+      branding.logoRenderablePath.trim()
+        ? branding.logoRenderablePath.trim()
+        : typeof branding.logoPath === "string"
+          ? branding.logoPath.trim()
+          : "";
+    if (!heading && !subheading && !logoPath) return;
+
+    const anchor: TopoMapBrandingAnchor =
+      branding.anchor === "south-west" ||
+      branding.anchor === "south-east" ||
+      branding.anchor === "north-west" ||
+      branding.anchor === "north-east"
+        ? branding.anchor
+        : TOPO_MAP_BRANDING_DEFAULT_ANCHOR;
+    const opacity = clamp01(
+      typeof branding.opacity === "number" ? branding.opacity : 0.92,
+    );
+    const textColor =
+      typeof branding.textColor === "string" ? branding.textColor : "#ffffff";
+    const fontFamily =
+      branding.fontFamily === "sans"
+        ? "system-ui, -apple-system, Segoe UI, sans-serif"
+        : branding.fontFamily === "serif"
+          ? "Georgia, Times New Roman, serif"
+          : branding.fontFamily === "condensed"
+            ? "Arial Narrow, Helvetica Condensed, sans-serif"
+            : "monospace";
+    const textAlign =
+      branding.textAlign === "center" || branding.textAlign === "right"
+        ? branding.textAlign
+        : "left";
+    const layout = branding.layout === "stacked" ? "stacked" : "horizontal";
+    const logoPlacement =
+      branding.logoPlacement === "after" ? "after" : "before";
+    const logoFit =
+      branding.logoFit === "cover" || branding.logoFit === "stretch"
+        ? branding.logoFit
+        : "contain";
+    const liftM = typeof branding.liftM === "number" ? branding.liftM : 260;
+    const offsetXM =
+      typeof branding.offsetXM === "number"
+        ? branding.offsetXM
+        : TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M;
+    const offsetYM =
+      typeof branding.offsetYM === "number"
+        ? branding.offsetYM
+        : TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M;
+    const logoWidthM = Math.max(
+      0,
+      typeof branding.logoWidthM === "number" ? branding.logoWidthM : 46000,
+    );
+    const logoGapM =
+      typeof branding.logoGapM === "number" ? branding.logoGapM : 16000;
+    const logoOpacity = clamp01(
+      typeof branding.logoOpacity === "number" ? branding.logoOpacity : opacity,
+    );
+    const textOpacity = clamp01(
+      typeof branding.textOpacity === "number" ? branding.textOpacity : opacity,
+    );
+    const headingSizeM = Math.max(
+      1000,
+      typeof branding.headingSizeM === "number"
+        ? branding.headingSizeM
+        : 18000,
+    );
+    const subheadingSizeM = Math.max(
+      1000,
+      typeof branding.subheadingSizeM === "number"
+        ? branding.subheadingSizeM
+        : 10500,
+    );
+    const lineGapM =
+      typeof branding.lineGapM === "number" ? branding.lineGapM : 2500;
+    const anchorPoint = this.topoMapBrandingAnchorPoint(anchor);
+    if (!anchorPoint) return;
+    const group = new THREE.Group();
+    group.name = "__topo_map_branding__";
+    group.renderOrder = 4564;
+    group.userData.topoMapBranding = true;
+    group.rotation.z =
+      this.topoMapBrandingFrameRotationRad() +
+      THREE.MathUtils.degToRad(
+        typeof branding.rotationDeg === "number" ? branding.rotationDeg : 0,
+      );
+    group.position
+      .copy(anchorPoint)
+      .add(new THREE.Vector3(offsetXM, offsetYM, liftM));
+
+    const contentGroup = new THREE.Group();
+    contentGroup.userData.topoMapBrandingContent = true;
+
+    let logoHeightM = logoPath && logoWidthM > 0 ? logoWidthM : 0;
+    let logo: THREE.Mesh | null = null;
+    let textBlockWidth = 0;
+    const textMeshes: Array<{
+      mesh: THREE.Mesh;
+      widthM: number;
+      heightM: number;
+      role: "heading" | "subheading";
+    }> = [];
+
+    if (logoPath && logoWidthM > 0) {
+      const geometry = new THREE.PlaneGeometry(logoWidthM, logoHeightM);
+      const material = new THREE.MeshBasicMaterial({
+        color: "#ffffff",
+        transparent: true,
+        opacity: logoOpacity,
+        depthTest: false,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      material.toneMapped = false;
+      material.fog = false;
+      material.userData.forceTransparent = true;
+      const logoMesh = new THREE.Mesh(geometry, material);
+      logo = logoMesh;
+      logoMesh.renderOrder = 4564;
+      logoMesh.userData.topoMapBranding = true;
+      logoMesh.userData.topoMapBrandingRole = "logo";
+      contentGroup.add(logoMesh);
+      const loadSeq = ++this.topoMapBrandingLogoLoadSeq;
+      new THREE.TextureLoader().load(
+        this.topoMapBrandingAssetUrl(logoPath),
+        (texture) => {
+          if (loadSeq !== this.topoMapBrandingLogoLoadSeq) {
+            texture.dispose();
+            return;
+          }
+          texture.colorSpace = THREE.SRGBColorSpace;
+          const image = texture.image as { width?: number; height?: number };
+          const aspect =
+            image?.width && image?.height ? image.height / image.width : 1;
+          logoHeightM =
+            logoFit === "stretch" ? logoWidthM : Math.max(1, logoWidthM * aspect);
+          logoMesh.geometry.dispose();
+          logoMesh.geometry = new THREE.PlaneGeometry(logoWidthM, logoHeightM);
+          material.map?.dispose();
+          material.map = texture;
+          material.needsUpdate = true;
+          layoutTitleBlock();
+        },
+        undefined,
+        () => {
+          logoMesh.visible = false;
+        },
+      );
+    }
+
+    if (heading) {
+      const { mesh, widthM } = this.createTopoMapBrandingText(
+        heading,
+        headingSizeM,
+        textColor,
+        textOpacity,
+        typeof branding.headingWeight === "number"
+          ? Math.round(branding.headingWeight)
+          : 800,
+        fontFamily,
+        branding.headingItalic === true,
+      );
+      mesh.userData.topoMapBrandingRole = "heading";
+      contentGroup.add(mesh);
+      textBlockWidth = Math.max(textBlockWidth, widthM);
+      textMeshes.push({ mesh, widthM, heightM: headingSizeM, role: "heading" });
+    }
+    if (subheading) {
+      const { mesh, widthM } = this.createTopoMapBrandingText(
+        subheading,
+        subheadingSizeM,
+        textColor,
+        textOpacity,
+        typeof branding.subheadingWeight === "number"
+          ? Math.round(branding.subheadingWeight)
+          : 500,
+        fontFamily,
+        branding.subheadingItalic === true,
+      );
+      mesh.userData.topoMapBrandingRole = "subheading";
+      contentGroup.add(mesh);
+      textBlockWidth = Math.max(textBlockWidth, widthM);
+      textMeshes.push({
+        mesh,
+        widthM,
+        heightM: subheadingSizeM,
+        role: "subheading",
+      });
+    }
+
+    const backgroundEnabled = branding.backgroundEnabled === true;
+    const outlineEnabled = branding.outlineEnabled === true;
+    const paddingX =
+      typeof branding.backgroundPaddingXM === "number"
+        ? Math.max(0, branding.backgroundPaddingXM)
+        : Math.max(6000, headingSizeM * 0.65);
+    const paddingY =
+      typeof branding.backgroundPaddingYM === "number"
+        ? Math.max(0, branding.backgroundPaddingYM)
+        : Math.max(5000, headingSizeM * 0.45);
+    const backgroundMaterial = new THREE.MeshBasicMaterial({
+      color:
+        typeof branding.backgroundColor === "string"
+          ? branding.backgroundColor
+          : "#050607",
+      transparent: true,
+      opacity: clamp01(
+        typeof branding.backgroundOpacity === "number"
+          ? branding.backgroundOpacity
+          : 0.36,
+      ),
+      depthTest: false,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    backgroundMaterial.toneMapped = false;
+    backgroundMaterial.fog = false;
+    backgroundMaterial.userData.forceTransparent = true;
+    const background = backgroundEnabled
+      ? new THREE.Mesh(new THREE.PlaneGeometry(1, 1), backgroundMaterial)
+      : null;
+    if (background) {
+      background.renderOrder = 4563;
+      background.position.z = -2;
+      background.userData.topoMapBranding = true;
+      background.userData.topoMapBrandingRole = "background";
+      contentGroup.add(background);
+    } else {
+      backgroundMaterial.dispose();
+    }
+
+    const outlineStrips: THREE.Mesh[] = [];
+    if (outlineEnabled) {
+      const outlineMaterial = new THREE.MeshBasicMaterial({
+        color:
+          typeof branding.outlineColor === "string"
+            ? branding.outlineColor
+            : textColor,
+        transparent: true,
+        opacity: clamp01(
+          typeof branding.outlineOpacity === "number"
+            ? branding.outlineOpacity
+            : 0.8,
+        ),
+        depthTest: false,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      outlineMaterial.toneMapped = false;
+      outlineMaterial.fog = false;
+      outlineMaterial.userData.forceTransparent = true;
+      for (let i = 0; i < 4; i += 1) {
+        const strip = new THREE.Mesh(
+          new THREE.PlaneGeometry(1, 1),
+          outlineMaterial,
+        );
+        strip.renderOrder = 4563.5;
+        strip.position.z = -1;
+        strip.userData.topoMapBranding = true;
+        strip.userData.topoMapBrandingRole = "outline";
+        outlineStrips.push(strip);
+        contentGroup.add(strip);
+      }
+    }
+
+    const layoutTitleBlock = () => {
+      const textBlockHeight =
+        heading && subheading
+          ? headingSizeM + lineGapM + subheadingSizeM
+          : textMeshes.length > 0
+            ? textMeshes[0].heightM
+            : 0;
+      const hasLogo = !!logo && logoWidthM > 0 && logo.visible !== false;
+      const hasText = textMeshes.length > 0;
+      const gap = hasLogo && hasText ? logoGapM : 0;
+      let contentWidth = 1;
+      let contentHeight = 1;
+      let logoCenterX = logoWidthM * 0.5;
+      let logoCenterY = 0;
+      let textOriginX = 0;
+      let textCenterY = 0;
+
+      if (layout === "stacked") {
+        contentWidth = Math.max(hasLogo ? logoWidthM : 0, textBlockWidth, 1);
+        contentHeight =
+          (hasLogo ? logoHeightM : 0) +
+          gap +
+          (hasText ? textBlockHeight : 0);
+        if (hasLogo) {
+          logoCenterX = contentWidth * 0.5;
+          logoCenterY =
+            logoPlacement === "before"
+              ? contentHeight * 0.5 - logoHeightM * 0.5
+              : -contentHeight * 0.5 + logoHeightM * 0.5;
+        }
+        if (hasText) {
+          textOriginX = (contentWidth - textBlockWidth) * 0.5;
+          textCenterY =
+            logoPlacement === "before"
+              ? -contentHeight * 0.5 + textBlockHeight * 0.5
+              : contentHeight * 0.5 - textBlockHeight * 0.5;
+        }
+      } else {
+        contentWidth =
+          (hasLogo ? logoWidthM : 0) + gap + (hasText ? textBlockWidth : 0);
+        contentHeight = Math.max(
+          hasLogo ? logoHeightM : 0,
+          hasText ? textBlockHeight : 0,
+          1,
+        );
+        if (hasLogo) {
+          logoCenterX =
+            logoPlacement === "before"
+              ? logoWidthM * 0.5
+              : contentWidth - logoWidthM * 0.5;
+        }
+        if (hasText) {
+          textOriginX =
+            logoPlacement === "before" && hasLogo ? logoWidthM + gap : 0;
+          textCenterY = 0;
+        }
+      }
+
+      if (logo) logo.position.set(logoCenterX, logoCenterY, 0);
+      for (const item of textMeshes) {
+        const y =
+          textMeshes.length === 2
+            ? item.role === "heading"
+              ? textCenterY + textBlockHeight * 0.5 - item.heightM * 0.5
+              : textCenterY - textBlockHeight * 0.5 + item.heightM * 0.5
+            : textCenterY;
+        const x =
+          textAlign === "center"
+            ? textOriginX + textBlockWidth * 0.5
+            : textAlign === "right"
+              ? textOriginX + textBlockWidth - item.widthM * 0.5
+              : textOriginX + item.widthM * 0.5;
+        item.mesh.position.set(x, y, 0);
+      }
+
+      const framedWidth = contentWidth + paddingX * 2;
+      const framedHeight = contentHeight + paddingY * 2;
+      if (background) {
+        background.scale.set(framedWidth, framedHeight, 1);
+        background.position.set(contentWidth * 0.5, 0, -2);
+      }
+      if (outlineStrips.length === 4) {
+        const outlineWidth = Math.max(
+          1,
+          typeof branding.outlineWidthM === "number"
+            ? branding.outlineWidthM
+            : 2500,
+        );
+        const left = contentWidth * 0.5 - framedWidth * 0.5;
+        const right = contentWidth * 0.5 + framedWidth * 0.5;
+        const top = framedHeight * 0.5;
+        const bottom = -framedHeight * 0.5;
+        const [topStrip, rightStrip, bottomStrip, leftStrip] = outlineStrips;
+        topStrip.scale.set(framedWidth, outlineWidth, 1);
+        topStrip.position.set(contentWidth * 0.5, top, -1);
+        bottomStrip.scale.set(framedWidth, outlineWidth, 1);
+        bottomStrip.position.set(contentWidth * 0.5, bottom, -1);
+        rightStrip.scale.set(outlineWidth, framedHeight, 1);
+        rightStrip.position.set(right, 0, -1);
+        leftStrip.scale.set(outlineWidth, framedHeight, 1);
+        leftStrip.position.set(left, 0, -1);
+      }
+
+      contentGroup.position.x = anchor.includes("east") ? -contentWidth : 0;
+      contentGroup.position.y = anchor.includes("south")
+        ? contentHeight * 0.5
+        : -contentHeight * 0.5;
+      contentGroup.userData.topoMapBrandingContentWidthM = contentWidth;
+      contentGroup.userData.topoMapBrandingContentHeightM = contentHeight;
+    };
+
+    layoutTitleBlock();
+    group.add(contentGroup);
+
+    this.scene.add(group);
+    this.topoMapBrandingGroup = group;
+  }
+
+  private topoGraticuleVisibleSegment(
+    a: TopoGraticuleLabelCandidate,
+    b: TopoGraticuleLabelCandidate,
+    edge: TerrainEdgeFadeState,
+    threshold: number,
+  ): [THREE.Vector3, THREE.Vector3] | null {
+    const aValue = terrainEdgeInsideDistance(a.position, edge) - threshold;
+    const bValue = terrainEdgeInsideDistance(b.position, edge) - threshold;
+    if (aValue < 0 && bValue < 0) return null;
+    if (aValue >= 0 && bValue >= 0) return [a.position, b.position];
+    const crossing = this.topoGraticuleThresholdCrossing(a, b, edge, threshold);
+    if (!crossing) return null;
+    return aValue >= 0
+      ? [a.position, crossing.position]
+      : [crossing.position, b.position];
+  }
+
+  private setTopoGraticuleLinePositions(
+    line: LineSegments2,
+    positions: number[],
+  ): void {
+    const geometry = new LineSegmentsGeometry();
+    geometry.setPositions(positions);
+    line.geometry.dispose();
+    line.geometry = geometry;
+    line.computeLineDistances();
+    line.userData.topoGraticuleSegmentCount = positions.length / 6;
+  }
+
+  private rebuildTopoGraticuleEdgeLines(
+    group: THREE.Group,
+    edge: TerrainEdgeFadeState | null,
+    edgeAware: boolean,
+    labelOffsetM: number,
+    labelGapM: number,
+  ): void {
+    let sourceRoot: THREE.Object3D | null =
+      group.userData?.topoGraticule === true ? group : null;
+    group.traverse((obj) => {
+      if (!sourceRoot && obj.userData?.topoGraticule === true) {
+        sourceRoot = obj;
+      }
+    });
+    if (!sourceRoot) return;
+    const rawSourceLines = sourceRoot.userData?.topoGraticuleSourceLines as
+      | unknown[]
+      | undefined;
+    if (!Array.isArray(rawSourceLines)) return;
+    const sourceLines = rawSourceLines
+      .map((line) => topoGraticuleSourceLine(line))
+      .filter((line): line is TopoGraticuleSourceLine => Boolean(line));
+    if (sourceLines.length === 0) return;
+
+    let interiorLine: LineSegments2 | null = null;
+    let dashedInteriorLine: LineSegments2 | null = null;
+    let leaderLine: LineSegments2 | null = null;
+    let dashedLeaderLine: LineSegments2 | null = null;
+    group.traverse((obj) => {
+      if (!(obj instanceof LineSegments2)) return;
+      if (obj.userData?.topoGraticuleLineRole === "leader") leaderLine = obj;
+      else if (obj.userData?.topoGraticuleLineRole === "leader-dashed") {
+        dashedLeaderLine = obj;
+      }
+      else if (obj.userData?.topoGraticuleLineRole === "interior-dashed") {
+        dashedInteriorLine = obj;
+      }
+      else if (obj.userData?.topoGraticuleLineRole === "interior") {
+        interiorLine = obj;
+      }
+    });
+    const interior = interiorLine as LineSegments2 | null;
+    const dashedInterior = dashedInteriorLine as LineSegments2 | null;
+    const leader = leaderLine as LineSegments2 | null;
+    const dashedLeader = dashedLeaderLine as LineSegments2 | null;
+    if (!interior || !dashedInterior || !leader || !dashedLeader) return;
+
+    const interiorPositions: number[] = [];
+    const dashedInteriorPositions: number[] = [];
+    const leaderPositions: number[] = [];
+    const dashedLeaderPositions: number[] = [];
+    const labelTargets = new Map<string, TopoGraticuleLabelTarget>();
+    const innerThreshold = edgeAware && edge ? edge.fadeDistanceM : -Infinity;
+    const labelGap = labelGapM;
+
+    for (const sourceLine of sourceLines) {
+      const { candidates } = sourceLine;
+      const isMinor = topoGraticuleIsHalfDegree(sourceLine.value);
+      const sourceInteriorPositions = isMinor
+        ? dashedInteriorPositions
+        : interiorPositions;
+      for (let index = 1; index < candidates.length; index += 1) {
+        if (!edgeAware || !edge) {
+          this.pushTopoGraticuleSegment(
+            sourceInteriorPositions,
+            candidates[index - 1].position,
+            candidates[index].position,
+          );
+          continue;
+        }
+        const clipped = this.topoGraticuleVisibleSegment(
+          candidates[index - 1],
+          candidates[index],
+          edge,
+          innerThreshold,
+        );
+        if (clipped) {
+          this.pushTopoGraticuleSegment(
+            sourceInteriorPositions,
+            clipped[0],
+            clipped[1],
+          );
+        }
+      }
+
+      if (!edgeAware || !edge) continue;
+      const inner = this.topoGraticulePreferredCrossing(
+        candidates,
+        edge,
+        sourceLine.preference,
+        innerThreshold,
+      );
+      if (!inner) continue;
+      const outer = this.topoGraticulePreferredCrossing(
+        candidates,
+        edge,
+        sourceLine.preference,
+        0,
+      );
+      if (
+        !terrainEdgeStraightSideEligible(
+          outer?.position ?? inner.position,
+          edge,
+          sourceLine.preference,
+        )
+      ) {
+        continue;
+      }
+      const effectiveLabelOffsetM =
+        labelOffsetM * (isMinor ? TOPO_GRATICULE_MINOR_SCALE : 1);
+      const effectiveLabelThreshold = -Math.max(0, effectiveLabelOffsetM);
+      const target =
+        this.topoGraticulePreferredCrossing(
+          candidates,
+          edge,
+          sourceLine.preference,
+          effectiveLabelThreshold,
+        ) ??
+        (() => {
+          const outward = edgeOutwardLineTangent(inner, edge);
+          const currentInside = terrainEdgeInsideDistance(inner.position, edge);
+          return {
+            position: inner.position
+              .clone()
+              .addScaledVector(outward, currentInside - effectiveLabelThreshold),
+            tangent: inner.tangent.clone(),
+          };
+        })();
+      const leaderDirection = target.position.clone().sub(inner.position);
+      leaderDirection.z = 0;
+      if (leaderDirection.lengthSq() <= 0.000001) {
+        leaderDirection.copy(edgeOutwardLineTangent(inner, edge));
+      } else {
+        leaderDirection.normalize();
+      }
+      const edgeTextBasis = topoGraticuleEdgeTextBasis(sourceLine.preference);
+      const readableTangent = edgeTextBasis.tangent;
+      const positions = isMinor ? dashedLeaderPositions : leaderPositions;
+      this.pushTopoGraticuleSegment(positions, inner.position, target.position);
+      labelTargets.set(
+        topoGraticuleLineKey(
+          sourceLine.kind,
+          sourceLine.value,
+          sourceLine.preference,
+        ),
+        {
+          position: target.position.clone(),
+          anchor: target.position.clone(),
+          tangent: readableTangent,
+          outward: edgeTextBasis.outward,
+          insideDistance: terrainEdgeInsideDistance(target.position, edge),
+          minor: isMinor,
+        },
+      );
+    }
+
+    this.setTopoGraticuleLinePositions(interior, interiorPositions);
+    this.setTopoGraticuleLinePositions(dashedInterior, dashedInteriorPositions);
+    this.setTopoGraticuleLinePositions(leader, leaderPositions);
+    this.setTopoGraticuleLinePositions(dashedLeader, dashedLeaderPositions);
+    interior.visible = interiorPositions.length > 0;
+    dashedInterior.visible = dashedInteriorPositions.length > 0;
+    leader.visible = edgeAware && leaderPositions.length > 0;
+    dashedLeader.visible = edgeAware && dashedLeaderPositions.length > 0;
+    for (const target of [group, sourceRoot]) {
+      target.userData.topoGraticuleInteriorSegmentCount =
+        (interiorPositions.length + dashedInteriorPositions.length) / 6;
+      target.userData.topoGraticuleDashedInteriorSegmentCount =
+        dashedInteriorPositions.length / 6;
+      target.userData.topoGraticuleLeaderSegmentCount =
+        (leaderPositions.length + dashedLeaderPositions.length) / 6;
+      target.userData.topoGraticuleDashedLeaderSegmentCount =
+        dashedLeaderPositions.length / 6;
+      target.userData.topoGraticuleInnerTrimInsideDistance = innerThreshold;
+      target.userData.topoGraticuleLabelOffsetM = labelOffsetM;
+      target.userData.topoGraticuleLabelGapM = labelGap;
+      target.userData.topoGraticuleLabelTargets = labelTargets;
+    }
+  }
+
+  private applyTopoGraticuleLabelPlacement(
+    obj: THREE.Object3D,
+    edge: TerrainEdgeFadeState | null,
+    edgeAware: boolean,
+    labelOffsetM: number,
+    labelGapM: number,
+    labelSizeM: number,
+  ): void {
+    if (!edgeAware || !edge) return;
+    const preference =
+      obj.userData?.topoGraticuleLabelPreference === "north"
+        ? "north"
+        : "west";
+    const targetMap = obj.parent?.userData
+      ?.topoGraticuleLabelTargets as Map<string, TopoGraticuleLabelTarget> | undefined;
+    if (targetMap instanceof Map) {
+      const labelKey = topoGraticuleLabelKey(obj);
+      const target = labelKey ? targetMap.get(labelKey) : null;
+      if (!target) {
+        obj.visible = false;
+        obj.userData.topoGraticuleLabelHasLeader = false;
+        obj.userData.topoGraticuleLabelExcludedReason = "no-edge-leader";
+        return;
+      }
+      const aspect =
+        typeof obj.userData?.topoGraticuleLabelAspect === "number"
+          ? Math.max(1, obj.userData.topoGraticuleLabelAspect)
+          : 2.4;
+      const labelScale =
+        (labelSizeM / 9000) *
+        (target.minor ? TOPO_GRATICULE_MINOR_SCALE : 1);
+      const halfTextLengthM = 9000 * aspect * labelScale * 0.5;
+      const labelGap = labelGapM;
+      const position = target.anchor
+        .clone()
+        .addScaledVector(target.outward, labelGap + halfTextLengthM);
+      obj.position.copy(position);
+      obj.rotation.set(
+        0,
+        0,
+        normalizeFullGroundTextAngle(
+          Math.atan2(target.tangent.y, target.tangent.x),
+        ),
+      );
+      obj.userData.topoGraticuleLabelHasLeader = true;
+      obj.userData.topoGraticuleLabelExcludedReason = null;
+      obj.userData.topoGraticuleActiveLabelInsideDistance =
+        terrainEdgeInsideDistance(position, edge);
+      obj.userData.topoGraticuleActiveLabelAnchor = {
+        x: target.anchor.x,
+        y: target.anchor.y,
+        z: target.anchor.z,
+      };
+      obj.userData.topoGraticuleActiveLabelTangent = {
+        x: target.tangent.x,
+        y: target.tangent.y,
+        z: target.tangent.z,
+      };
+      obj.userData.topoGraticuleLabelGapM = labelGapM;
+      obj.userData.topoGraticuleLabelMinor = target.minor;
+      return;
+    }
+    const candidates = obj.userData?.topoGraticuleLabelCandidates as
+      | unknown[]
+      | undefined;
+    if (!Array.isArray(candidates) || candidates.length === 0) return;
+    const targetInsideDistance = -Math.max(0, labelOffsetM);
+    const parsedCandidates = candidates
+      .map((candidate) => topoGraticuleLabelCandidate(candidate))
+      .filter((candidate): candidate is TopoGraticuleLabelCandidate =>
+        Boolean(candidate),
+      );
+    const target = this.topoGraticulePreferredCrossing(
+      parsedCandidates,
+      edge,
+      preference,
+      targetInsideDistance,
+    );
+    if (target) {
+      obj.position.copy(target.position);
+      obj.rotation.set(0, 0, topoGraticuleReadableAngle(target.tangent, preference));
+      obj.userData.topoGraticuleActiveLabelInsideDistance =
+        terrainEdgeInsideDistance(target.position, edge);
+      obj.userData.topoGraticuleActiveLabelTangent = {
+        x: target.tangent.x,
+        y: target.tangent.y,
+        z: target.tangent.z,
+      };
+      return;
+    }
+
+    let best: TopoGraticuleLabelCandidate | null = null;
+    let bestScore = -Infinity;
+    for (const candidate of parsedCandidates) {
+      const insideDistance = terrainEdgeInsideDistance(
+        candidate.position,
+        edge,
+      );
+      const edgeFit = -Math.abs(insideDistance - targetInsideDistance);
+      const sideFit =
+        terrainEdgePreferenceScore(candidate.position, edge, preference) *
+        0.35;
+      const score = sideFit + edgeFit;
+      if (score > bestScore) {
+        bestScore = score;
+        best = candidate;
+      }
+    }
+    if (!best) return;
+
+    const position = best.position.clone();
+    const currentInsideDistance = terrainEdgeInsideDistance(position, edge);
+    if (currentInsideDistance > targetInsideDistance) {
+      const outward = edgeOutwardLineTangent(best, edge);
+      position.addScaledVector(
+        outward,
+        currentInsideDistance - targetInsideDistance,
+      );
+    }
+    obj.position.copy(position);
+    obj.rotation.set(0, 0, topoGraticuleReadableAngle(best.tangent, preference));
+    obj.userData.topoGraticuleActiveLabelInsideDistance =
+      terrainEdgeInsideDistance(position, edge);
+    obj.userData.topoGraticuleActiveLabelTangent = {
+      x: best.tangent.x,
+      y: best.tangent.y,
+      z: best.tangent.z,
+    };
+  }
+
+  private applyTopoGraticuleStyle(id: string, style: EditableStyle): void {
+    if (id !== UTAH_FORGE_TOPO_GRATICULE_LAYER_ID) return;
+    const group = this.layers.get(id);
+    if (!group) return;
+    const clipBox = this.publicSurfaceClipBox(this.styleForLayer("terrain"));
+    const clipPlanes = clipBox.enabled
+      ? this.publicSurfaceClipPlanes(clipBox)
+      : [];
+    const labelVisible = style.graticuleLabelVisible !== false;
+    const labelSize = styleNumber(
+      style,
+      "graticuleLabelSizeM",
+      9000,
+      1500,
+      60000,
+    );
+    const lift = styleNumber(style, "graticuleLiftM", 24, -50, 500);
+    group.position.z = lift;
+    const opacity = clamp01(styleNumber(style, "opacity", 0.62, 0, 1));
+    const color = typeof style.color === "string" ? style.color : "#d7d1c7";
+    const edgeAware = style.graticuleEdgeFadeAware !== false;
+    const edgeStrength = styleNumber(
+      style,
+      "graticuleEdgeFadeStrength",
+      1,
+      0,
+      1,
+    );
+    const edgeLineColor =
+      typeof style.graticuleEdgeLineColor === "string"
+        ? style.graticuleEdgeLineColor
+        : "#ffffff";
+    const edgeLabelColor =
+      typeof style.graticuleEdgeLabelColor === "string"
+        ? style.graticuleEdgeLabelColor
+        : "#ffffff";
+    const edgeLabelVisible = style.graticuleEdgeLabelVisible !== false;
+    const edgeLabelOffsetM = styleNumber(
+      style,
+      "graticuleEdgeLabelOffsetM",
+      90000,
+      0,
+      160000,
+    );
+    const edgeLabelGapM = styleNumber(
+      style,
+      "graticuleEdgeLabelGapM",
+      22000,
+      -100000,
+      100000,
+    );
+    const graticuleLineWidth = styleNumber(style, "lineWidth", 4.75, 0.1, 24);
+    const graticuleEdgeLineWidth = styleNumber(
+      style,
+      "graticuleEdgeLineWidth",
+      graticuleLineWidth,
+      0.1,
+      32,
+    );
+    const terrainEdge = this.resolveTerrainEdgeFadeState();
+    this.rebuildTopoGraticuleEdgeLines(
+      group,
+      terrainEdge,
+      edgeAware,
+      edgeLabelOffsetM,
+      edgeLabelGapM,
+    );
+    group.traverse((obj) => {
+      if (obj.userData?.topoGraticuleLabel === true) {
+        obj.visible = labelVisible && (!edgeAware || edgeLabelVisible);
+        this.applyTopoGraticuleLabelPlacement(
+          obj,
+          terrainEdge,
+          edgeAware,
+          edgeLabelOffsetM,
+          edgeLabelGapM,
+          labelSize,
+        );
+        const base = obj.userData.topoGraticuleBaseScale as
+          | THREE.Vector3
+          | undefined;
+        const scaleFactor =
+          (labelSize / 9000) *
+          (obj.userData.topoGraticuleLabelMinor === true
+            ? TOPO_GRATICULE_MINOR_SCALE
+            : 1);
+        if (base) {
+          obj.scale.set(
+            base.x * scaleFactor,
+            base.y * scaleFactor,
+            base.z * scaleFactor,
+          );
+        } else {
+          obj.scale.setScalar(scaleFactor);
+        }
+      }
+      const material = (obj as { material?: THREE.Material | THREE.Material[] })
+        .material;
+      if (!material) return;
+      const materials = Array.isArray(material) ? material : [material];
+      for (const m of materials) {
+        const lineRole = obj.userData?.topoGraticuleLineRole;
+        const minorLine =
+          lineRole === "interior-dashed" || lineRole === "leader-dashed";
+        const minorLabel =
+          obj.userData?.topoGraticuleLabel === true &&
+          obj.userData.topoGraticuleLabelMinor === true;
+        if ("color" in m && m.color instanceof THREE.Color) {
+          m.color.set(
+            obj.userData?.topoGraticuleLabel === true && edgeAware
+              ? edgeLabelColor
+              : (lineRole === "leader" || lineRole === "leader-dashed") &&
+                  edgeAware
+                ? edgeLineColor
+              : color,
+          );
+        }
+        if (m instanceof LineMaterial && m.userData?.topoGraticuleLineMaterial) {
+          const edgeLine =
+            lineRole === "leader" || lineRole === "leader-dashed";
+          const baseLineWidth = edgeLine
+            ? graticuleEdgeLineWidth
+            : graticuleLineWidth;
+          m.linewidth =
+            baseLineWidth * (minorLine ? TOPO_GRATICULE_MINOR_SCALE : 1);
+          setTopoGraticuleEdgeFade(m, {
+            enabled: edgeAware,
+            strength: edgeStrength,
+            lineColor: edgeLineColor,
+            boundsMin: terrainEdge
+              ? [terrainEdge.boundsMin.x, terrainEdge.boundsMin.y]
+              : undefined,
+            boundsMax: terrainEdge
+              ? [terrainEdge.boundsMax.x, terrainEdge.boundsMax.y]
+              : undefined,
+            edgeFadeDistanceM: terrainEdge?.fadeDistanceM ?? 0,
+            edgeFadeShape: terrainEdge?.shape ?? "square",
+            edgeFadeInsetM: terrainEdge?.insetM ?? 0,
+            edgeFadeCornerRadiusM: terrainEdge?.cornerRadiusM ?? 0,
+          });
+        }
+        m.opacity =
+          opacity *
+          (minorLine || minorLabel ? TOPO_GRATICULE_MINOR_SCALE : 1);
+        m.transparent = true;
+        m.depthWrite = false;
+        const publicSurfaceClipPlanes =
+          clipBox.enabled && !edgeAware ? clipPlanes : null;
+        m.userData.publicSurfaceClipPlanes = publicSurfaceClipPlanes;
+        m.clippingPlanes = publicSurfaceClipPlanes;
+        m.clipIntersection = false;
+        m.needsUpdate = true;
+      }
+    });
+  }
+
+  private workingAreaFocusTargetLayerIds(style: EditableStyle): Set<string> {
+    const configured = Array.isArray(style.workingAreaFocusTargetLayerIds)
+      ? style.workingAreaFocusTargetLayerIds.filter(
+          (id) => typeof id === "string",
+        )
+      : [];
+    return new Set(
+      configured.length > 0
+        ? configured
+        : Array.from(WORKING_AREA_FOCUS_DEFAULT_TARGET_LAYER_IDS),
+    );
+  }
+
+  private workingAreaFocusOutsideOpacity(
+    style: EditableStyle,
+    layerId: string,
+  ): number {
+    if (style.workingAreaFocusEnabled !== true) return 1;
+    if (style.workingAreaFocusMode === "inside-only") return 0;
+    const map = style.workingAreaFocusOutsideOpacityByLayerId ?? {};
+    const value = map[layerId];
+    return typeof value === "number" && Number.isFinite(value)
+      ? clamp01(value)
+      : WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY;
+  }
+
+  private cleanWorkingAreaFocusVector(value: unknown): THREE.Vector3 | null {
+    if (Array.isArray(value) && value.length >= 3) {
+      const [x, y, z] = value;
+      return typeof x === "number" &&
+        typeof y === "number" &&
+        typeof z === "number" &&
+        Number.isFinite(x) &&
+        Number.isFinite(y) &&
+        Number.isFinite(z)
+        ? new THREE.Vector3(x, y, z)
+        : null;
+    }
+    const vector = value as { x?: unknown; y?: unknown; z?: unknown } | null;
+    if (
+      vector &&
+      typeof vector.x === "number" &&
+      typeof vector.y === "number" &&
+      typeof vector.z === "number" &&
+      Number.isFinite(vector.x) &&
+      Number.isFinite(vector.y) &&
+      Number.isFinite(vector.z)
+    ) {
+      return new THREE.Vector3(vector.x, vector.y, vector.z);
+    }
+    return null;
+  }
+
+  private resolveWorkingAreaFocusBounds(boundsLayerId: string): {
+    min: THREE.Vector3;
+    max: THREE.Vector3;
+  } {
+    const layer = this.layers.get(boundsLayerId);
+    const candidates: unknown[] = [];
+    if (layer?.userData?.sceneBounds)
+      candidates.push(layer.userData.sceneBounds);
+    layer?.traverse((obj) => {
+      if (obj.userData?.sceneBounds) candidates.push(obj.userData.sceneBounds);
+    });
+    for (const candidate of candidates) {
+      const bounds = candidate as { min?: unknown; max?: unknown };
+      const min = this.cleanWorkingAreaFocusVector(bounds.min);
+      const max = this.cleanWorkingAreaFocusVector(bounds.max);
+      if (min && max) return { min, max };
+    }
+    return {
+      min: WORKING_AREA_FOCUS_DEFAULT_BOUNDS.min.clone(),
+      max: WORKING_AREA_FOCUS_DEFAULT_BOUNDS.max.clone(),
+    };
+  }
+
+  private workingAreaFocusState(style: EditableStyle): WorkingAreaFocusState {
+    const boundsLayerId =
+      typeof style.workingAreaFocusBoundsLayerId === "string"
+        ? style.workingAreaFocusBoundsLayerId
+        : UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID;
+    const bounds = this.resolveWorkingAreaFocusBounds(boundsLayerId);
+    const targetLayerIds = this.workingAreaFocusTargetLayerIds(style);
+    const outsideOpacityByLayerId = new Map<string, number>();
+    for (const layerId of targetLayerIds) {
+      outsideOpacityByLayerId.set(
+        layerId,
+        this.workingAreaFocusOutsideOpacity(style, layerId),
+      );
+    }
+    return {
+      enabled: style.workingAreaFocusEnabled === true,
+      mode:
+        style.workingAreaFocusMode === "inside-only"
+          ? "inside-only"
+          : "outside-context",
+      boundsLayerId,
+      boundsMin: bounds.min,
+      boundsMax: bounds.max,
+      targetLayerIds,
+      outsideOpacityByLayerId,
+      helperVisible: style.workingAreaFocusHelperVisible !== false,
+    };
+  }
+
+  private workingAreaFocusSegmentPositions(
+    min: THREE.Vector3,
+    max: THREE.Vector3,
+  ): number[] {
+    const corners = [
+      new THREE.Vector3(min.x, min.y, min.z),
+      new THREE.Vector3(max.x, min.y, min.z),
+      new THREE.Vector3(max.x, max.y, min.z),
+      new THREE.Vector3(min.x, max.y, min.z),
+      new THREE.Vector3(min.x, min.y, max.z),
+      new THREE.Vector3(max.x, min.y, max.z),
+      new THREE.Vector3(max.x, max.y, max.z),
+      new THREE.Vector3(min.x, max.y, max.z),
+    ];
+    const edges = [
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [3, 0],
+      [4, 5],
+      [5, 6],
+      [6, 7],
+      [7, 4],
+      [0, 4],
+      [1, 5],
+      [2, 6],
+      [3, 7],
+    ] as const;
+    return edges.flatMap(([a, b]) => [
+      corners[a].x,
+      corners[a].y,
+      corners[a].z,
+      corners[b].x,
+      corners[b].y,
+      corners[b].z,
+    ]);
+  }
+
+  private ensureWorkingAreaFocusRuntime(): WorkingAreaFocusRuntime {
+    if (this.workingAreaFocusRuntime) return this.workingAreaFocusRuntime;
+    const geometry = new LineSegmentsGeometry();
+    geometry.setPositions([]);
+    const material = new LineMaterial({
+      color: 0x69f0ff,
+      linewidth: 2,
+      worldUnits: false,
+      transparent: true,
+      opacity: 0.72,
+      depthTest: false,
+      depthWrite: false,
+      dashed: false,
+    });
+    material.fog = false;
+    material.userData.forceTransparent = true;
+    material.resolution.set(
+      window.innerWidth || 1920,
+      window.innerHeight || 1080,
+    );
+    const line = new LineSegments2(geometry, material);
+    line.name = "Working area focus box";
+    line.renderOrder = WORKING_AREA_FOCUS_RENDER_ORDER;
+    line.userData.workingAreaFocusHelper = true;
+    const group = new THREE.Group();
+    group.name = "__working_area_focus_box__";
+    group.visible = false;
+    group.userData.workingAreaFocusHelper = true;
+    group.add(line);
+    this.scene.add(group);
+    this.workingAreaFocusRuntime = { group, line };
+    return this.workingAreaFocusRuntime;
+  }
+
+  private rebuildWorkingAreaFocusHelper(state: WorkingAreaFocusState): void {
+    const runtime = this.ensureWorkingAreaFocusRuntime();
+    runtime.group.visible =
+      this.editorMode && state.enabled && state.helperVisible;
+    if (!state.enabled) return;
+    const geometry = new LineSegmentsGeometry();
+    geometry.setPositions(
+      this.workingAreaFocusSegmentPositions(state.boundsMin, state.boundsMax),
+    );
+    runtime.line.geometry.dispose();
+    runtime.line.geometry = geometry;
+    runtime.line.computeLineDistances();
+  }
+
+  private setKnownShaderWorkingAreaFocus(
+    material: THREE.ShaderMaterial,
+    enabled: boolean,
+    state: WorkingAreaFocusState,
+    outsideOpacity: number,
+  ): boolean {
+    const uniforms = material.uniforms as Record<string, { value: unknown }>;
+    if (!uniforms.uWorkingAreaFocusEnabled) return false;
+    setWorkingAreaFocusShaderUniforms(
+      uniforms,
+      enabled,
+      state.boundsMin,
+      state.boundsMax,
+      outsideOpacity,
+    );
+    material.needsUpdate = true;
+    return true;
+  }
+
+  private applyWorkingAreaFocusMaterial(
+    material: THREE.Material,
+    enabled: boolean,
+    state: WorkingAreaFocusState,
+    outsideOpacity: number,
+  ): void {
+    if (material.userData?.workingAreaFocusHelper === true) return;
+    if (material instanceof THREE.ShaderMaterial) {
+      if (
+        this.setKnownShaderWorkingAreaFocus(
+          material,
+          enabled,
+          state,
+          outsideOpacity,
+        )
+      ) {
+        return;
+      }
+      material.userData.workingAreaFocusUnsupported = enabled;
+      return;
+    }
+    applyWorkingAreaFocusBuiltInMaterial(
+      material,
+      enabled,
+      state.boundsMin,
+      state.boundsMax,
+      outsideOpacity,
+    );
+  }
+
+  private applyWorkingAreaFocusStyle(style: EditableStyle): void {
+    this.lastWorkingAreaFocusStyle = style;
+    this.currentWorkingAreaFocusStyle = style;
+    const state = this.workingAreaFocusState(style);
+    for (const [layerId, group] of this.layers) {
+      const targeted =
+        state.enabled &&
+        state.targetLayerIds.has(layerId) &&
+        layerId !== state.boundsLayerId;
+      const outsideOpacity = state.outsideOpacityByLayerId.get(layerId) ?? 1;
+      group.traverse((obj) => {
+        const material = (
+          obj as { material?: THREE.Material | THREE.Material[] }
+        ).material;
+        if (!material) return;
+        const materials = Array.isArray(material) ? material : [material];
+        for (const m of materials) {
+          this.applyWorkingAreaFocusMaterial(
+            m,
+            targeted,
+            state,
+            outsideOpacity,
+          );
+        }
+      });
+    }
+    this.rebuildWorkingAreaFocusHelper(state);
+  }
+
+  private reapplyWorkingAreaFocus(): void {
+    this.applyWorkingAreaFocusStyle(this.lastWorkingAreaFocusStyle);
+  }
+
+  private interpolatedWorkingAreaFocusStyle(
+    fromStyle: EditableStyle,
+    toStyle: EditableStyle,
+    t: number,
+  ): EditableStyle {
+    const targetLayerIds = new Set<string>([
+      ...this.workingAreaFocusTargetLayerIds(fromStyle),
+      ...this.workingAreaFocusTargetLayerIds(toStyle),
+    ]);
+    const outsideOpacityByLayerId: Record<string, number> = {};
+    for (const layerId of targetLayerIds) {
+      const from = this.workingAreaFocusOutsideOpacity(fromStyle, layerId);
+      const to = this.workingAreaFocusOutsideOpacity(toStyle, layerId);
+      outsideOpacityByLayerId[layerId] = from + (to - from) * t;
+    }
+    return {
+      ...toStyle,
+      workingAreaFocusEnabled:
+        fromStyle.workingAreaFocusEnabled === true ||
+        toStyle.workingAreaFocusEnabled === true,
+      workingAreaFocusMode: "outside-context",
+      workingAreaFocusTargetLayerIds: Array.from(targetLayerIds),
+      workingAreaFocusOutsideOpacityByLayerId: outsideOpacityByLayerId,
+    };
+  }
+
+  private transitionWorkingAreaFocusForPage(
+    environment: EnvironmentSetup,
+    fromPage: PresentationPage,
+    toPage: PresentationPage,
+    durationMs: number,
+    easing: EasingName,
+  ): void {
+    const fromStyle =
+      Object.keys(this.currentWorkingAreaFocusStyle).length > 0
+        ? this.currentWorkingAreaFocusStyle
+        : effectiveStyle(
+            environment,
+            fromPage,
+            UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
+          );
+    const toStyle = effectiveStyle(
+      environment,
+      toPage,
+      UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
+    );
+    const duration = Math.max(0, durationMs);
+    if (duration <= 0) {
+      this.workingAreaFocusTween = null;
+      this.applyWorkingAreaFocusStyle(toStyle);
+      return;
+    }
+    this.workingAreaFocusTween = {
+      fromStyle,
+      toStyle,
+      startMs: performance.now(),
+      durationMs: duration,
+      easing,
+    };
+    this.applyWorkingAreaFocusStyle(
+      this.interpolatedWorkingAreaFocusStyle(fromStyle, toStyle, 0),
+    );
+  }
+
+  getWorkingAreaFocusDebugState(): {
+    enabled: boolean;
+    mode: string;
+    boundsLayerId: string;
+    targetLayerIds: string[];
+    outsideOpacityByLayerId: Record<string, number>;
+    helperVisible: boolean;
+    helperRenderable: boolean;
+    boundsMin: [number, number, number];
+    boundsMax: [number, number, number];
+  } {
+    const state = this.workingAreaFocusState(this.currentWorkingAreaFocusStyle);
+    return {
+      enabled: state.enabled,
+      mode: state.mode,
+      boundsLayerId: state.boundsLayerId,
+      targetLayerIds: Array.from(state.targetLayerIds),
+      outsideOpacityByLayerId: Object.fromEntries(
+        state.outsideOpacityByLayerId,
+      ),
+      helperVisible: state.helperVisible,
+      helperRenderable: this.workingAreaFocusRuntime?.group.visible === true,
+      boundsMin: [state.boundsMin.x, state.boundsMin.y, state.boundsMin.z],
+      boundsMax: [state.boundsMax.x, state.boundsMax.y, state.boundsMax.z],
+    };
+  }
+
+  private applyTerrainCompositeStyle(
+    layerId: string,
+    style: EditableStyle,
+  ): void {
     if (
       layerId !== "hydrography-lakes" &&
       layerId !== "three-firs-target" &&
@@ -4547,12 +7144,15 @@ export class SceneManager {
     const opacity =
       typeof style.opacity === "number" ? clamp01(style.opacity) : 1;
     const fillOpacity =
-      typeof style.fillOpacity === "number" ? clamp01(style.fillOpacity) : opacity;
+      typeof style.fillOpacity === "number"
+        ? clamp01(style.fillOpacity)
+        : opacity;
     const affectedByFog = styleAffectedByFog(style);
     const fogDensity = styleFogDensity(style, this.envFogDensity);
     terrainGroup.traverse((obj) => {
-      const handle = (obj as THREE.Mesh).userData
-        ?.terrainHandle as TerrainMaterialHandle | undefined;
+      const handle = (obj as THREE.Mesh).userData?.terrainHandle as
+        | TerrainMaterialHandle
+        | undefined;
       if (!handle) return;
       switch (layerId) {
         case "hydrography-lakes":
@@ -4578,7 +7178,8 @@ export class SceneManager {
           handle.setTargetOpacity("target-great-plains", opacity);
           break;
         case "claim-boundary":
-          if (typeof style.color === "string") handle.setClaimColor(style.color);
+          if (typeof style.color === "string")
+            handle.setClaimColor(style.color);
           handle.setClaimFogEnabled(affectedByFog);
           handle.setClaimFogDensity(fogDensity);
           handle.setClaimOpacity(opacity);
@@ -4611,7 +7212,10 @@ export class SceneManager {
           {
             let wallMat: THREE.ShaderMaterial | undefined;
             this.layers.get("trees-vri")?.traverse((child) => {
-              if (!wallMat && child.userData?.wallMaterial instanceof THREE.ShaderMaterial)
+              if (
+                !wallMat &&
+                child.userData?.wallMaterial instanceof THREE.ShaderMaterial
+              )
                 wallMat = child.userData.wallMaterial;
             });
             if (wallMat) {
@@ -4624,7 +7228,8 @@ export class SceneManager {
               if (typeof style.color === "string")
                 wallMat.uniforms.uColor.value.set(style.color);
               wallMat.uniforms.uFogEnabled.value = affectedByFog ? 1 : 0;
-              wallMat.uniforms.uFogFar.value = 3 / Math.max(fogDensity, 0.00001);
+              wallMat.uniforms.uFogFar.value =
+                3 / Math.max(fogDensity, 0.00001);
             }
           }
           break;
@@ -4650,9 +7255,7 @@ export class SceneManager {
       max: number,
     ) =>
       clampRange(
-        typeof value === "number" && Number.isFinite(value)
-          ? value
-          : fallback,
+        typeof value === "number" && Number.isFinite(value) ? value : fallback,
         min,
         max,
       );
@@ -4725,23 +7328,26 @@ export class SceneManager {
         color: color(style.gammaLoggedOverburdenColor, "#d2a35f"),
         opacity: numeric(style.gammaLoggedOverburdenOpacity, 0.42, 0, 1),
         radius: numeric(style.gammaLoggedOverburdenRadiusM, 7.92, 0.5, 36),
-        mode:
-          style.gammaLoggedOverburdenMode === "dashed" ? "dashed" : "solid",
+        mode: style.gammaLoggedOverburdenMode === "dashed" ? "dashed" : "solid",
       },
       bedrockInterval: {
         visible: bool(style.gammaBedrockIntervalVisible, true),
         color: color(style.gammaBedrockIntervalColor, "#75c878"),
         opacity: numeric(style.gammaBedrockIntervalOpacity, 0.46, 0, 1),
         radius: numeric(style.gammaBedrockIntervalRadiusM, 6.12, 0.5, 36),
-        mode:
-          style.gammaBedrockIntervalMode === "dashed" ? "dashed" : "solid",
+        mode: style.gammaBedrockIntervalMode === "dashed" ? "dashed" : "solid",
       },
     } as const;
 
     const contactShape = style.gammaContactShape === "coin" ? "coin" : "torus";
     const contactBaseRadius = 42;
     const contactRadius = numeric(style.gammaContactRadiusM, 42, 6, 120);
-    const contactThickness = numeric(style.gammaContactThicknessM, 3.2, 0.4, 18);
+    const contactThickness = numeric(
+      style.gammaContactThicknessM,
+      3.2,
+      0.4,
+      18,
+    );
     const contactRadiusScale = contactRadius / contactBaseRadius;
     const contactSettings = {
       1: {
@@ -4804,12 +7410,14 @@ export class SceneManager {
       if (obj.userData?.ezGammaContact === true) {
         const index = obj.userData.ezGammaContactIndex === 2 ? 2 : 1;
         const setting = contactSettings[index];
-        const shape = obj.userData.ezGammaContactShape === "coin" ? "coin" : "torus";
+        const shape =
+          obj.userData.ezGammaContactShape === "coin" ? "coin" : "torus";
         const baseThickness =
           typeof obj.userData.ezGammaContactBaseThicknessM === "number"
             ? obj.userData.ezGammaContactBaseThicknessM
             : contactThickness;
-        const thicknessScale = contactThickness / Math.max(0.001, baseThickness);
+        const thicknessScale =
+          contactThickness / Math.max(0.001, baseThickness);
         obj.visible = setting.visible && shape === contactShape;
         if (shape === "coin") {
           obj.scale.set(contactRadiusScale, thicknessScale, contactRadiusScale);
@@ -4825,9 +7433,10 @@ export class SceneManager {
       }
       if (obj.userData?.ezGammaTrackPanel === true) {
         obj.visible = panelVisible && panelOpacity > 0.001;
-        const baseWidth = typeof obj.userData.ezGammaPanelBaseWidthM === "number"
-          ? obj.userData.ezGammaPanelBaseWidthM
-          : 256;
+        const baseWidth =
+          typeof obj.userData.ezGammaPanelBaseWidthM === "number"
+            ? obj.userData.ezGammaPanelBaseWidthM
+            : 256;
         obj.position.x = 0;
         obj.scale.x = baseWidth > 0 ? panelWidth / baseWidth : 1;
         applyMaterial(obj, panelColor, panelOpacity);
@@ -4861,9 +7470,7 @@ export class SceneManager {
     group.traverse((obj) => {
       if (obj.userData?.ezGammaBillboardPivot !== true) return;
       obj.getWorldPosition(this.ezGammaWorldPos);
-      this.ezGammaToCamera
-        .copy(camera.position)
-        .sub(this.ezGammaWorldPos);
+      this.ezGammaToCamera.copy(camera.position).sub(this.ezGammaWorldPos);
       this.ezGammaToCamera.z = 0;
       if (this.ezGammaToCamera.lengthSq() < 0.0001) return;
       this.ezGammaToCamera.normalize();
@@ -4912,16 +7519,22 @@ export class SceneManager {
         | undefined) ?? {};
     const firstElement = Object.keys(elements)[0] ?? "cu_ppm";
     let element =
-      typeof style.geochemElement === "string" ? style.geochemElement : "cu_ppm";
+      typeof style.geochemElement === "string"
+        ? style.geochemElement
+        : "cu_ppm";
     const hasSelectedElement = sampleRoots.some((root) => {
-      const values = root.userData.elements as Record<string, number> | undefined;
+      const values = root.userData.elements as
+        | Record<string, number>
+        | undefined;
       return typeof values?.[element] === "number";
     });
     if (!hasSelectedElement) element = firstElement;
 
     const values = sampleRoots
       .map((root) => {
-        const map = root.userData.elements as Record<string, number> | undefined;
+        const map = root.userData.elements as
+          | Record<string, number>
+          | undefined;
         const value = map?.[element];
         return typeof value === "number" && Number.isFinite(value)
           ? value
@@ -4938,9 +7551,7 @@ export class SceneManager {
       max: number,
     ) =>
       clampRange(
-        typeof value === "number" && Number.isFinite(value)
-          ? value
-          : fallback,
+        typeof value === "number" && Number.isFinite(value) ? value : fallback,
         min,
         max,
       );
@@ -4957,9 +7568,7 @@ export class SceneManager {
     };
     const stats = elements[element] ?? {};
     const breaks = [stats.q20, stats.q40, stats.q60, stats.q80].map((v, i) =>
-      typeof v === "number" && Number.isFinite(v)
-        ? v
-        : quantile((i + 1) / 5),
+      typeof v === "number" && Number.isFinite(v) ? v : quantile((i + 1) / 5),
     );
     const minValue =
       typeof stats.min === "number" && Number.isFinite(stats.min)
@@ -4988,12 +7597,8 @@ export class SceneManager {
     const outlineOpacity = showOutline
       ? numeric(style.geochemOutlineOpacity, 0.65, 0, 1)
       : 0;
-    const lowColor = new THREE.Color(
-      color(style.geochemPaletteLow, "#2b6cb0"),
-    );
-    const midColor = new THREE.Color(
-      color(style.geochemPaletteMid, "#f2cf43"),
-    );
+    const lowColor = new THREE.Color(color(style.geochemPaletteLow, "#2b6cb0"));
+    const midColor = new THREE.Color(color(style.geochemPaletteMid, "#f2cf43"));
     const highColor = new THREE.Color(
       color(style.geochemPaletteHigh, "#c92a2a"),
     );
@@ -5287,7 +7892,10 @@ export class SceneManager {
       fog: false,
     });
     hardenStudioHelperMaterial(mat);
-    const center = new THREE.Mesh(new THREE.SphereGeometry(52, 16, 10), mat.clone());
+    const center = new THREE.Mesh(
+      new THREE.SphereGeometry(52, 16, 10),
+      mat.clone(),
+    );
     center.position.set(0, 0, 95);
     this.markAreaOutlinePickable(center, outline.id, "move");
     root.add(center);
@@ -5454,7 +8062,10 @@ export class SceneManager {
       }
     }
     const geom = new THREE.BufferGeometry();
-    geom.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geom.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positions, 3),
+    );
     geom.setIndex(indices);
     geom.computeVertexNormals();
     return geom;
@@ -5480,8 +8091,7 @@ export class SceneManager {
     const dashLength = clampRange(outline.dashLengthM ?? 170, 5, 2000);
     const dashGap = clampRange(outline.dashGapM ?? 90, 0, 2000);
     const circumference =
-      Math.PI *
-      (3 * (rx + ry) - Math.sqrt((3 * rx + ry) * (rx + 3 * ry)));
+      Math.PI * (3 * (rx + ry) - Math.sqrt((3 * rx + ry) * (rx + 3 * ry)));
     const pattern = dashed ? dashLength + dashGap : circumference;
     const dashCount = Math.max(1, Math.ceil(circumference / pattern));
     const radialSegments = 8;
@@ -5614,7 +8224,10 @@ export class SceneManager {
     }
 
     const geom = new THREE.BufferGeometry();
-    geom.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geom.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positions, 3),
+    );
     geom.setIndex(indices);
     geom.computeVertexNormals();
     return geom;
@@ -5641,19 +8254,31 @@ export class SceneManager {
     const showBoreTube = assays.showBoreTube ?? true;
     const boreTubeColor = assays.boreTubeColor ?? "#d8ccb2";
     const boreTubeOpacity = clampRange(assays.boreTubeOpacity ?? 0.88, 0, 1);
-    const boreTubeRoughness = clampRange(assays.boreTubeRoughness ?? 0.64, 0, 1);
-    const boreTubeMetalness = clampRange(assays.boreTubeMetalness ?? 0.08, 0, 1);
+    const boreTubeRoughness = clampRange(
+      assays.boreTubeRoughness ?? 0.64,
+      0,
+      1,
+    );
+    const boreTubeMetalness = clampRange(
+      assays.boreTubeMetalness ?? 0.08,
+      0,
+      1,
+    );
     const boreTubeEmissiveColor = assays.boreTubeEmissiveColor ?? "#8d826f";
-    const boreTubeEmissive = clampRange(assays.boreTubeEmissive ?? 0.012, 0, 0.4);
+    const boreTubeEmissive = clampRange(
+      assays.boreTubeEmissive ?? 0.012,
+      0,
+      0.4,
+    );
     const boreTubeRenderOrder = clampRange(
       assays.boreTubeRenderOrder ?? 5.4,
       0,
       20,
     );
-    const assayWidth = boreWidth *
-      clampRange(assays.assayWidthMultiplier ?? 2.6, 1, 10);
-    const lithologyWidth = boreWidth *
-      clampRange(assays.lithologyWidthMultiplier ?? 2.45, 1, 12);
+    const assayWidth =
+      boreWidth * clampRange(assays.assayWidthMultiplier ?? 2.6, 1, 10);
+    const lithologyWidth =
+      boreWidth * clampRange(assays.lithologyWidthMultiplier ?? 2.45, 1, 12);
     const lithologyOpacity = clampRange(assays.lithologyOpacity ?? 0.56, 0, 1);
     const showAssaySides = assays.showAssaySides ?? true;
     const showAssayCaps = assays.showAssayCaps ?? true;
@@ -5665,11 +8290,7 @@ export class SceneManager {
     const metalness = clampRange(assays.assayMetalness ?? 0.02, 0, 1);
     const sideEmissive = clampRange(assays.assaySideEmissive ?? 0.018, 0, 0.4);
     const capEmissive = clampRange(assays.assayCapEmissive ?? 0.012, 0, 0.4);
-    const sideRenderOrder = clampRange(
-      assays.assaySideRenderOrder ?? 6,
-      0,
-      20,
-    );
+    const sideRenderOrder = clampRange(assays.assaySideRenderOrder ?? 6, 0, 20);
     const capRenderOrder = clampRange(assays.assayCapRenderOrder ?? 6, 0, 20);
     const showBoreLens = assays.showBoreLens ?? true;
     const boreLensColor = assays.boreLensColor ?? "#e9dec4";
@@ -5689,170 +8310,169 @@ export class SceneManager {
 
     for (const group of groups) {
       group.traverse((obj) => {
-      const traceRole = (obj.userData as { drillTraceRole?: string })
-        .drillTraceRole;
-      if (traceRole === "assay") {
-        const assayVisible = traceMode === "assay" || traceMode === "both";
-        const isCap = obj.userData?.drillTubeCap === true;
-        const isSide = obj.userData?.drillTubeSegment === true;
-        obj.visible = assayVisible &&
-          (!isCap || showAssayCaps) &&
-          (!isSide || showAssaySides);
-      } else if (traceRole === "lithology") {
-        obj.visible = traceMode === "lithology" || traceMode === "both";
-      } else if (traceRole === "bore") {
-        obj.visible = true;
-      }
-
-      if (traceRole === "bore" && obj.userData?.drillBoreTube === true) {
-        obj.visible = showBoreTube;
-        const segmentLength =
-          typeof obj.userData.segmentLength === "number"
-            ? obj.userData.segmentLength
-            : obj.scale.y;
-        const radiusPerPixel =
-          typeof obj.userData.radiusPerPixel === "number"
-            ? obj.userData.radiusPerPixel
-            : 1.6;
-        const radius = boreWidth * radiusPerPixel;
-        obj.scale.set(radius, segmentLength, radius);
-        obj.renderOrder = boreTubeRenderOrder;
-      }
-
-      if (traceRole === "bore" && obj.userData?.drillBoreLens === true) {
-        obj.userData.lensEnabled = showBoreLens &&
-          (traceMode === "assay" || traceMode === "both");
-        const center = Array.isArray(obj.userData.capCenter)
-          ? obj.userData.capCenter
-          : null;
-        const axis = Array.isArray(obj.userData.capAxis)
-          ? obj.userData.capAxis
-          : null;
-        const radiusPerPixel =
-          typeof obj.userData.radiusPerPixel === "number"
-            ? obj.userData.radiusPerPixel
-            : 2.1;
-        const radius = boreWidth * radiusPerPixel;
-        obj.scale.set(radius, radius, 1);
-        if (center && axis) {
-          const offset = capThicknessM * 0.52 + 0.05;
-          obj.position.set(
-            Number(center[0]) + Number(axis[0]) * offset,
-            Number(center[1]) + Number(axis[1]) * offset,
-            Number(center[2]) + Number(axis[2]) * offset,
-          );
+        const traceRole = (obj.userData as { drillTraceRole?: string })
+          .drillTraceRole;
+        if (traceRole === "assay") {
+          const assayVisible = traceMode === "assay" || traceMode === "both";
+          const isCap = obj.userData?.drillTubeCap === true;
+          const isSide = obj.userData?.drillTubeSegment === true;
+          obj.visible =
+            assayVisible &&
+            (!isCap || showAssayCaps) &&
+            (!isSide || showAssaySides);
+        } else if (traceRole === "lithology") {
+          obj.visible = traceMode === "lithology" || traceMode === "both";
+        } else if (traceRole === "bore") {
+          obj.visible = true;
         }
-        const lensMat = (obj as THREE.Mesh).material;
-        const lensMats = Array.isArray(lensMat) ? lensMat : [lensMat];
-        for (const lensMaterial of lensMats) {
-          if (!(lensMaterial instanceof THREE.MeshBasicMaterial)) continue;
-          lensMaterial.color.set(boreLensColor);
-          lensMaterial.opacity = boreLensOpacity;
-          lensMaterial.transparent = true;
-          lensMaterial.toneMapped = true;
-          lensMaterial.needsUpdate = true;
-        }
-        obj.renderOrder = capRenderOrder + 0.25;
-      }
 
-      if (
-        traceRole === "assay" &&
-        (obj.userData?.drillTubeSegment === true ||
-          obj.userData?.drillTubeCap === true)
-      ) {
-        const isCap = obj.userData?.drillTubeCap === true;
-        const segmentLength =
-          isCap
+        if (traceRole === "bore" && obj.userData?.drillBoreTube === true) {
+          obj.visible = showBoreTube;
+          const segmentLength =
+            typeof obj.userData.segmentLength === "number"
+              ? obj.userData.segmentLength
+              : obj.scale.y;
+          const radiusPerPixel =
+            typeof obj.userData.radiusPerPixel === "number"
+              ? obj.userData.radiusPerPixel
+              : 1.6;
+          const radius = boreWidth * radiusPerPixel;
+          obj.scale.set(radius, segmentLength, radius);
+          obj.renderOrder = boreTubeRenderOrder;
+        }
+
+        if (traceRole === "bore" && obj.userData?.drillBoreLens === true) {
+          obj.userData.lensEnabled =
+            showBoreLens && (traceMode === "assay" || traceMode === "both");
+          const center = Array.isArray(obj.userData.capCenter)
+            ? obj.userData.capCenter
+            : null;
+          const axis = Array.isArray(obj.userData.capAxis)
+            ? obj.userData.capAxis
+            : null;
+          const radiusPerPixel =
+            typeof obj.userData.radiusPerPixel === "number"
+              ? obj.userData.radiusPerPixel
+              : 2.1;
+          const radius = boreWidth * radiusPerPixel;
+          obj.scale.set(radius, radius, 1);
+          if (center && axis) {
+            const offset = capThicknessM * 0.52 + 0.05;
+            obj.position.set(
+              Number(center[0]) + Number(axis[0]) * offset,
+              Number(center[1]) + Number(axis[1]) * offset,
+              Number(center[2]) + Number(axis[2]) * offset,
+            );
+          }
+          const lensMat = (obj as THREE.Mesh).material;
+          const lensMats = Array.isArray(lensMat) ? lensMat : [lensMat];
+          for (const lensMaterial of lensMats) {
+            if (!(lensMaterial instanceof THREE.MeshBasicMaterial)) continue;
+            lensMaterial.color.set(boreLensColor);
+            lensMaterial.opacity = boreLensOpacity;
+            lensMaterial.transparent = true;
+            lensMaterial.toneMapped = true;
+            lensMaterial.needsUpdate = true;
+          }
+          obj.renderOrder = capRenderOrder + 0.25;
+        }
+
+        if (
+          traceRole === "assay" &&
+          (obj.userData?.drillTubeSegment === true ||
+            obj.userData?.drillTubeCap === true)
+        ) {
+          const isCap = obj.userData?.drillTubeCap === true;
+          const segmentLength = isCap
             ? capThicknessM
             : typeof obj.userData.segmentLength === "number"
-            ? obj.userData.segmentLength
-            : obj.scale.y;
-        const radiusPerPixel =
-          typeof obj.userData.radiusPerPixel === "number"
-            ? obj.userData.radiusPerPixel
-            : 2.5;
-        const radius = assayWidth * radiusPerPixel;
-        obj.scale.set(radius, segmentLength, radius);
-        obj.renderOrder = isCap ? capRenderOrder : sideRenderOrder;
-      }
+              ? obj.userData.segmentLength
+              : obj.scale.y;
+          const radiusPerPixel =
+            typeof obj.userData.radiusPerPixel === "number"
+              ? obj.userData.radiusPerPixel
+              : 2.5;
+          const radius = assayWidth * radiusPerPixel;
+          obj.scale.set(radius, segmentLength, radius);
+          obj.renderOrder = isCap ? capRenderOrder : sideRenderOrder;
+        }
 
-      const mat = (obj as { material?: THREE.Material | THREE.Material[] })
-        .material;
-      if (!mat) return;
-      const mats = Array.isArray(mat) ? mat : [mat];
-      for (const m of mats) {
-        const role = m.userData?.drillAssayRole;
-        if (!(m instanceof LineMaterial)) {
-          if (role === "bore" && m instanceof THREE.MeshStandardMaterial) {
-            m.color.set(boreTubeColor);
-            m.emissive.set(boreTubeEmissiveColor);
-            m.emissiveIntensity = boreTubeEmissive;
-            m.roughness = boreTubeRoughness;
-            m.metalness = boreTubeMetalness;
-            m.opacity = boreTubeOpacity;
-            m.transparent = true;
-            m.toneMapped = true;
-            m.needsUpdate = true;
-          }
-          if (role === "assay") {
-            const surface = m.userData?.drillAssaySurface === "cap"
-              ? "cap"
-              : "side";
-            const stopId = m.userData?.assayColorStopId;
-            const stop = typeof stopId === "string"
-              ? colorStops.get(stopId)
-              : undefined;
-            const colored = m as THREE.Material & { color?: THREE.Color };
-            if (stop?.color && colored.color) {
-              const nextColor = new THREE.Color(stop.color);
-              colored.color.copy(nextColor);
-              if (m instanceof THREE.MeshStandardMaterial) {
-                m.emissive.copy(nextColor);
-                m.emissiveIntensity = surface === "cap"
-                  ? capEmissive
-                  : sideEmissive;
-                m.roughness = surface === "cap" ? capRoughness : sideRoughness;
-                m.metalness = metalness;
-              }
+        const mat = (obj as { material?: THREE.Material | THREE.Material[] })
+          .material;
+        if (!mat) return;
+        const mats = Array.isArray(mat) ? mat : [mat];
+        for (const m of mats) {
+          const role = m.userData?.drillAssayRole;
+          if (!(m instanceof LineMaterial)) {
+            if (role === "bore" && m instanceof THREE.MeshStandardMaterial) {
+              m.color.set(boreTubeColor);
+              m.emissive.set(boreTubeEmissiveColor);
+              m.emissiveIntensity = boreTubeEmissive;
+              m.roughness = boreTubeRoughness;
+              m.metalness = boreTubeMetalness;
+              m.opacity = boreTubeOpacity;
+              m.transparent = true;
+              m.toneMapped = true;
+              m.needsUpdate = true;
             }
-            m.opacity = surface === "cap" ? assayCapOpacity : assaySideOpacity;
-            m.transparent = true;
-            (m as THREE.MeshStandardMaterial).toneMapped = true;
-            m.needsUpdate = true;
+            if (role === "assay") {
+              const surface =
+                m.userData?.drillAssaySurface === "cap" ? "cap" : "side";
+              const stopId = m.userData?.assayColorStopId;
+              const stop =
+                typeof stopId === "string" ? colorStops.get(stopId) : undefined;
+              const colored = m as THREE.Material & { color?: THREE.Color };
+              if (stop?.color && colored.color) {
+                const nextColor = new THREE.Color(stop.color);
+                colored.color.copy(nextColor);
+                if (m instanceof THREE.MeshStandardMaterial) {
+                  m.emissive.copy(nextColor);
+                  m.emissiveIntensity =
+                    surface === "cap" ? capEmissive : sideEmissive;
+                  m.roughness =
+                    surface === "cap" ? capRoughness : sideRoughness;
+                  m.metalness = metalness;
+                }
+              }
+              m.opacity =
+                surface === "cap" ? assayCapOpacity : assaySideOpacity;
+              m.transparent = true;
+              (m as THREE.MeshStandardMaterial).toneMapped = true;
+              m.needsUpdate = true;
+            }
+            continue;
           }
-          continue;
+          if (role === "bore") {
+            m.color.set(boreLineColor);
+            m.linewidth = boreWidth;
+            m.opacity = boreLineOpacity;
+            m.transparent = true;
+            (obj as THREE.Object3D).visible = showBoreLine;
+            obj.renderOrder = boreLineRenderOrder;
+          } else if (role === "assay") {
+            m.linewidth = assayWidth;
+          } else if (role === "lithology") {
+            m.linewidth = lithologyWidth;
+            m.opacity = lithologyOpacity;
+            m.transparent = true;
+          } else {
+            continue;
+          }
+          if (role === "bore") {
+            m.blending = THREE.NormalBlending;
+            m.toneMapped = true;
+          } else if (role === "lithology") {
+            m.blending = THREE.NormalBlending;
+            m.toneMapped = true;
+          } else {
+            // Assay bands are data colour first. Additive blending made distant
+            // stacked intervals bleach toward white, so keep the Cu/Au bins as
+            // ordinary transparent colour even when the old Glow toggle is on.
+            m.blending = THREE.NormalBlending;
+            m.toneMapped = true;
+          }
+          m.needsUpdate = true;
         }
-        if (role === "bore") {
-          m.color.set(boreLineColor);
-          m.linewidth = boreWidth;
-          m.opacity = boreLineOpacity;
-          m.transparent = true;
-          (obj as THREE.Object3D).visible = showBoreLine;
-          obj.renderOrder = boreLineRenderOrder;
-        } else if (role === "assay") {
-          m.linewidth = assayWidth;
-        } else if (role === "lithology") {
-          m.linewidth = lithologyWidth;
-          m.opacity = lithologyOpacity;
-          m.transparent = true;
-        } else {
-          continue;
-        }
-        if (role === "bore") {
-          m.blending = THREE.NormalBlending;
-          m.toneMapped = true;
-        } else if (role === "lithology") {
-          m.blending = THREE.NormalBlending;
-          m.toneMapped = true;
-        } else {
-          // Assay bands are data colour first. Additive blending made distant
-          // stacked intervals bleach toward white, so keep the Cu/Au bins as
-          // ordinary transparent colour even when the old Glow toggle is on.
-          m.blending = THREE.NormalBlending;
-          m.toneMapped = true;
-        }
-        m.needsUpdate = true;
-      }
       });
     }
   }
@@ -5860,11 +8480,7 @@ export class SceneManager {
   private applyTopoDetailDistanceDisplay(sp: SceneProperties): void {
     const topo = sp.topoDetails ?? {};
     const near = clampRange(topo.distanceFadeNear ?? 5000, 0, 500000);
-    const far = clampRange(
-      topo.distanceFadeFar ?? 19000,
-      near + 250,
-      750000,
-    );
+    const far = clampRange(topo.distanceFadeFar ?? 19000, near + 250, 750000);
     const minScale = clampRange(topo.farLineScale ?? 0.67, 0.01, 1);
     const minAlpha = clampRange(topo.farOpacity ?? 0.2, 0, 1);
 
@@ -5894,15 +8510,41 @@ export class SceneManager {
     return this.layers.get(id);
   }
 
+  getTransitionDebugState(): {
+    active: boolean;
+    sourcePageId: string | null;
+    targetPageId: string | null;
+    reason: NavigationReason | null;
+    activeDataTransitionCount: number;
+    snapshotCount: number;
+    scalarTweenCount: number;
+    layerTweenCount: number;
+  } {
+    const transition = this.activeSceneTransitionContext;
+    return {
+      active: !!transition,
+      sourcePageId: transition?.sourcePageId ?? null,
+      targetPageId: transition?.targetPageId ?? null,
+      reason: transition?.reason ?? null,
+      activeDataTransitionCount:
+        this.layerTweens.size +
+        this.scalarStyleTweens.size +
+        (this.workingAreaFocusTween ? 1 : 0),
+      snapshotCount: this.layerTransitionSnapshots.size,
+      scalarTweenCount: this.scalarStyleTweens.size,
+      layerTweenCount: this.layerTweens.size,
+    };
+  }
+
   private listAuthoredScalarSectionIsoTargets(
     layerId?: string,
   ): ScalarSectionIsoTarget[] {
     const targets: ScalarSectionIsoTarget[] = [];
     const entries =
       typeof layerId === "string"
-        ? ([[layerId, this.layers.get(layerId)]].filter((entry) => entry[1]) as Array<
-            [string, THREE.Group]
-          >)
+        ? ([[layerId, this.layers.get(layerId)]].filter(
+            (entry) => entry[1],
+          ) as Array<[string, THREE.Group]>)
         : Array.from(this.layers.entries());
     for (const [id, group] of entries) {
       group.traverse((obj) => {
@@ -5926,7 +8568,9 @@ export class SceneManager {
     return targets;
   }
 
-  private listSeismicSectionIsoTargets(layerId?: string): ScalarSectionIsoTarget[] {
+  private listSeismicSectionIsoTargets(
+    layerId?: string,
+  ): ScalarSectionIsoTarget[] {
     if (layerId && layerId !== UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) return [];
     const group = this.layers.get(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID);
     if (!group) return [];
@@ -5950,7 +8594,10 @@ export class SceneManager {
       }
       const sectionId = seismicSectionMeshId(obj) ?? obj.uuid;
       targets.push({
-        targetKey: seismicSectionTargetKey(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID, obj),
+        targetKey: seismicSectionTargetKey(
+          UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+          obj,
+        ),
         layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
         sectionId,
         label: seismicSectionMeshLabel(obj),
@@ -5971,7 +8618,11 @@ export class SceneManager {
     let active: THREE.Mesh | null = null;
     group.traverse((obj) => {
       if (active) return;
-      if (obj instanceof THREE.Mesh && obj.userData?.scalarVolume === true && obj.visible) {
+      if (
+        obj instanceof THREE.Mesh &&
+        obj.userData?.scalarVolume === true &&
+        obj.visible
+      ) {
         active = obj;
       }
     });
@@ -5995,8 +8646,11 @@ export class SceneManager {
     return active;
   }
 
-  private listMtVolumeCutIsoTargets(layerId?: string): ScalarSectionIsoTarget[] {
-    if (layerId && layerId !== UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID) return [];
+  private listMtVolumeCutIsoTargets(
+    layerId?: string,
+  ): ScalarSectionIsoTarget[] {
+    if (layerId && layerId !== UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID)
+      return [];
     const mesh = this.activeScalarVolumeMesh();
     if (!mesh) return [];
     const productId =
@@ -6012,22 +8666,24 @@ export class SceneManager {
       : [-2, 4.5];
     const scalarMin = Number.isFinite(sourceRange[0]) ? sourceRange[0] : -2;
     const scalarMax = Number.isFinite(sourceRange[1]) ? sourceRange[1] : 4.5;
-    return this.sceneSectionActivePlanes(this.lastSceneSectionStyle).map((plane) => ({
-      targetKey: mtVolumeCutTargetKey(
-        UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
-        productId,
-        plane.axis,
-      ),
-      layerId: UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
-      sectionId: mtVolumeCutSectionId(productId, plane.axis),
-      label: `${productLabel} ${plane.axis.toUpperCase()} cut`,
-      kind: "MT volume cut",
-      group: "mt-volume-cuts",
-      groupLabel: "MT volume cuts",
-      visible: true,
-      scalarMin,
-      scalarMax,
-    }));
+    return this.sceneSectionActivePlanes(this.lastSceneSectionStyle).map(
+      (plane) => ({
+        targetKey: mtVolumeCutTargetKey(
+          UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+          productId,
+          plane.axis,
+        ),
+        layerId: UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+        sectionId: mtVolumeCutSectionId(productId, plane.axis),
+        label: `${productLabel} ${plane.axis.toUpperCase()} cut`,
+        kind: "MT volume cut",
+        group: "mt-volume-cuts",
+        groupLabel: "MT volume cuts",
+        visible: true,
+        scalarMin,
+        scalarMax,
+      }),
+    );
   }
 
   private listSeismicVolumeCutIsoTargets(
@@ -6044,22 +8700,24 @@ export class SceneManager {
       typeof mesh.userData.seismicProductLabel === "string"
         ? mesh.userData.seismicProductLabel
         : "Seismic volume";
-    return this.sceneSectionActivePlanes(this.lastSceneSectionStyle).map((plane) => ({
-      targetKey: seismicVolumeCutTargetKey(
-        UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
-        productId,
-        plane.axis,
-      ),
-      layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
-      sectionId: seismicVolumeCutSectionId(productId, plane.axis),
-      label: `${productLabel} ${plane.axis.toUpperCase()} volume cut`,
-      kind: "seismic volume cut",
-      group: "seismic-volume-cuts",
-      groupLabel: "Seismic volume cuts",
-      visible: true,
-      scalarMin: 0,
-      scalarMax: 1,
-    }));
+    return this.sceneSectionActivePlanes(this.lastSceneSectionStyle).map(
+      (plane) => ({
+        targetKey: seismicVolumeCutTargetKey(
+          UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+          productId,
+          plane.axis,
+        ),
+        layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+        sectionId: seismicVolumeCutSectionId(productId, plane.axis),
+        label: `${productLabel} ${plane.axis.toUpperCase()} volume cut`,
+        kind: "seismic volume cut",
+        group: "seismic-volume-cuts",
+        groupLabel: "Seismic volume cuts",
+        visible: true,
+        scalarMin: 0,
+        scalarMax: 1,
+      }),
+    );
   }
 
   listSectionIsoTargets(layerId?: string): ScalarSectionIsoTarget[] {
@@ -6130,7 +8788,11 @@ export class SceneManager {
       }
     });
 
-    if (meshes.length === 0 || !Number.isFinite(minZ) || !Number.isFinite(maxZ)) {
+    if (
+      meshes.length === 0 ||
+      !Number.isFinite(minZ) ||
+      !Number.isFinite(maxZ)
+    ) {
       return;
     }
 
@@ -6172,8 +8834,14 @@ export class SceneManager {
       if (!(position instanceof THREE.BufferAttribute)) continue;
 
       let color = geometry.getAttribute("color");
-      if (!(color instanceof THREE.BufferAttribute) || color.count !== position.count) {
-        color = new THREE.BufferAttribute(new Float32Array(position.count * 3), 3);
+      if (
+        !(color instanceof THREE.BufferAttribute) ||
+        color.count !== position.count
+      ) {
+        color = new THREE.BufferAttribute(
+          new Float32Array(position.count * 3),
+          3,
+        );
         geometry.setAttribute("color", color);
       }
 
@@ -6276,13 +8944,7 @@ export class SceneManager {
       16,
     );
     const edgeAverage = styleNumber(style, "scalarEdgeAverage", 0.45, 0, 1);
-    const edgeFillOffset = styleNumber(
-      style,
-      "scalarEdgeFillOffset",
-      0,
-      -1,
-      1,
-    );
+    const edgeFillOffset = styleNumber(style, "scalarEdgeFillOffset", 0, -1, 1);
     const edgeLineStyle =
       style.scalarEdgeLineStyle === "dashed" ? "dashed" : "solid";
     const sectionIsoSelectedTargets =
@@ -6297,21 +8959,9 @@ export class SceneManager {
       styleNumber(style, "sectionIsoLevelCount", 5, 2, 32),
     );
     const sectionIsoSourceOpacity = sectionIsoEnabled
-      ? styleNumber(
-          style,
-          "sectionIsoSourceOpacity",
-          0,
-          0,
-          1,
-        )
+      ? styleNumber(style, "sectionIsoSourceOpacity", 0, 0, 1)
       : 1;
-    const layerOpacity = styleNumber(
-      style,
-      "opacity",
-      1,
-      0,
-      1,
-    );
+    const layerOpacity = styleNumber(style, "opacity", 1, 0, 1);
     const sectionIsoLineWidth = styleNumber(
       style,
       "sectionIsoLineWidth",
@@ -6335,17 +8985,12 @@ export class SceneManager {
       -1,
       1,
     );
-    const noiseThreshold = styleNumber(
-      style,
-      "scalarNoiseThreshold",
-      0,
-      0,
-      1,
-    );
+    const noiseThreshold = styleNumber(style, "scalarNoiseThreshold", 0, 0, 1);
     const scratch = new THREE.Color();
 
     group.traverse((obj) => {
-      if (!(obj instanceof THREE.Mesh) && !(obj instanceof THREE.Points)) return;
+      if (!(obj instanceof THREE.Mesh) && !(obj instanceof THREE.Points))
+        return;
       if (obj.userData?.scalarSectionIsoOverlay === true) return;
       const geometry = obj.geometry;
       const values = geometry.userData.scalarValues as
@@ -6357,8 +9002,14 @@ export class SceneManager {
       const position = geometry.getAttribute("position");
       if (!(position instanceof THREE.BufferAttribute)) return;
       let color = geometry.getAttribute("color");
-      if (!(color instanceof THREE.BufferAttribute) || color.count !== position.count) {
-        color = new THREE.BufferAttribute(new Float32Array(position.count * 3), 3);
+      if (
+        !(color instanceof THREE.BufferAttribute) ||
+        color.count !== position.count
+      ) {
+        color = new THREE.BufferAttribute(
+          new Float32Array(position.count * 3),
+          3,
+        );
         geometry.setAttribute("color", color);
       }
 
@@ -6406,26 +9057,14 @@ export class SceneManager {
       const rawBlendMin = styleNumber(
         style,
         "scalarBlendMin",
-        styleNumber(
-          style,
-          "scalarDisplayMin",
-          trimMin,
-          -100,
-          100,
-        ),
+        styleNumber(style, "scalarDisplayMin", trimMin, -100, 100),
         -100,
         100,
       );
       const rawBlendMax = styleNumber(
         style,
         "scalarBlendMax",
-        styleNumber(
-          style,
-          "scalarDisplayMax",
-          trimMax,
-          -100,
-          100,
-        ),
+        styleNumber(style, "scalarDisplayMax", trimMax, -100, 100),
         -100,
         100,
       );
@@ -6445,6 +9084,14 @@ export class SceneManager {
         blendMin > trimMin + 0.000001 ||
         blendMax < trimMax - 0.000001 ||
         noiseThreshold > 0.000001;
+      // Full-density MT source point visibility must be protected.
+      // Focus/blend windows are visual styling by default, not source
+      // inclusion filters. Thresholded review pages must opt in explicitly.
+      const inclusionFilterActive = scalarInclusionFilterActive(
+        id,
+        style,
+        filterActive,
+      );
       const edgeLowerValue = styleNumber(
         style,
         "scalarEdgeLowerValue",
@@ -6459,8 +9106,15 @@ export class SceneManager {
         -100,
         100,
       );
+      const visualEmphasisActive =
+        filterActive &&
+        !inclusionFilterActive &&
+        !scalarFullDensityAllValidMode(id, style);
       const supportValues =
-        obj instanceof THREE.Points && (noiseThreshold > 0 || edgeLineWidth > 0)
+        obj instanceof THREE.Points &&
+        (((inclusionFilterActive || visualEmphasisActive) &&
+          noiseThreshold > 0) ||
+          edgeLineWidth > 0)
           ? scalarLateralSupport(geometry)
           : null;
 
@@ -6477,6 +9131,25 @@ export class SceneManager {
           highColor,
           scratch,
         );
+        if (visualEmphasisActive) {
+          let visualWeight = scalarVisibilityWeight(
+            values,
+            i,
+            trimMin,
+            blendMin,
+            blendMax,
+            trimMax,
+          );
+          if (supportValues && noiseThreshold > 0) {
+            visualWeight *= clamp01(
+              supportValues[i] / Math.max(0.000001, noiseThreshold),
+            );
+          }
+          const emphasisFloor = 0.18;
+          scratch.multiplyScalar(
+            emphasisFloor + (1 - emphasisFloor) * visualWeight,
+          );
+        }
         color.setXYZ(i, scratch.r, scratch.g, scratch.b);
       }
       color.needsUpdate = true;
@@ -6487,9 +9160,9 @@ export class SceneManager {
         blendMin,
         blendMax,
         trimMax,
-        filterActive,
+        inclusionFilterActive,
         supportValues,
-        noiseThreshold,
+        inclusionFilterActive ? noiseThreshold : 0,
       );
       if (obj instanceof THREE.Points) {
         updateScalarEdgeLineOverlay(obj, values, {
@@ -6630,7 +9303,9 @@ export class SceneManager {
         const scale = radius / Math.max(0.0001, baseRadius);
         obj.scale.setScalar(scale);
         const baseZ =
-          typeof obj.userData.baseZ === "number" ? obj.userData.baseZ : obj.position.z;
+          typeof obj.userData.baseZ === "number"
+            ? obj.userData.baseZ
+            : obj.position.z;
         obj.position.z = baseZ + lift;
         const stationId =
           typeof obj.userData.sourceProperties?.stationId === "string"
@@ -6643,12 +9318,16 @@ export class SceneManager {
         for (const m of materials) {
           if ("color" in m) {
             (m as THREE.Material & { color: THREE.Color }).color.set(
-              stationId && stationId === selectedStationId ? "#ffd34d" : style.color ?? "#999999",
+              stationId && stationId === selectedStationId
+                ? "#ffd34d"
+                : (style.color ?? "#999999"),
             );
           }
           if ("emissive" in m) {
             (m as THREE.Material & { emissive: THREE.Color }).emissive.set(
-              stationId && stationId === selectedStationId ? "#ff7a2c" : "#000000",
+              stationId && stationId === selectedStationId
+                ? "#ff7a2c"
+                : "#000000",
             );
           }
           m.needsUpdate = true;
@@ -6656,7 +9335,9 @@ export class SceneManager {
       }
       if (obj.userData?.pointMarkerLabelAnchor === true) {
         const baseZ =
-          typeof obj.userData.baseZ === "number" ? obj.userData.baseZ : obj.position.z;
+          typeof obj.userData.baseZ === "number"
+            ? obj.userData.baseZ
+            : obj.position.z;
         obj.position.z = baseZ + lift + labelLift;
       }
     });
@@ -6666,7 +9347,8 @@ export class SceneManager {
     if (id !== UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID) return;
     const group = this.layers.get(id);
     if (!group) return;
-    const horizontalVisible = style.resistivityHorizontalSlicesVisible !== false;
+    const horizontalVisible =
+      style.resistivityHorizontalSlicesVisible !== false;
     const verticalVisible = style.resistivityVerticalSectionsVisible !== false;
     const perSlice =
       typeof style.resistivitySliceVisibility === "object" &&
@@ -6684,7 +9366,8 @@ export class SceneManager {
         typeof obj.userData.resistivitySliceId === "string"
           ? obj.userData.resistivitySliceId
           : "";
-      const groupVisible = kind === "vertical-section" ? verticalVisible : horizontalVisible;
+      const groupVisible =
+        kind === "vertical-section" ? verticalVisible : horizontalVisible;
       obj.visible = groupVisible && perSlice[sliceId] !== false;
     });
   }
@@ -6703,7 +9386,9 @@ export class SceneManager {
     const products = Array.isArray(group.userData.scalarVolumeProducts)
       ? (group.userData.scalarVolumeProducts as Array<{ id?: unknown }>)
           .map((product) => product.id)
-          .filter((productId): productId is string => typeof productId === "string")
+          .filter(
+            (productId): productId is string => typeof productId === "string",
+          )
       : [];
     const requested =
       typeof style.scalarVolumeProductId === "string"
@@ -6717,9 +9402,21 @@ export class SceneManager {
         : products[0];
     group.userData.scalarVolumeSelectedProductId = selectedProductId;
 
-    const lowColor = styleColor(style, "scalarColorLow", DEFAULT_SCALAR_LOW_COLOR);
-    const midColor = styleColor(style, "scalarColorMid", DEFAULT_SCALAR_MID_COLOR);
-    const highColor = styleColor(style, "scalarColorHigh", DEFAULT_SCALAR_HIGH_COLOR);
+    const lowColor = styleColor(
+      style,
+      "scalarColorLow",
+      DEFAULT_SCALAR_LOW_COLOR,
+    );
+    const midColor = styleColor(
+      style,
+      "scalarColorMid",
+      DEFAULT_SCALAR_MID_COLOR,
+    );
+    const highColor = styleColor(
+      style,
+      "scalarColorHigh",
+      DEFAULT_SCALAR_HIGH_COLOR,
+    );
     const midpoint = styleNumber(style, "scalarMidpoint", 0.5, 0.05, 0.95);
     const contrast = styleNumber(style, "scalarContrast", 1.05, 0.35, 3);
     const opacity = styleNumber(
@@ -6729,17 +9426,25 @@ export class SceneManager {
       0,
       1,
     );
-    const isoSourceOpacity = style.sectionIsoEnabled === true
-      ? styleNumber(style, "sectionIsoSourceOpacity", 0, 0, 1)
-      : 1;
+    const isoSourceOpacity =
+      style.sectionIsoEnabled === true
+        ? styleNumber(style, "sectionIsoSourceOpacity", 0, 0, 1)
+        : 1;
     const renderOpacity = opacity * isoSourceOpacity;
     const density = styleNumber(style, "scalarVolumeDensity", 0.72, 0, 2);
-    const sampleSteps = styleNumber(style, "scalarVolumeSampleSteps", 112, 24, 192);
+    const sampleSteps = styleNumber(
+      style,
+      "scalarVolumeSampleSteps",
+      112,
+      24,
+      192,
+    );
     const maskVisible = style.scalarVolumeMaskVisible !== false ? 1 : 0;
     const transferMode = this.scalarVolumeTransferModeCode(style);
 
     group.traverse((obj) => {
-      if (obj.userData?.scalarVolume !== true || !(obj instanceof THREE.Mesh)) return;
+      if (obj.userData?.scalarVolume !== true || !(obj instanceof THREE.Mesh))
+        return;
       const productId =
         typeof obj.userData.scalarVolumeProductId === "string"
           ? obj.userData.scalarVolumeProductId
@@ -6824,8 +9529,9 @@ export class SceneManager {
   }
 
   private scalarVolumeIsoOverlayGroup(volumeLayer: THREE.Group): THREE.Group {
-    const existing = volumeLayer.userData
-      .mtVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
+    const existing = volumeLayer.userData.mtVolumeSectionIsoOverlayGroup as
+      | THREE.Group
+      | undefined;
     if (existing && existing.parent === volumeLayer) return existing;
     const group = new THREE.Group();
     group.name = "mt-volume-section-iso-overlays";
@@ -6838,10 +9544,9 @@ export class SceneManager {
   }
 
   private clearMtVolumeCutIsoOverlays(volumeLayer?: THREE.Group): void {
-    const group =
-      (volumeLayer ??
-        this.layers.get(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID))?.userData
-        .mtVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
+    const group = (
+      volumeLayer ?? this.layers.get(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID)
+    )?.userData.mtVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
     if (!group) return;
     const parent = group.parent;
     if (parent) parent.remove(group);
@@ -6901,7 +9606,11 @@ export class SceneManager {
       maskVisible: boolean;
       targetKey: string;
     },
-  ): { mesh: THREE.Mesh; values: Float32Array; alphaValues: Float32Array } | null {
+  ): {
+    mesh: THREE.Mesh;
+    values: Float32Array;
+    alphaValues: Float32Array;
+  } | null {
     const dimensions = Array.isArray(mesh.userData.scalarVolumeDimensions)
       ? (mesh.userData.scalarVolumeDimensions as [number, number, number])
       : null;
@@ -6909,7 +9618,9 @@ export class SceneManager {
       | { min?: [number, number, number]; max?: [number, number, number] }
       | undefined;
     const volumeData = mesh.userData.scalarVolumeData as Uint8Array | undefined;
-    const maskData = mesh.userData.scalarVolumeMaskData as Uint8Array | undefined;
+    const maskData = mesh.userData.scalarVolumeMaskData as
+      | Uint8Array
+      | undefined;
     if (!dimensions || !bounds?.min || !bounds.max || !volumeData) return null;
     const [nx, ny, nz] = dimensions;
     if (nx <= 1 || ny <= 1 || nz <= 1) return null;
@@ -6946,7 +9657,8 @@ export class SceneManager {
         const normalized =
           this.sampleScalarVolumeByte(volumeData, dimensions, u, v, w) / 255;
         const scalar =
-          options.sourceMin + normalized * (options.sourceMax - options.sourceMin);
+          options.sourceMin +
+          normalized * (options.sourceMax - options.sourceMin);
         const mask =
           options.maskVisible && maskData
             ? this.sampleScalarVolumeByte(maskData, dimensions, u, v, w) / 255
@@ -6973,7 +9685,10 @@ export class SceneManager {
     }
 
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positions, 3),
+    );
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
     geometry.computeBoundingBox();
@@ -6998,7 +9713,9 @@ export class SceneManager {
   }
 
   private updateMtVolumeCutIsoOverlays(style: EditableStyle): void {
-    const volumeLayer = this.layers.get(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID);
+    const volumeLayer = this.layers.get(
+      UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+    );
     if (!volumeLayer) return;
     this.clearMtVolumeCutIsoOverlays(volumeLayer);
     if (style.sectionIsoEnabled !== true || !volumeLayer.visible) return;
@@ -7079,7 +9796,9 @@ export class SceneManager {
       selectedTargetIds: selectedTargets,
       isoMin,
       isoMax,
-      levelCount: Math.round(styleNumber(style, "sectionIsoLevelCount", 5, 2, 32)),
+      levelCount: Math.round(
+        styleNumber(style, "sectionIsoLevelCount", 5, 2, 32),
+      ),
       lineWidth: styleNumber(style, "sectionIsoLineWidth", 2.6, 0, 12),
       lineStyle: style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
       bandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32, 0, 0.85),
@@ -7090,7 +9809,11 @@ export class SceneManager {
       contrast: styleNumber(style, "scalarContrast", 1.05, 0.35, 3),
       lowColor: styleColor(style, "scalarColorLow", DEFAULT_SCALAR_LOW_COLOR),
       midColor: styleColor(style, "scalarColorMid", DEFAULT_SCALAR_MID_COLOR),
-      highColor: styleColor(style, "scalarColorHigh", DEFAULT_SCALAR_HIGH_COLOR),
+      highColor: styleColor(
+        style,
+        "scalarColorHigh",
+        DEFAULT_SCALAR_HIGH_COLOR,
+      ),
       skipSceneSectionClipping: true,
     } satisfies Omit<ScalarSectionIsoOptions, "targetKey" | "alphaValues">;
 
@@ -7142,10 +9865,9 @@ export class SceneManager {
   }
 
   private clearSeismicVolumeCutIsoOverlays(seismicLayer?: THREE.Group): void {
-    const group =
-      (seismicLayer ??
-        this.layers.get(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID))?.userData
-        .seismicVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
+    const group = (
+      seismicLayer ?? this.layers.get(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID)
+    )?.userData.seismicVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
     if (!group) return;
     const parent = group.parent;
     if (parent) parent.remove(group);
@@ -7166,7 +9888,11 @@ export class SceneManager {
       backgroundCutoff: number;
       targetKey: string;
     },
-  ): { mesh: THREE.Mesh; values: Float32Array; alphaValues: Float32Array } | null {
+  ): {
+    mesh: THREE.Mesh;
+    values: Float32Array;
+    alphaValues: Float32Array;
+  } | null {
     const dimensions = Array.isArray(mesh.userData.seismicVolumeDimensions)
       ? (mesh.userData.seismicVolumeDimensions as [number, number, number])
       : null;
@@ -7177,7 +9903,9 @@ export class SceneManager {
       (mesh.userData.seismicVolumeBaseBounds as
         | { min?: [number, number, number]; max?: [number, number, number] }
         | undefined);
-    const volumeData = mesh.userData.seismicVolumeData as Uint8Array | undefined;
+    const volumeData = mesh.userData.seismicVolumeData as
+      | Uint8Array
+      | undefined;
     if (!dimensions || !bounds?.min || !bounds.max || !volumeData) return null;
     const [nx, ny, nz] = dimensions;
     if (nx <= 1 || ny <= 1 || nz <= 1) return null;
@@ -7237,7 +9965,10 @@ export class SceneManager {
     }
 
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positions, 3),
+    );
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
     geometry.computeBoundingBox();
@@ -7327,7 +10058,9 @@ export class SceneManager {
       selectedTargetIds: selectedTargets,
       isoMin,
       isoMax,
-      levelCount: Math.round(styleNumber(style, "sectionIsoLevelCount", 5, 2, 32)),
+      levelCount: Math.round(
+        styleNumber(style, "sectionIsoLevelCount", 5, 2, 32),
+      ),
       lineWidth: styleNumber(style, "sectionIsoLineWidth", 2.6, 0, 12),
       lineStyle: style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
       bandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32, 0, 0.85),
@@ -7394,8 +10127,13 @@ export class SceneManager {
           ? obj.userData.mtThresholdSurfaceId
           : "";
       obj.visible = visibility[surfaceId] !== false;
-      const material = (obj as { material?: THREE.Material | THREE.Material[] }).material;
-      const materials = Array.isArray(material) ? material : material ? [material] : [];
+      const material = (obj as { material?: THREE.Material | THREE.Material[] })
+        .material;
+      const materials = Array.isArray(material)
+        ? material
+        : material
+          ? [material]
+          : [];
       for (const m of materials) {
         if ("wireframe" in m) {
           (m as THREE.Material & { wireframe: boolean }).wireframe = wireframe;
@@ -7476,11 +10214,17 @@ export class SceneManager {
       summaryMap.set(summary.id, {
         id: summary.id,
         surveyKind:
-          typeof summary.surveyKind === "string" ? summary.surveyKind : undefined,
+          typeof summary.surveyKind === "string"
+            ? summary.surveyKind
+            : undefined,
         productKind:
-          typeof summary.productKind === "string" ? summary.productKind : undefined,
+          typeof summary.productKind === "string"
+            ? summary.productKind
+            : undefined,
         domainKind:
-          typeof summary.domainKind === "string" ? summary.domainKind : undefined,
+          typeof summary.domainKind === "string"
+            ? summary.domainKind
+            : undefined,
         amplitudeStats:
           summary.amplitudeStats &&
           typeof summary.amplitudeStats === "object" &&
@@ -7530,7 +10274,10 @@ export class SceneManager {
             obj.userData.seismicProductValueStats &&
             typeof obj.userData.seismicProductValueStats === "object" &&
             !Array.isArray(obj.userData.seismicProductValueStats)
-              ? (obj.userData.seismicProductValueStats as Record<string, unknown>)
+              ? (obj.userData.seismicProductValueStats as Record<
+                  string,
+                  unknown
+                >)
               : undefined,
           raymarchCapable: obj.userData?.seismicRaymarchVolume === true,
         });
@@ -7568,7 +10315,9 @@ export class SceneManager {
     const index = this.seismicBrowserRuntimeIndex(group);
     if (!index) return;
 
-    const productIds = new Set(index.productSummaries.map((product) => product.id));
+    const productIds = new Set(
+      index.productSummaries.map((product) => product.id),
+    );
     const firstProductId = index.productSummaries[0]?.id ?? "";
     const defaultProductId =
       typeof index.root.userData.seismicDefaultProductId === "string"
@@ -7616,21 +10365,9 @@ export class SceneManager {
       style.seismicSliceAxis === "line"
         ? style.seismicSliceAxis
         : "inline";
-    const sliceFraction = styleNumber(
-      style,
-      "seismicSliceFraction",
-      0.5,
-      0,
-      1,
-    );
+    const sliceFraction = styleNumber(style, "seismicSliceFraction", 0.5, 0, 1);
     const opacity = styleNumber(style, "opacity", 0.62, 0, 1);
-    const amplitudeMin = styleNumber(
-      style,
-      "seismicAmplitudeMin",
-      0.08,
-      0,
-      1,
-    );
+    const amplitudeMin = styleNumber(style, "seismicAmplitudeMin", 0.08, 0, 1);
     const amplitudeMax = Math.max(
       amplitudeMin + 0.001,
       styleNumber(style, "seismicAmplitudeMax", 0.92, 0, 1),
@@ -7723,7 +10460,9 @@ export class SceneManager {
           ? "seismic-velocity"
           : "seismic-blue-white-red";
     const comparisonMode =
-      style.seismicComparisonMode === "side-by-side" ? "side-by-side" : "overlay";
+      style.seismicComparisonMode === "side-by-side"
+        ? "side-by-side"
+        : "overlay";
     const comparisonProductId =
       typeof style.seismicComparisonProductId === "string"
         ? style.seismicComparisonProductId
@@ -7762,7 +10501,8 @@ export class SceneManager {
           (section) => section.userData?.seismicSectionAxis === "line",
         );
         if (summary.surveyKind !== "3d") {
-          const curtainSections = lineSections.length > 0 ? lineSections : sections;
+          const curtainSections =
+            lineSections.length > 0 ? lineSections : sections;
           for (const section of curtainSections) selectedSections.add(section);
           continue;
         }
@@ -7793,8 +10533,10 @@ export class SceneManager {
     }
 
     group.userData.seismicSelectedProductId = productId;
-    group.userData.seismicSelectedProductKind = activeSummary?.productKind ?? "";
-    group.userData.seismicSelectedProductStats = activeSummary?.amplitudeStats ?? null;
+    group.userData.seismicSelectedProductKind =
+      activeSummary?.productKind ?? "";
+    group.userData.seismicSelectedProductStats =
+      activeSummary?.amplitudeStats ?? null;
     group.userData.seismicAppliedRenderMode = renderMode;
     group.userData.seismicVisibleProductIds = Array.from(enabledProductIds);
     group.userData.seismicCapabilityPresetId =
@@ -7819,7 +10561,8 @@ export class SceneManager {
     index.root.userData.seismicSelectedProductStats =
       group.userData.seismicSelectedProductStats;
     index.root.userData.seismicAppliedRenderMode = renderMode;
-    index.root.userData.seismicVisibleProductIds = Array.from(enabledProductIds);
+    index.root.userData.seismicVisibleProductIds =
+      Array.from(enabledProductIds);
     index.root.userData.seismicCapabilityPresetId =
       group.userData.seismicCapabilityPresetId;
     index.root.userData.seismicComparisonMode = comparisonMode;
@@ -7857,7 +10600,10 @@ export class SceneManager {
           renderMode === "raymarch" &&
           candidateProductId === productId;
         obj.visible = visible;
-        if (!(obj instanceof THREE.Mesh) || !(obj.material instanceof THREE.ShaderMaterial)) {
+        if (
+          !(obj instanceof THREE.Mesh) ||
+          !(obj.material instanceof THREE.ShaderMaterial)
+        ) {
           continue;
         }
         const domain = obj.userData.seismicVolumeSampleDomain as
@@ -7925,10 +10671,18 @@ export class SceneManager {
           uniforms.uSampleSteps.value = volumeSampleSteps;
         }
         if (uniforms.uBoundsMin && boundsMin) {
-          uniforms.uBoundsMin.value.set(boundsMin[0], boundsMin[1], boundsMin[2]);
+          uniforms.uBoundsMin.value.set(
+            boundsMin[0],
+            boundsMin[1],
+            boundsMin[2],
+          );
         }
         if (uniforms.uBoundsMax && boundsMax) {
-          uniforms.uBoundsMax.value.set(boundsMax[0], boundsMax[1], boundsMax[2]);
+          uniforms.uBoundsMax.value.set(
+            boundsMax[0],
+            boundsMax[1],
+            boundsMax[2],
+          );
         }
         obj.userData.seismicVolumeCurrentBounds =
           boundsMin && boundsMax
@@ -7936,7 +10690,7 @@ export class SceneManager {
                 min: [boundsMin[0], boundsMin[1], boundsMin[2]],
                 max: [boundsMax[0], boundsMax[1], boundsMax[2]],
               }
-            : baseBounds ?? null;
+            : (baseBounds ?? null);
       }
     }
 
@@ -7992,7 +10746,11 @@ export class SceneManager {
           sampleValues &&
           position instanceof THREE.BufferAttribute
         ) {
-          for (let i = 0; i < Math.min(position.count, sampleValues.length); i += 1) {
+          for (
+            let i = 0;
+            i < Math.min(position.count, sampleValues.length);
+            i += 1
+          ) {
             position.setZ(i, datum - sampleValues[i] * timeScale);
           }
           position.needsUpdate = true;
@@ -8037,7 +10795,9 @@ export class SceneManager {
           alpha.needsUpdate = true;
         }
 
-        const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+        const materials = Array.isArray(obj.material)
+          ? obj.material
+          : [obj.material];
         for (const material of materials) {
           if (material instanceof THREE.ShaderMaterial) {
             if (material.uniforms.uOpacity) {
@@ -8212,6 +10972,10 @@ export class SceneManager {
 
   applyStyle(id: string, style: EditableStyle): void {
     this.appliedLayerStyles.set(id, style);
+    if (id === UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID) {
+      this.applyWorkingAreaFocusStyle(style);
+      return;
+    }
     const group = this.layers.get(id);
     const affectedByFog = styleAffectedByFog(style);
     const fogDensity = styleFogDensity(style, this.envFogDensity);
@@ -8236,7 +11000,8 @@ export class SceneManager {
             color?: THREE.Color;
             emissive?: THREE.Color;
           };
-          const preserveVertexColors = m.userData?.preserveVertexColors === true;
+          const preserveVertexColors =
+            m.userData?.preserveVertexColors === true;
           const preserveMaterialColor =
             m.userData?.preserveMaterialColor === true;
           const preserveMaterialOpacity =
@@ -8285,7 +11050,9 @@ export class SceneManager {
           }
           if (m instanceof THREE.PointsMaterial) {
             m.size = clampRange(
-              typeof style.pointSizePx === "number" ? style.pointSizePx : m.size,
+              typeof style.pointSizePx === "number"
+                ? style.pointSizePx
+                : m.size,
               0.5,
               24,
             );
@@ -8327,7 +11094,14 @@ export class SceneManager {
     if (id === "terrain" || PUBLIC_SURFACE_LAYER_IDS.has(id)) {
       this.applyPublicSurfaceClipStyle(this.styleForLayer("terrain"));
     }
+    if (id === "terrain") {
+      this.applyTopoGraticuleStyle(
+        UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
+        this.styleForLayer(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID),
+      );
+    }
     this.applyTerrainCompositeStyle(id, style);
+    this.applyTopoGraticuleStyle(id, style);
     this.applyGeochemStyle(id, style);
     this.applyHyperspectralStyle(id, style);
     this.applyImageryLidarAoiStyle(id, style);
@@ -8347,6 +11121,7 @@ export class SceneManager {
     } else {
       this.reapplySceneSectionPlanes();
     }
+    this.reapplyWorkingAreaFocus();
   }
 
   applyEffectiveStylesForPage(
@@ -8355,7 +11130,9 @@ export class SceneManager {
   ): void {
     this.layerTweens.clear();
     this.scalarStyleTweens.clear();
+    this.workingAreaFocusTween = null;
     this.clearLayerTransitionSnapshots();
+    this.activeSceneTransitionContext = null;
     this.lastEffectiveEnv = environment;
     this.lastEffectivePage = page;
     for (const id of this.layers.keys()) {
@@ -8363,6 +11140,9 @@ export class SceneManager {
     }
     this.applySceneSectionPlanes(
       effectiveStyle(environment, page, UTAH_FORGE_SCENE_SECTION_LAYER_ID),
+    );
+    this.applyWorkingAreaFocusStyle(
+      effectiveStyle(environment, page, UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID),
     );
     this.applyLakesToTerrain(environment, page);
   }
@@ -8373,10 +11153,15 @@ export class SceneManager {
   ): void {
     this.layerTweens.clear();
     this.scalarStyleTweens.clear();
+    this.workingAreaFocusTween = null;
     this.clearLayerTransitionSnapshots();
+    this.activeSceneTransitionContext = null;
     this.lastEffectiveEnv = environment;
     this.lastEffectivePage = page;
     this.setVisible(effectiveVisibility(environment, page));
+    this.applyWorkingAreaFocusStyle(
+      effectiveStyle(environment, page, UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID),
+    );
     this.applyLakesToTerrain(environment, page);
   }
 
@@ -8388,41 +11173,64 @@ export class SceneManager {
     easing: EasingName = "easeInOutCubic",
     scalarStyleDurationMs: number = durationMs,
     scalarStyleEasing: EasingName = easing,
+    reason: NavigationReason = "programmatic",
   ): void {
+    const layerIds = new Set<string>([
+      ...this.layers.keys(),
+      ...Object.keys(CASE_STUDY_B_DEMO_LAYER_ALIASES),
+    ]);
+    const sourceLayers = this.captureLayerRenderStates(
+      environment,
+      fromPage,
+      layerIds,
+    );
     this.layerTweens.clear();
     this.scalarStyleTweens.clear();
+    this.workingAreaFocusTween = null;
     this.clearLayerTransitionSnapshots();
     this.lastEffectiveEnv = environment;
     this.lastEffectivePage = toPage;
 
-    const fromVisible = effectiveVisibility(environment, fromPage);
     const toVisible = effectiveVisibility(environment, toPage);
     this.currentVisibleLayerIds = toVisible;
     const now = performance.now();
     const duration = Math.max(0, durationMs);
     const terrainOverrides = new Map<string, number>();
-    const layerIds = new Set<string>([
-      ...this.layers.keys(),
-      ...Object.keys(CASE_STUDY_B_DEMO_LAYER_ALIASES),
-    ]);
+    const layerKinds: Record<string, LayerTransitionKind> = {};
+    this.activeSceneTransitionContext = {
+      sourcePageId: fromPage.id,
+      targetPageId: toPage.id,
+      reason,
+      startMs: now,
+      durationMs: duration,
+      easing,
+      layerKinds,
+      sourceLayers,
+    };
 
     for (const id of layerIds) {
-      const fromOpacity = fromVisible.has(id)
-        ? this.targetOpacityForLayer(environment, fromPage, id)
-        : 0;
+      const sourceState = sourceLayers.get(id);
+      const fromOpacity = sourceState?.opacity ?? 0;
       const toOpacity = toVisible.has(id)
         ? this.targetOpacityForLayer(environment, toPage, id)
         : 0;
-      const fromStyle = effectiveStyle(environment, fromPage, id);
+      const fromStyle =
+        sourceState?.style ?? effectiveStyle(environment, fromPage, id);
       const targetStyle = effectiveStyle(environment, toPage, id);
       const group = this.layers.get(id);
       if (group) group.visible = fromOpacity > 0.001 || toOpacity > 0.001;
+      const shouldCrossfadeDiscreteData =
+        !!group &&
+        duration > 0 &&
+        fromOpacity > 0.001 &&
+        forgeDiscreteDataStyleChanged(id, fromStyle, targetStyle);
       const shouldTweenScalarStyle =
         !!group &&
+        !shouldCrossfadeDiscreteData &&
         scalarStyleDurationMs > 0 &&
         fromOpacity > 0.001 &&
         toOpacity > 0.001 &&
-        this.layerHasScalarPreviewData(group) &&
+        this.layerSupportsScalarStyleTween(id, group) &&
         scalarTransitionStyleChanged(fromStyle, targetStyle);
       const shouldCrossfadeScalarStyle =
         !!group &&
@@ -8430,9 +11238,19 @@ export class SceneManager {
         fromOpacity > 0.001 &&
         this.layerHasScalarPreviewData(group) &&
         !toVisible.has(id);
-      const scalarSnapshot = shouldCrossfadeScalarStyle
-        ? this.cloneLayerTransitionSnapshot(id, group)
-        : null;
+      const transitionSnapshot =
+        shouldCrossfadeDiscreteData || shouldCrossfadeScalarStyle
+          ? this.cloneLayerTransitionSnapshot(id, group)
+          : null;
+      const transitionKind: LayerTransitionKind =
+        shouldCrossfadeDiscreteData || shouldCrossfadeScalarStyle
+          ? "discrete-crossfade"
+          : shouldTweenScalarStyle
+            ? id === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID
+              ? "full-density-scalar"
+              : "continuous"
+            : "none";
+      layerKinds[id] = transitionKind;
 
       // Apply target page colour/provenance-style immediately, but restore the
       // visual opacity to the old page value before the fade begins.
@@ -8449,8 +11267,8 @@ export class SceneManager {
           easing: scalarStyleEasing,
         });
       }
-      if (scalarSnapshot) {
-        this.applyRenderOpacityToTree(scalarSnapshot, fromOpacity);
+      if (transitionSnapshot) {
+        this.applyRenderOpacityToTree(transitionSnapshot, fromOpacity);
         this.applyLayerRenderOpacity(id, 0);
         this.layerTweens.set(id, {
           from: 0,
@@ -8461,9 +11279,10 @@ export class SceneManager {
         });
         this.layerTransitionSnapshots.set(id, {
           id,
-          group: scalarSnapshot,
+          group: transitionSnapshot,
           from: fromOpacity,
           to: 0,
+          style: fromStyle,
           startMs: now,
           durationMs: duration,
           easing,
@@ -8488,6 +11307,14 @@ export class SceneManager {
         easing,
       });
     }
+
+    this.transitionWorkingAreaFocusForPage(
+      environment,
+      fromPage,
+      toPage,
+      duration,
+      easing,
+    );
 
     // Terrain-composite layers (lakes, targets, claims, geology, forest cover)
     // render part of their visual fill through terrain uniforms, not just group
@@ -8522,41 +11349,51 @@ export class SceneManager {
         : typeof lakeStyle.opacity === "number"
           ? lakeStyle.opacity
           : 1;
-    const lakeOp = opacityOverrides.get("hydrography-lakes") ??
+    const lakeOp =
+      opacityOverrides.get("hydrography-lakes") ??
       (visibleSet.has("hydrography-lakes") ? 1 : 0) * lakeFillOpacity;
     this.applyStreamLakeOcclusion(lakeOp > 0.001);
 
     const tfStyle = effectiveStyle(environment, page, "three-firs-target");
-    const tfOp = opacityOverrides.get("three-firs-target") ??
+    const tfOp =
+      opacityOverrides.get("three-firs-target") ??
       (visibleSet.has("three-firs-target") ? 1 : 0) *
         (typeof tfStyle.opacity === "number" ? tfStyle.opacity : 1);
 
     const gpStyle = effectiveStyle(environment, page, "great-plains-target");
-    const gpOp = opacityOverrides.get("great-plains-target") ??
+    const gpOp =
+      opacityOverrides.get("great-plains-target") ??
       (visibleSet.has("great-plains-target") ? 1 : 0) *
         (typeof gpStyle.opacity === "number" ? gpStyle.opacity : 1);
 
     const claimStyle = effectiveStyle(environment, page, "claim-boundary");
-    const claimOp = opacityOverrides.get("claim-boundary") ??
+    const claimOp =
+      opacityOverrides.get("claim-boundary") ??
       (visibleSet.has("claim-boundary") ? 1 : 0) *
         (typeof claimStyle.opacity === "number" ? claimStyle.opacity : 1);
 
     const geologyStyle = effectiveStyle(environment, page, "bedrock-geology");
-    const geologyOp = opacityOverrides.get("bedrock-geology") ??
+    const geologyOp =
+      opacityOverrides.get("bedrock-geology") ??
       (visibleSet.has("bedrock-geology") ? 1 : 0) *
-        (typeof geologyStyle.opacity === "number" ? geologyStyle.opacity : 0.28);
+        (typeof geologyStyle.opacity === "number"
+          ? geologyStyle.opacity
+          : 0.28);
 
     const forestStyle = effectiveStyle(environment, page, "trees-vri");
     const forestOpacity =
       typeof forestStyle.opacity === "number" ? forestStyle.opacity : 0.4;
-    const forestOp = opacityOverrides.get("trees-vri") ??
+    const forestOp =
+      opacityOverrides.get("trees-vri") ??
       (visibleSet.has("trees-vri") ? 1 : 0);
 
     terrainGroup.traverse((obj) => {
-      const handle = (obj as THREE.Mesh).userData
-        ?.terrainHandle as TerrainMaterialHandle | undefined;
+      const handle = (obj as THREE.Mesh).userData?.terrainHandle as
+        | TerrainMaterialHandle
+        | undefined;
       if (!handle) return;
-      if (typeof lakeStyle.color === "string") handle.setLakeColor(lakeStyle.color);
+      if (typeof lakeStyle.color === "string")
+        handle.setLakeColor(lakeStyle.color);
       handle.setLakeFogEnabled(styleAffectedByFog(lakeStyle));
       handle.setLakeFogDensity(styleFogDensity(lakeStyle, this.envFogDensity));
       handle.setLakeOpacity(lakeOp);
@@ -8585,7 +11422,9 @@ export class SceneManager {
       if (typeof claimStyle.color === "string")
         handle.setClaimColor(claimStyle.color);
       handle.setClaimFogEnabled(styleAffectedByFog(claimStyle));
-      handle.setClaimFogDensity(styleFogDensity(claimStyle, this.envFogDensity));
+      handle.setClaimFogDensity(
+        styleFogDensity(claimStyle, this.envFogDensity),
+      );
       handle.setClaimOpacity(claimOp);
       handle.setGeologyFogEnabled(styleAffectedByFog(geologyStyle));
       handle.setGeologyFogDensity(
@@ -8616,7 +11455,10 @@ export class SceneManager {
       {
         let wallMat: THREE.ShaderMaterial | undefined;
         this.layers.get("trees-vri")?.traverse((child) => {
-          if (!wallMat && child.userData?.wallMaterial instanceof THREE.ShaderMaterial)
+          if (
+            !wallMat &&
+            child.userData?.wallMaterial instanceof THREE.ShaderMaterial
+          )
             wallMat = child.userData.wallMaterial;
         });
         if (wallMat) {
@@ -8632,7 +11474,8 @@ export class SceneManager {
             ? 1
             : 0;
           wallMat.uniforms.uFogFar.value =
-            3 / Math.max(styleFogDensity(forestStyle, this.envFogDensity), 0.00001);
+            3 /
+            Math.max(styleFogDensity(forestStyle, this.envFogDensity), 0.00001);
         }
       }
     });
@@ -8647,12 +11490,14 @@ export class SceneManager {
         (geologyStyle as { geologyColorMap?: Record<string, string> })
           .geologyColorMap ?? {};
       const unitOverrides =
-        (geologyStyle as {
-          geologyUnitOverrides?: Record<
-            string,
-            { visible?: boolean; opacity?: number }
-          >;
-        }).geologyUnitOverrides ?? {};
+        (
+          geologyStyle as {
+            geologyUnitOverrides?: Record<
+              string,
+              { visible?: boolean; opacity?: number }
+            >;
+          }
+        ).geologyUnitOverrides ?? {};
       this.geologyHandle.rebuild({ colorMap, unitOverrides });
     }
   }
@@ -8662,7 +11507,11 @@ export class SceneManager {
     this.geologyHandle = handle;
     // Re-apply if we have a cached env/page so the loader's first
     // rebuild reflects authored overrides.
-    if (this.lastEffectiveEnv && this.lastEffectivePage) {
+    if (
+      !this.activeSceneTransitionContext &&
+      this.lastEffectiveEnv &&
+      this.lastEffectivePage
+    ) {
       this.applyEffectiveStylesForPage(
         this.lastEffectiveEnv,
         this.lastEffectivePage,
@@ -8732,9 +11581,8 @@ export class SceneManager {
       mergeSceneProperties(environment.scene, presetPatch),
       this.environmentScenePreviewPatch,
     );
-    this.setStudioSceneElementsVisible(
-      sp.lighting?.showSceneElements ?? true,
-    );
+    this.currentTerrainScene = sp.terrain ?? {};
+    this.setStudioSceneElementsVisible(sp.lighting?.showSceneElements ?? true);
     this.applyDrillingAssayDisplay(sp);
     this.applyTopoDetailDistanceDisplay(sp);
     this.rebuildAreaOutlines(sp.areaOutlines ?? []);
@@ -8918,13 +11766,15 @@ export class SceneManager {
     if (terrainGroup) {
       terrainGroup.traverse((obj) => {
         const userData = (obj as THREE.Mesh).userData;
-        const handle = userData
-          ?.terrainHandle as TerrainMaterialHandle | undefined;
+        const handle = userData?.terrainHandle as
+          | TerrainMaterialHandle
+          | undefined;
         if (!handle) return;
         handle.setSunDirection(this.currentSunDir);
         if (sp.terrain) handle.setParams(sp.terrain);
-        const gridHandle = userData
-          ?.terrainGridHandle as TerrainGridHandle | undefined;
+        const gridHandle = userData?.terrainGridHandle as
+          | TerrainGridHandle
+          | undefined;
         gridHandle?.update(sp.terrain ?? {});
         // lightMode overrides the elevation ramp with greyscale.
         // Applied AFTER the authored sp.terrain push so it wins.
@@ -8963,6 +11813,11 @@ export class SceneManager {
           styleFogDensity(style, density),
         );
       }
+      this.applyTopoGraticuleStyle(
+        UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
+        this.styleForLayer(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID),
+      );
+      this.rebuildTopoMapBranding(sp);
     }
 
     // ---- post-processing -----------------------------------------------
@@ -9013,6 +11868,7 @@ export class SceneManager {
    * that startup race so first open matches the saved presentation immediately.
    */
   reapplyCurrentPageState(): void {
+    if (this.activeSceneTransitionContext) return;
     const env = this.lastEnv ?? this.lastEffectiveEnv;
     const page = this.lastEffectivePage;
     if (env) this.applyEnvironment(env);
@@ -9027,15 +11883,31 @@ export class SceneManager {
     if (
       this.layerTweens.size === 0 &&
       this.scalarStyleTweens.size === 0 &&
-      this.layerTransitionSnapshots.size === 0
+      this.layerTransitionSnapshots.size === 0 &&
+      !this.workingAreaFocusTween
     ) {
       return;
     }
+    if (this.workingAreaFocusTween) {
+      const tween = this.workingAreaFocusTween;
+      const t =
+        tween.durationMs <= 0 ? 1 : (nowMs - tween.startMs) / tween.durationMs;
+      const done = t >= 1;
+      const eased = done ? 1 : easeProgress(t, tween.easing);
+      this.applyWorkingAreaFocusStyle(
+        done
+          ? tween.toStyle
+          : this.interpolatedWorkingAreaFocusStyle(
+              tween.fromStyle,
+              tween.toStyle,
+              eased,
+            ),
+      );
+      if (done) this.workingAreaFocusTween = null;
+    }
     for (const [id, tween] of this.scalarStyleTweens) {
       const t =
-        tween.durationMs <= 0
-          ? 1
-          : (nowMs - tween.startMs) / tween.durationMs;
+        tween.durationMs <= 0 ? 1 : (nowMs - tween.startMs) / tween.durationMs;
       const done = t >= 1;
       const eased = done ? 1 : easeProgress(t, tween.easing);
       const style = done
@@ -9046,9 +11918,7 @@ export class SceneManager {
     }
     for (const [id, tween] of this.layerTweens) {
       const t =
-        tween.durationMs <= 0
-          ? 1
-          : (nowMs - tween.startMs) / tween.durationMs;
+        tween.durationMs <= 0 ? 1 : (nowMs - tween.startMs) / tween.durationMs;
       const done = t >= 1;
       const eased = done ? 1 : easeProgress(t, tween.easing);
       const opacity = tween.from + (tween.to - tween.from) * eased;
@@ -9063,8 +11933,19 @@ export class SceneManager {
       const done = t >= 1;
       const eased = done ? 1 : easeProgress(t, snapshot.easing);
       const opacity = snapshot.from + (snapshot.to - snapshot.from) * eased;
-      this.applyRenderOpacityToTree(snapshot.group, done ? snapshot.to : opacity);
+      this.applyRenderOpacityToTree(
+        snapshot.group,
+        done ? snapshot.to : opacity,
+      );
       if (done) this.removeLayerTransitionSnapshot(id);
+    }
+    if (
+      this.layerTweens.size === 0 &&
+      this.scalarStyleTweens.size === 0 &&
+      this.layerTransitionSnapshots.size === 0 &&
+      !this.workingAreaFocusTween
+    ) {
+      this.activeSceneTransitionContext = null;
     }
   }
 
@@ -9092,29 +11973,29 @@ export class SceneManager {
     if (groups.length === 0) return;
     for (const group of groups) {
       group.traverse((obj) => {
-      if (obj.userData?.drillBoreLens !== true) return;
-      if (obj.userData?.lensEnabled === false) {
-        obj.visible = false;
-        return;
-      }
-      const axis = Array.isArray(obj.userData.capAxis)
-        ? obj.userData.capAxis
-        : null;
-      if (!axis) {
-        obj.visible = false;
-        return;
-      }
-      this.boreLensNormal
-        .set(Number(axis[0]), Number(axis[1]), Number(axis[2]))
-        .normalize();
-      obj.getWorldPosition(this.boreLensPos);
-      this.boreLensToCamera
-        .copy(camera.position)
-        .sub(this.boreLensPos)
-        .normalize();
-      // Inverted from the previous attempt: hide the face that was being
-      // shown on the visible coin side, and show the opposite contact cue.
-      obj.visible = this.boreLensNormal.dot(this.boreLensToCamera) < 0;
+        if (obj.userData?.drillBoreLens !== true) return;
+        if (obj.userData?.lensEnabled === false) {
+          obj.visible = false;
+          return;
+        }
+        const axis = Array.isArray(obj.userData.capAxis)
+          ? obj.userData.capAxis
+          : null;
+        if (!axis) {
+          obj.visible = false;
+          return;
+        }
+        this.boreLensNormal
+          .set(Number(axis[0]), Number(axis[1]), Number(axis[2]))
+          .normalize();
+        obj.getWorldPosition(this.boreLensPos);
+        this.boreLensToCamera
+          .copy(camera.position)
+          .sub(this.boreLensPos)
+          .normalize();
+        // Inverted from the previous attempt: hide the face that was being
+        // shown on the visible coin side, and show the opposite contact cue.
+        obj.visible = this.boreLensNormal.dot(this.boreLensToCamera) < 0;
       });
     }
   }
@@ -9166,7 +12047,8 @@ export class SceneManager {
       this.updatePageCameraMarkerScale(this.pageCameraMarker, camera);
     }
     for (const marker of this.globalPageCameraMarkers.values()) {
-      if (marker.group.visible) this.updatePageCameraMarkerScale(marker, camera);
+      if (marker.group.visible)
+        this.updatePageCameraMarkerScale(marker, camera);
     }
   }
 
@@ -9185,8 +12067,9 @@ export class SceneManager {
     const terrainGroup = this.layers.get("terrain");
     if (terrainGroup) {
       terrainGroup.traverse((obj) => {
-        const gridHandle = (obj as THREE.Mesh).userData
-          ?.terrainGridHandle as TerrainGridHandle | undefined;
+        const gridHandle = (obj as THREE.Mesh).userData?.terrainGridHandle as
+          | TerrainGridHandle
+          | undefined;
         gridHandle?.updateCameraVisibility(camera);
       });
     }
@@ -9214,10 +12097,7 @@ export class SceneManager {
     // opacity 0 because PageController's mount-time apply found an
     // empty registry and silently no-op'd.
     if (this.lastOverlayEnv && this.lastOverlayPage) {
-      this.applySceneOverlaysForPage(
-        this.lastOverlayEnv,
-        this.lastOverlayPage,
-      );
+      this.applySceneOverlaysForPage(this.lastOverlayEnv, this.lastOverlayPage);
     }
   }
 
@@ -9263,10 +12143,7 @@ export class SceneManager {
     this.sceneOverlayGroup!.add(handle.mesh);
     this.sceneOverlayGroup!.add(handle.outlineMesh);
     if (this.lastOverlayEnv && this.lastOverlayPage) {
-      this.applySceneOverlaysForPage(
-        this.lastOverlayEnv,
-        this.lastOverlayPage,
-      );
+      this.applySceneOverlaysForPage(this.lastOverlayEnv, this.lastOverlayPage);
     }
   }
 
@@ -9324,7 +12201,10 @@ export class SceneManager {
     if (id) {
       const handle = this.sceneOverlays.get(id);
       if (handle && handle.outlineTarget > 0) {
-        handle.outlineMaterial.opacity = Math.min(1, handle.outlineTarget + 0.3);
+        handle.outlineMaterial.opacity = Math.min(
+          1,
+          handle.outlineTarget + 0.3,
+        );
       }
     }
   }
@@ -9455,6 +12335,10 @@ export class SceneManager {
     const clipMaterial = this.publicSurfaceClipRuntime?.line.material;
     if (clipMaterial instanceof LineMaterial) {
       clipMaterial.resolution.set(width, height);
+    }
+    const focusMaterial = this.workingAreaFocusRuntime?.line.material;
+    if (focusMaterial instanceof LineMaterial) {
+      focusMaterial.resolution.set(width, height);
     }
   }
 }

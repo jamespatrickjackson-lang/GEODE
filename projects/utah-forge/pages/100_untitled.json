@@ -1,16 +1,17 @@
 {
-  "id": "10_untitled",
-  "title": "Untitled page copy",
+  "id": "100_untitled",
+  "title": "Unresolved / Missing Tools copy",
+  "subtitle": "Proposed / needs_review implementation checkpoint",
   "camera": {
     "position": [
-      -25758.118599762638,
-      267159.49967552704,
-      -35000.79617668223
+      -599108.2143325317,
+      -1539337.681063226,
+      1388662.9845221255
     ],
     "target": [
-      10844.11738335307,
-      -5098.606116313531,
-      -64366.201871915524
+      -7431.03125695828,
+      -36818.242721785406,
+      -83323.94626511438
     ],
     "up": [
       0,
@@ -24,20 +25,20 @@
     "easing": "easeInOutCubic"
   },
   "holdDuration": 4000,
-  "accentColor": "#42f236",
+  "accentColor": "#ff637a",
   "dynamicCamera": {
     "enabled": true,
     "mode": "orbit",
     "orbitEnabled": true,
     "poi": [
-      10844.11738335307,
-      -5098.606116313531,
-      -64366.201871915524
+      117683.41105116872,
+      -88479.90696301646,
+      -74674.76445674823
     ],
-    "orbitSpeedDegPerSec": 4,
-    "orbitRadius": 275129.9999999952,
-    "orbitHeight": 13000,
-    "orbitDirection": 1,
+    "orbitSpeedDegPerSec": 4.8,
+    "orbitRadius": 720830,
+    "orbitHeight": 1182843.5626178428,
+    "orbitDirection": -1,
     "zoomFov": 52,
     "zoomEnabled": false,
     "zoomDeltaFov": 0,
@@ -48,6 +49,6 @@
     "transitionLeadMs": 1600,
     "transitionExitMs": 900,
     "transitionBlendCurve": "smooth",
-    "pathAwareBlend": false
+    "pathAwareBlend": true
   }
 }

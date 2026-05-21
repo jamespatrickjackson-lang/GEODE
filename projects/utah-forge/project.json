@@ -152,6 +152,57 @@
       }
     },
     {
+      "id": "utah-forge-topo-graticule",
+      "label": "Longitude / latitude grid",
+      "type": "line",
+      "files": {},
+      "metadata": {
+        "sourceFile": "Procedural GeoSee graticule generated from the Utah FORGE public terrain CRS and scene transform",
+        "sourceDate": "2026-05-20",
+        "derivedArtifactDate": "2026-05-20",
+        "sourceOrigin": "GeoSee runtime graticule over the public terrain surface",
+        "classification": "public coordinate reference overlay",
+        "confidentiality": "public",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "geoTransform": {
+          "sourceCrs": "EPSG:26912",
+          "sceneOriginUtm": {
+            "easting_m": 341467.35,
+            "northing_m": 4273374.5,
+            "elevation_m": 0
+          },
+          "bounds": {
+            "min": [
+              -356385.9,
+              3703652,
+              0
+            ],
+            "max": [
+              1039320.6,
+              4843097,
+              4000
+            ]
+          }
+        },
+        "topoGraticule": {
+          "clipCenterScene": [
+            -1750,
+            0
+          ],
+          "clipSizeScene": [
+            487600,
+            484100
+          ],
+          "clipRotationDeg": -20,
+          "latitudeStepDeg": 0.5,
+          "longitudeStepDeg": 0.5,
+          "samplesPerLine": 192
+        },
+        "notes": "Procedural latitude/longitude reference overlay draped onto the public terrain. Labels and lines are visual map references, not geophysical data."
+      }
+    },
+    {
       "id": "transport-roads",
       "label": "Public roads",
       "type": "line",
@@ -2566,18 +2617,25 @@
     }
   ],
   "pageOrder": [
-    "02_untitled",
     "12_untitled",
-    "10_untitled",
     "06_untitled",
-    "07_untitled",
     "04_untitled",
     "05_untitled",
     "08_untitled",
     "09_untitled",
-    "11_untitled",
-    "intake_2026-05-16_02-12-44_uxm6dg",
-    "intake_2026-05-16_02-45-23_1kbq3z"
+    "40_geophysics_product_overview",
+    "41_mt_station_network_footprint",
+    "42_resistivity_volume_overview",
+    "43_resistivity_depth_elevation_slices",
+    "44_resistivity_cross_sections",
+    "45_resistivity_isosurfaces",
+    "46_tem_shallow_resistivity",
+    "47_seismic_footprint_velocity_support",
+    "48_basement_top_granite_surface",
+    "49_seismic_fence_panels",
+    "50_integrated_seismic_resistivity_context",
+    "99_unresolved_missing_tools",
+    "100_untitled"
   ],
   "presentationDefaults": {
     "transitionDuration": 1400,
@@ -2590,5 +2648,5 @@
     ]
   },
   "watermark": "GeoSee Utah FORGE - Phase 3 seismic + MT",
-  "modified": "2026-05-16T09:04:52.307Z"
+  "modified": "2026-05-21T06:49:50.911Z"
 }

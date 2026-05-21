@@ -130,6 +130,10 @@ uniform vec3 uSceneSectionNormals[3];
 uniform float uSceneSectionPositions[3];
 uniform float uSceneSectionThickness[3];
 uniform int uSceneSectionInvert[3];
+uniform int uWorkingAreaFocusEnabled;
+uniform vec3 uWorkingAreaFocusBoundsMin;
+uniform vec3 uWorkingAreaFocusBoundsMax;
+uniform float uWorkingAreaFocusOutsideOpacity;
 
 in vec3 vWorldPosition;
 out vec4 fragColor;
@@ -173,6 +177,14 @@ bool sceneSectionAllows(vec3 position) {
   return true;
 }
 
+float workingAreaFocusAlpha(vec3 position) {
+  if (uWorkingAreaFocusEnabled == 0) return 1.0;
+  bool inside =
+    all(greaterThanEqual(position, uWorkingAreaFocusBoundsMin)) &&
+    all(lessThanEqual(position, uWorkingAreaFocusBoundsMax));
+  return inside ? 1.0 : clamp(uWorkingAreaFocusOutsideOpacity, 0.0, 1.0);
+}
+
 float transferAlpha(float scalarValue, float rampT, float maskValue) {
   float rangeGate = smoothstep(uThresholdMin, uThresholdMin + 0.04, scalarValue) *
     (1.0 - smoothstep(uThresholdMax - 0.04, uThresholdMax, scalarValue));
@@ -206,6 +218,11 @@ void main() {
       t += stepSize;
       continue;
     }
+    float focusAlpha = workingAreaFocusAlpha(position);
+    if (focusAlpha <= 0.0001) {
+      t += stepSize;
+      continue;
+    }
     vec3 uvw = (position - uBoundsMin) / (uBoundsMax - uBoundsMin);
     uvw = clamp(uvw, vec3(0.0), vec3(1.0));
     float maskValue = texture(uMask, uvw).r;
@@ -216,7 +233,7 @@ void main() {
     float normalized = texture(uVolume, uvw).r;
     float scalarValue = mix(uSourceMin, uSourceMax, normalized);
     float rampT = saturate((scalarValue - uDisplayMin) / max(0.000001, uDisplayMax - uDisplayMin));
-    float alpha = transferAlpha(scalarValue, rampT, uMaskVisible == 1 ? maskValue : 1.0);
+    float alpha = transferAlpha(scalarValue, rampT, uMaskVisible == 1 ? maskValue : 1.0) * focusAlpha;
     if (alpha <= 0.0001) {
       t += stepSize;
       continue;
@@ -341,6 +358,10 @@ async function buildVolumeMesh(
       uSceneSectionPositions: { value: [0, 0, 0] },
       uSceneSectionThickness: { value: [1, 1, 1] },
       uSceneSectionInvert: { value: [0, 0, 0] },
+      uWorkingAreaFocusEnabled: { value: 0 },
+      uWorkingAreaFocusBoundsMin: { value: new THREE.Vector3() },
+      uWorkingAreaFocusBoundsMax: { value: new THREE.Vector3() },
+      uWorkingAreaFocusOutsideOpacity: { value: 1 },
     },
     side: THREE.BackSide,
     transparent: true,
