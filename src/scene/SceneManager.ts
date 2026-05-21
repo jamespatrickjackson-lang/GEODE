@@ -64,6 +64,11 @@ import {
   UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS,
   UTAH_FORGE_GRATICULE_EDGE_STYLE_FIELDS,
 } from "../projectModules/utahForge/crossfadeFields";
+import {
+  WORKING_AREA_FOCUS_DEFAULT_BOUNDS,
+  WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY,
+  WORKING_AREA_FOCUS_DEFAULT_TARGET_LAYER_IDS,
+} from "../projectModules/utahForge/workingAreaFocus";
 
 // Fade duration matches the markdown overlay panel (OverlayDisplay's
 // FADE_MS) so chapter transitions feel coherent across UI surfaces.
@@ -101,17 +106,6 @@ const TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M = -85_000;
 const CASE_STUDY_B_DEMO_SHELL_LAYER_ID = "case-study-b-demo-shell";
 const SHAHBAZI_GROUND_SURFACE_LAYER_ID = "shahbazi-tls-surface-preview";
 const SHAHBAZI_GROUND_CONTOUR_LAYER_ID = "shahbazi-tls-contours";
-const WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY = 0.15;
-const WORKING_AREA_FOCUS_DEFAULT_BOUNDS = {
-  min: new THREE.Vector3(-8041.4, -12617.6, -6200),
-  max: new THREE.Vector3(-3841.4, -8417.6, 2045.3),
-} as const;
-const WORKING_AREA_FOCUS_DEFAULT_TARGET_LAYER_IDS = [
-  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
-  "utah-forge-mt-resistivity-preview",
-  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
-  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
-] as const;
 const WORKING_AREA_FOCUS_RENDER_ORDER = 4575;
 const TOPO_GRATICULE_MINOR_SCALE = 0.8;
 const SCENE_SECTION_AXIS_NORMALS = {
