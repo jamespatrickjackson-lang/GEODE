@@ -338,7 +338,8 @@
   },
   "defaultVisibleLayers": [
     "utah-forge-topo-graticule",
-    "terrain"
+    "terrain",
+    "utah-forge-mt-resistivity-full-density"
   ],
   "scene": {
     "background": "#383838",
@@ -456,7 +457,7 @@
       "gridLineWidthM": 0.7,
       "undersideOpacity": 0,
       "topoMapBranding": {
-        "visible": true,
+        "visible": false,
         "logoPath": "projects/utah-forge/branding/fig2_wrong_vs_right__1_.png",
         "offsetYM": -10000,
         "offsetXM": 250000,

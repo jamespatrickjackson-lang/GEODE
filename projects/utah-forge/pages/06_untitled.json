@@ -85,5 +85,8 @@
     "transitionExitMs": 900,
     "transitionBlendCurve": "smooth",
     "pathAwareBlend": false
+  },
+  "visibilityOverrides": {
+    "terrain": false
   }
 }
