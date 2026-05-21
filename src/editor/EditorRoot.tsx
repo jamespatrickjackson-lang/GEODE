@@ -9,11 +9,11 @@ import { UtahForgeAddToProjectDrop } from "./UtahForgeAddToProjectDrop";
 import { ENVIRONMENT_SENTINEL } from "./types";
 import { usePageController } from "../pages/PageController";
 import { AudienceLensControls } from "../audience/AudienceLensControls";
+import { type AudienceLensId } from "../audience/audienceLenses";
 import {
   CASE_STUDY_B_AUDIENCE_LENSES,
   audienceLensById,
-  type AudienceLensId,
-} from "../audience/audienceLenses";
+} from "../projectModules/caseStudyB/audienceLenses";
 import {
   FROSTED_HAIRLINE,
   TECHNICAL_MONO_FONT,

@@ -23,9 +23,9 @@ import { ScaleBar } from "../ui/ScaleBar";
 import {
   applyAudienceLensSceneToEnvironment,
   applyAudienceLensToState,
-  audienceLensById,
   type AudienceLensId,
 } from "../audience/audienceLenses";
+import { audienceLensById } from "../projectModules/caseStudyB/audienceLenses";
 import { UTAH_FORGE_PREVIEW_LAYER_OVERRIDE_FIELDS } from "../projectModules/utahForge/editorPreviewFields";
 
 const utahForgeLegendStackStyle: CSSProperties = {

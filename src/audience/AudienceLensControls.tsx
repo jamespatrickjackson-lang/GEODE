@@ -4,11 +4,13 @@ import { useEditor } from "../editor/EditorContext";
 import { usePageController } from "../pages/PageController";
 import type { SceneHandle } from "../scene";
 import {
-  CASE_STUDY_B_AUDIENCE_LENSES,
-  audienceLensById,
   type AudienceLensConfig,
   type AudienceLensId,
 } from "./audienceLenses";
+import {
+  CASE_STUDY_B_AUDIENCE_LENSES,
+  audienceLensById,
+} from "../projectModules/caseStudyB/audienceLenses";
 import {
   FROSTED_CONTROL_SHADOW,
   FROSTED_HAIRLINE,
