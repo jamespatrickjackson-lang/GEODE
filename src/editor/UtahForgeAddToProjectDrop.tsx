@@ -9,7 +9,7 @@ const MAX_TOTAL_SIZE = 75 * 1024 * 1024;
 const UTAH_FORGE_PROJECT_ROOT = "projects/utah-forge";
 const LATEST_INTAKE_REVIEW_PATH = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/LATEST_INTAKE_REVIEW.json`;
 const LATEST_AI_REVIEW_PATH = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/LATEST_AI_REVIEW.json`;
-const NEXT_CODEX_PROMPT = "run intake trailhead";
+const NEXT_CODEX_PROMPT = "Ask for an explicit intake review pass";
 type IntakeEntrypoint = "editor-header" | "home-project-list";
 
 interface Props {
@@ -354,7 +354,7 @@ export function UtahForgeAddToProjectDrop({
         setAiReview(null);
         setReviewSourcePath(null);
         setResponseDrafts([]);
-        setResponseMessage("Run `run intake trailhead` first. No AI review file was found for this drop.");
+        setResponseMessage("No review file was found for this drop. Ask for an explicit intake review pass first.");
         return;
       }
       const parsed = JSON.parse(reviewText) as unknown;
@@ -399,7 +399,7 @@ export function UtahForgeAddToProjectDrop({
     try {
       const content = (await readFile(LATEST_INTAKE_REVIEW_PATH)) ?? (await readFile(LATEST_AI_REVIEW_PATH));
       if (!content) {
-        setResponseMessage("No latest intake review pointer found. Run `run intake trailhead` first.");
+        setResponseMessage("No latest intake review pointer found. Ask for an explicit intake review pass first.");
         return;
       }
       const pointer = JSON.parse(content) as LatestAiReviewPointer;
@@ -630,8 +630,7 @@ export function UtahForgeAddToProjectDrop({
         <section style={reviewPanelStyle} aria-label="Intake review">
           <div style={fileListHeaderStyle}>Intake Review</div>
           <div style={helperStyle}>
-            Load the intake review after Codex/API has run{" "}
-            <code>run intake trailhead</code>. The review shows the actual
+            Load the intake review after an explicit review pass. The review shows the actual
             dropped input, the concise plan, and questions only when something
             blocks the next step.
           </div>

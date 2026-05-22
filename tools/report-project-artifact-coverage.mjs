@@ -8,7 +8,7 @@ const projects = [
   { slug: "woodjam", title: "Woodjam", folder: "projects/woodjam" },
   { slug: "base-gui", title: "Base GUI", folder: "projects/base-gui" }
 ];
-const outputDir = path.join(root, "docs/dev-context/Generated-Reports");
+const outputDir = path.join(root, "test-results/project-artifact-coverage");
 const jsonOutput = path.join(outputDir, "project-artifact-coverage.json");
 const mdOutput = path.join(outputDir, "project-artifact-coverage.md");
 
@@ -499,7 +499,7 @@ ${projectSection(report.projects.find((project) => project.slug === "base-gui"))
 - Decide which layers without wrappers need metadata next.
 - Review any wrappers that do not map to manifest layer IDs.
 - Confirm whether default-visible unwrapped layers need first-priority wrappers.
-- Confirm the first actual runtime implementation candidate only after visual/render verification receipts exist for high-risk artifacts.
+- Confirm the first actual runtime implementation candidate only after fresh visual/render evidence exists for high-risk artifacts.
 
 ## Next Safe Implementation Candidates
 

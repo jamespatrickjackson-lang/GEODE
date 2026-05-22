@@ -27,7 +27,7 @@ Computed complexity is not bloat. Cleanup must preserve technical accuracy and p
 
 Sync note: this file was created before `Runtime-Loading-Policy.md`; the runtime policy now exists and cross-references these checks as a prerequisite for future loading changes.
 
-Coverage note: `docs/dev-context/Generated-Reports/project-artifact-coverage.md` now reports project layers, default/page references, and wrapper coverage. This generated report does not replace visual/render verification, screenshots, build/typecheck evidence, provenance review, or human acceptance.
+Coverage note: `tools/report-project-artifact-coverage.mjs` now writes ignored reports under `test-results/project-artifact-coverage/`. This generated report does not replace visual/render verification, screenshots, build/typecheck evidence, provenance review, or human acceptance.
 
 Runtime diagnostics note: `docs/dev-context/Runtime-Diagnostics.md` now documents a dev-only diagnostics hook. Diagnostics snapshots are structural/resource evidence and can show loaded/visible layer state, but they do not replace screenshot review, visual quality judgment, camera/page composition review, source/provenance review, or human acceptance.
 
@@ -118,23 +118,21 @@ Each artifact family should be checked for:
 
 Do not call an artifact technically accurate unless the evidence covers source, CRS/transform, units, parameters, stats/counts, provenance/status, and limitations. Do not call an artifact client-ready unless the rendering quality and presentation context are checked too.
 
-## Verification Receipt Format
+## Focused Evidence Format
 
-A render/computed-artifact verification receipt should capture:
+A render/computed-artifact evidence note should capture only what the current task needs:
 
-Template: `docs/dev-context/templates/render-computed-artifact-verification-receipt.template.md`
-
-First Utah FORGE MT/seismic receipt: `docs/dev-context/Verification-Receipts/VER-2026-05-15-001-utah-forge-mt-slices-seismic-browser.md`
+First Utah FORGE MT/seismic historical evidence was purged from active context and remains recoverable from Git history.
 
 This first receipt is not acceptance. It records metadata/path/build evidence and explicitly leaves visual rendering, screenshot evidence, and MT/seismic co-render quality as `needs review`.
 
-Focused Utah FORGE MT/seismic demo page receipt: `docs/dev-context/Verification-Receipts/VER-2026-05-15-003-utah-forge-mt-seismic-demo-page.md`
+Focused Utah FORGE MT/seismic demo page evidence should be recaptured when needed.
 
-Screenshot evidence exists at `docs/dev-context/Verification-Receipts/screenshots/utah-forge-mt-seismic-integration-page-2026-05-15.png`, with runtime diagnostics at `docs/dev-context/Generated-Reports/runtime-diagnostics-utah-forge-mt-seismic-demo-page.json`. This is evidence for human review, not acceptance.
+Historical screenshot/runtime evidence was purged from active context and remains recoverable from Git history. It is not current acceptance.
 
-Utah FORGE demo walkthrough v0 receipt: `docs/dev-context/Verification-Receipts/VER-2026-05-15-004-utah-forge-demo-walkthrough-v0.md`
+Utah FORGE demo walkthrough v0 historical evidence was purged from active context.
 
-Screenshot evidence exists for the MT slices, seismic, and MT + seismic integration demo pages, with runtime diagnostics at `docs/dev-context/Generated-Reports/runtime-diagnostics-utah-forge-demo-walkthrough-v0.json`. This is review evidence only and does not accept visual quality, page order, product choice, runtime loading behavior, or demo scope.
+Fresh screenshot/runtime evidence should be captured for current MT slices, seismic, and MT + seismic integration decisions. Historical evidence remains recoverable from Git history only.
 
 | Field | Expected content |
 | --- | --- |

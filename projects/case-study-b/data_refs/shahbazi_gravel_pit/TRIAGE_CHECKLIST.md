@@ -78,9 +78,6 @@ Do not attempt the full pipeline first.
 
 Update these records with real facts:
 
-- `projects/case-study-b/intake_staging/sample/source_inventory.json`
-- `projects/case-study-b/intake_staging/sample/gaps.json`
-- `projects/case-study-b/intake_staging/sample/unresolved.json`
-- `projects/case-study-b/intake_staging/sample/review_queue.json`
+- Historical sample staging records were purged from the active repo; recover from Git history only if explicitly needed.
 
 Keep all real-data layers disabled until processed outputs exist and review is complete.

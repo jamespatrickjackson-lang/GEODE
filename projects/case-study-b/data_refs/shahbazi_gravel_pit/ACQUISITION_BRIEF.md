@@ -139,7 +139,7 @@ Create or update local receipt notes with:
 
 Keep source receipt notes in this folder. Staging receipts can also be mirrored in:
 
-`projects/case-study-b/intake_staging/sample/receipts.jsonl`
+Historical sample staging receipts were purged from the active repo; recover from Git history only if explicitly needed.
 
 ## Step 3 - If Download Fails
 

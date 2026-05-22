@@ -52,13 +52,13 @@ Use that map before any cleanup touches source inputs, generated artifacts, QA o
 
 | Dataset family | Status | Evidence |
 | --- | --- | --- |
-| Phase 3 MT electrical resistivity source packages | Observed | `projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/` |
+| Phase 3 MT electrical resistivity source packages | Historical source | Source package paths remain in provenance, but source-only packages were purged from the active repo and remain recoverable from Git history. |
 | MT stations | Observed measured layer | `mt_stations.geojson`, `projects/utah-forge/project.json`, Utah decisions docs |
 | MT resistivity preview/full-density/slices/top surface/volume/threshold surfaces | Observed source-derived outputs | `projects/utah-forge/project.json`, `environment.json`, `geosee_processed/.../electrical_resistivity/` |
 | Public terrain/roads/hydrography context | Observed | `public_context/manifest.json`, `project.json`, `environment.json` |
 | Phase 3 seismic browser outputs | Observed in manifests/runtime/test | `project.json`, `environment.json`, `CHANGELOG.md`, `tests/utah-forge-smoke.spec.ts`, seismic browser files |
 | Project-local data/layer status guide | Observed status guidance | `projects/utah-forge/DATA_LAYER_STATUS.md`; covers source/client/public, processed/browser-ready, render-ready, QA/validation, provenance/status wrappers, MT, seismic, demo candidates, and unclear/future artifacts; docs/status only, no runtime behavior change |
-| Seismic active status | Observed contradiction | Project-local READMEs and Utah docs say not active/blocked; project config, environment defaults, page override, generated browser manifest, source loader/editor/scene code, prep scripts, and tests show implemented/default-visible paths. See `docs/dev-context/Verification-Receipts/VER-2026-05-15-002-utah-forge-seismic-contradiction.md`. |
+| Seismic active status | Observed contradiction | Project-local READMEs and Utah docs say not active/blocked; project config, environment defaults, page override, generated browser manifest, source loader/editor/scene code, prep scripts, and tests show implemented/default-visible paths. Historical contradiction evidence remains recoverable from Git history. |
 | Southwestern/regional MT | Observed reserved/inactive in docs | `projects/utah-forge/data/README.md`, Utah decisions docs |
 | Wells, faults, infrastructure, microseismic events | Observed unresolved/future | Utah project docs |
 
@@ -80,6 +80,6 @@ Use that map before any cleanup touches source inputs, generated artifacts, QA o
 | Is current Utah default-visible state accepted for demo/control-plane stability? | Unverified / needs human review | `environment.json` differs from several prose docs |
 | Should Utah FORGE seismic remain active/default-visible, be parked, or be hidden by default later? | Unverified / needs human review | `VER-2026-05-15-002` records blocked-doc evidence and active/runtime/test evidence; no recommendation executed. |
 | Which source/provenance records should be registered first in `Source-Register.md`? | Unverified / needs human review | Multiple candidates across Woodjam, Shahbazi, Utah |
-| What verification receipt is required for dataset-map/current-state reconciliation? | Unverified / needs human review | `Verification-Receipts/TEMPLATE.md` exists but no requirement recorded |
+| What focused verification evidence is required for dataset-map/current-state reconciliation? | Unverified / needs human review | Capture fresh focused evidence when this reconciliation is resumed. |
 | Which pipeline rows need metadata wrappers first? | Unverified / needs human review | `Computed-Artifact-Pipeline.md` identifies missing wrappers/acceptance status across Utah, Shahbazi, Woodjam, and Base GUI. |
 | Should `projects/utah-forge/DATA_LAYER_STATUS.md` become the first project-local status guide after human review? | Proposed / needs human review | Created as project-local status guidance, not acceptance or runtime authority. |

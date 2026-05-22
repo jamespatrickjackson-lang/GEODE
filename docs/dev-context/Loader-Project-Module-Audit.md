@@ -22,7 +22,7 @@ Boundary: this satisfies the low-risk reference-stage sentinel extraction from t
 
 ## Slice 1B verification note
 
-Observed: `docs/dev-context/Verification-Receipts/VER-2026-05-16-004-loader-registry-slice-1b-visual-regression.md` records a bounded post-extraction check. Base GUI and Utah FORGE opened through the existing app route, screenshots were captured, runtime diagnostics reported layer state, wrapper validation passed, coverage reporting passed, and `npm run build` passed.
+Observed: historical bounded post-extraction evidence existed before the purge and remains recoverable from Git history. Fresh evidence should be captured if this audit is resumed.
 
 Boundary: this is verification evidence only. It does not accept the extraction, prove full render equivalence, or authorize heavier Utah FORGE, Shahbazi, Woodjam, public-context, seismic, MT, scalar, volume, terrain, or lifecycle/disposal extraction.
 
@@ -82,7 +82,7 @@ Details:
 | `projects/*/pages/` | Page-level visibility/style/scene override evidence. |
 | `docs/dev-context/Runtime-Loading-Policy.md` | Existing staged loading-policy design and guardrails. |
 | `docs/dev-context/Project-Load-Class-Table.md` | Layer/load-class review evidence. |
-| `docs/dev-context/Generated-Reports/project-artifact-coverage.md` | Current project layer counts, wrapper coverage, and layer family signals. |
+| `test-results/project-artifact-coverage/project-artifact-coverage.md` | Current project layer counts, wrapper coverage, and layer family signals when regenerated. |
 | `docs/dev-context/Render-Quality-Checks.md` | Render/computed-artifact risk categories and verification expectations. |
 | `docs/dev-context/Computed-Artifact-Pipeline.md` | Raw-to-computed artifact guardrail. |
 | `projects/utah-forge/artifact_metadata/index.json` | Utah FORGE wrapper/index evidence for MT and seismic artifacts. |
@@ -337,7 +337,7 @@ After a future refactor, run:
 - no seismic product filtering
 - no MT product simplification
 - no computed-artifact simplification
-- no Processware/SRI implementation
+- no external control-plane implementation
 
 ## Summary recommendation
 

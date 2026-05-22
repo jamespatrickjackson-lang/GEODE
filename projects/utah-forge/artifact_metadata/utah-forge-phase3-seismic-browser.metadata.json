@@ -92,7 +92,7 @@
     "legendPath": null,
     "materialNotes": "Raymarch/section selection, opacity, colormap, amplitude window, navigation visibility, labels, and MT co-rendering quality need visual review before client-facing acceptance.",
     "visualCheckRequired": true,
-    "visualCheckReceipt": "docs/dev-context/Verification-Receipts/VER-2026-05-15-004-utah-forge-demo-walkthrough-v0.md",
+    "visualCheckReceipt": null,
     "notes": "This wrapper does not change or accept seismic rendering, default visibility, product filtering, or demo recipe behavior."
   },
   "provenance": {
@@ -105,7 +105,7 @@
     "Does not approve default demo behavior, default visibility, product filtering, or render mode.",
     "Older blocked/not-active seismic docs still need human supersession review.",
     "Engineering-grade interpretation requires qualified professional review; no seismic reflector is accepted here as a fault, target, mineralized structure, or resource estimate.",
-    "Product filtering, raymarch/section selection, amplitude windows, colormaps, navigation display, and visual check receipts remain incomplete.",
+    "Product filtering, raymarch/section selection, amplitude windows, colormaps, navigation display, and visual evidence remain incomplete.",
     "No runtime, loader, page, visibility, rendering, prep, or data artifact behavior changed."
   ],
   "relatedLayers": [
@@ -120,7 +120,7 @@
       "Which seismic product and render mode are intended for the next demo path?",
       "How should current project metadata default product and environment product settings be reconciled?",
       "Which old seismic-blocking docs are superseded, historical, or still relevant?",
-      "What visual receipt proves seismic raymarch/section display and MT co-rendering quality are acceptable?",
+      "What visual evidence proves seismic raymarch/section display and MT co-rendering quality are acceptable?",
       "What disclosure language is required for engineering-grade interpretation boundaries?"
     ],
     "acceptedBy": null,

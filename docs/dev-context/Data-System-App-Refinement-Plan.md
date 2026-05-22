@@ -4,7 +4,7 @@ Last populated: 2026-05-15
 
 ## Human Context
 
-- Processware/SRI implementation is parked for now.
+- External control-plane implementation is parked for now.
 - Seismic is needed and underway.
 - Updated time-pressure/demo goals will arrive later.
 - Current work is structural refinement, not locked scope.
@@ -34,7 +34,7 @@ Any performance, bundle, loader, data, or module-size recommendation is unsafe u
 | Page/layer structure | `project.json` owns `pageOrder`; `environment.json` owns defaults/styles; pages own camera plus `visibilityOverrides` and `layerOverrides`. | Default, page, product, and opacity visibility can diverge, especially in Utah seismic. |
 | Loader structure | `src/scene/layerLoaders.ts` mixes generic loaders, type-based loaders, and project/id-specific loaders. | Loader registry sprawl can obscure ownership and make project-specific behavior look generic. |
 | Project-specific logic | Utah FORGE MT/seismic and Shahbazi-specific behavior appear in generic scene/editor modules. | Broad modules become harder to change safely without touching unrelated projects. |
-| Docs/control context | `docs/dev-context` now captures current state, open loops, registers, doc inventory, verification receipts, and change receipts. | It is a lab book, not accepted scope or official DHF. |
+| Docs/control context | `docs/dev-context` now captures current app-build state, dataset maps, code maps, and focused visual/build guidance. | It is a lightweight build context, not accepted scope or official DHF. |
 | Seismic state | Utah seismic artifacts, scripts, source loader, scene/editor controls, tests, manifest, recipes, and generated products exist. Docs still contain older blocked/not-active statements. | Seismic must be preserved and clarified, not parked by assumption. |
 | Full-density/high-complexity state | Utah MT full-density, scalar volume, threshold surfaces, slices, top surface, and seismic raymarch/section products exist. Shahbazi has rich processed previews and future full-resolution targets. | High-complexity data should be loaded and presented intentionally, not removed or blindly defaulted. |
 
@@ -51,9 +51,9 @@ Any performance, bundle, loader, data, or module-size recommendation is unsafe u
 | `projects/utah-forge/artifact_metadata/WRAPPER_COVERAGE.md` | Observed present | Utah FORGE wrapper coverage and second-batch recommendation; proposed/review input only, not accepted scope. |
 | Utah FORGE wrapper batch 2A | Observed present | Project-local wrappers now exist for MT full-density tiled data, MT scalar volume, and MT threshold surfaces; review input only, not accepted scope or runtime behavior. |
 | Utah FORGE wrapper batch 2B | Observed present | Project-local wrappers now exist for seismic navigation/provenance, seismic recipes/presets, and MT top surface; review input only, not accepted scope or runtime behavior. |
-| `docs/dev-context/templates/render-computed-artifact-verification-receipt.template.md` | Observed present | Reusable receipt template for later visual/computed-artifact verification; no verification receipt was completed by creating the template. |
-| First Utah FORGE MT/seismic verification receipt | Observed present | `VER-2026-05-15-001-utah-forge-mt-slices-seismic-browser.md` records metadata/path/build evidence only; no runtime/app/project/data behavior changed and visual acceptance remains open. |
-| Metadata validator hardening and project coverage reporting | Observed present | `tools/validate-artifact-metadata.mjs` now supports project-wide validation and duplicate-key detection; `tools/report-project-artifact-coverage.mjs` generates all-project coverage reports under `docs/dev-context/Generated-Reports/`. |
+| Old render evidence template | Purged from active context | The receipt-template flow was removed from active context. Capture fresh, focused visual/build evidence only when a current task needs it. |
+| First Utah FORGE MT/seismic historical evidence | Purged from active context | Historical evidence remains recoverable from Git history; no runtime/app/project/data behavior changed and visual acceptance remains open. |
+| Metadata validator hardening and project coverage reporting | Observed present | `tools/validate-artifact-metadata.mjs` now supports project-wide validation and duplicate-key detection; `tools/report-project-artifact-coverage.mjs` generates ignored all-project coverage reports under `test-results/project-artifact-coverage/`. |
 | Dev-only runtime diagnostics and Utah open receipt | Observed present | `src/scene/layerDiagnostics.ts` exposes read-only dev diagnostics via `window.__GEOVOX_DIAGNOSTICS__`; `VER-2026-05-15-002-utah-forge-runtime-open-diagnostics.md` records a first app open, screenshot, and runtime snapshot as needs-review evidence. |
 | Utah FORGE MT + seismic demo page | Observed present | `projects/utah-forge/pages/20_mt_seismic_integration_check.json` creates a bounded verification page for MT slices plus Phase 3 seismic browser. It is pending visual/human review and is not accepted final demo scope. |
 | Utah FORGE demo walkthrough v0 | Observed present | `projects/utah-forge/pages/30_demo_site_context.json` through `35_demo_provenance_review.json` create a six-page page/overlay walkthrough with screenshot and diagnostics evidence. It is pending visual/human review and is not accepted demo scope. |
@@ -196,21 +196,21 @@ Boundary: Batch 2A wrappers are proposed/review input only. They do not change r
 
 Observed: project-local wrappers now exist for seismic navigation/inventory/provenance, seismic recipes/presets/export layouts, and MT top surface / ground cap.
 
-Observed: `docs/dev-context/templates/render-computed-artifact-verification-receipt.template.md` now exists as a reusable template for later artifact visual/technical verification receipts.
+Observed: the old reusable evidence template has been removed from active context. Use fresh, focused artifact visual/technical evidence only when the current task needs it.
 
-Boundary: Batch 2B wrappers and the template are proposed/review input only. They do not change runtime behavior, project manifests, pages, visibility, rendering, prep scripts, generated artifacts, computed outputs, load policy, or acceptance state.
+Boundary: Batch 2B wrappers and the old evidence-template note are proposed/review input only. They do not change runtime behavior, project manifests, pages, visibility, rendering, prep scripts, generated artifacts, computed outputs, load policy, or acceptance state.
 
-## First Utah FORGE MT / Seismic Verification Receipt
+## First Utah FORGE MT / Seismic Historical Evidence
 
-Observed: `docs/dev-context/Verification-Receipts/VER-2026-05-15-001-utah-forge-mt-slices-seismic-browser.md` now exists and is linked from the MT resistivity slices and Phase 3 seismic browser wrappers.
+Observed: historical MT/seismic verification evidence existed before the purge and remains recoverable from Git history; active work should capture fresh evidence when needed.
 
-Boundary: This receipt does not accept artifacts or demo readiness. It records metadata/path/build evidence and leaves screenshot/open visual verification, co-render readiness, seismic default product, page visibility, and human acceptance open.
+Boundary: This historical evidence does not accept artifacts or demo readiness. It records metadata/path/build evidence and leaves screenshot/open visual verification, co-render readiness, seismic default product, page visibility, and human acceptance open.
 
 ## Metadata Validation And Project Coverage Tooling
 
 Observed: `tools/validate-artifact-metadata.mjs` now supports `--project projects/utah-forge`, validates index-listed wrappers plus any discovered `*.metadata.json` files, reports missing/unlisted wrapper files, and detects duplicate JSON keys before parsing.
 
-Observed: `tools/report-project-artifact-coverage.mjs` now generates `docs/dev-context/Generated-Reports/project-artifact-coverage.md` and `.json` from read-only project manifests, environment defaults, pages, and artifact metadata folders.
+Observed: `tools/report-project-artifact-coverage.mjs` now generates ignored coverage reports under `test-results/project-artifact-coverage/` from read-only project manifests, environment defaults, pages, and artifact metadata folders.
 
 Boundary: This tooling is implementation support only. It does not change runtime behavior, manifests, pages, visibility, rendering, prep scripts, data artifacts, generated outputs, wrapper acceptance, or final scope.
 
@@ -218,7 +218,7 @@ Boundary: This tooling is implementation support only. It does not change runtim
 
 Observed: a dev-only diagnostics hook now exists through `src/scene/layerDiagnostics.ts` and is installed from `src/App.tsx` only when `import.meta.env.DEV` is true.
 
-Observed: `docs/dev-context/Verification-Receipts/VER-2026-05-15-002-utah-forge-runtime-open-diagnostics.md` records a first Utah FORGE runtime open, screenshot, and diagnostics snapshot. The receipt remains `needs review` and does not accept visual quality, seismic defaults, MT/seismic co-render readiness, runtime loading policy, or demo scope.
+Observed: historical runtime-open diagnostics evidence existed before the purge and remains recoverable from Git history. Fresh runtime evidence should be captured for current decisions.
 
 Boundary: Diagnostics are read-only implementation support. They do not change loading, visibility, rendering, materials, camera/page state, scalar ranges, color ramps, seismic products, MT products, computed artifacts, prep scripts, project manifests, page JSON, or data artifacts.
 
@@ -274,7 +274,7 @@ Small app/system changes that may help once structure is clear:
 | Candidate | Reason parked |
 | --- | --- |
 | Broad refactors | Too risky before structural map and rendering-quality checks exist. |
-| Processware/SRI app integration | Explicitly parked until structure is clarified. |
+| External control-plane app integration | Explicitly parked until structure is clarified. |
 | Full automation | Could distract from client-quality rendering and current structure. |
 | Project creation wizard | Useful later, not the immediate structural refinement. |
 | Major export pipeline | Useful later, but not before current data/page/render structure is clarified. |

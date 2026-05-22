@@ -89,7 +89,7 @@
     "legendPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/legend.json",
     "materialNotes": "Slice opacity, depth behavior, color ramp, labels/status, and MT/seismic co-rendering quality must be visually checked before client-facing acceptance.",
     "visualCheckRequired": true,
-    "visualCheckReceipt": "docs/dev-context/Verification-Receipts/VER-2026-05-15-004-utah-forge-demo-walkthrough-v0.md",
+    "visualCheckReceipt": null,
     "notes": "Render-ready and page-referenced, but not accepted demo scope."
   },
   "provenance": {
@@ -99,7 +99,7 @@
   "limitations": [
     "Not accepted project state.",
     "Does not approve default visibility or demo use.",
-    "CRS, transform, slice parameters, scalar range, color ramp, and visual check receipt require human review.",
+    "CRS, transform, slice parameters, scalar range, color ramp, and visual evidence require human review.",
     "Do not simplify slices, scalar ranges, color ramps, legends, material/depth behavior, or vertical scale as a proxy for bloat reduction.",
     "No runtime, loader, page, visibility, rendering, prep, or data artifact behavior changed."
   ],
@@ -114,7 +114,7 @@
     "questions": [
       "Are MT slices accepted as the clean client-facing MT presentation layer?",
       "Are the slice windows, scalar range, legend, color ramp, and 1:1 vertical scale accepted?",
-      "What visual receipt proves slices preserve spatial relation, color meaning, camera polish, and MT/seismic co-rendering quality?"
+      "What visual evidence proves slices preserve spatial relation, color meaning, camera polish, and MT/seismic co-rendering quality?"
     ],
     "acceptedBy": null,
     "acceptedAt": null,

@@ -14,26 +14,22 @@ Last populated: 2026-05-15
 ## Current Human Priority
 
 - Observed: Current priority is GeoVox data/system/app structural refinement before further implementation.
-- Observed: Current operating mode is software-build mode. Normal work should start from the requested subsystem and current source/project files, not from Utah FORGE intake directives or staged drops.
-- Observed: Intake remains a dormant Add to Project capability. It should only steer agent work when the human explicitly asks for intake, staged files, a drop, a directive, a review route, or Add to Project behavior.
-- Observed: Processware/SRI implementation is parked for now and should not be implemented in the app during this refinement step.
+- Observed: Current operating mode is software-build mode. Normal work should start from the requested subsystem and current source/project files, not from stale staged-intake traces.
+- Observed: Add to Project remains a dormant UI surface. It should only steer agent work when the human explicitly resumes it.
+- Observed: External control-plane implementation is parked for now and should not be implemented in the app during this refinement step.
 - Observed: Seismic is needed and underway; do not assume seismic should be parked, hidden, removed, or downgraded.
 - Observed: Rendering beauty and high-quality client-data visualization are non-negotiable.
 - Observed: Bloat reduction means reducing structural confusion, not simplifying visuals, weakening rendering, or reducing rich datasets to thin visual products.
 - Observed: Computed artifact generation is explicitly protected; isolines, isobands, contours, heat maps, scalar slices, scalar volumes, threshold surfaces, seismic products, meshes, point-cloud tiles, legends, and provenance/status wrappers are core GeoVox capabilities.
 - Observed: Updated time-pressure/demo goals will arrive later; scope remains under refinement and is not locked.
 - Observed: `Data-System-App-Refinement-Plan.md` records the current proposed structural refinement plan.
-- Observed: `Conceptual-Frame-Geovox-Lab-Processware-Breadcrumbs.md` now exists as context only, not active scope, not official DHF, and not an accepted product requirement.
+- Observed: Old conceptual control-plane notes are not active app scope.
 
-## Intelligence Layer Current State
+## Staged-Intake State
 
-- Observed: `docs/dev-context/Intelligence-Layer-Current-State.md` is now the active orientation doc for the Utah FORGE intelligence layer.
-- Observed: The canonical intake-review model remains available only for explicit intake work: `intake_manifest.json` / `intake_context.md` -> `INTAKE_REVIEW.json/.md` -> `LATEST_INTAKE_REVIEW.json` -> optional `USER_CONTEXT_RESPONSE.json/.md` -> later separate route execution.
-- Observed: Intake test artifacts and active intake page surfaces have been purged from the Utah FORGE active project surface so they do not distract normal software-build work.
-- Observed: `AI_REVIEW`, `LATEST_AI_REVIEW`, and `INTAKE_SWITCHBOARD` are compatibility aliases only.
-- Observed: `AGENT_TRAILHEAD`, `BUILD_DIRECTIVE`, and `INTENT_BINDINGS` are historical trace only, not active authority.
-- Observed: Pre-canonical planning docs were archived under `docs/dev-context/Archive/intake-intelligence-precanonical-2026-05-20/`.
-- Unverified / needs human review: This current model is not accepted product scope until a human records acceptance in `Acceptance-Register.md`.
+- Observed: Staged-intake records, review-route artifacts, old compatibility aliases, and pre-canonical planning notes were purged from active context.
+- Observed: The retained Add to Project UI is only a dormant staging surface until explicitly resumed.
+- Unverified / needs human review: Any future generalized intake model must be re-specified from current needs rather than old traces.
 
 ## What Is Real Now
 
@@ -62,8 +58,7 @@ Last populated: 2026-05-15
 | Shahbazi orthomosaic, textured mesh/GLB, and full point-cloud stream remain future targets. | Observed | `projects/case-study-b/project.json`, `docs/01-scope.md` |
 | Export/publish, MP4, still-pack, provenance PDF, project wizard, transactional save, and production auth remain unresolved product work. | Observed | `docs/01-scope.md`, `docs/04-build-sequence.md`, `docs/handover-for-claude.md` |
 | Persistent multi-audience authoring is not implemented; Shahbazi Audience Lens is runtime-only. | Observed | `docs/02-architecture.md`, `src/audience/` |
-| SRI / Processware / DHF-style rails are external documentation/control-plane concepts here, not app modules. | Observed | `docs/dev-context/HOME.md`, user instruction for this pass |
-| GeoVox lab / Processware / SRI / breadcrumb conceptual frame is recorded for future-agent orientation only. | Observed | `docs/dev-context/Conceptual-Frame-Geovox-Lab-Processware-Breadcrumbs.md` |
+| External control-plane rails are outside the app unless explicitly reintroduced. | Observed | user instruction for this cleanup |
 
 ## Appears Contradictory
 
@@ -75,9 +70,8 @@ Last populated: 2026-05-15
 | Some Utah docs say default visible layers are MT stations, full-density, and top surface; current `environment.json` defaults public context, full-density MT, and seismic browser, but not stations/top surface. | Observed | `projects/utah-forge/AI_NEXT_AGENT_START_HERE.md`, `projects/utah-forge/Stage 2 - Phase 3 MT resistivity.md`, `projects/utah-forge/environment.json` |
 | START-HERE says Utah authored MT slices are the default presentation layer; current `environment.json` does not include slices in `defaultVisibleLayers`. | Observed | `docs/START-HERE.md`, `projects/utah-forge/environment.json` |
 
-## Utah FORGE Seismic Receipt
+## Utah FORGE Seismic Record
 
-- Observed: `Verification-Receipts/VER-2026-05-15-002-utah-forge-seismic-contradiction.md` records evidence on both sides of the Utah FORGE seismic contradiction.
 - Observed: Blocked/not-active evidence appears in Utah project docs and data READMEs.
 - Observed: Active/default-visible/implemented evidence appears in `project.json`, `environment.json`, one page config, generated seismic browser manifests, prep scripts, source loader/editor/scene code, and the Utah smoke test.
 - Observed: The contradiction was documented only; no source, prep, project, environment, default-visibility, generated-data, or test changes were made.
@@ -88,18 +82,10 @@ Last populated: 2026-05-15
 - Unverified / needs human review: How older blocked/not-active seismic docs should be superseded, preserved, or rewritten.
 - Unverified / needs human review: What the intended default demo behavior should be for seismic without parking, hiding, or downgrading active work by assumption.
 
-## Control-Rail Closeout
-
-- Observed: `Change-Receipts/CHG-2026-05-15-001-dev-context-control-rail.md` closes the docs/dev-context scope-refinement/control-plane setup pass as documented work.
-- Observed: The pass created or updated lab-book/control records for current state, open loops, scope refinement, code/data/doc maps, source/inference/acceptance registers, verification receipts, and change receipts.
-- Observed: The closeout receipt records that no app implementation, source/prep/project/manifest/config change, SRI app integration, data pipeline change, doc move, or scope lock was intended.
-- Observed: This docs/control pass is complete as documentation setup.
-- Unverified / needs human review: The pass is not accepted shared state until a human reviews and records acceptance, rejection, or supersession in `Acceptance-Register.md`.
-
 ## Documentation Inventory Risk
 
 - Observed: Active truth appears scattered across root docs, canonical `docs/` files, `CHANGELOG.md`, project-local Utah/Shahbazi/Woodjam docs, generated data READMEs, and `docs/dev-context/`.
-- Observed: `docs/Doc-Register.md` now inventories root docs, canonical docs, dev-context records, project-local handoffs, data intake docs, and selected source README/metadata notes.
+- Observed: Root docs, canonical docs, project-local handoffs, data notes, and metadata notes still need ongoing reconciliation when they conflict.
 - Observed: Highest-risk contradictions currently involve Utah FORGE foundation/no-real-data wording, active Phase 3 MT state, seismic active/blocked wording, and default-visible layer state.
 - Observed: Root README/CLAUDE should not be relied on as complete current-state authority until classified because they retain Woodjam-first/TBD-shell framing.
 - Observed: Utah project-local AI handoffs, data READMEs, stage docs, and decisions should not be relied on alone until human review resolves seismic and default-visibility contradictions.
@@ -113,25 +99,23 @@ Last populated: 2026-05-15
 - Observed: Default-visible layer intent cannot be inferred from prose docs alone because the manifest/environment disagree with several notes.
 - Observed: Older Utah seismic intent cannot be inferred from runtime/config evidence alone because multiple Utah docs record explicit "do not start/process/wire seismic" instructions, but latest human context says seismic is needed and underway.
 - Observed: Utah seismic runtime visibility cannot be inferred from `defaultVisibleLayers` alone because the inspected environment style includes the seismic layer in defaults while setting seismic product visibility entries to false.
-- Observed: Version-control/diff verification unresolved; `git diff -- docs/dev-context` could not run because `C:\GeoSee_Dev` is not currently a git repository.
-- Observed: No-git state weakens receipt reliability; filesystem modified-time checks are weaker than real git diff/status verification.
+- Observed: The active repo is `C:\GeoSee\GeoSee_Dev`; Git history remains local unless a remote is added.
 - Unverified / needs human review: Whether the active Utah FORGE seismic browser was explicitly approved after earlier "do not start seismic" notes.
 - Unverified / needs human review: Whether current Utah public topo/default-visible choices are desired demo state or transient work state.
 - Unverified / needs human review: Which existing docs should be active, historical, stale, or proposal.
-- Unverified / needs human review: Human review is needed before initializing git or changing repo source-control structure.
 
 ## Next Valid Move
 
-Observed next valid move: create a bounded Data/System/App Refinement Plan review, then choose one structural documentation or audit prompt such as data/status manifest refinement, project-local data status README, page/layer visibility clarity, render-quality preservation checks, seismic status/provenance clarity, or app architecture map only. Do not refactor `src/`, move docs, initialize git, change source-control structure, simplify rendering, park seismic by assumption, or turn candidate architecture ideas into committed scope from this pass.
+Observed next valid move: create a bounded Data/System/App Refinement Plan review, then choose one structural documentation or audit prompt such as data/status manifest refinement, project-local data status README, page/layer visibility clarity, render-quality preservation checks, seismic status/provenance clarity, or app architecture map only. Do not simplify rendering, park seismic by assumption, or turn candidate architecture ideas into committed scope from this pass.
 
-## Utah FORGE Intake Test State
+## Utah FORGE Staged-Intake Test State
 
 Last updated: 2026-05-20
 
-Status: quarantined / not active build context.
+Status: purged from active build context.
 
-The prior Utah FORGE intake tests are over. Active test drops, archived test drops, sample intake vocabulary, latest intake pointers, intake review pages, and intake overlays have been removed from the active project surface.
+The prior Utah FORGE staged-intake tests are over. Active test drops, archived test drops, sample vocabulary, latest pointers, review pages, and review overlays have been removed from the active project surface.
 
-The Add to Project UI remains available as a dormant capability. It is not the problem. The operating rule is that agents should not read or follow intake drops, `BUILD_DIRECTIVE`, `LATEST_INTAKE_REVIEW`, `AI_REVIEW`, or switchboard files during normal software-build work unless the human explicitly asks for intake work.
+The Add to Project UI remains available as a dormant capability. It is not the problem. The operating rule is that agents should not follow staged-review traces during normal software-build work unless the human explicitly resumes that work.
 
-No intake artifact is accepted project truth. If intake is resumed later, treat it as a new explicit task with fresh staged evidence.
+No staged-intake artifact is accepted project truth. If this area is resumed later, treat it as a new explicit task with fresh staged evidence.

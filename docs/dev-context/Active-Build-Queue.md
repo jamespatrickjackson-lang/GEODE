@@ -4,11 +4,11 @@ Status: active software-build queue, not historical backlog
 
 Last updated: 2026-05-20
 
-This file lists current software-build issues that help shape the alpha. It intentionally excludes intake lifecycle work unless the human explicitly resumes intake.
+This file lists current software-build issues that help shape the alpha. It intentionally excludes staged-intake lifecycle work unless the human explicitly resumes it.
 
 ## Now
 
-- Keep Utah FORGE visual/topo/geophysics work moving from current source and project files, not intake directives.
+- Keep Utah FORGE visual/topo/geophysics work moving from current source and project files, not staged-intake traces.
 - Treat Phase 3 MT, seismic browser, product pages, topo surface controls, graticule controls, working-area focus, legends, overlays, and transitions as active build surfaces.
 - Preserve rendering quality. Bloat reduction means reducing structural confusion, not weakening visual fidelity or data richness.
 
@@ -17,7 +17,7 @@ This file lists current software-build issues that help shape the alpha. It inte
 - `LayerPanel.tsx` is too large for repeated feature work. Extract active editor control islands only when they are touched.
 - `SceneManager.ts` is too large for repeated visual/runtime work. Extract active terrain/graticule/focus/seismic/scalar helpers only when touched.
 - Some older Utah docs still describe Utah FORGE as foundation-only or seismic-blocked. Use current project files and `Active-Build-Context.md` first.
-- Visual audit evidence still sits under `projects/utah-forge/intake_staging/audits/`; it is software-build evidence, not intake routing state. Move later only if worth the churn.
+- Prior visual audit artifacts were purged from active context. Capture fresh focused evidence when visual QA is needed.
 
 ## Current Verification Defaults
 
@@ -36,7 +36,7 @@ This file lists current software-build issues that help shape the alpha. It inte
 
 ## Parked Unless Explicitly Asked
 
-- Intake drops, intake route execution, `BUILD_DIRECTIVE`, `LATEST_INTAKE_REVIEW`, and switchboard artifacts.
-- Processware/SRI/breadcrumb implementation.
+- Staged-intake drops and route execution artifacts.
+- External control-plane implementation.
 - New generalized project intake.
 - Broad documentation reconciliation beyond the stale-warning notes needed to prevent agent drift.

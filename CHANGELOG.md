@@ -143,7 +143,6 @@ This entry records the later-session changes that are still present in the repo 
   - `projects/utah-forge/overlays/01_overview/text.md`
   - `projects/utah-forge/data/README.md`
   - `projects/utah-forge/data_refs/README.md`
-  - `projects/utah-forge/intake_staging/sample/*`
 - `src/projects/projectCatalogRuntime.ts` includes `UTAH_FORGE_PROJECT`.
 - Utah FORGE appears as a normal selectable project on the landing page.
 - The Utah FORGE scene contains a procedural reference stage layer:
@@ -392,7 +391,6 @@ This entry records the work from the current GeoSee session that is still kept i
   - `projects/case-study-b/pages/04_planning_governance.json`
   - `projects/case-study-b/pages/05_public_communication.json`
   - `projects/case-study-b/overlays/*/text.md`
-  - `projects/case-study-b/intake_staging/sample/`
   - `projects/case-study-b/data/`
   - `projects/case-study-b/data_refs/`
 - The project remains framed as a demo/reference quarry project, not a final engineering model.
@@ -462,7 +460,7 @@ This entry records the work from the current GeoSee session that is still kept i
   - synthetic or placeholder demo layers
   - future final/analysis-grade products
 
-### Intake rails kept
+### Source and processed rails kept
 
 - The Shahbazi intake folder remains:
   - `projects/case-study-b/data/raw/shahbazi_gravel_pit/`
@@ -470,12 +468,7 @@ This entry records the work from the current GeoSee session that is still kept i
   - `projects/case-study-b/data/processed/shahbazi_gravel_pit/`
 - The Shahbazi reference folder remains:
   - `projects/case-study-b/data_refs/shahbazi_gravel_pit/`
-- Sample staging records remain in `projects/case-study-b/intake_staging/sample/`, including:
-  - `source_inventory.json`
-  - `gaps.json`
-  - `unresolved.json`
-  - `review_queue.json`
-  - `receipts.jsonl`
+- Historical sample staging records were purged from the active repo; recover them from Git history only if a future task explicitly needs them.
 
 ### Raw Shahbazi source files currently staged
 

@@ -34,7 +34,7 @@ Next valid move: human review of Slice 1B before considering any heavier project
 
 ## Loader Registry Slice 1B Visual Regression
 
-Observed: `docs/dev-context/Verification-Receipts/VER-2026-05-16-004-loader-registry-slice-1b-visual-regression.md` records a bounded visual/runtime regression check for Base GUI and Utah FORGE after Slice 1B.
+Observed: historical visual/runtime regression evidence for Base GUI and Utah FORGE after Slice 1B existed before the purge and remains recoverable from Git history.
 
 Status: verification evidence only. Base GUI and Utah FORGE opened, screenshots were captured, runtime diagnostics were available, wrapper validation passed, coverage reporting passed, and `npm run build` passed. The receipt remains `needs review` and does not mark the refactor accepted.
 

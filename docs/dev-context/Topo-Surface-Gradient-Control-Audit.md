@@ -54,4 +54,4 @@ The v1 editor keeps exactly five color stops, matching the existing PDF-style pa
 - Targeted Playwright: `npx playwright test tests/utah-forge-smoke.spec.ts -g "surface elevation gradient controls"` passed.
 - Build: `npm run build` passed.
 - Artifact metadata: `node tools/validate-artifact-metadata.mjs --project projects/utah-forge` passed.
-- Artifact coverage: `node tools/report-project-artifact-coverage.mjs` passed and refreshed `docs/dev-context/Generated-Reports/project-artifact-coverage.*`.
+- Artifact coverage: rerun `node tools/report-project-artifact-coverage.mjs` to refresh ignored coverage output under `test-results/project-artifact-coverage/`.

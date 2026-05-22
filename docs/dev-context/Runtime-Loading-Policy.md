@@ -53,11 +53,11 @@ Observed: Utah FORGE batch 2A wrappers now add proposed `loadClass` values for M
 
 Observed: Utah FORGE batch 2B wrappers now add proposed `loadClass` values for seismic navigation/provenance support, seismic recipes/presets, and MT top surface. All wrapper `loadClass` values are review inputs only and do not authorize runtime loading, lazy loading, default visibility, page, manifest, or disposal changes.
 
-Observed: `docs/dev-context/Generated-Reports/project-artifact-coverage.md` now provides a generated review report across Utah FORGE, Case Study B / Shahbazi, Woodjam, and Base GUI. Review this report before any runtime loading implementation; generated coverage can expose unwrapped default-visible layers, wrappers without matching layer IDs, and project-specific layer risks, but it does not authorize runtime loading, visibility, page, manifest, render, material, scalar-range, or disposal changes.
+Observed: `tools/report-project-artifact-coverage.mjs` now provides ignored generated review reports under `test-results/project-artifact-coverage/` across Utah FORGE, Case Study B / Shahbazi, Woodjam, and Base GUI. Review a fresh report before any runtime loading implementation; generated coverage can expose unwrapped default-visible layers, wrappers without matching layer IDs, and project-specific layer risks, but it does not authorize runtime loading, visibility, page, manifest, render, material, scalar-range, or disposal changes.
 
 Observed: `docs/dev-context/Runtime-Diagnostics.md` now documents a dev-only diagnostics hook exposed as `window.__GEOVOX_DIAGNOSTICS__` in Vite dev mode. Use diagnostics snapshots before implementing load-policy changes to see registered/loaded/visible layer state and approximate resource counts. Diagnostics are read-only evidence only; they do not authorize lazy loading, disposal, visibility, render, material, scalar, color-ramp, seismic, MT, page, or manifest changes.
 
-Observed: `projects/utah-forge/pages/20_mt_seismic_integration_check.json` now provides a page-level MT + seismic verification target with screenshot and diagnostics evidence. This page does not authorize runtime loading changes. Review `docs/dev-context/Verification-Receipts/VER-2026-05-15-003-utah-forge-mt-seismic-demo-page.md` before using it to guide load-policy implementation.
+Observed: `projects/utah-forge/pages/20_mt_seismic_integration_check.json` provides a page-level MT + seismic verification target. Capture fresh screenshot and diagnostics evidence before using it to guide load-policy implementation.
 
 Observed: the Utah FORGE demo walkthrough v0 pages now provide page-level review targets for site context, MT acquisition, MT slices, Phase 3 seismic, MT + seismic integration, and provenance/review caveats. These pages and their screenshots/diagnostics are evidence for human review only. They do not authorize runtime loading, lazy loading, disposal, default visibility, page schema, manifest, material, scalar range, color ramp, seismic product, MT product, or global render changes.
 
@@ -81,7 +81,7 @@ Structural/runtime bloat risk is not the presence of high-quality data. The risk
 - no full-density deletion
 - no computed-artifact simplification
 - no broad refactor
-- no Processware implementation
+- no external control-plane implementation
 - no manifest/page/schema change in this pass
 - no SceneManager split in this pass
 - no layerLoader refactor in this pass

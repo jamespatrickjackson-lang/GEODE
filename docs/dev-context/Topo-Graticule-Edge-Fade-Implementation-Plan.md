@@ -32,7 +32,7 @@ This is a visual map-reference feature. Terrain edge fade is the visual authorit
 - `src/editor/LayerPanel.tsx`
 - `tests/utah-forge-smoke.spec.ts`
 - `docs/dev-context/Topo-Graticule-Edge-Fade-Implementation-Plan.md`
-- `docs/dev-context/Change-Receipts/CHG-2026-05-20-058-topo-graticule-edge-fade-plan.md`
+- fresh implementation notes, if this work resumes
 
 ## Implementation Plan
 
@@ -74,4 +74,4 @@ Implemented on 2026-05-20.
 - Runtime line styling now receives terrain edge fade uniforms and blends toward white in the terrain fade band.
 - Runtime label placement now evaluates stored graticule candidates against the active terrain edge fade boundary instead of the fixed circular inset.
 - The editor exposes edge awareness, edge strength, edge line color, edge label color, and fade-label visibility controls under the longitude/latitude grid layer.
-- Targeted build, metadata validation, artifact coverage, and smoke checks passed. See `docs/dev-context/Change-Receipts/CHG-2026-05-20-058-topo-graticule-edge-fade-plan.md`.
+- Targeted build, metadata validation, artifact coverage, and smoke checks should be rerun if this work resumes.

@@ -8,7 +8,7 @@ Last updated: 2026-05-20
 
 GeoSee is in software-build mode. Start from the requested runtime/editor/visualization subsystem and current source files.
 
-Do not route normal work through Utah FORGE intake artifacts, `BUILD_DIRECTIVE`, staged drops, `LATEST_INTAKE_REVIEW`, `AI_REVIEW`, or switchboard files unless the human explicitly asks for intake, a drop, staged files, a directive, route review, or Add to Project behavior.
+Do not route normal work through staged-intake records or old review-route artifacts. The Add to Project UI is retained as an explicit, dormant surface only.
 
 ## Current App Shape
 
@@ -40,7 +40,7 @@ Use these because they directly protect software work:
 - `node tools/validate-artifact-metadata.mjs --project projects/utah-forge`
 - `node tools/report-project-artifact-coverage.mjs`
 - targeted Playwright checks in `tests/utah-forge-smoke.spec.ts` after the visual direction is settled
-- receipts and audits tied to the current change
+- notes or screenshots tied to the current change
 
 ## Visual Review Loop
 
@@ -73,12 +73,9 @@ For agent-run checks, prefer a scoped dev server command such as `npm run dev --
 Avoid these unless explicitly relevant:
 
 - broad intake history
-- `docs/dev-context/Change-Receipts/**`
-- `docs/dev-context/Verification-Receipts/**`
-- `docs/dev-context/Verification-Receipts/screenshots/**`
-- `docs/dev-context/Generated-Reports/**`
-- `docs/dev-context/Archive/**`
-- old `BUILD_DIRECTIVE` rails
+- old receipt archives
+- generated report folders
+- old review-route rails
 - historical open-loop rows as active scope
 - root docs that predate current Utah FORGE MT/seismic/topo work
 - reading visual audit screenshots unless the current task is visual QA

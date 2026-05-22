@@ -16,10 +16,21 @@ docs/dev-context/Verification-Receipts/
 docs/dev-context/Generated-Reports/
 docs/dev-context/Archive/
 docs/dev-context/**/screenshots/
+docs/dev-context/Future-Holds/
+docs/dev-context/Prompts/
+docs/dev-context/Backups/
+docs/dev-context/DHF-Links/
+docs/dev-context/Audits/
+docs/dev-context/System-Requirements/
+docs/dev-context/Visual-Review/
 
-projects/utah-forge/intake_staging/audits/
+projects/utah-forge/intake_staging/
+projects/case-study-b/intake_staging/
+prep/raw/bc_digital_geology/
+projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/
 projects/utah-forge/screenshots/
 projects/utah-forge/reports/
+test-results/project-artifact-coverage/
 
 GeoSee_Archive/
 GeoSee_Dev_Past/

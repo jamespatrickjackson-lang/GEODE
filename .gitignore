@@ -8,9 +8,24 @@ test-results/
 .DS_Store
 desktop.ini
 
-# Intake-staging audits are historical/QA artifacts; the directory's own
-# BUILD_DIRECTIVE.md flags them do_not_use_for_software_build.
-projects/utah-forge/intake_staging/audits/
+# Purged staging/context/source-only material. Keep it out of the active repo
+# unless explicit intake or source-regeneration work is resumed.
+projects/utah-forge/intake_staging/
+projects/case-study-b/intake_staging/
+prep/raw/bc_digital_geology/
+projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/
+docs/dev-context/Archive/
+docs/dev-context/Change-Receipts/
+docs/dev-context/Verification-Receipts/
+docs/dev-context/Generated-Reports/
+docs/dev-context/Future-Holds/
+docs/dev-context/Prompts/
+docs/dev-context/Backups/
+docs/dev-context/DHF-Links/
+docs/dev-context/Audits/
+docs/dev-context/System-Requirements/
+docs/dev-context/Visual-Review/
+test-results/project-artifact-coverage/
 
 # Raw deliveries, photogrammetry inputs, and survey appendix duplicates
 # were moved to C:\GeoSee\GeoSee_Archive\ on 2026-05-21. The app does not load

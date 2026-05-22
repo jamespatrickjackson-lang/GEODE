@@ -196,7 +196,7 @@ Observed: `tools/validate-artifact-metadata.mjs` now supports project-wide wrapp
 - detection of wrapper files present on disk but missing from the index
 - duplicate JSON key detection before `JSON.parse`, so repeated keys such as `visualCheckReceipt` are treated as validation failures
 
-Observed: `tools/report-project-artifact-coverage.mjs` now generates read-only project coverage reports under `docs/dev-context/Generated-Reports/`. The report is review input only and does not change wrapper acceptance, runtime behavior, project manifests, pages, visibility, rendering, prep scripts, data artifacts, or generated outputs.
+Observed: `tools/report-project-artifact-coverage.mjs` now generates ignored read-only project coverage reports under `test-results/project-artifact-coverage/`. The report is review input only and does not change wrapper acceptance, runtime behavior, project manifests, pages, visibility, rendering, prep scripts, data artifacts, or generated outputs.
 
 ## First Project-Local Utah FORGE Wrappers
 

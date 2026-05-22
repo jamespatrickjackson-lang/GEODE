@@ -5,7 +5,6 @@
   "projectRoot": "projects/case-study-b",
   "dataRoot": "projects/case-study-b/data",
   "dataRefsRoot": "projects/case-study-b/data_refs",
-  "intakeStagingRoot": "projects/case-study-b/intake_staging",
   "referenceShape": "woodjam",
   "demoStatus": "folder project with placeholder data references",
   "audienceLensDefaults": [

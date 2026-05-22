@@ -139,7 +139,7 @@ Do not implement these from this table alone:
 3. Add page-required, preload, and toggle-on-demand support only after render/computed-artifact quality checks are accepted.
 4. Add a loader lifecycle/disposal contract that preserves page transitions, QA access, and high-fidelity optional paths.
 5. Add an optional dev HUD for loaded layers/resources after runtime behavior is understood.
-6. Split project-specific loader registration later, after load classes and verification receipts are stable.
+6. Split project-specific loader registration later, after load classes and focused verification evidence are stable.
 
 ## Human Review Needed
 

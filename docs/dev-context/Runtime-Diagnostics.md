@@ -74,12 +74,12 @@ Use diagnostics to compare what is loaded, visible, hidden, and resource-heavy b
 
 - `docs/dev-context/Runtime-Loading-Policy.md`
 - `docs/dev-context/Render-Quality-Checks.md`
-- `docs/dev-context/Generated-Reports/project-artifact-coverage.md`
+- regenerated `test-results/project-artifact-coverage/project-artifact-coverage.md`
 - focused screenshot/render receipts
 - human review
 
 ## Captured Utah FORGE Demo Page Snapshot
 
-Observed: `docs/dev-context/Generated-Reports/runtime-diagnostics-utah-forge-mt-seismic-demo-page.json` captures a dev-only diagnostics snapshot for the `MT + Seismic Integration Check` page.
+Observed: historical dev-only diagnostics snapshots were purged from active context and remain recoverable from Git history. Capture fresh diagnostics for current decisions.
 
 The snapshot reports `utah-forge-mt-resistivity-slices` and `utah-forge-phase3-seismic-browser` visible together. It is structural/runtime evidence only and does not accept render quality, technical accuracy, product choice, page scope, or runtime loading behavior.
