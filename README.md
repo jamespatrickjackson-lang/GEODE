@@ -31,7 +31,9 @@ See `CLAUDE.md` "Locked decisions" for full stack rationale.
       docs/                 # all design / scope / decision docs
       src/                  # the application code
       projects/             # individual presentation projects (content)
-        woodjam/            # the alpha demo
+        woodjam/            # original reference project
+        case-study-b/        # Shahbazi quarry case study
+        utah-forge/          # geothermal/geophysics case study
 
 ## Working with this repo
 
@@ -56,11 +58,12 @@ The most important stable docs are:
 - `docs/01-scope.md` — what is in and out for alpha
 - `docs/03-decisions.md` — the running decision log
 
-## Building the Woodjam demo
+## Building Case Studies
 
-The Woodjam presentation is the artifact we take to market-feedback
-meetings. Its content lives in `projects/woodjam/`. The brief and data
-manifest live in `docs/woodjam/`.
+GeoSee is the tool being tested and sharpened. Each project under `projects/`
+is a case study for market feedback and architecture learning. Woodjam remains
+the original reference project, while Shahbazi and Utah FORGE exercise different
+data, rendering, provenance, and workflow needs.
 
 ## Contact
 

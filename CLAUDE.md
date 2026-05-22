@@ -1,8 +1,10 @@
 # GeoSee Alpha
 
 This repo is an **alpha prototype** built to gather market feedback from
-mining companies. It is NOT a v1 product. Architecture is intentionally
-disposable. Optimize for speed to a learnable artifact.
+mining companies. It is NOT a v1 product. Architecture is provisional, but it
+is still the product architecture under test. Optimize for fast feedback
+without treating the tool, data contracts, or project architecture as
+disposable.
 
 ## Why this exists — the 5 questions we're testing
 
@@ -16,11 +18,14 @@ Every feature, decision, and PR should help answer at least one of:
 
 If a proposed feature does not ladder to one of these, push back before building.
 
-## The deliverable is the Woodjam demo, not the tool
+## The deliverable is the tool sharpened through case studies
 
-The tool can be rough where it does not show. The Woodjam presentation must be
-visually impressive, narratively tight, and data-backed. Spend disproportionate
-effort on demo polish, not tool polish.
+GeoSee is the tool. Woodjam, Shahbazi / Case Study B, Utah FORGE, and future
+projects are equal case studies used to gather end-user feedback, stress
+different parts of the architecture, and expose what the product should become.
+Each case study should be visually credible, narratively useful, and honest
+about its data/provenance state. Polish the case studies and the tool together
+when feedback shows the architecture needs to improve.
 
 ## Before you do X, read Y
 
@@ -54,11 +59,11 @@ explicitly to the user before acting; do not silently propose alternatives.
 - **Build tool:** Vite
 - **Language:** TypeScript
 - **Hosting:** self-hosted static builds (no Cesium ion, no Google 3D Tiles)
-- **Project model:** single project per build; duplicate-and-edit for variants
+- **Project model:** multi-project workspace; each project is a feedback case study
 - **Provenance:** manual JSON sidecar + printable PDF (no workflow engine)
 - **Charts:** images in alpha; data model designed to support rendered charts later
 - **Video export:** headless Chromium screen recording → MP4 (no offline cinematic pipeline)
-- **Audience modes:** none in alpha; one project = one audience
+- **Audience modes:** not productized yet; case-study-specific experiments are allowed
 - **Data formats:** CSV, GeoJSON, glTF, GeoTIFF only
 - **CRS handling:** one CRS per project, fixed at creation
 
@@ -79,7 +84,8 @@ Full reasoning for each lives in `docs/03-decisions.md`.
 ## What this alpha is NOT
 
 - Not a SaaS platform — no multi-tenancy, no user accounts, no billing
-- Not a v1 product — do not build durable architecture; build throwaway-grade
+- Not a v1 product — avoid overbuilding, but keep architecture coherent enough
+  to learn from and extend across case studies
 - Not a geological modeling tool — no measurements, no engineering use
 - Not for end-client editing — internal GeoSee staff are the only authors
 

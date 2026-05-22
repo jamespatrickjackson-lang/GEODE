@@ -441,3 +441,13 @@ Each decision records:
 **Why:** The landing/project architecture should be ready before the detailed briefing arrives, while keeping all real technical claims out of the repo until sources are known.
 
 **Trade-off accepted:** Utah FORGE currently opens with a procedural reference stage only. CRS, bounds, source data, and real layers remain pending.
+
+## #043 - 2026-05-21 - GeoSee is the product, case studies are feedback vehicles
+
+**Considered:** frame Woodjam as the deliverable and the tool as secondary, or frame GeoSee as the tool being built and sharpened through multiple case studies.
+
+**Chose:** GeoSee is the tool under test. Woodjam, Shahbazi / Case Study B, Utah FORGE, and future projects are equal case studies for end-user feedback and architecture learning.
+
+**Why:** Each case study stresses different data, rendering, provenance, workflow, and presentation needs. Feedback should improve both the specific case-study experience and the reusable tool architecture.
+
+**Trade-off accepted:** Alpha work still avoids production overbuild, but architecture should not be treated as disposable when it carries learning across case studies.
