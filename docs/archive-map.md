@@ -54,13 +54,23 @@ history. That history rewrite changes commit hashes but preserves the current
 app/runtime files. After the rewrite, this file and `docs/archive-manifest.json`
 are the recovery pointers for source files that used to be in Git.
 
-Rewrite record:
+Archived source rewrite record:
 
 - Pre-rewrite HEAD: `be8de7eb8b77e2c2f3bfe8afb701d364b922cc78`
 - Rewritten HEAD before this record: `634c02d29e684c760a8dbb7b8fc17c4c40abd149`
 - Pre-rewrite Git object size: `17.06 GiB`
 - Post-rewrite Git pack size after garbage collection: `197.37 MiB`
 - Temporary recovery bundle: `C:\GeoSee\GeoSee_Dev_Past\GeoSee_Dev-pre-archive-history-rewrite.bundle`
+- Bundle policy: delete after verification passes; keep only if verification fails.
+
+Residual context rewrite record:
+
+- Pre-rewrite HEAD: `8d0015e3d9d16e85ed569e60e07a1bfb29d14159`
+- Rewritten HEAD before this record: `1be518a756b5905d64da6a31c54ec8b658239012`
+- Pre-rewrite Git pack size: `197.38 MiB`
+- Post-rewrite Git pack size after garbage collection: `73.34 MiB`
+- Temporary recovery bundle: `C:\GeoSee\GeoSee_Dev_Past\GeoSee_Dev-pre-residual-history-rewrite.bundle`
+- Purged residual history paths: deleted intake staging, dev-context archive/receipt/report/prompt/audit folders, temp PDF extraction output, and generated browser-report folders.
 - Bundle policy: delete after verification passes; keep only if verification fails.
 
 ## Prep Script Guidance
