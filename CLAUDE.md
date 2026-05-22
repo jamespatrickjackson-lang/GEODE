@@ -105,11 +105,13 @@ Every published output is watermarked "Not for engineering use" by default.
   through old receipt archives, screenshot folders, staged-intake records, or
   older root docs unless the task explicitly needs that history.
   Use cheap verification first: `npm run check:pages`,
-  `npm run check:agent-drag`, `npm run check:artifacts`,
-  `npm run check:coverage`, and `npm run build` according to the changed
-  surface. Use targeted Playwright only for browser/render/editor behavior.
-  Run full `npm run test:utah-forge` only for broad regression or explicit
-  request, not as the default iteration check.
+  `npm run check:agent-drag`, `npm run check:runtime-assets`,
+  `npm run check:utah-runtime`, `npm run check:utah-presentation`,
+  `npm run check:artifacts`, `npm run check:coverage`, and
+  `npm run build` according to the changed surface. Use targeted Utah
+  browser scripts only for browser/render/editor behavior. Run full
+  `npm run test:utah-forge` only for broad regression or explicit request,
+  not as the default iteration check.
 - **Authoring persistence (Week 3+).** The editor auto-saves edits to
   `projects/<project>/` via a dev-only Vite plugin endpoint
   (`/api/write-file`, `/api/read-file`, `/api/delete-file`) registered

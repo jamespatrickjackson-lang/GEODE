@@ -4,7 +4,7 @@
 
 | Area | Observed role | Status | Evidence |
 | --- | --- | --- | --- |
-| `package.json` | Vite/TypeScript/Playwright scripts and React/Three/geotiff/marked dependencies | Observed | `dev`, `build`, `test:e2e`, `test:utah-forge` |
+| `package.json` | Vite/TypeScript/Playwright scripts and React/Three/geotiff/marked dependencies | Observed | `dev`, `build`, `check:*`, `test:e2e`, `test:utah:*`, `test:utah-forge` |
 | `vite.config.ts` | React plugin, dev author-write plugin, build-time data/project copy plugins, manual chunks | Observed | `authorWritePlugin`, `copyRuntimeDataPlugin`, `copyProjectsPlugin`, `manualChunks` |
 | `src/App.tsx` | Landing/project selection and lazy-loading of editor chrome and scene module | Observed | `lazy`, `Suspense`, dynamic `import("./scene")` |
 | `src/projects/` | Runtime project catalog/path resolution | Observed | `projectCatalogRuntime.ts`, `projectPathsRuntime.ts` |

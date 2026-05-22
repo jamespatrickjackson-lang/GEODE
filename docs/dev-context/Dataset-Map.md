@@ -54,7 +54,7 @@ Use that map before any cleanup touches source inputs, generated artifacts, QA o
 | MT stations | Observed measured layer | `mt_stations.geojson`, `projects/utah-forge/project.json`, Utah decisions docs |
 | MT resistivity preview/full-density/slices/top surface/volume/threshold surfaces | Observed source-derived outputs | `projects/utah-forge/project.json`, `environment.json`, `geosee_processed/.../electrical_resistivity/` |
 | Public terrain/roads/hydrography context | Observed | `public_context/manifest.json`, `project.json`, `environment.json` |
-| Phase 3 seismic browser outputs | Observed in manifests/runtime/test | `project.json`, `environment.json`, `CHANGELOG.md`, `tests/utah-forge-smoke.spec.ts`, seismic browser files |
+| Phase 3 seismic browser outputs | Observed in manifests/runtime/test | `project.json`, `environment.json`, `CHANGELOG.md`, `tests/utah-forge/`, seismic browser files |
 | Project-local data/layer status guide | Observed status guidance | `projects/utah-forge/DATA_LAYER_STATUS.md`; covers source/client/public, processed/browser-ready, render-ready, QA/validation, provenance/status wrappers, MT, seismic, demo candidates, and unclear/future artifacts; docs/status only, no runtime behavior change |
 | Southwestern/regional MT | Observed reserved/inactive in docs | `projects/utah-forge/data/README.md`, Utah decisions docs |
 | Wells, faults, infrastructure, microseismic events | Observed unresolved/future | Utah project docs |

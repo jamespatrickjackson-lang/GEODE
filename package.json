@@ -18,7 +18,12 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
-    "test:utah-forge": "playwright test tests/utah-forge-smoke.spec.ts"
+    "test:utah:browser": "playwright test tests/utah-forge",
+    "test:utah:seismic": "playwright test tests/utah-forge/seismic-browser.spec.ts",
+    "test:utah:topo": "playwright test tests/utah-forge/topo-title-editor.spec.ts",
+    "test:utah:sections": "playwright test tests/utah-forge/section-iso.spec.ts",
+    "test:utah:mt": "playwright test tests/utah-forge/mt-rendering.spec.ts",
+    "test:utah-forge": "npm run check:utah-runtime && npm run check:utah-presentation && npm run test:utah:browser"
   },
   "dependencies": {
     "@tweenjs/tween.js": "^25.0.0",

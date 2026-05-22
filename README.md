@@ -56,10 +56,15 @@ Use the cheapest verification that matches the changed surface:
 
 - Static page/project wiring: `npm run check:pages`
 - Active context-drag markers: `npm run check:agent-drag`
+- Runtime asset wiring: `npm run check:runtime-assets`
+- Utah FORGE runtime/derived products: `npm run check:utah-runtime`
+- Utah FORGE presentation baseline: `npm run check:utah-presentation`
 - Utah FORGE artifact metadata: `npm run check:artifacts`
 - Project artifact coverage: `npm run check:coverage`
 - Code/runtime compile risk: `npm run build`
-- Browser/render/editor behavior: targeted Playwright by test name
+- Browser/render/editor behavior: targeted Utah scripts such as
+  `npm run test:utah:seismic`, `npm run test:utah:topo`,
+  `npm run test:utah:sections`, or `npm run test:utah:mt`
 
 The most important stable docs are:
 

@@ -20,11 +20,14 @@ This file lists current software-build issues that help shape the alpha. It inte
 
 - For static page/project wiring: `npm run check:pages`.
 - For active context-drag markers: `npm run check:agent-drag`.
+- For project layer file wiring: `npm run check:runtime-assets`.
+- For Utah runtime/derived product integrity: `npm run check:utah-runtime`.
+- For Utah presentation baseline drift: `npm run check:utah-presentation`.
 - For Utah FORGE metadata changes: `npm run check:artifacts`.
 - For project artifact coverage changes: `npm run check:coverage`.
 - For code/runtime/editor changes: `npm run build`.
 - For visual composition changes: capture a focused visual state first and ask for human judgment before slow Playwright.
-- For browser/render/editor behavior: targeted Playwright from `tests/utah-forge-smoke.spec.ts`.
+- For browser/render/editor behavior: targeted Utah browser scripts.
 - For broad regression only: full `npm run test:utah-forge`.
 
 ## Visual Review Active Loop
