@@ -13,6 +13,12 @@ Run `npm run check:workspace` before commits or broad verification. A dirty tree
 
 Shared vocabulary for these states lives in `docs/dev-context/GeoSee-Terms.md`.
 
+## Workspace Policy Modes
+
+- `npm run check:workspace`: report-only. Use this before commits and verification to see whether local sketch or excluded user work is present.
+- `npm run check:workspace -- --commit`: commit-scope policy. Fails only when staged paths mix snapshot-sensitive files with unrelated categories, or when the staged set is broadly mixed across too many categories.
+- `npm run check:workspace -- --broad`: broad-verification policy. Fails when snapshot-sensitive local files are dirty, because broad snapshot/browser results would describe local sketch state rather than committed repo state.
+
 ## Command Tiers
 
 - Workspace state: `npm run check:workspace`
