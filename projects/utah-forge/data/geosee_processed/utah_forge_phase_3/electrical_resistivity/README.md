@@ -8,6 +8,9 @@ This folder contains GeoSee-ready outputs derived from:
 ../../../client_preprocessed/utah_forge_phase_3/electrical_resistivity/
 ```
 
+That path is a historical source identifier. The actual source bytes are under
+`C:\GeoSee\GeoSee_Archive\projects\utah-forge\data\client_preprocessed\utah_forge_phase_3\electrical_resistivity\`.
+
 ## Current Status
 
 Phase 3 MT electrical resistivity is active in GeoSee.

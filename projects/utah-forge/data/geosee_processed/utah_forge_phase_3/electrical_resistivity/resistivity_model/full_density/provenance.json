@@ -6,7 +6,7 @@
     "dataset": "GDR submission 1255 updated MT model cell-center package",
     "sourceArchive": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip",
     "sourceEntry": "FRG200614_mdl17_cellcenter.dat",
-    "sourceArchiveNote": "Delivered source/client file retained under client_preprocessed."
+    "sourceArchiveNote": "Delivered source/client file is archived under C:/GeoSee/GeoSee_Archive; repo-relative path is retained as a historical provenance identifier."
   },
   "transform": {
     "crs": "scene-local meters",

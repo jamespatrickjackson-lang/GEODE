@@ -6,9 +6,12 @@ Reserved for GeoSee-ready outputs derived from:
 ../../../client_preprocessed/utah_forge_phase_3/seismic_analysis/
 ```
 
+That path is a historical source identifier. The actual source bytes are under
+`C:\GeoSee\GeoSee_Archive\projects\utah-forge\data\client_preprocessed\utah_forge_phase_3\seismic_analysis\`.
+
 No Utah FORGE Phase 3 seismic GeoSee output is active yet.
 
-Before adding output here, inventory the source files under:
+Before adding output here, inventory the archived source files for:
 
 ```text
 ../../../client_preprocessed/utah_forge_phase_3/seismic_analysis/
