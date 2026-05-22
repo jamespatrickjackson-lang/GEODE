@@ -42,6 +42,7 @@ Current Utah FORGE work includes active Phase 3 MT, seismic browser products, pu
 
 Use these because they directly protect software work:
 
+- `npm run check:workspace` before commits or broad verification
 - `npm run check:pages` for project/page/overlay wiring
 - `npm run check:agent-drag` for active no-function context markers
 - `npm run check:runtime-assets` for project layer file wiring
@@ -55,6 +56,7 @@ Use these because they directly protect software work:
 
 Verification tiers:
 
+- Workspace state: `npm run check:workspace` reports committed-state vs local sketch-state limits. A dirty tree is not automatically a failure, but snapshot-sensitive local files mean broad snapshot/browser results describe the local sketch state, not just committed repo state.
 - Static wiring/docs/data cleanup: `npm run check:pages`, `npm run check:agent-drag`, and `git diff --check`.
 - Runtime/data product changes: `npm run check:runtime-assets` and `npm run check:utah-runtime`.
 - Artifact metadata/data changes: `npm run check:artifacts` and `npm run check:coverage`.

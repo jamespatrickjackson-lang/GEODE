@@ -108,7 +108,8 @@ Every published output is watermarked "Not for engineering use" by default.
   `docs/dev-context/Active-Build-Context.md` as the first read. Do not route
   through old receipt archives, screenshot folders, staged-intake records, or
   older root docs unless the task explicitly needs that history.
-  Use cheap verification first: `npm run check:pages`,
+  Run `npm run check:workspace` before commits or broad verification. Use
+  cheap verification first: `npm run check:pages`,
   `npm run check:agent-drag`, `npm run check:runtime-assets`,
   `npm run check:utah-runtime`, `npm run check:utah-snapshot`,
   `npm run check:artifacts`, `npm run check:coverage`, and
