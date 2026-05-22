@@ -22,7 +22,7 @@ This file lists current software-build issues that help shape the alpha. It inte
 - For active context-drag markers: `npm run check:agent-drag`.
 - For project layer file wiring: `npm run check:runtime-assets`.
 - For Utah runtime/derived product integrity: `npm run check:utah-runtime`.
-- For Utah presentation baseline drift: `npm run check:utah-presentation`.
+- For Utah presentation snapshot drift: `npm run check:utah-snapshot`.
 - For Utah FORGE metadata changes: `npm run check:artifacts`.
 - For project artifact coverage changes: `npm run check:coverage`.
 - For code/runtime/editor changes: `npm run build`.

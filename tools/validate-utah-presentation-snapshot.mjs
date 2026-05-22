@@ -204,7 +204,7 @@ function validatePages() {
   );
 }
 
-runValidation("Utah FORGE presentation baseline", () => {
+runValidation("Utah FORGE presentation snapshot", () => {
   validateEnvironment();
   validatePages();
 });

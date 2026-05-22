@@ -21,7 +21,7 @@ The first implementation should be opt-in and non-destructive: if no preset is s
 
 Preset IDs should be stable, human-readable strings. Proposed first ID shape:
 
-- `neutral-current`: documents the existing look and acts as the no-surprise baseline.
+- `neutral-current`: documents the existing look and acts as the no-surprise snapshot.
 - `high-desert-review`: restrained Utah FORGE review mood with cleaner terrain contrast and atmospheric depth.
 - `demo-cinematic-clear`: polished client-demo presentation with stronger composition, labels, and public context clarity.
 - `technical-dark-context`: darker technical review mode for high-contrast layers and diagnostics.
@@ -91,7 +91,7 @@ Start with presets that mostly touch scene mood and public context, not technica
 
 | Preset ID | Role | Initial field families |
 | --- | --- | --- |
-| `neutral-current` | Baseline/current project look | Document current scene values, no visual change |
+| `neutral-current` | Current project look snapshot | Document current scene values, no visual change |
 | `high-desert-review` | Utah FORGE geological review mood | Background, fog, sun, terrain ramp, topo fade, roads/hydro styling |
 | `demo-cinematic-clear` | Client-demo clarity | Background, exposure, bloom, color grade, label density, public context contrast |
 | `technical-dark-context` | Dense technical layer review | Background, fog, contour/public-context contrast, label restraint |

@@ -12,7 +12,7 @@
     "check:agent-drag": "node tools/check-agent-drag.mjs",
     "check:runtime-assets": "node tools/validate-runtime-assets.mjs",
     "check:utah-derived": "node tools/validate-utah-derived-assets.mjs",
-    "check:utah-presentation": "node tools/validate-utah-presentation-baseline.mjs",
+    "check:utah-snapshot": "node tools/validate-utah-presentation-snapshot.mjs",
     "check:utah-runtime": "npm run check:runtime-assets && npm run check:utah-derived",
     "preview": "vite preview",
     "test:e2e": "playwright test",
@@ -23,7 +23,7 @@
     "test:utah:topo": "playwright test tests/utah-forge/topo-title-editor.spec.ts",
     "test:utah:sections": "playwright test tests/utah-forge/section-iso.spec.ts",
     "test:utah:mt": "playwright test tests/utah-forge/mt-rendering.spec.ts",
-    "test:utah-forge": "npm run check:utah-runtime && npm run check:utah-presentation && npm run test:utah:browser"
+    "test:utah-forge": "npm run check:utah-runtime && npm run check:utah-snapshot && npm run test:utah:browser"
   },
   "dependencies": {
     "@tweenjs/tween.js": "^25.0.0",

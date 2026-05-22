@@ -66,7 +66,7 @@ Important distinctions:
 
 ### Utah FORGE
 
-Utah FORGE is the geothermal/geophysics project. It is no longer only a foundation scaffold: the Phase 3 MT resistivity baseline is active.
+Utah FORGE is the geothermal/geophysics project. It is no longer only a foundation scaffold: the Phase 3 MT resistivity workstream is active.
 
 It currently has:
 

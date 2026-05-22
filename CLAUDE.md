@@ -106,7 +106,7 @@ Every published output is watermarked "Not for engineering use" by default.
   older root docs unless the task explicitly needs that history.
   Use cheap verification first: `npm run check:pages`,
   `npm run check:agent-drag`, `npm run check:runtime-assets`,
-  `npm run check:utah-runtime`, `npm run check:utah-presentation`,
+  `npm run check:utah-runtime`, `npm run check:utah-snapshot`,
   `npm run check:artifacts`, `npm run check:coverage`, and
   `npm run build` according to the changed surface. Use targeted Utah
   browser scripts only for browser/render/editor behavior. Run full

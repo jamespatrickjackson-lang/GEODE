@@ -95,7 +95,7 @@ Planned visual checks for future implementation or verification prompts:
 | Isoline/isoband/contour/heat-map layer if available | Shahbazi tie-point isolines/isobands, Shahbazi contours, Woodjam scalar/geochem/gamma layers, future heat maps | Interval/range fidelity, line clarity, fill opacity, interpolation caveats, and legend/status. |
 | Shahbazi surface + contours | TLS surface preview, outer surface, split contours | Surface/photo depth policy, contour fidelity, material quality, and preview caveats. |
 | Shahbazi point cloud/surface/photo overlay if available | TLS tiled preview, surface previews, photo overlay | Projection alignment, texture clarity, opacity/material behavior, and source/provenance labels. |
-| Woodjam reference project open/regression | Woodjam terrain, drilling, assays, geochem, geology, context layers | Baseline app/project regression, camera/page flow, layer styles, legends/status, and source/path stability. |
+| Woodjam reference project open/regression | Woodjam terrain, drilling, assays, geochem, geology, context layers | Reference app/project regression, camera/page flow, layer styles, legends/status, and source/path stability. |
 
 ## Computed Artifact Verification Checks
 

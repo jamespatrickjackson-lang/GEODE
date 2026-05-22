@@ -42,7 +42,7 @@ Use these because they directly protect software work:
 - `npm run check:agent-drag` for active no-function context markers
 - `npm run check:runtime-assets` for project layer file wiring
 - `npm run check:utah-runtime` for Utah runtime and derived-product integrity
-- `npm run check:utah-presentation` for Utah presentation baseline drift
+- `npm run check:utah-snapshot` for Utah presentation snapshot drift
 - `npm run check:artifacts` for Utah FORGE artifact metadata
 - `npm run check:coverage` for project artifact coverage
 - `npm run build`
@@ -54,7 +54,7 @@ Verification tiers:
 - Static wiring/docs/data cleanup: `npm run check:pages`, `npm run check:agent-drag`, and `git diff --check`.
 - Runtime/data product changes: `npm run check:runtime-assets` and `npm run check:utah-runtime`.
 - Artifact metadata/data changes: `npm run check:artifacts` and `npm run check:coverage`.
-- Presentation baseline changes: `npm run check:utah-presentation`.
+- Presentation snapshot changes: `npm run check:utah-snapshot`.
 - Code/runtime compile risk: `npm run build`.
 - Browser/render/editor behavior: targeted Utah browser scripts.
 - Full `npm run test:utah-forge`: broad regression only, not default iteration.
