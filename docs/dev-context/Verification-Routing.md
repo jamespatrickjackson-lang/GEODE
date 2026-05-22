@@ -11,6 +11,8 @@ Status: active verification and workspace-state routing
 
 Run `npm run check:workspace` before commits or broad verification. A dirty tree is not automatically a failure, but snapshot-sensitive local files mean broad snapshot/browser results describe the local sketch state, not just committed repo state.
 
+Shared vocabulary for these states lives in `docs/dev-context/GeoSee-Terms.md`.
+
 ## Command Tiers
 
 - Workspace state: `npm run check:workspace`
