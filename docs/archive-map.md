@@ -54,6 +54,15 @@ history. That history rewrite changes commit hashes but preserves the current
 app/runtime files. After the rewrite, this file and `docs/archive-manifest.json`
 are the recovery pointers for source files that used to be in Git.
 
+Rewrite record:
+
+- Pre-rewrite HEAD: `be8de7eb8b77e2c2f3bfe8afb701d364b922cc78`
+- Rewritten HEAD before this record: `634c02d29e684c760a8dbb7b8fc17c4c40abd149`
+- Pre-rewrite Git object size: `17.06 GiB`
+- Post-rewrite Git pack size after garbage collection: `197.37 MiB`
+- Temporary recovery bundle: `C:\GeoSee\GeoSee_Dev_Past\GeoSee_Dev-pre-archive-history-rewrite.bundle`
+- Bundle policy: delete after verification passes; keep only if verification fails.
+
 ## Prep Script Guidance
 
 Some prep scripts still name the former repo-relative source path because
@@ -68,4 +77,3 @@ For a one-off regeneration:
    source bucket back to its former repo-relative location.
 3. Regenerate the processed/runtime artifacts.
 4. Remove any temporary source copy from the active repo before committing.
-
