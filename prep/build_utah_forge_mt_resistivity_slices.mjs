@@ -657,7 +657,7 @@ async function main() {
       "Vertical scale remains true 1:1 meters.",
       "Horizontal slices average source model rows inside a documented elevation window.",
       "Vertical sections average source model rows inside a documented lateral window through the MT station centroid.",
-      "This is a display preview for GeoSee; the full model source remains in client_preprocessed.",
+      "This is a display preview for GeoSee; the full model source is archived under C:/GeoSee/GeoSee_Archive.",
     ],
   };
 
@@ -685,7 +685,8 @@ async function main() {
       dataset: "GDR submission 1255 updated MT model cell-center package",
       sourceArchive: relativeInput,
       sourceEntry: options.zipEntry,
-      sourceArchiveNote: "Delivered source/client file retained under client_preprocessed.",
+      sourceArchiveNote:
+        "Delivered source/client file is archived under C:/GeoSee/GeoSee_Archive; repo-relative path is retained as a historical provenance identifier.",
     },
     transform: manifest.transform,
     processing: meshPayload.processing,

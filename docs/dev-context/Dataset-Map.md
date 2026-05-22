@@ -20,7 +20,7 @@ Last populated: 2026-05-15
 | `projects/*/environment.json` | Default visibility, layer styles, scene and GUI defaults | Project environments |
 | `projects/*/pages/*.json` | Page/presentation state and camera/page deltas | Project page folders |
 | `projects/*/overlays/*` | Page overlay markdown/assets | Project overlay folders |
-| `projects/*/data/raw` or `client_preprocessed` | Source/client material preserved before app conversion | Shahbazi raw, Utah FORGE client_preprocessed |
+| `projects/*/data/raw` or `client_preprocessed` | Historical source/client identifiers preserved in provenance; source bytes are archived outside the active repo | Shahbazi raw, Utah FORGE client_preprocessed; resolve through `docs/archive-map.md` |
 | `projects/*/data/processed` or `geosee_processed` | Browser-ready derived artifacts and provenance | Shahbazi processed, Utah FORGE geosee_processed |
 
 ## Computed Artifact Pipeline Pointer
@@ -41,7 +41,7 @@ Use that map before any cleanup touches source inputs, generated artifacts, QA o
 
 | Dataset family | Status | Evidence |
 | --- | --- | --- |
-| Raw UAV/TLS/photogrammetry source staging | Observed | `projects/case-study-b/data/raw/shahbazi_gravel_pit/` |
+| Raw UAV/TLS/photogrammetry source staging | Archived source, historical identifier | `projects/case-study-b/data/raw/shahbazi_gravel_pit/`; actual source bytes under `C:\GeoSee\GeoSee_Archive` |
 | Processed preview outputs | Observed | `projects/case-study-b/data/processed/shahbazi_gravel_pit/` |
 | TLS sampled/tiled previews, TLS island mesh, sparse-object-point outer surface, split contours, GCPs, camera poses/frustums, dense matching, tie-point QA, projected image preview | Observed | `projects/case-study-b/project.json`, processed README |
 | Synthetic/planned quarry overlays | Observed | Disabled placeholder layers in `projects/case-study-b/project.json` |

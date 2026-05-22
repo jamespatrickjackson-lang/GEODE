@@ -1,7 +1,9 @@
 """
 One-off prep script. Reads the BC Geological Survey provincial bedrock
-geology shapefile (already downloaded + extracted to
-prep/raw/bc_digital_geology/), clips to project bounds in EPSG:26910,
+geology shapefile. The former repo-local source path was
+prep/raw/bc_digital_geology/; the source bucket now lives under
+C:/GeoSee/GeoSee_Archive/prep/raw/bc_digital_geology/ unless temporarily
+restored for regeneration. Clips to project bounds in EPSG:26910,
 and writes:
 
     data/bedrock_geology.geojson   -- one Polygon/MultiPolygon feature

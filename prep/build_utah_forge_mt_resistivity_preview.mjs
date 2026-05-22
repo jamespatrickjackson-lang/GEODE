@@ -342,7 +342,8 @@ async function main() {
       dataset: "GDR submission 1255 updated MT model cell-center package",
       sourceArchive: stats.source.archive,
       sourceEntry: options.zipEntry,
-      sourceArchiveNote: "Delivered source/client file retained under client_preprocessed.",
+      sourceArchiveNote:
+        "Delivered source/client file is archived under C:/GeoSee/GeoSee_Archive; repo-relative path is retained as a historical provenance identifier.",
     },
     transform: {
       sourceCrs: "EPSG:26912 NAD83 / UTM Zone 12N",

@@ -13,6 +13,10 @@ Reads:  data/source/trees_vri/veg_comp_lyr_r1_poly_2024.gdb.zip
         or https://openmaps.gov.bc.ca/geo/pub/wfs (DataBC public WFS)
 Writes: data/trees_vri.geojson
 
+The former repo-local data/source/trees_vri bucket is archived at
+C:/GeoSee/GeoSee_Archive/data/source/trees_vri/ unless temporarily restored
+for regeneration.
+
 BC VRI catalogue entry:
   - WHSE_FOREST_VEGETATION.VEG_COMP_LYR_R1_POLY
 

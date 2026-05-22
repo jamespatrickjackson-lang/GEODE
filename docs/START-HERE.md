@@ -76,7 +76,8 @@ It currently has:
 - landing page entry
 - overview page and overlay copy
 - procedural reference stage
-- Phase 3 MT source files staged under `client_preprocessed/`
+- Phase 3 MT source files archived outside the active repo and mapped through
+  `docs/archive-map.md`
 - Phase 3 MT GeoSee-ready outputs under `geosee_processed/`
 - measured MT station markers wired into the viewer
 - source-derived MT resistivity point preview wired as a QA layer
@@ -347,11 +348,14 @@ This distinction matters. Do not put missing future products in the same mental 
 
 Shahbazi is the best current example of the data flow.
 
-Raw staged files live under:
+Raw staged source files keep this historical repo-relative identifier:
 
 ```text
 projects/case-study-b/data/raw/shahbazi_gravel_pit/
 ```
+
+The actual Shahbazi source bytes now live under
+`C:\GeoSee\GeoSee_Archive\projects\case-study-b\data\raw\shahbazi_gravel_pit\`.
 
 Processed preview files live under:
 

@@ -38,6 +38,7 @@ verification evidence, intake/drop review, or visual QA evidence.
 | Changing scope or proposing a new feature | `docs/01-scope.md` |
 | Any architecture or library decision | `docs/02-architecture.md` + `docs/03-decisions.md` |
 | Editing `project.json`, `page.json`, or `sources.json` schemas | `docs/schemas/` |
+| Re-running prep scripts or interpreting old source/raw paths | `docs/archive-map.md` + `docs/archive-manifest.json` |
 | Adding scene/editor/render settings, app feature config, or project/page config fields | `docs/06-editor-exposure-rules.md` |
 | Changing the build plan or weekly priorities | `docs/04-build-sequence.md` |
 | Working on demo content or scenes | `docs/woodjam/` |
@@ -110,3 +111,7 @@ Every published output is watermarked "Not for engineering use" by default.
   exists at `plugins/vite-plugin-author-write.ts`.
 - **Working tree.** Per #021, the working tree is `C:\GeoSee\GeoSee_Dev\`,
   not the Drive copy. `npm install` against Drive will fail with EPERM.
+- **Source archive.** Large raw/source buckets are outside the active repo at
+  `C:\GeoSee\GeoSee_Archive\`. Treat old repo-relative source paths in
+  provenance as historical identifiers and resolve them through
+  `docs/archive-map.md` / `docs/archive-manifest.json`.

@@ -12,7 +12,8 @@ This folder holds Utah FORGE delivered source/client data and GeoSee-ready deriv
 Current kept state:
 
 - wrong early data folders were removed on 2026-05-12
-- Utah FORGE Phase 3 MT source archives are staged under `client_preprocessed/`
+- Utah FORGE source/client archives were moved out of the active repo and are
+  mapped through `docs/archive-map.md` and `docs/archive-manifest.json`
 - Phase 3 MT source inventory, archive entries, and CRS/origin docs are under `geosee_processed/`
 - Phase 3 MT station markers are generated and wired as measured station-location data
 - Phase 3 MT full-density tiled resistivity renderer is generated and wired as the Stage 2 density layer
@@ -40,11 +41,16 @@ projects/utah-forge/Utah_Forge_Next_Stage_Gates.md
 
 ## Locked Folder Rule
 
-Delivered source/client files stay under:
+Delivered source/client files keep their historical repo-relative identifiers
+under:
 
 ```text
 client_preprocessed/
 ```
+
+The actual source bytes now live under
+`C:\GeoSee\GeoSee_Archive\projects\utah-forge\data\client_preprocessed\`.
+Do not recommit those archive buckets to the active repo.
 
 GeoSee-ready outputs stay under:
 
@@ -79,7 +85,7 @@ utah_forge_phase_3/electrical_resistivity/
 ## Current Source Files
 
 ```text
-client_preprocessed/utah_forge_phase_3/electrical_resistivity/
+C:\GeoSee\GeoSee_Archive\projects\utah-forge\data\client_preprocessed\utah_forge_phase_3\electrical_resistivity\
   mt_edis/FORGE_MT_190812_EDIs.zip
   mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip
   references/FORGE_MT_12_12_2021.prj

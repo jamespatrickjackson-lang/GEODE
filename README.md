@@ -40,6 +40,11 @@ Start normal Claude Code and Codex software work with
 docs and source files. `CLAUDE.md` remains the routing doc for scope,
 architecture, data-prep, and handoff questions.
 
+Large raw/source buckets are not kept in the active repo. If a prep script,
+provenance file, or generated metadata points at an old source path, check
+`docs/archive-map.md` and `docs/archive-manifest.json`; the source system of
+record is `C:\GeoSee\GeoSee_Archive`.
+
 Avoid loading historical receipts, generated screenshots/reports, old intake
 archives, or older root docs by default. Run the full
 `npm run test:utah-forge` suite only when the task needs broad regression

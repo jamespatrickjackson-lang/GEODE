@@ -385,7 +385,8 @@ async function main() {
         project: "Utah FORGE",
         dataset: "GDR submission 1255 MT EDI archive",
         sourceArchive: path.relative(process.cwd(), options.inputZip).replaceAll("\\", "/"),
-        sourceArchiveNote: "Delivered source/client file retained under client_preprocessed.",
+        sourceArchiveNote:
+          "Delivered source/client file is archived under C:/GeoSee/GeoSee_Archive; repo-relative path is retained as a historical provenance identifier.",
       },
       transform: {
         sourceCrs: "EDI LAT/LONG interpreted as NAD83 geographic coordinates",

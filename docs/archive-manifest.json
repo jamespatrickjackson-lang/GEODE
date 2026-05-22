@@ -1,0 +1,111 @@
+{
+  "schema": "geosee.archive-manifest.v1",
+  "lastUpdated": "2026-05-21",
+  "repoRoot": "C:/GeoSee/GeoSee_Dev",
+  "archiveRoot": "C:/GeoSee/GeoSee_Archive",
+  "notes": [
+    "Archived source buckets preserve their former repo-relative structure under archiveRoot.",
+    "Repo-relative source paths in provenance are historical identifiers unless the file exists in the active repo.",
+    "Do not recommit source/client archive buckets to the active repo."
+  ],
+  "entries": [
+    {
+      "repoPath": "data/source/trees_vri",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/data/source/trees_vri",
+      "reason": "Large public/source VRI input for Woodjam forest polygon prep.",
+      "usedBy": ["prep/fetch_trees_vri.py", "data/trees_vri.geojson"],
+      "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "data/source/Geophysical_Data",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/data/source/Geophysical_Data",
+      "reason": "Large Woodjam ARIS geophysical survey source deliveries.",
+      "usedBy": ["Woodjam prep/provenance", "data/source geophysical references"],
+      "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "data/source/Images",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/data/source/Images",
+      "reason": "Source image material not needed by app runtime.",
+      "usedBy": ["Woodjam/source image provenance"],
+      "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "docs/woodjam/Appendix C - ZTEM Survey Data",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/docs/woodjam/Appendix C - ZTEM Survey Data",
+      "reason": "Large Woodjam source survey appendix.",
+      "usedBy": ["Woodjam source audit/provenance"],
+      "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "docs/woodjam/Appendix E - IP Survey Data",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/docs/woodjam/Appendix E - IP Survey Data",
+      "reason": "Large Woodjam source survey appendix.",
+      "usedBy": ["Woodjam source audit/provenance"],
+      "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "docs/woodjam/Appendix F - DHDB",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/docs/woodjam/Appendix F - DHDB",
+      "reason": "Large Woodjam source appendix.",
+      "usedBy": ["Woodjam source audit/provenance"],
+      "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "docs/woodjam/Appendix G - Drillhole Assay Certificates",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/docs/woodjam/Appendix G - Drillhole Assay Certificates",
+      "reason": "Large Woodjam assay certificate appendix.",
+      "usedBy": ["Woodjam source audit/provenance"],
+      "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "docs/woodjam/Appendix J - Rock Sample Assay Certificates",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/docs/woodjam/Appendix J - Rock Sample Assay Certificates",
+      "reason": "Large Woodjam assay certificate appendix.",
+      "usedBy": ["Woodjam source audit/provenance"],
+      "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "projects/case-study-b/data/raw",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/projects/case-study-b/data/raw",
+      "reason": "Large Shahbazi UAV/TLS/photogrammetry raw source package.",
+      "usedBy": ["prep/build_shahbazi_*.mjs", "projects/case-study-b/data/processed"],
+      "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "projects/utah-forge/data/client_preprocessed/forge_southwestern",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/forge_southwestern",
+      "reason": "Large Utah FORGE southwestern source delivery not loaded by runtime.",
+      "usedBy": ["Utah FORGE future prep/provenance"],
+      "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "projects/utah-forge/data/client_preprocessed/Unsorted data",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/Unsorted data",
+      "reason": "Large unsorted Utah FORGE source delivery not loaded by runtime.",
+      "usedBy": ["Utah FORGE future prep/provenance"],
+      "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source",
+      "reason": "Large Utah FORGE Phase 3 seismic source package; processed browser products remain in repo.",
+      "usedBy": ["prep/build_utah_forge_seismic_browser.py", "projects/utah-forge/artifact_metadata"],
+      "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity",
+      "reason": "Utah FORGE Phase 3 MT EDI/model source package; processed MT products remain in repo.",
+      "usedBy": ["prep/build_utah_forge_mt_*.mjs", "projects/utah-forge/data/geosee_processed"],
+      "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "prep/raw/bc_digital_geology",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/prep/raw/bc_digital_geology",
+      "reason": "BC digital geology raw shapefile/tables used only for prep regeneration.",
+      "usedBy": ["prep/fetch_geology.py", "data/bedrock_geology.geojson"],
+      "status": "archived-outside-repo"
+    }
+  ]
+}

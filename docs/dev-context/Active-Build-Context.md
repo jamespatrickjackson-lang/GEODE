@@ -10,6 +10,12 @@ GeoSee is in software-build mode. Start from the requested runtime/editor/visual
 
 Do not route normal work through staged-intake records or old review-route artifacts. The Add to Project UI is retained as an explicit, dormant surface only.
 
+Large raw/source inputs are archived outside the active repo at
+`C:\GeoSee\GeoSee_Archive`. When current provenance, prep scripts, or generated
+metadata mention old repo-relative source paths, resolve them through
+`docs/archive-map.md` and `docs/archive-manifest.json` instead of assuming the
+source bytes should be restored to Git.
+
 ## Current App Shape
 
 GeoSee is a Vite + React + TypeScript + Three.js internal authoring and presentation app.
