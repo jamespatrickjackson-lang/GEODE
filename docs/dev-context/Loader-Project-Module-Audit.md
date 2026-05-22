@@ -22,7 +22,7 @@ Boundary: this satisfies the low-risk reference-stage sentinel extraction from t
 
 ## Slice 1B verification note
 
-Observed: historical bounded post-extraction evidence existed before the purge and remains recoverable from Git history. Fresh evidence should be captured if this audit is resumed.
+Observed: historical bounded post-extraction evidence existed before the purge and was removed from reachable Git history. Fresh evidence should be captured if this audit is resumed.
 
 Boundary: this is verification evidence only. It does not accept the extraction, prove full render equivalence, or authorize heavier Utah FORGE, Shahbazi, Woodjam, public-context, seismic, MT, scalar, volume, terrain, or lifecycle/disposal extraction.
 

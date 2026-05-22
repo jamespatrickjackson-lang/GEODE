@@ -52,7 +52,7 @@ Any performance, bundle, loader, data, or module-size recommendation is unsafe u
 | Utah FORGE wrapper batch 2A | Observed present | Project-local wrappers now exist for MT full-density tiled data, MT scalar volume, and MT threshold surfaces; review input only, not accepted scope or runtime behavior. |
 | Utah FORGE wrapper batch 2B | Observed present | Project-local wrappers now exist for seismic navigation/provenance, seismic recipes/presets, and MT top surface; review input only, not accepted scope or runtime behavior. |
 | Old render evidence template | Purged from active context | The receipt-template flow was removed from active context. Capture fresh, focused visual/build evidence only when a current task needs it. |
-| First Utah FORGE MT/seismic historical evidence | Purged from active context | Historical evidence remains recoverable from Git history; no runtime/app/project/data behavior changed and visual acceptance remains open. |
+| First Utah FORGE MT/seismic historical evidence | Purged from active context | Historical evidence was removed from reachable Git history; no runtime/app/project/data behavior changed and visual acceptance remains open. |
 | Metadata validator hardening and project coverage reporting | Observed present | `tools/validate-artifact-metadata.mjs` now supports project-wide validation and duplicate-key detection; `tools/report-project-artifact-coverage.mjs` generates ignored all-project coverage reports under `test-results/project-artifact-coverage/`. |
 | Dev-only runtime diagnostics and Utah open receipt | Observed present | `src/scene/layerDiagnostics.ts` exposes read-only dev diagnostics via `window.__GEOVOX_DIAGNOSTICS__`; `VER-2026-05-15-002-utah-forge-runtime-open-diagnostics.md` records a first app open, screenshot, and runtime snapshot as needs-review evidence. |
 | Utah FORGE MT + seismic demo page | Observed present | `projects/utah-forge/pages/20_mt_seismic_integration_check.json` creates a bounded verification page for MT slices plus Phase 3 seismic browser. It is pending visual/human review and is not accepted final demo scope. |
@@ -202,7 +202,7 @@ Boundary: Batch 2B wrappers and the old evidence-template note are proposed/revi
 
 ## First Utah FORGE MT / Seismic Historical Evidence
 
-Observed: historical MT/seismic verification evidence existed before the purge and remains recoverable from Git history; active work should capture fresh evidence when needed.
+Observed: historical MT/seismic verification evidence existed before the purge and was removed from reachable Git history; active work should capture fresh evidence when needed.
 
 Boundary: This historical evidence does not accept artifacts or demo readiness. It records metadata/path/build evidence and leaves screenshot/open visual verification, co-render readiness, seismic default product, page visibility, and human acceptance open.
 
@@ -218,7 +218,7 @@ Boundary: This tooling is implementation support only. It does not change runtim
 
 Observed: a dev-only diagnostics hook now exists through `src/scene/layerDiagnostics.ts` and is installed from `src/App.tsx` only when `import.meta.env.DEV` is true.
 
-Observed: historical runtime-open diagnostics evidence existed before the purge and remains recoverable from Git history. Fresh runtime evidence should be captured for current decisions.
+Observed: historical runtime-open diagnostics evidence existed before the purge and was removed from reachable Git history. Fresh runtime evidence should be captured for current decisions.
 
 Boundary: Diagnostics are read-only implementation support. They do not change loading, visibility, rendering, materials, camera/page state, scalar ranges, color ramps, seismic products, MT products, computed artifacts, prep scripts, project manifests, page JSON, or data artifacts.
 

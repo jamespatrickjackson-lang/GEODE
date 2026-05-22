@@ -80,6 +80,6 @@ Use diagnostics to compare what is loaded, visible, hidden, and resource-heavy b
 
 ## Captured Utah FORGE Demo Page Snapshot
 
-Observed: historical dev-only diagnostics snapshots were purged from active context and remain recoverable from Git history. Capture fresh diagnostics for current decisions.
+Observed: historical dev-only diagnostics snapshots were purged from active context and removed from reachable Git history. Capture fresh diagnostics for current decisions.
 
 The snapshot reports `utah-forge-mt-resistivity-slices` and `utah-forge-phase3-seismic-browser` visible together. It is structural/runtime evidence only and does not accept render quality, technical accuracy, product choice, page scope, or runtime loading behavior.

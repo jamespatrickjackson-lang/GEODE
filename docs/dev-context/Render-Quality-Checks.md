@@ -122,17 +122,17 @@ Do not call an artifact technically accurate unless the evidence covers source, 
 
 A render/computed-artifact evidence note should capture only what the current task needs:
 
-First Utah FORGE MT/seismic historical evidence was purged from active context and remains recoverable from Git history.
+First Utah FORGE MT/seismic historical evidence was purged from active context and removed from reachable Git history.
 
 This first receipt is not acceptance. It records metadata/path/build evidence and explicitly leaves visual rendering, screenshot evidence, and MT/seismic co-render quality as `needs review`.
 
 Focused Utah FORGE MT/seismic demo page evidence should be recaptured when needed.
 
-Historical screenshot/runtime evidence was purged from active context and remains recoverable from Git history. It is not current acceptance.
+Historical screenshot/runtime evidence was purged from active context and removed from reachable Git history. It is not current acceptance.
 
 Utah FORGE demo walkthrough v0 historical evidence was purged from active context.
 
-Fresh screenshot/runtime evidence should be captured for current MT slices, seismic, and MT + seismic integration decisions. Historical evidence remains recoverable from Git history only.
+Fresh screenshot/runtime evidence should be captured for current MT slices, seismic, and MT + seismic integration decisions. Do not rely on purged historical receipts for current acceptance.
 
 | Field | Expected content |
 | --- | --- |
