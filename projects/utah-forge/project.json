@@ -2622,7 +2622,7 @@
     },
     {
       "id": "utah-forge-mt-top-surface",
-      "label": "Utah FORGE Phase 3 MT preview-derived ground cap",
+      "label": "Utah FORGE Phase 3 MT full-density top-contact surface",
       "type": "mesh",
       "files": {},
       "previewFiles": {
@@ -2634,15 +2634,15 @@
         "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/provenance.json"
       },
       "metadata": {
-        "sourceFile": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/resistivity_point_preview.json",
+        "sourceFile": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json",
         "sourceDate": "2021",
         "derivedArtifactDate": "2026-05-12",
         "sourceOrigin": "Utah FORGE GDR submission 1255 updated MT model cell-center inversion package",
-        "classification": "source-derived inversion model preview ground cap",
+        "classification": "source-derived full-density inversion model top-contact surface",
         "confidentiality": "client-preprocessed/public-source",
         "placeholder": false,
         "sourceDataIncluded": true,
-        "notes": "Standalone approximate ground-cap mesh generated only from the existing 90,000-point Utah FORGE Phase 3 MT resistivity model preview. The cap uses regular XY bins, p95 upper elevations, largest connected upper-component filtering, light smoothing, and adjacent-cell triangulation to avoid sparse-column icicle sheets. This is an approximate inversion-model preview ground layer, not a scalar trim/feather legend layer, measured terrain, interpreted geology, wells, faults, or seismic."
+        "notes": "Top-contact mesh generated from the full-density MT cell-center tile set. Each 2.5 km XY grid cell retains the highest source-derived full-density MT cell center and adjacent occupied cells are triangulated for rendering. This is the top contact of the MT model visualization, not public topo, lidar, DEM terrain, measured ground, interpreted geology, wells, faults, infrastructure, or seismic."
       }
     },
     {

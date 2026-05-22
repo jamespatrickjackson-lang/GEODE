@@ -89,8 +89,10 @@ Current facts:
 - point preview emitted points: 90,000
 - full-density emitted points: 1,094,624
 - full-density format: tiled Float32 XYZ plus Float32 scalar buffers
-- preview-derived ground cap: 1,135 vertices and 1,844 retained adjacent-grid triangles from the existing MT preview only
-- preview ground cap minimum scene elevation: 816.49 m
+- full-density top-contact surface: 2,065 vertices and 2,042 retained adjacent-grid triangles
+- full-density top-contact source: highest source-derived MT cell center per occupied 2.5 km XY grid cell
+- full-density top-contact elevation range: 1362.757 m to 3449.131 m
+- full-density top-contact control points: min/max elevation, edge points, and center-nearest point recorded in `resistivity_model/top_surface/stats.json`
 - display value: `log10(resistivity_ohm_m)`
 - slice preview: six horizontal elevation slices and two vertical station-centroid sections
 - crop applied: false
@@ -133,9 +135,9 @@ utah-forge-mt-resistivity-slices
 
 - The slice preview is an authored display product, not a live full-volume renderer.
 - The full-density layer is a tiled scalar point-cloud renderer, not a voxel/volume renderer.
-- The top surface is a preview-derived approximate ground cap, not measured terrain or interpreted geology.
+- The top surface is the source-derived top contact of the full-density MT cell-center model, not public topo, lidar, DEM terrain, measured ground, or interpreted geology.
 - The top surface is standalone and is not controlled by the MT scalar trim/feather legend.
-- The top surface is generated only from the existing 90,000-point MT preview using regular grid cells, p95 upper elevations, connected-component filtering, and adjacent-cell triangulation to avoid sparse-column icicle sheets.
+- The top surface is generated from full-density tiles by retaining the highest source-derived cell center per occupied 2.5 km XY grid cell and triangulating adjacent occupied cells.
 - The point preview is downsampled for performance.
 - Non-positive resistivity values are masked because `log10` is undefined.
 - The model's very deep negative elevation extent needs careful narration in presentation copy.

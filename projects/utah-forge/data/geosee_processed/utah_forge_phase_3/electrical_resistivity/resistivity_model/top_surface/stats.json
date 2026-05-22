@@ -2,50 +2,197 @@
   "project": "utah-forge",
   "area": "utah_forge_phase_3",
   "dataset": "electrical_resistivity",
-  "artifact": "MT preview-derived ground cap stats",
+  "artifact": "MT full-density top-contact surface stats",
   "generatedDate": "2026-05-12",
   "source": {
-    "preview": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/resistivity_point_preview.json",
-    "previewPointCount": 90000
+    "fullDensityManifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json",
+    "fullDensityPointCount": 1094624,
+    "tileCount": 11
   },
   "gridSizeM": 2500,
-  "topQuantile": 0.95,
-  "minSamplesPerCell": 3,
-  "rawGridCellCount": 2056,
-  "sampledGridCellCount": 1944,
-  "initialUpperCandidateCount": 1750,
-  "largestComponentCellCount": 1126,
-  "dilatedCellCount": 9,
-  "smoothingPasses": 2,
-  "vertexCount": 1135,
-  "retainedQuadCount": 922,
-  "triangleCount": 1844,
-  "upperFloorZ": 829.74,
-  "dilationFloorZ": -1384.28,
+  "minPointsPerCell": 3,
+  "skippedRows": 0,
+  "rawGridCellCount": 2065,
+  "sampledGridCellCount": 2065,
+  "vertexCount": 2065,
+  "candidateQuadCount": 1021,
+  "retainedQuadCount": 1021,
+  "triangleCount": 2042,
   "sourceBounds": {
     "easting_m": [
-      285217.35,
-      405217.35
+      201896.694,
+      481038.006
     ],
     "northing_m": [
-      4227124.5,
-      4317124.5
+      4159430,
+      4387319
     ],
     "elevation_m": [
-      816.49,
-      3023.47
+      1362.757,
+      3449.131
     ]
   },
   "sceneBounds": {
     "min": [
-      -56250,
-      -46250,
-      816.49
+      -139570.66,
+      -113944.5,
+      1362.76
     ],
     "max": [
-      63750,
-      43750,
-      3023.47
+      139570.66,
+      113944.5,
+      3449.13
     ]
+  },
+  "topContactLog10ResistivityRange": {
+    "name": "top-contact log10 resistivity",
+    "unit": "log10(ohm-m)",
+    "sourceField": "full-density top-contact cell scalar",
+    "min": -0.853872,
+    "max": 4.174335,
+    "displayMin": 0.139879,
+    "displayMax": 3.937122,
+    "colorStops": [
+      {
+        "value": 0.139879,
+        "color": "#2cc9ff"
+      },
+      {
+        "value": 2.02983,
+        "color": "#f8dd6d"
+      },
+      {
+        "value": 3.937122,
+        "color": "#ff637a"
+      }
+    ]
+  },
+  "cartographicControlPoints": {
+    "minElevation": {
+      "scene": [
+        -28223.15,
+        43254.5,
+        1362.757
+      ],
+      "sourceUtm": [
+        313244.2,
+        4316629,
+        1362.757
+      ],
+      "log10Resistivity": 1.710371,
+      "sampleCount": 45,
+      "gridCell": [
+        -12,
+        17
+      ]
+    },
+    "maxElevation": {
+      "scene": [
+        38357.352,
+        -24011.5,
+        3449.131
+      ],
+      "sourceUtm": [
+        379824.702,
+        4249363,
+        3449.131
+      ],
+      "log10Resistivity": 2.564347,
+      "sampleCount": 495,
+      "gridCell": [
+        15,
+        -10
+      ]
+    },
+    "westEdge": {
+      "scene": [
+        -139570.656,
+        -46574.5,
+        1744.395
+      ],
+      "sourceUtm": [
+        201896.694,
+        4226800,
+        1744.395
+      ],
+      "log10Resistivity": 1.570309,
+      "sampleCount": 45,
+      "gridCell": [
+        -56,
+        -19
+      ]
+    },
+    "eastEdge": {
+      "scene": [
+        139570.656,
+        46769.5,
+        2087.293
+      ],
+      "sourceUtm": [
+        481038.006,
+        4320144,
+        2087.293
+      ],
+      "log10Resistivity": 2.032377,
+      "sampleCount": 45,
+      "gridCell": [
+        55,
+        18
+      ]
+    },
+    "southEdge": {
+      "scene": [
+        45525.352,
+        -113944.5,
+        1902.949
+      ],
+      "sourceUtm": [
+        386992.702,
+        4159430,
+        1902.949
+      ],
+      "log10Resistivity": 2.034749,
+      "sampleCount": 45,
+      "gridCell": [
+        18,
+        -46
+      ]
+    },
+    "northEdge": {
+      "scene": [
+        -44991.25,
+        113944.5,
+        1624.869
+      ],
+      "sourceUtm": [
+        296476.1,
+        4387319,
+        1624.869
+      ],
+      "log10Resistivity": 1.181558,
+      "sampleCount": 45,
+      "gridCell": [
+        -18,
+        45
+      ]
+    },
+    "centerNearest": {
+      "scene": [
+        677.45,
+        -1317.5,
+        2097.568
+      ],
+      "sourceUtm": [
+        342144.8,
+        4272057,
+        2097.568
+      ],
+      "log10Resistivity": 3.302452,
+      "sampleCount": 2520,
+      "gridCell": [
+        0,
+        -1
+      ]
+    }
   }
 }
