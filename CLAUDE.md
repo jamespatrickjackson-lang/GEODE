@@ -1,5 +1,9 @@
 # GeoSee Alpha
 
+This file is the agent operating contract. `README.md` is the human repo
+landing page, `docs/START-HERE.md` is stable product/system orientation, and
+`docs/dev-context/Active-Build-Context.md` is the active software-work entry.
+
 This repo is an **alpha prototype** built to gather market feedback from
 mining companies. It is NOT a v1 product. Architecture is provisional, but it
 is still the product architecture under test. Optimize for fast feedback

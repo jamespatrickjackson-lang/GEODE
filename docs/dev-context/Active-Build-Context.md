@@ -2,6 +2,10 @@
 
 Status: active orientation for software-build work
 
+Entry hierarchy: `README.md` is the human repo landing page, `CLAUDE.md` is
+the agent operating contract, `docs/START-HERE.md` is stable product/system
+orientation, and this file is the active software-work entry.
+
 ## Current Mode
 
 GeoSee is in software-build mode. Start from the requested runtime/editor/visualization subsystem and current source files.

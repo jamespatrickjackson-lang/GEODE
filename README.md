@@ -21,12 +21,12 @@ for what this exists to test.
 - **Hosting:** static builds, self-hosted, password-gated
 - **Video export:** headless Chromium recording → MP4
 
-See `CLAUDE.md` "Locked decisions" for full stack rationale.
+Stack rationale lives in `docs/02-architecture.md` and `docs/03-decisions.md`.
 
 ## Repo layout
 
     C:\GeoSee\GeoSee_Dev\
-      CLAUDE.md             # routing doc for Claude Code sessions
+      CLAUDE.md             # agent rules and routing
       README.md             # this file
       docs/                 # all design / scope / decision docs
       src/                  # the application code
@@ -37,34 +37,20 @@ See `CLAUDE.md` "Locked decisions" for full stack rationale.
 
 ## Working with this repo
 
-Start normal Claude Code and Codex software work with
-`docs/dev-context/Active-Build-Context.md`, then read only task-specific
-docs and source files. `CLAUDE.md` remains the routing doc for scope,
-architecture, data-prep, and handoff questions.
+This README is the human repo landing page. Entry points are intentionally
+separated:
+
+- `CLAUDE.md` is the agent operating contract and routing doc.
+- `docs/dev-context/Active-Build-Context.md` is the active software-work entry.
+- `docs/START-HERE.md` is stable product/system orientation.
 
 Large raw/source buckets are not kept in the active repo. If a prep script,
 provenance file, or generated metadata points at an old source path, check
 `docs/archive-map.md` and `docs/archive-manifest.json`; the source system of
 record is `C:\GeoSee\GeoSee_Archive`.
 
-Avoid loading historical receipts, generated screenshots/reports, old intake
-archives, or older root docs by default. Run the full
-`npm run test:utah-forge` suite only when the task needs broad regression
-coverage; use `npm run build` and targeted checks during iteration.
-
-Use the cheapest verification that matches the changed surface:
-
-- Static page/project wiring: `npm run check:pages`
-- Active context-drag markers: `npm run check:agent-drag`
-- Runtime asset wiring: `npm run check:runtime-assets`
-- Utah FORGE runtime/derived products: `npm run check:utah-runtime`
-- Utah FORGE presentation snapshot drift: `npm run check:utah-snapshot`
-- Utah FORGE artifact metadata: `npm run check:artifacts`
-- Project artifact coverage: `npm run check:coverage`
-- Code/runtime compile risk: `npm run build`
-- Browser/render/editor behavior: targeted Utah scripts such as
-  `npm run test:utah:seismic`, `npm run test:utah:topo`,
-  `npm run test:utah:sections`, or `npm run test:utah:mt`
+Executable commands live in `package.json`. Verification routing for agents
+lives in `docs/dev-context/Active-Build-Context.md`.
 
 The most important stable docs are:
 

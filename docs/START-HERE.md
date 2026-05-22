@@ -1,8 +1,8 @@
-# Start Here: GeoSee Context for New Developers and Agents
+# Start Here: GeoSee Stable Product/System Orientation
 
-This document is the first-read orientation for people and AI agents joining GeoSee work. It explains what the app is, why it exists, how the code and data are shaped, and what boundaries matter while contributing.
+This document is stable product/system orientation. It explains what the app is, why it exists, how the code and data are shaped, and what boundaries matter while contributing.
 
-It is intentionally not a full spec. The app is moving quickly, so this file gives the stable mental model and points to the deeper docs/code when needed.
+It is intentionally not a full spec and not the active-work router. For active software work, use `docs/dev-context/Active-Build-Context.md`. For agent operating rules, use `CLAUDE.md`. For the repo landing page, use `README.md`.
 
 ## One-Sentence Product Frame
 
@@ -100,13 +100,14 @@ Its current client-preprocessed intake structure still expects four dataset slot
 - Utah FORGE Phase 3 electrical resistivity
 - Utah FORGE Phase 3 seismic analysis
 
-For Utah FORGE-specific context, start with:
+For current Utah FORGE-specific context, prefer the current project files and active maps:
 
 ```text
-projects/utah-forge/AI_NEXT_AGENT_START_HERE.md
-projects/utah-forge/Utah_Forge_Decisions.md
-projects/utah-forge/Utah_Forge_DevPlan.md
-projects/utah-forge/AI_FUTURE_DATA_INPUT_PLAYBOOK.md
+projects/utah-forge/project.json
+projects/utah-forge/environment.json
+projects/utah-forge/data/README.md
+docs/dev-context/Dataset-Map.md
+docs/dev-context/Computed-Artifact-Pipeline.md
 ```
 
 ### Base GUI Template
