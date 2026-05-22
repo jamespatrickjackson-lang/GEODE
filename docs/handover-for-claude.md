@@ -7,7 +7,7 @@ This is the current bootstrap for the next agent/session. It replaces the older 
 ## Working Directory
 
 ```text
-C:\GeoSee_Dev
+C:\GeoSee\GeoSee_Dev
 ```
 
 Primary local preview URL when dev server is running:

@@ -13,9 +13,9 @@ desktop.ini
 projects/utah-forge/intake_staging/audits/
 
 # Raw deliveries, photogrammetry inputs, and survey appendix duplicates
-# were moved to C:\GeoSee_Archive\ on 2026-05-21. The app does not load
+# were moved to C:\GeoSee\GeoSee_Archive\ on 2026-05-21. The app does not load
 # from these paths; prep/ scripts can re-read them from the archive if
-# needed. See C:\GeoSee_Archive\README.md.
+# needed. See C:\GeoSee\GeoSee_Archive\README.md.
 projects/case-study-b/data/raw/
 projects/utah-forge/data/client_preprocessed/forge_southwestern/
 projects/utah-forge/data/client_preprocessed/Unsorted data/

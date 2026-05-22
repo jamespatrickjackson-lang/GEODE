@@ -4,7 +4,7 @@ Corp (owner number 284856) from the DataBC public WFS, dissolves them
 into a single boundary polygon, and writes the result as GeoJSON in
 EPSG:26910.
 
-Usage (from C:\\GeoSee_Dev):
+Usage (from C:\\GeoSee\\GeoSee_Dev):
     python prep/fetch_claim.py
 
 Reads:  https://openmaps.gov.bc.ca/geo/pub/wfs (DataBC public WFS)

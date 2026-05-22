@@ -25,7 +25,7 @@ See `CLAUDE.md` "Locked decisions" for full stack rationale.
 
 ## Repo layout
 
-    Dev_files_V1/
+    C:\GeoSee\GeoSee_Dev\
       CLAUDE.md             # routing doc for Claude Code sessions
       README.md             # this file
       docs/                 # all design / scope / decision docs
@@ -35,8 +35,17 @@ See `CLAUDE.md` "Locked decisions" for full stack rationale.
 
 ## Working with this repo
 
-Start every Claude Code session by letting it read `CLAUDE.md`. That doc
-routes to whatever else is relevant. The most important docs are:
+Start normal Claude Code and Codex software work with
+`docs/dev-context/Active-Build-Context.md`, then read only task-specific
+docs and source files. `CLAUDE.md` remains the routing doc for scope,
+architecture, data-prep, and handoff questions.
+
+Avoid loading historical receipts, generated screenshots/reports, old intake
+archives, or older root docs by default. Run the full
+`npm run test:utah-forge` suite only when the task needs broad regression
+coverage; use `npm run build` and targeted checks during iteration.
+
+The most important stable docs are:
 
 - `docs/00-purpose.md` — what this exists to test
 - `docs/01-scope.md` — what is in and out for alpha

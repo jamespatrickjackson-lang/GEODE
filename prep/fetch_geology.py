@@ -8,7 +8,7 @@ and writes:
                                       per clipped bedrock polygon
     data/bedrock_geology_colors.json -- { strat_unit_code: "#hex", ... }
 
-Usage (from C:\\GeoSee_Dev):
+Usage (from C:\\GeoSee\\GeoSee_Dev):
     python prep/fetch_geology.py
 
 Inputs (all local, no network):

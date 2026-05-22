@@ -218,11 +218,11 @@ Each decision records:
 
 **Trade-off accepted:** Project-specific preprocessing remains needed.
 
-## #021 - 2026-04-29 - Working tree: `C:\GeoSee_Dev`
+## #021 - 2026-04-29 - Working tree: `C:\GeoSee\GeoSee_Dev`
 
 **Considered:** synced-drive working folder, local working folder.
 
-**Chose:** `C:\GeoSee_Dev`.
+**Chose:** `C:\GeoSee\GeoSee_Dev`.
 
 **Why:** Avoid file-locking and build-output issues.
 

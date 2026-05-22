@@ -1,0 +1,29 @@
+# Agent and search exclusions for ripgrep-style tooling.
+# These paths are generated, historical, external, or too broad for default
+# software-build context. Open them only when the task explicitly requires it.
+
+node_modules/
+dist/
+dist-tsbuild/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+*.log
+
+docs/dev-context/Change-Receipts/
+docs/dev-context/Verification-Receipts/
+docs/dev-context/Generated-Reports/
+docs/dev-context/Archive/
+docs/dev-context/**/screenshots/
+
+projects/utah-forge/intake_staging/audits/
+projects/utah-forge/screenshots/
+projects/utah-forge/reports/
+
+GeoSee_Archive/
+GeoSee_Dev_Past/
+archive/
+archives/
+backup/
+backups/

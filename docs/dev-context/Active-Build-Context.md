@@ -73,10 +73,17 @@ For agent-run checks, prefer a scoped dev server command such as `npm run dev --
 Avoid these unless explicitly relevant:
 
 - broad intake history
+- `docs/dev-context/Change-Receipts/**`
+- `docs/dev-context/Verification-Receipts/**`
+- `docs/dev-context/Verification-Receipts/screenshots/**`
+- `docs/dev-context/Generated-Reports/**`
+- `docs/dev-context/Archive/**`
 - old `BUILD_DIRECTIVE` rails
 - historical open-loop rows as active scope
 - root docs that predate current Utah FORGE MT/seismic/topo work
 - reading visual audit screenshots unless the current task is visual QA
+- full `npm run test:utah-forge` during iteration; use targeted tests or
+  browser probes instead
 
 ## Large Code Surface Warning
 

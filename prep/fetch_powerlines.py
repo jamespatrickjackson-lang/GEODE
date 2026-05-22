@@ -3,7 +3,7 @@ One-off prep script. Pulls BC Transmission Lines from the DataBC WFS
 service, clipped to the Woodjam 40x40 km project bounds, and writes one
 GeoJSON file local to data/.
 
-Usage (from C:\\GeoSee_Dev):
+Usage (from C:\\GeoSee\\GeoSee_Dev):
     python prep/fetch_powerlines.py
 
 Reads:  https://openmaps.gov.bc.ca/geo/pub/wfs (DataBC public WFS)

@@ -1,0 +1,34 @@
+{
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/dist-tsbuild/**": true,
+    "**/coverage/**": true,
+    "**/playwright-report/**": true,
+    "**/test-results/**": true,
+    "**/docs/dev-context/Change-Receipts/**": true,
+    "**/docs/dev-context/Verification-Receipts/**": true,
+    "**/docs/dev-context/Generated-Reports/**": true,
+    "**/docs/dev-context/Archive/**": true,
+    "**/docs/dev-context/**/screenshots/**": true,
+    "**/projects/utah-forge/intake_staging/audits/**": true,
+    "**/projects/utah-forge/screenshots/**": true,
+    "**/projects/utah-forge/reports/**": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/dist-tsbuild": true,
+    "**/coverage": true,
+    "**/playwright-report": true,
+    "**/test-results": true,
+    "**/docs/dev-context/Change-Receipts": true,
+    "**/docs/dev-context/Verification-Receipts": true,
+    "**/docs/dev-context/Generated-Reports": true,
+    "**/docs/dev-context/Archive": true,
+    "**/docs/dev-context/**/screenshots": true,
+    "**/projects/utah-forge/intake_staging/audits": true,
+    "**/projects/utah-forge/screenshots": true,
+    "**/projects/utah-forge/reports": true
+  }
+}

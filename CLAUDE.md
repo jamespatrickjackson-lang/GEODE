@@ -24,8 +24,17 @@ effort on demo polish, not tool polish.
 
 ## Before you do X, read Y
 
+Default current-work path: for normal software work, start with
+`docs/dev-context/Active-Build-Context.md`, then open only the docs and
+source files directly relevant to the task.
+
+Avoid loading historical receipts, screenshots, archived intake material, or
+old root docs by default. Use them only when the user asks for audit history,
+verification evidence, intake/drop review, or visual QA evidence.
+
 | Doing this | Read this first |
 |---|---|
+| Normal runtime/editor/visualization work | `docs/dev-context/Active-Build-Context.md` |
 | Changing scope or proposing a new feature | `docs/01-scope.md` |
 | Any architecture or library decision | `docs/02-architecture.md` + `docs/03-decisions.md` |
 | Editing `project.json`, `page.json`, or `sources.json` schemas | `docs/schemas/` |
@@ -84,6 +93,13 @@ Every published output is watermarked "Not for engineering use" by default.
 
 ## Operator notes for future Claude Code sessions
 
+- **Agent fast path.** For current software-build work, use
+  `docs/dev-context/Active-Build-Context.md` as the first read. Do not scan
+  `docs/dev-context/Change-Receipts/**`,
+  `docs/dev-context/Verification-Receipts/**`, screenshot folders, old intake
+  archives, or older root docs unless the task explicitly needs that history.
+  Avoid full `npm run test:utah-forge` during iteration; prefer `npm run build`
+  and targeted Playwright checks.
 - **Authoring persistence (Week 3+).** The editor auto-saves edits to
   `projects/<project>/` via a dev-only Vite plugin endpoint
   (`/api/write-file`, `/api/read-file`, `/api/delete-file`) registered
@@ -93,5 +109,5 @@ Every published output is watermarked "Not for engineering use" by default.
   reaching for IndexedDB / LocalStorage / a backend service to persist
   authoring state, stop: the dev plugin is the right answer and already
   exists at `plugins/vite-plugin-author-write.ts`.
-- **Working tree.** Per #021, the working tree is `C:\GeoSee_Dev\`,
+- **Working tree.** Per #021, the working tree is `C:\GeoSee\GeoSee_Dev\`,
   not the Drive copy. `npm install` against Drive will fail with EPERM.

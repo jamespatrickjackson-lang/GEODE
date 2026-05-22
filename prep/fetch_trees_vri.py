@@ -4,7 +4,7 @@ Rank 1 forest polygons from DataBC, clips them to the Woodjam project
 bounds, and writes a lightweight polygon layer for terrain-painted forest
 cover boundaries in the app.
 
-Usage (from C:\\GeoSee_Dev):
+Usage (from C:\\GeoSee\\GeoSee_Dev):
     python prep/fetch_trees_vri.py
 
 Reads:  data/source/trees_vri/veg_comp_lyr_r1_poly_2024.gdb.zip

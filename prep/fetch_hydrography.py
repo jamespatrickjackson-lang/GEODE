@@ -3,7 +3,7 @@ One-off prep script. Pulls BC Freshwater Atlas stream network + lake
 polygons from the DataBC WFS service, clipped to the project bounds in
 EPSG:26910, and writes two GeoJSON files local to the data/ folder.
 
-Usage (from C:\\GeoSee_Dev):
+Usage (from C:\\GeoSee\\GeoSee_Dev):
     python prep/fetch_hydrography.py
 
 Reads:  https://openmaps.gov.bc.ca/geo/pub/wfs (DataBC public WFS)
