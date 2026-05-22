@@ -1199,6 +1199,7 @@ export function mountScene(
     if (hoverTimer !== null) window.clearTimeout(hoverTimer);
     setHoverTooltip(null);
     controls.dispose();
+    manager.disposeTerrainOrthoPhotoTexture();
     renderer.dispose();
     if (renderer.domElement.parentElement === container) {
       container.removeChild(renderer.domElement);

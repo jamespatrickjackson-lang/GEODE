@@ -60,6 +60,11 @@ export interface TerrainMaterialParams {
   edgeFadeShape?: "square" | "rounded-square" | "circle";
   edgeFadeInsetM?: number;
   edgeFadeCornerRadiusM?: number;
+  orthoPhotoOpacity?: number;
+  orthoPhotoHillshadeBlend?: number;
+  orthoPhotoBrightness?: number;
+  orthoPhotoContrast?: number;
+  orthoPhotoSaturation?: number;
   // Color of shadowed areas. Pure black makes shadows muddy under
   // bloom; a slight cool tint reads as atmospheric.
   shadowTint?: string;
@@ -89,6 +94,7 @@ export interface TerrainMaterialHandle {
     boundsMin: [number, number],
     boundsMax: [number, number],
   ): void;
+  setOrthoPhotoTexture(texture: THREE.Texture | null): void;
   // Lake painting: lakes are NOT rendered as separate meshes any more.
   // A rasterized polygon mask is overlaid onto terrain pixels by the
   // fragment shader, recoloring them to lake color where the mask is
@@ -310,6 +316,27 @@ export function buildTerrainMaterial(
     uEdgeFadeCornerRadius: {
       value: Math.max(0, initial.edgeFadeCornerRadiusM ?? 0),
     },
+    uOrthoPhotoMap: { value: makeBlankMask() as THREE.Texture },
+    uOrthoPhotoEnabled: { value: 0 },
+    uOrthoPhotoOpacity: {
+      value: THREE.MathUtils.clamp(initial.orthoPhotoOpacity ?? 0, 0, 1),
+    },
+    uOrthoPhotoHillshadeBlend: {
+      value: THREE.MathUtils.clamp(
+        initial.orthoPhotoHillshadeBlend ?? 0.5,
+        0,
+        1,
+      ),
+    },
+    uOrthoPhotoBrightness: {
+      value: THREE.MathUtils.clamp(initial.orthoPhotoBrightness ?? 0, -0.5, 0.5),
+    },
+    uOrthoPhotoContrast: {
+      value: THREE.MathUtils.clamp(initial.orthoPhotoContrast ?? 1, 0.25, 2),
+    },
+    uOrthoPhotoSaturation: {
+      value: THREE.MathUtils.clamp(initial.orthoPhotoSaturation ?? 1, 0, 2),
+    },
     uTerrainBoundsMin: { value: new THREE.Vector2(-1, -1) },
     uTerrainBoundsMax: { value: new THREE.Vector2(1, 1) },
     uShadowTint: { value: new THREE.Color(initial.shadowTint ?? "#3a3f4d") },
@@ -435,6 +462,13 @@ export function buildTerrainMaterial(
       uniform float uEdgeFadeShape;
       uniform float uEdgeFadeInset;
       uniform float uEdgeFadeCornerRadius;
+      uniform sampler2D uOrthoPhotoMap;
+      uniform float uOrthoPhotoEnabled;
+      uniform float uOrthoPhotoOpacity;
+      uniform float uOrthoPhotoHillshadeBlend;
+      uniform float uOrthoPhotoBrightness;
+      uniform float uOrthoPhotoContrast;
+      uniform float uOrthoPhotoSaturation;
       uniform vec2 uTerrainBoundsMin;
       uniform vec2 uTerrainBoundsMax;
       uniform vec3 uShadowTint;
@@ -609,6 +643,14 @@ export function buildTerrainMaterial(
         return uSurfaceElevationColors[4];
       }
 
+      vec3 adjustedOrthoPhotoColor(vec3 color) {
+        vec3 adjusted = color + vec3(uOrthoPhotoBrightness);
+        adjusted = (adjusted - vec3(0.5)) * uOrthoPhotoContrast + vec3(0.5);
+        float luma = dot(adjusted, vec3(0.2126, 0.7152, 0.0722));
+        adjusted = mix(vec3(luma), adjusted, uOrthoPhotoSaturation);
+        return clamp(adjusted, 0.0, 1.0);
+      }
+
       void main() {
         if (uPublicClipEnabled > 0.5) {
           vec3 rel = vWorldPos - uPublicClipCenter;
@@ -712,6 +754,43 @@ export function buildTerrainMaterial(
         float slope = 1.0 - clamp(facetN.z, 0.0, 1.0);
         surface += base * pow(slope, 5.0) * litCompressed * 0.4 *
                    uFacetStrength;
+        if (uOrthoPhotoEnabled > 0.5 && uOrthoPhotoOpacity > 0.001) {
+          vec2 orthoUv = (vWorldPos.xy - uTerrainBoundsMin) /
+                         (uTerrainBoundsMax - uTerrainBoundsMin);
+          if (
+            orthoUv.x >= 0.0 && orthoUv.x <= 1.0 &&
+            orthoUv.y >= 0.0 && orthoUv.y <= 1.0
+          ) {
+            vec3 orthoPhoto = adjustedOrthoPhotoColor(
+              texture2D(uOrthoPhotoMap, orthoUv).rgb
+            );
+            vec3 orthoShaded = orthoPhoto *
+              (uAmbient * 0.55 + vec3(uHillshade * litAmount));
+            surface = mix(
+              surface,
+              mix(orthoPhoto, orthoShaded, uOrthoPhotoHillshadeBlend),
+              clamp(uOrthoPhotoOpacity, 0.0, 1.0)
+            );
+            if (uSurfaceElevationEnabled > 0.5) {
+              float elevationT = clamp(
+                (elev - uSurfaceElevationMin) /
+                  max(0.0001, uSurfaceElevationMax - uSurfaceElevationMin),
+                0.0,
+                1.0
+              );
+              if (uSurfaceElevationReverse > 0.5) {
+                elevationT = 1.0 - elevationT;
+              }
+              vec3 elevationOverlay = surfaceElevationRamp(elevationT) *
+                (uAmbient * 0.55 + vec3(uHillshade * litAmount));
+              surface = mix(
+                surface,
+                elevationOverlay,
+                clamp(uSurfaceElevationColorBlend, 0.0, 1.0)
+              );
+            }
+          }
+        }
         vec3 terrainSurface = surface;
 
         // Lake painting -- recolors terrain pixels where the rasterized
@@ -1019,6 +1098,41 @@ export function buildTerrainMaterial(
           0,
           p.edgeFadeCornerRadiusM,
         );
+      if (typeof p.orthoPhotoOpacity === "number") {
+        uniforms.uOrthoPhotoOpacity.value = THREE.MathUtils.clamp(
+          p.orthoPhotoOpacity,
+          0,
+          1,
+        );
+      }
+      if (typeof p.orthoPhotoHillshadeBlend === "number") {
+        uniforms.uOrthoPhotoHillshadeBlend.value = THREE.MathUtils.clamp(
+          p.orthoPhotoHillshadeBlend,
+          0,
+          1,
+        );
+      }
+      if (typeof p.orthoPhotoBrightness === "number") {
+        uniforms.uOrthoPhotoBrightness.value = THREE.MathUtils.clamp(
+          p.orthoPhotoBrightness,
+          -0.5,
+          0.5,
+        );
+      }
+      if (typeof p.orthoPhotoContrast === "number") {
+        uniforms.uOrthoPhotoContrast.value = THREE.MathUtils.clamp(
+          p.orthoPhotoContrast,
+          0.25,
+          2,
+        );
+      }
+      if (typeof p.orthoPhotoSaturation === "number") {
+        uniforms.uOrthoPhotoSaturation.value = THREE.MathUtils.clamp(
+          p.orthoPhotoSaturation,
+          0,
+          2,
+        );
+      }
       if (p.shadowTint) uniforms.uShadowTint.value.set(p.shadowTint);
       if (typeof p.gridEnabled === "boolean")
         uniforms.uGridEnabled.value = p.gridEnabled ? 1 : 0;
@@ -1048,6 +1162,15 @@ export function buildTerrainMaterial(
     setTerrainBounds(boundsMin, boundsMax) {
       uniforms.uTerrainBoundsMin.value.set(boundsMin[0], boundsMin[1]);
       uniforms.uTerrainBoundsMax.value.set(boundsMax[0], boundsMax[1]);
+    },
+    setOrthoPhotoTexture(texture) {
+      if (texture) {
+        uniforms.uOrthoPhotoMap.value = texture;
+        uniforms.uOrthoPhotoEnabled.value = 1;
+      } else {
+        uniforms.uOrthoPhotoEnabled.value = 0;
+      }
+      material.needsUpdate = true;
     },
     setLakeMask(texture, boundsMin, boundsMax) {
       uniforms.uLakeMask.value = texture;

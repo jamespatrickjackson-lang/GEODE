@@ -85,6 +85,55 @@ function validateLayerAssets(projectDir, layer) {
   }
 }
 
+function validateEnvironmentTerrainAssets(projectDir) {
+  const environmentPath = `${projectDir}/environment.json`;
+  if (!existsSync(repoPath(environmentPath))) return;
+  const environment = readJson(environmentPath);
+  const terrain = environment.scene?.terrain;
+  if (!terrain || typeof terrain !== "object") return;
+
+  const targets = [
+    terrain.orthoPhotoPath,
+    terrain.orthoPhotoTexture4096Path,
+    terrain.orthoPhotoTexture8192Path,
+  ].filter((target) => typeof target === "string" && target.length > 0);
+
+  for (const target of targets) {
+    for (const fragment of SOURCE_ONLY_FRAGMENTS) {
+      assertNotContains(target, fragment, `${projectDir}:environment.scene.terrain`);
+    }
+    const assetPath = resolveAssetPath(projectDir, target);
+    assert.equal(
+      existsSync(assetPath),
+      true,
+      `${projectDir}:environment.scene.terrain asset should exist: ${target} (${displayPath(
+        assetPath,
+      )})`,
+    );
+  }
+
+  if (
+    terrain.orthoPhotoTextureBudget === 4096 &&
+    terrain.orthoPhotoTexture4096Path
+  ) {
+    assert.equal(
+      terrain.orthoPhotoPath,
+      terrain.orthoPhotoTexture4096Path,
+      `${projectDir}:environment.scene.terrain active ortho path should match 4096 budget`,
+    );
+  }
+  if (
+    terrain.orthoPhotoTextureBudget === 8192 &&
+    terrain.orthoPhotoTexture8192Path
+  ) {
+    assert.equal(
+      terrain.orthoPhotoPath,
+      terrain.orthoPhotoTexture8192Path,
+      `${projectDir}:environment.scene.terrain active ortho path should match 8192 budget`,
+    );
+  }
+}
+
 function validateWoodjamPublicLayers() {
   const project = readJson("projects/woodjam/project.json");
   for (const [id, file] of [
@@ -114,6 +163,7 @@ runValidation("runtime asset wiring", () => {
     for (const layer of project.layers ?? []) {
       validateLayerAssets(projectDir, layer);
     }
+    validateEnvironmentTerrainAssets(projectDir);
   }
 
   validateWoodjamPublicLayers();

@@ -144,6 +144,11 @@ const CINEMATIC_LAYER_STYLE_PATCH_KEYS = [
   "labelTextOpacity",
   "labelOutlineOpacity",
   "labelFillOpacity",
+  "labelKind",
+  "labelPointerVisible",
+  "labelPointerSide",
+  "labelFadeNearM",
+  "labelFadeFarM",
 ] as const satisfies readonly (keyof EditableStyle)[];
 
 export function findRenderPreset(

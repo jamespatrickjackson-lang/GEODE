@@ -1,0 +1,59 @@
+{
+  "type": "FeatureCollection",
+  "name": "Utah FORGE Phase 3 required working area container",
+  "properties": {
+    "schema": "geosee-site-container-outline-v1",
+    "role": "site-container-outline",
+    "status": "active",
+    "renderAboveAll": true,
+    "renderOrder": 4580,
+    "coordinateSystem": "scene-local meters, X east, Y north, Z up",
+    "basis": "Report-backed full Phase 3 working footprint scale, approximately 4.2 km by 4.2 km, centered on the processed Phase 3 3D seismic acquisition navigation envelope.",
+    "footprintWidthM": 4200,
+    "footprintHeightM": 4200,
+    "footprintAreaKm2": 17.64,
+    "verticalReference": "Top follows the processed seismic navigation upper elevation.",
+    "sourceLayerId": "utah-forge-phase3-working-area"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "phase3-required-working-area-container",
+        "label": "Phase 3 required working area",
+        "role": "site-container-outline",
+        "source": "GeoSee render integration review using Utah FORGE Phase 3 seismic navigation and report-scale survey guidance"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -8041.4,
+            -12617.6,
+            2045.3
+          ],
+          [
+            -3841.4,
+            -12617.6,
+            2045.3
+          ],
+          [
+            -3841.4,
+            -8417.6,
+            2045.3
+          ],
+          [
+            -8041.4,
+            -8417.6,
+            2045.3
+          ],
+          [
+            -8041.4,
+            -12617.6,
+            2045.3
+          ]
+        ]
+      }
+    }
+  ]
+}

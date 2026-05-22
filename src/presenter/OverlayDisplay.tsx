@@ -532,7 +532,7 @@ export function OverlayDisplay() {
       : { height: "max-content" };
 
   // Use position:absolute to match the sidebar's working pattern.
-  // index.html clamps body / #root with overflow:hidden, which on
+  // global.css clamps body / #root with overflow:hidden, which on
   // Chrome makes backdrop-filter degrade to "just the background
   // color" for position:fixed children of an overflow:hidden body.
   // The App root is position:absolute inset:0 so absolute children

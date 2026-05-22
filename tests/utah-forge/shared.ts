@@ -912,6 +912,12 @@ export type TerrainMaterialSceneState = {
   edgeFadeShape: number | null;
   edgeFadeInsetM: number | null;
   edgeFadeCornerRadiusM: number | null;
+  orthoPhotoEnabled: number | null;
+  orthoPhotoOpacity: number | null;
+  orthoPhotoHillshadeBlend: number | null;
+  orthoPhotoBrightness: number | null;
+  orthoPhotoContrast: number | null;
+  orthoPhotoSaturation: number | null;
   surfaceElevationColors: string[];
   surfaceElevationPositions: number[];
   surfaceElevationMidpoints: number[];
@@ -958,6 +964,12 @@ export async function terrainMaterialSceneState(
     let edgeFadeShape: number | null = null;
     let edgeFadeInsetM: number | null = null;
     let edgeFadeCornerRadiusM: number | null = null;
+    let orthoPhotoEnabled: number | null = null;
+    let orthoPhotoOpacity: number | null = null;
+    let orthoPhotoHillshadeBlend: number | null = null;
+    let orthoPhotoBrightness: number | null = null;
+    let orthoPhotoContrast: number | null = null;
+    let orthoPhotoSaturation: number | null = null;
     let surfaceElevationColors: string[] = [];
     let surfaceElevationPositions: number[] = [];
     let surfaceElevationMidpoints: number[] = [];
@@ -1016,6 +1028,30 @@ export async function terrainMaterialSceneState(
           typeof uniforms.uEdgeFadeCornerRadius?.value === "number"
             ? uniforms.uEdgeFadeCornerRadius.value
             : null;
+        orthoPhotoEnabled =
+          typeof uniforms.uOrthoPhotoEnabled?.value === "number"
+            ? uniforms.uOrthoPhotoEnabled.value
+            : null;
+        orthoPhotoOpacity =
+          typeof uniforms.uOrthoPhotoOpacity?.value === "number"
+            ? uniforms.uOrthoPhotoOpacity.value
+            : null;
+        orthoPhotoHillshadeBlend =
+          typeof uniforms.uOrthoPhotoHillshadeBlend?.value === "number"
+            ? uniforms.uOrthoPhotoHillshadeBlend.value
+            : null;
+        orthoPhotoBrightness =
+          typeof uniforms.uOrthoPhotoBrightness?.value === "number"
+            ? uniforms.uOrthoPhotoBrightness.value
+            : null;
+        orthoPhotoContrast =
+          typeof uniforms.uOrthoPhotoContrast?.value === "number"
+            ? uniforms.uOrthoPhotoContrast.value
+            : null;
+        orthoPhotoSaturation =
+          typeof uniforms.uOrthoPhotoSaturation?.value === "number"
+            ? uniforms.uOrthoPhotoSaturation.value
+            : null;
         const colorValues = Array.isArray(
           uniforms.uSurfaceElevationColors?.value,
         )
@@ -1068,6 +1104,12 @@ export async function terrainMaterialSceneState(
       edgeFadeShape,
       edgeFadeInsetM,
       edgeFadeCornerRadiusM,
+      orthoPhotoEnabled,
+      orthoPhotoOpacity,
+      orthoPhotoHillshadeBlend,
+      orthoPhotoBrightness,
+      orthoPhotoContrast,
+      orthoPhotoSaturation,
       surfaceElevationColors,
       surfaceElevationPositions,
       surfaceElevationMidpoints,

@@ -1,0 +1,119 @@
+{
+  "type": "FeatureCollection",
+  "name": "Utah FORGE site boundary",
+  "properties": {
+    "schema": "geosee-site-boundary-outline-v1",
+    "role": "forge-site-boundary",
+    "status": "active",
+    "renderAboveAll": true,
+    "renderOrder": 4590,
+    "coordinateSystem": "scene-local meters, X east, Y north, Z up",
+    "sourceCrs": "EPSG:26912",
+    "sourceVerticalDatum": "NAVD88",
+    "sceneOriginUtm": {
+      "easting_m": 341467.35,
+      "northing_m": 4273374.5,
+      "elevation_m": 0
+    },
+    "source": {
+      "dataset": "Utah FORGE: Geologic, Topographic, and Other Related Maps and GIS Data from the Earth Model",
+      "resource": "FORGE Site Outline Shapefile.zip",
+      "doi": "10.15121/1495399",
+      "url": "https://gdr.openei.org/submissions/1108"
+    },
+    "sourceBoundsUtm": {
+      "min": [
+        332852.6298,
+        4261250.7367
+      ],
+      "max": [
+        336116.8469,
+        4264610.0182
+      ]
+    },
+    "sceneBounds": {
+      "min": [
+        -8614.72,
+        -12123.763,
+        2055
+      ],
+      "max": [
+        -5350.503,
+        -8764.482,
+        2055
+      ]
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "forge-site-boundary",
+        "label": "FORGE site boundary",
+        "role": "forge-site-boundary",
+        "source": "GDR submission 1108 FORGE Site Outline shapefile",
+        "styleIntent": "yellow top-render outline matching the FORGE site area reference"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -5350.503,
+            -8825.977,
+            2055
+          ],
+          [
+            -5382.716,
+            -10432.853,
+            2055
+          ],
+          [
+            -6186.449,
+            -10415.394,
+            2055
+          ],
+          [
+            -6219.097,
+            -12123.763,
+            2055
+          ],
+          [
+            -6619.187,
+            -12115.434,
+            2055
+          ],
+          [
+            -6613.347,
+            -11715.524,
+            2055
+          ],
+          [
+            -7014.564,
+            -11706.93,
+            2055
+          ],
+          [
+            -6978.307,
+            -9595.712,
+            2055
+          ],
+          [
+            -8614.72,
+            -9565.395,
+            2055
+          ],
+          [
+            -8597.718,
+            -8764.482,
+            2055
+          ],
+          [
+            -5350.503,
+            -8825.977,
+            2055
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,331 @@
+/* Root shell */
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+:root {
+  --editor-slider-filled: #c0c0c0;
+  --editor-slider-track: rgba(255, 255, 255, 0.72);
+  --editor-slider-track-border: rgba(255, 255, 255, 0.404);
+  --editor-slider-thumb: #929292;
+  --editor-slider-disabled-opacity: 0.4;
+  --editor-control-height: 20px;
+  --editor-slider-track-height: 8px;
+  --editor-slider-thumb-size: 20px;
+}
+
+/* Editor native controls */
+
+input[type="range"] {
+  width: 100%;
+  height: var(--editor-control-height);
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  cursor: pointer;
+  accent-color: var(--editor-slider-filled);
+}
+
+input[type="range"]:disabled {
+  opacity: var(--editor-slider-disabled-opacity);
+  cursor: default;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: var(--editor-slider-track-height);
+  border-radius: 999px;
+  border: 1px solid var(--editor-slider-track-border);
+  background:
+    linear-gradient(
+      to right,
+      var(--editor-slider-filled) 0%,
+      var(--editor-slider-filled) var(--editor-slider-fill, 50%),
+      transparent var(--editor-slider-fill, 50%),
+      transparent 100%
+    ),
+    var(--editor-slider-track);
+  overflow: hidden;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  width: var(--editor-slider-thumb-size);
+  height: var(--editor-slider-thumb-size);
+  margin-top: calc(
+    (var(--editor-slider-track-height) - var(--editor-slider-thumb-size)) / 2 - 1px
+  );
+  border: none;
+  border-radius: 999px;
+  background: var(--editor-slider-thumb);
+  -webkit-appearance: none;
+}
+
+input[type="range"]::-moz-range-track {
+  height: var(--editor-slider-track-height);
+  border-radius: 999px;
+  border: 1px solid var(--editor-slider-track-border);
+  background: var(--editor-slider-track);
+}
+
+input[type="range"]::-moz-range-progress {
+  height: var(--editor-slider-track-height);
+  border-radius: 999px;
+  background: var(--editor-slider-filled);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: var(--editor-slider-thumb-size);
+  height: var(--editor-slider-thumb-size);
+  border: none;
+  border-radius: 999px;
+  background: var(--editor-slider-thumb);
+}
+
+input[type="color"] {
+  width: 58px;
+  height: var(--editor-control-height);
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 999px;
+}
+
+input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 999px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+  border-radius: 999px;
+}
+
+textarea {
+  border-radius: 16px;
+}
+
+input[type="text"]::placeholder,
+input[type="number"]::placeholder,
+textarea::placeholder {
+  color: rgba(63, 63, 63, 0.58);
+}
+
+input[type="text"],
+input[type="number"],
+textarea {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233f3f3f' stroke-opacity='0.72' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-size: 13px 13px !important;
+}
+
+input[type="text"],
+input[type="number"] {
+  background-position: calc(100% - 11px) 50% !important;
+}
+
+textarea {
+  background-position: calc(100% - 11px) 12px !important;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+  outline: none;
+}
+
+.editor-sidebar-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.editor-sidebar-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Presentation overlays */
+
+.presentation-overlay-content,
+.presentation-overlay-content :where(p, li, h1, h2, h3, h4, h5, h6, strong, em, span) {
+  color: var(--presentation-overlay-text, rgba(0, 0, 0, 0.86));
+}
+
+.presentation-overlay-content :where(small, figcaption) {
+  color: var(--presentation-overlay-secondary, rgba(0, 0, 0, 0.58));
+}
+
+.presentation-overlay-markdown :where(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6) {
+  margin-top: 0;
+}
+
+.presentation-overlay-markdown :where(p:not(:has(img)), blockquote, h1, h2, h3, h4, h5, h6) {
+  box-sizing: border-box;
+  padding-left: var(--presentation-overlay-text-padding, 32px);
+  padding-right: var(--presentation-overlay-text-padding, 32px);
+}
+
+.presentation-overlay-markdown :where(ul, ol) {
+  box-sizing: border-box;
+  padding-left: calc(var(--presentation-overlay-text-padding, 32px) + 1.25em);
+  padding-right: var(--presentation-overlay-text-padding, 32px);
+}
+
+.presentation-overlay-markdown {
+  font-family: var(--presentation-overlay-body-font, system-ui, sans-serif);
+  font-size: var(--presentation-overlay-body-size, 14px);
+  font-weight: var(--presentation-overlay-body-weight, 400);
+  font-style: var(--presentation-overlay-body-style, normal);
+  counter-reset: presentation-overlay-figure;
+}
+
+.presentation-overlay-markdown p {
+  margin-bottom: 12px;
+}
+
+.presentation-overlay-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.presentation-overlay-markdown p:has(img) {
+  margin: 0;
+  padding: 0;
+}
+
+.presentation-overlay-markdown p:has(figure) {
+  margin: 0;
+  padding: 0;
+}
+
+.presentation-overlay-figure {
+  width: calc(100% - (var(--presentation-overlay-image-padding, 32px) * 2));
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: var(--presentation-overlay-image-margin, 14px)
+    var(--presentation-overlay-image-padding, 32px);
+  padding: 0;
+  counter-increment: presentation-overlay-figure;
+}
+
+.presentation-overlay-markdown img {
+  width: calc(100% - (var(--presentation-overlay-image-padding, 32px) * 2));
+  max-width: 100%;
+  height: auto;
+  display: block;
+  box-sizing: border-box;
+  margin: var(--presentation-overlay-image-margin, 14px)
+    var(--presentation-overlay-image-padding, 32px);
+  border: var(--presentation-overlay-image-outline, 0 solid transparent);
+  border-radius: var(--presentation-overlay-image-radius, 16px);
+  box-shadow: var(--presentation-overlay-image-shadow, none);
+}
+
+.presentation-overlay-figure img {
+  width: 100%;
+  margin: 0;
+}
+
+.presentation-overlay-figure figcaption,
+.presentation-overlay-figure-label {
+  width: max-content;
+  max-width: 100%;
+  margin:
+    calc(var(--presentation-overlay-figure-inset, 10px) * 0.5)
+    max(var(--presentation-overlay-figure-inset, 10px), var(--presentation-overlay-image-radius, 16px))
+    0
+    auto;
+  display: var(--presentation-overlay-figure-display, inline-flex);
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding:
+    var(--presentation-overlay-figure-padding-y, 4px)
+    var(--presentation-overlay-figure-padding-x, 8px);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--presentation-overlay-figure-color, #fff);
+  font-family: var(--presentation-overlay-figure-font, system-ui, sans-serif);
+  font-size: var(--presentation-overlay-figure-font-size, 11px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.presentation-overlay-figure figcaption::before {
+  content: var(--presentation-overlay-figure-prefix, "Fig.") " " counter(presentation-overlay-figure);
+}
+
+.presentation-overlay-figure-label::before {
+  content: var(--presentation-overlay-figure-prefix, "Fig.") " 1";
+}
+
+.presentation-overlay-image-placeholder {
+  position: relative;
+  width: calc(100% - (var(--presentation-overlay-image-padding, 32px) * 2));
+  aspect-ratio: 16 / 9;
+  box-sizing: border-box;
+  margin:
+    var(--presentation-overlay-image-margin, 14px)
+    var(--presentation-overlay-image-padding, 32px)
+    var(--presentation-overlay-text-padding, 32px);
+  border: var(--presentation-overlay-image-outline, 0 solid transparent);
+  border-radius: var(--presentation-overlay-image-radius, 16px);
+  box-shadow: var(--presentation-overlay-image-shadow, none);
+  background: rgba(0, 0, 0, 0.86);
+  overflow: hidden;
+}
+
+.presentation-overlay-placeholder-figure .presentation-overlay-image-placeholder {
+  width: 100%;
+  margin: 0;
+}
+
+.presentation-overlay-image-placeholder::before,
+.presentation-overlay-image-placeholder::after {
+  content: "";
+  position: absolute;
+  left: -12%;
+  top: 50%;
+  width: 124%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.72);
+  transform-origin: center;
+}
+
+.presentation-overlay-image-placeholder::before {
+  transform: rotate(29deg);
+}
+
+.presentation-overlay-image-placeholder::after {
+  transform: rotate(-29deg);
+}
+
+.presentation-overlay-markdown a {
+  color: var(--presentation-overlay-text, rgba(0, 0, 0, 0.86));
+  text-decoration-color: rgba(0, 0, 0, 0.28);
+}

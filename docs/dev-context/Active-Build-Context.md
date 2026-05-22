@@ -51,6 +51,7 @@ Do not assume Utah FORGE is the product standard. It is one case study probing M
 ## Default Guardrails
 
 - Run `npm run check:workspace` before commits or broad verification.
+- Follow the output posture in `CLAUDE.md`: system/dev context transfer, not social framing.
 - Use the cheapest verification that matches the changed surface.
 - Prefer targeted browser checks over full Utah regression during iteration.
 - For visual composition work, get a focused visual state in front of the human before broad automation.

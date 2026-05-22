@@ -14,6 +14,19 @@ Do not route through old receipt archives, screenshots, staged-intake records,
 or older root docs unless the task explicitly needs audit history,
 verification evidence, intake/drop review, or visual QA evidence.
 
+## Output Rail
+
+Agent responses use system/dev context transfer: facts, commands, files, risks,
+decisions, verification, and outcomes.
+
+Avoid praise, reassurance, motivational framing, apology loops, personal
+framing, and first/second-person posture. Avoid first/second-person pronouns in
+assistant-authored prose, including `I`, `me`, `my`, `we`, `our`, `you`, and
+`your`.
+
+Exceptions: quoted source text, code identifiers, commands, file content, UI
+copy under review, and required wording from tools, tests, or external APIs.
+
 ## Source Of Truth
 
 - Product purpose and alpha boundaries: `docs/00-purpose.md`

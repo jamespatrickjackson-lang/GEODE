@@ -544,6 +544,13 @@ const SURFACE_ELEVATION_DEFAULT_MIDPOINTS = [0.5, 0.5, 0.5, 0.5] as const;
 const SURFACE_ELEVATION_DEFAULT_SOFTNESS = 1;
 const SURFACE_ELEVATION_DEFAULT_BLEND = 1;
 const SURFACE_ELEVATION_STOP_GAP = 0.01;
+const ORTHO_PHOTO_TEXTURE_4096_PATH =
+  "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/ortho_photo_context_4096.jpg";
+const ORTHO_PHOTO_TEXTURE_8192_PATH =
+  "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/ortho_photo_context_8192.jpg";
+const ORTHO_PHOTO_BOUNDS: [number, number, number, number] = [
+  -356385.9, 3703652, 1039320.6, 4843097,
+];
 const TOPO_MAP_BRANDING_DEFAULT_ANCHOR = "south-east";
 const TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M = 0;
 const TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M = -85_000;
@@ -562,10 +569,43 @@ type PublicTopoMaterialPresetId =
   | "custom"
   | "soft-topo"
   | "surface-elevation"
+  | "ortho-photo"
   | "desert-relief"
   | "paper-map"
   | "grey-relief"
   | "high-contrast";
+type OrthoPhotoTextureBudgetId = "4096" | "8192";
+const ORTHO_PHOTO_TEXTURE_BUDGETS: readonly {
+  value: OrthoPhotoTextureBudgetId;
+  label: string;
+}[] = [
+  { value: "4096", label: "4096 px" },
+  { value: "8192", label: "8192 px" },
+];
+function orthoPhotoPathForBudget(
+  budget: OrthoPhotoTextureBudgetId,
+): string {
+  return budget === "8192"
+    ? ORTHO_PHOTO_TEXTURE_8192_PATH
+    : ORTHO_PHOTO_TEXTURE_4096_PATH;
+}
+function orthoPhotoDefaultPatch(
+  budget: OrthoPhotoTextureBudgetId = "4096",
+): NonNullable<SceneProperties["terrain"]> {
+  return {
+    materialPreset: "ortho-photo",
+    orthoPhotoTextureBudget: budget === "8192" ? 8192 : 4096,
+    orthoPhotoPath: orthoPhotoPathForBudget(budget),
+    orthoPhotoTexture4096Path: ORTHO_PHOTO_TEXTURE_4096_PATH,
+    orthoPhotoTexture8192Path: ORTHO_PHOTO_TEXTURE_8192_PATH,
+    orthoPhotoBounds: ORTHO_PHOTO_BOUNDS,
+    orthoPhotoOpacity: 1,
+    orthoPhotoHillshadeBlend: 0.45,
+    orthoPhotoBrightness: 0,
+    orthoPhotoContrast: 1,
+    orthoPhotoSaturation: 1,
+  };
+}
 const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
   value: PublicTopoMaterialPresetId;
   label: string;
@@ -592,6 +632,7 @@ const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
       rockHueVariance: 0.03,
       shadowTint: "#3f4650",
       surfaceElevationEnabled: false,
+      orthoPhotoOpacity: 0,
     },
   },
   {
@@ -623,6 +664,29 @@ const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
       surfaceElevationTransitionSoftness: SURFACE_ELEVATION_DEFAULT_SOFTNESS,
       surfaceElevationColorBlend: SURFACE_ELEVATION_DEFAULT_BLEND,
       surfaceElevationReverse: false,
+      orthoPhotoOpacity: 0,
+    },
+  },
+  {
+    value: "ortho-photo",
+    label: "Ortho photo",
+    patch: {
+      ...orthoPhotoDefaultPatch("4096"),
+      rampLow: "#575145",
+      rampMid: "#958a72",
+      rampHigh: "#d9cba3",
+      elevLowM: 0,
+      elevHighM: 180,
+      hillshadeIntensity: 0.86,
+      shadowSharpness: 0.34,
+      facetStrength: 0.04,
+      edgeFadeDistanceM: 90_000,
+      edgeFadeShape: "square",
+      edgeFadeInsetM: 0,
+      edgeFadeCornerRadiusM: 0,
+      rockHueVariance: 0,
+      shadowTint: "#303640",
+      surfaceElevationEnabled: false,
     },
   },
   {
@@ -645,6 +709,7 @@ const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
       rockHueVariance: 0.05,
       shadowTint: "#303640",
       surfaceElevationEnabled: false,
+      orthoPhotoOpacity: 0,
     },
   },
   {
@@ -667,6 +732,7 @@ const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
       rockHueVariance: 0.015,
       shadowTint: "#56524a",
       surfaceElevationEnabled: false,
+      orthoPhotoOpacity: 0,
     },
   },
   {
@@ -689,6 +755,7 @@ const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
       rockHueVariance: 0.005,
       shadowTint: "#3f464f",
       surfaceElevationEnabled: false,
+      orthoPhotoOpacity: 0,
     },
   },
   {
@@ -711,6 +778,7 @@ const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
       rockHueVariance: 0.07,
       shadowTint: "#262b34",
       surfaceElevationEnabled: false,
+      orthoPhotoOpacity: 0,
     },
   },
 ];
@@ -12535,6 +12603,8 @@ function PublicSurfaceGroupControls({
     )
       ? (terrain.materialPreset as PublicTopoMaterialPresetId)
       : "custom";
+  const selectedOrthoPhotoBudget: OrthoPhotoTextureBudgetId =
+    terrain.orthoPhotoTextureBudget === 8192 ? "8192" : "4096";
   const setPublicTopoLayerStyle = (patch: Partial<EditableStyle>) => {
     if (isEnv) {
       for (const id of PUBLIC_SURFACE_LAYER_IDS) setEnvLayerStyle(id, patch);
@@ -12576,6 +12646,16 @@ function PublicSurfaceGroupControls({
       return;
     }
     setTerrain({ surfaceElevationEnabled: false, ...preset.patch });
+  };
+  const setOrthoPhotoBudget = (value: OrthoPhotoTextureBudgetId) => {
+    const budget = value === "8192" ? 8192 : 4096;
+    setTerrain({
+      orthoPhotoTextureBudget: budget,
+      orthoPhotoPath: orthoPhotoPathForBudget(value),
+      orthoPhotoTexture4096Path: ORTHO_PHOTO_TEXTURE_4096_PATH,
+      orthoPhotoTexture8192Path: ORTHO_PHOTO_TEXTURE_8192_PATH,
+      orthoPhotoBounds: ORTHO_PHOTO_BOUNDS,
+    });
   };
 
   return (
@@ -13220,17 +13300,94 @@ function PublicSurfaceGroupControls({
                 testId="topo-material-preset"
                 onChange={setTopoMaterialPreset}
               />
+              {selectedPreset === "ortho-photo" ? (
+                <>
+                  <EnvSelectRow<OrthoPhotoTextureBudgetId>
+                    label="Texture budget"
+                    value={selectedOrthoPhotoBudget}
+                    options={ORTHO_PHOTO_TEXTURE_BUDGETS}
+                    testId="topo-ortho-photo-texture-budget"
+                    onChange={setOrthoPhotoBudget}
+                  />
+                  <EnvStyleRow
+                    label="Photo opacity"
+                    inputType="range"
+                    value={String(terrain.orthoPhotoOpacity ?? 1)}
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    decimals={2}
+                    testId="topo-ortho-photo-opacity"
+                    onChange={(v) =>
+                      setTerrain({ orthoPhotoOpacity: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Photo relief"
+                    inputType="range"
+                    value={String(terrain.orthoPhotoHillshadeBlend ?? 0.45)}
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    decimals={2}
+                    testId="topo-ortho-photo-hillshade"
+                    onChange={(v) =>
+                      setTerrain({ orthoPhotoHillshadeBlend: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Photo bright"
+                    inputType="range"
+                    value={String(terrain.orthoPhotoBrightness ?? 0)}
+                    min={-0.5}
+                    max={0.5}
+                    step={0.02}
+                    decimals={2}
+                    testId="topo-ortho-photo-brightness"
+                    onChange={(v) =>
+                      setTerrain({ orthoPhotoBrightness: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Photo contrast"
+                    inputType="range"
+                    value={String(terrain.orthoPhotoContrast ?? 1)}
+                    min={0.25}
+                    max={2}
+                    step={0.05}
+                    decimals={2}
+                    testId="topo-ortho-photo-contrast"
+                    onChange={(v) =>
+                      setTerrain({ orthoPhotoContrast: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Photo sat."
+                    inputType="range"
+                    value={String(terrain.orthoPhotoSaturation ?? 1)}
+                    min={0}
+                    max={2}
+                    step={0.05}
+                    decimals={2}
+                    testId="topo-ortho-photo-saturation"
+                    onChange={(v) =>
+                      setTerrain({ orthoPhotoSaturation: parseFloat(v) })
+                    }
+                  />
+                </>
+              ) : null}
               <EzGammaCheckboxRow
                 label="Surface color"
                 checked={terrain.surfaceElevationEnabled === true}
                 testId="topo-surface-elevation-enabled"
                 onChange={(checked) =>
                   setTerrain({
-                    materialPreset: checked
-                      ? "surface-elevation"
-                      : terrain.materialPreset === "surface-elevation"
-                        ? "soft-topo"
-                        : terrain.materialPreset,
+                    materialPreset:
+                      checked && terrain.materialPreset !== "ortho-photo"
+                        ? "surface-elevation"
+                        : terrain.materialPreset === "surface-elevation"
+                          ? "soft-topo"
+                          : terrain.materialPreset,
                     surfaceElevationEnabled: checked,
                     surfaceElevationLegendVisible:
                       checked &&

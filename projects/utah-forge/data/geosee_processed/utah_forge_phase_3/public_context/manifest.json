@@ -57,5 +57,42 @@
       "renderFeatureCount": 795,
       "simplifyM": 80
     }
+  },
+  "orthoPhoto": {
+    "source": "USGS NAIP Plus / The National Map orthoimagery service",
+    "service": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer",
+    "renderingRule": "NaturalColor",
+    "targetCrs": "EPSG:26912",
+    "sourceBounds": {
+      "easting_m": [
+        -356385.9,
+        1039320.6
+      ],
+      "northing_m": [
+        3703652.0,
+        4843097.0
+      ]
+    },
+    "copyright": "USGS, USDA, The National Map: Orthoimagery.",
+    "variants": {
+      "4096": {
+        "file": "ortho_photo_context_4096.jpg",
+        "width": 4096,
+        "height": 3344,
+        "longEdgePx": 4096,
+        "resolutionMApprox": 340.75,
+        "format": "jpeg",
+        "quality": 88
+      },
+      "8192": {
+        "file": "ortho_photo_context_8192.jpg",
+        "width": 8192,
+        "height": 6688,
+        "longEdgePx": 8192,
+        "resolutionMApprox": 170.37,
+        "format": "jpeg",
+        "quality": 88
+      }
+    }
   }
 }

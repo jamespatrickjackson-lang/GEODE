@@ -3216,6 +3216,9 @@ export class SceneManager {
   // taking a hard dependency on the renderer or path resolver.
   private overlayResolveAssetPath: (rel: string) => string = (p) => "/" + p;
   private overlayMaxAnisotropy = 1;
+  private terrainOrthoPhotoTexturePath: string | null = null;
+  private terrainOrthoPhotoTexture: THREE.Texture | null = null;
+  private terrainOrthoPhotoTextureSeq = 0;
   // Currently hovered overlay id (for drag-handle cursor + visual
   // brightness boost).
   private hoveredOverlayId: string | null = null;
@@ -5722,6 +5725,85 @@ export class SceneManager {
       return trimmed;
     }
     return this.overlayResolveAssetPath(trimmed);
+  }
+
+  private setTerrainOrthoPhotoTexture(texture: THREE.Texture | null): void {
+    const terrainGroup = this.layers.get("terrain");
+    terrainGroup?.traverse((obj) => {
+      const handle = (obj as THREE.Mesh).userData?.terrainHandle as
+        | TerrainMaterialHandle
+        | undefined;
+      handle?.setOrthoPhotoTexture(texture);
+    });
+  }
+
+  private clearTerrainOrthoPhotoTexture(): void {
+    this.terrainOrthoPhotoTextureSeq += 1;
+    this.terrainOrthoPhotoTexturePath = null;
+    if (this.terrainOrthoPhotoTexture) {
+      this.terrainOrthoPhotoTexture.dispose();
+      this.terrainOrthoPhotoTexture = null;
+    }
+    this.setTerrainOrthoPhotoTexture(null);
+  }
+
+  private applyTerrainOrthoPhotoTexture(
+    terrain: NonNullable<SceneProperties["terrain"]>,
+  ): void {
+    const opacity =
+      typeof terrain.orthoPhotoOpacity === "number"
+        ? terrain.orthoPhotoOpacity
+        : 0;
+    const path = opacity > 0.001 ? terrain.orthoPhotoPath?.trim() : "";
+    if (!path) {
+      if (this.terrainOrthoPhotoTexturePath || this.terrainOrthoPhotoTexture) {
+        this.clearTerrainOrthoPhotoTexture();
+      } else {
+        this.setTerrainOrthoPhotoTexture(null);
+      }
+      return;
+    }
+
+    if (this.terrainOrthoPhotoTexturePath === path) {
+      if (this.terrainOrthoPhotoTexture) {
+        this.setTerrainOrthoPhotoTexture(this.terrainOrthoPhotoTexture);
+      }
+      return;
+    }
+
+    this.clearTerrainOrthoPhotoTexture();
+    this.terrainOrthoPhotoTexturePath = path;
+    const seq = ++this.terrainOrthoPhotoTextureSeq;
+    const url = this.topoMapBrandingAssetUrl(path);
+    new THREE.TextureLoader().load(
+      url,
+      (texture) => {
+        if (
+          seq !== this.terrainOrthoPhotoTextureSeq ||
+          this.terrainOrthoPhotoTexturePath !== path
+        ) {
+          texture.dispose();
+          return;
+        }
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = this.overlayMaxAnisotropy;
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.wrapS = THREE.ClampToEdgeWrapping;
+        texture.wrapT = THREE.ClampToEdgeWrapping;
+        texture.generateMipmaps = true;
+        texture.needsUpdate = true;
+        this.terrainOrthoPhotoTexture = texture;
+        this.setTerrainOrthoPhotoTexture(texture);
+      },
+      undefined,
+      (error) => {
+        if (seq === this.terrainOrthoPhotoTextureSeq) {
+          console.error(`[SceneManager] ortho photo texture failed: ${url}`, error);
+          this.clearTerrainOrthoPhotoTexture();
+        }
+      },
+    );
   }
 
   private createTopoMapBrandingText(
@@ -11723,6 +11805,7 @@ export class SceneManager {
           fogFar: 3 / Math.max(density, 0.000001),
         });
       });
+      this.applyTerrainOrthoPhotoTexture(sp.terrain ?? {});
       for (const layerId of [
         "terrain",
         "hydrography-lakes",
@@ -12045,6 +12128,10 @@ export class SceneManager {
   }): void {
     this.overlayResolveAssetPath = opts.resolveAssetPath;
     this.overlayMaxAnisotropy = opts.maxAnisotropy;
+  }
+
+  disposeTerrainOrthoPhotoTexture(): void {
+    this.clearTerrainOrthoPhotoTexture();
   }
 
   /**

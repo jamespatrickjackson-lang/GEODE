@@ -10,9 +10,19 @@
       "showLabels": false
     },
     "utah-forge-phase3-working-area": {
-      "color": "#ffffff",
-      "opacity": 0.92,
+      "color": "#a25d5d",
+      "opacity": 0.9,
       "lineWidth": 2.4,
+      "affectedByFog": false,
+      "showLabels": true,
+      "labelKind": "siteElement",
+      "labelFadeNearM": 15000,
+      "labelFadeFarM": 120000
+    },
+    "utah-forge-site-boundary": {
+      "color": "#ffd84a",
+      "opacity": 1,
+      "lineWidth": 3.2,
       "affectedByFog": false,
       "showLabels": false
     },
@@ -338,8 +348,10 @@
   },
   "defaultVisibleLayers": [
     "utah-forge-topo-graticule",
-    "terrain",
-    "utah-forge-mt-resistivity-full-density"
+    "utah-forge-site-boundary",
+    "utah-forge-mt-resistivity-full-density",
+    "utah-forge-phase3-working-area",
+    "terrain"
   ],
   "scene": {
     "background": "#383838",
@@ -456,12 +468,48 @@
       "gridSpacingM": 100,
       "gridLineWidthM": 0.7,
       "undersideOpacity": 0,
+      "orthoPhotoTextureBudget": 4096,
+      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/ortho_photo_context_4096.jpg",
+      "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/ortho_photo_context_4096.jpg",
+      "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/ortho_photo_context_8192.jpg",
+      "orthoPhotoBounds": [
+        -356385.9,
+        3703652,
+        1039320.6,
+        4843097
+      ],
+      "orthoPhotoOpacity": 0,
+      "orthoPhotoHillshadeBlend": 0.45,
+      "orthoPhotoBrightness": 0,
+      "orthoPhotoContrast": 1,
+      "orthoPhotoSaturation": 1,
       "topoMapBranding": {
-        "visible": false,
-        "logoPath": "projects/utah-forge/branding/fig2_wrong_vs_right__1_.png",
-        "offsetYM": -10000,
-        "offsetXM": 250000,
-        "heading": "hello"
+        "visible": true,
+        "logoPath": "projects/utah-forge/branding/UtahFORGE-logo-updated2025-website-black-7015x1482-1-610x129.png",
+        "offsetYM": 375000,
+        "offsetXM": 385000,
+        "heading": "Phase 3| ",
+        "rotationDeg": 111,
+        "logoWidthM": 160000,
+        "logoRenderablePath": "projects/utah-forge/branding/UtahFORGE-logo-updated2025-website-black-7015x1482-1-610x129.png",
+        "logoSourcePath": "projects/utah-forge/branding/UtahFORGE-logo-updated2025-website-black-7015x1482-1-610x129.png",
+        "logoSourceFormat": "png",
+        "subheading": "",
+        "subheadingWeight": 700,
+        "lineGapM": -4500,
+        "layout": "horizontal",
+        "logoOpacity": 0.94,
+        "backgroundEnabled": false,
+        "backgroundColor": "#ffffff",
+        "outlineEnabled": false,
+        "outlineWidthM": 1250,
+        "headingSizeM": 48000,
+        "logoPlacement": "after",
+        "textAlign": "right",
+        "anchor": "north-east",
+        "logoGapM": -39000,
+        "textOpacity": 0.98,
+        "opacity": 0
       }
     },
     "gui": {
@@ -1365,7 +1413,50 @@
           "gridOpacity": 0.34,
           "gridSpacingM": 100,
           "gridLineWidthM": 0.7,
-          "undersideOpacity": 0
+          "undersideOpacity": 0,
+          "orthoPhotoTextureBudget": 4096,
+          "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/ortho_photo_context_4096.jpg",
+          "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/ortho_photo_context_4096.jpg",
+          "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/ortho_photo_context_8192.jpg",
+          "orthoPhotoBounds": [
+            -356385.9,
+            3703652,
+            1039320.6,
+            4843097
+          ],
+          "orthoPhotoOpacity": 0,
+          "orthoPhotoHillshadeBlend": 0.45,
+          "orthoPhotoBrightness": 0,
+          "orthoPhotoContrast": 1,
+          "orthoPhotoSaturation": 1,
+          "topoMapBranding": {
+            "visible": true,
+            "logoPath": "projects/utah-forge/branding/UtahFORGE-logo-updated2025-website-black-7015x1482-1-610x129.png",
+            "offsetYM": 375000,
+            "offsetXM": 385000,
+            "heading": "Phase 3| ",
+            "rotationDeg": 111,
+            "logoWidthM": 160000,
+            "logoRenderablePath": "projects/utah-forge/branding/UtahFORGE-logo-updated2025-website-black-7015x1482-1-610x129.png",
+            "logoSourcePath": "projects/utah-forge/branding/UtahFORGE-logo-updated2025-website-black-7015x1482-1-610x129.png",
+            "logoSourceFormat": "png",
+            "subheading": "",
+            "subheadingWeight": 700,
+            "lineGapM": -4500,
+            "layout": "horizontal",
+            "logoOpacity": 0.94,
+            "backgroundEnabled": false,
+            "backgroundColor": "#ffffff",
+            "outlineEnabled": false,
+            "outlineWidthM": 1250,
+            "headingSizeM": 48000,
+            "logoPlacement": "after",
+            "textAlign": "right",
+            "anchor": "north-east",
+            "logoGapM": -39000,
+            "textOpacity": 0.98,
+            "opacity": 0
+          }
         },
         "topoDetails": {
           "distanceFadeNear": 60000,
@@ -1527,11 +1618,14 @@
       },
       "layerStylePatchesByLayerId": {
         "utah-forge-phase3-working-area": {
-          "color": "#ffffff",
-          "opacity": 0.92,
+          "color": "#a25d5d",
+          "opacity": 0.9,
           "lineWidth": 2.4,
           "affectedByFog": false,
-          "showLabels": false
+          "showLabels": true,
+          "labelKind": "siteElement",
+          "labelFadeNearM": 15000,
+          "labelFadeFarM": 120000
         },
         "utah-forge-working-area-focus": {
           "affectedByFog": false,

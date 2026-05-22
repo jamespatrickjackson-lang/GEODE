@@ -185,7 +185,98 @@ function boxSegmentPositions(min: Vec3, max: Vec3): number[] {
   return edges.flatMap(([a, b]) => [...corners[a], ...corners[b]]);
 }
 
-function loadUtahForgePhase3WorkingArea(
+function applyWorkingAreaTopLinePolicy(
+  root: THREE.Object3D,
+  label: string,
+  bounds: { min: Vec3; max: Vec3 },
+  source: unknown,
+): THREE.Object3D {
+  root.name = label;
+  root.renderOrder = 4580;
+  root.userData = {
+    ...root.userData,
+    displayName: label,
+    phase3WorkingArea: true,
+    siteContainerOutline: true,
+    sceneBounds: bounds,
+  };
+  root.traverse((obj) => {
+    obj.renderOrder = 4580;
+    const line = obj as THREE.Line;
+    const material = line.material as THREE.Material | THREE.Material[] | undefined;
+    if (!material) return;
+    const materials = Array.isArray(material) ? material : [material];
+    for (const m of materials) {
+      const lineMaterial = m as THREE.Material & { fog?: boolean };
+      m.depthTest = false;
+      m.depthWrite = false;
+      m.transparent = true;
+      lineMaterial.fog = false;
+      m.userData.forceTransparent = true;
+      if (m instanceof LineMaterial) {
+        m.linewidth = 2.4;
+      }
+      m.needsUpdate = true;
+    }
+    obj.userData = {
+      ...obj.userData,
+      displayName: label,
+      phase3WorkingArea: true,
+      siteContainerOutline: true,
+      sceneBounds: bounds,
+      source,
+    };
+  });
+  return root;
+}
+
+function applyForgeSiteBoundaryPolicy(
+  root: THREE.Object3D,
+  label: string,
+  source: unknown,
+): THREE.Object3D {
+  root.name = label;
+  root.renderOrder = 4590;
+  root.userData = {
+    ...root.userData,
+    displayName: label,
+    forgeSiteBoundary: true,
+  };
+  root.traverse((obj) => {
+    obj.renderOrder = 4590;
+    const line = obj as THREE.Line;
+    const material = line.material as THREE.Material | THREE.Material[] | undefined;
+    if (!material) return;
+    const materials = Array.isArray(material) ? material : [material];
+    for (const m of materials) {
+      const lineMaterial = m as THREE.Material & {
+        color?: THREE.Color;
+        fog?: boolean;
+        opacity?: number;
+      };
+      lineMaterial.color?.set("#ffd84a");
+      m.depthTest = false;
+      m.depthWrite = false;
+      m.transparent = true;
+      lineMaterial.opacity = 1;
+      lineMaterial.fog = false;
+      m.userData.forceTransparent = true;
+      if (m instanceof LineMaterial) {
+        m.linewidth = 3.2;
+      }
+      m.needsUpdate = true;
+    }
+    obj.userData = {
+      ...obj.userData,
+      displayName: label,
+      forgeSiteBoundary: true,
+      source,
+    };
+  });
+  return root;
+}
+
+function loadUtahForgePhase3WorkingAreaBox(
   spec: ProjectLayerSpec,
 ): THREE.Object3D {
   const label = spec.label || "Phase 3 working area";
@@ -235,8 +326,43 @@ const layerLoaders: LayerLoaderHandler[] = [
   {
     id: "utah-forge-phase3-working-area",
     matches: (spec) => spec.id === "utah-forge-phase3-working-area",
-    load: (context) =>
-      context.onLoaded(loadUtahForgePhase3WorkingArea(context.spec)),
+    load: (context) => {
+      const label = context.spec.label || "Phase 3 working area";
+      const bounds = workingAreaSceneBounds(context.spec);
+      const geojson = layerFiles(context.spec).geojson;
+      if (geojson) {
+        loadObject(
+          context,
+          "loadUtahForgePhase3WorkingArea",
+          loadLineStrings(layerDataPath(context, geojson)).then((group) =>
+            applyWorkingAreaTopLinePolicy(
+              group,
+              label,
+              bounds,
+              context.spec.metadata,
+            ),
+          ),
+        );
+        return;
+      }
+      context.onLoaded(loadUtahForgePhase3WorkingAreaBox(context.spec));
+    },
+  },
+  {
+    id: "utah-forge-site-boundary",
+    matches: (spec) => spec.id === "utah-forge-site-boundary",
+    load: (context) => {
+      const label = context.spec.label || "FORGE site boundary";
+      const geojson = layerFiles(context.spec).geojson;
+      if (!geojson) return;
+      loadObject(
+        context,
+        "loadUtahForgeSiteBoundary",
+        loadLineStrings(layerDataPath(context, geojson)).then((group) =>
+          applyForgeSiteBoundaryPolicy(group, label, context.spec.metadata),
+        ),
+      );
+    },
   },
   {
     id: "utah-forge-topo-graticule",

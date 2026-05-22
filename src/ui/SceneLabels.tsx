@@ -1144,6 +1144,21 @@ export function SceneLabels({ sceneHandle }: Props) {
           typeof eff.labelFillOpacity === "number"
             ? clamp(eff.labelFillOpacity, 0, 1)
             : defaultLabelStyle.fillOpacity;
+        const labelFadeNearM = numberSetting(
+          eff.labelFadeNearM,
+          labelSettings.fadeNearM,
+          0,
+          150_000,
+        );
+        const labelFadeFarM = Math.max(
+          labelFadeNearM + 1,
+          numberSetting(
+            eff.labelFadeFarM,
+            labelSettings.fadeFarM,
+            1,
+            250_000,
+          ),
+        );
         const anchorsByLabel = chooseLabelAnchors(group);
           for (const [dn, obj] of anchorsByLabel) {
           const key = `${layerId}:${dn}`;
@@ -1167,13 +1182,13 @@ export function SceneLabels({ sceneHandle }: Props) {
           const dist = camPos.distanceTo(anchor);
           // Linear fade between near (full) and far (gone).
           const fade =
-            dist <= labelSettings.fadeNearM
+            dist <= labelFadeNearM
               ? 1
-              : dist >= labelSettings.fadeFarM
+              : dist >= labelFadeFarM
                 ? 0
                 : 1 -
-                  (dist - labelSettings.fadeNearM) /
-                    Math.max(1, labelSettings.fadeFarM - labelSettings.fadeNearM);
+                  (dist - labelFadeNearM) /
+                    Math.max(1, labelFadeFarM - labelFadeNearM);
           if (fade <= 0) continue;
 
           const size = measureLabelSize(dn, labelKind, measureContext);

@@ -370,6 +370,9 @@ export interface EditableStyle {
   // its feature. Site elements use a leader line; land titles use a
   // triangle pointer. Defaults true.
   labelPointerVisible?: boolean;
+  // Optional per-layer distance gate for large site-scale labels.
+  labelFadeNearM?: number;
+  labelFadeFarM?: number;
   [k: string]: unknown;
 }
 
@@ -745,6 +748,16 @@ export interface SceneProperties {
     edgeFadeShape?: "square" | "rounded-square" | "circle";
     edgeFadeInsetM?: number;
     edgeFadeCornerRadiusM?: number;
+    orthoPhotoTextureBudget?: 4096 | 8192;
+    orthoPhotoPath?: string;
+    orthoPhotoTexture4096Path?: string;
+    orthoPhotoTexture8192Path?: string;
+    orthoPhotoBounds?: [number, number, number, number];
+    orthoPhotoOpacity?: number;
+    orthoPhotoHillshadeBlend?: number;
+    orthoPhotoBrightness?: number;
+    orthoPhotoContrast?: number;
+    orthoPhotoSaturation?: number;
     shadowTint?: string;
     gridEnabled?: boolean;
     gridColor?: string;
@@ -876,6 +889,11 @@ export type CinematicLayerStylePatch = Partial<
     | "labelTextOpacity"
     | "labelOutlineOpacity"
     | "labelFillOpacity"
+    | "labelKind"
+    | "labelPointerVisible"
+    | "labelPointerSide"
+    | "labelFadeNearM"
+    | "labelFadeFarM"
   >
 >;
 

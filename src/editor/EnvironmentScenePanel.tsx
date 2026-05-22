@@ -574,7 +574,7 @@ function Range({
     <>
       <input
         data-dev-source="src/editor/EnvironmentScenePanel.tsx:43"
-        data-dev-note="Range controls Global Settings sliders; global slider visuals live in index.html."
+        data-dev-note="Range controls Global Settings sliders; global slider visuals live in global.css."
         type="range"
         min={min}
         max={max}
@@ -1457,7 +1457,7 @@ export function EnvironmentScenePanel({
                 <Row label="Fog color">
                   <input
                     data-dev-source="src/editor/EnvironmentScenePanel.tsx:192"
-                    data-dev-note="Fog color input; input[type=color] shape is controlled in index.html."
+                    data-dev-note="Fog color input; input[type=color] shape is controlled in global.css."
                     type="color"
                     value={scene.fog?.color ?? scene.background ?? "#23252a"}
                     onChange={(e) => {
@@ -1674,7 +1674,7 @@ export function CameraSetupPanel({
             <Row label="Tint color">
               <input
                 data-dev-source="src/editor/EnvironmentScenePanel.tsx:342"
-                data-dev-note="Camera Setup tint color; input[type=color] shape is controlled in index.html."
+                data-dev-note="Camera Setup tint color; input[type=color] shape is controlled in global.css."
                 type="color"
                 value={
                   scene.colorGrade?.tint ??

@@ -177,15 +177,167 @@ function withoutDirty(
   return next;
 }
 
+function mergeSceneEdit(
+  base: Partial<SceneProperties> | undefined,
+  patch: Partial<SceneProperties>,
+): Partial<SceneProperties> {
+  const next: Partial<SceneProperties> = { ...(base ?? {}), ...patch };
+  if (patch.fog) next.fog = { ...(base?.fog ?? {}), ...patch.fog };
+  if (patch.bloom) next.bloom = { ...(base?.bloom ?? {}), ...patch.bloom };
+  if (patch.camera) next.camera = { ...(base?.camera ?? {}), ...patch.camera };
+  if (patch.terrain) {
+    next.terrain = { ...(base?.terrain ?? {}), ...patch.terrain };
+  }
+  if (patch.ambientOcclusion) {
+    next.ambientOcclusion = {
+      ...(base?.ambientOcclusion ?? {}),
+      ...patch.ambientOcclusion,
+    };
+  }
+  if (patch.colorGrade) {
+    next.colorGrade = { ...(base?.colorGrade ?? {}), ...patch.colorGrade };
+  }
+  if (patch.vignette) {
+    next.vignette = { ...(base?.vignette ?? {}), ...patch.vignette };
+  }
+  if (patch.sun) next.sun = { ...(base?.sun ?? {}), ...patch.sun };
+  if (patch.topoDetails) {
+    next.topoDetails = { ...(base?.topoDetails ?? {}), ...patch.topoDetails };
+  }
+  if (patch.gui) {
+    next.gui = {
+      ...(base?.gui ?? {}),
+      ...patch.gui,
+      labels: {
+        ...(base?.gui?.labels ?? {}),
+        ...(patch.gui.labels ?? {}),
+      },
+    };
+  }
+  if (patch.lighting) {
+    next.lighting = {
+      ...(base?.lighting ?? {}),
+      ...patch.lighting,
+      hemisphere: {
+        ...(base?.lighting?.hemisphere ?? {}),
+        ...(patch.lighting.hemisphere ?? {}),
+      },
+      directional: {
+        ...(base?.lighting?.directional ?? {}),
+        ...(patch.lighting.directional ?? {}),
+      },
+      fill: {
+        ...(base?.lighting?.fill ?? {}),
+        ...(patch.lighting.fill ?? {}),
+      },
+      rim: {
+        ...(base?.lighting?.rim ?? {}),
+        ...(patch.lighting.rim ?? {}),
+      },
+    };
+  }
+  return next;
+}
+
+function cinematicScenePatchForEdit(
+  patch: Partial<SceneProperties>,
+): Partial<SceneProperties> {
+  const next: Partial<SceneProperties> = {};
+  if (patch.background !== undefined) next.background = patch.background;
+  if (patch.fog !== undefined) next.fog = patch.fog;
+  if (patch.sun !== undefined) next.sun = patch.sun;
+  if (patch.lighting !== undefined) next.lighting = patch.lighting;
+  if (patch.terrain !== undefined) next.terrain = patch.terrain;
+  if (patch.topoDetails !== undefined) next.topoDetails = patch.topoDetails;
+  if (patch.lightMode !== undefined) next.lightMode = patch.lightMode;
+  if (patch.toneMapping !== undefined) next.toneMapping = patch.toneMapping;
+  if (patch.exposure !== undefined) next.exposure = patch.exposure;
+  if (patch.bloom !== undefined) next.bloom = patch.bloom;
+  if (patch.ambientOcclusion !== undefined) {
+    next.ambientOcclusion = patch.ambientOcclusion;
+  }
+  if (patch.vignette !== undefined) next.vignette = patch.vignette;
+  if (patch.colorGrade !== undefined) next.colorGrade = patch.colorGrade;
+  if (patch.gui !== undefined) next.gui = patch.gui;
+  return next;
+}
+
+function syncActiveUserRenderPresetScene(
+  environment: EnvironmentSetup,
+  patch: Partial<SceneProperties>,
+): EnvironmentSetup {
+  const selectedId =
+    environment.renderPreset ?? environment.scene?.activeRenderPresetId;
+  if (!selectedId) return environment;
+  const presetScenePatch = cinematicScenePatchForEdit(patch);
+  if (Object.keys(presetScenePatch).length === 0) return environment;
+  const presets = environment.customRenderPresets ?? [];
+  const preset = presets.find(
+    (candidate) => candidate.id === selectedId && candidate.source === "user",
+  );
+  if (!preset) return environment;
+  return {
+    ...environment,
+    customRenderPresets: presets.map((candidate) =>
+      candidate.id === preset.id
+        ? {
+            ...candidate,
+            scenePatch: mergeSceneEdit(
+              candidate.scenePatch,
+              presetScenePatch,
+            ) as typeof candidate.scenePatch,
+          }
+        : candidate,
+    ),
+  };
+}
+
+function syncActiveUserRenderPresetLayerStyle(
+  environment: EnvironmentSetup,
+  layerId: string,
+  patch: Partial<EditableStyle>,
+): EnvironmentSetup {
+  const selectedId =
+    environment.renderPreset ?? environment.scene?.activeRenderPresetId;
+  if (!selectedId || Object.keys(patch).length === 0) return environment;
+  const presets = environment.customRenderPresets ?? [];
+  const preset = presets.find(
+    (candidate) => candidate.id === selectedId && candidate.source === "user",
+  );
+  if (!preset) return environment;
+  return {
+    ...environment,
+    customRenderPresets: presets.map((candidate) =>
+      candidate.id === preset.id
+        ? {
+            ...candidate,
+            layerStylePatchesByLayerId: {
+              ...(candidate.layerStylePatchesByLayerId ?? {}),
+              [layerId]: {
+                ...(candidate.layerStylePatchesByLayerId?.[layerId] ?? {}),
+                ...patch,
+              },
+            },
+          }
+        : candidate,
+    ),
+  };
+}
+
 function reducer(state: EditorState, action: EditorAction): EditorState {
   switch (action.type) {
     // ---- environment ------------------------------------------------------
     case "SET_ENV_LAYER_STYLE": {
-      const environment = clone(state.environment);
+      let environment = clone(state.environment);
       environment.layerStyles[action.layerId] = {
         ...(environment.layerStyles[action.layerId] ?? {}),
         ...action.style,
       };
+      environment = syncActiveUserRenderPresetLayerStyle(
+        environment,
+        action.layerId,
+        action.style,
+      );
       return {
         ...state,
         environment,
@@ -206,10 +358,14 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
     }
     case "SET_ENV_SCENE": {
       const environment = clone(state.environment);
-      environment.scene = { ...(environment.scene ?? {}), ...action.patch };
+      environment.scene = mergeSceneEdit(environment.scene, action.patch);
+      const nextEnvironment = syncActiveUserRenderPresetScene(
+        environment,
+        action.patch,
+      );
       return {
         ...state,
-        environment,
+        environment: nextEnvironment,
         dirty: withDirty(state.dirty, "environment"),
       };
     }
@@ -1020,14 +1176,30 @@ export function EditorProvider({
       if (displayPage) {
         const previewEnvironmentBase =
           cur.selectedPageId === ENVIRONMENT_SENTINEL;
-        const merged = {
-          ...(cur.environment.layerStyles[layerId] ?? {}),
-          ...style,
-          ...(previewEnvironmentBase
-            ? {}
-            : (displayPage.layerOverrides?.[layerId] ?? {})),
-        };
-        sceneHandle.manager.applyStyle(layerId, merged);
+        const nextEnvironment = syncActiveUserRenderPresetLayerStyle(
+          {
+            ...cur.environment,
+            layerStyles: {
+              ...cur.environment.layerStyles,
+              [layerId]: {
+                ...(cur.environment.layerStyles[layerId] ?? {}),
+                ...style,
+              },
+            },
+          },
+          layerId,
+          style,
+        );
+        const previewPage = previewEnvironmentBase
+          ? {
+              ...displayPage,
+              layerOverrides: undefined,
+            }
+          : displayPage;
+        sceneHandle.manager.applyStyle(
+          layerId,
+          effectiveStyle(nextEnvironment, previewPage, layerId),
+        );
       }
       dispatch({ type: "SET_ENV_LAYER_STYLE", layerId, style });
     },
@@ -1067,10 +1239,13 @@ export function EditorProvider({
   const setEnvScene = useCallback<EditorContextValue["setEnvScene"]>(
     (patch) => {
       const cur = stateRef.current;
-      const nextEnv: EnvironmentSetup = {
-        ...cur.environment,
-        scene: { ...(cur.environment.scene ?? {}), ...patch },
-      };
+      const nextEnv = syncActiveUserRenderPresetScene(
+        {
+          ...cur.environment,
+          scene: mergeSceneEdit(cur.environment.scene, patch),
+        },
+        patch,
+      );
       sceneHandle.manager.applyEnvironment(nextEnv);
       dispatch({ type: "SET_ENV_SCENE", patch });
     },

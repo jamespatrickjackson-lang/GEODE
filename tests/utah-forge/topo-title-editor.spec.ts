@@ -123,6 +123,91 @@ test("Utah FORGE topo editor exposes surface elevation coloring", async ({
   expect(consoleErrors).toEqual([]);
 });
 
+test("Utah FORGE topo editor exposes ortho photo terrain material", async ({
+  page,
+}) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  page.on("pageerror", (error) => {
+    consoleErrors.push(error.message);
+  });
+
+  await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
+  await expect(page.locator("canvas")).toHaveCount(1);
+  await openForgeDataEditorContainers(page);
+
+  const globalSettingsRow = page
+    .locator('[data-dev-note*="Global Settings is an editor-only pseudo-page"]')
+    .filter({ hasText: "Global Settings" });
+  await expect(globalSettingsRow).toHaveCount(1);
+  await globalSettingsRow.click();
+  await openForgeDataEditorContainers(page);
+  await page.locator("details").evaluateAll((details) => {
+    for (const detail of details) {
+      (detail as HTMLDetailsElement).open = true;
+    }
+  });
+
+  await expect(page.getByTestId("topo-material-preset")).toContainText(
+    "Ortho photo",
+  );
+  const beforeCanvas = await page.locator("canvas").screenshot();
+  await page.getByTestId("topo-material-preset").selectOption("ortho-photo");
+  await expect(page.getByTestId("topo-material-preset")).toHaveValue(
+    "ortho-photo",
+  );
+  await expect(page.getByTestId("topo-ortho-photo-texture-budget")).toHaveValue(
+    "4096",
+  );
+  await expect(page.getByTestId("topo-ortho-photo-opacity")).toHaveValue("1");
+  await expect(page.getByTestId("topo-ortho-photo-hillshade")).toHaveValue(
+    "0.45",
+  );
+
+  await expect
+    .poll(() => terrainMaterialSceneState(page))
+    .toMatchObject({
+      materialCount: 1,
+      orthoPhotoEnabled: 1,
+      orthoPhotoOpacity: 1,
+      orthoPhotoHillshadeBlend: 0.45,
+      orthoPhotoBrightness: 0,
+      orthoPhotoContrast: 1,
+      orthoPhotoSaturation: 1,
+    });
+  const orthoCanvas = await page.locator("canvas").screenshot();
+  expect(changedByteCount(beforeCanvas, orthoCanvas)).toBeGreaterThan(1000);
+
+  await page
+    .getByTestId("topo-ortho-photo-texture-budget")
+    .selectOption("8192");
+  await expect(page.getByTestId("topo-ortho-photo-texture-budget")).toHaveValue(
+    "8192",
+  );
+  await expect
+    .poll(() => terrainMaterialSceneState(page))
+    .toMatchObject({
+      materialCount: 1,
+      orthoPhotoEnabled: 1,
+      orthoPhotoOpacity: 1,
+    });
+
+  await page.getByTestId("topo-surface-elevation-enabled").setChecked(true);
+  await expect(page.getByTestId("topo-material-preset")).toHaveValue(
+    "ortho-photo",
+  );
+  await expect
+    .poll(() => terrainMaterialSceneState(page))
+    .toMatchObject({
+      surfaceElevationEnabled: 1,
+      orthoPhotoEnabled: 1,
+    });
+
+  expect(consoleErrors).toEqual([]);
+});
+
 test("Utah FORGE topo editor exposes surface elevation gradient controls", async ({
   page,
 }) => {

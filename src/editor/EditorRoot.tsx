@@ -607,7 +607,7 @@ export function EditorRoot({
           className="editor-sidebar-scroll"
           style={stackStyle}
           data-dev-source="src/editor/EditorRoot.tsx:50"
-          data-dev-note="stackStyle controls the scrollable sidebar content; index.html hides this scrollbar."
+          data-dev-note="stackStyle controls the scrollable sidebar content; global.css hides this scrollbar."
         >
           <CollapsibleSection title="Page Manager" defaultOpen>
             <PagePanel
