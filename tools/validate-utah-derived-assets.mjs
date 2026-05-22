@@ -267,16 +267,22 @@ function validateMtProducts() {
     MT_TOP_CONTACT_MESH_PATH,
   );
   assert.equal(topContactManifest.processing?.sourceFullDensityPointCount, 1_094_624);
+  assert.equal(topContactManifest.processing?.supportGridColumns, 113);
+  assert.equal(topContactManifest.processing?.supportGridRows, 93);
+  assert.equal(topContactManifest.processing?.observedSupportNodeCount, 2_164);
+  assert.equal(topContactManifest.processing?.inferredSupportNodeCount, 8_345);
   assertGreaterThan(
     topContactManifest.processing?.vertexCount,
-    2_000,
+    10_000,
     "MT top-contact vertices",
   );
   assertGreaterThan(
     topContactManifest.processing?.triangleCount,
-    2_000,
+    20_000,
     "MT top-contact triangles",
   );
+  assert.match(topContactManifest.processing?.topologyInference, /full-density data-point XY extent/);
+  assert.match(topContactManifest.processing?.notes?.join("\n") ?? "", /quality and confidence reduce/);
 
   const topContactMesh = readJson(MT_TOP_CONTACT_MESH_PATH);
   assert.equal(topContactMesh.schema, "geosee.mesh-preview.v1");
@@ -287,12 +293,12 @@ function validateMtProducts() {
   );
   assertGreaterThan(
     topContactMesh.vertices.length / 3,
-    2_000,
+    10_000,
     "MT top-contact mesh vertices",
   );
   assertGreaterThan(
     topContactMesh.indices.length / 3,
-    2_000,
+    20_000,
     "MT top-contact mesh triangles",
   );
   assertNotContains(
