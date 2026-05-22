@@ -1,0 +1,228 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "mt_top_envelope_surface_mesh_preview.json",
+  "artifactType": "full-density-mt-observed-top-envelope-surface",
+  "projectSlug": "utah-forge",
+  "createdDate": "2026-05-12",
+  "source": {
+    "fullDensityManifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json",
+    "sourceClassification": "source-derived inversion model full-density visualization"
+  },
+  "transform": {
+    "crs": "scene-local meters",
+    "sourceCrs": "EPSG:26912 NAD83 / UTM Zone 12N",
+    "axisConvention": "X east, Y north, Z up",
+    "sceneOriginUtm": {
+      "easting_m": 341467.35,
+      "northing_m": 4273374.5,
+      "elevation_m": 0
+    },
+    "cropApplied": false,
+    "verticalExaggeration": 1
+  },
+  "processing": {
+    "script": "prep/build_utah_forge_mt_top_envelope_surface.mjs",
+    "generatedDate": "2026-05-12",
+    "method": "Observed top-envelope surface from the full-density MT cell-center tile set. The top-most source point is retained per unique XY column and triangulated directly in observed scene coordinates.",
+    "topology": "Delaunay triangulation of observed top points only. Triangles with max edge longer than the bridge cutoff are removed. No rectangular support grid, IDW fill, inferred exterior nodes, smoothing pass, uniform regrid, or flattened surface treatment is used.",
+    "xyPrecisionM": 0.01,
+    "maxBridgeEdgeM": 10000,
+    "sourceFullDensityPointCount": 1094624,
+    "skippedRows": 0,
+    "observedTopPointCount": 24332,
+    "renderedVertexCount": 23811,
+    "unusedObservedTopPointCount": 521,
+    "delaunayTriangleCount": 48644,
+    "retainedTriangleCount": 46283,
+    "droppedBridgeTriangleCount": 2361,
+    "hullPointCount": 18,
+    "edgeStats": {
+      "allEdgeLengthM": {
+        "min": 12.364,
+        "p50": 510.01,
+        "p90": 2739.28,
+        "p95": 6825.905,
+        "p99": 18596.704,
+        "max": 167438.522
+      },
+      "retainedEdgeLengthM": {
+        "min": 12.364,
+        "p50": 505.848,
+        "p90": 1742.455,
+        "p95": 3865.63,
+        "p99": 8066.421,
+        "max": 9999.142
+      },
+      "droppedBridgeMaxEdgeM": {
+        "min": 10002.478,
+        "p50": 14611.875,
+        "p90": 19441.753,
+        "p95": 21258.021,
+        "p99": 34711.543,
+        "max": 167438.522
+      },
+      "retainedTriangleAreaM2": {
+        "min": 0.938,
+        "p50": 95435.48,
+        "p90": 574179.898,
+        "p95": 1124871.27,
+        "p99": 4133880.164,
+        "max": 27329529.922
+      },
+      "droppedBridgeTriangleAreaM2": {
+        "min": 10.652,
+        "p50": 3322884.043,
+        "p90": 19518789.711,
+        "p95": 41229258.637,
+        "p99": 104985173.957,
+        "max": 282054009.133
+      }
+    },
+    "elevationColorRamp": {
+      "role": "top-point elevation colors",
+      "minM": 1500,
+      "maxM": 3500,
+      "stops": [
+        {
+          "value": 0,
+          "color": "#5147b8"
+        },
+        {
+          "value": 0.25,
+          "color": "#2e8fd8"
+        },
+        {
+          "value": 0.5,
+          "color": "#4fc3c7"
+        },
+        {
+          "value": 0.75,
+          "color": "#93d66b"
+        },
+        {
+          "value": 1,
+          "color": "#fff24d"
+        }
+      ]
+    },
+    "controlPoints": {
+      "minElevation": {
+        "scene": [
+          -29894.35,
+          21516.5,
+          1358.266
+        ],
+        "sourceUtm": [
+          311573,
+          4294891,
+          1358.266
+        ],
+        "log10Resistivity": 1.310056,
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
+      },
+      "maxElevation": {
+        "scene": [
+          38357.352,
+          -24011.5,
+          3449.131
+        ],
+        "sourceUtm": [
+          379824.702,
+          4249363,
+          3449.131
+        ],
+        "log10Resistivity": 2.564347,
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
+      },
+      "westEdge": {
+        "scene": [
+          -119755.953,
+          2599.5,
+          1754.776
+        ],
+        "sourceUtm": [
+          221711.397,
+          4275974,
+          1754.776
+        ],
+        "log10Resistivity": 1.806655,
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
+      },
+      "eastEdge": {
+        "scene": [
+          107591.953,
+          -1656.5,
+          2838.688
+        ],
+        "sourceUtm": [
+          449059.303,
+          4271718,
+          2838.688
+        ],
+        "log10Resistivity": 2.200111,
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
+      },
+      "southEdge": {
+        "scene": [
+          283.85,
+          -97477.5,
+          1811.46
+        ],
+        "sourceUtm": [
+          341751.2,
+          4175897,
+          1811.46
+        ],
+        "log10Resistivity": 1.987264,
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
+      },
+      "northEdge": {
+        "scene": [
+          12267.95,
+          93104.5,
+          1384.207
+        ],
+        "sourceUtm": [
+          353735.3,
+          4366479,
+          1384.207
+        ],
+        "log10Resistivity": 2.149865,
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
+      },
+      "centerNearest": {
+        "scene": [
+          2659.35,
+          -3100.5,
+          1794.352
+        ],
+        "sourceUtm": [
+          344126.7,
+          4270274,
+          1794.352
+        ],
+        "log10Resistivity": 2.714497,
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
+      }
+    },
+    "notes": [
+      "This is not public topo, lidar, DEM terrain, or measured ground.",
+      "This is not an interpreted geological contact, reservoir boundary, well surface, fault, or seismic horizon.",
+      "Surface fidelity follows observed MT top-point support: denser areas render finer; sparse extent areas render coarser or remain open.",
+      "No exterior fill is fabricated where observed top-point support is absent or too weak.",
+      "Visible vertex colors encode top-point elevation for spatial readability; top-contact resistivity values remain scalar metadata."
+    ]
+  },
+  "reviewStatus": {
+    "readyForDemoPreview": true,
+    "readyForFinalSpatialAnalysis": false,
+    "notes": "Observed top-envelope from the full-density MT model cell-center tiles. Not measured terrain, not interpreted geology, and not a seismic product."
+  }
+}

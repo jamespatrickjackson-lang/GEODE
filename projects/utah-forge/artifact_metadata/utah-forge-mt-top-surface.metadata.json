@@ -2,24 +2,24 @@
   "schemaVersion": "0.1.0",
   "artifactId": "utah-forge-mt-top-surface",
   "project": "utah-forge",
-  "dataset": "utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface",
+  "dataset": "utah_forge_phase_3/electrical_resistivity/resistivity_model/top_envelope_surface",
   "artifactFamily": "render_ready",
   "artifactType": "top_surface",
   "renderRole": "technical_credibility",
   "loadClass": "page_required",
   "sourceType": "processed_full_density",
   "epistemicStatus": "source_derived",
-  "authority": "UI-facing 3D MT top surface layer now reads the full-density top-contact support artifact observed in top_contact_surface manifest/stats/provenance and wired through projects/utah-forge/project.json.",
+  "authority": "UI-facing 3D MT top surface layer reads the observed full-density MT top-envelope artifact in top_envelope_surface manifest/stats/provenance and wired through projects/utah-forge/project.json.",
   "status": "needs_review",
   "reviewRequired": true,
   "accepted": false,
   "paths": {
     "source": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json",
-    "artifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/mt_top_contact_surface_mesh_preview.json",
-    "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/manifest.json",
-    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/provenance.json",
+    "artifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_envelope_surface/mt_top_envelope_surface_mesh_preview.json",
+    "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_envelope_surface/manifest.json",
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_envelope_surface/provenance.json",
     "supporting": [
-      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/stats.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_envelope_surface/stats.json",
       "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json"
     ]
   },
@@ -27,14 +27,14 @@
     {
       "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json",
       "role": "full-density MT cell-center tile manifest",
-      "notes": "Top surface reads the source-derived full-density tile set, not the 90,000-point preview."
+      "notes": "Observed top-envelope surface reads the source-derived full-density tile set and keeps the top-most observed MT cell-center point per unique XY column."
     }
   ],
   "producedBy": {
-    "script": "prep/build_utah_forge_mt_top_contact_surface.mjs",
+    "script": "prep/build_utah_forge_mt_top_envelope_surface.mjs",
     "tool": "Node prep script",
     "generatedAt": "2026-05-12",
-    "notes": "Script derives top contact from processed full-density tile binaries and does not read raw archived source bytes."
+    "notes": "Script derives the observed top envelope from processed full-density tile binaries and does not read raw archived source bytes."
   },
   "crs": {
     "source": "EPSG:26912 / NAD83 UTM Zone 12N",
@@ -45,17 +45,17 @@
   "units": {
     "horizontal": "meters",
     "vertical": "meters",
-    "scalar": null,
-    "notes": "Top surface is an approximate support mesh, not a scalar resistivity color/legend artifact."
+    "scalar": "log10(ohm-m) retained as metadata",
+    "notes": "Visible colors encode top-point elevation; resistivity values remain per-vertex scalar metadata."
   },
   "scalar": {
-    "transform": "top-contact log10 resistivity preserved as per-vertex scalar metadata",
+    "transform": "top-envelope log10 resistivity preserved as per-vertex scalar metadata",
     "range": {
-      "name": "top-contact log10 resistivity",
+      "name": "top-envelope log10 resistivity",
       "unit": "log10(ohm-m)",
-      "sourceField": "full-density top-contact cell scalar",
-      "min": -0.853872,
-      "max": 4.174335,
+      "sourceField": "full-density observed top-point scalar",
+      "min": -1,
+      "max": 4.5,
       "displayMin": 0.139879,
       "displayMax": 3.937122,
       "colorStops": [
@@ -74,282 +74,260 @@
       ]
     },
     "thresholds": null,
-    "notes": "Visible top-surface colors encode contact elevation; scalar metadata keeps the top-contact resistivity values available for later style work."
+    "notes": "Visible top-surface colors encode observed top-point elevation; scalar metadata keeps top-contact resistivity available for later style work."
   },
   "processing": {
-    "method": "Full-density MT top-contact support surface. Direct observed cells retain the highest source-derived cell center; missing nodes across the full data-point XY extent are filled from nearby observed top contacts for renderable support.",
+    "method": "Observed top-envelope surface from the full-density MT cell-center tile set. The top-most source point is retained per unique XY column and triangulated directly in observed scene coordinates.",
     "parameters": {
-      "gridSizeM": 2500,
-      "minPointsPerCell": 3,
-      "supportNeighborCount": 8,
+      "xyPrecisionM": 0.01,
+      "maxBridgeEdgeM": 10000,
       "sourceFullDensityPointCount": 1094624,
-      "rawGridCellCount": 2065,
-      "sampledGridCellCount": 2065,
-      "supportGridColumns": 113,
-      "supportGridRows": 93,
-      "observedSupportNodeCount": 2164,
-      "inferredSupportNodeCount": 8345,
-      "maxNearestObservedDistanceM": 87955.363,
-      "meanNearestObservedDistanceM": 16437.988,
-      "vertexCount": 10509,
-      "candidateQuadCount": 10304,
-      "retainedQuadCount": 10304,
-      "triangleCount": 20608
+      "observedTopPointCount": 24332,
+      "renderedVertexCount": 23811,
+      "unusedObservedTopPointCount": 521,
+      "delaunayTriangleCount": 48644,
+      "retainedTriangleCount": 46283,
+      "droppedBridgeTriangleCount": 2361,
+      "hullPointCount": 18
     },
-    "downsampling": "Regular full-extent support grid generated from the processed full-density tile set for renderability; this is not the older 90,000-point preview-derived cap.",
-    "masking": "Support grid spans the full full-density data-point XY bounds. Direct observed top-contact cells are preserved where available; missing nodes are inverse-distance support estimates from nearby observed top contacts.",
-    "notes": "Top contact is expanded to the full data-point extent. Edge and gap-filled support nodes are lower-confidence display support, not new measured or interpreted surface data."
+    "downsampling": "No preview downsampling for the visible surface; one top-most observed point is retained per unique XY column.",
+    "masking": "No rectangular support grid or exterior fill. Delaunay triangles longer than the bridge cutoff are removed, leaving unsupported gaps open.",
+    "notes": "Surface fidelity varies with observed point support: dense regions render finer, sparse extents render coarser or open."
   },
   "stats": {
     "counts": {
       "fullDensityPointCount": 1094624,
-      "rawGridCellCount": 2065,
-      "sampledGridCellCount": 2065,
-      "supportGridColumns": 113,
-      "supportGridRows": 93,
-      "observedSupportNodeCount": 2164,
-      "inferredSupportNodeCount": 8345,
-      "vertexCount": 10509,
-      "retainedQuadCount": 10304,
-      "triangleCount": 20608
+      "observedTopPointCount": 24332,
+      "renderedVertexCount": 23811,
+      "unusedObservedTopPointCount": 521,
+      "delaunayTriangleCount": 48644,
+      "retainedTriangleCount": 46283,
+      "droppedBridgeTriangleCount": 2361
     },
     "bounds": {
       "sourceBounds": {
         "easting_m": [
-          201896.7,
-          481038
+          221711.397,
+          449059.303
+        ],
+        "northing_m": [
+          4175897,
+          4366479
+        ],
+        "elevation_m": [
+          1358.266,
+          3449.131
+        ]
+      },
+      "observedSourceBounds": {
+        "easting_m": [
+          201896.694,
+          481038.006
         ],
         "northing_m": [
           4159430,
           4387319
         ],
         "elevation_m": [
-          1362.757,
+          1358.266,
           3449.131
         ]
       },
       "sceneBounds": {
         "min": [
-          -139570.65,
-          -113944.5,
-          1362.76
+          -119755.95,
+          -97477.5,
+          1358.27
         ],
         "max": [
-          139570.65,
+          107591.95,
+          93104.5,
+          3449.13
+        ]
+      },
+      "observedSceneBounds": {
+        "min": [
+          -139570.66,
+          -113944.5,
+          1358.27
+        ],
+        "max": [
+          139570.66,
           113944.5,
           3449.13
         ]
       }
     },
+    "edgeStats": {
+      "allEdgeLengthM": {
+        "min": 12.364,
+        "p50": 510.01,
+        "p90": 2739.28,
+        "p95": 6825.905,
+        "p99": 18596.704,
+        "max": 167438.522
+      },
+      "retainedEdgeLengthM": {
+        "min": 12.364,
+        "p50": 505.848,
+        "p90": 1742.455,
+        "p95": 3865.63,
+        "p99": 8066.421,
+        "max": 9999.142
+      },
+      "droppedBridgeMaxEdgeM": {
+        "min": 10002.478,
+        "p50": 14611.875,
+        "p90": 19441.753,
+        "p95": 21258.021,
+        "p99": 34711.543,
+        "max": 167438.522
+      },
+      "retainedTriangleAreaM2": {
+        "min": 0.938,
+        "p50": 95435.48,
+        "p90": 574179.898,
+        "p95": 1124871.27,
+        "p99": 4133880.164,
+        "max": 27329529.922
+      },
+      "droppedBridgeTriangleAreaM2": {
+        "min": 10.652,
+        "p50": 3322884.043,
+        "p90": 19518789.711,
+        "p95": 41229258.637,
+        "p99": 104985173.957,
+        "max": 282054009.133
+      }
+    },
     "cartographicControlPoints": {
       "minElevation": {
         "scene": [
-          -29907.996,
-          44586.978,
-          1362.757
+          -29894.35,
+          21516.5,
+          1358.266
         ],
         "sourceUtm": [
-          311559.354,
-          4317961.478,
-          1362.757
+          311573,
+          4294891,
+          1358.266
         ],
-        "log10Resistivity": 1.710371,
-        "sampleCount": 45,
-        "gridCell": [
-          44,
-          64
-        ],
-        "sourceGridCell": [
-          -12,
-          17
-        ],
-        "supportRole": "observed-cell",
-        "nearestObservedDistanceM": 0
+        "log10Resistivity": 1.310056,
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
       },
       "maxElevation": {
         "scene": [
-          39877.329,
-          -24770.543,
+          38357.352,
+          -24011.5,
           3449.131
         ],
         "sourceUtm": [
-          381344.679,
-          4248603.957,
+          379824.702,
+          4249363,
           3449.131
         ],
         "log10Resistivity": 2.564347,
-        "sampleCount": 495,
-        "gridCell": [
-          72,
-          36
-        ],
-        "sourceGridCell": [
-          15,
-          -10
-        ],
-        "supportRole": "observed-cell",
-        "nearestObservedDistanceM": 0
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
       },
       "westEdge": {
         "scene": [
-          -139570.65,
-          -113944.5,
-          1883.05
+          -119755.953,
+          2599.5,
+          1754.776
         ],
         "sourceUtm": [
-          201896.7,
-          4159430,
-          1883.05
+          221711.397,
+          4275974,
+          1754.776
         ],
-        "log10Resistivity": 1.960169,
-        "sampleCount": 0,
-        "gridCell": [
-          0,
-          0
-        ],
-        "sourceGridCell": [
-          -56,
-          -46
-        ],
-        "supportRole": "idw-full-extent-support",
-        "nearestObservedDistanceM": 63462.381
+        "log10Resistivity": 1.806655,
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
       },
       "eastEdge": {
         "scene": [
-          139570.65,
-          -113944.5,
-          2461.726
+          107591.953,
+          -1656.5,
+          2838.688
         ],
         "sourceUtm": [
-          481038,
-          4159430,
-          2461.726
+          449059.303,
+          4271718,
+          2838.688
         ],
-        "log10Resistivity": 2.227272,
-        "sampleCount": 0,
-        "gridCell": [
-          112,
-          0
-        ],
-        "sourceGridCell": [
-          55,
-          -46
-        ],
-        "supportRole": "idw-full-extent-support",
-        "nearestObservedDistanceM": 87955.363
+        "log10Resistivity": 2.200111,
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
       },
       "southEdge": {
         "scene": [
-          -139570.65,
-          -113944.5,
-          1883.05
+          283.85,
+          -97477.5,
+          1811.46
         ],
         "sourceUtm": [
-          201896.7,
-          4159430,
-          1883.05
+          341751.2,
+          4175897,
+          1811.46
         ],
-        "log10Resistivity": 1.960169,
-        "sampleCount": 0,
-        "gridCell": [
-          0,
-          0
-        ],
-        "sourceGridCell": [
-          -56,
-          -46
-        ],
-        "supportRole": "idw-full-extent-support",
-        "nearestObservedDistanceM": 63462.381
+        "log10Resistivity": 1.987264,
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
       },
       "northEdge": {
         "scene": [
-          -139570.65,
-          113944.5,
-          1720.637
+          12267.95,
+          93104.5,
+          1384.207
         ],
         "sourceUtm": [
-          201896.7,
-          4387319,
-          1720.637
+          353735.3,
+          4366479,
+          1384.207
         ],
-        "log10Resistivity": 1.689923,
-        "sampleCount": 0,
-        "gridCell": [
-          0,
-          92
-        ],
-        "sourceGridCell": [
-          -56,
-          45
-        ],
-        "supportRole": "idw-full-extent-support",
-        "nearestObservedDistanceM": 78722.37
+        "log10Resistivity": 2.149865,
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
       },
       "centerNearest": {
         "scene": [
-          0,
-          0,
-          2022.929
+          2659.35,
+          -3100.5,
+          1794.352
         ],
         "sourceUtm": [
-          341467.35,
-          4273374.5,
-          2022.929
+          344126.7,
+          4270274,
+          1794.352
         ],
-        "log10Resistivity": 2.159447,
-        "sampleCount": 2385,
-        "gridCell": [
-          56,
-          46
-        ],
-        "sourceGridCell": [
-          0,
-          0
-        ],
-        "supportRole": "observed-cell",
-        "nearestObservedDistanceM": 0
+        "log10Resistivity": 2.714497,
+        "columnPointCount": 45,
+        "sourceRole": "observed-top-point"
       }
     },
-    "notes": "Counts, bounds, support-grid coverage, and control points are observed in top_contact_surface stats evidence.",
-    "supportGrid": {
-      "columns": 113,
-      "rows": 93,
-      "sourceExtent": {
-        "min": [
-          -139570.65,
-          -113944.5
-        ],
-        "max": [
-          139570.65,
-          113944.5
-        ]
-      },
-      "observedSupportNodeCount": 2164,
-      "inferredSupportNodeCount": 8345,
-      "maxNearestObservedDistanceM": 87955.363,
-      "meanNearestObservedDistanceM": 16437.988
-    }
+    "notes": "Counts, bounds, retained/dropped bridge triangles, edge-length distribution, and control points are observed in top_envelope_surface stats evidence."
   },
   "render": {
-    "colorRamp": "top-contact elevation colors, not resistivity colors",
+    "colorRamp": "top-point elevation colors using the Surface Elevation 1500-3500 m ramp, not resistivity colors",
     "legendPath": null,
-    "materialNotes": "Material/depth behavior, opacity, spatial alignment, camera/page framing, and caveat visibility require visual review.",
+    "materialNotes": "Flat-shaded observed mesh; material/depth behavior, opacity, spatial alignment, camera/page framing, and caveat visibility require visual review.",
     "visualCheckRequired": true,
     "visualCheckReceipt": null,
-    "notes": "Material/depth behavior, opacity, spatial alignment, camera/page framing, and caveat visibility require visual review."
+    "notes": "Outer regions should become coarser where observed source point spacing widens; unsupported exterior gaps should remain open."
   },
   "provenance": {
-    "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/provenance.json",
-    "notes": "Existing provenance says ready for demo preview but not final spatial analysis. This wrapper does not promote acceptance."
+    "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_envelope_surface/provenance.json",
+    "notes": "Provenance says ready for demo preview but not final spatial analysis. This wrapper does not promote acceptance."
   },
   "limitations": [
     "Not accepted project state.",
-    "Top surface is the source-derived full-density MT model top contact plus full-extent render support, not measured terrain.",
-    "Support-grid nodes outside directly observed top-contact cells are lower-confidence inverse-distance estimates for visualization coverage.",
+    "Top surface is the observed source-derived full-density MT model top envelope, not measured terrain.",
+    "Fidelity varies with observed point support; coarser outer triangles are expected where source spacing widens.",
+    "Unsupported exterior gaps are not filled; do not fabricate continuity from this surface.",
     "Do not represent as public topo, lidar, DEM terrain, interpreted geology, wells, faults, seismic, target, resource estimate, or accepted surface interpretation.",
-    "Material/depth behavior, opacity, visibility, page role, and visual receipt require review.",
-    "Do not simplify, recolor, hide, or promote this surface without review."
+    "Material/depth behavior, opacity, visibility, page role, and visual receipt require review."
   ],
   "relatedLayers": [
     "utah-forge-mt-top-surface"
@@ -362,14 +340,15 @@
   "review": {
     "requiredBy": "human",
     "questions": [
-      "Does the UI-facing 3D MT top surface reach the furthest visible full-density MT top envelope in the current scene?",
-      "What caveat language is required so it is not mistaken for terrain or interpreted geology?",
-      "Which fixed cartographic datum/control points should be used for later non-digital verification?",
+      "Does the UI-facing 3D MT top surface follow the visible full-density MT top-point cloud without a rectangular slab?",
+      "Do outer regions visibly coarsen where observed point spacing widens?",
+      "Are unsupported exterior gaps left open rather than filled?",
+      "What fixed cartographic datum/control points should be used for later non-digital verification?",
       "What visual receipt proves material/depth behavior, opacity, spatial alignment, and camera/page role are acceptable?"
     ],
     "acceptedBy": null,
     "acceptedAt": null,
     "receipt": null
   },
-  "notes": "UI-facing top-surface wrapper records that the visible 3D MT top surface now uses the full-density top-contact support artifact. The older preview-derived cap remains retained under resistivity_model/top_surface as data-history support, not the current visible top-surface endpoint."
+  "notes": "UI-facing top-surface wrapper records that the visible 3D MT top surface now uses the observed full-density top-envelope artifact. The older preview-derived cap and rectangular support-grid contact surface remain retained support/history data, not the current visible top-surface authority."
 }
