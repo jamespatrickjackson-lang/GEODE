@@ -18,6 +18,13 @@ metadata mention old repo-relative source paths, resolve them through
 `docs/archive-map.md` and `docs/archive-manifest.json` instead of assuming the
 source bytes should be restored to Git.
 
+## Workspace States
+
+- Committed repo state: the last committed tree plus any staged paths intended for the current commit. Broad verification is committed-state evidence only when relevant local sketch files are absent.
+- Local sketch state: uncommitted presentation/project work such as environment, page, overlay, branding, or image changes. This can be useful work without being accepted product truth.
+- Excluded user work: dirty files intentionally left out of a focused commit. Do not stage, rewrite, delete, or normalize these while doing unrelated work.
+- Accepted snapshot: a presentation sketch that has been intentionally committed. Snapshot checks can represent accepted state only after that happens.
+
 ## Current App Shape
 
 GeoSee is a Vite + React + TypeScript + Three.js internal authoring and presentation app.
@@ -56,14 +63,14 @@ Use these because they directly protect software work:
 
 Verification tiers:
 
-- Workspace state: `npm run check:workspace` reports committed-state vs local sketch-state limits. A dirty tree is not automatically a failure, but snapshot-sensitive local files mean broad snapshot/browser results describe the local sketch state, not just committed repo state.
+- Workspace state: `npm run check:workspace` reports committed repo state, local sketch state, excluded user work candidates, and accepted snapshot status. A dirty tree is not automatically a failure, but snapshot-sensitive local files mean broad snapshot/browser results describe the local sketch state, not just committed repo state.
 - Static wiring/docs/data cleanup: `npm run check:pages`, `npm run check:agent-drag`, and `git diff --check`.
 - Runtime/data product changes: `npm run check:runtime-assets` and `npm run check:utah-runtime`.
 - Artifact metadata/data changes: `npm run check:artifacts` and `npm run check:coverage`.
 - Presentation snapshot changes: `npm run check:utah-snapshot`.
 - Code/runtime compile risk: `npm run build`.
 - Browser/render/editor behavior: targeted Utah browser scripts.
-- Full `npm run test:utah-forge`: broad regression only, not default iteration.
+- Full `npm run test:utah-forge`: broad regression only, not default iteration. Treat it as committed-state evidence only when `npm run check:workspace` reports no relevant local sketch files.
 
 ## Visual Review Loop
 

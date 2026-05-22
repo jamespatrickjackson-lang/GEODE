@@ -137,11 +137,28 @@ function main() {
   );
   const trackedEntries = entries.filter((entry) => entry.tracked);
   const untrackedEntries = entries.filter((entry) => !entry.tracked);
+  const stagedEntries = entries.filter((entry) => entry.staged);
+  const unstagedEntries = entries.filter(
+    (entry) => entry.unstaged || !entry.tracked,
+  );
+  const hasSnapshotSketch = snapshotEntries.length > 0;
 
   console.log("Workspace state");
   console.log(`  tracked changes: ${trackedEntries.length}`);
   console.log(`  untracked files: ${untrackedEntries.length}`);
   console.log(`  snapshot-sensitive local files: ${snapshotEntries.length}`);
+  console.log("\nState model:");
+  console.log(
+    `  committed repo state: ${entries.length === 0 ? "clean" : "has local changes"}`,
+  );
+  console.log(`  local sketch state: ${hasSnapshotSketch ? "present" : "none detected"}`);
+  console.log(
+    `  excluded user work candidates: ${unstagedEntries.length > 0 ? "present" : "none detected"}`,
+  );
+  console.log(`  accepted snapshot: ${hasSnapshotSketch ? "not current" : "current"}`);
+  if (stagedEntries.length > 0) {
+    console.log(`  staged paths: ${stagedEntries.length}`);
+  }
 
   if (entries.length === 0) {
     console.log("\nClean workspace. Broad verification can be attributed to the committed tree.");
@@ -151,7 +168,7 @@ function main() {
   printGrouped(entries);
 
   console.log("\nVerification impact:");
-  if (snapshotEntries.length > 0) {
+  if (hasSnapshotSketch) {
     console.log(
       "  Snapshot-sensitive local work is present. Snapshot and broad browser checks describe this local sketch state, not only the committed repo state.",
     );
