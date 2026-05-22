@@ -180,7 +180,7 @@ Each image object:
 **Charts in alpha:** charts go here as image attachments. The data model
 is designed so that future versions can replace `images` with `panels`
 that include rendered chart references — but in alpha, images are the
-only option. See decision #005.
+only option. See decision DEC-005.
 
 ### Annotations
 

@@ -14,7 +14,7 @@ Each decision records:
 - trade-off accepted
 - supersedes, if applicable
 
-## #001 - 2026-04-29 - Renderer: Three.js
+## DEC-001 - 2026-04-29 - Renderer: Three.js
 
 **Considered:** Cesium, Three.js, Unreal Engine.
 
@@ -24,7 +24,7 @@ Each decision records:
 
 **Trade-off accepted:** No globe, terrain streaming, or georeferencing for free.
 
-## #002 - 2026-04-29 - Hosting: static self-hosted artifacts
+## DEC-002 - 2026-04-29 - Hosting: static self-hosted artifacts
 
 **Considered:** managed 3D platforms, hosted tile services, static self-hosted output.
 
@@ -34,7 +34,7 @@ Each decision records:
 
 **Trade-off accepted:** GeoSee owns data preparation and scene optimization.
 
-## #003 - 2026-04-29 - Original project model: one project, one presentation
+## DEC-003 - 2026-04-29 - Original project model: one project, one presentation
 
 **Considered:** one project per audience, multi-audience from one project.
 
@@ -44,9 +44,9 @@ Each decision records:
 
 **Trade-off accepted:** Duplicated project work for audience variants.
 
-**Superseded in part by:** #028 and #030.
+**Superseded in part by:** DEC-028 and DEC-030.
 
-## #004 - 2026-04-29 - Provenance: manual metadata, no workflow engine
+## DEC-004 - 2026-04-29 - Provenance: manual metadata, no workflow engine
 
 **Considered:** full approval workflow, manual metadata.
 
@@ -56,7 +56,7 @@ Each decision records:
 
 **Trade-off accepted:** Human review remains outside the app.
 
-## #005 - 2026-04-29 - Overlay charts: images first
+## DEC-005 - 2026-04-29 - Overlay charts: images first
 
 **Considered:** rendered chart engine, static images.
 
@@ -66,7 +66,7 @@ Each decision records:
 
 **Trade-off accepted:** Chart updates are manual.
 
-## #006 - 2026-04-29 - Video export target: scripted browser capture
+## DEC-006 - 2026-04-29 - Video export target: scripted browser capture
 
 **Considered:** browser MediaRecorder, headless capture, offline film pipeline.
 
@@ -76,7 +76,7 @@ Each decision records:
 
 **Trade-off accepted:** Not a full cinematic offline render pipeline.
 
-## #007 - 2026-04-29 - Original audience modes decision: defer
+## DEC-007 - 2026-04-29 - Original audience modes decision: defer
 
 **Considered:** audience-mode multiplexing in alpha.
 
@@ -86,9 +86,9 @@ Each decision records:
 
 **Trade-off accepted:** No persistent multi-audience authoring model yet.
 
-**Superseded in part by:** #030.
+**Superseded in part by:** DEC-030.
 
-## #008 - 2026-04-29 - Storage: local working tree with external backup
+## DEC-008 - 2026-04-29 - Storage: local working tree with external backup
 
 **Considered:** synced-drive working tree, local working tree.
 
@@ -98,7 +98,7 @@ Each decision records:
 
 **Trade-off accepted:** Backup/sync is operational, not automatic project storage.
 
-## #009 - 2026-04-29 - Repo root directly in working folder
+## DEC-009 - 2026-04-29 - Repo root directly in working folder
 
 **Considered:** nested wrapper folder, direct repo root.
 
@@ -108,7 +108,7 @@ Each decision records:
 
 **Trade-off accepted:** None material.
 
-## #010 - 2026-04-29 - Documentation pattern
+## DEC-010 - 2026-04-29 - Documentation pattern
 
 **Considered:** one large readme, routed docs.
 
@@ -118,7 +118,7 @@ Each decision records:
 
 **Trade-off accepted:** More docs to maintain.
 
-## #011 - 2026-04-29 - Original supported formats
+## DEC-011 - 2026-04-29 - Original supported formats
 
 **Considered:** proprietary native importers, basic open formats.
 
@@ -128,7 +128,7 @@ Each decision records:
 
 **Trade-off accepted:** Data is prepared outside the app.
 
-## #012 - 2026-04-29 - CRS: one project basis
+## DEC-012 - 2026-04-29 - CRS: one project basis
 
 **Considered:** mixed CRS handling inside a project, one conformed basis.
 
@@ -138,7 +138,7 @@ Each decision records:
 
 **Trade-off accepted:** Preprocessing handles CRS alignment.
 
-## #013 - 2026-04-29 - App framework: React
+## DEC-013 - 2026-04-29 - App framework: React
 
 **Considered:** Svelte, React.
 
@@ -148,7 +148,7 @@ Each decision records:
 
 **Trade-off accepted:** Some larger UI files and more boilerplate.
 
-## #014 - 2026-04-29 - Alpha framing
+## DEC-014 - 2026-04-29 - Alpha framing
 
 **Considered:** build directly to v1, build an alpha probe.
 
@@ -158,7 +158,7 @@ Each decision records:
 
 **Trade-off accepted:** Some alpha code will be refactored or replaced.
 
-## #015 - 2026-04-29 - Woodjam first
+## DEC-015 - 2026-04-29 - Woodjam first
 
 **Considered:** multiple first demos.
 
@@ -168,7 +168,7 @@ Each decision records:
 
 **Trade-off accepted:** First reference was exploration-scale, not high-fidelity site-scale.
 
-## #016 - 2026-04-29 - Woodjam narrative guardrail
+## DEC-016 - 2026-04-29 - Woodjam narrative guardrail
 
 **Considered:** unsupported Three Firs drilling, vectoring narrative, later data acquisition.
 
@@ -178,7 +178,7 @@ Each decision records:
 
 **Trade-off accepted:** Some chapters are visually thinner until source data exists.
 
-## #017 - 2026-04-29 - Hosting target: Cloudflare Pages
+## DEC-017 - 2026-04-29 - Hosting target: Cloudflare Pages
 
 **Considered:** Cloudflare Pages, S3/CloudFront, Netlify.
 
@@ -188,7 +188,7 @@ Each decision records:
 
 **Trade-off accepted:** Light provider coupling.
 
-## #018 - 2026-04-29 - Build model: solo with AI coding support
+## DEC-018 - 2026-04-29 - Build model: solo with AI coding support
 
 **Considered:** contractor, mixed team, solo with AI support.
 
@@ -198,7 +198,7 @@ Each decision records:
 
 **Trade-off accepted:** Low bus factor.
 
-## #019 - 2026-04-29 - No auth in current alpha
+## DEC-019 - 2026-04-29 - No auth in current alpha
 
 **Considered:** password gate, hosted access control, no auth.
 
@@ -208,7 +208,7 @@ Each decision records:
 
 **Trade-off accepted:** Non-public projects will need a new decision.
 
-## #020 - 2026-04-29 - Woodjam terrain source
+## DEC-020 - 2026-04-29 - Woodjam terrain source
 
 **Considered:** SRTM, CDEM, MRDEM.
 
@@ -218,7 +218,7 @@ Each decision records:
 
 **Trade-off accepted:** Project-specific preprocessing remains needed.
 
-## #021 - 2026-04-29 - Working tree: `C:\GeoSee\GeoSee_Dev`
+## DEC-021 - 2026-04-29 - Working tree: `C:\GeoSee\GeoSee_Dev`
 
 **Considered:** synced-drive working folder, local working folder.
 
@@ -228,7 +228,7 @@ Each decision records:
 
 **Trade-off accepted:** Backup is separate from active development.
 
-## #022 - 2026-04-29 - Authoring writes through dev-only endpoint
+## DEC-022 - 2026-04-29 - Authoring writes through dev-only endpoint
 
 **Considered:** File System Access API, dev-only Vite write endpoint.
 
@@ -238,7 +238,7 @@ Each decision records:
 
 **Trade-off accepted:** Authoring remains a trusted local/dev workflow.
 
-## #023 - 2026-04-29 - Environment setup as source of truth
+## DEC-023 - 2026-04-29 - Environment setup as source of truth
 
 **Considered:** every page fully defines scene state, environment plus page deltas.
 
@@ -248,7 +248,7 @@ Each decision records:
 
 **Trade-off accepted:** Editor needs explicit global/page distinction.
 
-## #024 - 2026-05-01 - Scene overlays as first-class layer family
+## DEC-024 - 2026-05-01 - Scene overlays as first-class layer family
 
 **Considered:** markdown images, ordinary layers, first-class scene overlays.
 
@@ -258,7 +258,7 @@ Each decision records:
 
 **Trade-off accepted:** More schema and loader surface.
 
-## #025 - 2026-05-01 - Authoritative palettes with sparse overrides
+## DEC-025 - 2026-05-01 - Authoritative palettes with sparse overrides
 
 **Considered:** manually maintained color maps, canonical source palettes, sparse overrides.
 
@@ -268,7 +268,7 @@ Each decision records:
 
 **Trade-off accepted:** Requires source palette preparation.
 
-## #026 - 2026-05-01 - Commercial shape: project-anchored entry
+## DEC-026 - 2026-05-01 - Commercial shape: project-anchored entry
 
 **Considered:** annual subscription first, project artifact first.
 
@@ -278,7 +278,7 @@ Each decision records:
 
 **Trade-off accepted:** Retainer/SaaS framing comes later.
 
-## #027 - 2026-05-11 - Multi-project folder support
+## DEC-027 - 2026-05-11 - Multi-project folder support
 
 **Considered:** keep hardcoded Woodjam paths, project-aware folder loading.
 
@@ -288,9 +288,9 @@ Each decision records:
 
 **Trade-off accepted:** Project path resolution becomes a shared concern.
 
-**Supersedes:** #003 in part.
+**Supersedes:** DEC-003 in part.
 
-## #028 - 2026-05-11 - Shahbazi Gravel Pit as high-fidelity Case Study B
+## DEC-028 - 2026-05-11 - Shahbazi Gravel Pit as high-fidelity Case Study B
 
 **Considered:** keep Case Study B procedural only, use a real open dataset.
 
@@ -300,7 +300,7 @@ Each decision records:
 
 **Trade-off accepted:** Current app uses preview products until full photogrammetry/orthomosaic/Potree assets exist.
 
-## #029 - 2026-05-11 - Keep procedural shell as fallback
+## DEC-029 - 2026-05-11 - Keep procedural shell as fallback
 
 **Considered:** replace the procedural shell immediately, keep it as fallback.
 
@@ -310,7 +310,7 @@ Each decision records:
 
 **Trade-off accepted:** Demo placeholders must remain visibly labelled as placeholders.
 
-## #030 - 2026-05-11 - Audience Lens: runtime-only for Shahbazi
+## DEC-030 - 2026-05-11 - Audience Lens: runtime-only for Shahbazi
 
 **Considered:** persistent multi-audience authoring, runtime-only lens controls.
 
@@ -320,9 +320,9 @@ Each decision records:
 
 **Trade-off accepted:** Lens choice resets on reload and does not save.
 
-**Supersedes:** #007 in part.
+**Supersedes:** DEC-007 in part.
 
-## #031 - 2026-05-11 - Shahbazi surfaces remain separate
+## DEC-031 - 2026-05-11 - Shahbazi surfaces remain separate
 
 **Considered:** combined mesh, seam mesh, island knit, separate surfaces.
 
@@ -332,7 +332,7 @@ Each decision records:
 
 **Trade-off accepted:** The transition between sparse outer surface and fine TLS surface remains a visible data-resolution boundary.
 
-## #032 - 2026-05-11 - Broad Shahbazi outer surface is preview interpolation
+## DEC-032 - 2026-05-11 - Broad Shahbazi outer surface is preview interpolation
 
 **Considered:** label outer surface as LiDAR, label it as sparse object-point preview.
 
@@ -342,7 +342,7 @@ Each decision records:
 
 **Trade-off accepted:** The layer is less impressive than a final reconstructed surface, but honest.
 
-## #033 - 2026-05-11 - Active preview files separate from future targets
+## DEC-033 - 2026-05-11 - Active preview files separate from future targets
 
 **Considered:** mix missing future paths with active files, split them.
 
@@ -352,7 +352,7 @@ Each decision records:
 
 **Trade-off accepted:** Layer specs carry two file maps.
 
-## #034 - 2026-05-11 - Surface/photo render policy is named
+## DEC-034 - 2026-05-11 - Surface/photo render policy is named
 
 **Considered:** keep material/depth settings inline, centralize them.
 
@@ -362,7 +362,7 @@ Each decision records:
 
 **Trade-off accepted:** Loaders import a shared policy file.
 
-## #035 - 2026-05-11 - Generated Shahbazi mesh winding should be correct
+## DEC-035 - 2026-05-11 - Generated Shahbazi mesh winding should be correct
 
 **Considered:** fix face side at runtime, fix generated artifacts.
 
@@ -372,7 +372,7 @@ Each decision records:
 
 **Trade-off accepted:** Prep scripts own more validation.
 
-## #036 - 2026-05-12 - Base GUI Template
+## DEC-036 - 2026-05-12 - Base GUI Template
 
 **Considered:** edit GUI defaults inside a real project, create a blank template project.
 
@@ -382,7 +382,7 @@ Each decision records:
 
 **Trade-off accepted:** It is a placeholder project, not real data.
 
-## #037 - 2026-05-12 - Dark frosted GUI aesthetic
+## DEC-037 - 2026-05-12 - Dark frosted GUI aesthetic
 
 **Considered:** old light editor, dark overlay-box-aligned GUI.
 
@@ -392,7 +392,7 @@ Each decision records:
 
 **Trade-off accepted:** More style state is shared with project GUI settings.
 
-## #038 - 2026-05-12 - Home exits to landing with unsaved prompt
+## DEC-038 - 2026-05-12 - Home exits to landing with unsaved prompt
 
 **Considered:** home jumps to first page, home returns to landing.
 
@@ -402,7 +402,7 @@ Each decision records:
 
 **Trade-off accepted:** Home control now depends on editor dirty/save state.
 
-## #039 - 2026-05-12 - Editor chrome lazy-loaded
+## DEC-039 - 2026-05-12 - Editor chrome lazy-loaded
 
 **Considered:** bundle editor with landing, lazy-load editor after project selection.
 
@@ -412,7 +412,7 @@ Each decision records:
 
 **Trade-off accepted:** The first project open has a Suspense loading state.
 
-## #040 - 2026-05-12 - Layer loader registry
+## DEC-040 - 2026-05-12 - Layer loader registry
 
 **Considered:** keep loader branches in `scene.ts`, move to registry.
 
@@ -422,7 +422,7 @@ Each decision records:
 
 **Trade-off accepted:** The registry still contains project-specific cases and should be refined over time.
 
-## #041 - 2026-05-12 - Sun lock-to-camera can be global or page-level
+## DEC-041 - 2026-05-12 - Sun lock-to-camera can be global or page-level
 
 **Considered:** fixed model-locked sun, global camera lock only, page override.
 
@@ -432,7 +432,7 @@ Each decision records:
 
 **Trade-off accepted:** Environment and page application must coordinate lighting state carefully.
 
-## #042 - 2026-05-12 - Utah FORGE starts as a foundation project
+## DEC-042 - 2026-05-12 - Utah FORGE starts as a foundation project
 
 **Considered:** wait for the full briefing before adding the project, or add a clean placeholder foundation now.
 
@@ -442,7 +442,7 @@ Each decision records:
 
 **Trade-off accepted:** Utah FORGE currently opens with a procedural reference stage only. CRS, bounds, source data, and real layers remain pending.
 
-## #043 - 2026-05-21 - GeoSee is the product, case studies are feedback vehicles
+## DEC-043 - 2026-05-21 - GeoSee is the product, case studies are feedback vehicles
 
 **Considered:** frame Woodjam as the deliverable and the tool as secondary, or frame GeoSee as the tool being built and sharpened through multiple case studies.
 
@@ -452,7 +452,7 @@ Each decision records:
 
 **Trade-off accepted:** Alpha work still avoids production overbuild, but architecture should not be treated as disposable when it carries learning across case studies.
 
-## #044 - 2026-05-22 - Active workspace lives under `C:\GeoSee`
+## DEC-044 - 2026-05-22 - Active workspace lives under `C:\GeoSee`
 
 **Considered:** keep GeoSee project folders spread directly across `C:\`, or consolidate them under one parent folder.
 
@@ -462,9 +462,9 @@ Each decision records:
 
 **Trade-off accepted:** Old absolute paths such as `C:\GeoSee_Dev` are obsolete except in historical receipts.
 
-**Supersedes:** #021.
+**Supersedes:** DEC-021.
 
-## #045 - 2026-05-22 - Utah FORGE is an active case study
+## DEC-045 - 2026-05-22 - Utah FORGE is an active case study
 
 **Considered:** keep Utah FORGE framed as a placeholder foundation project, or treat it as an active case study with current MT, seismic, public-context, and topology work.
 
@@ -474,9 +474,9 @@ Each decision records:
 
 **Trade-off accepted:** Older docs that say Utah FORGE has no real data or only a procedural reference stage are historical unless confirmed against current project files.
 
-**Supersedes:** #042.
+**Supersedes:** DEC-042.
 
-## #046 - 2026-05-22 - Raw/source data system of record is the archive
+## DEC-046 - 2026-05-22 - Raw/source data system of record is the archive
 
 **Considered:** keep raw/source/client/prep buckets in Git, rely on Git history for recovery, or maintain a separate archive map.
 
@@ -486,7 +486,7 @@ Each decision records:
 
 **Trade-off accepted:** Repo-relative source paths may remain in provenance as historical identifiers. Recovery goes through `docs/archive-map.md` and `docs/archive-manifest.json`, not by recommitting source bytes.
 
-## #047 - 2026-05-22 - Git history is for app/runtime/docs history, not raw-data storage
+## DEC-047 - 2026-05-22 - Git history is for app/runtime/docs history, not raw-data storage
 
 **Considered:** preserve all old large and stale blobs in reachable Git history, or rewrite local history after adding archive references.
 
@@ -496,7 +496,7 @@ Each decision records:
 
 **Trade-off accepted:** Old commit hashes are not stable references after the rewrite. The durable recovery references are the archive map, manifest, and current decision log.
 
-## #048 - 2026-05-22 - Private remote should back only the active repo
+## DEC-048 - 2026-05-22 - Private remote should back only the active repo
 
 **Considered:** keep Git local-only, push the active repo, or upload archive/backup material with the repo.
 
@@ -506,7 +506,7 @@ Each decision records:
 
 **Trade-off accepted:** Do not push `C:\GeoSee\GeoSee_Archive` or `C:\GeoSee\GeoSee_Dev_Past`. Avoid Git LFS for now; future large source data should go to archive/external storage unless a deliberate exception is recorded.
 
-## #049 - 2026-05-22 - Agent context starts from active build docs
+## DEC-049 - 2026-05-22 - Agent context starts from active build docs
 
 **Considered:** let agents route through the whole docs tree, historical receipts, screenshots, and old intake traces, or give them a narrow current-work entry point.
 
@@ -516,7 +516,7 @@ Each decision records:
 
 **Trade-off accepted:** Historical receipts and screenshots remain useful only when explicitly requested for audit, verification, intake review, or visual QA history. During iteration, prefer `npm run build` and targeted checks over full broad suites.
 
-## #050 - 2026-05-22 - Add to Project remains dormant, not deleted
+## DEC-050 - 2026-05-22 - Add to Project remains dormant, not deleted
 
 **Considered:** delete the Add to Project UI with all old intake/staging material, or keep the UI while purging stale staging records.
 

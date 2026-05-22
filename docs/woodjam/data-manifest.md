@@ -52,7 +52,7 @@ The three holes previously suspected of being at Three Firs
 was abandoned at 111 m and restarted as WJ23-106 on a different
 azimuth (per the `Comments` field in `Diamond Drilling_Headers.csv`).
 
-**Implication — chapter 4 reframed (decision #016).** Demo chapter 4
+**Implication — chapter 4 reframed (decision DEC-016).** Demo chapter 4
 uses the **vectoring narrative**: 2023 drilling elsewhere on the
 property + IP chargeability anomalies + Vizsla's publicly-reported
 inference of a concealed porphyry under Three Firs based on
@@ -499,7 +499,7 @@ Concrete tasks to complete *before* writing application code:
 - [x] Confirm Three Firs hole identification from public Vizsla press
   releases — **DONE 2026-04-29.** No 2023 holes at Three Firs;
   chapter 4 reframed to vectoring narrative + 2024 collar markers
-  (decision #016).
+  (decision DEC-016).
 - [ ] Acquire Vizsla press releases (Oct 2024 Great Plains, Nov 2024
   Three Firs, May 2025) — Week 0 prereq per `04-build-sequence.md`
 - [ ] **Action:** update `docs/woodjam/content-brief.md` chapter 4 to

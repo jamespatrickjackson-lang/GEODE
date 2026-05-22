@@ -111,11 +111,11 @@ Every published output is watermarked "Not for engineering use" by default.
   (`/api/write-file`, `/api/read-file`, `/api/delete-file`) registered
   in `vite.config.ts`. State lives on disk; closing the tab is safe.
   The plugin is dev-only — `vite build` produces a static artifact with
-  no write capability, by design (per #022). If you find yourself
+  no write capability, by design (per DEC-022). If you find yourself
   reaching for IndexedDB / LocalStorage / a backend service to persist
   authoring state, stop: the dev plugin is the right answer and already
   exists at `plugins/vite-plugin-author-write.ts`.
-- **Working tree.** Per #021, the working tree is `C:\GeoSee\GeoSee_Dev\`,
+- **Working tree.** Per DEC-021, the working tree is `C:\GeoSee\GeoSee_Dev\`,
   not the Drive copy. `npm install` against Drive will fail with EPERM.
 - **Source archive.** Large raw/source buckets are outside the active repo at
   `C:\GeoSee\GeoSee_Archive\`. Treat old repo-relative source paths in

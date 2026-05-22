@@ -9,7 +9,7 @@ poses, layer visibility, exact wording) happens in the GeoSee tool, but
 the structure here should not be improvised mid-build.
 
 **Last updated:** 2026-04-30 — chapter 2 zone fix, chapter 4 rewrite to
-vectoring narrative per decision #016, resolved-questions section added.
+vectoring narrative per decision DEC-016, resolved-questions section added.
 
 ## Audience
 
@@ -164,7 +164,7 @@ high" labels on the principal anomaly highs.
 forward bets, and walk through Vizsla's 2024 vectoring evidence at
 Three Firs. These are the punch line of the story.
 
-**Narrative approach (decision #016):** No 2023 drillhole sits at
+**Narrative approach (decision DEC-016):** No 2023 drillhole sits at
 Three Firs. The chapter relies on three pieces of evidence:
 (1) the IP chargeability anomaly outlines under the Three Firs target,
 (2) the three 2024 TF24 collar markers showing where Vizsla drilled
@@ -272,7 +272,7 @@ sessions. Listed here so future readers don't re-litigate.
    November 27, 2024 press release. Three Firs drilling occurred in
    2024 with the TF24- prefix (TF24-123, TF24-124, TF24-126), all
    collared approximately 500 m NW of the target. Chapter 4 narrative
-   reframed to vectoring approach (decision #016) using existing 2023
+   reframed to vectoring approach (decision DEC-016) using existing 2023
    data + the three 2024 TF24 collar markers + the public Vizsla
    interpretation.
 
