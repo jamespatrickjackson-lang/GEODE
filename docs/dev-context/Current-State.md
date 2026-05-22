@@ -1,15 +1,10 @@
 # Current State
 
-> Orientation note, 2026-05-20:
-> For current software-build work, start with `docs/dev-context/Active-Build-Context.md` and `docs/dev-context/Active-Build-Queue.md`. This file remains a state ledger and contradiction record, not the shortest active task orientation.
-
-Last populated: 2026-05-15
-
 ## Authority
 
 - Observed: This file is a docs/dev-context population record, not accepted scope, not app runtime, and not official DHF.
 - Observed: Deterministic state lives in source files, project manifests, generated data artifacts, tests, and explicit human acceptance records.
-- Observed: Existing docs contain contradictions. This pass records them instead of choosing a silent winner.
+- Observed: Current project files and generated artifacts are the authority for runtime/data state.
 
 ## Current Human Priority
 
@@ -60,47 +55,25 @@ Last populated: 2026-05-15
 | Persistent multi-audience authoring is not implemented; Shahbazi Audience Lens is runtime-only. | Observed | `docs/02-architecture.md`, `src/audience/` |
 | External control-plane rails are outside the app unless explicitly reintroduced. | Observed | user instruction for this cleanup |
 
-## Appears Contradictory
+## Utah FORGE Seismic State
 
-| Contradiction | Status | Evidence |
-| --- | --- | --- |
-| README/CLAUDE frame the deliverable as Woodjam-focused alpha and README says app shell is TBD; newer docs/code show React multi-project app. | Observed | `README.md`, `CLAUDE.md`, `docs/START-HERE.md`, `package.json` |
-| Several root docs say Utah FORGE is a foundation project with no real ingested technical data; newer project files and START-HERE say Phase 3 MT is active. | Observed | `docs/00-purpose.md`, `docs/01-scope.md`, `docs/04-build-sequence.md`, `docs/START-HERE.md`, `projects/utah-forge/project.json` |
-| Utah project-local docs say seismic is not active or is blocked; `project.json`, `environment.json`, CHANGELOG, and the smoke test show an active/default-visible seismic browser. | Observed | `projects/utah-forge/data/README.md`, `projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/README.md`, `projects/utah-forge/project.json`, `projects/utah-forge/environment.json`, `CHANGELOG.md`, `tests/utah-forge-smoke.spec.ts` |
-| Some Utah docs say default visible layers are MT stations, full-density, and top surface; current `environment.json` defaults public context, full-density MT, and seismic browser, but not stations/top surface. | Observed | `projects/utah-forge/AI_NEXT_AGENT_START_HERE.md`, `projects/utah-forge/Stage 2 - Phase 3 MT resistivity.md`, `projects/utah-forge/environment.json` |
-| START-HERE says Utah authored MT slices are the default presentation layer; current `environment.json` does not include slices in `defaultVisibleLayers`. | Observed | `docs/START-HERE.md`, `projects/utah-forge/environment.json` |
-
-## Utah FORGE Seismic Record
-
-- Observed: Blocked/not-active evidence appears in Utah project docs and data READMEs.
-- Observed: Active/default-visible/implemented evidence appears in `project.json`, `environment.json`, one page config, generated seismic browser manifests, prep scripts, source loader/editor/scene code, and the Utah smoke test.
-- Observed: The contradiction was documented only; no source, prep, project, environment, default-visibility, generated-data, or test changes were made.
-- Observed: Latest human context says seismic is needed and underway.
-- Observed: The current classification pass changed no runtime, project config, page, prep, source, visibility, generated data, or rendering behavior.
+- Observed: Seismic browser products, manifests, prep scripts, source loader/editor/scene code, project config, environment config, and the Utah smoke test exist.
 - Observed: `projects/utah-forge/DATA_LAYER_STATUS.md` records seismic as needed/underway, separates processed/render-ready/QA/provenance roles, and preserves the raw-to-computed artifact guardrail without changing runtime behavior.
 - Unverified / needs human review: Final demo loading/visibility policy for seismic remains pending human review.
-- Unverified / needs human review: How older blocked/not-active seismic docs should be superseded, preserved, or rewritten.
-- Unverified / needs human review: What the intended default demo behavior should be for seismic without parking, hiding, or downgrading active work by assumption.
 
 ## Documentation Inventory Risk
 
 - Observed: Active truth appears scattered across root docs, canonical `docs/` files, `CHANGELOG.md`, project-local Utah/Shahbazi/Woodjam docs, generated data READMEs, and `docs/dev-context/`.
-- Observed: Root docs, canonical docs, project-local handoffs, data notes, and metadata notes still need ongoing reconciliation when they conflict.
-- Observed: Highest-risk contradictions currently involve Utah FORGE foundation/no-real-data wording, active Phase 3 MT state, seismic active/blocked wording, and default-visible layer state.
-- Observed: Root README/CLAUDE should not be relied on as complete current-state authority until classified because they retain Woodjam-first/TBD-shell framing.
-- Observed: Utah project-local AI handoffs, data READMEs, stage docs, and decisions should not be relied on alone until human review resolves seismic and default-visibility contradictions.
-- Observed: Old session/handoff docs should be treated as preservation records or candidate archive material, not active truth, until classified.
+- Observed: Current source/project/generated files should be checked before broad prose docs when runtime or data state matters.
 - Unverified / needs human review: Which docs should become primary current-state sources after reconciliation.
 
 ## Unsafe To Assume
 
 - Observed: No single existing doc is safe as the complete current authority until contradictions are reviewed.
 - Observed: Utah FORGE active data status cannot be inferred from old root docs alone.
-- Observed: Default-visible layer intent cannot be inferred from prose docs alone because the manifest/environment disagree with several notes.
-- Observed: Older Utah seismic intent cannot be inferred from runtime/config evidence alone because multiple Utah docs record explicit "do not start/process/wire seismic" instructions, but latest human context says seismic is needed and underway.
+- Observed: Default-visible layer intent cannot be inferred from prose docs alone.
 - Observed: Utah seismic runtime visibility cannot be inferred from `defaultVisibleLayers` alone because the inspected environment style includes the seismic layer in defaults while setting seismic product visibility entries to false.
 - Observed: The active repo is `C:\GeoSee\GeoSee_Dev`; Git history remains local unless a remote is added.
-- Unverified / needs human review: Whether the active Utah FORGE seismic browser was explicitly approved after earlier "do not start seismic" notes.
 - Unverified / needs human review: Whether current Utah public topo/default-visible choices are desired demo state or transient work state.
 - Unverified / needs human review: Which existing docs should be active, historical, stale, or proposal.
 
@@ -109,8 +82,6 @@ Last populated: 2026-05-15
 Observed next valid move: create a bounded Data/System/App Refinement Plan review, then choose one structural documentation or audit prompt such as data/status manifest refinement, project-local data status README, page/layer visibility clarity, render-quality preservation checks, seismic status/provenance clarity, or app architecture map only. Do not simplify rendering, park seismic by assumption, or turn candidate architecture ideas into committed scope from this pass.
 
 ## Utah FORGE Staged-Intake Test State
-
-Last updated: 2026-05-20
 
 Status: purged from active build context.
 

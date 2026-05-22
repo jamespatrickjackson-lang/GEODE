@@ -1,7 +1,5 @@
 # Project Load-Class Table
 
-Last populated: 2026-05-15
-
 ## Purpose
 
 This table classifies existing project layers by intended loading behavior. It does not change runtime behavior, project manifests, page JSON, visibility, rendering, data, prep scripts, or computed artifacts.

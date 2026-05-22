@@ -1,7 +1,5 @@
 # Code Map
 
-Last populated: 2026-05-15
-
 ## App Shape
 
 | Area | Observed role | Status | Evidence |

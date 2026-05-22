@@ -1,7 +1,5 @@
 # Artifact Metadata Wrapper Spec
 
-Last populated: 2026-05-15
-
 ## Purpose
 
 This spec defines lightweight metadata wrappers for GeoVox source, intermediate, computed analytical, render-ready, QA/validation, presentation, and provenance/status artifacts.

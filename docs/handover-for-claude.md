@@ -1,7 +1,5 @@
 # GeoSee Current Handover
 
-Last updated: 2026-05-12
-
 This is the current bootstrap for the next agent/session. It replaces the older May 1 handover.
 
 ## Working Directory

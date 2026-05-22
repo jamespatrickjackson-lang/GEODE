@@ -1,7 +1,5 @@
 # Layer / Computed Artifact Classification
 
-Last populated: 2026-05-15
-
 ## Purpose
 
 This is a docs-only classification matrix for current GeoVox layers, data artifacts, and computed artifacts. It is not runtime state, not accepted scope, and not permission to edit manifests, visibility, data, prep scripts, or source code.
@@ -145,7 +143,6 @@ Observed project status: `projects/woodjam/project.json` says `draft`. Woodjam p
 ## Seismic Classification Summary
 
 - Observed: Utah seismic has a current manifest layer, generated browser manifest, provenance, source inventory, navigation, 34 products, 4 raymarch-capable 3D products, 30 section-only products, 66 total sections, demo recipes, loader support, and current default-visible environment membership.
-- Observed contradiction: Utah data READMEs still state seismic is blocked/not active.
 - Proposed interpretation: seismic should be classified by readiness, provenance clarity, render role, and load behavior rather than parked by default.
 - Human review needed: intended default demo behavior, acceptable opacity/product presets, provenance/disclosure wording, and whether older docs should be superseded.
 

@@ -1,7 +1,5 @@
 # GeoSee Archive Map
 
-Last updated: 2026-05-21
-
 This file is the in-repo reference for source/raw buckets that were moved out of
 Git history and out of the active working tree. The active repo is
 `C:\GeoSee\GeoSee_Dev`; the source archive is `C:\GeoSee\GeoSee_Archive`.

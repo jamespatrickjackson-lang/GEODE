@@ -8,9 +8,6 @@ This brief is the source of truth for narrative. Page authoring (camera
 poses, layer visibility, exact wording) happens in the GeoSee tool, but
 the structure here should not be improvised mid-build.
 
-**Last updated:** 2026-04-30 — chapter 2 zone fix, chapter 4 rewrite to
-vectoring narrative per decision DEC-016, resolved-questions section added.
-
 ## Audience
 
 Single audience for the alpha: **investors and corporate development

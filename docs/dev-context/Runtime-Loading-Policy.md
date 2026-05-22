@@ -1,7 +1,5 @@
 # Runtime Loading Policy
 
-Last populated: 2026-05-15
-
 ## Purpose
 
 This is a docs-only design pass for future runtime loading policy. It does not change source code, prep scripts, project manifests, page JSON, visibility, rendering, generated artifacts, or computed-artifact pipelines.
@@ -103,7 +101,7 @@ These classes are proposed only and require human review before implementation.
 | computed-artifact support | Manifests, stats, legends, masks, provenance, slices/threshold support products needed by render artifacts or review. | Do not orphan or delete just because they are not directly visible. |
 | future/placeholder | Declared future target, scaffold, or procedural placeholder. | Base GUI reference, Utah reference stage, planned wells/faults/future Shahbazi outputs. |
 | generated junk/dev output | Candidate temporary/dev-only output. | Must be proven junk by human review before deletion; do not assume numerous generated artifacts are junk. |
-| blocked/unknown | Status contradictory, unsupported, or unclear. | Older Utah seismic blocked docs versus current active manifest/runtime state; requires review, not automatic rollback. |
+| blocked/unknown | Status contradictory, unsupported, or unclear. | Requires review, not automatic rollback. |
 
 ## Proposed page/layer contract
 

@@ -74,7 +74,7 @@ Full reasoning for each lives in `docs/03-decisions.md`.
 - If you are about to make a decision that contradicts anything in `/docs`,
   STOP and surface it. Do not silently override.
 - New decisions get appended to `docs/03-decisions.md`. Never modify previous
-  entries — only add new ones with a "supersedes #N" note if the new decision
+  entries — only add new ones with a "supersedes DEC-NNN" note if the new decision
   replaces an older one.
 - When the user makes a verbal decision in a Claude Code session that should
   persist across sessions, append it to `03-decisions.md` before the session

@@ -1,7 +1,5 @@
 # Topo Edge Fade Shape Audit
 
-Date: 2026-05-20
-
 ## Feature definition
 
 Topo edge fade shape controls make the public terrain surface fade into the scene fog/background using a configurable boundary shape. This is a visual terrain shader feature only. It does not clip, crop, export, or mutate terrain/source data.

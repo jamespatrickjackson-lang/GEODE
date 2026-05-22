@@ -1,7 +1,5 @@
 # Utah FORGE Wrapper Coverage
 
-Last populated: 2026-05-15
-
 ## Purpose
 
 This file is project-local artifact metadata coverage guidance for Utah FORGE.

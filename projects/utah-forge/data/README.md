@@ -1,10 +1,5 @@
 # Utah FORGE Data
 
-> Candidate-stale orientation note, 2026-05-20:
-> This README predates current Utah FORGE software-build state. Use `docs/dev-context/Active-Build-Context.md`, `projects/utah-forge/project.json`, `projects/utah-forge/environment.json`, current generated artifacts, and tests as active authority. Statements below that say seismic analysis is not active or must not be wired are historical unless confirmed against current project files and the latest human request.
-
-Updated: 2026-05-12
-
 This folder holds Utah FORGE delivered source/client data and GeoSee-ready derived outputs.
 
 ## Current State
@@ -23,8 +18,7 @@ Current kept state:
 - Phase 3 MT scalar layers expose editor controls and a viewer legend
 - the preview-derived ground cap is standalone and is not controlled by MT scalar trim/feather legend edits
 - Southwestern/regional MT is not active yet
-- seismic analysis is not active yet
-- seismic must not be processed or wired until the user explicitly says to start
+- Phase 3 seismic browser outputs are generated under `geosee_processed/` and wired in current project files
 
 ## Planning And Handoff Docs
 

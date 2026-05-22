@@ -1,7 +1,5 @@
 # Utah FORGE GeoSee-Processed Outputs
 
-Updated: 2026-05-12
-
 This folder is for reviewed, converted, GeoSee-loadable Utah FORGE outputs.
 
 Original delivered/client files keep historical repo-relative identifiers under:

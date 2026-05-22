@@ -1,7 +1,5 @@
 # Topo Graticule Edge Fade Audit
 
-Date: 2026-05-20
-
 Status: log only / no implementation
 
 ## Intent

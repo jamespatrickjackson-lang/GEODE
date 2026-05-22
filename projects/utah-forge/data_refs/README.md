@@ -1,7 +1,5 @@
 # Utah FORGE Data References
 
-Updated: 2026-05-12
-
 This folder is for Utah FORGE source notes, citations, download instructions, provenance records, processing briefs, and decision notes that are not themselves active app data.
 
 ## Current State

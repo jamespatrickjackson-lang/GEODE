@@ -1,7 +1,5 @@
 # Build Sequence
 
-Last updated: 2026-05-12
-
 This document is now a current-state build sequence, not the original week plan.
 
 ## Current Phase

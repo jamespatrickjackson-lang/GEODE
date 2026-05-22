@@ -2,8 +2,6 @@
 
 Status: active lightweight loop for visual alpha work
 
-Last updated: 2026-05-20
-
 ## Purpose
 
 Use this file only when a visual issue needs human judgment before expensive automated tests. Keep it short and current.

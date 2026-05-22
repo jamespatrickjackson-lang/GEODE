@@ -1,7 +1,5 @@
 # Architecture
 
-Last updated: 2026-05-12
-
 This document describes the current GeoSee implementation, not the original planned architecture.
 
 ## System Shape

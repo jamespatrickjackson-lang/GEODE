@@ -1,10 +1,5 @@
 # Purpose
 
-> Candidate-stale orientation note, 2026-05-20:
-> This root purpose doc predates current Utah FORGE MT/seismic/topo software-build work. For active build context, start with `docs/dev-context/Active-Build-Context.md` and current project/source files. Statements below that frame Utah FORGE as foundation-only or as having no real ingested technical data are historical unless confirmed against current `projects/utah-forge/project.json`, `environment.json`, generated artifacts, and tests.
-
-Last updated: 2026-05-12
-
 ## What GeoSee Is
 
 GeoSee is a service-first visual communication tool for mining and geoscience projects.
@@ -27,7 +22,7 @@ The tool currently supports:
 - selectable folder projects
 - Woodjam as the original real/reference project
 - Shahbazi Gravel Pit / Case Study B as a high-fidelity quarry demo and source-derived preview project
-- Utah FORGE as a new geothermal foundation project awaiting briefing and real data ingest
+- Utah FORGE as an active geothermal/geophysics case study with Phase 3 MT, public context, and seismic browser records
 - Base GUI Template as a blank/default GUI editing project
 - a page-based editor and presenter flow
 - layer styling, visibility, provenance fields, page controls, overlay text, and image attachments
@@ -44,7 +39,7 @@ Current kept state:
 
 - Woodjam remains the real/reference project.
 - Shahbazi Gravel Pit is selectable and is the high-fidelity quarry case study.
-- Utah FORGE is selectable as a foundation geothermal project with no real data ingested yet.
+- Utah FORGE is selectable as an active geothermal/geophysics case study.
 - Case Study B contains a procedural fallback shell plus real source-derived Shahbazi preview layers.
 - The Shahbazi source-derived preview includes:
   - TLS sampled and tiled point previews
@@ -56,7 +51,7 @@ Current kept state:
   - dense matching and tie-point QA layers
   - six projected UAV image preview patches
 - A Base GUI Template project exists for editing the shared starting GUI/environment style.
-- Utah FORGE currently opens with a procedural reference stage only, so the briefing can define CRS, bounds, sources, pages, and layers before any technical claims are made.
+- Utah FORGE includes active Phase 3 MT records, public context, scalar/volume/threshold/top-surface records, and seismic browser records.
 - The editor and landing page have been restyled toward the dark frosted overlay-box aesthetic used by the Shahbazi viewer.
 - The bottom HUD now includes preview, compass, light/dark, and home controls.
 - The home control returns to the landing page and prompts before leaving if edits are unsaved.

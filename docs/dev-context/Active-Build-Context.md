@@ -2,8 +2,6 @@
 
 Status: active orientation for software-build work
 
-Last updated: 2026-05-20
-
 ## Current Mode
 
 GeoSee is in software-build mode. Start from the requested runtime/editor/visualization subsystem and current source files.
@@ -35,8 +33,6 @@ Utah FORGE is project/config driven:
 Treat current project/source files as the authority over older prose.
 
 Current Utah FORGE work includes active Phase 3 MT, seismic browser products, public topo/terrain controls, graticule/topo controls, working-area focus work, product pages, overlays, legends, and visual QA.
-
-Older docs that say Utah FORGE has no real data, is only a foundation project, or that seismic is blocked are candidate-stale unless confirmed against current `project.json`, `environment.json`, generated artifacts, and tests.
 
 ## Good Rails
 

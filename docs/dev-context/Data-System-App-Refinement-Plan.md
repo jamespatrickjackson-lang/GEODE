@@ -1,7 +1,5 @@
 # Data / System / App Refinement Plan
 
-Last populated: 2026-05-15
-
 ## Human Context
 
 - External control-plane implementation is parked for now.
@@ -35,7 +33,7 @@ Any performance, bundle, loader, data, or module-size recommendation is unsafe u
 | Loader structure | `src/scene/layerLoaders.ts` mixes generic loaders, type-based loaders, and project/id-specific loaders. | Loader registry sprawl can obscure ownership and make project-specific behavior look generic. |
 | Project-specific logic | Utah FORGE MT/seismic and Shahbazi-specific behavior appear in generic scene/editor modules. | Broad modules become harder to change safely without touching unrelated projects. |
 | Docs/control context | `docs/dev-context` now captures current app-build state, dataset maps, code maps, and focused visual/build guidance. | It is a lightweight build context, not accepted scope or official DHF. |
-| Seismic state | Utah seismic artifacts, scripts, source loader, scene/editor controls, tests, manifest, recipes, and generated products exist. Docs still contain older blocked/not-active statements. | Seismic must be preserved and clarified, not parked by assumption. |
+| Seismic state | Utah seismic artifacts, scripts, source loader, scene/editor controls, tests, manifest, recipes, and generated products exist. | Seismic must be preserved and clarified, not parked by assumption. |
 | Full-density/high-complexity state | Utah MT full-density, scalar volume, threshold surfaces, slices, top surface, and seismic raymarch/section products exist. Shahbazi has rich processed previews and future full-resolution targets. | High-complexity data should be loaded and presented intentionally, not removed or blindly defaulted. |
 
 ## Planning Artifacts Present
@@ -54,13 +52,13 @@ Any performance, bundle, loader, data, or module-size recommendation is unsafe u
 | Old render evidence template | Purged from active context | The receipt-template flow was removed from active context. Capture fresh, focused visual/build evidence only when a current task needs it. |
 | First Utah FORGE MT/seismic historical evidence | Purged from active context | Historical evidence was removed from reachable Git history; no runtime/app/project/data behavior changed and visual acceptance remains open. |
 | Metadata validator hardening and project coverage reporting | Observed present | `tools/validate-artifact-metadata.mjs` now supports project-wide validation and duplicate-key detection; `tools/report-project-artifact-coverage.mjs` generates ignored all-project coverage reports under `test-results/project-artifact-coverage/`. |
-| Dev-only runtime diagnostics and Utah open receipt | Observed present | `src/scene/layerDiagnostics.ts` exposes read-only dev diagnostics via `window.__GEOVOX_DIAGNOSTICS__`; `VER-2026-05-15-002-utah-forge-runtime-open-diagnostics.md` records a first app open, screenshot, and runtime snapshot as needs-review evidence. |
+| Dev-only runtime diagnostics | Observed present | `src/scene/layerDiagnostics.ts` exposes read-only dev diagnostics via `window.__GEOVOX_DIAGNOSTICS__`; capture fresh focused evidence when a current task needs it. |
 | Utah FORGE MT + seismic demo page | Observed present | `projects/utah-forge/pages/20_mt_seismic_integration_check.json` creates a bounded verification page for MT slices plus Phase 3 seismic browser. It is pending visual/human review and is not accepted final demo scope. |
 | Utah FORGE demo walkthrough v0 | Observed present | `projects/utah-forge/pages/30_demo_site_context.json` through `35_demo_provenance_review.json` create a six-page page/overlay walkthrough with screenshot and diagnostics evidence. It is pending visual/human review and is not accepted demo scope. |
 | `docs/dev-context/Loader-Project-Module-Audit.md` | Observed present | Read-only audit of future loader/project-module boundary; planning input only, with no loader registry, SceneManager refactor, runtime behavior, rendering, project config, page, data, or prep changes. |
 | Loader Registry Slice 1 | Observed implemented | `src/scene/layerLoaderRegistry.ts` exists and `src/scene/layerLoaders.ts` uses it internally while preserving `loadLayerInto(spec, manager)` and keeping all handlers in place. Project-specific extraction, lazy loading, lifecycle/disposal, and SceneManager split remain future work. |
 | Loader Registry Slice 1B | Observed implemented | Project-module sentinel extraction moved only `base-gui-reference-stage` and `utah-forge-reference-stage` handler definitions into project-module registration files. Heavy/data handlers, lazy loading, lifecycle/disposal, and SceneManager split remain future work. |
-| Loader Registry Slice 1B visual/runtime regression receipt | Observed present | `VER-2026-05-16-004-loader-registry-slice-1b-visual-regression.md` records Base GUI and Utah FORGE open checks, screenshots, diagnostics, wrapper validation, coverage, and build result. It is verification evidence only and remains needs-review. |
+| Loader Registry Slice 1B visual/runtime checks | Observed present | Base GUI and Utah FORGE open checks, diagnostics, wrapper validation, coverage, and build results should be recaptured when this area is reopened. |
 
 These records are planning/control artifacts, not accepted final scope.
 
@@ -104,7 +102,7 @@ Because seismic is needed and underway:
 - Require human review for default demo behavior.
 - Require provenance/status clarity for client-facing seismic.
 - Avoid half-wired or visually weak client-facing seismic unless intentionally accepted.
-- Reconcile older blocked/not-active docs as documentation status questions, not as an instruction to remove current seismic work.
+- Preserve current seismic work while final demo/default behavior remains under review.
 
 ## Full-Density / High-Complexity Policy
 
@@ -226,13 +224,13 @@ Boundary: Diagnostics are read-only implementation support. They do not change l
 
 Observed: `projects/utah-forge/pages/20_mt_seismic_integration_check.json` now exists and is listed in `projects/utah-forge/project.json` page order. It shows MT resistivity slices and the Phase 3 seismic browser together with public/context layers.
 
-Boundary: This is a page/config verification slice, not a loader, data, computed-artifact, material, global render, or runtime-loading change. `VER-2026-05-15-003-utah-forge-mt-seismic-demo-page.md` and its screenshot/diagnostics remain `needs review`.
+Boundary: This is a page/config verification slice, not a loader, data, computed-artifact, material, global render, or runtime-loading change.
 
 ## Utah FORGE Demo Walkthrough V0
 
 Observed: `projects/utah-forge/pages/30_demo_site_context.json` through `35_demo_provenance_review.json` now form a six-page demo walkthrough sequence for site context, MT acquisition, MT resistivity slices, Phase 3 seismic, MT + seismic integration, and provenance/review caveats.
 
-Boundary: This is a bounded project page/overlay implementation only. It does not change loaders, data artifacts, prep scripts, global environment defaults, global render policy, runtime loading behavior, scalar ranges, color ramps, seismic products, MT products, or acceptance state. `VER-2026-05-15-004-utah-forge-demo-walkthrough-v0.md` remains `needs review`.
+Boundary: This is a bounded project page/overlay implementation only. It does not change loaders, data artifacts, prep scripts, global environment defaults, global render policy, runtime loading behavior, scalar ranges, color ramps, seismic products, MT products, or acceptance state.
 
 ## Layer / Artifact Classification Pass Completed
 

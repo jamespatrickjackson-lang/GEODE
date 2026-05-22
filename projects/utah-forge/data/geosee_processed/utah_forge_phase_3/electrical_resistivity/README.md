@@ -1,7 +1,5 @@
 # Utah FORGE Phase 3 - GeoSee Electrical Resistivity Outputs
 
-Updated: 2026-05-12
-
 This folder contains GeoSee-ready outputs derived from:
 
 ```text
@@ -142,4 +140,3 @@ utah-forge-mt-resistivity-slices
 - Non-positive resistivity values are masked because `log10` is undefined.
 - The model's very deep negative elevation extent needs careful narration in presentation copy.
 - No crop or vertical exaggeration is applied in the baseline output.
-- No seismic output is active; seismic is blocked until the user explicitly says to start.

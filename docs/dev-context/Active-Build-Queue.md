@@ -2,8 +2,6 @@
 
 Status: active software-build queue, not historical backlog
 
-Last updated: 2026-05-20
-
 This file lists current software-build issues that help shape the alpha. It intentionally excludes staged-intake lifecycle work unless the human explicitly resumes it.
 
 ## Now
@@ -16,7 +14,6 @@ This file lists current software-build issues that help shape the alpha. It inte
 
 - `LayerPanel.tsx` is too large for repeated feature work. Extract active editor control islands only when they are touched.
 - `SceneManager.ts` is too large for repeated visual/runtime work. Extract active terrain/graticule/focus/seismic/scalar helpers only when touched.
-- Some older Utah docs still describe Utah FORGE as foundation-only or seismic-blocked. Use current project files and `Active-Build-Context.md` first.
 - Prior visual audit artifacts were purged from active context. Capture fresh focused evidence when visual QA is needed.
 
 ## Current Verification Defaults
@@ -39,4 +36,4 @@ This file lists current software-build issues that help shape the alpha. It inte
 - Staged-intake drops and route execution artifacts.
 - External control-plane implementation.
 - New generalized project intake.
-- Broad documentation reconciliation beyond the stale-warning notes needed to prevent agent drift.
+- Broad documentation reconciliation unless explicitly requested.

@@ -1,7 +1,5 @@
 # Runtime Diagnostics
 
-Last populated: 2026-05-15
-
 ## Purpose
 
 Dev-only runtime diagnostics expose a read-only snapshot of current GeoVox scene, layer, and renderer resource state.

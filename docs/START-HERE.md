@@ -1,7 +1,5 @@
 # Start Here: GeoSee Context for New Developers and Agents
 
-Last updated: 2026-05-12
-
 This document is the first-read orientation for people and AI agents joining GeoSee work. It explains what the app is, why it exists, how the code and data are shaped, and what boundaries matter while contributing.
 
 It is intentionally not a full spec. The app is moving quickly, so this file gives the stable mental model and points to the deeper docs/code when needed.

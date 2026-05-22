@@ -1,10 +1,5 @@
 # Scope
 
-> Candidate-stale orientation note, 2026-05-20:
-> This scope doc predates current Utah FORGE MT/seismic/topo software-build work. For active build context, start with `docs/dev-context/Active-Build-Context.md` and current project/source files. Statements below that describe Utah FORGE as foundation-only, empty, or without real ingested technical data are historical unless confirmed against current `projects/utah-forge/project.json`, `environment.json`, generated artifacts, and tests.
-
-Last updated: 2026-05-12
-
 This document records what the current GeoSee alpha is allowed to do, what it already does, and what remains out of scope.
 
 ## Current Scope Summary
@@ -15,7 +10,7 @@ Current project set:
 
 - `woodjam` - original real/reference project.
 - `case-study-b` - Shahbazi Gravel Pit high-fidelity quarry demo with source-derived preview layers.
-- `utah-forge` - foundation geothermal project ready for briefing and data ingest.
+- `utah-forge` - geothermal/geophysics case study with active Phase 3 MT, public context, and seismic browser records.
 - `base-gui` - empty/default project for editing shared GUI/environment defaults.
 
 Current priority:

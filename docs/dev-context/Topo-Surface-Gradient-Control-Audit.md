@@ -1,7 +1,5 @@
 # Topo Surface Gradient Control Audit
 
-Date: 2026-05-20
-
 ## Feature definition
 
 Surface Elevation Gradient controls give the Utah FORGE topo surface an editable five-stop elevation ramp. The goal is to make the current public topo map read better by controlling color stop placement, transition spread, ramp softness, and color blend against the underlying soft-topo ramp.

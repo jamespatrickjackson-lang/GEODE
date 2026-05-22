@@ -1,7 +1,5 @@
 # Working Area Focus Clip Audit
 
-Date: 2026-05-20
-
 Status: architecture/spec audit plus v1 runtime/editor implementation. No page JSON was pre-enabled, no data processing occurred, and no acceptance state changed.
 
 ## Definition

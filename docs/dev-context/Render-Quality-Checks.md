@@ -1,7 +1,5 @@
 # Render Quality Checks
 
-Last populated: 2026-05-15
-
 ## Purpose
 
 This is a docs-only planning rail for future render-quality and computed-artifact-quality verification. It does not change runtime behavior, manifests, pages, source data, prep scripts, rendering, or computed artifacts.
