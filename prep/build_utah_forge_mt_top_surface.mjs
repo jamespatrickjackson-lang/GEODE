@@ -6,11 +6,10 @@ import {
   UTAH_FORGE_PHASE3_MT_PROCESSED_ROOT,
 } from "./utah_forge_config.mjs";
 
-const DEFAULT_INPUT_MANIFEST = path.join(
+const DEFAULT_INPUT_PREVIEW = path.join(
   UTAH_FORGE_PHASE3_MT_PROCESSED_ROOT,
   "resistivity_model",
-  "full_density",
-  "manifest.json",
+  "resistivity_point_preview.json",
 );
 const DEFAULT_OUTPUT_DIR = path.join(
   UTAH_FORGE_PHASE3_MT_PROCESSED_ROOT,
@@ -19,7 +18,12 @@ const DEFAULT_OUTPUT_DIR = path.join(
 );
 
 const GRID_SIZE_M = 2500;
-const MIN_POINTS_PER_CELL = 3;
+const TOP_QUANTILE = 0.95;
+const MIN_SAMPLES_PER_CELL = 3;
+const SMOOTHING_PASSES = 2;
+const UPPER_COMPONENT_FLOOR_QUANTILE = 0.1;
+const DILATION_FLOOR_QUANTILE = 0.05;
+const MAX_DILATION_DELTA_M = 900;
 const TOPO_COLOR_STOPS = [
   { value: 0, color: "#334653" },
   { value: 0.55, color: "#898b73" },
@@ -28,7 +32,7 @@ const TOPO_COLOR_STOPS = [
 
 function parseArgs(argv) {
   const options = {
-    inputManifest: DEFAULT_INPUT_MANIFEST,
+    inputPreview: DEFAULT_INPUT_PREVIEW,
     outputDir: DEFAULT_OUTPUT_DIR,
   };
 
@@ -36,7 +40,7 @@ function parseArgs(argv) {
     const arg = argv[index];
     const value = argv[index + 1];
     if (arg === "--input" && value) {
-      options.inputManifest = path.resolve(value);
+      options.inputPreview = path.resolve(value);
       index += 1;
     } else if (arg === "--output" && value) {
       options.outputDir = path.resolve(value);
@@ -52,6 +56,19 @@ function parseArgs(argv) {
 function round(value, decimals = 3) {
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
+}
+
+function quantile(sortedValues, fraction) {
+  if (sortedValues.length === 0) return Number.NaN;
+  const index = Math.min(
+    sortedValues.length - 1,
+    Math.max(0, Math.floor((sortedValues.length - 1) * fraction)),
+  );
+  return sortedValues[index];
+}
+
+function median(values) {
+  return quantile([...values].sort((a, b) => a - b), 0.5);
 }
 
 function makeBounds() {
@@ -106,15 +123,17 @@ function sourceBoundsFromSceneBounds(sceneBounds, origin) {
   };
 }
 
-function sourcePoint(scenePoint, origin) {
-  return {
-    scene: scenePoint.map((value) => round(value, 3)),
-    sourceUtm: [
-      round(scenePoint[0] + origin.easting_m, 3),
-      round(scenePoint[1] + origin.northing_m, 3),
-      round(scenePoint[2] + origin.elevation_m, 3),
-    ],
-  };
+function readOrigin(preview) {
+  const origin = preview?.scenePlacement?.sceneOriginUtm;
+  if (
+    !origin ||
+    !Number.isFinite(origin.easting_m) ||
+    !Number.isFinite(origin.northing_m) ||
+    !Number.isFinite(origin.elevation_m)
+  ) {
+    throw new Error("Pointcloud preview is missing scenePlacement.sceneOriginUtm.");
+  }
+  return origin;
 }
 
 function safeHexToRgb(hex) {
@@ -167,125 +186,193 @@ function cellKey(ix, iy) {
   return `${ix},${iy}`;
 }
 
-function readOrigin(manifest) {
-  const origin = manifest?.scenePlacement?.sceneOriginUtm;
-  if (
-    !origin ||
-    !Number.isFinite(origin.easting_m) ||
-    !Number.isFinite(origin.northing_m) ||
-    !Number.isFinite(origin.elevation_m)
-  ) {
-    throw new Error("Full-density manifest is missing scenePlacement.sceneOriginUtm.");
-  }
-  return origin;
+function parseCellKey(key) {
+  const [ix, iy] = key.split(",").map(Number);
+  return { ix, iy };
 }
 
-function validateManifest(manifest) {
-  if (manifest?.schema !== "geosee.tiled-pointcloud-preview.v1") {
-    throw new Error("Input must be the Utah FORGE MT full-density tile manifest.");
+function neighborKeys(ix, iy) {
+  return [
+    cellKey(ix - 1, iy),
+    cellKey(ix + 1, iy),
+    cellKey(ix, iy - 1),
+    cellKey(ix, iy + 1),
+  ];
+}
+
+function cornerNeighborKeys(ix, iy) {
+  return [
+    cellKey(ix - 1, iy - 1),
+    cellKey(ix, iy - 1),
+    cellKey(ix + 1, iy - 1),
+    cellKey(ix - 1, iy),
+    cellKey(ix + 1, iy),
+    cellKey(ix - 1, iy + 1),
+    cellKey(ix, iy + 1),
+    cellKey(ix + 1, iy + 1),
+  ];
+}
+
+function validatePreview(preview) {
+  if (preview?.schema !== "geosee.pointcloud-preview.v1") {
+    throw new Error("Input must be the Utah FORGE MT pointcloud preview JSON.");
   }
-  if (!Array.isArray(manifest.tiles) || manifest.tiles.length === 0) {
-    throw new Error("Full-density manifest is missing tile entries.");
+  if (!Array.isArray(preview.points)) {
+    throw new Error("Pointcloud preview is missing points array.");
   }
 }
 
-function float32ArrayFromBuffer(buffer) {
-  if (buffer.byteLength % Float32Array.BYTES_PER_ELEMENT !== 0) {
-    throw new Error("Binary tile length is not divisible by Float32 byte size.");
-  }
-  return new Float32Array(
-    buffer.buffer,
-    buffer.byteOffset,
-    buffer.byteLength / Float32Array.BYTES_PER_ELEMENT,
-  );
-}
-
-async function collectFullDensityTopContacts(manifest, manifestPath) {
-  validateManifest(manifest);
-  const inputDir = path.dirname(manifestPath);
+function collectPreviewCells(preview) {
+  validatePreview(preview);
   const cells = new Map();
-  let sourcePointCount = 0;
+  const sourcePointCount = Math.floor(preview.points.length / 3);
   let skippedRows = 0;
 
-  for (const tile of manifest.tiles) {
-    const positionsPath = path.join(inputDir, tile.file);
-    const scalarsPath = path.join(inputDir, tile.scalarFile);
-    const [positionsBuffer, scalarsBuffer] = await Promise.all([
-      readFile(positionsPath),
-      readFile(scalarsPath),
-    ]);
-    const positions = float32ArrayFromBuffer(positionsBuffer);
-    const scalars = float32ArrayFromBuffer(scalarsBuffer);
-    if (positions.length % 3 !== 0) {
-      throw new Error(`Invalid XYZ position tile: ${tile.file}`);
+  for (let index = 0; index < sourcePointCount; index += 1) {
+    const x = preview.points[index * 3];
+    const y = preview.points[index * 3 + 1];
+    const z = preview.points[index * 3 + 2];
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
+      skippedRows += 1;
+      continue;
     }
-    if (scalars.length !== positions.length / 3) {
-      throw new Error(`Scalar tile length mismatch: ${tile.scalarFile}`);
+    const ix = Math.floor(x / GRID_SIZE_M);
+    const iy = Math.floor(y / GRID_SIZE_M);
+    const key = cellKey(ix, iy);
+    let cell = cells.get(key);
+    if (!cell) {
+      cell = { key, ix, iy, zs: [] };
+      cells.set(key, cell);
     }
-
-    for (let index = 0; index < scalars.length; index += 1) {
-      sourcePointCount += 1;
-      const offset = index * 3;
-      const x = positions[offset];
-      const y = positions[offset + 1];
-      const z = positions[offset + 2];
-      const scalar = scalars[index];
-      if (
-        !Number.isFinite(x) ||
-        !Number.isFinite(y) ||
-        !Number.isFinite(z) ||
-        !Number.isFinite(scalar)
-      ) {
-        skippedRows += 1;
-        continue;
-      }
-      const ix = Math.floor(x / GRID_SIZE_M);
-      const iy = Math.floor(y / GRID_SIZE_M);
-      const key = cellKey(ix, iy);
-      let cell = cells.get(key);
-      if (!cell) {
-        cell = {
-          key,
-          ix,
-          iy,
-          sampleCount: 0,
-          topContactZ: -Infinity,
-          topContactX: x,
-          topContactY: y,
-          topContactScalar: scalar,
-          minZ: Infinity,
-          maxZ: -Infinity,
-        };
-        cells.set(key, cell);
-      }
-      cell.sampleCount += 1;
-      cell.minZ = Math.min(cell.minZ, z);
-      cell.maxZ = Math.max(cell.maxZ, z);
-      if (z > cell.topContactZ) {
-        cell.topContactZ = z;
-        cell.topContactX = x;
-        cell.topContactY = y;
-        cell.topContactScalar = scalar;
-      }
-    }
+    cell.zs.push(z);
   }
 
   const sampledCells = new Map();
-  for (const [key, cell] of cells.entries()) {
-    if (cell.sampleCount < MIN_POINTS_PER_CELL) continue;
-    sampledCells.set(key, cell);
+  for (const cell of cells.values()) {
+    if (cell.zs.length < MIN_SAMPLES_PER_CELL) continue;
+    const sortedZ = [...cell.zs].sort((a, b) => a - b);
+    sampledCells.set(cell.key, {
+      key: cell.key,
+      ix: cell.ix,
+      iy: cell.iy,
+      sampleCount: cell.zs.length,
+      p95Z: quantile(sortedZ, TOP_QUANTILE),
+      maxZ: sortedZ[sortedZ.length - 1],
+      minZ: sortedZ[0],
+    });
   }
 
+  return { sampledCells, sourcePointCount, skippedRows, rawCellCount: cells.size };
+}
+
+function largestConnectedComponent(cells) {
+  const unvisited = new Set(cells.keys());
+  let largest = [];
+
+  while (unvisited.size > 0) {
+    const first = unvisited.values().next().value;
+    const stack = [first];
+    const component = [];
+    unvisited.delete(first);
+
+    while (stack.length > 0) {
+      const key = stack.pop();
+      component.push(key);
+      const cell = cells.get(key);
+      for (const neighborKey of neighborKeys(cell.ix, cell.iy)) {
+        if (!unvisited.has(neighborKey)) continue;
+        unvisited.delete(neighborKey);
+        stack.push(neighborKey);
+      }
+    }
+
+    if (component.length > largest.length) largest = component;
+  }
+
+  return new Set(largest);
+}
+
+function buildGroundCapCells(sampledCells) {
+  const topValues = [...sampledCells.values()]
+    .map((cell) => cell.p95Z)
+    .sort((a, b) => a - b);
+  const upperFloorZ = quantile(topValues, UPPER_COMPONENT_FLOOR_QUANTILE);
+  const dilationFloorZ = quantile(topValues, DILATION_FLOOR_QUANTILE);
+  const upperCandidates = new Map(
+    [...sampledCells.entries()].filter(([, cell]) => cell.p95Z >= upperFloorZ),
+  );
+  const componentKeys = largestConnectedComponent(upperCandidates);
+  const capCells = new Map();
+
+  for (const key of componentKeys) {
+    const cell = sampledCells.get(key);
+    capCells.set(key, {
+      key,
+      ix: cell.ix,
+      iy: cell.iy,
+      z: cell.p95Z,
+      sampleCount: cell.sampleCount,
+      sourceRole: "largest upper component",
+    });
+  }
+
+  const dilatedCells = [];
+  for (const cell of sampledCells.values()) {
+    if (capCells.has(cell.key)) continue;
+    if (cell.p95Z < dilationFloorZ) continue;
+    const adjacentCapHeights = neighborKeys(cell.ix, cell.iy)
+      .map((key) => capCells.get(key)?.z)
+      .filter(Number.isFinite);
+    if (adjacentCapHeights.length === 0) continue;
+    const neighborHeight = median(adjacentCapHeights);
+    if (Math.abs(cell.p95Z - neighborHeight) > MAX_DILATION_DELTA_M) continue;
+    dilatedCells.push({
+      key: cell.key,
+      ix: cell.ix,
+      iy: cell.iy,
+      z: cell.p95Z,
+      sampleCount: cell.sampleCount,
+      sourceRole: "one-cell edge dilation",
+    });
+  }
+  for (const cell of dilatedCells) capCells.set(cell.key, cell);
+
   return {
-    sampledCells,
-    sourcePointCount,
-    skippedRows,
-    rawCellCount: cells.size,
+    capCells,
+    upperFloorZ,
+    dilationFloorZ,
+    initialUpperCandidateCount: upperCandidates.size,
+    largestComponentCount: componentKeys.size,
+    dilatedCellCount: dilatedCells.length,
   };
 }
 
-function triangulateGrid(cells) {
-  const orderedCells = [...cells.values()].sort(
+function smoothCapCells(capCells) {
+  let current = new Map(
+    [...capCells.entries()].map(([key, cell]) => [key, { ...cell }]),
+  );
+
+  for (let pass = 0; pass < SMOOTHING_PASSES; pass += 1) {
+    const next = new Map();
+    for (const [key, cell] of current.entries()) {
+      const values = [cell.z];
+      for (const neighborKey of cornerNeighborKeys(cell.ix, cell.iy)) {
+        const neighbor = current.get(neighborKey);
+        if (neighbor) values.push(neighbor.z);
+      }
+      next.set(key, {
+        ...cell,
+        z: median(values),
+      });
+    }
+    current = next;
+  }
+
+  return current;
+}
+
+function triangulateGrid(capCells) {
+  const orderedCells = [...capCells.values()].sort(
     (a, b) => a.iy - b.iy || a.ix - b.ix,
   );
   const vertexIndexByKey = new Map();
@@ -298,9 +385,9 @@ function triangulateGrid(cells) {
   let retainedQuadCount = 0;
 
   for (const cell of orderedCells) {
-    const right = cells.get(cellKey(cell.ix + 1, cell.iy));
-    const up = cells.get(cellKey(cell.ix, cell.iy + 1));
-    const upRight = cells.get(cellKey(cell.ix + 1, cell.iy + 1));
+    const right = capCells.get(cellKey(cell.ix + 1, cell.iy));
+    const up = capCells.get(cellKey(cell.ix, cell.iy + 1));
+    const upRight = capCells.get(cellKey(cell.ix + 1, cell.iy + 1));
     if (!right || !up || !upRight) continue;
     candidateQuadCount += 1;
     retainedQuadCount += 1;
@@ -320,97 +407,29 @@ function triangulateGrid(cells) {
   };
 }
 
-function controlPointsForCells(cells, origin) {
-  const values = [...cells.values()];
-  const byMinZ = values.reduce((best, cell) =>
-    cell.topContactZ < best.topContactZ ? cell : best,
-  );
-  const byMaxZ = values.reduce((best, cell) =>
-    cell.topContactZ > best.topContactZ ? cell : best,
-  );
-  const byMinX = values.reduce((best, cell) =>
-    cell.topContactX < best.topContactX ? cell : best,
-  );
-  const byMaxX = values.reduce((best, cell) =>
-    cell.topContactX > best.topContactX ? cell : best,
-  );
-  const byMinY = values.reduce((best, cell) =>
-    cell.topContactY < best.topContactY ? cell : best,
-  );
-  const byMaxY = values.reduce((best, cell) =>
-    cell.topContactY > best.topContactY ? cell : best,
-  );
-  const center = values.reduce(
-    (acc, cell) => {
-      acc.x += cell.topContactX;
-      acc.y += cell.topContactY;
-      return acc;
-    },
-    { x: 0, y: 0 },
-  );
-  center.x /= values.length;
-  center.y /= values.length;
-  const byCenter = values.reduce((best, cell) => {
-    const distSq =
-      (cell.topContactX - center.x) ** 2 + (cell.topContactY - center.y) ** 2;
-    return distSq < best.distSq ? { cell, distSq } : best;
-  }, { cell: values[0], distSq: Infinity }).cell;
-
-  const toPayload = (cell) => ({
-    ...sourcePoint(
-      [cell.topContactX, cell.topContactY, cell.topContactZ],
-      origin,
-    ),
-    log10Resistivity: round(cell.topContactScalar, 6),
-    sampleCount: cell.sampleCount,
-    gridCell: [cell.ix, cell.iy],
-  });
-
-  return {
-    minElevation: toPayload(byMinZ),
-    maxElevation: toPayload(byMaxZ),
-    westEdge: toPayload(byMinX),
-    eastEdge: toPayload(byMaxX),
-    southEdge: toPayload(byMinY),
-    northEdge: toPayload(byMaxY),
-    centerNearest: toPayload(byCenter),
-  };
-}
-
 async function main() {
   const options = parseArgs(process.argv);
-  const manifest = JSON.parse(await readFile(options.inputManifest, "utf8"));
-  const origin = readOrigin(manifest);
-  const fullDensity = await collectFullDensityTopContacts(
-    manifest,
-    options.inputManifest,
-  );
-  const triangulation = triangulateGrid(fullDensity.sampledCells);
+  const preview = JSON.parse(await readFile(options.inputPreview, "utf8"));
+  const origin = readOrigin(preview);
+  const { sampledCells, sourcePointCount, skippedRows, rawCellCount } =
+    collectPreviewCells(preview);
+  const capBuild = buildGroundCapCells(sampledCells);
+  const smoothedCapCells = smoothCapCells(capBuild.capCells);
+  const triangulation = triangulateGrid(smoothedCapCells);
 
   const vertices = [];
   const colors = [];
-  const scalarValues = [];
   const sceneBounds = makeBounds();
   for (const cell of triangulation.orderedCells) {
-    includeBounds(
-      sceneBounds,
-      cell.topContactX,
-      cell.topContactY,
-      cell.topContactZ,
-    );
+    const x = (cell.ix + 0.5) * GRID_SIZE_M;
+    const y = (cell.iy + 0.5) * GRID_SIZE_M;
+    includeBounds(sceneBounds, x, y, cell.z);
   }
   for (const cell of triangulation.orderedCells) {
-    vertices.push(
-      round(cell.topContactX, 3),
-      round(cell.topContactY, 3),
-      round(cell.topContactZ, 3),
-    );
-    scalarValues.push(round(cell.topContactScalar, 6));
-    const color = topologyColorAtElevation(
-      cell.topContactZ,
-      sceneBounds.minZ,
-      sceneBounds.maxZ,
-    );
+    const x = (cell.ix + 0.5) * GRID_SIZE_M;
+    const y = (cell.iy + 0.5) * GRID_SIZE_M;
+    vertices.push(round(x, 3), round(y, 3), round(cell.z, 3));
+    const color = topologyColorAtElevation(cell.z, sceneBounds.minZ, sceneBounds.maxZ);
     colors.push(...color.map((channel) => round(channel, 5)));
   }
 
@@ -418,49 +437,30 @@ async function main() {
   const manifestPath = path.join(options.outputDir, "manifest.json");
   const statsPath = path.join(options.outputDir, "stats.json");
   const provenancePath = path.join(options.outputDir, "provenance.json");
-  const relativeInputManifest = path
-    .relative(process.cwd(), options.inputManifest)
+  const relativeInputPreview = path
+    .relative(process.cwd(), options.inputPreview)
     .replaceAll("\\", "/");
   const relativeMeshPath = path.relative(process.cwd(), meshPath).replaceAll("\\", "/");
   const sceneBoundsPayload = boundsTuple(sceneBounds);
-  const sourceBoundsPayload = sourceBoundsFromSceneBounds(sceneBounds, origin);
-  const controlPoints = controlPointsForCells(
-    triangulation.orderedCells,
-    origin,
-  );
 
   const meshPayload = {
     schema: "geosee.mesh-preview.v1",
-    label: "Utah FORGE Phase 3 MT full-density top-contact surface",
+    label: "Utah FORGE Phase 3 MT preview-derived ground cap",
     vertices,
     colors,
     indices: triangulation.indices,
-    attributes: {
-      scalarValues,
-      scalar: {
-        name: "top-contact log10 resistivity",
-        unit: "log10(ohm-m)",
-        sourceField: "full-density top-contact cell scalar",
-        min: round(Math.min(...scalarValues), 6),
-        max: round(Math.max(...scalarValues), 6),
-        displayMin: manifest.attributes?.scalar?.displayMin,
-        displayMax: manifest.attributes?.scalar?.displayMax,
-        colorStops: manifest.attributes?.scalar?.colorStops,
-      },
-    },
     material: {
       side: "double",
-      note: "Double-sided top-contact surface derived from the full-density MT cell-center tile set. Vertex colors encode top-contact elevation, not resistivity.",
+      note: "Double-sided standalone approximate ground cap derived only from the existing MT resistivity preview. Colors are elevation/topology colors, independent of the MT resistivity legend.",
     },
     source: {
-      dataset: "Utah FORGE Phase 3 MT resistivity full-density model",
-      fullDensityManifest: relativeInputManifest,
-      sourceClassification: manifest.source?.classification,
-      classification: "source-derived full-density inversion model top-contact surface",
+      dataset: "Utah FORGE Phase 3 MT resistivity model preview",
+      sourcePreview: relativeInputPreview,
+      classification: "source-derived inversion model preview ground cap",
       pointRole:
-        "top-most source-derived full-density MT cell center retained per XY grid cell",
+        "regular-grid p95 upper-cap samples from the 90,000-point MT resistivity model preview only",
     },
-    sourceBounds: sourceBoundsPayload,
+    sourceBounds: sourceBoundsFromSceneBounds(sceneBounds, origin),
     sceneBounds: sceneBoundsPayload,
     scenePlacement: {
       crs: "scene-local meters",
@@ -474,26 +474,36 @@ async function main() {
       script: "prep/build_utah_forge_mt_top_surface.mjs",
       generatedDate: DERIVED_DATE,
       method:
-        "Top-contact surface from the full-density MT cell-center tile set. For each 2.5 km XY grid cell, the highest source-derived cell center is retained as the surface contact point.",
+        "Preview-derived approximate ground cap from regular XY bins over the existing Utah FORGE Phase 3 MT resistivity model preview.",
       topologyInference:
-        "Adjacent occupied XY cells are triangulated into a renderable surface. No terrain, lidar, seismic, wells, faults, infrastructure, or interpreted geology are used.",
+        "Cells use p95 scene-Z values, sparse/deep exterior bins are rejected, only the largest connected upper component is retained, one local edge dilation is allowed, and triangles connect only adjacent grid cells.",
       gridSizeM: GRID_SIZE_M,
-      minPointsPerCell: MIN_POINTS_PER_CELL,
-      sourceFullDensityPointCount: fullDensity.sourcePointCount,
-      skippedRows: fullDensity.skippedRows,
-      rawGridCellCount: fullDensity.rawCellCount,
-      sampledGridCellCount: fullDensity.sampledCells.size,
+      topQuantile: TOP_QUANTILE,
+      minSamplesPerCell: MIN_SAMPLES_PER_CELL,
+      upperComponentFloorQuantile: UPPER_COMPONENT_FLOOR_QUANTILE,
+      dilationFloorQuantile: DILATION_FLOOR_QUANTILE,
+      maxDilationDeltaM: MAX_DILATION_DELTA_M,
+      smoothingPasses: SMOOTHING_PASSES,
+      sourcePreviewPointCount: sourcePointCount,
+      skippedRows,
+      rawGridCellCount: rawCellCount,
+      sampledGridCellCount: sampledCells.size,
+      initialUpperCandidateCount: capBuild.initialUpperCandidateCount,
+      largestComponentCellCount: capBuild.largestComponentCount,
+      dilatedCellCount: capBuild.dilatedCellCount,
       vertexCount: triangulation.orderedCells.length,
-      candidateQuadCount: triangulation.candidateQuadCount,
       retainedQuadCount: triangulation.retainedQuadCount,
       triangleCount: triangulation.triangleCount,
-      colorRole: "top-contact elevation colors",
-      controlPoints,
+      upperFloorZ: round(capBuild.upperFloorZ, 3),
+      dilationFloorZ: round(capBuild.dilationFloorZ, 3),
+      colorRole: "standalone elevation/topology surface colors",
       notes: [
-        "This is not public topo, lidar, DEM terrain, or measured ground.",
-        "This is not an interpreted geological contact, reservoir boundary, well surface, fault, or seismic horizon.",
-        "This is the top contact of the existing source-derived full-density MT cell-center visualization.",
-        "Resistivity values are preserved as per-vertex scalar metadata; visible vertex colors encode contact elevation for spatial readability.",
+        "This is a standalone approximate ground cap generated only from the existing 90,000-point Utah FORGE Phase 3 MT resistivity model preview.",
+        "Only the existing MT resistivity point preview JSON is read by this surface generator.",
+        "It is not connected to the MT scalar trim/feather legend or any resistivity subset decomposition.",
+        "It intentionally avoids raw sparse-column top triangulation because that creates vertical icicle sheets.",
+        "This is not measured ground terrain or interpreted geology.",
+        "No seismic, wells, faults, terrain, infrastructure, or other future data family is processed.",
       ],
     },
   };
@@ -502,26 +512,28 @@ async function main() {
     project: "utah-forge",
     area: "utah_forge_phase_3",
     dataset: "electrical_resistivity",
-    artifact: "MT full-density top-contact surface stats",
+    artifact: "MT preview-derived ground cap stats",
     generatedDate: DERIVED_DATE,
     source: {
-      fullDensityManifest: relativeInputManifest,
-      fullDensityPointCount: fullDensity.sourcePointCount,
-      tileCount: manifest.tiles.length,
+      preview: relativeInputPreview,
+      previewPointCount: sourcePointCount,
     },
     gridSizeM: GRID_SIZE_M,
-    minPointsPerCell: MIN_POINTS_PER_CELL,
-    skippedRows: fullDensity.skippedRows,
-    rawGridCellCount: fullDensity.rawCellCount,
-    sampledGridCellCount: fullDensity.sampledCells.size,
+    topQuantile: TOP_QUANTILE,
+    minSamplesPerCell: MIN_SAMPLES_PER_CELL,
+    rawGridCellCount: rawCellCount,
+    sampledGridCellCount: sampledCells.size,
+    initialUpperCandidateCount: capBuild.initialUpperCandidateCount,
+    largestComponentCellCount: capBuild.largestComponentCount,
+    dilatedCellCount: capBuild.dilatedCellCount,
+    smoothingPasses: SMOOTHING_PASSES,
     vertexCount: triangulation.orderedCells.length,
-    candidateQuadCount: triangulation.candidateQuadCount,
     retainedQuadCount: triangulation.retainedQuadCount,
     triangleCount: triangulation.triangleCount,
-    sourceBounds: sourceBoundsPayload,
+    upperFloorZ: round(capBuild.upperFloorZ, 3),
+    dilationFloorZ: round(capBuild.dilationFloorZ, 3),
+    sourceBounds: meshPayload.sourceBounds,
     sceneBounds: sceneBoundsPayload,
-    topContactLog10ResistivityRange: meshPayload.attributes.scalar,
-    cartographicControlPoints: controlPoints,
   };
 
   const surfaceManifest = {
@@ -530,7 +542,7 @@ async function main() {
     dataset: "electrical_resistivity",
     artifact: "manifest.json",
     generatedDate: DERIVED_DATE,
-    classification: "source-derived full-density inversion model top-contact surface",
+    classification: "source-derived inversion model preview ground cap",
     source: meshPayload.source,
     outputs: {
       meshPreview: relativeMeshPath,
@@ -543,12 +555,12 @@ async function main() {
   const provenance = {
     schema: "geosee.provenance.v1",
     artifact: "mt_top_surface_mesh_preview.json",
-    artifactType: "full-density-mt-top-contact-surface",
+    artifactType: "preview-derived-mt-ground-cap",
     projectSlug: "utah-forge",
     createdDate: DERIVED_DATE,
     source: {
-      fullDensityManifest: relativeInputManifest,
-      sourceClassification: manifest.source?.classification,
+      preview: relativeInputPreview,
+      sourceClassification: "preview-derived only",
     },
     transform: meshPayload.scenePlacement,
     processing: meshPayload.processing,
@@ -556,7 +568,7 @@ async function main() {
       readyForDemoPreview: true,
       readyForFinalSpatialAnalysis: false,
       notes:
-        "Source-derived top contact from the full-density MT model cell-center tiles. Not measured terrain, not interpreted geology, and not a seismic product.",
+        "Approximate ground cap from the existing 90,000-point MT resistivity preview only. Not surveyed terrain, not an interpreted geological contact, and not a seismic product.",
     },
   };
 
@@ -569,7 +581,7 @@ async function main() {
   ]);
 
   console.log(
-    `Wrote MT full-density top-contact surface with ${triangulation.orderedCells.length.toLocaleString()} vertices and ${triangulation.triangleCount.toLocaleString()} triangles.`,
+    `Wrote MT preview ground cap with ${triangulation.orderedCells.length.toLocaleString()} vertices and ${triangulation.triangleCount.toLocaleString()} triangles.`,
   );
   console.log(path.relative(process.cwd(), meshPath));
 }

@@ -2622,7 +2622,7 @@
     },
     {
       "id": "utah-forge-mt-top-surface",
-      "label": "Utah FORGE Phase 3 MT full-density top-contact surface",
+      "label": "Utah FORGE Phase 3 MT preview-derived ground cap",
       "type": "mesh",
       "files": {},
       "previewFiles": {
@@ -2634,15 +2634,34 @@
         "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/provenance.json"
       },
       "metadata": {
-        "sourceFile": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json",
+        "sourceFile": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/resistivity_point_preview.json",
         "sourceDate": "2021",
         "derivedArtifactDate": "2026-05-12",
         "sourceOrigin": "Utah FORGE GDR submission 1255 updated MT model cell-center inversion package",
-        "classification": "source-derived full-density inversion model top-contact surface",
+        "classification": "source-derived inversion model preview ground cap",
         "confidentiality": "client-preprocessed/public-source",
         "placeholder": false,
         "sourceDataIncluded": true,
-        "notes": "Top-contact mesh generated from the full-density MT cell-center tile set. Each 2.5 km XY grid cell retains the highest source-derived full-density MT cell center and adjacent occupied cells are triangulated for rendering. This is the top contact of the MT model visualization, not public topo, lidar, DEM terrain, measured ground, interpreted geology, wells, faults, infrastructure, or seismic."
+        "notes": "Standalone approximate ground cap generated from the existing 90,000-point MT preview only; not measured terrain or interpreted geology."
+      }
+    },
+    {
+      "id": "utah-forge-mt-top-contact-surface",
+      "label": "Utah FORGE Phase 3 MT full-density top-contact surface",
+      "type": "mesh",
+      "files": {},
+      "previewFiles": {
+        "meshPreview": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/mt_top_contact_surface_mesh_preview.json"
+      },
+      "supportFiles": {
+        "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/manifest.json",
+        "stats": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/stats.json",
+        "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/provenance.json"
+      },
+      "metadata": {
+        "sourceFile": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json",
+        "classification": "source-derived full-density inversion model top-contact surface",
+        "notes": "Top contact of the source-derived full-density MT cell-center model; not public topo, lidar, DEM terrain, measured ground, interpreted geology, wells, faults, infrastructure, or seismic."
       }
     },
     {

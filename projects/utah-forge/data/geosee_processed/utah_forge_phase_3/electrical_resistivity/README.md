@@ -75,6 +75,10 @@ resistivity_model/top_surface/manifest.json
 resistivity_model/top_surface/stats.json
 resistivity_model/top_surface/provenance.json
 resistivity_model/top_surface/mt_top_surface_mesh_preview.json
+resistivity_model/top_contact_surface/manifest.json
+resistivity_model/top_contact_surface/stats.json
+resistivity_model/top_contact_surface/provenance.json
+resistivity_model/top_contact_surface/mt_top_contact_surface_mesh_preview.json
 resistivity_model/slices/manifest.json
 resistivity_model/slices/legend.json
 resistivity_model/slices/resistivity_slices_mesh_preview.json
@@ -89,10 +93,12 @@ Current facts:
 - point preview emitted points: 90,000
 - full-density emitted points: 1,094,624
 - full-density format: tiled Float32 XYZ plus Float32 scalar buffers
+- preview-derived ground cap: 1,135 vertices and 1,844 retained adjacent-grid triangles from the existing MT preview only
+- preview-derived ground cap minimum scene elevation: 816.49 m
 - full-density top-contact surface: 2,065 vertices and 2,042 retained adjacent-grid triangles
 - full-density top-contact source: highest source-derived MT cell center per occupied 2.5 km XY grid cell
 - full-density top-contact elevation range: 1362.757 m to 3449.131 m
-- full-density top-contact control points: min/max elevation, edge points, and center-nearest point recorded in `resistivity_model/top_surface/stats.json`
+- full-density top-contact control points: min/max elevation, edge points, and center-nearest point recorded in `resistivity_model/top_contact_surface/stats.json`
 - display value: `log10(resistivity_ohm_m)`
 - slice preview: six horizontal elevation slices and two vertical station-centroid sections
 - crop applied: false
@@ -107,10 +113,16 @@ Default visible Stage 2 density layer:
 utah-forge-mt-resistivity-full-density
 ```
 
-Default visible topology aid:
+Existing preview-derived topology aid:
 
 ```text
 utah-forge-mt-top-surface
+```
+
+Additional full-density top-contact aid:
+
+```text
+utah-forge-mt-top-contact-surface
 ```
 
 QA/validation layer:
@@ -135,9 +147,10 @@ utah-forge-mt-resistivity-slices
 
 - The slice preview is an authored display product, not a live full-volume renderer.
 - The full-density layer is a tiled scalar point-cloud renderer, not a voxel/volume renderer.
-- The top surface is the source-derived top contact of the full-density MT cell-center model, not public topo, lidar, DEM terrain, measured ground, or interpreted geology.
-- The top surface is standalone and is not controlled by the MT scalar trim/feather legend.
-- The top surface is generated from full-density tiles by retaining the highest source-derived cell center per occupied 2.5 km XY grid cell and triangulating adjacent occupied cells.
+- The preview-derived ground cap is generated only from the existing 90,000-point MT preview.
+- The full-density top-contact surface is generated from full-density tiles by retaining the highest source-derived cell center per occupied 2.5 km XY grid cell and triangulating adjacent occupied cells.
+- Both surfaces are standalone and are not controlled by the MT scalar trim/feather legend.
+- Neither surface is public topo, lidar, DEM terrain, measured ground, or interpreted geology.
 - The point preview is downsampled for performance.
 - Non-positive resistivity values are masked because `log10` is undefined.
 - The model's very deep negative elevation extent needs careful narration in presentation copy.

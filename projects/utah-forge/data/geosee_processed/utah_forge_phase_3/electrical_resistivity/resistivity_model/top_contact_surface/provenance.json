@@ -1,0 +1,179 @@
+{
+  "schema": "geosee.provenance.v1",
+  "artifact": "mt_top_contact_surface_mesh_preview.json",
+  "artifactType": "full-density-mt-top-contact-surface",
+  "projectSlug": "utah-forge",
+  "createdDate": "2026-05-12",
+  "source": {
+    "fullDensityManifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json",
+    "sourceClassification": "source-derived inversion model full-density visualization"
+  },
+  "transform": {
+    "crs": "scene-local meters",
+    "sourceCrs": "EPSG:26912 NAD83 / UTM Zone 12N",
+    "axisConvention": "X east, Y north, Z up",
+    "sceneOriginUtm": {
+      "easting_m": 341467.35,
+      "northing_m": 4273374.5,
+      "elevation_m": 0
+    },
+    "cropApplied": false,
+    "verticalExaggeration": 1
+  },
+  "processing": {
+    "script": "prep/build_utah_forge_mt_top_contact_surface.mjs",
+    "generatedDate": "2026-05-12",
+    "method": "Top-contact surface from the full-density MT cell-center tile set. For each 2.5 km XY grid cell, the highest source-derived cell center is retained as the surface contact point.",
+    "topologyInference": "Adjacent occupied XY cells are triangulated into a renderable surface. No terrain, lidar, seismic, wells, faults, infrastructure, or interpreted geology are used.",
+    "gridSizeM": 2500,
+    "minPointsPerCell": 3,
+    "sourceFullDensityPointCount": 1094624,
+    "skippedRows": 0,
+    "rawGridCellCount": 2065,
+    "sampledGridCellCount": 2065,
+    "vertexCount": 2065,
+    "candidateQuadCount": 1021,
+    "retainedQuadCount": 1021,
+    "triangleCount": 2042,
+    "colorRole": "top-contact elevation colors",
+    "controlPoints": {
+      "minElevation": {
+        "scene": [
+          -28223.15,
+          43254.5,
+          1362.757
+        ],
+        "sourceUtm": [
+          313244.2,
+          4316629,
+          1362.757
+        ],
+        "log10Resistivity": 1.710371,
+        "sampleCount": 45,
+        "gridCell": [
+          -12,
+          17
+        ]
+      },
+      "maxElevation": {
+        "scene": [
+          38357.352,
+          -24011.5,
+          3449.131
+        ],
+        "sourceUtm": [
+          379824.702,
+          4249363,
+          3449.131
+        ],
+        "log10Resistivity": 2.564347,
+        "sampleCount": 495,
+        "gridCell": [
+          15,
+          -10
+        ]
+      },
+      "westEdge": {
+        "scene": [
+          -139570.656,
+          -46574.5,
+          1744.395
+        ],
+        "sourceUtm": [
+          201896.694,
+          4226800,
+          1744.395
+        ],
+        "log10Resistivity": 1.570309,
+        "sampleCount": 45,
+        "gridCell": [
+          -56,
+          -19
+        ]
+      },
+      "eastEdge": {
+        "scene": [
+          139570.656,
+          46769.5,
+          2087.293
+        ],
+        "sourceUtm": [
+          481038.006,
+          4320144,
+          2087.293
+        ],
+        "log10Resistivity": 2.032377,
+        "sampleCount": 45,
+        "gridCell": [
+          55,
+          18
+        ]
+      },
+      "southEdge": {
+        "scene": [
+          45525.352,
+          -113944.5,
+          1902.949
+        ],
+        "sourceUtm": [
+          386992.702,
+          4159430,
+          1902.949
+        ],
+        "log10Resistivity": 2.034749,
+        "sampleCount": 45,
+        "gridCell": [
+          18,
+          -46
+        ]
+      },
+      "northEdge": {
+        "scene": [
+          -44991.25,
+          113944.5,
+          1624.869
+        ],
+        "sourceUtm": [
+          296476.1,
+          4387319,
+          1624.869
+        ],
+        "log10Resistivity": 1.181558,
+        "sampleCount": 45,
+        "gridCell": [
+          -18,
+          45
+        ]
+      },
+      "centerNearest": {
+        "scene": [
+          677.45,
+          -1317.5,
+          2097.568
+        ],
+        "sourceUtm": [
+          342144.8,
+          4272057,
+          2097.568
+        ],
+        "log10Resistivity": 3.302452,
+        "sampleCount": 2520,
+        "gridCell": [
+          0,
+          -1
+        ]
+      }
+    },
+    "notes": [
+      "This is not public topo, lidar, DEM terrain, or measured ground.",
+      "This is not an interpreted geological contact, reservoir boundary, well surface, fault, or seismic horizon.",
+      "This is the top contact of the existing source-derived full-density MT cell-center visualization.",
+      "Resistivity values are preserved as per-vertex scalar metadata; visible vertex colors encode contact elevation for spatial readability."
+    ]
+  },
+  "reviewStatus": {
+    "readyForDemoPreview": true,
+    "readyForFinalSpatialAnalysis": false,
+    "notes": "Source-derived top contact from the full-density MT model cell-center tiles. Not measured terrain, not interpreted geology, and not a seismic product."
+  }
+}

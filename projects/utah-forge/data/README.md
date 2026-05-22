@@ -12,11 +12,12 @@ Current kept state:
 - Phase 3 MT source inventory, archive entries, and CRS/origin docs are under `geosee_processed/`
 - Phase 3 MT station markers are generated and wired as measured station-location data
 - Phase 3 MT full-density tiled resistivity renderer is generated and wired as the Stage 2 density layer
-- Phase 3 MT full-density top-contact surface is generated and wired as a separate Stage 2 spatial context aid
+- Phase 3 MT preview-derived ground cap remains wired as the existing Stage 2 top-surface aid
+- Phase 3 MT full-density top-contact surface is generated and wired as an additional Stage 2 spatial context aid
 - Phase 3 MT resistivity point preview is generated and wired as a QA/validation layer
 - Phase 3 MT authored resistivity slices are generated and wired as an optional presentation layer
 - Phase 3 MT scalar layers expose editor controls and a viewer legend
-- the full-density top-contact surface is standalone and is not controlled by MT scalar trim/feather legend edits
+- the preview-derived ground cap and full-density top-contact surface are standalone and are not controlled by MT scalar trim/feather legend edits
 - Southwestern/regional MT is not active yet
 - Phase 3 seismic browser outputs are generated under `geosee_processed/` and wired in current project files
 
@@ -113,6 +114,11 @@ geosee_processed/utah_forge_phase_3/electrical_resistivity/
       stats.json
       provenance.json
       mt_top_surface_mesh_preview.json
+    top_contact_surface/
+      manifest.json
+      stats.json
+      provenance.json
+      mt_top_contact_surface_mesh_preview.json
     slices/
       manifest.json
       legend.json
@@ -149,10 +155,13 @@ masked zero/non-positive rows: 316
 point preview emitted points: 90,000
 full-density emitted points: 1,094,624
 full-density format: tiled Float32 XYZ plus Float32 scalar buffers
+preview-derived ground cap: 1,135 vertices, 1,844 retained adjacent-grid triangles
+preview-derived ground cap source: 90,000-point MT preview
+preview-derived ground cap minimum scene elevation: 816.49 m
 full-density top-contact surface: 2,065 vertices, 2,042 retained adjacent-grid triangles
 full-density top-contact source: highest source-derived MT cell center per occupied 2.5 km XY grid cell
 full-density top-contact elevation range: 1362.757 m to 3449.131 m
-full-density top-contact control points: min/max elevation, edge points, and center-nearest point recorded in top_surface/stats.json
+full-density top-contact control points: min/max elevation, edge points, and center-nearest point recorded in top_contact_surface/stats.json
 slice preview: 6 horizontal slices, 2 vertical sections
 display value: log10(resistivity_ohm_m)
 classification: source-derived inversion model

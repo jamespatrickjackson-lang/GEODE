@@ -1,0 +1,303 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "utah-forge-mt-top-contact-surface",
+  "project": "utah-forge",
+  "dataset": "utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface",
+  "artifactFamily": "render_ready",
+  "artifactType": "top_surface",
+  "renderRole": "technical_credibility",
+  "loadClass": "page_required",
+  "sourceType": "processed_full_density",
+  "epistemicStatus": "source_derived",
+  "authority": "Full-density top-contact artifact observed in top_contact_surface manifest/stats/provenance and wired through projects/utah-forge/project.json.",
+  "status": "needs_review",
+  "reviewRequired": true,
+  "accepted": false,
+  "paths": {
+    "source": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json",
+    "artifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/mt_top_contact_surface_mesh_preview.json",
+    "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/manifest.json",
+    "provenance": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/provenance.json",
+    "supporting": [
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/stats.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json"
+    ]
+  },
+  "inputs": [
+    {
+      "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json",
+      "role": "full-density MT cell-center tile manifest",
+      "notes": "Top surface reads the source-derived full-density tile set, not the 90,000-point preview."
+    }
+  ],
+  "producedBy": {
+    "script": "prep/build_utah_forge_mt_top_contact_surface.mjs",
+    "tool": "Node prep script",
+    "generatedAt": "2026-05-12",
+    "notes": "Script derives top contact from processed full-density tile binaries and does not read raw archived source bytes."
+  },
+  "crs": {
+    "source": "EPSG:26912 / NAD83 UTM Zone 12N",
+    "scene": "scene-local meters, X east, Y north, Z up, origin easting 341467.35, northing 4273374.5, elevation 0",
+    "transformPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json",
+    "notes": "Provenance records source CRS and scene-local transform. Acceptance still requires spatial/visual review."
+  },
+  "units": {
+    "horizontal": "meters",
+    "vertical": "meters",
+    "scalar": null,
+    "notes": "Top surface is an approximate support mesh, not a scalar resistivity color/legend artifact."
+  },
+  "scalar": {
+    "transform": "top-contact log10 resistivity preserved as per-vertex scalar metadata",
+    "range": {
+      "name": "top-contact log10 resistivity",
+      "unit": "log10(ohm-m)",
+      "sourceField": "full-density top-contact cell scalar",
+      "min": -0.853872,
+      "max": 4.174335,
+      "displayMin": 0.139879,
+      "displayMax": 3.937122,
+      "colorStops": [
+        {
+          "value": 0.139879,
+          "color": "#2cc9ff"
+        },
+        {
+          "value": 2.02983,
+          "color": "#f8dd6d"
+        },
+        {
+          "value": 3.937122,
+          "color": "#ff637a"
+        }
+      ]
+    },
+    "thresholds": null,
+    "notes": "Visible top-surface colors encode contact elevation; scalar metadata keeps the top-contact resistivity values available for later style work."
+  },
+  "processing": {
+    "method": "Full-density top-contact surface from the MT cell-center tile set. Each 2.5 km XY grid cell retains the highest source-derived cell center and adjacent occupied cells are triangulated.",
+    "parameters": {
+      "gridSizeM": 2500,
+      "minPointsPerCell": 3,
+      "sourceFullDensityPointCount": 1094624,
+      "rawGridCellCount": 2065,
+      "sampledGridCellCount": 2065,
+      "vertexCount": 2065,
+      "candidateQuadCount": 1021,
+      "retainedQuadCount": 1021,
+      "triangleCount": 2042
+    },
+    "downsampling": "Gridded from the processed full-density tile set for renderability; this is not the older 90,000-point preview-derived cap.",
+    "masking": "One highest top-contact point retained per occupied XY grid cell; no terrain, lidar, seismic, wells, faults, or interpreted geology are used.",
+    "notes": "Top contact preserves source-derived full-density cell-center top surface as a renderable mesh."
+  },
+  "stats": {
+    "counts": {
+      "fullDensityPointCount": 1094624,
+      "rawGridCellCount": 2065,
+      "sampledGridCellCount": 2065,
+      "vertexCount": 2065,
+      "retainedQuadCount": 1021,
+      "triangleCount": 2042
+    },
+    "bounds": {
+      "sourceBounds": {
+        "easting_m": [
+          201896.694,
+          481038.006
+        ],
+        "northing_m": [
+          4159430,
+          4387319
+        ],
+        "elevation_m": [
+          1362.757,
+          3449.131
+        ]
+      },
+      "sceneBounds": {
+        "min": [
+          -139570.66,
+          -113944.5,
+          1362.76
+        ],
+        "max": [
+          139570.66,
+          113944.5,
+          3449.13
+        ]
+      }
+    },
+    "cartographicControlPoints": {
+      "minElevation": {
+        "scene": [
+          -28223.15,
+          43254.5,
+          1362.757
+        ],
+        "sourceUtm": [
+          313244.2,
+          4316629,
+          1362.757
+        ],
+        "log10Resistivity": 1.710371,
+        "sampleCount": 45,
+        "gridCell": [
+          -12,
+          17
+        ]
+      },
+      "maxElevation": {
+        "scene": [
+          38357.352,
+          -24011.5,
+          3449.131
+        ],
+        "sourceUtm": [
+          379824.702,
+          4249363,
+          3449.131
+        ],
+        "log10Resistivity": 2.564347,
+        "sampleCount": 495,
+        "gridCell": [
+          15,
+          -10
+        ]
+      },
+      "westEdge": {
+        "scene": [
+          -139570.656,
+          -46574.5,
+          1744.395
+        ],
+        "sourceUtm": [
+          201896.694,
+          4226800,
+          1744.395
+        ],
+        "log10Resistivity": 1.570309,
+        "sampleCount": 45,
+        "gridCell": [
+          -56,
+          -19
+        ]
+      },
+      "eastEdge": {
+        "scene": [
+          139570.656,
+          46769.5,
+          2087.293
+        ],
+        "sourceUtm": [
+          481038.006,
+          4320144,
+          2087.293
+        ],
+        "log10Resistivity": 2.032377,
+        "sampleCount": 45,
+        "gridCell": [
+          55,
+          18
+        ]
+      },
+      "southEdge": {
+        "scene": [
+          45525.352,
+          -113944.5,
+          1902.949
+        ],
+        "sourceUtm": [
+          386992.702,
+          4159430,
+          1902.949
+        ],
+        "log10Resistivity": 2.034749,
+        "sampleCount": 45,
+        "gridCell": [
+          18,
+          -46
+        ]
+      },
+      "northEdge": {
+        "scene": [
+          -44991.25,
+          113944.5,
+          1624.869
+        ],
+        "sourceUtm": [
+          296476.1,
+          4387319,
+          1624.869
+        ],
+        "log10Resistivity": 1.181558,
+        "sampleCount": 45,
+        "gridCell": [
+          -18,
+          45
+        ]
+      },
+      "centerNearest": {
+        "scene": [
+          677.45,
+          -1317.5,
+          2097.568
+        ],
+        "sourceUtm": [
+          342144.8,
+          4272057,
+          2097.568
+        ],
+        "log10Resistivity": 3.302452,
+        "sampleCount": 2520,
+        "gridCell": [
+          0,
+          -1
+        ]
+      }
+    },
+    "notes": "Counts, bounds, and control points are observed in top_contact_surface stats evidence."
+  },
+  "render": {
+    "colorRamp": "top-contact elevation colors, not resistivity colors",
+    "legendPath": null,
+    "materialNotes": "Material/depth behavior, opacity, spatial alignment, camera/page framing, and caveat visibility require visual review.",
+    "visualCheckRequired": true,
+    "visualCheckReceipt": null,
+    "notes": "Material/depth behavior, opacity, spatial alignment, camera/page framing, and caveat visibility require visual review."
+  },
+  "provenance": {
+    "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/provenance.json",
+    "notes": "Existing provenance says ready for demo preview but not final spatial analysis. This wrapper does not promote acceptance."
+  },
+  "limitations": [
+    "Not accepted project state.",
+    "Top surface is the source-derived full-density MT model top contact, not measured terrain.",
+    "Do not represent as public topo, lidar, DEM terrain, interpreted geology, wells, faults, seismic, target, resource estimate, or accepted surface interpretation.",
+    "Material/depth behavior, opacity, visibility, page role, and visual receipt require review.",
+    "Do not simplify, recolor, hide, or promote this surface without review."
+  ],
+  "relatedLayers": [
+    "utah-forge-mt-top-contact-surface"
+  ],
+  "relatedPages": [
+    "04_mt_high_resistivity_seismic",
+    "07_untitled",
+    "11_untitled"
+  ],
+  "review": {
+    "requiredBy": "human",
+    "questions": [
+      "Should the MT top-contact surface be client-facing, technical-credibility only, optional advanced, or page support?",
+      "What caveat language is required so it is not mistaken for terrain or interpreted geology?",
+      "Which fixed cartographic datum/control points should be used for later non-digital verification?",
+      "What visual receipt proves material/depth behavior, opacity, spatial alignment, and camera/page role are acceptable?"
+    ],
+    "acceptedBy": null,
+    "acceptedAt": null,
+    "receipt": null
+  },
+  "notes": "Project-local wrapper records full-density top-contact identity, caveats, control points, and review gaps without replacing the existing preview-derived top-surface endpoint."
+}

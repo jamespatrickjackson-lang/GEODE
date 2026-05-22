@@ -132,6 +132,20 @@
       "status": "needs_review",
       "reviewRequired": true,
       "accepted": false
+    },
+    {
+      "artifactId": "utah-forge-mt-top-contact-surface",
+      "path": "projects/utah-forge/artifact_metadata/utah-forge-mt-top-contact-surface.metadata.json",
+      "artifactFamily": "render_ready",
+      "artifactType": "top_surface",
+      "renderRole": "technical_credibility",
+      "loadClass": "page_required",
+      "relatedLayers": [
+        "utah-forge-mt-top-contact-surface"
+      ],
+      "status": "needs_review",
+      "reviewRequired": true,
+      "accepted": false
     }
   ]
 }
