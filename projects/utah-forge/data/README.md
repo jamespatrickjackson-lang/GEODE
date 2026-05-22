@@ -13,12 +13,12 @@ Current kept state:
 - Phase 3 MT station markers are generated and wired as measured station-location data
 - Phase 3 MT full-density tiled resistivity renderer is generated and wired as the Stage 2 density layer
 - Phase 3 MT preview-derived ground cap remains retained under `resistivity_model/top_surface/` as history/support data
-- the UI-facing `3D MT top surface` now uses the full-density top-contact support surface generated under `resistivity_model/top_contact_surface/`
-- Phase 3 MT full-density top-contact surface is also kept as an explicit technical endpoint for source/provenance review
+- the UI-facing `3D MT top surface` now uses the observed full-density top-envelope surface generated under `resistivity_model/top_envelope_surface/`
+- Phase 3 MT full-density top-contact support-grid surface remains retained as an explicit technical endpoint for source/provenance review
 - Phase 3 MT resistivity point preview is generated and wired as a QA/validation layer
 - Phase 3 MT authored resistivity slices are generated and wired as an optional presentation layer
 - Phase 3 MT scalar layers expose editor controls and a viewer legend
-- the retained preview-derived ground cap and full-density top-contact surface are standalone and are not controlled by MT scalar trim/feather legend edits
+- the observed top-envelope, retained preview-derived ground cap, and retained full-density top-contact surface are standalone and are not controlled by MT scalar trim/feather legend edits
 - Southwestern/regional MT is not active yet
 - Phase 3 seismic browser outputs are generated under `geosee_processed/` and wired in current project files
 
@@ -115,6 +115,11 @@ geosee_processed/utah_forge_phase_3/electrical_resistivity/
       stats.json
       provenance.json
       mt_top_surface_mesh_preview.json
+    top_envelope_surface/
+      manifest.json
+      stats.json
+      provenance.json
+      mt_top_envelope_surface_mesh_preview.json
     top_contact_surface/
       manifest.json
       stats.json
@@ -159,12 +164,13 @@ full-density format: tiled Float32 XYZ plus Float32 scalar buffers
 preview-derived ground cap: 1,135 vertices, 1,844 retained adjacent-grid triangles
 preview-derived ground cap source: 90,000-point MT preview
 preview-derived ground cap minimum scene elevation: 816.49 m
-full-density top-contact surface: 10,509 vertices, 20,608 full-extent support-grid triangles
-full-density top-contact source: direct highest source-derived MT cell centers plus inverse-distance support nodes across the full data-point XY extent
-full-density top-contact observed support nodes: 2,164
-full-density top-contact inferred support nodes: 8,345
-full-density top-contact elevation range: 1362.757 m to 3449.131 m
-full-density top-contact control points and support-distance stats: recorded in top_contact_surface/stats.json
+observed top-envelope surface: 23,811 vertices, 46,283 retained Delaunay triangles
+observed top-envelope source: top-most observed full-density MT cell-center point per unique XY column
+observed top-envelope input columns: 24,332 observed top points
+observed top-envelope bridge triangles dropped: 2,361 with max edge above 10,000 m
+observed top-envelope elevation range: 1358.266 m to 3449.131 m
+observed top-envelope edge-length distribution and control points: recorded in top_envelope_surface/stats.json
+retained full-density top-contact support-grid surface: 10,509 vertices, 20,608 triangles under top_contact_surface/
 slice preview: 6 horizontal slices, 2 vertical sections
 display value: log10(resistivity_ohm_m)
 classification: source-derived inversion model

@@ -75,6 +75,10 @@ resistivity_model/top_surface/manifest.json
 resistivity_model/top_surface/stats.json
 resistivity_model/top_surface/provenance.json
 resistivity_model/top_surface/mt_top_surface_mesh_preview.json
+resistivity_model/top_envelope_surface/manifest.json
+resistivity_model/top_envelope_surface/stats.json
+resistivity_model/top_envelope_surface/provenance.json
+resistivity_model/top_envelope_surface/mt_top_envelope_surface_mesh_preview.json
 resistivity_model/top_contact_surface/manifest.json
 resistivity_model/top_contact_surface/stats.json
 resistivity_model/top_contact_surface/provenance.json
@@ -95,12 +99,13 @@ Current facts:
 - full-density format: tiled Float32 XYZ plus Float32 scalar buffers
 - preview-derived ground cap: 1,135 vertices and 1,844 retained adjacent-grid triangles from the existing MT preview only
 - preview-derived ground cap minimum scene elevation: 816.49 m
-- full-density top-contact surface: 10,509 vertices and 20,608 full-extent support-grid triangles
-- full-density top-contact source: direct highest source-derived MT cell centers plus inverse-distance support nodes across the full data-point XY extent
-- full-density top-contact observed support nodes: 2,164
-- full-density top-contact inferred support nodes: 8,345
-- full-density top-contact elevation range: 1362.757 m to 3449.131 m
-- full-density top-contact control points and support-distance stats: recorded in `resistivity_model/top_contact_surface/stats.json`
+- observed top-envelope surface: 23,811 vertices and 46,283 retained Delaunay triangles
+- observed top-envelope source: top-most observed full-density MT cell-center point per unique XY column
+- observed top-envelope input columns: 24,332 observed top points
+- observed top-envelope bridge triangles dropped: 2,361 with max edge above 10,000 m
+- observed top-envelope elevation range: 1358.266 m to 3449.131 m
+- observed top-envelope edge-length distribution and control points: recorded in `resistivity_model/top_envelope_surface/stats.json`
+- retained full-density top-contact support-grid surface: 10,509 vertices and 20,608 triangles under `resistivity_model/top_contact_surface/`
 - display value: `log10(resistivity_ohm_m)`
 - slice preview: six horizontal elevation slices and two vertical station-centroid sections
 - crop applied: false
@@ -150,11 +155,12 @@ utah-forge-mt-resistivity-slices
 - The slice preview is an authored display product, not a live full-volume renderer.
 - The full-density layer is a tiled scalar point-cloud renderer, not a voxel/volume renderer.
 - The retained preview-derived ground cap is generated only from the existing 90,000-point MT preview and remains under `resistivity_model/top_surface/` as support/history data.
-- The UI-facing `utah-forge-mt-top-surface` layer reads the full-density top-contact support artifact, not the retained preview cap.
-- The full-density top-contact surface is generated from full-density tiles by retaining direct top-contact cells where available, then filling a full data-point extent support grid from nearby observed contacts.
-- Support-grid quality reduces outside directly observed top-contact cells; this is display support, not a new measured or interpreted surface.
-- Both surfaces are standalone and are not controlled by the MT scalar trim/feather legend.
-- Neither surface is public topo, lidar, DEM terrain, measured ground, or interpreted geology.
+- The UI-facing `utah-forge-mt-top-surface` layer reads the observed top-envelope artifact, not the retained preview cap or support-grid top-contact surface.
+- The observed top-envelope surface is triangulated directly from observed top-most full-density MT cell-center points.
+- Surface fidelity follows source support: dense areas render finer; sparse outer areas render coarser or remain open.
+- The retained top-contact support-grid surface remains available as history/support evidence, not current visible top-surface authority.
+- The surfaces are standalone and are not controlled by the MT scalar trim/feather legend.
+- No MT top surface is public topo, lidar, DEM terrain, measured ground, or interpreted geology.
 - The point preview is downsampled for performance.
 - Non-positive resistivity values are masked because `log10` is undefined.
 - The model's very deep negative elevation extent needs careful narration in presentation copy.
