@@ -192,7 +192,7 @@ Boundary: Batch 2A wrappers are proposed/review input only. They do not change r
 
 ## Utah FORGE Wrapper Batch 2B
 
-Observed: project-local wrappers now exist for seismic navigation/inventory/provenance, seismic recipes/presets/export layouts, and the MT full-density top-contact surface.
+Observed: project-local wrappers now exist for seismic navigation/inventory/provenance, seismic recipes/presets/export layouts, the existing MT preview-derived ground cap, and the added MT full-density top-contact surface.
 
 Observed: the old reusable evidence template has been removed from active context. Use fresh, focused artifact visual/technical evidence only when the current task needs it.
 

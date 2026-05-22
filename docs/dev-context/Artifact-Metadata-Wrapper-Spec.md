@@ -210,7 +210,7 @@ Observed: Utah FORGE wrapper coverage now exists at `projects/utah-forge/artifac
 
 Observed: Utah FORGE batch 2A wrappers now exist under `projects/utah-forge/artifact_metadata/` for MT full-density tiled data, MT scalar volume, and MT threshold surfaces. These wrappers are review inputs only. They are `needs_review`, `reviewRequired=true`, and `accepted=false`; they do not authorize runtime loading changes, visibility changes, render changes, prep changes, data moves, or client-facing acceptance.
 
-Observed: Utah FORGE batch 2B wrappers now exist under `projects/utah-forge/artifact_metadata/` for seismic navigation/inventory/provenance, seismic recipes/presets/export layouts, and the MT full-density top-contact surface. These wrappers are review inputs only. They are `needs_review`, `reviewRequired=true`, and `accepted=false`; they do not authorize runtime loading changes, visibility changes, render changes, prep changes, data moves, or client-facing acceptance.
+Observed: Utah FORGE batch 2B wrappers now exist under `projects/utah-forge/artifact_metadata/` for seismic navigation/inventory/provenance, seismic recipes/presets/export layouts, the existing MT preview-derived ground cap, and the added MT full-density top-contact surface. These wrappers are review inputs only. They are `needs_review`, `reviewRequired=true`, and `accepted=false`; they do not authorize runtime loading changes, visibility changes, render changes, prep changes, data moves, or client-facing acceptance.
 
 ## Do-Not-Do Rules
 
