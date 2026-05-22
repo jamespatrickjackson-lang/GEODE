@@ -344,6 +344,16 @@
       "sceneSectionLegendVisible": true,
       "affectedByFog": false,
       "showLabels": false
+    },
+    "utah-forge-mt-top-contact-surface": {
+      "color": "#f8dd6d",
+      "opacity": 0.34,
+      "meshSurfaceLiftM": 0,
+      "meshWireframe": false,
+      "meshRoughness": 0.68,
+      "meshMetalness": 0.02,
+      "affectedByFog": false,
+      "showLabels": false
     }
   },
   "defaultVisibleLayers": [
