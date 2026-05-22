@@ -72,8 +72,10 @@ Complete/kept:
 
 - Case Study B renamed/presented as Shahbazi Gravel Pit in the app.
 - Procedural quarry shell retained as fallback.
-- Shahbazi source/acquisition docs and staging records created.
-- Raw source files staged under `projects/case-study-b/data/raw/shahbazi_gravel_pit/`.
+- Shahbazi source/acquisition docs created.
+- Shahbazi raw source files are archived outside the active repo; resolve the
+  former `projects/case-study-b/data/raw/shahbazi_gravel_pit/` path through
+  `docs/archive-map.md`.
 - Processed preview outputs created under `projects/case-study-b/data/processed/shahbazi_gravel_pit/`.
 - Processed data README updated to describe current preview outputs.
 - Shahbazi layers added to project manifest.

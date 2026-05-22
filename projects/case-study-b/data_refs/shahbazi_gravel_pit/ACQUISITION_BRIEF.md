@@ -41,7 +41,8 @@ Likely role:
 - `mmc1.pdf`: transparency / supplementary document
 - `mmc2.zip` and `mmc3.zip`: non-image supplementary data packages
 
-Download and inspect `mmc2.zip` and `mmc3.zip` before concluding any companion source files are missing.
+Download or inspect `mmc2.zip` and `mmc3.zip` from the archive/source location
+before concluding any companion source files are missing.
 
 Article-level source facts:
 
@@ -56,7 +57,7 @@ Article-level source facts:
 
 ## Current Local Acquisition Status
 
-Downloaded and placed locally:
+Archived source inventory:
 
 - `Part3-RawImages.zip`
 - `RawImages/`
@@ -120,7 +121,7 @@ These are expected contents only. Do not mark any item as present until the sour
    - External repository link
    - Broken or missing link
 5. Download the source package if available.
-6. Place downloaded source files under:
+6. Place downloaded source files in the archive path mapped from:
    `projects/case-study-b/data/raw/shahbazi_gravel_pit/`
 7. Do not commit raw source files unless that is an intentional repository decision.
 
@@ -137,9 +138,9 @@ Create or update local receipt notes with:
 - License text or license URL
 - Any citation requirements
 
-Keep source receipt notes in this folder. Staging receipts can also be mirrored in:
-
-Historical sample staging receipts were purged from the active repo; recover from Git history only if explicitly needed.
+Keep source receipt notes in this folder. Historical sample staging receipts
+were purged from the active repo; source recovery is through
+`docs/archive-map.md` and `docs/archive-manifest.json`, not Git history.
 
 ## Step 3 - If Download Fails
 
@@ -151,7 +152,7 @@ Do this the same day as the failed download attempt so the project is not blocke
 
 ## Step 4 - Handoff After Data Lands
 
-Once files are placed in:
+Once files are located in the archive or temporarily restored from:
 
 `projects/case-study-b/data/raw/shahbazi_gravel_pit/`
 

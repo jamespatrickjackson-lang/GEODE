@@ -1,6 +1,7 @@
 # Source Bundle Triage Checklist
 
-Complete this immediately after placing downloaded source files in:
+Complete this immediately after locating or temporarily restoring downloaded
+source files from the archive-map path for:
 
 `projects/case-study-b/data/raw/shahbazi_gravel_pit/`
 
@@ -78,6 +79,8 @@ Do not attempt the full pipeline first.
 
 Update these records with real facts:
 
-- Historical sample staging records were purged from the active repo; recover from Git history only if explicitly needed.
+- Historical sample staging records were purged from the active repo. Use
+  `docs/archive-map.md` and `docs/archive-manifest.json` for source recovery;
+  do not recommit raw source or staging bytes.
 
 Keep all real-data layers disabled until processed outputs exist and review is complete.
