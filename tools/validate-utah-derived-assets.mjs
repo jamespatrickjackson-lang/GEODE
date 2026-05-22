@@ -25,6 +25,10 @@ const MT_VOLUME_MANIFEST_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/mt_volume_manifest.json";
 const MT_FULL_DENSITY_MANIFEST_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json";
+const MT_TOP_SURFACE_MANIFEST_PATH =
+  "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/manifest.json";
+const MT_TOP_SURFACE_MESH_PATH =
+  "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/mt_top_surface_mesh_preview.json";
 const MT_THRESHOLD_SURFACES_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/threshold_surfaces/mt_threshold_surfaces_mesh_preview.json";
 const MT_STATION_QC_PATH =
@@ -50,6 +54,7 @@ function validateProjectLayerWiring(project) {
     project,
     "utah-forge-mt-resistivity-threshold-surfaces",
   );
+  const mtTopSurfaceLayer = layerById(project, "utah-forge-mt-top-surface");
   const workingAreaLayer = layerById(project, "utah-forge-phase3-working-area");
   const publicTerrainLayer = layerById(project, "terrain");
   const publicRoadsLayer = layerById(project, "transport-roads");
@@ -131,6 +136,8 @@ function validateProjectLayerWiring(project) {
   );
   assert.equal(mtThresholdLayer.type, "mesh");
   assert.equal(mtThresholdLayer.previewFiles?.meshPreview, MT_THRESHOLD_SURFACES_PATH);
+  assert.equal(mtTopSurfaceLayer.type, "mesh");
+  assert.equal(mtTopSurfaceLayer.previewFiles?.meshPreview, MT_TOP_SURFACE_MESH_PATH);
 
   for (const layer of project.layers) {
     for (const target of Object.values(layer.previewFiles ?? {})) {
@@ -225,6 +232,49 @@ function validateMtProducts() {
   assert.match(
     stationQc.stations[0].qc.responseCurveStatus,
     /curves unavailable from source EDI/,
+  );
+
+  const topSurfaceManifest = readJson(MT_TOP_SURFACE_MANIFEST_PATH);
+  assert.match(topSurfaceManifest.classification, /full-density/);
+  assert.match(topSurfaceManifest.classification, /top-contact/);
+  assert.equal(
+    topSurfaceManifest.source?.fullDensityManifest,
+    MT_FULL_DENSITY_MANIFEST_PATH,
+  );
+  assert.equal(
+    topSurfaceManifest.outputs?.meshPreview,
+    MT_TOP_SURFACE_MESH_PATH,
+  );
+  assert.equal(topSurfaceManifest.processing?.sourceFullDensityPointCount, 1_094_624);
+  assertGreaterThan(
+    topSurfaceManifest.processing?.vertexCount,
+    2_000,
+    "MT top-contact vertices",
+  );
+  assertGreaterThan(
+    topSurfaceManifest.processing?.triangleCount,
+    2_000,
+    "MT top-contact triangles",
+  );
+
+  const topSurfaceMesh = readJson(MT_TOP_SURFACE_MESH_PATH);
+  assert.equal(topSurfaceMesh.schema, "geosee.mesh-preview.v1");
+  assert.match(topSurfaceMesh.label, /full-density top-contact/);
+  assert.equal(
+    topSurfaceMesh.source?.fullDensityManifest,
+    MT_FULL_DENSITY_MANIFEST_PATH,
+  );
+  assertGreaterThan(topSurfaceMesh.vertices.length / 3, 2_000, "MT top surface mesh vertices");
+  assertGreaterThan(topSurfaceMesh.indices.length / 3, 2_000, "MT top surface mesh triangles");
+  assertNotContains(
+    JSON.stringify(topSurfaceManifest),
+    "resistivity_point_preview",
+    "MT top-contact manifest",
+  );
+  assertNotContains(
+    JSON.stringify(topSurfaceMesh),
+    "90,000-point",
+    "MT top-contact mesh",
   );
 }
 
