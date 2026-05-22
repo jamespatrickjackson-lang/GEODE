@@ -142,7 +142,10 @@ function validateProjectLayerWiring(project) {
   assert.equal(mtThresholdLayer.type, "mesh");
   assert.equal(mtThresholdLayer.previewFiles?.meshPreview, MT_THRESHOLD_SURFACES_PATH);
   assert.equal(mtTopSurfaceLayer.type, "mesh");
-  assert.equal(mtTopSurfaceLayer.previewFiles?.meshPreview, MT_TOP_SURFACE_MESH_PATH);
+  assert.equal(mtTopSurfaceLayer.previewFiles?.meshPreview, MT_TOP_CONTACT_MESH_PATH);
+  assert.equal(mtTopSurfaceLayer.supportFiles?.manifest, MT_TOP_CONTACT_MANIFEST_PATH);
+  assert.match(mtTopSurfaceLayer.metadata?.classification ?? "", /full-density/);
+  assert.match(mtTopSurfaceLayer.metadata?.notes ?? "", /top envelope/);
   assert.equal(mtTopContactLayer.type, "mesh");
   assert.equal(mtTopContactLayer.previewFiles?.meshPreview, MT_TOP_CONTACT_MESH_PATH);
 
@@ -241,17 +244,17 @@ function validateMtProducts() {
     /curves unavailable from source EDI/,
   );
 
-  const topSurfaceManifest = readJson(MT_TOP_SURFACE_MANIFEST_PATH);
-  assert.match(topSurfaceManifest.classification, /preview ground cap/);
+  const retainedPreviewGroundCapManifest = readJson(MT_TOP_SURFACE_MANIFEST_PATH);
+  assert.match(retainedPreviewGroundCapManifest.classification, /preview ground cap/);
   assert.equal(
-    topSurfaceManifest.source?.sourcePreview,
+    retainedPreviewGroundCapManifest.source?.sourcePreview,
     "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/resistivity_point_preview.json",
   );
-  assert.equal(topSurfaceManifest.processing?.sourcePreviewPointCount, 90_000);
-  assert.equal(topSurfaceManifest.processing?.vertexCount, 1_135);
-  assert.equal(topSurfaceManifest.processing?.triangleCount, 1_844);
+  assert.equal(retainedPreviewGroundCapManifest.processing?.sourcePreviewPointCount, 90_000);
+  assert.equal(retainedPreviewGroundCapManifest.processing?.vertexCount, 1_135);
+  assert.equal(retainedPreviewGroundCapManifest.processing?.triangleCount, 1_844);
   assert.equal(
-    topSurfaceManifest.outputs?.meshPreview,
+    retainedPreviewGroundCapManifest.outputs?.meshPreview,
     MT_TOP_SURFACE_MESH_PATH,
   );
 

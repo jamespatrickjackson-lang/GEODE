@@ -902,36 +902,37 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     .poll(() =>
       loadedUrls.some((url) =>
         url.endsWith(
-          "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/mt_top_surface_mesh_preview.json",
+          "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/mt_top_contact_surface_mesh_preview.json",
         ),
       ),
     )
     .toBe(true);
   const topSurfaceMeshResponse = await page.request.get(
-    "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/mt_top_surface_mesh_preview.json",
+    "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/mt_top_contact_surface_mesh_preview.json",
   );
   expect(topSurfaceMeshResponse.ok()).toBe(true);
   const topSurfaceMesh = await topSurfaceMeshResponse.json();
-  expect(topSurfaceMesh.attributes).toBeUndefined();
-  expect(topSurfaceMesh.material?.note).toContain("standalone");
+  expect(topSurfaceMesh.attributes?.scalarValues.length).toBeGreaterThan(10_000);
+  expect(topSurfaceMesh.material?.note).toContain("full-density MT cell-center");
   expect(topSurfaceMesh.material?.note).not.toContain("scalar trim colors");
-  expect(topSurfaceMesh.indices.length / 3).toBe(1_844);
+  expect(topSurfaceMesh.indices.length / 3).toBe(20_608);
   const topSurfaceStatsResponse = await page.request.get(
-    "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_surface/stats.json",
+    "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/stats.json",
   );
   expect(topSurfaceStatsResponse.ok()).toBe(true);
   const topSurfaceStats = await topSurfaceStatsResponse.json();
-  expect(topSurfaceStats.source?.preview).toContain(
-    "resistivity_point_preview.json",
+  expect(topSurfaceStats.source?.fullDensityManifest).toContain(
+    "full_density/manifest.json",
   );
-  expect(topSurfaceStats.source?.previewPointCount).toBe(90_000);
+  expect(topSurfaceStats.source?.fullDensityPointCount).toBe(1_094_624);
   expect(topSurfaceStats.gridSizeM).toBe(2_500);
-  expect(topSurfaceStats.topQuantile).toBe(0.95);
-  expect(topSurfaceStats.vertexCount).toBe(1_135);
-  expect(topSurfaceStats.triangleCount).toBe(1_844);
-  expect(topSurfaceStats.retainedEdgeInferenceTriangles).toBeUndefined();
-  expect(topSurfaceStats.rejectedLongEdgeTriangles).toBeUndefined();
-  expect(topSurfaceStats.sceneBounds.min[2]).toBeGreaterThan(800);
+  expect(topSurfaceStats.supportGrid.columns).toBe(113);
+  expect(topSurfaceStats.supportGrid.rows).toBe(93);
+  expect(topSurfaceStats.vertexCount).toBe(10_509);
+  expect(topSurfaceStats.triangleCount).toBe(20_608);
+  expect(topSurfaceStats.supportGrid.observedSupportNodeCount).toBe(2_164);
+  expect(topSurfaceStats.supportGrid.inferredSupportNodeCount).toBe(8_345);
+  expect(topSurfaceStats.sceneBounds.min[2]).toBeGreaterThan(1300);
 
   await setForgeLayerVisible(page, "3D MT resistivity volume", false);
   const legend = page
