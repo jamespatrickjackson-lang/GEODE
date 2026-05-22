@@ -25,8 +25,10 @@ const MT_THRESHOLD_SURFACES_PATH =
 const MT_STATION_QC_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/stations/mt_station_response_qc.json";
 const UTAH_FORGE_ENVIRONMENT_PATH = "projects/utah-forge/environment.json";
-const UTAH_FORGE_PAGE06_PATH = "projects/utah-forge/pages/06_untitled.json";
-const UTAH_FORGE_PAGE12_PATH = "projects/utah-forge/pages/12_untitled.json";
+const UTAH_FORGE_PAGE06_PATH =
+  "projects/utah-forge/pages/06_mt_low_resistivity_seismic.json";
+const UTAH_FORGE_PAGE12_PATH =
+  "projects/utah-forge/pages/12_mt_volume_overview.json";
 const PUBLIC_CONTEXT_DIR =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context";
 const PUBLIC_CONTEXT_MANIFEST_PATH = `${PUBLIC_CONTEXT_DIR}/manifest.json`;
@@ -2666,10 +2668,22 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
   });
   expect(mtFullDensityStyle["scalarInclusionMode"]).toBeUndefined();
   const thresholdedPages = [
-    ["04_untitled", 2.694444193332294, 4.5, 3.619791464880117, 4.5],
-    ["05_untitled", 3.0555553761897336, 4.5, 3.0555553761897336, 4.5],
     [
-      "06_untitled",
+      "04_mt_high_resistivity_seismic",
+      2.694444193332294,
+      4.5,
+      3.619791464880117,
+      4.5,
+    ],
+    [
+      "05_mt_threshold_focus",
+      3.0555553761897336,
+      4.5,
+      3.0555553761897336,
+      4.5,
+    ],
+    [
+      "06_mt_low_resistivity_seismic",
       1.3177084813101363,
       2.2656248520231967,
       1.3177084813101363,
@@ -2698,7 +2712,7 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
     expect(override?.opacity).toBeUndefined();
     expect(override?.pointSizePx).toBeUndefined();
   }
-  for (const pageId of ["08_untitled"]) {
+  for (const pageId of ["08_mt_threshold_surfaces"]) {
     const pageSpec = readJsonFile<{
       layerOverrides?: Record<string, Record<string, unknown>>;
     }>(`projects/utah-forge/pages/${pageId}.json`);
@@ -2709,7 +2723,7 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
   const page05Spec = readJsonFile<{
     camera: { position: number[] };
     dynamicCamera?: Record<string, unknown>;
-  }>("projects/utah-forge/pages/05_untitled.json");
+  }>("projects/utah-forge/pages/05_mt_threshold_focus.json");
   expect(page05Spec.camera.position).toEqual([
     -28879.73795742467, -32469.208165290154, 11845.116116638794,
   ]);
@@ -2718,7 +2732,10 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
     orbitRadius: 34868,
     pathAwareBlend: false,
   });
-  for (const pageId of ["04_untitled", "06_untitled"]) {
+  for (const pageId of [
+    "04_mt_high_resistivity_seismic",
+    "06_mt_low_resistivity_seismic",
+  ]) {
     const pageSpec = readJsonFile<{
       layerOverrides?: Record<string, Record<string, unknown>>;
     }>(`projects/utah-forge/pages/${pageId}.json`);
@@ -2738,7 +2755,7 @@ test("Utah FORGE Phase 3 seismic artifacts are browser-ready", async () => {
   }
   const volumeOverviewPage = readJsonFile<{
     layerOverrides?: Record<string, Record<string, unknown>>;
-  }>("projects/utah-forge/pages/12_untitled.json");
+  }>("projects/utah-forge/pages/12_mt_volume_overview.json");
   expect(
     volumeOverviewPage.layerOverrides?.[
       "utah-forge-mt-resistivity-full-density"
@@ -6014,7 +6031,11 @@ test("Utah FORGE data layers follow page camera transitions", async ({
   const firstInterruptTargetIndex =
     beforeInterruptState.currentIndex === 0 ? 1 : 0;
   const secondInterruptTargetIndex = firstInterruptTargetIndex === 1 ? 2 : 1;
-  const pageIdByIndex = ["12_untitled", "06_untitled", "04_untitled"];
+  const pageIdByIndex = [
+    "12_mt_volume_overview",
+    "06_mt_low_resistivity_seismic",
+    "04_mt_high_resistivity_seismic",
+  ];
   await page.evaluate(
     ({ firstTargetIndex, secondTargetIndex }) =>
       new Promise<void>((resolve) => {

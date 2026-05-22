@@ -727,7 +727,7 @@ function newPageId(existingIds: string[]): string {
     if (m) maxN = Math.max(maxN, parseInt(m[1], 10));
   }
   const n = String(maxN + 1).padStart(2, "0");
-  return `${n}_untitled`;
+  return `${n}_page`;
 }
 
 function isExternalOrRootedAssetPath(path: string): boolean {
@@ -1522,7 +1522,7 @@ export function EditorProvider({
       const id = newPageId(stateRef.current.pages.map((p) => p.id));
       const page: PresentationPage = {
         id,
-        title: "Untitled page",
+        title: "New page",
         camera: basePose,
         transition: { duration: 3000, easing: "easeInOutCubic" },
         holdDuration: 4000,
@@ -1544,7 +1544,7 @@ export function EditorProvider({
       const page: PresentationPage = {
         ...rewriteOverlayForDuplicate(source, source.id, id),
         id,
-        title: `${source.title} copy`,
+        title: `${source.title} duplicate`,
       };
       const overlayText = cur.overlays[pageId];
       dispatch({

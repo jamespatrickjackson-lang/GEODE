@@ -14617,7 +14617,7 @@ function AreaOutlinesControls({
       {
         ...source,
         id: `area-outline-${Date.now().toString(36)}`,
-        label: `${source.label || `Area outline ${index + 1}`} copy`,
+        label: `${source.label || `Area outline ${index + 1}`} duplicate`,
         center: [center[0] + 80, center[1] + 80],
       },
       ...outlines.slice(index + 1),

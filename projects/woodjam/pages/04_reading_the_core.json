@@ -1,5 +1,5 @@
 {
-  "id": "04_untitled",
+  "id": "04_reading_the_core",
   "title": "Reading the Core",
   "camera": {
     "position": [
@@ -26,7 +26,7 @@
   "holdDuration": 4000,
   "overlay": {
     "position": "right",
-    "contentFile": "overlays/04_untitled/text.md",
+    "contentFile": "overlays/04_reading_the_core/text.md",
     "timing": {
       "fadeMs": 2000,
       "gapMs": 50,
@@ -34,7 +34,7 @@
     },
     "images": [
       {
-        "file": "overlays/04_untitled/vcu_2711_fig_4.500x0-is.jpg",
+        "file": "overlays/04_reading_the_core/vcu_2711_fig_4.500x0-is.jpg",
         "caption": "",
         "position": "below-text"
       }

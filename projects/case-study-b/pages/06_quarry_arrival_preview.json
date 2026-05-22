@@ -1,6 +1,6 @@
 {
-  "id": "06_untitled",
-  "title": "Quarry Arrival copy",
+  "id": "06_quarry_arrival_preview",
+  "title": "Quarry Arrival Preview",
   "subtitle": "Reference folder project for a high-fidelity site demo",
   "renderPreset": "boardroom",
   "camera": {
@@ -49,7 +49,7 @@
   },
   "overlay": {
     "position": "left",
-    "contentFile": "overlays/06_untitled/text.md",
+    "contentFile": "overlays/06_quarry_arrival_preview/text.md",
     "timing": {
       "fadeMs": 1600,
       "gapMs": 80,
