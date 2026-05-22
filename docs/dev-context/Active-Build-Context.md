@@ -1,117 +1,56 @@
 # Active Build Context
 
-Status: active orientation for software-build work
+Status: active entry point for software-build work
 
-Entry hierarchy: `README.md` is the human repo landing page, `CLAUDE.md` is
-the agent operating contract, `docs/START-HERE.md` is stable product/system
-orientation, and this file is the active software-work entry.
+Entry hierarchy:
+
+- `README.md`: human repo landing page
+- `CLAUDE.md`: agent operating contract
+- `docs/START-HERE.md`: stable product/system orientation
+- `docs/dev-context/Active-Build-Context.md`: active software-work router
 
 ## Current Mode
 
-GeoSee is in software-build mode. Start from the requested runtime/editor/visualization subsystem and current source files.
+GeoSee is in software-build mode. Start from the requested runtime, editor, visualization, data, or project subsystem and current source files.
 
-Do not route normal work through staged-intake records or old review-route artifacts. The Add to Project UI is retained as an explicit, dormant surface only.
+Do not route normal work through staged-intake records, old review-route artifacts, historical receipts, generated report folders, or old screenshots unless the task explicitly needs that history.
 
-Large raw/source inputs are archived outside the active repo at
-`C:\GeoSee\GeoSee_Archive`. When current provenance, prep scripts, or generated
-metadata mention old repo-relative source paths, resolve them through
-`docs/archive-map.md` and `docs/archive-manifest.json` instead of assuming the
-source bytes should be restored to Git.
-
-## Workspace States
-
-- Committed repo state: the last committed tree plus any staged paths intended for the current commit. Broad verification is committed-state evidence only when relevant local sketch files are absent.
-- Local sketch state: uncommitted presentation/project work such as environment, page, overlay, branding, or image changes. This can be useful work without being accepted product truth.
-- Excluded user work: dirty files intentionally left out of a focused commit. Do not stage, rewrite, delete, or normalize these while doing unrelated work.
-- Accepted snapshot: a presentation sketch that has been intentionally committed. Snapshot checks can represent accepted state only after that happens.
+Large raw/source inputs are archived outside the active repo at `C:\GeoSee\GeoSee_Archive`. When current provenance, prep scripts, or generated metadata mention old repo-relative source paths, resolve them through `docs/archive-map.md` and `docs/archive-manifest.json`.
 
 ## Current App Shape
 
 GeoSee is a Vite + React + TypeScript + Three.js internal authoring and presentation app.
 
-Utah FORGE is project/config driven:
+Core runtime/project surfaces:
 
-- `projects/utah-forge/project.json` registers layers and `pageOrder`.
-- `projects/utah-forge/environment.json` holds default scene/layer style state.
-- `projects/utah-forge/pages/*.json` holds page-local camera, visibility, transition, and layer override state.
-- `projects/utah-forge/overlays/<page_id>/text.md` holds overlay copy.
-- `src/scene/SceneManager.ts` applies scene, layer, style, material, transition, and runtime visual state.
-- `src/editor/LayerPanel.tsx` owns most editor controls.
-- `src/pages/PageController.tsx` owns page navigation and camera/page transitions.
-
-## Current Utah FORGE Reality
+- `projects/*/project.json`: layer registry, project metadata, `pageOrder`
+- `projects/*/environment.json`: default scene and layer style state
+- `projects/*/pages/*.json`: page-local camera, visibility, transition, and layer overrides
+- `projects/*/overlays/<page_id>/text.md`: overlay copy
+- `src/scene/SceneManager.ts`: scene, layer, style, material, transition, runtime visual state
+- `src/editor/LayerPanel.tsx`: most editor controls
+- `src/pages/PageController.tsx`: page navigation and camera/page transitions
 
 Treat current project/source files as the authority over older prose.
 
+## Current Utah FORGE Reality
+
 Current Utah FORGE work includes active Phase 3 MT, seismic browser products, public topo/terrain controls, graticule/topo controls, working-area focus work, product pages, overlays, legends, and visual QA.
 
-## Good Rails
+Do not assume Utah FORGE is the product standard. It is one case study probing MT/seismic/public-context/geophysics architecture and presentation needs.
 
-Use these because they directly protect software work:
+## Focused Routing
 
-- `npm run check:workspace` before commits or broad verification
-- `npm run check:pages` for project/page/overlay wiring
-- `npm run check:agent-drag` for active no-function context markers
-- `npm run check:runtime-assets` for project layer file wiring
-- `npm run check:utah-runtime` for Utah runtime and derived-product integrity
-- `npm run check:utah-snapshot` for Utah presentation snapshot drift
-- `npm run check:artifacts` for Utah FORGE artifact metadata
-- `npm run check:coverage` for project artifact coverage
-- `npm run build`
-- targeted Utah browser scripts after the visual direction is settled
-- notes or screenshots tied to the current change
+- Workspace state and verification tiers: `docs/dev-context/Verification-Routing.md`
+- Current visual review loop: `docs/dev-context/Visual-Review-Current.md`
+- Large code surfaces and extraction guidance: `docs/dev-context/Architecture-Hotspots.md`
+- Data/artifact status maps: `docs/dev-context/Dataset-Map.md`, `docs/dev-context/Computed-Artifact-Pipeline.md`, `docs/dev-context/Layer-Artifact-Classification.md`
+- Runtime/project load classes: `docs/dev-context/Project-Load-Class-Table.md`, `docs/dev-context/Runtime-Loading-Policy.md`
 
-Verification tiers:
+## Default Guardrails
 
-- Workspace state: `npm run check:workspace` reports committed repo state, local sketch state, excluded user work candidates, and accepted snapshot status. A dirty tree is not automatically a failure, but snapshot-sensitive local files mean broad snapshot/browser results describe the local sketch state, not just committed repo state.
-- Static wiring/docs/data cleanup: `npm run check:pages`, `npm run check:agent-drag`, and `git diff --check`.
-- Runtime/data product changes: `npm run check:runtime-assets` and `npm run check:utah-runtime`.
-- Artifact metadata/data changes: `npm run check:artifacts` and `npm run check:coverage`.
-- Presentation snapshot changes: `npm run check:utah-snapshot`.
-- Code/runtime compile risk: `npm run build`.
-- Browser/render/editor behavior: targeted Utah browser scripts.
-- Full `npm run test:utah-forge`: broad regression only, not default iteration. Treat it as committed-state evidence only when `npm run check:workspace` reports no relevant local sketch files.
-
-## Visual Review Loop
-
-For visual composition work, use the human eye before broad automated checks.
-
-Preferred loop:
-
-- make a narrow patch
-- capture one focused screenshot or viewport state
-- ask for direct human judgment
-- iterate from that judgment
-- run build and targeted checks after the visual direction is right
-
-Use `docs/dev-context/Visual-Review-Current.md` as the current lightweight visual contract when a visual issue spans more than one turn.
-
-Save the latest review screenshot, when needed, at:
-
-`docs/dev-context/Visual-Review/current.png`
-
-Avoid full or slow Playwright smoke runs during design iteration. Use Playwright for quick scene-state probes, targeted tests, and final guardrails.
-
-## Local Dev Server Rule
-
-Agents should not run `Launch GeoSee.bat`. It is a human-facing launcher and it force-kills any process listening on port `5173`, which may interrupt the user's live app session.
-
-For agent-run checks, prefer a scoped dev server command such as `npm run dev -- --host 127.0.0.1 --port <free-port>` and report the URL. If port `5173` is already in use, assume it may belong to the user unless the user explicitly asks to restart it.
-
-## Avoidable Drag
-
-Avoid these unless explicitly relevant:
-
-- broad intake history
-- old receipt archives
-- generated report folders
-- old review-route rails
-- historical open-loop rows as active scope
-- root docs that predate current Utah FORGE MT/seismic/topo work
-- reading visual audit screenshots unless the current task is visual QA
-- full `npm run test:utah-forge` during iteration; use targeted tests or
-  browser probes instead
-
-## Large Code Surface Warning
-
-`src/editor/LayerPanel.tsx` and `src/scene/SceneManager.ts` are very large mixed-concern files. Patch them in small targeted chunks. Reopen exact regions before edits and prefer extracting active feature islands over adding more unrelated code to the same large sections.
+- Run `npm run check:workspace` before commits or broad verification.
+- Use the cheapest verification that matches the changed surface.
+- Prefer targeted browser checks over full Utah regression during iteration.
+- For visual composition work, get a focused visual state in front of the human before broad automation.
+- Do not run `Launch GeoSee.bat`; use a scoped dev server on a free port if an agent needs one.
