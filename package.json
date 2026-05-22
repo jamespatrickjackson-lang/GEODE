@@ -6,6 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "check:pages": "node tools/validate-project-pages.mjs",
+    "check:artifacts": "node tools/validate-artifact-metadata.mjs --project projects/utah-forge",
+    "check:coverage": "node tools/report-project-artifact-coverage.mjs",
+    "check:agent-drag": "node tools/check-agent-drag.mjs",
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",

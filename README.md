@@ -52,6 +52,15 @@ archives, or older root docs by default. Run the full
 `npm run test:utah-forge` suite only when the task needs broad regression
 coverage; use `npm run build` and targeted checks during iteration.
 
+Use the cheapest verification that matches the changed surface:
+
+- Static page/project wiring: `npm run check:pages`
+- Active context-drag markers: `npm run check:agent-drag`
+- Utah FORGE artifact metadata: `npm run check:artifacts`
+- Project artifact coverage: `npm run check:coverage`
+- Code/runtime compile risk: `npm run build`
+- Browser/render/editor behavior: targeted Playwright by test name
+
 The most important stable docs are:
 
 - `docs/00-purpose.md` — what this exists to test

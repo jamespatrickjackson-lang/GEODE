@@ -38,11 +38,21 @@ Current Utah FORGE work includes active Phase 3 MT, seismic browser products, pu
 
 Use these because they directly protect software work:
 
+- `npm run check:pages` for project/page/overlay wiring
+- `npm run check:agent-drag` for active no-function context markers
+- `npm run check:artifacts` for Utah FORGE artifact metadata
+- `npm run check:coverage` for project artifact coverage
 - `npm run build`
-- `node tools/validate-artifact-metadata.mjs --project projects/utah-forge`
-- `node tools/report-project-artifact-coverage.mjs`
 - targeted Playwright checks in `tests/utah-forge-smoke.spec.ts` after the visual direction is settled
 - notes or screenshots tied to the current change
+
+Verification tiers:
+
+- Static wiring/docs/data cleanup: `npm run check:pages`, `npm run check:agent-drag`, and `git diff --check`.
+- Artifact metadata/data changes: `npm run check:artifacts` and `npm run check:coverage`.
+- Code/runtime compile risk: `npm run build`.
+- Browser/render/editor behavior: targeted Playwright by test name.
+- Full `npm run test:utah-forge`: broad regression only, not default iteration.
 
 ## Visual Review Loop
 

@@ -18,11 +18,14 @@ This file lists current software-build issues that help shape the alpha. It inte
 
 ## Current Verification Defaults
 
+- For static page/project wiring: `npm run check:pages`.
+- For active context-drag markers: `npm run check:agent-drag`.
+- For Utah FORGE metadata changes: `npm run check:artifacts`.
+- For project artifact coverage changes: `npm run check:coverage`.
 - For code/runtime/editor changes: `npm run build`.
-- For Utah FORGE metadata changes: `node tools/validate-artifact-metadata.mjs --project projects/utah-forge`.
-- For project artifact coverage changes: `node tools/report-project-artifact-coverage.mjs`.
 - For visual composition changes: capture a focused visual state first and ask for human judgment before slow Playwright.
-- For page-transition or structural behavior changes: targeted Playwright from `tests/utah-forge-smoke.spec.ts`, not the full slow suite unless explicitly needed.
+- For browser/render/editor behavior: targeted Playwright from `tests/utah-forge-smoke.spec.ts`.
+- For broad regression only: full `npm run test:utah-forge`.
 
 ## Visual Review Active Loop
 
