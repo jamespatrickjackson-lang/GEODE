@@ -19,6 +19,7 @@ interface MeshPreviewPayload {
   processing?: Record<string, unknown>;
   material?: {
     side?: "front" | "back" | "double";
+    flatShading?: boolean;
     note?: string;
   };
   attributes?: {
@@ -133,6 +134,10 @@ function createPreviewMesh(
 ): THREE.Mesh {
   const material = createSurfacePreviewMaterial();
   applyMaterialSide(material, payload.material?.side);
+  if (payload.material?.flatShading === true) {
+    material.flatShading = true;
+    material.needsUpdate = true;
+  }
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = label;
   mesh.renderOrder = renderOrder;

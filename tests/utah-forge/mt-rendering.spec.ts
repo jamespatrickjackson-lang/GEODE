@@ -902,22 +902,24 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     .poll(() =>
       loadedUrls.some((url) =>
         url.endsWith(
-          "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/mt_top_contact_surface_mesh_preview.json",
+          "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_envelope_surface/mt_top_envelope_surface_mesh_preview.json",
         ),
       ),
     )
     .toBe(true);
   const topSurfaceMeshResponse = await page.request.get(
-    "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/mt_top_contact_surface_mesh_preview.json",
+    "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_envelope_surface/mt_top_envelope_surface_mesh_preview.json",
   );
   expect(topSurfaceMeshResponse.ok()).toBe(true);
   const topSurfaceMesh = await topSurfaceMeshResponse.json();
-  expect(topSurfaceMesh.attributes?.scalarValues.length).toBeGreaterThan(10_000);
-  expect(topSurfaceMesh.material?.note).toContain("full-density MT cell-center");
-  expect(topSurfaceMesh.material?.note).not.toContain("scalar trim colors");
-  expect(topSurfaceMesh.indices.length / 3).toBe(20_608);
+  expect(topSurfaceMesh.attributes?.scalarValues.length).toBe(23_811);
+  expect(topSurfaceMesh.attributes?.columnPointCounts.length).toBe(23_811);
+  expect(topSurfaceMesh.material?.flatShading).toBe(true);
+  expect(topSurfaceMesh.material?.note).toContain("Observed top-envelope surface");
+  expect(topSurfaceMesh.material?.note).toContain("top-point elevation");
+  expect(topSurfaceMesh.indices.length / 3).toBe(46_283);
   const topSurfaceStatsResponse = await page.request.get(
-    "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/stats.json",
+    "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_envelope_surface/stats.json",
   );
   expect(topSurfaceStatsResponse.ok()).toBe(true);
   const topSurfaceStats = await topSurfaceStatsResponse.json();
@@ -925,13 +927,14 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     "full_density/manifest.json",
   );
   expect(topSurfaceStats.source?.fullDensityPointCount).toBe(1_094_624);
-  expect(topSurfaceStats.gridSizeM).toBe(2_500);
-  expect(topSurfaceStats.supportGrid.columns).toBe(113);
-  expect(topSurfaceStats.supportGrid.rows).toBe(93);
-  expect(topSurfaceStats.vertexCount).toBe(10_509);
-  expect(topSurfaceStats.triangleCount).toBe(20_608);
-  expect(topSurfaceStats.supportGrid.observedSupportNodeCount).toBe(2_164);
-  expect(topSurfaceStats.supportGrid.inferredSupportNodeCount).toBe(8_345);
+  expect(topSurfaceStats.processing.observedTopPointCount).toBe(24_332);
+  expect(topSurfaceStats.processing.renderedVertexCount).toBe(23_811);
+  expect(topSurfaceStats.processing.retainedTriangleCount).toBe(46_283);
+  expect(topSurfaceStats.processing.droppedBridgeTriangleCount).toBe(2_361);
+  expect(topSurfaceStats.processing.maxBridgeEdgeM).toBe(10_000);
+  expect(topSurfaceStats.processing.edgeStats.retainedEdgeLengthM.max).toBeLessThanOrEqual(10_000);
+  expect(topSurfaceStats.processing.topology).toContain("observed top points only");
+  expect(topSurfaceStats.processing.topology).toContain("No rectangular support grid");
   expect(topSurfaceStats.sceneBounds.min[2]).toBeGreaterThan(1300);
 
   await setForgeLayerVisible(page, "3D MT resistivity volume", false);

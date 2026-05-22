@@ -33,6 +33,12 @@ const MT_TOP_CONTACT_MANIFEST_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/manifest.json";
 const MT_TOP_CONTACT_MESH_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_contact_surface/mt_top_contact_surface_mesh_preview.json";
+const MT_TOP_ENVELOPE_MANIFEST_PATH =
+  "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_envelope_surface/manifest.json";
+const MT_TOP_ENVELOPE_MESH_PATH =
+  "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_envelope_surface/mt_top_envelope_surface_mesh_preview.json";
+const MT_TOP_ENVELOPE_STATS_PATH =
+  "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/top_envelope_surface/stats.json";
 const MT_THRESHOLD_SURFACES_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/threshold_surfaces/mt_threshold_surfaces_mesh_preview.json";
 const MT_STATION_QC_PATH =
@@ -142,10 +148,12 @@ function validateProjectLayerWiring(project) {
   assert.equal(mtThresholdLayer.type, "mesh");
   assert.equal(mtThresholdLayer.previewFiles?.meshPreview, MT_THRESHOLD_SURFACES_PATH);
   assert.equal(mtTopSurfaceLayer.type, "mesh");
-  assert.equal(mtTopSurfaceLayer.previewFiles?.meshPreview, MT_TOP_CONTACT_MESH_PATH);
-  assert.equal(mtTopSurfaceLayer.supportFiles?.manifest, MT_TOP_CONTACT_MANIFEST_PATH);
-  assert.match(mtTopSurfaceLayer.metadata?.classification ?? "", /full-density/);
-  assert.match(mtTopSurfaceLayer.metadata?.notes ?? "", /top envelope/);
+  assert.equal(mtTopSurfaceLayer.previewFiles?.meshPreview, MT_TOP_ENVELOPE_MESH_PATH);
+  assert.equal(mtTopSurfaceLayer.supportFiles?.manifest, MT_TOP_ENVELOPE_MANIFEST_PATH);
+  assert.equal(mtTopSurfaceLayer.supportFiles?.stats, MT_TOP_ENVELOPE_STATS_PATH);
+  assert.match(mtTopSurfaceLayer.metadata?.classification ?? "", /observed top-envelope/);
+  assert.match(mtTopSurfaceLayer.metadata?.notes ?? "", /observed full-density MT top-envelope/);
+  assert.match(mtTopSurfaceLayer.metadata?.notes ?? "", /fidelity coarsens/);
   assert.equal(mtTopContactLayer.type, "mesh");
   assert.equal(mtTopContactLayer.previewFiles?.meshPreview, MT_TOP_CONTACT_MESH_PATH);
 
@@ -314,6 +322,56 @@ function validateMtProducts() {
     "90,000-point",
     "MT top-contact mesh",
   );
+
+  const topEnvelopeManifest = readJson(MT_TOP_ENVELOPE_MANIFEST_PATH);
+  assert.match(topEnvelopeManifest.classification, /observed top-envelope/);
+  assert.equal(
+    topEnvelopeManifest.source?.fullDensityManifest,
+    MT_FULL_DENSITY_MANIFEST_PATH,
+  );
+  assert.equal(
+    topEnvelopeManifest.outputs?.meshPreview,
+    MT_TOP_ENVELOPE_MESH_PATH,
+  );
+  assert.equal(topEnvelopeManifest.processing?.sourceFullDensityPointCount, 1_094_624);
+  assert.equal(topEnvelopeManifest.processing?.observedTopPointCount, 24_332);
+  assert.equal(topEnvelopeManifest.processing?.renderedVertexCount, 23_811);
+  assert.equal(topEnvelopeManifest.processing?.unusedObservedTopPointCount, 521);
+  assert.equal(topEnvelopeManifest.processing?.retainedTriangleCount, 46_283);
+  assert.equal(topEnvelopeManifest.processing?.droppedBridgeTriangleCount, 2_361);
+  assert.equal(topEnvelopeManifest.processing?.maxBridgeEdgeM, 10_000);
+  assert.ok(
+    topEnvelopeManifest.processing?.edgeStats?.retainedEdgeLengthM?.max <= 10_000,
+    "MT top-envelope retained edges should stay inside bridge cutoff",
+  );
+  assert.match(topEnvelopeManifest.processing?.topology ?? "", /observed top points only/);
+  assert.match(topEnvelopeManifest.processing?.topology ?? "", /No rectangular support grid/);
+  assert.match(topEnvelopeManifest.processing?.notes?.join("\n") ?? "", /fidelity follows observed MT top-point support/);
+
+  const topEnvelopeStats = readJson(MT_TOP_ENVELOPE_STATS_PATH);
+  assert.equal(topEnvelopeStats.source?.fullDensityPointCount, 1_094_624);
+  assert.equal(topEnvelopeStats.processing?.observedTopPointCount, 24_332);
+  assert.equal(topEnvelopeStats.processing?.renderedVertexCount, 23_811);
+  assert.equal(topEnvelopeStats.processing?.retainedTriangleCount, 46_283);
+  assert.equal(topEnvelopeStats.processing?.droppedBridgeTriangleCount, 2_361);
+  assert.equal(topEnvelopeStats.processing?.elevationColorRamp?.minM, 1500);
+  assert.equal(topEnvelopeStats.processing?.elevationColorRamp?.maxM, 3500);
+
+  const topEnvelopeMesh = readJson(MT_TOP_ENVELOPE_MESH_PATH);
+  assert.equal(topEnvelopeMesh.schema, "geosee.mesh-preview.v1");
+  assert.match(topEnvelopeMesh.label, /observed top-envelope/);
+  assert.equal(topEnvelopeMesh.material?.flatShading, true);
+  assert.equal(
+    topEnvelopeMesh.source?.fullDensityManifest,
+    MT_FULL_DENSITY_MANIFEST_PATH,
+  );
+  assert.equal(topEnvelopeMesh.vertices.length / 3, 23_811);
+  assert.equal(topEnvelopeMesh.indices.length / 3, 46_283);
+  assert.equal(topEnvelopeMesh.attributes?.scalarValues?.length, 23_811);
+  assert.equal(topEnvelopeMesh.attributes?.columnPointCounts?.length, 23_811);
+  assert.equal(topEnvelopeMesh.processing?.elevationColorRamp?.minM, 1500);
+  assert.equal(topEnvelopeMesh.processing?.elevationColorRamp?.maxM, 3500);
+  assert.match(topEnvelopeMesh.processing?.topology ?? "", /No rectangular support grid/);
 }
 
 function validateSeismicProducts(seismicLayer) {
