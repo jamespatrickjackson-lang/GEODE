@@ -20,151 +20,201 @@
   "processing": {
     "script": "prep/build_utah_forge_mt_top_contact_surface.mjs",
     "generatedDate": "2026-05-12",
-    "method": "Top-contact surface from the full-density MT cell-center tile set. For each 2.5 km XY grid cell, the highest source-derived cell center is retained as the surface contact point.",
-    "topologyInference": "Adjacent occupied XY cells are triangulated into a renderable surface. No terrain, lidar, seismic, wells, faults, infrastructure, or interpreted geology are used.",
+    "method": "Top-contact surface from the full-density MT cell-center tile set. Direct observed cells retain the highest source-derived cell center in each occupied XY grid cell; missing nodes across the full data-point XY extent are filled from nearby observed top contacts for renderable support.",
+    "topologyInference": "A regular support grid spans the full full-density data-point XY extent and is triangulated into a renderable surface. Nodes without direct top-contact samples are inverse-distance support estimates from nearby observed top contacts. No terrain, lidar, seismic, wells, faults, infrastructure, or interpreted geology are used.",
     "gridSizeM": 2500,
     "minPointsPerCell": 3,
+    "supportNeighborCount": 8,
     "sourceFullDensityPointCount": 1094624,
     "skippedRows": 0,
     "rawGridCellCount": 2065,
     "sampledGridCellCount": 2065,
-    "vertexCount": 2065,
-    "candidateQuadCount": 1021,
-    "retainedQuadCount": 1021,
-    "triangleCount": 2042,
+    "supportGridColumns": 113,
+    "supportGridRows": 93,
+    "observedSupportNodeCount": 2164,
+    "inferredSupportNodeCount": 8345,
+    "maxNearestObservedDistanceM": 87955.363,
+    "meanNearestObservedDistanceM": 16437.988,
+    "vertexCount": 10509,
+    "candidateQuadCount": 10304,
+    "retainedQuadCount": 10304,
+    "triangleCount": 20608,
     "colorRole": "top-contact elevation colors",
     "controlPoints": {
       "minElevation": {
         "scene": [
-          -28223.15,
-          43254.5,
+          -29907.996,
+          44586.978,
           1362.757
         ],
         "sourceUtm": [
-          313244.2,
-          4316629,
+          311559.354,
+          4317961.478,
           1362.757
         ],
         "log10Resistivity": 1.710371,
         "sampleCount": 45,
         "gridCell": [
+          44,
+          64
+        ],
+        "sourceGridCell": [
           -12,
           17
-        ]
+        ],
+        "supportRole": "observed-cell",
+        "nearestObservedDistanceM": 0
       },
       "maxElevation": {
         "scene": [
-          38357.352,
-          -24011.5,
+          39877.329,
+          -24770.543,
           3449.131
         ],
         "sourceUtm": [
-          379824.702,
-          4249363,
+          381344.679,
+          4248603.957,
           3449.131
         ],
         "log10Resistivity": 2.564347,
         "sampleCount": 495,
         "gridCell": [
+          72,
+          36
+        ],
+        "sourceGridCell": [
           15,
           -10
-        ]
+        ],
+        "supportRole": "observed-cell",
+        "nearestObservedDistanceM": 0
       },
       "westEdge": {
         "scene": [
-          -139570.656,
-          -46574.5,
-          1744.395
+          -139570.65,
+          -113944.5,
+          1883.05
         ],
         "sourceUtm": [
-          201896.694,
-          4226800,
-          1744.395
+          201896.7,
+          4159430,
+          1883.05
         ],
-        "log10Resistivity": 1.570309,
-        "sampleCount": 45,
+        "log10Resistivity": 1.960169,
+        "sampleCount": 0,
         "gridCell": [
+          0,
+          0
+        ],
+        "sourceGridCell": [
           -56,
-          -19
-        ]
+          -46
+        ],
+        "supportRole": "idw-full-extent-support",
+        "nearestObservedDistanceM": 63462.381
       },
       "eastEdge": {
         "scene": [
-          139570.656,
-          46769.5,
-          2087.293
+          139570.65,
+          -113944.5,
+          2461.726
         ],
         "sourceUtm": [
-          481038.006,
-          4320144,
-          2087.293
+          481038,
+          4159430,
+          2461.726
         ],
-        "log10Resistivity": 2.032377,
-        "sampleCount": 45,
+        "log10Resistivity": 2.227272,
+        "sampleCount": 0,
         "gridCell": [
+          112,
+          0
+        ],
+        "sourceGridCell": [
           55,
-          18
-        ]
+          -46
+        ],
+        "supportRole": "idw-full-extent-support",
+        "nearestObservedDistanceM": 87955.363
       },
       "southEdge": {
         "scene": [
-          45525.352,
+          -139570.65,
           -113944.5,
-          1902.949
+          1883.05
         ],
         "sourceUtm": [
-          386992.702,
+          201896.7,
           4159430,
-          1902.949
+          1883.05
         ],
-        "log10Resistivity": 2.034749,
-        "sampleCount": 45,
+        "log10Resistivity": 1.960169,
+        "sampleCount": 0,
         "gridCell": [
-          18,
+          0,
+          0
+        ],
+        "sourceGridCell": [
+          -56,
           -46
-        ]
+        ],
+        "supportRole": "idw-full-extent-support",
+        "nearestObservedDistanceM": 63462.381
       },
       "northEdge": {
         "scene": [
-          -44991.25,
+          -139570.65,
           113944.5,
-          1624.869
+          1720.637
         ],
         "sourceUtm": [
-          296476.1,
+          201896.7,
           4387319,
-          1624.869
+          1720.637
         ],
-        "log10Resistivity": 1.181558,
-        "sampleCount": 45,
+        "log10Resistivity": 1.689923,
+        "sampleCount": 0,
         "gridCell": [
-          -18,
+          0,
+          92
+        ],
+        "sourceGridCell": [
+          -56,
           45
-        ]
+        ],
+        "supportRole": "idw-full-extent-support",
+        "nearestObservedDistanceM": 78722.37
       },
       "centerNearest": {
         "scene": [
-          677.45,
-          -1317.5,
-          2097.568
+          0,
+          0,
+          2022.929
         ],
         "sourceUtm": [
-          342144.8,
-          4272057,
-          2097.568
+          341467.35,
+          4273374.5,
+          2022.929
         ],
-        "log10Resistivity": 3.302452,
-        "sampleCount": 2520,
+        "log10Resistivity": 2.159447,
+        "sampleCount": 2385,
         "gridCell": [
+          56,
+          46
+        ],
+        "sourceGridCell": [
           0,
-          -1
-        ]
+          0
+        ],
+        "supportRole": "observed-cell",
+        "nearestObservedDistanceM": 0
       }
     },
     "notes": [
       "This is not public topo, lidar, DEM terrain, or measured ground.",
       "This is not an interpreted geological contact, reservoir boundary, well surface, fault, or seismic horizon.",
       "This is the top contact of the existing source-derived full-density MT cell-center visualization.",
+      "The surface extends to the full data-point XY bounds; quality and confidence reduce outside directly observed top-contact cells.",
       "Resistivity values are preserved as per-vertex scalar metadata; visible vertex colors encode contact elevation for spatial readability."
     ]
   }

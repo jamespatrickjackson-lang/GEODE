@@ -20,6 +20,7 @@ const DEFAULT_OUTPUT_DIR = path.join(
 
 const GRID_SIZE_M = 2500;
 const MIN_POINTS_PER_CELL = 3;
+const SUPPORT_NEIGHBOR_COUNT = 8;
 const TOPO_COLOR_STOPS = [
   { value: 0, color: "#334653" },
   { value: 0.55, color: "#898b73" },
@@ -284,6 +285,164 @@ async function collectFullDensityTopContacts(manifest, manifestPath) {
   };
 }
 
+function nearestObservedCells(observedCells, x, y, limit = SUPPORT_NEIGHBOR_COUNT) {
+  const nearest = [];
+  for (const cell of observedCells) {
+    const distanceSq =
+      (cell.topContactX - x) ** 2 + (cell.topContactY - y) ** 2;
+    let insertAt = nearest.length;
+    while (insertAt > 0 && nearest[insertAt - 1].distanceSq > distanceSq) {
+      insertAt -= 1;
+    }
+    nearest.splice(insertAt, 0, { cell, distanceSq });
+    if (nearest.length > limit) nearest.pop();
+  }
+  return nearest;
+}
+
+function interpolateSupportCell(observedCells, ix, iy, x, y) {
+  const nearest = nearestObservedCells(observedCells, x, y);
+  if (nearest.length === 0) {
+    throw new Error("Cannot build support cell without observed top contacts.");
+  }
+
+  let weightSum = 0;
+  let zSum = 0;
+  let scalarSum = 0;
+  for (const entry of nearest) {
+    const weight = 1 / Math.max(1, entry.distanceSq);
+    weightSum += weight;
+    zSum += entry.cell.topContactZ * weight;
+    scalarSum += entry.cell.topContactScalar * weight;
+  }
+  const nearestCell = nearest[0].cell;
+  return {
+    key: cellKey(ix, iy),
+    ix,
+    iy,
+    sampleCount: 0,
+    topContactZ: zSum / weightSum,
+    topContactX: x,
+    topContactY: y,
+    topContactScalar: scalarSum / weightSum,
+    minZ: zSum / weightSum,
+    maxZ: zSum / weightSum,
+    supportRole: "idw-full-extent-support",
+    nearestObservedDistanceM: Math.sqrt(nearest[0].distanceSq),
+    nearestObservedCount: nearest.length,
+    nearestObservedGridCell: [nearestCell.ix, nearestCell.iy],
+  };
+}
+
+function buildFullExtentSupportGrid(observedCellsMap, manifest) {
+  const observedCells = [...observedCellsMap.values()];
+  if (observedCells.length === 0) {
+    throw new Error("No observed full-density top-contact cells found.");
+  }
+
+  const sceneBounds = manifest.sceneBounds;
+  const sourceExtent =
+    sceneBounds?.min &&
+    sceneBounds?.max &&
+    Number.isFinite(sceneBounds.min[0]) &&
+    Number.isFinite(sceneBounds.max[0]) &&
+    Number.isFinite(sceneBounds.min[1]) &&
+    Number.isFinite(sceneBounds.max[1])
+      ? {
+          minX: sceneBounds.min[0],
+          maxX: sceneBounds.max[0],
+          minY: sceneBounds.min[1],
+          maxY: sceneBounds.max[1],
+        }
+      : observedCells.reduce(
+          (bounds, cell) => {
+            bounds.minX = Math.min(bounds.minX, cell.topContactX);
+            bounds.maxX = Math.max(bounds.maxX, cell.topContactX);
+            bounds.minY = Math.min(bounds.minY, cell.topContactY);
+            bounds.maxY = Math.max(bounds.maxY, cell.topContactY);
+            return bounds;
+          },
+          {
+            minX: Infinity,
+            maxX: -Infinity,
+            minY: Infinity,
+            maxY: -Infinity,
+          },
+        );
+
+  const columns = Math.max(
+    2,
+    Math.ceil((sourceExtent.maxX - sourceExtent.minX) / GRID_SIZE_M) + 1,
+  );
+  const rows = Math.max(
+    2,
+    Math.ceil((sourceExtent.maxY - sourceExtent.minY) / GRID_SIZE_M) + 1,
+  );
+  const supportCells = new Map();
+  let observedSupportNodeCount = 0;
+  let inferredSupportNodeCount = 0;
+  let maxNearestObservedDistanceM = 0;
+  let nearestObservedDistanceSumM = 0;
+
+  for (let row = 0; row < rows; row += 1) {
+    const y =
+      rows === 1
+        ? sourceExtent.minY
+        : sourceExtent.minY +
+          ((sourceExtent.maxY - sourceExtent.minY) * row) / (rows - 1);
+    for (let col = 0; col < columns; col += 1) {
+      const x =
+        columns === 1
+          ? sourceExtent.minX
+          : sourceExtent.minX +
+            ((sourceExtent.maxX - sourceExtent.minX) * col) / (columns - 1);
+      const sourceIx = Math.floor(x / GRID_SIZE_M);
+      const sourceIy = Math.floor(y / GRID_SIZE_M);
+      const observedCell = observedCellsMap.get(cellKey(sourceIx, sourceIy));
+      let supportCell;
+      if (observedCell) {
+        supportCell = {
+          ...observedCell,
+          key: cellKey(col, row),
+          ix: col,
+          iy: row,
+          topContactX: x,
+          topContactY: y,
+          supportRole: "observed-cell",
+          nearestObservedDistanceM: 0,
+          nearestObservedCount: 1,
+          sourceGridCell: [observedCell.ix, observedCell.iy],
+        };
+        observedSupportNodeCount += 1;
+      } else {
+        supportCell = interpolateSupportCell(observedCells, col, row, x, y);
+        supportCell.sourceGridCell = [sourceIx, sourceIy];
+        inferredSupportNodeCount += 1;
+        maxNearestObservedDistanceM = Math.max(
+          maxNearestObservedDistanceM,
+          supportCell.nearestObservedDistanceM,
+        );
+        nearestObservedDistanceSumM += supportCell.nearestObservedDistanceM;
+      }
+      supportCells.set(supportCell.key, supportCell);
+    }
+  }
+
+  return {
+    supportCells,
+    sourceExtent,
+    columns,
+    rows,
+    observedSupportNodeCount,
+    inferredSupportNodeCount,
+    maxNearestObservedDistanceM,
+    meanNearestObservedDistanceM:
+      inferredSupportNodeCount === 0
+        ? 0
+        : nearestObservedDistanceSumM / inferredSupportNodeCount,
+  };
+}
+
 function triangulateGrid(cells) {
   const orderedCells = [...cells.values()].sort(
     (a, b) => a.iy - b.iy || a.ix - b.ix,
@@ -364,6 +523,9 @@ function controlPointsForCells(cells, origin) {
     log10Resistivity: round(cell.topContactScalar, 6),
     sampleCount: cell.sampleCount,
     gridCell: [cell.ix, cell.iy],
+    sourceGridCell: cell.sourceGridCell ?? [cell.ix, cell.iy],
+    supportRole: cell.supportRole ?? "observed-cell",
+    nearestObservedDistanceM: round(cell.nearestObservedDistanceM ?? 0, 3),
   });
 
   return {
@@ -385,7 +547,11 @@ async function main() {
     manifest,
     options.inputManifest,
   );
-  const triangulation = triangulateGrid(fullDensity.sampledCells);
+  const supportGrid = buildFullExtentSupportGrid(
+    fullDensity.sampledCells,
+    manifest,
+  );
+  const triangulation = triangulateGrid(supportGrid.supportCells);
 
   const vertices = [];
   const colors = [];
@@ -474,15 +640,22 @@ async function main() {
       script: "prep/build_utah_forge_mt_top_contact_surface.mjs",
       generatedDate: DERIVED_DATE,
       method:
-        "Top-contact surface from the full-density MT cell-center tile set. For each 2.5 km XY grid cell, the highest source-derived cell center is retained as the surface contact point.",
+        "Top-contact surface from the full-density MT cell-center tile set. Direct observed cells retain the highest source-derived cell center in each occupied XY grid cell; missing nodes across the full data-point XY extent are filled from nearby observed top contacts for renderable support.",
       topologyInference:
-        "Adjacent occupied XY cells are triangulated into a renderable surface. No terrain, lidar, seismic, wells, faults, infrastructure, or interpreted geology are used.",
+        "A regular support grid spans the full full-density data-point XY extent and is triangulated into a renderable surface. Nodes without direct top-contact samples are inverse-distance support estimates from nearby observed top contacts. No terrain, lidar, seismic, wells, faults, infrastructure, or interpreted geology are used.",
       gridSizeM: GRID_SIZE_M,
       minPointsPerCell: MIN_POINTS_PER_CELL,
+      supportNeighborCount: SUPPORT_NEIGHBOR_COUNT,
       sourceFullDensityPointCount: fullDensity.sourcePointCount,
       skippedRows: fullDensity.skippedRows,
       rawGridCellCount: fullDensity.rawCellCount,
       sampledGridCellCount: fullDensity.sampledCells.size,
+      supportGridColumns: supportGrid.columns,
+      supportGridRows: supportGrid.rows,
+      observedSupportNodeCount: supportGrid.observedSupportNodeCount,
+      inferredSupportNodeCount: supportGrid.inferredSupportNodeCount,
+      maxNearestObservedDistanceM: round(supportGrid.maxNearestObservedDistanceM, 3),
+      meanNearestObservedDistanceM: round(supportGrid.meanNearestObservedDistanceM, 3),
       vertexCount: triangulation.orderedCells.length,
       candidateQuadCount: triangulation.candidateQuadCount,
       retainedQuadCount: triangulation.retainedQuadCount,
@@ -493,6 +666,7 @@ async function main() {
         "This is not public topo, lidar, DEM terrain, or measured ground.",
         "This is not an interpreted geological contact, reservoir boundary, well surface, fault, or seismic horizon.",
         "This is the top contact of the existing source-derived full-density MT cell-center visualization.",
+        "The surface extends to the full data-point XY bounds; quality and confidence reduce outside directly observed top-contact cells.",
         "Resistivity values are preserved as per-vertex scalar metadata; visible vertex colors encode contact elevation for spatial readability.",
       ],
     },
@@ -511,9 +685,28 @@ async function main() {
     },
     gridSizeM: GRID_SIZE_M,
     minPointsPerCell: MIN_POINTS_PER_CELL,
+    supportNeighborCount: SUPPORT_NEIGHBOR_COUNT,
     skippedRows: fullDensity.skippedRows,
     rawGridCellCount: fullDensity.rawCellCount,
     sampledGridCellCount: fullDensity.sampledCells.size,
+    supportGrid: {
+      columns: supportGrid.columns,
+      rows: supportGrid.rows,
+      sourceExtent: {
+        min: [
+          round(supportGrid.sourceExtent.minX, 3),
+          round(supportGrid.sourceExtent.minY, 3),
+        ],
+        max: [
+          round(supportGrid.sourceExtent.maxX, 3),
+          round(supportGrid.sourceExtent.maxY, 3),
+        ],
+      },
+      observedSupportNodeCount: supportGrid.observedSupportNodeCount,
+      inferredSupportNodeCount: supportGrid.inferredSupportNodeCount,
+      maxNearestObservedDistanceM: round(supportGrid.maxNearestObservedDistanceM, 3),
+      meanNearestObservedDistanceM: round(supportGrid.meanNearestObservedDistanceM, 3),
+    },
     vertexCount: triangulation.orderedCells.length,
     candidateQuadCount: triangulation.candidateQuadCount,
     retainedQuadCount: triangulation.retainedQuadCount,

@@ -95,10 +95,12 @@ Current facts:
 - full-density format: tiled Float32 XYZ plus Float32 scalar buffers
 - preview-derived ground cap: 1,135 vertices and 1,844 retained adjacent-grid triangles from the existing MT preview only
 - preview-derived ground cap minimum scene elevation: 816.49 m
-- full-density top-contact surface: 2,065 vertices and 2,042 retained adjacent-grid triangles
-- full-density top-contact source: highest source-derived MT cell center per occupied 2.5 km XY grid cell
+- full-density top-contact surface: 10,509 vertices and 20,608 full-extent support-grid triangles
+- full-density top-contact source: direct highest source-derived MT cell centers plus inverse-distance support nodes across the full data-point XY extent
+- full-density top-contact observed support nodes: 2,164
+- full-density top-contact inferred support nodes: 8,345
 - full-density top-contact elevation range: 1362.757 m to 3449.131 m
-- full-density top-contact control points: min/max elevation, edge points, and center-nearest point recorded in `resistivity_model/top_contact_surface/stats.json`
+- full-density top-contact control points and support-distance stats: recorded in `resistivity_model/top_contact_surface/stats.json`
 - display value: `log10(resistivity_ohm_m)`
 - slice preview: six horizontal elevation slices and two vertical station-centroid sections
 - crop applied: false
@@ -148,7 +150,8 @@ utah-forge-mt-resistivity-slices
 - The slice preview is an authored display product, not a live full-volume renderer.
 - The full-density layer is a tiled scalar point-cloud renderer, not a voxel/volume renderer.
 - The preview-derived ground cap is generated only from the existing 90,000-point MT preview.
-- The full-density top-contact surface is generated from full-density tiles by retaining the highest source-derived cell center per occupied 2.5 km XY grid cell and triangulating adjacent occupied cells.
+- The full-density top-contact surface is generated from full-density tiles by retaining direct top-contact cells where available, then filling a full data-point extent support grid from nearby observed contacts.
+- Support-grid quality reduces outside directly observed top-contact cells; this is display support, not a new measured or interpreted surface.
 - Both surfaces are standalone and are not controlled by the MT scalar trim/feather legend.
 - Neither surface is public topo, lidar, DEM terrain, measured ground, or interpreted geology.
 - The point preview is downsampled for performance.

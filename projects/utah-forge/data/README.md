@@ -158,10 +158,12 @@ full-density format: tiled Float32 XYZ plus Float32 scalar buffers
 preview-derived ground cap: 1,135 vertices, 1,844 retained adjacent-grid triangles
 preview-derived ground cap source: 90,000-point MT preview
 preview-derived ground cap minimum scene elevation: 816.49 m
-full-density top-contact surface: 2,065 vertices, 2,042 retained adjacent-grid triangles
-full-density top-contact source: highest source-derived MT cell center per occupied 2.5 km XY grid cell
+full-density top-contact surface: 10,509 vertices, 20,608 full-extent support-grid triangles
+full-density top-contact source: direct highest source-derived MT cell centers plus inverse-distance support nodes across the full data-point XY extent
+full-density top-contact observed support nodes: 2,164
+full-density top-contact inferred support nodes: 8,345
 full-density top-contact elevation range: 1362.757 m to 3449.131 m
-full-density top-contact control points: min/max elevation, edge points, and center-nearest point recorded in top_contact_surface/stats.json
+full-density top-contact control points and support-distance stats: recorded in top_contact_surface/stats.json
 slice preview: 6 horizontal slices, 2 vertical sections
 display value: log10(resistivity_ohm_m)
 classification: source-derived inversion model
