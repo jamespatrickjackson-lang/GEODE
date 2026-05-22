@@ -115,13 +115,13 @@ Default visible Stage 2 density layer:
 utah-forge-mt-resistivity-full-density
 ```
 
-Existing preview-derived topology aid:
+UI-facing full-density top-envelope aid:
 
 ```text
 utah-forge-mt-top-surface
 ```
 
-Additional full-density top-contact aid:
+Explicit full-density top-contact technical endpoint:
 
 ```text
 utah-forge-mt-top-contact-surface
@@ -149,7 +149,8 @@ utah-forge-mt-resistivity-slices
 
 - The slice preview is an authored display product, not a live full-volume renderer.
 - The full-density layer is a tiled scalar point-cloud renderer, not a voxel/volume renderer.
-- The preview-derived ground cap is generated only from the existing 90,000-point MT preview.
+- The retained preview-derived ground cap is generated only from the existing 90,000-point MT preview and remains under `resistivity_model/top_surface/` as support/history data.
+- The UI-facing `utah-forge-mt-top-surface` layer reads the full-density top-contact support artifact, not the retained preview cap.
 - The full-density top-contact surface is generated from full-density tiles by retaining direct top-contact cells where available, then filling a full data-point extent support grid from nearby observed contacts.
 - Support-grid quality reduces outside directly observed top-contact cells; this is display support, not a new measured or interpreted surface.
 - Both surfaces are standalone and are not controlled by the MT scalar trim/feather legend.

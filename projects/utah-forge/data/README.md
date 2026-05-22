@@ -12,12 +12,13 @@ Current kept state:
 - Phase 3 MT source inventory, archive entries, and CRS/origin docs are under `geosee_processed/`
 - Phase 3 MT station markers are generated and wired as measured station-location data
 - Phase 3 MT full-density tiled resistivity renderer is generated and wired as the Stage 2 density layer
-- Phase 3 MT preview-derived ground cap remains wired as the existing Stage 2 top-surface aid
-- Phase 3 MT full-density top-contact surface is generated and wired as an additional Stage 2 spatial context aid
+- Phase 3 MT preview-derived ground cap remains retained under `resistivity_model/top_surface/` as history/support data
+- the UI-facing `3D MT top surface` now uses the full-density top-contact support surface generated under `resistivity_model/top_contact_surface/`
+- Phase 3 MT full-density top-contact surface is also kept as an explicit technical endpoint for source/provenance review
 - Phase 3 MT resistivity point preview is generated and wired as a QA/validation layer
 - Phase 3 MT authored resistivity slices are generated and wired as an optional presentation layer
 - Phase 3 MT scalar layers expose editor controls and a viewer legend
-- the preview-derived ground cap and full-density top-contact surface are standalone and are not controlled by MT scalar trim/feather legend edits
+- the retained preview-derived ground cap and full-density top-contact surface are standalone and are not controlled by MT scalar trim/feather legend edits
 - Southwestern/regional MT is not active yet
 - Phase 3 seismic browser outputs are generated under `geosee_processed/` and wired in current project files
 
