@@ -10,14 +10,17 @@
       "showLabels": false
     },
     "utah-forge-phase3-working-area": {
-      "color": "#a25d5d",
-      "opacity": 0.9,
+      "color": "#adadad",
+      "opacity": 0.95,
       "lineWidth": 2.4,
       "affectedByFog": false,
       "showLabels": true,
-      "labelKind": "siteElement",
+      "labelKind": "area",
       "labelFadeNearM": 15000,
-      "labelFadeFarM": 120000
+      "labelFadeFarM": 120000,
+      "labelPointerVisible": false,
+      "labelFillOpacity": 0.95,
+      "labelFillColor": "#060604"
     },
     "utah-forge-site-boundary": {
       "color": "#ffd84a",
@@ -360,8 +363,8 @@
     "utah-forge-topo-graticule",
     "utah-forge-site-boundary",
     "utah-forge-mt-resistivity-full-density",
-    "utah-forge-phase3-working-area",
-    "terrain"
+    "terrain",
+    "utah-forge-phase3-working-area"
   ],
   "scene": {
     "background": "#383838",
@@ -438,39 +441,21 @@
       "elevHighM": 180,
       "surfaceElevationEnabled": true,
       "surfaceElevationLegendVisible": true,
-      "surfaceElevationMinM": 1500,
-      "surfaceElevationMaxM": 3500,
       "surfaceElevationColors": [
-        "#ffffff",
+        "#5147b8",
         "#2e8fd8",
         "#4fc3c7",
         "#93d66b",
         "#fff24d"
       ],
-      "surfaceElevationColorPositions": [
-        0,
-        0.25,
-        0.5,
-        0.75,
-        1
-      ],
-      "surfaceElevationMidpoints": [
-        0.5,
-        0.5,
-        0.5,
-        0.5
-      ],
-      "surfaceElevationTransitionSoftness": 1,
-      "surfaceElevationColorBlend": 1,
-      "surfaceElevationReverse": false,
       "hillshadeIntensity": 0.86,
-      "rockHueVariance": 0.03,
+      "rockHueVariance": 0,
       "shadowSharpness": 0.34,
-      "facetStrength": 0.2,
-      "edgeFadeDistanceM": 25000,
+      "facetStrength": 0.04,
+      "edgeFadeDistanceM": 15000,
       "edgeFadeShape": "rounded-square",
-      "edgeFadeInsetM": 0,
-      "edgeFadeCornerRadiusM": 55000,
+      "edgeFadeInsetM": 65000,
+      "edgeFadeCornerRadiusM": 65000,
       "shadowTint": "#303640",
       "gridEnabled": false,
       "gridColor": "#d7d1c7",
@@ -1384,39 +1369,21 @@
           "elevHighM": 180,
           "surfaceElevationEnabled": true,
           "surfaceElevationLegendVisible": true,
-          "surfaceElevationMinM": 1500,
-          "surfaceElevationMaxM": 3500,
           "surfaceElevationColors": [
-            "#ffffff",
+            "#5147b8",
             "#2e8fd8",
             "#4fc3c7",
             "#93d66b",
             "#fff24d"
           ],
-          "surfaceElevationColorPositions": [
-            0,
-            0.25,
-            0.5,
-            0.75,
-            1
-          ],
-          "surfaceElevationMidpoints": [
-            0.5,
-            0.5,
-            0.5,
-            0.5
-          ],
-          "surfaceElevationTransitionSoftness": 1,
-          "surfaceElevationColorBlend": 1,
-          "surfaceElevationReverse": false,
           "hillshadeIntensity": 0.86,
-          "rockHueVariance": 0.03,
+          "rockHueVariance": 0,
           "shadowSharpness": 0.34,
-          "facetStrength": 0.2,
-          "edgeFadeDistanceM": 25000,
+          "facetStrength": 0.04,
+          "edgeFadeDistanceM": 15000,
           "edgeFadeShape": "rounded-square",
-          "edgeFadeInsetM": 0,
-          "edgeFadeCornerRadiusM": 55000,
+          "edgeFadeInsetM": 65000,
+          "edgeFadeCornerRadiusM": 65000,
           "shadowTint": "#303640",
           "gridEnabled": false,
           "gridColor": "#d7d1c7",
@@ -1628,14 +1595,17 @@
       },
       "layerStylePatchesByLayerId": {
         "utah-forge-phase3-working-area": {
-          "color": "#a25d5d",
-          "opacity": 0.9,
+          "color": "#adadad",
+          "opacity": 0.95,
           "lineWidth": 2.4,
           "affectedByFog": false,
           "showLabels": true,
-          "labelKind": "siteElement",
+          "labelKind": "area",
           "labelFadeNearM": 15000,
-          "labelFadeFarM": 120000
+          "labelFadeFarM": 120000,
+          "labelPointerVisible": false,
+          "labelFillOpacity": 0.95,
+          "labelFillColor": "#060604"
         },
         "utah-forge-working-area-focus": {
           "affectedByFog": false,

@@ -28,7 +28,6 @@
   "accentColor": "#ffcd42",
   "visibilityOverrides": {
     "utah-forge-phase3-working-area": true,
-    "terrain": true,
     "transport-roads": true,
     "hydrography-streams": true,
     "hydrography-lakes": true,

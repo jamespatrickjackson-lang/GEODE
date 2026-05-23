@@ -39,6 +39,7 @@ import { geoTransformOptionsFromMetadata } from "../loaders/geoTransform";
 import type { ProjectLayerSpec } from "../pages/types";
 import { registerBaseGuiLoaders } from "../projectModules/baseGui/registerBaseGuiLoaders";
 import { registerUtahForgeReferenceLoaders } from "../projectModules/utahForge/registerUtahForgeReferenceLoaders";
+import { isTopoMapGraticuleLayer } from "../topoMap/settings";
 import { appAssetUrl } from "../projects/projectPathsRuntime";
 import { SceneManager } from "./SceneManager";
 import {
@@ -365,8 +366,8 @@ const layerLoaders: LayerLoaderHandler[] = [
     },
   },
   {
-    id: "utah-forge-topo-graticule",
-    matches: (spec) => spec.id === "utah-forge-topo-graticule",
+    id: "topo-map-graticule",
+    matches: (spec) => isTopoMapGraticuleLayer(spec),
     load: (context) =>
       loadObject(
         context,

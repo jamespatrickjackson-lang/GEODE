@@ -16,6 +16,8 @@
     "check:utah-derived": "node tools/validate-utah-derived-assets.mjs",
     "check:utah-snapshot": "node tools/validate-utah-presentation-snapshot.mjs",
     "check:utah-runtime": "npm run check:runtime-assets && npm run check:utah-derived",
+    "check:topo-map": "playwright test tests/topo-map",
+    "audit:topo-map": "node tools/audit-topo-map-defaults.mjs projects/utah-forge",
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",

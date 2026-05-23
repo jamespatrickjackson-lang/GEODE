@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+import { TOPO_EDGE_FADE_GLSL } from "../topoMap/edgeFade";
 
 interface DistanceWidthOptions {
   near?: number;
@@ -193,36 +194,7 @@ export function enableDistanceAttenuatedLineWidth(
 		uniform float topoGraticuleEdgeFadeCornerRadius;
 		varying float vTopoDistanceFade;
 		varying float vTopoGraticuleEdgeFade;
-
-		float topoGraticuleInsideDistance( vec2 worldPos ) {
-			vec2 terrainCenter = ( topoGraticuleTerrainBoundsMin + topoGraticuleTerrainBoundsMax ) * 0.5;
-			vec2 terrainHalfSize = max(
-				( topoGraticuleTerrainBoundsMax - topoGraticuleTerrainBoundsMin ) * 0.5 - vec2( max( topoGraticuleEdgeFadeInset, 0.0 ) ),
-				vec2( 1.0 )
-			);
-			vec2 localPos = worldPos - terrainCenter;
-			if ( topoGraticuleEdgeFadeShape > 1.5 ) {
-				float radius = min( terrainHalfSize.x, terrainHalfSize.y );
-				return radius - length( localPos );
-			}
-			if ( topoGraticuleEdgeFadeShape > 0.5 ) {
-				float radius = clamp(
-					topoGraticuleEdgeFadeCornerRadius,
-					0.0,
-					max( 0.0, min( terrainHalfSize.x, terrainHalfSize.y ) - 1.0 )
-				);
-				vec2 q = abs( localPos ) - ( terrainHalfSize - vec2( radius ) );
-				float signedDist =
-					length( max( q, vec2( 0.0 ) ) ) +
-					min( max( q.x, q.y ), 0.0 ) -
-					radius;
-				return -signedDist;
-			}
-			return min(
-				terrainHalfSize.x - abs( localPos.x ),
-				terrainHalfSize.y - abs( localPos.y )
-			);
-		}`,
+		${TOPO_EDGE_FADE_GLSL}`,
     );
 
     shader.vertexShader = shader.vertexShader.replace(
@@ -236,14 +208,37 @@ export function enableDistanceAttenuatedLineWidth(
 			float topoDistanceT = smoothstep( distanceLineWidthNear, distanceLineWidthFar, topoLineDepth );
 			float topoWidthScale = mix( 1.0, distanceLineMinScale, topoDistanceT );
 			vTopoDistanceFade = mix( 1.0, distanceLineMinAlpha, topoDistanceT );
-			float topoEdgeDistance = min(
-				topoGraticuleInsideDistance( startWorld.xy ),
-				topoGraticuleInsideDistance( endWorld.xy )
-			);
 			float topoEdgeWidth = max( topoGraticuleEdgeFadeDistance, 1.0 );
-			float topoEdgeFade = 1.0 - smoothstep( 0.0, topoEdgeWidth, topoEdgeDistance );
+			float topoStartEdgeFade = 1.0 - smoothstep(
+				0.0,
+				topoEdgeWidth,
+				topoEdgeFadeInsideDistance(
+					startWorld.xy,
+					topoGraticuleTerrainBoundsMin,
+					topoGraticuleTerrainBoundsMax,
+					topoGraticuleEdgeFadeShape,
+					topoGraticuleEdgeFadeInset,
+					topoGraticuleEdgeFadeCornerRadius
+				)
+			);
+			float topoEndEdgeFade = 1.0 - smoothstep(
+				0.0,
+				topoEdgeWidth,
+				topoEdgeFadeInsideDistance(
+					endWorld.xy,
+					topoGraticuleTerrainBoundsMin,
+					topoGraticuleTerrainBoundsMax,
+					topoGraticuleEdgeFadeShape,
+					topoGraticuleEdgeFadeInset,
+					topoGraticuleEdgeFadeCornerRadius
+				)
+			);
+			float topoEndpointT = position.y < 0.5 ? 0.0 : 1.0;
+			float topoEdgeFade = mix( topoStartEdgeFade, topoEndEdgeFade, topoEndpointT );
+			float topoEdgeEnabled = topoGraticuleEdgeFadeDistance > 1.0 ? 1.0 : 0.0;
 			vTopoGraticuleEdgeFade =
 				clamp( topoEdgeFade, 0.0, 1.0 ) *
+				topoEdgeEnabled *
 				clamp( topoGraticuleEdgeFadeEnabled, 0.0, 1.0 ) *
 				clamp( topoGraticuleEdgeFadeStrength, 0.0, 1.0 );`,
     );

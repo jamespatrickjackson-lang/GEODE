@@ -4,9 +4,9 @@
   "subtitle": "Source-derived 3D MT inversion scalar volume",
   "camera": {
     "position": [
-      -25758.118599762638,
-      267159.49967552704,
-      -35000.79617668223
+      -15175.279571534375,
+      154140.43969197164,
+      158863.35300860292
     ],
     "target": [
       10844.11738335307,
@@ -79,9 +79,6 @@
   "visibilityOverrides": {
     "utah-forge-phase3-working-area": true,
     "terrain": false,
-    "transport-roads": false,
-    "hydrography-streams": false,
-    "hydrography-lakes": false,
     "utah-forge-mt-stations": true,
     "utah-forge-mt-resistivity-preview": false,
     "utah-forge-mt-resistivity-full-density": true,

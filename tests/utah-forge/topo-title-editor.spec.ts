@@ -1,13 +1,13 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import {
   changedByteCount,
   forgeLayerItem,
-  openForgeDataEditorContainers,
+  openForgeTopoEditorContainers,
   setForgeLayerVisible,
   terrainMaterialSceneState,
   tinyPdfBase64,
   titleBlockSceneState,
-  topoGraticuleSceneState
+  topoGraticuleSceneState,
 } from "./shared";
 
 test.setTimeout(900_000);
@@ -25,14 +25,14 @@ test("Utah FORGE topo editor exposes surface elevation coloring", async ({
 
   await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
   await expect(page.locator("canvas")).toHaveCount(1);
-  await openForgeDataEditorContainers(page);
+  await openForgeTopoEditorContainers(page);
 
   const globalSettingsRow = page
     .locator('[data-dev-note*="Global Settings is an editor-only pseudo-page"]')
     .filter({ hasText: "Global Settings" });
   await expect(globalSettingsRow).toHaveCount(1);
   await globalSettingsRow.click();
-  await openForgeDataEditorContainers(page);
+  await openForgeTopoEditorContainers(page);
   await page.locator("details").evaluateAll((details) => {
     for (const detail of details) {
       (detail as HTMLDetailsElement).open = true;
@@ -49,7 +49,14 @@ test("Utah FORGE topo editor exposes surface elevation coloring", async ({
         (state) => state.surfaceElevationEnabled,
       ),
     )
-    .toBe(0);
+    .toBe(1);
+  await expect
+    .poll(() =>
+      terrainMaterialSceneState(page).then(
+        (state) => state.surfaceElevationColors,
+      ),
+    )
+    .toEqual(["#4d5a4e", "#758067", "#a99a76", "#d0bd8f", "#f1e2ad"]);
   const beforeCanvas = await page.locator("canvas").screenshot();
 
   await page
@@ -85,6 +92,42 @@ test("Utah FORGE topo editor exposes surface elevation coloring", async ({
       surfaceElevationTransitionSoftness: 1,
       surfaceElevationColorBlend: 1,
     });
+  const proceduralPalettes = [
+    {
+      preset: "soft-topo",
+      colors: ["#4d5a4e", "#758067", "#a99a76", "#d0bd8f", "#f1e2ad"],
+    },
+    {
+      preset: "desert-relief",
+      colors: ["#5b4130", "#8b6240", "#bf8f54", "#dec37a", "#f4e6aa"],
+    },
+    {
+      preset: "paper-map",
+      colors: ["#716b5b", "#928c74", "#b7ad8a", "#d8cfa7", "#efe6c6"],
+    },
+    {
+      preset: "grey-relief",
+      colors: ["#3f4243", "#666b6c", "#909494", "#b8b8b2", "#dedbd2"],
+    },
+    {
+      preset: "high-contrast",
+      colors: ["#251b2f", "#5d2e54", "#9d5544", "#d89a42", "#fff0a3"],
+    },
+  ];
+  for (const { preset, colors } of proceduralPalettes) {
+    await page.getByTestId("topo-material-preset").selectOption(preset);
+    await expect
+      .poll(() =>
+        terrainMaterialSceneState(page).then((state) => ({
+          enabled: state.surfaceElevationEnabled,
+          colors: state.surfaceElevationColors,
+        })),
+      )
+      .toEqual({ enabled: 1, colors });
+  }
+  await page
+    .getByTestId("topo-material-preset")
+    .selectOption("surface-elevation");
 
   const legend = page.getByTestId("surface-elevation-legend");
   await expect(legend).toBeVisible();
@@ -115,8 +158,15 @@ test("Utah FORGE topo editor exposes surface elevation coloring", async ({
         (state) => state.surfaceElevationEnabled,
       ),
     )
-    .toBe(0);
-  await expect(page.getByTestId("surface-elevation-legend")).toHaveCount(0);
+    .toBe(1);
+  await expect
+    .poll(() =>
+      terrainMaterialSceneState(page).then(
+        (state) => state.surfaceElevationColors,
+      ),
+    )
+    .toEqual(["#4d5a4e", "#758067", "#a99a76", "#d0bd8f", "#f1e2ad"]);
+  await expect(page.getByTestId("surface-elevation-legend")).toBeVisible();
   const restoredCanvas = await page.locator("canvas").screenshot();
   expect(restoredCanvas.length).toBeGreaterThan(1000);
 
@@ -136,14 +186,14 @@ test("Utah FORGE topo editor exposes ortho photo terrain material", async ({
 
   await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
   await expect(page.locator("canvas")).toHaveCount(1);
-  await openForgeDataEditorContainers(page);
+  await openForgeTopoEditorContainers(page);
 
   const globalSettingsRow = page
     .locator('[data-dev-note*="Global Settings is an editor-only pseudo-page"]')
     .filter({ hasText: "Global Settings" });
   await expect(globalSettingsRow).toHaveCount(1);
   await globalSettingsRow.click();
-  await openForgeDataEditorContainers(page);
+  await openForgeTopoEditorContainers(page);
   await page.locator("details").evaluateAll((details) => {
     for (const detail of details) {
       (detail as HTMLDetailsElement).open = true;
@@ -170,6 +220,7 @@ test("Utah FORGE topo editor exposes ortho photo terrain material", async ({
     .poll(() => terrainMaterialSceneState(page))
     .toMatchObject({
       materialCount: 1,
+      surfaceElevationEnabled: 0,
       orthoPhotoEnabled: 1,
       orthoPhotoOpacity: 1,
       orthoPhotoHillshadeBlend: 0.45,
@@ -230,17 +281,36 @@ test("Utah FORGE topo editor exposes surface elevation gradient controls", async
       el.dispatchEvent(new Event("change", { bubbles: true }));
     }, value);
   };
+  const dragGradientHandleToPercent = async (
+    handle: Locator,
+    percent: number,
+  ) => {
+    const rail = page.getByTestId("topo-surface-gradient-rail");
+    await handle.scrollIntoViewIfNeeded();
+    const railBox = await rail.boundingBox();
+    const handleBox = await handle.boundingBox();
+    if (!railBox || !handleBox) throw new Error("Missing gradient geometry");
+    const x = railBox.x + railBox.width * percent;
+    const y = handleBox.y + handleBox.height / 2;
+    await page.mouse.move(
+      handleBox.x + handleBox.width / 2,
+      handleBox.y + handleBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(x, y, { steps: 8 });
+    await page.mouse.up();
+  };
 
   await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
   await expect(page.locator("canvas")).toHaveCount(1);
-  await openForgeDataEditorContainers(page);
+  await openForgeTopoEditorContainers(page);
 
   const globalSettingsRow = page
     .locator('[data-dev-note*="Global Settings is an editor-only pseudo-page"]')
     .filter({ hasText: "Global Settings" });
   await expect(globalSettingsRow).toHaveCount(1);
   await globalSettingsRow.click();
-  await openForgeDataEditorContainers(page);
+  await openForgeTopoEditorContainers(page);
   await page.locator("details").evaluateAll((details) => {
     for (const detail of details) {
       (detail as HTMLDetailsElement).open = true;
@@ -268,13 +338,19 @@ test("Utah FORGE topo editor exposes surface elevation gradient controls", async
     .getByTestId("surface-elevation-legend-ramp")
     .evaluate((el) => getComputedStyle(el).backgroundImage);
 
-  await setInputValue(
-    page.getByTestId("topo-surface-elevation-position-1"),
-    "0.35",
+  await expect(
+    page.locator('[data-testid^="topo-surface-elevation-position-"]'),
+  ).toHaveCount(0);
+  await expect(
+    page.locator('[data-testid^="topo-surface-elevation-midpoint-"]'),
+  ).toHaveCount(0);
+  await dragGradientHandleToPercent(
+    page.getByTestId("topo-surface-gradient-stop-1"),
+    0.35,
   );
-  await setInputValue(
-    page.getByTestId("topo-surface-elevation-midpoint-1"),
-    "0.25",
+  await dragGradientHandleToPercent(
+    page.getByTestId("topo-surface-gradient-midpoint-1"),
+    0.3875,
   );
   await setInputValue(
     page.getByTestId("topo-surface-elevation-softness"),
@@ -289,8 +365,8 @@ test("Utah FORGE topo editor exposes surface elevation gradient controls", async
     .poll(async () => {
       const state = await terrainMaterialSceneState(page);
       return {
-        position1: state.surfaceElevationPositions[1],
-        midpoint1: state.surfaceElevationMidpoints[1],
+        position1: Number(state.surfaceElevationPositions[1]?.toFixed(2)),
+        midpoint1: Number(state.surfaceElevationMidpoints[1]?.toFixed(2)),
         softness: state.surfaceElevationTransitionSoftness,
         blend: state.surfaceElevationColorBlend,
       };
@@ -337,14 +413,14 @@ test("Utah FORGE topo editor exposes edge fade shape controls", async ({
 
   await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
   await expect(page.locator("canvas")).toHaveCount(1);
-  await openForgeDataEditorContainers(page);
+  await openForgeTopoEditorContainers(page);
 
   const globalSettingsRow = page
     .locator('[data-dev-note*="Global Settings is an editor-only pseudo-page"]')
     .filter({ hasText: "Global Settings" });
   await expect(globalSettingsRow).toHaveCount(1);
   await globalSettingsRow.click();
-  await openForgeDataEditorContainers(page);
+  await openForgeTopoEditorContainers(page);
   await page.locator("details").evaluateAll((details) => {
     for (const detail of details) {
       (detail as HTMLDetailsElement).open = true;
@@ -355,35 +431,35 @@ test("Utah FORGE topo editor exposes edge fade shape controls", async ({
     "rounded-square",
   );
   await expect(page.getByTestId("topo-edge-fade-distance")).toHaveValue(
-    "25000",
+    "15000",
   );
-  await expect(page.getByTestId("topo-edge-fade-inset")).toHaveValue("0");
+  await expect(page.getByTestId("topo-edge-fade-inset")).toHaveValue("65000");
   await expect(page.getByTestId("topo-edge-fade-corner-radius")).toHaveValue(
-    "55000",
+    "65000",
   );
   await expect(page.getByText("Edge fade aware")).toBeVisible();
   await expect(page.getByTestId("topo-graticule-edge-strength")).toHaveValue(
     "1",
   );
   await expect(page.getByTestId("topo-graticule-edge-line-color")).toHaveValue(
-    "#ffffff",
+    "#d4d4d4",
   );
   await expect(page.getByTestId("topo-graticule-edge-label-color")).toHaveValue(
-    "#ffffff",
+    "#d6d6d6",
   );
   await expect(page.getByTestId("topo-graticule-edge-label-offset")).toHaveValue(
-    "90000",
+    "31000",
   );
   await expect(page.getByTestId("topo-graticule-edge-label-gap")).toHaveValue(
-    "22000",
+    "-32000",
   );
   await expect
     .poll(() => terrainMaterialSceneState(page))
     .toMatchObject({
-      edgeFadeDistanceM: 25000,
+      edgeFadeDistanceM: 15000,
       edgeFadeShape: 1,
-      edgeFadeInsetM: 0,
-      edgeFadeCornerRadiusM: 55000,
+      edgeFadeInsetM: 65000,
+      edgeFadeCornerRadiusM: 65000,
     });
   await expect
     .poll(() => topoGraticuleSceneState(page))
@@ -391,9 +467,9 @@ test("Utah FORGE topo editor exposes edge fade shape controls", async ({
       firstLineEdgeEnabled: true,
       firstLineEdgeStrength: 1,
       firstLineEdgeShape: "rounded-square",
-      firstLineEdgeDistanceM: 25000,
-      firstLineEdgeLineColor: "#ffffff",
-      firstLabelColor: "#ffffff",
+      firstLineEdgeDistanceM: 15000,
+      firstLineEdgeLineColor: "#d4d4d4",
+      firstLabelColor: "#d6d6d6",
     });
 
   await page.getByTestId("topo-edge-fade-shape").selectOption("circle");
@@ -446,14 +522,14 @@ test("Utah FORGE topo editor exposes circular clipping and graticule layer", asy
 
   await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
   await expect(page.locator("canvas")).toHaveCount(1);
-  await openForgeDataEditorContainers(page);
+  await openForgeTopoEditorContainers(page);
 
   const globalSettingsRow = page
     .locator('[data-dev-note*="Global Settings is an editor-only pseudo-page"]')
     .filter({ hasText: "Global Settings" });
   await expect(globalSettingsRow).toHaveCount(1);
   await globalSettingsRow.click();
-  await openForgeDataEditorContainers(page);
+  await openForgeTopoEditorContainers(page);
   await page.locator("details").evaluateAll((details) => {
     for (const detail of details) {
       (detail as HTMLDetailsElement).open = true;
@@ -481,9 +557,9 @@ test("Utah FORGE topo editor exposes circular clipping and graticule layer", asy
   expect(enabledGraticule.dashedInteriorSegmentCount ?? 0).toBeGreaterThan(0);
   expect(enabledGraticule.leaderSegmentCount ?? 0).toBeGreaterThan(0);
   expect(enabledGraticule.dashedLeaderSegmentCount ?? 0).toBeGreaterThan(0);
-  expect(enabledGraticule.graticuleInnerTrimInsideDistance).toBe(25000);
-  expect(enabledGraticule.graticuleLabelOffsetM).toBe(90000);
-  expect(enabledGraticule.graticuleLabelGapM).toBe(22000);
+  expect(enabledGraticule.graticuleInnerTrimInsideDistance).toBe(15000);
+  expect(enabledGraticule.graticuleLabelOffsetM).toBe(31000);
+  expect(enabledGraticule.graticuleLabelGapM).toBe(-32000);
   expect(enabledGraticule.visibleLabelWithoutLeaderCount).toBe(0);
   expect(enabledGraticule.generatedBounds).not.toBeNull();
   expect(enabledGraticule.terrainBounds).not.toBeNull();
@@ -506,10 +582,7 @@ test("Utah FORGE topo editor exposes circular clipping and graticule layer", asy
 
   const shapeSelect = page.getByTestId("public-surface-clip-shape").first();
   await expect(shapeSelect).toHaveValue("circle");
-  const clippingDetails = page
-    .locator("details")
-    .filter({ hasText: "Topo map clipping" })
-    .first();
+  const clippingDetails = shapeSelect.locator("xpath=ancestor::details[1]");
   await clippingDetails
     .locator('input[type="checkbox"]')
     .first()
@@ -547,14 +620,14 @@ test("Utah FORGE topo title block renders flat and exposes controls", async ({
 
   await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
   await expect(page.locator("canvas")).toHaveCount(1);
-  await openForgeDataEditorContainers(page);
+  await openForgeTopoEditorContainers(page);
 
   const globalSettingsRow = page
     .locator('[data-dev-note*="Global Settings is an editor-only pseudo-page"]')
     .filter({ hasText: "Global Settings" });
   await expect(globalSettingsRow).toHaveCount(1);
   await globalSettingsRow.click();
-  await openForgeDataEditorContainers(page);
+  await openForgeTopoEditorContainers(page);
   await page.locator("details").evaluateAll((details) => {
     for (const detail of details) {
       (detail as HTMLDetailsElement).open = true;
@@ -583,12 +656,14 @@ test("Utah FORGE topo title block renders flat and exposes controls", async ({
     "stacked",
   );
 
-  await page.evaluate(async () => {
+  await page.evaluate(() => {
     const sceneHandle = (
       window as unknown as {
         __scene?: {
           manager?: {
-            applyEnvironment?: (env: Record<string, unknown>) => void;
+            setEnvironmentScenePreviewPatch?: (
+              patch: Record<string, unknown>,
+            ) => void;
           };
           camera?: {
             position: { x: number; y: number; z: number };
@@ -598,46 +673,37 @@ test("Utah FORGE topo title block renders flat and exposes controls", async ({
         };
       }
     ).__scene;
-    const env = (await fetch("/projects/utah-forge/environment.json").then((r) =>
-      r.json(),
-    )) as Record<string, unknown> & {
-      scene?: { terrain?: Record<string, unknown> };
-    };
     const svgLogo =
       "data:image/svg+xml;charset=utf-8," +
       encodeURIComponent(
         '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="200" height="100" fill="#00c2ff"/><circle cx="50" cy="50" r="32" fill="#ffffff"/></svg>',
       );
-    sceneHandle?.manager?.applyEnvironment?.({
-      ...env,
-      scene: {
-        ...(env.scene ?? {}),
-        terrain: {
-          ...(env.scene?.terrain ?? {}),
-          topoMapBranding: {
-            visible: true,
-            logoPath: svgLogo,
-            heading: "Client Title",
-            subheading: "FORGE map block",
-            anchor: "north-east",
-            offsetXM: 420000,
-            offsetYM: 160000,
-            rotationDeg: 12,
-            liftM: 320,
-            logoWidthM: 60000,
-            logoGapM: 12000,
-            headingSizeM: 72000,
-            subheadingSizeM: 30000,
-            layout: "stacked",
-            logoPlacement: "before",
-            logoFit: "contain",
-            fontFamily: "sans",
-            textAlign: "center",
-            textColor: "#ff00aa",
-            opacity: 0.96,
-            backgroundEnabled: false,
-            outlineEnabled: false,
-          },
+    sceneHandle?.manager?.setEnvironmentScenePreviewPatch?.({
+      terrain: {
+        topoMapBranding: {
+          visible: true,
+          logoPath: svgLogo,
+          logoRenderablePath: svgLogo,
+          heading: "Client Title",
+          subheading: "FORGE map block",
+          anchor: "north-east",
+          offsetXM: 420000,
+          offsetYM: 160000,
+          rotationDeg: 12,
+          liftM: 320,
+          logoWidthM: 60000,
+          logoGapM: 12000,
+          headingSizeM: 72000,
+          subheadingSizeM: 30000,
+          layout: "stacked",
+          logoPlacement: "before",
+          logoFit: "contain",
+          fontFamily: "sans",
+          textAlign: "center",
+          textColor: "#ff00aa",
+          opacity: 0.96,
+          backgroundEnabled: false,
+          outlineEnabled: false,
         },
       },
     });
@@ -700,35 +766,28 @@ test("Utah FORGE topo title block renders flat and exposes controls", async ({
       encoding: "base64",
     },
   });
-  await page.evaluate(async (logoPath) => {
-    const env = (await fetch("/projects/utah-forge/environment.json").then((r) =>
-      r.json(),
-    )) as Record<string, unknown> & {
-      scene?: { terrain?: Record<string, unknown> };
-    };
+  await page.evaluate((logoPath) => {
     (
       window as unknown as {
         __scene?: {
           manager?: {
-            applyEnvironment?: (env: Record<string, unknown>) => void;
+            setEnvironmentScenePreviewPatch?: (
+              patch: Record<string, unknown>,
+            ) => void;
           };
         };
       }
-    ).__scene?.manager?.applyEnvironment?.({
-      ...env,
-      scene: {
-        ...(env.scene ?? {}),
-        terrain: {
-          ...(env.scene?.terrain ?? {}),
-          topoMapBranding: {
-            visible: true,
-            logoPath,
-            heading: "PNG logo",
-            backgroundEnabled: false,
-            outlineEnabled: true,
-            logoWidthM: 40000,
-            headingSizeM: 240000,
-          },
+    ).__scene?.manager?.setEnvironmentScenePreviewPatch?.({
+      terrain: {
+        topoMapBranding: {
+          visible: true,
+          logoPath,
+          logoRenderablePath: logoPath,
+          heading: "PNG logo",
+          backgroundEnabled: false,
+          outlineEnabled: true,
+          logoWidthM: 40000,
+          headingSizeM: 240000,
         },
       },
     });

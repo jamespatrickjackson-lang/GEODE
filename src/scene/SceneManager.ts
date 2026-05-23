@@ -6,6 +6,7 @@ import type {
   EasingName,
   Pose,
   PresentationPage,
+  ProjectLayerSpec,
   SceneProperties,
   Vec3,
 } from "../pages/types";
@@ -40,7 +41,6 @@ import type { GeologyHandle } from "../loaders/loadGeology";
 import {
   setDistanceAttenuatedLineWidth,
   setTerrainShadowInfluence,
-  setTopoGraticuleEdgeFade,
 } from "../loaders/topoLineMaterial";
 import { getHeightSampler } from "./heightSampler";
 import type { SceneOverlayDef } from "../pages/types";
@@ -62,7 +62,6 @@ import {
 } from "../projectModules/utahForge/layerIds";
 import {
   UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS,
-  UTAH_FORGE_GRATICULE_EDGE_STYLE_FIELDS,
 } from "../projectModules/utahForge/crossfadeFields";
 import {
   WORKING_AREA_FOCUS_DEFAULT_BOUNDS,
@@ -75,6 +74,23 @@ import {
   SHAHBAZI_GROUND_CONTOUR_LAYER_ID,
   SHAHBAZI_GROUND_SURFACE_LAYER_ID,
 } from "../projectModules/shahbazi/layerIds";
+import {
+  TOPO_MAP_DEFAULT_SURFACE_LAYER_ID,
+  TOPO_MAP_GRATICULE_EDGE_STYLE_FIELDS,
+  isTopoMapGraticuleLayer,
+  isTopoMapLayer,
+  isTopoMapSurfaceLayer,
+} from "../topoMap/settings";
+import {
+  createTopoMapRuntime,
+  type TopoMapRuntime,
+} from "../topoMap/runtime";
+import {
+  deterministicScalarSample,
+  scalarLateralSupportValues,
+  scalarValueIsVisible,
+  scalarVisibilityWeight,
+} from "./scalarFocus";
 
 // Fade duration matches the markdown overlay panel (OverlayDisplay's
 // FADE_MS) so chapter transitions feel coherent across UI surfaces.
@@ -88,29 +104,7 @@ const TOPO_DISTANCE_LINE_LAYER_IDS = [
   "transport-roads",
   "power-lines",
 ] as const;
-const PUBLIC_SURFACE_LAYER_IDS = new Set([
-  "terrain",
-  "utah-forge-topo-graticule",
-  "transport-roads",
-  "hydrography-streams",
-  "hydrography-lakes",
-]);
-const PUBLIC_SURFACE_CLIP_CIRCLE_SEGMENTS = 48;
-const PUBLIC_SURFACE_CLIP_DEFAULTS = {
-  centerX: 0,
-  centerY: 0,
-  centerZ: 2000,
-  sizeX: 279_150,
-  sizeY: 227_900,
-  sizeZ: 8000,
-  rotationZDeg: 0,
-} as const;
-const PUBLIC_SURFACE_CLIP_RENDER_ORDER = 4550;
-const TOPO_MAP_BRANDING_DEFAULT_ANCHOR: TopoMapBrandingAnchor = "south-east";
-const TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M = 0;
-const TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M = -85_000;
 const WORKING_AREA_FOCUS_RENDER_ORDER = 4575;
-const TOPO_GRATICULE_MINOR_SCALE = 0.8;
 const SCENE_SECTION_AXIS_NORMALS = {
   x: new THREE.Vector3(1, 0, 0),
   y: new THREE.Vector3(0, 1, 0),
@@ -145,8 +139,6 @@ const DEFAULT_SEISMIC_MID_COLOR = "#f4f7ff";
 const DEFAULT_SEISMIC_HIGH_COLOR = "#d9362f";
 const POINT_DISTANCE_LIGHT_NEAR_M = 0;
 const POINT_DISTANCE_LIGHT_FAR_M = 180_000;
-const SCALAR_LATERAL_SUPPORT_XY_BIN_M = 2500;
-const SCALAR_LATERAL_SUPPORT_Z_BIN_M = 1200;
 const SCALAR_EDGE_LINE_XY_BIN_M = 2600;
 const SCALAR_EDGE_LINE_Z_BIN_M = 1300;
 const SCALAR_EDGE_LINE_MIN_CELL_POINTS = 2;
@@ -175,9 +167,6 @@ const LAYER_FOG_SHADER_KEY = "layer-fog-density:v1";
 // Values are picked to read with proper hillshade contrast against
 // the existing sun direction; tweaks should keep the low/mid/high
 // progression so elevation reads even without color.
-const LIGHT_MODE_TERRAIN_RAMP_LOW = "#4a4a4a";
-const LIGHT_MODE_TERRAIN_RAMP_MID = "#888888";
-const LIGHT_MODE_TERRAIN_RAMP_HIGH = "#cccccc";
 const LIGHT_MODE_BG = "#a0a0a0";
 let rectAreaLightsReady = false;
 
@@ -339,308 +328,6 @@ function styleNumber(
   return typeof value === "number" && Number.isFinite(value)
     ? clampRange(value, min, max)
     : fallback;
-}
-
-type TerrainEdgeFadeShape = "square" | "rounded-square" | "circle";
-
-interface TerrainEdgeFadeState {
-  boundsMin: THREE.Vector2;
-  boundsMax: THREE.Vector2;
-  shape: TerrainEdgeFadeShape;
-  fadeDistanceM: number;
-  insetM: number;
-  cornerRadiusM: number;
-}
-
-interface TopoGraticuleLabelCandidate {
-  position: THREE.Vector3;
-  tangent: THREE.Vector3;
-}
-
-interface TopoGraticuleSourceLine {
-  kind: "lat" | "lon";
-  value: number;
-  preference: "west" | "north";
-  candidates: TopoGraticuleLabelCandidate[];
-}
-
-interface TopoGraticuleLabelTarget {
-  position: THREE.Vector3;
-  anchor: THREE.Vector3;
-  tangent: THREE.Vector3;
-  outward: THREE.Vector3;
-  insideDistance: number;
-  minor: boolean;
-}
-
-type TopoMapBrandingAnchor =
-  | "south-west"
-  | "south-east"
-  | "north-west"
-  | "north-east";
-
-interface TopoMapBrandingTextMesh extends THREE.Mesh {
-  userData: THREE.Mesh["userData"] & {
-    topoMapBrandingTexture?: THREE.Texture;
-  };
-}
-
-function terrainEdgeShape(
-  shape: NonNullable<SceneProperties["terrain"]>["edgeFadeShape"],
-): TerrainEdgeFadeShape {
-  if (shape === "rounded-square" || shape === "circle") return shape;
-  return "square";
-}
-
-function terrainEdgeInsideDistance(
-  point: THREE.Vector3,
-  edge: TerrainEdgeFadeState,
-): number {
-  const centerX = (edge.boundsMin.x + edge.boundsMax.x) * 0.5;
-  const centerY = (edge.boundsMin.y + edge.boundsMax.y) * 0.5;
-  const halfX = Math.max(
-    1,
-    (edge.boundsMax.x - edge.boundsMin.x) * 0.5 - edge.insetM,
-  );
-  const halfY = Math.max(
-    1,
-    (edge.boundsMax.y - edge.boundsMin.y) * 0.5 - edge.insetM,
-  );
-  const localX = point.x - centerX;
-  const localY = point.y - centerY;
-  if (edge.shape === "circle") {
-    return Math.min(halfX, halfY) - Math.hypot(localX, localY);
-  }
-  if (edge.shape === "rounded-square") {
-    const radius = clampRange(
-      edge.cornerRadiusM,
-      0,
-      Math.max(0, Math.min(halfX, halfY) - 1),
-    );
-    const qx = Math.abs(localX) - (halfX - radius);
-    const qy = Math.abs(localY) - (halfY - radius);
-    const outside = Math.hypot(Math.max(qx, 0), Math.max(qy, 0));
-    const inside = Math.min(Math.max(qx, qy), 0);
-    return -(outside + inside - radius);
-  }
-  return Math.min(halfX - Math.abs(localX), halfY - Math.abs(localY));
-}
-
-function terrainEdgePreferenceScore(
-  point: THREE.Vector3,
-  edge: TerrainEdgeFadeState,
-  preference: "west" | "north",
-): number {
-  const centerX = (edge.boundsMin.x + edge.boundsMax.x) * 0.5;
-  const centerY = (edge.boundsMin.y + edge.boundsMax.y) * 0.5;
-  return preference === "west" ? centerX - point.x : point.y - centerY;
-}
-
-function coerceVector3(value: unknown): THREE.Vector3 | null {
-  if (value instanceof THREE.Vector3) return value.clone();
-  const vector = value as { x?: unknown; y?: unknown; z?: unknown } | null;
-  if (
-    vector &&
-    typeof vector.x === "number" &&
-    typeof vector.y === "number" &&
-    typeof vector.z === "number" &&
-    Number.isFinite(vector.x) &&
-    Number.isFinite(vector.y) &&
-    Number.isFinite(vector.z)
-  ) {
-    return new THREE.Vector3(vector.x, vector.y, vector.z);
-  }
-  return null;
-}
-
-function topoGraticuleLabelCandidate(
-  value: unknown,
-): TopoGraticuleLabelCandidate | null {
-  const position = coerceVector3(value);
-  if (position) {
-    return {
-      position,
-      tangent: new THREE.Vector3(1, 0, 0),
-    };
-  }
-  const record = value as
-    | { position?: unknown; tangent?: unknown }
-    | null
-    | undefined;
-  const candidatePosition = coerceVector3(record?.position);
-  if (!candidatePosition) return null;
-  const tangent = coerceVector3(record?.tangent) ?? new THREE.Vector3(1, 0, 0);
-  tangent.z = 0;
-  if (tangent.lengthSq() <= 0.000001) tangent.set(1, 0, 0);
-  else tangent.normalize();
-  return {
-    position: candidatePosition,
-    tangent,
-  };
-}
-
-function topoGraticuleSourceLine(value: unknown): TopoGraticuleSourceLine | null {
-  const record = value as
-    | {
-        kind?: unknown;
-        value?: unknown;
-        preference?: unknown;
-        candidates?: unknown;
-      }
-    | null
-    | undefined;
-  if (!record) return null;
-  const kind = record.kind === "lat" ? "lat" : record.kind === "lon" ? "lon" : null;
-  const valueNumber =
-    typeof record.value === "number" && Number.isFinite(record.value)
-      ? record.value
-      : NaN;
-  const preference =
-    record.preference === "north"
-      ? "north"
-      : record.preference === "west"
-        ? "west"
-        : null;
-  if (!kind || !preference || !Array.isArray(record.candidates)) return null;
-  const candidates = record.candidates
-    .map((candidate) => topoGraticuleLabelCandidate(candidate))
-    .filter((candidate): candidate is TopoGraticuleLabelCandidate =>
-      Boolean(candidate),
-    );
-  if (candidates.length < 2) return null;
-  return { kind, value: valueNumber, preference, candidates };
-}
-
-function normalizeFullGroundTextAngle(angle: number): number {
-  let next = angle;
-  while (next > Math.PI) next -= Math.PI * 2;
-  while (next < -Math.PI) next += Math.PI * 2;
-  return next;
-}
-
-function topoGraticuleLineKey(
-  kind: "lat" | "lon",
-  value: number,
-  preference: "west" | "north",
-): string {
-  const valueKey = Number.isFinite(value) ? value.toFixed(6) : "unknown";
-  return `${kind}:${valueKey}:${preference}`;
-}
-
-function topoGraticuleLabelKey(obj: THREE.Object3D): string | null {
-  const kind =
-    obj.userData?.topoGraticuleLineKind === "lat"
-      ? "lat"
-      : obj.userData?.topoGraticuleLineKind === "lon"
-        ? "lon"
-        : null;
-  const value = obj.userData?.topoGraticuleLineValue;
-  const preference =
-    obj.userData?.topoGraticuleLabelPreference === "north"
-      ? "north"
-      : obj.userData?.topoGraticuleLabelPreference === "west"
-        ? "west"
-        : null;
-  if (!kind || !preference || typeof value !== "number") return null;
-  return topoGraticuleLineKey(kind, value, preference);
-}
-
-function topoGraticuleIsHalfDegree(value: number): boolean {
-  if (!Number.isFinite(value)) return false;
-  const doubled = Math.abs(value) * 2;
-  const rounded = Math.round(doubled);
-  return Math.abs(doubled - rounded) < 0.0001 && rounded % 2 === 1;
-}
-
-function terrainEdgeStraightSideEligible(
-  point: THREE.Vector3,
-  edge: TerrainEdgeFadeState,
-  preference: "west" | "north",
-): boolean {
-  if (edge.shape !== "rounded-square") return true;
-  const centerX = (edge.boundsMin.x + edge.boundsMax.x) * 0.5;
-  const centerY = (edge.boundsMin.y + edge.boundsMax.y) * 0.5;
-  const halfX = Math.max(
-    1,
-    (edge.boundsMax.x - edge.boundsMin.x) * 0.5 - edge.insetM,
-  );
-  const halfY = Math.max(
-    1,
-    (edge.boundsMax.y - edge.boundsMin.y) * 0.5 - edge.insetM,
-  );
-  const radius = clampRange(
-    edge.cornerRadiusM,
-    0,
-    Math.max(0, Math.min(halfX, halfY) - 1),
-  );
-  if (radius <= 0) return true;
-  const localX = point.x - centerX;
-  const localY = point.y - centerY;
-  const tolerance = Math.max(2000, Math.min(edge.fadeDistanceM * 0.25, radius * 0.2));
-  if (preference === "north") {
-    return localY >= 0 && Math.abs(localX) <= halfX - radius + tolerance;
-  }
-  return localX <= 0 && Math.abs(localY) <= halfY - radius + tolerance;
-}
-
-function topoGraticuleReadableTangent(
-  direction: THREE.Vector3,
-  preference: "west" | "north",
-): THREE.Vector3 {
-  const readable = direction.clone();
-  readable.z = 0;
-  if (readable.lengthSq() <= 0.000001) {
-    readable.set(preference === "north" ? 0 : 1, preference === "north" ? 1 : 0, 0);
-  } else {
-    readable.normalize();
-  }
-  if (preference === "north" && readable.y < 0) readable.multiplyScalar(-1);
-  if (preference === "west" && readable.x < 0) readable.multiplyScalar(-1);
-  return readable;
-}
-
-function topoGraticuleEdgeTextBasis(preference: "west" | "north"): {
-  tangent: THREE.Vector3;
-  outward: THREE.Vector3;
-} {
-  return preference === "north"
-    ? {
-        tangent: new THREE.Vector3(0, 1, 0),
-        outward: new THREE.Vector3(0, 1, 0),
-      }
-    : {
-        tangent: new THREE.Vector3(1, 0, 0),
-        outward: new THREE.Vector3(-1, 0, 0),
-      };
-}
-
-function topoGraticuleReadableAngle(
-  direction: THREE.Vector3,
-  preference: "west" | "north",
-): number {
-  const tangent = topoGraticuleReadableTangent(direction, preference);
-  return normalizeFullGroundTextAngle(Math.atan2(tangent.y, tangent.x));
-}
-
-function edgeOutwardLineTangent(
-  candidate: TopoGraticuleLabelCandidate,
-  edge: TerrainEdgeFadeState,
-): THREE.Vector3 {
-  const step = 1000;
-  const plus = candidate.position
-    .clone()
-    .addScaledVector(candidate.tangent, step);
-  const minus = candidate.position
-    .clone()
-    .addScaledVector(candidate.tangent, -step);
-  const plusInside = terrainEdgeInsideDistance(plus, edge);
-  const minusInside = terrainEdgeInsideDistance(minus, edge);
-  const direction = candidate.tangent.clone();
-  if (plusInside > minusInside) direction.multiplyScalar(-1);
-  direction.z = 0;
-  if (direction.lengthSq() <= 0.000001) direction.set(1, 0, 0);
-  else direction.normalize();
-  return direction;
 }
 
 interface PointDistanceLightShader {
@@ -1058,63 +745,6 @@ function sequentialIndex(count: number): Uint32Array {
   return indices;
 }
 
-function scalarValueIsVisible(
-  values: Float32Array | number[],
-  index: number,
-  trimMin: number,
-  blendMin: number,
-  blendMax: number,
-  trimMax: number,
-): boolean {
-  const value = values[index];
-  if (!Number.isFinite(value)) return false;
-  if (value < trimMin || value > trimMax) return false;
-  if (value >= blendMin && value <= blendMax) return true;
-
-  let weight = 0;
-  if (value < blendMin) {
-    const span = Math.max(0.000001, blendMin - trimMin);
-    weight = (value - trimMin) / span;
-  } else {
-    const span = Math.max(0.000001, trimMax - blendMax);
-    weight = (trimMax - value) / span;
-  }
-
-  if (weight >= 1) return true;
-  if (weight <= 0) return false;
-  return deterministicScalarSample(index) <= weight;
-}
-
-function deterministicScalarSample(index: number): number {
-  let value = Math.imul(index + 1, 2654435761) >>> 0;
-  value ^= value >>> 16;
-  value = Math.imul(value, 2246822519) >>> 0;
-  value ^= value >>> 13;
-  return (value >>> 0) / 4294967295;
-}
-
-function scalarVisibilityWeight(
-  values: Float32Array | number[],
-  index: number,
-  trimMin: number,
-  blendMin: number,
-  blendMax: number,
-  trimMax: number,
-): number {
-  const value = values[index];
-  if (!Number.isFinite(value)) return 0;
-  if (value < trimMin || value > trimMax) return 0;
-  if (value >= blendMin && value <= blendMax) return 1;
-  if (value < blendMin) {
-    return clamp01((value - trimMin) / Math.max(0.000001, blendMin - trimMin));
-  }
-  return clamp01((trimMax - value) / Math.max(0.000001, trimMax - blendMax));
-}
-
-function supportCellKey(ix: number, iy: number, iz: number): number {
-  return (ix + 32768) * 4294967296 + (iy + 32768) * 65536 + iz + 32768;
-}
-
 function scalarLateralSupport(
   geometry: THREE.BufferGeometry,
 ): Float32Array | null {
@@ -1125,35 +755,7 @@ function scalarLateralSupport(
     | undefined;
   if (cached?.count === position.count) return cached.values;
 
-  const occupied = new Set<number>();
-  const cells = new Int32Array(position.count * 3);
-  for (let i = 0; i < position.count; i += 1) {
-    const ix = Math.floor(position.getX(i) / SCALAR_LATERAL_SUPPORT_XY_BIN_M);
-    const iy = Math.floor(position.getY(i) / SCALAR_LATERAL_SUPPORT_XY_BIN_M);
-    const iz = Math.floor(position.getZ(i) / SCALAR_LATERAL_SUPPORT_Z_BIN_M);
-    cells[i * 3] = ix;
-    cells[i * 3 + 1] = iy;
-    cells[i * 3 + 2] = iz;
-    occupied.add(supportCellKey(ix, iy, iz));
-  }
-
-  const values = new Float32Array(position.count);
-  for (let i = 0; i < position.count; i += 1) {
-    const ix = cells[i * 3];
-    const iy = cells[i * 3 + 1];
-    const iz = cells[i * 3 + 2];
-    let neighborCount = 0;
-    for (let dx = -1; dx <= 1; dx += 1) {
-      for (let dy = -1; dy <= 1; dy += 1) {
-        if (dx === 0 && dy === 0) continue;
-        if (occupied.has(supportCellKey(ix + dx, iy + dy, iz))) {
-          neighborCount += 1;
-        }
-      }
-    }
-    values[i] = neighborCount / 8;
-  }
-
+  const values = scalarLateralSupportValues(position);
   geometry.userData.scalarLateralSupport = { count: position.count, values };
   return values;
 }
@@ -2881,7 +2483,15 @@ function forgeDiscreteDataStyleChanged(
   layerId: string,
   fromStyle: EditableStyle,
   toStyle: EditableStyle,
+  layerSpec?: ProjectLayerSpec,
 ): boolean {
+  if (layerSpec && isTopoMapGraticuleLayer(layerSpec)) {
+    return styleFieldsChanged(
+      fromStyle,
+      toStyle,
+      TOPO_MAP_GRATICULE_EDGE_STYLE_FIELDS,
+    );
+  }
   if (!UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS.has(layerId)) return false;
   if (layerId === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID) {
     return styleFieldsChanged(fromStyle, toStyle, [
@@ -2925,15 +2535,10 @@ function forgeDiscreteDataStyleChanged(
     return styleFieldsChanged(
       fromStyle,
       toStyle,
-      UTAH_FORGE_GRATICULE_EDGE_STYLE_FIELDS,
+      TOPO_MAP_GRATICULE_EDGE_STYLE_FIELDS,
     );
   }
   return false;
-}
-
-interface TerrainGridHandle {
-  update(params?: NonNullable<SceneProperties["terrain"]>): void;
-  updateCameraVisibility(camera: THREE.Camera): void;
 }
 
 type PresentationLightSource = NonNullable<
@@ -3030,19 +2635,6 @@ interface SceneSectionRuntime {
   planes: Map<SceneSectionAxis, THREE.Object3D>;
 }
 
-interface PublicSurfaceClipRuntime {
-  group: THREE.Group;
-  line: LineSegments2;
-}
-
-interface PublicSurfaceClipBox {
-  enabled: boolean;
-  shape: "box" | "circle";
-  center: THREE.Vector3;
-  halfSize: THREE.Vector3;
-  rotationZRad: number;
-}
-
 interface WorkingAreaFocusRuntime {
   group: THREE.Group;
   line: LineSegments2;
@@ -3119,6 +2711,7 @@ function hardenStudioHelperTree(obj: THREE.Object3D): void {
 
 export class SceneManager {
   private layers = new Map<string, THREE.Group>();
+  private layerSpecs = new Map<string, ProjectLayerSpec>();
   private envHemiLight: THREE.HemisphereLight | null = null;
   private envKeyLight: THREE.DirectionalLight | null = null;
   private envFillLight: THREE.DirectionalLight | null = null;
@@ -3133,7 +2726,7 @@ export class SceneManager {
   private pageCameraMarker: PageCameraMarkerRuntime | null = null;
   private globalPageCameraMarkers = new Map<string, PageCameraMarkerRuntime>();
   private sceneSectionRuntime: SceneSectionRuntime | null = null;
-  private publicSurfaceClipRuntime: PublicSurfaceClipRuntime | null = null;
+  private readonly topoRuntime: TopoMapRuntime;
   private workingAreaFocusRuntime: WorkingAreaFocusRuntime | null = null;
   private lastSceneSectionStyle: EditableStyle = {};
   private lastWorkingAreaFocusStyle: EditableStyle = {};
@@ -3216,9 +2809,6 @@ export class SceneManager {
   // taking a hard dependency on the renderer or path resolver.
   private overlayResolveAssetPath: (rel: string) => string = (p) => "/" + p;
   private overlayMaxAnisotropy = 1;
-  private terrainOrthoPhotoTexturePath: string | null = null;
-  private terrainOrthoPhotoTexture: THREE.Texture | null = null;
-  private terrainOrthoPhotoTextureSeq = 0;
   // Currently hovered overlay id (for drag-handle cursor + visual
   // brightness boost).
   private hoveredOverlayId: string | null = null;
@@ -3229,14 +2819,93 @@ export class SceneManager {
   private geologyHandle: GeologyHandle | null = null;
   private environmentScenePreviewPatch: Partial<SceneProperties> | null = null;
   private lastAppliedRenderPresetId: string | null = null;
-  private currentTerrainScene: NonNullable<SceneProperties["terrain"]> = {};
-  private topoMapBrandingGroup: THREE.Group | null = null;
-  private topoMapBrandingLogoLoadSeq = 0;
 
   constructor(
     private scene: THREE.Scene,
     private renderer: THREE.WebGLRenderer,
-  ) {}
+  ) {
+    this.topoRuntime = createTopoMapRuntime({
+      scene,
+      renderer,
+      resolveAssetPath: (path) => this.overlayResolveAssetPath(path),
+      getMaxAnisotropy: () => this.overlayMaxAnisotropy,
+      getLayerGroup: (id) => this.layers.get(id),
+      getLayerStyle: (id) => this.styleForLayer(id),
+      getSurfaceLayerId: () => this.topoSurfaceLayerId(),
+      getGraticuleLayerIds: () => this.topoGraticuleLayerIds(),
+      getPublicSurfaceLayerIds: () => this.topoPublicSurfaceLayerIds(),
+      isSurfaceLayerId: (id) => this.isTopoSurfaceLayerId(id),
+      isGraticuleLayerId: (id) => this.isTopoGraticuleLayerId(id),
+      getEditorMode: () => this.editorMode,
+      onPublicSurfaceClippingActive: (active) => {
+        this.publicSurfaceClippingActive = active;
+      },
+      updateRendererLocalClipping: () => this.updateRendererLocalClipping(),
+    });
+  }
+
+  private layerSpecFor(id: string): ProjectLayerSpec | undefined {
+    return this.layerSpecs.get(id);
+  }
+
+  private topoSurfaceLayerId(): string {
+    for (const spec of this.layerSpecs.values()) {
+      if (isTopoMapSurfaceLayer(spec)) return spec.id;
+    }
+    return TOPO_MAP_DEFAULT_SURFACE_LAYER_ID;
+  }
+
+  private topoSurfaceGroup(): THREE.Group | undefined {
+    return this.layers.get(this.topoSurfaceLayerId());
+  }
+
+  private isTopoSurfaceLayerId(id: string): boolean {
+    const spec = this.layerSpecFor(id);
+    if (spec) return isTopoMapSurfaceLayer(spec);
+    return id === TOPO_MAP_DEFAULT_SURFACE_LAYER_ID;
+  }
+
+  private isTopoGraticuleLayerId(id: string): boolean {
+    const spec = this.layerSpecFor(id);
+    if (spec) return isTopoMapGraticuleLayer(spec);
+    return id === UTAH_FORGE_TOPO_GRATICULE_LAYER_ID;
+  }
+
+  private topoGraticuleLayerIds(): string[] {
+    const ids = [...this.layerSpecs.values()]
+      .filter(isTopoMapGraticuleLayer)
+      .map((spec) => spec.id);
+    if (
+      ids.length === 0 &&
+      this.layers.has(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID)
+    ) {
+      ids.push(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID);
+    }
+    return ids;
+  }
+
+  private topoPublicSurfaceLayerIds(): string[] {
+    const ids = new Set<string>();
+    for (const spec of this.layerSpecs.values()) {
+      if (isTopoMapLayer(spec)) ids.add(spec.id);
+    }
+    if (ids.size === 0) {
+      if (this.layers.has(TOPO_MAP_DEFAULT_SURFACE_LAYER_ID)) {
+        ids.add(TOPO_MAP_DEFAULT_SURFACE_LAYER_ID);
+      }
+      if (this.layers.has(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID)) {
+        ids.add(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID);
+      }
+      for (const id of [
+        "transport-roads",
+        "hydrography-streams",
+        "hydrography-lakes",
+      ]) {
+        if (this.layers.has(id)) ids.add(id);
+      }
+    }
+    return [...ids];
+  }
 
   setPostHandle(handle: PostHandle): void {
     this.postHandle = handle;
@@ -3259,10 +2928,7 @@ export class SceneManager {
         this.lastSceneSectionStyle.sceneSectionEnabled === true &&
         helperVisible;
     }
-    if (this.publicSurfaceClipRuntime) {
-      this.publicSurfaceClipRuntime.group.visible =
-        enabled && this.publicSurfaceClippingActive;
-    }
+    this.topoRuntime.setEditorMode(enabled);
     if (this.workingAreaFocusRuntime) {
       const focusState = this.workingAreaFocusState(
         this.lastWorkingAreaFocusStyle,
@@ -3281,15 +2947,7 @@ export class SceneManager {
       this.envKeyLight.target.updateMatrixWorld();
     }
 
-    const terrainGroup = this.layers.get("terrain");
-    if (terrainGroup) {
-      terrainGroup.traverse((obj) => {
-        const handle = (obj as THREE.Mesh).userData?.terrainHandle as
-          | TerrainMaterialHandle
-          | undefined;
-        handle?.setSunDirection(this.currentSunDir);
-      });
-    }
+    this.topoRuntime.applySunDirection(this.currentSunDir);
   }
 
   private requestCameraSunCapture(worldDir: THREE.Vector3): void {
@@ -4116,14 +3774,20 @@ export class SceneManager {
     this.updateLightingStudioHelpers();
   }
 
-  registerLayer(id: string): THREE.Group {
+  registerLayer(layer: string | ProjectLayerSpec): THREE.Group {
+    const id = typeof layer === "string" ? layer : layer.id;
+    const spec = typeof layer === "string" ? undefined : layer;
+    if (spec) this.layerSpecs.set(id, spec);
     if (this.layers.has(id)) {
       console.warn(`[SceneManager] layer "${id}" already registered`);
-      return this.layers.get(id)!;
+      const existing = this.layers.get(id)!;
+      if (spec) existing.userData.layerSpec = spec;
+      return existing;
     }
     const group = new THREE.Group();
     group.name = id;
     group.visible = false;
+    if (spec) group.userData.layerSpec = spec;
     this.scene.add(group);
     this.layers.set(id, group);
     return group;
@@ -4137,10 +3801,9 @@ export class SceneManager {
     for (const id of Object.keys(CASE_STUDY_B_DEMO_LAYER_ALIASES)) {
       this.applyCaseStudyBDemoLayerAlias(id, this.styleForLayer(id));
     }
-    this.applyTopoGraticuleStyle(
-      UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
-      this.styleForLayer(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID),
-    );
+    for (const id of this.topoGraticuleLayerIds()) {
+      this.topoRuntime.applyGraticuleStyle(id, this.styleForLayer(id));
+    }
     this.reapplySceneSectionPlanes();
     this.reapplyWorkingAreaFocus();
   }
@@ -4454,7 +4117,7 @@ export class SceneManager {
     ) {
       return;
     }
-    const terrainGroup = this.layers.get("terrain");
+    const terrainGroup = this.topoSurfaceGroup();
     if (!terrainGroup) return;
     terrainGroup.traverse((obj) => {
       const handle = (obj as THREE.Mesh).userData?.terrainHandle as
@@ -4494,7 +4157,7 @@ export class SceneManager {
     fogDensity: number,
   ): void {
     if (
-      layerId !== "terrain" &&
+      !this.isTopoSurfaceLayerId(layerId) &&
       layerId !== "hydrography-lakes" &&
       layerId !== "three-firs-target" &&
       layerId !== "great-plains-target" &&
@@ -4504,7 +4167,7 @@ export class SceneManager {
     ) {
       return;
     }
-    const terrainGroup = this.layers.get("terrain");
+    const terrainGroup = this.topoSurfaceGroup();
     if (!terrainGroup) return;
     const enabled = this.envFogEnabled && affectedByFog;
     terrainGroup.traverse((obj) => {
@@ -4513,7 +4176,7 @@ export class SceneManager {
         | undefined;
       if (!handle) return;
       switch (layerId) {
-        case "terrain":
+        case this.topoSurfaceLayerId():
           handle.setTerrainFogEnabled(enabled);
           handle.setTerrainFogDensity(fogDensity);
           break;
@@ -5224,1549 +4887,12 @@ export class SceneManager {
   }
 
   private applyTerrainLiftStyle(layerId: string, style: EditableStyle): void {
-    if (layerId !== "terrain" && !PUBLIC_SURFACE_LAYER_IDS.has(layerId)) return;
-    const terrainStyle =
-      layerId === "terrain" ? style : this.styleForLayer("terrain");
-    const liftM = styleNumber(
-      terrainStyle,
-      "meshSurfaceLiftM",
-      0,
-      -12000,
-      12000,
-    );
-    for (const publicLayerId of PUBLIC_SURFACE_LAYER_IDS) {
-      const group = this.layers.get(publicLayerId);
-      if (!group) continue;
-      if (publicLayerId === "terrain") {
-        group.traverse((obj) => {
-          const terrainMesh = obj as THREE.Mesh;
-          if (!terrainMesh.userData?.terrainHandle) return;
-          const baseZ =
-            typeof terrainMesh.userData.terrainBaseZ === "number"
-              ? terrainMesh.userData.terrainBaseZ
-              : terrainMesh.position.z;
-          terrainMesh.userData.terrainBaseZ = baseZ;
-          terrainMesh.position.z = baseZ;
-        });
-      }
-      const baseZ =
-        typeof group.userData.publicSurfaceBaseZ === "number"
-          ? group.userData.publicSurfaceBaseZ
-          : group.position.z;
-      group.userData.publicSurfaceBaseZ = baseZ;
-      group.position.z = baseZ + liftM;
-      group.updateMatrixWorld(true);
-    }
+    this.topoRuntime.applySurfaceLiftStyle(layerId, style);
   }
 
   private updateRendererLocalClipping(): void {
     this.renderer.localClippingEnabled =
       this.sceneSectionClippingActive || this.publicSurfaceClippingActive;
-  }
-
-  private publicSurfaceClipBox(style: EditableStyle): PublicSurfaceClipBox {
-    const sizeX = styleNumber(
-      style,
-      "publicSurfaceClipSizeX",
-      PUBLIC_SURFACE_CLIP_DEFAULTS.sizeX,
-      100,
-      500_000,
-    );
-    const sizeY = styleNumber(
-      style,
-      "publicSurfaceClipSizeY",
-      PUBLIC_SURFACE_CLIP_DEFAULTS.sizeY,
-      100,
-      500_000,
-    );
-    const sizeZ = styleNumber(
-      style,
-      "publicSurfaceClipSizeZ",
-      PUBLIC_SURFACE_CLIP_DEFAULTS.sizeZ,
-      100,
-      50_000,
-    );
-    return {
-      enabled: style.publicSurfaceClipEnabled === true,
-      shape: style.publicSurfaceClipShape === "circle" ? "circle" : "box",
-      center: new THREE.Vector3(
-        styleNumber(
-          style,
-          "publicSurfaceClipCenterX",
-          PUBLIC_SURFACE_CLIP_DEFAULTS.centerX,
-          -300_000,
-          300_000,
-        ),
-        styleNumber(
-          style,
-          "publicSurfaceClipCenterY",
-          PUBLIC_SURFACE_CLIP_DEFAULTS.centerY,
-          -300_000,
-          300_000,
-        ),
-        styleNumber(
-          style,
-          "publicSurfaceClipCenterZ",
-          PUBLIC_SURFACE_CLIP_DEFAULTS.centerZ,
-          -20_000,
-          30_000,
-        ),
-      ),
-      halfSize: new THREE.Vector3(sizeX * 0.5, sizeY * 0.5, sizeZ * 0.5),
-      rotationZRad: THREE.MathUtils.degToRad(
-        styleNumber(
-          style,
-          "publicSurfaceClipRotationZDeg",
-          PUBLIC_SURFACE_CLIP_DEFAULTS.rotationZDeg,
-          -180,
-          180,
-        ),
-      ),
-    };
-  }
-
-  private publicSurfaceClipAxes(box: PublicSurfaceClipBox): {
-    xAxis: THREE.Vector3;
-    yAxis: THREE.Vector3;
-    zAxis: THREE.Vector3;
-  } {
-    const c = Math.cos(box.rotationZRad);
-    const s = Math.sin(box.rotationZRad);
-    return {
-      xAxis: new THREE.Vector3(c, s, 0),
-      yAxis: new THREE.Vector3(-s, c, 0),
-      zAxis: new THREE.Vector3(0, 0, 1),
-    };
-  }
-
-  private publicSurfaceClipPlanes(box: PublicSurfaceClipBox): THREE.Plane[] {
-    const { xAxis, yAxis, zAxis } = this.publicSurfaceClipAxes(box);
-    const makePlane = (
-      normal: THREE.Vector3,
-      axis: THREE.Vector3,
-      distance: number,
-    ) => {
-      const point = box.center.clone().addScaledVector(axis, distance);
-      return new THREE.Plane().setFromNormalAndCoplanarPoint(
-        normal.clone(),
-        point,
-      );
-    };
-    const zPlanes = [
-      makePlane(zAxis.clone().negate(), zAxis, box.halfSize.z),
-      makePlane(zAxis, zAxis, -box.halfSize.z),
-    ];
-    if (box.shape === "circle") {
-      const radius = Math.min(box.halfSize.x, box.halfSize.y);
-      const radialPlanes: THREE.Plane[] = [];
-      for (let i = 0; i < PUBLIC_SURFACE_CLIP_CIRCLE_SEGMENTS; i += 1) {
-        const theta = (i / PUBLIC_SURFACE_CLIP_CIRCLE_SEGMENTS) * Math.PI * 2;
-        const outward = xAxis
-          .clone()
-          .multiplyScalar(Math.cos(theta))
-          .addScaledVector(yAxis, Math.sin(theta))
-          .normalize();
-        const point = box.center.clone().addScaledVector(outward, radius);
-        radialPlanes.push(
-          new THREE.Plane().setFromNormalAndCoplanarPoint(
-            outward.clone().negate(),
-            point,
-          ),
-        );
-      }
-      return [...radialPlanes, ...zPlanes];
-    }
-    return [
-      makePlane(xAxis.clone().negate(), xAxis, box.halfSize.x),
-      makePlane(xAxis, xAxis, -box.halfSize.x),
-      makePlane(yAxis.clone().negate(), yAxis, box.halfSize.y),
-      makePlane(yAxis, yAxis, -box.halfSize.y),
-      ...zPlanes,
-    ];
-  }
-
-  private publicSurfaceClipSegmentPositions(
-    box: PublicSurfaceClipBox,
-  ): number[] {
-    const { xAxis, yAxis, zAxis } = this.publicSurfaceClipAxes(box);
-    if (box.shape === "circle") {
-      const positions: number[] = [];
-      const radius = Math.min(box.halfSize.x, box.halfSize.y);
-      const point = (theta: number, zSign: number) =>
-        box.center
-          .clone()
-          .addScaledVector(xAxis, Math.cos(theta) * radius)
-          .addScaledVector(yAxis, Math.sin(theta) * radius)
-          .addScaledVector(zAxis, zSign * box.halfSize.z);
-      for (let i = 0; i < PUBLIC_SURFACE_CLIP_CIRCLE_SEGMENTS; i += 1) {
-        const a = (i / PUBLIC_SURFACE_CLIP_CIRCLE_SEGMENTS) * Math.PI * 2;
-        const b = ((i + 1) / PUBLIC_SURFACE_CLIP_CIRCLE_SEGMENTS) * Math.PI * 2;
-        const bottomA = point(a, -1);
-        const bottomB = point(b, -1);
-        const topA = point(a, 1);
-        const topB = point(b, 1);
-        positions.push(
-          bottomA.x,
-          bottomA.y,
-          bottomA.z,
-          bottomB.x,
-          bottomB.y,
-          bottomB.z,
-          topA.x,
-          topA.y,
-          topA.z,
-          topB.x,
-          topB.y,
-          topB.z,
-        );
-        if (i % 6 === 0) {
-          positions.push(
-            bottomA.x,
-            bottomA.y,
-            bottomA.z,
-            topA.x,
-            topA.y,
-            topA.z,
-          );
-        }
-      }
-      return positions;
-    }
-    const corner = (sx: number, sy: number, sz: number) =>
-      box.center
-        .clone()
-        .addScaledVector(xAxis, sx * box.halfSize.x)
-        .addScaledVector(yAxis, sy * box.halfSize.y)
-        .addScaledVector(zAxis, sz * box.halfSize.z);
-    const corners = [
-      corner(-1, -1, -1),
-      corner(1, -1, -1),
-      corner(1, 1, -1),
-      corner(-1, 1, -1),
-      corner(-1, -1, 1),
-      corner(1, -1, 1),
-      corner(1, 1, 1),
-      corner(-1, 1, 1),
-    ];
-    const edges = [
-      [0, 1],
-      [1, 2],
-      [2, 3],
-      [3, 0],
-      [4, 5],
-      [5, 6],
-      [6, 7],
-      [7, 4],
-      [0, 4],
-      [1, 5],
-      [2, 6],
-      [3, 7],
-    ] as const;
-    return edges.flatMap(([a, b]) => [
-      corners[a].x,
-      corners[a].y,
-      corners[a].z,
-      corners[b].x,
-      corners[b].y,
-      corners[b].z,
-    ]);
-  }
-
-  private ensurePublicSurfaceClipRuntime(): PublicSurfaceClipRuntime {
-    if (this.publicSurfaceClipRuntime) return this.publicSurfaceClipRuntime;
-    const geometry = new LineSegmentsGeometry();
-    geometry.setPositions([]);
-    const material = new LineMaterial({
-      color: 0xffffff,
-      linewidth: 2.2,
-      worldUnits: false,
-      transparent: true,
-      opacity: 0.9,
-      depthTest: false,
-      depthWrite: false,
-      dashed: false,
-    });
-    material.fog = false;
-    material.userData.forceTransparent = true;
-    material.resolution.set(
-      window.innerWidth || 1920,
-      window.innerHeight || 1080,
-    );
-    const line = new LineSegments2(geometry, material);
-    line.name = "Public surface clipping box";
-    line.renderOrder = PUBLIC_SURFACE_CLIP_RENDER_ORDER;
-    line.userData.publicSurfaceClipHelper = true;
-    const group = new THREE.Group();
-    group.name = "__public_surface_clip_box__";
-    group.visible = false;
-    group.userData.publicSurfaceClipHelper = true;
-    group.add(line);
-    this.scene.add(group);
-    this.publicSurfaceClipRuntime = { group, line };
-    return this.publicSurfaceClipRuntime;
-  }
-
-  private rebuildPublicSurfaceClipHelper(box: PublicSurfaceClipBox): void {
-    const runtime = this.ensurePublicSurfaceClipRuntime();
-    runtime.group.visible = this.editorMode && box.enabled;
-    if (!box.enabled) return;
-    const geometry = new LineSegmentsGeometry();
-    geometry.setPositions(this.publicSurfaceClipSegmentPositions(box));
-    runtime.line.geometry.dispose();
-    runtime.line.geometry = geometry;
-    runtime.line.computeLineDistances();
-  }
-
-  private applyPublicSurfaceClipStyle(style: EditableStyle): void {
-    const box = this.publicSurfaceClipBox(style);
-    const planes = box.enabled ? this.publicSurfaceClipPlanes(box) : [];
-    this.publicSurfaceClippingActive = box.enabled;
-    this.updateRendererLocalClipping();
-
-    for (const layerId of PUBLIC_SURFACE_LAYER_IDS) {
-      const group = this.layers.get(layerId);
-      if (!group) continue;
-      const graticuleUsesTerrainEdgeFrame =
-        layerId === UTAH_FORGE_TOPO_GRATICULE_LAYER_ID &&
-        this.styleForLayer(layerId).graticuleEdgeFadeAware !== false;
-      group.traverse((obj) => {
-        const handle = (obj as THREE.Mesh).userData?.terrainHandle as
-          | TerrainMaterialHandle
-          | undefined;
-        handle?.setPublicClip(
-          box.enabled,
-          box.shape,
-          box.center,
-          box.halfSize,
-          box.rotationZRad,
-        );
-
-        const material = (
-          obj as { material?: THREE.Material | THREE.Material[] }
-        ).material;
-        if (!material) return;
-        const materials = Array.isArray(material) ? material : [material];
-        for (const m of materials) {
-          if (m.userData?.publicSurfaceClipHelper === true) continue;
-          const terrainShaderHandlesClip =
-            box.shape === "circle" && m.userData?.terrainMaterial === true;
-          const publicSurfaceClipPlanes =
-            box.enabled &&
-            !terrainShaderHandlesClip &&
-            !graticuleUsesTerrainEdgeFrame
-              ? planes
-              : null;
-          m.userData.publicSurfaceClipPlanes = publicSurfaceClipPlanes;
-          m.clippingPlanes = publicSurfaceClipPlanes;
-          m.clipIntersection = false;
-          m.needsUpdate = true;
-        }
-      });
-    }
-    this.rebuildPublicSurfaceClipHelper(box);
-  }
-
-  private resolveTerrainEdgeFadeState(): TerrainEdgeFadeState | null {
-    const terrainGroup = this.layers.get("terrain");
-    let boundsMin: THREE.Vector2 | null = null;
-    let boundsMax: THREE.Vector2 | null = null;
-    terrainGroup?.traverse((obj) => {
-      if (boundsMin && boundsMax) return;
-      const handle = (obj as THREE.Mesh).userData?.terrainHandle as
-        | TerrainMaterialHandle
-        | undefined;
-      const uniforms = handle?.material.uniforms as
-        | Record<string, { value: unknown }>
-        | undefined;
-      const min = uniforms?.uTerrainBoundsMin?.value as
-        | THREE.Vector2
-        | undefined;
-      const max = uniforms?.uTerrainBoundsMax?.value as
-        | THREE.Vector2
-        | undefined;
-      if (min && max) {
-        boundsMin = min.clone();
-        boundsMax = max.clone();
-      }
-    });
-    if (!boundsMin || !boundsMax) return null;
-    const terrain = this.currentTerrainScene;
-    return {
-      boundsMin,
-      boundsMax,
-      shape: terrainEdgeShape(terrain.edgeFadeShape),
-      fadeDistanceM: Math.max(0, terrain.edgeFadeDistanceM ?? 0),
-      insetM: Math.max(0, terrain.edgeFadeInsetM ?? 0),
-      cornerRadiusM: Math.max(0, terrain.edgeFadeCornerRadiusM ?? 0),
-    };
-  }
-
-  private topoGraticuleThresholdCrossing(
-    a: TopoGraticuleLabelCandidate,
-    b: TopoGraticuleLabelCandidate,
-    edge: TerrainEdgeFadeState,
-    threshold: number,
-  ): TopoGraticuleLabelCandidate | null {
-    const aValue = terrainEdgeInsideDistance(a.position, edge) - threshold;
-    const bValue = terrainEdgeInsideDistance(b.position, edge) - threshold;
-    if (Math.abs(aValue) <= 0.0001) return a;
-    if (Math.abs(bValue) <= 0.0001) return b;
-    if (aValue * bValue > 0) return null;
-    const t = clampRange(aValue / (aValue - bValue), 0, 1);
-    const position = a.position.clone().lerp(b.position, t);
-    const tangent = b.position.clone().sub(a.position);
-    tangent.z = 0;
-    if (tangent.lengthSq() <= 0.000001) tangent.copy(a.tangent);
-    if (tangent.lengthSq() <= 0.000001) tangent.set(1, 0, 0);
-    else tangent.normalize();
-    return { position, tangent };
-  }
-
-  private topoGraticulePreferredCrossing(
-    candidates: TopoGraticuleLabelCandidate[],
-    edge: TerrainEdgeFadeState,
-    preference: "west" | "north",
-    threshold: number,
-  ): TopoGraticuleLabelCandidate | null {
-    let best: TopoGraticuleLabelCandidate | null = null;
-    let bestScore = -Infinity;
-    for (let index = 1; index < candidates.length; index += 1) {
-      const crossing = this.topoGraticuleThresholdCrossing(
-        candidates[index - 1],
-        candidates[index],
-        edge,
-        threshold,
-      );
-      if (!crossing) continue;
-      const score = terrainEdgePreferenceScore(
-        crossing.position,
-        edge,
-        preference,
-      );
-      if (score > bestScore) {
-        bestScore = score;
-        best = crossing;
-      }
-    }
-    return best;
-  }
-
-  private pushTopoGraticuleSegment(
-    positions: number[],
-    a: THREE.Vector3,
-    b: THREE.Vector3,
-  ): void {
-    positions.push(a.x, a.y, a.z, b.x, b.y, b.z);
-  }
-
-  private topoMapBrandingAnchorPoint(
-    anchor: TopoMapBrandingAnchor,
-  ): THREE.Vector3 | null {
-    const terrainStyle = this.styleForLayer("terrain");
-    const publicSurfaceFrameAuthored =
-      typeof terrainStyle.publicSurfaceClipCenterX === "number" ||
-      typeof terrainStyle.publicSurfaceClipCenterY === "number" ||
-      typeof terrainStyle.publicSurfaceClipSizeX === "number" ||
-      typeof terrainStyle.publicSurfaceClipSizeY === "number" ||
-      typeof terrainStyle.publicSurfaceClipRotationZDeg === "number";
-    if (publicSurfaceFrameAuthored) {
-      const box = this.publicSurfaceClipBox(terrainStyle);
-      const { xAxis, yAxis } = this.publicSurfaceClipAxes(box);
-      const west = anchor.includes("west");
-      const south = anchor.includes("south");
-      return box.center
-        .clone()
-        .addScaledVector(xAxis, west ? -box.halfSize.x : box.halfSize.x)
-        .addScaledVector(yAxis, south ? -box.halfSize.y : box.halfSize.y);
-    }
-
-    const edge = this.resolveTerrainEdgeFadeState();
-    if (!edge) return null;
-    const centerX = (edge.boundsMin.x + edge.boundsMax.x) * 0.5;
-    const centerY = (edge.boundsMin.y + edge.boundsMax.y) * 0.5;
-    const halfX = Math.max(
-      1,
-      (edge.boundsMax.x - edge.boundsMin.x) * 0.5 - edge.insetM,
-    );
-    const halfY = Math.max(
-      1,
-      (edge.boundsMax.y - edge.boundsMin.y) * 0.5 - edge.insetM,
-    );
-    const west = anchor.includes("west");
-    const south = anchor.includes("south");
-    return new THREE.Vector3(
-      centerX + (west ? -halfX : halfX),
-      centerY + (south ? -halfY : halfY),
-      0,
-    );
-  }
-
-  private topoMapBrandingFrameRotationRad(): number {
-    const terrainStyle = this.styleForLayer("terrain");
-    const publicSurfaceFrameAuthored =
-      typeof terrainStyle.publicSurfaceClipCenterX === "number" ||
-      typeof terrainStyle.publicSurfaceClipCenterY === "number" ||
-      typeof terrainStyle.publicSurfaceClipSizeX === "number" ||
-      typeof terrainStyle.publicSurfaceClipSizeY === "number" ||
-      typeof terrainStyle.publicSurfaceClipRotationZDeg === "number";
-    return publicSurfaceFrameAuthored
-      ? this.publicSurfaceClipBox(terrainStyle).rotationZRad
-      : 0;
-  }
-
-  private topoMapBrandingAssetUrl(path: string): string {
-    const trimmed = path.trim();
-    if (
-      /^https?:\/\//i.test(trimmed) ||
-      trimmed.startsWith("data:") ||
-      trimmed.startsWith("blob:") ||
-      trimmed.startsWith("/")
-    ) {
-      return trimmed;
-    }
-    return this.overlayResolveAssetPath(trimmed);
-  }
-
-  private setTerrainOrthoPhotoTexture(texture: THREE.Texture | null): void {
-    const terrainGroup = this.layers.get("terrain");
-    terrainGroup?.traverse((obj) => {
-      const handle = (obj as THREE.Mesh).userData?.terrainHandle as
-        | TerrainMaterialHandle
-        | undefined;
-      handle?.setOrthoPhotoTexture(texture);
-    });
-  }
-
-  private clearTerrainOrthoPhotoTexture(): void {
-    this.terrainOrthoPhotoTextureSeq += 1;
-    this.terrainOrthoPhotoTexturePath = null;
-    if (this.terrainOrthoPhotoTexture) {
-      this.terrainOrthoPhotoTexture.dispose();
-      this.terrainOrthoPhotoTexture = null;
-    }
-    this.setTerrainOrthoPhotoTexture(null);
-  }
-
-  private applyTerrainOrthoPhotoTexture(
-    terrain: NonNullable<SceneProperties["terrain"]>,
-  ): void {
-    const opacity =
-      typeof terrain.orthoPhotoOpacity === "number"
-        ? terrain.orthoPhotoOpacity
-        : 0;
-    const path = opacity > 0.001 ? terrain.orthoPhotoPath?.trim() : "";
-    if (!path) {
-      if (this.terrainOrthoPhotoTexturePath || this.terrainOrthoPhotoTexture) {
-        this.clearTerrainOrthoPhotoTexture();
-      } else {
-        this.setTerrainOrthoPhotoTexture(null);
-      }
-      return;
-    }
-
-    if (this.terrainOrthoPhotoTexturePath === path) {
-      if (this.terrainOrthoPhotoTexture) {
-        this.setTerrainOrthoPhotoTexture(this.terrainOrthoPhotoTexture);
-      }
-      return;
-    }
-
-    this.clearTerrainOrthoPhotoTexture();
-    this.terrainOrthoPhotoTexturePath = path;
-    const seq = ++this.terrainOrthoPhotoTextureSeq;
-    const url = this.topoMapBrandingAssetUrl(path);
-    new THREE.TextureLoader().load(
-      url,
-      (texture) => {
-        if (
-          seq !== this.terrainOrthoPhotoTextureSeq ||
-          this.terrainOrthoPhotoTexturePath !== path
-        ) {
-          texture.dispose();
-          return;
-        }
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.anisotropy = this.overlayMaxAnisotropy;
-        texture.minFilter = THREE.LinearMipmapLinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        texture.wrapS = THREE.ClampToEdgeWrapping;
-        texture.wrapT = THREE.ClampToEdgeWrapping;
-        texture.generateMipmaps = true;
-        texture.needsUpdate = true;
-        this.terrainOrthoPhotoTexture = texture;
-        this.setTerrainOrthoPhotoTexture(texture);
-      },
-      undefined,
-      (error) => {
-        if (seq === this.terrainOrthoPhotoTextureSeq) {
-          console.error(`[SceneManager] ortho photo texture failed: ${url}`, error);
-          this.clearTerrainOrthoPhotoTexture();
-        }
-      },
-    );
-  }
-
-  private createTopoMapBrandingText(
-    text: string,
-    sizeM: number,
-    color: string,
-    opacity: number,
-    weight: number,
-    fontFamily: string,
-    italic: boolean,
-  ): { mesh: TopoMapBrandingTextMesh; widthM: number; heightM: number } {
-    const clean = text.trim();
-    const canvas = document.createElement("canvas");
-    const measureCanvas = document.createElement("canvas");
-    const measureCtx = measureCanvas.getContext("2d");
-    const font = `${italic ? "italic " : ""}${weight} 96px ${fontFamily}`;
-    if (measureCtx) measureCtx.font = font;
-    const measuredWidth = measureCtx?.measureText(clean).width ?? 512;
-    canvas.width = Math.max(512, Math.min(4096, Math.ceil(measuredWidth + 96)));
-    canvas.height = 256;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.font = font;
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(clean, 36, canvas.height / 2);
-    }
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.needsUpdate = true;
-    const widthM = sizeM * Math.max(2.6, clean.length * 0.66);
-    const geometry = new THREE.PlaneGeometry(widthM, sizeM);
-    const material = new THREE.MeshBasicMaterial({
-      color,
-      map: texture,
-      transparent: true,
-      opacity,
-      depthTest: false,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    material.toneMapped = false;
-    material.fog = false;
-    material.userData.forceTransparent = true;
-    const mesh = new THREE.Mesh(geometry, material) as TopoMapBrandingTextMesh;
-    mesh.renderOrder = 4564;
-    mesh.userData.topoMapBranding = true;
-    mesh.userData.topoMapBrandingTexture = texture;
-    return { mesh, widthM, heightM: sizeM };
-  }
-
-  private disposeTopoMapBrandingGroup(): void {
-    if (!this.topoMapBrandingGroup) return;
-    this.topoMapBrandingGroup.parent?.remove(this.topoMapBrandingGroup);
-    this.topoMapBrandingGroup.traverse((obj) => {
-      const mesh = obj as THREE.Mesh;
-      mesh.geometry?.dispose?.();
-      const materials = Array.isArray(mesh.material)
-        ? mesh.material
-        : mesh.material
-          ? [mesh.material]
-          : [];
-      for (const material of materials) {
-        const map = (material as THREE.MeshBasicMaterial).map;
-        map?.dispose();
-        material.dispose();
-      }
-      const texture = (obj as TopoMapBrandingTextMesh).userData
-        ?.topoMapBrandingTexture;
-      texture?.dispose();
-    });
-    this.topoMapBrandingGroup = null;
-  }
-
-  private rebuildTopoMapBranding(sp: SceneProperties): void {
-    this.disposeTopoMapBrandingGroup();
-    const terrain = sp.terrain ?? {};
-    const branding = terrain.topoMapBranding ?? {};
-    if (branding.visible !== true) return;
-    const heading =
-      typeof branding.heading === "string" ? branding.heading.trim() : "";
-    const subheading =
-      typeof branding.subheading === "string"
-        ? branding.subheading.trim()
-        : "";
-    const logoPath =
-      typeof branding.logoRenderablePath === "string" &&
-      branding.logoRenderablePath.trim()
-        ? branding.logoRenderablePath.trim()
-        : typeof branding.logoPath === "string"
-          ? branding.logoPath.trim()
-          : "";
-    if (!heading && !subheading && !logoPath) return;
-
-    const anchor: TopoMapBrandingAnchor =
-      branding.anchor === "south-west" ||
-      branding.anchor === "south-east" ||
-      branding.anchor === "north-west" ||
-      branding.anchor === "north-east"
-        ? branding.anchor
-        : TOPO_MAP_BRANDING_DEFAULT_ANCHOR;
-    const opacity = clamp01(
-      typeof branding.opacity === "number" ? branding.opacity : 0.92,
-    );
-    const textColor =
-      typeof branding.textColor === "string" ? branding.textColor : "#ffffff";
-    const fontFamily =
-      branding.fontFamily === "sans"
-        ? "system-ui, -apple-system, Segoe UI, sans-serif"
-        : branding.fontFamily === "serif"
-          ? "Georgia, Times New Roman, serif"
-          : branding.fontFamily === "condensed"
-            ? "Arial Narrow, Helvetica Condensed, sans-serif"
-            : "monospace";
-    const textAlign =
-      branding.textAlign === "center" || branding.textAlign === "right"
-        ? branding.textAlign
-        : "left";
-    const layout = branding.layout === "stacked" ? "stacked" : "horizontal";
-    const logoPlacement =
-      branding.logoPlacement === "after" ? "after" : "before";
-    const logoFit =
-      branding.logoFit === "cover" || branding.logoFit === "stretch"
-        ? branding.logoFit
-        : "contain";
-    const liftM = typeof branding.liftM === "number" ? branding.liftM : 260;
-    const offsetXM =
-      typeof branding.offsetXM === "number"
-        ? branding.offsetXM
-        : TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M;
-    const offsetYM =
-      typeof branding.offsetYM === "number"
-        ? branding.offsetYM
-        : TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M;
-    const logoWidthM = Math.max(
-      0,
-      typeof branding.logoWidthM === "number" ? branding.logoWidthM : 46000,
-    );
-    const logoGapM =
-      typeof branding.logoGapM === "number" ? branding.logoGapM : 16000;
-    const logoOpacity = clamp01(
-      typeof branding.logoOpacity === "number" ? branding.logoOpacity : opacity,
-    );
-    const textOpacity = clamp01(
-      typeof branding.textOpacity === "number" ? branding.textOpacity : opacity,
-    );
-    const headingSizeM = Math.max(
-      1000,
-      typeof branding.headingSizeM === "number"
-        ? branding.headingSizeM
-        : 18000,
-    );
-    const subheadingSizeM = Math.max(
-      1000,
-      typeof branding.subheadingSizeM === "number"
-        ? branding.subheadingSizeM
-        : 10500,
-    );
-    const lineGapM =
-      typeof branding.lineGapM === "number" ? branding.lineGapM : 2500;
-    const anchorPoint = this.topoMapBrandingAnchorPoint(anchor);
-    if (!anchorPoint) return;
-    const group = new THREE.Group();
-    group.name = "__topo_map_branding__";
-    group.renderOrder = 4564;
-    group.userData.topoMapBranding = true;
-    group.rotation.z =
-      this.topoMapBrandingFrameRotationRad() +
-      THREE.MathUtils.degToRad(
-        typeof branding.rotationDeg === "number" ? branding.rotationDeg : 0,
-      );
-    group.position
-      .copy(anchorPoint)
-      .add(new THREE.Vector3(offsetXM, offsetYM, liftM));
-
-    const contentGroup = new THREE.Group();
-    contentGroup.userData.topoMapBrandingContent = true;
-
-    let logoHeightM = logoPath && logoWidthM > 0 ? logoWidthM : 0;
-    let logo: THREE.Mesh | null = null;
-    let textBlockWidth = 0;
-    const textMeshes: Array<{
-      mesh: THREE.Mesh;
-      widthM: number;
-      heightM: number;
-      role: "heading" | "subheading";
-    }> = [];
-
-    if (logoPath && logoWidthM > 0) {
-      const geometry = new THREE.PlaneGeometry(logoWidthM, logoHeightM);
-      const material = new THREE.MeshBasicMaterial({
-        color: "#ffffff",
-        transparent: true,
-        opacity: logoOpacity,
-        depthTest: false,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-      });
-      material.toneMapped = false;
-      material.fog = false;
-      material.userData.forceTransparent = true;
-      const logoMesh = new THREE.Mesh(geometry, material);
-      logo = logoMesh;
-      logoMesh.renderOrder = 4564;
-      logoMesh.userData.topoMapBranding = true;
-      logoMesh.userData.topoMapBrandingRole = "logo";
-      contentGroup.add(logoMesh);
-      const loadSeq = ++this.topoMapBrandingLogoLoadSeq;
-      new THREE.TextureLoader().load(
-        this.topoMapBrandingAssetUrl(logoPath),
-        (texture) => {
-          if (loadSeq !== this.topoMapBrandingLogoLoadSeq) {
-            texture.dispose();
-            return;
-          }
-          texture.colorSpace = THREE.SRGBColorSpace;
-          const image = texture.image as { width?: number; height?: number };
-          const aspect =
-            image?.width && image?.height ? image.height / image.width : 1;
-          logoHeightM =
-            logoFit === "stretch" ? logoWidthM : Math.max(1, logoWidthM * aspect);
-          logoMesh.geometry.dispose();
-          logoMesh.geometry = new THREE.PlaneGeometry(logoWidthM, logoHeightM);
-          material.map?.dispose();
-          material.map = texture;
-          material.needsUpdate = true;
-          layoutTitleBlock();
-        },
-        undefined,
-        () => {
-          logoMesh.visible = false;
-        },
-      );
-    }
-
-    if (heading) {
-      const { mesh, widthM } = this.createTopoMapBrandingText(
-        heading,
-        headingSizeM,
-        textColor,
-        textOpacity,
-        typeof branding.headingWeight === "number"
-          ? Math.round(branding.headingWeight)
-          : 800,
-        fontFamily,
-        branding.headingItalic === true,
-      );
-      mesh.userData.topoMapBrandingRole = "heading";
-      contentGroup.add(mesh);
-      textBlockWidth = Math.max(textBlockWidth, widthM);
-      textMeshes.push({ mesh, widthM, heightM: headingSizeM, role: "heading" });
-    }
-    if (subheading) {
-      const { mesh, widthM } = this.createTopoMapBrandingText(
-        subheading,
-        subheadingSizeM,
-        textColor,
-        textOpacity,
-        typeof branding.subheadingWeight === "number"
-          ? Math.round(branding.subheadingWeight)
-          : 500,
-        fontFamily,
-        branding.subheadingItalic === true,
-      );
-      mesh.userData.topoMapBrandingRole = "subheading";
-      contentGroup.add(mesh);
-      textBlockWidth = Math.max(textBlockWidth, widthM);
-      textMeshes.push({
-        mesh,
-        widthM,
-        heightM: subheadingSizeM,
-        role: "subheading",
-      });
-    }
-
-    const backgroundEnabled = branding.backgroundEnabled === true;
-    const outlineEnabled = branding.outlineEnabled === true;
-    const paddingX =
-      typeof branding.backgroundPaddingXM === "number"
-        ? Math.max(0, branding.backgroundPaddingXM)
-        : Math.max(6000, headingSizeM * 0.65);
-    const paddingY =
-      typeof branding.backgroundPaddingYM === "number"
-        ? Math.max(0, branding.backgroundPaddingYM)
-        : Math.max(5000, headingSizeM * 0.45);
-    const backgroundMaterial = new THREE.MeshBasicMaterial({
-      color:
-        typeof branding.backgroundColor === "string"
-          ? branding.backgroundColor
-          : "#050607",
-      transparent: true,
-      opacity: clamp01(
-        typeof branding.backgroundOpacity === "number"
-          ? branding.backgroundOpacity
-          : 0.36,
-      ),
-      depthTest: false,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    backgroundMaterial.toneMapped = false;
-    backgroundMaterial.fog = false;
-    backgroundMaterial.userData.forceTransparent = true;
-    const background = backgroundEnabled
-      ? new THREE.Mesh(new THREE.PlaneGeometry(1, 1), backgroundMaterial)
-      : null;
-    if (background) {
-      background.renderOrder = 4563;
-      background.position.z = -2;
-      background.userData.topoMapBranding = true;
-      background.userData.topoMapBrandingRole = "background";
-      contentGroup.add(background);
-    } else {
-      backgroundMaterial.dispose();
-    }
-
-    const outlineStrips: THREE.Mesh[] = [];
-    if (outlineEnabled) {
-      const outlineMaterial = new THREE.MeshBasicMaterial({
-        color:
-          typeof branding.outlineColor === "string"
-            ? branding.outlineColor
-            : textColor,
-        transparent: true,
-        opacity: clamp01(
-          typeof branding.outlineOpacity === "number"
-            ? branding.outlineOpacity
-            : 0.8,
-        ),
-        depthTest: false,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-      });
-      outlineMaterial.toneMapped = false;
-      outlineMaterial.fog = false;
-      outlineMaterial.userData.forceTransparent = true;
-      for (let i = 0; i < 4; i += 1) {
-        const strip = new THREE.Mesh(
-          new THREE.PlaneGeometry(1, 1),
-          outlineMaterial,
-        );
-        strip.renderOrder = 4563.5;
-        strip.position.z = -1;
-        strip.userData.topoMapBranding = true;
-        strip.userData.topoMapBrandingRole = "outline";
-        outlineStrips.push(strip);
-        contentGroup.add(strip);
-      }
-    }
-
-    const layoutTitleBlock = () => {
-      const textBlockHeight =
-        heading && subheading
-          ? headingSizeM + lineGapM + subheadingSizeM
-          : textMeshes.length > 0
-            ? textMeshes[0].heightM
-            : 0;
-      const hasLogo = !!logo && logoWidthM > 0 && logo.visible !== false;
-      const hasText = textMeshes.length > 0;
-      const gap = hasLogo && hasText ? logoGapM : 0;
-      let contentWidth = 1;
-      let contentHeight = 1;
-      let logoCenterX = logoWidthM * 0.5;
-      let logoCenterY = 0;
-      let textOriginX = 0;
-      let textCenterY = 0;
-
-      if (layout === "stacked") {
-        contentWidth = Math.max(hasLogo ? logoWidthM : 0, textBlockWidth, 1);
-        contentHeight =
-          (hasLogo ? logoHeightM : 0) +
-          gap +
-          (hasText ? textBlockHeight : 0);
-        if (hasLogo) {
-          logoCenterX = contentWidth * 0.5;
-          logoCenterY =
-            logoPlacement === "before"
-              ? contentHeight * 0.5 - logoHeightM * 0.5
-              : -contentHeight * 0.5 + logoHeightM * 0.5;
-        }
-        if (hasText) {
-          textOriginX = (contentWidth - textBlockWidth) * 0.5;
-          textCenterY =
-            logoPlacement === "before"
-              ? -contentHeight * 0.5 + textBlockHeight * 0.5
-              : contentHeight * 0.5 - textBlockHeight * 0.5;
-        }
-      } else {
-        contentWidth =
-          (hasLogo ? logoWidthM : 0) + gap + (hasText ? textBlockWidth : 0);
-        contentHeight = Math.max(
-          hasLogo ? logoHeightM : 0,
-          hasText ? textBlockHeight : 0,
-          1,
-        );
-        if (hasLogo) {
-          logoCenterX =
-            logoPlacement === "before"
-              ? logoWidthM * 0.5
-              : contentWidth - logoWidthM * 0.5;
-        }
-        if (hasText) {
-          textOriginX =
-            logoPlacement === "before" && hasLogo ? logoWidthM + gap : 0;
-          textCenterY = 0;
-        }
-      }
-
-      if (logo) logo.position.set(logoCenterX, logoCenterY, 0);
-      for (const item of textMeshes) {
-        const y =
-          textMeshes.length === 2
-            ? item.role === "heading"
-              ? textCenterY + textBlockHeight * 0.5 - item.heightM * 0.5
-              : textCenterY - textBlockHeight * 0.5 + item.heightM * 0.5
-            : textCenterY;
-        const x =
-          textAlign === "center"
-            ? textOriginX + textBlockWidth * 0.5
-            : textAlign === "right"
-              ? textOriginX + textBlockWidth - item.widthM * 0.5
-              : textOriginX + item.widthM * 0.5;
-        item.mesh.position.set(x, y, 0);
-      }
-
-      const framedWidth = contentWidth + paddingX * 2;
-      const framedHeight = contentHeight + paddingY * 2;
-      if (background) {
-        background.scale.set(framedWidth, framedHeight, 1);
-        background.position.set(contentWidth * 0.5, 0, -2);
-      }
-      if (outlineStrips.length === 4) {
-        const outlineWidth = Math.max(
-          1,
-          typeof branding.outlineWidthM === "number"
-            ? branding.outlineWidthM
-            : 2500,
-        );
-        const left = contentWidth * 0.5 - framedWidth * 0.5;
-        const right = contentWidth * 0.5 + framedWidth * 0.5;
-        const top = framedHeight * 0.5;
-        const bottom = -framedHeight * 0.5;
-        const [topStrip, rightStrip, bottomStrip, leftStrip] = outlineStrips;
-        topStrip.scale.set(framedWidth, outlineWidth, 1);
-        topStrip.position.set(contentWidth * 0.5, top, -1);
-        bottomStrip.scale.set(framedWidth, outlineWidth, 1);
-        bottomStrip.position.set(contentWidth * 0.5, bottom, -1);
-        rightStrip.scale.set(outlineWidth, framedHeight, 1);
-        rightStrip.position.set(right, 0, -1);
-        leftStrip.scale.set(outlineWidth, framedHeight, 1);
-        leftStrip.position.set(left, 0, -1);
-      }
-
-      contentGroup.position.x = anchor.includes("east") ? -contentWidth : 0;
-      contentGroup.position.y = anchor.includes("south")
-        ? contentHeight * 0.5
-        : -contentHeight * 0.5;
-      contentGroup.userData.topoMapBrandingContentWidthM = contentWidth;
-      contentGroup.userData.topoMapBrandingContentHeightM = contentHeight;
-    };
-
-    layoutTitleBlock();
-    group.add(contentGroup);
-
-    this.scene.add(group);
-    this.topoMapBrandingGroup = group;
-  }
-
-  private topoGraticuleVisibleSegment(
-    a: TopoGraticuleLabelCandidate,
-    b: TopoGraticuleLabelCandidate,
-    edge: TerrainEdgeFadeState,
-    threshold: number,
-  ): [THREE.Vector3, THREE.Vector3] | null {
-    const aValue = terrainEdgeInsideDistance(a.position, edge) - threshold;
-    const bValue = terrainEdgeInsideDistance(b.position, edge) - threshold;
-    if (aValue < 0 && bValue < 0) return null;
-    if (aValue >= 0 && bValue >= 0) return [a.position, b.position];
-    const crossing = this.topoGraticuleThresholdCrossing(a, b, edge, threshold);
-    if (!crossing) return null;
-    return aValue >= 0
-      ? [a.position, crossing.position]
-      : [crossing.position, b.position];
-  }
-
-  private setTopoGraticuleLinePositions(
-    line: LineSegments2,
-    positions: number[],
-  ): void {
-    const geometry = new LineSegmentsGeometry();
-    geometry.setPositions(positions);
-    line.geometry.dispose();
-    line.geometry = geometry;
-    line.computeLineDistances();
-    line.userData.topoGraticuleSegmentCount = positions.length / 6;
-  }
-
-  private rebuildTopoGraticuleEdgeLines(
-    group: THREE.Group,
-    edge: TerrainEdgeFadeState | null,
-    edgeAware: boolean,
-    labelOffsetM: number,
-    labelGapM: number,
-  ): void {
-    let sourceRoot: THREE.Object3D | null =
-      group.userData?.topoGraticule === true ? group : null;
-    group.traverse((obj) => {
-      if (!sourceRoot && obj.userData?.topoGraticule === true) {
-        sourceRoot = obj;
-      }
-    });
-    if (!sourceRoot) return;
-    const rawSourceLines = sourceRoot.userData?.topoGraticuleSourceLines as
-      | unknown[]
-      | undefined;
-    if (!Array.isArray(rawSourceLines)) return;
-    const sourceLines = rawSourceLines
-      .map((line) => topoGraticuleSourceLine(line))
-      .filter((line): line is TopoGraticuleSourceLine => Boolean(line));
-    if (sourceLines.length === 0) return;
-
-    let interiorLine: LineSegments2 | null = null;
-    let dashedInteriorLine: LineSegments2 | null = null;
-    let leaderLine: LineSegments2 | null = null;
-    let dashedLeaderLine: LineSegments2 | null = null;
-    group.traverse((obj) => {
-      if (!(obj instanceof LineSegments2)) return;
-      if (obj.userData?.topoGraticuleLineRole === "leader") leaderLine = obj;
-      else if (obj.userData?.topoGraticuleLineRole === "leader-dashed") {
-        dashedLeaderLine = obj;
-      }
-      else if (obj.userData?.topoGraticuleLineRole === "interior-dashed") {
-        dashedInteriorLine = obj;
-      }
-      else if (obj.userData?.topoGraticuleLineRole === "interior") {
-        interiorLine = obj;
-      }
-    });
-    const interior = interiorLine as LineSegments2 | null;
-    const dashedInterior = dashedInteriorLine as LineSegments2 | null;
-    const leader = leaderLine as LineSegments2 | null;
-    const dashedLeader = dashedLeaderLine as LineSegments2 | null;
-    if (!interior || !dashedInterior || !leader || !dashedLeader) return;
-
-    const interiorPositions: number[] = [];
-    const dashedInteriorPositions: number[] = [];
-    const leaderPositions: number[] = [];
-    const dashedLeaderPositions: number[] = [];
-    const labelTargets = new Map<string, TopoGraticuleLabelTarget>();
-    const innerThreshold = edgeAware && edge ? edge.fadeDistanceM : -Infinity;
-    const labelGap = labelGapM;
-
-    for (const sourceLine of sourceLines) {
-      const { candidates } = sourceLine;
-      const isMinor = topoGraticuleIsHalfDegree(sourceLine.value);
-      const sourceInteriorPositions = isMinor
-        ? dashedInteriorPositions
-        : interiorPositions;
-      for (let index = 1; index < candidates.length; index += 1) {
-        if (!edgeAware || !edge) {
-          this.pushTopoGraticuleSegment(
-            sourceInteriorPositions,
-            candidates[index - 1].position,
-            candidates[index].position,
-          );
-          continue;
-        }
-        const clipped = this.topoGraticuleVisibleSegment(
-          candidates[index - 1],
-          candidates[index],
-          edge,
-          innerThreshold,
-        );
-        if (clipped) {
-          this.pushTopoGraticuleSegment(
-            sourceInteriorPositions,
-            clipped[0],
-            clipped[1],
-          );
-        }
-      }
-
-      if (!edgeAware || !edge) continue;
-      const inner = this.topoGraticulePreferredCrossing(
-        candidates,
-        edge,
-        sourceLine.preference,
-        innerThreshold,
-      );
-      if (!inner) continue;
-      const outer = this.topoGraticulePreferredCrossing(
-        candidates,
-        edge,
-        sourceLine.preference,
-        0,
-      );
-      if (
-        !terrainEdgeStraightSideEligible(
-          outer?.position ?? inner.position,
-          edge,
-          sourceLine.preference,
-        )
-      ) {
-        continue;
-      }
-      const effectiveLabelOffsetM =
-        labelOffsetM * (isMinor ? TOPO_GRATICULE_MINOR_SCALE : 1);
-      const effectiveLabelThreshold = -Math.max(0, effectiveLabelOffsetM);
-      const target =
-        this.topoGraticulePreferredCrossing(
-          candidates,
-          edge,
-          sourceLine.preference,
-          effectiveLabelThreshold,
-        ) ??
-        (() => {
-          const outward = edgeOutwardLineTangent(inner, edge);
-          const currentInside = terrainEdgeInsideDistance(inner.position, edge);
-          return {
-            position: inner.position
-              .clone()
-              .addScaledVector(outward, currentInside - effectiveLabelThreshold),
-            tangent: inner.tangent.clone(),
-          };
-        })();
-      const leaderDirection = target.position.clone().sub(inner.position);
-      leaderDirection.z = 0;
-      if (leaderDirection.lengthSq() <= 0.000001) {
-        leaderDirection.copy(edgeOutwardLineTangent(inner, edge));
-      } else {
-        leaderDirection.normalize();
-      }
-      const edgeTextBasis = topoGraticuleEdgeTextBasis(sourceLine.preference);
-      const readableTangent = edgeTextBasis.tangent;
-      const positions = isMinor ? dashedLeaderPositions : leaderPositions;
-      this.pushTopoGraticuleSegment(positions, inner.position, target.position);
-      labelTargets.set(
-        topoGraticuleLineKey(
-          sourceLine.kind,
-          sourceLine.value,
-          sourceLine.preference,
-        ),
-        {
-          position: target.position.clone(),
-          anchor: target.position.clone(),
-          tangent: readableTangent,
-          outward: edgeTextBasis.outward,
-          insideDistance: terrainEdgeInsideDistance(target.position, edge),
-          minor: isMinor,
-        },
-      );
-    }
-
-    this.setTopoGraticuleLinePositions(interior, interiorPositions);
-    this.setTopoGraticuleLinePositions(dashedInterior, dashedInteriorPositions);
-    this.setTopoGraticuleLinePositions(leader, leaderPositions);
-    this.setTopoGraticuleLinePositions(dashedLeader, dashedLeaderPositions);
-    interior.visible = interiorPositions.length > 0;
-    dashedInterior.visible = dashedInteriorPositions.length > 0;
-    leader.visible = edgeAware && leaderPositions.length > 0;
-    dashedLeader.visible = edgeAware && dashedLeaderPositions.length > 0;
-    for (const target of [group, sourceRoot]) {
-      target.userData.topoGraticuleInteriorSegmentCount =
-        (interiorPositions.length + dashedInteriorPositions.length) / 6;
-      target.userData.topoGraticuleDashedInteriorSegmentCount =
-        dashedInteriorPositions.length / 6;
-      target.userData.topoGraticuleLeaderSegmentCount =
-        (leaderPositions.length + dashedLeaderPositions.length) / 6;
-      target.userData.topoGraticuleDashedLeaderSegmentCount =
-        dashedLeaderPositions.length / 6;
-      target.userData.topoGraticuleInnerTrimInsideDistance = innerThreshold;
-      target.userData.topoGraticuleLabelOffsetM = labelOffsetM;
-      target.userData.topoGraticuleLabelGapM = labelGap;
-      target.userData.topoGraticuleLabelTargets = labelTargets;
-    }
-  }
-
-  private applyTopoGraticuleLabelPlacement(
-    obj: THREE.Object3D,
-    edge: TerrainEdgeFadeState | null,
-    edgeAware: boolean,
-    labelOffsetM: number,
-    labelGapM: number,
-    labelSizeM: number,
-  ): void {
-    if (!edgeAware || !edge) return;
-    const preference =
-      obj.userData?.topoGraticuleLabelPreference === "north"
-        ? "north"
-        : "west";
-    const targetMap = obj.parent?.userData
-      ?.topoGraticuleLabelTargets as Map<string, TopoGraticuleLabelTarget> | undefined;
-    if (targetMap instanceof Map) {
-      const labelKey = topoGraticuleLabelKey(obj);
-      const target = labelKey ? targetMap.get(labelKey) : null;
-      if (!target) {
-        obj.visible = false;
-        obj.userData.topoGraticuleLabelHasLeader = false;
-        obj.userData.topoGraticuleLabelExcludedReason = "no-edge-leader";
-        return;
-      }
-      const aspect =
-        typeof obj.userData?.topoGraticuleLabelAspect === "number"
-          ? Math.max(1, obj.userData.topoGraticuleLabelAspect)
-          : 2.4;
-      const labelScale =
-        (labelSizeM / 9000) *
-        (target.minor ? TOPO_GRATICULE_MINOR_SCALE : 1);
-      const halfTextLengthM = 9000 * aspect * labelScale * 0.5;
-      const labelGap = labelGapM;
-      const position = target.anchor
-        .clone()
-        .addScaledVector(target.outward, labelGap + halfTextLengthM);
-      obj.position.copy(position);
-      obj.rotation.set(
-        0,
-        0,
-        normalizeFullGroundTextAngle(
-          Math.atan2(target.tangent.y, target.tangent.x),
-        ),
-      );
-      obj.userData.topoGraticuleLabelHasLeader = true;
-      obj.userData.topoGraticuleLabelExcludedReason = null;
-      obj.userData.topoGraticuleActiveLabelInsideDistance =
-        terrainEdgeInsideDistance(position, edge);
-      obj.userData.topoGraticuleActiveLabelAnchor = {
-        x: target.anchor.x,
-        y: target.anchor.y,
-        z: target.anchor.z,
-      };
-      obj.userData.topoGraticuleActiveLabelTangent = {
-        x: target.tangent.x,
-        y: target.tangent.y,
-        z: target.tangent.z,
-      };
-      obj.userData.topoGraticuleLabelGapM = labelGapM;
-      obj.userData.topoGraticuleLabelMinor = target.minor;
-      return;
-    }
-    const candidates = obj.userData?.topoGraticuleLabelCandidates as
-      | unknown[]
-      | undefined;
-    if (!Array.isArray(candidates) || candidates.length === 0) return;
-    const targetInsideDistance = -Math.max(0, labelOffsetM);
-    const parsedCandidates = candidates
-      .map((candidate) => topoGraticuleLabelCandidate(candidate))
-      .filter((candidate): candidate is TopoGraticuleLabelCandidate =>
-        Boolean(candidate),
-      );
-    const target = this.topoGraticulePreferredCrossing(
-      parsedCandidates,
-      edge,
-      preference,
-      targetInsideDistance,
-    );
-    if (target) {
-      obj.position.copy(target.position);
-      obj.rotation.set(0, 0, topoGraticuleReadableAngle(target.tangent, preference));
-      obj.userData.topoGraticuleActiveLabelInsideDistance =
-        terrainEdgeInsideDistance(target.position, edge);
-      obj.userData.topoGraticuleActiveLabelTangent = {
-        x: target.tangent.x,
-        y: target.tangent.y,
-        z: target.tangent.z,
-      };
-      return;
-    }
-
-    let best: TopoGraticuleLabelCandidate | null = null;
-    let bestScore = -Infinity;
-    for (const candidate of parsedCandidates) {
-      const insideDistance = terrainEdgeInsideDistance(
-        candidate.position,
-        edge,
-      );
-      const edgeFit = -Math.abs(insideDistance - targetInsideDistance);
-      const sideFit =
-        terrainEdgePreferenceScore(candidate.position, edge, preference) *
-        0.35;
-      const score = sideFit + edgeFit;
-      if (score > bestScore) {
-        bestScore = score;
-        best = candidate;
-      }
-    }
-    if (!best) return;
-
-    const position = best.position.clone();
-    const currentInsideDistance = terrainEdgeInsideDistance(position, edge);
-    if (currentInsideDistance > targetInsideDistance) {
-      const outward = edgeOutwardLineTangent(best, edge);
-      position.addScaledVector(
-        outward,
-        currentInsideDistance - targetInsideDistance,
-      );
-    }
-    obj.position.copy(position);
-    obj.rotation.set(0, 0, topoGraticuleReadableAngle(best.tangent, preference));
-    obj.userData.topoGraticuleActiveLabelInsideDistance =
-      terrainEdgeInsideDistance(position, edge);
-    obj.userData.topoGraticuleActiveLabelTangent = {
-      x: best.tangent.x,
-      y: best.tangent.y,
-      z: best.tangent.z,
-    };
-  }
-
-  private applyTopoGraticuleStyle(id: string, style: EditableStyle): void {
-    if (id !== UTAH_FORGE_TOPO_GRATICULE_LAYER_ID) return;
-    const group = this.layers.get(id);
-    if (!group) return;
-    const clipBox = this.publicSurfaceClipBox(this.styleForLayer("terrain"));
-    const clipPlanes = clipBox.enabled
-      ? this.publicSurfaceClipPlanes(clipBox)
-      : [];
-    const labelVisible = style.graticuleLabelVisible !== false;
-    const labelSize = styleNumber(
-      style,
-      "graticuleLabelSizeM",
-      9000,
-      1500,
-      60000,
-    );
-    const lift = styleNumber(style, "graticuleLiftM", 24, -50, 500);
-    group.position.z = lift;
-    const opacity = clamp01(styleNumber(style, "opacity", 0.62, 0, 1));
-    const color = typeof style.color === "string" ? style.color : "#d7d1c7";
-    const edgeAware = style.graticuleEdgeFadeAware !== false;
-    const edgeStrength = styleNumber(
-      style,
-      "graticuleEdgeFadeStrength",
-      1,
-      0,
-      1,
-    );
-    const edgeLineColor =
-      typeof style.graticuleEdgeLineColor === "string"
-        ? style.graticuleEdgeLineColor
-        : "#ffffff";
-    const edgeLabelColor =
-      typeof style.graticuleEdgeLabelColor === "string"
-        ? style.graticuleEdgeLabelColor
-        : "#ffffff";
-    const edgeLabelVisible = style.graticuleEdgeLabelVisible !== false;
-    const edgeLabelOffsetM = styleNumber(
-      style,
-      "graticuleEdgeLabelOffsetM",
-      90000,
-      0,
-      160000,
-    );
-    const edgeLabelGapM = styleNumber(
-      style,
-      "graticuleEdgeLabelGapM",
-      22000,
-      -100000,
-      100000,
-    );
-    const graticuleLineWidth = styleNumber(style, "lineWidth", 4.75, 0.1, 24);
-    const graticuleEdgeLineWidth = styleNumber(
-      style,
-      "graticuleEdgeLineWidth",
-      graticuleLineWidth,
-      0.1,
-      32,
-    );
-    const terrainEdge = this.resolveTerrainEdgeFadeState();
-    this.rebuildTopoGraticuleEdgeLines(
-      group,
-      terrainEdge,
-      edgeAware,
-      edgeLabelOffsetM,
-      edgeLabelGapM,
-    );
-    group.traverse((obj) => {
-      if (obj.userData?.topoGraticuleLabel === true) {
-        obj.visible = labelVisible && (!edgeAware || edgeLabelVisible);
-        this.applyTopoGraticuleLabelPlacement(
-          obj,
-          terrainEdge,
-          edgeAware,
-          edgeLabelOffsetM,
-          edgeLabelGapM,
-          labelSize,
-        );
-        const base = obj.userData.topoGraticuleBaseScale as
-          | THREE.Vector3
-          | undefined;
-        const scaleFactor =
-          (labelSize / 9000) *
-          (obj.userData.topoGraticuleLabelMinor === true
-            ? TOPO_GRATICULE_MINOR_SCALE
-            : 1);
-        if (base) {
-          obj.scale.set(
-            base.x * scaleFactor,
-            base.y * scaleFactor,
-            base.z * scaleFactor,
-          );
-        } else {
-          obj.scale.setScalar(scaleFactor);
-        }
-      }
-      const material = (obj as { material?: THREE.Material | THREE.Material[] })
-        .material;
-      if (!material) return;
-      const materials = Array.isArray(material) ? material : [material];
-      for (const m of materials) {
-        const lineRole = obj.userData?.topoGraticuleLineRole;
-        const minorLine =
-          lineRole === "interior-dashed" || lineRole === "leader-dashed";
-        const minorLabel =
-          obj.userData?.topoGraticuleLabel === true &&
-          obj.userData.topoGraticuleLabelMinor === true;
-        if ("color" in m && m.color instanceof THREE.Color) {
-          m.color.set(
-            obj.userData?.topoGraticuleLabel === true && edgeAware
-              ? edgeLabelColor
-              : (lineRole === "leader" || lineRole === "leader-dashed") &&
-                  edgeAware
-                ? edgeLineColor
-              : color,
-          );
-        }
-        if (m instanceof LineMaterial && m.userData?.topoGraticuleLineMaterial) {
-          const edgeLine =
-            lineRole === "leader" || lineRole === "leader-dashed";
-          const baseLineWidth = edgeLine
-            ? graticuleEdgeLineWidth
-            : graticuleLineWidth;
-          m.linewidth =
-            baseLineWidth * (minorLine ? TOPO_GRATICULE_MINOR_SCALE : 1);
-          setTopoGraticuleEdgeFade(m, {
-            enabled: edgeAware,
-            strength: edgeStrength,
-            lineColor: edgeLineColor,
-            boundsMin: terrainEdge
-              ? [terrainEdge.boundsMin.x, terrainEdge.boundsMin.y]
-              : undefined,
-            boundsMax: terrainEdge
-              ? [terrainEdge.boundsMax.x, terrainEdge.boundsMax.y]
-              : undefined,
-            edgeFadeDistanceM: terrainEdge?.fadeDistanceM ?? 0,
-            edgeFadeShape: terrainEdge?.shape ?? "square",
-            edgeFadeInsetM: terrainEdge?.insetM ?? 0,
-            edgeFadeCornerRadiusM: terrainEdge?.cornerRadiusM ?? 0,
-          });
-        }
-        m.opacity =
-          opacity *
-          (minorLine || minorLabel ? TOPO_GRATICULE_MINOR_SCALE : 1);
-        m.transparent = true;
-        m.depthWrite = false;
-        const publicSurfaceClipPlanes =
-          clipBox.enabled && !edgeAware ? clipPlanes : null;
-        m.userData.publicSurfaceClipPlanes = publicSurfaceClipPlanes;
-        m.clippingPlanes = publicSurfaceClipPlanes;
-        m.clipIntersection = false;
-        m.needsUpdate = true;
-      }
-    });
   }
 
   private workingAreaFocusTargetLayerIds(style: EditableStyle): Set<string> {
@@ -7147,7 +5273,7 @@ export class SceneManager {
     ) {
       return;
     }
-    const terrainGroup = this.layers.get("terrain");
+    const terrainGroup = this.topoSurfaceGroup();
     if (!terrainGroup) return;
     const opacity =
       typeof style.opacity === "number" ? clamp01(style.opacity) : 1;
@@ -11099,17 +9225,24 @@ export class SceneManager {
     }
     this.applyTerrainFogStyle(id, affectedByFog, fogDensity);
     this.applyTerrainLiftStyle(id, style);
-    if (id === "terrain" || PUBLIC_SURFACE_LAYER_IDS.has(id)) {
-      this.applyPublicSurfaceClipStyle(this.styleForLayer("terrain"));
-    }
-    if (id === "terrain") {
-      this.applyTopoGraticuleStyle(
-        UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
-        this.styleForLayer(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID),
+    if (
+      this.isTopoSurfaceLayerId(id) ||
+      this.topoPublicSurfaceLayerIds().includes(id)
+    ) {
+      this.topoRuntime.applyPublicSurfaceClipStyle(
+        this.styleForLayer(this.topoSurfaceLayerId()),
       );
     }
+    if (this.isTopoSurfaceLayerId(id)) {
+      for (const graticuleLayerId of this.topoGraticuleLayerIds()) {
+        this.topoRuntime.applyGraticuleStyle(
+          graticuleLayerId,
+          this.styleForLayer(graticuleLayerId),
+        );
+      }
+    }
     this.applyTerrainCompositeStyle(id, style);
-    this.applyTopoGraticuleStyle(id, style);
+    this.topoRuntime.applyGraticuleStyle(id, style);
     this.applyGeochemStyle(id, style);
     this.applyHyperspectralStyle(id, style);
     this.applyImageryLidarAoiStyle(id, style);
@@ -11231,7 +9364,12 @@ export class SceneManager {
         !!group &&
         duration > 0 &&
         fromOpacity > 0.001 &&
-        forgeDiscreteDataStyleChanged(id, fromStyle, targetStyle);
+        forgeDiscreteDataStyleChanged(
+          id,
+          fromStyle,
+          targetStyle,
+          this.layerSpecFor(id),
+        );
       const shouldTweenScalarStyle =
         !!group &&
         !shouldCrossfadeDiscreteData &&
@@ -11346,7 +9484,7 @@ export class SceneManager {
     page: PresentationPage,
     opacityOverrides: ReadonlyMap<string, number> = new Map(),
   ): void {
-    const terrainGroup = this.layers.get("terrain");
+    const terrainGroup = this.topoSurfaceGroup();
     if (!terrainGroup) return;
     const visibleSet = effectiveVisibility(environment, page);
 
@@ -11589,7 +9727,7 @@ export class SceneManager {
       mergeSceneProperties(environment.scene, presetPatch),
       this.environmentScenePreviewPatch,
     );
-    this.currentTerrainScene = sp.terrain ?? {};
+    this.topoRuntime.setCurrentTerrain(sp.terrain ?? {});
     this.setStudioSceneElementsVisible(sp.lighting?.showSceneElements ?? true);
     this.applyDrillingAssayDisplay(sp);
     this.applyTopoDetailDistanceDisplay(sp);
@@ -11770,44 +9908,18 @@ export class SceneManager {
     this.renderer.shadowMap.enabled = false;
 
     // ---- terrain shader uniforms --------------------------------------
-    const terrainGroup = this.layers.get("terrain");
+    const terrainGroup = this.topoSurfaceGroup();
     if (terrainGroup) {
-      terrainGroup.traverse((obj) => {
-        const userData = (obj as THREE.Mesh).userData;
-        const handle = userData?.terrainHandle as
-          | TerrainMaterialHandle
-          | undefined;
-        if (!handle) return;
-        handle.setSunDirection(this.currentSunDir);
-        if (sp.terrain) handle.setParams(sp.terrain);
-        const gridHandle = userData?.terrainGridHandle as
-          | TerrainGridHandle
-          | undefined;
-        gridHandle?.update(sp.terrain ?? {});
-        // lightMode overrides the elevation ramp with greyscale.
-        // Applied AFTER the authored sp.terrain push so it wins.
-        // Hillshade intensity / shadow sharpness / hue variance are
-        // left at authored values: only the colors swap.
-        if (lightMode) {
-          handle.setParams({
-            rampLow: LIGHT_MODE_TERRAIN_RAMP_LOW,
-            rampMid: LIGHT_MODE_TERRAIN_RAMP_MID,
-            rampHigh: LIGHT_MODE_TERRAIN_RAMP_HIGH,
-          });
-        }
-        // Push the fog color into the terrain shader so its in-shader
-        // distance fade ends up at the same tone as the renderer fog.
-        handle.setParams({
-          fogColor: "#" + fogColor.getHexString(),
-          // Approximate exponential -> linear fog distance for the
-          // shader's near/far model: full-fade distance = ~3/density.
-          fogNear: 0,
-          fogFar: 3 / Math.max(density, 0.000001),
-        });
+      this.topoRuntime.applyEnvironment({
+        sceneProperties: sp,
+        sunDirection: this.currentSunDir,
+        fogColor,
+        fogDensity: density,
+        lightMode,
       });
-      this.applyTerrainOrthoPhotoTexture(sp.terrain ?? {});
+      const surfaceLayerId = this.topoSurfaceLayerId();
       for (const layerId of [
-        "terrain",
+        surfaceLayerId,
         "hydrography-lakes",
         "three-firs-target",
         "great-plains-target",
@@ -11822,11 +9934,8 @@ export class SceneManager {
           styleFogDensity(style, density),
         );
       }
-      this.applyTopoGraticuleStyle(
-        UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
-        this.styleForLayer(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID),
-      );
-      this.rebuildTopoMapBranding(sp);
+      this.topoRuntime.applyAllGraticuleStyles();
+      this.topoRuntime.rebuildBranding(sp);
     }
 
     // ---- post-processing -----------------------------------------------
@@ -12073,15 +10182,7 @@ export class SceneManager {
     this.updateDynamicCameraOrbitCenterScale(camera);
     this.updatePageCameraMarkersScale(camera);
     this.updateEzGammaBillboards(camera);
-    const terrainGroup = this.layers.get("terrain");
-    if (terrainGroup) {
-      terrainGroup.traverse((obj) => {
-        const gridHandle = (obj as THREE.Mesh).userData?.terrainGridHandle as
-          | TerrainGridHandle
-          | undefined;
-        gridHandle?.updateCameraVisibility(camera);
-      });
-    }
+    this.topoRuntime.updateGridCameraVisibility(camera);
     if (this.sceneOverlays.size > 0) {
       tickSceneOverlayTweens(this.sceneOverlays.values(), nowMs);
     }
@@ -12131,7 +10232,7 @@ export class SceneManager {
   }
 
   disposeTerrainOrthoPhotoTexture(): void {
-    this.clearTerrainOrthoPhotoTexture();
+    this.topoRuntime.disposeOrthoPhotoTexture();
   }
 
   /**
@@ -12345,13 +10446,11 @@ export class SceneManager {
     for (const h of this.sceneOverlays.values()) {
       h.outlineMaterial.resolution.set(width, height);
     }
-    const clipMaterial = this.publicSurfaceClipRuntime?.line.material;
-    if (clipMaterial instanceof LineMaterial) {
-      clipMaterial.resolution.set(width, height);
-    }
+    this.topoRuntime.notifyResize(width, height);
     const focusMaterial = this.workingAreaFocusRuntime?.line.material;
     if (focusMaterial instanceof LineMaterial) {
       focusMaterial.resolution.set(width, height);
     }
   }
 }
+

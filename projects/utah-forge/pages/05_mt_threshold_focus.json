@@ -3,9 +3,9 @@
   "title": "MT Threshold Focus",
   "camera": {
     "position": [
-      -28879.73795742467,
-      -32469.208165290154,
-      11845.116116638794
+      7748.442847693308,
+      -80291.83550412979,
+      28013.273246632307
     ],
     "target": [
       -2988,
@@ -26,10 +26,10 @@
   "holdDuration": 4000,
   "layerOverrides": {
     "utah-forge-mt-resistivity-full-density": {
-      "scalarFocusMin": 3.0555553761897336,
-      "scalarFocusMax": 4.5,
-      "scalarBlendMin": 3.0555553761897336,
-      "scalarBlendMax": 4.5,
+      "scalarFocusMin": 2.3676704614943205,
+      "scalarFocusMax": 3.315372172975416,
+      "scalarBlendMin": 2.3676704614943205,
+      "scalarBlendMax": 3.315372172975416,
       "scalarInclusionMode": "thresholded",
       "scalarEdgeLineWidth": 1.3,
       "scalarEdgeAverage": 1,
@@ -68,6 +68,7 @@
   },
   "visibilityOverrides": {
     "utah-forge-mt-resistivity-full-density": true,
-    "utah-forge-phase3-seismic-browser": true
+    "utah-forge-phase3-seismic-browser": true,
+    "terrain": false
   }
 }

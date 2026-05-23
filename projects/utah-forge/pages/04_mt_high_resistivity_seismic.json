@@ -26,13 +26,14 @@
   "holdDuration": 4000,
   "layerOverrides": {
     "utah-forge-mt-resistivity-full-density": {
-      "scalarFocusMin": 2.694444193332294,
+      "scalarFocusMin": 3.706814235494493,
       "scalarFocusMax": 4.5,
-      "scalarBlendMin": 3.619791464880117,
+      "scalarBlendMin": 3.706814235494493,
       "scalarBlendMax": 4.5,
       "scalarInclusionMode": "thresholded",
       "scalarEdgeLineWidth": 1.3,
-      "scalarEdgeAverage": 0.59
+      "scalarEdgeAverage": 0.59,
+      "scalarEdgeLowerValue": 1.8114104195761795
     },
     "utah-forge-mt-top-surface": {
       "opacity": 0

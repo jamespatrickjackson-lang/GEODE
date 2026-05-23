@@ -15,9 +15,6 @@ const WGS84_F = 1 / 298.257223563;
 const WGS84_E2 = WGS84_F * (2 - WGS84_F);
 const WGS84_EP2 = WGS84_E2 / (1 - WGS84_E2);
 const UTM_K0 = 0.9996;
-const UTM_ZONE = 12;
-const UTM_CENTRAL_MERIDIAN_RAD =
-  (((UTM_ZONE - 1) * 6 - 180 + 3) * Math.PI) / 180;
 const DEG = Math.PI / 180;
 const RAD = 180 / Math.PI;
 const DEFAULT_STEP_DEG = 0.5;
@@ -25,6 +22,7 @@ const DEFAULT_SAMPLES_PER_LINE = 192;
 const DEFAULT_LABEL_SIZE_M = 9000;
 
 interface TopoGraticuleOptions extends GeoSceneTransformOptions {
+  utmZone: number;
   clipCenterScene?: [number, number];
   clipSizeScene?: [number, number];
   clipRotationDeg?: number;
@@ -71,16 +69,38 @@ function safeNumber(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
-function latLonToUtm(latDeg: number, lonDeg: number): UtmPoint {
+function utmCentralMeridianRad(zone: number): number {
+  return (((zone - 1) * 6 - 180 + 3) * Math.PI) / 180;
+}
+
+function utmZoneFromSourceCrs(sourceCrs: string | undefined): number | null {
+  const match = /^EPSG:(269|326|327)(\d{2})$/i.exec(sourceCrs?.trim() ?? "");
+  if (!match) return null;
+  const zone = Number.parseInt(match[2], 10);
+  return zone >= 1 && zone <= 60 ? zone : null;
+}
+
+function metadataSourceCrs(metadata: Record<string, unknown>): string | undefined {
+  const geoTransform =
+    metadata.geoTransform && typeof metadata.geoTransform === "object"
+      ? (metadata.geoTransform as Record<string, unknown>)
+      : null;
+  return typeof geoTransform?.sourceCrs === "string"
+    ? geoTransform.sourceCrs
+    : undefined;
+}
+
+function latLonToUtm(latDeg: number, lonDeg: number, zone: number): UtmPoint {
   const lat = latDeg * DEG;
   const lon = lonDeg * DEG;
+  const centralMeridian = utmCentralMeridianRad(zone);
   const sinLat = Math.sin(lat);
   const cosLat = Math.cos(lat);
   const tanLat = Math.tan(lat);
   const n = WGS84_A / Math.sqrt(1 - WGS84_E2 * sinLat * sinLat);
   const t = tanLat * tanLat;
   const c = WGS84_EP2 * cosLat * cosLat;
-  const a = cosLat * (lon - UTM_CENTRAL_MERIDIAN_RAD);
+  const a = cosLat * (lon - centralMeridian);
   const m =
     WGS84_A *
     ((1 - WGS84_E2 / 4 - (3 * WGS84_E2 ** 2) / 64 - (5 * WGS84_E2 ** 3) / 256) *
@@ -110,9 +130,10 @@ function latLonToUtm(latDeg: number, lonDeg: number): UtmPoint {
   return { easting, northing };
 }
 
-function utmToLatLon(easting: number, northing: number): LatLon {
+function utmToLatLon(easting: number, northing: number, zone: number): LatLon {
   const x = easting - 500000;
   const y = northing;
+  const centralMeridian = utmCentralMeridianRad(zone);
   const m = y / UTM_K0;
   const mu =
     m /
@@ -154,7 +175,7 @@ function utmToLatLon(easting: number, northing: number): LatLon {
           d ** 6) /
           720);
   const lon =
-    UTM_CENTRAL_MERIDIAN_RAD +
+    centralMeridian +
     (d -
       ((1 + 2 * t1 + c1) * d ** 3) / 6 +
       ((5 - 2 * c1 + 28 * t1 - 3 * c1 * c1 + 8 * WGS84_EP2 + 24 * t1 * t1) *
@@ -218,6 +239,8 @@ function makeTextPlane(
 
 function metadataOptions(
   metadata: Record<string, unknown>,
+  transformOptions?: GeoSceneTransformOptions,
+  fallbackSourceCrs?: string,
 ): TopoGraticuleOptions {
   const graticule =
     metadata.topoGraticule && typeof metadata.topoGraticule === "object"
@@ -230,6 +253,11 @@ function metadataOptions(
     ? graticule.clipSizeScene
     : [487600, 484100];
   return {
+    utmZone:
+      utmZoneFromSourceCrs(transformOptions?.sourceCrs) ??
+      utmZoneFromSourceCrs(metadataSourceCrs(metadata)) ??
+      utmZoneFromSourceCrs(fallbackSourceCrs) ??
+      Number.NaN,
     clipCenterScene: [safeNumber(center[0], -1750), safeNumber(center[1], 0)],
     clipSizeScene: [safeNumber(size[0], 487600), safeNumber(size[1], 484100)],
     clipRotationDeg: safeNumber(graticule.clipRotationDeg, -20),
@@ -262,6 +290,7 @@ function labelCandidatesForLine(points: THREE.Vector3[]): LabelCandidate[] {
 
 function terrainBoundsCorners(
   transform: ReturnType<typeof resolveGeoSceneTransform>,
+  utmZone: number,
 ): LatLon[] {
   const { min, max } = transform.bounds;
   return [
@@ -269,7 +298,7 @@ function terrainBoundsCorners(
     { easting: max.easting, northing: min.northing },
     { easting: max.easting, northing: max.northing },
     { easting: min.easting, northing: max.northing },
-  ].map((point) => utmToLatLon(point.easting, point.northing));
+  ].map((point) => utmToLatLon(point.easting, point.northing, utmZone));
 }
 
 function initialLabelCandidate(
@@ -335,12 +364,17 @@ export async function loadTopoGraticule(
 ): Promise<THREE.Group> {
   const transform = resolveGeoSceneTransform(transformOptions);
   const sampleHeight = await getHeightSampler();
-  const options = metadataOptions(metadata);
+  const options = metadataOptions(metadata, transformOptions, transform.sourceCrs);
+  if (!Number.isFinite(options.utmZone)) {
+    throw new Error(
+      "Topo graticule requires a supported UTM CRS in geoTransform.sourceCrs, such as EPSG:26912 or EPSG:32612.",
+    );
+  }
   const samples = options.samplesPerLine ?? DEFAULT_SAMPLES_PER_LINE;
   const labelSizeM = DEFAULT_LABEL_SIZE_M;
   const latStep = Math.max(0.05, options.latitudeStepDeg ?? DEFAULT_STEP_DEG);
   const lonStep = Math.max(0.05, options.longitudeStepDeg ?? DEFAULT_STEP_DEG);
-  const corners = terrainBoundsCorners(transform);
+  const corners = terrainBoundsCorners(transform, options.utmZone);
   const domainMarginDeg = Math.max(1.5, Math.max(latStep, lonStep) * 3);
   const minLat =
     Math.min(...corners.map((corner) => corner.lat)) - domainMarginDeg;
@@ -368,7 +402,7 @@ export async function loadTopoGraticule(
     generatedBounds.maxY = Math.max(generatedBounds.maxY, point.y);
   };
   const pushScenePoint = (lat: number, lon: number): THREE.Vector3 => {
-    const utm = latLonToUtm(lat, lon);
+    const utm = latLonToUtm(lat, lon, options.utmZone);
     const [x, y, z] = utmToSceneWithTransform(
       transform,
       utm.easting,

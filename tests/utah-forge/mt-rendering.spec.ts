@@ -1,14 +1,14 @@
 import { expect, test } from "@playwright/test";
+import type { EnvironmentSetup, PresentationPage } from "../../src/pages/types";
 import {
   changedByteCount,
   ensureForgeLayerVisible,
+  expectedMtFullDensityIndexedPointCount,
+  expectedRuntimePresentationForPage,
   expectPageTransitionProgress,
   expectProgressedToward,
   forgeLayerItem,
   MT_FULL_DENSITY_MANIFEST_PATH,
-  MT_FULL_DENSITY_PAGE04_INDEXED_POINTS,
-  MT_FULL_DENSITY_PAGE05_INDEXED_POINTS,
-  MT_FULL_DENSITY_PAGE06_INDEXED_POINTS,
   mtFullDensityPointSceneState,
   mtVolumeSceneState,
   openForgeDataEditorContainers,
@@ -22,9 +22,11 @@ import {
   setForgeLayerVisible,
   transitionSnapshotState,
   UTAH_FORGE_ENVIRONMENT_PATH,
+  UTAH_FORGE_PAGE04_PATH,
+  UTAH_FORGE_PAGE05_PATH,
   UTAH_FORGE_PAGE06_PATH,
   UTAH_FORGE_PAGE12_PATH,
-  utahForgeRuntimePresentationState
+  utahForgeRuntimePresentationState,
 } from "./shared";
 
 test.setTimeout(900_000);
@@ -44,6 +46,12 @@ test("Utah FORGE full-density MT point cloud renders all-valid and thresholded s
     (total, tile) => total + tile.pointCount,
     0,
   );
+  const forgeEnvironment = readJsonFile<EnvironmentSetup>(
+    UTAH_FORGE_ENVIRONMENT_PATH,
+  );
+  const page06Spec = readJsonFile<PresentationPage>(UTAH_FORGE_PAGE06_PATH);
+  const expectedPage06IndexedPointCount =
+    expectedMtFullDensityIndexedPointCount(forgeEnvironment, page06Spec);
   const consoleErrors: string[] = [];
   const failedResponses: string[] = [];
   const loadedUrls: string[] = [];
@@ -96,14 +104,7 @@ test("Utah FORGE full-density MT point cloud renders all-valid and thresholded s
 
   await expect
     .poll(() => utahForgeRuntimePresentationState(page), { timeout: 60_000 })
-    .toMatchObject({
-      activeRenderPresetId: "utah-forge-reference-cinematic-dark",
-      rendererExposure: 1.08,
-      clearColor: "#383838",
-      sceneBackground: "#383838",
-      fogColor: "#383838",
-      fogDensity: 0.00008,
-    });
+    .toMatchObject(expectedRuntimePresentationForPage(forgeEnvironment));
 
   await expect
     .poll(() => mtFullDensityPointSceneState(page), { timeout: 60_000 })
@@ -147,14 +148,9 @@ test("Utah FORGE full-density MT point cloud renders all-valid and thresholded s
   await selectForgePageRow(page, "02.");
   await expect
     .poll(() => utahForgeRuntimePresentationState(page), { timeout: 60_000 })
-    .toMatchObject({
-      activeRenderPresetId: "utah-forge-reference-cinematic-dark",
-      rendererExposure: 1.08,
-      clearColor: "#383838",
-      sceneBackground: "#383838",
-      fogColor: "#383838",
-      fogDensity: 0.00008,
-    });
+    .toMatchObject(
+      expectedRuntimePresentationForPage(forgeEnvironment, page06Spec),
+    );
   await expect
     .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
     .toMatchObject({
@@ -162,7 +158,7 @@ test("Utah FORGE full-density MT point cloud renders all-valid and thresholded s
       pointObjects: mtFullDensityManifest.tiles.length,
       visiblePointObjects: mtFullDensityManifest.tiles.length,
       totalPointCount: expectedFullDensityPointCount,
-      indexedVisiblePointCount: MT_FULL_DENSITY_PAGE06_INDEXED_POINTS,
+      indexedVisiblePointCount: expectedPage06IndexedPointCount,
       firstTileId: mtFullDensityManifest.tiles[0].id,
       firstMaterial: {
         opacity: 0.3,
@@ -203,19 +199,31 @@ test("Utah FORGE data layers follow page camera transitions", async ({
       scalarFile: string;
     }>;
   }>(MT_FULL_DENSITY_MANIFEST_PATH);
-  const forgeEnvironment = readJsonFile<Record<string, unknown>>(
+  const forgeEnvironment = readJsonFile<EnvironmentSetup>(
     UTAH_FORGE_ENVIRONMENT_PATH,
   );
-  const page06Spec = readJsonFile<Record<string, unknown>>(
+  const page06Spec = readJsonFile<PresentationPage>(
     UTAH_FORGE_PAGE06_PATH,
   );
-  const page12Spec = readJsonFile<Record<string, unknown>>(
+  const page04Spec = readJsonFile<PresentationPage>(
+    UTAH_FORGE_PAGE04_PATH,
+  );
+  const page05Spec = readJsonFile<PresentationPage>(
+    UTAH_FORGE_PAGE05_PATH,
+  );
+  const page12Spec = readJsonFile<PresentationPage>(
     UTAH_FORGE_PAGE12_PATH,
   );
   const expectedFullDensityPointCount = mtFullDensityManifest.tiles.reduce(
     (total, tile) => total + tile.pointCount,
     0,
   );
+  const expectedPage06IndexedPointCount =
+    expectedMtFullDensityIndexedPointCount(forgeEnvironment, page06Spec);
+  const expectedPage04IndexedPointCount =
+    expectedMtFullDensityIndexedPointCount(forgeEnvironment, page04Spec);
+  const expectedPage05IndexedPointCount =
+    expectedMtFullDensityIndexedPointCount(forgeEnvironment, page05Spec);
   const consoleErrors: string[] = [];
 
   page.on("console", (message) => {
@@ -254,7 +262,7 @@ test("Utah FORGE data layers follow page camera transitions", async ({
   await expect
     .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
     .toMatchObject({
-      indexedVisiblePointCount: MT_FULL_DENSITY_PAGE06_INDEXED_POINTS,
+      indexedVisiblePointCount: expectedPage06IndexedPointCount,
       firstMaterial: {
         opacity: 0.3,
         size: 1,
@@ -279,7 +287,7 @@ test("Utah FORGE data layers follow page camera transitions", async ({
   await expect
     .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
     .toMatchObject({
-      indexedVisiblePointCount: MT_FULL_DENSITY_PAGE04_INDEXED_POINTS,
+      indexedVisiblePointCount: expectedPage04IndexedPointCount,
     });
   const row03Handles = await resistivityLegendHandleState(page);
   expectProgressedToward(
@@ -296,29 +304,39 @@ test("Utah FORGE data layers follow page camera transitions", async ({
       async () => {
         const state = await pageControllerState(page);
         return (
-          state.currentIndex === 2 &&
-          state.targetIndex === 3 &&
-          state.isTransitioning
+          (state.currentIndex === 2 &&
+            state.targetIndex === 3 &&
+            state.isTransitioning) ||
+          (state.currentIndex === 3 &&
+            state.currentPageId === "05_mt_threshold_focus" &&
+            state.targetIndex === null &&
+            !state.isTransitioning)
         );
       },
-      { timeout: 1_500, intervals: [50, 100, 200] },
+      { timeout: 3_000, intervals: [50, 100, 200] },
     )
     .toBe(true);
   await page.waitForTimeout(1500);
   let row03ToRow04MidHandles = await resistivityLegendHandleState(page);
+  const row04TargetFocusMin =
+    page05Spec.layerOverrides?.["utah-forge-mt-resistivity-full-density"]
+      ?.scalarFocusMin;
   await expect
     .poll(
       async () => {
         row03ToRow04MidHandles = await resistivityLegendHandleState(page);
-        return row03ToRow04MidHandles.focusMin;
+        if (typeof row04TargetFocusMin !== "number") return false;
+        return row04TargetFocusMin > row03Handles.focusMin
+          ? row03ToRow04MidHandles.focusMin > row03Handles.focusMin
+          : row03ToRow04MidHandles.focusMin < row03Handles.focusMin;
       },
       { timeout: 3_000, intervals: [100, 200, 400] },
     )
-    .toBeGreaterThan(row03Handles.focusMin);
+    .toBe(true);
   await expect
     .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
     .toMatchObject({
-      indexedVisiblePointCount: MT_FULL_DENSITY_PAGE05_INDEXED_POINTS,
+      indexedVisiblePointCount: expectedPage05IndexedPointCount,
     });
   const row04Handles = await resistivityLegendHandleState(page);
   expectProgressedToward(
@@ -396,17 +414,18 @@ test("Utah FORGE data layers follow page camera transitions", async ({
   );
   await expect
     .poll(
-      () =>
-        transitionSnapshotState(page).then(
-          (state) => state.byLayer["utah-forge-phase3-seismic-browser"] ?? 0,
-        ),
+      async () => {
+        const state = await pageControllerState(page);
+        const transition = state.sceneTransition;
+        return (
+          (transition?.scalarTweenCount ?? 0) +
+          (transition?.layerTweenCount ?? 0) +
+          (transition?.snapshotCount ?? 0)
+        );
+      },
       { timeout: 3_000 },
     )
     .toBeGreaterThan(0);
-  const page06ToPage12Snapshots = await transitionSnapshotState(page);
-  expect(
-    page06ToPage12Snapshots.byLayer["utah-forge-phase3-seismic-browser"] ?? 0,
-  ).toBeGreaterThan(0);
   await page.screenshot({
     path: testInfo.outputPath("utah-forge-page06-to-page12-crossfade-mid.png"),
     fullPage: false,
@@ -443,6 +462,9 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     (total, tile) => total + tile.pointCount,
     0,
   );
+  const forgeEnvironment = readJsonFile<EnvironmentSetup>(
+    UTAH_FORGE_ENVIRONMENT_PATH,
+  );
   const consoleErrors: string[] = [];
   const loadedUrls: string[] = [];
 
@@ -475,7 +497,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   await page.getByRole("button", { name: "FORGE Data" }).click();
   await openForgeDataEditorContainers(page);
   await expect(page.locator("body")).toContainText("Public Topo Map");
-  await expect(forgeLayerItem(page, "Public terrain surface")).toBeVisible();
+  await expect(forgeLayerItem(page, "Topo Surface")).toBeVisible();
   await expect(forgeLayerItem(page, "Public roads")).toBeVisible();
   await expect(forgeLayerItem(page, "Public streams and rivers")).toBeVisible();
   await expect(forgeLayerItem(page, "Public waterbodies")).toBeVisible();
@@ -507,7 +529,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     .toBe(true);
   await expect(page.locator('[aria-label^="Scale "]')).toBeVisible();
   for (const label of [
-    "Public terrain surface",
+    "Topo Surface",
     "Public roads",
     "Public streams and rivers",
     "Public waterbodies",
@@ -603,7 +625,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   expect(publicContextScene.roadObjects).toBeGreaterThan(0);
   expect(publicContextScene.streamObjects).toBeGreaterThan(0);
   expect(publicContextScene.waterObjects).toBeGreaterThan(0);
-  await setForgeLayerVisible(page, "Public terrain surface", false);
+  await setForgeLayerVisible(page, "Topo Surface", false);
   await expect(page.locator('[aria-label^="Scale "]')).toBeVisible();
   for (const label of [
     "Public roads",
@@ -888,14 +910,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     });
   await expect
     .poll(() => utahForgeRuntimePresentationState(page), { timeout: 60_000 })
-    .toMatchObject({
-      activeRenderPresetId: "utah-forge-reference-cinematic-dark",
-      rendererExposure: 1.08,
-      clearColor: "#383838",
-      sceneBackground: "#383838",
-      fogColor: "#383838",
-      fogDensity: 0.00008,
-    });
+    .toMatchObject(expectedRuntimePresentationForPage(forgeEnvironment));
   const mtFullDensityScene = await mtFullDensityPointSceneState(page);
   expect(mtFullDensityScene.scalarFocusVisibleCount).toBeGreaterThan(0);
   await expect

@@ -1,14 +1,30 @@
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { expect } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
+import type {
+  EditableStyle,
+  EnvironmentSetup,
+  PresentationPage,
+} from "../../src/pages/types";
+import { effectiveStyle } from "../../src/pages/effective";
+import {
+  activeRenderPresetIdForPage,
+  projectRenderPresets,
+  scenePatchForRenderPreset,
+} from "../../src/pages/renderPresets";
+import {
+  scalarInclusionVisibleCount,
+  scalarLateralSupportValues,
+} from "../../src/scene/scalarFocus";
 
 export const MT_FULL_DENSITY_MANIFEST_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json";
-export const MT_FULL_DENSITY_PAGE06_INDEXED_POINTS = 375_355;
-export const MT_FULL_DENSITY_PAGE04_INDEXED_POINTS = 137_776;
-export const MT_FULL_DENSITY_PAGE05_INDEXED_POINTS = 138_859;
 export const UTAH_FORGE_ENVIRONMENT_PATH = "projects/utah-forge/environment.json";
+export const UTAH_FORGE_PAGE04_PATH =
+  "projects/utah-forge/pages/04_mt_high_resistivity_seismic.json";
+export const UTAH_FORGE_PAGE05_PATH =
+  "projects/utah-forge/pages/05_mt_threshold_focus.json";
 export const UTAH_FORGE_PAGE06_PATH =
   "projects/utah-forge/pages/06_mt_low_resistivity_seismic.json";
 export const UTAH_FORGE_PAGE12_PATH =
@@ -27,43 +43,246 @@ export function changedByteCount(before: Buffer, after: Buffer): number {
   return changedBytes;
 }
 
-export async function openForgeDataEditorContainers(page: Page): Promise<void> {
-  const openSection = async (
-    name: string,
-    timeout = 30_000,
-    contentText?: string,
-  ) => {
-    const content = contentText ? page.getByText(contentText).first() : null;
+type MtFullDensityManifest = {
+  attributes?: {
+    scalar?: {
+      min?: number;
+      max?: number;
+      displayMin?: number;
+      displayMax?: number;
+    };
+  };
+  tiles: Array<{
+    pointCount: number;
+    file: string;
+    scalarFile: string;
+  }>;
+};
+
+const expectedMtCountCache = new Map<string, number>();
+
+function clampRange(v: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, v));
+}
+
+function styleNumber(
+  style: EditableStyle,
+  field: keyof EditableStyle,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  const value = style[field];
+  return typeof value === "number" && Number.isFinite(value)
+    ? clampRange(value, min, max)
+    : fallback;
+}
+
+function float32File(path: string): Float32Array {
+  const buffer = readFileSync(resolve(process.cwd(), path));
+  return new Float32Array(
+    buffer.buffer,
+    buffer.byteOffset,
+    buffer.byteLength / Float32Array.BYTES_PER_ELEMENT,
+  );
+}
+
+function finiteNumber(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+export function expectedRuntimePresentationForPage(
+  environment: EnvironmentSetup,
+  page?: PresentationPage | null,
+): UtahForgeRuntimePresentationState {
+  const activeRenderPresetId = activeRenderPresetIdForPage(environment, page);
+  const patch = scenePatchForRenderPreset(
+    activeRenderPresetId,
+    projectRenderPresets(environment),
+  );
+  const scene = {
+    ...(environment.scene ?? {}),
+    ...(patch ?? {}),
+    fog: {
+      ...(environment.scene?.fog ?? {}),
+      ...(patch?.fog ?? {}),
+    },
+  };
+  const background =
+    typeof scene.background === "string" ? scene.background : null;
+  return {
+    activeRenderPresetId,
+    rendererExposure:
+      typeof scene.exposure === "number" && Number.isFinite(scene.exposure)
+        ? scene.exposure
+        : null,
+    clearColor: background,
+    sceneBackground: background,
+    fogColor: typeof scene.fog?.color === "string" ? scene.fog.color : null,
+    fogDensity:
+      typeof scene.fog?.density === "number" &&
+      Number.isFinite(scene.fog.density)
+        ? scene.fog.density
+        : null,
+  };
+}
+
+export function expectedMtFullDensityIndexedPointCount(
+  environment: EnvironmentSetup,
+  page: PresentationPage,
+): number {
+  const cacheKey = `${page.id}:${JSON.stringify(
+    page.layerOverrides?.["utah-forge-mt-resistivity-full-density"] ?? {},
+  )}`;
+  const cached = expectedMtCountCache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const manifest = readJsonFile<MtFullDensityManifest>(
+    MT_FULL_DENSITY_MANIFEST_PATH,
+  );
+  const style = effectiveStyle(
+    environment,
+    page,
+    "utah-forge-mt-resistivity-full-density",
+  );
+  const totalPointCount = manifest.tiles.reduce(
+    (total, tile) => total + tile.pointCount,
+    0,
+  );
+  if (style.scalarInclusionMode !== "thresholded") {
+    expectedMtCountCache.set(cacheKey, totalPointCount);
+    return totalPointCount;
+  }
+
+  const sourceMin = finiteNumber(manifest.attributes?.scalar?.min, -2);
+  const sourceMax = finiteNumber(manifest.attributes?.scalar?.max, 4.5);
+  const displayMin = finiteNumber(
+    style.scalarDisplayMin,
+    finiteNumber(manifest.attributes?.scalar?.displayMin, 0.139879),
+  );
+  const displayMax = finiteNumber(
+    style.scalarDisplayMax,
+    finiteNumber(manifest.attributes?.scalar?.displayMax, 3.937122),
+  );
+  const trimMin = styleNumber(
+    style,
+    "scalarFocusMin",
+    sourceMin,
+    -100,
+    100,
+  );
+  const trimMax = styleNumber(
+    style,
+    "scalarFocusMax",
+    sourceMax,
+    -100,
+    100,
+  );
+  const rawBlendMin = styleNumber(
+    style,
+    "scalarBlendMin",
+    displayMin,
+    -100,
+    100,
+  );
+  const rawBlendMax = styleNumber(
+    style,
+    "scalarBlendMax",
+    displayMax,
+    -100,
+    100,
+  );
+  const blendMin = clampRange(
+    rawBlendMin,
+    trimMin,
+    Math.max(trimMin, trimMax - 0.000001),
+  );
+  const blendMax = clampRange(Math.max(rawBlendMax, blendMin), blendMin, trimMax);
+  const noiseThreshold = styleNumber(
+    style,
+    "scalarNoiseThreshold",
+    0,
+    0,
+    1,
+  );
+  const filterActive =
+    trimMin > sourceMin + 0.000001 ||
+    trimMax < sourceMax - 0.000001 ||
+    blendMin > trimMin + 0.000001 ||
+    blendMax < trimMax - 0.000001 ||
+    noiseThreshold > 0.000001;
+  if (!filterActive) {
+    expectedMtCountCache.set(cacheKey, totalPointCount);
+    return totalPointCount;
+  }
+
+  const manifestDir = dirname(MT_FULL_DENSITY_MANIFEST_PATH);
+  let count = 0;
+  for (const tile of manifest.tiles) {
+    const scalarValues = float32File(`${manifestDir}/${tile.scalarFile}`);
+    const positions =
+      noiseThreshold > 0.000001
+        ? float32File(`${manifestDir}/${tile.file}`)
+        : null;
+    const supportValues =
+      positions && noiseThreshold > 0.000001
+        ? scalarLateralSupportValues({
+            count: tile.pointCount,
+            getX: (index) => positions[index * 3],
+            getY: (index) => positions[index * 3 + 1],
+            getZ: (index) => positions[index * 3 + 2],
+          })
+        : null;
+    count += scalarInclusionVisibleCount(scalarValues, {
+      trimMin,
+      blendMin,
+      blendMax,
+      trimMax,
+      supportValues,
+      noiseThreshold,
+    });
+  }
+  expectedMtCountCache.set(cacheKey, count);
+  return count;
+}
+
+async function openEditorSection(
+  page: Page,
+  name: string,
+  timeout = 30_000,
+  contentText?: string,
+): Promise<void> {
+  const content = contentText ? page.getByText(contentText).first() : null;
+  const button = page.getByRole("button", { name }).first();
+  try {
+    await button.waitFor({ state: "visible", timeout });
+  } catch {
     if (content && (await content.count()) > 0) {
       const contentVisible = await content.isVisible().catch(() => false);
       if (contentVisible) return;
     }
-    const button = page.getByRole("button", { name }).first();
-    try {
-      await button.waitFor({ state: "visible", timeout });
-    } catch {
-      return;
-    }
-    const expanded = await button.getAttribute("aria-expanded");
-    if (expanded !== "true") {
-      await button.scrollIntoViewIfNeeded({ timeout }).catch(() => {});
-      await button.click({ timeout }).catch(async () => {
-        await button.click({ force: true, timeout }).catch(() => {});
-      });
-    }
-    if (content) {
-      await content.waitFor({ state: "visible", timeout }).catch(() => {});
-    }
-  };
+    return;
+  }
+  const expanded = await button
+    .getAttribute("aria-expanded", { timeout: Math.min(timeout, 3000) })
+    .catch(() => null);
+  if (expanded !== "true") {
+    await button.scrollIntoViewIfNeeded({ timeout }).catch(() => {});
+    await button.click({ timeout }).catch(async () => {
+      await button.click({ force: true, timeout }).catch(() => {});
+    });
+    await expect(button)
+      .toHaveAttribute("aria-expanded", "true", {
+        timeout: Math.min(timeout, 5000),
+      })
+      .catch(() => {});
+  }
+  if (content) {
+    await content.waitFor({ state: "visible", timeout }).catch(() => {});
+  }
+}
 
-  await openSection("Public Topo Map", 30_000, "Topo layers");
-  await openSection("Topo layers", 30_000, "Public terrain surface");
-  await openSection("FORGE Data", 30_000, "Scene section planes");
-  await openSection("Working area", 10_000, "Phase 3 required working area");
-  await openSection("Scene section planes", 10_000, "section plane");
-  await openSection("Seismic analysis", 10_000, "Seismic browser");
-  await openSection("MT resistivity", 30_000, "3D MT top surface");
-  await openSection("Other", 5_000, "Foundation");
+async function openAllDetails(page: Page): Promise<void> {
   await page.locator("details").evaluateAll((details) => {
     for (const detail of details) {
       (detail as HTMLDetailsElement).open = true;
@@ -71,15 +290,31 @@ export async function openForgeDataEditorContainers(page: Page): Promise<void> {
   });
 }
 
+export async function openForgeDataEditorContainers(page: Page): Promise<void> {
+  await openEditorSection(page, "Public Topo Map", 30_000, "Topo layers");
+  await openEditorSection(page, "Topo layers", 30_000, "Topo Surface");
+  await openEditorSection(page, "FORGE Data", 30_000, "Scene section planes");
+  await openEditorSection(page, "Working area focus", 3000, "Working area");
+  await openEditorSection(page, "Working area", 3000, "Phase 3 required working area");
+  await openEditorSection(page, "Scene section planes", 10_000, "section plane");
+  await openEditorSection(page, "Seismic analysis", 10_000, "Seismic browser");
+  await openEditorSection(page, "MT resistivity", 30_000, "3D MT top surface");
+  await openEditorSection(page, "Other", 5_000, "Foundation");
+  await openAllDetails(page);
+}
+
+export async function openForgeTopoEditorContainers(page: Page): Promise<void> {
+  await openEditorSection(page, "Public Topo Map", 30_000, "Topo layers");
+  await openEditorSection(page, "Topo layers", 30_000, "Topo Surface");
+  await openAllDetails(page);
+}
+
 export async function setForgeLayerVisible(
   page: Page,
   label: string,
   visible: boolean,
 ): Promise<void> {
-  const layerItem = page
-    .locator('[data-dev-note*="layerItemStyle"]')
-    .filter({ hasText: label })
-    .first();
+  const layerItem = forgeLayerItem(page, label);
   await expect(layerItem).toBeVisible();
   const checkbox = layerItem.locator('input[type="checkbox"]').first();
   if ((await checkbox.isChecked()) !== visible) {
@@ -88,6 +323,9 @@ export async function setForgeLayerVisible(
 }
 
 export function forgeLayerItem(page: Page, label: string): Locator {
+  if (label === "Topo Surface") {
+    return page.getByTestId("topo-surface-controls");
+  }
   return page
     .locator('[data-dev-note*="layerItemStyle"]')
     .filter({ hasText: label })
@@ -2079,9 +2317,9 @@ export async function transitionSnapshotState(
 
 export async function runForgeDataTransitionProbe(
   page: Page,
-  environment: Record<string, unknown>,
-  fromPage: Record<string, unknown>,
-  toPage: Record<string, unknown>,
+  environment: EnvironmentSetup,
+  fromPage: PresentationPage,
+  toPage: PresentationPage,
   durationMs = 3000,
 ): Promise<void> {
   await page.evaluate(

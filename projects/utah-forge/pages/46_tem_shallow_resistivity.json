@@ -28,7 +28,6 @@
   "accentColor": "#3d9db8",
   "visibilityOverrides": {
     "utah-forge-phase3-working-area": true,
-    "terrain": true,
     "transport-roads": true,
     "hydrography-streams": true,
     "hydrography-lakes": true,
@@ -45,9 +44,6 @@
     "utah-forge-mt-stations": {
       "opacity": 0.42,
       "showLabels": false
-    },
-    "terrain": {
-      "opacity": 0.42
     },
     "utah-forge-phase3-seismic-browser": {
       "opacity": 0,

@@ -166,7 +166,7 @@
     },
     {
       "id": "terrain",
-      "label": "Public terrain surface",
+      "label": "Topo Surface",
       "type": "geotiff",
       "files": {
         "raster": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/terrain_public_context_1000m.tif"
@@ -180,6 +180,11 @@
         "confidentiality": "public",
         "placeholder": false,
         "sourceDataIncluded": true,
+        "geoSeeTool": {
+          "id": "topo-map",
+          "role": "surface",
+          "settingsScope": "mixed"
+        },
         "geoTransform": {
           "sourceCrs": "EPSG:26912",
           "terrainMaxVertices": 450000,
@@ -219,6 +224,12 @@
         "confidentiality": "public",
         "placeholder": false,
         "sourceDataIncluded": true,
+        "geoSeeTool": {
+          "id": "topo-map",
+          "role": "graticule",
+          "surfaceLayerId": "terrain",
+          "settingsScope": "layer"
+        },
         "geoTransform": {
           "sourceCrs": "EPSG:26912",
           "sceneOriginUtm": {
@@ -272,6 +283,12 @@
         "confidentiality": "public",
         "placeholder": false,
         "sourceDataIncluded": true,
+        "geoSeeTool": {
+          "id": "topo-map",
+          "role": "reference",
+          "surfaceLayerId": "terrain",
+          "settingsScope": "layer"
+        },
         "geoTransform": {
           "sourceCrs": "EPSG:26912",
           "sceneOriginUtm": {
@@ -311,6 +328,12 @@
         "confidentiality": "public",
         "placeholder": false,
         "sourceDataIncluded": true,
+        "geoSeeTool": {
+          "id": "topo-map",
+          "role": "reference",
+          "surfaceLayerId": "terrain",
+          "settingsScope": "layer"
+        },
         "geoTransform": {
           "sourceCrs": "EPSG:26912",
           "sceneOriginUtm": {
@@ -349,6 +372,12 @@
         "confidentiality": "public",
         "placeholder": false,
         "sourceDataIncluded": true,
+        "geoSeeTool": {
+          "id": "topo-map",
+          "role": "reference",
+          "surfaceLayerId": "terrain",
+          "settingsScope": "layer"
+        },
         "geoTransform": {
           "sourceCrs": "EPSG:26912",
           "sceneOriginUtm": {

@@ -134,7 +134,7 @@ export function mountScene(
 
   const manager = new SceneManager(scene, renderer);
   for (const spec of layerSpecs) {
-    manager.registerLayer(spec.id);
+    manager.registerLayer(spec);
   }
   for (const spec of layerSpecs) {
     loadLayerInto(spec, manager);

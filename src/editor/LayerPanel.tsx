@@ -13,7 +13,37 @@ import {
   vibrancySecondaryLabel,
   vibrancyTertiaryLabel,
 } from "./styles";
-import { convertBrandingAsset, writeFile } from "./save";
+import { writeFile } from "./save";
+import { TopoMapPanel } from "./topoMap/TopoMapPanel";
+import {
+  detailsContentStyle,
+  drillingAssayDetailsStyle,
+  drillingAssayHintStyle,
+  drillingAssayPaletteStyle,
+  drillingAssayPaletteTitleStyle,
+  drillingAssaySummaryStyle,
+  EnvSelectRow,
+  EnvStyleRow,
+  EnvVisibilityRow,
+  EzGammaCheckboxRow,
+  LayerBooleanStyleControl,
+  LayerColorStyleControl,
+  LayerNumberStyleControl,
+  nestedControlRowStyle,
+  nestedDetailsStyle,
+  nestedFieldLabelStyle,
+  overrideTagActiveStyle,
+  overrideTagStyle,
+  PageStyleRow,
+  PageVisibilityRow,
+  sliderNumberReadoutStyle,
+  styleBoolean,
+  styleNumber,
+  styleString,
+  type LayerStyleSetter,
+  type PageStyleClearer,
+  type PageStyleSetter,
+} from "./styleControls";
 import {
   effectiveStyle,
   isStyleFieldOverridden,
@@ -57,6 +87,14 @@ import {
   SHAHBAZI_GROUND_CONTOUR_LAYER_ID,
   SHAHBAZI_GROUND_SURFACE_LAYER_ID,
 } from "../projectModules/shahbazi/layerIds";
+import {
+  isTopoMapGraticuleLayer,
+  isTopoMapLayer,
+  isTopoMapSurfaceLayer,
+  resolveTopoMapSettings,
+  topoMapLayerLabel,
+  topoMapLayerIds,
+} from "../topoMap/settings";
 
 const CLASSIFICATIONS = [
   "observation",
@@ -423,18 +461,7 @@ const UTAH_FORGE_PUBLIC_LAYER_GROUPS = [
     ids: ["utah-forge-reference-stage"],
   },
 ] as const satisfies readonly LayerGroupDef[];
-const UTAH_FORGE_PUBLIC_TOPO_LAYER_GROUPS = [
-  {
-    title: "Topo layers",
-    ids: [
-      "terrain",
-      UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
-      "transport-roads",
-      "hydrography-streams",
-      "hydrography-lakes",
-    ],
-  },
-] as const satisfies readonly LayerGroupDef[];
+const PUBLIC_TOPO_LAYER_GROUP_TITLE = "Topo layers";
 const UTAH_FORGE_CUSTOMER_LAYER_GROUPS =
   [] as const satisfies readonly LayerGroupDef[];
 
@@ -487,6 +514,8 @@ function prefixMtDimension(label: string, dimension: "2D" | "3D"): string {
 }
 
 function editorLayerLabel(layer: ProjectLayerSpec): string {
+  const topoLabel = topoMapLayerLabel(layer);
+  if (topoLabel) return topoLabel;
   const mtLabels: Record<string, string> = {
     [UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID]: "Phase 3 working area",
     [UTAH_FORGE_MT_STATIONS_LAYER_ID]: "2D MT station locations",
@@ -513,275 +542,8 @@ const PUBLIC_LAYER_IDS: Set<string> = new Set(
     ...PUBLIC_LAYER_GROUPS,
     ...CASE_STUDY_B_PUBLIC_LAYER_GROUPS,
     ...UTAH_FORGE_PUBLIC_LAYER_GROUPS,
-    ...UTAH_FORGE_PUBLIC_TOPO_LAYER_GROUPS,
   ].flatMap((group) => group.ids),
 );
-const PUBLIC_SURFACE_CONTEXT_LAYER_IDS: Set<string> = new Set([
-  "terrain",
-  UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
-  "transport-roads",
-  "hydrography-streams",
-  "hydrography-lakes",
-]);
-const PUBLIC_SURFACE_LAYER_IDS = [
-  "terrain",
-  UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
-  "transport-roads",
-  "hydrography-streams",
-  "hydrography-lakes",
-] as const;
-const SURFACE_ELEVATION_DEFAULT_MIN_M = 1500;
-const SURFACE_ELEVATION_DEFAULT_MAX_M = 3500;
-const SURFACE_ELEVATION_DEFAULT_COLORS = [
-  "#5147b8",
-  "#2e8fd8",
-  "#4fc3c7",
-  "#93d66b",
-  "#fff24d",
-] as const;
-const SURFACE_ELEVATION_DEFAULT_POSITIONS = [0, 0.25, 0.5, 0.75, 1] as const;
-const SURFACE_ELEVATION_DEFAULT_MIDPOINTS = [0.5, 0.5, 0.5, 0.5] as const;
-const SURFACE_ELEVATION_DEFAULT_SOFTNESS = 1;
-const SURFACE_ELEVATION_DEFAULT_BLEND = 1;
-const SURFACE_ELEVATION_STOP_GAP = 0.01;
-const ORTHO_PHOTO_TEXTURE_4096_PATH =
-  "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/ortho_photo_context_4096.jpg";
-const ORTHO_PHOTO_TEXTURE_8192_PATH =
-  "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/ortho_photo_context_8192.jpg";
-const ORTHO_PHOTO_BOUNDS: [number, number, number, number] = [
-  -356385.9, 3703652, 1039320.6, 4843097,
-];
-const TOPO_MAP_BRANDING_DEFAULT_ANCHOR = "south-east";
-const TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M = 0;
-const TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M = -85_000;
-const TITLE_BLOCK_UPLOAD_ACCEPT =
-  ".png,.jpg,.jpeg,.webp,.gif,.svg,.pdf,.eps,image/png,image/jpeg,image/webp,image/gif,image/svg+xml,application/pdf,application/postscript";
-const TITLE_BLOCK_DIRECT_IMAGE_EXTENSIONS = new Set([
-  "png",
-  "jpg",
-  "jpeg",
-  "webp",
-  "gif",
-  "svg",
-]);
-const TITLE_BLOCK_CONVERTED_EXTENSIONS = new Set(["pdf", "eps"]);
-type PublicTopoMaterialPresetId =
-  | "custom"
-  | "soft-topo"
-  | "surface-elevation"
-  | "ortho-photo"
-  | "desert-relief"
-  | "paper-map"
-  | "grey-relief"
-  | "high-contrast";
-type OrthoPhotoTextureBudgetId = "4096" | "8192";
-const ORTHO_PHOTO_TEXTURE_BUDGETS: readonly {
-  value: OrthoPhotoTextureBudgetId;
-  label: string;
-}[] = [
-  { value: "4096", label: "4096 px" },
-  { value: "8192", label: "8192 px" },
-];
-function orthoPhotoPathForBudget(
-  budget: OrthoPhotoTextureBudgetId,
-): string {
-  return budget === "8192"
-    ? ORTHO_PHOTO_TEXTURE_8192_PATH
-    : ORTHO_PHOTO_TEXTURE_4096_PATH;
-}
-function orthoPhotoDefaultPatch(
-  budget: OrthoPhotoTextureBudgetId = "4096",
-): NonNullable<SceneProperties["terrain"]> {
-  return {
-    materialPreset: "ortho-photo",
-    orthoPhotoTextureBudget: budget === "8192" ? 8192 : 4096,
-    orthoPhotoPath: orthoPhotoPathForBudget(budget),
-    orthoPhotoTexture4096Path: ORTHO_PHOTO_TEXTURE_4096_PATH,
-    orthoPhotoTexture8192Path: ORTHO_PHOTO_TEXTURE_8192_PATH,
-    orthoPhotoBounds: ORTHO_PHOTO_BOUNDS,
-    orthoPhotoOpacity: 1,
-    orthoPhotoHillshadeBlend: 0.45,
-    orthoPhotoBrightness: 0,
-    orthoPhotoContrast: 1,
-    orthoPhotoSaturation: 1,
-  };
-}
-const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
-  value: PublicTopoMaterialPresetId;
-  label: string;
-  patch?: NonNullable<SceneProperties["terrain"]>;
-}[] = [
-  { value: "custom", label: "Custom" },
-  {
-    value: "soft-topo",
-    label: "Soft topo",
-    patch: {
-      materialPreset: "soft-topo",
-      rampLow: "#575145",
-      rampMid: "#958a72",
-      rampHigh: "#d9cba3",
-      elevLowM: 0,
-      elevHighM: 180,
-      hillshadeIntensity: 0.86,
-      shadowSharpness: 0.28,
-      facetStrength: 0.04,
-      edgeFadeDistanceM: 90_000,
-      edgeFadeShape: "square",
-      edgeFadeInsetM: 0,
-      edgeFadeCornerRadiusM: 0,
-      rockHueVariance: 0.03,
-      shadowTint: "#3f4650",
-      surfaceElevationEnabled: false,
-      orthoPhotoOpacity: 0,
-    },
-  },
-  {
-    value: "surface-elevation",
-    label: "Surface elevation",
-    patch: {
-      materialPreset: "surface-elevation",
-      rampLow: "#575145",
-      rampMid: "#958a72",
-      rampHigh: "#d9cba3",
-      elevLowM: 0,
-      elevHighM: 180,
-      hillshadeIntensity: 0.86,
-      shadowSharpness: 0.34,
-      facetStrength: 0.04,
-      edgeFadeDistanceM: 90_000,
-      edgeFadeShape: "square",
-      edgeFadeInsetM: 0,
-      edgeFadeCornerRadiusM: 0,
-      rockHueVariance: 0,
-      shadowTint: "#303640",
-      surfaceElevationEnabled: true,
-      surfaceElevationLegendVisible: true,
-      surfaceElevationMinM: SURFACE_ELEVATION_DEFAULT_MIN_M,
-      surfaceElevationMaxM: SURFACE_ELEVATION_DEFAULT_MAX_M,
-      surfaceElevationColors: [...SURFACE_ELEVATION_DEFAULT_COLORS],
-      surfaceElevationColorPositions: [...SURFACE_ELEVATION_DEFAULT_POSITIONS],
-      surfaceElevationMidpoints: [...SURFACE_ELEVATION_DEFAULT_MIDPOINTS],
-      surfaceElevationTransitionSoftness: SURFACE_ELEVATION_DEFAULT_SOFTNESS,
-      surfaceElevationColorBlend: SURFACE_ELEVATION_DEFAULT_BLEND,
-      surfaceElevationReverse: false,
-      orthoPhotoOpacity: 0,
-    },
-  },
-  {
-    value: "ortho-photo",
-    label: "Ortho photo",
-    patch: {
-      ...orthoPhotoDefaultPatch("4096"),
-      rampLow: "#575145",
-      rampMid: "#958a72",
-      rampHigh: "#d9cba3",
-      elevLowM: 0,
-      elevHighM: 180,
-      hillshadeIntensity: 0.86,
-      shadowSharpness: 0.34,
-      facetStrength: 0.04,
-      edgeFadeDistanceM: 90_000,
-      edgeFadeShape: "square",
-      edgeFadeInsetM: 0,
-      edgeFadeCornerRadiusM: 0,
-      rockHueVariance: 0,
-      shadowTint: "#303640",
-      surfaceElevationEnabled: false,
-    },
-  },
-  {
-    value: "desert-relief",
-    label: "Desert relief",
-    patch: {
-      materialPreset: "desert-relief",
-      rampLow: "#4f4a40",
-      rampMid: "#8a7e68",
-      rampHigh: "#d7c69e",
-      elevLowM: 0,
-      elevHighM: 120,
-      hillshadeIntensity: 1.05,
-      shadowSharpness: 0.5,
-      facetStrength: 0.12,
-      edgeFadeDistanceM: 80_000,
-      edgeFadeShape: "square",
-      edgeFadeInsetM: 0,
-      edgeFadeCornerRadiusM: 0,
-      rockHueVariance: 0.05,
-      shadowTint: "#303640",
-      surfaceElevationEnabled: false,
-      orthoPhotoOpacity: 0,
-    },
-  },
-  {
-    value: "paper-map",
-    label: "Paper map",
-    patch: {
-      materialPreset: "paper-map",
-      rampLow: "#706a5b",
-      rampMid: "#aea282",
-      rampHigh: "#e4d8b1",
-      elevLowM: -100,
-      elevHighM: 250,
-      hillshadeIntensity: 0.72,
-      shadowSharpness: 0.18,
-      facetStrength: 0.02,
-      edgeFadeDistanceM: 120_000,
-      edgeFadeShape: "square",
-      edgeFadeInsetM: 0,
-      edgeFadeCornerRadiusM: 0,
-      rockHueVariance: 0.015,
-      shadowTint: "#56524a",
-      surfaceElevationEnabled: false,
-      orthoPhotoOpacity: 0,
-    },
-  },
-  {
-    value: "grey-relief",
-    label: "Grey relief",
-    patch: {
-      materialPreset: "grey-relief",
-      rampLow: "#515151",
-      rampMid: "#9a9a93",
-      rampHigh: "#dad8cf",
-      elevLowM: -100,
-      elevHighM: 300,
-      hillshadeIntensity: 0.92,
-      shadowSharpness: 0.38,
-      facetStrength: 0.06,
-      edgeFadeDistanceM: 85_000,
-      edgeFadeShape: "square",
-      edgeFadeInsetM: 0,
-      edgeFadeCornerRadiusM: 0,
-      rockHueVariance: 0.005,
-      shadowTint: "#3f464f",
-      surfaceElevationEnabled: false,
-      orthoPhotoOpacity: 0,
-    },
-  },
-  {
-    value: "high-contrast",
-    label: "High contrast",
-    patch: {
-      materialPreset: "high-contrast",
-      rampLow: "#423b31",
-      rampMid: "#8f7f5f",
-      rampHigh: "#f0ddaa",
-      elevLowM: -100,
-      elevHighM: 220,
-      hillshadeIntensity: 1.35,
-      shadowSharpness: 0.72,
-      facetStrength: 0.22,
-      edgeFadeDistanceM: 70_000,
-      edgeFadeShape: "square",
-      edgeFadeInsetM: 0,
-      edgeFadeCornerRadiusM: 0,
-      rockHueVariance: 0.07,
-      shadowTint: "#262b34",
-      surfaceElevationEnabled: false,
-      orthoPhotoOpacity: 0,
-    },
-  },
-];
 const CUSTOMER_LAYER_IDS: Set<string> = new Set(
   [
     ...CUSTOMER_LAYER_GROUPS,
@@ -905,6 +667,7 @@ function labelPointerVisibleControlValue(style: EditableStyle): boolean {
 }
 
 function layerDataSection(layer: ProjectLayerSpec): LayerDataSection {
+  if (isTopoMapLayer(layer)) return "publicTopo";
   if (PUBLIC_LAYER_IDS.has(layer.id)) return "public";
   if (CUSTOMER_LAYER_IDS.has(layer.id)) return "customer";
 
@@ -1025,16 +788,15 @@ export function LayerPanel({
       layer.id === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID;
     const isUtahForgeSeismicBrowser =
       layer.id === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID;
-    const isUtahForgeTopoGraticule =
-      layer.id === UTAH_FORGE_TOPO_GRATICULE_LAYER_ID;
-    const isPublicTerrainSurface = layer.id === "terrain";
-    const isPublicSurfaceContextLayer = PUBLIC_SURFACE_CONTEXT_LAYER_IDS.has(
-      layer.id,
-    );
+    const isTopoMapGraticule = isTopoMapGraticuleLayer(layer);
+    const isPublicTerrainSurface = isTopoMapSurfaceLayer(layer);
+    const isPublicSurfaceContextLayer = isTopoMapLayer(layer);
     const isLakes = layer.id === "hydrography-lakes";
     const hasInfillAndOutline = isLakes || isImageryLidar;
     const isStreams = layer.id === "hydrography-streams";
-    const lineWidthDefault = LINE_WIDTH_LAYER_DEFAULTS[layer.id];
+    const lineWidthDefault = isTopoMapGraticule
+      ? (LINE_WIDTH_LAYER_DEFAULTS[layer.id] ?? 1.15)
+      : LINE_WIDTH_LAYER_DEFAULTS[layer.id];
     const supportsLineWidth = lineWidthDefault !== undefined;
     const globalFogDensity =
       state.environment.scene?.fog?.density ?? DEFAULT_FOG_DENSITY;
@@ -1933,7 +1695,7 @@ export function LayerPanel({
                       />
                     ) : null}
 
-                    {isUtahForgeTopoGraticule ? (
+                    {isTopoMapGraticule ? (
                       <>
                         <LayerBooleanStyleControl
                           label="Labels"
@@ -3343,9 +3105,15 @@ export function LayerPanel({
       : state.projectSlug === "utah-forge"
         ? UTAH_FORGE_PUBLIC_LAYER_GROUPS
         : PUBLIC_LAYER_GROUPS;
+  const publicTopoLayerIds = topoMapLayerIds(state.manifest.layers);
   const projectPublicTopoLayerGroups =
-    state.projectSlug === "utah-forge"
-      ? UTAH_FORGE_PUBLIC_TOPO_LAYER_GROUPS
+    publicTopoLayerIds.length > 0
+      ? ([
+          {
+            title: PUBLIC_TOPO_LAYER_GROUP_TITLE,
+            ids: publicTopoLayerIds,
+          },
+        ] as const satisfies readonly LayerGroupDef[])
       : ([] as const satisfies readonly LayerGroupDef[]);
   const projectCustomerLayerGroups =
     state.projectSlug === "case-study-b"
@@ -3411,6 +3179,20 @@ export function LayerPanel({
       : {};
   const workingAreaFocusDisabled =
     state.projectSlug === "utah-forge" && !isEnv && currentPage === null;
+  const publicTopoSettings = resolveTopoMapSettings({
+    manifest: state.manifest,
+    environment: state.environment,
+    page: currentPage,
+  });
+  const publicTopoTerrainLayer = publicTopoSettings.surfaceLayer;
+  const publicTopoTerrainLayerId = publicTopoSettings.surfaceLayerId;
+  const publicTopoTerrainEnvVisible =
+    state.environment.defaultVisibleLayers.includes(publicTopoTerrainLayerId);
+  const publicTopoTerrainEffectiveVisible = currentPage
+    ? isVisibilityOverridden(currentPage, publicTopoTerrainLayerId)
+      ? currentPage.visibilityOverrides?.[publicTopoTerrainLayerId] === true
+      : publicTopoTerrainEnvVisible
+    : publicTopoTerrainEnvVisible;
 
   return (
     <div
@@ -3457,6 +3239,11 @@ export function LayerPanel({
             (layer): layer is ProjectLayerSpec =>
               !!layer && layerHasRenderableControl(layer),
           );
+        const renderedLayers =
+          section === "publicTopo" &&
+          group.title === PUBLIC_TOPO_LAYER_GROUP_TITLE
+            ? layers.filter((layer) => !isTopoMapSurfaceLayer(layer))
+            : layers;
         const seismicLayer =
           state.projectSlug === "utah-forge" &&
           section === "public" &&
@@ -3480,7 +3267,7 @@ export function LayerPanel({
             devNote="layerGroupSummaryStyle controls layer-category subheading pills like Topo map tile and Drilling."
             accentColor={selectedPageAccent}
           >
-            {group.title !== "Topo layers" ? (
+            {group.title !== PUBLIC_TOPO_LAYER_GROUP_TITLE ? (
               <LayerGroupFogControl
                 layerIds={layers.map((layer) => layer.id)}
                 isEnv={isEnv}
@@ -3517,15 +3304,11 @@ export function LayerPanel({
                 sceneHandle={sceneHandle}
               />
             ) : null}
-            {state.projectSlug === "utah-forge" &&
-            section === "publicTopo" &&
-            group.title === "Topo layers" ? (
-              <PublicSurfaceGroupControls
-                style={
-                  currentPage
-                    ? effectiveStyle(state.environment, currentPage, "terrain")
-                    : (state.environment.layerStyles.terrain ?? {})
-                }
+            {section === "publicTopo" &&
+            publicTopoTerrainLayer &&
+            group.title === PUBLIC_TOPO_LAYER_GROUP_TITLE ? (
+              <TopoMapPanel
+                settings={publicTopoSettings}
                 scene={state.environment.scene ?? {}}
                 isEnv={isEnv}
                 currentPage={currentPage}
@@ -3534,9 +3317,33 @@ export function LayerPanel({
                 clearPageLayerOverride={clearPageLayerOverride}
                 setEnvScene={setEnvScene}
                 projectRoot={state.projectRoot}
+                terrainEnvVisible={publicTopoTerrainEnvVisible}
+                terrainEffectiveVisible={publicTopoTerrainEffectiveVisible}
+                toggleTerrainEnvVisible={() =>
+                  toggleEnvDefaultVisible(publicTopoTerrainLayerId)
+                }
+                setPageTerrainVisible={(visible) => {
+                  if (currentPage) {
+                    setPageVisibilityOverride(
+                      currentPage.id,
+                      publicTopoTerrainLayerId,
+                      visible,
+                    );
+                  }
+                }}
+                clearPageTerrainVisible={() => {
+                  if (currentPage) {
+                    clearPageVisibilityOverride(
+                      currentPage.id,
+                      publicTopoTerrainLayerId,
+                    );
+                  }
+                }}
+                publicSurfaceLayerIds={layers.map((layer) => layer.id)}
+                setLayerProvenance={setLayerProvenance}
               />
             ) : null}
-            {group.title === "Topo layers" && (
+            {group.title === PUBLIC_TOPO_LAYER_GROUP_TITLE && (
               <TopoDetailDistancePanel
                 scene={state.environment.scene ?? {}}
                 setEnvScene={setEnvScene}
@@ -3554,7 +3361,7 @@ export function LayerPanel({
                 setEnvScene={setEnvScene}
               />
             )}
-            {layers.map(renderLayer)}
+            {renderedLayers.map(renderLayer)}
             {seismicLayer && layerHasRenderableControl(seismicLayer) ? (
               <SeismicCapabilityLayerContainers
                 layer={seismicLayer}
@@ -4657,13 +4464,6 @@ function PageMoodOverrideRow({
   );
 }
 
-const sliderNumberReadoutStyle: React.CSSProperties = {
-  ...panelStyles.numberReadout,
-  width: 44,
-  marginLeft: 0,
-  textAlign: "left",
-};
-
 const layerGroupStyle: React.CSSProperties = {
   marginBottom: 16,
   paddingLeft: 12,
@@ -4765,16 +4565,6 @@ const layerControlsStyle: React.CSSProperties = {
   paddingLeft: 2,
 };
 
-const nestedDetailsStyle: React.CSSProperties = {
-  marginTop: 7,
-  paddingLeft: 10,
-  boxSizing: "border-box",
-};
-
-const detailsContentStyle: React.CSSProperties = {
-  padding: "4px 0 0 14px",
-};
-
 const miniInfoGridStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "72px minmax(0, 1fr)",
@@ -4813,40 +4603,6 @@ const smallActionButtonStyle: React.CSSProperties = {
   minHeight: 24,
   padding: "4px 8px",
   fontSize: 11,
-};
-
-const drillingAssayDetailsStyle: React.CSSProperties = {
-  marginBottom: 10,
-  padding: "6px 12px 8px 0",
-  borderBottom: FROSTED_HAIRLINE,
-};
-
-const drillingAssaySummaryStyle: React.CSSProperties = {
-  ...panelStyles.summary,
-  fontWeight: 700,
-  color: vibrancySecondaryLabel,
-  marginBottom: 8,
-};
-
-const drillingAssayHintStyle: React.CSSProperties = {
-  fontSize: 11,
-  color: vibrancyTertiaryLabel,
-  marginTop: 4,
-  paddingLeft: 66,
-  lineHeight: 1.3,
-};
-
-const drillingAssayPaletteStyle: React.CSSProperties = {
-  marginTop: 8,
-  marginBottom: 8,
-  paddingLeft: 66,
-};
-
-const drillingAssayPaletteTitleStyle: React.CSSProperties = {
-  fontSize: 12,
-  fontWeight: 700,
-  color: vibrancySecondaryLabel,
-  marginBottom: 6,
 };
 
 const ezGammaControlsStyle: React.CSSProperties = {
@@ -4934,19 +4690,6 @@ const treeToggleTextStyle: React.CSSProperties = {
   fontWeight: 700,
   textAlign: "center",
   lineHeight: "16px",
-};
-
-const nestedControlRowStyle: React.CSSProperties = {
-  ...panelStyles.row,
-};
-
-const nestedFieldLabelStyle: React.CSSProperties = {
-  ...panelStyles.fieldLabel,
-  width: 92,
-  flex: "none",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
 };
 
 // ----- scene overlays (authoring) ------------------------------------------
@@ -5238,21 +4981,6 @@ function SceneOverlayRow({
 }
 
 // ----- env-mode rows --------------------------------------------------------
-
-function EnvVisibilityRow({
-  visible,
-  onToggle,
-}: {
-  visible: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div style={panelStyles.row}>
-      <label style={panelStyles.fieldLabel}>Visible (default)</label>
-      <input type="checkbox" checked={visible} onChange={onToggle} />
-    </div>
-  );
-}
 
 function EnvTreeVisibilityToggle({
   visible,
@@ -5712,78 +5440,6 @@ function PageAffectedByFogRow({
       <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
         {overridden ? "overridden" : "inherited"}
       </span>
-    </div>
-  );
-}
-
-function EnvStyleRow({
-  label,
-  inputType,
-  value,
-  min = 0,
-  max = 1,
-  step = 0.05,
-  decimals = 2,
-  testId,
-  onChange,
-}: {
-  label: string;
-  inputType: "color" | "range" | "number";
-  value: string;
-  min?: number;
-  max?: number;
-  step?: number;
-  decimals?: number;
-  testId?: string;
-  onChange: (v: string) => void;
-}) {
-  const rangeValue = parseFloat(value);
-  const safeValue = Number.isFinite(rangeValue) ? rangeValue : min;
-  const fill = Math.max(
-    0,
-    Math.min(100, ((safeValue - min) / (max - min)) * 100),
-  );
-  return (
-    <div style={nestedControlRowStyle}>
-      <label style={nestedFieldLabelStyle}>{label}</label>
-      {inputType === "range" ? (
-        <>
-          <input
-            type="range"
-            min={min}
-            max={max}
-            step={step}
-            value={value}
-            data-testid={testId}
-            onChange={(e) => onChange(e.target.value)}
-            style={
-              {
-                flex: 1,
-                "--editor-slider-fill": `${fill}%`,
-              } as React.CSSProperties
-            }
-          />
-          <span style={sliderNumberReadoutStyle}>
-            {safeValue.toFixed(decimals)}
-          </span>
-        </>
-      ) : inputType === "number" ? (
-        <input
-          type="number"
-          value={value}
-          step={step}
-          data-testid={testId}
-          onChange={(e) => onChange(e.target.value)}
-          style={{ flex: 1 }}
-        />
-      ) : (
-        <input
-          type="color"
-          value={value}
-          data-testid={testId}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      )}
     </div>
   );
 }
@@ -12112,1786 +11768,6 @@ function ScalarRampControls({
   );
 }
 
-type LayerStyleSetter = (
-  layerId: string,
-  patch: Partial<EditableStyle>,
-) => void;
-type PageStyleSetter = (
-  pageId: string,
-  layerId: string,
-  patch: Partial<EditableStyle>,
-) => void;
-type PageStyleClearer = (
-  pageId: string,
-  layerId: string,
-  field: keyof EditableStyle,
-) => void;
-
-function LayerNumberStyleControl({
-  label,
-  field,
-  fallback,
-  min,
-  max,
-  step,
-  decimals,
-  style,
-  isEnv,
-  currentPage,
-  layerId,
-  setEnvLayerStyle,
-  setPageLayerOverride,
-  clearPageLayerOverride,
-  testId,
-}: {
-  label: string;
-  field: keyof EditableStyle;
-  fallback: number;
-  min: number;
-  max: number;
-  step: number;
-  decimals: number;
-  style: EditableStyle;
-  isEnv: boolean;
-  currentPage: PresentationPage | null;
-  layerId: string;
-  setEnvLayerStyle: LayerStyleSetter;
-  setPageLayerOverride: PageStyleSetter;
-  clearPageLayerOverride: PageStyleClearer;
-  testId?: string;
-}) {
-  if (isEnv) {
-    return (
-      <EnvStyleRow
-        label={label}
-        inputType="range"
-        value={String(styleNumber(style, field, fallback))}
-        min={min}
-        max={max}
-        step={step}
-        decimals={decimals}
-        testId={testId}
-        onChange={(value) =>
-          setEnvLayerStyle(layerId, { [field]: parseFloat(value) })
-        }
-      />
-    );
-  }
-  if (!currentPage) return null;
-  return (
-    <PageStyleRow
-      label={label}
-      inputType="range"
-      inheritedValue={String(styleNumber(style, field, fallback))}
-      isOverridden={isStyleFieldOverridden(currentPage, layerId, field)}
-      overrideValue={
-        currentPage.layerOverrides?.[layerId]?.[field] !== undefined
-          ? String(currentPage.layerOverrides[layerId][field])
-          : undefined
-      }
-      fallbackValue={String(fallback)}
-      min={min}
-      max={max}
-      step={step}
-      decimals={decimals}
-      onOverride={(value) =>
-        setPageLayerOverride(currentPage.id, layerId, {
-          [field]: parseFloat(value),
-        })
-      }
-      onClear={() => clearPageLayerOverride(currentPage.id, layerId, field)}
-    />
-  );
-}
-
-function LayerBooleanStyleControl({
-  label,
-  field,
-  fallback,
-  style,
-  isEnv,
-  currentPage,
-  layerId,
-  setEnvLayerStyle,
-  setPageLayerOverride,
-  clearPageLayerOverride,
-}: {
-  label: string;
-  field: keyof EditableStyle;
-  fallback: boolean;
-  style: EditableStyle;
-  isEnv: boolean;
-  currentPage: PresentationPage | null;
-  layerId: string;
-  setEnvLayerStyle: LayerStyleSetter;
-  setPageLayerOverride: PageStyleSetter;
-  clearPageLayerOverride: PageStyleClearer;
-}) {
-  const checked = styleBoolean(style, field, fallback);
-  if (isEnv) {
-    return (
-      <EzGammaCheckboxRow
-        label={label}
-        checked={checked}
-        onChange={(value) => setEnvLayerStyle(layerId, { [field]: value })}
-      />
-    );
-  }
-  if (!currentPage) return null;
-  const overridden = isStyleFieldOverridden(currentPage, layerId, field);
-  return (
-    <div style={nestedControlRowStyle}>
-      <label style={nestedFieldLabelStyle}>{label}</label>
-      <input
-        type="checkbox"
-        checked={overridden}
-        onChange={(e) => {
-          if (e.target.checked) {
-            setPageLayerOverride(currentPage.id, layerId, { [field]: checked });
-          } else {
-            clearPageLayerOverride(currentPage.id, layerId, field);
-          }
-        }}
-        title="Override environment value for this page"
-      />
-      <input
-        type="checkbox"
-        checked={checked}
-        disabled={!overridden}
-        onChange={(e) =>
-          setPageLayerOverride(currentPage.id, layerId, {
-            [field]: e.target.checked,
-          })
-        }
-      />
-      <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {overridden ? "overridden" : "inherited"}
-      </span>
-    </div>
-  );
-}
-
-function LayerColorStyleControl({
-  label,
-  field,
-  fallback,
-  style,
-  isEnv,
-  currentPage,
-  layerId,
-  setEnvLayerStyle,
-  setPageLayerOverride,
-  clearPageLayerOverride,
-  testId,
-}: {
-  label: string;
-  field: keyof EditableStyle;
-  fallback: string;
-  style: EditableStyle;
-  isEnv: boolean;
-  currentPage: PresentationPage | null;
-  layerId: string;
-  setEnvLayerStyle: LayerStyleSetter;
-  setPageLayerOverride: PageStyleSetter;
-  clearPageLayerOverride: PageStyleClearer;
-  testId?: string;
-}) {
-  const value = styleString(style, field, fallback);
-  if (isEnv) {
-    return (
-      <EnvStyleRow
-        label={label}
-        inputType="color"
-        value={value}
-        testId={testId}
-        onChange={(next) => setEnvLayerStyle(layerId, { [field]: next })}
-      />
-    );
-  }
-  if (!currentPage) return null;
-  return (
-    <PageStyleRow
-      label={label}
-      inputType="color"
-      inheritedValue={value}
-      isOverridden={isStyleFieldOverridden(currentPage, layerId, field)}
-      overrideValue={
-        currentPage.layerOverrides?.[layerId]?.[field] !== undefined
-          ? String(currentPage.layerOverrides[layerId][field])
-          : undefined
-      }
-      fallbackValue={fallback}
-      onOverride={(next) =>
-        setPageLayerOverride(currentPage.id, layerId, { [field]: next })
-      }
-      onClear={() => clearPageLayerOverride(currentPage.id, layerId, field)}
-    />
-  );
-}
-
-function surfaceElevationDefaultPatch(): NonNullable<
-  SceneProperties["terrain"]
-> {
-  return {
-    materialPreset: "surface-elevation",
-    surfaceElevationEnabled: true,
-    surfaceElevationLegendVisible: true,
-    surfaceElevationMinM: SURFACE_ELEVATION_DEFAULT_MIN_M,
-    surfaceElevationMaxM: SURFACE_ELEVATION_DEFAULT_MAX_M,
-    surfaceElevationColors: [...SURFACE_ELEVATION_DEFAULT_COLORS],
-    surfaceElevationColorPositions: [...SURFACE_ELEVATION_DEFAULT_POSITIONS],
-    surfaceElevationMidpoints: [...SURFACE_ELEVATION_DEFAULT_MIDPOINTS],
-    surfaceElevationTransitionSoftness: SURFACE_ELEVATION_DEFAULT_SOFTNESS,
-    surfaceElevationColorBlend: SURFACE_ELEVATION_DEFAULT_BLEND,
-    surfaceElevationReverse: false,
-    edgeFadeShape: "square",
-    edgeFadeInsetM: 0,
-    edgeFadeCornerRadiusM: 0,
-  };
-}
-
-function surfaceElevationColorsFromTerrain(
-  terrain: NonNullable<SceneProperties["terrain"]>,
-): string[] {
-  const colors = Array.isArray(terrain.surfaceElevationColors)
-    ? terrain.surfaceElevationColors
-    : [];
-  return Array.from(
-    { length: 5 },
-    (_, index) => colors[index] ?? SURFACE_ELEVATION_DEFAULT_COLORS[index],
-  );
-}
-
-function surfaceElevationPositionsFromTerrain(
-  terrain: NonNullable<SceneProperties["terrain"]>,
-): number[] {
-  const values = Array.isArray(terrain.surfaceElevationColorPositions)
-    ? terrain.surfaceElevationColorPositions
-    : [];
-  let previous = 0;
-  return Array.from({ length: 5 }, (_, index) => {
-    const raw =
-      typeof values[index] === "number" && Number.isFinite(values[index])
-        ? values[index]
-        : SURFACE_ELEVATION_DEFAULT_POSITIONS[index];
-    const remaining = 4 - index;
-    const min = index === 0 ? 0 : previous + SURFACE_ELEVATION_STOP_GAP;
-    const max = 1 - remaining * SURFACE_ELEVATION_STOP_GAP;
-    const next = Math.min(max, Math.max(min, raw));
-    previous = next;
-    return next;
-  });
-}
-
-function surfaceElevationMidpointsFromTerrain(
-  terrain: NonNullable<SceneProperties["terrain"]>,
-): number[] {
-  const values = Array.isArray(terrain.surfaceElevationMidpoints)
-    ? terrain.surfaceElevationMidpoints
-    : [];
-  return Array.from({ length: 4 }, (_, index) => {
-    const raw =
-      typeof values[index] === "number" && Number.isFinite(values[index])
-        ? values[index]
-        : SURFACE_ELEVATION_DEFAULT_MIDPOINTS[index];
-    return Math.min(0.95, Math.max(0.05, raw));
-  });
-}
-
-function surfaceElevationTickLabel(
-  minM: number,
-  maxM: number,
-  index: number,
-): string {
-  return Math.round(minM + ((maxM - minM) * index) / 4).toLocaleString();
-}
-
-function surfaceElevationGradientCss(
-  colors: string[],
-  positions: number[],
-  midpoints: number[],
-): string {
-  const parts: string[] = [];
-  for (let index = 0; index < colors.length; index += 1) {
-    const position = Math.min(1, Math.max(0, positions[index] ?? index / 4));
-    if (index > 0) {
-      const left = Math.min(1, Math.max(0, positions[index - 1] ?? 0));
-      const midpoint = Math.min(
-        0.95,
-        Math.max(0.05, midpoints[index - 1] ?? 0.5),
-      );
-      const hint = left + (position - left) * midpoint;
-      parts.push(`${(hint * 100).toFixed(1)}%`);
-    }
-    parts.push(`${colors[index]} ${(position * 100).toFixed(1)}%`);
-  }
-  return `linear-gradient(90deg, ${parts.join(", ")})`;
-}
-
-function PublicSurfaceGroupControls({
-  style,
-  scene,
-  isEnv,
-  currentPage,
-  setEnvLayerStyle,
-  setPageLayerOverride,
-  clearPageLayerOverride,
-  setEnvScene,
-  projectRoot,
-}: {
-  style: EditableStyle;
-  scene: SceneProperties;
-  isEnv: boolean;
-  currentPage: PresentationPage | null;
-  setEnvLayerStyle: LayerStyleSetter;
-  setPageLayerOverride: PageStyleSetter;
-  clearPageLayerOverride: PageStyleClearer;
-  setEnvScene: (patch: Partial<SceneProperties>) => void;
-  projectRoot: string;
-}) {
-  const terrain = scene.terrain ?? {};
-  const [brandingUploadError, setBrandingUploadError] = useState<string | null>(
-    null,
-  );
-  const [brandingUploading, setBrandingUploading] = useState(false);
-  const layerId = "terrain";
-  const setTerrain = (patch: NonNullable<SceneProperties["terrain"]>) => {
-    if (!isEnv) return;
-    setEnvScene({ terrain: { ...terrain, ...patch } });
-  };
-  const layerControlProps = {
-    style,
-    isEnv,
-    currentPage,
-    layerId,
-    setEnvLayerStyle,
-    setPageLayerOverride,
-    clearPageLayerOverride,
-  };
-  const sceneFog = scene.fog ?? {};
-  const sceneFogEnabled = sceneFog.enabled !== false;
-  const sceneFogDensity = sceneFog.density ?? DEFAULT_FOG_DENSITY;
-  const sceneFogReachKm = 3 / Math.max(sceneFogDensity, 0.000001) / 1000;
-  const topoFogDensity =
-    typeof style.fogDensity === "number" ? style.fogDensity : sceneFogDensity;
-  const topoFogReachKm = 3 / Math.max(topoFogDensity, 0.000001) / 1000;
-  const topoFogIncluded = style.affectedByFog !== false;
-  const surfaceElevationMinM =
-    typeof terrain.surfaceElevationMinM === "number"
-      ? terrain.surfaceElevationMinM
-      : SURFACE_ELEVATION_DEFAULT_MIN_M;
-  const surfaceElevationMaxM =
-    typeof terrain.surfaceElevationMaxM === "number"
-      ? terrain.surfaceElevationMaxM
-      : SURFACE_ELEVATION_DEFAULT_MAX_M;
-  const surfaceElevationColors = surfaceElevationColorsFromTerrain(terrain);
-  const surfaceElevationPositions =
-    surfaceElevationPositionsFromTerrain(terrain);
-  const surfaceElevationMidpoints =
-    surfaceElevationMidpointsFromTerrain(terrain);
-  const surfaceElevationTransitionSoftness =
-    typeof terrain.surfaceElevationTransitionSoftness === "number"
-      ? terrain.surfaceElevationTransitionSoftness
-      : SURFACE_ELEVATION_DEFAULT_SOFTNESS;
-  const surfaceElevationColorBlend =
-    typeof terrain.surfaceElevationColorBlend === "number"
-      ? terrain.surfaceElevationColorBlend
-      : SURFACE_ELEVATION_DEFAULT_BLEND;
-  const surfaceElevationGradient = surfaceElevationGradientCss(
-    surfaceElevationColors,
-    surfaceElevationPositions,
-    surfaceElevationMidpoints,
-  );
-  const edgeFadeShape =
-    terrain.edgeFadeShape === "rounded-square" ||
-    terrain.edgeFadeShape === "circle"
-      ? terrain.edgeFadeShape
-      : "square";
-  const topoMapBranding = terrain.topoMapBranding ?? {};
-  const setTopoMapBranding = (
-    patch: NonNullable<NonNullable<SceneProperties["terrain"]>["topoMapBranding"]>,
-  ) => {
-    setEnvScene({
-      terrain: {
-        ...terrain,
-        topoMapBranding: { ...topoMapBranding, ...patch },
-      },
-    });
-  };
-  const onTopoMapBrandingLogoFile = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const originalName = file.name || "title-block-logo";
-    const ext = originalName.split(".").pop()?.toLowerCase() ?? "";
-    if (
-      !TITLE_BLOCK_DIRECT_IMAGE_EXTENSIONS.has(ext) &&
-      !TITLE_BLOCK_CONVERTED_EXTENSIONS.has(ext)
-    ) {
-      setBrandingUploadError(
-        "Choose PNG, JPG, WebP, GIF, SVG, PDF, or EPS.",
-      );
-      event.target.value = "";
-      return;
-    }
-    setBrandingUploading(true);
-    setBrandingUploadError(null);
-    try {
-      const buf = await file.arrayBuffer();
-      const b64 = arrayBufferToBase64(buf);
-      const fileName = originalName.replace(/[^a-zA-Z0-9._-]/g, "_");
-      if (TITLE_BLOCK_CONVERTED_EXTENSIONS.has(ext)) {
-        const stem = fileName.replace(/\.[^.]+$/, "") || "title-block-logo";
-        const sourcePath = `${projectRoot}/branding/source/${fileName}`;
-        const outputPath = `${projectRoot}/branding/generated/${stem}.png`;
-        await writeFile(sourcePath, b64, { encoding: "base64" });
-        await convertBrandingAsset({
-          sourcePath,
-          outputPath,
-          sourceFormat: ext,
-        });
-        setTopoMapBranding({
-          logoPath: outputPath,
-          logoRenderablePath: outputPath,
-          logoSourcePath: sourcePath,
-          logoSourceFormat: ext,
-          visible: true,
-        });
-      } else {
-        const path = `${projectRoot}/branding/${fileName}`;
-        await writeFile(path, b64, { encoding: "base64" });
-        setTopoMapBranding({
-          logoPath: path,
-          logoRenderablePath: path,
-          logoSourcePath: path,
-          logoSourceFormat: ext,
-          visible: true,
-        });
-      }
-    } catch (error) {
-      setBrandingUploadError(String((error as Error).message ?? error));
-    } finally {
-      setBrandingUploading(false);
-      event.target.value = "";
-    }
-  };
-  const setSurfaceElevationColor = (index: number, value: string) => {
-    const nextColors = [...surfaceElevationColors];
-    nextColors[index] = value;
-    setTerrain({ surfaceElevationColors: nextColors });
-  };
-  const setSurfaceElevationPosition = (index: number, value: number) => {
-    const nextPositions = [...surfaceElevationPositions];
-    const lower =
-      index === 0 ? 0 : nextPositions[index - 1] + SURFACE_ELEVATION_STOP_GAP;
-    const upper =
-      index === nextPositions.length - 1
-        ? 1
-        : nextPositions[index + 1] - SURFACE_ELEVATION_STOP_GAP;
-    nextPositions[index] = Math.min(Math.max(value, lower), upper);
-    setTerrain({ surfaceElevationColorPositions: nextPositions });
-  };
-  const setSurfaceElevationMidpoint = (index: number, value: number) => {
-    const nextMidpoints = [...surfaceElevationMidpoints];
-    nextMidpoints[index] = Math.min(Math.max(value, 0.05), 0.95);
-    setTerrain({ surfaceElevationMidpoints: nextMidpoints });
-  };
-  const selectedPreset: PublicTopoMaterialPresetId =
-    PUBLIC_TOPO_MATERIAL_PRESETS.some(
-      (preset) => preset.value === terrain.materialPreset,
-    )
-      ? (terrain.materialPreset as PublicTopoMaterialPresetId)
-      : "custom";
-  const selectedOrthoPhotoBudget: OrthoPhotoTextureBudgetId =
-    terrain.orthoPhotoTextureBudget === 8192 ? "8192" : "4096";
-  const setPublicTopoLayerStyle = (patch: Partial<EditableStyle>) => {
-    if (isEnv) {
-      for (const id of PUBLIC_SURFACE_LAYER_IDS) setEnvLayerStyle(id, patch);
-    } else if (currentPage) {
-      for (const id of PUBLIC_SURFACE_LAYER_IDS) {
-        setPageLayerOverride(currentPage.id, id, patch);
-      }
-    }
-  };
-  const publicSurfaceLayerControlProps = {
-    ...layerControlProps,
-    setEnvLayerStyle: (_layerId: string, patch: Partial<EditableStyle>) =>
-      setPublicTopoLayerStyle(patch),
-    setPageLayerOverride: (
-      _pageId: string,
-      _layerId: string,
-      patch: Partial<EditableStyle>,
-    ) => setPublicTopoLayerStyle(patch),
-    clearPageLayerOverride: (
-      pageId: string,
-      _layerId: string,
-      field: keyof EditableStyle,
-    ) => {
-      for (const id of PUBLIC_SURFACE_LAYER_IDS) {
-        clearPageLayerOverride(pageId, id, field);
-      }
-    },
-  };
-  const setSceneFog = (patch: NonNullable<SceneProperties["fog"]>) => {
-    if (!isEnv) return;
-    setEnvScene({ fog: { ...sceneFog, ...patch } });
-  };
-  const setTopoMaterialPreset = (value: PublicTopoMaterialPresetId) => {
-    const preset = PUBLIC_TOPO_MATERIAL_PRESETS.find(
-      (candidate) => candidate.value === value,
-    );
-    if (!preset?.patch) {
-      setTerrain({ materialPreset: "custom" });
-      return;
-    }
-    setTerrain({ surfaceElevationEnabled: false, ...preset.patch });
-  };
-  const setOrthoPhotoBudget = (value: OrthoPhotoTextureBudgetId) => {
-    const budget = value === "8192" ? 8192 : 4096;
-    setTerrain({
-      orthoPhotoTextureBudget: budget,
-      orthoPhotoPath: orthoPhotoPathForBudget(value),
-      orthoPhotoTexture4096Path: ORTHO_PHOTO_TEXTURE_4096_PATH,
-      orthoPhotoTexture8192Path: ORTHO_PHOTO_TEXTURE_8192_PATH,
-      orthoPhotoBounds: ORTHO_PHOTO_BOUNDS,
-    });
-  };
-
-  return (
-    <>
-      <details style={drillingAssayDetailsStyle}>
-        <summary style={drillingAssaySummaryStyle}>Topo map transform</summary>
-        <div style={detailsContentStyle}>
-          <LayerNumberStyleControl
-            label="Lift +/-"
-            field="meshSurfaceLiftM"
-            fallback={0}
-            min={-5000}
-            max={5000}
-            step={25}
-            decimals={0}
-            {...layerControlProps}
-          />
-        </div>
-      </details>
-      <PublicSurfaceClipControls {...publicSurfaceLayerControlProps} />
-      <details style={drillingAssayDetailsStyle} open>
-        <summary style={drillingAssaySummaryStyle}>Title block</summary>
-        <div style={detailsContentStyle}>
-              <EzGammaCheckboxRow
-                label="Visible"
-                checked={topoMapBranding.visible === true}
-                testId="topo-map-branding-visible"
-                onChange={(checked) => setTopoMapBranding({ visible: checked })}
-              />
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Logo file</label>
-                <input
-                  data-testid="topo-map-branding-logo-file"
-                  type="file"
-                  accept={TITLE_BLOCK_UPLOAD_ACCEPT}
-                  disabled={brandingUploading}
-                  onChange={onTopoMapBrandingLogoFile}
-                  style={{ flex: 1, minWidth: 0, fontSize: 11 }}
-                />
-              </div>
-              {topoMapBranding.logoPath ? (
-                <div style={{ ...panelStyles.muted, fontSize: 11 }}>
-                  {(
-                    topoMapBranding.logoSourcePath ??
-                    topoMapBranding.logoPath
-                  )
-                    .split("/")
-                    .at(-1)}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setTopoMapBranding({
-                        logoPath: "",
-                        logoRenderablePath: "",
-                        logoSourcePath: "",
-                        logoSourceFormat: "",
-                      })
-                    }
-                    style={{
-                      ...panelStyles.iconButton,
-                      width: "auto",
-                      minHeight: 0,
-                      marginLeft: 8,
-                      padding: "1px 6px",
-                      fontSize: 10,
-                    }}
-                  >
-                    Clear
-                  </button>
-                </div>
-              ) : null}
-              {brandingUploadError ? (
-                <div
-                  style={{
-                    color: "rgba(255, 111, 127, 0.9)",
-                    fontSize: 11,
-                  }}
-                >
-                  {brandingUploadError}
-                </div>
-              ) : null}
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Heading</label>
-                <input
-                  data-testid="topo-map-branding-heading"
-                  type="text"
-                  value={topoMapBranding.heading ?? ""}
-                  onChange={(event) =>
-                    setTopoMapBranding({ heading: event.currentTarget.value })
-                  }
-                  style={{ flex: 1, minWidth: 0 }}
-                />
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Subheading</label>
-                <input
-                  data-testid="topo-map-branding-subheading"
-                  type="text"
-                  value={topoMapBranding.subheading ?? ""}
-                  onChange={(event) =>
-                    setTopoMapBranding({ subheading: event.currentTarget.value })
-                  }
-                  style={{ flex: 1, minWidth: 0 }}
-                />
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Layout</label>
-                <select
-                  data-testid="topo-map-branding-layout"
-                  value={topoMapBranding.layout ?? "horizontal"}
-                  onChange={(event) =>
-                    setTopoMapBranding({
-                      layout: event.currentTarget
-                        .value as NonNullable<
-                        NonNullable<
-                          SceneProperties["terrain"]
-                        >["topoMapBranding"]
-                      >["layout"],
-                    })
-                  }
-                  style={{ flex: 1 }}
-                >
-                  <option value="horizontal">Horizontal</option>
-                  <option value="stacked">Stacked</option>
-                </select>
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Logo pos.</label>
-                <select
-                  data-testid="topo-map-branding-logo-placement"
-                  value={topoMapBranding.logoPlacement ?? "before"}
-                  onChange={(event) =>
-                    setTopoMapBranding({
-                      logoPlacement: event.currentTarget
-                        .value as NonNullable<
-                        NonNullable<
-                          SceneProperties["terrain"]
-                        >["topoMapBranding"]
-                      >["logoPlacement"],
-                    })
-                  }
-                  style={{ flex: 1 }}
-                >
-                  <option value="before">Before text</option>
-                  <option value="after">After text</option>
-                </select>
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Logo fit</label>
-                <select
-                  data-testid="topo-map-branding-logo-fit"
-                  value={topoMapBranding.logoFit ?? "contain"}
-                  onChange={(event) =>
-                    setTopoMapBranding({
-                      logoFit: event.currentTarget
-                        .value as NonNullable<
-                        NonNullable<
-                          SceneProperties["terrain"]
-                        >["topoMapBranding"]
-                      >["logoFit"],
-                    })
-                  }
-                  style={{ flex: 1 }}
-                >
-                  <option value="contain">Contain</option>
-                  <option value="cover">Cover</option>
-                  <option value="stretch">Stretch</option>
-                </select>
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Font</label>
-                <select
-                  data-testid="topo-map-branding-font-family"
-                  value={topoMapBranding.fontFamily ?? "mono"}
-                  onChange={(event) =>
-                    setTopoMapBranding({
-                      fontFamily: event.currentTarget
-                        .value as NonNullable<
-                        NonNullable<
-                          SceneProperties["terrain"]
-                        >["topoMapBranding"]
-                      >["fontFamily"],
-                    })
-                  }
-                  style={{ flex: 1 }}
-                >
-                  <option value="mono">Mono</option>
-                  <option value="sans">Sans</option>
-                  <option value="serif">Serif</option>
-                  <option value="condensed">Condensed</option>
-                </select>
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Text align</label>
-                <select
-                  data-testid="topo-map-branding-text-align"
-                  value={topoMapBranding.textAlign ?? "left"}
-                  onChange={(event) =>
-                    setTopoMapBranding({
-                      textAlign: event.currentTarget
-                        .value as NonNullable<
-                        NonNullable<
-                          SceneProperties["terrain"]
-                        >["topoMapBranding"]
-                      >["textAlign"],
-                    })
-                  }
-                  style={{ flex: 1 }}
-                >
-                  <option value="left">Left</option>
-                  <option value="center">Center</option>
-                  <option value="right">Right</option>
-                </select>
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Anchor</label>
-                <select
-                  data-testid="topo-map-branding-anchor"
-                  value={
-                    topoMapBranding.anchor ?? TOPO_MAP_BRANDING_DEFAULT_ANCHOR
-                  }
-                  onChange={(event) =>
-                    setTopoMapBranding({
-                      anchor: event.currentTarget
-                        .value as NonNullable<
-                        NonNullable<
-                          SceneProperties["terrain"]
-                        >["topoMapBranding"]
-                      >["anchor"],
-                    })
-                  }
-                  style={{ flex: 1 }}
-                >
-                  <option value="south-west">South west</option>
-                  <option value="south-east">South east</option>
-                  <option value="north-west">North west</option>
-                  <option value="north-east">North east</option>
-                </select>
-              </div>
-              <EnvStyleRow
-                label="Offset X"
-                inputType="range"
-                value={String(
-                  topoMapBranding.offsetXM ??
-                    TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M,
-                )}
-                min={-600000}
-                max={600000}
-                step={5000}
-                decimals={0}
-                testId="topo-map-branding-offset-x"
-                onChange={(v) =>
-                  setTopoMapBranding({ offsetXM: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Offset Y"
-                inputType="range"
-                value={String(
-                  topoMapBranding.offsetYM ??
-                    TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M,
-                )}
-                min={-600000}
-                max={600000}
-                step={5000}
-                decimals={0}
-                testId="topo-map-branding-offset-y"
-                onChange={(v) =>
-                  setTopoMapBranding({ offsetYM: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Rotation"
-                inputType="range"
-                value={String(topoMapBranding.rotationDeg ?? 0)}
-                min={-180}
-                max={180}
-                step={1}
-                decimals={0}
-                testId="topo-map-branding-rotation"
-                onChange={(v) =>
-                  setTopoMapBranding({ rotationDeg: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Lift"
-                inputType="range"
-                value={String(topoMapBranding.liftM ?? 260)}
-                min={0}
-                max={2000}
-                step={25}
-                decimals={0}
-                testId="topo-map-branding-lift"
-                onChange={(v) => setTopoMapBranding({ liftM: parseFloat(v) })}
-              />
-              <EnvStyleRow
-                label="Logo width"
-                inputType="range"
-                value={String(topoMapBranding.logoWidthM ?? 46000)}
-                min={0}
-                max={160000}
-                step={1000}
-                decimals={0}
-                testId="topo-map-branding-logo-width"
-                onChange={(v) =>
-                  setTopoMapBranding({ logoWidthM: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Logo gap"
-                inputType="range"
-                value={String(topoMapBranding.logoGapM ?? 16000)}
-                min={-50000}
-                max={80000}
-                step={1000}
-                decimals={0}
-                testId="topo-map-branding-logo-gap"
-                onChange={(v) =>
-                  setTopoMapBranding({ logoGapM: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Heading size"
-                inputType="range"
-                value={String(topoMapBranding.headingSizeM ?? 18000)}
-                min={2000}
-                max={240000}
-                step={1000}
-                decimals={0}
-                testId="topo-map-branding-heading-size"
-                onChange={(v) =>
-                  setTopoMapBranding({ headingSizeM: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Subhead size"
-                inputType="range"
-                value={String(topoMapBranding.subheadingSizeM ?? 10500)}
-                min={1500}
-                max={180000}
-                step={500}
-                decimals={0}
-                testId="topo-map-branding-subheading-size"
-                onChange={(v) =>
-                  setTopoMapBranding({ subheadingSizeM: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Head weight"
-                inputType="range"
-                value={String(topoMapBranding.headingWeight ?? 800)}
-                min={100}
-                max={900}
-                step={100}
-                decimals={0}
-                testId="topo-map-branding-heading-weight"
-                onChange={(v) =>
-                  setTopoMapBranding({ headingWeight: parseFloat(v) })
-                }
-              />
-              <EzGammaCheckboxRow
-                label="Head italic"
-                checked={topoMapBranding.headingItalic === true}
-                testId="topo-map-branding-heading-italic"
-                onChange={(checked) =>
-                  setTopoMapBranding({ headingItalic: checked })
-                }
-              />
-              <EnvStyleRow
-                label="Sub weight"
-                inputType="range"
-                value={String(topoMapBranding.subheadingWeight ?? 500)}
-                min={100}
-                max={900}
-                step={100}
-                decimals={0}
-                testId="topo-map-branding-subheading-weight"
-                onChange={(v) =>
-                  setTopoMapBranding({ subheadingWeight: parseFloat(v) })
-                }
-              />
-              <EzGammaCheckboxRow
-                label="Sub italic"
-                checked={topoMapBranding.subheadingItalic === true}
-                testId="topo-map-branding-subheading-italic"
-                onChange={(checked) =>
-                  setTopoMapBranding({ subheadingItalic: checked })
-                }
-              />
-              <EnvStyleRow
-                label="Line gap"
-                inputType="range"
-                value={String(topoMapBranding.lineGapM ?? 2500)}
-                min={-30000}
-                max={50000}
-                step={500}
-                decimals={0}
-                testId="topo-map-branding-line-gap"
-                onChange={(v) =>
-                  setTopoMapBranding({ lineGapM: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Text color"
-                inputType="color"
-                value={topoMapBranding.textColor ?? "#ffffff"}
-                testId="topo-map-branding-text-color"
-                onChange={(v) => setTopoMapBranding({ textColor: v })}
-              />
-              <EnvStyleRow
-                label="Block opacity"
-                inputType="range"
-                value={String(topoMapBranding.opacity ?? 0.92)}
-                min={0}
-                max={1}
-                step={0.02}
-                decimals={2}
-                testId="topo-map-branding-opacity"
-                onChange={(v) =>
-                  setTopoMapBranding({ opacity: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Logo opacity"
-                inputType="range"
-                value={String(topoMapBranding.logoOpacity ?? topoMapBranding.opacity ?? 0.92)}
-                min={0}
-                max={1}
-                step={0.02}
-                decimals={2}
-                testId="topo-map-branding-logo-opacity"
-                onChange={(v) =>
-                  setTopoMapBranding({ logoOpacity: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Text opacity"
-                inputType="range"
-                value={String(topoMapBranding.textOpacity ?? topoMapBranding.opacity ?? 0.92)}
-                min={0}
-                max={1}
-                step={0.02}
-                decimals={2}
-                testId="topo-map-branding-text-opacity"
-                onChange={(v) =>
-                  setTopoMapBranding({ textOpacity: parseFloat(v) })
-                }
-              />
-              <EzGammaCheckboxRow
-                label="Background"
-                checked={topoMapBranding.backgroundEnabled === true}
-                testId="topo-map-branding-background-enabled"
-                onChange={(checked) =>
-                  setTopoMapBranding({ backgroundEnabled: checked })
-                }
-              />
-              <EnvStyleRow
-                label="Bg color"
-                inputType="color"
-                value={topoMapBranding.backgroundColor ?? "#050607"}
-                testId="topo-map-branding-background-color"
-                onChange={(v) => setTopoMapBranding({ backgroundColor: v })}
-              />
-              <EnvStyleRow
-                label="Bg opacity"
-                inputType="range"
-                value={String(topoMapBranding.backgroundOpacity ?? 0.36)}
-                min={0}
-                max={1}
-                step={0.02}
-                decimals={2}
-                testId="topo-map-branding-background-opacity"
-                onChange={(v) =>
-                  setTopoMapBranding({ backgroundOpacity: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Bg pad X"
-                inputType="range"
-                value={String(topoMapBranding.backgroundPaddingXM ?? 12000)}
-                min={0}
-                max={180000}
-                step={1000}
-                decimals={0}
-                testId="topo-map-branding-background-padding-x"
-                onChange={(v) =>
-                  setTopoMapBranding({ backgroundPaddingXM: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Bg pad Y"
-                inputType="range"
-                value={String(topoMapBranding.backgroundPaddingYM ?? 8000)}
-                min={0}
-                max={180000}
-                step={1000}
-                decimals={0}
-                testId="topo-map-branding-background-padding-y"
-                onChange={(v) =>
-                  setTopoMapBranding({ backgroundPaddingYM: parseFloat(v) })
-                }
-              />
-              <EzGammaCheckboxRow
-                label="Outline"
-                checked={topoMapBranding.outlineEnabled === true}
-                testId="topo-map-branding-outline-enabled"
-                onChange={(checked) =>
-                  setTopoMapBranding({ outlineEnabled: checked })
-                }
-              />
-              <EnvStyleRow
-                label="Outline color"
-                inputType="color"
-                value={topoMapBranding.outlineColor ?? "#ffffff"}
-                testId="topo-map-branding-outline-color"
-                onChange={(v) => setTopoMapBranding({ outlineColor: v })}
-              />
-              <EnvStyleRow
-                label="Outline opacity"
-                inputType="range"
-                value={String(topoMapBranding.outlineOpacity ?? 0.8)}
-                min={0}
-                max={1}
-                step={0.02}
-                decimals={2}
-                testId="topo-map-branding-outline-opacity"
-                onChange={(v) =>
-                  setTopoMapBranding({ outlineOpacity: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Outline width"
-                inputType="range"
-                value={String(topoMapBranding.outlineWidthM ?? 2500)}
-                min={250}
-                max={50000}
-                step={250}
-                decimals={0}
-                testId="topo-map-branding-outline-width"
-                onChange={(v) =>
-                  setTopoMapBranding({ outlineWidthM: parseFloat(v) })
-                }
-              />
-        </div>
-      </details>
-      <details style={drillingAssayDetailsStyle}>
-        <summary style={drillingAssaySummaryStyle}>Topo fog</summary>
-        <div style={detailsContentStyle}>
-          {!isEnv ? (
-            <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
-              Scene fog variables are edited in Global Settings.
-            </div>
-          ) : (
-            <>
-              <EzGammaCheckboxRow
-                label="Scene fog"
-                checked={sceneFogEnabled}
-                onChange={(checked) => setSceneFog({ enabled: checked })}
-              />
-              <EnvStyleRow
-                label="Fog color"
-                inputType="color"
-                value={sceneFog.color ?? scene.background ?? "#383838"}
-                onChange={(v) => setSceneFog({ color: v })}
-              />
-              <EnvStyleRow
-                label="Fog dens."
-                inputType="range"
-                value={String(sceneFogDensity * 10000)}
-                min={0.01}
-                max={6}
-                step={0.01}
-                decimals={2}
-                onChange={(v) =>
-                  setSceneFog({ density: parseFloat(v) / 10000 })
-                }
-              />
-              <EnvStyleRow
-                label="Fog reach"
-                inputType="range"
-                value={String(sceneFogReachKm)}
-                min={5}
-                max={3000}
-                step={5}
-                decimals={0}
-                onChange={(v) =>
-                  setSceneFog({
-                    density: 3 / Math.max(parseFloat(v) * 1000, 1),
-                  })
-                }
-              />
-            </>
-          )}
-          <EzGammaCheckboxRow
-            label="Topo fog"
-            checked={topoFogIncluded}
-            onChange={(checked) =>
-              setPublicTopoLayerStyle({ affectedByFog: checked })
-            }
-          />
-          <EnvStyleRow
-            label="Layer dens."
-            inputType="range"
-            value={String(topoFogDensity * 10000)}
-            min={0.01}
-            max={6}
-            step={0.01}
-            decimals={2}
-            onChange={(v) =>
-              setPublicTopoLayerStyle({ fogDensity: parseFloat(v) / 10000 })
-            }
-          />
-          <EnvStyleRow
-            label="Layer reach"
-            inputType="range"
-            value={String(topoFogReachKm)}
-            min={5}
-            max={3000}
-            step={5}
-            decimals={0}
-            onChange={(v) =>
-              setPublicTopoLayerStyle({
-                fogDensity: 3 / Math.max(parseFloat(v) * 1000, 1),
-              })
-            }
-          />
-        </div>
-      </details>
-      <details style={drillingAssayDetailsStyle}>
-        <summary style={drillingAssaySummaryStyle}>Topo surface style</summary>
-        <div style={detailsContentStyle}>
-          {!isEnv ? (
-            <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
-              Topo surface variables are edited in Global Settings.
-            </div>
-          ) : (
-            <>
-              <EnvSelectRow<PublicTopoMaterialPresetId>
-                label="Material"
-                value={selectedPreset}
-                options={PUBLIC_TOPO_MATERIAL_PRESETS}
-                testId="topo-material-preset"
-                onChange={setTopoMaterialPreset}
-              />
-              {selectedPreset === "ortho-photo" ? (
-                <>
-                  <EnvSelectRow<OrthoPhotoTextureBudgetId>
-                    label="Texture budget"
-                    value={selectedOrthoPhotoBudget}
-                    options={ORTHO_PHOTO_TEXTURE_BUDGETS}
-                    testId="topo-ortho-photo-texture-budget"
-                    onChange={setOrthoPhotoBudget}
-                  />
-                  <EnvStyleRow
-                    label="Photo opacity"
-                    inputType="range"
-                    value={String(terrain.orthoPhotoOpacity ?? 1)}
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    decimals={2}
-                    testId="topo-ortho-photo-opacity"
-                    onChange={(v) =>
-                      setTerrain({ orthoPhotoOpacity: parseFloat(v) })
-                    }
-                  />
-                  <EnvStyleRow
-                    label="Photo relief"
-                    inputType="range"
-                    value={String(terrain.orthoPhotoHillshadeBlend ?? 0.45)}
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    decimals={2}
-                    testId="topo-ortho-photo-hillshade"
-                    onChange={(v) =>
-                      setTerrain({ orthoPhotoHillshadeBlend: parseFloat(v) })
-                    }
-                  />
-                  <EnvStyleRow
-                    label="Photo bright"
-                    inputType="range"
-                    value={String(terrain.orthoPhotoBrightness ?? 0)}
-                    min={-0.5}
-                    max={0.5}
-                    step={0.02}
-                    decimals={2}
-                    testId="topo-ortho-photo-brightness"
-                    onChange={(v) =>
-                      setTerrain({ orthoPhotoBrightness: parseFloat(v) })
-                    }
-                  />
-                  <EnvStyleRow
-                    label="Photo contrast"
-                    inputType="range"
-                    value={String(terrain.orthoPhotoContrast ?? 1)}
-                    min={0.25}
-                    max={2}
-                    step={0.05}
-                    decimals={2}
-                    testId="topo-ortho-photo-contrast"
-                    onChange={(v) =>
-                      setTerrain({ orthoPhotoContrast: parseFloat(v) })
-                    }
-                  />
-                  <EnvStyleRow
-                    label="Photo sat."
-                    inputType="range"
-                    value={String(terrain.orthoPhotoSaturation ?? 1)}
-                    min={0}
-                    max={2}
-                    step={0.05}
-                    decimals={2}
-                    testId="topo-ortho-photo-saturation"
-                    onChange={(v) =>
-                      setTerrain({ orthoPhotoSaturation: parseFloat(v) })
-                    }
-                  />
-                </>
-              ) : null}
-              <EzGammaCheckboxRow
-                label="Surface color"
-                checked={terrain.surfaceElevationEnabled === true}
-                testId="topo-surface-elevation-enabled"
-                onChange={(checked) =>
-                  setTerrain({
-                    materialPreset:
-                      checked && terrain.materialPreset !== "ortho-photo"
-                        ? "surface-elevation"
-                        : terrain.materialPreset === "surface-elevation"
-                          ? "soft-topo"
-                          : terrain.materialPreset,
-                    surfaceElevationEnabled: checked,
-                    surfaceElevationLegendVisible:
-                      checked &&
-                      terrain.surfaceElevationLegendVisible !== false,
-                    surfaceElevationMinM,
-                    surfaceElevationMaxM,
-                    surfaceElevationColors,
-                    surfaceElevationColorPositions: surfaceElevationPositions,
-                    surfaceElevationMidpoints,
-                    surfaceElevationTransitionSoftness,
-                    surfaceElevationColorBlend,
-                    surfaceElevationReverse:
-                      terrain.surfaceElevationReverse === true,
-                  })
-                }
-              />
-              <EzGammaCheckboxRow
-                label="Elev. legend"
-                checked={terrain.surfaceElevationLegendVisible !== false}
-                testId="topo-surface-elevation-legend-visible"
-                onChange={(checked) =>
-                  setTerrain({ surfaceElevationLegendVisible: checked })
-                }
-              />
-              <EzGammaCheckboxRow
-                label="Reverse ramp"
-                checked={terrain.surfaceElevationReverse === true}
-                testId="topo-surface-elevation-reverse"
-                onChange={(checked) =>
-                  setTerrain({ surfaceElevationReverse: checked })
-                }
-              />
-              <div style={nestedControlRowStyle}>
-                <span style={nestedFieldLabelStyle}>PDF palette</span>
-                <button
-                  type="button"
-                  data-testid="topo-surface-elevation-reset"
-                  onClick={() => setTerrain(surfaceElevationDefaultPatch())}
-                  style={{
-                    flex: 1,
-                    border: "1px solid rgba(255, 255, 255, 0.22)",
-                    borderRadius: 6,
-                    background: "rgba(255, 255, 255, 0.08)",
-                    color: vibrancySecondaryLabel,
-                    font: "inherit",
-                    padding: "4px 8px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Reset 1500-3500 m
-                </button>
-              </div>
-              <EnvStyleRow
-                label="Elev. min"
-                inputType="range"
-                value={String(surfaceElevationMinM)}
-                min={-500}
-                max={4500}
-                step={25}
-                decimals={0}
-                testId="topo-surface-elevation-min"
-                onChange={(v) =>
-                  setTerrain({ surfaceElevationMinM: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Elev. max"
-                inputType="range"
-                value={String(surfaceElevationMaxM)}
-                min={0}
-                max={5000}
-                step={25}
-                decimals={0}
-                testId="topo-surface-elevation-max"
-                onChange={(v) =>
-                  setTerrain({ surfaceElevationMaxM: parseFloat(v) })
-                }
-              />
-              <div style={nestedControlRowStyle}>
-                <span style={nestedFieldLabelStyle}>Gradient</span>
-                <div
-                  data-testid="topo-surface-gradient-rail"
-                  style={{
-                    position: "relative",
-                    flex: 1,
-                    height: 30,
-                    minWidth: 0,
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: "10px 0 7px",
-                      borderRadius: 999,
-                      background: surfaceElevationGradient,
-                      border: "1px solid rgba(255, 255, 255, 0.28)",
-                      boxShadow: "inset 0 0 0 1px rgba(0, 0, 0, 0.18)",
-                    }}
-                  />
-                  {surfaceElevationMidpoints.map((midpoint, index) => {
-                    const left = surfaceElevationPositions[index];
-                    const right = surfaceElevationPositions[index + 1];
-                    const position = left + (right - left) * midpoint;
-                    return (
-                      <span
-                        key={`surface-elevation-midpoint-${index}`}
-                        data-testid={`topo-surface-gradient-midpoint-${index}`}
-                        title={`Transition spread ${index + 1}-${index + 2}`}
-                        style={{
-                          position: "absolute",
-                          left: `${position * 100}%`,
-                          top: 5,
-                          width: 5,
-                          height: 22,
-                          borderRadius: 3,
-                          transform: "translateX(-50%)",
-                          background: "rgba(255, 255, 255, 0.78)",
-                          border: "1px solid rgba(17, 20, 24, 0.62)",
-                          boxShadow: "0 1px 5px rgba(0, 0, 0, 0.28)",
-                        }}
-                      />
-                    );
-                  })}
-                  {surfaceElevationColors.map((color, index) => (
-                    <span
-                      key={`surface-elevation-stop-${index}`}
-                      data-testid={`topo-surface-gradient-stop-${index}`}
-                      title={`Color stop ${index + 1}`}
-                      style={{
-                        position: "absolute",
-                        left: `${surfaceElevationPositions[index] * 100}%`,
-                        top: 2,
-                        width: 11,
-                        height: 11,
-                        transform: "translateX(-50%) rotate(45deg)",
-                        borderRadius: 2,
-                        background: color,
-                        border: "1px solid rgba(255, 255, 255, 0.86)",
-                        boxShadow: "0 1px 6px rgba(0, 0, 0, 0.36)",
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-              {surfaceElevationPositions.map((position, index) => (
-                <EnvStyleRow
-                  key={`surface-elevation-position-${index}`}
-                  label={`Stop ${index + 1} pos`}
-                  inputType="range"
-                  value={String(position)}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  decimals={2}
-                  testId={`topo-surface-elevation-position-${index}`}
-                  onChange={(v) =>
-                    setSurfaceElevationPosition(index, parseFloat(v))
-                  }
-                />
-              ))}
-              {surfaceElevationMidpoints.map((midpoint, index) => (
-                <EnvStyleRow
-                  key={`surface-elevation-midpoint-${index}`}
-                  label={`Spread ${index + 1}-${index + 2}`}
-                  inputType="range"
-                  value={String(midpoint)}
-                  min={0.05}
-                  max={0.95}
-                  step={0.01}
-                  decimals={2}
-                  testId={`topo-surface-elevation-midpoint-${index}`}
-                  onChange={(v) =>
-                    setSurfaceElevationMidpoint(index, parseFloat(v))
-                  }
-                />
-              ))}
-              <EnvStyleRow
-                label="Ramp softness"
-                inputType="range"
-                value={String(surfaceElevationTransitionSoftness)}
-                min={0}
-                max={1}
-                step={0.05}
-                decimals={2}
-                testId="topo-surface-elevation-softness"
-                onChange={(v) =>
-                  setTerrain({
-                    surfaceElevationTransitionSoftness: parseFloat(v),
-                  })
-                }
-              />
-              <EnvStyleRow
-                label="Color blend"
-                inputType="range"
-                value={String(surfaceElevationColorBlend)}
-                min={0}
-                max={1}
-                step={0.05}
-                decimals={2}
-                testId="topo-surface-elevation-color-blend"
-                onChange={(v) =>
-                  setTerrain({ surfaceElevationColorBlend: parseFloat(v) })
-                }
-              />
-              {surfaceElevationColors.map((color, index) => (
-                <EnvStyleRow
-                  key={`surface-elevation-color-${index}`}
-                  label={`${surfaceElevationTickLabel(
-                    surfaceElevationMinM,
-                    surfaceElevationMaxM,
-                    index,
-                  )} m`}
-                  inputType="color"
-                  value={color}
-                  testId={`topo-surface-elevation-color-${index}`}
-                  onChange={(v) => setSurfaceElevationColor(index, v)}
-                />
-              ))}
-              <EnvStyleRow
-                label="Ramp low"
-                inputType="color"
-                value={terrain.rampLow ?? "#4f4a40"}
-                onChange={(v) => setTerrain({ rampLow: v })}
-              />
-              <EnvStyleRow
-                label="Ramp mid"
-                inputType="color"
-                value={terrain.rampMid ?? "#8a7e68"}
-                onChange={(v) => setTerrain({ rampMid: v })}
-              />
-              <EnvStyleRow
-                label="Ramp high"
-                inputType="color"
-                value={terrain.rampHigh ?? "#d7c69e"}
-                onChange={(v) => setTerrain({ rampHigh: v })}
-              />
-              <EnvStyleRow
-                label="Elev low"
-                inputType="range"
-                value={String(terrain.elevLowM ?? 0)}
-                min={-2000}
-                max={4000}
-                step={25}
-                decimals={0}
-                onChange={(v) => setTerrain({ elevLowM: parseFloat(v) })}
-              />
-              <EnvStyleRow
-                label="Elev high"
-                inputType="range"
-                value={String(terrain.elevHighM ?? 120)}
-                min={-2000}
-                max={5000}
-                step={25}
-                decimals={0}
-                onChange={(v) => setTerrain({ elevHighM: parseFloat(v) })}
-              />
-              <EnvStyleRow
-                label="Hillshade"
-                inputType="range"
-                value={String(terrain.hillshadeIntensity ?? 1.05)}
-                min={0}
-                max={2}
-                step={0.05}
-                decimals={2}
-                onChange={(v) =>
-                  setTerrain({ hillshadeIntensity: parseFloat(v) })
-                }
-              />
-              <EnvStyleRow
-                label="Shadow edge"
-                inputType="range"
-                value={String(terrain.shadowSharpness ?? 0.5)}
-                min={0}
-                max={1}
-                step={0.02}
-                decimals={2}
-                onChange={(v) => setTerrain({ shadowSharpness: parseFloat(v) })}
-              />
-              <EnvStyleRow
-                label="Tessellation"
-                inputType="range"
-                value={String(terrain.facetStrength ?? 0.08)}
-                min={0}
-                max={1}
-                step={0.02}
-                decimals={2}
-                onChange={(v) => setTerrain({ facetStrength: parseFloat(v) })}
-              />
-              <EnvStyleRow
-                label="Edge fade"
-                inputType="range"
-                value={String(terrain.edgeFadeDistanceM ?? 90_000)}
-                min={0}
-                max={250_000}
-                step={5_000}
-                decimals={0}
-                onChange={(v) =>
-                  setTerrain({ edgeFadeDistanceM: parseFloat(v) })
-                }
-                testId="topo-edge-fade-distance"
-              />
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Edge shape</label>
-                <select
-                  data-testid="topo-edge-fade-shape"
-                  value={edgeFadeShape}
-                  onChange={(event) =>
-                    setTerrain({
-                      edgeFadeShape: event.currentTarget.value as NonNullable<
-                        SceneProperties["terrain"]
-                      >["edgeFadeShape"],
-                    })
-                  }
-                  style={{ flex: 1 }}
-                >
-                  <option value="square">Square</option>
-                  <option value="rounded-square">Rounded square</option>
-                  <option value="circle">Circle</option>
-                </select>
-              </div>
-              <EnvStyleRow
-                label="Edge distance"
-                inputType="range"
-                value={String(terrain.edgeFadeInsetM ?? 0)}
-                min={0}
-                max={250_000}
-                step={5_000}
-                decimals={0}
-                onChange={(v) => setTerrain({ edgeFadeInsetM: parseFloat(v) })}
-                testId="topo-edge-fade-inset"
-              />
-              <EnvStyleRow
-                label="Corner radius"
-                inputType="range"
-                value={String(terrain.edgeFadeCornerRadiusM ?? 0)}
-                min={0}
-                max={250_000}
-                step={5_000}
-                decimals={0}
-                onChange={(v) =>
-                  setTerrain({ edgeFadeCornerRadiusM: parseFloat(v) })
-                }
-                testId="topo-edge-fade-corner-radius"
-              />
-              <EnvStyleRow
-                label="Hue variance"
-                inputType="range"
-                value={String(terrain.rockHueVariance ?? 0.05)}
-                min={0}
-                max={0.2}
-                step={0.005}
-                decimals={3}
-                onChange={(v) => setTerrain({ rockHueVariance: parseFloat(v) })}
-              />
-              <EnvStyleRow
-                label="Shadow tint"
-                inputType="color"
-                value={terrain.shadowTint ?? "#303640"}
-                onChange={(v) => setTerrain({ shadowTint: v })}
-              />
-            </>
-          )}
-        </div>
-      </details>
-    </>
-  );
-}
-
-function PublicSurfaceClipControls({
-  style,
-  isEnv,
-  currentPage,
-  layerId,
-  setEnvLayerStyle,
-  setPageLayerOverride,
-  clearPageLayerOverride,
-}: {
-  style: EditableStyle;
-  isEnv: boolean;
-  currentPage: PresentationPage | null;
-  layerId: string;
-  setEnvLayerStyle: LayerStyleSetter;
-  setPageLayerOverride: PageStyleSetter;
-  clearPageLayerOverride: PageStyleClearer;
-}) {
-  const numberProps = {
-    style,
-    isEnv,
-    currentPage,
-    layerId,
-    setEnvLayerStyle,
-    setPageLayerOverride,
-    clearPageLayerOverride,
-  };
-  return (
-    <details style={drillingAssayDetailsStyle}>
-      <summary style={drillingAssaySummaryStyle}>Topo map clipping</summary>
-      <div style={detailsContentStyle}>
-        <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
-          Clips terrain, roads, streams, and waterbodies together.
-        </div>
-        <LayerBooleanStyleControl
-          label="Enabled"
-          field="publicSurfaceClipEnabled"
-          fallback={false}
-          {...numberProps}
-        />
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Shape</label>
-          <select
-            data-testid="public-surface-clip-shape"
-            value={style.publicSurfaceClipShape === "circle" ? "circle" : "box"}
-            onChange={(event) => {
-              const value =
-                event.currentTarget.value === "circle" ? "circle" : "box";
-              if (isEnv) {
-                setEnvLayerStyle(layerId, { publicSurfaceClipShape: value });
-              } else if (currentPage) {
-                setPageLayerOverride(currentPage.id, layerId, {
-                  publicSurfaceClipShape: value,
-                });
-              }
-            }}
-            style={{ flex: 1 }}
-          >
-            <option value="circle">Circle inside box</option>
-            <option value="box">Box</option>
-          </select>
-        </div>
-        <LayerNumberStyleControl
-          label="X center"
-          field="publicSurfaceClipCenterX"
-          fallback={0}
-          min={-300000}
-          max={300000}
-          step={250}
-          decimals={0}
-          {...numberProps}
-        />
-        <LayerNumberStyleControl
-          label="Y center"
-          field="publicSurfaceClipCenterY"
-          fallback={0}
-          min={-300000}
-          max={300000}
-          step={250}
-          decimals={0}
-          {...numberProps}
-        />
-        <LayerNumberStyleControl
-          label="Z center"
-          field="publicSurfaceClipCenterZ"
-          fallback={2000}
-          min={-20000}
-          max={30000}
-          step={100}
-          decimals={0}
-          {...numberProps}
-        />
-        <LayerNumberStyleControl
-          label="X size"
-          field="publicSurfaceClipSizeX"
-          fallback={279150}
-          min={100}
-          max={500000}
-          step={500}
-          decimals={0}
-          {...numberProps}
-        />
-        <LayerNumberStyleControl
-          label="Y size"
-          field="publicSurfaceClipSizeY"
-          fallback={227900}
-          min={100}
-          max={500000}
-          step={500}
-          decimals={0}
-          {...numberProps}
-        />
-        <LayerNumberStyleControl
-          label="Z size"
-          field="publicSurfaceClipSizeZ"
-          fallback={8000}
-          min={100}
-          max={50000}
-          step={100}
-          decimals={0}
-          {...numberProps}
-        />
-        <LayerNumberStyleControl
-          label="Z rotate"
-          field="publicSurfaceClipRotationZDeg"
-          fallback={0}
-          min={-180}
-          max={180}
-          step={1}
-          decimals={0}
-          {...numberProps}
-        />
-      </div>
-    </details>
-  );
-}
-
 function PointMarkerControls({
   style,
   isEnv,
@@ -14295,89 +12171,6 @@ function EnvTextRow({
         style={{ flex: 1 }}
       />
     </div>
-  );
-}
-
-function EnvSelectRow<T extends string>({
-  label,
-  value,
-  options,
-  testId,
-  onChange,
-}: {
-  label: string;
-  value: T;
-  options: readonly { value: T; label: string }[];
-  testId?: string;
-  onChange: (v: T) => void;
-}) {
-  return (
-    <div style={nestedControlRowStyle}>
-      <label style={nestedFieldLabelStyle}>{label}</label>
-      <select
-        value={value}
-        data-testid={testId}
-        onChange={(e) => onChange(e.target.value as T)}
-        style={{ flex: 1 }}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-function styleNumber(
-  style: EditableStyle,
-  key: keyof EditableStyle,
-  fallback: number,
-): number {
-  const value = style[key];
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-}
-
-function styleString(
-  style: EditableStyle,
-  key: keyof EditableStyle,
-  fallback: string,
-): string {
-  const value = style[key];
-  return typeof value === "string" ? value : fallback;
-}
-
-function styleBoolean(
-  style: EditableStyle,
-  key: keyof EditableStyle,
-  fallback: boolean,
-): boolean {
-  const value = style[key];
-  return typeof value === "boolean" ? value : fallback;
-}
-
-function EzGammaCheckboxRow({
-  label,
-  checked,
-  testId,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  testId?: string;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-      <span style={nestedFieldLabelStyle}>{label}</span>
-      <input
-        type="checkbox"
-        checked={checked}
-        data-testid={testId}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-    </label>
   );
 }
 
@@ -15345,164 +13138,11 @@ function EzGammaStyleControls({
 
 // ----- page-mode rows -------------------------------------------------------
 
-const overrideTagStyle: React.CSSProperties = {
-  fontSize: 10,
-  color: vibrancyTertiaryLabel,
-  marginLeft: 4,
-};
-const overrideTagActiveStyle: React.CSSProperties = {
-  ...overrideTagStyle,
-  color: vibrancySecondaryLabel,
-};
-
 const pageRenderPresetHelpStyle: React.CSSProperties = {
   ...panelStyles.muted,
   margin: "0 0 8px 0",
   lineHeight: 1.35,
 };
-
-function PageVisibilityRow({
-  page,
-  layerId,
-  envVisible,
-  onSet,
-  onClear,
-}: {
-  page: PresentationPage;
-  layerId: string;
-  envVisible: boolean;
-  onSet: (v: boolean) => void;
-  onClear: () => void;
-}) {
-  const overridden = isVisibilityOverridden(page, layerId);
-  const overrideVal = page.visibilityOverrides?.[layerId];
-  const effective = overridden ? !!overrideVal : envVisible;
-
-  return (
-    <div style={panelStyles.row}>
-      <label style={panelStyles.fieldLabel}>Visible</label>
-      <input
-        type="checkbox"
-        checked={overridden}
-        onChange={(e) => {
-          if (e.target.checked) {
-            // Start an override mirroring the inherited value -- least
-            // surprising default; user can flip immediately.
-            onSet(envVisible);
-          } else {
-            onClear();
-          }
-        }}
-        title="Override environment default for this page"
-      />
-      <input
-        type="checkbox"
-        checked={effective}
-        disabled={!overridden}
-        onChange={(e) => onSet(e.target.checked)}
-      />
-      <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {overridden ? "overridden" : "inherited"}
-      </span>
-    </div>
-  );
-}
-
-function PageStyleRow({
-  label,
-  inputType,
-  inheritedValue,
-  isOverridden,
-  overrideValue,
-  fallbackValue,
-  min = 0,
-  max = 1,
-  step = 0.05,
-  decimals = 2,
-  onOverride,
-  onClear,
-}: {
-  label: string;
-  inputType: "color" | "range";
-  inheritedValue: string | undefined;
-  isOverridden: boolean;
-  overrideValue: string | undefined;
-  fallbackValue?: string;
-  min?: number;
-  max?: number;
-  step?: number;
-  decimals?: number;
-  onOverride: (v: string) => void;
-  onClear: () => void;
-}) {
-  const fallback = fallbackValue ?? (inputType === "range" ? "1" : "#cccccc");
-  const value = isOverridden
-    ? (overrideValue ?? inheritedValue ?? fallback)
-    : (inheritedValue ?? fallback);
-  const rangeValue = parseFloat(value);
-  const safeValue = Number.isFinite(rangeValue) ? rangeValue : min;
-  const fill = Math.max(
-    0,
-    Math.min(100, ((safeValue - min) / (max - min)) * 100),
-  );
-
-  return (
-    <div style={nestedControlRowStyle}>
-      <label style={nestedFieldLabelStyle}>{label}</label>
-      <input
-        type="checkbox"
-        checked={isOverridden}
-        onChange={(e) => {
-          if (e.target.checked) {
-            // Materialize the inherited value as the starting override.
-            onOverride(value);
-          } else {
-            onClear();
-          }
-        }}
-        title="Override environment value for this page"
-      />
-      {inputType === "range" ? (
-        <>
-          <input
-            type="range"
-            min={min}
-            max={max}
-            step={step}
-            value={value}
-            disabled={!isOverridden}
-            onChange={(e) => onOverride(e.target.value)}
-            style={
-              {
-                flex: 1,
-                opacity: isOverridden ? 1 : 0.4,
-                "--editor-slider-fill": `${fill}%`,
-              } as React.CSSProperties
-            }
-          />
-          <span style={sliderNumberReadoutStyle}>
-            {safeValue.toFixed(decimals)}
-          </span>
-        </>
-      ) : (
-        <input
-          type="color"
-          value={value}
-          disabled={!isOverridden}
-          onChange={(e) => onOverride(e.target.value)}
-          style={{ opacity: isOverridden ? 1 : 0.4 }}
-        />
-      )}
-      <span style={isOverridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {isOverridden ? "overridden" : "inherited"}
-      </span>
-    </div>
-  );
-}
-
-// Avoid an unused-import lint warning for EditableStyle (kept for future
-// fields that take partial-style patches).
-export type _Unused = EditableStyle;
 
 // ----- bedrock geology sub-layer panel -------------------------------------
 //
