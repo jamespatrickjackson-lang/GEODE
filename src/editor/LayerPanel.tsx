@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useEditor } from "./EditorContext";
 import { usePageController } from "../pages/PageController";
 import { ENVIRONMENT_SENTINEL } from "./types";
 import {
+  EDITOR_PILL_TEXT_INSET_PX,
   FROSTED_HAIRLINE,
   frostedSubheading,
   globalSettingsAccent,
@@ -460,7 +461,7 @@ const UTAH_FORGE_PUBLIC_LAYER_GROUPS = [
     ids: ["utah-forge-reference-stage"],
   },
 ] as const satisfies readonly LayerGroupDef[];
-const PUBLIC_TOPO_LAYER_GROUP_TITLE = "Topo layers";
+const PUBLIC_TOPO_LAYER_GROUP_TITLE = "Topo Settings";
 const UTAH_FORGE_CUSTOMER_LAYER_GROUPS =
   [] as const satisfies readonly LayerGroupDef[];
 
@@ -742,7 +743,7 @@ export function LayerPanel({
       ? pageAccentForPage(
           currentPage!,
           selectedPageIndex,
-          selectedPageHasLanded ? 0.62 : 0.24,
+          selectedPageHasLanded ? 0.496 : 0.192,
         )
       : isEnv
         ? globalSettingsAccent
@@ -3240,7 +3241,11 @@ export function LayerPanel({
         const renderedLayers =
           section === "publicTopo" &&
           group.title === PUBLIC_TOPO_LAYER_GROUP_TITLE
-            ? layers.filter((layer) => !isTopoMapSurfaceLayer(layer))
+            ? layers.filter(
+                (layer) =>
+                  !isTopoMapSurfaceLayer(layer) &&
+                  !isTopoMapGraticuleLayer(layer),
+              )
             : layers;
         const seismicLayer =
           state.projectSlug === "utah-forge" &&
@@ -3257,6 +3262,110 @@ export function LayerPanel({
           : {};
         const seismicCapabilityDisabled = !isEnv && currentPage === null;
         if (layers.length === 0) return null;
+        if (
+          section === "publicTopo" &&
+          group.title === PUBLIC_TOPO_LAYER_GROUP_TITLE
+        ) {
+          const topoPanelProps = {
+            settings: publicTopoSettings,
+            environment: state.environment,
+            scene: state.environment.scene ?? {},
+            isEnv,
+            currentPage,
+            setEnvLayerStyle,
+            setPageLayerOverride,
+            clearPageLayerOverride,
+            setEnvScene,
+            projectRoot: state.projectRoot,
+            terrainEnvVisible: publicTopoTerrainEnvVisible,
+            terrainEffectiveVisible: publicTopoTerrainEffectiveVisible,
+            toggleTerrainEnvVisible: () =>
+              toggleEnvDefaultVisible(publicTopoTerrainLayerId),
+            setPageTerrainVisible: (visible: boolean) => {
+              if (currentPage) {
+                setPageVisibilityOverride(
+                  currentPage.id,
+                  publicTopoTerrainLayerId,
+                  visible,
+                );
+              }
+            },
+            clearPageTerrainVisible: () => {
+              if (currentPage) {
+                clearPageVisibilityOverride(
+                  currentPage.id,
+                  publicTopoTerrainLayerId,
+                );
+              }
+            },
+            toggleEnvDefaultVisible,
+            setPageVisibilityOverride,
+            clearPageVisibilityOverride,
+            publicSurfaceLayerIds: layers.map((layer) => layer.id),
+            setLayerProvenance,
+          };
+
+          return (
+            <Fragment key={group.title}>
+              {publicTopoTerrainLayer ? (
+                <LayerGroup
+                  title="Topo Settings"
+                  devSource="src/editor/LayerPanel.tsx:topo-settings"
+                  devNote="Topo Settings contains the global topo surface controls for the public topo map tool."
+                  accentColor={selectedPageAccent}
+                >
+                  <TopoMapPanel
+                    {...topoPanelProps}
+                    section="surface"
+                    nestedContainers={false}
+                  />
+                </LayerGroup>
+              ) : null}
+              {publicTopoSettings.graticuleLayers.length > 0 ? (
+                <LayerGroup
+                  title="Longitude / latitude grid"
+                  devSource="src/editor/LayerPanel.tsx:topo-graticule"
+                  devNote="Longitude / latitude grid contains the graticule visibility and style controls for the public topo map tool."
+                  accentColor={selectedPageAccent}
+                >
+                  <TopoMapPanel
+                    {...topoPanelProps}
+                    section="graticule"
+                    nestedContainers={false}
+                  />
+                </LayerGroup>
+              ) : null}
+              {publicTopoTerrainLayer ? (
+                <LayerGroup
+                  title="Title block"
+                  devSource="src/editor/LayerPanel.tsx:topo-title-block"
+                  devNote="Title block contains the branding controls for the public topo map tool."
+                  accentColor={selectedPageAccent}
+                >
+                  <TopoMapPanel
+                    {...topoPanelProps}
+                    section="title"
+                    nestedContainers={false}
+                  />
+                </LayerGroup>
+              ) : null}
+              {renderedLayers.length > 0 ? (
+                <LayerGroup
+                  title="Reference layers"
+                  devSource="src/editor/LayerPanel.tsx:topo-reference-layers"
+                  devNote="Reference layers contains roads, streams, waterbodies, and shared distance fade controls for the public topo map tool."
+                  accentColor={selectedPageAccent}
+                >
+                  <TopoDetailDistancePanel
+                    scene={state.environment.scene ?? {}}
+                    setEnvScene={setEnvScene}
+                  />
+                  {renderedLayers.map(renderLayer)}
+                </LayerGroup>
+              ) : null}
+            </Fragment>
+          );
+        }
         return (
           <LayerGroup
             key={group.title}
@@ -3307,6 +3416,7 @@ export function LayerPanel({
             group.title === PUBLIC_TOPO_LAYER_GROUP_TITLE ? (
               <TopoMapPanel
                 settings={publicTopoSettings}
+                environment={state.environment}
                 scene={state.environment.scene ?? {}}
                 isEnv={isEnv}
                 currentPage={currentPage}
@@ -3337,6 +3447,9 @@ export function LayerPanel({
                     );
                   }
                 }}
+                toggleEnvDefaultVisible={toggleEnvDefaultVisible}
+                setPageVisibilityOverride={setPageVisibilityOverride}
+                clearPageVisibilityOverride={clearPageVisibilityOverride}
                 publicSurfaceLayerIds={layers.map((layer) => layer.id)}
                 setLayerProvenance={setLayerProvenance}
               />
@@ -3415,7 +3528,8 @@ function LayerGroup({
   const summaryStyle: React.CSSProperties = accentColor
     ? {
         ...layerGroupSummaryStyle,
-        border: `3px solid ${accentColor}`,
+        background: accentColor,
+        border: "1px solid transparent",
         boxShadow: "none",
       }
     : layerGroupSummaryStyle;
@@ -4489,7 +4603,7 @@ const layerGroupSummaryStyle: React.CSSProperties = {
   gap: 14,
   width: "100%",
   minHeight: 42,
-  padding: "0 18px",
+  padding: `0 ${EDITOR_PILL_TEXT_INSET_PX}px`,
   cursor: "pointer",
   userSelect: "none",
   color: "inherit",
@@ -4646,24 +4760,25 @@ const treeToggleButtonStyle: React.CSSProperties = {
   width: 62,
   height: 26,
   borderRadius: 999,
-  border: FROSTED_HAIRLINE,
+  border: "1px solid transparent",
   padding: 0,
   flex: "0 0 auto",
   cursor: "pointer",
   font: "inherit",
   overflow: "hidden",
+  boxShadow: "none",
   transition: "background 160ms ease, border-color 160ms ease",
 };
 
 const treeToggleButtonActiveStyle: React.CSSProperties = {
-  background: "rgba(25, 53, 37, 0.7)",
-  borderColor: "rgba(25, 53, 37, 0.28)",
+  background: "rgba(25, 53, 37, 0.56)",
+  boxShadow: "none",
   color: "rgba(255, 255, 255, 0.92)",
 };
 
 const treeToggleButtonInactiveStyle: React.CSSProperties = {
   ...thinLightMaterial,
-  background: "rgba(18, 21, 24, 0.38)",
+  background: "rgba(18, 21, 24, 0.304)",
   color: vibrancySecondaryLabel,
 };
 

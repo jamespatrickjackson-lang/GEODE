@@ -1,11 +1,10 @@
 import type { CSSProperties } from "react";
 import { useEditor } from "../editor/EditorContext";
 import {
-  FROSTED_HAIRLINE,
-  TECHNICAL_MONO_FONT,
   vibrancyLabel,
   vibrancySecondaryLabel,
 } from "../editor/styles";
+import { transparentLegendPanelStyle } from "./legendStyles";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const DEFAULT_MIN_M = 1500;
@@ -22,23 +21,10 @@ const DEFAULT_MIDPOINTS = [0.5, 0.5, 0.5, 0.5] as const;
 const STOP_GAP = 0.01;
 
 const rootStyle: CSSProperties = {
-  position: "absolute",
-  zIndex: 11,
+  ...transparentLegendPanelStyle,
   left: 34,
   bottom: 500,
-  width: 282,
-  boxSizing: "border-box",
-  padding: 14,
   pointerEvents: "none",
-  fontFamily: TECHNICAL_MONO_FONT,
-  color: vibrancyLabel,
-  background: "rgba(18, 21, 24, 0.55)",
-  border: FROSTED_HAIRLINE,
-  borderRadius: 12,
-  boxShadow:
-    "0 24px 80px rgba(0, 0, 0, 0.24), inset 0 -1px 0 rgba(0, 0, 0, 0.12)",
-  backdropFilter: "blur(20px) saturate(145%)",
-  WebkitBackdropFilter: "blur(20px) saturate(145%)",
 };
 
 const titleStyle: CSSProperties = {

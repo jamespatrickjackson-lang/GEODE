@@ -18,6 +18,7 @@ interface Props {
   textStyle?: CSSProperties;
   hoverBackground?: string;
   title?: string; // tooltip
+  truncate?: boolean;
 }
 
 export function InlineEditableTitle({
@@ -26,6 +27,7 @@ export function InlineEditableTitle({
   textStyle,
   hoverBackground = "rgba(255, 255, 255, 0.06)",
   title = "Click to edit",
+  truncate = false,
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -89,6 +91,8 @@ export function InlineEditableTitle({
           margin: 0,
           color: "inherit",
           width: "100%",
+          minWidth: 0,
+          boxSizing: "border-box",
         }}
         data-dev-source="src/editor/InlineEditableTitle.tsx:63"
         data-dev-text-source="src/editor/InlineEditableTitle.tsx:63"
@@ -116,7 +120,17 @@ export function InlineEditableTitle({
         borderRadius: 0,
         padding: "0 2px",
         margin: "0 -2px",
-        display: "inline-block",
+        display: truncate ? "block" : "inline-block",
+        ...(truncate
+          ? {
+              maxWidth: "100%",
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              verticalAlign: "bottom",
+            }
+          : {}),
       }}
       title={title}
     >

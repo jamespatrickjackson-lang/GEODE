@@ -5,12 +5,11 @@ import type {
 import { useRef } from "react";
 import { useEditor } from "../editor/EditorContext";
 import {
-  FROSTED_HAIRLINE,
-  TECHNICAL_MONO_FONT,
   vibrancyLabel,
   vibrancySecondaryLabel,
   vibrancyTertiaryLabel,
 } from "../editor/styles";
+import { transparentLegendPanelStyle } from "./legendStyles";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import { effectiveStyle, effectiveVisibility } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
@@ -20,26 +19,11 @@ const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const SEISMIC_LAYER_ID = "utah-forge-phase3-seismic-browser";
 const HANDLE_GAP = 0.01;
 const LEGEND_HANDLE_FILL = "#f4f5f7";
-const LEGEND_PANEL_SHADOW =
-  "0 24px 80px rgba(0, 0, 0, 0.24), inset 0 -1px 0 rgba(0, 0, 0, 0.12)";
 
 const rootStyle: CSSProperties = {
-  position: "absolute",
-  zIndex: 11,
+  ...transparentLegendPanelStyle,
   left: 34,
   bottom: 500,
-  width: 282,
-  boxSizing: "border-box",
-  padding: 14,
-  pointerEvents: "auto",
-  fontFamily: TECHNICAL_MONO_FONT,
-  color: vibrancyLabel,
-  background: "rgba(18, 21, 24, 0.55)",
-  border: FROSTED_HAIRLINE,
-  borderRadius: 12,
-  boxShadow: LEGEND_PANEL_SHADOW,
-  backdropFilter: "blur(20px) saturate(145%)",
-  WebkitBackdropFilter: "blur(20px) saturate(145%)",
 };
 
 const titleStyle: CSSProperties = {

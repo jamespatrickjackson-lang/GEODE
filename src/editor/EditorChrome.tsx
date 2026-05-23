@@ -20,6 +20,7 @@ import { SeismicVolumeLegend } from "../ui/SeismicVolumeLegend";
 import { SurfaceElevationLegend } from "../ui/SurfaceElevationLegend";
 import { SceneSectionLegend } from "../ui/SceneSectionLegend";
 import { ScaleBar } from "../ui/ScaleBar";
+import { LEGEND_STACK_GAP_PX } from "../ui/legendStyles";
 import {
   applyAudienceLensSceneToEnvironment,
   applyAudienceLensToState,
@@ -34,7 +35,7 @@ const utahForgeLegendStackStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
   alignItems: "flex-start",
-  gap: 12,
+  gap: LEGEND_STACK_GAP_PX,
   maxHeight: "calc(100vh - 104px)",
   overflowY: "auto",
   pointerEvents: "none",

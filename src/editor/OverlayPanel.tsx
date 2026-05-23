@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useEditor } from "./EditorContext";
 import {
+  EDITOR_PILL_TEXT_INSET_PX,
   FROSTED_HAIRLINE,
   frostedSubheading,
   panelStyles,
@@ -285,7 +286,7 @@ const overlaySubheadingStyle: React.CSSProperties = {
   justifyContent: "space-between",
   gap: 14,
   minHeight: 42,
-  padding: "0 18px",
+  padding: `0 ${EDITOR_PILL_TEXT_INSET_PX}px`,
   marginBottom: 4,
   marginLeft: 18,
 };

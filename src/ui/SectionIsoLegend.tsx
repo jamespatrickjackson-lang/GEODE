@@ -9,6 +9,7 @@ import {
   vibrancySecondaryLabel,
   vibrancyTertiaryLabel,
 } from "../editor/styles";
+import { transparentLegendPanelStyle } from "./legendStyles";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import { effectiveStyle } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
@@ -19,27 +20,12 @@ import type {
 } from "../scene/SceneManager";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
-const LEGEND_WIDTH_PX = 282;
 const POPOVER_WIDTH_PX = 312;
 const POPOVER_MARGIN_PX = 12;
-const LEGEND_PANEL_SHADOW =
-  "0 24px 80px rgba(0, 0, 0, 0.24), inset 0 -1px 0 rgba(0, 0, 0, 0.12)";
 
 const rootStyle: CSSProperties = {
-  position: "absolute",
-  zIndex: 11,
-  width: LEGEND_WIDTH_PX,
-  boxSizing: "border-box",
+  ...transparentLegendPanelStyle,
   padding: 13,
-  pointerEvents: "auto",
-  fontFamily: TECHNICAL_MONO_FONT,
-  color: vibrancyLabel,
-  background: "rgba(18, 21, 24, 0.55)",
-  border: FROSTED_HAIRLINE,
-  borderRadius: 12,
-  boxShadow: LEGEND_PANEL_SHADOW,
-  backdropFilter: "blur(20px) saturate(145%)",
-  WebkitBackdropFilter: "blur(20px) saturate(145%)",
 };
 
 const titleStyle: CSSProperties = {

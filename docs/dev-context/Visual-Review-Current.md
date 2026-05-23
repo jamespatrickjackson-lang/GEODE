@@ -19,15 +19,16 @@ narrow patch
 ## Current Visual Contract
 
 - Goal: make Utah FORGE visual/topo/editor changes converge by direct human review before slow smoke tests.
-- Current focus: topo graticule edge behavior.
+- Current focus: editor sidebar structure, global settings/toolset containers, Page Manager spacing, and lightweight viewport legends.
 - Accepted decisions:
-  - The topo edge fade is the visual authority for map-frame behavior.
-  - Interior grid lines trim to the inner edge-fade boundary.
-  - Edge leaders and labels are visual references only.
+  - Top-level editor containers are peers when they represent real workflows or tools.
+  - Container shape, fill, spacing, and contrast should come from shared editor tokens.
+  - Page Manager keeps compact page-list spacing; full-panel end padding belongs to the scroll extent.
+  - Viewport legends should be lightweight overlays unless a specific tool requires a card/backplate.
   - Human visual judgment is the first acceptance filter for composition.
 - Still wrong / under review:
-  - Rounded-corner longitude/latitude labels can hang in the undefined-space corners.
-  - Candidate fix: hide labels/leaders that require rounded-corner or arc placement, while keeping their interior grid lines.
+  - Final sidebar polish and toolset grouping remain iterative.
+  - Legend spacing/background should be visually checked in current Utah FORGE scenes before broader regression.
 - Do not revisit unless asked:
   - Intake directives or intake drops for normal software-build work.
   - Full broad Utah FORGE smoke runs during visual iteration.

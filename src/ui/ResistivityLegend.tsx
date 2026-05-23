@@ -14,6 +14,7 @@ import {
   vibrancySecondaryLabel,
   vibrancyTertiaryLabel,
 } from "../editor/styles";
+import { transparentLegendPanelStyle } from "./legendStyles";
 import { effectiveStyle, effectiveVisibility } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle } from "../pages/types";
@@ -36,10 +37,7 @@ const DEFAULT_SOURCE_MIN = -2;
 const DEFAULT_SOURCE_MAX = 4.5;
 const HANDLE_GAP = 0.01;
 const EDGE_LINE_MAX_WIDTH_PX = 8;
-const LEGEND_WIDTH_PX = 282;
 const LEGEND_HANDLE_FILL = "#f4f5f7";
-const LEGEND_PANEL_SHADOW =
-  "0 24px 80px rgba(0, 0, 0, 0.24), inset 0 -1px 0 rgba(0, 0, 0, 0.12)";
 const EDGE_POPOVER_WIDTH_PX = 300;
 const EDGE_POPOVER_MARGIN_PX = 12;
 const MT_THRESHOLD_SURFACE_LEGEND_ITEMS = [
@@ -61,20 +59,7 @@ const MT_THRESHOLD_SURFACE_LEGEND_ITEMS = [
 ] as const;
 
 const rootBaseStyle: CSSProperties = {
-  position: "absolute",
-  zIndex: 11,
-  width: LEGEND_WIDTH_PX,
-  boxSizing: "border-box",
-  padding: 14,
-  pointerEvents: "auto",
-  fontFamily: TECHNICAL_MONO_FONT,
-  color: vibrancyLabel,
-  background: "rgba(18, 21, 24, 0.55)",
-  border: FROSTED_HAIRLINE,
-  borderRadius: 12,
-  boxShadow: LEGEND_PANEL_SHADOW,
-  backdropFilter: "blur(20px) saturate(145%)",
-  WebkitBackdropFilter: "blur(20px) saturate(145%)",
+  ...transparentLegendPanelStyle,
 };
 
 const titleStyle: CSSProperties = {
@@ -90,14 +75,6 @@ const subtitleStyle: CSSProperties = {
   color: vibrancySecondaryLabel,
   fontSize: 10,
   lineHeight: 1.25,
-};
-
-const targetNoticeStyle: CSSProperties = {
-  marginTop: 7,
-  color: vibrancyLabel,
-  fontSize: 10,
-  lineHeight: 1.25,
-  fontWeight: 700,
 };
 
 const rampStyle: CSSProperties = {
@@ -543,13 +520,6 @@ function scalarLegendLayerSubtitle(layer: ScalarLegendLayer): string {
   return "Point preview";
 }
 
-function scalarLegendTargetLabel(layer: ScalarLegendLayer): string {
-  if (layer === "volume") return "MT volume";
-  if (layer === "full-density") return "MT full-density points";
-  if (layer === "slices") return "MT authored slices";
-  return "MT point preview";
-}
-
 function activeScalarLayers(visible: Set<string>): ScalarLegendLayer[] {
   const layers: ScalarLegendLayer[] = [];
   if (visible.has(MT_RESISTIVITY_FULL_DENSITY_LAYER_ID)) {
@@ -683,12 +653,6 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
     0,
     1,
   );
-  const inclusionMode =
-    activeLayer === "full-density" && style.scalarInclusionMode !== "thresholded"
-      ? "all-valid"
-      : style.scalarInclusionMode === "thresholded"
-        ? "thresholded"
-        : "all-valid";
   const thresholdControlsActive = true;
   const edgeAverage = clamp(styleNumber(style, "scalarEdgeAverage", 0.45), 0, 1);
   const edgeFillOffset = clamp(
@@ -1007,9 +971,6 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
       <div style={subtitleStyle}>
         {scalarLegendLayerSubtitle(activeLayer)} - log10 resistivity
       </div>
-      <div style={targetNoticeStyle}>
-        Scalar controls target: {scalarLegendTargetLabel(activeLayer)}
-      </div>
       {visibleScalarLayers.length > 1 ? (
         <div style={targetSelectorStyle} aria-label="MT resistivity legend target">
           {visibleScalarLayers.map((layer) => {
@@ -1037,13 +998,6 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
               </button>
             );
           })}
-        </div>
-      ) : null}
-      {activeLayer === "full-density" ? (
-        <div style={subtitleStyle}>
-          {inclusionMode === "thresholded"
-            ? "Trim, feather, and noise may filter drawn points."
-            : "Trim, feather, and noise adjust emphasis; all valid points stay drawn."}
         </div>
       ) : null}
       <div

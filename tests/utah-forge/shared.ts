@@ -291,8 +291,15 @@ async function openAllDetails(page: Page): Promise<void> {
 }
 
 export async function openForgeDataEditorContainers(page: Page): Promise<void> {
-  await openEditorSection(page, "Public Topo Map", 30_000, "Topo layers");
-  await openEditorSection(page, "Topo layers", 30_000, "Topo Surface");
+  await openEditorSection(page, "Public Topo Map", 30_000, "Topo Settings");
+  await openEditorSection(page, "Topo Settings", 30_000, "Topo Surface");
+  await openEditorSection(
+    page,
+    "Longitude / latitude grid",
+    30_000,
+    "Line width",
+  );
+  await openEditorSection(page, "Title block", 30_000, "Logo file");
   await openEditorSection(page, "FORGE Data", 30_000, "Scene section planes");
   await openEditorSection(page, "Working area focus", 3000, "Working area");
   await openEditorSection(page, "Working area", 3000, "Phase 3 required working area");
@@ -304,8 +311,15 @@ export async function openForgeDataEditorContainers(page: Page): Promise<void> {
 }
 
 export async function openForgeTopoEditorContainers(page: Page): Promise<void> {
-  await openEditorSection(page, "Public Topo Map", 30_000, "Topo layers");
-  await openEditorSection(page, "Topo layers", 30_000, "Topo Surface");
+  await openEditorSection(page, "Public Topo Map", 30_000, "Topo Settings");
+  await openEditorSection(page, "Topo Settings", 30_000, "Topo Surface");
+  await openEditorSection(
+    page,
+    "Longitude / latitude grid",
+    30_000,
+    "Line width",
+  );
+  await openEditorSection(page, "Title block", 30_000, "Logo file");
   await openAllDetails(page);
 }
 
@@ -378,6 +392,9 @@ export async function setForgeLayerVisible(
 export function forgeLayerItem(page: Page, label: string): Locator {
   if (label === "Topo Surface") {
     return page.getByTestId("topo-surface-controls");
+  }
+  if (label === "Longitude / latitude grid") {
+    return page.getByTestId("topo-graticule-controls");
   }
   return page
     .locator('[data-dev-note*="layerItemStyle"]')

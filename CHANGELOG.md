@@ -1,5 +1,17 @@
 # GeoSee Change Log
 
+## 2026-05-23 - Toolset Sidebar And Topo Structure Checkpoint
+
+- Continued the topo map cleanup as a global GeoSee toolset pattern rather than a Utah FORGE-specific editor branch.
+- Kept `src/topoMap/` and `src/editor/topoMap/` as the current precedent for global defaults, resolver/runtime behavior, editor controls, and project-authored diffs.
+- Promoted `Visual Studio` and `UI` to top-level editor sections beside `Page Manager`, `Public Topo Map`, data sections, and overlay tools.
+- Refined Page Manager and Global Settings chrome with shared pill, spacing, and dark material tokens instead of local one-off container styling.
+- Reworked the Public Topo Map editor into cleaner peer containers for topo surface settings, longitude/latitude grid, title block, and reference layers.
+- Added shared transparent legend styling so MT, surface elevation, seismic, section ISO, and scene-section legends no longer carry heavy card backplates.
+- Removed explanatory MT legend text from the viewport while preserving the interactive scalar handles and controls.
+- Verified `npm run build` and `git diff --check` during the iteration.
+- Status: checkpoint toward the editor/toolset structure, not a final shipped UI.
+
 ## 2026-05-13 - Utah FORGE Seismic Capability Layer Rows
 
 - Promoted seismic capability controls to virtual layer-level rows in the FORGE Data list, beside the main Utah FORGE Phase 3 seismic browser layer.

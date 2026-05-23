@@ -28,7 +28,10 @@ Core runtime/project surfaces:
 - `projects/*/pages/*.json`: page-local camera, visibility, transition, and layer overrides
 - `projects/*/overlays/<page_id>/text.md`: overlay copy
 - `src/scene/SceneManager.ts`: scene, layer, style, material, transition, runtime visual state
-- `src/editor/LayerPanel.tsx`: most editor controls
+- `src/editor/EditorRoot.tsx`: editor shell and top-level tool/workflow section tree
+- `src/editor/PagePanel.tsx`: Page Manager, page selection/actions, and exported global tool panels
+- `src/editor/LayerPanel.tsx`: project data layer controls that have not yet moved into tool modules
+- `src/editor/topoMap/TopoMapPanel.tsx`: public topo map tool editor
 - `src/pages/PageController.tsx`: page navigation and camera/page transitions
 
 Treat current project/source files as the authority over older prose.
@@ -38,6 +41,11 @@ Treat current project/source files as the authority over older prose.
 Current Utah FORGE work includes active Phase 3 MT, seismic browser products, public topo/terrain controls, graticule/topo controls, working-area focus work, product pages, overlays, legends, and visual QA.
 
 Do not assume Utah FORGE is the product standard. It is one case study probing MT/seismic/public-context/geophysics architecture and presentation needs.
+
+Current editor/toolset work is an iteration toward a cleaner global-tool
+structure. It is not a shipped endpoint. Preserve current behavior while moving
+tool defaults, runtime behavior, editor panels, and style tokens out of
+project-specific branches when each toolset is touched.
 
 ## Focused Routing
 

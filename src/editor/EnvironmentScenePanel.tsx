@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useEditor } from "./EditorContext";
 import {
-  FROSTED_HAIRLINE,
   frostedSubheading,
+  EDITOR_PILL_TEXT_INSET_PX,
   panelStyles,
   thinLightMaterial,
   vibrancyLabel,
@@ -10,8 +10,7 @@ import {
   vibrancyTertiaryLabel,
 } from "./styles";
 import { writeFile } from "./save";
-import { renderPresetOptionsForEnvironment } from "../pages/renderPresets";
-import type { RenderPresetId, SceneProperties } from "../pages/types";
+import type { SceneProperties } from "../pages/types";
 
 type GuiProperties = NonNullable<SceneProperties["gui"]>;
 type BoxOverlayStyle = NonNullable<GuiProperties["overlay"]>;
@@ -750,10 +749,7 @@ export function EnvironmentScenePanel({
   accentColor,
   content = "environment",
 }: EnvironmentScenePanelProps) {
-  const { state, setEnvScene, setEnvRenderPreset } = useEditor();
-  const renderPresetOptions = renderPresetOptionsForEnvironment(
-    state.environment,
-  );
+  const { state, setEnvScene } = useEditor();
   const scene: SceneProperties = state.environment.scene ?? {};
   const [open, setOpen] = useState(false);
   const lightSources = scene.lighting?.sources ?? [];
@@ -847,39 +843,6 @@ export function EnvironmentScenePanel({
         >
           {content === "environment" && (
             <>
-              <div
-                style={sectionHeaderStyle}
-                data-dev-text-source="src/editor/EnvironmentScenePanel.tsx:132"
-              >
-                Cinematic Render Preset
-              </div>
-              <div style={panelStyles.section}>
-                <Row label="Preset">
-                  <select
-                    value={state.environment.renderPreset ?? ""}
-                    onChange={(e) =>
-                      setEnvRenderPreset(
-                        e.target.value
-                          ? (e.target.value as RenderPresetId)
-                          : null,
-                      )
-                    }
-                    style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
-                    title="Environment-level cinematic preset"
-                  >
-                    <option value="">Current / Custom</option>
-                    {renderPresetOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </Row>
-                <div style={environmentHelpTextStyle}>
-                  Presets are optional cinematic moods. Choose Current / Custom
-                  to preserve the authored scene settings.
-                </div>
-              </div>
               <div
                 style={sectionHeaderStyle}
                 data-dev-text-source="src/editor/EnvironmentScenePanel.tsx:132"
@@ -3667,7 +3630,8 @@ function accentedEnvironmentHeadingStyle(
   return {
     ...base,
     background: accentColor,
-    border: FROSTED_HAIRLINE,
+    border: "1px solid transparent",
+    boxShadow: "none",
   };
 }
 
@@ -3684,7 +3648,7 @@ const environmentHeadingStyle: React.CSSProperties = {
   gap: 14,
   width: "100%",
   minHeight: 42,
-  padding: "0 18px",
+  padding: `0 ${EDITOR_PILL_TEXT_INSET_PX}px`,
   cursor: "pointer",
   userSelect: "none",
   color: "inherit",
@@ -3791,10 +3755,11 @@ const environmentAddButtonStyle: React.CSSProperties = {
 
 const environmentLightSourceStyle: React.CSSProperties = {
   ...thinLightMaterial,
-  border: FROSTED_HAIRLINE,
+  border: "1px solid transparent",
   borderRadius: 14,
   margin: "8px 28px 8px 0",
   overflow: "hidden",
+  boxShadow: "none",
 };
 
 const environmentLightSummaryStyle: React.CSSProperties = {

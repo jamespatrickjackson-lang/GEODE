@@ -43,6 +43,8 @@
 | A layer/artifact/computed-artifact classification matrix now exists for Utah FORGE, Case Study B / Shahbazi, and Woodjam. | Observed | `docs/dev-context/Layer-Artifact-Classification.md` |
 | A computed-artifact pipeline guardrail now exists and explicitly protects raw-to-derived analytical/render-ready output generation. | Observed | `docs/dev-context/Computed-Artifact-Pipeline.md` |
 | Utah FORGE now has a project-local data/layer status guide. | Observed | `projects/utah-forge/DATA_LAYER_STATUS.md`; covers source/client/public, processed/browser-ready, render-ready, QA/validation, provenance/status wrappers, MT, seismic, demo candidates, and unclear/future artifacts; docs/status only, no runtime behavior change |
+| Public topo map is the first global toolset pattern. | Observed | `src/topoMap/`, `src/editor/topoMap/`, `docs/dev-context/Global-Toolset-Structure.md`, `tests/topo-map/` |
+| Editor sidebar structure is mid-iteration toward peer-level tool/workflow sections. | Observed | `src/editor/EditorRoot.tsx`, `src/editor/PagePanel.tsx`, `src/editor/styles.ts`, `docs/dev-context/Global-Toolset-Structure.md` |
 
 ## Placeholder / Future / Parked
 
@@ -79,7 +81,7 @@
 
 ## Next Valid Move
 
-Observed next valid move: create a bounded Data/System/App Refinement Plan review, then choose one structural documentation or audit prompt such as data/status manifest refinement, project-local data status README, page/layer visibility clarity, render-quality preservation checks, seismic status/provenance clarity, or app architecture map only. Do not simplify rendering, park seismic by assumption, or turn candidate architecture ideas into committed scope from this pass.
+Observed next valid move: continue bounded Data/System/App refinement from current source and project files. Good next prompts are toolset extraction, page/layer visibility clarity, render-quality preservation checks, seismic status/provenance clarity, or app architecture map refinement. Do not simplify rendering, park seismic by assumption, or turn candidate architecture ideas into committed scope from this pass.
 
 ## Utah FORGE Staged-Intake Test State
 

@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEditor } from "./EditorContext";
 import { LayerPanel } from "./LayerPanel";
-import { DynamicCameraPanel, PagePanel } from "./PagePanel";
+import {
+  DynamicCameraPanel,
+  PagePanel,
+  UiSettingsPanel,
+  VisualStudioPanel,
+} from "./PagePanel";
 import { OverlayPanel } from "./OverlayPanel";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { DevModeInspector } from "./DevModeInspector";
@@ -15,7 +20,9 @@ import {
   audienceLensById,
 } from "../projectModules/caseStudyB/audienceLenses";
 import {
+  EDITOR_SCROLL_END_PADDING_Y,
   FROSTED_HAIRLINE,
+  FROSTED_PANEL_OUTLINE,
   TECHNICAL_MONO_FONT,
   globalSettingsAccent,
   pageAccentForPage,
@@ -33,6 +40,7 @@ import { topoMapLayerIds } from "../topoMap/settings";
 const SIDEBAR_WIDTH = 512;
 const FLOATING_PANEL_MARGIN = 44;
 const BOTTOM_HUD_SAFE_ZONE = 112;
+const HEADER_SAVE_TRASH_ALIGN_OFFSET = 21;
 
 interface PanelPosition {
   x: number;
@@ -80,9 +88,9 @@ const headerStyle: React.CSSProperties = {
 const addToProjectButtonStyle: React.CSSProperties = {
   minHeight: 28,
   padding: "0 10px",
-  border: "1px solid rgba(255, 255, 255, 0.24)",
+  border: "1px solid transparent",
   borderRadius: 7,
-  background: "rgba(107, 197, 255, 0.13)",
+  background: "rgba(107, 197, 255, 0.104)",
   color: "rgba(244, 240, 232, 0.94)",
   cursor: "pointer",
   fontFamily: TECHNICAL_MONO_FONT,
@@ -102,7 +110,7 @@ const sidebarStyle: React.CSSProperties = {
   color: vibrancyLabel,
   fontFamily: TECHNICAL_MONO_FONT,
   zIndex: 20,
-  border: FROSTED_HAIRLINE,
+  border: FROSTED_PANEL_OUTLINE,
   borderRadius: 12,
   overflow: "hidden",
   boxShadow: "none",
@@ -114,6 +122,8 @@ const stackStyle: React.CSSProperties = {
   overflowY: "auto",
   minHeight: 0,
   background: "transparent",
+  paddingBottom: EDITOR_SCROLL_END_PADDING_Y,
+  boxSizing: "border-box",
 };
 
 const previewLensBackdropStyle: React.CSSProperties = {
@@ -218,7 +228,7 @@ export function EditorRoot({
       ? pageAccentForPage(
           selectedPage!,
           selectedPageIndex,
-          selectedPageHasLanded ? 0.62 : 0.24,
+          selectedPageHasLanded ? 0.496 : 0.192,
         )
       : globalSettingsSelected
         ? globalSettingsAccent
@@ -538,8 +548,7 @@ export function EditorRoot({
             border-color: rgba(244, 240, 232, 0.46) !important;
             box-shadow:
               inset 0 1px 0 rgba(255, 255, 255, 0.16),
-              inset 0 -1px 0 rgba(0, 0, 0, 0.18),
-              0 0 0 1px rgba(244, 240, 232, 0.08) !important;
+              inset 0 -1px 0 rgba(0, 0, 0, 0.18) !important;
           }
 
           .editor-action-button:not(:disabled):active {
@@ -621,6 +630,20 @@ export function EditorRoot({
               onShowGlobalPageCameras={() => setShowGlobalPageCameras(true)}
             />
           </CollapsibleSection>
+          <CollapsibleSection
+            title="Visual Studio"
+            accentColor={globalSettingsSelected ? globalSettingsAccent : null}
+            onActivate={() => selectPage(ENVIRONMENT_SENTINEL)}
+          >
+            <VisualStudioPanel accentColor={globalSettingsAccent} />
+          </CollapsibleSection>
+          <CollapsibleSection
+            title="UI"
+            accentColor={globalSettingsSelected ? globalSettingsAccent : null}
+            onActivate={() => selectPage(ENVIRONMENT_SENTINEL)}
+          >
+            <UiSettingsPanel accentColor={globalSettingsAccent} />
+          </CollapsibleSection>
           {selectedPage && (
             <CollapsibleSection
               title="Camera Dynamics"
@@ -636,7 +659,7 @@ export function EditorRoot({
                 pageAccent={pageAccentForPage(
                   selectedPage,
                   Math.max(0, selectedPageIndex),
-                  selectedPageHasLanded ? 0.46 : 0.24,
+                  selectedPageHasLanded ? 0.368 : 0.192,
                 )}
               />
             </CollapsibleSection>
@@ -754,6 +777,7 @@ function SaveButton() {
         alignItems: "center",
         gap: 7,
         flex: "none",
+        marginRight: HEADER_SAVE_TRASH_ALIGN_OFFSET,
       }}
     >
       <span

@@ -58,12 +58,19 @@ The most important stable docs are:
 - `docs/01-scope.md` — what is in and out for alpha
 - `docs/03-decisions.md` — the running decision log
 
+- `docs/dev-context/Global-Toolset-Structure.md` records the current global toolset pattern.
+
 ## Building Case Studies
 
 GeoSee is the tool being tested and sharpened. Each project under `projects/`
 is a case study for market feedback and architecture learning. Woodjam remains
 the original reference project, while Shahbazi and Utah FORGE exercise different
 data, rendering, provenance, and workflow needs.
+
+Current architecture work is moving tool behavior into reusable GeoSee toolsets
+while keeping project folders as data/provenance/authored-diff instances. The
+public topo map is the first implemented pattern; other toolsets will align
+incrementally as they are touched.
 
 ## Contact
 

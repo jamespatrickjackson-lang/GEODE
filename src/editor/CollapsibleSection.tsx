@@ -23,6 +23,7 @@ interface Props {
   openSignal?: unknown;
   closeSignal?: unknown;
   accentColor?: string | null;
+  onActivate?: () => void;
   children: ReactNode;
 }
 
@@ -32,6 +33,7 @@ export function CollapsibleSection({
   openSignal,
   closeSignal,
   accentColor,
+  onActivate,
   children,
 }: Props) {
   const [open, setOpen] = useState(defaultOpen);
@@ -73,13 +75,17 @@ export function CollapsibleSection({
         data-dev-source="src/editor/styles.ts:180"
         data-dev-padding-source="src/editor/styles.ts:188"
         data-dev-note="panelStyles.collapsibleHeader controls top-level heading pill spacing and layout."
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          onActivate?.();
+          setOpen((v) => !v);
+        }}
         role="button"
         aria-expanded={open}
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
+            onActivate?.();
             setOpen((v) => !v);
           }
         }}

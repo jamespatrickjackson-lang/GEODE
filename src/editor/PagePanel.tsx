@@ -8,6 +8,8 @@ import {
   renderPresetOptionsForEnvironment,
 } from "../pages/renderPresets";
 import {
+  EDITOR_PAGE_LIST_INDENT_X,
+  EDITOR_PILL_TEXT_INSET_PX,
   FROSTED_HAIRLINE,
   TECHNICAL_MONO_FONT,
   editorFieldBackground,
@@ -75,9 +77,6 @@ export function PagePanel({
     reorderPage,
     selectPage,
     setPageField,
-    setEnvRenderPreset,
-    saveEnvCustomRenderPreset,
-    updateSelectedEnvCustomRenderPreset,
     resetPageOverrides,
   } = useEditor();
   const { currentIndex, goto, isTransitioning, targetIndex } =
@@ -87,13 +86,16 @@ export function PagePanel({
     (state.selectedPageId && state.selectedPageId !== ENVIRONMENT_SENTINEL
       ? state.pages.find((p) => p.id === state.selectedPageId)
       : null);
+  const selectedActionPageIndex = selectedActionPage
+    ? state.pages.findIndex((page) => page.id === selectedActionPage.id)
+    : -1;
+  const selectedActionPageAccent =
+    selectedActionPage && selectedActionPageIndex >= 0
+      ? pageAccentForPage(selectedActionPage, selectedActionPageIndex)
+      : null;
   const globalSettingsSelected = visualSelectedPageId === ENVIRONMENT_SENTINEL;
   const renderPresetOptions = renderPresetOptionsForEnvironment(
     state.environment,
-  );
-  const selectedProjectPresetIsCustom = isUserRenderPresetId(
-    state.environment,
-    state.environment.renderPreset,
   );
 
   useEffect(() => {
@@ -178,25 +180,22 @@ export function PagePanel({
       data-dev-note="PagePanel contains Global Settings plus the Pages select/order list."
     >
       <div
-        style={pageListStyle}
+        style={globalSettingsSelectorStyle}
         data-dev-source="src/editor/PagePanel.tsx:244"
-        data-dev-note="pageListStyle controls the indentation and spacing of page rows."
+        data-dev-note="globalSettingsSelectorStyle aligns the Global Settings selector with the Global Settings containers."
       >
         <div
-          data-dev-source="src/editor/styles.ts:135"
-          data-dev-padding-source="src/editor/styles.ts:140"
+          data-dev-source="src/editor/styles.ts:205"
+          data-dev-padding-source="src/editor/styles.ts:216"
           data-dev-note="Global Settings is an editor-only pseudo-page. It selects environment/global controls and is not part of presenter navigation."
           style={{
-            ...panelStyles.pageRow,
+            ...panelStyles.globalSettingsBar,
+            background: globalSettingsSelected
+              ? globalSettingsAccent
+              : frostedSubheading.background,
             ...(hoveredPageId === ENVIRONMENT_SENTINEL &&
             !globalSettingsSelected
               ? pageRowHoverStyle(globalSettingsHoverAccent)
-              : {}),
-            ...(globalSettingsSelected
-              ? {
-                  ...panelStyles.pageRowSelected,
-                  ...selectedPageRowStyle(globalSettingsAccent),
-                }
               : {}),
           }}
           onMouseEnter={() => setHoveredPageId(ENVIRONMENT_SENTINEL)}
@@ -221,6 +220,9 @@ export function PagePanel({
                 : vibrancySecondaryLabel,
               display: "flex",
               alignItems: "center",
+              minWidth: 0,
+              overflow: "hidden",
+              whiteSpace: "nowrap",
             }}
           >
             {(state.dirty.has("environment") || state.dirty.has("project")) && (
@@ -241,9 +243,9 @@ export function PagePanel({
               className="editor-action-button"
               data-dev-source="src/editor/PagePanel.tsx:195"
               data-dev-note="Global Settings camera button toggles the in-scene page camera markers."
-              style={{
-                ...pageActionButtonStyle,
-              }}
+              style={pageManagerIconButtonStyle({
+                surface: globalSettingsSelected ? "tinted" : "dark",
+              })}
               onClick={(e) => {
                 e.stopPropagation();
                 if (globalSettingsSelected) {
@@ -269,6 +271,13 @@ export function PagePanel({
             </button>
           </span>
         </div>
+      </div>
+
+      <div
+        style={pageListStyle}
+        data-dev-source="src/editor/PagePanel.tsx:244"
+        data-dev-note="pageListStyle controls the indentation and spacing of page rows."
+      >
         {state.pages.map((p, i) => {
           const pageHidden = p.hidden === true;
           const pageIsChosen = p.id === visualSelectedPageId;
@@ -280,9 +289,10 @@ export function PagePanel({
           const pageIsWaiting = pageIsChosen && !pageHasLanded;
           const hovered = p.id === hoveredPageId;
           const pageAccent = pageAccentForPage(p, i);
-          const pageHoverAccent = pageAccentForPage(p, i, 0.48);
-          const pagePendingAccent = pageAccentForPage(p, i, 0.24);
+          const pageHoverAccent = pageAccentForPage(p, i, 0.384);
+          const pagePendingAccent = pageAccentForPage(p, i, 0.192);
           const pageAccentHex = p.accentColor ?? pageAccentHexForIndex(i);
+          const actionSurface = pageIsChosen ? "tinted" : "dark";
           return (
             <div
               key={p.id}
@@ -329,6 +339,9 @@ export function PagePanel({
                       : vibrancySecondaryLabel,
                   display: "flex",
                   alignItems: "center",
+                  minWidth: 0,
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
                 }}
               >
                 {(state.dirty.has(`page:${p.id}`) ||
@@ -346,6 +359,8 @@ export function PagePanel({
                 <InlineEditableTitle
                   value={p.title}
                   onCommit={(next) => setPageField(p.id, { title: next })}
+                  title={p.title}
+                  truncate
                   textStyle={{
                     fontWeight: pageHasLanded ? 600 : 400,
                     color: pageHidden
@@ -356,86 +371,99 @@ export function PagePanel({
                   }}
                 />
               </span>
-              <label
-                data-dev-source="src/editor/PagePanel.tsx:322"
-                data-dev-note="Page color circle stores the page accent color used for row and section fill states."
-                style={pageColorButtonStyle(pageAccent)}
-                title="Change page color"
-                aria-label="Change page color"
-                onClick={(e) => e.stopPropagation()}
-                onPointerDown={(e) => e.stopPropagation()}
-              >
-                <input
-                  type="color"
-                  value={pageAccentHex}
-                  style={pageColorInputStyle}
+              <span style={pageRowActionsStyle}>
+                <label
+                  data-dev-source="src/editor/PagePanel.tsx:322"
+                  data-dev-note="Page color circle stores the page accent color used for row and section fill states."
+                  style={pageColorButtonStyle(pageAccent)}
+                  title="Change page color"
+                  aria-label="Change page color"
                   onClick={(e) => e.stopPropagation()}
-                  onChange={(e) =>
-                    setPageField(p.id, { accentColor: e.currentTarget.value })
-                  }
-                />
-              </label>
-              <button
-                className="editor-action-button"
-                data-dev-source="src/editor/styles.ts:148"
-                data-dev-note="panelStyles.iconButton controls these reorder/show-hide/delete button circles."
-                style={pageActionButtonStyle}
-                disabled={i === 0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  reorderPage(p.id, "up");
-                }}
-                title="Move up"
-                aria-label="Move page up"
-              >
-                <span style={upTriangleIconStyle} aria-hidden="true" />
-              </button>
-              <button
-                className="editor-action-button"
-                data-dev-source="src/editor/styles.ts:148"
-                data-dev-note="panelStyles.iconButton controls these reorder/show-hide/delete button circles."
-                style={pageActionButtonStyle}
-                disabled={i === state.pages.length - 1}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  reorderPage(p.id, "down");
-                }}
-                title="Move down"
-                aria-label="Move page down"
-              >
-                <span style={downTriangleIconStyle} aria-hidden="true" />
-              </button>
-              <button
-                className="editor-action-button"
-                data-dev-source="src/editor/styles.ts:148"
-                data-dev-note="panelStyles.iconButton controls these reorder/show-hide/delete button circles."
-                style={pageActionButtonStyle}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPageField(p.id, { hidden: !pageHidden });
-                }}
-                title={pageHidden ? "Show page" : "Hide page"}
-                aria-label={pageHidden ? "Show page" : "Hide page"}
-              >
-                {pageHidden ? <EyeOffIcon /> : <EyeIcon />}
-              </button>
-              <button
-                className="editor-action-button"
-                data-dev-source="src/editor/styles.ts:148"
-                data-dev-note="panelStyles.iconButton controls these reorder/show-hide/delete button circles."
-                style={pageActionButtonStyle}
-                disabled={state.pages.length <= 1}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm(`Delete page "${p.title}"?`)) {
-                    deletePageById(p.id);
-                  }
-                }}
-                title="Delete"
-                aria-label="Delete page"
-              >
-                <TrashIcon />
-              </button>
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <input
+                    type="color"
+                    value={pageAccentHex}
+                    style={pageColorInputStyle}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) =>
+                      setPageField(p.id, {
+                        accentColor: e.currentTarget.value,
+                      })
+                    }
+                  />
+                </label>
+                <button
+                  className="editor-action-button"
+                  data-dev-source="src/editor/styles.ts:148"
+                  data-dev-note="panelStyles.iconButton controls these reorder/show-hide/delete button circles."
+                  style={pageManagerIconButtonStyle({
+                    surface: actionSurface,
+                    disabled: i === 0,
+                  })}
+                  disabled={i === 0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    reorderPage(p.id, "up");
+                  }}
+                  title="Move up"
+                  aria-label="Move page up"
+                >
+                  <span style={upTriangleIconStyle} aria-hidden="true" />
+                </button>
+                <button
+                  className="editor-action-button"
+                  data-dev-source="src/editor/styles.ts:148"
+                  data-dev-note="panelStyles.iconButton controls these reorder/show-hide/delete button circles."
+                  style={pageManagerIconButtonStyle({
+                    surface: actionSurface,
+                    disabled: i === state.pages.length - 1,
+                  })}
+                  disabled={i === state.pages.length - 1}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    reorderPage(p.id, "down");
+                  }}
+                  title="Move down"
+                  aria-label="Move page down"
+                >
+                  <span style={downTriangleIconStyle} aria-hidden="true" />
+                </button>
+                <button
+                  className="editor-action-button"
+                  data-dev-source="src/editor/styles.ts:148"
+                  data-dev-note="panelStyles.iconButton controls these reorder/show-hide/delete button circles."
+                  style={pageManagerIconButtonStyle({ surface: actionSurface })}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPageField(p.id, { hidden: !pageHidden });
+                  }}
+                  title={pageHidden ? "Show page" : "Hide page"}
+                  aria-label={pageHidden ? "Show page" : "Hide page"}
+                >
+                  {pageHidden ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+                <button
+                  className="editor-action-button"
+                  data-dev-source="src/editor/styles.ts:148"
+                  data-dev-note="panelStyles.iconButton controls these reorder/show-hide/delete button circles."
+                  style={pageManagerIconButtonStyle({
+                    surface: actionSurface,
+                    disabled: state.pages.length <= 1,
+                  })}
+                  disabled={state.pages.length <= 1}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm(`Delete page "${p.title}"?`)) {
+                      deletePageById(p.id);
+                    }
+                  }}
+                  title="Delete"
+                  aria-label="Delete page"
+                >
+                  <TrashIcon />
+                </button>
+              </span>
             </div>
           );
         })}
@@ -446,76 +474,50 @@ export function PagePanel({
         data-dev-source="src/editor/PagePanel.tsx:280"
         data-dev-note="pageActionsStyle aligns Pages action buttons to the delete button right edge."
       >
-        <button
-          className="editor-action-button"
-          style={pagePanelActionButtonStyle}
-          onClick={onAdd}
-        >
-          Add page
-        </button>
-        <button
-          className="editor-action-button"
-          style={{
-            ...pagePanelActionButtonStyle,
-            opacity: selectedActionPage ? 1 : 0.55,
-            cursor: selectedActionPage ? "pointer" : "default",
-          }}
-          disabled={!selectedActionPage}
-          onClick={onDuplicateSelected}
-          title={
-            selectedActionPage
-              ? `Duplicate ${selectedActionPage.title}`
-              : "Select a page first"
-          }
-        >
-          Duplicate page
-        </button>
-        <button
-          className="editor-action-button"
-          style={{
-            ...pagePanelActionButtonStyle,
-            opacity: selectedActionPage ? 1 : 0.55,
-            cursor: selectedActionPage ? "pointer" : "default",
-          }}
-          disabled={!selectedActionPage}
-          onClick={() => {
-            if (!selectedActionPage) return;
-            if (
-              confirm(
-                `Reset page "${selectedActionPage.title}" to Global Settings defaults? Camera, dynamic camera, title, timing, and text/image overlays will be preserved.`,
-              )
-            ) {
-              resetPageOverrides(selectedActionPage.id);
+        <span style={pageFooterActionsStyle}>
+          <button
+            className="editor-action-button"
+            style={pageFooterActionButtonStyle(36)}
+            onClick={onAdd}
+          >
+            Add
+          </button>
+          <button
+            className="editor-action-button"
+            style={pageFooterActionButtonStyle(76, !selectedActionPage)}
+            disabled={!selectedActionPage}
+            onClick={onDuplicateSelected}
+            title={
+              selectedActionPage
+                ? `Duplicate ${selectedActionPage.title}`
+                : "Select a page first"
             }
-          }}
-          title="Strip layer, visibility, exposure, and bloom overrides from the selected page only."
-        >
-          Reset page
-        </button>
+          >
+            Duplicate
+          </button>
+          <button
+            className="editor-action-button"
+            style={pageFooterActionButtonStyle(44, !selectedActionPage)}
+            disabled={!selectedActionPage}
+            onClick={() => {
+              if (!selectedActionPage) return;
+              if (
+                confirm(
+                  `Reset page "${selectedActionPage.title}" to Global Settings defaults? Camera, dynamic camera, title, timing, and text/image overlays will be preserved.`,
+                )
+              ) {
+                resetPageOverrides(selectedActionPage.id);
+              }
+            }}
+            title="Strip layer, visibility, exposure, and bloom overrides from the selected page only."
+          >
+            Reset
+          </button>
+        </span>
       </div>
 
-      {globalSettingsSelected && (
-        <RenderPresetEditorCard
-          title="Cinematic Render Preset"
-          label="Project preset"
-          value={state.environment.renderPreset ?? ""}
-          options={renderPresetOptions}
-          emptyLabel="Current / Custom"
-          helper="Presets are optional cinematic moods. Choose Current / Custom to preserve the authored scene settings."
-          revertLabel="Revert to Current / Custom"
-          saveCustomLabel="Save Custom Preset"
-          updateCustomLabel="Update Selected Custom Preset"
-          showUpdateCustom={selectedProjectPresetIsCustom}
-          onSaveCustom={saveEnvCustomRenderPreset}
-          onUpdateCustom={updateSelectedEnvCustomRenderPreset}
-          onChange={(value) =>
-            setEnvRenderPreset(value ? (value as RenderPresetId) : null)
-          }
-        />
-      )}
-
       {!globalSettingsSelected && selectedActionPage && (
-        <RenderPresetEditorCard
+        <RenderPresetContainer
           title="Page Render Preset Override"
           label="Page preset"
           value={
@@ -524,8 +526,8 @@ export function PagePanel({
             ""
           }
           options={renderPresetOptions}
+          accentColor={selectedActionPageAccent}
           emptyLabel="Inherit project preset"
-          helper="Overrides the project render preset for this page only."
           onChange={(value) =>
             setPageField(selectedActionPage.id, {
               renderPreset: value ? (value as RenderPresetId) : undefined,
@@ -534,56 +536,119 @@ export function PagePanel({
           }
         />
       )}
-
-      {globalSettingsSelected && (
-        <>
-          <GuiSetupPanel
-            title="Client Logo"
-            content="logo"
-            onActivate={selectGlobalSettings}
-            accentColor={globalSettingsAccent}
-          />
-          <EnvironmentScenePanel
-            title="Environment"
-            onActivate={selectGlobalSettings}
-            accentColor={globalSettingsAccent}
-          />
-          <EnvironmentScenePanel
-            title="Lighting Studio"
-            content="lighting"
-            onActivate={selectGlobalSettings}
-            accentColor={globalSettingsAccent}
-          />
-          <CameraSetupPanel
-            title="Camera Studio"
-            onActivate={selectGlobalSettings}
-            accentColor={globalSettingsAccent}
-          />
-          <GuiSetupPanel
-            title="GUI Styles"
-            content="overlay"
-            onActivate={selectGlobalSettings}
-            accentColor={globalSettingsAccent}
-          />
-          <EnvironmentScenePanel
-            title="Terrain grid"
-            content="terrain"
-            onActivate={selectGlobalSettings}
-            accentColor={globalSettingsAccent}
-          />
-        </>
-      )}
     </div>
   );
 }
 
-function RenderPresetEditorCard({
+interface GlobalToolPanelProps {
+  accentColor?: string | null;
+}
+
+export function VisualStudioPanel({
+  accentColor = globalSettingsAccent,
+}: GlobalToolPanelProps) {
+  const {
+    state,
+    selectPage,
+    setEnvRenderPreset,
+    saveEnvCustomRenderPreset,
+    updateSelectedEnvCustomRenderPreset,
+  } = useEditor();
+  const renderPresetOptions = renderPresetOptionsForEnvironment(
+    state.environment,
+  );
+  const selectedProjectPresetIsCustom = isUserRenderPresetId(
+    state.environment,
+    state.environment.renderPreset,
+  );
+  const activateGlobalSettings = useCallback(() => {
+    selectPage(ENVIRONMENT_SENTINEL);
+  }, [selectPage]);
+
+  return (
+    <div
+      style={globalToolPanelBodyStyle}
+      onPointerDownCapture={activateGlobalSettings}
+    >
+      <RenderPresetContainer
+        title="Cinematic Render Preset"
+        label="Project preset"
+        value={state.environment.renderPreset ?? ""}
+        options={renderPresetOptions}
+        accentColor={accentColor}
+        emptyLabel="Current / Custom"
+        revertLabel="Revert to Current / Custom"
+        saveCustomLabel="Save Custom Preset"
+        updateCustomLabel="Update Selected Custom Preset"
+        showUpdateCustom={selectedProjectPresetIsCustom}
+        onSaveCustom={saveEnvCustomRenderPreset}
+        onUpdateCustom={updateSelectedEnvCustomRenderPreset}
+        onChange={(value) =>
+          setEnvRenderPreset(value ? (value as RenderPresetId) : null)
+        }
+      />
+      <EnvironmentScenePanel
+        title="Environment"
+        onActivate={activateGlobalSettings}
+        accentColor={accentColor}
+      />
+      <EnvironmentScenePanel
+        title="Lighting Studio"
+        content="lighting"
+        onActivate={activateGlobalSettings}
+        accentColor={accentColor}
+      />
+      <CameraSetupPanel
+        title="Camera Studio"
+        onActivate={activateGlobalSettings}
+        accentColor={accentColor}
+      />
+      <EnvironmentScenePanel
+        title="Terrain grid"
+        content="terrain"
+        onActivate={activateGlobalSettings}
+        accentColor={accentColor}
+      />
+    </div>
+  );
+}
+
+export function UiSettingsPanel({
+  accentColor = globalSettingsAccent,
+}: GlobalToolPanelProps) {
+  const { selectPage } = useEditor();
+  const activateGlobalSettings = useCallback(() => {
+    selectPage(ENVIRONMENT_SENTINEL);
+  }, [selectPage]);
+
+  return (
+    <div
+      style={globalToolPanelBodyStyle}
+      onPointerDownCapture={activateGlobalSettings}
+    >
+      <GuiSetupPanel
+        title="Client Logo"
+        content="logo"
+        onActivate={activateGlobalSettings}
+        accentColor={accentColor}
+      />
+      <GuiSetupPanel
+        title="GUI Styles"
+        content="overlay"
+        onActivate={activateGlobalSettings}
+        accentColor={accentColor}
+      />
+    </div>
+  );
+}
+
+function RenderPresetContainer({
   title,
   label,
   value,
   options,
+  accentColor,
   emptyLabel,
-  helper,
   revertLabel,
   saveCustomLabel,
   updateCustomLabel,
@@ -596,8 +661,8 @@ function RenderPresetEditorCard({
   label: string;
   value: RenderPresetId | "";
   options: Array<{ value: string; label: string }>;
+  accentColor?: string | null;
   emptyLabel: string;
-  helper: string;
   revertLabel?: string;
   saveCustomLabel?: string;
   updateCustomLabel?: string;
@@ -606,61 +671,82 @@ function RenderPresetEditorCard({
   onUpdateCustom?: () => unknown;
   onChange: (value: RenderPresetId | "") => void;
 }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <section style={renderPresetCardStyle} aria-label={title}>
-      <div style={renderPresetCardTitleStyle}>{title}</div>
-      <label style={renderPresetControlRowStyle}>
-        <span style={renderPresetFieldLabelStyle}>{label}</span>
-        <select
-          value={value}
-          onChange={(event) =>
-            onChange(event.currentTarget.value as RenderPresetId | "")
-          }
-          style={renderPresetSelectStyle}
-        >
-          <option value="">{emptyLabel}</option>
-          {options.map((preset) => (
-            <option key={preset.value} value={preset.value}>
-              {preset.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      {(saveCustomLabel || (revertLabel && value) || showUpdateCustom) && (
-        <div style={renderPresetButtonRowStyle}>
-          {saveCustomLabel && onSaveCustom && (
-            <button
-              type="button"
-              className="editor-action-button"
-              style={renderPresetSmallButtonStyle}
-              onClick={() => onSaveCustom()}
+    <section style={renderPresetGroupStyle} aria-label={title}>
+      <button
+        type="button"
+        style={renderPresetHeadingStyle(accentColor)}
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <span style={renderPresetHeadingTextStyle}>{title}</span>
+        <span style={renderPresetDisclosureStyle} aria-hidden="true">
+          <span
+            style={{
+              ...renderPresetChevronStyle,
+              transform: open ? "rotate(45deg)" : "rotate(-45deg)",
+            }}
+          />
+        </span>
+      </button>
+
+      {open && (
+        <div style={renderPresetBodyStyle}>
+          <label style={renderPresetControlRowStyle}>
+            <span style={renderPresetFieldLabelStyle}>{label}</span>
+            <select
+              value={value}
+              onChange={(event) =>
+                onChange(event.currentTarget.value as RenderPresetId | "")
+              }
+              style={renderPresetSelectStyle}
             >
-              {saveCustomLabel}
-            </button>
-          )}
-          {showUpdateCustom && updateCustomLabel && onUpdateCustom && (
-            <button
-              type="button"
-              className="editor-action-button"
-              style={renderPresetSmallButtonStyle}
-              onClick={() => onUpdateCustom()}
-            >
-              {updateCustomLabel}
-            </button>
-          )}
-          {revertLabel && value && (
-            <button
-              type="button"
-              className="editor-action-button"
-              style={renderPresetSmallButtonStyle}
-              onClick={() => onChange("")}
-            >
-              {revertLabel}
-            </button>
+              <option value="">{emptyLabel}</option>
+              {options.map((preset) => (
+                <option key={preset.value} value={preset.value}>
+                  {preset.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {(saveCustomLabel || (revertLabel && value) || showUpdateCustom) && (
+            <div style={renderPresetButtonRowStyle}>
+              {saveCustomLabel && onSaveCustom && (
+                <button
+                  type="button"
+                  className="editor-action-button"
+                  style={renderPresetSmallButtonStyle}
+                  onClick={() => onSaveCustom()}
+                >
+                  {saveCustomLabel}
+                </button>
+              )}
+              {showUpdateCustom && updateCustomLabel && onUpdateCustom && (
+                <button
+                  type="button"
+                  className="editor-action-button"
+                  style={renderPresetSmallButtonStyle}
+                  onClick={() => onUpdateCustom()}
+                >
+                  {updateCustomLabel}
+                </button>
+              )}
+              {revertLabel && value && (
+                <button
+                  type="button"
+                  className="editor-action-button"
+                  style={renderPresetSmallButtonStyle}
+                  onClick={() => onChange("")}
+                >
+                  {revertLabel}
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}
-      <div style={renderPresetHelperStyle}>{helper}</div>
     </section>
   );
 }
@@ -1700,33 +1786,30 @@ const dirtyDotStyle: React.CSSProperties = {
   lineHeight: 1,
 };
 
-function pageRowHoverStyle(accentColor: string): React.CSSProperties {
+function pageRowHoverStyle(_accentColor: string): React.CSSProperties {
   return {
     background: "transparent",
-    border: FROSTED_HAIRLINE,
-    boxShadow: "0 0 0 1px rgba(244, 240, 232, 0.04)",
-    outline: `1px solid ${accentColor}`,
+    border: "1px solid transparent",
+    boxShadow: "none",
   };
 }
 
 function waitingPageRowStyle(
   _accentFill: string,
-  accentStroke: string,
+  _accentStroke: string,
 ): React.CSSProperties {
   return {
     background: _accentFill,
-    border: FROSTED_HAIRLINE,
-    boxShadow: "0 0 0 1px rgba(244, 240, 232, 0.04)",
-    outline: `1px solid ${accentStroke}`,
+    border: "1px solid transparent",
+    boxShadow: "none",
   };
 }
 
 function selectedPageRowStyle(accentColor: string): React.CSSProperties {
   return {
     background: accentColor,
-    border: FROSTED_HAIRLINE,
-    boxShadow:
-      "inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.18)",
+    border: "1px solid transparent",
+    boxShadow: "none",
   };
 }
 
@@ -1734,9 +1817,62 @@ const hiddenPageRowStyle: React.CSSProperties = {
   opacity: 0.58,
 };
 
-const pageActionButtonStyle: React.CSSProperties = {
+type PageManagerActionSurface = "dark" | "tinted";
+
+const PAGE_ROW_ACTION_EXTENT = 168;
+const PAGE_ROW_ACTION_RIGHT_INSET = 26;
+const PAGE_MANAGER_DARK_SURFACE_FILL = "rgba(244, 240, 232, 0.066)";
+const PAGE_MANAGER_TINTED_SURFACE_FILL = "rgba(18, 21, 24, 0.192)";
+const PAGE_MANAGER_DISABLED_FILL = "rgba(244, 240, 232, 0.038)";
+
+const pageActionButtonBaseStyle: React.CSSProperties = {
   ...panelStyles.iconButton,
   color: vibrancySecondaryLabel,
+};
+
+function pageManagerActionContrastStyle(
+  surface: PageManagerActionSurface,
+  disabled = false,
+): React.CSSProperties {
+  if (disabled) {
+    return {
+      background: PAGE_MANAGER_DISABLED_FILL,
+      color: "rgba(244, 240, 232, 0.38)",
+      opacity: 1,
+      cursor: "default",
+    };
+  }
+
+  return {
+    background:
+      surface === "tinted"
+        ? PAGE_MANAGER_TINTED_SURFACE_FILL
+        : PAGE_MANAGER_DARK_SURFACE_FILL,
+    color: surface === "tinted" ? vibrancyLabel : vibrancySecondaryLabel,
+    opacity: 1,
+    cursor: "pointer",
+  };
+}
+
+function pageManagerIconButtonStyle({
+  surface = "dark",
+  disabled = false,
+}: {
+  surface?: PageManagerActionSurface;
+  disabled?: boolean;
+}): React.CSSProperties {
+  return {
+    ...pageActionButtonBaseStyle,
+    ...pageManagerActionContrastStyle(surface, disabled),
+  };
+}
+
+const pageRowActionsStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 12,
+  flex: "none",
+  marginLeft: 12,
 };
 
 function pageColorButtonStyle(accentColor: string): React.CSSProperties {
@@ -1777,11 +1913,12 @@ const pageActionSvgStyle: React.CSSProperties = {
 };
 
 const globalSettingsActionSlotStyle: React.CSSProperties = {
-  width: 108,
+  width: PAGE_ROW_ACTION_EXTENT,
   height: 24,
   display: "flex",
   justifyContent: "flex-end",
   flex: "none",
+  marginRight: 8,
 };
 
 function CameraIcon() {
@@ -1881,12 +2018,34 @@ function TrashIcon() {
 const pageActionsStyle: React.CSSProperties = {
   marginTop: 16,
   marginBottom: 24,
-  paddingRight: 8,
+  paddingRight: PAGE_ROW_ACTION_RIGHT_INSET,
   display: "flex",
-  flexDirection: "column",
-  alignItems: "flex-end",
+  justifyContent: "flex-end",
+};
+
+const pageFooterActionsStyle: React.CSSProperties = {
+  width: PAGE_ROW_ACTION_EXTENT,
+  display: "grid",
+  gridTemplateColumns: "36px 76px 44px",
   gap: 6,
 };
+
+function pageFooterActionButtonStyle(
+  width: number,
+  disabled = false,
+): React.CSSProperties {
+  return {
+    ...pageActionButtonBaseStyle,
+    ...pageManagerActionContrastStyle("dark", disabled),
+    width,
+    minWidth: width,
+    height: 24,
+    padding: "0 6px",
+    fontSize: 10.5,
+    lineHeight: 1,
+    whiteSpace: "nowrap",
+  };
+}
 
 const pagePanelActionButtonStyle: React.CSSProperties = {
   ...panelStyles.iconButton,
@@ -1897,22 +2056,58 @@ const pagePanelActionButtonStyle: React.CSSProperties = {
   color: vibrancySecondaryLabel,
 };
 
-const renderPresetCardStyle: React.CSSProperties = {
-  ...regularLightMaterial,
-  margin: "0 0 18px 18px",
-  padding: "12px 14px",
-  border: "2px solid rgba(244, 240, 232, 0.42)",
-  borderRadius: 12,
-  boxShadow:
-    "0 10px 28px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12)",
+const globalToolPanelBodyStyle: React.CSSProperties = {
+  paddingTop: 10,
 };
 
-const renderPresetCardTitleStyle: React.CSSProperties = {
+const renderPresetGroupStyle: React.CSSProperties = {
+  marginBottom: 16,
+  paddingLeft: 18,
+};
+
+const renderPresetHeadingTextStyle: React.CSSProperties = {
   color: vibrancyLabel,
   fontSize: 13,
-  fontWeight: 800,
+  fontWeight: 700,
   lineHeight: 1.2,
-  marginBottom: 9,
+  minWidth: 0,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+
+const renderPresetHeadingStyle = (
+  accentColor?: string | null,
+): React.CSSProperties => ({
+  ...panelStyles.globalSettingsBar,
+  background: accentColor ?? panelStyles.globalSettingsBar.background,
+  color: "inherit",
+  font: "inherit",
+  textAlign: "left",
+  appearance: "none",
+});
+
+const renderPresetDisclosureStyle: React.CSSProperties = {
+  width: 30,
+  height: 30,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: vibrancyLabel,
+  flex: "none",
+};
+
+const renderPresetChevronStyle: React.CSSProperties = {
+  width: 9,
+  height: 9,
+  borderRight: "2px solid rgba(244, 240, 232, 0.82)",
+  borderBottom: "2px solid rgba(244, 240, 232, 0.82)",
+  transformOrigin: "center",
+  transition: "transform 160ms ease",
+};
+
+const renderPresetBodyStyle: React.CSSProperties = {
+  ...panelStyles.globalSettingsBody,
 };
 
 const renderPresetControlRowStyle: React.CSSProperties = {
@@ -1934,26 +2129,24 @@ const renderPresetSelectStyle: React.CSSProperties = {
   minWidth: 0,
 };
 
-const renderPresetHelperStyle: React.CSSProperties = {
-  color: vibrancySecondaryLabel,
-  fontSize: 11,
-  lineHeight: 1.35,
-};
-
 const renderPresetButtonRowStyle: React.CSSProperties = {
   margin: "0 0 8px 102px",
   display: "flex",
   flexWrap: "wrap",
-  gap: 6,
+  gap: 8,
 };
 
 const renderPresetSmallButtonStyle: React.CSSProperties = {
+  ...panelStyles.button,
+  width: "auto",
+  minHeight: 28,
   padding: "6px 10px",
   fontSize: 11,
+  whiteSpace: "nowrap",
 };
 
-const dynamicCameraPastelGreenStrong = "rgba(181, 219, 191, 0.84)";
-const dynamicCameraMutedGrayStrong = "rgba(18, 21, 24, 0.46)";
+const dynamicCameraPastelGreenStrong = "rgba(181, 219, 191, 0.672)";
+const dynamicCameraMutedGrayStrong = "rgba(18, 21, 24, 0.368)";
 
 const dynamicCameraCaptureBlockStyle: React.CSSProperties = {
   margin: "0 0 12px 18px",
@@ -2040,17 +2233,14 @@ function dynamicCameraGroupSummaryStyle(
     gap: 14,
     width: "100%",
     minHeight: 42,
-    padding: "0 18px",
+    padding: `0 ${EDITOR_PILL_TEXT_INSET_PX}px`,
     cursor: "pointer",
     userSelect: "none",
     color: "inherit",
     font: "inherit",
     textAlign: "left",
-    border: accentColor
-      ? `3px solid ${accentColor}`
-      : inactive
-        ? "1px solid rgba(130, 130, 130, 0.16)"
-        : frostedSubheading.border,
+    background: accentColor ?? frostedSubheading.background,
+    border: "1px solid transparent",
     opacity: inactive ? 0.72 : 1,
     boxShadow: "none",
   };
@@ -2327,6 +2517,13 @@ const downTriangleIconStyle: React.CSSProperties = {
 // -----------------------------
 // This is the plain list under the Page Manager top-level section. It should
 // not carry a heavy material box; the visual weight belongs to selected rows.
+const globalSettingsSelectorStyle: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  marginTop: 6,
+  paddingLeft: EDITOR_PAGE_LIST_INDENT_X,
+};
+
 const pageListStyle: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
@@ -2334,8 +2531,7 @@ const pageListStyle: React.CSSProperties = {
   marginTop: 6,
   // Row text aligns with Global Settings section labels like Atmosphere:
   // 38px list inset + 8px row padding = 46px visual text start.
-  paddingLeft: 18,
-  // Keeps the delete button's right edge on the same vertical line as the
-  // midpoint of the disclosure chevrons in the rounded heading bars.
-  paddingRight: 0,
+  paddingLeft: EDITOR_PAGE_LIST_INDENT_X,
+  // Mirror the left inset so selected rows have balanced rounded ends.
+  paddingRight: EDITOR_PAGE_LIST_INDENT_X,
 };

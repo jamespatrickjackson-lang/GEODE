@@ -9,12 +9,15 @@ This file lists current software-build issues that help shape the alpha. It inte
 - Keep Utah FORGE visual/topo/geophysics work moving from current source and project files, not staged-intake traces.
 - Treat Phase 3 MT, seismic browser, product pages, topo surface controls, graticule controls, working-area focus, legends, overlays, and transitions as active build surfaces.
 - Preserve rendering quality. Bloat reduction means reducing structural confusion, not weakening visual fidelity or data richness.
+- Continue aligning editor sections to real tool/workflow boundaries. Top-level containers are peers; nested containers should represent actual hierarchy, not spacing fixes.
+- Keep Page Manager, Visual Studio, UI, Public Topo Map, project data, and overlay tools structurally separate unless a new global tool contract says otherwise.
 
 ## Current Build Friction
 
 - `LayerPanel.tsx` is too large for repeated feature work. Extract active editor control islands only when they are touched.
 - `SceneManager.ts` is too large for repeated visual/runtime work. Extract active terrain/graticule/focus/seismic/scalar helpers only when touched.
 - Prior visual audit artifacts were purged from active context. Capture fresh focused evidence when visual QA is needed.
+- Editor sidebar styling is mid-iteration. Prefer shared tokens in `src/editor/styles.ts` for pill shape, spacing, contrast, and internal outlines.
 
 ## Current Verification Defaults
 

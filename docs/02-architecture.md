@@ -213,6 +213,19 @@ Known issue:
 
 `EditorRoot` owns the visible editor shell and top-level section layout.
 
+Current editor section rule:
+
+- top-level bars represent peer workflows or toolsets;
+- `Page Manager` owns page selection/order/actions;
+- `Visual Studio` owns global render, environment, lighting, camera, and terrain-grid controls;
+- `UI` owns global client-facing chrome controls;
+- `Public Topo Map` owns the global topo map tool editor;
+- project data and overlay sections remain separate peer containers.
+
+Use shared style tokens in `src/editor/styles.ts` for sidebar shape, spacing,
+contrast, and internal outlines. Do not use local padding or light-gray
+backplates to fake hierarchy.
+
 Large editor files still present:
 
 - `src/editor/LayerPanel.tsx`

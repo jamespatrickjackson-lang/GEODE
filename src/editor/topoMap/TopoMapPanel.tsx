@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { convertBrandingAsset, writeFile } from "../save";
 import {
   detailsContentStyle,
@@ -9,6 +9,7 @@ import {
   EnvVisibilityRow,
   EzGammaCheckboxRow,
   LayerBooleanStyleControl,
+  LayerColorStyleControl,
   LayerNumberStyleControl,
   nestedControlRowStyle,
   nestedFieldLabelStyle,
@@ -23,9 +24,12 @@ import {
   vibrancySecondaryLabel,
   vibrancyTertiaryLabel,
 } from "../styles";
+import { effectiveStyle, isVisibilityOverridden } from "../../pages/effective";
 import type {
   EditableStyle,
+  EnvironmentSetup,
   PresentationPage,
+  ProjectLayerSpec,
   SceneProperties,
 } from "../../pages/types";
 import {
@@ -86,9 +90,13 @@ type LayerProvenancePatch = Partial<
     string
   >
 >;
+type TopoMapPanelSection = "all" | "surface" | "graticule" | "title";
 
 export function TopoMapPanel({
   settings,
+  section = "all",
+  nestedContainers = true,
+  environment,
   scene,
   isEnv,
   currentPage,
@@ -102,10 +110,16 @@ export function TopoMapPanel({
   toggleTerrainEnvVisible,
   setPageTerrainVisible,
   clearPageTerrainVisible,
+  toggleEnvDefaultVisible,
+  setPageVisibilityOverride,
+  clearPageVisibilityOverride,
   publicSurfaceLayerIds,
   setLayerProvenance,
 }: {
   settings: ResolvedTopoMapSettings;
+  section?: TopoMapPanelSection;
+  nestedContainers?: boolean;
+  environment: EnvironmentSetup;
   scene: SceneProperties;
   isEnv: boolean;
   currentPage: PresentationPage | null;
@@ -119,6 +133,13 @@ export function TopoMapPanel({
   toggleTerrainEnvVisible: () => void;
   setPageTerrainVisible: (visible: boolean) => void;
   clearPageTerrainVisible: () => void;
+  toggleEnvDefaultVisible: (layerId: string) => void;
+  setPageVisibilityOverride: (
+    pageId: string,
+    layerId: string,
+    visible: boolean,
+  ) => void;
+  clearPageVisibilityOverride: (pageId: string, layerId: string) => void;
   publicSurfaceLayerIds: readonly string[];
   setLayerProvenance: (layerId: string, patch: LayerProvenancePatch) => void;
 }) {
@@ -126,6 +147,7 @@ export function TopoMapPanel({
   const terrain = settings.terrain;
   const style = settings.surfaceStyle;
   const terrainLayer = settings.surfaceLayer;
+  const graticuleLayer = settings.graticuleLayers[0] ?? null;
   const layerId = settings.surfaceLayerId;
   const [brandingUploadError, setBrandingUploadError] = useState<string | null>(
     null,
@@ -334,13 +356,14 @@ export function TopoMapPanel({
   const setOrthoPhotoBudget = (value: OrthoPhotoTextureBudgetId) => {
     setTerrain(orthoPhotoDefaultPatch(rawTerrain, value));
   };
+  const showSurface = section === "all" || section === "surface";
+  const showGraticule = section === "all" || section === "graticule";
+  const showTitle = section === "all" || section === "title";
 
   return (
-    <details style={drillingAssayDetailsStyle} open>
-      <summary style={drillingAssaySummaryStyle}>
-        {TOPO_MAP_SURFACE_LABEL}
-      </summary>
-      <div style={detailsContentStyle} data-testid="topo-surface-controls">
+    <>
+      {showSurface ? (
+        <TopoSurfaceSettingsPanel nested={nestedContainers}>
         {terrainLayer ? (
           <div style={panelStyles.sectionHeader}>
             <div style={panelStyles.checkboxRow}>
@@ -407,498 +430,6 @@ export function TopoMapPanel({
           </div>
         </details>
         <TopoSurfaceClipControls {...publicSurfaceLayerControlProps} />
-        <details style={drillingAssayDetailsStyle} open>
-          <summary style={drillingAssaySummaryStyle}>Title block</summary>
-          <div style={detailsContentStyle}>
-            <EzGammaCheckboxRow
-              label="Visible"
-              checked={topoMapBranding.visible === true}
-              testId="topo-map-branding-visible"
-              onChange={(checked) => setTopoMapBranding({ visible: checked })}
-            />
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Logo file</label>
-              <input
-                data-testid="topo-map-branding-logo-file"
-                type="file"
-                accept={TITLE_BLOCK_UPLOAD_ACCEPT}
-                disabled={brandingUploading}
-                onChange={onTopoMapBrandingLogoFile}
-                style={{ flex: 1, minWidth: 0, fontSize: 11 }}
-              />
-            </div>
-            {topoMapBranding.logoPath ? (
-              <div style={{ ...panelStyles.muted, fontSize: 11 }}>
-                {(topoMapBranding.logoSourcePath ?? topoMapBranding.logoPath)
-                  .split("/")
-                  .at(-1)}
-                <button
-                  type="button"
-                  onClick={() =>
-                    setTopoMapBranding({
-                      logoPath: "",
-                      logoRenderablePath: "",
-                      logoSourcePath: "",
-                      logoSourceFormat: "",
-                    })
-                  }
-                  style={{
-                    ...panelStyles.iconButton,
-                    width: "auto",
-                    minHeight: 0,
-                    marginLeft: 8,
-                    padding: "1px 6px",
-                    fontSize: 10,
-                  }}
-                >
-                  Clear
-                </button>
-              </div>
-            ) : null}
-            {brandingUploadError ? (
-              <div
-                style={{
-                  color: "rgba(255, 111, 127, 0.9)",
-                  fontSize: 11,
-                }}
-              >
-                {brandingUploadError}
-              </div>
-            ) : null}
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Heading</label>
-              <input
-                data-testid="topo-map-branding-heading"
-                type="text"
-                value={topoMapBranding.heading ?? ""}
-                onChange={(event) =>
-                  setTopoMapBranding({ heading: event.currentTarget.value })
-                }
-                style={{ flex: 1, minWidth: 0 }}
-              />
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Subheading</label>
-              <input
-                data-testid="topo-map-branding-subheading"
-                type="text"
-                value={topoMapBranding.subheading ?? ""}
-                onChange={(event) =>
-                  setTopoMapBranding({ subheading: event.currentTarget.value })
-                }
-                style={{ flex: 1, minWidth: 0 }}
-              />
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Layout</label>
-              <select
-                data-testid="topo-map-branding-layout"
-                value={topoMapBranding.layout ?? "horizontal"}
-                onChange={(event) =>
-                  setTopoMapBranding({
-                    layout: event.currentTarget
-                      .value as TopoMapBranding["layout"],
-                  })
-                }
-                style={{ flex: 1 }}
-              >
-                <option value="horizontal">Horizontal</option>
-                <option value="stacked">Stacked</option>
-              </select>
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Logo pos.</label>
-              <select
-                data-testid="topo-map-branding-logo-placement"
-                value={topoMapBranding.logoPlacement ?? "before"}
-                onChange={(event) =>
-                  setTopoMapBranding({
-                    logoPlacement: event.currentTarget
-                      .value as TopoMapBranding["logoPlacement"],
-                  })
-                }
-                style={{ flex: 1 }}
-              >
-                <option value="before">Before text</option>
-                <option value="after">After text</option>
-              </select>
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Logo fit</label>
-              <select
-                data-testid="topo-map-branding-logo-fit"
-                value={topoMapBranding.logoFit ?? "contain"}
-                onChange={(event) =>
-                  setTopoMapBranding({
-                    logoFit: event.currentTarget
-                      .value as TopoMapBranding["logoFit"],
-                  })
-                }
-                style={{ flex: 1 }}
-              >
-                <option value="contain">Contain</option>
-                <option value="cover">Cover</option>
-                <option value="stretch">Stretch</option>
-              </select>
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Font</label>
-              <select
-                data-testid="topo-map-branding-font-family"
-                value={topoMapBranding.fontFamily ?? "mono"}
-                onChange={(event) =>
-                  setTopoMapBranding({
-                    fontFamily: event.currentTarget
-                      .value as TopoMapBranding["fontFamily"],
-                  })
-                }
-                style={{ flex: 1 }}
-              >
-                <option value="mono">Mono</option>
-                <option value="sans">Sans</option>
-                <option value="serif">Serif</option>
-                <option value="condensed">Condensed</option>
-              </select>
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Text align</label>
-              <select
-                data-testid="topo-map-branding-text-align"
-                value={topoMapBranding.textAlign ?? "left"}
-                onChange={(event) =>
-                  setTopoMapBranding({
-                    textAlign: event.currentTarget
-                      .value as TopoMapBranding["textAlign"],
-                  })
-                }
-                style={{ flex: 1 }}
-              >
-                <option value="left">Left</option>
-                <option value="center">Center</option>
-                <option value="right">Right</option>
-              </select>
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Anchor</label>
-              <select
-                data-testid="topo-map-branding-anchor"
-                value={topoMapBranding.anchor ?? TOPO_MAP_BRANDING_DEFAULT_ANCHOR}
-                onChange={(event) =>
-                  setTopoMapBranding({
-                    anchor: event.currentTarget
-                      .value as TopoMapBranding["anchor"],
-                  })
-                }
-                style={{ flex: 1 }}
-              >
-                <option value="south-west">South west</option>
-                <option value="south-east">South east</option>
-                <option value="north-west">North west</option>
-                <option value="north-east">North east</option>
-              </select>
-            </div>
-            <EnvStyleRow
-              label="Offset X"
-              inputType="range"
-              value={String(
-                topoMapBranding.offsetXM ?? TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M,
-              )}
-              min={-600000}
-              max={600000}
-              step={5000}
-              decimals={0}
-              testId="topo-map-branding-offset-x"
-              onChange={(v) => setTopoMapBranding({ offsetXM: parseFloat(v) })}
-            />
-            <EnvStyleRow
-              label="Offset Y"
-              inputType="range"
-              value={String(
-                topoMapBranding.offsetYM ?? TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M,
-              )}
-              min={-600000}
-              max={600000}
-              step={5000}
-              decimals={0}
-              testId="topo-map-branding-offset-y"
-              onChange={(v) => setTopoMapBranding({ offsetYM: parseFloat(v) })}
-            />
-            <EnvStyleRow
-              label="Rotation"
-              inputType="range"
-              value={String(topoMapBranding.rotationDeg ?? 0)}
-              min={-180}
-              max={180}
-              step={1}
-              decimals={0}
-              testId="topo-map-branding-rotation"
-              onChange={(v) =>
-                setTopoMapBranding({ rotationDeg: parseFloat(v) })
-              }
-            />
-            <EnvStyleRow
-              label="Lift"
-              inputType="range"
-              value={String(topoMapBranding.liftM ?? 260)}
-              min={0}
-              max={2000}
-              step={25}
-              decimals={0}
-              testId="topo-map-branding-lift"
-              onChange={(v) => setTopoMapBranding({ liftM: parseFloat(v) })}
-            />
-            <EnvStyleRow
-              label="Logo width"
-              inputType="range"
-              value={String(topoMapBranding.logoWidthM ?? 46000)}
-              min={0}
-              max={160000}
-              step={1000}
-              decimals={0}
-              testId="topo-map-branding-logo-width"
-              onChange={(v) =>
-                setTopoMapBranding({ logoWidthM: parseFloat(v) })
-              }
-            />
-            <EnvStyleRow
-              label="Logo gap"
-              inputType="range"
-              value={String(topoMapBranding.logoGapM ?? 16000)}
-              min={-50000}
-              max={80000}
-              step={1000}
-              decimals={0}
-              testId="topo-map-branding-logo-gap"
-              onChange={(v) =>
-                setTopoMapBranding({ logoGapM: parseFloat(v) })
-              }
-            />
-            <EnvStyleRow
-              label="Heading size"
-              inputType="range"
-              value={String(topoMapBranding.headingSizeM ?? 18000)}
-              min={2000}
-              max={240000}
-              step={1000}
-              decimals={0}
-              testId="topo-map-branding-heading-size"
-              onChange={(v) =>
-                setTopoMapBranding({ headingSizeM: parseFloat(v) })
-              }
-            />
-            <EnvStyleRow
-              label="Subhead size"
-              inputType="range"
-              value={String(topoMapBranding.subheadingSizeM ?? 10500)}
-              min={1500}
-              max={180000}
-              step={500}
-              decimals={0}
-              testId="topo-map-branding-subheading-size"
-              onChange={(v) =>
-                setTopoMapBranding({ subheadingSizeM: parseFloat(v) })
-              }
-            />
-            <EnvStyleRow
-              label="Head weight"
-              inputType="range"
-              value={String(topoMapBranding.headingWeight ?? 800)}
-              min={100}
-              max={900}
-              step={100}
-              decimals={0}
-              testId="topo-map-branding-heading-weight"
-              onChange={(v) =>
-                setTopoMapBranding({ headingWeight: parseFloat(v) })
-              }
-            />
-            <EzGammaCheckboxRow
-              label="Head italic"
-              checked={topoMapBranding.headingItalic === true}
-              testId="topo-map-branding-heading-italic"
-              onChange={(checked) =>
-                setTopoMapBranding({ headingItalic: checked })
-              }
-            />
-            <EnvStyleRow
-              label="Sub weight"
-              inputType="range"
-              value={String(topoMapBranding.subheadingWeight ?? 500)}
-              min={100}
-              max={900}
-              step={100}
-              decimals={0}
-              testId="topo-map-branding-subheading-weight"
-              onChange={(v) =>
-                setTopoMapBranding({ subheadingWeight: parseFloat(v) })
-              }
-            />
-            <EzGammaCheckboxRow
-              label="Sub italic"
-              checked={topoMapBranding.subheadingItalic === true}
-              testId="topo-map-branding-subheading-italic"
-              onChange={(checked) =>
-                setTopoMapBranding({ subheadingItalic: checked })
-              }
-            />
-            <EnvStyleRow
-              label="Line gap"
-              inputType="range"
-              value={String(topoMapBranding.lineGapM ?? 2500)}
-              min={-30000}
-              max={50000}
-              step={500}
-              decimals={0}
-              testId="topo-map-branding-line-gap"
-              onChange={(v) =>
-                setTopoMapBranding({ lineGapM: parseFloat(v) })
-              }
-            />
-            <EnvStyleRow
-              label="Text color"
-              inputType="color"
-              value={topoMapBranding.textColor ?? "#ffffff"}
-              testId="topo-map-branding-text-color"
-              onChange={(v) => setTopoMapBranding({ textColor: v })}
-            />
-            <EnvStyleRow
-              label="Block opacity"
-              inputType="range"
-              value={String(topoMapBranding.opacity ?? 0.92)}
-              min={0}
-              max={1}
-              step={0.02}
-              decimals={2}
-              testId="topo-map-branding-opacity"
-              onChange={(v) => setTopoMapBranding({ opacity: parseFloat(v) })}
-            />
-            <EnvStyleRow
-              label="Logo opacity"
-              inputType="range"
-              value={String(
-                topoMapBranding.logoOpacity ?? topoMapBranding.opacity ?? 0.92,
-              )}
-              min={0}
-              max={1}
-              step={0.02}
-              decimals={2}
-              testId="topo-map-branding-logo-opacity"
-              onChange={(v) =>
-                setTopoMapBranding({ logoOpacity: parseFloat(v) })
-              }
-            />
-            <EnvStyleRow
-              label="Text opacity"
-              inputType="range"
-              value={String(
-                topoMapBranding.textOpacity ?? topoMapBranding.opacity ?? 0.92,
-              )}
-              min={0}
-              max={1}
-              step={0.02}
-              decimals={2}
-              testId="topo-map-branding-text-opacity"
-              onChange={(v) =>
-                setTopoMapBranding({ textOpacity: parseFloat(v) })
-              }
-            />
-            <EzGammaCheckboxRow
-              label="Background"
-              checked={topoMapBranding.backgroundEnabled === true}
-              testId="topo-map-branding-background-enabled"
-              onChange={(checked) =>
-                setTopoMapBranding({ backgroundEnabled: checked })
-              }
-            />
-            <EnvStyleRow
-              label="Bg color"
-              inputType="color"
-              value={topoMapBranding.backgroundColor ?? "#050607"}
-              testId="topo-map-branding-background-color"
-              onChange={(v) => setTopoMapBranding({ backgroundColor: v })}
-            />
-            <EnvStyleRow
-              label="Bg opacity"
-              inputType="range"
-              value={String(topoMapBranding.backgroundOpacity ?? 0.36)}
-              min={0}
-              max={1}
-              step={0.02}
-              decimals={2}
-              testId="topo-map-branding-background-opacity"
-              onChange={(v) =>
-                setTopoMapBranding({ backgroundOpacity: parseFloat(v) })
-              }
-            />
-            <EnvStyleRow
-              label="Bg pad X"
-              inputType="range"
-              value={String(topoMapBranding.backgroundPaddingXM ?? 12000)}
-              min={0}
-              max={180000}
-              step={1000}
-              decimals={0}
-              testId="topo-map-branding-background-padding-x"
-              onChange={(v) =>
-                setTopoMapBranding({ backgroundPaddingXM: parseFloat(v) })
-              }
-            />
-            <EnvStyleRow
-              label="Bg pad Y"
-              inputType="range"
-              value={String(topoMapBranding.backgroundPaddingYM ?? 8000)}
-              min={0}
-              max={180000}
-              step={1000}
-              decimals={0}
-              testId="topo-map-branding-background-padding-y"
-              onChange={(v) =>
-                setTopoMapBranding({ backgroundPaddingYM: parseFloat(v) })
-              }
-            />
-            <EzGammaCheckboxRow
-              label="Outline"
-              checked={topoMapBranding.outlineEnabled === true}
-              testId="topo-map-branding-outline-enabled"
-              onChange={(checked) =>
-                setTopoMapBranding({ outlineEnabled: checked })
-              }
-            />
-            <EnvStyleRow
-              label="Outline color"
-              inputType="color"
-              value={topoMapBranding.outlineColor ?? "#ffffff"}
-              testId="topo-map-branding-outline-color"
-              onChange={(v) => setTopoMapBranding({ outlineColor: v })}
-            />
-            <EnvStyleRow
-              label="Outline opacity"
-              inputType="range"
-              value={String(topoMapBranding.outlineOpacity ?? 0.8)}
-              min={0}
-              max={1}
-              step={0.02}
-              decimals={2}
-              testId="topo-map-branding-outline-opacity"
-              onChange={(v) =>
-                setTopoMapBranding({ outlineOpacity: parseFloat(v) })
-              }
-            />
-            <EnvStyleRow
-              label="Outline width"
-              inputType="range"
-              value={String(topoMapBranding.outlineWidthM ?? 2500)}
-              min={250}
-              max={50000}
-              step={250}
-              decimals={0}
-              testId="topo-map-branding-outline-width"
-              onChange={(v) =>
-                setTopoMapBranding({ outlineWidthM: parseFloat(v) })
-              }
-            />
-          </div>
-        </details>
         <details style={drillingAssayDetailsStyle}>
           <summary style={drillingAssaySummaryStyle}>Topo fog</summary>
           <div style={detailsContentStyle}>
@@ -982,15 +513,12 @@ export function TopoMapPanel({
             />
           </div>
         </details>
-        <details style={drillingAssayDetailsStyle}>
-          <summary style={drillingAssaySummaryStyle}>Topo surface style</summary>
-          <div style={detailsContentStyle}>
-            {!isEnv ? (
-              <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
-                Topo surface variables are edited in Global Settings.
-              </div>
-            ) : (
-              <>
+        {!isEnv ? (
+          <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
+            Topo surface variables are edited in Global Settings.
+          </div>
+        ) : (
+          <>
                 <EnvSelectRow<PublicTopoMaterialPresetId>
                   label="Material"
                   value={selectedPreset}
@@ -1458,10 +986,8 @@ export function TopoMapPanel({
                   value={terrain.shadowTint ?? "#303640"}
                   onChange={(v) => setTerrain({ shadowTint: v })}
                 />
-              </>
-            )}
-          </div>
-        </details>
+          </>
+        )}
         {terrainLayer ? (
           <details style={drillingAssayDetailsStyle}>
             <summary style={drillingAssaySummaryStyle}>Provenance</summary>
@@ -1543,7 +1069,784 @@ export function TopoMapPanel({
             </div>
           </details>
         ) : null}
+        </TopoSurfaceSettingsPanel>
+      ) : null}
+      {showGraticule ? (
+        <TopoGraticulePanel
+          layer={graticuleLayer}
+          nested={nestedContainers}
+          environment={environment}
+          isEnv={isEnv}
+          currentPage={currentPage}
+          setEnvLayerStyle={setEnvLayerStyle}
+          setPageLayerOverride={setPageLayerOverride}
+          clearPageLayerOverride={clearPageLayerOverride}
+          toggleEnvDefaultVisible={toggleEnvDefaultVisible}
+          setPageVisibilityOverride={setPageVisibilityOverride}
+          clearPageVisibilityOverride={clearPageVisibilityOverride}
+        />
+      ) : null}
+      {showTitle ? (
+        <TopoTitleBlockPanel nested={nestedContainers}>
+        <EzGammaCheckboxRow
+          label="Visible"
+          checked={topoMapBranding.visible === true}
+          testId="topo-map-branding-visible"
+          onChange={(checked) => setTopoMapBranding({ visible: checked })}
+        />
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Logo file</label>
+          <input
+            data-testid="topo-map-branding-logo-file"
+            type="file"
+            accept={TITLE_BLOCK_UPLOAD_ACCEPT}
+            disabled={brandingUploading}
+            onChange={onTopoMapBrandingLogoFile}
+            style={{ flex: 1, minWidth: 0, fontSize: 11 }}
+          />
+        </div>
+        {topoMapBranding.logoPath ? (
+          <div style={{ ...panelStyles.muted, fontSize: 11 }}>
+            {(topoMapBranding.logoSourcePath ?? topoMapBranding.logoPath)
+              .split("/")
+              .at(-1)}
+            <button
+              type="button"
+              onClick={() =>
+                setTopoMapBranding({
+                  logoPath: "",
+                  logoRenderablePath: "",
+                  logoSourcePath: "",
+                  logoSourceFormat: "",
+                })
+              }
+              style={{
+                ...panelStyles.iconButton,
+                width: "auto",
+                minHeight: 0,
+                marginLeft: 8,
+                padding: "1px 6px",
+                fontSize: 10,
+              }}
+            >
+              Clear
+            </button>
+          </div>
+        ) : null}
+        {brandingUploadError ? (
+          <div
+            style={{
+              color: "rgba(255, 111, 127, 0.9)",
+              fontSize: 11,
+            }}
+          >
+            {brandingUploadError}
+          </div>
+        ) : null}
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Heading</label>
+          <input
+            data-testid="topo-map-branding-heading"
+            type="text"
+            value={topoMapBranding.heading ?? ""}
+            onChange={(event) =>
+              setTopoMapBranding({ heading: event.currentTarget.value })
+            }
+            style={{ flex: 1, minWidth: 0 }}
+          />
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Subheading</label>
+          <input
+            data-testid="topo-map-branding-subheading"
+            type="text"
+            value={topoMapBranding.subheading ?? ""}
+            onChange={(event) =>
+              setTopoMapBranding({ subheading: event.currentTarget.value })
+            }
+            style={{ flex: 1, minWidth: 0 }}
+          />
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Layout</label>
+          <select
+            data-testid="topo-map-branding-layout"
+            value={topoMapBranding.layout ?? "horizontal"}
+            onChange={(event) =>
+              setTopoMapBranding({
+                layout: event.currentTarget.value as TopoMapBranding["layout"],
+              })
+            }
+            style={{ flex: 1 }}
+          >
+            <option value="horizontal">Horizontal</option>
+            <option value="stacked">Stacked</option>
+          </select>
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Logo pos.</label>
+          <select
+            data-testid="topo-map-branding-logo-placement"
+            value={topoMapBranding.logoPlacement ?? "before"}
+            onChange={(event) =>
+              setTopoMapBranding({
+                logoPlacement: event.currentTarget
+                  .value as TopoMapBranding["logoPlacement"],
+              })
+            }
+            style={{ flex: 1 }}
+          >
+            <option value="before">Before text</option>
+            <option value="after">After text</option>
+          </select>
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Logo fit</label>
+          <select
+            data-testid="topo-map-branding-logo-fit"
+            value={topoMapBranding.logoFit ?? "contain"}
+            onChange={(event) =>
+              setTopoMapBranding({
+                logoFit: event.currentTarget.value as TopoMapBranding["logoFit"],
+              })
+            }
+            style={{ flex: 1 }}
+          >
+            <option value="contain">Contain</option>
+            <option value="cover">Cover</option>
+            <option value="stretch">Stretch</option>
+          </select>
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Font</label>
+          <select
+            data-testid="topo-map-branding-font-family"
+            value={topoMapBranding.fontFamily ?? "mono"}
+            onChange={(event) =>
+              setTopoMapBranding({
+                fontFamily: event.currentTarget
+                  .value as TopoMapBranding["fontFamily"],
+              })
+            }
+            style={{ flex: 1 }}
+          >
+            <option value="mono">Mono</option>
+            <option value="sans">Sans</option>
+            <option value="serif">Serif</option>
+            <option value="condensed">Condensed</option>
+          </select>
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Text align</label>
+          <select
+            data-testid="topo-map-branding-text-align"
+            value={topoMapBranding.textAlign ?? "left"}
+            onChange={(event) =>
+              setTopoMapBranding({
+                textAlign: event.currentTarget
+                  .value as TopoMapBranding["textAlign"],
+              })
+            }
+            style={{ flex: 1 }}
+          >
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+          </select>
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Anchor</label>
+          <select
+            data-testid="topo-map-branding-anchor"
+            value={topoMapBranding.anchor ?? TOPO_MAP_BRANDING_DEFAULT_ANCHOR}
+            onChange={(event) =>
+              setTopoMapBranding({
+                anchor: event.currentTarget.value as TopoMapBranding["anchor"],
+              })
+            }
+            style={{ flex: 1 }}
+          >
+            <option value="south-west">South west</option>
+            <option value="south-east">South east</option>
+            <option value="north-west">North west</option>
+            <option value="north-east">North east</option>
+          </select>
+        </div>
+        <EnvStyleRow
+          label="Offset X"
+          inputType="range"
+          value={String(
+            topoMapBranding.offsetXM ?? TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M,
+          )}
+          min={-600000}
+          max={600000}
+          step={5000}
+          decimals={0}
+          testId="topo-map-branding-offset-x"
+          onChange={(v) => setTopoMapBranding({ offsetXM: parseFloat(v) })}
+        />
+        <EnvStyleRow
+          label="Offset Y"
+          inputType="range"
+          value={String(
+            topoMapBranding.offsetYM ?? TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M,
+          )}
+          min={-600000}
+          max={600000}
+          step={5000}
+          decimals={0}
+          testId="topo-map-branding-offset-y"
+          onChange={(v) => setTopoMapBranding({ offsetYM: parseFloat(v) })}
+        />
+        <EnvStyleRow
+          label="Rotation"
+          inputType="range"
+          value={String(topoMapBranding.rotationDeg ?? 0)}
+          min={-180}
+          max={180}
+          step={1}
+          decimals={0}
+          testId="topo-map-branding-rotation"
+          onChange={(v) =>
+            setTopoMapBranding({ rotationDeg: parseFloat(v) })
+          }
+        />
+        <EnvStyleRow
+          label="Lift"
+          inputType="range"
+          value={String(topoMapBranding.liftM ?? 260)}
+          min={0}
+          max={2000}
+          step={25}
+          decimals={0}
+          testId="topo-map-branding-lift"
+          onChange={(v) => setTopoMapBranding({ liftM: parseFloat(v) })}
+        />
+        <EnvStyleRow
+          label="Logo width"
+          inputType="range"
+          value={String(topoMapBranding.logoWidthM ?? 46000)}
+          min={0}
+          max={160000}
+          step={1000}
+          decimals={0}
+          testId="topo-map-branding-logo-width"
+          onChange={(v) =>
+            setTopoMapBranding({ logoWidthM: parseFloat(v) })
+          }
+        />
+        <EnvStyleRow
+          label="Logo gap"
+          inputType="range"
+          value={String(topoMapBranding.logoGapM ?? 16000)}
+          min={-50000}
+          max={80000}
+          step={1000}
+          decimals={0}
+          testId="topo-map-branding-logo-gap"
+          onChange={(v) => setTopoMapBranding({ logoGapM: parseFloat(v) })}
+        />
+        <EnvStyleRow
+          label="Heading size"
+          inputType="range"
+          value={String(topoMapBranding.headingSizeM ?? 18000)}
+          min={2000}
+          max={240000}
+          step={1000}
+          decimals={0}
+          testId="topo-map-branding-heading-size"
+          onChange={(v) =>
+            setTopoMapBranding({ headingSizeM: parseFloat(v) })
+          }
+        />
+        <EnvStyleRow
+          label="Subhead size"
+          inputType="range"
+          value={String(topoMapBranding.subheadingSizeM ?? 10500)}
+          min={1500}
+          max={180000}
+          step={500}
+          decimals={0}
+          testId="topo-map-branding-subheading-size"
+          onChange={(v) =>
+            setTopoMapBranding({ subheadingSizeM: parseFloat(v) })
+          }
+        />
+        <EnvStyleRow
+          label="Head weight"
+          inputType="range"
+          value={String(topoMapBranding.headingWeight ?? 800)}
+          min={100}
+          max={900}
+          step={100}
+          decimals={0}
+          testId="topo-map-branding-heading-weight"
+          onChange={(v) =>
+            setTopoMapBranding({ headingWeight: parseFloat(v) })
+          }
+        />
+        <EzGammaCheckboxRow
+          label="Head italic"
+          checked={topoMapBranding.headingItalic === true}
+          testId="topo-map-branding-heading-italic"
+          onChange={(checked) =>
+            setTopoMapBranding({ headingItalic: checked })
+          }
+        />
+        <EnvStyleRow
+          label="Sub weight"
+          inputType="range"
+          value={String(topoMapBranding.subheadingWeight ?? 500)}
+          min={100}
+          max={900}
+          step={100}
+          decimals={0}
+          testId="topo-map-branding-subheading-weight"
+          onChange={(v) =>
+            setTopoMapBranding({ subheadingWeight: parseFloat(v) })
+          }
+        />
+        <EzGammaCheckboxRow
+          label="Sub italic"
+          checked={topoMapBranding.subheadingItalic === true}
+          testId="topo-map-branding-subheading-italic"
+          onChange={(checked) =>
+            setTopoMapBranding({ subheadingItalic: checked })
+          }
+        />
+        <EnvStyleRow
+          label="Line gap"
+          inputType="range"
+          value={String(topoMapBranding.lineGapM ?? 2500)}
+          min={-30000}
+          max={50000}
+          step={500}
+          decimals={0}
+          testId="topo-map-branding-line-gap"
+          onChange={(v) => setTopoMapBranding({ lineGapM: parseFloat(v) })}
+        />
+        <EnvStyleRow
+          label="Text color"
+          inputType="color"
+          value={topoMapBranding.textColor ?? "#ffffff"}
+          testId="topo-map-branding-text-color"
+          onChange={(v) => setTopoMapBranding({ textColor: v })}
+        />
+        <EnvStyleRow
+          label="Block opacity"
+          inputType="range"
+          value={String(topoMapBranding.opacity ?? 0.92)}
+          min={0}
+          max={1}
+          step={0.02}
+          decimals={2}
+          testId="topo-map-branding-opacity"
+          onChange={(v) => setTopoMapBranding({ opacity: parseFloat(v) })}
+        />
+        <EnvStyleRow
+          label="Logo opacity"
+          inputType="range"
+          value={String(
+            topoMapBranding.logoOpacity ?? topoMapBranding.opacity ?? 0.92,
+          )}
+          min={0}
+          max={1}
+          step={0.02}
+          decimals={2}
+          testId="topo-map-branding-logo-opacity"
+          onChange={(v) =>
+            setTopoMapBranding({ logoOpacity: parseFloat(v) })
+          }
+        />
+        <EnvStyleRow
+          label="Text opacity"
+          inputType="range"
+          value={String(
+            topoMapBranding.textOpacity ?? topoMapBranding.opacity ?? 0.92,
+          )}
+          min={0}
+          max={1}
+          step={0.02}
+          decimals={2}
+          testId="topo-map-branding-text-opacity"
+          onChange={(v) =>
+            setTopoMapBranding({ textOpacity: parseFloat(v) })
+          }
+        />
+        <EzGammaCheckboxRow
+          label="Background"
+          checked={topoMapBranding.backgroundEnabled === true}
+          testId="topo-map-branding-background-enabled"
+          onChange={(checked) =>
+            setTopoMapBranding({ backgroundEnabled: checked })
+          }
+        />
+        <EnvStyleRow
+          label="Bg color"
+          inputType="color"
+          value={topoMapBranding.backgroundColor ?? "#050607"}
+          testId="topo-map-branding-background-color"
+          onChange={(v) => setTopoMapBranding({ backgroundColor: v })}
+        />
+        <EnvStyleRow
+          label="Bg opacity"
+          inputType="range"
+          value={String(topoMapBranding.backgroundOpacity ?? 0.36)}
+          min={0}
+          max={1}
+          step={0.02}
+          decimals={2}
+          testId="topo-map-branding-background-opacity"
+          onChange={(v) =>
+            setTopoMapBranding({ backgroundOpacity: parseFloat(v) })
+          }
+        />
+        <EnvStyleRow
+          label="Bg pad X"
+          inputType="range"
+          value={String(topoMapBranding.backgroundPaddingXM ?? 12000)}
+          min={0}
+          max={180000}
+          step={1000}
+          decimals={0}
+          testId="topo-map-branding-background-padding-x"
+          onChange={(v) =>
+            setTopoMapBranding({ backgroundPaddingXM: parseFloat(v) })
+          }
+        />
+        <EnvStyleRow
+          label="Bg pad Y"
+          inputType="range"
+          value={String(topoMapBranding.backgroundPaddingYM ?? 8000)}
+          min={0}
+          max={180000}
+          step={1000}
+          decimals={0}
+          testId="topo-map-branding-background-padding-y"
+          onChange={(v) =>
+            setTopoMapBranding({ backgroundPaddingYM: parseFloat(v) })
+          }
+        />
+        <EzGammaCheckboxRow
+          label="Outline"
+          checked={topoMapBranding.outlineEnabled === true}
+          testId="topo-map-branding-outline-enabled"
+          onChange={(checked) =>
+            setTopoMapBranding({ outlineEnabled: checked })
+          }
+        />
+        <EnvStyleRow
+          label="Outline color"
+          inputType="color"
+          value={topoMapBranding.outlineColor ?? "#ffffff"}
+          testId="topo-map-branding-outline-color"
+          onChange={(v) => setTopoMapBranding({ outlineColor: v })}
+        />
+        <EnvStyleRow
+          label="Outline opacity"
+          inputType="range"
+          value={String(topoMapBranding.outlineOpacity ?? 0.8)}
+          min={0}
+          max={1}
+          step={0.02}
+          decimals={2}
+          testId="topo-map-branding-outline-opacity"
+          onChange={(v) =>
+            setTopoMapBranding({ outlineOpacity: parseFloat(v) })
+          }
+        />
+        <EnvStyleRow
+          label="Outline width"
+          inputType="range"
+          value={String(topoMapBranding.outlineWidthM ?? 2500)}
+          min={250}
+          max={50000}
+          step={250}
+          decimals={0}
+          testId="topo-map-branding-outline-width"
+          onChange={(v) =>
+            setTopoMapBranding({ outlineWidthM: parseFloat(v) })
+          }
+        />
+        </TopoTitleBlockPanel>
+      ) : null}
+    </>
+  );
+}
+
+function TopoSurfaceSettingsPanel({
+  children,
+  nested,
+}: {
+  children: ReactNode;
+  nested: boolean;
+}) {
+  if (!nested) {
+    return (
+      <div style={detailsContentStyle} data-testid="topo-surface-controls">
+        {children}
       </div>
+    );
+  }
+  return (
+    <details style={drillingAssayDetailsStyle}>
+      <summary style={drillingAssaySummaryStyle}>
+        Topo Surface Settings
+      </summary>
+      <div style={detailsContentStyle} data-testid="topo-surface-controls">
+        {children}
+      </div>
+    </details>
+  );
+}
+
+function TopoGraticulePanel({
+  layer,
+  nested,
+  environment,
+  isEnv,
+  currentPage,
+  setEnvLayerStyle,
+  setPageLayerOverride,
+  clearPageLayerOverride,
+  toggleEnvDefaultVisible,
+  setPageVisibilityOverride,
+  clearPageVisibilityOverride,
+}: {
+  layer: ProjectLayerSpec | null;
+  nested: boolean;
+  environment: EnvironmentSetup;
+  isEnv: boolean;
+  currentPage: PresentationPage | null;
+  setEnvLayerStyle: LayerStyleSetter;
+  setPageLayerOverride: PageStyleSetter;
+  clearPageLayerOverride: PageStyleClearer;
+  toggleEnvDefaultVisible: (layerId: string) => void;
+  setPageVisibilityOverride: (
+    pageId: string,
+    layerId: string,
+    visible: boolean,
+  ) => void;
+  clearPageVisibilityOverride: (pageId: string, layerId: string) => void;
+}) {
+  if (!layer) return null;
+
+  const layerId = layer.id;
+  const envStyle = environment.layerStyles[layerId] ?? {};
+  const style = currentPage
+    ? effectiveStyle(environment, currentPage, layerId)
+    : envStyle;
+  const envVisible = environment.defaultVisibleLayers.includes(layerId);
+  const effectiveVisible = currentPage
+    ? isVisibilityOverridden(currentPage, layerId)
+      ? currentPage.visibilityOverrides?.[layerId] === true
+      : envVisible
+    : envVisible;
+  const controlProps = {
+    style: isEnv ? envStyle : style,
+    isEnv,
+    currentPage,
+    layerId,
+    setEnvLayerStyle,
+    setPageLayerOverride,
+    clearPageLayerOverride,
+  };
+
+  const content = (
+    <div
+      style={detailsContentStyle}
+      data-testid={nested ? undefined : "topo-graticule-controls"}
+    >
+      <div style={panelStyles.sectionHeader}>
+        <div style={panelStyles.checkboxRow}>
+          <span
+            style={{
+              ...panelStyles.layerLabel,
+              color: effectiveVisible ? vibrancyLabel : vibrancyTertiaryLabel,
+            }}
+          >
+            {layer.label ?? "Longitude / latitude grid"}
+          </span>
+        </div>
+        <span
+          style={{
+            ...panelStyles.layerType,
+            color: effectiveVisible
+              ? vibrancySecondaryLabel
+              : vibrancyTertiaryLabel,
+          }}
+        >
+          {layer.type}
+        </span>
+      </div>
+      {isEnv ? (
+        <EnvVisibilityRow
+          visible={envVisible}
+          onToggle={() => toggleEnvDefaultVisible(layerId)}
+        />
+      ) : currentPage ? (
+        <PageVisibilityRow
+          page={currentPage}
+          layerId={layerId}
+          envVisible={envVisible}
+          onSet={(visible) =>
+            setPageVisibilityOverride(currentPage.id, layerId, visible)
+          }
+          onClear={() => clearPageVisibilityOverride(currentPage.id, layerId)}
+        />
+      ) : null}
+      <LayerColorStyleControl
+        label="Color"
+        field="color"
+        fallback="#cccccc"
+        {...controlProps}
+      />
+      <LayerNumberStyleControl
+        label="Opacity"
+        field="opacity"
+        fallback={1}
+        min={0}
+        max={1}
+        step={0.05}
+        decimals={2}
+        {...controlProps}
+      />
+      <LayerNumberStyleControl
+        label="Line width"
+        field="lineWidth"
+        fallback={1.15}
+        min={0.5}
+        max={6}
+        step={0.25}
+        decimals={2}
+        {...controlProps}
+      />
+      <LayerBooleanStyleControl
+        label="Labels"
+        field="graticuleLabelVisible"
+        fallback={true}
+        {...controlProps}
+      />
+      <LayerNumberStyleControl
+        label="Label size"
+        field="graticuleLabelSizeM"
+        fallback={9000}
+        min={1500}
+        max={60000}
+        step={500}
+        decimals={0}
+        {...controlProps}
+      />
+      <LayerNumberStyleControl
+        label="Surface lift"
+        field="graticuleLiftM"
+        fallback={24}
+        min={0}
+        max={500}
+        step={4}
+        decimals={0}
+        {...controlProps}
+      />
+      <LayerBooleanStyleControl
+        label="Edge fade aware"
+        field="graticuleEdgeFadeAware"
+        fallback={true}
+        {...controlProps}
+      />
+      <LayerNumberStyleControl
+        label="Edge strength"
+        field="graticuleEdgeFadeStrength"
+        fallback={1}
+        min={0}
+        max={1}
+        step={0.05}
+        decimals={2}
+        testId="topo-graticule-edge-strength"
+        {...controlProps}
+      />
+      <LayerColorStyleControl
+        label="Edge line"
+        field="graticuleEdgeLineColor"
+        fallback="#ffffff"
+        testId="topo-graticule-edge-line-color"
+        {...controlProps}
+      />
+      <LayerNumberStyleControl
+        label="Edge line weight"
+        field="graticuleEdgeLineWidth"
+        fallback={4.75}
+        min={0.1}
+        max={32}
+        step={0.25}
+        decimals={2}
+        testId="topo-graticule-edge-line-width"
+        {...controlProps}
+      />
+      <LayerColorStyleControl
+        label="Edge label"
+        field="graticuleEdgeLabelColor"
+        fallback="#ffffff"
+        testId="topo-graticule-edge-label-color"
+        {...controlProps}
+      />
+      <LayerBooleanStyleControl
+        label="Fade labels"
+        field="graticuleEdgeLabelVisible"
+        fallback={true}
+        {...controlProps}
+      />
+      <LayerNumberStyleControl
+        label="Label offset"
+        field="graticuleEdgeLabelOffsetM"
+        fallback={90000}
+        min={0}
+        max={160000}
+        step={1000}
+        decimals={0}
+        testId="topo-graticule-edge-label-offset"
+        {...controlProps}
+      />
+      <LayerNumberStyleControl
+        label="Label gap"
+        field="graticuleEdgeLabelGapM"
+        fallback={22000}
+        min={-100000}
+        max={100000}
+        step={1000}
+        decimals={0}
+        testId="topo-graticule-edge-label-gap"
+        {...controlProps}
+      />
+    </div>
+  );
+
+  if (!nested) return content;
+
+  return (
+    <details
+      style={drillingAssayDetailsStyle}
+      data-testid="topo-graticule-controls"
+    >
+      <summary style={drillingAssaySummaryStyle}>
+        Longitude / latitude grid
+      </summary>
+      {content}
+    </details>
+  );
+}
+
+function TopoTitleBlockPanel({
+  children,
+  nested,
+}: {
+  children: ReactNode;
+  nested: boolean;
+}) {
+  if (!nested) return <div style={detailsContentStyle}>{children}</div>;
+  return (
+    <details style={drillingAssayDetailsStyle}>
+      <summary style={drillingAssaySummaryStyle}>Title block</summary>
+      <div style={detailsContentStyle}>{children}</div>
     </details>
   );
 }

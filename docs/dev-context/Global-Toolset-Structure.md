@@ -31,6 +31,27 @@ Legacy IDs such as `terrain` and `utah-forge-topo-graticule` remain readable for
 backward compatibility, but metadata-authored topo projects must not depend on
 those IDs.
 
+## Current Editor Structure Checkpoint
+
+The editor sidebar is being aligned to the same global-tool rule. Top-level
+editor sections should represent real tool or workflow boundaries, not padding
+workarounds or nested historical containers.
+
+Current top-level peer sections include:
+
+- `Page Manager`: page selection, ordering, page-level actions, and global/page
+  selection state.
+- `Visual Studio`: global render preset, environment, lighting, camera, and
+  terrain-grid controls.
+- `UI`: global client-facing chrome controls such as logo and GUI style.
+- `Public Topo Map`: the topo tool editor, including topo surface settings,
+  longitude/latitude grid, title block, and topo reference layers.
+- project data sections and overlay tools.
+
+Container styling should come from shared editor tokens in `src/editor/styles.ts`.
+Do not reintroduce local light-gray global-settings containers, nested fake
+hierarchy, or one-off padding to imply tree structure.
+
 ## Forward Alignment
 
 Other toolsets should be aligned to this structure over time when they are

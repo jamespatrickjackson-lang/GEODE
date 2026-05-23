@@ -10,29 +10,40 @@ export const TECHNICAL_MONO_FONT =
 export const vibrancyLabel = "#f4f0e8";
 export const vibrancySecondaryLabel = "rgba(244, 240, 232, 0.72)";
 export const vibrancyTertiaryLabel = "rgba(244, 240, 232, 0.46)";
-export const editorFieldBackground = "rgba(18, 21, 24, 0.5)";
+export const editorFieldBackground = "rgba(18, 21, 24, 0.4)";
 export const editorFieldText = vibrancyLabel;
-export const editorFieldBorder = "1px solid rgba(255, 255, 255, 0.2)";
-export const globalSettingsAccent = "rgba(244, 240, 232, 0.18)";
-export const globalSettingsHoverAccent = "rgba(244, 240, 232, 0.48)";
+export const editorFieldBorder = "1px solid transparent";
+export const EDITOR_FULL_RADIUS = 999;
+export const EDITOR_SECTION_MARGIN_X = 12;
+export const EDITOR_SECTION_GAP_Y = 10;
+export const EDITOR_SCROLL_END_PADDING_Y = 20;
+export const EDITOR_PAGE_LIST_INDENT_X = 18;
+export const EDITOR_HEADING_BAR_BACKGROUND = "rgba(18, 21, 24, 0.528)";
+export const EDITOR_NESTED_BAR_BACKGROUND = "rgba(18, 21, 24, 0.442)";
+export const EDITOR_ACTIVE_BAR_BACKGROUND = "rgba(18, 21, 24, 0.672)";
+export const EDITOR_ACTIVE_BAR_HOVER_BACKGROUND = "rgba(18, 21, 24, 0.768)";
+export const globalSettingsAccent = EDITOR_ACTIVE_BAR_BACKGROUND;
+export const globalSettingsHoverAccent = EDITOR_ACTIVE_BAR_HOVER_BACKGROUND;
 
 export const regularLightMaterial: CSSProperties = {
-  background: "rgba(18, 21, 24, 0.55)",
+  background: EDITOR_HEADING_BAR_BACKGROUND,
   backdropFilter: "blur(20px) saturate(145%)",
   WebkitBackdropFilter: "blur(20px) saturate(145%)",
 };
 
 export const thinLightMaterial: CSSProperties = {
-  background: "rgba(18, 21, 24, 0.38)",
+  background: "rgba(18, 21, 24, 0.304)",
   backdropFilter: "blur(16px) saturate(135%)",
   WebkitBackdropFilter: "blur(16px) saturate(135%)",
 };
 
-export const FROSTED_HAIRLINE = "1px solid rgba(255, 255, 255, 0.2)";
+export const FROSTED_HAIRLINE = "1px solid transparent";
+export const FROSTED_PANEL_OUTLINE = "1px solid rgba(255, 255, 255, 0.2)";
 export const FROSTED_PANEL_SHADOW =
   "0 24px 80px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -1px 0 rgba(0, 0, 0, 0.12)";
 export const FROSTED_CONTROL_SHADOW =
-  "inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.18)";
+  "inset 0 1px 0 rgba(255, 255, 255, 0.096), inset 0 -1px 0 rgba(0, 0, 0, 0.144)";
+export const EDITOR_PILL_TEXT_INSET_PX = 24;
 
 const pageAccentRgbPalette = [
   [250, 196, 205],
@@ -44,7 +55,7 @@ const pageAccentRgbPalette = [
 ];
 
 export const pageAccentPalette = pageAccentRgbPalette.map(
-  ([r, g, b]) => `rgba(${r}, ${g}, ${b}, 0.62)`,
+  ([r, g, b]) => `rgba(${r}, ${g}, ${b}, 0.496)`,
 );
 
 function rgbToHex(r: number, g: number, b: number): string {
@@ -90,7 +101,7 @@ export function pageAccentHexForIndex(index: number): string {
   return rgbToHex(r, g, b);
 }
 
-export function pageAccentForIndex(index: number, alpha = 0.62): string {
+export function pageAccentForIndex(index: number, alpha = 0.496): string {
   const safeIndex =
     ((index % pageAccentRgbPalette.length) + pageAccentRgbPalette.length) %
     pageAccentRgbPalette.length;
@@ -101,7 +112,7 @@ export function pageAccentForIndex(index: number, alpha = 0.62): string {
 export function pageAccentForPage(
   page: { accentColor?: string | null },
   index: number,
-  alpha = 0.62,
+  alpha = 0.496,
 ): string {
   return page.accentColor
     ? colorWithAlpha(page.accentColor, alpha)
@@ -117,7 +128,8 @@ export function pageAccentForPage(
 //   the main section bars: Page Manager, Public Data, Customer Data.
 // - thinLightMaterial: lighter interactive material. Used for secondary bars,
 //   selected rows, small buttons, and text inputs.
-// - FROSTED_HAIRLINE: the single divider/border color used across the sidebar.
+// - FROSTED_HAIRLINE: transparent internal layout border; the outer editor
+//   panel keeps its visible border through FROSTED_PANEL_OUTLINE.
 // - vibrancyLabel / Secondary / Tertiary: the only text color levels sidebar UI
 //   should normally use. Avoid adding one-off colors for labels/headings.
 //
@@ -134,18 +146,18 @@ export const frostedNested = regularLightMaterial;
 export const frostedMenuBar = regularLightMaterial;
 export const frostedHeading: CSSProperties = {
   ...regularLightMaterial,
-  border: FROSTED_HAIRLINE,
-  borderRadius: 12,
+  border: "1px solid transparent",
+  borderRadius: EDITOR_FULL_RADIUS,
   boxSizing: "border-box",
-  boxShadow: FROSTED_CONTROL_SHADOW,
+  boxShadow: "none",
 };
 export const frostedSubheading: CSSProperties = {
   ...thinLightMaterial,
-  background: "rgba(18, 21, 24, 0.46)",
-  border: FROSTED_HAIRLINE,
-  borderRadius: 12,
+  background: EDITOR_NESTED_BAR_BACKGROUND,
+  border: "1px solid transparent",
+  borderRadius: EDITOR_FULL_RADIUS,
   boxSizing: "border-box",
-  boxShadow: FROSTED_CONTROL_SHADOW,
+  boxShadow: "none",
 };
 
 export const panelStyles: Record<string, CSSProperties> = {
@@ -157,6 +169,24 @@ export const panelStyles: Record<string, CSSProperties> = {
     fontFamily: TECHNICAL_MONO_FONT,
     flex: 1,
     background: "transparent",
+  },
+  globalSettingsBar: {
+    ...frostedSubheading,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 14,
+    width: "100%",
+    minHeight: 42,
+    padding: `0 ${EDITOR_PILL_TEXT_INSET_PX}px`,
+    cursor: "pointer",
+    userSelect: "none",
+  },
+  globalSettingsBody: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 6,
+    padding: "8px 0 8px 28px",
   },
   section: {
     paddingBottom: 12,
@@ -206,6 +236,7 @@ export const panelStyles: Record<string, CSSProperties> = {
     fontFamily: "inherit",
     caretColor: editorFieldText,
     colorScheme: "dark",
+    boxShadow: "none",
   },
   numberReadout: {
     width: 40,
@@ -229,19 +260,22 @@ export const panelStyles: Record<string, CSSProperties> = {
     display: "flex",
     alignItems: "center",
     gap: 4,
+    width: "100%",
+    minWidth: 0,
     minHeight: 28,
     padding: "4px 8px",
     border: "1px solid transparent",
-    borderRadius: 12,
+    borderRadius: EDITOR_FULL_RADIUS,
     boxSizing: "border-box",
+    overflow: "hidden",
     cursor: "pointer",
     transition: "border-color 140ms ease, box-shadow 140ms ease, opacity 140ms ease",
   },
   pageRowSelected: {
     ...thinLightMaterial,
-    border: FROSTED_HAIRLINE,
-    borderRadius: 12,
-    boxShadow: FROSTED_CONTROL_SHADOW,
+    border: "1px solid transparent",
+    borderRadius: EDITOR_FULL_RADIUS,
+    boxShadow: "none",
   },
   iconButton: {
     ...thinLightMaterial,
@@ -251,12 +285,12 @@ export const panelStyles: Record<string, CSSProperties> = {
     alignItems: "center",
     justifyContent: "center",
     color: vibrancyLabel,
-    border: FROSTED_HAIRLINE,
-    borderRadius: 999,
+    border: "1px solid transparent",
+    borderRadius: EDITOR_FULL_RADIUS,
     fontSize: 12,
     cursor: "pointer",
     padding: 0,
-    boxShadow: FROSTED_CONTROL_SHADOW,
+    boxShadow: "none",
     appearance: "none",
     fontFamily: TECHNICAL_MONO_FONT,
   },
@@ -264,11 +298,11 @@ export const panelStyles: Record<string, CSSProperties> = {
     ...thinLightMaterial,
     padding: "6px 12px",
     color: vibrancyLabel,
-    border: FROSTED_HAIRLINE,
-    borderRadius: 12,
+    border: "1px solid transparent",
+    borderRadius: EDITOR_FULL_RADIUS,
     fontSize: 13,
     cursor: "pointer",
-    boxShadow: FROSTED_CONTROL_SHADOW,
+    boxShadow: "none",
     appearance: "none",
     fontFamily: TECHNICAL_MONO_FONT,
   },
@@ -278,12 +312,12 @@ export const panelStyles: Record<string, CSSProperties> = {
     minHeight: 28,
     padding: "6px 10px",
     color: vibrancySecondaryLabel,
-    border: FROSTED_HAIRLINE,
-    borderRadius: 12,
+    border: "1px solid transparent",
+    borderRadius: EDITOR_FULL_RADIUS,
     fontSize: 11,
     fontFamily: "inherit",
     cursor: "pointer",
-    boxShadow: FROSTED_CONTROL_SHADOW,
+    boxShadow: "none",
     appearance: "none",
   },
   collapsibleSection: {
@@ -302,8 +336,8 @@ export const panelStyles: Record<string, CSSProperties> = {
     justifyContent: "space-between",
     gap: 14,
     minHeight: 44,
-    padding: "0 18px",
-    margin: "10px 12px 6px",
+    padding: `0 ${EDITOR_PILL_TEXT_INSET_PX}px`,
+    margin: `${EDITOR_SECTION_GAP_Y}px ${EDITOR_SECTION_MARGIN_X}px 6px`,
     cursor: "pointer",
     userSelect: "none",
   },
@@ -373,6 +407,7 @@ export const panelStyles: Record<string, CSSProperties> = {
     boxSizing: "border-box",
     caretColor: editorFieldText,
     colorScheme: "dark",
+    boxShadow: "none",
   },
 };
 /*  */
