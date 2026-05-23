@@ -57,7 +57,6 @@ import {
   UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
-  UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
   UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
 import {
@@ -75,11 +74,11 @@ import {
   SHAHBAZI_GROUND_SURFACE_LAYER_ID,
 } from "../projectModules/shahbazi/layerIds";
 import {
-  TOPO_MAP_DEFAULT_SURFACE_LAYER_ID,
   TOPO_MAP_GRATICULE_EDGE_STYLE_FIELDS,
+  TOPO_MAP_LEGACY_GRATICULE_LAYER_ID,
   isTopoMapGraticuleLayer,
-  isTopoMapLayer,
   isTopoMapSurfaceLayer,
+  topoMapRuntimeLayerIds,
 } from "../topoMap/settings";
 import {
   createTopoMapRuntime,
@@ -2531,7 +2530,7 @@ function forgeDiscreteDataStyleChanged(
       "sectionIsoTargetIds",
     ]);
   }
-  if (layerId === UTAH_FORGE_TOPO_GRATICULE_LAYER_ID) {
+  if (layerId === TOPO_MAP_LEGACY_GRATICULE_LAYER_ID) {
     return styleFieldsChanged(
       fromStyle,
       toStyle,
@@ -2849,10 +2848,7 @@ export class SceneManager {
   }
 
   private topoSurfaceLayerId(): string {
-    for (const spec of this.layerSpecs.values()) {
-      if (isTopoMapSurfaceLayer(spec)) return spec.id;
-    }
-    return TOPO_MAP_DEFAULT_SURFACE_LAYER_ID;
+    return this.topoRuntimeLayerIds().surfaceLayerId;
   }
 
   private topoSurfaceGroup(): THREE.Group | undefined {
@@ -2862,49 +2858,28 @@ export class SceneManager {
   private isTopoSurfaceLayerId(id: string): boolean {
     const spec = this.layerSpecFor(id);
     if (spec) return isTopoMapSurfaceLayer(spec);
-    return id === TOPO_MAP_DEFAULT_SURFACE_LAYER_ID;
+    return id === this.topoRuntimeLayerIds().surfaceLayerId;
   }
 
   private isTopoGraticuleLayerId(id: string): boolean {
     const spec = this.layerSpecFor(id);
     if (spec) return isTopoMapGraticuleLayer(spec);
-    return id === UTAH_FORGE_TOPO_GRATICULE_LAYER_ID;
+    return this.topoRuntimeLayerIds().graticuleLayerIds.includes(id);
   }
 
   private topoGraticuleLayerIds(): string[] {
-    const ids = [...this.layerSpecs.values()]
-      .filter(isTopoMapGraticuleLayer)
-      .map((spec) => spec.id);
-    if (
-      ids.length === 0 &&
-      this.layers.has(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID)
-    ) {
-      ids.push(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID);
-    }
-    return ids;
+    return this.topoRuntimeLayerIds().graticuleLayerIds;
   }
 
   private topoPublicSurfaceLayerIds(): string[] {
-    const ids = new Set<string>();
-    for (const spec of this.layerSpecs.values()) {
-      if (isTopoMapLayer(spec)) ids.add(spec.id);
-    }
-    if (ids.size === 0) {
-      if (this.layers.has(TOPO_MAP_DEFAULT_SURFACE_LAYER_ID)) {
-        ids.add(TOPO_MAP_DEFAULT_SURFACE_LAYER_ID);
-      }
-      if (this.layers.has(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID)) {
-        ids.add(UTAH_FORGE_TOPO_GRATICULE_LAYER_ID);
-      }
-      for (const id of [
-        "transport-roads",
-        "hydrography-streams",
-        "hydrography-lakes",
-      ]) {
-        if (this.layers.has(id)) ids.add(id);
-      }
-    }
-    return [...ids];
+    return this.topoRuntimeLayerIds().publicSurfaceLayerIds;
+  }
+
+  private topoRuntimeLayerIds() {
+    return topoMapRuntimeLayerIds({
+      layerSpecs: this.layerSpecs.values(),
+      hasLoadedLayer: (id) => this.layers.has(id),
+    });
   }
 
   setPostHandle(handle: PostHandle): void {

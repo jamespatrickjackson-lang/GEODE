@@ -16,6 +16,13 @@ export const TOPO_MAP_DEFAULT_REFERENCE_LAYER_IDS = [
   "hydrography-streams",
   "hydrography-lakes",
 ] as const;
+export const TOPO_MAP_LEGACY_GRATICULE_LAYER_ID =
+  "utah-forge-topo-graticule";
+export const TOPO_MAP_LEGACY_PUBLIC_SURFACE_LAYER_IDS = [
+  TOPO_MAP_DEFAULT_SURFACE_LAYER_ID,
+  TOPO_MAP_LEGACY_GRATICULE_LAYER_ID,
+  ...TOPO_MAP_DEFAULT_REFERENCE_LAYER_IDS,
+] as const;
 
 export type TopoMapToolRole = "surface" | "graticule" | "reference";
 export type PublicTopoMaterialPresetId =
@@ -45,6 +52,12 @@ export interface ResolvedTopoMapSettings {
   surfaceStyle: EditableStyle;
   terrain: NonNullable<SceneProperties["terrain"]>;
   materialPreset: PublicTopoMaterialPresetId;
+}
+
+export interface TopoMapRuntimeLayerIds {
+  surfaceLayerId: string;
+  graticuleLayerIds: string[];
+  publicSurfaceLayerIds: string[];
 }
 
 export const SURFACE_ELEVATION_DEFAULT_MIN_M = 1500;
@@ -175,10 +188,40 @@ export function topoMapSurfaceLayerIdFor(
   );
 }
 
+function hasTopoMapToolMetadata(layers: readonly ProjectLayerSpec[]): boolean {
+  return layers.some((layer) => topoMapToolMetadata(layer) !== null);
+}
+
 export function findTopoMapSurfaceLayer(
   layers: readonly ProjectLayerSpec[],
 ): ProjectLayerSpec | undefined {
+  const metadataSurface = layers.find(
+    (layer) => topoMapToolMetadata(layer)?.role === "surface",
+  );
+  if (metadataSurface) return metadataSurface;
   return layers.find(isTopoMapSurfaceLayer);
+}
+
+export function topoMapGraticuleLayers(
+  layers: readonly ProjectLayerSpec[],
+): ProjectLayerSpec[] {
+  if (hasTopoMapToolMetadata(layers)) {
+    return layers.filter(
+      (layer) => topoMapToolMetadata(layer)?.role === "graticule",
+    );
+  }
+  return layers.filter(isTopoMapGraticuleLayer);
+}
+
+export function topoMapReferenceLayers(
+  layers: readonly ProjectLayerSpec[],
+): ProjectLayerSpec[] {
+  if (hasTopoMapToolMetadata(layers)) {
+    return layers.filter(
+      (layer) => topoMapToolMetadata(layer)?.role === "reference",
+    );
+  }
+  return layers.filter(isTopoMapReferenceLayer);
 }
 
 export function topoMapLayerIds(
@@ -187,12 +230,48 @@ export function topoMapLayerIds(
   const ids = new Set<string>();
   const surface = findTopoMapSurfaceLayer(layers);
   if (surface) ids.add(surface.id);
-  for (const layer of layers) {
-    if (isTopoMapGraticuleLayer(layer) || isTopoMapReferenceLayer(layer)) {
-      ids.add(layer.id);
-    }
+  for (const layer of [
+    ...topoMapGraticuleLayers(layers),
+    ...topoMapReferenceLayers(layers),
+  ]) {
+    ids.add(layer.id);
   }
   return [...ids];
+}
+
+export function topoMapRuntimeLayerIds({
+  layerSpecs,
+  hasLoadedLayer,
+}: {
+  layerSpecs: Iterable<ProjectLayerSpec>;
+  hasLoadedLayer?: (id: string) => boolean;
+}): TopoMapRuntimeLayerIds {
+  const specs = [...layerSpecs];
+  const surfaceLayer = findTopoMapSurfaceLayer(specs);
+  const surfaceLayerId = surfaceLayer?.id ?? TOPO_MAP_DEFAULT_SURFACE_LAYER_ID;
+  const graticuleLayerIds = topoMapGraticuleLayers(specs).map(
+    (layer) => layer.id,
+  );
+  const publicSurfaceLayerIds = new Set(topoMapLayerIds(specs));
+  const authoredTopoMetadata = hasTopoMapToolMetadata(specs);
+
+  if (!authoredTopoMetadata && graticuleLayerIds.length === 0) {
+    if (hasLoadedLayer?.(TOPO_MAP_LEGACY_GRATICULE_LAYER_ID)) {
+      graticuleLayerIds.push(TOPO_MAP_LEGACY_GRATICULE_LAYER_ID);
+    }
+  }
+
+  if (!authoredTopoMetadata && publicSurfaceLayerIds.size === 0) {
+    for (const id of TOPO_MAP_LEGACY_PUBLIC_SURFACE_LAYER_IDS) {
+      if (hasLoadedLayer?.(id)) publicSurfaceLayerIds.add(id);
+    }
+  }
+
+  return {
+    surfaceLayerId,
+    graticuleLayerIds,
+    publicSurfaceLayerIds: [...publicSurfaceLayerIds],
+  };
 }
 
 export function topoMapLayerLabel(layer: ProjectLayerSpec): string | null {
@@ -566,8 +645,8 @@ export function resolveTopoMapSettings({
   return {
     surfaceLayer: resolvedSurfaceLayer ?? null,
     surfaceLayerId,
-    graticuleLayers: layers.filter(isTopoMapGraticuleLayer),
-    referenceLayers: layers.filter(isTopoMapReferenceLayer),
+    graticuleLayers: topoMapGraticuleLayers(layers),
+    referenceLayers: topoMapReferenceLayers(layers),
     surfaceStyle: page
       ? effectiveStyle(environment, page, surfaceLayerId)
       : (environment.layerStyles[surfaceLayerId] ?? {}),

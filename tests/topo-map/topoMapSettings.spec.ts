@@ -7,11 +7,14 @@ import type {
 import {
   TOPO_MAP_SURFACE_LABEL,
   isTopoMapGraticuleLayer,
+  isTopoMapReferenceLayer,
   isTopoMapSurfaceLayer,
   resolveTopoMapSettings,
   surfaceElevationPositionsFromTerrain,
+  topoMapLayerIds,
   topoMapLayerLabel,
   topoMapPresetPatch,
+  topoMapRuntimeLayerIds,
 } from "../../src/topoMap/settings";
 
 const surfaceLayer = {
@@ -42,6 +45,55 @@ const graticuleLayer = {
   },
 } as const;
 
+const roadReferenceLayer = {
+  id: "regional-roads",
+  label: "Regional roads",
+  type: "line",
+  files: {},
+  metadata: {
+    geoSeeTool: {
+      id: "topo-map",
+      role: "reference",
+      surfaceLayerId: "regional-dem",
+    },
+  },
+} as const;
+
+const streamReferenceLayer = {
+  id: "regional-streams",
+  label: "Regional streams",
+  type: "line",
+  files: {},
+  metadata: {
+    geoSeeTool: {
+      id: "topo-map",
+      role: "reference",
+      surfaceLayerId: "regional-dem",
+    },
+  },
+} as const;
+
+const lakeReferenceLayer = {
+  id: "regional-lakes",
+  label: "Regional lakes",
+  type: "polygon",
+  files: {},
+  metadata: {
+    geoSeeTool: {
+      id: "topo-map",
+      role: "reference",
+      surfaceLayerId: "regional-dem",
+    },
+  },
+} as const;
+
+const unrelatedLegacyNamedRoadLayer = {
+  id: "transport-roads",
+  label: "Transport roads outside topo tool",
+  type: "line",
+  files: {},
+} as const;
+
 function manifest(): ProjectManifest {
   return {
     id: "unit-topo",
@@ -49,7 +101,14 @@ function manifest(): ProjectManifest {
     crs: { code: "EPSG:32610" },
     bounds: { min: [0, 0, 0], max: [1, 1, 1] },
     sceneOrigin: [0, 0, 0],
-    layers: [surfaceLayer, graticuleLayer],
+    layers: [
+      surfaceLayer,
+      graticuleLayer,
+      roadReferenceLayer,
+      streamReferenceLayer,
+      lakeReferenceLayer,
+      unrelatedLegacyNamedRoadLayer,
+    ],
     pageOrder: [],
     watermark: "",
   };
@@ -93,7 +152,62 @@ function page(): PresentationPage {
 test("topo-map role metadata identifies surface and graticule layers", () => {
   expect(isTopoMapSurfaceLayer(surfaceLayer)).toBe(true);
   expect(isTopoMapGraticuleLayer(graticuleLayer)).toBe(true);
+  expect(isTopoMapReferenceLayer(roadReferenceLayer)).toBe(true);
   expect(topoMapLayerLabel(surfaceLayer)).toBe(TOPO_MAP_SURFACE_LABEL);
+});
+
+test("metadata-authored topo map selects non-Utah layer ids without legacy defaults", () => {
+  const layerIds = topoMapLayerIds(manifest().layers);
+  expect(layerIds).toEqual([
+    "regional-dem",
+    "lat-lon-grid",
+    "regional-roads",
+    "regional-streams",
+    "regional-lakes",
+  ]);
+  expect(layerIds).not.toContain("terrain");
+  expect(layerIds).not.toContain("utah-forge-topo-graticule");
+  expect(layerIds).not.toContain("transport-roads");
+});
+
+test("legacy topo fallbacks are isolated to projects without topo metadata", () => {
+  const legacyLayerIds = topoMapLayerIds([
+    {
+      id: "terrain",
+      label: "Legacy terrain",
+      type: "geotiff",
+      files: {},
+    },
+    {
+      id: "utah-forge-topo-graticule",
+      label: "Legacy grid",
+      type: "line",
+      files: {},
+      metadata: { topoGraticule: true },
+    },
+    {
+      id: "transport-roads",
+      label: "Legacy roads",
+      type: "line",
+      files: {},
+    },
+  ] as ProjectManifest["layers"]);
+  expect(legacyLayerIds).toEqual([
+    "terrain",
+    "utah-forge-topo-graticule",
+    "transport-roads",
+  ]);
+
+  const runtimeIds = topoMapRuntimeLayerIds({
+    layerSpecs: [],
+    hasLoadedLayer: (id) =>
+      ["terrain", "utah-forge-topo-graticule"].includes(id),
+  });
+  expect(runtimeIds).toMatchObject({
+    surfaceLayerId: "terrain",
+    graticuleLayerIds: ["utah-forge-topo-graticule"],
+    publicSurfaceLayerIds: ["terrain", "utah-forge-topo-graticule"],
+  });
 });
 
 test("procedural presets enable elevation gradients with distinct palettes", () => {
@@ -147,6 +261,11 @@ test("resolver merges defaults, legacy terrain values, and page style overrides"
   expect(resolved.surfaceStyle.opacity).toBe(0.75);
   expect(resolved.graticuleLayers.map((layer) => layer.id)).toEqual([
     "lat-lon-grid",
+  ]);
+  expect(resolved.referenceLayers.map((layer) => layer.id)).toEqual([
+    "regional-roads",
+    "regional-streams",
+    "regional-lakes",
   ]);
   expect(resolved.terrain).toMatchObject({
     materialPreset: "surface-elevation",

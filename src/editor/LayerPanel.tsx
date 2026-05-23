@@ -75,7 +75,6 @@ import {
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
-  UTAH_FORGE_TOPO_GRATICULE_LAYER_ID,
   UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
 import {
@@ -553,7 +552,6 @@ const CUSTOMER_LAYER_IDS: Set<string> = new Set(
 );
 
 const LINE_WIDTH_LAYER_DEFAULTS: Record<string, number> = {
-  [UTAH_FORGE_TOPO_GRATICULE_LAYER_ID]: 1.15,
   "hydrography-lakes": 1,
   "hydrography-streams": 1,
   "transport-roads": 2,
@@ -795,7 +793,7 @@ export function LayerPanel({
     const hasInfillAndOutline = isLakes || isImageryLidar;
     const isStreams = layer.id === "hydrography-streams";
     const lineWidthDefault = isTopoMapGraticule
-      ? (LINE_WIDTH_LAYER_DEFAULTS[layer.id] ?? 1.15)
+      ? 1.15
       : LINE_WIDTH_LAYER_DEFAULTS[layer.id];
     const supportsLineWidth = lineWidthDefault !== undefined;
     const globalFogDensity =

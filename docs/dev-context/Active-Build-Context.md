@@ -43,6 +43,7 @@ Do not assume Utah FORGE is the product standard. It is one case study probing M
 
 - Workspace state and verification tiers: `docs/dev-context/Verification-Routing.md`
 - Operating vocabulary: `docs/dev-context/GeoSee-Terms.md`
+- Global toolset structure and topo map precedent: `docs/dev-context/Global-Toolset-Structure.md`
 - Current visual review loop: `docs/dev-context/Visual-Review-Current.md`
 - Large code surfaces and extraction guidance: `docs/dev-context/Architecture-Hotspots.md`
 - Data/artifact status maps: `docs/dev-context/Dataset-Map.md`, `docs/dev-context/Computed-Artifact-Pipeline.md`, `docs/dev-context/Layer-Artifact-Classification.md`

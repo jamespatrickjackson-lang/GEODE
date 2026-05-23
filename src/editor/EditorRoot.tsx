@@ -28,6 +28,7 @@ import {
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
+import { topoMapLayerIds } from "../topoMap/settings";
 
 const SIDEBAR_WIDTH = 512;
 const FLOATING_PANEL_MARGIN = 44;
@@ -211,6 +212,7 @@ export function EditorRoot({
     state.projectSlug === "utah-forge";
   const publicDataTitle =
     state.projectSlug === "utah-forge" ? "FORGE Data" : "Public Data";
+  const hasPublicTopoMap = topoMapLayerIds(state.manifest.layers).length > 0;
   const selectedPageAccent =
     selectedPageIndex >= 0
       ? pageAccentForPage(
@@ -639,7 +641,7 @@ export function EditorRoot({
               />
             </CollapsibleSection>
           )}
-          {state.projectSlug === "utah-forge" && (
+          {hasPublicTopoMap && (
             <CollapsibleSection
               title="Public Topo Map"
               accentColor={selectedPageAccent}

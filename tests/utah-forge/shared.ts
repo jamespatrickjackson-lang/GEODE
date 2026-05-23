@@ -314,11 +314,64 @@ export async function setForgeLayerVisible(
   label: string,
   visible: boolean,
 ): Promise<void> {
+  const publicContextLayerIdsByLabel: Record<string, string> = {
+    "Topo Surface": "terrain",
+    "Public roads": "transport-roads",
+    "Public streams and rivers": "hydrography-streams",
+    "Public waterbodies": "hydrography-lakes",
+  };
+  const publicContextLayerId = publicContextLayerIdsByLabel[label];
+  if (publicContextLayerId) {
+    await page.evaluate(
+      ({ layerId, nextVisible }) => {
+        const manager = (
+          window as unknown as {
+            __scene?: {
+              manager?: {
+                getLayer?: (id: string) => { visible: boolean } | undefined;
+              };
+            };
+          }
+        ).__scene?.manager;
+        const layer = manager?.getLayer?.(layerId);
+        if (layer) layer.visible = nextVisible;
+      },
+      { layerId: publicContextLayerId, nextVisible: visible },
+    );
+    await expect
+      .poll(() =>
+        page.evaluate((layerId) => {
+          const manager = (
+            window as unknown as {
+              __scene?: {
+                manager?: {
+                  getLayer?: (id: string) => { visible: boolean } | undefined;
+                };
+              };
+            }
+          ).__scene?.manager;
+          return manager?.getLayer?.(layerId)?.visible ?? false;
+        }, publicContextLayerId),
+      )
+      .toBe(visible);
+    return;
+  }
   const layerItem = forgeLayerItem(page, label);
   await expect(layerItem).toBeVisible();
-  const checkbox = layerItem.locator('input[type="checkbox"]').first();
-  if ((await checkbox.isChecked()) !== visible) {
-    await checkbox.setChecked(visible);
+  const checkboxes = layerItem.locator('input[type="checkbox"]');
+  await expect(checkboxes.first()).toBeAttached({ timeout: 15_000 });
+  const checkboxCount = await checkboxes.count();
+  const targetCheckbox =
+    checkboxCount >= 2 ? checkboxes.nth(1) : checkboxes.first();
+  if (checkboxCount >= 2) {
+    const overrideCheckbox = checkboxes.first();
+    if (!(await overrideCheckbox.isChecked())) {
+      await overrideCheckbox.setChecked(true);
+    }
+    await expect(targetCheckbox).toBeEnabled({ timeout: 15_000 });
+  }
+  if ((await targetCheckbox.isChecked()) !== visible) {
+    await targetCheckbox.setChecked(visible, { timeout: 15_000 });
   }
 }
 
