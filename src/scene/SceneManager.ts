@@ -2514,6 +2514,7 @@ function forgeDiscreteDataStyleChanged(
   }
   if (layerId === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID) {
     return styleFieldsChanged(fromStyle, toStyle, [
+      "mtIsosurfaceProductId",
       "mtThresholdSurfaceVisibility",
       "mtThresholdSurfaceWireframe",
     ]);
@@ -8457,13 +8458,23 @@ export class SceneManager {
         ? (style.mtThresholdSurfaceVisibility as Record<string, boolean>)
         : {};
     const wireframe = style.mtThresholdSurfaceWireframe === true;
+    const selectedProductId =
+      typeof style.mtIsosurfaceProductId === "string"
+        ? style.mtIsosurfaceProductId
+        : "mt-isosurface-forge-focused";
     group.traverse((obj) => {
       if (obj.userData?.mtThresholdSurfacePreview !== true) return;
+      const productId =
+        typeof obj.userData.mtIsosurfaceProductId === "string"
+          ? obj.userData.mtIsosurfaceProductId
+          : "";
       const surfaceId =
         typeof obj.userData.mtThresholdSurfaceId === "string"
           ? obj.userData.mtThresholdSurfaceId
           : "";
-      obj.visible = visibility[surfaceId] !== false;
+      const productVisible =
+        productId.length === 0 || productId === selectedProductId;
+      obj.visible = productVisible && visibility[surfaceId] !== false;
       const material = (obj as { material?: THREE.Material | THREE.Material[] })
         .material;
       const materials = Array.isArray(material)

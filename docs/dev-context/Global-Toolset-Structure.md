@@ -52,6 +52,12 @@ full-source or explicitly presentation-cropped. The 90,000-point MT preview is
 QA/support context only and must not become computational input for slices,
 sections, isosurfaces, or scalar volumes.
 
+Current isosurface products are generated offline with mask-aware Marching
+Cubes from the scalar-volume products. Utah FORGE carries both
+`mt-isosurface-full-extent` and `mt-isosurface-forge-focused` in one render
+artifact; editor/runtime state chooses the active product without changing the
+legacy threshold-surface layer id.
+
 ## Current Editor Structure Checkpoint
 
 The editor sidebar is being aligned to the same global-tool rule. Top-level

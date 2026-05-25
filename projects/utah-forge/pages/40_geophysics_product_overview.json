@@ -1,7 +1,7 @@
 {
   "id": "40_geophysics_product_overview",
   "title": "Geophysics Product Overview",
-  "subtitle": "Proposed / needs_review seismic + resistivity walkthrough",
+  "subtitle": "Global tool products: stations, scalar volume, and focused isosurfaces",
   "camera": {
     "position": [
       25717.838323311036,
@@ -35,14 +35,15 @@
     "utah-forge-mt-stations": true,
     "utah-forge-mt-resistivity-preview": false,
     "utah-forge-mt-resistivity-full-density": false,
-    "utah-forge-mt-resistivity-volume": false,
-    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-resistivity-volume": true,
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-mt-top-surface": false,
-    "utah-forge-mt-resistivity-slices": false
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-phase3-demo-boreholes": true
   },
   "layerOverrides": {
     "utah-forge-mt-stations": {
-      "opacity": 0.72,
+      "opacity": 0.58,
       "showLabels": false
     },
     "terrain": {
@@ -56,10 +57,37 @@
       "scalarLegendVisible": false
     },
     "utah-forge-mt-resistivity-volume": {
-      "scalarLegendVisible": false
+      "scalarLegendVisible": true,
+      "opacity": 0.18,
+      "scalarVolumeOpacity": 0.18,
+      "scalarVolumeDensity": 0.36,
+      "scalarVolumeSampleSteps": 80,
+      "scalarVolumeThresholdMin": -2,
+      "scalarVolumeThresholdMax": 4.5,
+      "scalarVolumeProductId": "mt-resistivity-forge-focused-volume",
+      "scalarFocusMin": -2,
+      "scalarFocusMax": 4.5,
+      "scalarBlendMin": 0.139879,
+      "scalarBlendMax": 3.937122
     },
     "utah-forge-mt-resistivity-slices": {
       "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": false,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": true
+      },
+      "mtThresholdSurfaceWireframe": false,
+      "opacity": 0.28,
+      "affectedByFog": false,
+      "showLabels": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.78,
+      "showLabels": false
     }
   }
 }

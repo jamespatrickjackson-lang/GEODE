@@ -8,10 +8,14 @@ function layerOverride(pageId, layerId) {
 
 function validateEnvironment() {
   const environment = readJson("projects/utah-forge/environment.json");
-  assert.equal(environment.renderPreset, "utah-forge-reference-cinematic-dark");
+  assert.equal(environment.renderPreset, "user-3");
   assert.deepEqual(environment.defaultVisibleLayers, [
+    "utah-forge-topo-graticule",
+    "utah-forge-site-boundary",
+    "utah-forge-phase3-demo-boreholes",
     "utah-forge-mt-resistivity-full-density",
-    "utah-forge-phase3-seismic-browser",
+    "terrain",
+    "utah-forge-phase3-working-area",
   ]);
   assertSubset(
     environment.scene,
@@ -49,8 +53,8 @@ function validateEnvironment() {
   assertSubset(
     environment.layerStyles["utah-forge-phase3-working-area"],
     {
-      color: "#ffffff",
-      opacity: 0.92,
+      color: "#adadad",
+      opacity: 0.95,
       lineWidth: 2.4,
       affectedByFog: false,
     },
@@ -102,20 +106,34 @@ function validateEnvironment() {
 }
 
 function validatePages() {
+  const project = readJson("projects/utah-forge/project.json");
+  const demoPageOrderIndex = project.pageOrder.indexOf(
+    "51_mt_marching_cubes_focused",
+  );
+  assert.ok(demoPageOrderIndex > -1, "focused Marching Cubes demo page exists");
+  assert.deepEqual(
+    project.pageOrder.slice(demoPageOrderIndex, demoPageOrderIndex + 3),
+    [
+      "51_mt_marching_cubes_focused",
+      "52_mt_marching_cubes_full_extent",
+      "53_mt_product_stack_demo",
+    ],
+  );
+
   for (const [pageId, focusMin, focusMax, blendMin, blendMax] of [
     [
       "04_mt_high_resistivity_seismic",
-      2.694444193332294,
+      3.706814235494493,
       4.5,
-      3.619791464880117,
+      3.706814235494493,
       4.5,
     ],
     [
       "05_mt_threshold_focus",
-      3.0555553761897336,
-      4.5,
-      3.0555553761897336,
-      4.5,
+      2.3676704614943205,
+      3.315372172975416,
+      2.3676704614943205,
+      3.315372172975416,
     ],
     [
       "06_mt_low_resistivity_seismic",
@@ -148,16 +166,16 @@ function validatePages() {
 
   const page05 = readJson("projects/utah-forge/pages/05_mt_threshold_focus.json");
   assert.deepEqual(page05.camera.position, [
-    -28879.73795742467,
-    -32469.208165290154,
-    11845.116116638794,
+    7748.442847693308,
+    -80291.83550412979,
+    28013.273246632307,
   ]);
   assertSubset(
     page05.dynamicCamera,
     {
-      orbitSpeedDegPerSec: 4,
-      orbitRadius: 34868,
-      pathAwareBlend: false,
+      orbitSpeedDegPerSec: 5,
+      orbitRadius: 47950,
+      pathAwareBlend: true,
     },
     "05_mt_threshold_focus dynamic camera",
   );
@@ -201,6 +219,58 @@ function validatePages() {
       scalarVolumeSampleSteps: 96,
     },
     "12_mt_volume_overview volume override",
+  );
+
+  assertSubset(
+    layerOverride(
+      "51_mt_marching_cubes_focused",
+      "utah-forge-mt-resistivity-threshold-surfaces",
+    ),
+    {
+      mtIsosurfaceProductId: "mt-isosurface-forge-focused",
+      mtThresholdSurfaceVisibility: {
+        "conductive-le-10-ohm-m": true,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": false,
+      },
+    },
+    "51 focused isosurface override",
+  );
+  assertSubset(
+    layerOverride(
+      "52_mt_marching_cubes_full_extent",
+      "utah-forge-mt-resistivity-threshold-surfaces",
+    ),
+    {
+      mtIsosurfaceProductId: "mt-isosurface-full-extent",
+      mtThresholdSurfaceVisibility: {
+        "conductive-le-10-ohm-m": true,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": true,
+      },
+    },
+    "52 full-extent isosurface override",
+  );
+  assertSubset(
+    layerOverride("53_mt_product_stack_demo", "utah-forge-mt-resistivity-volume"),
+    {
+      scalarVolumeProductId: "mt-resistivity-forge-focused-volume",
+      scalarVolumeTransferMode: "balanced",
+      scalarLegendVisible: true,
+    },
+    "53 product stack volume override",
+  );
+  assertSubset(
+    layerOverride(
+      "53_mt_product_stack_demo",
+      "utah-forge-mt-resistivity-slices",
+    ),
+    {
+      resistivityHorizontalSlicesVisible: true,
+      resistivityVerticalSectionsVisible: true,
+      scalarLegendVisible: true,
+    },
+    "53 product stack slice override",
   );
 }
 

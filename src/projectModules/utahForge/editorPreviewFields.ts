@@ -83,6 +83,7 @@ const MT_FULL_DENSITY_PREVIEW_FIELDS = [
 ] as const;
 
 const MT_THRESHOLD_PREVIEW_FIELDS = [
+  "mtIsosurfaceProductId",
   "mtThresholdSurfaceVisibility",
   "mtThresholdSurfaceWireframe",
   "opacity",

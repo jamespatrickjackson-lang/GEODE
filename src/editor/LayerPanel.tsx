@@ -396,6 +396,7 @@ const MT_VOLUME_FIELDS = [
   "opacity",
 ] as const satisfies readonly (keyof EditableStyle)[];
 const MT_THRESHOLD_SURFACE_FIELDS = [
+  "mtIsosurfaceProductId",
   "mtThresholdSurfaceVisibility",
   "mtThresholdSurfaceWireframe",
   "opacity",
@@ -5742,6 +5743,10 @@ function mtThresholdSurfacePatchFromStyle(
   style: EditableStyle,
 ): Partial<EditableStyle> {
   return {
+    mtIsosurfaceProductId:
+      typeof style.mtIsosurfaceProductId === "string"
+        ? style.mtIsosurfaceProductId
+        : "mt-isosurface-forge-focused",
     mtThresholdSurfaceVisibility:
       typeof style.mtThresholdSurfaceVisibility === "object" &&
       style.mtThresholdSurfaceVisibility !== null
@@ -9366,6 +9371,54 @@ interface MtThresholdSurfaceOption {
   label: string;
 }
 
+interface MtIsosurfaceProductOption {
+  id: string;
+  label: string;
+  cropStatus: string | undefined;
+}
+
+function mtIsosurfaceProductOptions(
+  layer: ProjectLayerSpec,
+): MtIsosurfaceProductOption[] {
+  const raw = (layer.metadata as { isosurfaceProducts?: unknown })
+    .isosurfaceProducts;
+  if (Array.isArray(raw)) {
+    const options = raw
+      .map((item) => {
+        const product = item as {
+          id?: unknown;
+          label?: unknown;
+          cropStatus?: unknown;
+        };
+        return typeof product.id === "string"
+          ? {
+              id: product.id,
+              label:
+                typeof product.label === "string" ? product.label : product.id,
+              cropStatus:
+                typeof product.cropStatus === "string"
+                  ? product.cropStatus
+                  : undefined,
+            }
+          : null;
+      })
+      .filter((item): item is MtIsosurfaceProductOption => item !== null);
+    if (options.length > 0) return options;
+  }
+  return [
+    {
+      id: "mt-isosurface-forge-focused",
+      label: "MT FORGE-focused isosurfaces",
+      cropStatus: "presentation-crop",
+    },
+    {
+      id: "mt-isosurface-full-extent",
+      label: "MT full-extent isosurfaces",
+      cropStatus: "full-source",
+    },
+  ];
+}
+
 function mtThresholdSurfaceOptions(
   layer: ProjectLayerSpec,
 ): MtThresholdSurfaceOption[] {
@@ -9416,6 +9469,11 @@ function MtThresholdSurfaceControls({
   clearPageLayerOverride: PageStyleClearer;
 }) {
   const options = mtThresholdSurfaceOptions(layer);
+  const productOptions = mtIsosurfaceProductOptions(layer);
+  const selectedProductId =
+    typeof style.mtIsosurfaceProductId === "string"
+      ? style.mtIsosurfaceProductId
+      : "mt-isosurface-forge-focused";
   const visibility =
     typeof style.mtThresholdSurfaceVisibility === "object" &&
     style.mtThresholdSurfaceVisibility !== null
@@ -9456,6 +9514,20 @@ function MtThresholdSurfaceControls({
             source-derived iso-resistivity
           </span>
         </div>
+        <EnvSelectRow<string>
+          label="Product"
+          value={selectedProductId}
+          testId="mt-isosurface-product"
+          options={productOptions.map((option) => ({
+            value: option.id,
+            label:
+              option.cropStatus === "presentation-crop"
+                ? `${option.label} (crop)`
+                : option.label,
+          }))}
+          disabled={disabled}
+          onChange={(value) => commit({ mtIsosurfaceProductId: value })}
+        />
         {options.map((option) => (
           <label
             key={option.id}

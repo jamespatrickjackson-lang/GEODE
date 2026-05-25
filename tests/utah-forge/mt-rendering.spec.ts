@@ -721,6 +721,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     if (threshold) threshold.visible = true;
     manager?.applyStyle?.("utah-forge-mt-resistivity-threshold-surfaces", {
       opacity: 0.44,
+      mtIsosurfaceProductId: "mt-isosurface-forge-focused",
       mtThresholdSurfaceVisibility: {
         "conductive-le-10-ohm-m": false,
         "conductive-le-30-ohm-m": true,
@@ -737,6 +738,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
       visibleVolumeCount: 1,
       visibleProductIds: ["mt-resistivity-forge-focused-volume"],
       thresholdLayerVisible: true,
+      visibleThresholdProductIds: ["mt-isosurface-forge-focused"],
       visibleThresholdSurfaceIds: expect.arrayContaining([
         "conductive-le-30-ohm-m",
         "resistive-ge-1000-ohm-m",
@@ -801,6 +803,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-mt-resistivity-threshold-surfaces", {
       opacity: 0.35,
+      mtIsosurfaceProductId: "mt-isosurface-full-extent",
       mtThresholdSurfaceVisibility: {
         "conductive-le-10-ohm-m": true,
         "conductive-le-30-ohm-m": false,
@@ -810,6 +813,9 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     });
   });
   mtVolumeState = await mtVolumeSceneState(page);
+  expect(mtVolumeState.visibleThresholdProductIds).toEqual([
+    "mt-isosurface-full-extent",
+  ]);
   expect(mtVolumeState.visibleThresholdSurfaceIds).toEqual(
     expect.arrayContaining([
       "conductive-le-10-ohm-m",

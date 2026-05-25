@@ -230,7 +230,16 @@ function validateMtProducts() {
     manifest.thresholdSurfaces.file,
     "threshold_surfaces/mt_threshold_surfaces_mesh_preview.json",
   );
-  assert.equal(manifest.thresholdSurfaces.surfaces.length, 3);
+  assert.equal(
+    manifest.thresholdSurfaces.defaultProductId,
+    "mt-isosurface-forge-focused",
+  );
+  assertArrayContainsAll(
+    manifest.thresholdSurfaces.products.map((product) => product.id),
+    ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"],
+    "MT isosurface products",
+  );
+  assert.equal(manifest.thresholdSurfaces.surfaces.length, 6);
   assertArrayContainsAll(
     manifest.thresholdSurfaces.surfaces.map((surface) => surface.id),
     ["conductive-le-10-ohm-m", "conductive-le-30-ohm-m", "resistive-ge-1000-ohm-m"],
@@ -238,7 +247,21 @@ function validateMtProducts() {
   );
 
   const thresholdMesh = readJson(MT_THRESHOLD_SURFACES_PATH);
-  assert.equal(thresholdMesh.processing.thresholdSurfaces.length, 3);
+  assert.equal(
+    thresholdMesh.processing.extractionMethod,
+    "mask-aware-marching-cubes",
+  );
+  assert.equal(thresholdMesh.processing.thresholdSurfaces.length, 6);
+  assertArrayContainsAll(
+    thresholdMesh.processing.isosurfaceProducts.map((product) => product.id),
+    ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"],
+    "MT threshold mesh products",
+  );
+  for (const surface of thresholdMesh.processing.thresholdSurfaces) {
+    assert.equal(surface.extractionMethod, "mask-aware-marching-cubes");
+    assertGreaterThan(surface.marchingCubes?.triangleCount, 0, `${surface.meshId} triangles`);
+    assertGreaterThan(surface.marchingCubes?.vertexCount, 0, `${surface.meshId} vertices`);
+  }
   assertGreaterThan(thresholdMesh.vertices.length, 0, "threshold mesh vertices");
   assertGreaterThan(thresholdMesh.indices.length, 0, "threshold mesh indices");
 

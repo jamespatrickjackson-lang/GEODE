@@ -2681,6 +2681,20 @@
         "confidentiality": "client-preprocessed/public-source",
         "placeholder": false,
         "sourceDataIncluded": true,
+        "isosurfaceProducts": [
+          {
+            "id": "mt-isosurface-forge-focused",
+            "label": "MT FORGE-focused isosurfaces",
+            "sourceProductId": "mt-resistivity-forge-focused-volume",
+            "cropStatus": "presentation-crop"
+          },
+          {
+            "id": "mt-isosurface-full-extent",
+            "label": "MT full-extent isosurfaces",
+            "sourceProductId": "mt-resistivity-full-extent-volume",
+            "cropStatus": "full-source"
+          }
+        ],
         "thresholdSurfaces": [
           {
             "id": "conductive-le-10-ohm-m",
@@ -2695,7 +2709,7 @@
             "label": "Resistive shell >=1000 Ohm-m"
           }
         ],
-        "notes": "Fixed source-derived iso-resistivity visualization meshes generated from the focused MT scalar volume. These surfaces are for communication only and are not faults, ore bodies, mineralization, targets, or resource estimates."
+        "notes": "Fixed source-derived iso-resistivity visualization meshes generated with mask-aware Marching Cubes from both full-extent and FORGE-focused MT scalar volumes. Focused surfaces are presentation crops. These surfaces are for communication only and are not faults, ore bodies, mineralization, targets, or resource estimates."
       }
     },
     {
@@ -2779,6 +2793,9 @@
     "43_resistivity_depth_elevation_slices",
     "44_resistivity_cross_sections",
     "45_resistivity_isosurfaces",
+    "51_mt_marching_cubes_focused",
+    "52_mt_marching_cubes_full_extent",
+    "53_mt_product_stack_demo",
     "46_tem_shallow_resistivity",
     "47_seismic_footprint_velocity_support",
     "48_basement_top_granite_surface",

@@ -1,7 +1,7 @@
 {
   "id": "44_resistivity_cross_sections",
   "title": "Resistivity Cross-Sections / Fence Panels",
-  "subtitle": "Proposed / needs_review authored MT vertical sections",
+  "subtitle": "Authored vertical MT sections with site-detail orientation",
   "camera": {
     "position": [
       -59727.5089767489,
@@ -35,7 +35,8 @@
     "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-threshold-surfaces": false,
     "utah-forge-mt-top-surface": false,
-    "utah-forge-mt-resistivity-slices": true
+    "utah-forge-mt-resistivity-slices": true,
+    "utah-forge-phase3-demo-boreholes": true
   },
   "layerOverrides": {
     "utah-forge-mt-resistivity-slices": {
@@ -70,6 +71,22 @@
     },
     "utah-forge-mt-resistivity-volume": {
       "scalarLegendVisible": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.74,
+      "showLabels": false
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": false,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": true
+      },
+      "mtThresholdSurfaceWireframe": false,
+      "opacity": 0.2,
+      "affectedByFog": false,
+      "showLabels": false
     }
   }
 }

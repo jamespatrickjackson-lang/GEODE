@@ -1,7 +1,7 @@
 {
   "id": "48_basement_top_granite_surface",
   "title": "Interpreted Basement / Top-of-Granite Surface",
-  "subtitle": "Proposed / needs_review context page; gridded surface missing",
+  "subtitle": "Interpreted basement context with seismic volume and Site Details orientation",
   "camera": {
     "position": [
       -88734.90318739192,
@@ -35,7 +35,8 @@
     "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-threshold-surfaces": false,
     "utah-forge-mt-top-surface": false,
-    "utah-forge-mt-resistivity-slices": false
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-phase3-demo-boreholes": true
   },
   "layerOverrides": {
     "utah-forge-phase3-seismic-browser": {
@@ -67,6 +68,10 @@
     },
     "utah-forge-mt-resistivity-slices": {
       "scalarLegendVisible": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.72,
+      "showLabels": false
     }
   }
 }

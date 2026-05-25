@@ -1,14 +1,320 @@
 {
   "artifact": "threshold_surfaces/mt_threshold_surfaces_mesh_preview.json",
   "classification": "source-derived iso-resistivity communication surfaces",
-  "sourceProductId": "mt-resistivity-forge-focused-volume",
-  "sourceVolume": "forge_focused/volume.u8",
-  "sourceMask": "forge_focused/mask.u8",
+  "extractionMethod": "mask-aware-marching-cubes",
+  "sourceProductIds": [
+    "mt-resistivity-full-extent-volume",
+    "mt-resistivity-forge-focused-volume"
+  ],
+  "products": [
+    {
+      "id": "mt-isosurface-full-extent",
+      "label": "MT full-extent isosurfaces",
+      "sourceProductId": "mt-resistivity-full-extent-volume",
+      "cropStatus": "full-source",
+      "sourceVolume": "full_extent/volume.u8",
+      "sourceMask": "full_extent/mask.u8",
+      "dimensions": [
+        80,
+        64,
+        56
+      ],
+      "voxelSpacingM": {
+        "x_m": 3489.266,
+        "y_m": 3560.766,
+        "z_m": 2242.199
+      }
+    },
+    {
+      "id": "mt-isosurface-forge-focused",
+      "label": "MT FORGE-focused isosurfaces",
+      "sourceProductId": "mt-resistivity-forge-focused-volume",
+      "cropStatus": "presentation-crop",
+      "sourceVolume": "forge_focused/volume.u8",
+      "sourceMask": "forge_focused/mask.u8",
+      "dimensions": [
+        96,
+        80,
+        64
+      ],
+      "voxelSpacingM": {
+        "x_m": 927.609,
+        "y_m": 1277.815,
+        "z_m": 522.643
+      }
+    }
+  ],
+  "thresholdSurfaces": [
+    {
+      "id": "conductive-le-10-ohm-m",
+      "meshId": "mt-isosurface-full-extent:conductive-le-10-ohm-m",
+      "label": "Conductive shell <=10 Ohm-m",
+      "kind": "conductive-threshold-surface",
+      "isoProductId": "mt-isosurface-full-extent",
+      "isoProductLabel": "MT full-extent isosurfaces",
+      "sourceProductId": "mt-resistivity-full-extent-volume",
+      "cropStatus": "full-source",
+      "comparison": "<=",
+      "thresholdOhmM": 10,
+      "thresholdLog10": 1,
+      "color": "#2cc9ff",
+      "extractionMethod": "mask-aware-marching-cubes",
+      "smoothing": "none",
+      "decimation": "none",
+      "dimensions": [
+        80,
+        64,
+        56
+      ],
+      "voxelSpacingM": {
+        "x_m": 3489.266,
+        "y_m": 3560.766,
+        "z_m": 2242.199
+      },
+      "marchingCubes": {
+        "visitedCubeCount": 273735,
+        "skippedMaskedCubeCount": 268652,
+        "activeCubeCount": 402,
+        "triangleCount": 791,
+        "vertexCount": 2373
+      },
+      "matchingVoxelCount": 967,
+      "meanLog10Resistivity": 0.722919,
+      "meshRange": {
+        "vertexStart": 0,
+        "vertexCount": 2373,
+        "indexStart": 0,
+        "indexCount": 2373
+      },
+      "classification": "source-derived iso-resistivity communication surface",
+      "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+    },
+    {
+      "id": "conductive-le-30-ohm-m",
+      "meshId": "mt-isosurface-full-extent:conductive-le-30-ohm-m",
+      "label": "Conductive shell <=30 Ohm-m",
+      "kind": "conductive-threshold-surface",
+      "isoProductId": "mt-isosurface-full-extent",
+      "isoProductLabel": "MT full-extent isosurfaces",
+      "sourceProductId": "mt-resistivity-full-extent-volume",
+      "cropStatus": "full-source",
+      "comparison": "<=",
+      "thresholdOhmM": 30,
+      "thresholdLog10": 1.477121,
+      "color": "#38f0b3",
+      "extractionMethod": "mask-aware-marching-cubes",
+      "smoothing": "none",
+      "decimation": "none",
+      "dimensions": [
+        80,
+        64,
+        56
+      ],
+      "voxelSpacingM": {
+        "x_m": 3489.266,
+        "y_m": 3560.766,
+        "z_m": 2242.199
+      },
+      "marchingCubes": {
+        "visitedCubeCount": 273735,
+        "skippedMaskedCubeCount": 268652,
+        "activeCubeCount": 754,
+        "triangleCount": 1499,
+        "vertexCount": 4497
+      },
+      "matchingVoxelCount": 3961,
+      "meanLog10Resistivity": 1.149358,
+      "meshRange": {
+        "vertexStart": 2373,
+        "vertexCount": 4497,
+        "indexStart": 2373,
+        "indexCount": 4497
+      },
+      "classification": "source-derived iso-resistivity communication surface",
+      "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+    },
+    {
+      "id": "resistive-ge-1000-ohm-m",
+      "meshId": "mt-isosurface-full-extent:resistive-ge-1000-ohm-m",
+      "label": "Resistive shell >=1000 Ohm-m",
+      "kind": "resistive-threshold-surface",
+      "isoProductId": "mt-isosurface-full-extent",
+      "isoProductLabel": "MT full-extent isosurfaces",
+      "sourceProductId": "mt-resistivity-full-extent-volume",
+      "cropStatus": "full-source",
+      "comparison": ">=",
+      "thresholdOhmM": 1000,
+      "thresholdLog10": 3,
+      "color": "#ff637a",
+      "extractionMethod": "mask-aware-marching-cubes",
+      "smoothing": "none",
+      "decimation": "none",
+      "dimensions": [
+        80,
+        64,
+        56
+      ],
+      "voxelSpacingM": {
+        "x_m": 3489.266,
+        "y_m": 3560.766,
+        "z_m": 2242.199
+      },
+      "marchingCubes": {
+        "visitedCubeCount": 273735,
+        "skippedMaskedCubeCount": 268652,
+        "activeCubeCount": 1489,
+        "triangleCount": 3026,
+        "vertexCount": 9078
+      },
+      "matchingVoxelCount": 2274,
+      "meanLog10Resistivity": 3.370173,
+      "meshRange": {
+        "vertexStart": 6870,
+        "vertexCount": 9078,
+        "indexStart": 6870,
+        "indexCount": 9078
+      },
+      "classification": "source-derived iso-resistivity communication surface",
+      "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+    },
+    {
+      "id": "conductive-le-10-ohm-m",
+      "meshId": "mt-isosurface-forge-focused:conductive-le-10-ohm-m",
+      "label": "Conductive shell <=10 Ohm-m",
+      "kind": "conductive-threshold-surface",
+      "isoProductId": "mt-isosurface-forge-focused",
+      "isoProductLabel": "MT FORGE-focused isosurfaces",
+      "sourceProductId": "mt-resistivity-forge-focused-volume",
+      "cropStatus": "presentation-crop",
+      "comparison": "<=",
+      "thresholdOhmM": 10,
+      "thresholdLog10": 1,
+      "color": "#2cc9ff",
+      "extractionMethod": "mask-aware-marching-cubes",
+      "smoothing": "none",
+      "decimation": "none",
+      "dimensions": [
+        96,
+        80,
+        64
+      ],
+      "voxelSpacingM": {
+        "x_m": 927.609,
+        "y_m": 1277.815,
+        "z_m": 522.643
+      },
+      "marchingCubes": {
+        "visitedCubeCount": 472815,
+        "skippedMaskedCubeCount": 451629,
+        "activeCubeCount": 3406,
+        "triangleCount": 6739,
+        "vertexCount": 20217
+      },
+      "matchingVoxelCount": 5259,
+      "meanLog10Resistivity": 0.559173,
+      "meshRange": {
+        "vertexStart": 15948,
+        "vertexCount": 20217,
+        "indexStart": 15948,
+        "indexCount": 20217
+      },
+      "classification": "source-derived iso-resistivity communication surface",
+      "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+    },
+    {
+      "id": "conductive-le-30-ohm-m",
+      "meshId": "mt-isosurface-forge-focused:conductive-le-30-ohm-m",
+      "label": "Conductive shell <=30 Ohm-m",
+      "kind": "conductive-threshold-surface",
+      "isoProductId": "mt-isosurface-forge-focused",
+      "isoProductLabel": "MT FORGE-focused isosurfaces",
+      "sourceProductId": "mt-resistivity-forge-focused-volume",
+      "cropStatus": "presentation-crop",
+      "comparison": "<=",
+      "thresholdOhmM": 30,
+      "thresholdLog10": 1.477121,
+      "color": "#38f0b3",
+      "extractionMethod": "mask-aware-marching-cubes",
+      "smoothing": "none",
+      "decimation": "none",
+      "dimensions": [
+        96,
+        80,
+        64
+      ],
+      "voxelSpacingM": {
+        "x_m": 927.609,
+        "y_m": 1277.815,
+        "z_m": 522.643
+      },
+      "marchingCubes": {
+        "visitedCubeCount": 472815,
+        "skippedMaskedCubeCount": 451629,
+        "activeCubeCount": 4980,
+        "triangleCount": 10231,
+        "vertexCount": 30693
+      },
+      "matchingVoxelCount": 11619,
+      "meanLog10Resistivity": 0.946858,
+      "meshRange": {
+        "vertexStart": 36165,
+        "vertexCount": 30693,
+        "indexStart": 36165,
+        "indexCount": 30693
+      },
+      "classification": "source-derived iso-resistivity communication surface",
+      "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+    },
+    {
+      "id": "resistive-ge-1000-ohm-m",
+      "meshId": "mt-isosurface-forge-focused:resistive-ge-1000-ohm-m",
+      "label": "Resistive shell >=1000 Ohm-m",
+      "kind": "resistive-threshold-surface",
+      "isoProductId": "mt-isosurface-forge-focused",
+      "isoProductLabel": "MT FORGE-focused isosurfaces",
+      "sourceProductId": "mt-resistivity-forge-focused-volume",
+      "cropStatus": "presentation-crop",
+      "comparison": ">=",
+      "thresholdOhmM": 1000,
+      "thresholdLog10": 3,
+      "color": "#ff637a",
+      "extractionMethod": "mask-aware-marching-cubes",
+      "smoothing": "none",
+      "decimation": "none",
+      "dimensions": [
+        96,
+        80,
+        64
+      ],
+      "voxelSpacingM": {
+        "x_m": 927.609,
+        "y_m": 1277.815,
+        "z_m": 522.643
+      },
+      "marchingCubes": {
+        "visitedCubeCount": 472815,
+        "skippedMaskedCubeCount": 451629,
+        "activeCubeCount": 3154,
+        "triangleCount": 6388,
+        "vertexCount": 19164
+      },
+      "matchingVoxelCount": 19087,
+      "meanLog10Resistivity": 3.447784,
+      "meshRange": {
+        "vertexStart": 66858,
+        "vertexCount": 19164,
+        "indexStart": 66858,
+        "indexCount": 19164
+      },
+      "classification": "source-derived iso-resistivity communication surface",
+      "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+    }
+  ],
   "generatedDate": "2026-05-12",
   "script": "prep/build_utah_forge_mt_volume_products.mjs",
   "caveats": [
-    "Source-derived threshold surfaces are fixed visualization meshes generated from the resampled scalar volume.",
+    "Source-derived threshold surfaces are fixed visualization meshes generated from resampled scalar volumes with mask-aware Marching Cubes.",
     "They are not faults, horizons, mineralization, ore bodies, targets, or resource estimates.",
-    "Surfaces are decimated for browser preview performance."
+    "Focused isosurfaces are presentation crops and must be labeled as such."
   ]
 }

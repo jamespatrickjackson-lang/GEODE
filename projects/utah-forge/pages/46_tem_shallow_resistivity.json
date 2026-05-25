@@ -1,7 +1,7 @@
 {
   "id": "46_tem_shallow_resistivity",
   "title": "TEM Shallow Resistivity Pseudo-Section",
-  "subtitle": "Proposed / needs_review context page; TEM app layer missing",
+  "subtitle": "TEM placeholder context with current MT stations and Site Details orientation",
   "camera": {
     "position": [
       25717.838323311036,
@@ -38,7 +38,8 @@
     "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-threshold-surfaces": false,
     "utah-forge-mt-top-surface": false,
-    "utah-forge-mt-resistivity-slices": false
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-phase3-demo-boreholes": true
   },
   "layerOverrides": {
     "utah-forge-mt-stations": {
@@ -57,6 +58,10 @@
     },
     "utah-forge-mt-resistivity-slices": {
       "scalarLegendVisible": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.66,
+      "showLabels": false
     }
   }
 }

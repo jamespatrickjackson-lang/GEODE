@@ -1,7 +1,7 @@
 {
   "id": "42_resistivity_volume_overview",
   "title": "3D Resistivity Volume Overview",
-  "subtitle": "Proposed / needs_review Phase 3 MT inversion volume",
+  "subtitle": "Full-source-derived MT scalar volume with focused threshold shells",
   "camera": {
     "position": [
       -25758.118599762638,
@@ -59,9 +59,10 @@
     "utah-forge-mt-resistivity-preview": false,
     "utah-forge-mt-resistivity-full-density": true,
     "utah-forge-mt-resistivity-volume": true,
-    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-mt-top-surface": false,
-    "utah-forge-mt-resistivity-slices": false
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-phase3-demo-boreholes": true
   },
   "layerOverrides": {
     "utah-forge-mt-resistivity-full-density": {
@@ -90,6 +91,22 @@
     "utah-forge-phase3-seismic-browser": {
       "opacity": 0,
       "seismicLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": false,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": true
+      },
+      "mtThresholdSurfaceWireframe": false,
+      "opacity": 0.24,
+      "affectedByFog": false,
+      "showLabels": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.72,
+      "showLabels": false
     }
   }
 }

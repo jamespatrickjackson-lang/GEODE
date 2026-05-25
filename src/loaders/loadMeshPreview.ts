@@ -46,6 +46,9 @@ interface MeshSliceSummary {
   id?: string;
   label?: string;
   kind?: string;
+  isoProductId?: string;
+  sourceProductId?: string;
+  cropStatus?: string;
   meshRange?: {
     vertexStart?: number;
     vertexCount?: number;
@@ -292,6 +295,9 @@ export async function loadMeshPreview(
   const group = new THREE.Group();
   group.name = payload.label ?? "Mesh preview";
   group.userData.displayName = payload.label ?? "Mesh preview";
+  if (Array.isArray(payload.processing?.isosurfaceProducts)) {
+    group.userData.mtIsosurfaceProducts = payload.processing.isosurfaceProducts;
+  }
 
   const thresholdSurfaces = meshThresholdSurfaces(payload);
   const slices = meshSlices(payload);
@@ -354,6 +360,9 @@ export async function loadMeshPreview(
         mesh.userData.mtThresholdSurfacePreview = true;
         mesh.userData.mtThresholdSurfaceId = slice.id;
         mesh.userData.mtThresholdSurfaceKind = slice.kind;
+        mesh.userData.mtIsosurfaceProductId = slice.isoProductId;
+        mesh.userData.mtIsosurfaceSourceProductId = slice.sourceProductId;
+        mesh.userData.mtIsosurfaceCropStatus = slice.cropStatus;
         mesh.userData.mtThresholdSurface = slice;
       } else {
         mesh.userData.resistivitySlicePreview = true;

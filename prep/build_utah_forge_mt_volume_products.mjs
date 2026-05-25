@@ -8,12 +8,16 @@ import {
   UTAH_FORGE_PHASE3_MT_CLIENT_ROOT,
   UTAH_FORGE_PHASE3_MT_PROCESSED_ROOT,
 } from "./utah_forge_config.mjs";
+import { extractMaskAwareMarchingCubes } from "./lib/marchingCubes.mjs";
 
 const DEFAULT_INPUT_ZIP = path.join(
   UTAH_FORGE_PHASE3_MT_CLIENT_ROOT,
   "mt_model_cell_center_updated",
   "FORGE_MT_mdl17_cellcenter.zip",
 );
+const CANONICAL_INPUT_ZIP_REF = path
+  .relative(process.cwd(), DEFAULT_INPUT_ZIP)
+  .replaceAll("\\", "/");
 const DEFAULT_ZIP_ENTRY = "FRG200614_mdl17_cellcenter.dat";
 const DEFAULT_TRANSFORM_PATH = path.join(
   UTAH_FORGE_PHASE3_MT_PROCESSED_ROOT,
@@ -36,7 +40,6 @@ const DEFAULT_OUTPUT_DIR = path.join(
   "volume",
 );
 
-const MAX_FACES_PER_THRESHOLD = 22000;
 const PRODUCTS = [
   {
     id: "mt-resistivity-full-extent-volume",
@@ -57,6 +60,20 @@ const PRODUCTS = [
     outputDir: "forge_focused",
   },
 ];
+const ISOSURFACE_PRODUCT_IDS = {
+  "mt-resistivity-full-extent-volume": {
+    id: "mt-isosurface-full-extent",
+    label: "MT full-extent isosurfaces",
+    cropStatus: "full-source",
+    classification: "source-derived full-source iso-resistivity surfaces",
+  },
+  "mt-resistivity-forge-focused-volume": {
+    id: "mt-isosurface-forge-focused",
+    label: "MT FORGE-focused isosurfaces",
+    cropStatus: "presentation-crop",
+    classification: "source-derived presentation-crop iso-resistivity surfaces",
+  },
+};
 const THRESHOLDS = [
   {
     id: "conductive-le-10-ohm-m",
@@ -121,6 +138,15 @@ function parseArgs(argv) {
   }
 
   return options;
+}
+
+function sourceArchiveReference(inputZip) {
+  const input = path.resolve(inputZip);
+  const canonical = path.resolve(DEFAULT_INPUT_ZIP);
+  if (path.basename(input) === path.basename(canonical)) {
+    return CANONICAL_INPUT_ZIP_REF;
+  }
+  return path.relative(process.cwd(), input).replaceAll("\\", "/");
 }
 
 function round(value, decimals = 3) {
@@ -385,141 +411,75 @@ function conditionMatches(value, threshold) {
   return threshold.comparison === "<=" ? value <= thresholdLog : value >= thresholdLog;
 }
 
-function countBoundaryFaces(accumulator, threshold) {
-  const [nx, ny, nz] = accumulator.dimensions;
-  const { values, mask } = accumulator;
-  let count = 0;
-  for (let z = 0; z < nz; z += 1) {
-    for (let y = 0; y < ny; y += 1) {
-      for (let x = 0; x < nx; x += 1) {
-        const index = volumeIndex(x, y, z, accumulator.dimensions);
-        if (mask[index] === 0 || !conditionMatches(values[index], threshold)) continue;
-        const neighbors = [
-          [x - 1, y, z],
-          [x + 1, y, z],
-          [x, y - 1, z],
-          [x, y + 1, z],
-          [x, y, z - 1],
-          [x, y, z + 1],
-        ];
-        for (const [nxi, nyi, nzi] of neighbors) {
-          if (nxi < 0 || nyi < 0 || nzi < 0 || nxi >= nx || nyi >= ny || nzi >= nz) {
-            count += 1;
-            continue;
-          }
-          const neighborIndex = volumeIndex(nxi, nyi, nzi, accumulator.dimensions);
-          if (mask[neighborIndex] === 0 || !conditionMatches(values[neighborIndex], threshold)) {
-            count += 1;
-          }
-        }
-      }
-    }
+function voxelSpacing(bounds, dimensions) {
+  const [nx, ny, nz] = dimensions;
+  return {
+    x_m: round((bounds.maxX - bounds.minX) / nx, 3),
+    y_m: round((bounds.maxY - bounds.minY) / ny, 3),
+    z_m: round((bounds.maxZ - bounds.minZ) / nz, 3),
+  };
+}
+
+function isosurfaceProductForAccumulator(accumulator) {
+  const product = ISOSURFACE_PRODUCT_IDS[accumulator.id];
+  if (!product) {
+    throw new Error(`Missing isosurface product metadata for ${accumulator.id}`);
   }
-  return count;
+  return product;
 }
 
-function cellBoundaryCoordinate(min, max, count, index) {
-  return min + ((max - min) * index) / count;
-}
-
-function faceCorners(accumulator, x, y, z, side) {
-  const [nx, ny, nz] = accumulator.dimensions;
-  const { bounds } = accumulator;
-  const x0 = cellBoundaryCoordinate(bounds.minX, bounds.maxX, nx, x);
-  const x1 = cellBoundaryCoordinate(bounds.minX, bounds.maxX, nx, x + 1);
-  const y0 = cellBoundaryCoordinate(bounds.minY, bounds.maxY, ny, y);
-  const y1 = cellBoundaryCoordinate(bounds.minY, bounds.maxY, ny, y + 1);
-  const z0 = cellBoundaryCoordinate(bounds.minZ, bounds.maxZ, nz, z);
-  const z1 = cellBoundaryCoordinate(bounds.minZ, bounds.maxZ, nz, z + 1);
-  if (side === 0) return [[x0, y0, z0], [x0, y1, z0], [x0, y1, z1], [x0, y0, z1]];
-  if (side === 1) return [[x1, y0, z0], [x1, y0, z1], [x1, y1, z1], [x1, y1, z0]];
-  if (side === 2) return [[x0, y0, z0], [x0, y0, z1], [x1, y0, z1], [x1, y0, z0]];
-  if (side === 3) return [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]];
-  if (side === 4) return [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0]];
-  return [[x0, y0, z1], [x0, y1, z1], [x1, y1, z1], [x1, y0, z1]];
-}
-
-function addFace(mesh, corners, color, scalarValue) {
-  const vertexStart = mesh.vertices.length / 3;
-  for (const corner of corners) {
-    mesh.vertices.push(round(corner[0], 2), round(corner[1], 2), round(corner[2], 2));
-    mesh.colors.push(color[0], color[1], color[2]);
-    mesh.scalarValues.push(round(scalarValue, 6));
-  }
-  mesh.indices.push(
-    vertexStart,
-    vertexStart + 1,
-    vertexStart + 2,
-    vertexStart,
-    vertexStart + 2,
-    vertexStart + 3,
-  );
-}
-
-function appendThresholdSurface(mesh, accumulator, threshold) {
-  const candidateFaces = countBoundaryFaces(accumulator, threshold);
-  const stride = Math.max(1, Math.ceil(candidateFaces / MAX_FACES_PER_THRESHOLD));
-  const [nx, ny, nz] = accumulator.dimensions;
-  const { values, mask } = accumulator;
+function appendMarchingCubesSurface(mesh, accumulator, threshold) {
+  const isoProduct = isosurfaceProductForAccumulator(accumulator);
   const color = hexToRgb(threshold.color);
   const vertexStart = mesh.vertices.length / 3;
   const indexStart = mesh.indices.length;
-  let candidateIndex = 0;
-  let emittedFaces = 0;
   let valueSum = 0;
   let valueCount = 0;
-
-  for (let z = 0; z < nz; z += 1) {
-    for (let y = 0; y < ny; y += 1) {
-      for (let x = 0; x < nx; x += 1) {
-        const index = volumeIndex(x, y, z, accumulator.dimensions);
-        const value = values[index];
-        if (mask[index] === 0 || !conditionMatches(value, threshold)) continue;
-        valueSum += value;
-        valueCount += 1;
-        const neighbors = [
-          [x - 1, y, z],
-          [x + 1, y, z],
-          [x, y - 1, z],
-          [x, y + 1, z],
-          [x, y, z - 1],
-          [x, y, z + 1],
-        ];
-        for (let side = 0; side < neighbors.length; side += 1) {
-          const [nxi, nyi, nzi] = neighbors[side];
-          let boundary = false;
-          if (nxi < 0 || nyi < 0 || nzi < 0 || nxi >= nx || nyi >= ny || nzi >= nz) {
-            boundary = true;
-          } else {
-            const neighborIndex = volumeIndex(nxi, nyi, nzi, accumulator.dimensions);
-            boundary =
-              mask[neighborIndex] === 0 ||
-              !conditionMatches(values[neighborIndex], threshold);
-          }
-          if (!boundary) continue;
-          if (candidateIndex % stride === 0) {
-            addFace(mesh, faceCorners(accumulator, x, y, z, side), color, value);
-            emittedFaces += 1;
-          }
-          candidateIndex += 1;
-        }
-      }
+  for (let index = 0; index < accumulator.values.length; index += 1) {
+    const value = accumulator.values[index];
+    if (accumulator.mask[index] !== 0 && conditionMatches(value, threshold)) {
+      valueSum += value;
+      valueCount += 1;
     }
   }
+
+  const extracted = extractMaskAwareMarchingCubes({
+    values: accumulator.values,
+    mask: accumulator.mask,
+    dimensions: accumulator.dimensions,
+    bounds: accumulator.bounds,
+    thresholdLog10: Math.log10(threshold.thresholdOhmM),
+    comparison: threshold.comparison,
+    color,
+    round,
+  });
+  const vertexOffset = mesh.vertices.length / 3;
+  mesh.vertices.push(...extracted.vertices);
+  mesh.colors.push(...extracted.colors);
+  mesh.scalarValues.push(...extracted.scalarValues);
+  mesh.indices.push(...extracted.indices.map((index) => index + vertexOffset));
 
   const vertexCount = mesh.vertices.length / 3 - vertexStart;
   const indexCount = mesh.indices.length - indexStart;
   return {
     id: threshold.id,
+    meshId: `${isoProduct.id}:${threshold.id}`,
     label: threshold.label,
     kind: threshold.kind,
+    isoProductId: isoProduct.id,
+    isoProductLabel: isoProduct.label,
+    sourceProductId: accumulator.id,
+    cropStatus: isoProduct.cropStatus,
     comparison: threshold.comparison,
     thresholdOhmM: threshold.thresholdOhmM,
     thresholdLog10: round(Math.log10(threshold.thresholdOhmM), 6),
     color: threshold.color,
-    candidateBoundaryFaceCount: candidateFaces,
-    emittedBoundaryFaceCount: emittedFaces,
-    decimationStride: stride,
+    extractionMethod: "mask-aware-marching-cubes",
+    smoothing: "none",
+    decimation: "none",
+    dimensions: accumulator.dimensions,
+    voxelSpacingM: voxelSpacing(accumulator.bounds, accumulator.dimensions),
+    marchingCubes: extracted.stats,
     matchingVoxelCount: valueCount,
     meanLog10Resistivity: round(valueCount > 0 ? valueSum / valueCount : 0, 6),
     meshRange: {
@@ -534,27 +494,54 @@ function appendThresholdSurface(mesh, accumulator, threshold) {
   };
 }
 
-function buildThresholdMesh(accumulator, options) {
+function buildThresholdMesh(accumulators, options) {
   const mesh = {
     vertices: [],
     colors: [],
     scalarValues: [],
     indices: [],
   };
-  const thresholdSurfaces = THRESHOLDS.map((threshold) =>
-    appendThresholdSurface(mesh, accumulator, threshold),
+  const isosurfaceProducts = accumulators.map((accumulator) => ({
+    ...isosurfaceProductForAccumulator(accumulator),
+    sourceProductId: accumulator.id,
+    dimensions: accumulator.dimensions,
+    sceneBounds: sceneBoundsTuple(accumulator.bounds),
+    voxelSpacingM: voxelSpacing(accumulator.bounds, accumulator.dimensions),
+  }));
+  const thresholdSurfaces = accumulators.flatMap((accumulator) =>
+    THRESHOLDS.map((threshold) =>
+      appendMarchingCubesSurface(mesh, accumulator, threshold),
+    ),
+  );
+  const sceneBounds = accumulators.reduce(
+    (bounds, accumulator) => ({
+      minX: Math.min(bounds.minX, accumulator.bounds.minX),
+      maxX: Math.max(bounds.maxX, accumulator.bounds.maxX),
+      minY: Math.min(bounds.minY, accumulator.bounds.minY),
+      maxY: Math.max(bounds.maxY, accumulator.bounds.maxY),
+      minZ: Math.min(bounds.minZ, accumulator.bounds.minZ),
+      maxZ: Math.max(bounds.maxZ, accumulator.bounds.maxZ),
+    }),
+    {
+      minX: Infinity,
+      maxX: -Infinity,
+      minY: Infinity,
+      maxY: -Infinity,
+      minZ: Infinity,
+      maxZ: -Infinity,
+    },
   );
   return {
     schema: "geosee.scalar-grid-mesh-preview.v1",
-    label: "Utah FORGE Phase 3 MT source-derived threshold surfaces",
+    label: "Utah FORGE Phase 3 MT source-derived isosurfaces",
     source: {
       project: "Utah FORGE",
       dataset: "Phase 3 MT updated cell-center resistivity inversion model",
-      sourceArchive: path.relative(process.cwd(), options.inputZip).replaceAll("\\", "/"),
+      sourceArchive: sourceArchiveReference(options.inputZip),
       sourceEntry: options.zipEntry,
-      productId: accumulator.id,
+      productIds: accumulators.map((accumulator) => accumulator.id),
     },
-    sceneBounds: sceneBoundsTuple(accumulator.bounds),
+    sceneBounds: sceneBoundsTuple(sceneBounds),
     material: {
       side: "double",
       note: "Vertex colors distinguish source-derived threshold surfaces.",
@@ -564,21 +551,23 @@ function buildThresholdMesh(accumulator, options) {
       scalar: {
         name: "log10 resistivity",
         unit: "log10 Ohm-m",
-        min: accumulator.scalarRange.min,
-        max: accumulator.scalarRange.max,
-        displayMin: accumulator.scalarRange.displayMin,
-        displayMax: accumulator.scalarRange.displayMax,
+        min: accumulators[0].scalarRange.min,
+        max: accumulators[0].scalarRange.max,
+        displayMin: accumulators[0].scalarRange.displayMin,
+        displayMax: accumulators[0].scalarRange.displayMax,
       },
     },
     processing: {
       script: "prep/build_utah_forge_mt_volume_products.mjs",
       generatedDate: DERIVED_DATE,
-      sourceProductId: accumulator.id,
+      extractionMethod: "mask-aware-marching-cubes",
+      sourceProductIds: accumulators.map((accumulator) => accumulator.id),
+      isosurfaceProducts,
       thresholdSurfaces,
       caveats: [
-        "Source-derived threshold surfaces are fixed visualization meshes generated from the resampled scalar volume.",
+        "Source-derived threshold surfaces are fixed visualization meshes generated from resampled scalar volumes with mask-aware Marching Cubes.",
         "They are not faults, horizons, mineralization, ore bodies, targets, or resource estimates.",
-        "Surfaces are decimated for browser preview performance.",
+        "Focused isosurfaces are presentation crops and must be labeled as such.",
       ],
     },
     vertices: mesh.vertices,
@@ -603,7 +592,7 @@ async function writeProduct(accumulator, options) {
     source: {
       project: "Utah FORGE",
       dataset: "GDR submission 1255 updated MT model cell-center inversion package",
-      sourceArchive: path.relative(process.cwd(), options.inputZip).replaceAll("\\", "/"),
+      sourceArchive: sourceArchiveReference(options.inputZip),
       sourceEntry: options.zipEntry,
       sourceCrs: "EPSG:26912 NAD83 / UTM Zone 12N",
     },
@@ -712,10 +701,9 @@ async function main() {
     });
   }
 
-  const focused = accumulators.find((item) => item.id.includes("focused")) ?? accumulators[0];
   const thresholdDir = path.join(options.outputDir, "threshold_surfaces");
   await mkdir(thresholdDir, { recursive: true });
-  const thresholdMesh = buildThresholdMesh(focused, options);
+  const thresholdMesh = buildThresholdMesh(accumulators, options);
   await writeFile(
     path.join(thresholdDir, "mt_threshold_surfaces_mesh_preview.json"),
     `${JSON.stringify(thresholdMesh)}\n`,
@@ -724,9 +712,25 @@ async function main() {
   const thresholdProvenance = {
     artifact: "threshold_surfaces/mt_threshold_surfaces_mesh_preview.json",
     classification: "source-derived iso-resistivity communication surfaces",
-    sourceProductId: focused.id,
-    sourceVolume: `${focused.outputDir}/volume.u8`,
-    sourceMask: `${focused.outputDir}/mask.u8`,
+    extractionMethod: thresholdMesh.processing.extractionMethod,
+    sourceProductIds: thresholdMesh.processing.sourceProductIds,
+    products: thresholdMesh.processing.isosurfaceProducts.map((product) => ({
+      id: product.id,
+      label: product.label,
+      sourceProductId: product.sourceProductId,
+      cropStatus: product.cropStatus,
+      sourceVolume:
+        product.sourceProductId === "mt-resistivity-full-extent-volume"
+          ? "full_extent/volume.u8"
+          : "forge_focused/volume.u8",
+      sourceMask:
+        product.sourceProductId === "mt-resistivity-full-extent-volume"
+          ? "full_extent/mask.u8"
+          : "forge_focused/mask.u8",
+      dimensions: product.dimensions,
+      voxelSpacingM: product.voxelSpacingM,
+    })),
+    thresholdSurfaces: thresholdMesh.processing.thresholdSurfaces,
     generatedDate: DERIVED_DATE,
     script: "prep/build_utah_forge_mt_volume_products.mjs",
     caveats: thresholdMesh.processing.caveats,
@@ -745,7 +749,7 @@ async function main() {
     dataset: "electrical_resistivity",
     generatedDate: DERIVED_DATE,
     source: {
-      archive: path.relative(process.cwd(), options.inputZip).replaceAll("\\", "/"),
+      archive: sourceArchiveReference(options.inputZip),
       entry: options.zipEntry,
       crs: "EPSG:26912 NAD83 / UTM Zone 12N",
       fields: ["northing_m", "easting_m", "elevation_m", "resistivity_ohm_m"],
@@ -771,7 +775,8 @@ async function main() {
     thresholdSurfaces: {
       file: "threshold_surfaces/mt_threshold_surfaces_mesh_preview.json",
       provenance: "threshold_surfaces/provenance.json",
-      sourceProductId: focused.id,
+      defaultProductId: "mt-isosurface-forge-focused",
+      products: thresholdMesh.processing.isosurfaceProducts,
       surfaces: thresholdMesh.processing.thresholdSurfaces,
     },
     displayRecipes: [
@@ -783,6 +788,7 @@ async function main() {
         density: 0.72,
         sampleSteps: 112,
         transferMode: "balanced",
+        thresholdSurfaceProductId: "mt-isosurface-forge-focused",
         thresholdSurfaces: ["conductive-le-30-ohm-m", "resistive-ge-1000-ohm-m"],
       },
       {
@@ -793,6 +799,7 @@ async function main() {
         density: 0.54,
         sampleSteps: 96,
         transferMode: "soft",
+        thresholdSurfaceProductId: "mt-isosurface-full-extent",
         thresholdSurfaces: [],
       },
     ],

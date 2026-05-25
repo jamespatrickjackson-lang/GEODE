@@ -251,6 +251,7 @@ export interface EditableStyle {
   scalarVolumeThresholdMin?: number;
   scalarVolumeThresholdMax?: number;
   scalarVolumeMaskVisible?: boolean;
+  mtIsosurfaceProductId?: string;
   mtThresholdSurfaceVisibility?: Record<string, boolean>;
   mtThresholdSurfaceWireframe?: boolean;
   mtStationQcSelectedStationId?: string;

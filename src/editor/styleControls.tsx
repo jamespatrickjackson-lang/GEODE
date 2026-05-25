@@ -322,12 +322,14 @@ export function EnvSelectRow<T extends string>({
   value,
   options,
   testId,
+  disabled = false,
   onChange,
 }: {
   label: string;
   value: T;
   options: readonly { value: T; label: string }[];
   testId?: string;
+  disabled?: boolean;
   onChange: (v: T) => void;
 }) {
   return (
@@ -336,8 +338,9 @@ export function EnvSelectRow<T extends string>({
       <select
         value={value}
         data-testid={testId}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.value as T)}
-        style={{ flex: 1 }}
+        style={{ flex: 1, opacity: disabled ? 0.4 : 1 }}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

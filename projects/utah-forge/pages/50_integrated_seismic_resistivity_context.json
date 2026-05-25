@@ -1,7 +1,7 @@
 {
   "id": "50_integrated_seismic_resistivity_context",
   "title": "Integrated Seismic + Resistivity Context",
-  "subtitle": "Proposed / needs_review multi-method context",
+  "subtitle": "Focused MT Marching Cubes shells integrated with seismic velocity context",
   "camera": {
     "position": [
       -88734.90318739192,
@@ -36,7 +36,8 @@
     "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-mt-top-surface": false,
-    "utah-forge-mt-resistivity-slices": false
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-phase3-demo-boreholes": true
   },
   "layerOverrides": {
     "utah-forge-mt-resistivity-full-density": {
@@ -51,7 +52,10 @@
         "resistive-ge-1000-ohm-m": true
       },
       "mtThresholdSurfaceWireframe": false,
-      "opacity": 0.36
+      "opacity": 0.36,
+      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
+      "affectedByFog": false,
+      "showLabels": false
     },
     "utah-forge-phase3-seismic-browser": {
       "opacity": 0.35,
@@ -74,6 +78,16 @@
     "utah-forge-mt-stations": {
       "opacity": 0.58,
       "showLabels": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.78,
+      "showLabels": false
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-slices": {
+      "scalarLegendVisible": false
     }
   }
 }

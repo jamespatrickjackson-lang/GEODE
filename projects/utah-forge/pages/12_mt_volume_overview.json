@@ -1,7 +1,7 @@
 {
   "id": "12_mt_volume_overview",
   "title": "MT Volume Overview",
-  "subtitle": "Source-derived 3D MT inversion scalar volume",
+  "subtitle": "Source-derived MT volume with focused Marching Cubes context",
   "camera": {
     "position": [
       -15175.279571534375,
@@ -74,6 +74,22 @@
     "utah-forge-mt-stations": {
       "opacity": 0.5,
       "showLabels": false
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": false,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": true
+      },
+      "mtThresholdSurfaceWireframe": false,
+      "opacity": 0.24,
+      "affectedByFog": false,
+      "showLabels": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.72,
+      "showLabels": false
     }
   },
   "visibilityOverrides": {
@@ -84,8 +100,9 @@
     "utah-forge-mt-resistivity-full-density": true,
     "utah-forge-mt-resistivity-volume": true,
     "utah-forge-mt-resistivity-slices": false,
-    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-mt-top-surface": false,
-    "utah-forge-phase3-seismic-browser": false
+    "utah-forge-phase3-seismic-browser": false,
+    "utah-forge-phase3-demo-boreholes": true
   }
 }

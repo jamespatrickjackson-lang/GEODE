@@ -1,7 +1,7 @@
 {
   "id": "49_seismic_fence_panels",
   "title": "Seismic Fence Panels",
-  "subtitle": "Proposed / needs_review rendered seismic section products",
+  "subtitle": "Seismic fence panels with Phase 3 Site Details orientation",
   "camera": {
     "position": [
       -72734.67301267442,
@@ -36,7 +36,8 @@
     "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-threshold-surfaces": false,
     "utah-forge-mt-top-surface": false,
-    "utah-forge-mt-resistivity-slices": false
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-phase3-demo-boreholes": true
   },
   "layerOverrides": {
     "utah-forge-phase3-seismic-browser": {
@@ -69,6 +70,10 @@
     },
     "utah-forge-mt-resistivity-slices": {
       "scalarLegendVisible": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.72,
+      "showLabels": false
     }
   }
 }

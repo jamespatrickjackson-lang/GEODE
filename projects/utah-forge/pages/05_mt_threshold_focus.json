@@ -34,10 +34,34 @@
       "scalarEdgeLineWidth": 1.3,
       "scalarEdgeAverage": 1,
       "scalarEdgeLowerValue": 3.0555553761897336,
-      "scalarNoiseThreshold": 0.65
+      "scalarNoiseThreshold": 0.65,
+      "scalarLegendVisible": false
     },
     "utah-forge-phase3-seismic-browser": {
-      "opacity": 0
+      "opacity": 0,
+      "seismicLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": true,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": true
+      },
+      "mtThresholdSurfaceWireframe": false,
+      "opacity": 0.48,
+      "affectedByFog": false,
+      "showLabels": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.9,
+      "showLabels": true
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-slices": {
+      "scalarLegendVisible": false
     }
   },
   "accentColor": "#f44215",
@@ -68,7 +92,14 @@
   },
   "visibilityOverrides": {
     "utah-forge-mt-resistivity-full-density": true,
-    "utah-forge-phase3-seismic-browser": true,
-    "terrain": false
-  }
+    "utah-forge-phase3-seismic-browser": false,
+    "terrain": false,
+    "utah-forge-phase3-working-area": true,
+    "utah-forge-phase3-demo-boreholes": true,
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-mt-top-surface": false
+  },
+  "subtitle": "Focused MT threshold window with demo boreholes and mask-aware shells"
 }

@@ -231,19 +231,73 @@ function validateVolumesAndSurfaces(stats) {
 
   assert.equal(thresholdMesh.schema, "geosee.scalar-grid-mesh-preview.v1");
   assert.equal(
-    thresholdMesh.processing.sourceProductId,
-    "mt-resistivity-forge-focused-volume",
+    thresholdMesh.processing.extractionMethod,
+    "mask-aware-marching-cubes",
   );
   assert.equal(
-    thresholdProvenance.sourceProductId,
-    "mt-resistivity-forge-focused-volume",
+    thresholdProvenance.extractionMethod,
+    "mask-aware-marching-cubes",
   );
-  assert.equal(thresholdMesh.processing.thresholdSurfaces.length, 3);
+  assertArrayContainsAll(
+    thresholdMesh.processing.sourceProductIds,
+    ["mt-resistivity-full-extent-volume", "mt-resistivity-forge-focused-volume"],
+    "threshold surface source products",
+  );
+  assertArrayContainsAll(
+    manifest.thresholdSurfaces.products.map((product) => product.id),
+    ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"],
+    "manifest isosurface products",
+  );
+  assert.equal(
+    manifest.thresholdSurfaces.defaultProductId,
+    "mt-isosurface-forge-focused",
+  );
+  const isoProducts = thresholdMesh.processing.isosurfaceProducts ?? [];
+  assertArrayContainsAll(
+    isoProducts.map((product) => product.id),
+    ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"],
+    "threshold mesh isosurface products",
+  );
+  const fullIso = isoProducts.find(
+    (product) => product.id === "mt-isosurface-full-extent",
+  );
+  const focusedIso = isoProducts.find(
+    (product) => product.id === "mt-isosurface-forge-focused",
+  );
+  assert.equal(fullIso.sourceProductId, "mt-resistivity-full-extent-volume");
+  assert.equal(fullIso.cropStatus, "full-source");
+  assert.equal(focusedIso.sourceProductId, "mt-resistivity-forge-focused-volume");
+  assert.equal(focusedIso.cropStatus, "presentation-crop");
+
+  assert.equal(thresholdMesh.processing.thresholdSurfaces.length, 6);
   assertArrayContainsAll(
     thresholdMesh.processing.thresholdSurfaces.map((surface) => surface.id),
     ["conductive-le-10-ohm-m", "conductive-le-30-ohm-m", "resistive-ge-1000-ohm-m"],
     "threshold surfaces",
   );
+  for (const surface of thresholdMesh.processing.thresholdSurfaces) {
+    assert.equal(surface.extractionMethod, "mask-aware-marching-cubes");
+    assert.equal(surface.smoothing, "none");
+    assert.equal(surface.decimation, "none");
+    assert.equal(surface.candidateBoundaryFaceCount, undefined);
+    assert.equal(surface.decimationStride, undefined);
+    assertGreaterThan(surface.marchingCubes?.triangleCount, 0, `${surface.meshId} triangles`);
+    assertGreaterThan(surface.marchingCubes?.vertexCount, 0, `${surface.meshId} vertices`);
+    assertArrayContainsAll(
+      ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"],
+      [surface.isoProductId],
+      `${surface.meshId} product id`,
+    );
+  }
+  for (const productId of ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"]) {
+    assert.equal(
+      thresholdMesh.processing.thresholdSurfaces.filter(
+        (surface) => surface.isoProductId === productId,
+      ).length,
+      3,
+      `${productId} threshold count`,
+    );
+  }
   assertGreaterThan(thresholdMesh.vertices.length, 0, "threshold vertices");
   assertGreaterThan(thresholdMesh.indices.length, 0, "threshold indices");
 }
@@ -257,6 +311,9 @@ function validatePrepScripts() {
       "resistivity_point_preview",
       `${scriptPath} computational input`,
     );
+    assertNotContains(source, "MAX_FACES_PER_THRESHOLD", `${scriptPath} old isosurface decimation`);
+    assertNotContains(source, "candidateBoundaryFaceCount", `${scriptPath} old boundary shells`);
+    assertNotContains(source, "decimationStride", `${scriptPath} old boundary-shell stride`);
     assertNotContains(source, "Math.random", `${scriptPath} deterministic build`);
   }
 }

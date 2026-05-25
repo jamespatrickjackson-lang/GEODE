@@ -1,0 +1,98 @@
+{
+  "id": "51_mt_marching_cubes_focused",
+  "title": "MT Marching Cubes - FORGE Focus",
+  "subtitle": "Demo / needs_review focused mask-aware isosurfaces",
+  "camera": {
+    "position": [
+      -59727.5089767489,
+      77515.83916639606,
+      -3368.4321245397587
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 48
+  },
+  "transition": {
+    "duration": 3600,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 5200,
+  "accentColor": "#38f0b3",
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "orbitSpeedDegPerSec": 3,
+    "orbitRadius": 104000,
+    "orbitHeight": 16000,
+    "orbitDirection": -1,
+    "zoomFov": 48,
+    "zoomEnabled": false,
+    "easeInMs": 1200,
+    "transitionLeadMs": 1400,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth"
+  },
+  "visibilityOverrides": {
+    "utah-forge-phase3-working-area": true,
+    "utah-forge-phase3-demo-boreholes": true,
+    "utah-forge-phase3-seismic-browser": false,
+    "utah-forge-mt-stations": true,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": true,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-mt-resistivity-slices": false,
+    "terrain": false
+  },
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "opacity": 0.16,
+      "pointSizePx": 0.9,
+      "scalarInclusionMode": "all-valid",
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": true,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": false
+      },
+      "mtThresholdSurfaceWireframe": false,
+      "opacity": 0.52
+    },
+    "utah-forge-mt-stations": {
+      "opacity": 0.45,
+      "showLabels": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.9,
+      "showLabels": true
+    },
+    "utah-forge-phase3-seismic-browser": {
+      "opacity": 0,
+      "seismicLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-slices": {
+      "scalarLegendVisible": false
+    }
+  }
+}

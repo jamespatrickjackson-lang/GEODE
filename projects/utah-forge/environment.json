@@ -274,6 +274,7 @@
     },
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "opacity": 0.42,
+      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
       "mtThresholdSurfaceVisibility": {
         "conductive-le-10-ohm-m": false,
         "conductive-le-30-ohm-m": true,

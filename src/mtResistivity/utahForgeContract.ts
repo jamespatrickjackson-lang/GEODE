@@ -60,7 +60,20 @@ export const UTAH_FORGE_MT_RESISTIVITY_CONTRACT = {
         "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/slices/provenance.json",
     },
     {
-      id: "utah-forge-mt-threshold-isosurfaces",
+      id: "utah-forge-mt-isosurface-full-extent",
+      kind: "isosurfaces",
+      layerId: UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+      sourceModelId: "utah-forge-mt-model-17-cell-centers",
+      cropStatus: "full-source",
+      dataPath:
+        "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/threshold_surfaces/mt_threshold_surfaces_mesh_preview.json",
+      notes: [
+        "Full-extent threshold meshes are fixed, mask-aware Marching Cubes outputs derived from the full-source scalar volume.",
+        "They are regional context products, not interpreted geological contacts, resource shells, or targets.",
+      ],
+    },
+    {
+      id: "utah-forge-mt-isosurface-forge-focused",
       kind: "isosurfaces",
       layerId: UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
       sourceModelId: "utah-forge-mt-model-17-cell-centers",
@@ -68,8 +81,8 @@ export const UTAH_FORGE_MT_RESISTIVITY_CONTRACT = {
       dataPath:
         "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/threshold_surfaces/mt_threshold_surfaces_mesh_preview.json",
       notes: [
-        "Current browser isosurfaces are fixed threshold meshes derived from the source-model scalar volume.",
-        "They are presentation-cropped around the FORGE-focused volume until the full-extent isosurface product is promoted.",
+        "FORGE-focused threshold meshes are fixed, mask-aware Marching Cubes outputs derived from the focused scalar volume crop.",
+        "They are presentation-cropped for readability and must not be treated as the authoritative model extent.",
       ],
     },
     {
@@ -83,4 +96,3 @@ export const UTAH_FORGE_MT_RESISTIVITY_CONTRACT = {
     },
   ],
 } as const satisfies MtResistivityToolContract;
-

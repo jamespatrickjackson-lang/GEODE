@@ -1,7 +1,7 @@
 {
   "id": "41_mt_station_network_footprint",
   "title": "MT Station Network / Survey Footprint",
-  "subtitle": "Proposed / needs_review measured MT acquisition support",
+  "subtitle": "MT station footprint with Site Details orientation",
   "camera": {
     "position": [
       25717.838323311036,
@@ -38,7 +38,8 @@
     "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-threshold-surfaces": false,
     "utah-forge-mt-top-surface": false,
-    "utah-forge-mt-resistivity-slices": false
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-phase3-demo-boreholes": true
   },
   "layerOverrides": {
     "utah-forge-mt-stations": {
@@ -61,6 +62,10 @@
     },
     "utah-forge-mt-resistivity-slices": {
       "scalarLegendVisible": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.7,
+      "showLabels": false
     }
   }
 }

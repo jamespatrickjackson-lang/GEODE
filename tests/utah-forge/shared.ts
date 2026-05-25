@@ -563,6 +563,7 @@ export type MtVolumeSceneState = {
   } | null;
   thresholdLayerVisible: boolean;
   visibleThresholdSurfaceIds: string[];
+  visibleThresholdProductIds: string[];
   thresholdWireframe: boolean | null;
   selectedStationId: string | null;
 };
@@ -2309,6 +2310,7 @@ export async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState
       }
     });
     const visibleThresholdSurfaceIds: string[] = [];
+    const visibleThresholdProductIds = new Set<string>();
     let thresholdWireframe: boolean | null = null;
     thresholdLayer?.traverse((obj) => {
       if (obj.userData?.mtThresholdSurfacePreview !== true || !obj.visible)
@@ -2316,6 +2318,8 @@ export async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState
       const surfaceId = obj.userData.mtThresholdSurfaceId;
       if (typeof surfaceId === "string")
         visibleThresholdSurfaceIds.push(surfaceId);
+      const productId = obj.userData.mtIsosurfaceProductId;
+      if (typeof productId === "string") visibleThresholdProductIds.add(productId);
       const material = Array.isArray(obj.material)
         ? obj.material[0]
         : obj.material;
@@ -2335,6 +2339,7 @@ export async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState
       firstVisibleUniforms,
       thresholdLayerVisible: thresholdLayer?.visible ?? false,
       visibleThresholdSurfaceIds,
+      visibleThresholdProductIds: Array.from(visibleThresholdProductIds),
       thresholdWireframe,
       selectedStationId:
         typeof stationLayer?.userData.mtStationQcSelectedStationId === "string"

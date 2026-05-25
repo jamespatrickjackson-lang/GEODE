@@ -25,8 +25,15 @@
   },
   "holdDuration": 4000,
   "visibilityOverrides": {
-    "utah-forge-mt-resistivity-full-density": true,
-    "utah-forge-mt-resistivity-threshold-surfaces": true
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
+    "utah-forge-phase3-working-area": true,
+    "utah-forge-phase3-demo-boreholes": true,
+    "utah-forge-phase3-seismic-browser": false,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-mt-top-surface": false,
+    "terrain": false
   },
   "layerOverrides": {
     "utah-forge-mt-resistivity-threshold-surfaces": {
@@ -35,8 +42,11 @@
         "conductive-le-30-ohm-m": true,
         "resistive-ge-1000-ohm-m": false
       },
-      "mtThresholdSurfaceWireframe": true,
-      "opacity": 0.42
+      "mtThresholdSurfaceWireframe": false,
+      "opacity": 0.56,
+      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
+      "affectedByFog": false,
+      "showLabels": false
     },
     "utah-forge-phase3-seismic-browser": {
       "seismicProductVisibility": {
@@ -86,7 +96,19 @@
         "sources": true,
         "receivers": true,
         "lines": true
-      }
+      },
+      "opacity": 0,
+      "seismicLegendVisible": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.92,
+      "showLabels": true
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-slices": {
+      "scalarLegendVisible": false
     }
   },
   "dynamicCamera": {
@@ -113,5 +135,6 @@
     "transitionExitMs": 900,
     "transitionBlendCurve": "cinematic",
     "pathAwareBlend": false
-  }
+  },
+  "subtitle": "Mask-aware Marching Cubes conductive threshold surfaces"
 }

@@ -1,7 +1,7 @@
 {
   "id": "45_resistivity_isosurfaces",
   "title": "Resistivity Isosurfaces",
-  "subtitle": "Proposed / needs_review fixed MT threshold surfaces",
+  "subtitle": "Mask-aware Marching Cubes threshold shells from full-source-derived volumes",
   "camera": {
     "position": [
       -59727.5089767489,
@@ -36,7 +36,8 @@
     "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-mt-top-surface": false,
-    "utah-forge-mt-resistivity-slices": false
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-phase3-demo-boreholes": true
   },
   "layerOverrides": {
     "utah-forge-mt-resistivity-full-density": {
@@ -51,7 +52,10 @@
         "resistive-ge-1000-ohm-m": true
       },
       "mtThresholdSurfaceWireframe": false,
-      "opacity": 0.46
+      "opacity": 0.46,
+      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
+      "affectedByFog": false,
+      "showLabels": false
     },
     "utah-forge-phase3-seismic-browser": {
       "opacity": 0,
@@ -62,6 +66,10 @@
     },
     "utah-forge-mt-resistivity-slices": {
       "scalarLegendVisible": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.86,
+      "showLabels": true
     }
   }
 }

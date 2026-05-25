@@ -1,0 +1,90 @@
+{
+  "id": "52_mt_marching_cubes_full_extent",
+  "title": "MT Marching Cubes - Full Extent",
+  "subtitle": "Demo / needs_review full-source regional isosurface context",
+  "camera": {
+    "position": [
+      -25758.118599762638,
+      267159.49967552704,
+      -35000.79617668223
+    ],
+    "target": [
+      10844.11738335307,
+      -5098.606116313531,
+      -64366.201871915524
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 54
+  },
+  "transition": {
+    "duration": 3600,
+    "easing": "easeInOutSine"
+  },
+  "holdDuration": 5200,
+  "accentColor": "#2cc9ff",
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      10844.11738335307,
+      -5098.606116313531,
+      -64366.201871915524
+    ],
+    "orbitSpeedDegPerSec": 2.5,
+    "orbitRadius": 275130,
+    "orbitHeight": 18000,
+    "orbitDirection": -1,
+    "zoomFov": 54,
+    "zoomEnabled": false,
+    "easeInMs": 1400,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 1000,
+    "transitionBlendCurve": "smooth"
+  },
+  "visibilityOverrides": {
+    "utah-forge-phase3-working-area": true,
+    "utah-forge-phase3-demo-boreholes": false,
+    "utah-forge-phase3-seismic-browser": false,
+    "utah-forge-mt-stations": false,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": true,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-mt-resistivity-slices": false,
+    "terrain": false
+  },
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "opacity": 0.18,
+      "pointSizePx": 0.8,
+      "scalarInclusionMode": "all-valid",
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtIsosurfaceProductId": "mt-isosurface-full-extent",
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": true,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": true
+      },
+      "mtThresholdSurfaceWireframe": false,
+      "opacity": 0.38
+    },
+    "utah-forge-phase3-seismic-browser": {
+      "opacity": 0,
+      "seismicLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-slices": {
+      "scalarLegendVisible": false
+    }
+  }
+}

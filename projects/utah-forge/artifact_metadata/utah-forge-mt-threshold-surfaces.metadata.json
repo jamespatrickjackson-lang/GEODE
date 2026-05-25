@@ -23,6 +23,10 @@
       "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/forge_focused/mask.u8",
       "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/forge_focused/stats.json",
       "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/forge_focused/provenance.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/full_extent/volume.u8",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/full_extent/mask.u8",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/full_extent/stats.json",
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/full_extent/provenance.json",
       "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/intake/crs_transform.json"
     ]
   },
@@ -30,19 +34,24 @@
     {
       "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/mt_volume_manifest.json",
       "role": "MT scalar volume manifest",
-      "notes": "Threshold surfaces are recorded as source-derived iso-resistivity communication surfaces from the focused MT scalar volume."
+      "notes": "Threshold surfaces are recorded as source-derived iso-resistivity communication surfaces from both full-extent and focused MT scalar volumes."
+    },
+    {
+      "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/full_extent/volume.u8",
+      "role": "Full-extent MT scalar volume product",
+      "notes": "Observed source product for full-source threshold surface generation in the MT volume manifest."
     },
     {
       "path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/forge_focused/volume.u8",
       "role": "Focused MT scalar volume product",
-      "notes": "Observed source product for threshold surface generation in the MT volume manifest."
+      "notes": "Observed source product for presentation-crop threshold surface generation in the MT volume manifest."
     }
   ],
   "producedBy": {
     "script": "prep/build_utah_forge_mt_volume_products.mjs",
     "tool": "Node prep script",
     "generatedAt": "2026-05-12",
-    "notes": "Script and generated output paths were observed read-only; no script was run in this pass."
+    "notes": "Regenerated with mask-aware Marching Cubes from the canonical MT scalar volume source; physical source zip may be supplied from the archive when the active repo source package is omitted."
   },
   "crs": {
     "source": "EPSG:26912 / NAD83 UTM Zone 12N",
@@ -88,50 +97,86 @@
     "notes": "Threshold values are acceptance-sensitive communication choices; do not alter them without provenance, caveats, and human review."
   },
   "processing": {
-    "method": "Source-derived iso-resistivity mesh preview surfaces from the focused MT scalar volume.",
+    "method": "Mask-aware Marching Cubes iso-resistivity mesh preview surfaces from full-extent and FORGE-focused MT scalar volumes.",
     "parameters": {
-      "sourceProductId": "mt-resistivity-forge-focused-volume",
+      "sourceProductIds": [
+        "mt-resistivity-full-extent-volume",
+        "mt-resistivity-forge-focused-volume"
+      ],
+      "extractionMethod": "mask-aware-marching-cubes",
+      "isosurfaceProducts": [
+        {
+          "id": "mt-isosurface-full-extent",
+          "sourceProductId": "mt-resistivity-full-extent-volume",
+          "cropStatus": "full-source"
+        },
+        {
+          "id": "mt-isosurface-forge-focused",
+          "sourceProductId": "mt-resistivity-forge-focused-volume",
+          "cropStatus": "presentation-crop"
+        }
+      ],
       "surfaces": [
         {
           "surfaceId": "conductive-le-10-ohm-m",
-          "candidateBoundaryFaceCount": 10838,
-          "emittedBoundaryFaceCount": 10838,
-          "matchingVoxelCount": 5259,
-          "meanLog10Resistivity": 0.559173,
-          "vertexCount": 43352,
-          "indexCount": 65028
+          "isoProductId": "mt-isosurface-full-extent",
+          "matchingVoxelCount": 967,
+          "meanLog10Resistivity": 0.722919,
+          "vertexCount": 2373,
+          "triangleCount": 791
         },
         {
           "surfaceId": "conductive-le-30-ohm-m",
-          "candidateBoundaryFaceCount": 22906,
-          "emittedBoundaryFaceCount": 11453,
-          "decimationStride": 2,
-          "matchingVoxelCount": 11619,
-          "meanLog10Resistivity": 0.946858,
-          "vertexCount": 45812,
-          "indexCount": 68718
+          "isoProductId": "mt-isosurface-full-extent",
+          "matchingVoxelCount": 3961,
+          "meanLog10Resistivity": 1.149358,
+          "vertexCount": 4497,
+          "triangleCount": 1499
         },
         {
           "surfaceId": "resistive-ge-1000-ohm-m",
-          "candidateBoundaryFaceCount": 47434,
-          "emittedBoundaryFaceCount": 15812,
-          "decimationStride": 3,
+          "isoProductId": "mt-isosurface-full-extent",
+          "matchingVoxelCount": 2274,
+          "meanLog10Resistivity": 3.370173,
+          "vertexCount": 9078,
+          "triangleCount": 3026
+        },
+        {
+          "surfaceId": "conductive-le-10-ohm-m",
+          "isoProductId": "mt-isosurface-forge-focused",
+          "matchingVoxelCount": 5259,
+          "meanLog10Resistivity": 0.559173,
+          "vertexCount": 20217,
+          "triangleCount": 6739
+        },
+        {
+          "surfaceId": "conductive-le-30-ohm-m",
+          "isoProductId": "mt-isosurface-forge-focused",
+          "matchingVoxelCount": 11619,
+          "meanLog10Resistivity": 0.946858,
+          "vertexCount": 30693,
+          "triangleCount": 10231
+        },
+        {
+          "surfaceId": "resistive-ge-1000-ohm-m",
+          "isoProductId": "mt-isosurface-forge-focused",
           "matchingVoxelCount": 19087,
           "meanLog10Resistivity": 3.447784,
-          "vertexCount": 63248,
-          "indexCount": 94872
+          "vertexCount": 19164,
+          "triangleCount": 6388
         }
       ]
     },
-    "downsampling": "Observed decimation stride is threshold-specific for some surfaces; do not change decimation without recording technical and visual impact.",
-    "masking": "Derived from the focused volume/mask product; mask handling should be reviewed before acceptance.",
+    "downsampling": "No boundary-face decimation is recorded for the active Marching Cubes surfaces.",
+    "masking": "Derived from volume/mask products; masked voxels terminate surfaces instead of bridging voids.",
     "notes": "Threshold surfaces communicate iso-resistivity shells only; they are not accepted geologic interpretations."
   },
   "stats": {
     "counts": {
-      "surfaceCount": 3,
-      "totalVertexCount": 152412,
-      "totalIndexCount": 228618
+      "surfaceCount": 6,
+      "totalVertexCount": 86022,
+      "totalTriangleCount": 28674,
+      "totalIndexCount": 86022
     },
     "bounds": {},
     "notes": "Surface counts are observed in manifest evidence. Bounds and material/depth review still need a visual receipt."
@@ -157,7 +202,7 @@
     "Does not approve default visibility, eager loading, lazy loading, or demo use.",
     "Threshold meaning and caveats are acceptance-sensitive.",
     "Threshold surfaces must not imply faults, ore bodies, mineralization, targets, reservoir boundaries, resource estimates, or accepted geologic interpretation.",
-    "Scalar threshold values, colors, opacity, material/depth behavior, decimation, and visual receipt require human review.",
+    "Scalar threshold values, colors, opacity, material/depth behavior, extraction method, product selection, and visual receipt require human review.",
     "Do not simplify threshold surfaces or change color/material/depth behavior as a proxy for bloat reduction."
   ],
   "relatedLayers": [
