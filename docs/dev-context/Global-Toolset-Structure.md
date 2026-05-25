@@ -31,6 +31,27 @@ Legacy IDs such as `terrain` and `utah-forge-topo-graticule` remain readable for
 backward compatibility, but metadata-authored topo projects must not depend on
 those IDs.
 
+## Second Tool Alignment In Progress
+
+MT resistivity is now being aligned to the same global-tool structure, with Utah
+FORGE as the first instance rather than the owner of the behavior.
+
+Current MT resistivity structure:
+
+- `src/mtResistivity/`: global product definitions, slice product metadata, and
+  the Utah FORGE instance contract.
+- `tools/audit-mt-resistivity.mjs`: full-source fidelity gate for the current
+  Utah FORGE MT products.
+- `projects/utah-forge/data/geosee_processed/.../electrical_resistivity/`:
+  render-ready products and provenance derived from the authoritative MT
+  cell-center source model.
+
+MT product roles are `pointCloud`, `depthSlices`, `crossSections`,
+`isosurfaces`, and `scalarVolume`. Products must record whether they are
+full-source or explicitly presentation-cropped. The 90,000-point MT preview is
+QA/support context only and must not become computational input for slices,
+sections, isosurfaces, or scalar volumes.
+
 ## Current Editor Structure Checkpoint
 
 The editor sidebar is being aligned to the same global-tool rule. Top-level
@@ -55,7 +76,7 @@ hierarchy, or one-off padding to imply tree structure.
 ## Forward Alignment
 
 Other toolsets should be aligned to this structure over time when they are
-touched for real work. Likely candidates include MT resistivity, seismic
+touched for real work. Likely candidates after topo and MT include seismic
 analysis, working-area focus, scene section planes, and future project-specific
 data tools.
 

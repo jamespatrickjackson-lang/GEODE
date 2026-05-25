@@ -32,6 +32,7 @@ Core runtime/project surfaces:
 - `src/editor/PagePanel.tsx`: Page Manager, page selection/actions, and exported global tool panels
 - `src/editor/LayerPanel.tsx`: project data layer controls that have not yet moved into tool modules
 - `src/editor/topoMap/TopoMapPanel.tsx`: public topo map tool editor
+- `src/mtResistivity/`: global MT resistivity tool contract and slice product metadata
 - `src/pages/PageController.tsx`: page navigation and camera/page transitions
 
 Treat current project/source files as the authority over older prose.
@@ -46,6 +47,10 @@ Current editor/toolset work is an iteration toward a cleaner global-tool
 structure. It is not a shipped endpoint. Preserve current behavior while moving
 tool defaults, runtime behavior, editor panels, and style tokens out of
 project-specific branches when each toolset is touched.
+
+Current MT resistivity work follows the same rule: all slices, sections,
+volumes, and threshold surfaces must trace back to the full authoritative MT
+cell-center model unless they are explicitly labeled presentation crops.
 
 ## Focused Routing
 

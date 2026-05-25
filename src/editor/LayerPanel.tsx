@@ -98,6 +98,11 @@ import {
   topoMapLayerLabel,
   topoMapLayerIds,
 } from "../topoMap/settings";
+import {
+  DEFAULT_MT_RESISTIVITY_SLICE_ID,
+  MT_RESISTIVITY_SLICE_PRODUCTS,
+  mtResistivitySliceById,
+} from "../mtResistivity/sliceProducts";
 
 const CLASSIFICATIONS = [
   "observation",
@@ -471,17 +476,6 @@ const UTAH_FORGE_PUBLIC_LAYER_GROUPS = [
 const PUBLIC_TOPO_LAYER_GROUP_TITLE = "Topo Settings";
 const UTAH_FORGE_CUSTOMER_LAYER_GROUPS =
   [] as const satisfies readonly LayerGroupDef[];
-
-const UTAH_FORGE_RESISTIVITY_SLICE_OPTIONS = [
-  { id: "horizontal_elev_1500m", label: "+1500 m horizontal" },
-  { id: "horizontal_elev_0m", label: "0 m horizontal" },
-  { id: "horizontal_elev_minus2500m", label: "-2500 m horizontal" },
-  { id: "horizontal_elev_minus5000m", label: "-5000 m horizontal" },
-  { id: "horizontal_elev_minus10000m", label: "-10000 m horizontal" },
-  { id: "horizontal_elev_minus25000m", label: "-25000 m horizontal" },
-  { id: "vertical_ew_station_centroid", label: "E-W centroid section" },
-  { id: "vertical_ns_station_centroid", label: "N-S centroid section" },
-] as const;
 
 function layerHasRenderableControl(layer: ProjectLayerSpec): boolean {
   if ((layer as { disabled?: boolean }).disabled !== true) return true;
@@ -12186,15 +12180,39 @@ function ResistivitySliceControls({
     style.resistivitySliceVisibility !== null
       ? (style.resistivitySliceVisibility as Record<string, boolean>)
       : {};
+  const sliceMode = style.resistivitySliceMode === "single" ? "single" : "stack";
+  const selectedSliceId =
+    mtResistivitySliceById(style.resistivitySelectedSliceId)?.id ??
+    DEFAULT_MT_RESISTIVITY_SLICE_ID;
+  const selectedSliceIndex = Math.max(
+    0,
+    MT_RESISTIVITY_SLICE_PRODUCTS.findIndex(
+      (product) => product.id === selectedSliceId,
+    ),
+  );
+  const selectedSlice =
+    MT_RESISTIVITY_SLICE_PRODUCTS[selectedSliceIndex] ??
+    MT_RESISTIVITY_SLICE_PRODUCTS[0];
+  const sliceSelectOptions = MT_RESISTIVITY_SLICE_PRODUCTS.map((product) => ({
+    value: product.id,
+    label: product.label,
+  }));
+  const updateSliceStyle = (patch: Partial<EditableStyle>) => {
+    if (isEnv) {
+      setEnvLayerStyle(layerId, patch);
+    } else if (currentPage) {
+      setPageLayerOverride(currentPage.id, layerId, patch);
+    }
+  };
+  const setSelectedSlice = (id: string) => {
+    updateSliceStyle({
+      resistivitySliceMode: "single",
+      resistivitySelectedSliceId: id,
+    });
+  };
   const setSliceVisible = (id: string, checked: boolean) => {
     const next = { ...visibility, [id]: checked };
-    if (isEnv) {
-      setEnvLayerStyle(layerId, { resistivitySliceVisibility: next });
-    } else if (currentPage) {
-      setPageLayerOverride(currentPage.id, layerId, {
-        resistivitySliceVisibility: next,
-      });
-    }
+    updateSliceStyle({ resistivitySliceVisibility: next });
   };
 
   return (
@@ -12202,6 +12220,48 @@ function ResistivitySliceControls({
       <details style={nestedDetailsStyle}>
         <summary style={panelStyles.summary}>2D slice products</summary>
         <div style={detailsContentStyle}>
+          <EnvSelectRow<"stack" | "single">
+            label="Mode"
+            value={sliceMode}
+            testId="mt-slice-mode"
+            options={[
+              { value: "stack", label: "Stack" },
+              { value: "single", label: "Single slice" },
+            ]}
+            onChange={(value) =>
+              updateSliceStyle({
+                resistivitySliceMode: value,
+                resistivitySelectedSliceId: selectedSliceId,
+              })
+            }
+          />
+          <EnvSelectRow<string>
+            label="Active slice"
+            value={selectedSlice.id}
+            testId="mt-slice-select"
+            options={sliceSelectOptions}
+            onChange={setSelectedSlice}
+          />
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Depth slider</label>
+            <input
+              type="range"
+              min={0}
+              max={MT_RESISTIVITY_SLICE_PRODUCTS.length - 1}
+              step={1}
+              value={selectedSliceIndex}
+              data-testid="mt-slice-depth-slider"
+              onChange={(event) => {
+                const next =
+                  MT_RESISTIVITY_SLICE_PRODUCTS[
+                    Number.parseInt(event.target.value, 10)
+                  ] ?? MT_RESISTIVITY_SLICE_PRODUCTS[0];
+                setSelectedSlice(next.id);
+              }}
+              style={{ flex: 1 }}
+            />
+            <span style={sliderNumberReadoutStyle}>{selectedSlice.label}</span>
+          </div>
           <LayerBooleanStyleControl
             label="Horiz. slices"
             field="resistivityHorizontalSlicesVisible"
@@ -12226,10 +12286,22 @@ function ResistivitySliceControls({
             setPageLayerOverride={setPageLayerOverride}
             clearPageLayerOverride={clearPageLayerOverride}
           />
+          <LayerBooleanStyleControl
+            label="Top trace"
+            field="resistivitySectionTopTraceVisible"
+            fallback={true}
+            style={style}
+            isEnv={isEnv}
+            currentPage={currentPage}
+            layerId={layerId}
+            setEnvLayerStyle={setEnvLayerStyle}
+            setPageLayerOverride={setPageLayerOverride}
+            clearPageLayerOverride={clearPageLayerOverride}
+          />
           <details style={nestedDetailsStyle}>
             <summary style={panelStyles.summary}>Slice visibility</summary>
             <div style={detailsContentStyle}>
-              {UTAH_FORGE_RESISTIVITY_SLICE_OPTIONS.map((option) => (
+              {MT_RESISTIVITY_SLICE_PRODUCTS.map((option) => (
                 <EzGammaCheckboxRow
                   key={option.id}
                   label={option.label}

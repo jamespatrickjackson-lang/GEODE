@@ -236,6 +236,9 @@ export interface EditableStyle {
   // true 1:1; these only show/hide authored section surfaces.
   resistivityHorizontalSlicesVisible?: boolean;
   resistivityVerticalSectionsVisible?: boolean;
+  resistivitySliceMode?: "stack" | "single";
+  resistivitySelectedSliceId?: string;
+  resistivitySectionTopTraceVisible?: boolean;
   resistivitySliceVisibility?: Record<string, boolean>;
   // Utah FORGE MT scalar-volume controls. These are source-derived render
   // controls for browser-ready scalar volumes and fixed threshold surfaces.

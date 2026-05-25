@@ -101,6 +101,7 @@ import {
   rebuildDemoBoreholeCenterlineGeometry,
   rebuildDemoBoreholePipeGeometry,
 } from "../loaders/loadUtahForgeDemoBoreholes";
+import { DEFAULT_MT_RESISTIVITY_SLICE_ID } from "../mtResistivity/sliceProducts";
 
 // Fade duration matches the markdown overlay panel (OverlayDisplay's
 // FADE_MS) so chapter transitions feel coherent across UI surfaces.
@@ -7668,6 +7669,12 @@ export class SceneManager {
     const horizontalVisible =
       style.resistivityHorizontalSlicesVisible !== false;
     const verticalVisible = style.resistivityVerticalSectionsVisible !== false;
+    const topTraceVisible = style.resistivitySectionTopTraceVisible !== false;
+    const sliceMode = style.resistivitySliceMode === "single" ? "single" : "stack";
+    const selectedSliceId =
+      typeof style.resistivitySelectedSliceId === "string"
+        ? style.resistivitySelectedSliceId
+        : DEFAULT_MT_RESISTIVITY_SLICE_ID;
     const perSlice =
       typeof style.resistivitySliceVisibility === "object" &&
       style.resistivitySliceVisibility !== null
@@ -7675,7 +7682,12 @@ export class SceneManager {
         : {};
 
     group.traverse((obj) => {
-      if (obj.userData?.resistivitySlicePreview !== true) return;
+      if (
+        obj.userData?.resistivitySlicePreview !== true &&
+        obj.userData?.resistivitySectionTopTrace !== true
+      ) {
+        return;
+      }
       const kind =
         typeof obj.userData.resistivitySliceKind === "string"
           ? obj.userData.resistivitySliceKind
@@ -7686,7 +7698,14 @@ export class SceneManager {
           : "";
       const groupVisible =
         kind === "vertical-section" ? verticalVisible : horizontalVisible;
-      obj.visible = groupVisible && perSlice[sliceId] !== false;
+      const stackVisible =
+        sliceMode === "stack" || sliceId === selectedSliceId;
+      const roleVisible =
+        obj.userData?.resistivitySectionTopTrace === true
+          ? topTraceVisible
+          : true;
+      obj.visible =
+        groupVisible && roleVisible && stackVisible && perSlice[sliceId] !== false;
     });
   }
 

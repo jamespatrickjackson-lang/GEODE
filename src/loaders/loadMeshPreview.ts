@@ -173,6 +173,73 @@ function addDepthOccluder(
   group.add(occluder);
 }
 
+function addVerticalSectionTopTrace(
+  group: THREE.Group,
+  payload: MeshPreviewPayload,
+  slice: MeshSliceSummary,
+  label: string,
+  renderOrder: number,
+): void {
+  if (slice.kind !== "vertical-section") return;
+  const sectionLine = slice.sectionLine as
+    | {
+        orientation?: string;
+        fixedX?: number;
+        fixedY?: number;
+        xMin?: number;
+        xMax?: number;
+        yMin?: number;
+        yMax?: number;
+      }
+    | undefined;
+  const topZ = payload.sceneBounds?.max?.[2];
+  if (!sectionLine || !Number.isFinite(topZ)) return;
+
+  let points: THREE.Vector3[] | null = null;
+  if (
+    sectionLine.orientation === "east-west" &&
+    Number.isFinite(sectionLine.fixedY) &&
+    Number.isFinite(sectionLine.xMin) &&
+    Number.isFinite(sectionLine.xMax)
+  ) {
+    points = [
+      new THREE.Vector3(sectionLine.xMin, sectionLine.fixedY, topZ),
+      new THREE.Vector3(sectionLine.xMax, sectionLine.fixedY, topZ),
+    ];
+  } else if (
+    sectionLine.orientation === "north-south" &&
+    Number.isFinite(sectionLine.fixedX) &&
+    Number.isFinite(sectionLine.yMin) &&
+    Number.isFinite(sectionLine.yMax)
+  ) {
+    points = [
+      new THREE.Vector3(sectionLine.fixedX, sectionLine.yMin, topZ),
+      new THREE.Vector3(sectionLine.fixedX, sectionLine.yMax, topZ),
+    ];
+  }
+  if (!points) return;
+
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const material = new THREE.LineBasicMaterial({
+    color: "#f8f4e8",
+    transparent: true,
+    opacity: 0.82,
+    depthWrite: false,
+  });
+  const line = new THREE.Line(geometry, material);
+  line.name = `${label} top trace`;
+  line.renderOrder = renderOrder + 0.02;
+  line.userData = {
+    displayName: `${label} top trace`,
+    resistivitySectionTopTrace: true,
+    resistivitySliceId: slice.id,
+    resistivitySliceKind: slice.kind,
+    resistivitySlice: slice,
+    scaleReferenceSurface: true,
+  };
+  group.add(line);
+}
+
 function meshSlices(payload: MeshPreviewPayload): MeshSliceSummary[] {
   const raw = payload.processing?.slices;
   return Array.isArray(raw) ? (raw as MeshSliceSummary[]) : [];
@@ -295,6 +362,15 @@ export async function loadMeshPreview(
         mesh.userData.resistivitySlice = slice;
       }
       group.add(mesh);
+      if (thresholdSurfaces.length === 0) {
+        addVerticalSectionTopTrace(
+          group,
+          payload,
+          slice,
+          label,
+          options.renderOrder ?? SURFACE_RENDER_ORDER.meshPreview,
+        );
+      }
       if (options.depthPolicy === "depth-occluding-preview") {
         addDepthOccluder(group, geometry, label);
       }

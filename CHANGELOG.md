@@ -1,5 +1,15 @@
 # GeoSee Change Log
 
+## 2026-05-25 - Global MT Resistivity Tool Fidelity Pass
+
+- Added `src/mtResistivity/` as the initial global MT resistivity tool boundary with product roles for point cloud, depth slices, cross-sections, isosurfaces, and scalar volume.
+- Added shared slice product metadata and wired the Utah FORGE slice editor to single-slice / stack modes with a depth/elevation slider.
+- Added source-count visibility logic so single-slice mode affects both slice meshes and vertical-section top traces.
+- Added `tools/audit-mt-resistivity.mjs` and `npm run check:mt-resistivity` to validate source row counts, positive/masked rows, full-density tile totals, slice provenance, volume provenance, threshold surfaces, and prep-script computational inputs.
+- Updated `npm run check:utah-runtime` so MT fidelity is part of the Utah runtime integrity gate.
+- Documented MT as the second global-tool alignment after topo: Utah FORGE is the first instance, while the 90,000-point preview remains QA/support only and not computational source truth.
+- Status: checkpoint toward a full global MT/resistivity workflow, not a final Marching Cubes or arbitrary live-slicing implementation.
+
 ## 2026-05-25 - Utah FORGE Topo Image And Site Details Iteration
 
 - Added NAIP 2024 as a second Utah FORGE topo image material with generated active assets, material resolver/runtime support, alpha-aware rendering, detail overlay plumbing, and NAIP quality audit tooling.

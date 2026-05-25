@@ -300,6 +300,7 @@ export async function openForgeDataEditorContainers(page: Page): Promise<void> {
     "Line width",
   );
   await openEditorSection(page, "Title block", 30_000, "Logo file");
+  await openEditorSection(page, "Reference layers", 30_000, "Public roads");
   await openEditorSection(page, "FORGE Data", 30_000, "Scene section planes");
   await openEditorSection(page, "Working area focus", 3000, "Working area");
   await openEditorSection(page, "Working area", 3000, "Phase 3 required working area");
@@ -320,6 +321,7 @@ export async function openForgeTopoEditorContainers(page: Page): Promise<void> {
     "Line width",
   );
   await openEditorSection(page, "Title block", 30_000, "Logo file");
+  await openEditorSection(page, "Reference layers", 30_000, "Public roads");
   await openAllDetails(page);
 }
 
