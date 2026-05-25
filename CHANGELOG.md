@@ -1,5 +1,18 @@
 # GeoSee Change Log
 
+## 2026-05-25 - Utah FORGE Topo Image And Site Details Iteration
+
+- Added NAIP 2024 as a second Utah FORGE topo image material with generated active assets, material resolver/runtime support, alpha-aware rendering, detail overlay plumbing, and NAIP quality audit tooling.
+- Kept `Ortho photo` and `NAIP 2024 Aerial Image` as separate material choices; NAIP now falls back to procedural topo instead of compositing Ortho underneath.
+- Added Utah FORGE Phase 3 demo/orientation borehole data from public GDR survey sources, including two sourced well trajectories and a schematic surface facility block.
+- Reworked the FORGE Data controls into `Site Details`, grouping the FORGE site boundary, 16A injection well, 16B production well, and surface facility/orientation block with independent presentation controls.
+- Added per-well display controls for visibility, diameter, color, opacity, solid/dashed pipe style, centerline, collars, labels, and presentation-only path cleanup modes.
+- Added structured site-detail style defaults under the Utah FORGE project module while keeping legacy borehole style fields readable.
+- Updated runtime asset validation, topo settings/runtime tests, NAIP audit tests, and borehole/site-details tests.
+- Updated `.gitignore` so local `.tmp/` intake/download staging stays out of the active repo.
+- Verified `npm run build`, targeted Utah borehole/site-details Playwright tests, and `git diff --check` during the iteration.
+- Status: checkpoint toward Utah FORGE visual/toolset refinement, not a final shipped UI or engineering-grade borehole/building deliverable.
+
 ## 2026-05-23 - Toolset Sidebar And Topo Structure Checkpoint
 
 - Continued the topo map cleanup as a global GeoSee toolset pattern rather than a Utah FORGE-specific editor branch.

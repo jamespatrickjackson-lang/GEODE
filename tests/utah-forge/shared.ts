@@ -1220,17 +1220,46 @@ export type TerrainMaterialSceneState = {
   edgeFadeShape: number | null;
   edgeFadeInsetM: number | null;
   edgeFadeCornerRadiusM: number | null;
+  verticalExaggeration: number | null;
+  edgeOutlineEnabled: number | null;
+  edgeOutlineOffsetM: number | null;
+  edgeOutlineThicknessM: number | null;
+  edgeOutlineOpacity: number | null;
+  edgeTopShine: number | null;
+  edgeCornerShine: number | null;
+  edgeBottomShine: number | null;
   orthoPhotoEnabled: number | null;
   orthoPhotoOpacity: number | null;
   orthoPhotoHillshadeBlend: number | null;
   orthoPhotoBrightness: number | null;
   orthoPhotoContrast: number | null;
   orthoPhotoSaturation: number | null;
+  orthoPhotoBoundsMin: { x: number; y: number } | null;
+  orthoPhotoBoundsMax: { x: number; y: number } | null;
+  orthoPhotoTextureSrc: string | null;
+  orthoPhotoTextureSize: { width: number; height: number } | null;
+  orthoPhotoTextureParams: TextureRuntimeParams | null;
+  topoImageDetailEnabled: number | null;
+  topoImageDetailOpacity: number | null;
+  topoImageDetailEdgeFeatherM: number | null;
+  topoImageDetailBoundsMin: { x: number; y: number } | null;
+  topoImageDetailBoundsMax: { x: number; y: number } | null;
+  topoImageDetailTextureSrc: string | null;
+  topoImageDetailTextureSize: { width: number; height: number } | null;
+  topoImageDetailTextureParams: TextureRuntimeParams | null;
   surfaceElevationColors: string[];
   surfaceElevationPositions: number[];
   surfaceElevationMidpoints: number[];
   surfaceElevationTransitionSoftness: number | null;
   surfaceElevationColorBlend: number | null;
+};
+
+export type TextureRuntimeParams = {
+  minFilter: number | null;
+  magFilter: number | null;
+  generateMipmaps: boolean | null;
+  anisotropy: number | null;
+  colorSpace: string | null;
 };
 
 export async function terrainMaterialSceneState(
@@ -1272,12 +1301,34 @@ export async function terrainMaterialSceneState(
     let edgeFadeShape: number | null = null;
     let edgeFadeInsetM: number | null = null;
     let edgeFadeCornerRadiusM: number | null = null;
+    let verticalExaggeration: number | null = null;
+    let edgeOutlineEnabled: number | null = null;
+    let edgeOutlineOffsetM: number | null = null;
+    let edgeOutlineThicknessM: number | null = null;
+    let edgeOutlineOpacity: number | null = null;
+    let edgeTopShine: number | null = null;
+    let edgeCornerShine: number | null = null;
+    let edgeBottomShine: number | null = null;
     let orthoPhotoEnabled: number | null = null;
     let orthoPhotoOpacity: number | null = null;
     let orthoPhotoHillshadeBlend: number | null = null;
     let orthoPhotoBrightness: number | null = null;
     let orthoPhotoContrast: number | null = null;
     let orthoPhotoSaturation: number | null = null;
+    let orthoPhotoBoundsMin: { x: number; y: number } | null = null;
+    let orthoPhotoBoundsMax: { x: number; y: number } | null = null;
+    let orthoPhotoTextureSrc: string | null = null;
+    let orthoPhotoTextureSize: { width: number; height: number } | null = null;
+    let orthoPhotoTextureParams: TextureRuntimeParams | null = null;
+    let topoImageDetailEnabled: number | null = null;
+    let topoImageDetailOpacity: number | null = null;
+    let topoImageDetailEdgeFeatherM: number | null = null;
+    let topoImageDetailBoundsMin: { x: number; y: number } | null = null;
+    let topoImageDetailBoundsMax: { x: number; y: number } | null = null;
+    let topoImageDetailTextureSrc: string | null = null;
+    let topoImageDetailTextureSize: { width: number; height: number } | null =
+      null;
+    let topoImageDetailTextureParams: TextureRuntimeParams | null = null;
     let surfaceElevationColors: string[] = [];
     let surfaceElevationPositions: number[] = [];
     let surfaceElevationMidpoints: number[] = [];
@@ -1336,6 +1387,38 @@ export async function terrainMaterialSceneState(
           typeof uniforms.uEdgeFadeCornerRadius?.value === "number"
             ? uniforms.uEdgeFadeCornerRadius.value
             : null;
+        verticalExaggeration =
+          typeof uniforms.uVerticalExaggeration?.value === "number"
+            ? uniforms.uVerticalExaggeration.value
+            : null;
+        edgeOutlineEnabled =
+          typeof uniforms.uEdgeOutlineEnabled?.value === "number"
+            ? uniforms.uEdgeOutlineEnabled.value
+            : null;
+        edgeOutlineOffsetM =
+          typeof uniforms.uEdgeOutlineOffset?.value === "number"
+            ? uniforms.uEdgeOutlineOffset.value
+            : null;
+        edgeOutlineThicknessM =
+          typeof uniforms.uEdgeOutlineThickness?.value === "number"
+            ? uniforms.uEdgeOutlineThickness.value
+            : null;
+        edgeOutlineOpacity =
+          typeof uniforms.uEdgeOutlineOpacity?.value === "number"
+            ? uniforms.uEdgeOutlineOpacity.value
+            : null;
+        edgeTopShine =
+          typeof uniforms.uEdgeTopShine?.value === "number"
+            ? uniforms.uEdgeTopShine.value
+            : null;
+        edgeCornerShine =
+          typeof uniforms.uEdgeCornerShine?.value === "number"
+            ? uniforms.uEdgeCornerShine.value
+            : null;
+        edgeBottomShine =
+          typeof uniforms.uEdgeBottomShine?.value === "number"
+            ? uniforms.uEdgeBottomShine.value
+            : null;
         orthoPhotoEnabled =
           typeof uniforms.uOrthoPhotoEnabled?.value === "number"
             ? uniforms.uOrthoPhotoEnabled.value
@@ -1360,6 +1443,128 @@ export async function terrainMaterialSceneState(
           typeof uniforms.uOrthoPhotoSaturation?.value === "number"
             ? uniforms.uOrthoPhotoSaturation.value
             : null;
+        topoImageDetailEnabled =
+          typeof uniforms.uTopoImageDetailEnabled?.value === "number"
+            ? uniforms.uTopoImageDetailEnabled.value
+            : null;
+        topoImageDetailOpacity =
+          typeof uniforms.uTopoImageDetailOpacity?.value === "number"
+            ? uniforms.uTopoImageDetailOpacity.value
+            : null;
+        topoImageDetailEdgeFeatherM =
+          typeof uniforms.uTopoImageDetailEdgeFeather?.value === "number"
+            ? uniforms.uTopoImageDetailEdgeFeather.value
+            : null;
+        const orthoBoundsMin = uniforms.uOrthoPhotoBoundsMin?.value as
+          | { x?: unknown; y?: unknown }
+          | undefined;
+        const orthoBoundsMax = uniforms.uOrthoPhotoBoundsMax?.value as
+          | { x?: unknown; y?: unknown }
+          | undefined;
+        orthoPhotoBoundsMin =
+          typeof orthoBoundsMin?.x === "number" &&
+          typeof orthoBoundsMin?.y === "number"
+            ? { x: orthoBoundsMin.x, y: orthoBoundsMin.y }
+            : null;
+        orthoPhotoBoundsMax =
+          typeof orthoBoundsMax?.x === "number" &&
+          typeof orthoBoundsMax?.y === "number"
+            ? { x: orthoBoundsMax.x, y: orthoBoundsMax.y }
+            : null;
+        const detailBoundsMin = uniforms.uTopoImageDetailBoundsMin?.value as
+          | { x?: unknown; y?: unknown }
+          | undefined;
+        const detailBoundsMax = uniforms.uTopoImageDetailBoundsMax?.value as
+          | { x?: unknown; y?: unknown }
+          | undefined;
+        topoImageDetailBoundsMin =
+          typeof detailBoundsMin?.x === "number" &&
+          typeof detailBoundsMin?.y === "number"
+            ? { x: detailBoundsMin.x, y: detailBoundsMin.y }
+            : null;
+        topoImageDetailBoundsMax =
+          typeof detailBoundsMax?.x === "number" &&
+          typeof detailBoundsMax?.y === "number"
+            ? { x: detailBoundsMax.x, y: detailBoundsMax.y }
+            : null;
+        const textureParams = (texture: unknown): TextureRuntimeParams | null => {
+          if (!texture || typeof texture !== "object") return null;
+          const candidate = texture as {
+            minFilter?: unknown;
+            magFilter?: unknown;
+            generateMipmaps?: unknown;
+            anisotropy?: unknown;
+            colorSpace?: unknown;
+          };
+          return {
+            minFilter:
+              typeof candidate.minFilter === "number"
+                ? candidate.minFilter
+                : null,
+            magFilter:
+              typeof candidate.magFilter === "number"
+                ? candidate.magFilter
+                : null,
+            generateMipmaps:
+              typeof candidate.generateMipmaps === "boolean"
+                ? candidate.generateMipmaps
+                : null,
+            anisotropy:
+              typeof candidate.anisotropy === "number"
+                ? candidate.anisotropy
+                : null,
+            colorSpace:
+              typeof candidate.colorSpace === "string"
+                ? candidate.colorSpace
+                : null,
+          };
+        };
+        const orthoTexture = uniforms.uOrthoPhotoMap?.value as
+          | {
+              image?: {
+                width?: unknown;
+                height?: unknown;
+                src?: unknown;
+                currentSrc?: unknown;
+              };
+            }
+          | undefined;
+        const orthoImage = orthoTexture?.image;
+        orthoPhotoTextureSrc =
+          typeof orthoImage?.currentSrc === "string"
+            ? orthoImage.currentSrc
+            : typeof orthoImage?.src === "string"
+              ? orthoImage.src
+              : null;
+        orthoPhotoTextureSize =
+          typeof orthoImage?.width === "number" &&
+          typeof orthoImage?.height === "number"
+            ? { width: orthoImage.width, height: orthoImage.height }
+            : null;
+        orthoPhotoTextureParams = textureParams(orthoTexture);
+        const detailTexture = uniforms.uTopoImageDetailMap?.value as
+          | {
+              image?: {
+                width?: unknown;
+                height?: unknown;
+                src?: unknown;
+                currentSrc?: unknown;
+              };
+            }
+          | undefined;
+        const detailImage = detailTexture?.image;
+        topoImageDetailTextureSrc =
+          typeof detailImage?.currentSrc === "string"
+            ? detailImage.currentSrc
+            : typeof detailImage?.src === "string"
+              ? detailImage.src
+              : null;
+        topoImageDetailTextureSize =
+          typeof detailImage?.width === "number" &&
+          typeof detailImage?.height === "number"
+            ? { width: detailImage.width, height: detailImage.height }
+            : null;
+        topoImageDetailTextureParams = textureParams(detailTexture);
         const colorValues = Array.isArray(
           uniforms.uSurfaceElevationColors?.value,
         )
@@ -1412,12 +1617,33 @@ export async function terrainMaterialSceneState(
       edgeFadeShape,
       edgeFadeInsetM,
       edgeFadeCornerRadiusM,
+      verticalExaggeration,
+      edgeOutlineEnabled,
+      edgeOutlineOffsetM,
+      edgeOutlineThicknessM,
+      edgeOutlineOpacity,
+      edgeTopShine,
+      edgeCornerShine,
+      edgeBottomShine,
       orthoPhotoEnabled,
       orthoPhotoOpacity,
       orthoPhotoHillshadeBlend,
       orthoPhotoBrightness,
       orthoPhotoContrast,
       orthoPhotoSaturation,
+      orthoPhotoBoundsMin,
+      orthoPhotoBoundsMax,
+      orthoPhotoTextureSrc,
+      orthoPhotoTextureSize,
+      orthoPhotoTextureParams,
+      topoImageDetailEnabled,
+      topoImageDetailOpacity,
+      topoImageDetailEdgeFeatherM,
+      topoImageDetailBoundsMin,
+      topoImageDetailBoundsMax,
+      topoImageDetailTextureSrc,
+      topoImageDetailTextureSize,
+      topoImageDetailTextureParams,
       surfaceElevationColors,
       surfaceElevationPositions,
       surfaceElevationMidpoints,

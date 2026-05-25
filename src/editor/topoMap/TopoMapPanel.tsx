@@ -34,7 +34,6 @@ import type {
 } from "../../pages/types";
 import {
   ORTHO_PHOTO_TEXTURE_BUDGETS,
-  PUBLIC_TOPO_MATERIAL_PRESETS,
   SURFACE_ELEVATION_DEFAULT_BLEND,
   SURFACE_ELEVATION_DEFAULT_MAX_M,
   SURFACE_ELEVATION_DEFAULT_MIN_M,
@@ -44,6 +43,7 @@ import {
   TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M,
   TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M,
   TOPO_MAP_SURFACE_LABEL,
+  isImageBackedTopoMaterialPreset,
   orthoPhotoDefaultPatch,
   surfaceElevationColorsFromTerrain,
   surfaceElevationDefaultPatch,
@@ -51,7 +51,10 @@ import {
   surfaceElevationMidpointsFromTerrain,
   surfaceElevationPositionsFromTerrain,
   surfaceElevationTickLabel,
+  topoImageMaterialDefaultPatch,
+  topoImageMaterialSourceForPreset,
   topoMapPresetPatch,
+  topoMapPresetSurfaceStylePatch,
   type OrthoPhotoTextureBudgetId,
   type PublicTopoMaterialPresetId,
   type ResolvedTopoMapSettings,
@@ -309,6 +312,12 @@ export function TopoMapPanel({
     setMidpoint: setSurfaceElevationMidpoint,
   });
   const selectedPreset = settings.materialPreset;
+  const selectedImageSource = topoImageMaterialSourceForPreset(
+    rawTerrain,
+    selectedPreset,
+  );
+  const selectedPresetIsImageBacked =
+    isImageBackedTopoMaterialPreset(selectedPreset);
   const selectedOrthoPhotoBudget: OrthoPhotoTextureBudgetId =
     terrain.orthoPhotoTextureBudget === 8192 ? "8192" : "4096";
   const targetLayerIds =
@@ -352,9 +361,15 @@ export function TopoMapPanel({
       return;
     }
     setTerrain(patch);
+    const stylePatch = topoMapPresetSurfaceStylePatch(value, rawTerrain);
+    if (stylePatch) setPublicTopoLayerStyle(stylePatch);
   };
-  const setOrthoPhotoBudget = (value: OrthoPhotoTextureBudgetId) => {
-    setTerrain(orthoPhotoDefaultPatch(rawTerrain, value));
+  const setImageTextureBudget = (value: OrthoPhotoTextureBudgetId) => {
+    setTerrain(
+      selectedImageSource
+        ? topoImageMaterialDefaultPatch(selectedImageSource, value)
+        : orthoPhotoDefaultPatch(rawTerrain, value),
+    );
   };
   const showSurface = section === "all" || section === "surface";
   const showGraticule = section === "all" || section === "graticule";
@@ -522,18 +537,18 @@ export function TopoMapPanel({
                 <EnvSelectRow<PublicTopoMaterialPresetId>
                   label="Material"
                   value={selectedPreset}
-                  options={PUBLIC_TOPO_MATERIAL_PRESETS}
+                  options={settings.materialOptions}
                   testId="topo-material-preset"
                   onChange={setTopoMaterialPreset}
                 />
-                {selectedPreset === "ortho-photo" ? (
+                {selectedPresetIsImageBacked ? (
                   <>
                     <EnvSelectRow<OrthoPhotoTextureBudgetId>
                       label="Texture budget"
                       value={selectedOrthoPhotoBudget}
                       options={ORTHO_PHOTO_TEXTURE_BUDGETS}
                       testId="topo-ortho-photo-texture-budget"
-                      onChange={setOrthoPhotoBudget}
+                      onChange={setImageTextureBudget}
                     />
                     <EnvStyleRow
                       label="Photo opacity"
@@ -611,7 +626,8 @@ export function TopoMapPanel({
                   onChange={(checked) =>
                     setTerrain({
                       materialPreset:
-                        checked && terrain.materialPreset !== "ortho-photo"
+                        checked &&
+                        !isImageBackedTopoMaterialPreset(terrain.materialPreset)
                           ? "surface-elevation"
                           : terrain.materialPreset === "surface-elevation"
                             ? "soft-topo"
@@ -912,6 +928,19 @@ export function TopoMapPanel({
                   }
                 />
                 <EnvStyleRow
+                  label="Vertical exaggeration"
+                  inputType="range"
+                  value={String(terrain.verticalExaggeration ?? 1)}
+                  min={0.25}
+                  max={5}
+                  step={0.05}
+                  decimals={2}
+                  onChange={(v) =>
+                    setTerrain({ verticalExaggeration: parseFloat(v) })
+                  }
+                  testId="topo-vertical-exaggeration"
+                />
+                <EnvStyleRow
                   label="Edge fade"
                   inputType="range"
                   value={String(terrain.edgeFadeDistanceM ?? 90_000)}
@@ -967,6 +996,102 @@ export function TopoMapPanel({
                     setTerrain({ edgeFadeCornerRadiusM: parseFloat(v) })
                   }
                   testId="topo-edge-fade-corner-radius"
+                />
+                <div style={nestedControlRowStyle}>
+                  <label style={nestedFieldLabelStyle}>Edge outline</label>
+                  <input
+                    type="checkbox"
+                    checked={terrain.edgeOutlineEnabled === true}
+                    data-testid="topo-edge-outline-enabled"
+                    onChange={(event) =>
+                      setTerrain({
+                        edgeOutlineEnabled: event.currentTarget.checked,
+                      })
+                    }
+                  />
+                </div>
+                <EnvStyleRow
+                  label="Outline offset"
+                  inputType="range"
+                  value={String(terrain.edgeOutlineOffsetM ?? 0)}
+                  min={0}
+                  max={250_000}
+                  step={2_500}
+                  decimals={0}
+                  onChange={(v) =>
+                    setTerrain({ edgeOutlineOffsetM: parseFloat(v) })
+                  }
+                  testId="topo-edge-outline-offset"
+                />
+                <EnvStyleRow
+                  label="Outline width"
+                  inputType="range"
+                  value={String(terrain.edgeOutlineThicknessM ?? 2500)}
+                  min={0}
+                  max={25_000}
+                  step={500}
+                  decimals={0}
+                  onChange={(v) =>
+                    setTerrain({ edgeOutlineThicknessM: parseFloat(v) })
+                  }
+                  testId="topo-edge-outline-thickness"
+                />
+                <EnvStyleRow
+                  label="Outline opacity"
+                  inputType="range"
+                  value={String(terrain.edgeOutlineOpacity ?? 0)}
+                  min={0}
+                  max={1}
+                  step={0.02}
+                  decimals={2}
+                  onChange={(v) =>
+                    setTerrain({ edgeOutlineOpacity: parseFloat(v) })
+                  }
+                  testId="topo-edge-outline-opacity"
+                />
+                <EnvStyleRow
+                  label="Outline color"
+                  inputType="color"
+                  value={terrain.edgeOutlineColor ?? "#f8ead0"}
+                  onChange={(v) => setTerrain({ edgeOutlineColor: v })}
+                  testId="topo-edge-outline-color"
+                />
+                <EnvStyleRow
+                  label="Top shine"
+                  inputType="range"
+                  value={String(terrain.edgeTopShine ?? 0)}
+                  min={0}
+                  max={1}
+                  step={0.02}
+                  decimals={2}
+                  onChange={(v) => setTerrain({ edgeTopShine: parseFloat(v) })}
+                  testId="topo-edge-top-shine"
+                />
+                <EnvStyleRow
+                  label="Corner shine"
+                  inputType="range"
+                  value={String(terrain.edgeCornerShine ?? 0)}
+                  min={0}
+                  max={1}
+                  step={0.02}
+                  decimals={2}
+                  onChange={(v) =>
+                    setTerrain({ edgeCornerShine: parseFloat(v) })
+                  }
+                  testId="topo-edge-corner-shine"
+                />
+                <EnvStyleRow
+                  label="Bottom shine"
+                  inputType="range"
+                  value={String(terrain.edgeBottomShine ?? 0)}
+                  min={0}
+                  max={1}
+                  step={0.02}
+                  decimals={2}
+                  onChange={(v) =>
+                    setTerrain({ edgeBottomShine: parseFloat(v) })
+                  }
+                  testId="topo-edge-bottom-shine"
                 />
                 <EnvStyleRow
                   label="Hue variance"

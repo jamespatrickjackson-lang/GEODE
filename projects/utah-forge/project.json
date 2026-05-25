@@ -114,6 +114,55 @@
       }
     },
     {
+      "id": "utah-forge-phase3-demo-boreholes",
+      "label": "Phase 3 demo boreholes",
+      "type": "mesh",
+      "files": {
+        "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/demo_boreholes/phase3_demo_boreholes.json"
+      },
+      "metadata": {
+        "sourceFile": "16A(78)-32 Survey.xlsx; 16B(78)-32 Well Survey.zip; Utah FORGE Well and Seismic Locations.csv",
+        "sourceDate": "2020-2023",
+        "derivedArtifactDate": "2026-05-25",
+        "sourceOrigin": "Utah FORGE GDR submissions 1283, 1516, and 1358",
+        "sourceUrls": [
+          "https://gdr.openei.org/submissions/1283",
+          "https://gdr.openei.org/submissions/1516",
+          "https://gdr.openei.org/submissions/1358"
+        ],
+        "classification": "demo-orientation",
+        "confidentiality": "public-source/demo",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "notForEngineeringUse": true,
+        "demoBoreholes": {
+          "label": "Utah FORGE Phase 3 demo boreholes",
+          "coordinateSystem": "scene-local meters, X east, Y north, Z up",
+          "sourceCrs": "EPSG:26912",
+          "sourceVerticalDatum": "survey reported elevations; presentation-oriented scene conversion",
+          "basis": "16A(78)-32 and 16B(78)-32 trajectories are parsed from public directional survey files. The white orientation block is schematic and centered on measured 16A-32 pad corners because no measured building footprint is present in the active project files.",
+          "containerArtifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/demo_boreholes/phase3_demo_boreholes.json",
+          "wellIds": [
+            "16A(78)-32",
+            "16B(78)-32"
+          ],
+          "sceneBounds": {
+            "min": [
+              -6826.905,
+              -10247.748,
+              -958.712
+            ],
+            "max": [
+              -5543.288,
+              -9894.582,
+              1684.09
+            ]
+          }
+        },
+        "notes": "Presentation-oriented demo layer for spatial orientation. Borehole trajectories are public-source survey-derived, but the surface facility block is schematic and must not be treated as engineering or as-built building geometry."
+      }
+    },
+    {
       "id": "utah-forge-site-boundary",
       "label": "FORGE site boundary",
       "type": "line",

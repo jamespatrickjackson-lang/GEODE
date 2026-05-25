@@ -59,6 +59,54 @@ export interface DynamicCamera {
   pathAwareBlend?: boolean;
 }
 
+export type DemoBoreholeLineStyle = "solid" | "dashed";
+export type DemoBoreholePathTreatment =
+  | "survey"
+  | "smoothed"
+  | "presentation-normalized";
+
+export interface DemoBoreholeWellStyle {
+  visible?: boolean;
+  pipeDiameterM?: number;
+  color?: string;
+  opacity?: number;
+  lineStyle?: DemoBoreholeLineStyle;
+  dashLengthM?: number;
+  dashGapM?: number;
+  centerlineVisible?: boolean;
+  centerlineWidth?: number;
+  centerlineOpacity?: number;
+  centerlineColor?: string;
+  collarVisible?: boolean;
+  collarDiameterM?: number;
+  pathTreatment?: DemoBoreholePathTreatment;
+  smoothingStrength?: number;
+  collarLabelVisible?: boolean;
+  collarLabelText?: string;
+  collarLabelLiftM?: number;
+  toeLabelVisible?: boolean;
+  toeLabelText?: string;
+  toeLabelLiftM?: number;
+}
+
+export interface DemoOrientationBlockStyle {
+  visible?: boolean;
+  widthM?: number;
+  depthM?: number;
+  heightM?: number;
+  liftM?: number;
+  rotationDeg?: number;
+  fillColor?: string;
+  opacity?: number;
+  outlineVisible?: boolean;
+  outlineColor?: string;
+  outlineThickness?: number;
+  outlineOpacity?: number;
+  labelVisible?: boolean;
+  labelText?: string;
+  labelLiftM?: number;
+}
+
 // Style fields the alpha actually applies to the live scene. Loaders read
 // these; the editor writes them. Unknown fields pass through untouched
 // so future polish work can add fields without breaking the loader.
@@ -178,6 +226,12 @@ export interface EditableStyle {
   pointMarkerRadiusM?: number;
   pointMarkerLiftM?: number;
   pointMarkerLabelLiftM?: number;
+  // Utah FORGE demo/orientation borehole layer controls. Coordinates are
+  // source-derived where available; these fields only tune presentation.
+  demoBoreholeWells?: Record<string, DemoBoreholeWellStyle>;
+  demoBoreholeBlock?: DemoOrientationBlockStyle;
+  demoBoreholePipeRadiusM?: number;
+  demoBoreholeBlockVisible?: boolean;
   // Utah FORGE authored resistivity slice controls. Vertical scale remains
   // true 1:1; these only show/hide authored section surfaces.
   resistivityHorizontalSlicesVisible?: boolean;
@@ -528,6 +582,42 @@ export interface BoxOverlayStylePreset {
   labels?: GuiLabelSettings;
 }
 
+export interface TopoImageMaterialDetailOverlay {
+  id: string;
+  label?: string;
+  texturePath?: string;
+  texture4096Path?: string;
+  texture8192Path?: string;
+  textureBudget?: 4096 | 8192;
+  format?: "jpeg" | "png" | "webp";
+  hasAlpha?: boolean;
+  bounds: [number, number, number, number];
+  resolutionM?: number;
+  opacity?: number;
+  edgeFeatherM?: number;
+}
+
+export interface TopoImageMaterialSource {
+  id: string;
+  label: string;
+  texturePath?: string;
+  texture4096Path?: string;
+  texture8192Path?: string;
+  textureBudget?: 4096 | 8192;
+  format?: "jpeg" | "png" | "webp";
+  hasAlpha?: boolean;
+  bounds?: [number, number, number, number];
+  detailOverlays?: TopoImageMaterialDetailOverlay[];
+  attribution?: string;
+  provenancePath?: string;
+  defaultSurfaceOpacity?: number;
+  defaultOpacity?: number;
+  defaultHillshadeBlend?: number;
+  defaultBrightness?: number;
+  defaultContrast?: number;
+  defaultSaturation?: number;
+}
+
 export type BuiltInRenderPresetId =
   | "cinematic-dark"
   | "survey-daylight"
@@ -740,6 +830,7 @@ export interface SceneProperties {
     surfaceElevationTransitionSoftness?: number;
     surfaceElevationColorBlend?: number;
     surfaceElevationReverse?: boolean;
+    verticalExaggeration?: number;
     hillshadeIntensity?: number;
     rockHueVariance?: number;
     shadowSharpness?: number;
@@ -748,6 +839,15 @@ export interface SceneProperties {
     edgeFadeShape?: "square" | "rounded-square" | "circle";
     edgeFadeInsetM?: number;
     edgeFadeCornerRadiusM?: number;
+    edgeOutlineEnabled?: boolean;
+    edgeOutlineOffsetM?: number;
+    edgeOutlineThicknessM?: number;
+    edgeOutlineColor?: string;
+    edgeOutlineOpacity?: number;
+    edgeTopShine?: number;
+    edgeCornerShine?: number;
+    edgeBottomShine?: number;
+    topoImageMaterialSources?: TopoImageMaterialSource[];
     orthoPhotoTextureBudget?: 4096 | 8192;
     orthoPhotoPath?: string;
     orthoPhotoTexture4096Path?: string;

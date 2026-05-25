@@ -203,6 +203,9 @@ test("Utah FORGE topo editor exposes ortho photo terrain material", async ({
   await expect(page.getByTestId("topo-material-preset")).toContainText(
     "Ortho photo",
   );
+  await expect(page.getByTestId("topo-material-preset")).toContainText(
+    "NAIP 2024 Aerial Image",
+  );
   const beforeCanvas = await page.locator("canvas").screenshot();
   await page.getByTestId("topo-material-preset").selectOption("ortho-photo");
   await expect(page.getByTestId("topo-material-preset")).toHaveValue(
@@ -233,9 +236,9 @@ test("Utah FORGE topo editor exposes ortho photo terrain material", async ({
 
   await page
     .getByTestId("topo-ortho-photo-texture-budget")
-    .selectOption("8192");
+    .selectOption("4096");
   await expect(page.getByTestId("topo-ortho-photo-texture-budget")).toHaveValue(
-    "8192",
+    "4096",
   );
   await expect
     .poll(() => terrainMaterialSceneState(page))
@@ -245,9 +248,73 @@ test("Utah FORGE topo editor exposes ortho photo terrain material", async ({
       orthoPhotoOpacity: 1,
     });
 
+  await page
+    .getByTestId("topo-material-preset")
+    .selectOption("image:naip-2024-aerial");
+  await expect(page.getByTestId("topo-material-preset")).toHaveValue(
+    "image:naip-2024-aerial",
+  );
+  await expect(page.getByTestId("topo-ortho-photo-texture-budget")).toHaveValue(
+    "4096",
+  );
+  await expect
+    .poll(() =>
+      terrainMaterialSceneState(page).then(
+        (state) => state.orthoPhotoTextureSrc ?? "",
+      ),
+    )
+    .toContain("naip_2024_beauty_4096.webp");
+  await expect
+    .poll(() =>
+      terrainMaterialSceneState(page).then(
+        (state) => state.topoImageDetailTextureSrc ?? "",
+      ),
+    )
+    .toContain("naip_2024_forge_detail_4096.webp");
+  await page
+    .getByTestId("topo-ortho-photo-texture-budget")
+    .selectOption("8192");
+  await expect(page.getByTestId("topo-ortho-photo-texture-budget")).toHaveValue(
+    "8192",
+  );
+  await expect
+    .poll(() =>
+      terrainMaterialSceneState(page).then(
+        (state) => state.orthoPhotoTextureSrc ?? "",
+      ),
+    )
+    .toContain("naip_2024_beauty_8192.webp");
+  await expect
+    .poll(() =>
+      terrainMaterialSceneState(page).then(
+        (state) => state.topoImageDetailTextureSrc ?? "",
+      ),
+    )
+    .toContain("naip_2024_forge_detail_8192.webp");
+  const naipState = await terrainMaterialSceneState(page);
+  expect(naipState).toMatchObject({
+    materialCount: 1,
+    orthoPhotoEnabled: 1,
+    orthoPhotoOpacity: 1,
+    orthoPhotoHillshadeBlend: 0.12,
+    orthoPhotoBrightness: 0.08,
+    orthoPhotoContrast: 1.28,
+    orthoPhotoSaturation: 1.18,
+    orthoPhotoTextureSize: { width: 8192, height: 3161 },
+    topoImageDetailEnabled: 1,
+    topoImageDetailTextureSize: { width: 8192, height: 8192 },
+  });
+  expect(naipState.orthoPhotoTextureSrc ?? "").not.toContain(
+    "ortho_photo_context",
+  );
+  expect(naipState.orthoPhotoBoundsMin?.x).toBeCloseTo(-110351.55, 4);
+  expect(naipState.orthoPhotoBoundsMin?.y).toBeCloseTo(-52998.5, 4);
+  expect(naipState.orthoPhotoBoundsMax?.x).toBeCloseTo(44182.65, 4);
+  expect(naipState.orthoPhotoBoundsMax?.y).toBeCloseTo(6625.3, 4);
+
   await page.getByTestId("topo-surface-elevation-enabled").setChecked(true);
   await expect(page.getByTestId("topo-material-preset")).toHaveValue(
-    "ortho-photo",
+    "image:naip-2024-aerial",
   );
   await expect
     .poll(() => terrainMaterialSceneState(page))
@@ -433,9 +500,9 @@ test("Utah FORGE topo editor exposes edge fade shape controls", async ({
   await expect(page.getByTestId("topo-edge-fade-distance")).toHaveValue(
     "15000",
   );
-  await expect(page.getByTestId("topo-edge-fade-inset")).toHaveValue("65000");
+  await expect(page.getByTestId("topo-edge-fade-inset")).toHaveValue("0");
   await expect(page.getByTestId("topo-edge-fade-corner-radius")).toHaveValue(
-    "65000",
+    "95000",
   );
   await expect(page.getByText("Edge fade aware")).toBeVisible();
   await expect(page.getByTestId("topo-graticule-edge-strength")).toHaveValue(
@@ -458,8 +525,8 @@ test("Utah FORGE topo editor exposes edge fade shape controls", async ({
     .toMatchObject({
       edgeFadeDistanceM: 15000,
       edgeFadeShape: 1,
-      edgeFadeInsetM: 65000,
-      edgeFadeCornerRadiusM: 65000,
+      edgeFadeInsetM: 0,
+      edgeFadeCornerRadiusM: 95000,
     });
   await expect
     .poll(() => topoGraticuleSceneState(page))
@@ -634,7 +701,7 @@ test("Utah FORGE topo title block renders flat and exposes controls", async ({
     }
   });
 
-  await expect(page.locator("summary").filter({ hasText: "Title block" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Title block" })).toBeVisible();
   await expect(page.getByTestId("topo-map-branding-heading-size")).toHaveAttribute(
     "max",
     "240000",

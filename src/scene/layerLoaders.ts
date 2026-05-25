@@ -34,11 +34,13 @@ import { loadTerrain } from "../loaders/loadTerrain";
 import { loadTopoGraticule } from "../loaders/loadTopoGraticule";
 import { loadTiledPointCloudPreview } from "../loaders/loadTiledPointCloudPreview";
 import { loadTreesVri } from "../loaders/loadTreesVri";
+import { loadUtahForgeDemoBoreholes } from "../loaders/loadUtahForgeDemoBoreholes";
 import { SURFACE_RENDER_ORDER } from "../loaders/surfaceRenderPolicy";
 import { geoTransformOptionsFromMetadata } from "../loaders/geoTransform";
 import type { ProjectLayerSpec } from "../pages/types";
 import { registerBaseGuiLoaders } from "../projectModules/baseGui/registerBaseGuiLoaders";
 import { registerUtahForgeReferenceLoaders } from "../projectModules/utahForge/registerUtahForgeReferenceLoaders";
+import { UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID } from "../projectModules/utahForge/layerIds";
 import { isTopoMapGraticuleLayer } from "../topoMap/settings";
 import { appAssetUrl } from "../projects/projectPathsRuntime";
 import { SceneManager } from "./SceneManager";
@@ -391,6 +393,18 @@ const layerLoaders: LayerLoaderHandler[] = [
         loadSeismicBrowser(
           layerDataPath(context, context.files.seismicManifest),
         ),
+      ),
+  },
+  {
+    id: UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
+    matches: (spec) =>
+      spec.id === UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID &&
+      !!layerFiles(spec).manifest,
+    load: (context) =>
+      loadObject(
+        context,
+        `loadUtahForgeDemoBoreholes (${context.spec.id})`,
+        loadUtahForgeDemoBoreholes(layerDataPath(context, context.files.manifest)),
       ),
   },
   {

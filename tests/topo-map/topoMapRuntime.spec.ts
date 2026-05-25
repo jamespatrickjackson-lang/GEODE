@@ -9,7 +9,11 @@ import {
   publicSurfaceClipPlanes,
 } from "../../src/topoMap/publicSurfaceClipRuntime";
 import { TopoMapBrandingRuntime } from "../../src/topoMap/brandingRuntime";
-import type { TerrainEdgeFadeState } from "../../src/topoMap/surfaceRuntime";
+import {
+  topoImageUtmBoundsToSceneBounds,
+  type TerrainEdgeFadeState,
+} from "../../src/topoMap/surfaceRuntime";
+import { buildTerrainMaterial } from "../../src/scene/terrainMaterial";
 
 function makeGraticuleLine(
   role: "interior" | "interior-dashed" | "leader" | "leader-dashed",
@@ -197,4 +201,73 @@ test("topo branding runtime removes old groups before rebuilding", () => {
   } finally {
     globalThis.document = originalDocument;
   }
+});
+
+test("topo image material bounds are converted from UTM into scene space", () => {
+  const bounds = topoImageUtmBoundsToSceneBounds({
+    terrainUtmBounds: [-356385.9, 3703652, 1039320.6, 4843097],
+    terrainSceneBounds: [-697853.25, -569722.5, 697853.25, 569722.5],
+    imageUtmBounds: [231115.8, 4220376, 385650, 4279999.8],
+  });
+  expect(bounds[0]).toBeCloseTo(-110351.55, 4);
+  expect(bounds[1]).toBeCloseTo(-52998.5, 4);
+  expect(bounds[2]).toBeCloseTo(44182.65, 4);
+  expect(bounds[3]).toBeCloseTo(6625.3, 4);
+});
+
+test("terrain material exposes selected image, edge outline, shine, and vertical controls", () => {
+  const handle = buildTerrainMaterial({});
+  const uniforms = handle.material.uniforms;
+  handle.setParams({
+    verticalExaggeration: 2.5,
+    edgeOutlineEnabled: true,
+    edgeOutlineOffsetM: 4000,
+    edgeOutlineThicknessM: 1500,
+    edgeOutlineColor: "#ffeecc",
+    edgeOutlineOpacity: 0.42,
+    edgeTopShine: 0.25,
+    edgeCornerShine: 0.35,
+    edgeBottomShine: 0.15,
+  });
+  handle.setOrthoPhotoBounds([-10, -20], [30, 40]);
+  handle.setTopoImageDetailOverlay(
+    new THREE.Texture(),
+    [-5, -15],
+    [10, 15],
+    0.8,
+    250,
+  );
+  handle.setCameraPosition(new THREE.Vector3(1, 2, 3));
+
+  expect(uniforms.uVerticalExaggeration.value).toBe(2.5);
+  expect(uniforms.uEdgeOutlineEnabled.value).toBe(1);
+  expect(uniforms.uEdgeOutlineOffset.value).toBe(4000);
+  expect(uniforms.uEdgeOutlineThickness.value).toBe(1500);
+  expect(uniforms.uEdgeOutlineColor.value.getHexString()).toBe("ffeecc");
+  expect(uniforms.uEdgeOutlineOpacity.value).toBe(0.42);
+  expect(uniforms.uEdgeTopShine.value).toBe(0.25);
+  expect(uniforms.uEdgeCornerShine.value).toBe(0.35);
+  expect(uniforms.uEdgeBottomShine.value).toBe(0.15);
+  expect(uniforms.uOrthoPhotoBoundsMin.value.x).toBe(-10);
+  expect(uniforms.uOrthoPhotoBoundsMin.value.y).toBe(-20);
+  expect(uniforms.uOrthoPhotoBoundsMax.value.x).toBe(30);
+  expect(uniforms.uOrthoPhotoBoundsMax.value.y).toBe(40);
+  expect(uniforms.uTopoImageDetailEnabled.value).toBe(1);
+  expect(uniforms.uTopoImageDetailBoundsMin.value.x).toBe(-5);
+  expect(uniforms.uTopoImageDetailBoundsMax.value.y).toBe(15);
+  expect(uniforms.uTopoImageDetailOpacity.value).toBe(0.8);
+  expect(uniforms.uTopoImageDetailEdgeFeather.value).toBe(250);
+  expect(uniforms.uCameraPosition.value.toArray()).toEqual([1, 2, 3]);
+});
+
+test("terrain material layers selected image and detail overlay before procedural fallback", () => {
+  const handle = buildTerrainMaterial({});
+  const shader = handle.material.fragmentShader;
+  expect(shader).toContain("vec4 orthoSample = texture2D(uOrthoPhotoMap, orthoUv)");
+  expect(shader).toContain("if (orthoSample.a > 0.001)");
+  expect(shader).toContain("uOrthoPhotoOpacity * orthoSample.a");
+  expect(shader).toContain("uTopoImageDetailMap");
+  expect(shader).toContain("vec4 detailSample = texture2D(uTopoImageDetailMap, detailUv)");
+  expect(shader).toContain("uTopoImageDetailOpacity * detailSample.a * edgeWeight");
+  expect(shader).not.toContain("uBaseOrthoPhoto");
 });

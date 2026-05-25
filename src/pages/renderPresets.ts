@@ -8,6 +8,10 @@ import type {
   SceneProperties,
   UserRenderPreset,
 } from "./types";
+import {
+  stripTopoMaterialAuthorityFromScenePatch,
+  stripTopoMaterialAuthorityFromTerrain,
+} from "../topoMap/materialAuthority";
 
 export const RENDER_PRESET_IDS = [
   "cinematic-dark",
@@ -243,7 +247,9 @@ export function scenePatchForRenderPreset(
 ): Partial<SceneProperties> | null {
   const preset = findRenderPreset(id, projectPresets);
   if (!preset) return null;
-  if (isUserRenderPreset(preset)) return preset.scenePatch;
+  if (isUserRenderPreset(preset)) {
+    return stripTopoMaterialAuthorityFromScenePatch(preset.scenePatch);
+  }
   // Runtime application is intentionally narrower than the full preset model:
   // this patch handles only the scene-level world-building fields. Public
   // context and label density are applied through their existing style paths;
@@ -412,6 +418,14 @@ function captureCinematicScenePatch(
     const value = scene[key];
     if (value !== undefined) {
       (patch as Record<string, unknown>)[key] = cloneJson(value);
+    }
+  }
+  if (patch.terrain) {
+    const terrain = stripTopoMaterialAuthorityFromTerrain(patch.terrain);
+    if (terrain) {
+      patch.terrain = terrain;
+    } else {
+      delete patch.terrain;
     }
   }
   return patch;

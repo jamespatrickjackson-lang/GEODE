@@ -51,11 +51,69 @@ export interface TopoSurfaceLiftParams {
   getLayerStyle(id: string): EditableStyle;
 }
 
+export function topoImageUtmBoundsToSceneBounds({
+  terrainUtmBounds,
+  terrainSceneBounds,
+  imageUtmBounds,
+}: {
+  terrainUtmBounds: [number, number, number, number];
+  terrainSceneBounds: [number, number, number, number];
+  imageUtmBounds: [number, number, number, number];
+}): [number, number, number, number] {
+  const [terrainMinX, terrainMinY, terrainMaxX, terrainMaxY] =
+    terrainUtmBounds;
+  const [sceneMinX, sceneMinY, sceneMaxX, sceneMaxY] = terrainSceneBounds;
+  const [imageMinX, imageMinY, imageMaxX, imageMaxY] = imageUtmBounds;
+  const originX =
+    Math.abs(terrainMinX - sceneMinX) <= Math.abs(terrainMaxX - sceneMaxX)
+      ? terrainMinX - sceneMinX
+      : terrainMaxX - sceneMaxX;
+  const originY =
+    Math.abs(terrainMinY - sceneMinY) <= Math.abs(terrainMaxY - sceneMaxY)
+      ? terrainMinY - sceneMinY
+      : terrainMaxY - sceneMaxY;
+  return [
+    imageMinX - originX,
+    imageMinY - originY,
+    imageMaxX - originX,
+    imageMaxY - originY,
+  ];
+}
+
+type TerrainSettings = NonNullable<SceneProperties["terrain"]>;
+type TopoImageDetailOverlay = NonNullable<
+  NonNullable<TerrainSettings["topoImageMaterialSources"]>[number]["detailOverlays"]
+>[number];
+
+function configureTopoTexture(
+  texture: THREE.Texture,
+  maxAnisotropy: number,
+): void {
+  const image = texture.image as { width?: number; height?: number } | undefined;
+  const width = image?.width ?? 0;
+  const height = image?.height ?? 0;
+  const powerOfTwo =
+    THREE.MathUtils.isPowerOfTwo(width) && THREE.MathUtils.isPowerOfTwo(height);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = maxAnisotropy;
+  texture.minFilter = powerOfTwo
+    ? THREE.LinearMipmapLinearFilter
+    : THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.generateMipmaps = powerOfTwo;
+  texture.needsUpdate = true;
+}
+
 export class TopoSurfaceRuntime {
   private terrain: NonNullable<SceneProperties["terrain"]> = {};
   private orthoPhotoTexturePath: string | null = null;
   private orthoPhotoTexture: THREE.Texture | null = null;
   private orthoPhotoTextureSeq = 0;
+  private topoImageDetailTexturePath: string | null = null;
+  private topoImageDetailTexture: THREE.Texture | null = null;
+  private topoImageDetailTextureSeq = 0;
 
   constructor(private readonly options: TopoSurfaceRuntimeOptions) {}
 
@@ -65,6 +123,7 @@ export class TopoSurfaceRuntime {
 
   dispose(): void {
     this.clearOrthoPhotoTexture(undefined);
+    this.clearTopoImageDetailOverlay(undefined);
   }
 
   disposeOrthoPhotoTexture(terrainGroup: THREE.Group | undefined): void {
@@ -114,7 +173,9 @@ export class TopoSurfaceRuntime {
         });
       });
     }
+    this.applyOrthoPhotoBounds(terrainGroup, terrain);
     this.applyOrthoPhotoTexture(terrainGroup, terrain);
+    this.applyTopoImageDetailOverlay(terrainGroup, terrain);
   }
 
   updateGridCameraVisibility(
@@ -122,6 +183,10 @@ export class TopoSurfaceRuntime {
     camera: THREE.Camera,
   ): void {
     terrainGroup?.traverse((obj) => {
+      const handle = (obj as THREE.Mesh).userData?.terrainHandle as
+        | TerrainMaterialHandle
+        | undefined;
+      handle?.setCameraPosition(camera.position);
       const gridHandle = (obj as THREE.Mesh).userData?.terrainGridHandle as
         | TerrainGridHandle
         | undefined;
@@ -176,6 +241,33 @@ export class TopoSurfaceRuntime {
     }
   }
 
+  applyVerticalExaggeration({
+    terrain,
+    publicLayerIds,
+    getLayerGroup,
+  }: {
+    terrain: TerrainSettings;
+    publicLayerIds: string[];
+    getLayerGroup(id: string): THREE.Group | undefined;
+  }): void {
+    const exaggeration = THREE.MathUtils.clamp(
+      terrain.verticalExaggeration ?? 1,
+      0.05,
+      20,
+    );
+    for (const layerId of publicLayerIds) {
+      const group = getLayerGroup(layerId);
+      if (!group) continue;
+      const baseScaleZ =
+        typeof group.userData.topoVerticalBaseScaleZ === "number"
+          ? group.userData.topoVerticalBaseScaleZ
+          : group.scale.z;
+      group.userData.topoVerticalBaseScaleZ = baseScaleZ;
+      group.scale.z = baseScaleZ * exaggeration;
+      group.updateMatrixWorld(true);
+    }
+  }
+
   resolveEdgeFadeState(
     terrainGroup: THREE.Group | undefined,
   ): TerrainEdgeFadeState | null {
@@ -223,6 +315,123 @@ export class TopoSurfaceRuntime {
     });
   }
 
+  private setTopoImageDetailOverlay(
+    terrainGroup: THREE.Group | undefined,
+    texture: THREE.Texture | null,
+    sceneBounds?: [number, number, number, number],
+    overlay?: TopoImageDetailOverlay,
+  ): void {
+    terrainGroup?.traverse((obj) => {
+      const handle = (obj as THREE.Mesh).userData?.terrainHandle as
+        | TerrainMaterialHandle
+        | undefined;
+      if (texture && sceneBounds) {
+        handle?.setTopoImageDetailOverlay(
+          texture,
+          [sceneBounds[0], sceneBounds[1]],
+          [sceneBounds[2], sceneBounds[3]],
+          overlay?.opacity ?? 1,
+          overlay?.edgeFeatherM ?? 0,
+        );
+      } else {
+        handle?.setTopoImageDetailOverlay(null);
+      }
+    });
+  }
+
+  private sceneBoundsForImageUtmBounds(
+    terrainMesh: THREE.Mesh,
+    handle: TerrainMaterialHandle,
+    imageUtmBounds: [number, number, number, number],
+  ): [number, number, number, number] | null {
+    const terrainUtmBounds = terrainMesh.userData?.terrainUtmBounds as
+      | [number, number, number, number]
+      | undefined;
+    const uniforms = handle.material.uniforms as
+      | Record<string, { value: unknown }>
+      | undefined;
+    const sceneMin = uniforms?.uTerrainBoundsMin?.value as
+      | THREE.Vector2
+      | undefined;
+    const sceneMax = uniforms?.uTerrainBoundsMax?.value as
+      | THREE.Vector2
+      | undefined;
+    if (!terrainUtmBounds || !sceneMin || !sceneMax) return null;
+    return topoImageUtmBoundsToSceneBounds({
+      terrainUtmBounds,
+      terrainSceneBounds: [sceneMin.x, sceneMin.y, sceneMax.x, sceneMax.y],
+      imageUtmBounds,
+    });
+  }
+
+  private applyTopoImageDetailBounds(
+    terrainGroup: THREE.Group | undefined,
+    overlay: TopoImageDetailOverlay,
+    texture: THREE.Texture | null,
+    opacity: number = overlay.opacity ?? 1,
+  ): void {
+    terrainGroup?.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      const handle = mesh.userData?.terrainHandle as
+        | TerrainMaterialHandle
+        | undefined;
+      if (!handle) return;
+      const sceneBounds = this.sceneBoundsForImageUtmBounds(
+        mesh,
+        handle,
+        overlay.bounds,
+      );
+      if (texture && sceneBounds) {
+        handle.setTopoImageDetailOverlay(
+          texture,
+          [sceneBounds[0], sceneBounds[1]],
+          [sceneBounds[2], sceneBounds[3]],
+          opacity,
+          overlay.edgeFeatherM ?? 0,
+        );
+      } else {
+        handle.setTopoImageDetailOverlay(null);
+      }
+    });
+  }
+
+  private applyOrthoPhotoBounds(
+    terrainGroup: THREE.Group | undefined,
+    terrain: NonNullable<SceneProperties["terrain"]>,
+  ): void {
+    const bounds = terrain.orthoPhotoBounds;
+    if (!Array.isArray(bounds) || bounds.length !== 4) return;
+    const [imageMinX, imageMinY, imageMaxX, imageMaxY] = bounds;
+    if (
+      !Number.isFinite(imageMinX) ||
+      !Number.isFinite(imageMinY) ||
+      !Number.isFinite(imageMaxX) ||
+      !Number.isFinite(imageMaxY) ||
+      imageMaxX <= imageMinX ||
+      imageMaxY <= imageMinY
+    ) {
+      return;
+    }
+    terrainGroup?.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      const handle = mesh.userData?.terrainHandle as
+        | TerrainMaterialHandle
+        | undefined;
+      if (!handle) return;
+      const sceneBounds = this.sceneBoundsForImageUtmBounds(mesh, handle, [
+        imageMinX,
+        imageMinY,
+        imageMaxX,
+        imageMaxY,
+      ]);
+      if (!sceneBounds) return;
+      handle.setOrthoPhotoBounds(
+        [sceneBounds[0], sceneBounds[1]],
+        [sceneBounds[2], sceneBounds[3]],
+      );
+    });
+  }
+
   private clearOrthoPhotoTexture(terrainGroup: THREE.Group | undefined): void {
     this.orthoPhotoTextureSeq += 1;
     this.orthoPhotoTexturePath = null;
@@ -231,6 +440,113 @@ export class TopoSurfaceRuntime {
       this.orthoPhotoTexture = null;
     }
     this.setOrthoPhotoTexture(terrainGroup, null);
+  }
+
+  private selectedTopoImageDetailOverlay(
+    terrain: NonNullable<SceneProperties["terrain"]>,
+  ): TopoImageDetailOverlay | null {
+    const preset = terrain.materialPreset;
+    if (typeof preset !== "string" || !preset.startsWith("image:")) return null;
+    const sourceId = preset.slice("image:".length);
+    const source = (terrain.topoImageMaterialSources ?? []).find(
+      (candidate) => candidate.id === sourceId,
+    );
+    return source?.detailOverlays?.[0] ?? null;
+  }
+
+  private texturePathForBudget(
+    source: {
+      texturePath?: string;
+      texture4096Path?: string;
+      texture8192Path?: string;
+      textureBudget?: 4096 | 8192;
+    },
+    terrain: NonNullable<SceneProperties["terrain"]>,
+  ): string | undefined {
+    const budget =
+      terrain.orthoPhotoTextureBudget === 8192
+        ? 8192
+        : terrain.orthoPhotoTextureBudget === 4096
+          ? 4096
+          : source.textureBudget === 8192
+            ? 8192
+            : 4096;
+    return budget === 8192
+      ? source.texture8192Path ?? source.texturePath
+      : source.texture4096Path ?? source.texturePath;
+  }
+
+  private clearTopoImageDetailOverlay(
+    terrainGroup: THREE.Group | undefined,
+  ): void {
+    this.topoImageDetailTextureSeq += 1;
+    this.topoImageDetailTexturePath = null;
+    if (this.topoImageDetailTexture) {
+      this.topoImageDetailTexture.dispose();
+      this.topoImageDetailTexture = null;
+    }
+    this.setTopoImageDetailOverlay(terrainGroup, null);
+  }
+
+  private applyTopoImageDetailOverlay(
+    terrainGroup: THREE.Group | undefined,
+    terrain: NonNullable<SceneProperties["terrain"]>,
+  ): void {
+    const overlay = this.selectedTopoImageDetailOverlay(terrain);
+    const path = overlay ? this.texturePathForBudget(overlay, terrain)?.trim() : "";
+    const materialOpacity =
+      typeof terrain.orthoPhotoOpacity === "number" ? terrain.orthoPhotoOpacity : 1;
+    const opacity =
+      (overlay && typeof overlay.opacity === "number" ? overlay.opacity : 1) *
+      materialOpacity;
+    if (!overlay || !path || opacity <= 0.001) {
+      if (this.topoImageDetailTexturePath || this.topoImageDetailTexture) {
+        this.clearTopoImageDetailOverlay(terrainGroup);
+      } else {
+        this.setTopoImageDetailOverlay(terrainGroup, null);
+      }
+      return;
+    }
+
+    if (this.topoImageDetailTexturePath === path) {
+      this.applyTopoImageDetailBounds(
+        terrainGroup,
+        overlay,
+        this.topoImageDetailTexture,
+        opacity,
+      );
+      return;
+    }
+
+    this.clearTopoImageDetailOverlay(terrainGroup);
+    this.topoImageDetailTexturePath = path;
+    const seq = ++this.topoImageDetailTextureSeq;
+    const url = assetUrl(path, this.options.resolveAssetPath);
+    new THREE.TextureLoader().load(
+      url,
+      (texture) => {
+        if (
+          seq !== this.topoImageDetailTextureSeq ||
+          this.topoImageDetailTexturePath !== path
+        ) {
+          texture.dispose();
+          return;
+        }
+        configureTopoTexture(texture, this.options.maxAnisotropy());
+        this.topoImageDetailTexture = texture;
+        this.applyTopoImageDetailBounds(terrainGroup, overlay, texture, opacity);
+      },
+      undefined,
+      (error) => {
+        if (seq === this.topoImageDetailTextureSeq) {
+          console.error(
+            `[TopoMapRuntime] topo image detail texture failed: ${url}`,
+            error,
+          );
+          this.clearTopoImageDetailOverlay(terrainGroup);
+        }
+      },
+    );
   }
 
   private applyOrthoPhotoTexture(
@@ -272,14 +588,7 @@ export class TopoSurfaceRuntime {
           texture.dispose();
           return;
         }
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.anisotropy = this.options.maxAnisotropy();
-        texture.minFilter = THREE.LinearMipmapLinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        texture.wrapS = THREE.ClampToEdgeWrapping;
-        texture.wrapT = THREE.ClampToEdgeWrapping;
-        texture.generateMipmaps = true;
-        texture.needsUpdate = true;
+        configureTopoTexture(texture, this.options.maxAnisotropy());
         this.orthoPhotoTexture = texture;
         this.setOrthoPhotoTexture(terrainGroup, texture);
       },

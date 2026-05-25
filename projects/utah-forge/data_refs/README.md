@@ -23,6 +23,13 @@ Current Phase 3 MT processing evidence and provenance is under:
 ../data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/
 ```
 
+Current Phase 3 demo/orientation well evidence is under:
+
+```text
+wells/phase3_demo_boreholes.md
+../data/geosee_processed/utah_forge_phase_3/demo_boreholes/
+```
+
 ## What Is Known
 
 Current Phase 3 MT baseline:
@@ -49,7 +56,6 @@ phase_3_mt/
 phase_3_seismic/
 southwestern_mt/
 southwestern_seismic/
-wells/
 faults/
 terrain/
 infrastructure/

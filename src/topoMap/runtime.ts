@@ -105,6 +105,11 @@ export class TopoMapRuntime {
       fogDensity,
       lightMode,
     });
+    this.surface.applyVerticalExaggeration({
+      terrain,
+      publicLayerIds: this.options.getPublicSurfaceLayerIds(),
+      getLayerGroup: this.options.getLayerGroup,
+    });
   }
 
   applySurfaceLiftStyle(layerId: string, style: EditableStyle): void {

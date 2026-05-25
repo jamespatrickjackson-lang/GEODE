@@ -11,9 +11,12 @@ import {
   isTopoMapSurfaceLayer,
   resolveTopoMapSettings,
   surfaceElevationPositionsFromTerrain,
+  topoImageMaterialPresetId,
+  topoImageMaterialUv,
   topoMapLayerIds,
   topoMapLayerLabel,
   topoMapPresetPatch,
+  topoMapPresetSurfaceStylePatch,
   topoMapRuntimeLayerIds,
 } from "../../src/topoMap/settings";
 
@@ -247,8 +250,179 @@ test("ortho-photo preset preserves imported paths and does not enable elevation 
   });
 });
 
+test("project image material sources become distinct image-backed material options", () => {
+  const orthoSource = {
+    id: "ortho-photo",
+    label: "Ortho photo",
+    texture4096Path: "project/ortho-4096.jpg",
+    texture8192Path: "project/ortho-8192.jpg",
+    textureBudget: 4096 as const,
+    bounds: [0, 0, 100, 100] as [number, number, number, number],
+  };
+  const imageSource = {
+    id: "naip-2024-aerial",
+    label: "NAIP 2024 Aerial Image",
+    texture4096Path: "project/naip-beauty-4096.webp",
+    texture8192Path: "project/naip-beauty-8192.webp",
+    textureBudget: 4096 as const,
+    format: "webp" as const,
+    hasAlpha: true,
+    bounds: [10, 20, 30, 40] as [number, number, number, number],
+    detailOverlays: [
+      {
+        id: "forge-working-area-native",
+        texture4096Path: "project/naip-detail-4096.webp",
+        texture8192Path: "project/naip-detail-8192.webp",
+        textureBudget: 4096 as const,
+        format: "webp" as const,
+        hasAlpha: true,
+        bounds: [12, 22, 18, 28] as [number, number, number, number],
+        resolutionM: 0.6,
+        opacity: 1,
+        edgeFeatherM: 450,
+      },
+    ],
+    defaultHillshadeBlend: 0.12,
+    defaultBrightness: 0.08,
+    defaultContrast: 1.28,
+    defaultSaturation: 1.18,
+    defaultSurfaceOpacity: 0.78,
+  };
+  const env = environment();
+  env.scene.terrain = {
+    ...env.scene.terrain,
+    topoImageMaterialSources: [orthoSource, imageSource],
+    materialPreset: topoImageMaterialPresetId(imageSource.id),
+  };
+  const resolved = resolveTopoMapSettings({
+    manifest: manifest(),
+    environment: env,
+  });
+  expect(resolved.materialOptions).toEqual(
+    expect.arrayContaining([
+      { value: "ortho-photo", label: "Ortho photo" },
+      {
+        value: "image:naip-2024-aerial",
+        label: "NAIP 2024 Aerial Image",
+      },
+    ]),
+  );
+  expect(resolved.terrain).toMatchObject({
+    materialPreset: "image:naip-2024-aerial",
+    surfaceElevationEnabled: false,
+    orthoPhotoPath: "project/naip-beauty-4096.webp",
+    orthoPhotoTextureBudget: 4096,
+    orthoPhotoBounds: [10, 20, 30, 40],
+    orthoPhotoHillshadeBlend: 0.12,
+    orthoPhotoBrightness: 0.08,
+    orthoPhotoContrast: 1.28,
+    orthoPhotoSaturation: 1.18,
+  });
+  expect(
+    resolved.materialOptions.filter((option) => option.value === "ortho-photo"),
+  ).toHaveLength(1);
+
+  const orthoPatch = topoMapPresetPatch("ortho-photo", {
+    ...env.scene.terrain,
+    materialPreset: "image:naip-2024-aerial",
+    orthoPhotoTexture4096Path: "project/naip-beauty-4096.webp",
+    orthoPhotoTexture8192Path: "project/naip-beauty-8192.webp",
+  });
+  expect(orthoPatch).toMatchObject({
+    materialPreset: "ortho-photo",
+    orthoPhotoPath: "project/ortho-4096.jpg",
+    orthoPhotoBounds: [0, 0, 100, 100],
+  });
+
+  const staleOrthoEnv = environment();
+  staleOrthoEnv.scene.terrain = {
+    ...staleOrthoEnv.scene.terrain,
+    topoImageMaterialSources: [orthoSource, imageSource],
+    materialPreset: "ortho-photo",
+    orthoPhotoPath: "project/naip-beauty-8192.webp",
+    orthoPhotoTexture4096Path: "project/naip-beauty-4096.webp",
+    orthoPhotoTexture8192Path: "project/naip-beauty-8192.webp",
+    orthoPhotoBounds: [10, 20, 30, 40],
+  };
+  expect(
+    resolveTopoMapSettings({
+      manifest: manifest(),
+      environment: staleOrthoEnv,
+    }).terrain,
+  ).toMatchObject({
+    materialPreset: "ortho-photo",
+    orthoPhotoPath: "project/ortho-4096.jpg",
+    orthoPhotoBounds: [0, 0, 100, 100],
+  });
+
+  expect(
+    topoMapPresetSurfaceStylePatch(
+      topoImageMaterialPresetId(imageSource.id),
+      env.scene.terrain,
+    ),
+  ).toEqual({ opacity: 0.78 });
+  expect(resolved.imageMaterialSources).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: "naip-2024-aerial",
+        format: "webp",
+        hasAlpha: true,
+        detailOverlays: [
+          expect.objectContaining({
+            id: "forge-working-area-native",
+            resolutionM: 0.6,
+            edgeFeatherM: 450,
+          }),
+        ],
+      }),
+    ]),
+  );
+  expect(
+    topoMapPresetPatch(topoImageMaterialPresetId(imageSource.id), {
+      ...env.scene.terrain,
+      materialPreset: topoImageMaterialPresetId(imageSource.id),
+      orthoPhotoTextureBudget: 8192,
+    }),
+  ).toMatchObject({
+    materialPreset: "image:naip-2024-aerial",
+    orthoPhotoTextureBudget: 8192,
+    orthoPhotoPath: "project/naip-beauty-8192.webp",
+  });
+});
+
+test("image material UV helper returns null outside selected image bounds", () => {
+  const bounds: [number, number, number, number] = [10, 20, 30, 40];
+  expect(topoImageMaterialUv(bounds, [20, 30])).toEqual([0.5, 0.5]);
+  expect(topoImageMaterialUv(bounds, [9.99, 30])).toBeNull();
+  expect(topoImageMaterialUv(bounds, [20, 40.01])).toBeNull();
+});
+
 test("custom preset preserves explicit settings", () => {
   expect(topoMapPresetPatch("custom", { edgeFadeDistanceM: 123 })).toBeNull();
+});
+
+test("material preset patches do not own topo edge or exaggeration settings", () => {
+  const authored = {
+    edgeFadeDistanceM: 15000,
+    edgeFadeShape: "rounded-square" as const,
+    edgeFadeInsetM: 2000,
+    edgeFadeCornerRadiusM: 95000,
+    verticalExaggeration: 2.25,
+  };
+  const patch = topoMapPresetPatch("desert-relief", authored);
+  expect(patch).toMatchObject({ materialPreset: "desert-relief" });
+  for (const field of Object.keys(authored)) {
+    expect(patch?.[field as keyof typeof patch]).toBeUndefined();
+  }
+  const env = environment();
+  env.scene.terrain = {
+    ...env.scene.terrain,
+    ...authored,
+    materialPreset: "desert-relief",
+  };
+  expect(
+    resolveTopoMapSettings({ manifest: manifest(), environment: env }).terrain,
+  ).toMatchObject(authored);
 });
 
 test("resolver merges defaults, legacy terrain values, and page style overrides", () => {

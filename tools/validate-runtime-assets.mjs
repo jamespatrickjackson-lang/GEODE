@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import {
   assertFileExists,
@@ -55,6 +55,50 @@ function resolveAssetPath(projectDir, target) {
     repoPath(join(dirname(projectDir), normalized).replaceAll("\\", "/")),
   ];
   return candidates.find((candidate) => existsSync(candidate)) ?? candidates[0];
+}
+
+function readWebpInfo(assetPath) {
+  const bytes = readFileSync(assetPath);
+  if (
+    bytes.length < 30 ||
+    bytes.toString("ascii", 0, 4) !== "RIFF" ||
+    bytes.toString("ascii", 8, 12) !== "WEBP"
+  ) {
+    return null;
+  }
+  let offset = 12;
+  while (offset + 8 <= bytes.length) {
+    const chunk = bytes.toString("ascii", offset, offset + 4);
+    const size = bytes.readUInt32LE(offset + 4);
+    const start = offset + 8;
+    if (chunk === "VP8X" && start + 10 <= bytes.length) {
+      return {
+        hasAlpha: (bytes[start] & 0x10) !== 0,
+        width: 1 + bytes.readUIntLE(start + 4, 3),
+        height: 1 + bytes.readUIntLE(start + 7, 3),
+      };
+    }
+    if (chunk === "VP8 " && start + 10 <= bytes.length) {
+      return {
+        hasAlpha: false,
+        width: bytes.readUInt16LE(start + 6) & 0x3fff,
+        height: bytes.readUInt16LE(start + 8) & 0x3fff,
+      };
+    }
+    if (chunk === "VP8L" && start + 5 <= bytes.length) {
+      const b1 = bytes[start + 1];
+      const b2 = bytes[start + 2];
+      const b3 = bytes[start + 3];
+      const b4 = bytes[start + 4];
+      return {
+        hasAlpha: false,
+        width: 1 + (((b2 & 0x3f) << 8) | b1),
+        height: 1 + (((b4 & 0x0f) << 10) | (b3 << 2) | ((b2 & 0xc0) >> 6)),
+      };
+    }
+    offset = start + size + (size % 2);
+  }
+  return null;
 }
 
 function validateLayerAssets(projectDir, layer) {
@@ -131,6 +175,183 @@ function validateEnvironmentTerrainAssets(projectDir) {
       terrain.orthoPhotoTexture8192Path,
       `${projectDir}:environment.scene.terrain active ortho path should match 8192 budget`,
     );
+  }
+
+  const imageSources = Array.isArray(terrain.topoImageMaterialSources)
+    ? terrain.topoImageMaterialSources
+    : [];
+  for (const source of imageSources) {
+    assert.equal(
+      typeof source.id,
+      "string",
+      `${projectDir}:environment.scene.terrain topo image source should have an id`,
+    );
+    assert.equal(
+      typeof source.label,
+      "string",
+      `${projectDir}:environment.scene.terrain topo image source should have a label`,
+    );
+    for (const target of [
+      source.texturePath,
+      source.texture4096Path,
+      source.texture8192Path,
+      source.provenancePath,
+    ].filter((value) => typeof value === "string" && value.length > 0)) {
+      for (const fragment of SOURCE_ONLY_FRAGMENTS) {
+        assertNotContains(
+          target,
+          fragment,
+          `${projectDir}:environment.scene.terrain.topoImageMaterialSources`,
+        );
+      }
+      const assetPath = resolveAssetPath(projectDir, target);
+      assert.equal(
+        existsSync(assetPath),
+        true,
+        `${projectDir}:environment.scene.terrain topo image source asset should exist: ${target} (${displayPath(
+          assetPath,
+        )})`,
+      );
+    }
+    if (Array.isArray(source.bounds)) {
+      assert.equal(
+        source.bounds.length,
+        4,
+        `${projectDir}:environment.scene.terrain topo image source bounds should have four numbers`,
+      );
+      assert.equal(
+        source.bounds.every((value) => Number.isFinite(value)),
+        true,
+        `${projectDir}:environment.scene.terrain topo image source bounds should be finite`,
+      );
+      assert.equal(
+        source.bounds[2] > source.bounds[0] &&
+          source.bounds[3] > source.bounds[1],
+        true,
+        `${projectDir}:environment.scene.terrain topo image source bounds should be ordered`,
+      );
+    }
+    assert.equal(
+      typeof source.baseSourceId,
+      "undefined",
+      `${projectDir}:environment.scene.terrain topo image source should not composite a base source`,
+    );
+    if (source.hasAlpha === true) {
+      assert.equal(
+        source.format === "webp" || source.format === "png",
+        true,
+        `${projectDir}:environment.scene.terrain alpha topo image source should use an alpha-capable format`,
+      );
+      for (const target of [
+        source.texturePath,
+        source.texture4096Path,
+        source.texture8192Path,
+      ].filter((value) => typeof value === "string" && value.length > 0)) {
+        const assetPath = resolveAssetPath(projectDir, target);
+        if (target.toLowerCase().endsWith(".webp")) {
+          const webpInfo = readWebpInfo(assetPath);
+          assert.notEqual(
+            webpInfo,
+            null,
+            `${projectDir}:environment.scene.terrain alpha topo image source should be a valid WebP: ${target}`,
+          );
+          assert.equal(
+            webpInfo?.hasAlpha,
+            true,
+            `${projectDir}:environment.scene.terrain alpha topo image source should preserve WebP alpha: ${target}`,
+          );
+          assert.equal(
+            (webpInfo?.width ?? 0) > 0 && (webpInfo?.height ?? 0) > 0,
+            true,
+            `${projectDir}:environment.scene.terrain alpha topo image source should report valid dimensions: ${target}`,
+          );
+        }
+      }
+    }
+    if (Array.isArray(source.detailOverlays)) {
+      for (const overlay of source.detailOverlays) {
+        assert.equal(
+          typeof overlay.id,
+          "string",
+          `${projectDir}:environment.scene.terrain topo image detail overlay should have an id`,
+        );
+        assert.equal(
+          Array.isArray(overlay.bounds) && overlay.bounds.length === 4,
+          true,
+          `${projectDir}:environment.scene.terrain topo image detail overlay bounds should have four numbers`,
+        );
+        assert.equal(
+          overlay.bounds.every((value) => Number.isFinite(value)),
+          true,
+          `${projectDir}:environment.scene.terrain topo image detail overlay bounds should be finite`,
+        );
+        if (Array.isArray(source.bounds)) {
+          assert.equal(
+            overlay.bounds[0] >= source.bounds[0] &&
+              overlay.bounds[1] >= source.bounds[1] &&
+              overlay.bounds[2] <= source.bounds[2] &&
+              overlay.bounds[3] <= source.bounds[3],
+            true,
+            `${projectDir}:environment.scene.terrain topo image detail overlay bounds should sit inside source bounds`,
+          );
+        }
+        if (typeof overlay.resolutionM === "number") {
+          assert.equal(
+            overlay.resolutionM > 0 && overlay.resolutionM <= 1.5,
+            true,
+            `${projectDir}:environment.scene.terrain topo image detail overlay should declare high-detail resolution`,
+          );
+        }
+        for (const target of [
+          overlay.texturePath,
+          overlay.texture4096Path,
+          overlay.texture8192Path,
+        ].filter((value) => typeof value === "string" && value.length > 0)) {
+          const assetPath = resolveAssetPath(projectDir, target);
+          assert.equal(
+            existsSync(assetPath),
+            true,
+            `${projectDir}:environment.scene.terrain topo image detail overlay asset should exist: ${target} (${displayPath(
+              assetPath,
+            )})`,
+          );
+          if (target.toLowerCase().endsWith(".webp")) {
+            const webpInfo = readWebpInfo(assetPath);
+            assert.notEqual(
+              webpInfo,
+              null,
+              `${projectDir}:environment.scene.terrain topo image detail overlay should be a valid WebP: ${target}`,
+            );
+            assert.equal(
+              (webpInfo?.width ?? 0) > 0 && (webpInfo?.height ?? 0) > 0,
+              true,
+              `${projectDir}:environment.scene.terrain topo image detail overlay should report valid dimensions: ${target}`,
+            );
+          }
+        }
+      }
+    }
+    if (terrain.materialPreset === `image:${source.id}`) {
+      const sourceBudget =
+        terrain.orthoPhotoTextureBudget === 8192
+          ? 8192
+          : terrain.orthoPhotoTextureBudget === 4096
+            ? 4096
+            : source.textureBudget === 8192
+              ? 8192
+              : 4096;
+      const expectedPath =
+        sourceBudget === 8192
+          ? source.texture8192Path || source.texturePath
+          : source.texture4096Path || source.texturePath;
+      if (expectedPath) {
+        assert.equal(
+          terrain.orthoPhotoPath,
+          expectedPath,
+          `${projectDir}:environment.scene.terrain active image material path should match selected topo image source`,
+        );
+      }
+    }
   }
 }
 

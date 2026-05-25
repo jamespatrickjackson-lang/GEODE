@@ -5,22 +5,22 @@
   "mtFullDensityBounds": {
     "easting_m": [
       201896.7,
-      481038.0
+      481038
     ],
     "northing_m": [
-      4159430.0,
-      4387319.0
+      4159430,
+      4387319
     ]
   },
-  "xyPaddingFractionEachSide": 2.0,
+  "xyPaddingFractionEachSide": 2,
   "sourceBounds": {
     "easting_m": [
       -356385.9,
       1039320.6
     ],
     "northing_m": [
-      3703652.0,
-      4843097.0
+      3703652,
+      4843097
     ]
   },
   "sceneOriginUtm": {
@@ -69,8 +69,8 @@
         1039320.6
       ],
       "northing_m": [
-        3703652.0,
-        4843097.0
+        3703652,
+        4843097
       ]
     },
     "copyright": "USGS, USDA, The National Map: Orthoimagery.",
@@ -93,6 +93,80 @@
         "format": "jpeg",
         "quality": 88
       }
+    }
+  },
+  "imageMaterials": {
+    "naip-2024-aerial": {
+      "label": "NAIP 2024 Aerial Image",
+      "source": "USDA NAIP 2024 Beaver County mosaic via UGRC Raster Data Discovery",
+      "manifest": "naip_2024/manifest.json",
+      "targetCrs": "EPSG:26912",
+      "format": "webp",
+      "hasAlpha": true,
+      "sourceBounds": {
+        "easting_m": [
+          231115.8,
+          385650
+        ],
+        "northing_m": [
+          4220376,
+          4279999.8
+        ]
+      },
+      "variants": {
+        "4096": {
+          "file": "naip_2024/naip_2024_beauty_4096.webp",
+          "width": 4096,
+          "height": 1580,
+          "resolutionMApprox": 37.73,
+          "format": "webp",
+          "hasAlpha": true,
+          "quality": 94
+        },
+        "8192": {
+          "file": "naip_2024/naip_2024_beauty_8192.webp",
+          "width": 8192,
+          "height": 3161,
+          "resolutionMApprox": 18.86,
+          "format": "webp",
+          "hasAlpha": true,
+          "quality": 94
+        }
+      },
+      "detailOverlays": [
+        {
+          "id": "forge-working-area-native",
+          "fileBase": "naip_2024/naip_2024_forge_detail",
+          "bounds": [
+            333323.4,
+            4260536.4,
+            338238.6,
+            4265451.6
+          ],
+          "resolutionM": 0.6,
+          "edgeFeatherM": 450,
+          "variants": {
+            "4096": {
+              "file": "naip_2024/naip_2024_forge_detail_4096.webp",
+              "width": 4096,
+              "height": 4096,
+              "resolutionMApprox": 1.2,
+              "format": "webp",
+              "hasAlpha": true,
+              "quality": 94
+            },
+            "8192": {
+              "file": "naip_2024/naip_2024_forge_detail_8192.webp",
+              "width": 8192,
+              "height": 8192,
+              "resolutionMApprox": 0.6,
+              "format": "webp",
+              "hasAlpha": true,
+              "quality": 94
+            }
+          }
+        }
+      ]
     }
   }
 }

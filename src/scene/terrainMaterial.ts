@@ -44,6 +44,7 @@ export interface TerrainMaterialParams {
   surfaceElevationTransitionSoftness?: number;
   surfaceElevationColorBlend?: number;
   surfaceElevationReverse?: boolean;
+  verticalExaggeration?: number;
   hillshadeIntensity?: number;
   rockHueVariance?: number;
   // Shadow / hillshade definition. 0 = soft Gouraud-style gradient
@@ -60,6 +61,15 @@ export interface TerrainMaterialParams {
   edgeFadeShape?: "square" | "rounded-square" | "circle";
   edgeFadeInsetM?: number;
   edgeFadeCornerRadiusM?: number;
+  edgeOutlineEnabled?: boolean;
+  edgeOutlineOffsetM?: number;
+  edgeOutlineThicknessM?: number;
+  edgeOutlineColor?: string;
+  edgeOutlineOpacity?: number;
+  edgeTopShine?: number;
+  edgeCornerShine?: number;
+  edgeBottomShine?: number;
+  orthoPhotoBounds?: [number, number, number, number];
   orthoPhotoOpacity?: number;
   orthoPhotoHillshadeBlend?: number;
   orthoPhotoBrightness?: number;
@@ -94,7 +104,19 @@ export interface TerrainMaterialHandle {
     boundsMin: [number, number],
     boundsMax: [number, number],
   ): void;
+  setOrthoPhotoBounds(
+    boundsMin: [number, number],
+    boundsMax: [number, number],
+  ): void;
   setOrthoPhotoTexture(texture: THREE.Texture | null): void;
+  setTopoImageDetailOverlay(
+    texture: THREE.Texture | null,
+    boundsMin?: [number, number],
+    boundsMax?: [number, number],
+    opacity?: number,
+    edgeFeatherM?: number,
+  ): void;
+  setCameraPosition(position: THREE.Vector3): void;
   // Lake painting: lakes are NOT rendered as separate meshes any more.
   // A rasterized polygon mask is overlaid onto terrain pixels by the
   // fragment shader, recoloring them to lake color where the mask is
@@ -310,14 +332,40 @@ export function buildTerrainMaterial(
     uAmbient: { value: new THREE.Color(0x5a6878) },
     uShadowSharpness: { value: initial.shadowSharpness ?? 0.45 },
     uFacetStrength: { value: initial.facetStrength ?? 0.12 },
+    uVerticalExaggeration: {
+      value: THREE.MathUtils.clamp(initial.verticalExaggeration ?? 1, 0.05, 20),
+    },
     uEdgeFadeDistance: { value: initial.edgeFadeDistanceM ?? 0 },
     uEdgeFadeShape: { value: edgeFadeShapeValue(initial.edgeFadeShape) },
     uEdgeFadeInset: { value: Math.max(0, initial.edgeFadeInsetM ?? 0) },
     uEdgeFadeCornerRadius: {
       value: Math.max(0, initial.edgeFadeCornerRadiusM ?? 0),
     },
+    uEdgeOutlineEnabled: { value: initial.edgeOutlineEnabled ? 1 : 0 },
+    uEdgeOutlineOffset: { value: Math.max(0, initial.edgeOutlineOffsetM ?? 0) },
+    uEdgeOutlineThickness: {
+      value: Math.max(0, initial.edgeOutlineThicknessM ?? 2500),
+    },
+    uEdgeOutlineColor: {
+      value: new THREE.Color(initial.edgeOutlineColor ?? "#f8ead0"),
+    },
+    uEdgeOutlineOpacity: {
+      value: THREE.MathUtils.clamp(initial.edgeOutlineOpacity ?? 0, 0, 1),
+    },
+    uEdgeTopShine: {
+      value: THREE.MathUtils.clamp(initial.edgeTopShine ?? 0, 0, 1),
+    },
+    uEdgeCornerShine: {
+      value: THREE.MathUtils.clamp(initial.edgeCornerShine ?? 0, 0, 1),
+    },
+    uEdgeBottomShine: {
+      value: THREE.MathUtils.clamp(initial.edgeBottomShine ?? 0, 0, 1),
+    },
+    uCameraPosition: { value: new THREE.Vector3() },
     uOrthoPhotoMap: { value: makeBlankMask() as THREE.Texture },
     uOrthoPhotoEnabled: { value: 0 },
+    uOrthoPhotoBoundsMin: { value: new THREE.Vector2(-1, -1) },
+    uOrthoPhotoBoundsMax: { value: new THREE.Vector2(1, 1) },
     uOrthoPhotoOpacity: {
       value: THREE.MathUtils.clamp(initial.orthoPhotoOpacity ?? 0, 0, 1),
     },
@@ -337,6 +385,12 @@ export function buildTerrainMaterial(
     uOrthoPhotoSaturation: {
       value: THREE.MathUtils.clamp(initial.orthoPhotoSaturation ?? 1, 0, 2),
     },
+    uTopoImageDetailMap: { value: makeBlankMask() as THREE.Texture },
+    uTopoImageDetailEnabled: { value: 0 },
+    uTopoImageDetailBoundsMin: { value: new THREE.Vector2(-1, -1) },
+    uTopoImageDetailBoundsMax: { value: new THREE.Vector2(1, 1) },
+    uTopoImageDetailOpacity: { value: 1 },
+    uTopoImageDetailEdgeFeather: { value: 0 },
     uTerrainBoundsMin: { value: new THREE.Vector2(-1, -1) },
     uTerrainBoundsMax: { value: new THREE.Vector2(1, 1) },
     uShadowTint: { value: new THREE.Color(initial.shadowTint ?? "#3a3f4d") },
@@ -458,17 +512,35 @@ export function buildTerrainMaterial(
       uniform vec3 uAmbient;
       uniform float uShadowSharpness;
       uniform float uFacetStrength;
+      uniform float uVerticalExaggeration;
       uniform float uEdgeFadeDistance;
       uniform float uEdgeFadeShape;
       uniform float uEdgeFadeInset;
       uniform float uEdgeFadeCornerRadius;
+      uniform float uEdgeOutlineEnabled;
+      uniform float uEdgeOutlineOffset;
+      uniform float uEdgeOutlineThickness;
+      uniform vec3 uEdgeOutlineColor;
+      uniform float uEdgeOutlineOpacity;
+      uniform float uEdgeTopShine;
+      uniform float uEdgeCornerShine;
+      uniform float uEdgeBottomShine;
+      uniform vec3 uCameraPosition;
       uniform sampler2D uOrthoPhotoMap;
       uniform float uOrthoPhotoEnabled;
+      uniform vec2 uOrthoPhotoBoundsMin;
+      uniform vec2 uOrthoPhotoBoundsMax;
       uniform float uOrthoPhotoOpacity;
       uniform float uOrthoPhotoHillshadeBlend;
       uniform float uOrthoPhotoBrightness;
       uniform float uOrthoPhotoContrast;
       uniform float uOrthoPhotoSaturation;
+      uniform sampler2D uTopoImageDetailMap;
+      uniform float uTopoImageDetailEnabled;
+      uniform vec2 uTopoImageDetailBoundsMin;
+      uniform vec2 uTopoImageDetailBoundsMax;
+      uniform float uTopoImageDetailOpacity;
+      uniform float uTopoImageDetailEdgeFeather;
       uniform vec2 uTerrainBoundsMin;
       uniform vec2 uTerrainBoundsMax;
       uniform vec3 uShadowTint;
@@ -643,12 +715,79 @@ export function buildTerrainMaterial(
         return uSurfaceElevationColors[4];
       }
 
-      vec3 adjustedOrthoPhotoColor(vec3 color) {
-        vec3 adjusted = color + vec3(uOrthoPhotoBrightness);
-        adjusted = (adjusted - vec3(0.5)) * uOrthoPhotoContrast + vec3(0.5);
+      vec3 adjustedPhotoColor(
+        vec3 color,
+        float brightness,
+        float contrast,
+        float saturation
+      ) {
+        vec3 adjusted = color + vec3(brightness);
+        adjusted = (adjusted - vec3(0.5)) * contrast + vec3(0.5);
         float luma = dot(adjusted, vec3(0.2126, 0.7152, 0.0722));
-        adjusted = mix(vec3(luma), adjusted, uOrthoPhotoSaturation);
+        adjusted = mix(vec3(luma), adjusted, saturation);
         return clamp(adjusted, 0.0, 1.0);
+      }
+
+      vec3 topoImageSurface(vec4 imageSample, float litAmount) {
+        vec3 photo = adjustedPhotoColor(
+          imageSample.rgb,
+          uOrthoPhotoBrightness,
+          uOrthoPhotoContrast,
+          uOrthoPhotoSaturation
+        );
+        vec3 photoShaded = photo *
+          (uAmbient * 0.55 + vec3(uHillshade * litAmount));
+        return mix(photo, photoShaded, uOrthoPhotoHillshadeBlend);
+      }
+
+      float boundsEdgeWeight(vec2 worldXY, vec2 boundsMin, vec2 boundsMax, float featherM) {
+        if (featherM <= 0.001) return 1.0;
+        float distToEdge = min(
+          min(worldXY.x - boundsMin.x, boundsMax.x - worldXY.x),
+          min(worldXY.y - boundsMin.y, boundsMax.y - worldXY.y)
+        );
+        return smoothstep(0.0, max(featherM, 1.0), distToEdge);
+      }
+
+      float terrainEdgeInsideDistance(vec2 worldXY) {
+        vec2 terrainCenter = (uTerrainBoundsMin + uTerrainBoundsMax) * 0.5;
+        vec2 terrainHalfSize = max(
+          (uTerrainBoundsMax - uTerrainBoundsMin) * 0.5 - vec2(max(uEdgeFadeInset, 0.0)),
+          vec2(1.0)
+        );
+        vec2 localPos = worldXY - terrainCenter;
+        if (uEdgeFadeShape > 1.5) {
+          float radius = min(terrainHalfSize.x, terrainHalfSize.y);
+          return radius - length(localPos);
+        }
+        if (uEdgeFadeShape > 0.5) {
+          float radius = clamp(
+            uEdgeFadeCornerRadius,
+            0.0,
+            max(0.0, min(terrainHalfSize.x, terrainHalfSize.y) - 1.0)
+          );
+          vec2 q = abs(localPos) - (terrainHalfSize - vec2(radius));
+          float signedDist =
+            length(max(q, vec2(0.0))) +
+            min(max(q.x, q.y), 0.0) -
+            radius;
+          return -signedDist;
+        }
+        return min(
+          terrainHalfSize.x - abs(localPos.x),
+          terrainHalfSize.y - abs(localPos.y)
+        );
+      }
+
+      float terrainEdgeCornerWeight(vec2 worldXY) {
+        if (uEdgeFadeShape > 1.5) return 1.0;
+        vec2 terrainCenter = (uTerrainBoundsMin + uTerrainBoundsMax) * 0.5;
+        vec2 terrainHalfSize = max(
+          (uTerrainBoundsMax - uTerrainBoundsMin) * 0.5 - vec2(max(uEdgeFadeInset, 0.0)),
+          vec2(1.0)
+        );
+        vec2 normalizedCorner = abs(worldXY - terrainCenter) / terrainHalfSize;
+        return smoothstep(0.62, 0.98, min(normalizedCorner.x, normalizedCorner.y));
       }
 
       void main() {
@@ -678,7 +817,8 @@ export function buildTerrainMaterial(
         }
 
         // Elevation ramp.
-        float elev = vWorldPos.z + uElevationOffsetM;
+        float elevationScale = max(uVerticalExaggeration, 0.0001);
+        float elev = (vWorldPos.z / elevationScale) + uElevationOffsetM;
         float t = clamp(
           (elev - uElevLow) / max(0.0001, uElevHigh - uElevLow),
           0.0,
@@ -754,42 +894,72 @@ export function buildTerrainMaterial(
         float slope = 1.0 - clamp(facetN.z, 0.0, 1.0);
         surface += base * pow(slope, 5.0) * litCompressed * 0.4 *
                    uFacetStrength;
+        float topoImageApplied = 0.0;
         if (uOrthoPhotoEnabled > 0.5 && uOrthoPhotoOpacity > 0.001) {
-          vec2 orthoUv = (vWorldPos.xy - uTerrainBoundsMin) /
-                         (uTerrainBoundsMax - uTerrainBoundsMin);
+          vec2 orthoUv = (vWorldPos.xy - uOrthoPhotoBoundsMin) /
+                         (uOrthoPhotoBoundsMax - uOrthoPhotoBoundsMin);
           if (
             orthoUv.x >= 0.0 && orthoUv.x <= 1.0 &&
             orthoUv.y >= 0.0 && orthoUv.y <= 1.0
           ) {
-            vec3 orthoPhoto = adjustedOrthoPhotoColor(
-              texture2D(uOrthoPhotoMap, orthoUv).rgb
-            );
-            vec3 orthoShaded = orthoPhoto *
-              (uAmbient * 0.55 + vec3(uHillshade * litAmount));
-            surface = mix(
-              surface,
-              mix(orthoPhoto, orthoShaded, uOrthoPhotoHillshadeBlend),
-              clamp(uOrthoPhotoOpacity, 0.0, 1.0)
-            );
-            if (uSurfaceElevationEnabled > 0.5) {
-              float elevationT = clamp(
-                (elev - uSurfaceElevationMin) /
-                  max(0.0001, uSurfaceElevationMax - uSurfaceElevationMin),
-                0.0,
-                1.0
-              );
-              if (uSurfaceElevationReverse > 0.5) {
-                elevationT = 1.0 - elevationT;
-              }
-              vec3 elevationOverlay = surfaceElevationRamp(elevationT) *
-                (uAmbient * 0.55 + vec3(uHillshade * litAmount));
+            vec4 orthoSample = texture2D(uOrthoPhotoMap, orthoUv);
+            if (orthoSample.a > 0.001) {
+              float imageAlpha = clamp(uOrthoPhotoOpacity * orthoSample.a, 0.0, 1.0);
               surface = mix(
                 surface,
-                elevationOverlay,
-                clamp(uSurfaceElevationColorBlend, 0.0, 1.0)
+                topoImageSurface(orthoSample, litAmount),
+                imageAlpha
               );
+              topoImageApplied = max(topoImageApplied, imageAlpha);
             }
           }
+        }
+        if (uTopoImageDetailEnabled > 0.5 && uTopoImageDetailOpacity > 0.001) {
+          vec2 detailUv = (vWorldPos.xy - uTopoImageDetailBoundsMin) /
+                          (uTopoImageDetailBoundsMax - uTopoImageDetailBoundsMin);
+          if (
+            detailUv.x >= 0.0 && detailUv.x <= 1.0 &&
+            detailUv.y >= 0.0 && detailUv.y <= 1.0
+          ) {
+            vec4 detailSample = texture2D(uTopoImageDetailMap, detailUv);
+            float edgeWeight = boundsEdgeWeight(
+              vWorldPos.xy,
+              uTopoImageDetailBoundsMin,
+              uTopoImageDetailBoundsMax,
+              uTopoImageDetailEdgeFeather
+            );
+            float detailAlpha = clamp(
+              uTopoImageDetailOpacity * detailSample.a * edgeWeight,
+              0.0,
+              1.0
+            );
+            if (detailAlpha > 0.001) {
+              surface = mix(
+                surface,
+                topoImageSurface(detailSample, litAmount),
+                detailAlpha
+              );
+              topoImageApplied = max(topoImageApplied, detailAlpha);
+            }
+          }
+        }
+        if (topoImageApplied > 0.001 && uSurfaceElevationEnabled > 0.5) {
+          float elevationT = clamp(
+            (elev - uSurfaceElevationMin) /
+              max(0.0001, uSurfaceElevationMax - uSurfaceElevationMin),
+            0.0,
+            1.0
+          );
+          if (uSurfaceElevationReverse > 0.5) {
+            elevationT = 1.0 - elevationT;
+          }
+          vec3 elevationOverlay = surfaceElevationRamp(elevationT) *
+            (uAmbient * 0.55 + vec3(uHillshade * litAmount));
+          surface = mix(
+            surface,
+            elevationOverlay,
+            clamp(uSurfaceElevationColorBlend, 0.0, 1.0)
+          );
         }
         vec3 terrainSurface = surface;
 
@@ -967,35 +1137,36 @@ export function buildTerrainMaterial(
           }
         }
 
-        if (uEdgeFadeDistance > 1.0) {
-          vec2 terrainCenter = (uTerrainBoundsMin + uTerrainBoundsMax) * 0.5;
-          vec2 terrainHalfSize = max(
-            (uTerrainBoundsMax - uTerrainBoundsMin) * 0.5 - vec2(max(uEdgeFadeInset, 0.0)),
-            vec2(1.0)
+        float insideDist = terrainEdgeInsideDistance(vWorldPos.xy);
+        float edgeBandWidth = max(max(uEdgeFadeDistance, uEdgeOutlineThickness), 1.0);
+        float edgeBand = 1.0 - smoothstep(0.0, edgeBandWidth, insideDist);
+        if (uEdgeOutlineEnabled > 0.5 && uEdgeOutlineOpacity > 0.001) {
+          float lineDistance = abs(insideDist - max(uEdgeOutlineOffset, 0.0));
+          float lineWidth = max(uEdgeOutlineThickness, 1.0);
+          float lineAlpha = 1.0 - smoothstep(lineWidth * 0.5, lineWidth, lineDistance);
+          surface = mix(
+            surface,
+            uEdgeOutlineColor,
+            clamp(lineAlpha * uEdgeOutlineOpacity, 0.0, 1.0)
           );
-          vec2 localPos = vWorldPos.xy - terrainCenter;
-          float insideDist;
-          if (uEdgeFadeShape > 1.5) {
-            float radius = min(terrainHalfSize.x, terrainHalfSize.y);
-            insideDist = radius - length(localPos);
-          } else if (uEdgeFadeShape > 0.5) {
-            float radius = clamp(
-              uEdgeFadeCornerRadius,
-              0.0,
-              max(0.0, min(terrainHalfSize.x, terrainHalfSize.y) - 1.0)
-            );
-            vec2 q = abs(localPos) - (terrainHalfSize - vec2(radius));
-            float signedDist =
-              length(max(q, vec2(0.0))) +
-              min(max(q.x, q.y), 0.0) -
-              radius;
-            insideDist = -signedDist;
-          } else {
-            insideDist = min(
-              terrainHalfSize.x - abs(localPos.x),
-              terrainHalfSize.y - abs(localPos.y)
-            );
-          }
+        }
+        if (
+          uEdgeTopShine > 0.001 ||
+          uEdgeCornerShine > 0.001 ||
+          uEdgeBottomShine > 0.001
+        ) {
+          vec3 viewDir = normalize(uCameraPosition - vWorldPos);
+          float viewFacing = clamp(dot(N, viewDir) * 0.5 + 0.5, 0.0, 1.0);
+          float topShine = edgeBand * clamp(N.z, 0.0, 1.0) * viewFacing *
+            uEdgeTopShine;
+          float cornerShine = edgeBand * terrainEdgeCornerWeight(vWorldPos.xy) *
+            viewFacing * uEdgeCornerShine;
+          float bottomShine = edgeBand * (1.0 - clamp(N.z, 0.0, 1.0)) *
+            uEdgeBottomShine;
+          float shine = clamp(topShine + cornerShine + bottomShine, 0.0, 1.0);
+          surface += uEdgeOutlineColor * shine * 0.45;
+        }
+        if (uEdgeFadeDistance > 1.0) {
           float edgeFade = smoothstep(0.0, uEdgeFadeDistance, insideDist);
           surface = mix(uFogColor, surface, clamp(edgeFade, 0.0, 1.0));
         }
@@ -1087,6 +1258,12 @@ export function buildTerrainMaterial(
         uniforms.uShadowSharpness.value = p.shadowSharpness;
       if (typeof p.facetStrength === "number")
         uniforms.uFacetStrength.value = p.facetStrength;
+      if (typeof p.verticalExaggeration === "number")
+        uniforms.uVerticalExaggeration.value = THREE.MathUtils.clamp(
+          p.verticalExaggeration,
+          0.05,
+          20,
+        );
       if (typeof p.edgeFadeDistanceM === "number")
         uniforms.uEdgeFadeDistance.value = Math.max(0, p.edgeFadeDistanceM);
       if (typeof p.edgeFadeShape === "string")
@@ -1097,6 +1274,40 @@ export function buildTerrainMaterial(
         uniforms.uEdgeFadeCornerRadius.value = Math.max(
           0,
           p.edgeFadeCornerRadiusM,
+        );
+      if (typeof p.edgeOutlineEnabled === "boolean")
+        uniforms.uEdgeOutlineEnabled.value = p.edgeOutlineEnabled ? 1 : 0;
+      if (typeof p.edgeOutlineOffsetM === "number")
+        uniforms.uEdgeOutlineOffset.value = Math.max(0, p.edgeOutlineOffsetM);
+      if (typeof p.edgeOutlineThicknessM === "number")
+        uniforms.uEdgeOutlineThickness.value = Math.max(
+          0,
+          p.edgeOutlineThicknessM,
+        );
+      if (p.edgeOutlineColor) uniforms.uEdgeOutlineColor.value.set(p.edgeOutlineColor);
+      if (typeof p.edgeOutlineOpacity === "number")
+        uniforms.uEdgeOutlineOpacity.value = THREE.MathUtils.clamp(
+          p.edgeOutlineOpacity,
+          0,
+          1,
+        );
+      if (typeof p.edgeTopShine === "number")
+        uniforms.uEdgeTopShine.value = THREE.MathUtils.clamp(
+          p.edgeTopShine,
+          0,
+          1,
+        );
+      if (typeof p.edgeCornerShine === "number")
+        uniforms.uEdgeCornerShine.value = THREE.MathUtils.clamp(
+          p.edgeCornerShine,
+          0,
+          1,
+        );
+      if (typeof p.edgeBottomShine === "number")
+        uniforms.uEdgeBottomShine.value = THREE.MathUtils.clamp(
+          p.edgeBottomShine,
+          0,
+          1,
         );
       if (typeof p.orthoPhotoOpacity === "number") {
         uniforms.uOrthoPhotoOpacity.value = THREE.MathUtils.clamp(
@@ -1162,6 +1373,12 @@ export function buildTerrainMaterial(
     setTerrainBounds(boundsMin, boundsMax) {
       uniforms.uTerrainBoundsMin.value.set(boundsMin[0], boundsMin[1]);
       uniforms.uTerrainBoundsMax.value.set(boundsMax[0], boundsMax[1]);
+      uniforms.uOrthoPhotoBoundsMin.value.set(boundsMin[0], boundsMin[1]);
+      uniforms.uOrthoPhotoBoundsMax.value.set(boundsMax[0], boundsMax[1]);
+    },
+    setOrthoPhotoBounds(boundsMin, boundsMax) {
+      uniforms.uOrthoPhotoBoundsMin.value.set(boundsMin[0], boundsMin[1]);
+      uniforms.uOrthoPhotoBoundsMax.value.set(boundsMax[0], boundsMax[1]);
     },
     setOrthoPhotoTexture(texture) {
       if (texture) {
@@ -1171,6 +1388,29 @@ export function buildTerrainMaterial(
         uniforms.uOrthoPhotoEnabled.value = 0;
       }
       material.needsUpdate = true;
+    },
+    setTopoImageDetailOverlay(texture, boundsMin, boundsMax, opacity, edgeFeatherM) {
+      if (texture && boundsMin && boundsMax) {
+        uniforms.uTopoImageDetailMap.value = texture;
+        uniforms.uTopoImageDetailBoundsMin.value.set(boundsMin[0], boundsMin[1]);
+        uniforms.uTopoImageDetailBoundsMax.value.set(boundsMax[0], boundsMax[1]);
+        uniforms.uTopoImageDetailOpacity.value = THREE.MathUtils.clamp(
+          opacity ?? 1,
+          0,
+          1,
+        );
+        uniforms.uTopoImageDetailEdgeFeather.value = Math.max(
+          0,
+          edgeFeatherM ?? 0,
+        );
+        uniforms.uTopoImageDetailEnabled.value = 1;
+      } else {
+        uniforms.uTopoImageDetailEnabled.value = 0;
+      }
+      material.needsUpdate = true;
+    },
+    setCameraPosition(position) {
+      uniforms.uCameraPosition.value.copy(position);
     },
     setLakeMask(texture, boundsMin, boundsMax) {
       uniforms.uLakeMask.value = texture;

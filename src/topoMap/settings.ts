@@ -6,6 +6,7 @@ import type {
   ProjectLayerSpec,
   ProjectManifest,
   SceneProperties,
+  TopoImageMaterialSource,
 } from "../pages/types";
 
 export const TOPO_MAP_TOOL_ID = "topo-map";
@@ -25,7 +26,7 @@ export const TOPO_MAP_LEGACY_PUBLIC_SURFACE_LAYER_IDS = [
 ] as const;
 
 export type TopoMapToolRole = "surface" | "graticule" | "reference";
-export type PublicTopoMaterialPresetId =
+export type BuiltInTopoMaterialPresetId =
   | "custom"
   | "soft-topo"
   | "surface-elevation"
@@ -34,6 +35,10 @@ export type PublicTopoMaterialPresetId =
   | "paper-map"
   | "grey-relief"
   | "high-contrast";
+export type TopoImageMaterialPresetId = `image:${string}`;
+export type PublicTopoMaterialPresetId =
+  | BuiltInTopoMaterialPresetId
+  | TopoImageMaterialPresetId;
 export type OrthoPhotoTextureBudgetId = "4096" | "8192";
 
 export interface TopoMapToolMetadata {
@@ -52,6 +57,11 @@ export interface ResolvedTopoMapSettings {
   surfaceStyle: EditableStyle;
   terrain: NonNullable<SceneProperties["terrain"]>;
   materialPreset: PublicTopoMaterialPresetId;
+  materialOptions: readonly {
+    value: PublicTopoMaterialPresetId;
+    label: string;
+  }[];
+  imageMaterialSources: readonly TopoImageMaterialSource[];
 }
 
 export interface TopoMapRuntimeLayerIds {
@@ -102,6 +112,14 @@ export const ORTHO_PHOTO_TEXTURE_BUDGETS: readonly {
   { value: "4096", label: "4096 px" },
   { value: "8192", label: "8192 px" },
 ];
+
+const TOPO_IMAGE_SOURCE_TERRAIN_FIELDS = [
+  "orthoPhotoTextureBudget",
+  "orthoPhotoPath",
+  "orthoPhotoTexture4096Path",
+  "orthoPhotoTexture8192Path",
+  "orthoPhotoBounds",
+] as const satisfies readonly (keyof NonNullable<SceneProperties["terrain"]>)[];
 
 export const TOPO_MAP_BRANDING_DEFAULT_ANCHOR = "south-east";
 export const TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M = 0;
@@ -304,15 +322,12 @@ export function surfaceElevationDefaultPatch(): NonNullable<
     ...surfaceElevationPresetGradientPatch(
       SURFACE_ELEVATION_PRESET_PALETTES.surfaceElevation,
     ),
-    edgeFadeShape: "square",
-    edgeFadeInsetM: 0,
-    edgeFadeCornerRadiusM: 0,
   };
 }
 
 function proceduralPresetPatch(
   materialPreset: Exclude<
-    PublicTopoMaterialPresetId,
+    BuiltInTopoMaterialPresetId,
     "custom" | "ortho-photo"
   >,
   colors: readonly string[],
@@ -336,10 +351,132 @@ export function orthoPhotoPathForBudget(
   return terrain.orthoPhotoTexture4096Path ?? terrain.orthoPhotoPath;
 }
 
+export function topoImageMaterialPresetId(
+  sourceId: string,
+): TopoImageMaterialPresetId {
+  return `image:${sourceId}`;
+}
+
+export function isTopoImageMaterialPreset(
+  preset: PublicTopoMaterialPresetId | string | undefined,
+): preset is TopoImageMaterialPresetId {
+  return typeof preset === "string" && preset.startsWith("image:");
+}
+
+export function isImageBackedTopoMaterialPreset(
+  preset: PublicTopoMaterialPresetId | string | undefined,
+): boolean {
+  return preset === "ortho-photo" || isTopoImageMaterialPreset(preset);
+}
+
+export function topoImageMaterialSourceForPreset(
+  terrain: NonNullable<SceneProperties["terrain"]>,
+  preset: PublicTopoMaterialPresetId | string | undefined,
+): TopoImageMaterialSource | undefined {
+  if (!isTopoImageMaterialPreset(preset)) return undefined;
+  const sourceId = preset.slice("image:".length);
+  return (terrain.topoImageMaterialSources ?? []).find(
+    (source) => source.id === sourceId,
+  );
+}
+
+export function topoImageMaterialTexturePathForBudget(
+  source: Pick<
+    TopoImageMaterialSource,
+    "texturePath" | "texture4096Path" | "texture8192Path"
+  >,
+  budget: OrthoPhotoTextureBudgetId,
+): string | undefined {
+  if (budget === "8192") {
+    return source.texture8192Path ?? source.texturePath;
+  }
+  return source.texture4096Path ?? source.texturePath;
+}
+
+function orthoPhotoMaterialSource(
+  terrain: NonNullable<SceneProperties["terrain"]>,
+): TopoImageMaterialSource | undefined {
+  return (terrain.topoImageMaterialSources ?? []).find(
+    (source) => source.id === "ortho-photo",
+  );
+}
+
+function clampedDefaultSurfaceOpacity(
+  source: TopoImageMaterialSource | undefined,
+): number | undefined {
+  const opacity = source?.defaultSurfaceOpacity;
+  return typeof opacity === "number" && Number.isFinite(opacity)
+    ? Math.min(1, Math.max(0, opacity))
+    : undefined;
+}
+
+export function topoMapPresetSurfaceStylePatch(
+  preset: PublicTopoMaterialPresetId,
+  terrain: NonNullable<SceneProperties["terrain"]> = {},
+): Partial<EditableStyle> | null {
+  const source =
+    preset === "ortho-photo"
+      ? orthoPhotoMaterialSource(terrain)
+      : topoImageMaterialSourceForPreset(terrain, preset);
+  const opacity = clampedDefaultSurfaceOpacity(source);
+  return typeof opacity === "number" ? { opacity } : null;
+}
+
+export function topoImageMaterialDefaultPatch(
+  source: TopoImageMaterialSource,
+  budget: OrthoPhotoTextureBudgetId = source.textureBudget === 8192
+    ? "8192"
+    : "4096",
+): NonNullable<SceneProperties["terrain"]> {
+  const nextBudget = budget === "8192" ? 8192 : 4096;
+  const path = topoImageMaterialTexturePathForBudget(source, budget);
+  return {
+    materialPreset: topoImageMaterialPresetId(source.id),
+    orthoPhotoTextureBudget: nextBudget,
+    ...(path ? { orthoPhotoPath: path } : {}),
+    ...(source.texture4096Path
+      ? { orthoPhotoTexture4096Path: source.texture4096Path }
+      : {}),
+    ...(source.texture8192Path
+      ? { orthoPhotoTexture8192Path: source.texture8192Path }
+      : {}),
+    ...(source.bounds ? { orthoPhotoBounds: source.bounds } : {}),
+    orthoPhotoOpacity: source.defaultOpacity ?? 1,
+    orthoPhotoHillshadeBlend: source.defaultHillshadeBlend ?? 0.45,
+    orthoPhotoBrightness: source.defaultBrightness ?? 0,
+    orthoPhotoContrast: source.defaultContrast ?? 1,
+    orthoPhotoSaturation: source.defaultSaturation ?? 1,
+    surfaceElevationEnabled: false,
+  };
+}
+
 export function orthoPhotoDefaultPatch(
   terrain: NonNullable<SceneProperties["terrain"]> = {},
   budget: OrthoPhotoTextureBudgetId = "4096",
 ): NonNullable<SceneProperties["terrain"]> {
+  const source = orthoPhotoMaterialSource(terrain);
+  if (source) {
+    const nextBudget = budget === "8192" ? 8192 : 4096;
+    const path = topoImageMaterialTexturePathForBudget(source, budget);
+    return {
+      materialPreset: "ortho-photo",
+      orthoPhotoTextureBudget: nextBudget,
+      ...(path ? { orthoPhotoPath: path } : {}),
+      ...(source.texture4096Path
+        ? { orthoPhotoTexture4096Path: source.texture4096Path }
+        : {}),
+      ...(source.texture8192Path
+        ? { orthoPhotoTexture8192Path: source.texture8192Path }
+        : {}),
+      ...(source.bounds ? { orthoPhotoBounds: source.bounds } : {}),
+      orthoPhotoOpacity: source.defaultOpacity ?? 1,
+      orthoPhotoHillshadeBlend: source.defaultHillshadeBlend ?? 0.45,
+      orthoPhotoBrightness: source.defaultBrightness ?? 0,
+      orthoPhotoContrast: source.defaultContrast ?? 1,
+      orthoPhotoSaturation: source.defaultSaturation ?? 1,
+      surfaceElevationEnabled: false,
+    };
+  }
   const nextBudget = budget === "8192" ? 8192 : 4096;
   const orthoPhotoPath = orthoPhotoPathForBudget(terrain, budget);
   return {
@@ -368,6 +505,31 @@ export function topoMapPresetPatch(
   preset: PublicTopoMaterialPresetId,
   terrain: NonNullable<SceneProperties["terrain"]> = {},
 ): NonNullable<SceneProperties["terrain"]> | null {
+  const imageSource = topoImageMaterialSourceForPreset(terrain, preset);
+  if (imageSource) {
+    const imageBudget =
+      terrain.materialPreset === preset && terrain.orthoPhotoTextureBudget === 4096
+        ? "4096"
+        : terrain.materialPreset === preset && terrain.orthoPhotoTextureBudget === 8192
+          ? "8192"
+          : imageSource.textureBudget === 4096
+            ? "4096"
+            : "8192";
+    return {
+      ...topoImageMaterialDefaultPatch(imageSource, imageBudget),
+      rampLow: "#575145",
+      rampMid: "#958a72",
+      rampHigh: "#d9cba3",
+      elevLowM: 0,
+      elevHighM: 180,
+      hillshadeIntensity: 0.86,
+      shadowSharpness: 0.34,
+      facetStrength: 0.04,
+      rockHueVariance: 0,
+      shadowTint: "#303640",
+    };
+  }
+  if (isTopoImageMaterialPreset(preset)) return null;
   switch (preset) {
     case "custom":
       return null;
@@ -384,10 +546,6 @@ export function topoMapPresetPatch(
           hillshadeIntensity: 0.86,
           shadowSharpness: 0.28,
           facetStrength: 0.04,
-          edgeFadeDistanceM: 90_000,
-          edgeFadeShape: "square",
-          edgeFadeInsetM: 0,
-          edgeFadeCornerRadiusM: 0,
           rockHueVariance: 0.03,
           shadowTint: "#3f4650",
         },
@@ -405,10 +563,6 @@ export function topoMapPresetPatch(
           hillshadeIntensity: 0.86,
           shadowSharpness: 0.34,
           facetStrength: 0.04,
-          edgeFadeDistanceM: 90_000,
-          edgeFadeShape: "square",
-          edgeFadeInsetM: 0,
-          edgeFadeCornerRadiusM: 0,
           rockHueVariance: 0,
           shadowTint: "#303640",
         },
@@ -427,10 +581,6 @@ export function topoMapPresetPatch(
         hillshadeIntensity: 0.86,
         shadowSharpness: 0.34,
         facetStrength: 0.04,
-        edgeFadeDistanceM: 90_000,
-        edgeFadeShape: "square",
-        edgeFadeInsetM: 0,
-        edgeFadeCornerRadiusM: 0,
         rockHueVariance: 0,
         shadowTint: "#303640",
       };
@@ -447,10 +597,6 @@ export function topoMapPresetPatch(
           hillshadeIntensity: 1.05,
           shadowSharpness: 0.5,
           facetStrength: 0.12,
-          edgeFadeDistanceM: 80_000,
-          edgeFadeShape: "square",
-          edgeFadeInsetM: 0,
-          edgeFadeCornerRadiusM: 0,
           rockHueVariance: 0.05,
           shadowTint: "#303640",
         },
@@ -468,10 +614,6 @@ export function topoMapPresetPatch(
           hillshadeIntensity: 0.72,
           shadowSharpness: 0.18,
           facetStrength: 0.02,
-          edgeFadeDistanceM: 120_000,
-          edgeFadeShape: "square",
-          edgeFadeInsetM: 0,
-          edgeFadeCornerRadiusM: 0,
           rockHueVariance: 0.015,
           shadowTint: "#56524a",
         },
@@ -489,10 +631,6 @@ export function topoMapPresetPatch(
           hillshadeIntensity: 0.92,
           shadowSharpness: 0.38,
           facetStrength: 0.06,
-          edgeFadeDistanceM: 85_000,
-          edgeFadeShape: "square",
-          edgeFadeInsetM: 0,
-          edgeFadeCornerRadiusM: 0,
           rockHueVariance: 0.005,
           shadowTint: "#3f464f",
         },
@@ -510,19 +648,16 @@ export function topoMapPresetPatch(
           hillshadeIntensity: 1.35,
           shadowSharpness: 0.72,
           facetStrength: 0.22,
-          edgeFadeDistanceM: 70_000,
-          edgeFadeShape: "square",
-          edgeFadeInsetM: 0,
-          edgeFadeCornerRadiusM: 0,
           rockHueVariance: 0.07,
           shadowTint: "#262b34",
         },
       );
   }
+  return null;
 }
 
 export const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
-  value: PublicTopoMaterialPresetId;
+  value: BuiltInTopoMaterialPresetId;
   label: string;
 }[] = [
   { value: "custom", label: "Custom" },
@@ -535,12 +670,43 @@ export const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
   { value: "high-contrast", label: "High contrast" },
 ];
 
+export function topoMapMaterialOptions(
+  terrain: NonNullable<SceneProperties["terrain"]> = {},
+): readonly {
+  value: PublicTopoMaterialPresetId;
+  label: string;
+}[] {
+  const sourceOptions = (terrain.topoImageMaterialSources ?? []).map(
+    (source) => ({
+      value: topoImageMaterialPresetId(source.id) as PublicTopoMaterialPresetId,
+      label: source.label,
+    }),
+  ).filter((source) => source.value !== "image:ortho-photo");
+  return [...PUBLIC_TOPO_MATERIAL_PRESETS, ...sourceOptions];
+}
+
 export function publicTopoMaterialPresetId(
   value: unknown,
+  terrain: NonNullable<SceneProperties["terrain"]> = {},
 ): PublicTopoMaterialPresetId {
-  return PUBLIC_TOPO_MATERIAL_PRESETS.some((preset) => preset.value === value)
+  return topoMapMaterialOptions(terrain).some((preset) => preset.value === value)
     ? (value as PublicTopoMaterialPresetId)
     : "custom";
+}
+
+export function topoImageMaterialUv(
+  bounds: [number, number, number, number] | undefined,
+  point: [number, number],
+): [number, number] | null {
+  if (!bounds) return null;
+  const [minX, minY, maxX, maxY] = bounds;
+  const width = maxX - minX;
+  const height = maxY - minY;
+  if (width <= 0 || height <= 0) return null;
+  const u = (point[0] - minX) / width;
+  const v = (point[1] - minY) / height;
+  if (u < 0 || u > 1 || v < 0 || v > 1) return null;
+  return [u, v];
 }
 
 export function surfaceElevationColorsFromTerrain(
@@ -637,11 +803,24 @@ export function resolveTopoMapSettings({
   const surfaceLayerId =
     resolvedSurfaceLayer?.id ?? TOPO_MAP_DEFAULT_SURFACE_LAYER_ID;
   const legacyTerrain = environment.scene?.terrain ?? {};
-  const materialPreset = publicTopoMaterialPresetId(legacyTerrain.materialPreset);
+  const materialPreset = publicTopoMaterialPresetId(
+    legacyTerrain.materialPreset,
+    legacyTerrain,
+  );
   const presetPatch =
     materialPreset === "custom"
       ? null
       : topoMapPresetPatch(materialPreset, legacyTerrain);
+  const materialOptions = topoMapMaterialOptions(legacyTerrain);
+  const terrain = {
+    ...(presetPatch ?? {}),
+    ...legacyTerrain,
+  };
+  if (presetPatch && isImageBackedTopoMaterialPreset(materialPreset)) {
+    for (const field of TOPO_IMAGE_SOURCE_TERRAIN_FIELDS) {
+      terrain[field] = presetPatch[field] as never;
+    }
+  }
   return {
     surfaceLayer: resolvedSurfaceLayer ?? null,
     surfaceLayerId,
@@ -650,10 +829,9 @@ export function resolveTopoMapSettings({
     surfaceStyle: page
       ? effectiveStyle(environment, page, surfaceLayerId)
       : (environment.layerStyles[surfaceLayerId] ?? {}),
-    terrain: {
-      ...(presetPatch ?? {}),
-      ...legacyTerrain,
-    },
+    terrain,
     materialPreset,
+    materialOptions,
+    imageMaterialSources: legacyTerrain.topoImageMaterialSources ?? [],
   };
 }

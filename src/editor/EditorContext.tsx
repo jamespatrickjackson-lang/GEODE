@@ -46,6 +46,7 @@ import {
   createUserRenderPresetFromEnvironment,
   updateUserRenderPresetFromEnvironment,
 } from "../pages/renderPresets";
+import { stripTopoMaterialAuthorityFromTerrain } from "../topoMap/materialAuthority";
 
 // EditorContext owns the editable copy of the project. The on-disk state is
 // authoritative on first load (via loadProject in src/pages); from then on
@@ -247,7 +248,10 @@ function cinematicScenePatchForEdit(
   if (patch.fog !== undefined) next.fog = patch.fog;
   if (patch.sun !== undefined) next.sun = patch.sun;
   if (patch.lighting !== undefined) next.lighting = patch.lighting;
-  if (patch.terrain !== undefined) next.terrain = patch.terrain;
+  if (patch.terrain !== undefined) {
+    const terrain = stripTopoMaterialAuthorityFromTerrain(patch.terrain);
+    if (terrain) next.terrain = terrain;
+  }
   if (patch.topoDetails !== undefined) next.topoDetails = patch.topoDetails;
   if (patch.lightMode !== undefined) next.lightMode = patch.lightMode;
   if (patch.toneMapping !== undefined) next.toneMapping = patch.toneMapping;

@@ -16,6 +16,7 @@ import {
 } from "./styles";
 import { writeFile } from "./save";
 import { TopoMapPanel } from "./topoMap/TopoMapPanel";
+import { SiteDetailsPanel } from "./SiteDetailsPanel";
 import {
   detailsContentStyle,
   drillingAssayDetailsStyle,
@@ -74,8 +75,10 @@ import {
   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
   UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+  UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+  UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
   UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
 import {
@@ -439,6 +442,10 @@ const UTAH_FORGE_PUBLIC_LAYER_GROUPS = [
   {
     title: "Working area",
     ids: [UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID],
+  },
+  {
+    title: "Site Details",
+    ids: [UTAH_FORGE_SITE_BOUNDARY_LAYER_ID, UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID],
   },
   {
     title: "Seismic analysis",
@@ -3262,6 +3269,47 @@ export function LayerPanel({
           : {};
         const seismicCapabilityDisabled = !isEnv && currentPage === null;
         if (layers.length === 0) return null;
+        if (
+          state.projectSlug === "utah-forge" &&
+          section === "public" &&
+          group.title === "Site Details"
+        ) {
+          const boreholeLayer = byId.get(UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID);
+          const boundaryLayer = byId.get(UTAH_FORGE_SITE_BOUNDARY_LAYER_ID);
+          const boreholeStyle = isEnv
+            ? (state.environment.layerStyles[
+                UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID
+              ] ?? {})
+            : currentPage
+              ? effectiveStyle(
+                  state.environment,
+                  currentPage,
+                  UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
+                )
+              : (state.environment.layerStyles[
+                  UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID
+                ] ?? {});
+          return (
+            <LayerGroup
+              key={group.title}
+              title="Site Details"
+              devSource="src/editor/LayerPanel.tsx:site-details"
+              devNote="Site Details contains the FORGE site boundary, demo boreholes, and schematic orientation block."
+              accentColor={selectedPageAccent}
+            >
+              <SiteDetailsPanel
+                boreholeLayer={boreholeLayer}
+                boundaryLayer={boundaryLayer}
+                renderLayer={renderLayer}
+                style={boreholeStyle}
+                isEnv={isEnv}
+                currentPage={currentPage}
+                setEnvLayerStyle={setEnvLayerStyle}
+                setPageLayerOverride={setPageLayerOverride}
+              />
+            </LayerGroup>
+          );
+        }
         if (
           section === "publicTopo" &&
           group.title === PUBLIC_TOPO_LAYER_GROUP_TITLE

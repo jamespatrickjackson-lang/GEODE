@@ -22,6 +22,7 @@ import {
 } from "../pages/renderPresets";
 import type { PostHandle } from "./postprocessing";
 import type { TerrainMaterialHandle } from "./terrainMaterial";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeometry.js";
@@ -55,10 +56,15 @@ import {
   UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
   UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
   UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+  UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
   UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
+import {
+  resolveDemoBoreholeWellStyle,
+  resolveDemoOrientationBlockStyle,
+} from "../projectModules/utahForge/siteDetails";
 import {
   UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS,
 } from "../projectModules/utahForge/crossfadeFields";
@@ -84,12 +90,17 @@ import {
   createTopoMapRuntime,
   type TopoMapRuntime,
 } from "../topoMap/runtime";
+import { applyTopoMaterialAuthority } from "../topoMap/materialAuthority";
 import {
   deterministicScalarSample,
   scalarLateralSupportValues,
   scalarValueIsVisible,
   scalarVisibilityWeight,
 } from "./scalarFocus";
+import {
+  rebuildDemoBoreholeCenterlineGeometry,
+  rebuildDemoBoreholePipeGeometry,
+} from "../loaders/loadUtahForgeDemoBoreholes";
 
 // Fade duration matches the markdown overlay panel (OverlayDisplay's
 // FADE_MS) so chapter transitions feel coherent across UI surfaces.
@@ -5599,6 +5610,204 @@ export class SceneManager {
     });
   }
 
+  private applyDemoBoreholeStyle(layerId: string, style: EditableStyle): void {
+    if (layerId !== UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID) return;
+    const group = this.layers.get(layerId);
+    if (!group) return;
+    const layerOpacity = clamp01(
+      typeof style.opacity === "number" ? style.opacity : 1,
+    );
+    const displayPointsByWellId = new Map<string, THREE.Vector3[]>();
+    const blockStyle = resolveDemoOrientationBlockStyle(style);
+    const tupleToVector = (value: unknown): THREE.Vector3 | null => {
+      if (
+        !Array.isArray(value) ||
+        value.length < 3 ||
+        !value.every((entry) => typeof entry === "number" && Number.isFinite(entry))
+      ) {
+        return null;
+      }
+      return new THREE.Vector3(value[0], value[1], value[2]);
+    };
+
+    group.traverse((obj) => {
+      if (obj.userData?.demoBoreholePipeRoot === true) {
+        const wellId =
+          typeof obj.userData.demoBoreholeWellId === "string"
+            ? obj.userData.demoBoreholeWellId
+            : "";
+        const wellStyle = resolveDemoBoreholeWellStyle(style, wellId);
+        obj.visible = wellStyle.visible;
+        const displayPoints = rebuildDemoBoreholePipeGeometry(obj, {
+          radiusM: wellStyle.pipeDiameterM * 0.5,
+          color: wellStyle.color,
+          opacity: wellStyle.opacity * layerOpacity,
+          lineStyle: wellStyle.lineStyle,
+          dashLengthM: wellStyle.dashLengthM,
+          dashGapM: wellStyle.dashGapM,
+          pathTreatment: wellStyle.pathTreatment,
+          smoothingStrength: wellStyle.smoothingStrength,
+        });
+        displayPointsByWellId.set(wellId, displayPoints);
+      }
+    });
+
+    group.traverse((obj) => {
+      const wellId =
+        typeof obj.userData?.demoBoreholeWellId === "string"
+          ? obj.userData.demoBoreholeWellId
+          : "";
+      const wellStyle = wellId
+        ? resolveDemoBoreholeWellStyle(style, wellId)
+        : null;
+      const displayPoints = wellId ? displayPointsByWellId.get(wellId) : null;
+
+      if (wellStyle && obj.userData?.demoBoreholeWell === true) {
+        obj.visible = wellStyle.visible;
+      }
+      if (
+        wellStyle &&
+        displayPoints &&
+        obj.userData?.demoBoreholeCenterline === true
+      ) {
+        obj.visible = wellStyle.visible && wellStyle.centerlineVisible;
+        rebuildDemoBoreholeCenterlineGeometry(obj, displayPoints);
+        const line = obj as Line2;
+        if (line.material instanceof LineMaterial) {
+          line.material.color.set(wellStyle.centerlineColor);
+          line.material.opacity = wellStyle.centerlineOpacity * layerOpacity;
+          line.material.transparent = true;
+          line.material.linewidth = wellStyle.centerlineWidth;
+          line.material.needsUpdate = true;
+        }
+      }
+      if (
+        wellStyle &&
+        displayPoints &&
+        obj.userData?.demoBoreholeCollar === true
+      ) {
+        obj.visible = wellStyle.visible && wellStyle.collarVisible;
+        if (displayPoints[0]) obj.position.copy(displayPoints[0]);
+        const baseRadius =
+          typeof obj.userData.demoBoreholeBaseCollarRadiusM === "number"
+            ? obj.userData.demoBoreholeBaseCollarRadiusM
+            : 30;
+        obj.scale.setScalar(
+          wellStyle.collarDiameterM * 0.5 / Math.max(0.001, baseRadius),
+        );
+        const mesh = obj as THREE.Mesh;
+        const material = mesh.material as THREE.MeshStandardMaterial | undefined;
+        if (material) {
+          material.color.set(wellStyle.color);
+          material.emissive?.set(wellStyle.color);
+          material.opacity = wellStyle.opacity * layerOpacity;
+          material.transparent = true;
+          material.needsUpdate = true;
+        }
+      }
+      if (
+        wellStyle &&
+        displayPoints &&
+        obj.userData?.demoBoreholeLabelAnchor === true &&
+        obj.userData?.demoBoreholeOwnerId === wellId
+      ) {
+        const labelRole = obj.userData.demoBoreholeLabelRole;
+        if (labelRole === "collar") {
+          obj.visible = wellStyle.visible && wellStyle.collarLabelVisible;
+          if (displayPoints[0]) {
+            obj.position.copy(displayPoints[0]);
+            obj.position.z += wellStyle.collarLabelLiftM;
+          }
+          obj.userData.displayName = wellStyle.collarLabelText;
+        } else if (labelRole === "toe") {
+          obj.visible = wellStyle.visible && wellStyle.toeLabelVisible;
+          const toe = displayPoints[displayPoints.length - 1];
+          if (toe) {
+            obj.position.copy(toe);
+            obj.position.z += wellStyle.toeLabelLiftM;
+          }
+          obj.userData.displayName = wellStyle.toeLabelText;
+        }
+      }
+      if (
+        obj.userData?.demoOrientationBlock === true ||
+        obj.userData?.demoOrientationBlockEdge === true
+      ) {
+        const baseCenter = tupleToVector(obj.userData.demoOrientationBlockBaseCenter);
+        const baseSize = Array.isArray(obj.userData.demoOrientationBlockBaseSize)
+          ? obj.userData.demoOrientationBlockBaseSize
+          : null;
+        if (!baseCenter || !baseSize || baseSize.length < 3) return;
+        const baseWidth = typeof baseSize[0] === "number" ? baseSize[0] : 118;
+        const baseDepth = typeof baseSize[1] === "number" ? baseSize[1] : 68;
+        const baseHeight = typeof baseSize[2] === "number" ? baseSize[2] : 34;
+        obj.visible =
+          blockStyle.visible &&
+          (obj.userData.demoOrientationBlock === true ||
+            blockStyle.outlineVisible);
+        obj.position.set(
+          baseCenter.x,
+          baseCenter.y,
+          baseCenter.z + blockStyle.liftM + (blockStyle.heightM - baseHeight) * 0.5,
+        );
+        obj.scale.set(
+          blockStyle.widthM / Math.max(0.001, baseWidth),
+          blockStyle.depthM / Math.max(0.001, baseDepth),
+          blockStyle.heightM / Math.max(0.001, baseHeight),
+        );
+        obj.rotation.z = THREE.MathUtils.degToRad(blockStyle.rotationDeg);
+        const material = (obj as THREE.Mesh | THREE.LineSegments).material as
+          | THREE.Material
+          | undefined;
+        const colored = material as
+          | (THREE.Material & {
+              color?: THREE.Color;
+              opacity?: number;
+              linewidth?: number;
+            })
+          | undefined;
+        if (colored?.color) {
+          colored.color.set(
+            obj.userData.demoOrientationBlockEdge === true
+              ? blockStyle.outlineColor
+              : blockStyle.fillColor,
+          );
+        }
+        if (colored) {
+          colored.opacity =
+            (obj.userData.demoOrientationBlockEdge === true
+              ? blockStyle.outlineOpacity
+              : blockStyle.opacity) * layerOpacity;
+          colored.transparent = true;
+          if ("linewidth" in colored) colored.linewidth = blockStyle.outlineThickness;
+          colored.needsUpdate = true;
+        }
+      }
+      if (
+        obj.userData?.demoBoreholeLabelAnchor === true &&
+        obj.userData?.demoBoreholeLabelRole === "block"
+      ) {
+        const baseCenter = tupleToVector(
+          obj.parent?.children.find(
+            (child) => child.userData?.demoOrientationBlock === true,
+          )?.userData.demoOrientationBlockBaseCenter,
+        );
+        const blockMesh = obj.parent?.children.find(
+          (child) => child.userData?.demoOrientationBlock === true,
+        );
+        if (baseCenter && blockMesh) {
+          obj.visible = blockStyle.visible && blockStyle.labelVisible;
+          obj.position.set(
+            baseCenter.x,
+            baseCenter.y,
+            blockMesh.position.z + blockStyle.labelLiftM,
+          );
+          obj.userData.displayName = blockStyle.labelText;
+        }
+      }
+    });
+  }
+
   private applyGeochemStyle(layerId: string, style: EditableStyle): void {
     if (layerId !== "geochem-soils-2024") return;
     const group = this.layers.get(layerId);
@@ -9222,6 +9431,7 @@ export class SceneManager {
     this.applyHyperspectralStyle(id, style);
     this.applyImageryLidarAoiStyle(id, style);
     this.applyEzGammaStyle(id, style);
+    this.applyDemoBoreholeStyle(id, style);
     this.applyCaseStudyBDemoLayerAlias(id, style);
     this.applySurfaceGradientStyle(id, style);
     this.applyScalarPreviewStyle(id, style);
@@ -9702,6 +9912,11 @@ export class SceneManager {
       mergeSceneProperties(environment.scene, presetPatch),
       this.environmentScenePreviewPatch,
     );
+    const authoritativeTerrain = applyTopoMaterialAuthority(
+      sp.terrain,
+      environment.scene?.terrain,
+    );
+    if (authoritativeTerrain) sp.terrain = authoritativeTerrain;
     this.topoRuntime.setCurrentTerrain(sp.terrain ?? {});
     this.setStudioSceneElementsVisible(sp.lighting?.showSceneElements ?? true);
     this.applyDrillingAssayDisplay(sp);

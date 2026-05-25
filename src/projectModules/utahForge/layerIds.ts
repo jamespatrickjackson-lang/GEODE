@@ -37,6 +37,11 @@ export const UTAH_FORGE_SCENE_SECTION_LAYER_ID =
 export const UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID =
   "utah-forge-phase3-working-area";
 
+export const UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID =
+  "utah-forge-phase3-demo-boreholes";
+
+export const UTAH_FORGE_SITE_BOUNDARY_LAYER_ID = "utah-forge-site-boundary";
+
 export const UTAH_FORGE_TOPO_GRATICULE_LAYER_ID = "utah-forge-topo-graticule";
 
 export const UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID =

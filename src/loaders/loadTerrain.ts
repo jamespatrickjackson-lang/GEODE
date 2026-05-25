@@ -298,6 +298,7 @@ export async function loadTerrain(
   mesh.castShadow = false;
   mesh.receiveShadow = false;
   mesh.userData.terrainHandle = terrainHandle;
+  mesh.userData.terrainUtmBounds = bbox;
   mesh.userData.terrainBaseZ = mesh.position.z;
 
   // Sanity check: warn if the GeoTIFF bbox does not match the project bounds.
