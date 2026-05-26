@@ -69,6 +69,20 @@ labels, and demo boreholes may remain as passive orientation context, but active
 MT, seismic, slices, volumes, and isosurfaces should not be co-rendered on one
 page unless a future page is explicitly scoped as a comparison view.
 
+MT surface boundaries are now authorable visualization entities under the
+legacy `3D MT threshold surfaces` layer. The nested editor surface is named
+`Surface boundaries`, while runtime compatibility keeps the existing layer id.
+Boundary opacity is owned by the boundary system: effective opacity is master
+opacity multiplied by per-boundary opacity, with generic layer opacity hidden
+where it would compete.
+
+Page transitions must be product-aware for MT and seismic tools. A layer can
+remain visible while the wrong sub-product is hidden, so transition state must
+preserve render-entity identity such as selected scalar-volume product, section
+ISO overlay, threshold boundary id, seismic product id, and scene-section
+window state. Product-owned shader opacity must be multiplied by transition
+opacity rather than replaced by a generic layer fade.
+
 ## Current Editor Structure Checkpoint
 
 The editor sidebar is being aligned to the same global-tool rule. Top-level

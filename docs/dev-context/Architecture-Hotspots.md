@@ -22,6 +22,10 @@ Use this file before modifying large mixed-concern modules. It points to the cur
 - Keep project data semantics, page IDs, provenance fields, and visual behavior stable unless the task explicitly changes them.
 - Reopen exact source regions before editing; do not rely on stale context.
 - Prefer existing validators and targeted browser suites before adding new broad tests.
+- Transition changes in `SceneManager.ts` require product-level reasoning.
+  Verify the specific source/target pages and product ids involved; layer-level
+  visibility is not enough for MT scalar volumes, section ISO overlays,
+  threshold boundaries, or seismic section/volume products.
 
 ## Current Useful Checks
 

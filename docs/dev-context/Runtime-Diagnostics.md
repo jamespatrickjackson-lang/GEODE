@@ -29,6 +29,19 @@ The dev hook attempts to report:
 
 Fields that are unavailable remain `null`, empty, or noted rather than forcing runtime changes.
 
+## Transition Diagnostics
+
+`SceneManager.getTransitionDebugState()` is available through the page
+controller debug state during browser tests. It reports whether a transition is
+active, source/target page ids, transition reason, active data-transition count,
+snapshot count, scalar tween count, and layer tween count.
+
+For MT/seismic transition regressions, inspect product-level scene state in
+addition to this layer-level diagnostic. A layer can be visible while a product
+inside it is intentionally hidden. The important invariant is that product-owned
+shader opacity, for example MT scalar-volume `uOpacity` after
+`sectionIsoSourceOpacity`, is not overwritten by the layer fade.
+
 ## How To Call It
 
 In a Vite dev session, open the browser console and run:
@@ -59,6 +72,7 @@ window.__GEOVOX_DIAGNOSTICS__.getLastSnapshot()
 - It does not change render output.
 - It does not validate technical accuracy.
 - It does not mark any artifact, wrapper, render result, or inference accepted.
+- It does not prove transition correctness without a source/target page test.
 
 ## Warnings
 

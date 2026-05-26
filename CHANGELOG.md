@@ -1,5 +1,15 @@
 # GeoSee Change Log
 
+## 2026-05-26 - MT Surface Boundaries And Transition Stability
+
+- Added authorable MT surface-boundary controls for the `3D MT threshold surfaces` layer, including a `Surface boundaries` editor subcontainer, boundary order/style state, per-boundary visibility/color/opacity, and standalone legend handling.
+- Added generated MT boundary-bank assets and metadata for focused and full-extent MT isosurface products while preserving the existing Utah FORGE threshold-surface layer id.
+- Added scene-section smoothing and persistence work so saved MT section windows, ground trace, and section-helper state survive page navigation and editor interaction.
+- Fixed transition artifacts where product-owned shader opacity was overwritten by generic layer fades. MT scalar volumes and seismic section/volume shaders now preserve their product opacity base through page transitions.
+- Added a targeted Utah FORGE browser regression proving section-heavy page transitions do not reveal the hidden MT volume source while section ISO overlays are active.
+- Verified `npm run build`, `npm run check:utah-runtime`, `git diff --check`, and the targeted MT transition test during the iteration.
+- Status: transition stability checkpoint. The current rule is that page transitions must operate on render entities and product-owned opacity, not only layer ids.
+
 ## 2026-05-25 - Global MT Resistivity Tool Fidelity Pass
 
 - Added `src/mtResistivity/` as the initial global MT resistivity tool boundary with product roles for point cloud, depth slices, cross-sections, isosurfaces, and scalar volume.

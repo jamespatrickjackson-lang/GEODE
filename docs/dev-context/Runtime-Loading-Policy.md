@@ -26,6 +26,7 @@ Runtime loading policy must be reviewed against `docs/dev-context/Render-Quality
 | Visibility composition | Effective visibility starts from `environment.defaultVisibleLayers`, then applies page `visibilityOverrides`. | `src/pages/effective.ts` |
 | Style composition | Effective style shallow-merges `environment.layerStyles[layerId]` with page `layerOverrides[layerId]`. | `src/pages/effective.ts` |
 | Page application | `PageController` applies first-page visibility, styles, page scene, overlays, and camera. Page transitions fade layer visibility/style state rather than changing what has been allocated. | `src/pages/PageController.tsx` |
+| Product-aware transitions | Page transitions must preserve product/object identity inside visible layers. MT scalar-volume source opacity, section ISO overlays, threshold boundaries, and seismic section/volume source opacity are render entities, not generic layer opacity. | `src/scene/SceneManager.ts`, `tests/utah-forge/mt-rendering.spec.ts` |
 | Scene overlays | Scene overlays load eagerly from `environment.sceneOverlays`; per-page activation controls opacity/visibility. | `src/scene.ts`, `src/pages/effective.ts` |
 | Project scale | Observed layer/page counts: Utah FORGE 14 layers / 10 pages, Case Study B 28 layers / 5 pages, Woodjam 21 layers / 4 pages, Base GUI 1 layer / 1 page. | Project manifests/environments |
 
@@ -142,6 +143,8 @@ Any loading change must preserve:
 - seismic/MT co-rendering quality
 - computed artifact fidelity
 - opacity and visibility transitions
+- product-owned opacity during transitions; layer fades must not reveal hidden
+  scalar-volume, seismic, or section-source products
 - scalar/raymarch transfer behavior
 - point size and high-density readability
 

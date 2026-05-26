@@ -38,6 +38,8 @@ Core runtime/project surfaces:
 - `src/editor/topoMap/TopoMapPanel.tsx`: public topo map tool editor
 - `src/mtResistivity/`: global MT resistivity tool contract and slice product metadata
 - `src/pages/PageController.tsx`: page navigation and camera/page transitions
+- `src/scene/SceneManager.ts`: also owns the current product-aware transition
+  envelope, section-window interpolation, and render-entity opacity handling
 
 Treat current project/source files as the authority over older prose.
 
@@ -56,6 +58,13 @@ Current MT resistivity work follows the same rule: all slices, sections,
 volumes, and threshold surfaces must trace back to the full authoritative MT
 cell-center model unless they are explicitly labeled presentation crops.
 
+Current transition work is product-aware. Page navigation should treat visible
+render entities as `layer id + product/object id + section state`, not just
+layer ids. Product-owned shader opacity such as MT scalar-volume source opacity
+and seismic section/volume source opacity must be multiplied by layer/page fade
+opacity, not overwritten by it. This prevents hidden section sources from
+appearing during camera/page transitions.
+
 ## Focused Routing
 
 - Workspace state and verification tiers: `docs/dev-context/Verification-Routing.md`
@@ -72,5 +81,8 @@ cell-center model unless they are explicitly labeled presentation crops.
 - Follow the output posture in `CLAUDE.md`: system/dev context transfer, not social framing.
 - Use the cheapest verification that matches the changed surface.
 - Prefer targeted browser checks over full Utah regression during iteration.
+- For transition changes, include at least one focused browser check around the
+  affected source/target pages; product-level pop-in bugs can pass layer-level
+  tests.
 - For visual composition work, get a focused visual state in front of the human before broad automation.
 - Do not run `Launch GeoSee.bat`; use a scoped dev server on a free port if an agent needs one.
