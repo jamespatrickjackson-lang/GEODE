@@ -201,6 +201,7 @@ function applyWorkingAreaTopLinePolicy(
     displayName: label,
     phase3WorkingArea: true,
     siteContainerOutline: true,
+    terrainDrapedSiteGuide: true,
     sceneBounds: bounds,
   };
   root.traverse((obj) => {
@@ -211,11 +212,12 @@ function applyWorkingAreaTopLinePolicy(
     const materials = Array.isArray(material) ? material : [material];
     for (const m of materials) {
       const lineMaterial = m as THREE.Material & { fog?: boolean };
-      m.depthTest = false;
+      m.depthTest = true;
       m.depthWrite = false;
       m.transparent = true;
       lineMaterial.fog = false;
       m.userData.forceTransparent = true;
+      m.userData.lakeOutlineMaterial = true;
       if (m instanceof LineMaterial) {
         m.linewidth = 2.4;
       }
@@ -226,6 +228,7 @@ function applyWorkingAreaTopLinePolicy(
       displayName: label,
       phase3WorkingArea: true,
       siteContainerOutline: true,
+      terrainDrapedSiteGuideLine: true,
       sceneBounds: bounds,
       source,
     };
@@ -244,6 +247,7 @@ function applyForgeSiteBoundaryPolicy(
     ...root.userData,
     displayName: label,
     forgeSiteBoundary: true,
+    terrainDrapedSiteGuide: true,
   };
   root.traverse((obj) => {
     obj.renderOrder = 4590;
@@ -258,12 +262,13 @@ function applyForgeSiteBoundaryPolicy(
         opacity?: number;
       };
       lineMaterial.color?.set("#ffd84a");
-      m.depthTest = false;
+      m.depthTest = true;
       m.depthWrite = false;
       m.transparent = true;
       lineMaterial.opacity = 1;
       lineMaterial.fog = false;
       m.userData.forceTransparent = true;
+      m.userData.lakeOutlineMaterial = true;
       if (m instanceof LineMaterial) {
         m.linewidth = 3.2;
       }
@@ -273,6 +278,7 @@ function applyForgeSiteBoundaryPolicy(
       ...obj.userData,
       displayName: label,
       forgeSiteBoundary: true,
+      terrainDrapedSiteGuideLine: true,
       source,
     };
   });

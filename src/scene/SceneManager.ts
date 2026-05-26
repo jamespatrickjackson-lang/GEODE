@@ -59,6 +59,7 @@ import {
   UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+  UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
   UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
 import {
@@ -150,6 +151,8 @@ const DEFAULT_SEISMIC_MID_COLOR = "#f4f7ff";
 const DEFAULT_SEISMIC_HIGH_COLOR = "#d9362f";
 const POINT_DISTANCE_LIGHT_NEAR_M = 0;
 const POINT_DISTANCE_LIGHT_FAR_M = 180_000;
+const MT_SURFACE_MASK_DEFAULT_DEPTH_M = 25;
+const MT_SURFACE_MASK_DEFAULT_FEATHER_M = 175;
 const SCALAR_EDGE_LINE_XY_BIN_M = 2600;
 const SCALAR_EDGE_LINE_Z_BIN_M = 1300;
 const SCALAR_EDGE_LINE_MIN_CELL_POINTS = 2;
@@ -343,6 +346,12 @@ function styleNumber(
 
 interface PointDistanceLightShader {
   uniforms: Record<string, { value: number }>;
+  vertexShader: string;
+  fragmentShader: string;
+}
+
+interface MtSurfaceMaskShader {
+  uniforms: Record<string, { value: unknown }>;
   vertexShader: string;
   fragmentShader: string;
 }
@@ -549,6 +558,63 @@ function applyPointDistanceLightMaterial(
     shader.uniforms.uPointDistanceLightNear.value = POINT_DISTANCE_LIGHT_NEAR_M;
     shader.uniforms.uPointDistanceLightFar.value = POINT_DISTANCE_LIGHT_FAR_M;
   }
+}
+
+function applyMtSurfaceMaskPointMaterial(material: THREE.PointsMaterial): void {
+  material.transparent = true;
+  material.depthWrite = false;
+  material.depthTest = true;
+  material.blending = THREE.NormalBlending;
+  material.toneMapped = false;
+
+  if (material.userData.mtSurfaceMaskPatched === true) return;
+
+  const previousOnBeforeCompile = material.onBeforeCompile.bind(material);
+  const previousKey = material.customProgramCacheKey.bind(material);
+  material.onBeforeCompile = (shader, renderer) => {
+    previousOnBeforeCompile(shader, renderer);
+    const patchedShader = shader as MtSurfaceMaskShader;
+    if (!patchedShader.vertexShader.includes("surfaceMaskAlpha")) {
+      patchedShader.vertexShader = patchedShader.vertexShader.replace(
+        "void main() {",
+        [
+          "attribute float surfaceMaskAlpha;",
+          "varying float vMtSurfaceMaskAlpha;",
+          "void main() {",
+          "  vMtSurfaceMaskAlpha = clamp(surfaceMaskAlpha, 0.0, 1.0);",
+        ].join("\n"),
+      );
+    }
+    if (!patchedShader.fragmentShader.includes("vMtSurfaceMaskAlpha")) {
+      patchedShader.fragmentShader = patchedShader.fragmentShader.replace(
+        "void main() {",
+        [
+          "varying float vMtSurfaceMaskAlpha;",
+          "void main() {",
+        ].join("\n"),
+      );
+      const alphaPatch = [
+        "diffuseColor.a *= clamp(vMtSurfaceMaskAlpha, 0.0, 1.0);",
+        "if (diffuseColor.a <= 0.001) discard;",
+      ].join("\n");
+      if (patchedShader.fragmentShader.includes("#include <alphatest_fragment>")) {
+        patchedShader.fragmentShader = patchedShader.fragmentShader.replace(
+          "#include <alphatest_fragment>",
+          `${alphaPatch}\n#include <alphatest_fragment>`,
+        );
+      } else {
+        patchedShader.fragmentShader = patchedShader.fragmentShader.replace(
+          "#include <dithering_fragment>",
+          `${alphaPatch}\n#include <dithering_fragment>`,
+        );
+      }
+    }
+    material.userData.mtSurfaceMaskShader = patchedShader;
+  };
+  material.customProgramCacheKey = () =>
+    `${previousKey()}|geosee-mt-surface-mask-v1`;
+  material.userData.mtSurfaceMaskPatched = true;
+  material.needsUpdate = true;
 }
 
 function surfaceGradientColorAt(
@@ -2382,6 +2448,8 @@ const SCALAR_TRANSITION_STYLE_FIELDS: readonly (keyof EditableStyle)[] = [
   "scalarEdgeFillOffset",
   "scalarNoiseThreshold",
   "scalarDistanceLightStrength",
+  "scalarSurfaceMaskDepthM",
+  "scalarSurfaceMaskFeatherM",
   "scalarVolumeThresholdMin",
   "scalarVolumeThresholdMax",
   "scalarVolumeOpacity",
@@ -2446,6 +2514,10 @@ function scalarStyleNumber(
   if (field === "scalarEdgeFillOffset") return 0;
   if (field === "scalarNoiseThreshold") return 0;
   if (field === "scalarDistanceLightStrength") return 0;
+  if (field === "scalarSurfaceMaskDepthM")
+    return MT_SURFACE_MASK_DEFAULT_DEPTH_M;
+  if (field === "scalarSurfaceMaskFeatherM")
+    return MT_SURFACE_MASK_DEFAULT_FEATHER_M;
   if (field === "sectionIsoMin") return displayMin;
   if (field === "sectionIsoMax") return displayMax;
   if (field === "sectionIsoLevelCount") return 5;
@@ -4203,6 +4275,518 @@ export class SceneManager {
       return effectiveStyle(this.lastEffectiveEnv, this.lastEffectivePage, id);
     }
     return this.lastEnv?.layerStyles[id] ?? {};
+  }
+
+  private isSiteSurfaceGuideLayerId(id: string): boolean {
+    return (
+      id === UTAH_FORGE_SITE_BOUNDARY_LAYER_ID ||
+      id === UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID
+    );
+  }
+
+  private siteSurfaceGuideOrigin(group?: THREE.Object3D): {
+    easting: number;
+    northing: number;
+    elevation: number;
+  } {
+    const parseOrigin = (
+      value: unknown,
+    ): { easting: number; northing: number; elevation: number } | null => {
+      if (Array.isArray(value) && value.length >= 2) {
+        const [easting, northing, elevation = 0] = value;
+        return typeof easting === "number" &&
+          Number.isFinite(easting) &&
+          typeof northing === "number" &&
+          Number.isFinite(northing) &&
+          typeof elevation === "number" &&
+          Number.isFinite(elevation)
+          ? { easting, northing, elevation }
+          : null;
+      }
+      if (!value || typeof value !== "object") return null;
+      const record = value as Record<string, unknown>;
+      const easting = record.easting ?? record.easting_m;
+      const northing = record.northing ?? record.northing_m;
+      const elevation = record.elevation ?? record.elevation_m ?? 0;
+      return typeof easting === "number" &&
+        Number.isFinite(easting) &&
+        typeof northing === "number" &&
+        Number.isFinite(northing) &&
+        typeof elevation === "number" &&
+        Number.isFinite(elevation)
+        ? { easting, northing, elevation }
+        : null;
+    };
+
+    const terrainMetadata = this.layerSpecFor(this.topoSurfaceLayerId())
+      ?.metadata as Record<string, unknown> | undefined;
+    const terrainTransform = terrainMetadata?.geoTransform as
+      | Record<string, unknown>
+      | undefined;
+    let sourceProps = group?.userData?.sourceProperties as
+      | Record<string, unknown>
+      | undefined;
+    let source = group?.userData?.source as Record<string, unknown> | undefined;
+    group?.traverse((child) => {
+      sourceProps ??= child.userData?.sourceProperties as
+        | Record<string, unknown>
+        | undefined;
+      source ??= child.userData?.source as Record<string, unknown> | undefined;
+    });
+    const sourceTransform = source?.geoTransform as
+      | Record<string, unknown>
+      | undefined;
+
+    return (
+      parseOrigin(terrainTransform?.sceneOriginUtm) ??
+      parseOrigin(sourceProps?.sceneOriginUtm) ??
+      parseOrigin(sourceTransform?.sceneOriginUtm) ?? {
+        easting: SCENE_ORIGIN.easting,
+        northing: SCENE_ORIGIN.northing,
+        elevation: SCENE_ORIGIN.elevation,
+      }
+    );
+  }
+
+  private sourceSiteGuideLines(group: THREE.Object3D): Vec3[][] {
+    const rawLines: unknown[] = [];
+    group.traverse((child) => {
+      const lines = child.userData?.sourceLineStrings;
+      if (Array.isArray(lines)) rawLines.push(...lines);
+    });
+    return rawLines
+      .map((line) =>
+        Array.isArray(line)
+          ? line.filter(
+              (point): point is Vec3 =>
+                Array.isArray(point) &&
+                point.length >= 3 &&
+                point.every(
+                  (entry) =>
+                    typeof entry === "number" && Number.isFinite(entry),
+                ),
+            )
+          : [],
+      )
+      .filter((line) => line.length >= 2);
+  }
+
+  private resampleSiteGuideLine(line: Vec3[], stepM: number): Vec3[] {
+    if (line.length <= 1) return line;
+    const resampled: Vec3[] = [line[0]];
+    for (let index = 1; index < line.length; index += 1) {
+      const start = line[index - 1];
+      const end = line[index];
+      const dx = end[0] - start[0];
+      const dy = end[1] - start[1];
+      const dz = end[2] - start[2];
+      const distance = Math.hypot(dx, dy);
+      const steps = Math.max(1, Math.ceil(distance / stepM));
+      for (let step = 1; step <= steps; step += 1) {
+        const t = step / steps;
+        resampled.push([
+          start[0] + dx * t,
+          start[1] + dy * t,
+          start[2] + dz * t,
+        ]);
+      }
+    }
+    return resampled;
+  }
+
+  private siteGuideSurfaceZ(
+    x: number,
+    y: number,
+    sampleHeight: (easting: number, northing: number) => number,
+    origin: { easting: number; northing: number; elevation: number },
+    liftM: number,
+  ): number {
+    return (
+      sampleHeight(origin.easting + x, origin.northing + y) -
+      origin.elevation +
+      liftM
+    );
+  }
+
+  private pointInSiteGuideRing(x: number, y: number, ring: Vec3[]): boolean {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
+      const xi = ring[i][0];
+      const yi = ring[i][1];
+      const xj = ring[j][0];
+      const yj = ring[j][1];
+      const denom = yj - yi;
+      const intersects =
+        yi > y !== yj > y &&
+        x <
+          ((xj - xi) * (y - yi)) /
+            (Math.abs(denom) < 0.000001 ? 0.000001 : denom) +
+            xi;
+      if (intersects) inside = !inside;
+    }
+    return inside;
+  }
+
+  private siteGuideRing(lines: Vec3[][]): Vec3[] | null {
+    const longest = lines.reduce<Vec3[] | null>(
+      (best, line) => (!best || line.length > best.length ? line : best),
+      null,
+    );
+    if (!longest || longest.length < 3) return null;
+    const ring = longest.slice();
+    const first = ring[0];
+    const last = ring[ring.length - 1];
+    if (Math.hypot(last[0] - first[0], last[1] - first[1]) > 0.001) {
+      ring.push(first);
+    }
+    return ring;
+  }
+
+  private buildSiteGuideFillGeometry(
+    ring: Vec3[],
+    sampleHeight: (easting: number, northing: number) => number,
+    origin: { easting: number; northing: number; elevation: number },
+  ): THREE.BufferGeometry {
+    const xs = ring.map((point) => point[0]);
+    const ys = ring.map((point) => point[1]);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const targetStepM = 140;
+    const cols = Math.max(1, Math.ceil((maxX - minX) / targetStepM));
+    const rows = Math.max(1, Math.ceil((maxY - minY) / targetStepM));
+    const stepX = (maxX - minX) / cols;
+    const stepY = (maxY - minY) / rows;
+    const positions: number[] = [];
+    const push = (x: number, y: number) => {
+      positions.push(
+        x,
+        y,
+        this.siteGuideSurfaceZ(x, y, sampleHeight, origin, 1.4),
+      );
+    };
+
+    for (let col = 0; col < cols; col += 1) {
+      const x0 = minX + col * stepX;
+      const x1 = minX + (col + 1) * stepX;
+      for (let row = 0; row < rows; row += 1) {
+        const y0 = minY + row * stepY;
+        const y1 = minY + (row + 1) * stepY;
+        const cx = (x0 + x1) * 0.5;
+        const cy = (y0 + y1) * 0.5;
+        if (!this.pointInSiteGuideRing(cx, cy, ring)) continue;
+        push(x0, y0);
+        push(x1, y0);
+        push(x1, y1);
+        push(x0, y0);
+        push(x1, y1);
+        push(x0, y1);
+      }
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positions, 3),
+    );
+    geometry.computeBoundingBox();
+    geometry.computeBoundingSphere();
+    return geometry;
+  }
+
+  private updateSiteSurfaceGuide(
+    id: string,
+    group: THREE.Object3D,
+    style: EditableStyle,
+    sampleHeight: (easting: number, northing: number) => number,
+  ): void {
+    const sourceLines = this.sourceSiteGuideLines(group);
+    if (sourceLines.length === 0) return;
+    const origin = this.siteSurfaceGuideOrigin(group);
+    const linePositions: number[] = [];
+    for (const sourceLine of sourceLines) {
+      const line = this.resampleSiteGuideLine(sourceLine, 90);
+      for (let index = 1; index < line.length; index += 1) {
+        for (const point of [line[index - 1], line[index]]) {
+          linePositions.push(
+            point[0],
+            point[1],
+            this.siteGuideSurfaceZ(point[0], point[1], sampleHeight, origin, 3),
+          );
+        }
+      }
+    }
+
+    const fillColor =
+      typeof style.color === "string"
+        ? style.color
+        : id === UTAH_FORGE_SITE_BOUNDARY_LAYER_ID
+          ? "#ffd84a"
+          : "#adadad";
+    const fillOpacity =
+      typeof style.fillOpacity === "number" ? clamp01(style.fillOpacity) : 0.08;
+    const outlineColor =
+      typeof style.outlineColor === "string" ? style.outlineColor : fillColor;
+    const outlineOpacity =
+      typeof style.opacity === "number" ? clamp01(style.opacity) : 1;
+    const renderOrder =
+      id === UTAH_FORGE_SITE_BOUNDARY_LAYER_ID ? 4590 : 4580;
+
+    group.traverse((obj) => {
+      if (obj.userData?.terrainDrapedSiteGuideLine !== true) return;
+      const line = obj as LineSegments2;
+      const geometry = line.geometry as LineSegmentsGeometry | undefined;
+      if (geometry?.setPositions) {
+        geometry.setPositions(linePositions);
+        geometry.computeBoundingBox();
+        geometry.computeBoundingSphere();
+        line.computeLineDistances();
+      }
+      const material = line.material as LineMaterial | undefined;
+      if (material instanceof LineMaterial) {
+        material.color.set(outlineColor);
+        material.opacity = outlineOpacity;
+        material.transparent = true;
+        material.depthTest = true;
+        material.depthWrite = false;
+        material.userData.forceTransparent = true;
+        material.userData.lakeOutlineMaterial = true;
+        material.needsUpdate = true;
+      }
+    });
+
+    const ring = this.siteGuideRing(sourceLines);
+    let fill = group.children.find(
+      (child) => child.userData?.terrainDrapedSiteGuideFill === true,
+    ) as THREE.Mesh | undefined;
+    if (!ring || fillOpacity <= 0.0001) {
+      if (fill) {
+        fill.parent?.remove(fill);
+        disposeObjectTree(fill);
+      }
+      return;
+    }
+
+    const fillGeometry = this.buildSiteGuideFillGeometry(
+      ring,
+      sampleHeight,
+      origin,
+    );
+    if (!fill) {
+      const fillMaterial = new THREE.MeshBasicMaterial({
+        color: fillColor,
+        transparent: true,
+        opacity: fillOpacity,
+        depthTest: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2,
+      });
+      fillMaterial.userData.forceTransparent = true;
+      fillMaterial.userData.lakeFillMaterial = true;
+      fill = new THREE.Mesh(fillGeometry, fillMaterial);
+      fill.name = `${group.name || id} fill`;
+      fill.userData = {
+        displayName: group.userData?.displayName ?? group.name,
+        terrainDrapedSiteGuideFill: true,
+      };
+      group.add(fill);
+    } else {
+      fill.geometry.dispose();
+      fill.geometry = fillGeometry;
+    }
+    fill.renderOrder = renderOrder - 0.1;
+    const material = fill.material as THREE.MeshBasicMaterial;
+    material.color.set(fillColor);
+    material.opacity = fillOpacity;
+    material.transparent = true;
+    material.depthTest = true;
+    material.depthWrite = false;
+    material.needsUpdate = true;
+  }
+
+  private applySiteSurfaceGuideStyle(id: string, style: EditableStyle): void {
+    if (!this.isSiteSurfaceGuideLayerId(id)) return;
+    const group = this.layers.get(id);
+    if (!group) return;
+    void getHeightSampler().then((sampleHeight) => {
+      if (this.layers.get(id) !== group) return;
+      this.updateSiteSurfaceGuide(id, group, style, sampleHeight);
+    });
+  }
+
+  private reapplySiteSurfaceGuides(): void {
+    for (const id of [
+      UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
+      UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+    ]) {
+      this.applySiteSurfaceGuideStyle(id, this.styleForLayer(id));
+    }
+  }
+
+  private applyMtSurfaceMaskStyle(id: string, style: EditableStyle): void {
+    if (id !== UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID) return;
+    const group = this.layers.get(id);
+    if (!group) return;
+    this.restoreMtSurfaceMaskMaterials(id);
+    const enabled = style.scalarSurfaceMaskEnabled !== false;
+    const depthM = styleNumber(
+      style,
+      "scalarSurfaceMaskDepthM",
+      MT_SURFACE_MASK_DEFAULT_DEPTH_M,
+      0,
+      500,
+    );
+    const featherM = styleNumber(
+      style,
+      "scalarSurfaceMaskFeatherM",
+      MT_SURFACE_MASK_DEFAULT_FEATHER_M,
+      0,
+      1000,
+    );
+
+    void getHeightSampler().then((sampleHeight) => {
+      if (this.layers.get(id) !== group) return;
+      const origin = this.siteSurfaceGuideOrigin(group);
+      const terrainGroup = this.layers.get(this.topoSurfaceLayerId());
+      const terrainScaleZ =
+        typeof terrainGroup?.scale.z === "number" &&
+        Number.isFinite(terrainGroup.scale.z)
+          ? terrainGroup.scale.z
+          : 1;
+      const terrainLiftZ =
+        typeof terrainGroup?.position.z === "number" &&
+        Number.isFinite(terrainGroup.position.z)
+          ? terrainGroup.position.z
+          : 0;
+      const maskKey = [
+        enabled ? "1" : "0",
+        depthM.toFixed(3),
+        featherM.toFixed(3),
+        origin.easting.toFixed(3),
+        origin.northing.toFixed(3),
+        origin.elevation.toFixed(3),
+        terrainScaleZ.toFixed(6),
+        terrainLiftZ.toFixed(3),
+      ].join("|");
+
+      group.traverse((obj) => {
+        if (!(obj instanceof THREE.Points)) return;
+        this.updateMtSurfaceMaskForPoints(obj, {
+          enabled,
+          depthM,
+          featherM,
+          origin,
+          maskKey,
+          sampleHeight,
+          terrainScaleZ,
+          terrainLiftZ,
+        });
+      });
+    });
+  }
+
+  private updateMtSurfaceMaskForPoints(
+    points: THREE.Points,
+    options: {
+      enabled: boolean;
+      depthM: number;
+      featherM: number;
+      origin: { easting: number; northing: number; elevation: number };
+      maskKey: string;
+      sampleHeight: (easting: number, northing: number) => number;
+      terrainScaleZ: number;
+      terrainLiftZ: number;
+    },
+  ): void {
+    const geometry = points.geometry;
+    const position = geometry.getAttribute("position");
+    if (!(position instanceof THREE.BufferAttribute)) return;
+
+    const material = points.material;
+    const materials = Array.isArray(material) ? material : [material];
+    for (const mat of materials) {
+      if (mat instanceof THREE.PointsMaterial) {
+        applyMtSurfaceMaskPointMaterial(mat);
+      }
+    }
+
+    if (
+      geometry.userData.mtSurfaceMaskKey === options.maskKey &&
+      geometry.getAttribute("surfaceMaskAlpha")
+    ) {
+      return;
+    }
+
+    let alphaAttribute = geometry.getAttribute("surfaceMaskAlpha");
+    if (
+      !(alphaAttribute instanceof THREE.BufferAttribute) ||
+      alphaAttribute.count !== position.count
+    ) {
+      alphaAttribute = new THREE.BufferAttribute(
+        new Float32Array(position.count),
+        1,
+      );
+      geometry.setAttribute("surfaceMaskAlpha", alphaAttribute);
+    }
+
+    const alpha = alphaAttribute.array as Float32Array;
+    if (!options.enabled) {
+      alpha.fill(1);
+    } else {
+      const world = new THREE.Vector3();
+      points.updateMatrixWorld(true);
+      const feather = Math.max(0.000001, options.featherM);
+      for (let i = 0; i < position.count; i += 1) {
+        world
+          .set(position.getX(i), position.getY(i), position.getZ(i))
+          .applyMatrix4(points.matrixWorld);
+        const terrainSurfaceZ =
+          (options.sampleHeight(
+            options.origin.easting + world.x,
+            options.origin.northing + world.y,
+          ) -
+            options.origin.elevation) *
+            options.terrainScaleZ +
+          options.terrainLiftZ;
+        if (!Number.isFinite(terrainSurfaceZ)) {
+          alpha[i] = 1;
+          continue;
+        }
+        const clearanceM = terrainSurfaceZ - world.z;
+        if (clearanceM <= options.depthM) {
+          alpha[i] = 0;
+        } else if (options.featherM <= 0) {
+          alpha[i] = 1;
+        } else {
+          const t = clamp01((clearanceM - options.depthM) / feather);
+          alpha[i] = t * t * (3 - 2 * t);
+        }
+      }
+    }
+    alphaAttribute.needsUpdate = true;
+    geometry.userData.mtSurfaceMaskKey = options.maskKey;
+  }
+
+  private restoreMtSurfaceMaskMaterials(id: string): void {
+    if (id !== UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID) return;
+    const group = this.layers.get(id);
+    if (!group) return;
+    group.traverse((obj) => {
+      const material = (obj as THREE.Points).material;
+      const materials = Array.isArray(material) ? material : [material];
+      for (const mat of materials) {
+        if (!(mat instanceof THREE.PointsMaterial)) continue;
+        mat.depthWrite = false;
+        mat.depthTest = true;
+        mat.blending = THREE.NormalBlending;
+        mat.toneMapped = false;
+        mat.needsUpdate = true;
+      }
+    });
   }
 
   private sceneSectionProductIds(style: EditableStyle): Set<string> {
@@ -9454,6 +10038,11 @@ export class SceneManager {
           this.styleForLayer(graticuleLayerId),
         );
       }
+      this.reapplySiteSurfaceGuides();
+      this.applyMtSurfaceMaskStyle(
+        UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+        this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID),
+      );
     }
     this.applyTerrainCompositeStyle(id, style);
     this.topoRuntime.applyGraticuleStyle(id, style);
@@ -9465,6 +10054,7 @@ export class SceneManager {
     this.applyCaseStudyBDemoLayerAlias(id, style);
     this.applySurfaceGradientStyle(id, style);
     this.applyScalarPreviewStyle(id, style);
+    this.applyMtSurfaceMaskStyle(id, style);
     this.applyScalarVolumeStyle(id, style);
     this.applyMtThresholdSurfaceStyle(id, style);
     this.applyMtTopSurfaceStyle(id, style);
@@ -9472,6 +10062,7 @@ export class SceneManager {
     this.applyResistivitySliceStyle(id, style);
     this.applySeismicBrowserStyle(id, style);
     this.applyContourDisplayStyle(id, style);
+    this.applySiteSurfaceGuideStyle(id, style);
     if (id === UTAH_FORGE_SCENE_SECTION_LAYER_ID) {
       this.applySceneSectionPlanes(style);
     } else {

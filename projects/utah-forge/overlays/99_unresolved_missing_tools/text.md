@@ -20,5 +20,6 @@ This page lists product support that is missing, partial, unsafe, or not yet con
 - PDF/FigJam/report figure provenance and canonical reference selection.
 - Page-specific camera tuning after human review.
 - Image/reference overlay box convention.
+- MT/topo surface intersection opacity artifacts persist on some pages and need terrain-depth rendering QA.
 
 Boundary: do not solve these by inventing data or treating report images as spatial truth.

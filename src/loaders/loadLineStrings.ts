@@ -415,6 +415,7 @@ export async function loadLineStrings(url: string): Promise<THREE.Group> {
 
   const segments: number[] = [];
   const contourLines: ContourLineEntry[] = [];
+  const sourceLineStrings: FinitePoint[][] = [];
   let featureCount = 0;
   const isDerivedContour = isDerivedContourCollection(data);
   const isBoundary = isBoundaryCollection(data);
@@ -431,12 +432,16 @@ export async function loadLineStrings(url: string): Promise<THREE.Group> {
       continue;
     }
     if (feature.geometry.type === "LineString") {
+      const sourceLine = finiteLine(feature.geometry.coordinates);
+      if (sourceLine.length >= 2) sourceLineStrings.push(sourceLine);
       appendLineString(segments, feature.geometry.coordinates);
       featureCount += 1;
       continue;
     }
     if (feature.geometry.type === "MultiLineString") {
       for (const line of feature.geometry.coordinates) {
+        const sourceLine = finiteLine(line);
+        if (sourceLine.length >= 2) sourceLineStrings.push(sourceLine);
         appendLineString(segments, line);
       }
       featureCount += 1;
@@ -447,6 +452,7 @@ export async function loadLineStrings(url: string): Promise<THREE.Group> {
   group.name = data.name ?? "line strings";
   group.userData.displayName = data.name ?? "Line strings";
   group.userData.sourceProperties = data.properties;
+  group.userData.sourceLineStrings = sourceLineStrings;
 
   const material = createLineMaterial({ isDerivedContour, isBoundary });
   const indexContourMaterial = isDerivedContour
@@ -495,6 +501,7 @@ export async function loadLineStrings(url: string): Promise<THREE.Group> {
     line.computeLineDistances();
     line.renderOrder = isBoundary ? RENDER_ORDER + 0.2 : RENDER_ORDER;
     line.userData.displayName = data.name ?? "Line strings";
+    line.userData.sourceLineSegments = segments.slice();
     group.add(line);
   }
 

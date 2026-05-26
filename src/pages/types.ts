@@ -205,6 +205,9 @@ export interface EditableStyle {
   scalarEdgeLineStyle?: "solid" | "dashed";
   scalarNoiseThreshold?: number;
   scalarDistanceLightStrength?: number;
+  scalarSurfaceMaskEnabled?: boolean;
+  scalarSurfaceMaskDepthM?: number;
+  scalarSurfaceMaskFeatherM?: number;
   scalarLegendVisible?: boolean;
   // Scalar section ISO controls. Applied to authored/future scalar section
   // meshes that expose per-vertex scalar values; point clouds keep using the

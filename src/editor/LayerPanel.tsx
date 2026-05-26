@@ -338,6 +338,9 @@ const SCALAR_RAMP_FIELDS = [
   "scalarEdgeFillOffset",
   "scalarEdgeLineStyle",
   "scalarNoiseThreshold",
+  "scalarSurfaceMaskEnabled",
+  "scalarSurfaceMaskDepthM",
+  "scalarSurfaceMaskFeatherM",
   "sectionIsoEnabled",
   "sectionIsoLinesVisible",
   "sectionIsoBandsVisible",
@@ -446,12 +449,12 @@ const SCALAR_SOURCE_MIN = -2;
 const SCALAR_SOURCE_MAX = 4.5;
 const UTAH_FORGE_PUBLIC_LAYER_GROUPS = [
   {
-    title: "Working area",
-    ids: [UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID],
-  },
-  {
     title: "Site Details",
-    ids: [UTAH_FORGE_SITE_BOUNDARY_LAYER_ID, UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID],
+    ids: [
+      UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+      UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
+      UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
+    ],
   },
   {
     title: "Seismic analysis",
@@ -567,6 +570,8 @@ const LINE_WIDTH_LAYER_DEFAULTS: Record<string, number> = {
   "ez-gamma-2024": 2.4,
   "ip-survey-lines-2024": 3.2,
   "imagery-lidar-aoi-2024": 3,
+  [UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID]: 2.4,
+  [UTAH_FORGE_SITE_BOUNDARY_LAYER_ID]: 3.2,
 };
 
 const DEFAULT_FOG_DENSITY = 0.00018;
@@ -793,7 +798,11 @@ export function LayerPanel({
     const isPublicTerrainSurface = isTopoMapSurfaceLayer(layer);
     const isPublicSurfaceContextLayer = isTopoMapLayer(layer);
     const isLakes = layer.id === "hydrography-lakes";
-    const hasInfillAndOutline = isLakes || isImageryLidar;
+    const isUtahForgeSurfaceGuide =
+      layer.id === UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID ||
+      layer.id === UTAH_FORGE_SITE_BOUNDARY_LAYER_ID;
+    const hasInfillAndOutline =
+      isLakes || isImageryLidar || isUtahForgeSurfaceGuide;
     const isStreams = layer.id === "hydrography-streams";
     const lineWidthDefault = isTopoMapGraticule
       ? 1.15
@@ -3270,6 +3279,9 @@ export function LayerPanel({
           group.title === "Site Details"
         ) {
           const boreholeLayer = byId.get(UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID);
+          const workingAreaLayer = byId.get(
+            UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+          );
           const boundaryLayer = byId.get(UTAH_FORGE_SITE_BOUNDARY_LAYER_ID);
           const boreholeStyle = isEnv
             ? (state.environment.layerStyles[
@@ -3294,6 +3306,7 @@ export function LayerPanel({
             >
               <SiteDetailsPanel
                 boreholeLayer={boreholeLayer}
+                workingAreaLayer={workingAreaLayer}
                 boundaryLayer={boundaryLayer}
                 renderLayer={renderLayer}
                 style={boreholeStyle}
@@ -3301,6 +3314,16 @@ export function LayerPanel({
                 currentPage={currentPage}
                 setEnvLayerStyle={setEnvLayerStyle}
                 setPageLayerOverride={setPageLayerOverride}
+              />
+              <WorkingAreaFocusContainer
+                allLayers={state.manifest.layers}
+                style={workingAreaFocusStyle}
+                disabled={workingAreaFocusDisabled}
+                isEnv={isEnv}
+                currentPage={currentPage}
+                setEnvLayerStyle={setEnvLayerStyle}
+                setPageLayerOverride={setPageLayerOverride}
+                sceneHandle={sceneHandle}
               />
             </LayerGroup>
           );
@@ -3438,20 +3461,6 @@ export function LayerPanel({
                 onSetPageDensity={(pageId, layerId, fogDensity) =>
                   setPageLayerOverride(pageId, layerId, { fogDensity })
                 }
-              />
-            ) : null}
-            {state.projectSlug === "utah-forge" &&
-            section === "public" &&
-            group.title === "Working area" ? (
-              <WorkingAreaFocusContainer
-                allLayers={state.manifest.layers}
-                style={workingAreaFocusStyle}
-                disabled={workingAreaFocusDisabled}
-                isEnv={isEnv}
-                currentPage={currentPage}
-                setEnvLayerStyle={setEnvLayerStyle}
-                setPageLayerOverride={setPageLayerOverride}
-                sceneHandle={sceneHandle}
               />
             ) : null}
             {section === "publicTopo" &&
@@ -11592,6 +11601,85 @@ function ScalarRampControls({
               {inclusionMode === "thresholded"
                 ? "Trim, feather, and noise can filter drawn points."
                 : "Trim, feather, and noise change visual emphasis; all valid points stay drawn."}
+            </span>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Surface mask</label>
+            <input
+              type="checkbox"
+              checked={style.scalarSurfaceMaskEnabled !== false}
+              disabled={disabled}
+              onChange={(e) =>
+                onChange({ scalarSurfaceMaskEnabled: e.target.checked })
+              }
+            />
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Mask depth</label>
+            <input
+              type="range"
+              aria-label="MT surface mask depth"
+              min={0}
+              max={500}
+              step={5}
+              value={styleNumber(style, "scalarSurfaceMaskDepthM", 25)}
+              disabled={disabled || style.scalarSurfaceMaskEnabled === false}
+              onChange={(e) =>
+                onChange({
+                  scalarSurfaceMaskDepthM: parseFloat(e.target.value),
+                })
+              }
+              style={
+                {
+                  flex: 1,
+                  opacity:
+                    disabled || style.scalarSurfaceMaskEnabled === false
+                      ? 0.4
+                      : controlOpacity,
+                  "--editor-slider-fill": `${Math.round(
+                    (styleNumber(style, "scalarSurfaceMaskDepthM", 25) / 500) *
+                      100,
+                  )}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>
+              {Math.round(styleNumber(style, "scalarSurfaceMaskDepthM", 25))} m
+            </span>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Mask feather</label>
+            <input
+              type="range"
+              aria-label="MT surface mask feather"
+              min={0}
+              max={1000}
+              step={10}
+              value={styleNumber(style, "scalarSurfaceMaskFeatherM", 175)}
+              disabled={disabled || style.scalarSurfaceMaskEnabled === false}
+              onChange={(e) =>
+                onChange({
+                  scalarSurfaceMaskFeatherM: parseFloat(e.target.value),
+                })
+              }
+              style={
+                {
+                  flex: 1,
+                  opacity:
+                    disabled || style.scalarSurfaceMaskEnabled === false
+                      ? 0.4
+                      : controlOpacity,
+                  "--editor-slider-fill": `${Math.round(
+                    (styleNumber(style, "scalarSurfaceMaskFeatherM", 175) /
+                      1000) *
+                      100,
+                  )}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span style={sliderNumberReadoutStyle}>
+              {Math.round(styleNumber(style, "scalarSurfaceMaskFeatherM", 175))}{" "}
+              m
             </span>
           </div>
         </>

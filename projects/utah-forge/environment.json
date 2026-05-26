@@ -11,6 +11,7 @@
     },
     "utah-forge-phase3-working-area": {
       "color": "#adadad",
+      "fillOpacity": 0.06,
       "opacity": 0.95,
       "lineWidth": 2.4,
       "affectedByFog": false,
@@ -103,6 +104,7 @@
     },
     "utah-forge-site-boundary": {
       "color": "#ffd84a",
+      "fillOpacity": 0.08,
       "opacity": 1,
       "lineWidth": 3.2,
       "affectedByFog": false,
@@ -242,6 +244,9 @@
       "scalarEdgeAverage": 0.45,
       "scalarNoiseThreshold": 0,
       "scalarDistanceLightStrength": 0.35,
+      "scalarSurfaceMaskEnabled": true,
+      "scalarSurfaceMaskDepthM": 25,
+      "scalarSurfaceMaskFeatherM": 175,
       "affectedByFog": false,
       "showLabels": false,
       "scalarLegendVisible": true
