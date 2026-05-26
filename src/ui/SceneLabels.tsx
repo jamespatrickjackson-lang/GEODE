@@ -416,6 +416,7 @@ function createChipElement(text: string): HTMLDivElement {
     "position:absolute;top:0;left:0;pointer-events:auto;" +
     "font-family:system-ui,sans-serif;font-size:11px;" +
     "white-space:nowrap;will-change:transform,opacity;line-height:14px;" +
+    "transition:opacity 180ms ease;" +
     "padding:4px 8px;border-radius:6px;" +
     "box-sizing:border-box;text-align:center;" +
     "background:rgba(20,22,28,0.72);" +
@@ -678,7 +679,8 @@ function createLeaderElement(): HTMLDivElement {
   el.style.cssText =
     "position:absolute;top:0;left:0;height:1px;" +
     "transform-origin:0 0;background:rgba(255,255,255,0.5);" +
-    "will-change:transform,width,opacity;pointer-events:none;";
+    "will-change:transform,width,opacity;pointer-events:none;" +
+    "transition:opacity 180ms ease;";
   return el;
 }
 
@@ -1024,12 +1026,14 @@ interface Props {
 
 export function SceneLabels({ sceneHandle }: Props) {
   const { state } = useEditor();
-  const { pages, currentIndex, targetIndex } = usePageController();
+  const { pages, currentIndex, targetIndex, transitionProgress } =
+    usePageController();
   const containerRef = useRef<HTMLDivElement | null>(null);
   // Stable across frames: map `${layerId}:${displayName}` -> { chip, leader }.
   const elementsRef = useRef<
     Map<string, { chip: HTMLDivElement; leader: HTMLDivElement }>
   >(new Map());
+  const removalTimersRef = useRef<Map<string, number>>(new Map());
   // Last rendered position per visible label key. Used for per-frame
   // smoothing and side hysteresis so labels do not swap slots just
   // because the camera moved a few pixels. Keys absent from this map on
@@ -1040,7 +1044,10 @@ export function SceneLabels({ sceneHandle }: Props) {
   // need to re-bind whenever environment/page changes.
   const envRef = useRef(state.environment);
   envRef.current = state.environment;
-  const page = pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
+  const page =
+    targetIndex !== null && transitionProgress >= 0.92
+      ? pages[targetIndex] ?? pages[currentIndex]
+      : pages[currentIndex];
   const pageRef = useRef(page);
   pageRef.current = page;
 
@@ -1288,13 +1295,20 @@ export function SceneLabels({ sceneHandle }: Props) {
       const visibleKeys = new Set(finalVisible.map((v) => v.key));
       for (const [key, pair] of elements) {
         if (!visibleKeys.has(key)) {
-          pair.chip.remove();
-          pair.leader.remove();
-          elements.delete(key);
-          // Forget the position too -- if this label reappears later
-          // (camera reveals the feature again) it should pop in at
-          // its solver target rather than glide from a stale point.
-          previousPositions.delete(key);
+          if (!removalTimersRef.current.has(key)) {
+            pair.chip.style.opacity = "0";
+            pair.leader.style.opacity = "0";
+            const timer = window.setTimeout(() => {
+              if (elements.get(key) === pair) {
+                pair.chip.remove();
+                pair.leader.remove();
+                elements.delete(key);
+                previousPositions.delete(key);
+              }
+              removalTimersRef.current.delete(key);
+            }, 220);
+            removalTimersRef.current.set(key, timer);
+          }
         }
       }
       const orderedVisible = [...finalVisible].sort(
@@ -1308,9 +1322,16 @@ export function SceneLabels({ sceneHandle }: Props) {
             chip: createChipElement(v.label),
             leader: createLeaderElement(),
           };
+          pair.chip.style.opacity = "0";
+          pair.leader.style.opacity = "0";
           chipsDiv.appendChild(pair.chip);
           leadersDiv.appendChild(pair.leader);
           elements.set(v.key, pair);
+        }
+        const removalTimer = removalTimersRef.current.get(v.key);
+        if (removalTimer !== undefined) {
+          window.clearTimeout(removalTimer);
+          removalTimersRef.current.delete(v.key);
         }
         pair.chip.onclick = null;
         // Lerp the displayed position toward the solver's target.
@@ -1398,6 +1419,10 @@ export function SceneLabels({ sceneHandle }: Props) {
 
     return () => {
       off();
+      for (const timer of removalTimersRef.current.values()) {
+        window.clearTimeout(timer);
+      }
+      removalTimersRef.current.clear();
       // Tear down DOM on unmount.
       for (const pair of elementsRef.current.values()) {
         pair.chip.remove();

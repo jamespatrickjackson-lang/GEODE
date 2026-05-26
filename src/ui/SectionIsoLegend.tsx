@@ -13,7 +13,7 @@ import { transparentLegendPanelStyle } from "./legendStyles";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import { effectiveStyle } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
-import type { EditableStyle } from "../pages/types";
+import type { EditableStyle, PresentationPage } from "../pages/types";
 import type {
   ScalarSectionIsoTarget,
   SectionIsoTargetGroup,
@@ -267,7 +267,13 @@ function defaultDisplayMax(
   return styleNumber(style, "scalarDisplayMax", fallback);
 }
 
-export function SectionIsoLegend({ stacked = false }: { stacked?: boolean }) {
+export function SectionIsoLegend({
+  stacked = false,
+  pageOverride = null,
+}: {
+  stacked?: boolean;
+  pageOverride?: PresentationPage | null;
+}) {
   const {
     state,
     sceneHandle,
@@ -334,13 +340,16 @@ export function SectionIsoLegend({ stacked = false }: { stacked?: boolean }) {
   if (activeTargets.length === 0) return null;
 
   const layerId = activeTargets[0].layerId;
-  const controllerPage = pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
+  const controllerPage =
+    pageOverride ?? pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
   const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
   const selectedPage =
-    !editingEnvironment && state.selectedPageId
+    !pageOverride && !editingEnvironment && state.selectedPageId
       ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
       : null;
-  const page = targetIndex !== null ? controllerPage : selectedPage ?? controllerPage;
+  const page =
+    pageOverride ??
+    (targetIndex !== null ? controllerPage : selectedPage ?? controllerPage);
   const style = editingEnvironment
     ? state.environment.layerStyles[layerId] ?? {}
     : page

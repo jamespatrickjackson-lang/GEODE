@@ -78,7 +78,7 @@
       "sceneSectionPlanes": {
         "x": {
           "enabled": true,
-          "positionM": -2044.5900498691408,
+          "positionM": 29760.837114861275,
           "invert": false
         },
         "y": {
@@ -104,7 +104,8 @@
       "mtSurfaceBoundaryOrder": [
         "conductive-le-10-ohm-m",
         "conductive-le-30-ohm-m",
-        "resistive-ge-1000-ohm-m"
+        "resistive-ge-1000-ohm-m",
+        "bank-ge-5461-ohm-m"
       ],
       "mtSurfaceBoundariesById": {
         "conductive-le-10-ohm-m": {
@@ -118,7 +119,7 @@
           "source": "precomputed"
         },
         "conductive-le-30-ohm-m": {
-          "visible": true,
+          "visible": false,
           "label": "<=30 Ohm-m",
           "color": "#b6cda7",
           "comparison": "<=",
@@ -128,7 +129,7 @@
           "source": "precomputed"
         },
         "resistive-ge-1000-ohm-m": {
-          "visible": true,
+          "visible": false,
           "label": ">=1000 Ohm-m",
           "color": "#d8967f",
           "comparison": ">=",
@@ -136,8 +137,19 @@
           "thresholdLog10": 3,
           "opacity": 1,
           "source": "precomputed"
+        },
+        "bank-ge-5461-ohm-m": {
+          "visible": false,
+          "label": ">=5,461 Ohm-m boundary",
+          "color": "#fe7079",
+          "comparison": ">=",
+          "thresholdOhmM": 5460.936232077636,
+          "thresholdLog10": 3.737267,
+          "opacity": 1,
+          "source": "precomputed"
         }
-      }
+      },
+      "mtThresholdSurfaceMetalness": 0.31
     },
     "utah-forge-site-boundary": {
       "color": "#47c299"

@@ -16,7 +16,7 @@ import {
 import { transparentLegendPanelStyle } from "./legendStyles";
 import { effectiveStyle, effectiveVisibility } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
-import type { EditableStyle } from "../pages/types";
+import type { EditableStyle, PresentationPage } from "../pages/types";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const MT_RESISTIVITY_FULL_DENSITY_LAYER_ID =
@@ -503,7 +503,15 @@ function activeScalarLayers(visible: Set<string>): ScalarLegendLayer[] {
   return layers;
 }
 
-export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
+export function ResistivityLegend({
+  stacked = false,
+  pageOverride = null,
+  testIdsEnabled = true,
+}: {
+  stacked?: boolean;
+  pageOverride?: PresentationPage | null;
+  testIdsEnabled?: boolean;
+}) {
   const { state, sceneHandle, setEnvLayerStyle, setPageLayerOverride } =
     useEditor();
   const { pages, currentIndex, targetIndex, transitionProgress } = usePageController();
@@ -535,13 +543,19 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
   }, [edgePopoverOpen]);
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
 
-  const controllerPage = pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
+  const controllerPage =
+    pageOverride ?? pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
   const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
   const selectedPage =
-    !editingEnvironment && targetIndex === null && state.selectedPageId
+    !pageOverride &&
+    !editingEnvironment &&
+    targetIndex === null &&
+    state.selectedPageId
       ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
       : null;
-  const page = targetIndex !== null ? controllerPage : selectedPage ?? controllerPage;
+  const page =
+    pageOverride ??
+    (targetIndex !== null ? controllerPage : selectedPage ?? controllerPage);
   if (!page) return null;
 
   const visible = editingEnvironment
@@ -570,12 +584,12 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
   const targetStyle = editingEnvironment
     ? state.environment.layerStyles[layerId] ?? {}
     : effectiveStyle(state.environment, page, layerId);
-  const currentPage = pages[currentIndex] ?? page;
+  const currentPage = pageOverride ?? pages[currentIndex] ?? page;
   const currentStyle = editingEnvironment
     ? targetStyle
     : effectiveStyle(state.environment, currentPage, layerId);
   const style =
-    !editingEnvironment && targetIndex !== null
+    !pageOverride && !editingEnvironment && targetIndex !== null
       ? interpolatedScalarLegendStyle(
           currentStyle,
           targetStyle,
@@ -849,13 +863,17 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
               ? trimMin
               : trimMax
       }
-      data-testid={`resistivity-legend-${handle}`}
+      data-testid={
+        testIdsEnabled ? `resistivity-legend-${handle}` : undefined
+      }
       title={label}
       onPointerDown={beginDrag(handle)}
       onKeyDown={handleKeyDown(handle)}
       style={spectralHandleStyle(percent, inner)}
     />
   );
+  const testId = (id: string): string | undefined =>
+    testIdsEnabled ? id : undefined;
   const volumeOpacity = clamp(styleNumber(style, "scalarVolumeOpacity", 0.48), 0, 1);
   const volumeDensity = clamp(styleNumber(style, "scalarVolumeDensity", 0.72), 0, 2);
   const volumeSamples = clamp(styleNumber(style, "scalarVolumeSampleSteps", 112), 24, 192);
@@ -890,7 +908,7 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
               <button
                 key={layer}
                 type="button"
-                data-testid={`resistivity-legend-target-${layer}`}
+                data-testid={testId(`resistivity-legend-target-${layer}`)}
                 title={`Control ${scalarLegendLayerSubtitle(layer).toLowerCase()}`}
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={() => setSelectedLayer(layer)}
@@ -914,7 +932,7 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
       <div
         ref={rampRef}
         style={rampWrapStyle}
-        data-testid="resistivity-legend-track"
+        data-testid={testId("resistivity-legend-track")}
         onPointerDown={
           thresholdControlsActive ? beginTrackPlacement : undefined
         }
@@ -1012,7 +1030,7 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
         <button
           type="button"
           aria-label="Lower edge line value"
-          data-testid="resistivity-legend-edge-lower"
+          data-testid={testId("resistivity-legend-edge-lower")}
           title="Lower edge line value"
           onPointerDown={beginEdgeDrag("edgeLower")}
           onDoubleClick={(event) => {
@@ -1025,7 +1043,7 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
         <button
           type="button"
           aria-label="Upper edge line value"
-          data-testid="resistivity-legend-edge-upper"
+          data-testid={testId("resistivity-legend-edge-upper")}
           title="Upper edge line value"
           onPointerDown={beginEdgeDrag("edgeUpper")}
           onDoubleClick={(event) => {
@@ -1063,7 +1081,7 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
             left: edgePopoverPosition.left,
             top: edgePopoverPosition.top,
           }}
-          data-testid="resistivity-legend-edge-popout"
+          data-testid={testId("resistivity-legend-edge-popout")}
           onPointerDown={(event) => event.stopPropagation()}
         >
           <div style={edgePopoverHeaderStyle}>
@@ -1085,7 +1103,7 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
                 max={1}
                 step={0.01}
                 value={edgeFillOffset}
-                data-testid="resistivity-legend-edge-fill-offset"
+                data-testid={testId("resistivity-legend-edge-fill-offset")}
                 title="Iso line fill offset"
                 onPointerDown={(event) => event.stopPropagation()}
                 onChange={(event) =>
@@ -1104,7 +1122,7 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
               Style
               <select
                 value={edgeLineStyle}
-                data-testid="resistivity-legend-edge-line-style"
+                data-testid={testId("resistivity-legend-edge-line-style")}
                 title="Iso line style"
                 onPointerDown={(event) => event.stopPropagation()}
                 onChange={(event) =>
@@ -1126,7 +1144,7 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
                 max={EDGE_LINE_MAX_WIDTH_PX}
                 step={0.1}
                 value={edgeLineWidth}
-                data-testid="resistivity-legend-edge-highlight"
+                data-testid={testId("resistivity-legend-edge-highlight")}
                 title="Edge line thickness"
                 onPointerDown={(event) => event.stopPropagation()}
                 onChange={(event) =>
@@ -1149,7 +1167,7 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
                 max={1}
                 step={0.01}
                 value={edgeAverage}
-                data-testid="resistivity-legend-edge-average"
+                data-testid={testId("resistivity-legend-edge-average")}
                 title="Average edge line into a smoother spline"
                 onPointerDown={(event) => event.stopPropagation()}
                 onChange={(event) =>
@@ -1173,7 +1191,7 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
                   max={1}
                   step={0.01}
                   value={noiseThreshold}
-                  data-testid="resistivity-legend-noise-threshold"
+                  data-testid={testId("resistivity-legend-noise-threshold")}
                   title="Hide scalar points without lateral support"
                   onPointerDown={(event) => event.stopPropagation()}
                   onChange={(event) =>
@@ -1206,7 +1224,7 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
                 max={1}
                 step={0.01}
                 value={volumeOpacity}
-                data-testid="resistivity-legend-volume-opacity"
+                data-testid={testId("resistivity-legend-volume-opacity")}
                 title="Volume opacity"
                 onPointerDown={(event) => event.stopPropagation()}
                 onChange={(event) =>
@@ -1234,7 +1252,7 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
                 max={2}
                 step={0.01}
                 value={volumeDensity}
-                data-testid="resistivity-legend-volume-density"
+                data-testid={testId("resistivity-legend-volume-density")}
                 title="Volume density"
                 onPointerDown={(event) => event.stopPropagation()}
                 onChange={(event) =>
@@ -1257,7 +1275,7 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
                 max={192}
                 step={4}
                 value={volumeSamples}
-                data-testid="resistivity-legend-volume-samples"
+                data-testid={testId("resistivity-legend-volume-samples")}
                 title="Raymarch sample steps"
                 onPointerDown={(event) => event.stopPropagation()}
                 onChange={(event) =>

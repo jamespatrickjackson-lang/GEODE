@@ -55,6 +55,7 @@ import {
   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
   UTAH_FORGE_MT_STATIONS_LAYER_ID,
   UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+  UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
   UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
   UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
   UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
@@ -2441,6 +2442,9 @@ interface SceneTransitionContext {
   easing: EasingName;
   layerKinds: Record<string, LayerTransitionKind>;
   sourceLayers: Map<string, ResolvedLayerRenderState>;
+  sourceVisibleLayerIds: Set<string>;
+  targetVisibleLayerIds: Set<string>;
+  warnedUnexpectedVisibleLayerIds: Set<string>;
 }
 
 interface SceneSectionStyleTween {
@@ -2604,6 +2608,7 @@ const SCENE_SECTION_AFFECTED_LAYER_IDS = new Set<string>([
   UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
   UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
   UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
+  UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 ]);
 
@@ -11160,6 +11165,12 @@ export class SceneManager {
 
     const toVisible = effectiveVisibility(environment, toPage);
     this.currentVisibleLayerIds = toVisible;
+    const sourceVisibleLayerIds = new Set<string>();
+    for (const [id, state] of sourceLayers) {
+      if (state.visible && state.opacity > 0.001) {
+        sourceVisibleLayerIds.add(id);
+      }
+    }
     const now = performance.now();
     const duration = Math.max(0, durationMs);
     const terrainOverrides = new Map<string, number>();
@@ -11173,6 +11184,9 @@ export class SceneManager {
       easing,
       layerKinds,
       sourceLayers,
+      sourceVisibleLayerIds,
+      targetVisibleLayerIds: new Set(toVisible),
+      warnedUnexpectedVisibleLayerIds: new Set(),
     };
 
     const fromSceneSectionStyle = effectiveStyle(
@@ -11210,121 +11224,121 @@ export class SceneManager {
 
     this.sceneSectionReapplySuspended = true;
     try {
-    for (const id of layerIds) {
-      const sourceState = sourceLayers.get(id);
-      const fromOpacity = sourceState?.opacity ?? 0;
-      const toOpacity = toVisible.has(id)
-        ? this.targetOpacityForLayer(environment, toPage, id)
-        : 0;
-      const fromStyle =
-        sourceState?.style ?? effectiveStyle(environment, fromPage, id);
-      const targetStyle = effectiveStyle(environment, toPage, id);
-      const group = this.layers.get(id);
-      if (group) group.visible = fromOpacity > 0.001 || toOpacity > 0.001;
-      const shouldCrossfadeDiscreteData =
-        !!group &&
-        duration > 0 &&
-        fromOpacity > 0.001 &&
-        forgeDiscreteDataStyleChanged(
-          id,
-          fromStyle,
-          targetStyle,
-          this.layerSpecFor(id),
-        );
-      const shouldCrossfadeSceneSection =
-        !!group &&
-        duration > 0 &&
-        sceneSectionDiscreteChanged &&
-        fromOpacity > 0.001 &&
-        SCENE_SECTION_AFFECTED_LAYER_IDS.has(id);
-      const shouldTweenScalarStyle =
-        !!group &&
-        !shouldCrossfadeDiscreteData &&
-        !shouldCrossfadeSceneSection &&
-        scalarStyleDurationMs > 0 &&
-        fromOpacity > 0.001 &&
-        toOpacity > 0.001 &&
-        this.layerSupportsScalarStyleTween(id, group) &&
-        scalarTransitionStyleChanged(fromStyle, targetStyle);
-      const shouldCrossfadeScalarStyle =
-        !!group &&
-        duration > 0 &&
-        fromOpacity > 0.001 &&
-        this.layerHasScalarPreviewData(group) &&
-        !toVisible.has(id);
-      const transitionSnapshot =
-        shouldCrossfadeDiscreteData ||
-        shouldCrossfadeScalarStyle ||
-        shouldCrossfadeSceneSection
-          ? this.cloneLayerTransitionSnapshot(id, group)
-          : null;
-      const transitionKind: LayerTransitionKind =
-        shouldCrossfadeDiscreteData ||
-        shouldCrossfadeScalarStyle ||
-        shouldCrossfadeSceneSection
-          ? "discrete-crossfade"
-          : shouldTweenScalarStyle
-            ? id === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID
-              ? "full-density-scalar"
-              : "continuous"
-            : "none";
-      layerKinds[id] = transitionKind;
+      for (const id of layerIds) {
+        const sourceState = sourceLayers.get(id);
+        const fromOpacity = sourceState?.opacity ?? 0;
+        const toOpacity = toVisible.has(id)
+          ? this.targetOpacityForLayer(environment, toPage, id)
+          : 0;
+        const fromStyle =
+          sourceState?.style ?? effectiveStyle(environment, fromPage, id);
+        const targetStyle = effectiveStyle(environment, toPage, id);
+        const group = this.layers.get(id);
+        if (group) group.visible = fromOpacity > 0.001 || toOpacity > 0.001;
+        const shouldCrossfadeDiscreteData =
+          !!group &&
+          duration > 0 &&
+          fromOpacity > 0.001 &&
+          forgeDiscreteDataStyleChanged(
+            id,
+            fromStyle,
+            targetStyle,
+            this.layerSpecFor(id),
+          );
+        const shouldCrossfadeSceneSection =
+          !!group &&
+          duration > 0 &&
+          sceneSectionDiscreteChanged &&
+          fromOpacity > 0.001 &&
+          SCENE_SECTION_AFFECTED_LAYER_IDS.has(id);
+        const shouldTweenScalarStyle =
+          !!group &&
+          !shouldCrossfadeDiscreteData &&
+          !shouldCrossfadeSceneSection &&
+          scalarStyleDurationMs > 0 &&
+          fromOpacity > 0.001 &&
+          toOpacity > 0.001 &&
+          this.layerSupportsScalarStyleTween(id, group) &&
+          scalarTransitionStyleChanged(fromStyle, targetStyle);
+        const shouldCrossfadeScalarStyle =
+          !!group &&
+          duration > 0 &&
+          fromOpacity > 0.001 &&
+          this.layerHasScalarPreviewData(group) &&
+          !toVisible.has(id);
+        const transitionSnapshot =
+          shouldCrossfadeDiscreteData ||
+          shouldCrossfadeScalarStyle ||
+          shouldCrossfadeSceneSection
+            ? this.cloneLayerTransitionSnapshot(id, group)
+            : null;
+        const transitionKind: LayerTransitionKind =
+          shouldCrossfadeDiscreteData ||
+          shouldCrossfadeScalarStyle ||
+          shouldCrossfadeSceneSection
+            ? "discrete-crossfade"
+            : shouldTweenScalarStyle
+              ? id === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID
+                ? "full-density-scalar"
+                : "continuous"
+              : "none";
+        layerKinds[id] = transitionKind;
 
-      // Apply target page colour/provenance-style immediately, but restore the
-      // visual opacity to the old page value before the fade begins.
-      this.applyStyle(id, shouldTweenScalarStyle ? fromStyle : targetStyle);
-      if (shouldTweenScalarStyle) {
-        this.scalarStyleTweens.set(id, {
-          id,
-          from: 0,
-          to: 1,
-          fromStyle,
-          toStyle: targetStyle,
-          startMs: now,
-          durationMs: Math.max(0, scalarStyleDurationMs),
-          easing: scalarStyleEasing,
-        });
-      }
-      if (transitionSnapshot) {
-        this.applyRenderOpacityToTree(transitionSnapshot, fromOpacity);
-        this.applyLayerRenderOpacity(id, 0);
+        // Apply target page colour/provenance-style immediately, but restore the
+        // visual opacity to the old page value before the fade begins.
+        this.applyStyle(id, shouldTweenScalarStyle ? fromStyle : targetStyle);
+        if (shouldTweenScalarStyle) {
+          this.scalarStyleTweens.set(id, {
+            id,
+            from: 0,
+            to: 1,
+            fromStyle,
+            toStyle: targetStyle,
+            startMs: now,
+            durationMs: Math.max(0, scalarStyleDurationMs),
+            easing: scalarStyleEasing,
+          });
+        }
+        if (transitionSnapshot) {
+          this.applyRenderOpacityToTree(transitionSnapshot, fromOpacity);
+          this.applyLayerRenderOpacity(id, 0);
+          this.layerTweens.set(id, {
+            from: 0,
+            to: toOpacity,
+            startMs: now,
+            durationMs: duration,
+            easing,
+          });
+          this.layerTransitionSnapshots.set(id, {
+            id,
+            group: transitionSnapshot,
+            from: fromOpacity,
+            to: 0,
+            style: fromStyle,
+            startMs: now,
+            durationMs: duration,
+            easing,
+          });
+          terrainOverrides.set(id, 0);
+          continue;
+        }
+        this.applyLayerRenderOpacity(id, fromOpacity);
+        terrainOverrides.set(id, fromOpacity);
+
+        if (duration <= 0 || Math.abs(fromOpacity - toOpacity) < 0.001) {
+          this.applyLayerRenderOpacity(id, toOpacity);
+          terrainOverrides.set(id, toOpacity);
+          continue;
+        }
+
         this.layerTweens.set(id, {
-          from: 0,
+          from: fromOpacity,
           to: toOpacity,
           startMs: now,
           durationMs: duration,
           easing,
         });
-        this.layerTransitionSnapshots.set(id, {
-          id,
-          group: transitionSnapshot,
-          from: fromOpacity,
-          to: 0,
-          style: fromStyle,
-          startMs: now,
-          durationMs: duration,
-          easing,
-        });
-        terrainOverrides.set(id, 0);
-        continue;
       }
-      this.applyLayerRenderOpacity(id, fromOpacity);
-      terrainOverrides.set(id, fromOpacity);
-
-      if (duration <= 0 || Math.abs(fromOpacity - toOpacity) < 0.001) {
-        this.applyLayerRenderOpacity(id, toOpacity);
-        terrainOverrides.set(id, toOpacity);
-        continue;
-      }
-
-      this.layerTweens.set(id, {
-        from: fromOpacity,
-        to: toOpacity,
-        startMs: now,
-        durationMs: duration,
-        easing,
-      });
-    }
     } finally {
       this.sceneSectionReapplySuspended = false;
     }
@@ -11868,6 +11882,7 @@ export class SceneManager {
    */
   reapplyCurrentPageState(): void {
     if (this.activeSceneTransitionContext) {
+      this.enforceTransitionVisibilityEnvelope();
       this.reapplySceneSectionPlanes();
       return;
     }
@@ -11881,13 +11896,82 @@ export class SceneManager {
     }
   }
 
+  private warnUnexpectedTransitionLayer(id: string): void {
+    const transition = this.activeSceneTransitionContext;
+    if (!transition) return;
+    if (transition.warnedUnexpectedVisibleLayerIds.has(id)) return;
+    transition.warnedUnexpectedVisibleLayerIds.add(id);
+    console.warn(
+      `[SceneManager] layer "${id}" became visible outside the page-transition envelope`,
+      {
+        sourcePageId: transition.sourcePageId,
+        targetPageId: transition.targetPageId,
+        reason: transition.reason,
+      },
+    );
+  }
+
+  private transitionEnvelopeAllowsLayer(id: string): boolean {
+    const transition = this.activeSceneTransitionContext;
+    if (!transition) return true;
+    return (
+      transition.sourceVisibleLayerIds.has(id) ||
+      transition.targetVisibleLayerIds.has(id) ||
+      this.layerTransitionSnapshots.has(id)
+    );
+  }
+
+  private transitionFrameOpacityForLayer(id: string): number {
+    const transition = this.activeSceneTransitionContext;
+    if (!transition) return 0;
+    const elapsed =
+      transition.durationMs <= 0
+        ? 1
+        : (performance.now() - transition.startMs) / transition.durationMs;
+    const t = elapsed >= 1 ? 1 : easeProgress(elapsed, transition.easing);
+    const from = transition.sourceLayers.get(id)?.opacity ?? 0;
+    const to =
+      transition.targetVisibleLayerIds.has(id) &&
+      this.lastEffectiveEnv &&
+      this.lastEffectivePage
+        ? this.targetOpacityForLayer(
+            this.lastEffectiveEnv,
+            this.lastEffectivePage,
+            id,
+          )
+        : 0;
+    return from + (to - from) * clamp01(t);
+  }
+
+  private enforceTransitionVisibilityEnvelope(): void {
+    const transition = this.activeSceneTransitionContext;
+    if (!transition) return;
+    for (const [id, group] of this.layers) {
+      if (this.transitionEnvelopeAllowsLayer(id)) {
+        if (
+          !this.layerTweens.has(id) &&
+          !this.layerTransitionSnapshots.has(id)
+        ) {
+          this.applyLayerRenderOpacity(
+            id,
+            this.transitionFrameOpacityForLayer(id),
+          );
+        }
+        continue;
+      }
+      if (group.visible) this.warnUnexpectedTransitionLayer(id);
+      this.applyLayerRenderOpacity(id, 0);
+    }
+  }
+
   private tickLayerTweens(nowMs: number): void {
     if (
       this.layerTweens.size === 0 &&
       this.scalarStyleTweens.size === 0 &&
       this.layerTransitionSnapshots.size === 0 &&
       !this.sceneSectionStyleTween &&
-      !this.workingAreaFocusTween
+      !this.workingAreaFocusTween &&
+      !this.activeSceneTransitionContext
     ) {
       return;
     }
@@ -11966,6 +12050,7 @@ export class SceneManager {
       );
       if (done) this.removeLayerTransitionSnapshot(id);
     }
+    this.enforceTransitionVisibilityEnvelope();
     if (
       this.layerTweens.size === 0 &&
       this.scalarStyleTweens.size === 0 &&
@@ -11973,7 +12058,14 @@ export class SceneManager {
       !this.sceneSectionStyleTween &&
       !this.workingAreaFocusTween
     ) {
-      this.activeSceneTransitionContext = null;
+      const transition = this.activeSceneTransitionContext;
+      const transitionDone =
+        !transition ||
+        transition.durationMs <= 0 ||
+        performance.now() - transition.startMs >= transition.durationMs;
+      if (transitionDone) {
+        this.activeSceneTransitionContext = null;
+      }
     }
   }
 

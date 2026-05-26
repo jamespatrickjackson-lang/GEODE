@@ -13,7 +13,7 @@ import { transparentLegendPanelStyle } from "./legendStyles";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import { effectiveStyle, effectiveVisibility } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
-import type { EditableStyle } from "../pages/types";
+import type { EditableStyle, PresentationPage } from "../pages/types";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const SEISMIC_LAYER_ID = "utah-forge-phase3-seismic-browser";
@@ -250,20 +250,29 @@ function velocityValueLabel(
 
 type AmplitudeHandle = "min" | "max";
 
-export function SeismicVolumeLegend({ stacked = false }: { stacked?: boolean }) {
+export function SeismicVolumeLegend({
+  stacked = false,
+  pageOverride = null,
+}: {
+  stacked?: boolean;
+  pageOverride?: PresentationPage | null;
+}) {
   const { state, sceneHandle, setEnvLayerStyle, setPageLayerOverride } =
     useEditor();
   const { pages, currentIndex, targetIndex } = usePageController();
   const rampRef = useRef<HTMLDivElement | null>(null);
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
 
-  const controllerPage = pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
+  const controllerPage =
+    pageOverride ?? pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
   const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
   const selectedPage =
-    !editingEnvironment && state.selectedPageId
+    !pageOverride && !editingEnvironment && state.selectedPageId
       ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
       : null;
-  const page = targetIndex !== null ? controllerPage : selectedPage ?? controllerPage;
+  const page =
+    pageOverride ??
+    (targetIndex !== null ? controllerPage : selectedPage ?? controllerPage);
   const visible = editingEnvironment
     ? new Set(state.environment.defaultVisibleLayers)
     : page

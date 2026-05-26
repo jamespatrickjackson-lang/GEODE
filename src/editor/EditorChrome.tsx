@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { SceneHandle } from "../scene";
+import type { PresentationPage } from "../pages/types";
 import {
   PageControllerProvider,
   usePageController,
@@ -101,20 +102,7 @@ export function EditorChrome({
       <LightModeToggle sceneHandle={sceneHandle} onReturnHome={onReturnHome} />
       <AssayLegend sceneHandle={sceneHandle} />
       {state.projectSlug === "utah-forge" ? (
-        <div
-          style={{
-            ...utahForgeLegendStackStyle,
-            left: legendInset,
-            bottom: legendInset + 34,
-          }}
-        >
-          <SeismicVolumeLegend stacked />
-          <SceneSectionLegend stacked />
-          <SectionIsoLegend stacked />
-          <ResistivityLegend stacked />
-          <MtSurfaceBoundaryLegend stacked />
-          <SurfaceElevationLegend stacked />
-        </div>
+        <UtahForgeLegendStack legendInset={legendInset} />
       ) : (
         <>
           <ResistivityLegend />
@@ -133,6 +121,117 @@ export function EditorChrome({
           the saved layout. Pages without overlay content render nothing. */}
       <OverlayDisplay />
     </PageControllerProvider>
+  );
+}
+
+function UtahForgeLegendStack({
+  legendInset,
+}: {
+  legendInset: number;
+}) {
+  const {
+    pages,
+    currentIndex,
+    targetIndex,
+    isTransitioning,
+    transitionProgress,
+  } = usePageController();
+  const sourcePage = pages[currentIndex] ?? null;
+  const targetPage =
+    typeof targetIndex === "number" ? pages[targetIndex] ?? null : null;
+  const transitionActive =
+    isTransitioning &&
+    !!sourcePage &&
+    !!targetPage &&
+    sourcePage.id !== targetPage.id;
+  const direction =
+    typeof targetIndex === "number" && targetIndex < currentIndex ? -1 : 1;
+
+  if (!transitionActive || !sourcePage || !targetPage) {
+    return (
+      <UtahForgeLegendStackFrame
+        legendInset={legendInset}
+        opacity={1}
+        offsetY={0}
+        pageOverride={null}
+      />
+    );
+  }
+
+  const t = Math.max(0, Math.min(1, transitionProgress));
+  const slidePx = 12;
+  return (
+    <>
+      <UtahForgeLegendStackFrame
+        legendInset={legendInset}
+        opacity={1 - t}
+        offsetY={-direction * slidePx * t}
+        pageOverride={sourcePage}
+        includeResistivity={false}
+      />
+      <UtahForgeLegendStackFrame
+        legendInset={legendInset}
+        opacity={t}
+        offsetY={direction * slidePx * (1 - t)}
+        pageOverride={targetPage}
+        includeResistivity={false}
+      />
+      <UtahForgeResistivityLegendFrame legendInset={legendInset} />
+    </>
+  );
+}
+
+function UtahForgeLegendStackFrame({
+  legendInset,
+  opacity,
+  offsetY,
+  pageOverride,
+  includeResistivity = true,
+}: {
+  legendInset: number;
+  opacity: number;
+  offsetY: number;
+  pageOverride: PresentationPage | null;
+  includeResistivity?: boolean;
+}) {
+  if (opacity <= 0.001) return null;
+  return (
+    <div
+      style={{
+        ...utahForgeLegendStackStyle,
+        left: legendInset,
+        bottom: legendInset + 34,
+        opacity,
+        transform: `translate3d(0, ${offsetY.toFixed(1)}px, 0)`,
+      }}
+    >
+      <SeismicVolumeLegend stacked pageOverride={pageOverride} />
+      <SceneSectionLegend stacked pageOverride={pageOverride} />
+      <SectionIsoLegend stacked pageOverride={pageOverride} />
+      {includeResistivity ? (
+        <ResistivityLegend stacked pageOverride={pageOverride} />
+      ) : null}
+      <MtSurfaceBoundaryLegend stacked pageOverride={pageOverride} />
+      <SurfaceElevationLegend stacked pageOverride={pageOverride} />
+    </div>
+  );
+}
+
+function UtahForgeResistivityLegendFrame({
+  legendInset,
+}: {
+  legendInset: number;
+}) {
+  return (
+    <div
+      style={{
+        ...utahForgeLegendStackStyle,
+        left: legendInset,
+        bottom: legendInset + 34,
+      }}
+    >
+      <ResistivityLegend stacked />
+    </div>
   );
 }
 

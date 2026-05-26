@@ -8,7 +8,7 @@ import { transparentLegendPanelStyle } from "./legendStyles";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import { effectiveStyle } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
-import type { EditableStyle } from "../pages/types";
+import type { EditableStyle, PresentationPage } from "../pages/types";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const SCENE_SECTION_LAYER_ID = "utah-forge-scene-section-planes";
@@ -84,18 +84,27 @@ function scopeLabel(scope: EditableStyle["sceneSectionTargetScope"]): string {
   return "selected targets";
 }
 
-export function SceneSectionLegend({ stacked = false }: { stacked?: boolean }) {
+export function SceneSectionLegend({
+  stacked = false,
+  pageOverride = null,
+}: {
+  stacked?: boolean;
+  pageOverride?: PresentationPage | null;
+}) {
   const { state, sceneHandle, setEnvLayerStyle, setPageLayerOverride } = useEditor();
   const { pages, currentIndex, targetIndex } = usePageController();
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
 
-  const controllerPage = pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
+  const controllerPage =
+    pageOverride ?? pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
   const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
   const selectedPage =
-    !editingEnvironment && state.selectedPageId
+    !pageOverride && !editingEnvironment && state.selectedPageId
       ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
       : null;
-  const page = targetIndex !== null ? controllerPage : selectedPage ?? controllerPage;
+  const page =
+    pageOverride ??
+    (targetIndex !== null ? controllerPage : selectedPage ?? controllerPage);
   const style = editingEnvironment
     ? state.environment.layerStyles[SCENE_SECTION_LAYER_ID] ?? {}
     : page

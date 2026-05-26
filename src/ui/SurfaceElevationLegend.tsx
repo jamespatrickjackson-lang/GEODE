@@ -9,6 +9,7 @@ import { transparentLegendPanelStyle } from "./legendStyles";
 import { usePageController } from "../pages/PageController";
 import { effectiveVisibility } from "../pages/effective";
 import { resolveTopoMapSettings } from "../topoMap/settings";
+import type { PresentationPage } from "../pages/types";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const DEFAULT_MIN_M = 1500;
@@ -120,21 +121,28 @@ function tickLabel(minM: number, maxM: number, index: number): string {
 
 export function SurfaceElevationLegend({
   stacked = false,
+  pageOverride = null,
 }: {
   stacked?: boolean;
+  pageOverride?: PresentationPage | null;
 }) {
   const { state } = useEditor();
   const { pages, currentIndex, targetIndex } = usePageController();
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
 
-  const controllerPage = pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
+  const controllerPage =
+    pageOverride ?? pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
   const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
   const selectedPage =
-    !editingEnvironment && targetIndex === null && state.selectedPageId
+    !pageOverride &&
+    !editingEnvironment &&
+    targetIndex === null &&
+    state.selectedPageId
       ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
       : null;
   const page =
-    targetIndex !== null ? controllerPage : selectedPage ?? controllerPage;
+    pageOverride ??
+    (targetIndex !== null ? controllerPage : selectedPage ?? controllerPage);
   const settings = resolveTopoMapSettings({
     manifest: state.manifest,
     environment: state.environment,

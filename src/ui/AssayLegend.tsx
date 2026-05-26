@@ -85,8 +85,12 @@ function leaderPath(
 
 export function AssayLegend({ sceneHandle }: { sceneHandle: SceneHandle }) {
   const { state } = useEditor();
-  const { pages, currentIndex, targetIndex } = usePageController();
-  const page = pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
+  const { pages, currentIndex, targetIndex, transitionProgress } =
+    usePageController();
+  const page =
+    targetIndex !== null && transitionProgress >= 0.92
+      ? pages[targetIndex] ?? pages[currentIndex]
+      : pages[currentIndex];
   const assays = state.environment.scene?.drilling?.assays ?? {};
   const traceMode = assays.traceMode ?? "assay";
   const svgRef = useRef<SVGSVGElement | null>(null);
