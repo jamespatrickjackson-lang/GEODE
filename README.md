@@ -25,6 +25,13 @@ Stack rationale lives in `docs/02-architecture.md` and `docs/03-decisions.md`.
 
 ## Repo layout
 
+Canonical active repo root:
+
+    C:\GeoSee\GeoSee_Dev
+
+Run commands from this folder. `C:\GeoSee_Dev` is an obsolete/stale location
+and should not be used for current work.
+
     C:\GeoSee\GeoSee_Dev\
       CLAUDE.md             # agent rules and routing
       README.md             # this file

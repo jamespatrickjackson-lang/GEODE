@@ -153,6 +153,8 @@ the dev-only author-write plugin described in `CLAUDE.md` and
 
 ## Working Safely
 
+- Use `C:\GeoSee\GeoSee_Dev` as the active repo root for current work.
+  `C:\GeoSee_Dev` is obsolete/stale and should not be used as a working tree.
 - Read local files before editing.
 - Prefer existing patterns.
 - Keep changes scoped.

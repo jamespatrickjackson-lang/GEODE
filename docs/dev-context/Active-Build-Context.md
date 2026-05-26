@@ -2,6 +2,10 @@
 
 Status: active entry point for software-build work
 
+Canonical active repo root: `C:\GeoSee\GeoSee_Dev`. If a shell opens in
+`C:\GeoSee_Dev` or another path that is missing the repo, change to the
+canonical root before running project commands.
+
 Entry hierarchy:
 
 - `README.md`: human repo landing page

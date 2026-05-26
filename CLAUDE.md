@@ -38,6 +38,11 @@ copy under review, and required wording from tools, tests, or external APIs.
 
 ## Workspace Rules
 
+- The canonical active repo root is `C:\GeoSee\GeoSee_Dev\`.
+- If the current working directory is missing the repo, switch to
+  `C:\GeoSee\GeoSee_Dev\` before inspecting, testing, editing, or committing.
+- `C:\GeoSee_Dev\` is obsolete/stale and must not be treated as the current
+  working tree.
 - Run `npm run check:workspace` before commits or broad verification.
 - Stage exact paths for focused commits; do not use broad staging when unrelated
   local work exists.
