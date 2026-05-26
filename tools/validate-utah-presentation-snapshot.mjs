@@ -18,9 +18,7 @@ function validateEnvironment() {
     "utah-forge-topo-graticule",
     "utah-forge-site-boundary",
     "utah-forge-phase3-demo-boreholes",
-    "utah-forge-mt-resistivity-full-density",
-    "terrain",
-    "utah-forge-phase3-working-area",
+    "utah-forge-mt-resistivity-volume",
   ]);
   assertSubset(
     environment.scene,
@@ -68,22 +66,26 @@ function validateEnvironment() {
   assertSubset(
     environment.layerStyles["utah-forge-scene-section-planes"],
     {
-      sceneSectionEnabled: false,
+      sceneSectionEnabled: true,
       sceneSectionMode: "cutaway",
       sceneSectionTargetScope: "selected-targets",
+      sceneSectionWindowEnabled: true,
+      sceneSectionGroundTraceVisible: true,
+      sceneSectionAxesVisible: true,
     },
     "scene section style",
   );
   assert.deepEqual(
     environment.layerStyles["utah-forge-scene-section-planes"]
       .sceneSectionTargetLayerIds,
-    ["utah-forge-mt-resistivity-volume"],
+    ["utah-forge-mt-resistivity-volume", "utah-forge-mt-resistivity-slices"],
   );
   assertSubset(
     environment.layerStyles["utah-forge-mt-resistivity-volume"],
     {
-      scalarVolumeProductId: "mt-resistivity-forge-focused-volume",
+      scalarVolumeProductId: "mt-resistivity-full-extent-volume",
       scalarVolumeRenderMode: "raymarch",
+      scalarVolumeTransferMode: "dense",
       scalarVolumeMaskVisible: true,
     },
     "MT volume style",

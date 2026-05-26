@@ -312,6 +312,14 @@ export interface EditableStyle {
     y?: SceneSectionPlaneState;
     z?: SceneSectionPlaneState;
   };
+  sceneSectionWindowEnabled?: boolean;
+  sceneSectionWindowByAxis?: {
+    x?: SceneSectionWindowState;
+    y?: SceneSectionWindowState;
+    z?: SceneSectionWindowState;
+  };
+  sceneSectionGroundTraceVisible?: boolean;
+  sceneSectionAxesVisible?: boolean;
   sceneSectionTargetLayerIds?: string[];
   sceneSectionTargetProductIds?: string[];
   sceneSectionHelperVisible?: boolean;
@@ -448,6 +456,12 @@ export interface SceneSectionPlaneState {
   enabled?: boolean;
   positionM?: number;
   invert?: boolean;
+}
+
+export interface SceneSectionWindowState {
+  minAlongM?: number;
+  maxAlongM?: number;
+  bottomElevationM?: number;
 }
 
 // ---------- Environment (the "world") ---------------------------------------

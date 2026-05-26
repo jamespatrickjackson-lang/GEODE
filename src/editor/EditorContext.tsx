@@ -1541,6 +1541,53 @@ export function EditorProvider({
     return () => sceneHandle.setSceneSectionPlaneCommitHandler(null);
   }, [sceneHandle]);
 
+  useEffect(() => {
+    sceneHandle.setSceneSectionWindowCommitHandler((axis, kind, valueM) => {
+      const cur = stateRef.current;
+      const selectedPageId = cur.selectedPageId;
+      const page =
+        selectedPageId && selectedPageId !== ENVIRONMENT_SENTINEL
+          ? cur.pages.find((candidate) => candidate.id === selectedPageId)
+          : null;
+      const layerId = "utah-forge-scene-section-planes";
+      const currentStyle = page
+        ? effectiveStyle(cur.environment, page, layerId)
+        : (cur.environment.layerStyles[layerId] ?? {});
+      const currentByAxis = currentStyle.sceneSectionWindowByAxis ?? {};
+      const currentWindow = currentByAxis[axis] ?? {};
+      const windowPatch =
+        kind === "window-min"
+          ? { minAlongM: valueM }
+          : kind === "window-max"
+            ? { maxAlongM: valueM }
+            : { bottomElevationM: valueM };
+      const patch: Partial<EditableStyle> = {
+        sceneSectionEnabled: true,
+        sceneSectionActiveAxis: axis,
+        sceneSectionWindowEnabled: true,
+        sceneSectionWindowByAxis: {
+          ...currentByAxis,
+          [axis]: {
+            ...currentWindow,
+            ...windowPatch,
+          },
+        },
+      };
+      sceneHandle.manager.applyStyle(layerId, { ...currentStyle, ...patch });
+      if (page) {
+        dispatch({
+          type: "SET_PAGE_LAYER_OVERRIDE",
+          pageId: page.id,
+          layerId,
+          patch,
+        });
+      } else {
+        dispatch({ type: "SET_ENV_LAYER_STYLE", layerId, style: patch });
+      }
+    });
+    return () => sceneHandle.setSceneSectionWindowCommitHandler(null);
+  }, [sceneHandle]);
+
   // Editor mode flag drives the manager's overlay drag UX (cursor +
   // outline brightening). Presenter mode keeps overlays read-only.
   useEffect(() => {

@@ -9,6 +9,7 @@ import type {
   OrbitCenterHandleMode,
   PageCameraMarkerSpec,
   SceneSectionAxis,
+  SceneSectionWindowHandleKind,
 } from "./scene/SceneManager";
 import { buildPostprocessing } from "./scene/postprocessing";
 import { setHoverTooltip } from "./ui/HoverTooltip";
@@ -83,6 +84,15 @@ export interface SceneHandle {
   ): void;
   setSceneSectionPlaneCommitHandler(
     fn: ((axis: SceneSectionAxis, positionM: number) => void) | null,
+  ): void;
+  setSceneSectionWindowCommitHandler(
+    fn:
+      | ((
+          axis: SceneSectionAxis,
+          kind: SceneSectionWindowHandleKind,
+          valueM: number,
+        ) => void)
+      | null,
   ): void;
   setPageCameraMarker(pose: Pose | null): void;
   setPageCameraMarkerClickHandler(fn: (() => void) | null): void;
@@ -389,6 +399,7 @@ export function mountScene(
   let dragSceneSectionPlane:
     | {
         axis: SceneSectionAxis;
+        kind: "plane" | SceneSectionWindowHandleKind;
         normal: THREE.Vector3;
         originalPositionM: number;
         grabOffsetM: number;
@@ -409,6 +420,13 @@ export function mountScene(
     | null = null;
   let sceneSectionPlaneCommit:
     | ((axis: SceneSectionAxis, positionM: number) => void)
+    | null = null;
+  let sceneSectionWindowCommit:
+    | ((
+        axis: SceneSectionAxis,
+        kind: SceneSectionWindowHandleKind,
+        valueM: number,
+      ) => void)
     | null = null;
   let orbitCenterPick: ((point: Vec3) => void) | null = null;
   let pageCameraMarkerClick: (() => void) | null = null;
@@ -471,6 +489,17 @@ export function mountScene(
     fn: ((axis: SceneSectionAxis, positionM: number) => void) | null,
   ) => {
     sceneSectionPlaneCommit = fn;
+  };
+  const setSceneSectionWindowCommitHandler = (
+    fn:
+      | ((
+          axis: SceneSectionAxis,
+          kind: SceneSectionWindowHandleKind,
+          valueM: number,
+        ) => void)
+      | null,
+  ) => {
+    sceneSectionWindowCommit = fn;
   };
   const setEditorMode = (on: boolean) => {
     editorMode = on;
@@ -650,7 +679,11 @@ export function mountScene(
   const pickSceneSectionPlaneHandle = (
     clientX: number,
     clientY: number,
-  ): { axis: SceneSectionAxis; world: THREE.Vector3 } | null => {
+  ): {
+    axis: SceneSectionAxis;
+    kind: "plane" | SceneSectionWindowHandleKind;
+    world: THREE.Vector3;
+  } | null => {
     const pickables = manager.listSceneSectionPlanePickables();
     if (pickables.length === 0) return null;
     const rect = renderer.domElement.getBoundingClientRect();
@@ -662,6 +695,7 @@ export function mountScene(
       const data = hit.object.userData as {
         sceneSectionPlaneHandle?: boolean;
         sceneSectionAxis?: SceneSectionAxis;
+        sceneSectionPlaneHandleKind?: string;
       };
       if (
         data.sceneSectionPlaneHandle === true &&
@@ -669,7 +703,13 @@ export function mountScene(
           data.sceneSectionAxis === "y" ||
           data.sceneSectionAxis === "z")
       ) {
-        return { axis: data.sceneSectionAxis, world: hit.point.clone() };
+        const kind =
+          data.sceneSectionPlaneHandleKind === "window-min" ||
+          data.sceneSectionPlaneHandleKind === "window-max" ||
+          data.sceneSectionPlaneHandleKind === "window-bottom"
+            ? data.sceneSectionPlaneHandleKind
+            : "plane";
+        return { axis: data.sceneSectionAxis, kind, world: hit.point.clone() };
       }
     }
     return null;
@@ -715,7 +755,15 @@ export function mountScene(
           -250_000,
           250_000,
         );
-        manager.previewSceneSectionPlane(dragSceneSectionPlane.axis, positionM);
+        if (dragSceneSectionPlane.kind === "plane") {
+          manager.previewSceneSectionPlane(dragSceneSectionPlane.axis, positionM);
+        } else {
+          manager.previewSceneSectionWindow(
+            dragSceneSectionPlane.axis,
+            dragSceneSectionPlane.kind,
+            positionM,
+          );
+        }
       }
       return;
     }
@@ -952,14 +1000,26 @@ export function mountScene(
     if (sceneSectionHandle) {
       suppressNextDrillFocusClick = true;
       const normal =
-        sceneSectionHandle.axis === "x"
-          ? new THREE.Vector3(1, 0, 0)
-          : sceneSectionHandle.axis === "y"
-            ? new THREE.Vector3(0, 1, 0)
-            : new THREE.Vector3(0, 0, 1);
+        sceneSectionHandle.kind === "window-bottom"
+          ? new THREE.Vector3(0, 0, 1)
+          : sceneSectionHandle.kind === "window-min" ||
+              sceneSectionHandle.kind === "window-max"
+            ? sceneSectionHandle.axis === "x"
+              ? new THREE.Vector3(0, 1, 0)
+              : new THREE.Vector3(1, 0, 0)
+            : sceneSectionHandle.axis === "x"
+              ? new THREE.Vector3(1, 0, 0)
+              : sceneSectionHandle.axis === "y"
+                ? new THREE.Vector3(0, 1, 0)
+                : new THREE.Vector3(0, 0, 1);
       const originalPosition =
-        manager.getSceneSectionPlaneScalar(sceneSectionHandle.axis) ??
-        sceneSectionHandle.world.dot(normal);
+        sceneSectionHandle.kind === "plane"
+          ? (manager.getSceneSectionPlaneScalar(sceneSectionHandle.axis) ??
+            sceneSectionHandle.world.dot(normal))
+          : (manager.getSceneSectionWindowValue(
+              sceneSectionHandle.axis,
+              sceneSectionHandle.kind,
+            ) ?? sceneSectionHandle.world.dot(normal));
       const cameraRight = new THREE.Vector3()
         .setFromMatrixColumn(camera.matrixWorld, 0)
         .normalize();
@@ -969,6 +1029,7 @@ export function mountScene(
       );
       dragSceneSectionPlane = {
         axis: sceneSectionHandle.axis,
+        kind: sceneSectionHandle.kind,
         normal,
         originalPositionM: originalPosition,
         grabOffsetM: sceneSectionHandle.world.dot(normal) - originalPosition,
@@ -1081,11 +1142,29 @@ export function mountScene(
 
   const onWindowMouseUp = () => {
     if (dragSceneSectionPlane) {
-      const positionM = manager.getSceneSectionPlaneScalar(
-        dragSceneSectionPlane.axis,
-      );
-      if (positionM !== null && sceneSectionPlaneCommit) {
+      const positionM =
+        dragSceneSectionPlane.kind === "plane"
+          ? manager.getSceneSectionPlaneScalar(dragSceneSectionPlane.axis)
+          : manager.getSceneSectionWindowValue(
+              dragSceneSectionPlane.axis,
+              dragSceneSectionPlane.kind,
+            );
+      if (
+        positionM !== null &&
+        dragSceneSectionPlane.kind === "plane" &&
+        sceneSectionPlaneCommit
+      ) {
         sceneSectionPlaneCommit(dragSceneSectionPlane.axis, positionM);
+      } else if (
+        positionM !== null &&
+        dragSceneSectionPlane.kind !== "plane" &&
+        sceneSectionWindowCommit
+      ) {
+        sceneSectionWindowCommit(
+          dragSceneSectionPlane.axis,
+          dragSceneSectionPlane.kind,
+          positionM,
+        );
       }
       dragSceneSectionPlane = null;
       renderer.domElement.style.cursor = "";
@@ -1233,6 +1312,7 @@ export function mountScene(
     setDynamicCameraOrbitCenterCommitHandler,
     setAreaOutlineCommitHandler,
     setSceneSectionPlaneCommitHandler,
+    setSceneSectionWindowCommitHandler,
     setPageCameraMarker,
     setPageCameraMarkerClickHandler,
     setGlobalPageCameraMarkers,

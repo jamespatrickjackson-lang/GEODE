@@ -318,14 +318,14 @@
       "scalarColorLow": "#2cc9ff",
       "scalarColorMid": "#f8dd6d",
       "scalarColorHigh": "#ff637a",
-      "scalarBlendMin": -2,
-      "scalarBlendMax": 3.61,
-      "scalarDisplayMin": 1.26,
-      "scalarDisplayMax": 3.61,
+      "scalarBlendMin": 0.139879,
+      "scalarBlendMax": 3.937122,
+      "scalarDisplayMin": 0.139879,
+      "scalarDisplayMax": 3.937122,
       "scalarFocusMin": -2,
       "scalarFocusMax": 4.5,
-      "scalarMidpoint": 0.55,
-      "scalarContrast": 1.15,
+      "scalarMidpoint": 0.5,
+      "scalarContrast": 1.05,
       "scalarEdgeHighlight": 0,
       "scalarEdgeColor": "#ff2a2a",
       "scalarEdgeLineWidth": 0,
@@ -451,11 +451,27 @@
         }
       },
       "sceneSectionTargetLayerIds": [
-        "utah-forge-mt-resistivity-volume"
+        "utah-forge-mt-resistivity-volume",
+        "utah-forge-mt-resistivity-slices"
       ],
       "sceneSectionTargetProductIds": [
         "gdr-1141-forge3d-ani-psdm-stack-unenh"
       ],
+      "sceneSectionWindowEnabled": true,
+      "sceneSectionWindowByAxis": {
+        "x": {
+          "minAlongM": -113000,
+          "maxAlongM": 113000,
+          "bottomElevationM": -25000
+        },
+        "y": {
+          "minAlongM": -140000,
+          "maxAlongM": 140000,
+          "bottomElevationM": -25000
+        }
+      },
+      "sceneSectionGroundTraceVisible": true,
+      "sceneSectionAxesVisible": true,
       "sceneSectionHelperVisible": true,
       "sceneSectionLegendVisible": true,
       "affectedByFog": false,
@@ -1909,8 +1925,10 @@
           "resistivitySectionTopTraceVisible": false,
           "opacity": 0.65,
           "scalarFocusMin": -2,
-          "scalarBlendMin": -2,
-          "scalarBlendMax": 3.61,
+          "scalarBlendMin": 0.139879,
+          "scalarBlendMax": 3.937122,
+          "scalarDisplayMin": 0.139879,
+          "scalarDisplayMax": 3.937122,
           "resistivitySliceVisibility": {
             "horizontal_elev_1500m": true,
             "horizontal_elev_0m": true,
@@ -1926,7 +1944,8 @@
             "utah-forge-mt-resistivity-slices:vertical_ew_station_centroid": true,
             "utah-forge-mt-resistivity-slices:vertical_ns_station_centroid": true
           },
-          "scalarMidpoint": 0.55,
+          "scalarMidpoint": 0.5,
+          "scalarContrast": 1.05,
           "resistivitySliceMode": "single",
           "resistivitySelectedSliceId": "horizontal_elev_1500m",
           "sectionIsoBandsVisible": true,
@@ -1954,8 +1973,24 @@
           "sceneSectionActiveAxis": "x",
           "sceneSectionTargetScope": "selected-targets",
           "sceneSectionTargetLayerIds": [
-            "utah-forge-mt-resistivity-volume"
+            "utah-forge-mt-resistivity-volume",
+            "utah-forge-mt-resistivity-slices"
           ],
+          "sceneSectionWindowEnabled": true,
+          "sceneSectionWindowByAxis": {
+            "x": {
+              "minAlongM": -113000,
+              "maxAlongM": 113000,
+              "bottomElevationM": -25000
+            },
+            "y": {
+              "minAlongM": -140000,
+              "maxAlongM": 140000,
+              "bottomElevationM": -25000
+            }
+          },
+          "sceneSectionGroundTraceVisible": true,
+          "sceneSectionAxesVisible": true,
           "sceneSectionHelperVisible": true,
           "sceneSectionLegendVisible": true,
           "sceneSectionPlanes": {

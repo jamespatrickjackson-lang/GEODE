@@ -6925,10 +6925,11 @@ function SceneSectionPlanesContainer({
   const targetLayerIds = new Set(
     Array.isArray(style.sceneSectionTargetLayerIds)
       ? style.sceneSectionTargetLayerIds
-      : [
-          UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
-          UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
-        ],
+        : [
+            UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+            UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+            UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+          ],
   );
   const targetProductIds = new Set(
     Array.isArray(style.sceneSectionTargetProductIds)
@@ -6939,6 +6940,14 @@ function SceneSectionPlanesContainer({
   );
   const helperVisible = styleBoolean(style, "sceneSectionHelperVisible", true);
   const legendVisible = styleBoolean(style, "sceneSectionLegendVisible", true);
+  const windowEnabled = styleBoolean(style, "sceneSectionWindowEnabled", false);
+  const groundTraceVisible = styleBoolean(
+    style,
+    "sceneSectionGroundTraceVisible",
+    true,
+  );
+  const axesVisible = styleBoolean(style, "sceneSectionAxesVisible", true);
+  const windowByAxis = style.sceneSectionWindowByAxis ?? {};
   const liveStyleRef = useRef(style);
   useEffect(() => {
     liveStyleRef.current = style;
@@ -6968,6 +6977,22 @@ function SceneSectionPlanesContainer({
         ...planes,
         [axis]: {
           ...(planes[axis] ?? {}),
+          ...patch,
+        },
+      },
+    });
+  };
+  const setWindowPatch = (
+    axis: "x" | "y",
+    patch: { minAlongM?: number; maxAlongM?: number; bottomElevationM?: number },
+  ) => {
+    commit({
+      sceneSectionActiveAxis: axis,
+      sceneSectionWindowEnabled: true,
+      sceneSectionWindowByAxis: {
+        ...windowByAxis,
+        [axis]: {
+          ...(windowByAxis[axis] ?? {}),
           ...patch,
         },
       },
@@ -7209,6 +7234,149 @@ function SceneSectionPlanesContainer({
             }
           />
         </label>
+        <details style={nestedDetailsStyle} data-testid="scene-section-window">
+          <summary style={panelStyles.summary}>MT section window</summary>
+          <div style={detailsContentStyle}>
+            <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+              <span style={nestedFieldLabelStyle}>Window crop</span>
+              <input
+                data-testid="scene-section-window-enabled"
+                type="checkbox"
+                disabled={disabled}
+                checked={windowEnabled}
+                onChange={(e) =>
+                  commit({ sceneSectionWindowEnabled: e.target.checked })
+                }
+              />
+            </label>
+            <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+              <span style={nestedFieldLabelStyle}>Ground trace</span>
+              <input
+                data-testid="scene-section-ground-trace-visible"
+                type="checkbox"
+                disabled={disabled || !windowEnabled}
+                checked={groundTraceVisible}
+                onChange={(e) =>
+                  commit({ sceneSectionGroundTraceVisible: e.target.checked })
+                }
+              />
+            </label>
+            <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+              <span style={nestedFieldLabelStyle}>Scale axes</span>
+              <input
+                data-testid="scene-section-axes-visible"
+                type="checkbox"
+                disabled={disabled || !windowEnabled}
+                checked={axesVisible}
+                onChange={(e) =>
+                  commit({ sceneSectionAxesVisible: e.target.checked })
+                }
+              />
+            </label>
+            {(["x", "y"] as const).map((axis) => {
+              const axisWindow = windowByAxis[axis] ?? {};
+              const minLimit = axis === "x" ? -115000 : -140000;
+              const maxLimit = axis === "x" ? 115000 : 140000;
+              const minAlong =
+                typeof axisWindow.minAlongM === "number" &&
+                Number.isFinite(axisWindow.minAlongM)
+                  ? axisWindow.minAlongM
+                  : minLimit;
+              const maxAlong =
+                typeof axisWindow.maxAlongM === "number" &&
+                Number.isFinite(axisWindow.maxAlongM)
+                  ? axisWindow.maxAlongM
+                  : maxLimit;
+              const bottomElevation =
+                typeof axisWindow.bottomElevationM === "number" &&
+                Number.isFinite(axisWindow.bottomElevationM)
+                  ? axisWindow.bottomElevationM
+                  : -25000;
+              const alongLabel =
+                axis === "x" ? "Northing window" : "Easting window";
+              return (
+                <details
+                  key={axis}
+                  style={nestedDetailsStyle}
+                  data-testid={`scene-section-window-${axis}`}
+                >
+                  <summary style={panelStyles.summary}>
+                    {axis.toUpperCase()} section frame
+                  </summary>
+                  <div style={detailsContentStyle}>
+                    <div style={nestedControlRowStyle}>
+                      <label style={nestedFieldLabelStyle}>
+                        {alongLabel} min
+                      </label>
+                      <input
+                        data-testid={`scene-section-window-${axis}-min`}
+                        type="range"
+                        min={minLimit}
+                        max={maxLimit}
+                        step={100}
+                        disabled={disabled || !windowEnabled}
+                        value={minAlong}
+                        onChange={(e) =>
+                          setWindowPatch(axis, {
+                            minAlongM: parseFloat(e.target.value),
+                          })
+                        }
+                        style={{ flex: 1 }}
+                      />
+                      <span style={sliderNumberReadoutStyle}>
+                        {Math.round(minAlong)} m
+                      </span>
+                    </div>
+                    <div style={nestedControlRowStyle}>
+                      <label style={nestedFieldLabelStyle}>
+                        {alongLabel} max
+                      </label>
+                      <input
+                        data-testid={`scene-section-window-${axis}-max`}
+                        type="range"
+                        min={minLimit}
+                        max={maxLimit}
+                        step={100}
+                        disabled={disabled || !windowEnabled}
+                        value={maxAlong}
+                        onChange={(e) =>
+                          setWindowPatch(axis, {
+                            maxAlongM: parseFloat(e.target.value),
+                          })
+                        }
+                        style={{ flex: 1 }}
+                      />
+                      <span style={sliderNumberReadoutStyle}>
+                        {Math.round(maxAlong)} m
+                      </span>
+                    </div>
+                    <div style={nestedControlRowStyle}>
+                      <label style={nestedFieldLabelStyle}>Bottom elev.</label>
+                      <input
+                        data-testid={`scene-section-window-${axis}-bottom`}
+                        type="range"
+                        min={-122000}
+                        max={4000}
+                        step={100}
+                        disabled={disabled || !windowEnabled}
+                        value={bottomElevation}
+                        onChange={(e) =>
+                          setWindowPatch(axis, {
+                            bottomElevationM: parseFloat(e.target.value),
+                          })
+                        }
+                        style={{ flex: 1 }}
+                      />
+                      <span style={sliderNumberReadoutStyle}>
+                        {(bottomElevation / 1000).toFixed(1)} km
+                      </span>
+                    </div>
+                  </div>
+                </details>
+              );
+            })}
+          </div>
+        </details>
         {(["x", "y", "z"] as const).map(renderAxis)}
         <details style={nestedDetailsStyle}>
           <summary style={panelStyles.summary}>Target checklist</summary>

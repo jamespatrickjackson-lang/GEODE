@@ -130,6 +130,11 @@ uniform vec3 uSceneSectionNormals[3];
 uniform float uSceneSectionPositions[3];
 uniform float uSceneSectionThickness[3];
 uniform int uSceneSectionInvert[3];
+uniform int uSceneSectionWindowEnabled;
+uniform int uSceneSectionWindowAxis;
+uniform float uSceneSectionWindowMinAlong;
+uniform float uSceneSectionWindowMaxAlong;
+uniform float uSceneSectionWindowBottomZ;
 uniform int uWorkingAreaFocusEnabled;
 uniform vec3 uWorkingAreaFocusBoundsMin;
 uniform vec3 uWorkingAreaFocusBoundsMax;
@@ -177,6 +182,18 @@ bool sceneSectionAllows(vec3 position) {
   return true;
 }
 
+bool sceneSectionWindowAllows(vec3 position) {
+  if (uSceneSectionWindowEnabled == 0) return true;
+  float along = uSceneSectionWindowAxis == 0 ? position.y : position.x;
+  if (along < uSceneSectionWindowMinAlong || along > uSceneSectionWindowMaxAlong) {
+    return false;
+  }
+  if (position.z < uSceneSectionWindowBottomZ) {
+    return false;
+  }
+  return true;
+}
+
 float workingAreaFocusAlpha(vec3 position) {
   if (uWorkingAreaFocusEnabled == 0) return 1.0;
   bool inside =
@@ -214,7 +231,7 @@ void main() {
     if (float(i) >= sampleSteps) break;
     if (t > tEnd || accum.a > 0.96) break;
     vec3 position = cameraPosition + rayDirection * t;
-    if (!sceneSectionAllows(position)) {
+    if (!sceneSectionAllows(position) || !sceneSectionWindowAllows(position)) {
       t += stepSize;
       continue;
     }
@@ -358,6 +375,11 @@ async function buildVolumeMesh(
       uSceneSectionPositions: { value: [0, 0, 0] },
       uSceneSectionThickness: { value: [1, 1, 1] },
       uSceneSectionInvert: { value: [0, 0, 0] },
+      uSceneSectionWindowEnabled: { value: 0 },
+      uSceneSectionWindowAxis: { value: 0 },
+      uSceneSectionWindowMinAlong: { value: -250000 },
+      uSceneSectionWindowMaxAlong: { value: 250000 },
+      uSceneSectionWindowBottomZ: { value: -250000 },
       uWorkingAreaFocusEnabled: { value: 0 },
       uWorkingAreaFocusBoundsMin: { value: new THREE.Vector3() },
       uWorkingAreaFocusBoundsMax: { value: new THREE.Vector3() },
