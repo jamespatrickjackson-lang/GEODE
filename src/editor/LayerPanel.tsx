@@ -84,6 +84,15 @@ import {
   UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
 import {
+  boundaryStyleFromDefinition,
+  liveBoundaryId,
+  mtSurfaceBoundaryDefinitionsForLayer,
+  mtSurfaceBoundaryMode,
+  mtSurfaceBoundaryOrder,
+  resolveMtSurfaceBoundaries,
+  type MtSurfaceBoundaryComparison,
+} from "../projectModules/utahForge/mtSurfaceBoundaries";
+import {
   WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY,
   WORKING_AREA_FOCUS_DEFAULT_TARGET_LAYER_IDS,
 } from "../projectModules/utahForge/workingAreaFocus";
@@ -402,6 +411,10 @@ const MT_VOLUME_FIELDS = [
 ] as const satisfies readonly (keyof EditableStyle)[];
 const MT_THRESHOLD_SURFACE_FIELDS = [
   "mtIsosurfaceProductId",
+  "mtSurfaceBoundaryMode",
+  "mtSurfaceBoundaryOrder",
+  "mtSurfaceBoundariesById",
+  "mtSurfaceBoundaryLegendVisible",
   "mtThresholdSurfaceVisibility",
   "mtThresholdSurfaceWireframe",
   "mtThresholdSurfaceRoughness",
@@ -5854,6 +5867,20 @@ function mtThresholdSurfacePatchFromStyle(
       typeof style.mtIsosurfaceProductId === "string"
         ? style.mtIsosurfaceProductId
         : "mt-isosurface-forge-focused",
+    mtSurfaceBoundaryMode: mtSurfaceBoundaryMode(style),
+    mtSurfaceBoundaryOrder: Array.isArray(style.mtSurfaceBoundaryOrder)
+      ? [...style.mtSurfaceBoundaryOrder]
+      : undefined,
+    mtSurfaceBoundariesById:
+      typeof style.mtSurfaceBoundariesById === "object" &&
+      style.mtSurfaceBoundariesById !== null
+        ? { ...style.mtSurfaceBoundariesById }
+        : undefined,
+    mtSurfaceBoundaryLegendVisible: styleBoolean(
+      style,
+      "mtSurfaceBoundaryLegendVisible",
+      true,
+    ),
     mtThresholdSurfaceVisibility:
       typeof style.mtThresholdSurfaceVisibility === "object" &&
       style.mtThresholdSurfaceVisibility !== null
@@ -9674,11 +9701,6 @@ function MtVolumeControls({
   );
 }
 
-interface MtThresholdSurfaceOption {
-  id: string;
-  label: string;
-}
-
 interface MtIsosurfaceProductOption {
   id: string;
   label: string;
@@ -9727,33 +9749,6 @@ function mtIsosurfaceProductOptions(
   ];
 }
 
-function mtThresholdSurfaceOptions(
-  layer: ProjectLayerSpec,
-): MtThresholdSurfaceOption[] {
-  const raw = (layer.metadata as { thresholdSurfaces?: unknown })
-    .thresholdSurfaces;
-  if (Array.isArray(raw)) {
-    const options = raw
-      .map((item) => {
-        const surface = item as { id?: unknown; label?: unknown };
-        return typeof surface.id === "string"
-          ? {
-              id: surface.id,
-              label:
-                typeof surface.label === "string" ? surface.label : surface.id,
-            }
-          : null;
-      })
-      .filter((item): item is MtThresholdSurfaceOption => item !== null);
-    if (options.length > 0) return options;
-  }
-  return [
-    { id: "conductive-le-10-ohm-m", label: "Conductive shell <=10 Ohm-m" },
-    { id: "conductive-le-30-ohm-m", label: "Conductive shell <=30 Ohm-m" },
-    { id: "resistive-ge-1000-ohm-m", label: "Resistive shell >=1000 Ohm-m" },
-  ];
-}
-
 function MtThresholdSurfaceControls({
   layer,
   style,
@@ -9776,18 +9771,26 @@ function MtThresholdSurfaceControls({
   setPageLayerOverride: PageStyleSetter;
   clearPageLayerOverride: PageStyleClearer;
 }) {
-  const options = mtThresholdSurfaceOptions(layer);
+  const definitions = mtSurfaceBoundaryDefinitionsForLayer(layer);
+  const definitionsById = new Map(
+    definitions.map((definition) => [definition.id, definition]),
+  );
   const productOptions = mtIsosurfaceProductOptions(layer);
   const selectedProductId =
     typeof style.mtIsosurfaceProductId === "string"
       ? style.mtIsosurfaceProductId
       : "mt-isosurface-forge-focused";
-  const visibility =
-    typeof style.mtThresholdSurfaceVisibility === "object" &&
-    style.mtThresholdSurfaceVisibility !== null
-      ? (style.mtThresholdSurfaceVisibility as Record<string, boolean>)
+  const [boundaryToAddId, setBoundaryToAddId] = useState("");
+  const boundaryMode = mtSurfaceBoundaryMode(style);
+  const boundaryOrder = mtSurfaceBoundaryOrder(style, definitions);
+  const boundaries = resolveMtSurfaceBoundaries(style, definitions);
+  const boundaryStyles =
+    typeof style.mtSurfaceBoundariesById === "object" &&
+    style.mtSurfaceBoundariesById !== null
+      ? style.mtSurfaceBoundariesById
       : {};
   const opacity = Math.max(0, Math.min(1, styleNumber(style, "opacity", 0.86)));
+  const legendVisible = styleBoolean(style, "mtSurfaceBoundaryLegendVisible", true);
   const wireframe = styleBoolean(style, "mtThresholdSurfaceWireframe", false);
   const roughness = Math.max(
     0,
@@ -9828,9 +9831,77 @@ function MtThresholdSurfaceControls({
       setPageLayerOverride(currentPage.id, layerId, patch);
     }
   };
+  const updateBoundary = (
+    id: string,
+    patch: Partial<NonNullable<EditableStyle["mtSurfaceBoundariesById"]>[string]>,
+  ) => {
+    const definition = definitionsById.get(id);
+    const current =
+      boundaryStyles[id] ??
+      (definition ? boundaryStyleFromDefinition(definition) : {});
+    commit({
+      mtSurfaceBoundaryOrder: boundaryOrder.includes(id)
+        ? boundaryOrder
+        : [...boundaryOrder, id],
+      mtSurfaceBoundariesById: {
+        ...boundaryStyles,
+        [id]: {
+          ...current,
+          ...patch,
+        },
+      },
+    });
+  };
+  const removeBoundary = (id: string) => {
+    const nextById = { ...boundaryStyles };
+    delete nextById[id];
+    commit({
+      mtSurfaceBoundaryOrder: boundaryOrder.filter((boundaryId) => boundaryId !== id),
+      mtSurfaceBoundariesById: nextById,
+    });
+  };
+  const availableBoundaries = definitions.filter(
+    (definition) => !boundaryOrder.includes(definition.id),
+  );
+  const addBoundary = () => {
+    if (boundaryMode === "live-compute") {
+      const id = liveBoundaryId();
+      const thresholdOhmM = 30;
+      commit({
+        mtSurfaceBoundaryOrder: [...boundaryOrder, id],
+        mtSurfaceBoundariesById: {
+          ...boundaryStyles,
+          [id]: {
+            visible: true,
+            label: "<=30 Ohm-m live",
+            color: "#f8dd6d",
+            comparison: "<=",
+            thresholdOhmM,
+            thresholdLog10: Math.log10(thresholdOhmM),
+            opacity: 1,
+            source: "live",
+          },
+        },
+      });
+      return;
+    }
+    const definition =
+      availableBoundaries.find((boundary) => boundary.id === boundaryToAddId) ??
+      availableBoundaries[0];
+    if (definition) {
+      commit({
+        mtSurfaceBoundaryOrder: [...boundaryOrder, definition.id],
+        mtSurfaceBoundariesById: {
+          ...boundaryStyles,
+          [definition.id]: boundaryStyleFromDefinition(definition, true),
+        },
+      });
+      return;
+    }
+  };
   return (
     <details style={nestedDetailsStyle}>
-      <summary style={panelStyles.summary}>3D MT threshold surfaces</summary>
+      <summary style={panelStyles.summary}>Surface boundaries</summary>
       <div style={detailsContentStyle}>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Surfaces</label>
@@ -9867,29 +9938,225 @@ function MtThresholdSurfaceControls({
           disabled={disabled}
           onChange={(value) => commit({ mtIsosurfaceProductId: value })}
         />
-        {options.map((option) => (
-          <label
-            key={option.id}
-            style={{ ...nestedControlRowStyle, cursor: "pointer" }}
-          >
-            <span style={nestedFieldLabelStyle}>{option.label}</span>
-            <input
-              data-testid={`mt-threshold-${option.id}`}
-              type="checkbox"
-              checked={visibility[option.id] !== false}
-              disabled={disabled}
-              onChange={(e) =>
-                commit({
-                  mtThresholdSurfaceVisibility: {
-                    ...visibility,
-                    [option.id]: e.target.checked,
-                  },
-                })
+        <EnvSelectRow<"precomputed-bank" | "live-compute">
+          label="Mode"
+          value={boundaryMode}
+          testId="mt-surface-boundary-mode"
+          options={[
+            { value: "precomputed-bank", label: "Precomputed bank" },
+            { value: "live-compute", label: "Live compute (expert)" },
+          ]}
+          disabled={disabled}
+          onChange={(value) => commit({ mtSurfaceBoundaryMode: value })}
+        />
+        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+          <span style={nestedFieldLabelStyle}>Legend</span>
+          <input
+            type="checkbox"
+            checked={legendVisible}
+            disabled={disabled}
+            onChange={(e) =>
+              commit({ mtSurfaceBoundaryLegendVisible: e.target.checked })
+            }
+            style={{ opacity: controlOpacity }}
+          />
+          <span style={{ flex: 1 }} />
+        </label>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Master opacity</label>
+          <input
+            data-testid="mt-threshold-opacity"
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={opacity}
+            disabled={disabled}
+            onChange={(e) => commit({ opacity: parseFloat(e.target.value) })}
+            style={
+              {
+                flex: 1,
+                opacity: controlOpacity,
+                "--editor-slider-fill": `${opacity * 100}%`,
+              } as React.CSSProperties
+            }
+          />
+          <span style={sliderNumberReadoutStyle}>{opacity.toFixed(2)}</span>
+        </div>
+        <div style={{ display: "grid", gap: 10 }}>
+          {boundaries.map((boundary) => (
+            <div
+              key={boundary.id}
+              style={{
+                display: "grid",
+                gap: 6,
+                padding: "8px 0",
+                borderTop: FROSTED_HAIRLINE,
+              }}
+            >
+              <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+                <span style={nestedFieldLabelStyle}>Visible</span>
+                <input
+                  data-testid={`mt-threshold-${boundary.id}`}
+                  type="checkbox"
+                  checked={boundary.visible}
+                  disabled={disabled}
+                  onChange={(e) =>
+                    updateBoundary(boundary.id, { visible: e.target.checked })
+                  }
+                  style={{ opacity: controlOpacity }}
+                />
+                <input
+                  type="color"
+                  value={boundary.color}
+                  disabled={disabled}
+                  onChange={(e) =>
+                    updateBoundary(boundary.id, { color: e.target.value })
+                  }
+                  style={{ opacity: controlOpacity }}
+                />
+              </label>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Label</label>
+                <input
+                  type="text"
+                  value={boundary.label}
+                  disabled={disabled}
+                  onChange={(e) =>
+                    updateBoundary(boundary.id, { label: e.target.value })
+                  }
+                  style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+                />
+              </div>
+              <EnvSelectRow<MtSurfaceBoundaryComparison>
+                label="Compare"
+                value={boundary.comparison}
+                testId={`mt-threshold-comparison-${boundary.id}`}
+                options={[
+                  { value: "<=", label: "<=" },
+                  { value: ">=", label: ">=" },
+                ]}
+                disabled={disabled || boundaryMode === "precomputed-bank"}
+                onChange={(value) =>
+                  updateBoundary(boundary.id, { comparison: value })
+                }
+              />
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Ohm-m</label>
+                <input
+                  type="number"
+                  min={0.01}
+                  step={0.1}
+                  value={Number.isFinite(boundary.thresholdOhmM) ? boundary.thresholdOhmM : 0}
+                  disabled={disabled || boundaryMode === "precomputed-bank"}
+                  onChange={(e) => {
+                    const thresholdOhmM = parseFloat(e.target.value);
+                    if (!(thresholdOhmM > 0)) return;
+                    updateBoundary(boundary.id, {
+                      thresholdOhmM,
+                      thresholdLog10: Math.log10(thresholdOhmM),
+                    });
+                  }}
+                  style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+                />
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>log10 rho</label>
+                <input
+                  type="number"
+                  step={0.01}
+                  value={
+                    Number.isFinite(boundary.thresholdLog10)
+                      ? boundary.thresholdLog10.toFixed(3)
+                      : "0"
+                  }
+                  disabled={disabled || boundaryMode === "precomputed-bank"}
+                  onChange={(e) => {
+                    const thresholdLog10 = parseFloat(e.target.value);
+                    if (!Number.isFinite(thresholdLog10)) return;
+                    updateBoundary(boundary.id, {
+                      thresholdLog10,
+                      thresholdOhmM: 10 ** thresholdLog10,
+                    });
+                  }}
+                  style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+                />
+              </div>
+              <div style={nestedControlRowStyle}>
+                <label style={nestedFieldLabelStyle}>Boundary opacity</label>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={boundary.opacity}
+                  disabled={disabled}
+                  onChange={(e) =>
+                    updateBoundary(boundary.id, {
+                      opacity: parseFloat(e.target.value),
+                    })
+                  }
+                  style={
+                    {
+                      flex: 1,
+                      opacity: controlOpacity,
+                      "--editor-slider-fill": `${boundary.opacity * 100}%`,
+                    } as React.CSSProperties
+                  }
+                />
+                <span style={sliderNumberReadoutStyle}>
+                  {boundary.opacity.toFixed(2)}
+                </span>
+              </div>
+              <div style={nestedControlRowStyle}>
+                <span style={nestedFieldLabelStyle}>Boundary</span>
+                <button
+                  type="button"
+                  className="editor-action-button"
+                  disabled={disabled}
+                  onClick={() => removeBoundary(boundary.id)}
+                >
+                  Remove
+                </button>
+                <span style={{ flex: 1 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ ...nestedControlRowStyle, marginTop: 8 }}>
+          <span style={nestedFieldLabelStyle}>Bank</span>
+          {boundaryMode === "precomputed-bank" ? (
+            <select
+              value={
+                availableBoundaries.some(
+                  (boundary) => boundary.id === boundaryToAddId,
+                )
+                  ? boundaryToAddId
+                  : (availableBoundaries[0]?.id ?? "")
               }
-              style={{ opacity: controlOpacity }}
-            />
-          </label>
-        ))}
+              disabled={disabled || availableBoundaries.length === 0}
+              onChange={(e) => setBoundaryToAddId(e.target.value)}
+              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+            >
+              {availableBoundaries.map((boundary) => (
+                <option key={boundary.id} value={boundary.id}>
+                  {boundary.label}
+                </option>
+              ))}
+            </select>
+          ) : null}
+          <button
+            type="button"
+            className="editor-action-button"
+            disabled={disabled}
+            onClick={addBoundary}
+          >
+            Add boundary
+          </button>
+          <span style={{ color: vibrancyTertiaryLabel, fontSize: 11 }}>
+            {availableBoundaries.length} available
+          </span>
+        </div>
         <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
           <span style={nestedFieldLabelStyle}>Diagnostic wireframe</span>
           <input
@@ -9927,27 +10194,6 @@ function MtThresholdSurfaceControls({
           />
           <span style={{ flex: 1 }} />
         </label>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Opacity</label>
-          <input
-            data-testid="mt-threshold-opacity"
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={opacity}
-            disabled={disabled}
-            onChange={(e) => commit({ opacity: parseFloat(e.target.value) })}
-            style={
-              {
-                flex: 1,
-                opacity: controlOpacity,
-                "--editor-slider-fill": `${opacity * 100}%`,
-              } as React.CSSProperties
-            }
-          />
-          <span style={sliderNumberReadoutStyle}>{opacity.toFixed(2)}</span>
-        </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Roughness</label>
           <input

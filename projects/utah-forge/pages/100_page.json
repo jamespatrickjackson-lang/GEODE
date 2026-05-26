@@ -100,7 +100,44 @@
         "conductive-le-30-ohm-m": false,
         "resistive-ge-1000-ohm-m": true
       },
-      "mtIsosurfaceProductId": "mt-isosurface-full-extent"
+      "mtIsosurfaceProductId": "mt-isosurface-full-extent",
+      "mtSurfaceBoundaryOrder": [
+        "conductive-le-10-ohm-m",
+        "conductive-le-30-ohm-m",
+        "resistive-ge-1000-ohm-m"
+      ],
+      "mtSurfaceBoundariesById": {
+        "conductive-le-10-ohm-m": {
+          "visible": false,
+          "label": "<=10 Ohm-m",
+          "color": "#2cc9ff",
+          "comparison": "<=",
+          "thresholdOhmM": 10,
+          "thresholdLog10": 1,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "conductive-le-30-ohm-m": {
+          "visible": true,
+          "label": "<=30 Ohm-m",
+          "color": "#b6cda7",
+          "comparison": "<=",
+          "thresholdOhmM": 30,
+          "thresholdLog10": 1.477121,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "resistive-ge-1000-ohm-m": {
+          "visible": true,
+          "label": ">=1000 Ohm-m",
+          "color": "#d8967f",
+          "comparison": ">=",
+          "thresholdOhmM": 1000,
+          "thresholdLog10": 3,
+          "opacity": 1,
+          "source": "precomputed"
+        }
+      }
     },
     "utah-forge-site-boundary": {
       "color": "#47c299"

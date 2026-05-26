@@ -221,6 +221,1566 @@
     ],
     "surfaces": [
       {
+        "id": "bank-le-1p38-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-le-1p38-ohm-m",
+        "label": "<=1.38 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": "<=",
+        "thresholdOhmM": 1.3799997254542724,
+        "thresholdLog10": 0.139879,
+        "color": "#2cc9ff",
+        "bankIndex": 0,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 50,
+          "smoothedVertexCount": 41
+        },
+        "vertexWelding": {
+          "inputVertexCount": 342,
+          "weldedVertexCount": 91,
+          "inputTriangleCount": 114,
+          "weldedTriangleCount": 114,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 66,
+          "triangleCount": 114,
+          "vertexCount": 91,
+          "welding": {
+            "inputVertexCount": 342,
+            "weldedVertexCount": 91,
+            "inputTriangleCount": 114,
+            "weldedTriangleCount": 114,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 50,
+            "smoothedVertexCount": 41
+          }
+        },
+        "matchingVoxelCount": 46,
+        "meanLog10Resistivity": 0.019217,
+        "meshRange": {
+          "vertexStart": 0,
+          "vertexCount": 91,
+          "indexStart": 0,
+          "indexCount": 342
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-le-1p38-ohm-m.json"
+      },
+      {
+        "id": "bank-le-2p19-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-le-2p19-ohm-m",
+        "label": "<=2.19 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": "<=",
+        "thresholdOhmM": 2.1864215273438377,
+        "thresholdLog10": 0.339734,
+        "color": "#41cbf0",
+        "bankIndex": 1,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 86,
+          "smoothedVertexCount": 86
+        },
+        "vertexWelding": {
+          "inputVertexCount": 726,
+          "weldedVertexCount": 172,
+          "inputTriangleCount": 242,
+          "weldedTriangleCount": 242,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 127,
+          "triangleCount": 242,
+          "vertexCount": 172,
+          "welding": {
+            "inputVertexCount": 726,
+            "weldedVertexCount": 172,
+            "inputTriangleCount": 242,
+            "weldedTriangleCount": 242,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 86,
+            "smoothedVertexCount": 86
+          }
+        },
+        "matchingVoxelCount": 120,
+        "meanLog10Resistivity": 0.158714,
+        "meshRange": {
+          "vertexStart": 91,
+          "vertexCount": 172,
+          "indexStart": 342,
+          "indexCount": 726
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-le-2p19-ohm-m.json"
+      },
+      {
+        "id": "bank-le-3p46-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-le-3p46-ohm-m",
+        "label": "<=3.46 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": "<=",
+        "thresholdOhmM": 3.464086990060031,
+        "thresholdLog10": 0.539589,
+        "color": "#57cde0",
+        "bankIndex": 2,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 110,
+          "smoothedVertexCount": 104
+        },
+        "vertexWelding": {
+          "inputVertexCount": 912,
+          "weldedVertexCount": 214,
+          "inputTriangleCount": 304,
+          "weldedTriangleCount": 304,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 158,
+          "triangleCount": 304,
+          "vertexCount": 214,
+          "welding": {
+            "inputVertexCount": 912,
+            "weldedVertexCount": 214,
+            "inputTriangleCount": 304,
+            "weldedTriangleCount": 304,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 110,
+            "smoothedVertexCount": 104
+          }
+        },
+        "matchingVoxelCount": 205,
+        "meanLog10Resistivity": 0.276663,
+        "meshRange": {
+          "vertexStart": 263,
+          "vertexCount": 214,
+          "indexStart": 1068,
+          "indexCount": 912
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-le-3p46-ohm-m.json"
+      },
+      {
+        "id": "bank-le-5p49-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-le-5p49-ohm-m",
+        "label": "<=5.49 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": "<=",
+        "thresholdOhmM": 5.488373822078662,
+        "thresholdLog10": 0.739444,
+        "color": "#6ccfd1",
+        "bankIndex": 3,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 153,
+          "smoothedVertexCount": 153
+        },
+        "vertexWelding": {
+          "inputVertexCount": 1305,
+          "weldedVertexCount": 306,
+          "inputTriangleCount": 435,
+          "weldedTriangleCount": 435,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 235,
+          "triangleCount": 435,
+          "vertexCount": 306,
+          "welding": {
+            "inputVertexCount": 1305,
+            "weldedVertexCount": 306,
+            "inputTriangleCount": 435,
+            "weldedTriangleCount": 435,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 153,
+            "smoothedVertexCount": 153
+          }
+        },
+        "matchingVoxelCount": 360,
+        "meanLog10Resistivity": 0.442431,
+        "meshRange": {
+          "vertexStart": 477,
+          "vertexCount": 306,
+          "indexStart": 1980,
+          "indexCount": 1305
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-le-5p49-ohm-m.json"
+      },
+      {
+        "id": "bank-le-8p7-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-le-8p7-ohm-m",
+        "label": "<=8.7 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": "<=",
+        "thresholdOhmM": 8.695580479737417,
+        "thresholdLog10": 0.939299,
+        "color": "#82d1c2",
+        "bankIndex": 4,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 225,
+          "smoothedVertexCount": 239
+        },
+        "vertexWelding": {
+          "inputVertexCount": 2025,
+          "weldedVertexCount": 464,
+          "inputTriangleCount": 675,
+          "weldedTriangleCount": 675,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 349,
+          "triangleCount": 675,
+          "vertexCount": 464,
+          "welding": {
+            "inputVertexCount": 2025,
+            "weldedVertexCount": 464,
+            "inputTriangleCount": 675,
+            "weldedTriangleCount": 675,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 225,
+            "smoothedVertexCount": 239
+          }
+        },
+        "matchingVoxelCount": 769,
+        "meanLog10Resistivity": 0.659551,
+        "meshRange": {
+          "vertexStart": 783,
+          "vertexCount": 464,
+          "indexStart": 3285,
+          "indexCount": 2025
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-le-8p7-ohm-m.json"
+      },
+      {
+        "id": "bank-le-13p8-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-le-13p8-ohm-m",
+        "label": "<=13.8 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": "<=",
+        "thresholdOhmM": 13.776962417431095,
+        "thresholdLog10": 1.139153,
+        "color": "#97d4b2",
+        "bankIndex": 5,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 283,
+          "smoothedVertexCount": 335
+        },
+        "vertexWelding": {
+          "inputVertexCount": 2769,
+          "weldedVertexCount": 618,
+          "inputTriangleCount": 923,
+          "weldedTriangleCount": 923,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 467,
+          "triangleCount": 923,
+          "vertexCount": 618,
+          "welding": {
+            "inputVertexCount": 2769,
+            "weldedVertexCount": 618,
+            "inputTriangleCount": 923,
+            "weldedTriangleCount": 923,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 283,
+            "smoothedVertexCount": 335
+          }
+        },
+        "matchingVoxelCount": 1529,
+        "meanLog10Resistivity": 0.851683,
+        "meshRange": {
+          "vertexStart": 1247,
+          "vertexCount": 618,
+          "indexStart": 5310,
+          "indexCount": 2769
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-le-13p8-ohm-m.json"
+      },
+      {
+        "id": "bank-le-21p8-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-le-21p8-ohm-m",
+        "label": "<=21.8 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": "<=",
+        "thresholdOhmM": 21.827719712743146,
+        "thresholdLog10": 1.339008,
+        "color": "#add6a3",
+        "bankIndex": 6,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 370,
+          "smoothedVertexCount": 455
+        },
+        "vertexWelding": {
+          "inputVertexCount": 3711,
+          "weldedVertexCount": 825,
+          "inputTriangleCount": 1237,
+          "weldedTriangleCount": 1237,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 631,
+          "triangleCount": 1237,
+          "vertexCount": 825,
+          "welding": {
+            "inputVertexCount": 3711,
+            "weldedVertexCount": 825,
+            "inputTriangleCount": 1237,
+            "weldedTriangleCount": 1237,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 370,
+            "smoothedVertexCount": 455
+          }
+        },
+        "matchingVoxelCount": 2638,
+        "meanLog10Resistivity": 1.01748,
+        "meshRange": {
+          "vertexStart": 1865,
+          "vertexCount": 825,
+          "indexStart": 8079,
+          "indexCount": 3711
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-le-21p8-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-34p6-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-ge-34p6-ohm-m",
+        "label": ">=34.6 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": ">=",
+        "thresholdOhmM": 34.58304765753409,
+        "thresholdLog10": 1.538863,
+        "color": "#c2d893",
+        "bankIndex": 7,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 455,
+          "smoothedVertexCount": 615
+        },
+        "vertexWelding": {
+          "inputVertexCount": 4989,
+          "weldedVertexCount": 1070,
+          "inputTriangleCount": 1663,
+          "weldedTriangleCount": 1663,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 832,
+          "triangleCount": 1663,
+          "vertexCount": 1070,
+          "welding": {
+            "inputVertexCount": 4989,
+            "weldedVertexCount": 1070,
+            "inputTriangleCount": 1663,
+            "weldedTriangleCount": 1663,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 455,
+            "smoothedVertexCount": 615
+          }
+        },
+        "matchingVoxelCount": 20790,
+        "meanLog10Resistivity": 2.2407,
+        "meshRange": {
+          "vertexStart": 2690,
+          "vertexCount": 1070,
+          "indexStart": 11790,
+          "indexCount": 4989
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-ge-34p6-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-54p8-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-ge-54p8-ohm-m",
+        "label": ">=54.8 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": ">=",
+        "thresholdOhmM": 54.79212675545995,
+        "thresholdLog10": 1.738718,
+        "color": "#d8da84",
+        "bankIndex": 8,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 528,
+          "smoothedVertexCount": 822
+        },
+        "vertexWelding": {
+          "inputVertexCount": 6444,
+          "weldedVertexCount": 1350,
+          "inputTriangleCount": 2148,
+          "weldedTriangleCount": 2148,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 1064,
+          "triangleCount": 2148,
+          "vertexCount": 1350,
+          "welding": {
+            "inputVertexCount": 6444,
+            "weldedVertexCount": 1350,
+            "inputTriangleCount": 2148,
+            "weldedTriangleCount": 2148,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 528,
+            "smoothedVertexCount": 822
+          }
+        },
+        "matchingVoxelCount": 16610,
+        "meanLog10Resistivity": 2.394288,
+        "meshRange": {
+          "vertexStart": 3760,
+          "vertexCount": 1350,
+          "indexStart": 16779,
+          "indexCount": 6444
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-ge-54p8-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-86p8-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-ge-86p8-ohm-m",
+        "label": ">=86.8 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": ">=",
+        "thresholdOhmM": 86.8106589134677,
+        "thresholdLog10": 1.938573,
+        "color": "#eddc75",
+        "bankIndex": 9,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 613,
+          "smoothedVertexCount": 1021
+        },
+        "vertexWelding": {
+          "inputVertexCount": 7965,
+          "weldedVertexCount": 1634,
+          "inputTriangleCount": 2655,
+          "weldedTriangleCount": 2655,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 1308,
+          "triangleCount": 2655,
+          "vertexCount": 1634,
+          "welding": {
+            "inputVertexCount": 7965,
+            "weldedVertexCount": 1634,
+            "inputTriangleCount": 2655,
+            "weldedTriangleCount": 2655,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 613,
+            "smoothedVertexCount": 1021
+          }
+        },
+        "matchingVoxelCount": 13015,
+        "meanLog10Resistivity": 2.54856,
+        "meshRange": {
+          "vertexStart": 5110,
+          "vertexCount": 1634,
+          "indexStart": 23223,
+          "indexCount": 7965
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-ge-86p8-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-138-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-ge-138-ohm-m",
+        "label": ">=138 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": ">=",
+        "thresholdOhmM": 137.53966029872095,
+        "thresholdLog10": 2.138428,
+        "color": "#f8d76e",
+        "bankIndex": 10,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 653,
+          "smoothedVertexCount": 1233
+        },
+        "vertexWelding": {
+          "inputVertexCount": 9348,
+          "weldedVertexCount": 1886,
+          "inputTriangleCount": 3116,
+          "weldedTriangleCount": 3116,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 1537,
+          "triangleCount": 3116,
+          "vertexCount": 1886,
+          "welding": {
+            "inputVertexCount": 9348,
+            "weldedVertexCount": 1886,
+            "inputTriangleCount": 3116,
+            "weldedTriangleCount": 3116,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 653,
+            "smoothedVertexCount": 1233
+          }
+        },
+        "matchingVoxelCount": 9761,
+        "meanLog10Resistivity": 2.719296,
+        "meshRange": {
+          "vertexStart": 6744,
+          "vertexCount": 1886,
+          "indexStart": 31188,
+          "indexCount": 9348
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-ge-138-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-218-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-ge-218-ohm-m",
+        "label": ">=218 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": ">=",
+        "thresholdOhmM": 217.91285070124968,
+        "thresholdLog10": 2.338283,
+        "color": "#f9ca6f",
+        "bankIndex": 11,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 658,
+          "smoothedVertexCount": 1441
+        },
+        "vertexWelding": {
+          "inputVertexCount": 10680,
+          "weldedVertexCount": 2099,
+          "inputTriangleCount": 3560,
+          "weldedTriangleCount": 3560,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 1721,
+          "triangleCount": 3560,
+          "vertexCount": 2099,
+          "welding": {
+            "inputVertexCount": 10680,
+            "weldedVertexCount": 2099,
+            "inputTriangleCount": 3560,
+            "weldedTriangleCount": 3560,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 658,
+            "smoothedVertexCount": 1441
+          }
+        },
+        "matchingVoxelCount": 7531,
+        "meanLog10Resistivity": 2.864496,
+        "meshRange": {
+          "vertexStart": 8630,
+          "vertexCount": 2099,
+          "indexStart": 40536,
+          "indexCount": 10680
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-ge-218-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-345-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-ge-345-ohm-m",
+        "label": ">=345 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": ">=",
+        "thresholdOhmM": 345.2532193086028,
+        "thresholdLog10": 2.538138,
+        "color": "#fabd70",
+        "bankIndex": 12,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 635,
+          "smoothedVertexCount": 1542
+        },
+        "vertexWelding": {
+          "inputVertexCount": 11241,
+          "weldedVertexCount": 2177,
+          "inputTriangleCount": 3747,
+          "weldedTriangleCount": 3747,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 1807,
+          "triangleCount": 3747,
+          "vertexCount": 2177,
+          "welding": {
+            "inputVertexCount": 11241,
+            "weldedVertexCount": 2177,
+            "inputTriangleCount": 3747,
+            "weldedTriangleCount": 3747,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 635,
+            "smoothedVertexCount": 1542
+          }
+        },
+        "matchingVoxelCount": 5763,
+        "meanLog10Resistivity": 2.995781,
+        "meshRange": {
+          "vertexStart": 10729,
+          "vertexCount": 2177,
+          "indexStart": 51216,
+          "indexCount": 11241
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-ge-345-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-547-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-ge-547-ohm-m",
+        "label": ">=547 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": ">=",
+        "thresholdOhmM": 547.0066820720584,
+        "thresholdLog10": 2.737993,
+        "color": "#fbb072",
+        "bankIndex": 13,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 586,
+          "smoothedVertexCount": 1559
+        },
+        "vertexWelding": {
+          "inputVertexCount": 11064,
+          "weldedVertexCount": 2145,
+          "inputTriangleCount": 3688,
+          "weldedTriangleCount": 3688,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 1805,
+          "triangleCount": 3688,
+          "vertexCount": 2145,
+          "welding": {
+            "inputVertexCount": 11064,
+            "weldedVertexCount": 2145,
+            "inputTriangleCount": 3688,
+            "weldedTriangleCount": 3688,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 586,
+            "smoothedVertexCount": 1559
+          }
+        },
+        "matchingVoxelCount": 4114,
+        "meanLog10Resistivity": 3.138567,
+        "meshRange": {
+          "vertexStart": 12906,
+          "vertexCount": 2145,
+          "indexStart": 62457,
+          "indexCount": 11064
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-ge-547-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-867-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-ge-867-ohm-m",
+        "label": ">=867 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": ">=",
+        "thresholdOhmM": 866.6575530582627,
+        "thresholdLog10": 2.937848,
+        "color": "#fba373",
+        "bankIndex": 14,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 455,
+          "smoothedVertexCount": 1348
+        },
+        "vertexWelding": {
+          "inputVertexCount": 9447,
+          "weldedVertexCount": 1803,
+          "inputTriangleCount": 3149,
+          "weldedTriangleCount": 3149,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 1552,
+          "triangleCount": 3149,
+          "vertexCount": 1803,
+          "welding": {
+            "inputVertexCount": 9447,
+            "weldedVertexCount": 1803,
+            "inputTriangleCount": 3149,
+            "weldedTriangleCount": 3149,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 455,
+            "smoothedVertexCount": 1348
+          }
+        },
+        "matchingVoxelCount": 2601,
+        "meanLog10Resistivity": 3.319572,
+        "meshRange": {
+          "vertexStart": 15051,
+          "vertexCount": 1803,
+          "indexStart": 73521,
+          "indexCount": 9447
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-ge-867-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-1373-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-ge-1373-ohm-m",
+        "label": ">=1,373 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": ">=",
+        "thresholdOhmM": 1373.1008027686094,
+        "thresholdLog10": 3.137702,
+        "color": "#fc9675",
+        "bankIndex": 15,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 318,
+          "smoothedVertexCount": 1114
+        },
+        "vertexWelding": {
+          "inputVertexCount": 7602,
+          "weldedVertexCount": 1432,
+          "inputTriangleCount": 2534,
+          "weldedTriangleCount": 2534,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 1264,
+          "triangleCount": 2534,
+          "vertexCount": 1432,
+          "welding": {
+            "inputVertexCount": 7602,
+            "weldedVertexCount": 1432,
+            "inputTriangleCount": 2534,
+            "weldedTriangleCount": 2534,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 318,
+            "smoothedVertexCount": 1114
+          }
+        },
+        "matchingVoxelCount": 1666,
+        "meanLog10Resistivity": 3.480592,
+        "meshRange": {
+          "vertexStart": 16854,
+          "vertexCount": 1432,
+          "indexStart": 82968,
+          "indexCount": 7602
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-ge-1373-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-2175-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-ge-2175-ohm-m",
+        "label": ">=2,175 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": ">=",
+        "thresholdOhmM": 2175.491124389988,
+        "thresholdLog10": 3.337557,
+        "color": "#fd8a76",
+        "bankIndex": 16,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 197,
+          "smoothedVertexCount": 850
+        },
+        "vertexWelding": {
+          "inputVertexCount": 5631,
+          "weldedVertexCount": 1047,
+          "inputTriangleCount": 1877,
+          "weldedTriangleCount": 1877,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 947,
+          "triangleCount": 1877,
+          "vertexCount": 1047,
+          "welding": {
+            "inputVertexCount": 5631,
+            "weldedVertexCount": 1047,
+            "inputTriangleCount": 1877,
+            "weldedTriangleCount": 1877,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 197,
+            "smoothedVertexCount": 850
+          }
+        },
+        "matchingVoxelCount": 1048,
+        "meanLog10Resistivity": 3.628915,
+        "meshRange": {
+          "vertexStart": 18286,
+          "vertexCount": 1047,
+          "indexStart": 90570,
+          "indexCount": 5631
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-ge-2175-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-3447-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-ge-3447-ohm-m",
+        "label": ">=3,447 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": ">=",
+        "thresholdOhmM": 3446.769255947459,
+        "thresholdLog10": 3.537412,
+        "color": "#fe7d77",
+        "bankIndex": 17,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 147,
+          "smoothedVertexCount": 608
+        },
+        "vertexWelding": {
+          "inputVertexCount": 4071,
+          "weldedVertexCount": 755,
+          "inputTriangleCount": 1357,
+          "weldedTriangleCount": 1357,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 683,
+          "triangleCount": 1357,
+          "vertexCount": 755,
+          "welding": {
+            "inputVertexCount": 4071,
+            "weldedVertexCount": 755,
+            "inputTriangleCount": 1357,
+            "weldedTriangleCount": 1357,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 147,
+            "smoothedVertexCount": 608
+          }
+        },
+        "matchingVoxelCount": 616,
+        "meanLog10Resistivity": 3.763701,
+        "meshRange": {
+          "vertexStart": 19333,
+          "vertexCount": 755,
+          "indexStart": 96201,
+          "indexCount": 4071
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-ge-3447-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-5461-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-ge-5461-ohm-m",
+        "label": ">=5,461 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": ">=",
+        "thresholdOhmM": 5460.936232077636,
+        "thresholdLog10": 3.737267,
+        "color": "#fe7079",
+        "bankIndex": 18,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 63,
+          "smoothedVertexCount": 369
+        },
+        "vertexWelding": {
+          "inputVertexCount": 2415,
+          "weldedVertexCount": 432,
+          "inputTriangleCount": 805,
+          "weldedTriangleCount": 805,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 396,
+          "triangleCount": 805,
+          "vertexCount": 432,
+          "welding": {
+            "inputVertexCount": 2415,
+            "weldedVertexCount": 432,
+            "inputTriangleCount": 805,
+            "weldedTriangleCount": 805,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 63,
+            "smoothedVertexCount": 369
+          }
+        },
+        "matchingVoxelCount": 273,
+        "meanLog10Resistivity": 3.930871,
+        "meshRange": {
+          "vertexStart": 20088,
+          "vertexCount": 432,
+          "indexStart": 100272,
+          "indexCount": 2415
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-ge-5461-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-8652-ohm-m",
+        "meshId": "mt-isosurface-full-extent:bank-ge-8652-ohm-m",
+        "label": ">=8,652 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-full-extent",
+        "isoProductLabel": "MT full-extent isosurfaces",
+        "sourceProductId": "mt-resistivity-full-extent-volume",
+        "cropStatus": "full-source",
+        "comparison": ">=",
+        "thresholdOhmM": 8652.109357004456,
+        "thresholdLog10": 3.937122,
+        "color": "#ff637a",
+        "bankIndex": 19,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 0,
+          "smoothedVertexCount": 256
+        },
+        "vertexWelding": {
+          "inputVertexCount": 1536,
+          "weldedVertexCount": 256,
+          "inputTriangleCount": 512,
+          "weldedTriangleCount": 512,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          80,
+          64,
+          56
+        ],
+        "voxelSpacingM": {
+          "x_m": 3489.266,
+          "y_m": 3560.766,
+          "z_m": 2242.199
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 273735,
+          "skippedMaskedCubeCount": 268652,
+          "activeCubeCount": 250,
+          "triangleCount": 512,
+          "vertexCount": 256,
+          "welding": {
+            "inputVertexCount": 1536,
+            "weldedVertexCount": 256,
+            "inputTriangleCount": 512,
+            "weldedTriangleCount": 512,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 0,
+            "smoothedVertexCount": 256
+          }
+        },
+        "matchingVoxelCount": 111,
+        "meanLog10Resistivity": 4.091576,
+        "meshRange": {
+          "vertexStart": 20520,
+          "vertexCount": 256,
+          "indexStart": 102687,
+          "indexCount": 1536
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/bank-ge-8652-ohm-m.json"
+      },
+      {
         "id": "conductive-le-10-ohm-m",
         "meshId": "mt-isosurface-full-extent:conductive-le-10-ohm-m",
         "label": "Conductive shell <=10 Ohm-m",
@@ -233,6 +1793,9 @@
         "thresholdOhmM": 10,
         "thresholdLog10": 1,
         "color": "#2cc9ff",
+        "bankIndex": null,
+        "bankCount": null,
+        "boundarySource": "semantic-preset",
         "extractionMethod": "mask-aware-marching-cubes",
         "smoothing": {
           "method": "taubin-laplacian",
@@ -286,13 +1849,14 @@
         "matchingVoxelCount": 967,
         "meanLog10Resistivity": 0.722919,
         "meshRange": {
-          "vertexStart": 0,
+          "vertexStart": 20776,
           "vertexCount": 529,
-          "indexStart": 0,
+          "indexStart": 104223,
           "indexCount": 2373
         },
         "classification": "source-derived iso-resistivity communication surface",
-        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/conductive-le-10-ohm-m.json"
       },
       {
         "id": "conductive-le-30-ohm-m",
@@ -307,6 +1871,9 @@
         "thresholdOhmM": 30,
         "thresholdLog10": 1.477121,
         "color": "#38f0b3",
+        "bankIndex": null,
+        "bankCount": null,
+        "boundarySource": "semantic-preset",
         "extractionMethod": "mask-aware-marching-cubes",
         "smoothing": {
           "method": "taubin-laplacian",
@@ -360,13 +1927,14 @@
         "matchingVoxelCount": 3961,
         "meanLog10Resistivity": 1.149358,
         "meshRange": {
-          "vertexStart": 529,
+          "vertexStart": 21305,
           "vertexCount": 979,
-          "indexStart": 2373,
+          "indexStart": 106596,
           "indexCount": 4497
         },
         "classification": "source-derived iso-resistivity communication surface",
-        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/conductive-le-30-ohm-m.json"
       },
       {
         "id": "resistive-ge-1000-ohm-m",
@@ -381,6 +1949,9 @@
         "thresholdOhmM": 1000,
         "thresholdLog10": 3,
         "color": "#ff637a",
+        "bankIndex": null,
+        "bankCount": null,
+        "boundarySource": "semantic-preset",
         "extractionMethod": "mask-aware-marching-cubes",
         "smoothing": {
           "method": "taubin-laplacian",
@@ -434,13 +2005,1574 @@
         "matchingVoxelCount": 2274,
         "meanLog10Resistivity": 3.370173,
         "meshRange": {
-          "vertexStart": 1508,
+          "vertexStart": 22284,
           "vertexCount": 1720,
-          "indexStart": 6870,
+          "indexStart": 111093,
           "indexCount": 9078
         },
         "classification": "source-derived iso-resistivity communication surface",
-        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-full-extent/resistive-ge-1000-ohm-m.json"
+      },
+      {
+        "id": "bank-le-1p38-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-le-1p38-ohm-m",
+        "label": "<=1.38 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": "<=",
+        "thresholdOhmM": 1.3799997254542724,
+        "thresholdLog10": 0.139879,
+        "color": "#2cc9ff",
+        "bankIndex": 0,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 367,
+          "smoothedVertexCount": 1125
+        },
+        "vertexWelding": {
+          "inputVertexCount": 7605,
+          "weldedVertexCount": 1492,
+          "inputTriangleCount": 2535,
+          "weldedTriangleCount": 2535,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 1249,
+          "triangleCount": 2535,
+          "vertexCount": 1492,
+          "welding": {
+            "inputVertexCount": 7605,
+            "weldedVertexCount": 1492,
+            "inputTriangleCount": 2535,
+            "weldedTriangleCount": 2535,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 367,
+            "smoothedVertexCount": 1125
+          }
+        },
+        "matchingVoxelCount": 720,
+        "meanLog10Resistivity": -0.107317,
+        "meshRange": {
+          "vertexStart": 24004,
+          "vertexCount": 1492,
+          "indexStart": 120171,
+          "indexCount": 7605
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-le-1p38-ohm-m.json"
+      },
+      {
+        "id": "bank-le-2p19-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-le-2p19-ohm-m",
+        "label": "<=2.19 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": "<=",
+        "thresholdOhmM": 2.1864215273438377,
+        "thresholdLog10": 0.339734,
+        "color": "#41cbf0",
+        "bankIndex": 1,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 549,
+          "smoothedVertexCount": 1530
+        },
+        "vertexWelding": {
+          "inputVertexCount": 10785,
+          "weldedVertexCount": 2079,
+          "inputTriangleCount": 3595,
+          "weldedTriangleCount": 3595,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 1696,
+          "triangleCount": 3595,
+          "vertexCount": 2079,
+          "welding": {
+            "inputVertexCount": 10785,
+            "weldedVertexCount": 2079,
+            "inputTriangleCount": 3595,
+            "weldedTriangleCount": 3595,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 549,
+            "smoothedVertexCount": 1530
+          }
+        },
+        "matchingVoxelCount": 1306,
+        "meanLog10Resistivity": 0.052031,
+        "meshRange": {
+          "vertexStart": 25496,
+          "vertexCount": 2079,
+          "indexStart": 127776,
+          "indexCount": 10785
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-le-2p19-ohm-m.json"
+      },
+      {
+        "id": "bank-le-3p46-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-le-3p46-ohm-m",
+        "label": "<=3.46 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": "<=",
+        "thresholdOhmM": 3.464086990060031,
+        "thresholdLog10": 0.539589,
+        "color": "#57cde0",
+        "bankIndex": 2,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 767,
+          "smoothedVertexCount": 1897
+        },
+        "vertexWelding": {
+          "inputVertexCount": 13548,
+          "weldedVertexCount": 2664,
+          "inputTriangleCount": 4516,
+          "weldedTriangleCount": 4516,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 2179,
+          "triangleCount": 4516,
+          "vertexCount": 2664,
+          "welding": {
+            "inputVertexCount": 13548,
+            "weldedVertexCount": 2664,
+            "inputTriangleCount": 4516,
+            "weldedTriangleCount": 4516,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 767,
+            "smoothedVertexCount": 1897
+          }
+        },
+        "matchingVoxelCount": 2125,
+        "meanLog10Resistivity": 0.202973,
+        "meshRange": {
+          "vertexStart": 27575,
+          "vertexCount": 2664,
+          "indexStart": 138561,
+          "indexCount": 13548
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-le-3p46-ohm-m.json"
+      },
+      {
+        "id": "bank-le-5p49-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-le-5p49-ohm-m",
+        "label": "<=5.49 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": "<=",
+        "thresholdOhmM": 5.488373822078662,
+        "thresholdLog10": 0.739444,
+        "color": "#6ccfd1",
+        "bankIndex": 3,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 985,
+          "smoothedVertexCount": 2281
+        },
+        "vertexWelding": {
+          "inputVertexCount": 16260,
+          "weldedVertexCount": 3266,
+          "inputTriangleCount": 5420,
+          "weldedTriangleCount": 5420,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 2704,
+          "triangleCount": 5420,
+          "vertexCount": 3266,
+          "welding": {
+            "inputVertexCount": 16260,
+            "weldedVertexCount": 3266,
+            "inputTriangleCount": 5420,
+            "weldedTriangleCount": 5420,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 985,
+            "smoothedVertexCount": 2281
+          }
+        },
+        "matchingVoxelCount": 3129,
+        "meanLog10Resistivity": 0.343691,
+        "meshRange": {
+          "vertexStart": 30239,
+          "vertexCount": 3266,
+          "indexStart": 152109,
+          "indexCount": 16260
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-le-5p49-ohm-m.json"
+      },
+      {
+        "id": "bank-le-8p7-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-le-8p7-ohm-m",
+        "label": "<=8.7 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": "<=",
+        "thresholdOhmM": 8.695580479737417,
+        "thresholdLog10": 0.939299,
+        "color": "#82d1c2",
+        "bankIndex": 4,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 1287,
+          "smoothedVertexCount": 2665
+        },
+        "vertexWelding": {
+          "inputVertexCount": 19233,
+          "weldedVertexCount": 3952,
+          "inputTriangleCount": 6411,
+          "weldedTriangleCount": 6411,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 3250,
+          "triangleCount": 6411,
+          "vertexCount": 3952,
+          "welding": {
+            "inputVertexCount": 19233,
+            "weldedVertexCount": 3952,
+            "inputTriangleCount": 6411,
+            "weldedTriangleCount": 6411,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 1287,
+            "smoothedVertexCount": 2665
+          }
+        },
+        "matchingVoxelCount": 4739,
+        "meanLog10Resistivity": 0.513973,
+        "meshRange": {
+          "vertexStart": 33505,
+          "vertexCount": 3952,
+          "indexStart": 168369,
+          "indexCount": 19233
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-le-8p7-ohm-m.json"
+      },
+      {
+        "id": "bank-le-13p8-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-le-13p8-ohm-m",
+        "label": "<=13.8 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": "<=",
+        "thresholdOhmM": 13.776962417431095,
+        "thresholdLog10": 1.139153,
+        "color": "#97d4b2",
+        "bankIndex": 5,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 1553,
+          "smoothedVertexCount": 3158
+        },
+        "vertexWelding": {
+          "inputVertexCount": 23136,
+          "weldedVertexCount": 4711,
+          "inputTriangleCount": 7712,
+          "weldedTriangleCount": 7712,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 3827,
+          "triangleCount": 7712,
+          "vertexCount": 4711,
+          "welding": {
+            "inputVertexCount": 23136,
+            "weldedVertexCount": 4711,
+            "inputTriangleCount": 7712,
+            "weldedTriangleCount": 7712,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 1553,
+            "smoothedVertexCount": 3158
+          }
+        },
+        "matchingVoxelCount": 6630,
+        "meanLog10Resistivity": 0.665024,
+        "meshRange": {
+          "vertexStart": 37457,
+          "vertexCount": 4711,
+          "indexStart": 187602,
+          "indexCount": 23136
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-le-13p8-ohm-m.json"
+      },
+      {
+        "id": "bank-le-21p8-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-le-21p8-ohm-m",
+        "label": "<=21.8 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": "<=",
+        "thresholdOhmM": 21.827719712743146,
+        "thresholdLog10": 1.339008,
+        "color": "#add6a3",
+        "bankIndex": 6,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 1828,
+          "smoothedVertexCount": 3928
+        },
+        "vertexWelding": {
+          "inputVertexCount": 28770,
+          "weldedVertexCount": 5756,
+          "inputTriangleCount": 9590,
+          "weldedTriangleCount": 9590,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 4686,
+          "triangleCount": 9590,
+          "vertexCount": 5756,
+          "welding": {
+            "inputVertexCount": 28770,
+            "weldedVertexCount": 5756,
+            "inputTriangleCount": 9590,
+            "weldedTriangleCount": 9590,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 1828,
+            "smoothedVertexCount": 3928
+          }
+        },
+        "matchingVoxelCount": 9313,
+        "meanLog10Resistivity": 0.832114,
+        "meshRange": {
+          "vertexStart": 42168,
+          "vertexCount": 5756,
+          "indexStart": 210738,
+          "indexCount": 28770
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-le-21p8-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-34p6-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-ge-34p6-ohm-m",
+        "label": ">=34.6 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": ">=",
+        "thresholdOhmM": 34.58304765753409,
+        "thresholdLog10": 1.538863,
+        "color": "#c2d893",
+        "bankIndex": 7,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 2074,
+          "smoothedVertexCount": 4293
+        },
+        "vertexWelding": {
+          "inputVertexCount": 31857,
+          "weldedVertexCount": 6367,
+          "inputTriangleCount": 10619,
+          "weldedTriangleCount": 10619,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 5164,
+          "triangleCount": 10619,
+          "vertexCount": 6367,
+          "welding": {
+            "inputVertexCount": 31857,
+            "weldedVertexCount": 6367,
+            "inputTriangleCount": 10619,
+            "weldedTriangleCount": 10619,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 2074,
+            "smoothedVertexCount": 4293
+          }
+        },
+        "matchingVoxelCount": 70052,
+        "meanLog10Resistivity": 2.641171,
+        "meshRange": {
+          "vertexStart": 47924,
+          "vertexCount": 6367,
+          "indexStart": 239508,
+          "indexCount": 31857
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-ge-34p6-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-54p8-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-ge-54p8-ohm-m",
+        "label": ">=54.8 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": ">=",
+        "thresholdOhmM": 54.79212675545995,
+        "thresholdLog10": 1.738718,
+        "color": "#d8da84",
+        "bankIndex": 8,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 2251,
+          "smoothedVertexCount": 4448
+        },
+        "vertexWelding": {
+          "inputVertexCount": 33021,
+          "weldedVertexCount": 6699,
+          "inputTriangleCount": 11007,
+          "weldedTriangleCount": 11007,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 5428,
+          "triangleCount": 11007,
+          "vertexCount": 6699,
+          "welding": {
+            "inputVertexCount": 33021,
+            "weldedVertexCount": 6699,
+            "inputTriangleCount": 11007,
+            "weldedTriangleCount": 11007,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 2251,
+            "smoothedVertexCount": 4448
+          }
+        },
+        "matchingVoxelCount": 65551,
+        "meanLog10Resistivity": 2.709742,
+        "meshRange": {
+          "vertexStart": 54291,
+          "vertexCount": 6699,
+          "indexStart": 271365,
+          "indexCount": 33021
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-ge-54p8-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-86p8-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-ge-86p8-ohm-m",
+        "label": ">=86.8 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": ">=",
+        "thresholdOhmM": 86.8106589134677,
+        "thresholdLog10": 1.938573,
+        "color": "#eddc75",
+        "bankIndex": 9,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 2410,
+          "smoothedVertexCount": 4683
+        },
+        "vertexWelding": {
+          "inputVertexCount": 35019,
+          "weldedVertexCount": 7093,
+          "inputTriangleCount": 11673,
+          "weldedTriangleCount": 11673,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 5748,
+          "triangleCount": 11673,
+          "vertexCount": 7093,
+          "welding": {
+            "inputVertexCount": 35019,
+            "weldedVertexCount": 7093,
+            "inputTriangleCount": 11673,
+            "weldedTriangleCount": 11673,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 2410,
+            "smoothedVertexCount": 4683
+          }
+        },
+        "matchingVoxelCount": 59763,
+        "meanLog10Resistivity": 2.794035,
+        "meshRange": {
+          "vertexStart": 60990,
+          "vertexCount": 7093,
+          "indexStart": 304386,
+          "indexCount": 35019
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-ge-86p8-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-138-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-ge-138-ohm-m",
+        "label": ">=138 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": ">=",
+        "thresholdOhmM": 137.53966029872095,
+        "thresholdLog10": 2.138428,
+        "color": "#f8d76e",
+        "bankIndex": 10,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 2548,
+          "smoothedVertexCount": 4817
+        },
+        "vertexWelding": {
+          "inputVertexCount": 36210,
+          "weldedVertexCount": 7365,
+          "inputTriangleCount": 12070,
+          "weldedTriangleCount": 12070,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 5905,
+          "triangleCount": 12070,
+          "vertexCount": 7365,
+          "welding": {
+            "inputVertexCount": 36210,
+            "weldedVertexCount": 7365,
+            "inputTriangleCount": 12070,
+            "weldedTriangleCount": 12070,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 2548,
+            "smoothedVertexCount": 4817
+          }
+        },
+        "matchingVoxelCount": 53211,
+        "meanLog10Resistivity": 2.886602,
+        "meshRange": {
+          "vertexStart": 68083,
+          "vertexCount": 7365,
+          "indexStart": 339405,
+          "indexCount": 36210
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-ge-138-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-218-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-ge-218-ohm-m",
+        "label": ">=218 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": ">=",
+        "thresholdOhmM": 217.91285070124968,
+        "thresholdLog10": 2.338283,
+        "color": "#f9ca6f",
+        "bankIndex": 11,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 2517,
+          "smoothedVertexCount": 4515
+        },
+        "vertexWelding": {
+          "inputVertexCount": 34287,
+          "weldedVertexCount": 7032,
+          "inputTriangleCount": 11429,
+          "weldedTriangleCount": 11429,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 5549,
+          "triangleCount": 11429,
+          "vertexCount": 7032,
+          "welding": {
+            "inputVertexCount": 34287,
+            "weldedVertexCount": 7032,
+            "inputTriangleCount": 11429,
+            "weldedTriangleCount": 11429,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 2517,
+            "smoothedVertexCount": 4515
+          }
+        },
+        "matchingVoxelCount": 45518,
+        "meanLog10Resistivity": 2.995996,
+        "meshRange": {
+          "vertexStart": 75448,
+          "vertexCount": 7032,
+          "indexStart": 375615,
+          "indexCount": 34287
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-ge-218-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-345-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-ge-345-ohm-m",
+        "label": ">=345 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": ">=",
+        "thresholdOhmM": 345.2532193086028,
+        "thresholdLog10": 2.538138,
+        "color": "#fabd70",
+        "bankIndex": 12,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 2262,
+          "smoothedVertexCount": 3953
+        },
+        "vertexWelding": {
+          "inputVertexCount": 30090,
+          "weldedVertexCount": 6215,
+          "inputTriangleCount": 10030,
+          "weldedTriangleCount": 10030,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 4936,
+          "triangleCount": 10030,
+          "vertexCount": 6215,
+          "welding": {
+            "inputVertexCount": 30090,
+            "weldedVertexCount": 6215,
+            "inputTriangleCount": 10030,
+            "weldedTriangleCount": 10030,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 2262,
+            "smoothedVertexCount": 3953
+          }
+        },
+        "matchingVoxelCount": 37961,
+        "meanLog10Resistivity": 3.107003,
+        "meshRange": {
+          "vertexStart": 82480,
+          "vertexCount": 6215,
+          "indexStart": 409902,
+          "indexCount": 30090
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-ge-345-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-547-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-ge-547-ohm-m",
+        "label": ">=547 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": ">=",
+        "thresholdOhmM": 547.0066820720584,
+        "thresholdLog10": 2.737993,
+        "color": "#fbb072",
+        "bankIndex": 13,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 2006,
+          "smoothedVertexCount": 3414
+        },
+        "vertexWelding": {
+          "inputVertexCount": 26256,
+          "weldedVertexCount": 5420,
+          "inputTriangleCount": 8752,
+          "weldedTriangleCount": 8752,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 4260,
+          "triangleCount": 8752,
+          "vertexCount": 5420,
+          "welding": {
+            "inputVertexCount": 26256,
+            "weldedVertexCount": 5420,
+            "inputTriangleCount": 8752,
+            "weldedTriangleCount": 8752,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 2006,
+            "smoothedVertexCount": 3414
+          }
+        },
+        "matchingVoxelCount": 29605,
+        "meanLog10Resistivity": 3.239299,
+        "meshRange": {
+          "vertexStart": 88695,
+          "vertexCount": 5420,
+          "indexStart": 439992,
+          "indexCount": 26256
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-ge-547-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-867-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-ge-867-ohm-m",
+        "label": ">=867 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": ">=",
+        "thresholdOhmM": 866.6575530582627,
+        "thresholdLog10": 2.937848,
+        "color": "#fba373",
+        "bankIndex": 14,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 1567,
+          "smoothedVertexCount": 2700
+        },
+        "vertexWelding": {
+          "inputVertexCount": 20607,
+          "weldedVertexCount": 4267,
+          "inputTriangleCount": 6869,
+          "weldedTriangleCount": 6869,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 3388,
+          "triangleCount": 6869,
+          "vertexCount": 4267,
+          "welding": {
+            "inputVertexCount": 20607,
+            "weldedVertexCount": 4267,
+            "inputTriangleCount": 6869,
+            "weldedTriangleCount": 6869,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 1567,
+            "smoothedVertexCount": 2700
+          }
+        },
+        "matchingVoxelCount": 21261,
+        "meanLog10Resistivity": 3.398789,
+        "meshRange": {
+          "vertexStart": 94115,
+          "vertexCount": 4267,
+          "indexStart": 466248,
+          "indexCount": 20607
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-ge-867-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-1373-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-ge-1373-ohm-m",
+        "label": ">=1,373 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": ">=",
+        "thresholdOhmM": 1373.1008027686094,
+        "thresholdLog10": 3.137702,
+        "color": "#fc9675",
+        "bankIndex": 15,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 1113,
+          "smoothedVertexCount": 1977
+        },
+        "vertexWelding": {
+          "inputVertexCount": 14952,
+          "weldedVertexCount": 3090,
+          "inputTriangleCount": 4984,
+          "weldedTriangleCount": 4984,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 2475,
+          "triangleCount": 4984,
+          "vertexCount": 3090,
+          "welding": {
+            "inputVertexCount": 14952,
+            "weldedVertexCount": 3090,
+            "inputTriangleCount": 4984,
+            "weldedTriangleCount": 4984,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 1113,
+            "smoothedVertexCount": 1977
+          }
+        },
+        "matchingVoxelCount": 14816,
+        "meanLog10Resistivity": 3.557472,
+        "meshRange": {
+          "vertexStart": 98382,
+          "vertexCount": 3090,
+          "indexStart": 486855,
+          "indexCount": 14952
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-ge-1373-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-2175-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-ge-2175-ohm-m",
+        "label": ">=2,175 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": ">=",
+        "thresholdOhmM": 2175.491124389988,
+        "thresholdLog10": 3.337557,
+        "color": "#fd8a76",
+        "bankIndex": 16,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 842,
+          "smoothedVertexCount": 1274
+        },
+        "vertexWelding": {
+          "inputVertexCount": 10005,
+          "weldedVertexCount": 2116,
+          "inputTriangleCount": 3335,
+          "weldedTriangleCount": 3335,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 1653,
+          "triangleCount": 3335,
+          "vertexCount": 2116,
+          "welding": {
+            "inputVertexCount": 10005,
+            "weldedVertexCount": 2116,
+            "inputTriangleCount": 3335,
+            "weldedTriangleCount": 3335,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 842,
+            "smoothedVertexCount": 1274
+          }
+        },
+        "matchingVoxelCount": 10195,
+        "meanLog10Resistivity": 3.705726,
+        "meshRange": {
+          "vertexStart": 101472,
+          "vertexCount": 2116,
+          "indexStart": 501807,
+          "indexCount": 10005
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-ge-2175-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-3447-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-ge-3447-ohm-m",
+        "label": ">=3,447 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": ">=",
+        "thresholdOhmM": 3446.769255947459,
+        "thresholdLog10": 3.537412,
+        "color": "#fe7d77",
+        "bankIndex": 17,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 574,
+          "smoothedVertexCount": 759
+        },
+        "vertexWelding": {
+          "inputVertexCount": 6114,
+          "weldedVertexCount": 1333,
+          "inputTriangleCount": 2038,
+          "weldedTriangleCount": 2038,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 1033,
+          "triangleCount": 2038,
+          "vertexCount": 1333,
+          "welding": {
+            "inputVertexCount": 6114,
+            "weldedVertexCount": 1333,
+            "inputTriangleCount": 2038,
+            "weldedTriangleCount": 2038,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 574,
+            "smoothedVertexCount": 759
+          }
+        },
+        "matchingVoxelCount": 6871,
+        "meanLog10Resistivity": 3.836564,
+        "meshRange": {
+          "vertexStart": 103588,
+          "vertexCount": 1333,
+          "indexStart": 511812,
+          "indexCount": 6114
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-ge-3447-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-5461-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-ge-5461-ohm-m",
+        "label": ">=5,461 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": ">=",
+        "thresholdOhmM": 5460.936232077636,
+        "thresholdLog10": 3.737267,
+        "color": "#fe7079",
+        "bankIndex": 18,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 371,
+          "smoothedVertexCount": 390
+        },
+        "vertexWelding": {
+          "inputVertexCount": 3336,
+          "weldedVertexCount": 761,
+          "inputTriangleCount": 1112,
+          "weldedTriangleCount": 1112,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 573,
+          "triangleCount": 1112,
+          "vertexCount": 761,
+          "welding": {
+            "inputVertexCount": 3336,
+            "weldedVertexCount": 761,
+            "inputTriangleCount": 1112,
+            "weldedTriangleCount": 1112,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 371,
+            "smoothedVertexCount": 390
+          }
+        },
+        "matchingVoxelCount": 3987,
+        "meanLog10Resistivity": 3.984347,
+        "meshRange": {
+          "vertexStart": 104921,
+          "vertexCount": 761,
+          "indexStart": 517926,
+          "indexCount": 3336
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-ge-5461-ohm-m.json"
+      },
+      {
+        "id": "bank-ge-8652-ohm-m",
+        "meshId": "mt-isosurface-forge-focused:bank-ge-8652-ohm-m",
+        "label": ">=8,652 Ohm-m boundary",
+        "kind": "precomputed-bank-threshold-surface",
+        "isoProductId": "mt-isosurface-forge-focused",
+        "isoProductLabel": "MT FORGE-focused isosurfaces",
+        "sourceProductId": "mt-resistivity-forge-focused-volume",
+        "cropStatus": "presentation-crop",
+        "comparison": ">=",
+        "thresholdOhmM": 8652.109357004456,
+        "thresholdLog10": 3.937122,
+        "color": "#ff637a",
+        "bankIndex": 19,
+        "bankCount": 20,
+        "boundarySource": "precomputed-bank",
+        "extractionMethod": "mask-aware-marching-cubes",
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 226,
+          "smoothedVertexCount": 243
+        },
+        "vertexWelding": {
+          "inputVertexCount": 2124,
+          "weldedVertexCount": 469,
+          "inputTriangleCount": 708,
+          "weldedTriangleCount": 708,
+          "removedDegenerateTriangleCount": 0
+        },
+        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "decimation": "none",
+        "dimensions": [
+          96,
+          80,
+          64
+        ],
+        "voxelSpacingM": {
+          "x_m": 927.609,
+          "y_m": 1277.815,
+          "z_m": 522.643
+        },
+        "marchingCubes": {
+          "visitedCubeCount": 472815,
+          "skippedMaskedCubeCount": 451629,
+          "activeCubeCount": 352,
+          "triangleCount": 708,
+          "vertexCount": 469,
+          "welding": {
+            "inputVertexCount": 2124,
+            "weldedVertexCount": 469,
+            "inputTriangleCount": 708,
+            "weldedTriangleCount": 708,
+            "removedDegenerateTriangleCount": 0
+          },
+          "smoothing": {
+            "method": "taubin-laplacian",
+            "iterations": 2,
+            "lambda": 0.15,
+            "mu": -0.16,
+            "boundaryVertexCount": 226,
+            "smoothedVertexCount": 243
+          }
+        },
+        "matchingVoxelCount": 1966,
+        "meanLog10Resistivity": 4.145241,
+        "meshRange": {
+          "vertexStart": 105682,
+          "vertexCount": 469,
+          "indexStart": 521262,
+          "indexCount": 2124
+        },
+        "classification": "source-derived iso-resistivity communication surface",
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/bank-ge-8652-ohm-m.json"
       },
       {
         "id": "conductive-le-10-ohm-m",
@@ -455,6 +3587,9 @@
         "thresholdOhmM": 10,
         "thresholdLog10": 1,
         "color": "#2cc9ff",
+        "bankIndex": null,
+        "bankCount": null,
+        "boundarySource": "semantic-preset",
         "extractionMethod": "mask-aware-marching-cubes",
         "smoothing": {
           "method": "taubin-laplacian",
@@ -508,13 +3643,14 @@
         "matchingVoxelCount": 5259,
         "meanLog10Resistivity": 0.559173,
         "meshRange": {
-          "vertexStart": 3228,
+          "vertexStart": 106151,
           "vertexCount": 4152,
-          "indexStart": 15948,
+          "indexStart": 523386,
           "indexCount": 20217
         },
         "classification": "source-derived iso-resistivity communication surface",
-        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/conductive-le-10-ohm-m.json"
       },
       {
         "id": "conductive-le-30-ohm-m",
@@ -529,6 +3665,9 @@
         "thresholdOhmM": 30,
         "thresholdLog10": 1.477121,
         "color": "#38f0b3",
+        "bankIndex": null,
+        "bankCount": null,
+        "boundarySource": "semantic-preset",
         "extractionMethod": "mask-aware-marching-cubes",
         "smoothing": {
           "method": "taubin-laplacian",
@@ -582,13 +3721,14 @@
         "matchingVoxelCount": 11619,
         "meanLog10Resistivity": 0.946858,
         "meshRange": {
-          "vertexStart": 7380,
+          "vertexStart": 110303,
           "vertexCount": 6124,
-          "indexStart": 36165,
+          "indexStart": 543603,
           "indexCount": 30693
         },
         "classification": "source-derived iso-resistivity communication surface",
-        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/conductive-le-30-ohm-m.json"
       },
       {
         "id": "resistive-ge-1000-ohm-m",
@@ -603,6 +3743,9 @@
         "thresholdOhmM": 1000,
         "thresholdLog10": 3,
         "color": "#ff637a",
+        "bankIndex": null,
+        "bankCount": null,
+        "boundarySource": "semantic-preset",
         "extractionMethod": "mask-aware-marching-cubes",
         "smoothing": {
           "method": "taubin-laplacian",
@@ -656,13 +3799,14 @@
         "matchingVoxelCount": 19087,
         "meanLog10Resistivity": 3.447784,
         "meshRange": {
-          "vertexStart": 13504,
+          "vertexStart": 116427,
           "vertexCount": 3970,
-          "indexStart": 66858,
+          "indexStart": 574296,
           "indexCount": 19164
         },
         "classification": "source-derived iso-resistivity communication surface",
-        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell."
+        "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
+        "assetFile": "threshold_surfaces/boundaries/mt-isosurface-forge-focused/resistive-ge-1000-ohm-m.json"
       }
     ]
   },

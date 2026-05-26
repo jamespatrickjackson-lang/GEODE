@@ -84,6 +84,10 @@ const MT_FULL_DENSITY_PREVIEW_FIELDS = [
 
 const MT_THRESHOLD_PREVIEW_FIELDS = [
   "mtIsosurfaceProductId",
+  "mtSurfaceBoundaryMode",
+  "mtSurfaceBoundaryOrder",
+  "mtSurfaceBoundariesById",
+  "mtSurfaceBoundaryLegendVisible",
   "mtThresholdSurfaceVisibility",
   "mtThresholdSurfaceWireframe",
   "mtThresholdSurfaceRoughness",

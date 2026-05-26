@@ -239,7 +239,8 @@ function validateMtProducts() {
     ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"],
     "MT isosurface products",
   );
-  assert.equal(manifest.thresholdSurfaces.surfaces.length, 6);
+  const expectedPerProductBoundaryCount = 23;
+  assert.equal(manifest.thresholdSurfaces.surfaces.length, expectedPerProductBoundaryCount * 2);
   assertArrayContainsAll(
     manifest.thresholdSurfaces.surfaces.map((surface) => surface.id),
     ["conductive-le-10-ohm-m", "conductive-le-30-ohm-m", "resistive-ge-1000-ohm-m"],
@@ -251,7 +252,15 @@ function validateMtProducts() {
     thresholdMesh.processing.extractionMethod,
     "mask-aware-marching-cubes",
   );
-  assert.equal(thresholdMesh.processing.thresholdSurfaces.length, 6);
+  assert.equal(
+    thresholdMesh.processing.boundaryBank?.intervalCount,
+    20,
+    "MT precomputed boundary bank count",
+  );
+  assert.equal(
+    thresholdMesh.processing.thresholdSurfaces.length,
+    expectedPerProductBoundaryCount * 2,
+  );
   assertArrayContainsAll(
     thresholdMesh.processing.isosurfaceProducts.map((product) => product.id),
     ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"],
@@ -259,6 +268,11 @@ function validateMtProducts() {
   );
   for (const surface of thresholdMesh.processing.thresholdSurfaces) {
     assert.equal(surface.extractionMethod, "mask-aware-marching-cubes");
+    assertFileExists(
+      "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/" +
+        surface.assetFile,
+      `${surface.meshId} boundary asset`,
+    );
     assertGreaterThan(surface.marchingCubes?.triangleCount, 0, `${surface.meshId} triangles`);
     assertGreaterThan(surface.marchingCubes?.vertexCount, 0, `${surface.meshId} vertices`);
     assert.equal(surface.smoothing?.method, "taubin-laplacian");

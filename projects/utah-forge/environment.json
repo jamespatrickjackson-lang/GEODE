@@ -27,7 +27,7 @@
       "demoBoreholeWells": {
         "16A(78)-32": {
           "visible": true,
-          "pipeDiameterM": 24,
+          "pipeDiameterM": 18,
           "color": "#35d7ff",
           "opacity": 0.92,
           "lineStyle": "solid",
@@ -38,7 +38,7 @@
           "centerlineOpacity": 0.82,
           "centerlineColor": "#35d7ff",
           "collarVisible": true,
-          "collarDiameterM": 60,
+          "collarDiameterM": 32,
           "pathTreatment": "survey",
           "smoothingStrength": 0.35,
           "collarLabelVisible": true,
@@ -50,18 +50,18 @@
         },
         "16B(78)-32": {
           "visible": true,
-          "pipeDiameterM": 24,
+          "pipeDiameterM": 16,
           "color": "#ff7440",
           "opacity": 0.92,
           "lineStyle": "solid",
           "dashLengthM": 260,
           "dashGapM": 150,
           "centerlineVisible": true,
-          "centerlineWidth": 2.2,
+          "centerlineWidth": 2,
           "centerlineOpacity": 0.82,
           "centerlineColor": "#ff7440",
           "collarVisible": true,
-          "collarDiameterM": 60,
+          "collarDiameterM": 30,
           "pathTreatment": "survey",
           "smoothingStrength": 0.35,
           "collarLabelVisible": true,
@@ -79,7 +79,7 @@
         "heightM": 34,
         "liftM": 0,
         "rotationDeg": -24.985,
-        "fillColor": "#ffffff",
+        "fillColor": "#f79c9c",
         "opacity": 0.82,
         "outlineVisible": true,
         "outlineColor": "#ffffff",
@@ -132,7 +132,7 @@
     },
     "terrain": {
       "renderMode": "elevation-mesh",
-      "opacity": 0.45,
+      "opacity": 0.78,
       "meshSurfaceLiftM": 0,
       "publicSurfaceClipEnabled": false,
       "publicSurfaceClipCenterX": -1750,
@@ -149,7 +149,7 @@
     },
     "utah-forge-topo-graticule": {
       "color": "#212121",
-      "opacity": 0.62,
+      "opacity": 0.78,
       "lineWidth": 4.75,
       "graticuleLabelVisible": true,
       "graticuleLabelSizeM": 29000,
@@ -168,7 +168,7 @@
     },
     "transport-roads": {
       "color": "#5a4f3d",
-      "opacity": 0.8,
+      "opacity": 0.78,
       "lineWidth": 2.1,
       "affectedByFog": false,
       "showLabels": false,
@@ -176,7 +176,7 @@
     },
     "hydrography-streams": {
       "color": "#3d9db8",
-      "opacity": 0.48,
+      "opacity": 0.78,
       "lineWidth": 1.05,
       "affectedByFog": false,
       "showLabels": false,
@@ -185,7 +185,7 @@
     "hydrography-lakes": {
       "color": "#385a65",
       "outlineColor": "#69a6bd",
-      "opacity": 0.6,
+      "opacity": 0.78,
       "fillOpacity": 0.28,
       "lineWidth": 1.8,
       "affectedByFog": false,
@@ -307,7 +307,46 @@
       "mtThresholdSurfaceSmoothNormals": true,
       "mtThresholdSurfaceEmissiveBoost": 0.08,
       "mtThresholdSurfaceWireframeColor": "#f8f4e8",
-      "mtThresholdSurfaceWireframeOpacity": 0.42
+      "mtThresholdSurfaceWireframeOpacity": 0.42,
+      "mtSurfaceBoundaryMode": "precomputed-bank",
+      "mtSurfaceBoundaryOrder": [
+        "conductive-le-10-ohm-m",
+        "conductive-le-30-ohm-m",
+        "resistive-ge-1000-ohm-m"
+      ],
+      "mtSurfaceBoundariesById": {
+        "conductive-le-10-ohm-m": {
+          "visible": false,
+          "label": "<=10 Ohm-m",
+          "color": "#2cc9ff",
+          "comparison": "<=",
+          "thresholdOhmM": 10,
+          "thresholdLog10": 1,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "conductive-le-30-ohm-m": {
+          "visible": true,
+          "label": "<=30 Ohm-m",
+          "color": "#38f0b3",
+          "comparison": "<=",
+          "thresholdOhmM": 30,
+          "thresholdLog10": 1.477121,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "resistive-ge-1000-ohm-m": {
+          "visible": true,
+          "label": ">=1000 Ohm-m",
+          "color": "#ff637a",
+          "comparison": ">=",
+          "thresholdOhmM": 1000,
+          "thresholdLog10": 3,
+          "opacity": 1,
+          "source": "precomputed"
+        }
+      },
+      "mtSurfaceBoundaryLegendVisible": true
     },
     "utah-forge-mt-top-surface": {
       "color": "#ffffff",
@@ -568,13 +607,13 @@
       "threshold": 0.86
     },
     "terrain": {
-      "materialPreset": "surface-elevation",
+      "materialPreset": "image:naip-2024-aerial",
       "rampLow": "#575145",
       "rampMid": "#958a72",
       "rampHigh": "#d9cba3",
       "elevLowM": 0,
       "elevHighM": 180,
-      "surfaceElevationEnabled": true,
+      "surfaceElevationEnabled": false,
       "surfaceElevationLegendVisible": true,
       "surfaceElevationColors": [
         "#5147b8",
@@ -664,8 +703,8 @@
           ]
         }
       ],
-      "orthoPhotoTextureBudget": 8192,
-      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_8192.webp",
+      "orthoPhotoTextureBudget": 4096,
+      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_4096.webp",
       "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_4096.webp",
       "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_8192.webp",
       "orthoPhotoBounds": [
@@ -674,7 +713,7 @@
         385650,
         4279999.8
       ],
-      "orthoPhotoOpacity": 0,
+      "orthoPhotoOpacity": 1,
       "orthoPhotoHillshadeBlend": 0.12,
       "orthoPhotoBrightness": 0.08,
       "orthoPhotoContrast": 1.28,
@@ -1898,7 +1937,7 @@
         },
         "transport-roads": {
           "color": "#5a4f3d",
-          "opacity": 0.8,
+          "opacity": 0.78,
           "lineWidth": 2.1,
           "affectedByFog": false,
           "fogDensity": 0.00002,
@@ -1906,7 +1945,7 @@
         },
         "hydrography-streams": {
           "color": "#3d9db8",
-          "opacity": 0.48,
+          "opacity": 0.78,
           "lineWidth": 1.05,
           "affectedByFog": false,
           "fogDensity": 0.00002,
@@ -1916,14 +1955,14 @@
           "color": "#385a65",
           "outlineColor": "#69a6bd",
           "fillOpacity": 0.28,
-          "opacity": 0.6,
+          "opacity": 0.78,
           "lineWidth": 1.8,
           "affectedByFog": false,
           "fogDensity": 0.00002,
           "showLabels": false
         },
         "terrain": {
-          "opacity": 0.45
+          "opacity": 0.78
         },
         "utah-forge-mt-resistivity-slices": {
           "sectionIsoEnabled": true,
@@ -2021,6 +2060,76 @@
               "enabled": false,
               "positionM": -2200,
               "invert": false
+            }
+          }
+        },
+        "utah-forge-topo-graticule": {
+          "opacity": 0.78
+        },
+        "utah-forge-phase3-demo-boreholes": {
+          "demoBoreholeBlock": {
+            "visible": true,
+            "widthM": 118,
+            "depthM": 68,
+            "heightM": 34,
+            "liftM": 0,
+            "rotationDeg": -24.985,
+            "fillColor": "#f79c9c",
+            "opacity": 0.82,
+            "outlineVisible": true,
+            "outlineColor": "#ffffff",
+            "outlineThickness": 1.5,
+            "outlineOpacity": 0.92,
+            "labelVisible": true,
+            "labelText": "FORGE surface facility / orientation block",
+            "labelLiftM": 25.5
+          },
+          "demoBoreholeWells": {
+            "16A(78)-32": {
+              "visible": true,
+              "pipeDiameterM": 18,
+              "color": "#35d7ff",
+              "opacity": 0.92,
+              "lineStyle": "solid",
+              "dashLengthM": 260,
+              "dashGapM": 150,
+              "centerlineVisible": true,
+              "centerlineWidth": 2.2,
+              "centerlineOpacity": 0.82,
+              "centerlineColor": "#35d7ff",
+              "collarVisible": true,
+              "collarDiameterM": 32,
+              "pathTreatment": "survey",
+              "smoothingStrength": 0.35,
+              "collarLabelVisible": true,
+              "collarLabelText": "16A injection",
+              "collarLabelLiftM": 95,
+              "toeLabelVisible": true,
+              "toeLabelText": "Injection toe",
+              "toeLabelLiftM": 40
+            },
+            "16B(78)-32": {
+              "visible": true,
+              "pipeDiameterM": 16,
+              "color": "#ff7440",
+              "opacity": 0.92,
+              "lineStyle": "solid",
+              "dashLengthM": 260,
+              "dashGapM": 150,
+              "centerlineVisible": true,
+              "centerlineWidth": 2,
+              "centerlineOpacity": 0.82,
+              "centerlineColor": "#ff7440",
+              "collarVisible": true,
+              "collarDiameterM": 30,
+              "pathTreatment": "survey",
+              "smoothingStrength": 0.35,
+              "collarLabelVisible": true,
+              "collarLabelText": "16B production",
+              "collarLabelLiftM": 95,
+              "toeLabelVisible": true,
+              "toeLabelText": "Production toe",
+              "toeLabelLiftM": 40
             }
           }
         }

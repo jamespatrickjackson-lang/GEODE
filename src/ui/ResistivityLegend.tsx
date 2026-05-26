@@ -12,7 +12,6 @@ import {
   TECHNICAL_MONO_FONT,
   vibrancyLabel,
   vibrancySecondaryLabel,
-  vibrancyTertiaryLabel,
 } from "../editor/styles";
 import { transparentLegendPanelStyle } from "./legendStyles";
 import { effectiveStyle, effectiveVisibility } from "../pages/effective";
@@ -25,8 +24,6 @@ const MT_RESISTIVITY_FULL_DENSITY_LAYER_ID =
 const MT_RESISTIVITY_SLICES_LAYER_ID = "utah-forge-mt-resistivity-slices";
 const MT_RESISTIVITY_PREVIEW_LAYER_ID = "utah-forge-mt-resistivity-preview";
 const MT_RESISTIVITY_VOLUME_LAYER_ID = "utah-forge-mt-resistivity-volume";
-const MT_THRESHOLD_SURFACES_LAYER_ID =
-  "utah-forge-mt-resistivity-threshold-surfaces";
 
 const DEFAULT_LOW = "#2cc9ff";
 const DEFAULT_MID = "#f8dd6d";
@@ -40,24 +37,6 @@ const EDGE_LINE_MAX_WIDTH_PX = 8;
 const LEGEND_HANDLE_FILL = "#f4f5f7";
 const EDGE_POPOVER_WIDTH_PX = 300;
 const EDGE_POPOVER_MARGIN_PX = 12;
-const MT_THRESHOLD_SURFACE_LEGEND_ITEMS = [
-  {
-    id: "conductive-le-10-ohm-m",
-    label: "<=10 Ohm-m",
-    color: "#2cc9ff",
-  },
-  {
-    id: "conductive-le-30-ohm-m",
-    label: "<=30 Ohm-m",
-    color: "#38f0b3",
-  },
-  {
-    id: "resistive-ge-1000-ohm-m",
-    label: ">=1000 Ohm-m",
-    color: "#ff637a",
-  },
-] as const;
-
 const rootBaseStyle: CSSProperties = {
   ...transparentLegendPanelStyle,
 };
@@ -117,13 +96,6 @@ const tickMiddleStyle: CSSProperties = {
 
 const tickRightStyle: CSSProperties = {
   textAlign: "right",
-};
-
-const footerStyle: CSSProperties = {
-  marginTop: 9,
-  color: vibrancyTertiaryLabel,
-  fontSize: 10,
-  lineHeight: 1.25,
 };
 
 const fineControlsStyle: CSSProperties = {
@@ -580,89 +552,11 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
     selectedLayer && visibleScalarLayers.includes(selectedLayer)
       ? selectedLayer
       : visibleScalarLayers[0] ?? null;
-  const thresholdLayerVisible = visible.has(MT_THRESHOLD_SURFACES_LAYER_ID);
-  const thresholdStyle = editingEnvironment
-    ? state.environment.layerStyles[MT_THRESHOLD_SURFACES_LAYER_ID] ?? {}
-    : effectiveStyle(state.environment, page, MT_THRESHOLD_SURFACES_LAYER_ID);
-  const thresholdVisibility =
-    typeof thresholdStyle.mtThresholdSurfaceVisibility === "object" &&
-    thresholdStyle.mtThresholdSurfaceVisibility !== null
-      ? (thresholdStyle.mtThresholdSurfaceVisibility as Record<string, boolean>)
-      : {};
   const gui = state.environment.scene?.gui ?? {};
   const navigator = gui.navigator ?? {};
   const inset = navigator.useOverride === true ? navigator.bottom ?? 34 : 34;
-  const setThresholdVisibility = (surfaceId: string, visibleSurface: boolean) => {
-    const patch: Partial<EditableStyle> = {
-      mtThresholdSurfaceVisibility: {
-        ...thresholdVisibility,
-        [surfaceId]: visibleSurface,
-      },
-    };
-    sceneHandle.manager.applyStyle(MT_THRESHOLD_SURFACES_LAYER_ID, {
-      ...thresholdStyle,
-      ...patch,
-    });
-    if (editingEnvironment) {
-      setEnvLayerStyle(MT_THRESHOLD_SURFACES_LAYER_ID, patch);
-    } else {
-      setPageLayerOverride(page.id, MT_THRESHOLD_SURFACES_LAYER_ID, patch);
-    }
-  };
-  const thresholdSurfaceLegend = thresholdLayerVisible ? (
-    <div style={footerStyle}>
-      <div style={{ marginBottom: 5 }}>Threshold surfaces</div>
-      {MT_THRESHOLD_SURFACE_LEGEND_ITEMS.map((item) => (
-        <label
-          key={item.id}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            marginRight: 8,
-            marginTop: 4,
-          }}
-        >
-          <span
-            style={{
-              width: 9,
-              height: 9,
-              borderRadius: 2,
-              background: item.color,
-              boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.35)",
-            }}
-          />
-          <input
-            type="checkbox"
-            data-testid={`resistivity-legend-threshold-${item.id}`}
-            checked={thresholdVisibility[item.id] !== false}
-            onChange={(event) =>
-              setThresholdVisibility(item.id, event.currentTarget.checked)
-            }
-          />{" "}
-          {item.label}
-        </label>
-      ))}
-    </div>
-  ) : null;
   if (!activeLayer) {
-    if (!thresholdLayerVisible) return null;
-    return (
-      <aside
-        ref={rootRef}
-        style={{
-          ...rootBaseStyle,
-          ...(stacked
-            ? { position: "relative" }
-            : { left: inset, bottom: inset + 34 }),
-        }}
-        aria-label="Utah FORGE MT threshold surface legend"
-      >
-        <h2 style={titleStyle}>MT resistivity</h2>
-        <div style={subtitleStyle}>Threshold surfaces</div>
-        {thresholdSurfaceLegend}
-      </aside>
-    );
+    return null;
   }
 
   const layerId =
@@ -1379,10 +1273,8 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
               />
             </label>
           </div>
-          {thresholdSurfaceLegend}
         </>
       ) : null}
-      {activeLayer !== "volume" ? thresholdSurfaceLegend : null}
     </aside>
   );
 }

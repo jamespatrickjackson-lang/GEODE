@@ -15,6 +15,7 @@ import { LightModeToggle } from "../ui/LightModeToggle";
 import { SceneLabels } from "../ui/SceneLabels";
 import { AssayLegend } from "../ui/AssayLegend";
 import { ResistivityLegend } from "../ui/ResistivityLegend";
+import { MtSurfaceBoundaryLegend } from "../ui/MtSurfaceBoundaryLegend";
 import { SectionIsoLegend } from "../ui/SectionIsoLegend";
 import { SeismicVolumeLegend } from "../ui/SeismicVolumeLegend";
 import { SurfaceElevationLegend } from "../ui/SurfaceElevationLegend";
@@ -111,11 +112,13 @@ export function EditorChrome({
           <SceneSectionLegend stacked />
           <SectionIsoLegend stacked />
           <ResistivityLegend stacked />
+          <MtSurfaceBoundaryLegend stacked />
           <SurfaceElevationLegend stacked />
         </div>
       ) : (
         <>
           <ResistivityLegend />
+          <MtSurfaceBoundaryLegend />
           <SceneSectionLegend />
           <SectionIsoLegend />
           <SeismicVolumeLegend />

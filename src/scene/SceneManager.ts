@@ -43,6 +43,7 @@ import {
   setDistanceAttenuatedLineWidth,
   setTerrainShadowInfluence,
 } from "../loaders/topoLineMaterial";
+import { SURFACE_RENDER_ORDER } from "../loaders/surfaceRenderPolicy";
 import { getHeightSampler } from "./heightSampler";
 import type { SceneOverlayDef } from "../pages/types";
 import { DEFAULT_ASSAY_COLOR_STOPS } from "../loaders/assayPalette";
@@ -66,6 +67,12 @@ import {
   resolveDemoBoreholeWellStyle,
   resolveDemoOrientationBlockStyle,
 } from "../projectModules/utahForge/siteDetails";
+import {
+  DEFAULT_MT_SURFACE_BOUNDARIES,
+  resolveMtSurfaceBoundaries,
+  type MtSurfaceBoundaryDefinition,
+  type ResolvedMtSurfaceBoundary,
+} from "../projectModules/utahForge/mtSurfaceBoundaries";
 import {
   UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS,
 } from "../projectModules/utahForge/crossfadeFields";
@@ -98,6 +105,7 @@ import {
   scalarValueIsVisible,
   scalarVisibilityWeight,
 } from "./scalarFocus";
+import { extractRuntimeMarchingCubesGeometry } from "../mtResistivity/runtimeMarchingCubes";
 import {
   rebuildDemoBoreholeCenterlineGeometry,
   rebuildDemoBoreholePipeGeometry,
@@ -2590,6 +2598,9 @@ function forgeDiscreteDataStyleChanged(
   if (layerId === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID) {
     return styleFieldsChanged(fromStyle, toStyle, [
       "mtIsosurfaceProductId",
+      "mtSurfaceBoundaryMode",
+      "mtSurfaceBoundaryOrder",
+      "mtSurfaceBoundariesById",
       "mtThresholdSurfaceVisibility",
       "mtThresholdSurfaceWireframe",
     ]);
@@ -9520,15 +9531,243 @@ export class SceneManager {
     }
   }
 
+  private mtSurfaceBoundaryDefinitionsFromGroup(
+    group: THREE.Group,
+  ): MtSurfaceBoundaryDefinition[] {
+    const byId = new Map<string, MtSurfaceBoundaryDefinition>();
+    group.traverse((obj) => {
+      if (obj.userData?.mtThresholdSurfacePreview !== true) return;
+      const surface = obj.userData.mtThresholdSurface as
+        | {
+            id?: unknown;
+            label?: unknown;
+            color?: unknown;
+            comparison?: unknown;
+            thresholdOhmM?: unknown;
+            thresholdLog10?: unknown;
+            kind?: unknown;
+          }
+        | undefined;
+      const id =
+        typeof surface?.id === "string"
+          ? surface.id
+          : typeof obj.userData.mtThresholdSurfaceId === "string"
+            ? obj.userData.mtThresholdSurfaceId
+            : "";
+      if (!id || byId.has(id)) return;
+      const thresholdOhmM =
+        typeof surface?.thresholdOhmM === "number" &&
+        Number.isFinite(surface.thresholdOhmM)
+          ? surface.thresholdOhmM
+          : undefined;
+      const thresholdLog10 =
+        typeof surface?.thresholdLog10 === "number" &&
+        Number.isFinite(surface.thresholdLog10)
+          ? surface.thresholdLog10
+          : thresholdOhmM && thresholdOhmM > 0
+            ? Math.log10(thresholdOhmM)
+            : undefined;
+      const fallback = DEFAULT_MT_SURFACE_BOUNDARIES.find(
+        (boundary) => boundary.id === id,
+      );
+      if (
+        thresholdOhmM === undefined &&
+        thresholdLog10 === undefined &&
+        !fallback
+      ) {
+        return;
+      }
+      const comparison =
+        surface?.comparison === ">=" || surface?.comparison === "<="
+          ? surface.comparison
+          : id.includes("-ge-")
+            ? ">="
+            : "<=";
+      const resolvedOhmM =
+        thresholdOhmM ??
+        (thresholdLog10 !== undefined ? 10 ** thresholdLog10 : fallback!.thresholdOhmM);
+      byId.set(id, {
+        id,
+        label:
+          typeof surface?.label === "string"
+            ? surface.label
+            : fallback?.label ?? id,
+        color:
+          typeof surface?.color === "string"
+            ? surface.color
+            : fallback?.color ?? "#f8f4e8",
+        comparison,
+        thresholdOhmM: resolvedOhmM,
+        thresholdLog10:
+          thresholdLog10 ??
+          (resolvedOhmM > 0 ? Math.log10(resolvedOhmM) : fallback!.thresholdLog10),
+        kind: typeof surface?.kind === "string" ? surface.kind : undefined,
+        source: "precomputed",
+      });
+    });
+    for (const boundary of DEFAULT_MT_SURFACE_BOUNDARIES) {
+      if (!byId.has(boundary.id)) byId.set(boundary.id, boundary);
+    }
+    return [...byId.values()];
+  }
+
+  private mtVolumeProductIdForIsosurfaceProduct(productId: string): string {
+    return productId === "mt-isosurface-full-extent"
+      ? "mt-resistivity-full-extent-volume"
+      : "mt-resistivity-forge-focused-volume";
+  }
+
+  private activeMtScalarVolumeForIsosurface(productId: string): THREE.Mesh | null {
+    const volumeGroup = this.layers.get(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID);
+    if (!volumeGroup) return null;
+    const sourceProductId = this.mtVolumeProductIdForIsosurfaceProduct(productId);
+    let mesh: THREE.Mesh | null = null;
+    volumeGroup.traverse((obj) => {
+      if (
+        mesh === null &&
+        obj instanceof THREE.Mesh &&
+        obj.userData?.scalarVolume === true &&
+        obj.userData.scalarVolumeProductId === sourceProductId
+      ) {
+        mesh = obj;
+      }
+    });
+    return mesh;
+  }
+
+  private clearLiveMtSurfaceBoundaries(group: THREE.Group): void {
+    const removals = group.children.filter(
+      (child) => child.userData?.mtSurfaceBoundaryLive === true,
+    );
+    for (const child of removals) {
+      group.remove(child);
+      disposeObjectTree(child);
+    }
+  }
+
+  private ensureLiveMtSurfaceBoundaries(
+    group: THREE.Group,
+    selectedProductId: string,
+    boundaries: ResolvedMtSurfaceBoundary[],
+    style: EditableStyle,
+  ): void {
+    if (style.mtSurfaceBoundaryMode !== "live-compute") {
+      this.clearLiveMtSurfaceBoundaries(group);
+      return;
+    }
+    const liveBoundaries = boundaries.filter(
+      (boundary) => boundary.source === "live" && boundary.visible,
+    );
+    if (liveBoundaries.length === 0) {
+      this.clearLiveMtSurfaceBoundaries(group);
+      return;
+    }
+    const volumeMesh = this.activeMtScalarVolumeForIsosurface(selectedProductId);
+    const volumeData = volumeMesh?.userData.scalarVolumeData as
+      | Uint8Array
+      | undefined;
+    const maskData = volumeMesh?.userData.scalarVolumeMaskData as
+      | Uint8Array
+      | undefined;
+    const dimensions = volumeMesh?.userData.scalarVolumeDimensions as
+      | [number, number, number]
+      | undefined;
+    const bounds = volumeMesh?.userData.scalarVolumeBounds as
+      | { min?: [number, number, number]; max?: [number, number, number] }
+      | undefined;
+    const sourceRange = volumeMesh?.userData.scalarVolumeSourceRange as
+      | [number, number]
+      | undefined;
+    if (!volumeData || !maskData || !dimensions || !bounds?.min || !bounds?.max || !sourceRange) {
+      this.clearLiveMtSurfaceBoundaries(group);
+      return;
+    }
+    const wantedIds = new Set(liveBoundaries.map((boundary) => boundary.id));
+    for (const child of [...group.children]) {
+      if (
+        child.userData?.mtSurfaceBoundaryLive === true &&
+        !wantedIds.has(String(child.userData.mtThresholdSurfaceId ?? ""))
+      ) {
+        group.remove(child);
+        disposeObjectTree(child);
+      }
+    }
+    for (const boundary of liveBoundaries) {
+      const cacheKey = `${selectedProductId}:${boundary.id}:${boundary.comparison}:${boundary.thresholdLog10.toFixed(5)}`;
+      const existing = group.children.find(
+        (child) =>
+          child.userData?.mtSurfaceBoundaryLive === true &&
+          child.userData?.mtThresholdSurfaceId === boundary.id &&
+          child.userData?.mtSurfaceBoundaryLiveCacheKey === cacheKey,
+      );
+      if (existing) continue;
+      for (const child of [...group.children]) {
+        if (
+          child.userData?.mtSurfaceBoundaryLive === true &&
+          child.userData?.mtThresholdSurfaceId === boundary.id
+        ) {
+          group.remove(child);
+          disposeObjectTree(child);
+        }
+      }
+      const geometry = extractRuntimeMarchingCubesGeometry({
+        volume: volumeData,
+        mask: maskData,
+        dimensions,
+        bounds: { min: bounds.min, max: bounds.max },
+        sourceRange,
+        thresholdLog10: boundary.thresholdLog10,
+        comparison: boundary.comparison,
+      });
+      if (!geometry) continue;
+      const material = new THREE.MeshStandardMaterial({
+        color: boundary.color,
+        transparent: true,
+        opacity: styleNumber(style, "opacity", 0.86, 0, 1) * boundary.opacity,
+        roughness: styleNumber(style, "mtThresholdSurfaceRoughness", 0.64, 0, 1),
+        metalness: styleNumber(style, "mtThresholdSurfaceMetalness", 0, 0, 1),
+        side:
+          style.mtThresholdSurfaceSide === "front"
+            ? THREE.FrontSide
+            : THREE.DoubleSide,
+        depthWrite: true,
+        depthTest: true,
+      });
+      material.emissive.set(0xffffff);
+      material.emissiveIntensity = styleNumber(
+        style,
+        "mtThresholdSurfaceEmissiveBoost",
+        0.08,
+        0,
+        1,
+      );
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.name = boundary.label;
+      mesh.renderOrder = SURFACE_RENDER_ORDER.meshPreview + 0.01;
+      mesh.userData = {
+        mtThresholdSurfacePreview: true,
+        mtSurfaceBoundaryLive: true,
+        mtSurfaceBoundaryLiveCacheKey: cacheKey,
+        mtThresholdSurfaceId: boundary.id,
+        mtThresholdSurfaceKind: "live-threshold-surface",
+        mtIsosurfaceProductId: selectedProductId,
+        mtThresholdSurface: boundary,
+      };
+      group.add(mesh);
+    }
+  }
+
   private applyMtThresholdSurfaceStyle(id: string, style: EditableStyle): void {
     if (id !== UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID) return;
     const group = this.layers.get(id);
     if (!group) return;
-    const visibility =
-      typeof style.mtThresholdSurfaceVisibility === "object" &&
-      style.mtThresholdSurfaceVisibility !== null
-        ? (style.mtThresholdSurfaceVisibility as Record<string, boolean>)
-        : {};
+    const boundaries = resolveMtSurfaceBoundaries(
+      style,
+      this.mtSurfaceBoundaryDefinitionsFromGroup(group),
+    );
+    const boundaryById = new Map(
+      boundaries.map((boundary) => [boundary.id, boundary]),
+    );
     const wireframe = style.mtThresholdSurfaceWireframe === true;
     const opacity = styleNumber(style, "opacity", 0.86, 0, 1);
     const roughness = styleNumber(
@@ -9573,6 +9812,12 @@ export class SceneManager {
       typeof style.mtIsosurfaceProductId === "string"
         ? style.mtIsosurfaceProductId
         : "mt-isosurface-forge-focused";
+    this.ensureLiveMtSurfaceBoundaries(
+      group,
+      selectedProductId,
+      boundaries,
+      style,
+    );
     group.traverse((obj) => {
       if (obj.userData?.mtThresholdSurfacePreview !== true) return;
       const productId =
@@ -9585,7 +9830,8 @@ export class SceneManager {
           : "";
       const productVisible =
         productId.length === 0 || productId === selectedProductId;
-      obj.visible = productVisible && visibility[surfaceId] !== false;
+      const boundary = boundaryById.get(surfaceId);
+      obj.visible = productVisible && boundary?.visible === true;
       const material = (obj as { material?: THREE.Material | THREE.Material[] })
         .material;
       const materials = Array.isArray(material)
@@ -9599,7 +9845,7 @@ export class SceneManager {
         }
         if ("vertexColors" in m) {
           (m as THREE.Material & { vertexColors: boolean }).vertexColors =
-            !wireframe;
+            false;
         }
         if ("roughness" in m) {
           (m as THREE.Material & { roughness: number }).roughness = roughness;
@@ -9625,10 +9871,14 @@ export class SceneManager {
             wireframeColor,
           );
         } else if ("color" in m) {
-          (m as THREE.Material & { color: THREE.Color }).color.set(0xffffff);
+          (m as THREE.Material & { color: THREE.Color }).color.set(
+            boundary?.color ?? "#ffffff",
+          );
         }
         m.side = side;
-        m.opacity = wireframe ? wireframeOpacity : opacity;
+        m.opacity = wireframe
+          ? wireframeOpacity
+          : opacity * (boundary?.opacity ?? 1);
         m.transparent = true;
         m.depthWrite = !wireframe;
         m.depthTest = true;
@@ -11441,6 +11691,33 @@ export class SceneManager {
   ): EditableStyle {
     const t = clamp01(amount);
     const next: EditableStyle = { ...toStyle };
+    if (
+      typeof fromStyle.opacity === "number" &&
+      Number.isFinite(fromStyle.opacity) &&
+      typeof toStyle.opacity === "number" &&
+      Number.isFinite(toStyle.opacity)
+    ) {
+      next.opacity = fromStyle.opacity + (toStyle.opacity - fromStyle.opacity) * t;
+    }
+    if (fromStyle.mtSurfaceBoundariesById && toStyle.mtSurfaceBoundariesById) {
+      const nextBoundaries = { ...toStyle.mtSurfaceBoundariesById };
+      for (const [id, toBoundary] of Object.entries(toStyle.mtSurfaceBoundariesById)) {
+        const fromBoundary = fromStyle.mtSurfaceBoundariesById[id];
+        if (
+          fromBoundary &&
+          typeof fromBoundary.opacity === "number" &&
+          Number.isFinite(fromBoundary.opacity) &&
+          typeof toBoundary.opacity === "number" &&
+          Number.isFinite(toBoundary.opacity)
+        ) {
+          nextBoundaries[id] = {
+            ...toBoundary,
+            opacity: fromBoundary.opacity + (toBoundary.opacity - fromBoundary.opacity) * t,
+          };
+        }
+      }
+      next.mtSurfaceBoundariesById = nextBoundaries;
+    }
     for (const field of SCALAR_TRANSITION_STYLE_FIELDS) {
       const from = scalarStyleNumber(fromStyle, field);
       const to = scalarStyleNumber(toStyle, field);

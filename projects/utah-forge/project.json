@@ -2683,33 +2683,329 @@
         "sourceDataIncluded": true,
         "isosurfaceProducts": [
           {
-            "id": "mt-isosurface-forge-focused",
-            "label": "MT FORGE-focused isosurfaces",
-            "sourceProductId": "mt-resistivity-forge-focused-volume",
-            "cropStatus": "presentation-crop"
-          },
-          {
             "id": "mt-isosurface-full-extent",
             "label": "MT full-extent isosurfaces",
             "sourceProductId": "mt-resistivity-full-extent-volume",
             "cropStatus": "full-source"
+          },
+          {
+            "id": "mt-isosurface-forge-focused",
+            "label": "MT FORGE-focused isosurfaces",
+            "sourceProductId": "mt-resistivity-forge-focused-volume",
+            "cropStatus": "presentation-crop"
           }
         ],
         "thresholdSurfaces": [
           {
+            "id": "bank-le-1p38-ohm-m",
+            "label": "<=1.38 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": "<=",
+            "thresholdOhmM": 1.3799997254542724,
+            "thresholdLog10": 0.139879,
+            "color": "#2cc9ff",
+            "bankIndex": 0,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-le-2p19-ohm-m",
+            "label": "<=2.19 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": "<=",
+            "thresholdOhmM": 2.1864215273438377,
+            "thresholdLog10": 0.339734,
+            "color": "#41cbf0",
+            "bankIndex": 1,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-le-3p46-ohm-m",
+            "label": "<=3.46 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": "<=",
+            "thresholdOhmM": 3.464086990060031,
+            "thresholdLog10": 0.539589,
+            "color": "#57cde0",
+            "bankIndex": 2,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-le-5p49-ohm-m",
+            "label": "<=5.49 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": "<=",
+            "thresholdOhmM": 5.488373822078662,
+            "thresholdLog10": 0.739444,
+            "color": "#6ccfd1",
+            "bankIndex": 3,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-le-8p7-ohm-m",
+            "label": "<=8.7 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": "<=",
+            "thresholdOhmM": 8.695580479737417,
+            "thresholdLog10": 0.939299,
+            "color": "#82d1c2",
+            "bankIndex": 4,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-le-13p8-ohm-m",
+            "label": "<=13.8 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": "<=",
+            "thresholdOhmM": 13.776962417431095,
+            "thresholdLog10": 1.139153,
+            "color": "#97d4b2",
+            "bankIndex": 5,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-le-21p8-ohm-m",
+            "label": "<=21.8 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": "<=",
+            "thresholdOhmM": 21.827719712743146,
+            "thresholdLog10": 1.339008,
+            "color": "#add6a3",
+            "bankIndex": 6,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-ge-34p6-ohm-m",
+            "label": ">=34.6 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 34.58304765753409,
+            "thresholdLog10": 1.538863,
+            "color": "#c2d893",
+            "bankIndex": 7,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-ge-54p8-ohm-m",
+            "label": ">=54.8 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 54.79212675545995,
+            "thresholdLog10": 1.738718,
+            "color": "#d8da84",
+            "bankIndex": 8,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-ge-86p8-ohm-m",
+            "label": ">=86.8 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 86.8106589134677,
+            "thresholdLog10": 1.938573,
+            "color": "#eddc75",
+            "bankIndex": 9,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-ge-138-ohm-m",
+            "label": ">=138 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 137.53966029872095,
+            "thresholdLog10": 2.138428,
+            "color": "#f8d76e",
+            "bankIndex": 10,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-ge-218-ohm-m",
+            "label": ">=218 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 217.91285070124968,
+            "thresholdLog10": 2.338283,
+            "color": "#f9ca6f",
+            "bankIndex": 11,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-ge-345-ohm-m",
+            "label": ">=345 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 345.2532193086028,
+            "thresholdLog10": 2.538138,
+            "color": "#fabd70",
+            "bankIndex": 12,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-ge-547-ohm-m",
+            "label": ">=547 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 547.0066820720584,
+            "thresholdLog10": 2.737993,
+            "color": "#fbb072",
+            "bankIndex": 13,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-ge-867-ohm-m",
+            "label": ">=867 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 866.6575530582627,
+            "thresholdLog10": 2.937848,
+            "color": "#fba373",
+            "bankIndex": 14,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-ge-1373-ohm-m",
+            "label": ">=1,373 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 1373.1008027686094,
+            "thresholdLog10": 3.137702,
+            "color": "#fc9675",
+            "bankIndex": 15,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-ge-2175-ohm-m",
+            "label": ">=2,175 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 2175.491124389988,
+            "thresholdLog10": 3.337557,
+            "color": "#fd8a76",
+            "bankIndex": 16,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-ge-3447-ohm-m",
+            "label": ">=3,447 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 3446.769255947459,
+            "thresholdLog10": 3.537412,
+            "color": "#fe7d77",
+            "bankIndex": 17,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-ge-5461-ohm-m",
+            "label": ">=5,461 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 5460.936232077636,
+            "thresholdLog10": 3.737267,
+            "color": "#fe7079",
+            "bankIndex": 18,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
+            "id": "bank-ge-8652-ohm-m",
+            "label": ">=8,652 Ohm-m boundary",
+            "kind": "precomputed-bank-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 8652.109357004456,
+            "thresholdLog10": 3.937122,
+            "color": "#ff637a",
+            "bankIndex": 19,
+            "bankCount": 20,
+            "boundarySource": "precomputed-bank",
+            "extractionMethod": "mask-aware-marching-cubes"
+          },
+          {
             "id": "conductive-le-10-ohm-m",
-            "label": "Conductive shell <=10 Ohm-m"
+            "label": "Conductive shell <=10 Ohm-m",
+            "kind": "conductive-threshold-surface",
+            "comparison": "<=",
+            "thresholdOhmM": 10,
+            "thresholdLog10": 1,
+            "color": "#2cc9ff",
+            "bankIndex": null,
+            "bankCount": null,
+            "boundarySource": "semantic-preset",
+            "extractionMethod": "mask-aware-marching-cubes"
           },
           {
             "id": "conductive-le-30-ohm-m",
-            "label": "Conductive shell <=30 Ohm-m"
+            "label": "Conductive shell <=30 Ohm-m",
+            "kind": "conductive-threshold-surface",
+            "comparison": "<=",
+            "thresholdOhmM": 30,
+            "thresholdLog10": 1.477121,
+            "color": "#38f0b3",
+            "bankIndex": null,
+            "bankCount": null,
+            "boundarySource": "semantic-preset",
+            "extractionMethod": "mask-aware-marching-cubes"
           },
           {
             "id": "resistive-ge-1000-ohm-m",
-            "label": "Resistive shell >=1000 Ohm-m"
+            "label": "Resistive shell >=1000 Ohm-m",
+            "kind": "resistive-threshold-surface",
+            "comparison": ">=",
+            "thresholdOhmM": 1000,
+            "thresholdLog10": 3,
+            "color": "#ff637a",
+            "bankIndex": null,
+            "bankCount": null,
+            "boundarySource": "semantic-preset",
+            "extractionMethod": "mask-aware-marching-cubes"
           }
         ],
-        "notes": "Fixed source-derived iso-resistivity visualization meshes generated with mask-aware Marching Cubes from both full-extent and FORGE-focused MT scalar volumes. Focused surfaces are presentation crops. These surfaces are for communication only and are not faults, ore bodies, mineralization, targets, or resource estimates."
+        "notes": "Fixed source-derived iso-resistivity visualization meshes generated with mask-aware Marching Cubes from both full-extent and FORGE-focused MT scalar volumes. Focused surfaces are presentation crops. These surfaces are for communication only and are not faults, ore bodies, mineralization, targets, or resource estimates.",
+        "boundaryBank": {
+          "mode": "precomputed-bank",
+          "intervalCount": 20,
+          "semanticBoundaryIds": [
+            "conductive-le-10-ohm-m",
+            "conductive-le-30-ohm-m",
+            "resistive-ge-1000-ohm-m"
+          ]
+        }
       }
     },
     {

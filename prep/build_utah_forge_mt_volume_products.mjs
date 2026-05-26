@@ -74,7 +74,7 @@ const ISOSURFACE_PRODUCT_IDS = {
     classification: "source-derived presentation-crop iso-resistivity surfaces",
   },
 };
-const THRESHOLDS = [
+const SEMANTIC_THRESHOLDS = [
   {
     id: "conductive-le-10-ohm-m",
     label: "Conductive shell <=10 Ohm-m",
@@ -100,6 +100,84 @@ const THRESHOLDS = [
     color: "#ff637a",
   },
 ];
+const PRECOMPUTED_BANK_BOUNDARY_COUNT = 20;
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function rgbToHex([r, g, b]) {
+  const parts = [r, g, b].map((value) =>
+    Math.max(0, Math.min(255, Math.round(value)))
+      .toString(16)
+      .padStart(2, "0"),
+  );
+  return `#${parts.join("")}`;
+}
+
+function bankBoundaryColor(t) {
+  const low = [44, 201, 255];
+  const mid = [248, 221, 109];
+  const high = [255, 99, 122];
+  if (t <= 0.5) {
+    const local = t / 0.5;
+    return rgbToHex([
+      lerp(low[0], mid[0], local),
+      lerp(low[1], mid[1], local),
+      lerp(low[2], mid[2], local),
+    ]);
+  }
+  const local = (t - 0.5) / 0.5;
+  return rgbToHex([
+    lerp(mid[0], high[0], local),
+    lerp(mid[1], high[1], local),
+    lerp(mid[2], high[2], local),
+  ]);
+}
+
+function thresholdSlug(value) {
+  if (value >= 100) return Math.round(value).toString();
+  if (value >= 10) return value.toFixed(1).replace(".", "p").replace(/p0$/, "");
+  return value.toFixed(2).replace(".", "p").replace(/0+$/, "").replace(/p$/, "");
+}
+
+function thresholdLabel(comparison, thresholdOhmM) {
+  const value =
+    thresholdOhmM >= 100
+      ? Math.round(thresholdOhmM).toLocaleString("en-US")
+      : thresholdOhmM >= 10
+        ? thresholdOhmM.toFixed(1).replace(/\.0$/, "")
+        : thresholdOhmM.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+  return `${comparison}${value} Ohm-m boundary`;
+}
+
+function thresholdDefinitions(scalarRange) {
+  const displayMin = scalarRange.displayMin ?? scalarRange.min;
+  const displayMax = scalarRange.displayMax ?? scalarRange.max;
+  const bank = [];
+  for (let index = 0; index < PRECOMPUTED_BANK_BOUNDARY_COUNT; index += 1) {
+    const t =
+      PRECOMPUTED_BANK_BOUNDARY_COUNT <= 1
+        ? 0
+        : index / (PRECOMPUTED_BANK_BOUNDARY_COUNT - 1);
+    const thresholdLog10 = displayMin + (displayMax - displayMin) * t;
+    const thresholdOhmM = 10 ** thresholdLog10;
+    const comparison = thresholdLog10 <= Math.log10(30) ? "<=" : ">=";
+    const direction = comparison === "<=" ? "le" : "ge";
+    bank.push({
+      id: `bank-${direction}-${thresholdSlug(thresholdOhmM)}-ohm-m`,
+      label: thresholdLabel(comparison, thresholdOhmM),
+      kind: "precomputed-bank-threshold-surface",
+      comparison,
+      thresholdOhmM,
+      color: bankBoundaryColor(t),
+      bankIndex: index,
+      bankCount: PRECOMPUTED_BANK_BOUNDARY_COUNT,
+      source: "precomputed-bank",
+    });
+  }
+  return [...bank, ...SEMANTIC_THRESHOLDS];
+}
 
 function parseArgs(argv) {
   const options = {
@@ -474,6 +552,9 @@ function appendMarchingCubesSurface(mesh, accumulator, threshold) {
     thresholdOhmM: threshold.thresholdOhmM,
     thresholdLog10: round(Math.log10(threshold.thresholdOhmM), 6),
     color: threshold.color,
+    bankIndex: Number.isInteger(threshold.bankIndex) ? threshold.bankIndex : null,
+    bankCount: Number.isInteger(threshold.bankCount) ? threshold.bankCount : null,
+    boundarySource: threshold.source ?? "semantic-preset",
     extractionMethod: "mask-aware-marching-cubes",
     smoothing: extracted.stats.smoothing,
     vertexWelding: extracted.stats.welding,
@@ -510,8 +591,9 @@ function buildThresholdMesh(accumulators, options) {
     sceneBounds: sceneBoundsTuple(accumulator.bounds),
     voxelSpacingM: voxelSpacing(accumulator.bounds, accumulator.dimensions),
   }));
+  const thresholds = thresholdDefinitions(accumulators[0].scalarRange);
   const thresholdSurfaces = accumulators.flatMap((accumulator) =>
-    THRESHOLDS.map((threshold) =>
+    thresholds.map((threshold) =>
       appendMarchingCubesSurface(mesh, accumulator, threshold),
     ),
   );
@@ -563,6 +645,13 @@ function buildThresholdMesh(accumulators, options) {
       script: "prep/build_utah_forge_mt_volume_products.mjs",
       generatedDate: DERIVED_DATE,
       extractionMethod: "mask-aware-marching-cubes",
+      boundaryBank: {
+        mode: "precomputed-bank",
+        intervalCount: PRECOMPUTED_BANK_BOUNDARY_COUNT,
+        semanticBoundaryIds: SEMANTIC_THRESHOLDS.map((threshold) => threshold.id),
+        note:
+          "Bank boundaries are log-spaced across the shared MT display range; semantic boundaries are exact pinned thresholds.",
+      },
       sourceProductIds: accumulators.map((accumulator) => accumulator.id),
       isosurfaceProducts,
       thresholdSurfaces,
@@ -576,6 +665,65 @@ function buildThresholdMesh(accumulators, options) {
     colors: mesh.colors,
     indices: mesh.indices,
   };
+}
+
+async function writeThresholdBoundaryAssets(thresholdMesh, thresholdDir) {
+  const boundaryRoot = path.join(thresholdDir, "boundaries");
+  await mkdir(boundaryRoot, { recursive: true });
+  const surfaces = thresholdMesh.processing.thresholdSurfaces;
+  for (const surface of surfaces) {
+    const range = surface.meshRange;
+    if (!range || range.vertexCount <= 0 || range.indexCount <= 0) continue;
+    const productDir = path.join(boundaryRoot, surface.isoProductId);
+    await mkdir(productDir, { recursive: true });
+    const vertexStart = range.vertexStart;
+    const vertexEnd = range.vertexStart + range.vertexCount;
+    const indexStart = range.indexStart;
+    const indexEnd = range.indexStart + range.indexCount;
+    const vertices = thresholdMesh.vertices.slice(vertexStart * 3, vertexEnd * 3);
+    const colors = thresholdMesh.colors.slice(vertexStart * 3, vertexEnd * 3);
+    const scalarValues = thresholdMesh.attributes.scalarValues.slice(
+      vertexStart,
+      vertexEnd,
+    );
+    const indices = thresholdMesh.indices
+      .slice(indexStart, indexEnd)
+      .map((index) => index - vertexStart);
+    const assetSurface = {
+      ...surface,
+      meshRange: {
+        vertexStart: 0,
+        vertexCount: range.vertexCount,
+        indexStart: 0,
+        indexCount: range.indexCount,
+      },
+    };
+    const payload = {
+      schema: thresholdMesh.schema,
+      label: `${surface.isoProductLabel} ${surface.label}`,
+      source: thresholdMesh.source,
+      sceneBounds: thresholdMesh.sceneBounds,
+      material: thresholdMesh.material,
+      attributes: {
+        scalarValues,
+        scalar: thresholdMesh.attributes.scalar,
+      },
+      processing: {
+        ...thresholdMesh.processing,
+        thresholdSurfaces: [assetSurface],
+      },
+      vertices,
+      colors,
+      indices,
+    };
+    const relativeFile = `threshold_surfaces/boundaries/${surface.isoProductId}/${surface.id}.json`;
+    await writeFile(
+      path.join(productDir, `${surface.id}.json`),
+      `${JSON.stringify(payload)}\n`,
+      "utf8",
+    );
+    surface.assetFile = relativeFile;
+  }
 }
 
 async function writeProduct(accumulator, options) {
@@ -706,6 +854,7 @@ async function main() {
   const thresholdDir = path.join(options.outputDir, "threshold_surfaces");
   await mkdir(thresholdDir, { recursive: true });
   const thresholdMesh = buildThresholdMesh(accumulators, options);
+  await writeThresholdBoundaryAssets(thresholdMesh, thresholdDir);
   await writeFile(
     path.join(thresholdDir, "mt_threshold_surfaces_mesh_preview.json"),
     `${JSON.stringify(thresholdMesh)}\n`,

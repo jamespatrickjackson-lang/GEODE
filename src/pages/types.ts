@@ -107,6 +107,17 @@ export interface DemoOrientationBlockStyle {
   labelLiftM?: number;
 }
 
+export interface MtSurfaceBoundaryStyle {
+  visible?: boolean;
+  label?: string;
+  color?: string;
+  comparison?: "<=" | ">=";
+  thresholdOhmM?: number;
+  thresholdLog10?: number;
+  opacity?: number;
+  source?: "precomputed" | "live";
+}
+
 // Style fields the alpha actually applies to the live scene. Loaders read
 // these; the editor writes them. Unknown fields pass through untouched
 // so future polish work can add fields without breaking the loader.
@@ -255,6 +266,10 @@ export interface EditableStyle {
   scalarVolumeThresholdMax?: number;
   scalarVolumeMaskVisible?: boolean;
   mtIsosurfaceProductId?: string;
+  mtSurfaceBoundaryMode?: "precomputed-bank" | "live-compute";
+  mtSurfaceBoundaryOrder?: string[];
+  mtSurfaceBoundariesById?: Record<string, MtSurfaceBoundaryStyle>;
+  mtSurfaceBoundaryLegendVisible?: boolean;
   mtThresholdSurfaceVisibility?: Record<string, boolean>;
   mtThresholdSurfaceWireframe?: boolean;
   mtThresholdSurfaceRoughness?: number;

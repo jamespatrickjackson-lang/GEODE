@@ -269,7 +269,16 @@ function validateVolumesAndSurfaces(stats) {
   assert.equal(focusedIso.sourceProductId, "mt-resistivity-forge-focused-volume");
   assert.equal(focusedIso.cropStatus, "presentation-crop");
 
-  assert.equal(thresholdMesh.processing.thresholdSurfaces.length, 6);
+  const expectedPerProductBoundaryCount = 23;
+  assert.equal(
+    thresholdMesh.processing.boundaryBank?.intervalCount,
+    20,
+    "precomputed bank interval count",
+  );
+  assert.equal(
+    thresholdMesh.processing.thresholdSurfaces.length,
+    expectedPerProductBoundaryCount * 2,
+  );
   assertArrayContainsAll(
     thresholdMesh.processing.thresholdSurfaces.map((surface) => surface.id),
     ["conductive-le-10-ohm-m", "conductive-le-30-ohm-m", "resistive-ge-1000-ohm-m"],
@@ -277,6 +286,15 @@ function validateVolumesAndSurfaces(stats) {
   );
   for (const surface of thresholdMesh.processing.thresholdSurfaces) {
     assert.equal(surface.extractionMethod, "mask-aware-marching-cubes");
+    assert.match(
+      surface.assetFile,
+      /^threshold_surfaces\/boundaries\//,
+      `${surface.meshId} lazy boundary asset`,
+    );
+    assertFileExists(
+      manifestRelativePath(VOLUME_MANIFEST_PATH, surface.assetFile),
+      `${surface.meshId} lazy boundary asset`,
+    );
     assert.equal(surface.smoothing?.method, "taubin-laplacian");
     assertGreaterThan(
       surface.smoothing?.smoothedVertexCount,
@@ -308,8 +326,17 @@ function validateVolumesAndSurfaces(stats) {
       thresholdMesh.processing.thresholdSurfaces.filter(
         (surface) => surface.isoProductId === productId,
       ).length,
-      3,
+      expectedPerProductBoundaryCount,
       `${productId} threshold count`,
+    );
+    assert.equal(
+      thresholdMesh.processing.thresholdSurfaces.filter(
+        (surface) =>
+          surface.isoProductId === productId &&
+          surface.boundarySource === "precomputed-bank",
+      ).length,
+      20,
+      `${productId} precomputed bank count`,
     );
   }
   assertGreaterThan(thresholdMesh.vertices.length, 0, "threshold vertices");
