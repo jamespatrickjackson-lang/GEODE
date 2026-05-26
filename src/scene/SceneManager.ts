@@ -2443,6 +2443,15 @@ interface SceneTransitionContext {
   sourceLayers: Map<string, ResolvedLayerRenderState>;
 }
 
+interface SceneSectionStyleTween {
+  fromStyle: EditableStyle;
+  toStyle: EditableStyle;
+  startMs: number;
+  durationMs: number;
+  easing: EasingName;
+  discreteChanged: boolean;
+}
+
 const SCALAR_TRANSITION_STYLE_FIELDS: readonly (keyof EditableStyle)[] = [
   "scalarBlendMin",
   "scalarBlendMax",
@@ -2571,6 +2580,83 @@ function styleFieldsChanged(
   fields: readonly (keyof EditableStyle)[],
 ): boolean {
   return fields.some((field) => styleFieldChanged(fromStyle, toStyle, field));
+}
+
+const SCENE_SECTION_TRANSITION_STYLE_FIELDS: readonly (keyof EditableStyle)[] =
+  [
+    "sceneSectionEnabled",
+    "sceneSectionMode",
+    "sceneSectionTargetScope",
+    "sceneSectionActiveAxis",
+    "sceneSectionPlanes",
+    "sceneSectionWindowEnabled",
+    "sceneSectionWindowActiveAxis",
+    "sceneSectionWindowByAxis",
+    "sceneSectionTargetLayerIds",
+    "sceneSectionTargetProductIds",
+    "sceneSectionHelperVisible",
+    "sceneSectionGroundTraceVisible",
+    "sceneSectionAxesVisible",
+  ];
+
+const SCENE_SECTION_AFFECTED_LAYER_IDS = new Set<string>([
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+  UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
+  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+]);
+
+function sceneSectionDiscreteSignature(style: EditableStyle): string {
+  const planes = style.sceneSectionPlanes ?? {};
+  return JSON.stringify({
+    enabled: style.sceneSectionEnabled === true,
+    mode: style.sceneSectionMode ?? null,
+    targetScope: style.sceneSectionTargetScope ?? null,
+    activeAxis: style.sceneSectionActiveAxis ?? null,
+    windowEnabled: style.sceneSectionWindowEnabled === true,
+    windowActiveAxis: style.sceneSectionWindowActiveAxis ?? null,
+    targetLayerIds: style.sceneSectionTargetLayerIds ?? [],
+    targetProductIds: style.sceneSectionTargetProductIds ?? [],
+    helperVisible: style.sceneSectionHelperVisible !== false,
+    groundTraceVisible: style.sceneSectionGroundTraceVisible === true,
+    axesVisible: style.sceneSectionAxesVisible === true,
+    planes: {
+      x: {
+        enabled: planes.x?.enabled === true,
+        invert: planes.x?.invert === true,
+      },
+      y: {
+        enabled: planes.y?.enabled === true,
+        invert: planes.y?.invert === true,
+      },
+      z: {
+        enabled: planes.z?.enabled === true,
+        invert: planes.z?.invert === true,
+      },
+    },
+  });
+}
+
+function sceneSectionTransitionStyleChanged(
+  fromStyle: EditableStyle,
+  toStyle: EditableStyle,
+): boolean {
+  return styleFieldsChanged(
+    fromStyle,
+    toStyle,
+    SCENE_SECTION_TRANSITION_STYLE_FIELDS,
+  );
+}
+
+function sceneSectionDiscreteStyleChanged(
+  fromStyle: EditableStyle,
+  toStyle: EditableStyle,
+): boolean {
+  return (
+    sceneSectionDiscreteSignature(fromStyle) !==
+    sceneSectionDiscreteSignature(toStyle)
+  );
 }
 
 function forgeDiscreteDataStyleChanged(
@@ -2897,7 +2983,10 @@ export class SceneManager {
   private scalarStyleTweens = new Map<string, ScalarStyleTween>();
   private layerTransitionSnapshots = new Map<string, LayerTransitionSnapshot>();
   private workingAreaFocusTween: WorkingAreaFocusStyleTween | null = null;
+  private sceneSectionStyleTween: SceneSectionStyleTween | null = null;
+  private sceneSectionHelperTransitionOpacity = 1;
   private activeSceneTransitionContext: SceneTransitionContext | null = null;
+  private sceneSectionReapplySuspended = false;
   private materialBaseOpacity = new WeakMap<THREE.Material, number>();
   private currentVisibleLayerIds: ReadonlySet<string> | null = null;
   // Scene overlay registry: one handle per env.sceneOverlays entry.
@@ -5119,6 +5208,123 @@ export class SceneManager {
     material.needsUpdate = true;
   }
 
+  private interpolatedSceneSectionStyle(
+    fromStyle: EditableStyle,
+    toStyle: EditableStyle,
+    amount: number,
+  ): EditableStyle {
+    const t = clamp01(amount);
+    const next: EditableStyle = { ...toStyle };
+    const axes: SceneSectionAxis[] = ["x", "y", "z"];
+    const fromPlanes = fromStyle.sceneSectionPlanes ?? {};
+    const toPlanes = toStyle.sceneSectionPlanes ?? {};
+    const sceneSectionPlanes: NonNullable<EditableStyle["sceneSectionPlanes"]> =
+      { ...toPlanes };
+
+    for (const axis of axes) {
+      const fromPlane = fromPlanes[axis];
+      const toPlane = toPlanes[axis];
+      if (
+        typeof fromPlane?.positionM === "number" &&
+        Number.isFinite(fromPlane.positionM) &&
+        typeof toPlane?.positionM === "number" &&
+        Number.isFinite(toPlane.positionM)
+      ) {
+        sceneSectionPlanes[axis] = {
+          ...toPlane,
+          positionM:
+            fromPlane.positionM + (toPlane.positionM - fromPlane.positionM) * t,
+        };
+      }
+    }
+    next.sceneSectionPlanes = sceneSectionPlanes;
+
+    const fromWindowByAxis = fromStyle.sceneSectionWindowByAxis ?? {};
+    const toWindowByAxis = toStyle.sceneSectionWindowByAxis ?? {};
+    const windowByAxis: NonNullable<EditableStyle["sceneSectionWindowByAxis"]> =
+      { ...toWindowByAxis };
+    for (const axis of axes) {
+      const fromWindow = fromWindowByAxis[axis];
+      const toWindow = toWindowByAxis[axis];
+      if (!toWindow) continue;
+      const nextWindow = { ...toWindow };
+      for (const key of [
+        "minAlongM",
+        "maxAlongM",
+        "bottomElevationM",
+      ] as const) {
+        const from = fromWindow?.[key];
+        const to = toWindow[key];
+        if (
+          typeof from === "number" &&
+          Number.isFinite(from) &&
+          typeof to === "number" &&
+          Number.isFinite(to)
+        ) {
+          nextWindow[key] = from + (to - from) * t;
+        }
+      }
+      windowByAxis[axis] = nextWindow;
+    }
+    next.sceneSectionWindowByAxis = windowByAxis;
+    return next;
+  }
+
+  private currentSceneSectionStyle(nowMs = performance.now()): EditableStyle {
+    const tween = this.sceneSectionStyleTween;
+    if (!tween) return this.styleForLayer(UTAH_FORGE_SCENE_SECTION_LAYER_ID);
+    const t =
+      tween.durationMs <= 0 ? 1 : (nowMs - tween.startMs) / tween.durationMs;
+    if (t >= 1 || tween.discreteChanged) return tween.toStyle;
+    return this.interpolatedSceneSectionStyle(
+      tween.fromStyle,
+      tween.toStyle,
+      easeProgress(t, tween.easing),
+    );
+  }
+
+  private sceneSectionHelperOpacityForTween(
+    tween: SceneSectionStyleTween,
+    eased: number,
+  ): number {
+    const fromActive =
+      tween.fromStyle.sceneSectionEnabled === true &&
+      tween.fromStyle.sceneSectionHelperVisible !== false;
+    const toActive =
+      tween.toStyle.sceneSectionEnabled === true &&
+      tween.toStyle.sceneSectionHelperVisible !== false;
+    if (!fromActive && toActive) return clamp01(eased);
+    if (fromActive && !toActive) return 1 - clamp01(eased);
+    return 1;
+  }
+
+  private applySceneSectionHelperTransitionOpacity(): void {
+    const runtime = this.sceneSectionRuntime;
+    if (!runtime?.group.visible) return;
+    const opacity = clamp01(this.sceneSectionHelperTransitionOpacity);
+    runtime.group.traverse((obj) => {
+      const mat = (obj as { material?: THREE.Material | THREE.Material[] })
+        .material;
+      if (!mat) return;
+      const mats = Array.isArray(mat) ? mat : [mat];
+      for (const material of mats) {
+        if (material.userData?.sceneSectionHelper !== true) continue;
+        const baseOpacity = this.baseOpacityForMaterial(material);
+        material.opacity = baseOpacity * opacity;
+        material.transparent =
+          material.userData?.forceTransparent === true ||
+          material.opacity < 0.999;
+        if (
+          material instanceof THREE.ShaderMaterial &&
+          material.uniforms.uOpacity
+        ) {
+          material.uniforms.uOpacity.value = material.opacity;
+        }
+        material.needsUpdate = true;
+      }
+    });
+  }
+
   private sceneSectionBounds(
     style: EditableStyle,
     layerTargets: Set<string>,
@@ -5761,6 +5967,7 @@ export class SceneManager {
       layerTargets,
       productTargets,
     );
+    this.applySceneSectionHelperTransitionOpacity();
     this.updateMtVolumeCutIsoOverlays(
       this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID),
     );
@@ -5770,9 +5977,8 @@ export class SceneManager {
   }
 
   private reapplySceneSectionPlanes(): void {
-    this.applySceneSectionPlanes(
-      this.styleForLayer(UTAH_FORGE_SCENE_SECTION_LAYER_ID),
-    );
+    if (this.sceneSectionReapplySuspended) return;
+    this.applySceneSectionPlanes(this.currentSceneSectionStyle());
   }
 
   listSceneSectionPlanePickables(): THREE.Object3D[] {
@@ -10870,6 +11076,8 @@ export class SceneManager {
     this.applyContourDisplayStyle(id, style);
     this.applySiteSurfaceGuideStyle(id, style);
     if (id === UTAH_FORGE_SCENE_SECTION_LAYER_ID) {
+      this.sceneSectionStyleTween = null;
+      this.sceneSectionHelperTransitionOpacity = 1;
       this.applySceneSectionPlanes(style);
     } else {
       this.reapplySceneSectionPlanes();
@@ -10884,6 +11092,8 @@ export class SceneManager {
     this.layerTweens.clear();
     this.scalarStyleTweens.clear();
     this.workingAreaFocusTween = null;
+    this.sceneSectionStyleTween = null;
+    this.sceneSectionHelperTransitionOpacity = 1;
     this.clearLayerTransitionSnapshots();
     this.activeSceneTransitionContext = null;
     this.lastEffectiveEnv = environment;
@@ -10907,6 +11117,8 @@ export class SceneManager {
     this.layerTweens.clear();
     this.scalarStyleTweens.clear();
     this.workingAreaFocusTween = null;
+    this.sceneSectionStyleTween = null;
+    this.sceneSectionHelperTransitionOpacity = 1;
     this.clearLayerTransitionSnapshots();
     this.activeSceneTransitionContext = null;
     this.lastEffectiveEnv = environment;
@@ -10940,6 +11152,8 @@ export class SceneManager {
     this.layerTweens.clear();
     this.scalarStyleTweens.clear();
     this.workingAreaFocusTween = null;
+    this.sceneSectionStyleTween = null;
+    this.sceneSectionHelperTransitionOpacity = 1;
     this.clearLayerTransitionSnapshots();
     this.lastEffectiveEnv = environment;
     this.lastEffectivePage = toPage;
@@ -10961,6 +11175,41 @@ export class SceneManager {
       sourceLayers,
     };
 
+    const fromSceneSectionStyle = effectiveStyle(
+      environment,
+      fromPage,
+      UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+    );
+    const targetSceneSectionStyle = effectiveStyle(
+      environment,
+      toPage,
+      UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+    );
+    const sceneSectionStyleChanged = sceneSectionTransitionStyleChanged(
+      fromSceneSectionStyle,
+      targetSceneSectionStyle,
+    );
+    const sceneSectionDiscreteChanged =
+      sceneSectionStyleChanged &&
+      sceneSectionDiscreteStyleChanged(
+        fromSceneSectionStyle,
+        targetSceneSectionStyle,
+      );
+    if (sceneSectionStyleChanged && duration > 0) {
+      this.sceneSectionStyleTween = {
+        fromStyle: fromSceneSectionStyle,
+        toStyle: targetSceneSectionStyle,
+        startMs: now,
+        durationMs: duration,
+        easing,
+        discreteChanged: sceneSectionDiscreteChanged,
+      };
+      this.sceneSectionHelperTransitionOpacity =
+        this.sceneSectionHelperOpacityForTween(this.sceneSectionStyleTween, 0);
+    }
+
+    this.sceneSectionReapplySuspended = true;
+    try {
     for (const id of layerIds) {
       const sourceState = sourceLayers.get(id);
       const fromOpacity = sourceState?.opacity ?? 0;
@@ -10982,9 +11231,16 @@ export class SceneManager {
           targetStyle,
           this.layerSpecFor(id),
         );
+      const shouldCrossfadeSceneSection =
+        !!group &&
+        duration > 0 &&
+        sceneSectionDiscreteChanged &&
+        fromOpacity > 0.001 &&
+        SCENE_SECTION_AFFECTED_LAYER_IDS.has(id);
       const shouldTweenScalarStyle =
         !!group &&
         !shouldCrossfadeDiscreteData &&
+        !shouldCrossfadeSceneSection &&
         scalarStyleDurationMs > 0 &&
         fromOpacity > 0.001 &&
         toOpacity > 0.001 &&
@@ -10997,11 +11253,15 @@ export class SceneManager {
         this.layerHasScalarPreviewData(group) &&
         !toVisible.has(id);
       const transitionSnapshot =
-        shouldCrossfadeDiscreteData || shouldCrossfadeScalarStyle
+        shouldCrossfadeDiscreteData ||
+        shouldCrossfadeScalarStyle ||
+        shouldCrossfadeSceneSection
           ? this.cloneLayerTransitionSnapshot(id, group)
           : null;
       const transitionKind: LayerTransitionKind =
-        shouldCrossfadeDiscreteData || shouldCrossfadeScalarStyle
+        shouldCrossfadeDiscreteData ||
+        shouldCrossfadeScalarStyle ||
+        shouldCrossfadeSceneSection
           ? "discrete-crossfade"
           : shouldTweenScalarStyle
             ? id === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID
@@ -11065,6 +11325,10 @@ export class SceneManager {
         easing,
       });
     }
+    } finally {
+      this.sceneSectionReapplySuspended = false;
+    }
+    this.reapplySceneSectionPlanes();
 
     this.transitionWorkingAreaFocusForPage(
       environment,
@@ -11603,7 +11867,10 @@ export class SceneManager {
    * that startup race so first open matches the saved presentation immediately.
    */
   reapplyCurrentPageState(): void {
-    if (this.activeSceneTransitionContext) return;
+    if (this.activeSceneTransitionContext) {
+      this.reapplySceneSectionPlanes();
+      return;
+    }
     const env = this.lastEnv ?? this.lastEffectiveEnv;
     const page = this.lastEffectivePage;
     if (env) this.applyEnvironment(env);
@@ -11619,9 +11886,34 @@ export class SceneManager {
       this.layerTweens.size === 0 &&
       this.scalarStyleTweens.size === 0 &&
       this.layerTransitionSnapshots.size === 0 &&
+      !this.sceneSectionStyleTween &&
       !this.workingAreaFocusTween
     ) {
       return;
+    }
+    if (this.sceneSectionStyleTween) {
+      const tween = this.sceneSectionStyleTween;
+      const t =
+        tween.durationMs <= 0 ? 1 : (nowMs - tween.startMs) / tween.durationMs;
+      const done = t >= 1;
+      const eased = done ? 1 : easeProgress(t, tween.easing);
+      const style = done
+        ? tween.toStyle
+        : tween.discreteChanged
+          ? tween.toStyle
+          : this.interpolatedSceneSectionStyle(
+              tween.fromStyle,
+              tween.toStyle,
+              eased,
+            );
+      this.sceneSectionHelperTransitionOpacity = done
+        ? 1
+        : this.sceneSectionHelperOpacityForTween(tween, eased);
+      this.applySceneSectionPlanes(style);
+      if (done) {
+        this.sceneSectionStyleTween = null;
+        this.sceneSectionHelperTransitionOpacity = 1;
+      }
     }
     if (this.workingAreaFocusTween) {
       const tween = this.workingAreaFocusTween;
@@ -11678,6 +11970,7 @@ export class SceneManager {
       this.layerTweens.size === 0 &&
       this.scalarStyleTweens.size === 0 &&
       this.layerTransitionSnapshots.size === 0 &&
+      !this.sceneSectionStyleTween &&
       !this.workingAreaFocusTween
     ) {
       this.activeSceneTransitionContext = null;
