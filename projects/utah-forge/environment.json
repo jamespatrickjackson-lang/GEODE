@@ -253,12 +253,12 @@
     },
     "utah-forge-mt-resistivity-volume": {
       "opacity": 0.48,
-      "scalarVolumeProductId": "mt-resistivity-forge-focused-volume",
+      "scalarVolumeProductId": "mt-resistivity-full-extent-volume",
       "scalarVolumeRenderMode": "raymarch",
       "scalarVolumeOpacity": 0.48,
       "scalarVolumeDensity": 0.72,
       "scalarVolumeSampleSteps": 112,
-      "scalarVolumeTransferMode": "balanced",
+      "scalarVolumeTransferMode": "dense",
       "scalarVolumeThresholdMin": -2,
       "scalarVolumeThresholdMax": 4.5,
       "scalarVolumeMaskVisible": true,
@@ -275,7 +275,14 @@
       "scalarContrast": 1.05,
       "scalarLegendVisible": true,
       "affectedByFog": false,
-      "showLabels": false
+      "showLabels": false,
+      "sectionIsoEnabled": true,
+      "sectionIsoBandsVisible": true,
+      "sectionIsoLinesVisible": true,
+      "sectionIsoLevelCount": 32,
+      "sectionIsoSourceOpacity": 0,
+      "sectionIsoMin": -2,
+      "sectionIsoMax": 4.5
     },
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "opacity": 0.86,
@@ -307,17 +314,17 @@
       "showLabels": false
     },
     "utah-forge-mt-resistivity-slices": {
-      "opacity": 0.78,
+      "opacity": 0.65,
       "scalarColorLow": "#2cc9ff",
       "scalarColorMid": "#f8dd6d",
       "scalarColorHigh": "#ff637a",
-      "scalarBlendMin": 1.26,
+      "scalarBlendMin": -2,
       "scalarBlendMax": 3.61,
       "scalarDisplayMin": 1.26,
       "scalarDisplayMax": 3.61,
       "scalarFocusMin": -2,
       "scalarFocusMax": 4.5,
-      "scalarMidpoint": 0.36,
+      "scalarMidpoint": 0.55,
       "scalarContrast": 1.15,
       "scalarEdgeHighlight": 0,
       "scalarEdgeColor": "#ff2a2a",
@@ -325,7 +332,7 @@
       "scalarEdgeAverage": 0.45,
       "scalarNoiseThreshold": 0,
       "scalarDistanceLightStrength": 0,
-      "resistivityHorizontalSlicesVisible": true,
+      "resistivityHorizontalSlicesVisible": false,
       "resistivityVerticalSectionsVisible": true,
       "resistivitySliceVisibility": {
         "horizontal_elev_1500m": true,
@@ -338,7 +345,21 @@
         "vertical_ns_station_centroid": true
       },
       "affectedByFog": false,
-      "showLabels": false
+      "showLabels": false,
+      "sectionIsoEnabled": true,
+      "resistivitySectionTopTraceVisible": false,
+      "sectionIsoLinesVisible": true,
+      "sectionIsoTargetIds": {
+        "utah-forge-mt-resistivity-slices:vertical_ew_station_centroid": true,
+        "utah-forge-mt-resistivity-slices:vertical_ns_station_centroid": true
+      },
+      "resistivitySliceMode": "single",
+      "resistivitySelectedSliceId": "horizontal_elev_1500m",
+      "sectionIsoBandsVisible": true,
+      "sectionIsoLevelCount": 32,
+      "sectionIsoSourceOpacity": 0,
+      "sectionIsoMin": -2,
+      "sectionIsoMax": 4.5
     },
     "utah-forge-phase3-seismic-browser": {
       "opacity": 1,
@@ -408,18 +429,18 @@
       "sectionIsoEnabled": false
     },
     "utah-forge-scene-section-planes": {
-      "sceneSectionEnabled": false,
+      "sceneSectionEnabled": true,
       "sceneSectionMode": "cutaway",
       "sceneSectionTargetScope": "selected-targets",
       "sceneSectionActiveAxis": "x",
       "sceneSectionPlanes": {
         "x": {
-          "enabled": false,
-          "positionM": -3535.1243091098167,
+          "enabled": true,
+          "positionM": -2718.3432159080403,
           "invert": false
         },
         "y": {
-          "enabled": false,
+          "enabled": true,
           "positionM": -10300,
           "invert": false
         },
@@ -455,9 +476,7 @@
     "utah-forge-topo-graticule",
     "utah-forge-site-boundary",
     "utah-forge-phase3-demo-boreholes",
-    "utah-forge-mt-resistivity-full-density",
-    "terrain",
-    "utah-forge-phase3-working-area"
+    "utah-forge-mt-resistivity-volume"
   ],
   "scene": {
     "background": "#383838",
@@ -1882,6 +1901,80 @@
         },
         "terrain": {
           "opacity": 0.45
+        },
+        "utah-forge-mt-resistivity-slices": {
+          "sectionIsoEnabled": true,
+          "resistivityVerticalSectionsVisible": true,
+          "resistivityHorizontalSlicesVisible": false,
+          "resistivitySectionTopTraceVisible": false,
+          "opacity": 0.65,
+          "scalarFocusMin": -2,
+          "scalarBlendMin": -2,
+          "scalarBlendMax": 3.61,
+          "resistivitySliceVisibility": {
+            "horizontal_elev_1500m": true,
+            "horizontal_elev_0m": true,
+            "horizontal_elev_minus2500m": true,
+            "horizontal_elev_minus5000m": true,
+            "horizontal_elev_minus10000m": true,
+            "horizontal_elev_minus25000m": true,
+            "vertical_ew_station_centroid": true,
+            "vertical_ns_station_centroid": true
+          },
+          "sectionIsoLinesVisible": true,
+          "sectionIsoTargetIds": {
+            "utah-forge-mt-resistivity-slices:vertical_ew_station_centroid": true,
+            "utah-forge-mt-resistivity-slices:vertical_ns_station_centroid": true
+          },
+          "scalarMidpoint": 0.55,
+          "resistivitySliceMode": "single",
+          "resistivitySelectedSliceId": "horizontal_elev_1500m",
+          "sectionIsoBandsVisible": true,
+          "sectionIsoLevelCount": 32,
+          "sectionIsoSourceOpacity": 0,
+          "sectionIsoMin": -2,
+          "sectionIsoMax": 4.5
+        },
+        "utah-forge-mt-resistivity-volume": {
+          "scalarVolumeProductId": "mt-resistivity-full-extent-volume",
+          "scalarVolumeRenderMode": "raymarch",
+          "sectionIsoEnabled": true,
+          "sectionIsoBandsVisible": true,
+          "sectionIsoLinesVisible": true,
+          "sectionIsoLevelCount": 32,
+          "sectionIsoSourceOpacity": 0,
+          "sectionIsoMin": -2,
+          "sectionIsoMax": 4.5,
+          "scalarVolumeTransferMode": "dense",
+          "scalarVolumeMaskVisible": true
+        },
+        "utah-forge-scene-section-planes": {
+          "sceneSectionEnabled": true,
+          "sceneSectionMode": "cutaway",
+          "sceneSectionActiveAxis": "x",
+          "sceneSectionTargetScope": "selected-targets",
+          "sceneSectionTargetLayerIds": [
+            "utah-forge-mt-resistivity-volume"
+          ],
+          "sceneSectionHelperVisible": true,
+          "sceneSectionLegendVisible": true,
+          "sceneSectionPlanes": {
+            "x": {
+              "enabled": true,
+              "positionM": -2718.3432159080403,
+              "invert": false
+            },
+            "y": {
+              "enabled": true,
+              "positionM": -10300,
+              "invert": false
+            },
+            "z": {
+              "enabled": false,
+              "positionM": -2200,
+              "invert": false
+            }
+          }
         }
       }
     }
