@@ -498,7 +498,8 @@
     "utah-forge-topo-graticule",
     "utah-forge-site-boundary",
     "utah-forge-phase3-demo-boreholes",
-    "utah-forge-mt-resistivity-volume"
+    "utah-forge-mt-resistivity-volume",
+    "utah-forge-mt-resistivity-full-density"
   ],
   "scene": {
     "background": "#383838",

@@ -4,14 +4,14 @@
   "subtitle": "Proposed / needs_review implementation checkpoint",
   "camera": {
     "position": [
-      1304910.7218927606,
-      1026464.2763902751,
-      1381959.320128334
+      242601.735372106,
+      179446.09695810778,
+      136686.52488937505
     ],
     "target": [
-      117683.41105116872,
-      -88479.90696301646,
-      -74674.76445674823
+      1439,
+      -3466,
+      2008
     ],
     "up": [
       0,
@@ -31,13 +31,13 @@
     "mode": "orbit",
     "orbitEnabled": true,
     "poi": [
-      117683.41105116872,
-      -88479.90696301646,
-      -74674.76445674823
+      1439,
+      -3466,
+      2008
     ],
     "orbitSpeedDegPerSec": 5.8,
-    "orbitRadius": 1837191.6564012945,
-    "orbitHeight": 1182843.5626178428,
+    "orbitRadius": 302682,
+    "orbitHeight": 134679,
     "orbitDirection": -1,
     "zoomFov": 52,
     "zoomEnabled": true,
@@ -65,8 +65,8 @@
       "sceneSectionWindowActiveAxis": "x",
       "sceneSectionWindowByAxis": {
         "x": {
-          "minAlongM": -48559.10562502691,
-          "maxAlongM": -13749.110206885776,
+          "minAlongM": -49109.66796010506,
+          "maxAlongM": -14216.341507179926,
           "bottomElevationM": -14609.101887030438
         },
         "y": {
@@ -78,7 +78,7 @@
       "sceneSectionPlanes": {
         "x": {
           "enabled": true,
-          "positionM": -7731.786191810479,
+          "positionM": -2044.5900498691408,
           "invert": false
         },
         "y": {
@@ -91,12 +91,13 @@
           "positionM": -2200,
           "invert": false
         }
-      }
+      },
+      "sceneSectionHelperVisible": true
     },
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "mtThresholdSurfaceVisibility": {
-        "conductive-le-10-ohm-m": true,
-        "conductive-le-30-ohm-m": true,
+        "conductive-le-10-ohm-m": false,
+        "conductive-le-30-ohm-m": false,
         "resistive-ge-1000-ohm-m": true
       },
       "mtIsosurfaceProductId": "mt-isosurface-full-extent"
@@ -105,12 +106,13 @@
       "color": "#47c299"
     },
     "utah-forge-mt-resistivity-full-density": {
-      "opacity": 0.36,
+      "opacity": 0.05,
       "scalarLegendVisible": true
     }
   },
   "visibilityOverrides": {
-    "utah-forge-mt-resistivity-threshold-surfaces": true,
-    "utah-forge-phase3-seismic-browser": true
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-phase3-seismic-browser": true,
+    "utah-forge-mt-resistivity-full-density": false
   }
 }

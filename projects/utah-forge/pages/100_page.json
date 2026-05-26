@@ -1,0 +1,118 @@
+{
+  "id": "100_page",
+  "title": "Unresolved / Missing Tools duplicate",
+  "subtitle": "Proposed / needs_review implementation checkpoint",
+  "camera": {
+    "position": [
+      -156995.53133410236,
+      -289869.3467479204,
+      -49238.73125794818
+    ],
+    "target": [
+      1439,
+      -3466.0000000000005,
+      2008.0000000000002
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#ff637a",
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": false,
+    "poi": [
+      18771,
+      54698,
+      1403
+    ],
+    "orbitSpeedDegPerSec": 5.8,
+    "orbitRadius": 386808,
+    "orbitHeight": -50642,
+    "orbitDirection": -1,
+    "zoomFov": 52,
+    "zoomEnabled": true,
+    "zoomDeltaFov": -21,
+    "zoomStartMs": 250,
+    "zoomEndMs": 8000,
+    "zoomCurve": "cinematic",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": true
+  },
+  "overlayLayout": {
+    "x": 0.007028045341341882,
+    "y": 0.023374271247273266,
+    "width": 0.15,
+    "height": 0.462439114429907
+  },
+  "layerOverrides": {
+    "utah-forge-scene-section-planes": {
+      "sceneSectionEnabled": true,
+      "sceneSectionActiveAxis": "x",
+      "sceneSectionWindowEnabled": true,
+      "sceneSectionWindowActiveAxis": "x",
+      "sceneSectionWindowByAxis": {
+        "x": {
+          "minAlongM": -49109.66796010506,
+          "maxAlongM": -14216.341507179926,
+          "bottomElevationM": -14609.101887030438
+        },
+        "y": {
+          "minAlongM": -118667.98253963646,
+          "maxAlongM": 34046.04347254154,
+          "bottomElevationM": -25000
+        }
+      },
+      "sceneSectionPlanes": {
+        "x": {
+          "enabled": true,
+          "positionM": -2044.5900498691408,
+          "invert": false
+        },
+        "y": {
+          "enabled": true,
+          "positionM": -14276.695748094688,
+          "invert": false
+        },
+        "z": {
+          "enabled": false,
+          "positionM": -2200,
+          "invert": false
+        }
+      },
+      "sceneSectionHelperVisible": true
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": false,
+        "conductive-le-30-ohm-m": false,
+        "resistive-ge-1000-ohm-m": true
+      },
+      "mtIsosurfaceProductId": "mt-isosurface-full-extent"
+    },
+    "utah-forge-site-boundary": {
+      "color": "#47c299"
+    },
+    "utah-forge-mt-resistivity-full-density": {
+      "opacity": 0.05,
+      "scalarLegendVisible": true
+    }
+  },
+  "visibilityOverrides": {
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
+    "utah-forge-phase3-seismic-browser": true,
+    "utah-forge-mt-resistivity-full-density": false
+  }
+}
