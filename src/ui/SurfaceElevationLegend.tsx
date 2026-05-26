@@ -1,10 +1,14 @@
 import type { CSSProperties } from "react";
 import { useEditor } from "../editor/EditorContext";
+import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import {
   vibrancyLabel,
   vibrancySecondaryLabel,
 } from "../editor/styles";
 import { transparentLegendPanelStyle } from "./legendStyles";
+import { usePageController } from "../pages/PageController";
+import { effectiveVisibility } from "../pages/effective";
+import { resolveTopoMapSettings } from "../topoMap/settings";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const DEFAULT_MIN_M = 1500;
@@ -120,9 +124,30 @@ export function SurfaceElevationLegend({
   stacked?: boolean;
 }) {
   const { state } = useEditor();
+  const { pages, currentIndex, targetIndex } = usePageController();
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
 
-  const terrain = state.environment.scene?.terrain ?? {};
+  const controllerPage = pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
+  const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
+  const selectedPage =
+    !editingEnvironment && targetIndex === null && state.selectedPageId
+      ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
+      : null;
+  const page =
+    targetIndex !== null ? controllerPage : selectedPage ?? controllerPage;
+  const settings = resolveTopoMapSettings({
+    manifest: state.manifest,
+    environment: state.environment,
+    page: editingEnvironment ? null : page,
+  });
+  const terrain = settings.terrain;
+  const visibleLayerIds =
+    !editingEnvironment && page
+      ? effectiveVisibility(state.environment, page)
+      : new Set(state.environment.defaultVisibleLayers);
+  if (settings.surfaceLayerId && !visibleLayerIds.has(settings.surfaceLayerId)) {
+    return null;
+  }
   if (terrain.surfaceElevationEnabled !== true) return null;
   if (terrain.surfaceElevationLegendVisible === false) return null;
 

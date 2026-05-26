@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import type React from "react";
 import {
   patchDemoBoreholeWellStyle,
@@ -56,10 +57,43 @@ interface SiteDetailsPanelProps {
   currentPage: PresentationPage | null;
   setEnvLayerStyle: LayerStyleSetter;
   setPageLayerOverride: PageStyleSetter;
+  activeSignalPrefix?: string;
+  boreholeLayerActive?: boolean;
 }
 
 function controlDisabled(isEnv: boolean, currentPage: PresentationPage | null) {
   return !isEnv && !currentPage;
+}
+
+function AutoOpenDetails({
+  summary,
+  children,
+  openSignal,
+}: {
+  summary: React.ReactNode;
+  children: React.ReactNode;
+  openSignal?: unknown;
+}) {
+  const [open, setOpen] = useState(openSignal !== undefined);
+  const previousOpenSignal = useRef(openSignal);
+  useEffect(() => {
+    if (openSignal === undefined || openSignal === previousOpenSignal.current) {
+      return;
+    }
+    previousOpenSignal.current = openSignal;
+    setOpen(true);
+  }, [openSignal]);
+
+  return (
+    <details
+      style={nestedDetailsStyle}
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
+      <summary style={panelStyles.summary}>{summary}</summary>
+      {children}
+    </details>
+  );
 }
 
 function SiteDetailsBooleanRow({
@@ -239,6 +273,8 @@ export function SiteDetailsPanel({
   currentPage,
   setEnvLayerStyle,
   setPageLayerOverride,
+  activeSignalPrefix,
+  boreholeLayerActive = false,
 }: SiteDetailsPanelProps) {
   const disabled = controlDisabled(isEnv, currentPage);
   const applyPatch = (patch: Partial<EditableStyle>) => {
@@ -277,11 +313,16 @@ export function SiteDetailsPanel({
           />
           {UTAH_FORGE_DEMO_BOREHOLE_WELL_IDS.map((wellId) => {
             const well = resolveDemoBoreholeWellStyle(style, wellId);
+            const wellOpenSignal =
+              boreholeLayerActive && well.visible && well.opacity > 0.001
+                ? `${activeSignalPrefix ?? "site-details"}:${wellId}`
+                : undefined;
             return (
-              <details key={wellId} style={nestedDetailsStyle}>
-                <summary style={panelStyles.summary}>
-                  {WELL_LABELS[wellId] ?? wellId}
-                </summary>
+              <AutoOpenDetails
+                key={wellId}
+                summary={WELL_LABELS[wellId] ?? wellId}
+                openSignal={wellOpenSignal}
+              >
                 <div style={detailsContentStyle}>
                   <SiteDetailsBooleanRow
                     label="Visible"
@@ -484,13 +525,17 @@ export function SiteDetailsPanel({
                     }
                   />
                 </div>
-              </details>
+              </AutoOpenDetails>
             );
           })}
-          <details style={nestedDetailsStyle}>
-            <summary style={panelStyles.summary}>
-              Surface facility / orientation block
-            </summary>
+          <AutoOpenDetails
+            summary="Surface facility / orientation block"
+            openSignal={
+              boreholeLayerActive && block.visible && block.opacity > 0.001
+                ? `${activeSignalPrefix ?? "site-details"}:orientation-block`
+                : undefined
+            }
+          >
             <div style={detailsContentStyle}>
               <SiteDetailsBooleanRow
                 label="Visible"
@@ -621,7 +666,7 @@ export function SiteDetailsPanel({
                 onChange={(labelLiftM) => updateBlock({ labelLiftM })}
               />
             </div>
-          </details>
+          </AutoOpenDetails>
         </>
       ) : null}
     </>

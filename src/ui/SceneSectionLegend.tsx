@@ -84,7 +84,7 @@ function scopeLabel(scope: EditableStyle["sceneSectionTargetScope"]): string {
   return "selected targets";
 }
 
-export function SceneSectionLegend() {
+export function SceneSectionLegend({ stacked = false }: { stacked?: boolean }) {
   const { state, sceneHandle, setEnvLayerStyle, setPageLayerOverride } = useEditor();
   const { pages, currentIndex, targetIndex } = usePageController();
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
@@ -135,7 +135,13 @@ export function SceneSectionLegend() {
   };
 
   return (
-    <aside style={rootStyle} aria-label="Utah FORGE scene section plane legend">
+    <aside
+      style={{
+        ...rootStyle,
+        ...(stacked ? { position: "relative", left: "auto", bottom: "auto" } : {}),
+      }}
+      aria-label="Utah FORGE scene section plane legend"
+    >
       <h2 style={titleStyle}>Scene section planes</h2>
       <div style={subtitleStyle}>
         Cutaway clip - {scopeLabel(style.sceneSectionTargetScope)}

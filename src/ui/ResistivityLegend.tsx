@@ -580,8 +580,90 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
     selectedLayer && visibleScalarLayers.includes(selectedLayer)
       ? selectedLayer
       : visibleScalarLayers[0] ?? null;
-  if (!activeLayer) return null;
   const thresholdLayerVisible = visible.has(MT_THRESHOLD_SURFACES_LAYER_ID);
+  const thresholdStyle = editingEnvironment
+    ? state.environment.layerStyles[MT_THRESHOLD_SURFACES_LAYER_ID] ?? {}
+    : effectiveStyle(state.environment, page, MT_THRESHOLD_SURFACES_LAYER_ID);
+  const thresholdVisibility =
+    typeof thresholdStyle.mtThresholdSurfaceVisibility === "object" &&
+    thresholdStyle.mtThresholdSurfaceVisibility !== null
+      ? (thresholdStyle.mtThresholdSurfaceVisibility as Record<string, boolean>)
+      : {};
+  const gui = state.environment.scene?.gui ?? {};
+  const navigator = gui.navigator ?? {};
+  const inset = navigator.useOverride === true ? navigator.bottom ?? 34 : 34;
+  const setThresholdVisibility = (surfaceId: string, visibleSurface: boolean) => {
+    const patch: Partial<EditableStyle> = {
+      mtThresholdSurfaceVisibility: {
+        ...thresholdVisibility,
+        [surfaceId]: visibleSurface,
+      },
+    };
+    sceneHandle.manager.applyStyle(MT_THRESHOLD_SURFACES_LAYER_ID, {
+      ...thresholdStyle,
+      ...patch,
+    });
+    if (editingEnvironment) {
+      setEnvLayerStyle(MT_THRESHOLD_SURFACES_LAYER_ID, patch);
+    } else {
+      setPageLayerOverride(page.id, MT_THRESHOLD_SURFACES_LAYER_ID, patch);
+    }
+  };
+  const thresholdSurfaceLegend = thresholdLayerVisible ? (
+    <div style={footerStyle}>
+      <div style={{ marginBottom: 5 }}>Threshold surfaces</div>
+      {MT_THRESHOLD_SURFACE_LEGEND_ITEMS.map((item) => (
+        <label
+          key={item.id}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            marginRight: 8,
+            marginTop: 4,
+          }}
+        >
+          <span
+            style={{
+              width: 9,
+              height: 9,
+              borderRadius: 2,
+              background: item.color,
+              boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.35)",
+            }}
+          />
+          <input
+            type="checkbox"
+            data-testid={`resistivity-legend-threshold-${item.id}`}
+            checked={thresholdVisibility[item.id] !== false}
+            onChange={(event) =>
+              setThresholdVisibility(item.id, event.currentTarget.checked)
+            }
+          />{" "}
+          {item.label}
+        </label>
+      ))}
+    </div>
+  ) : null;
+  if (!activeLayer) {
+    if (!thresholdLayerVisible) return null;
+    return (
+      <aside
+        ref={rootRef}
+        style={{
+          ...rootBaseStyle,
+          ...(stacked
+            ? { position: "relative" }
+            : { left: inset, bottom: inset + 34 }),
+        }}
+        aria-label="Utah FORGE MT threshold surface legend"
+      >
+        <h2 style={titleStyle}>MT resistivity</h2>
+        <div style={subtitleStyle}>Threshold surfaces</div>
+        {thresholdSurfaceLegend}
+      </aside>
+    );
+  }
 
   const layerId =
     activeLayer === "volume"
@@ -703,9 +785,6 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
     colorMinPercent + (colorMaxPercent - colorMinPercent) * midpoint;
   const lowOverlap = Math.abs(trimMinPercent - blendMinPercent) < 1.2;
   const highOverlap = Math.abs(trimMaxPercent - blendMaxPercent) < 1.2;
-  const gui = state.environment.scene?.gui ?? {};
-  const navigator = gui.navigator ?? {};
-  const inset = navigator.useOverride === true ? navigator.bottom ?? 34 : 34;
   const setSpectralValue = (handle: SpectralHandle, value: number) => {
     let nextTrimMin = trimMin;
     let nextBlendMin = blendMin;
@@ -886,14 +965,6 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
   const volumeOpacity = clamp(styleNumber(style, "scalarVolumeOpacity", 0.48), 0, 1);
   const volumeDensity = clamp(styleNumber(style, "scalarVolumeDensity", 0.72), 0, 2);
   const volumeSamples = clamp(styleNumber(style, "scalarVolumeSampleSteps", 112), 24, 192);
-  const thresholdStyle = editingEnvironment
-    ? state.environment.layerStyles[MT_THRESHOLD_SURFACES_LAYER_ID] ?? {}
-    : effectiveStyle(state.environment, page, MT_THRESHOLD_SURFACES_LAYER_ID);
-  const thresholdVisibility =
-    typeof thresholdStyle.mtThresholdSurfaceVisibility === "object" &&
-    thresholdStyle.mtThresholdSurfaceVisibility !== null
-      ? (thresholdStyle.mtThresholdSurfaceVisibility as Record<string, boolean>)
-      : {};
   const setVolumePatch = (patch: Partial<EditableStyle>) => {
     sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
     if (editingEnvironment) {
@@ -902,60 +973,6 @@ export function ResistivityLegend({ stacked = false }: { stacked?: boolean }) {
       setPageLayerOverride(page.id, layerId, patch);
     }
   };
-  const setThresholdVisibility = (surfaceId: string, visibleSurface: boolean) => {
-    const patch: Partial<EditableStyle> = {
-      mtThresholdSurfaceVisibility: {
-        ...thresholdVisibility,
-        [surfaceId]: visibleSurface,
-      },
-    };
-    sceneHandle.manager.applyStyle(MT_THRESHOLD_SURFACES_LAYER_ID, {
-      ...thresholdStyle,
-      ...patch,
-    });
-    if (editingEnvironment) {
-      setEnvLayerStyle(MT_THRESHOLD_SURFACES_LAYER_ID, patch);
-    } else {
-      setPageLayerOverride(page.id, MT_THRESHOLD_SURFACES_LAYER_ID, patch);
-    }
-  };
-  const thresholdSurfaceLegend = thresholdLayerVisible ? (
-    <div style={footerStyle}>
-      <div style={{ marginBottom: 5 }}>Threshold surfaces</div>
-      {MT_THRESHOLD_SURFACE_LEGEND_ITEMS.map((item) => (
-        <label
-          key={item.id}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            marginRight: 8,
-            marginTop: 4,
-          }}
-        >
-          <span
-            style={{
-              width: 9,
-              height: 9,
-              borderRadius: 2,
-              background: item.color,
-              boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.35)",
-            }}
-          />
-          <input
-            type="checkbox"
-            data-testid={`resistivity-legend-threshold-${item.id}`}
-            checked={thresholdVisibility[item.id] !== false}
-            onChange={(event) =>
-              setThresholdVisibility(item.id, event.currentTarget.checked)
-            }
-          />{" "}
-          {item.label}
-        </label>
-      ))}
-    </div>
-  ) : null;
-
   return (
     <aside
       ref={rootRef}

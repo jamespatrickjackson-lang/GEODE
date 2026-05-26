@@ -48,6 +48,7 @@ import {
 } from "./styleControls";
 import {
   effectiveStyle,
+  effectiveVisibility,
   isStyleFieldOverridden,
   isVisibilityOverridden,
 } from "../pages/effective";
@@ -74,6 +75,7 @@ import {
   UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
   UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+  UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
   UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
@@ -468,6 +470,7 @@ const UTAH_FORGE_PUBLIC_LAYER_GROUPS = [
       UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
       UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
       UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
+      UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
       UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
       UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
     ],
@@ -527,6 +530,8 @@ function editorLayerLabel(layer: ProjectLayerSpec): string {
     [UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID]:
       "3D MT resistivity full-density model",
     [UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID]: "3D MT top surface",
+    [UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID]:
+      "3D MT top-contact surface",
     [UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID]: "3D MT resistivity preview",
     [UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID]: "2D MT resistivity slices",
     [UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID]: "3D MT resistivity volume",
@@ -578,6 +583,25 @@ const DEFAULT_FOG_DENSITY = 0.00018;
 const FOG_DENSITY_UI_MIN = 0.02;
 const FOG_DENSITY_UI_MAX = 6;
 const FOG_DENSITY_UI_STEP = 0.05;
+
+function layerStyleOpacityForActiveState(
+  layerId: string,
+  style: EditableStyle,
+): number {
+  const genericOpacity =
+    typeof style.opacity === "number" && Number.isFinite(style.opacity)
+      ? style.opacity
+      : 1;
+  if (layerId === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID) {
+    const volumeOpacity =
+      typeof style.scalarVolumeOpacity === "number" &&
+      Number.isFinite(style.scalarVolumeOpacity)
+        ? style.scalarVolumeOpacity
+        : 1;
+    return Math.min(genericOpacity, volumeOpacity);
+  }
+  return genericOpacity;
+}
 
 const LABEL_KIND_OPTIONS = [
   { value: "siteElement", label: "Site element" },
@@ -794,6 +818,10 @@ export function LayerPanel({
       layer.id === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID;
     const isUtahForgeSeismicBrowser =
       layer.id === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID;
+    const hasSpecializedOpacityOwner =
+      isUtahForgeSeismicBrowser ||
+      isUtahForgeMtVolume ||
+      isUtahForgeMtThresholdSurfaces;
     const isTopoMapGraticule = isTopoMapGraticuleLayer(layer);
     const isPublicTerrainSurface = isTopoMapSurfaceLayer(layer);
     const isPublicSurfaceContextLayer = isTopoMapLayer(layer);
@@ -1104,7 +1132,7 @@ export function LayerPanel({
                       />
                     ) : null}
 
-                    {isEnv ? (
+                    {!hasSpecializedOpacityOwner && isEnv ? (
                       <EnvStyleRow
                         label={
                           hasInfillAndOutline ? "Outline opacity" : "Opacity"
@@ -1117,7 +1145,7 @@ export function LayerPanel({
                           setEnvLayerStyle(layer.id, { opacity: parseFloat(v) })
                         }
                       />
-                    ) : currentPage ? (
+                    ) : !hasSpecializedOpacityOwner && currentPage ? (
                       <PageStyleRow
                         label={
                           hasInfillAndOutline ? "Outline opacity" : "Opacity"
@@ -3203,6 +3231,33 @@ export function LayerPanel({
       ? currentPage.visibilityOverrides?.[publicTopoTerrainLayerId] === true
       : publicTopoTerrainEnvVisible
     : publicTopoTerrainEnvVisible;
+  const effectiveVisibleLayerIds = currentPage
+    ? effectiveVisibility(state.environment, currentPage)
+    : new Set(state.environment.defaultVisibleLayers);
+  const activeOpenSignalPrefix = isEnv
+    ? ENVIRONMENT_SENTINEL
+    : (currentPage?.id ?? "no-page");
+  const activeLayerOpenSignal = (layerIds: readonly string[]) => {
+    if (state.projectSlug !== "utah-forge" || section !== "public") {
+      return undefined;
+    }
+    const activeIds = layerIds.filter((layerId) => {
+      if (!effectiveVisibleLayerIds.has(layerId)) return false;
+      const style = currentPage
+        ? effectiveStyle(state.environment, currentPage, layerId)
+        : (state.environment.layerStyles[layerId] ?? {});
+      return layerStyleOpacityForActiveState(layerId, style) > 0.001;
+    });
+    return activeIds.length > 0
+      ? `${activeOpenSignalPrefix}:${activeIds.join(",")}`
+      : undefined;
+  };
+  const sceneSectionOpenSignal =
+    state.projectSlug === "utah-forge" &&
+    section === "public" &&
+    sceneSectionStyle.sceneSectionEnabled === true
+      ? `${activeOpenSignalPrefix}:${UTAH_FORGE_SCENE_SECTION_LAYER_ID}`
+      : undefined;
 
   return (
     <div
@@ -3228,6 +3283,8 @@ export function LayerPanel({
           devSource="src/editor/LayerPanel.tsx:scene-section"
           devNote="Scene section planes are a virtual FORGE Data tool; controls patch a virtual layer style and SceneManager applies it across targeted visible scene objects."
           accentColor={selectedPageAccent}
+          defaultOpen={!!sceneSectionOpenSignal}
+          openSignal={sceneSectionOpenSignal}
         >
           <SceneSectionPlanesContainer
             seismicLayer={utahForgeSeismicLayer}
@@ -3272,6 +3329,9 @@ export function LayerPanel({
               : (state.environment.layerStyles[seismicLayer.id] ?? {})
           : {};
         const seismicCapabilityDisabled = !isEnv && currentPage === null;
+        const groupOpenSignal = activeLayerOpenSignal(
+          layers.map((layer) => layer.id),
+        );
         if (layers.length === 0) return null;
         if (
           state.projectSlug === "utah-forge" &&
@@ -3296,6 +3356,12 @@ export function LayerPanel({
               : (state.environment.layerStyles[
                   UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID
                 ] ?? {});
+          const workingAreaFocusOpenSignal =
+            workingAreaFocusStyle.workingAreaFocusEnabled === true
+              ? `${activeOpenSignalPrefix}:${UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID}`
+              : undefined;
+          const siteDetailsOpenSignal =
+            groupOpenSignal ?? workingAreaFocusOpenSignal;
           return (
             <LayerGroup
               key={group.title}
@@ -3303,6 +3369,8 @@ export function LayerPanel({
               devSource="src/editor/LayerPanel.tsx:site-details"
               devNote="Site Details contains the FORGE site boundary, demo boreholes, and schematic orientation block."
               accentColor={selectedPageAccent}
+              defaultOpen={!!siteDetailsOpenSignal}
+              openSignal={siteDetailsOpenSignal}
             >
               <SiteDetailsPanel
                 boreholeLayer={boreholeLayer}
@@ -3314,6 +3382,11 @@ export function LayerPanel({
                 currentPage={currentPage}
                 setEnvLayerStyle={setEnvLayerStyle}
                 setPageLayerOverride={setPageLayerOverride}
+                activeSignalPrefix={activeOpenSignalPrefix}
+                boreholeLayerActive={
+                  activeLayerOpenSignal([UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID]) !==
+                  undefined
+                }
               />
               <WorkingAreaFocusContainer
                 allLayers={state.manifest.layers}
@@ -3439,6 +3512,8 @@ export function LayerPanel({
             devSource="src/editor/LayerPanel.tsx:880"
             devNote="layerGroupSummaryStyle controls layer-category subheading pills like Topo map tile and Drilling."
             accentColor={selectedPageAccent}
+            defaultOpen={!!groupOpenSignal}
+            openSignal={groupOpenSignal}
           >
             {group.title !== PUBLIC_TOPO_LAYER_GROUP_TITLE ? (
               <LayerGroupFogControl
@@ -3553,6 +3628,12 @@ export function LayerPanel({
           devSource="src/editor/LayerPanel.tsx:880"
           devNote="layerGroupSummaryStyle controls layer-category subheading pills."
           accentColor={selectedPageAccent}
+          defaultOpen={!!activeLayerOpenSignal(
+            otherLayers.map((layer) => layer.id),
+          )}
+          openSignal={activeLayerOpenSignal(
+            otherLayers.map((layer) => layer.id),
+          )}
         >
           {otherLayers.map(renderLayer)}
         </LayerGroup>
@@ -3565,6 +3646,7 @@ function LayerGroup({
   title,
   children,
   defaultOpen = false,
+  openSignal,
   devSource = "src/editor/LayerPanel.tsx:423",
   devNote,
   accentColor,
@@ -3572,11 +3654,20 @@ function LayerGroup({
   title: string;
   children: React.ReactNode;
   defaultOpen?: boolean;
+  openSignal?: unknown;
   devSource?: string;
   devNote?: string;
   accentColor?: string | null;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const previousOpenSignal = useRef(openSignal);
+  useEffect(() => {
+    if (openSignal === undefined || openSignal === previousOpenSignal.current) {
+      return;
+    }
+    previousOpenSignal.current = openSignal;
+    setOpen(true);
+  }, [openSignal]);
   const summaryStyle: React.CSSProperties = accentColor
     ? {
         ...layerGroupSummaryStyle,

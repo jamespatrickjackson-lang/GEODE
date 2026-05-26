@@ -108,6 +108,7 @@ export function EditorChrome({
           }}
         >
           <SeismicVolumeLegend stacked />
+          <SceneSectionLegend stacked />
           <SectionIsoLegend stacked />
           <ResistivityLegend stacked />
           <SurfaceElevationLegend stacked />
@@ -115,12 +116,12 @@ export function EditorChrome({
       ) : (
         <>
           <ResistivityLegend />
+          <SceneSectionLegend />
           <SectionIsoLegend />
           <SeismicVolumeLegend />
           <SurfaceElevationLegend />
         </>
       )}
-      <SceneSectionLegend />
       <SceneLabels sceneHandle={sceneHandle} />
       <PresenterLogo />
       {/* Overlay container is always mounted. In editor mode it's draggable

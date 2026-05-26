@@ -30,10 +30,22 @@ import {
 } from "./styles";
 import type { SceneHandle } from "../scene";
 import type { EditableStyle } from "../pages/types";
+import { effectiveStyle, effectiveVisibility } from "../pages/effective";
 import {
+  UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
   UTAH_FORGE_MT_STATIONS_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+  UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
+  UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
+  UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+  UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
+  UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
 import { topoMapLayerIds } from "../topoMap/settings";
 
@@ -41,6 +53,43 @@ const SIDEBAR_WIDTH = 512;
 const FLOATING_PANEL_MARGIN = 44;
 const BOTTOM_HUD_SAFE_ZONE = 112;
 const HEADER_SAVE_TRASH_ALIGN_OFFSET = 21;
+
+const UTAH_FORGE_DATA_LAYER_IDS = [
+  UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+  UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+  UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
+  UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
+  UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
+  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+  UTAH_FORGE_MT_STATIONS_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+  UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
+  UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
+  "utah-forge-reference-stage",
+] as const;
+
+function styleOpacityForActiveState(
+  layerId: string,
+  style: EditableStyle,
+): number {
+  const genericOpacity =
+    typeof style.opacity === "number" && Number.isFinite(style.opacity)
+      ? style.opacity
+      : 1;
+  if (layerId === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID) {
+    const volumeOpacity =
+      typeof style.scalarVolumeOpacity === "number" &&
+      Number.isFinite(style.scalarVolumeOpacity)
+        ? style.scalarVolumeOpacity
+        : 1;
+    return Math.min(genericOpacity, volumeOpacity);
+  }
+  return genericOpacity;
+}
 
 interface PanelPosition {
   x: number;
@@ -223,6 +272,33 @@ export function EditorRoot({
   const publicDataTitle =
     state.projectSlug === "utah-forge" ? "FORGE Data" : "Public Data";
   const hasPublicTopoMap = topoMapLayerIds(state.manifest.layers).length > 0;
+  const forgeDataVisibleLayerIds = selectedPage
+    ? effectiveVisibility(state.environment, selectedPage)
+    : new Set(state.environment.defaultVisibleLayers);
+  const forgeDataActiveLayerIds =
+    state.projectSlug === "utah-forge"
+      ? UTAH_FORGE_DATA_LAYER_IDS.filter((layerId) => {
+          const style = selectedPage
+            ? effectiveStyle(state.environment, selectedPage, layerId)
+            : (state.environment.layerStyles[layerId] ?? {});
+          if (layerId === UTAH_FORGE_SCENE_SECTION_LAYER_ID) {
+            return style.sceneSectionEnabled === true;
+          }
+          if (layerId === UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID) {
+            return style.workingAreaFocusEnabled === true;
+          }
+          if (!forgeDataVisibleLayerIds.has(layerId)) return false;
+          return styleOpacityForActiveState(layerId, style) > 0.001;
+        })
+      : [];
+  const forgeDataActiveSignal =
+    forgeDataActiveLayerIds.length > 0
+      ? `${selectedPage?.id ?? ENVIRONMENT_SENTINEL}:${forgeDataActiveLayerIds.join(
+          ",",
+        )}:${publicDataOpenSignal}`
+      : publicDataOpenSignal > 0
+        ? `event:${publicDataOpenSignal}`
+        : undefined;
   const selectedPageAccent =
     selectedPageIndex >= 0
       ? pageAccentForPage(
@@ -675,10 +751,9 @@ export function EditorRoot({
           )}
           <CollapsibleSection
             title={publicDataTitle}
-            defaultOpen={isCaseStudyB}
-            openSignal={publicDataOpenSignal}
+            defaultOpen={isCaseStudyB || forgeDataActiveLayerIds.length > 0}
+            openSignal={forgeDataActiveSignal}
             accentColor={selectedPageAccent}
-            closeSignal={selectedPage?.id}
           >
             <LayerPanel section="public" />
           </CollapsibleSection>

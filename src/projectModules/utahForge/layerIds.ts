@@ -22,6 +22,9 @@ export const UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID =
 
 export const UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID = "utah-forge-mt-top-surface";
 
+export const UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID =
+  "utah-forge-mt-top-contact-surface";
+
 export const UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID =
   "utah-forge-mt-resistivity-slices";
 
