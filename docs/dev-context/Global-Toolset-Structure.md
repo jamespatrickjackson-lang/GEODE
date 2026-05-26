@@ -58,6 +58,17 @@ Cubes from the scalar-volume products. Utah FORGE carries both
 artifact; editor/runtime state chooses the active product without changing the
 legacy threshold-surface layer id.
 
+Threshold surfaces use a dedicated solid-surface material path, not the generic
+transparent mesh-preview material. Generated Marching Cubes meshes weld shared
+vertices and record conservative smoothing metadata so runtime-computed normals
+read as continuous surfaces. Diagnostic wireframe remains an editor option, but
+standalone product pages should default to solid, depth-stable shells.
+
+MT presentation pages should isolate active products. Topo, site outlines,
+labels, and demo boreholes may remain as passive orientation context, but active
+MT, seismic, slices, volumes, and isosurfaces should not be co-rendered on one
+page unless a future page is explicitly scoped as a comparison view.
+
 ## Current Editor Structure Checkpoint
 
 The editor sidebar is being aligned to the same global-tool rule. Top-level

@@ -261,6 +261,8 @@ function validateMtProducts() {
     assert.equal(surface.extractionMethod, "mask-aware-marching-cubes");
     assertGreaterThan(surface.marchingCubes?.triangleCount, 0, `${surface.meshId} triangles`);
     assertGreaterThan(surface.marchingCubes?.vertexCount, 0, `${surface.meshId} vertices`);
+    assert.equal(surface.smoothing?.method, "taubin-laplacian");
+    assert.equal(surface.normalPolicy, "runtime-computed-smooth-vertex-normals");
   }
   assertGreaterThan(thresholdMesh.vertices.length, 0, "threshold mesh vertices");
   assertGreaterThan(thresholdMesh.indices.length, 0, "threshold mesh indices");

@@ -33,6 +33,18 @@ export const PHOTO_OVERLAY_PREVIEW_POLICY = {
   polygonOffsetUnits: -16,
 } as const;
 
+export const MT_THRESHOLD_SURFACE_POLICY = {
+  name: "solid-mt-threshold-surface-preview",
+  material: {
+    opacity: 0.86,
+    roughness: 0.64,
+    metalness: 0,
+    emissiveIntensity: 0.08,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+  },
+} as const;
+
 export function createSurfacePreviewMaterial(): THREE.MeshStandardMaterial {
   const material = new THREE.MeshStandardMaterial({
     color: 0xffffff,
@@ -53,6 +65,30 @@ export function createSurfacePreviewMaterial(): THREE.MeshStandardMaterial {
   material.userData.forceTransparent = true;
   material.userData.preserveVertexColors = true;
   material.userData.surfaceRenderPolicy = SURFACE_PREVIEW_DEPTH_POLICY.name;
+  return material;
+}
+
+export function createMtThresholdSurfaceMaterial(): THREE.MeshStandardMaterial {
+  const material = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    vertexColors: true,
+    transparent: true,
+    opacity: MT_THRESHOLD_SURFACE_POLICY.material.opacity,
+    depthTest: true,
+    depthWrite: true,
+    side: THREE.DoubleSide,
+    roughness: MT_THRESHOLD_SURFACE_POLICY.material.roughness,
+    metalness: MT_THRESHOLD_SURFACE_POLICY.material.metalness,
+    emissive: 0xffffff,
+    emissiveIntensity: MT_THRESHOLD_SURFACE_POLICY.material.emissiveIntensity,
+    polygonOffset: true,
+    polygonOffsetFactor:
+      MT_THRESHOLD_SURFACE_POLICY.material.polygonOffsetFactor,
+    polygonOffsetUnits:
+      MT_THRESHOLD_SURFACE_POLICY.material.polygonOffsetUnits,
+  });
+  material.userData.preserveVertexColors = true;
+  material.userData.surfaceRenderPolicy = MT_THRESHOLD_SURFACE_POLICY.name;
   return material;
 }
 

@@ -1,6 +1,6 @@
 {
   "id": "04_mt_high_resistivity_seismic",
-  "title": "MT High-Resistivity + Seismic Context",
+  "title": "MT High-Resistivity Context",
   "camera": {
     "position": [
       -88734.90318739192,
@@ -40,7 +40,7 @@
       "opacity": 0
     },
     "utah-forge-phase3-seismic-browser": {
-      "opacity": 0.42,
+      "opacity": 0,
       "seismicProductId": "gdr-1015-forge3d-velo5d-float-01312018",
       "seismicProductVisibility": {
         "gdr-1015-forge3d-velo5d-float-01312018": true
@@ -61,7 +61,8 @@
       },
       "seismicRemoveBackground": true,
       "seismicCapabilityPresetId": "gdr-1015-forge3d-velo5d-float-01312018-raymarch",
-      "sectionIsoEnabled": false
+      "sectionIsoEnabled": false,
+      "seismicLegendVisible": false
     },
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
@@ -71,9 +72,16 @@
         "resistive-ge-1000-ohm-m": true
       },
       "mtThresholdSurfaceWireframe": false,
-      "opacity": 0.42,
+      "opacity": 0.82,
       "affectedByFog": false,
-      "showLabels": false
+      "showLabels": false,
+      "mtThresholdSurfaceRoughness": 0.64,
+      "mtThresholdSurfaceMetalness": 0,
+      "mtThresholdSurfaceSide": "double",
+      "mtThresholdSurfaceSmoothNormals": true,
+      "mtThresholdSurfaceEmissiveBoost": 0.08,
+      "mtThresholdSurfaceWireframeColor": "#f8f4e8",
+      "mtThresholdSurfaceWireframeOpacity": 0.42
     },
     "utah-forge-phase3-demo-boreholes": {
       "opacity": 0.84,
@@ -116,11 +124,11 @@
     "transitionBlendCurve": "smooth",
     "pathAwareBlend": false
   },
-  "subtitle": "High-resistivity MT selection with Marching Cubes shell and velocity context",
+  "subtitle": "Resistive MT shells with site orientation context",
   "visibilityOverrides": {
     "utah-forge-phase3-working-area": true,
     "utah-forge-phase3-demo-boreholes": true,
-    "utah-forge-phase3-seismic-browser": true,
+    "utah-forge-phase3-seismic-browser": false,
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-slices": false,

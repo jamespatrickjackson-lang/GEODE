@@ -59,7 +59,22 @@
       "thresholdLog10": 1,
       "color": "#2cc9ff",
       "extractionMethod": "mask-aware-marching-cubes",
-      "smoothing": "none",
+      "smoothing": {
+        "method": "taubin-laplacian",
+        "iterations": 2,
+        "lambda": 0.15,
+        "mu": -0.16,
+        "boundaryVertexCount": 239,
+        "smoothedVertexCount": 290
+      },
+      "vertexWelding": {
+        "inputVertexCount": 2373,
+        "weldedVertexCount": 529,
+        "inputTriangleCount": 791,
+        "weldedTriangleCount": 791,
+        "removedDegenerateTriangleCount": 0
+      },
+      "normalPolicy": "runtime-computed-smooth-vertex-normals",
       "decimation": "none",
       "dimensions": [
         80,
@@ -76,13 +91,28 @@
         "skippedMaskedCubeCount": 268652,
         "activeCubeCount": 402,
         "triangleCount": 791,
-        "vertexCount": 2373
+        "vertexCount": 529,
+        "welding": {
+          "inputVertexCount": 2373,
+          "weldedVertexCount": 529,
+          "inputTriangleCount": 791,
+          "weldedTriangleCount": 791,
+          "removedDegenerateTriangleCount": 0
+        },
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 239,
+          "smoothedVertexCount": 290
+        }
       },
       "matchingVoxelCount": 967,
       "meanLog10Resistivity": 0.722919,
       "meshRange": {
         "vertexStart": 0,
-        "vertexCount": 2373,
+        "vertexCount": 529,
         "indexStart": 0,
         "indexCount": 2373
       },
@@ -103,7 +133,22 @@
       "thresholdLog10": 1.477121,
       "color": "#38f0b3",
       "extractionMethod": "mask-aware-marching-cubes",
-      "smoothing": "none",
+      "smoothing": {
+        "method": "taubin-laplacian",
+        "iterations": 2,
+        "lambda": 0.15,
+        "mu": -0.16,
+        "boundaryVertexCount": 425,
+        "smoothedVertexCount": 554
+      },
+      "vertexWelding": {
+        "inputVertexCount": 4497,
+        "weldedVertexCount": 979,
+        "inputTriangleCount": 1499,
+        "weldedTriangleCount": 1499,
+        "removedDegenerateTriangleCount": 0
+      },
+      "normalPolicy": "runtime-computed-smooth-vertex-normals",
       "decimation": "none",
       "dimensions": [
         80,
@@ -120,13 +165,28 @@
         "skippedMaskedCubeCount": 268652,
         "activeCubeCount": 754,
         "triangleCount": 1499,
-        "vertexCount": 4497
+        "vertexCount": 979,
+        "welding": {
+          "inputVertexCount": 4497,
+          "weldedVertexCount": 979,
+          "inputTriangleCount": 1499,
+          "weldedTriangleCount": 1499,
+          "removedDegenerateTriangleCount": 0
+        },
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 425,
+          "smoothedVertexCount": 554
+        }
       },
       "matchingVoxelCount": 3961,
       "meanLog10Resistivity": 1.149358,
       "meshRange": {
-        "vertexStart": 2373,
-        "vertexCount": 4497,
+        "vertexStart": 529,
+        "vertexCount": 979,
         "indexStart": 2373,
         "indexCount": 4497
       },
@@ -147,7 +207,22 @@
       "thresholdLog10": 3,
       "color": "#ff637a",
       "extractionMethod": "mask-aware-marching-cubes",
-      "smoothing": "none",
+      "smoothing": {
+        "method": "taubin-laplacian",
+        "iterations": 2,
+        "lambda": 0.15,
+        "mu": -0.16,
+        "boundaryVertexCount": 408,
+        "smoothedVertexCount": 1312
+      },
+      "vertexWelding": {
+        "inputVertexCount": 9078,
+        "weldedVertexCount": 1720,
+        "inputTriangleCount": 3026,
+        "weldedTriangleCount": 3026,
+        "removedDegenerateTriangleCount": 0
+      },
+      "normalPolicy": "runtime-computed-smooth-vertex-normals",
       "decimation": "none",
       "dimensions": [
         80,
@@ -164,13 +239,28 @@
         "skippedMaskedCubeCount": 268652,
         "activeCubeCount": 1489,
         "triangleCount": 3026,
-        "vertexCount": 9078
+        "vertexCount": 1720,
+        "welding": {
+          "inputVertexCount": 9078,
+          "weldedVertexCount": 1720,
+          "inputTriangleCount": 3026,
+          "weldedTriangleCount": 3026,
+          "removedDegenerateTriangleCount": 0
+        },
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 408,
+          "smoothedVertexCount": 1312
+        }
       },
       "matchingVoxelCount": 2274,
       "meanLog10Resistivity": 3.370173,
       "meshRange": {
-        "vertexStart": 6870,
-        "vertexCount": 9078,
+        "vertexStart": 1508,
+        "vertexCount": 1720,
         "indexStart": 6870,
         "indexCount": 9078
       },
@@ -191,7 +281,22 @@
       "thresholdLog10": 1,
       "color": "#2cc9ff",
       "extractionMethod": "mask-aware-marching-cubes",
-      "smoothing": "none",
+      "smoothing": {
+        "method": "taubin-laplacian",
+        "iterations": 2,
+        "lambda": 0.15,
+        "mu": -0.16,
+        "boundaryVertexCount": 1360,
+        "smoothedVertexCount": 2792
+      },
+      "vertexWelding": {
+        "inputVertexCount": 20217,
+        "weldedVertexCount": 4152,
+        "inputTriangleCount": 6739,
+        "weldedTriangleCount": 6739,
+        "removedDegenerateTriangleCount": 0
+      },
+      "normalPolicy": "runtime-computed-smooth-vertex-normals",
       "decimation": "none",
       "dimensions": [
         96,
@@ -208,13 +313,28 @@
         "skippedMaskedCubeCount": 451629,
         "activeCubeCount": 3406,
         "triangleCount": 6739,
-        "vertexCount": 20217
+        "vertexCount": 4152,
+        "welding": {
+          "inputVertexCount": 20217,
+          "weldedVertexCount": 4152,
+          "inputTriangleCount": 6739,
+          "weldedTriangleCount": 6739,
+          "removedDegenerateTriangleCount": 0
+        },
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 1360,
+          "smoothedVertexCount": 2792
+        }
       },
       "matchingVoxelCount": 5259,
       "meanLog10Resistivity": 0.559173,
       "meshRange": {
-        "vertexStart": 15948,
-        "vertexCount": 20217,
+        "vertexStart": 3228,
+        "vertexCount": 4152,
         "indexStart": 15948,
         "indexCount": 20217
       },
@@ -235,7 +355,22 @@
       "thresholdLog10": 1.477121,
       "color": "#38f0b3",
       "extractionMethod": "mask-aware-marching-cubes",
-      "smoothing": "none",
+      "smoothing": {
+        "method": "taubin-laplacian",
+        "iterations": 2,
+        "lambda": 0.15,
+        "mu": -0.16,
+        "boundaryVertexCount": 1966,
+        "smoothedVertexCount": 4158
+      },
+      "vertexWelding": {
+        "inputVertexCount": 30693,
+        "weldedVertexCount": 6124,
+        "inputTriangleCount": 10231,
+        "weldedTriangleCount": 10231,
+        "removedDegenerateTriangleCount": 0
+      },
+      "normalPolicy": "runtime-computed-smooth-vertex-normals",
       "decimation": "none",
       "dimensions": [
         96,
@@ -252,13 +387,28 @@
         "skippedMaskedCubeCount": 451629,
         "activeCubeCount": 4980,
         "triangleCount": 10231,
-        "vertexCount": 30693
+        "vertexCount": 6124,
+        "welding": {
+          "inputVertexCount": 30693,
+          "weldedVertexCount": 6124,
+          "inputTriangleCount": 10231,
+          "weldedTriangleCount": 10231,
+          "removedDegenerateTriangleCount": 0
+        },
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 1966,
+          "smoothedVertexCount": 4158
+        }
       },
       "matchingVoxelCount": 11619,
       "meanLog10Resistivity": 0.946858,
       "meshRange": {
-        "vertexStart": 36165,
-        "vertexCount": 30693,
+        "vertexStart": 7380,
+        "vertexCount": 6124,
         "indexStart": 36165,
         "indexCount": 30693
       },
@@ -279,7 +429,22 @@
       "thresholdLog10": 3,
       "color": "#ff637a",
       "extractionMethod": "mask-aware-marching-cubes",
-      "smoothing": "none",
+      "smoothing": {
+        "method": "taubin-laplacian",
+        "iterations": 2,
+        "lambda": 0.15,
+        "mu": -0.16,
+        "boundaryVertexCount": 1444,
+        "smoothedVertexCount": 2526
+      },
+      "vertexWelding": {
+        "inputVertexCount": 19164,
+        "weldedVertexCount": 3970,
+        "inputTriangleCount": 6388,
+        "weldedTriangleCount": 6388,
+        "removedDegenerateTriangleCount": 0
+      },
+      "normalPolicy": "runtime-computed-smooth-vertex-normals",
       "decimation": "none",
       "dimensions": [
         96,
@@ -296,13 +461,28 @@
         "skippedMaskedCubeCount": 451629,
         "activeCubeCount": 3154,
         "triangleCount": 6388,
-        "vertexCount": 19164
+        "vertexCount": 3970,
+        "welding": {
+          "inputVertexCount": 19164,
+          "weldedVertexCount": 3970,
+          "inputTriangleCount": 6388,
+          "weldedTriangleCount": 6388,
+          "removedDegenerateTriangleCount": 0
+        },
+        "smoothing": {
+          "method": "taubin-laplacian",
+          "iterations": 2,
+          "lambda": 0.15,
+          "mu": -0.16,
+          "boundaryVertexCount": 1444,
+          "smoothedVertexCount": 2526
+        }
       },
       "matchingVoxelCount": 19087,
       "meanLog10Resistivity": 3.447784,
       "meshRange": {
-        "vertexStart": 66858,
-        "vertexCount": 19164,
+        "vertexStart": 13504,
+        "vertexCount": 3970,
         "indexStart": 66858,
         "indexCount": 19164
       },

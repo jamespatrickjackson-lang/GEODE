@@ -9042,6 +9042,45 @@ export class SceneManager {
         ? (style.mtThresholdSurfaceVisibility as Record<string, boolean>)
         : {};
     const wireframe = style.mtThresholdSurfaceWireframe === true;
+    const opacity = styleNumber(style, "opacity", 0.86, 0, 1);
+    const roughness = styleNumber(
+      style,
+      "mtThresholdSurfaceRoughness",
+      0.64,
+      0,
+      1,
+    );
+    const metalness = styleNumber(
+      style,
+      "mtThresholdSurfaceMetalness",
+      0,
+      0,
+      1,
+    );
+    const smoothNormals = style.mtThresholdSurfaceSmoothNormals !== false;
+    const emissiveBoost = styleNumber(
+      style,
+      "mtThresholdSurfaceEmissiveBoost",
+      0.08,
+      0,
+      1,
+    );
+    const side =
+      style.mtThresholdSurfaceSide === "front"
+        ? THREE.FrontSide
+        : THREE.DoubleSide;
+    const wireframeColor = styleColor(
+      style,
+      "mtThresholdSurfaceWireframeColor",
+      "#f8f4e8",
+    );
+    const wireframeOpacity = styleNumber(
+      style,
+      "mtThresholdSurfaceWireframeOpacity",
+      0.42,
+      0,
+      1,
+    );
     const selectedProductId =
       typeof style.mtIsosurfaceProductId === "string"
         ? style.mtIsosurfaceProductId
@@ -9071,11 +9110,40 @@ export class SceneManager {
           (m as THREE.Material & { wireframe: boolean }).wireframe = wireframe;
         }
         if ("vertexColors" in m) {
-          (m as THREE.Material & { vertexColors: boolean }).vertexColors = true;
+          (m as THREE.Material & { vertexColors: boolean }).vertexColors =
+            !wireframe;
         }
-        m.opacity = styleNumber(style, "opacity", 0.42, 0, 1);
+        if ("roughness" in m) {
+          (m as THREE.Material & { roughness: number }).roughness = roughness;
+        }
+        if ("metalness" in m) {
+          (m as THREE.Material & { metalness: number }).metalness = metalness;
+        }
+        if ("flatShading" in m) {
+          (m as THREE.Material & { flatShading: boolean }).flatShading =
+            !smoothNormals;
+        }
+        if ("emissive" in m) {
+          (m as THREE.Material & { emissive: THREE.Color }).emissive.set(
+            0xffffff,
+          );
+        }
+        if ("emissiveIntensity" in m) {
+          (m as THREE.Material & { emissiveIntensity: number }).emissiveIntensity =
+            wireframe ? 0 : emissiveBoost;
+        }
+        if ("color" in m && wireframe) {
+          (m as THREE.Material & { color: THREE.Color }).color.copy(
+            wireframeColor,
+          );
+        } else if ("color" in m) {
+          (m as THREE.Material & { color: THREE.Color }).color.set(0xffffff);
+        }
+        m.side = side;
+        m.opacity = wireframe ? wireframeOpacity : opacity;
         m.transparent = true;
-        m.depthWrite = false;
+        m.depthWrite = !wireframe;
+        m.depthTest = true;
         m.needsUpdate = true;
       }
     });

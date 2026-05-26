@@ -277,7 +277,21 @@ function validateVolumesAndSurfaces(stats) {
   );
   for (const surface of thresholdMesh.processing.thresholdSurfaces) {
     assert.equal(surface.extractionMethod, "mask-aware-marching-cubes");
-    assert.equal(surface.smoothing, "none");
+    assert.equal(surface.smoothing?.method, "taubin-laplacian");
+    assertGreaterThan(
+      surface.smoothing?.smoothedVertexCount,
+      0,
+      `${surface.meshId} smoothed vertices`,
+    );
+    assertGreaterThan(
+      surface.vertexWelding?.inputVertexCount,
+      surface.vertexWelding?.weldedVertexCount,
+      `${surface.meshId} welded vertices`,
+    );
+    assert.equal(
+      surface.normalPolicy,
+      "runtime-computed-smooth-vertex-normals",
+    );
     assert.equal(surface.decimation, "none");
     assert.equal(surface.candidateBoundaryFaceCount, undefined);
     assert.equal(surface.decimationStride, undefined);

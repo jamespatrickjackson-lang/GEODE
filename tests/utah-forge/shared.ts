@@ -565,6 +565,18 @@ export type MtVolumeSceneState = {
   visibleThresholdSurfaceIds: string[];
   visibleThresholdProductIds: string[];
   thresholdWireframe: boolean | null;
+  thresholdMaterial: {
+    opacity: number | null;
+    transparent: boolean | null;
+    depthWrite: boolean | null;
+    depthTest: boolean | null;
+    roughness: number | null;
+    metalness: number | null;
+    side: number | null;
+    flatShading: boolean | null;
+    emissiveIntensity: number | null;
+    vertexColors: boolean | null;
+  } | null;
   selectedStationId: string | null;
 };
 
@@ -2233,10 +2245,30 @@ export async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState
                       material?:
                         | {
                             wireframe?: boolean;
+                            opacity?: number;
+                            transparent?: boolean;
+                            depthWrite?: boolean;
+                            depthTest?: boolean;
+                            roughness?: number;
+                            metalness?: number;
+                            side?: number;
+                            flatShading?: boolean;
+                            emissiveIntensity?: number;
+                            vertexColors?: boolean;
                             uniforms?: Record<string, { value: unknown }>;
                           }
                         | Array<{
                             wireframe?: boolean;
+                            opacity?: number;
+                            transparent?: boolean;
+                            depthWrite?: boolean;
+                            depthTest?: boolean;
+                            roughness?: number;
+                            metalness?: number;
+                            side?: number;
+                            flatShading?: boolean;
+                            emissiveIntensity?: number;
+                            vertexColors?: boolean;
                             uniforms?: Record<string, { value: unknown }>;
                           }>;
                     }) => void,
@@ -2312,6 +2344,7 @@ export async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState
     const visibleThresholdSurfaceIds: string[] = [];
     const visibleThresholdProductIds = new Set<string>();
     let thresholdWireframe: boolean | null = null;
+    let thresholdMaterial: MtVolumeSceneState["thresholdMaterial"] = null;
     thresholdLayer?.traverse((obj) => {
       if (obj.userData?.mtThresholdSurfacePreview !== true || !obj.visible)
         return;
@@ -2325,6 +2358,39 @@ export async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState
         : obj.material;
       if (typeof material?.wireframe === "boolean") {
         thresholdWireframe = material.wireframe;
+      }
+      if (!thresholdMaterial && material) {
+        thresholdMaterial = {
+          opacity:
+            typeof material.opacity === "number" ? material.opacity : null,
+          transparent:
+            typeof material.transparent === "boolean"
+              ? material.transparent
+              : null,
+          depthWrite:
+            typeof material.depthWrite === "boolean"
+              ? material.depthWrite
+              : null,
+          depthTest:
+            typeof material.depthTest === "boolean" ? material.depthTest : null,
+          roughness:
+            typeof material.roughness === "number" ? material.roughness : null,
+          metalness:
+            typeof material.metalness === "number" ? material.metalness : null,
+          side: typeof material.side === "number" ? material.side : null,
+          flatShading:
+            typeof material.flatShading === "boolean"
+              ? material.flatShading
+              : null,
+          emissiveIntensity:
+            typeof material.emissiveIntensity === "number"
+              ? material.emissiveIntensity
+              : null,
+          vertexColors:
+            typeof material.vertexColors === "boolean"
+              ? material.vertexColors
+              : null,
+        };
       }
     });
     return {
@@ -2341,6 +2407,7 @@ export async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState
       visibleThresholdSurfaceIds,
       visibleThresholdProductIds: Array.from(visibleThresholdProductIds),
       thresholdWireframe,
+      thresholdMaterial,
       selectedStationId:
         typeof stationLayer?.userData.mtStationQcSelectedStationId === "string"
           ? stationLayer.userData.mtStationQcSelectedStationId

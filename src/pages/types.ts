@@ -257,6 +257,13 @@ export interface EditableStyle {
   mtIsosurfaceProductId?: string;
   mtThresholdSurfaceVisibility?: Record<string, boolean>;
   mtThresholdSurfaceWireframe?: boolean;
+  mtThresholdSurfaceRoughness?: number;
+  mtThresholdSurfaceMetalness?: number;
+  mtThresholdSurfaceSide?: "front" | "double";
+  mtThresholdSurfaceSmoothNormals?: boolean;
+  mtThresholdSurfaceEmissiveBoost?: number;
+  mtThresholdSurfaceWireframeColor?: string;
+  mtThresholdSurfaceWireframeOpacity?: number;
   mtStationQcSelectedStationId?: string;
   mtStationQcPanelOpen?: boolean;
   // Utah FORGE Phase 3 seismic browser controls. These select among processed

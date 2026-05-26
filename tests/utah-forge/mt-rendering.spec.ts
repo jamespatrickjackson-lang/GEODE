@@ -720,7 +720,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     );
     if (threshold) threshold.visible = true;
     manager?.applyStyle?.("utah-forge-mt-resistivity-threshold-surfaces", {
-      opacity: 0.44,
+      opacity: 0.86,
       mtIsosurfaceProductId: "mt-isosurface-forge-focused",
       mtThresholdSurfaceVisibility: {
         "conductive-le-10-ohm-m": false,
@@ -728,6 +728,11 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
         "resistive-ge-1000-ohm-m": true,
       },
       mtThresholdSurfaceWireframe: false,
+      mtThresholdSurfaceRoughness: 0.58,
+      mtThresholdSurfaceMetalness: 0.03,
+      mtThresholdSurfaceSide: "double",
+      mtThresholdSurfaceSmoothNormals: true,
+      mtThresholdSurfaceEmissiveBoost: 0.12,
     });
   });
   await expect
@@ -753,6 +758,18 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     maskVisible: 1,
     thresholdMin: -1.25,
     thresholdMax: 3.75,
+  });
+  expect(mtVolumeState.thresholdMaterial).toMatchObject({
+    opacity: 0.86,
+    transparent: true,
+    depthWrite: true,
+    depthTest: true,
+    roughness: 0.58,
+    metalness: 0.03,
+    side: 2,
+    flatShading: false,
+    emissiveIntensity: 0.12,
+    vertexColors: true,
   });
 
   await page.evaluate(() => {
@@ -810,6 +827,8 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
         "resistive-ge-1000-ohm-m": true,
       },
       mtThresholdSurfaceWireframe: true,
+      mtThresholdSurfaceWireframeColor: "#f8f4e8",
+      mtThresholdSurfaceWireframeOpacity: 0.31,
     });
   });
   mtVolumeState = await mtVolumeSceneState(page);
@@ -826,6 +845,13 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     "conductive-le-30-ohm-m",
   );
   expect(mtVolumeState.thresholdWireframe).toBe(true);
+  expect(mtVolumeState.thresholdMaterial).toMatchObject({
+    opacity: 0.31,
+    transparent: true,
+    depthWrite: false,
+    depthTest: true,
+    vertexColors: false,
+  });
 
   await page.evaluate(() => {
     const manager = (

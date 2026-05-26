@@ -43,10 +43,17 @@
         "resistive-ge-1000-ohm-m": false
       },
       "mtThresholdSurfaceWireframe": false,
-      "opacity": 0.56,
+      "opacity": 0.82,
       "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
       "affectedByFog": false,
-      "showLabels": false
+      "showLabels": false,
+      "mtThresholdSurfaceRoughness": 0.64,
+      "mtThresholdSurfaceMetalness": 0,
+      "mtThresholdSurfaceSide": "double",
+      "mtThresholdSurfaceSmoothNormals": true,
+      "mtThresholdSurfaceEmissiveBoost": 0.08,
+      "mtThresholdSurfaceWireframeColor": "#f8f4e8",
+      "mtThresholdSurfaceWireframeOpacity": 0.42
     },
     "utah-forge-phase3-seismic-browser": {
       "seismicProductVisibility": {

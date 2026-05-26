@@ -1,12 +1,12 @@
-# Integrated Seismic + Resistivity Context
+# Site Details Orientation
 
-Status: proposed / needs_review
+Status: demo-orientation / needs_review
 
-This page combines app-native seismic and MT resistivity layers for multi-method review.
+This page isolates site-orientation geometry from the geophysical products.
 
-- MT stations are measured.
-- MT volume, slices, and threshold surfaces are source-derived from inversion products.
-- Seismic products show reflection/velocity context.
-- The goal is comparison, not forced agreement.
+- The Phase 3 working area is an orientation outline.
+- Demo boreholes and the surface facility block are presentation geometry.
+- Site context is shown without co-rendering seismic or MT products.
+- Use this page to orient the viewer before product-specific pages.
 
-Missing / unresolved: TEM, basement surface, interpreted contacts, well alignment, and arbitrary generated products are not yet app-native.
+Missing / unresolved: exact engineered building footprint and survey-grade Phase 3 wellbore geometry remain outside this demo layer.

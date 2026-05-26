@@ -1,6 +1,6 @@
 {
   "id": "06_mt_low_resistivity_seismic",
-  "title": "MT Low-Resistivity + Seismic Context",
+  "title": "MT Low-Resistivity Context",
   "camera": {
     "position": [
       -72734.67301267442,
@@ -37,7 +37,7 @@
       "scalarLegendVisible": false
     },
     "utah-forge-phase3-seismic-browser": {
-      "opacity": 0.42,
+      "opacity": 0,
       "seismicProductId": "gdr-1015-forge3d-velo5d-float-01312018",
       "seismicProductVisibility": {
         "gdr-1015-forge3d-velo5d-float-01312018": true
@@ -58,7 +58,8 @@
       },
       "seismicRemoveBackground": true,
       "seismicCapabilityPresetId": "gdr-1015-forge3d-velo5d-float-01312018-raymarch",
-      "sectionIsoEnabled": false
+      "sectionIsoEnabled": false,
+      "seismicLegendVisible": false
     },
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
@@ -68,9 +69,16 @@
         "resistive-ge-1000-ohm-m": false
       },
       "mtThresholdSurfaceWireframe": false,
-      "opacity": 0.4,
+      "opacity": 0.82,
       "affectedByFog": false,
-      "showLabels": false
+      "showLabels": false,
+      "mtThresholdSurfaceRoughness": 0.64,
+      "mtThresholdSurfaceMetalness": 0,
+      "mtThresholdSurfaceSide": "double",
+      "mtThresholdSurfaceSmoothNormals": true,
+      "mtThresholdSurfaceEmissiveBoost": 0.08,
+      "mtThresholdSurfaceWireframeColor": "#f8f4e8",
+      "mtThresholdSurfaceWireframeOpacity": 0.42
     },
     "utah-forge-phase3-demo-boreholes": {
       "opacity": 0.84,
@@ -117,11 +125,11 @@
     "terrain": false,
     "utah-forge-phase3-working-area": true,
     "utah-forge-phase3-demo-boreholes": true,
-    "utah-forge-phase3-seismic-browser": true,
+    "utah-forge-phase3-seismic-browser": false,
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-slices": false,
     "utah-forge-mt-top-surface": false
   },
-  "subtitle": "Conductive MT shells with velocity context"
+  "subtitle": "Conductive MT shells with site orientation context"
 }

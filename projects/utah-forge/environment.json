@@ -278,7 +278,7 @@
       "showLabels": false
     },
     "utah-forge-mt-resistivity-threshold-surfaces": {
-      "opacity": 0.42,
+      "opacity": 0.86,
       "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
       "mtThresholdSurfaceVisibility": {
         "conductive-le-10-ohm-m": false,
@@ -287,7 +287,14 @@
       },
       "mtThresholdSurfaceWireframe": false,
       "affectedByFog": false,
-      "showLabels": false
+      "showLabels": false,
+      "mtThresholdSurfaceRoughness": 0.64,
+      "mtThresholdSurfaceMetalness": 0,
+      "mtThresholdSurfaceSide": "double",
+      "mtThresholdSurfaceSmoothNormals": true,
+      "mtThresholdSurfaceEmissiveBoost": 0.08,
+      "mtThresholdSurfaceWireframeColor": "#f8f4e8",
+      "mtThresholdSurfaceWireframeOpacity": 0.42
     },
     "utah-forge-mt-top-surface": {
       "color": "#ffffff",

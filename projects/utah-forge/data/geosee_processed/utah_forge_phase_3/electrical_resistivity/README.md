@@ -116,7 +116,7 @@ Current facts:
 - display value: `log10(resistivity_ohm_m)`
 - slice preview: six horizontal elevation slices and two vertical station-centroid sections
 - scalar volumes: one full-extent context product and one explicitly focused presentation crop
-- threshold surfaces: six fixed iso-resistivity communication meshes: three full-extent and three FORGE-focused mask-aware Marching Cubes surfaces
+- threshold surfaces: six fixed iso-resistivity communication meshes: three full-extent and three FORGE-focused mask-aware Marching Cubes surfaces with welded vertices, conservative smoothing metadata, and runtime-computed smooth normals
 - crop applied: false
 - vertical exaggeration: 1.0
 - classification: source-derived inversion model
@@ -172,7 +172,8 @@ utah-forge-mt-resistivity-threshold-surfaces
 - The slice preview is an authored display product, not a live full-volume renderer.
 - The full-density layer is a tiled scalar point-cloud renderer, not a voxel/volume renderer.
 - The full-extent scalar volume and full-extent isosurfaces are source-derived context; the FORGE-focused scalar volume and focused isosurfaces are presentation crops and must be labeled as such.
-- Current threshold surfaces are mask-aware Marching Cubes communication meshes, not interpreted faults, contacts, targets, ore bodies, or resource estimates.
+- Current threshold surfaces are mask-aware Marching Cubes communication meshes, rendered as solid presentation surfaces by default; diagnostic wireframe is an editor/debug mode, not the normal presentation style.
+- Threshold surfaces are not interpreted faults, contacts, targets, ore bodies, or resource estimates.
 - The retained preview-derived ground cap is generated only from the existing 90,000-point MT preview and remains under `resistivity_model/top_surface/` as support/history data.
 - The UI-facing `utah-forge-mt-top-surface` layer reads the observed top-envelope artifact, not the retained preview cap or support-grid top-contact surface.
 - The observed top-envelope surface is triangulated directly from observed top-most full-density MT cell-center points.

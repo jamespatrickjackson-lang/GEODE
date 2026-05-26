@@ -404,6 +404,13 @@ const MT_THRESHOLD_SURFACE_FIELDS = [
   "mtIsosurfaceProductId",
   "mtThresholdSurfaceVisibility",
   "mtThresholdSurfaceWireframe",
+  "mtThresholdSurfaceRoughness",
+  "mtThresholdSurfaceMetalness",
+  "mtThresholdSurfaceSide",
+  "mtThresholdSurfaceSmoothNormals",
+  "mtThresholdSurfaceEmissiveBoost",
+  "mtThresholdSurfaceWireframeColor",
+  "mtThresholdSurfaceWireframeOpacity",
   "opacity",
 ] as const satisfies readonly (keyof EditableStyle)[];
 const SEISMIC_BROWSER_FIELDS = [
@@ -5861,7 +5868,39 @@ function mtThresholdSurfacePatchFromStyle(
       "mtThresholdSurfaceWireframe",
       false,
     ),
-    opacity: styleNumber(style, "opacity", 0.42),
+    mtThresholdSurfaceRoughness: styleNumber(
+      style,
+      "mtThresholdSurfaceRoughness",
+      0.64,
+    ),
+    mtThresholdSurfaceMetalness: styleNumber(
+      style,
+      "mtThresholdSurfaceMetalness",
+      0,
+    ),
+    mtThresholdSurfaceSide:
+      style.mtThresholdSurfaceSide === "front" ? "front" : "double",
+    mtThresholdSurfaceSmoothNormals: styleBoolean(
+      style,
+      "mtThresholdSurfaceSmoothNormals",
+      true,
+    ),
+    mtThresholdSurfaceEmissiveBoost: styleNumber(
+      style,
+      "mtThresholdSurfaceEmissiveBoost",
+      0.08,
+    ),
+    mtThresholdSurfaceWireframeColor: styleString(
+      style,
+      "mtThresholdSurfaceWireframeColor",
+      "#f8f4e8",
+    ),
+    mtThresholdSurfaceWireframeOpacity: styleNumber(
+      style,
+      "mtThresholdSurfaceWireframeOpacity",
+      0.42,
+    ),
+    opacity: styleNumber(style, "opacity", 0.86),
   };
 }
 
@@ -9579,8 +9618,39 @@ function MtThresholdSurfaceControls({
     style.mtThresholdSurfaceVisibility !== null
       ? (style.mtThresholdSurfaceVisibility as Record<string, boolean>)
       : {};
-  const opacity = Math.max(0, Math.min(1, styleNumber(style, "opacity", 0.42)));
+  const opacity = Math.max(0, Math.min(1, styleNumber(style, "opacity", 0.86)));
   const wireframe = styleBoolean(style, "mtThresholdSurfaceWireframe", false);
+  const roughness = Math.max(
+    0,
+    Math.min(1, styleNumber(style, "mtThresholdSurfaceRoughness", 0.64)),
+  );
+  const metalness = Math.max(
+    0,
+    Math.min(1, styleNumber(style, "mtThresholdSurfaceMetalness", 0)),
+  );
+  const emissiveBoost = Math.max(
+    0,
+    Math.min(1, styleNumber(style, "mtThresholdSurfaceEmissiveBoost", 0.08)),
+  );
+  const wireframeOpacity = Math.max(
+    0,
+    Math.min(
+      1,
+      styleNumber(style, "mtThresholdSurfaceWireframeOpacity", 0.42),
+    ),
+  );
+  const surfaceSide =
+    style.mtThresholdSurfaceSide === "front" ? "front" : "double";
+  const smoothNormals = styleBoolean(
+    style,
+    "mtThresholdSurfaceSmoothNormals",
+    true,
+  );
+  const wireframeColor = styleString(
+    style,
+    "mtThresholdSurfaceWireframeColor",
+    "#f8f4e8",
+  );
   const controlOpacity = disabled ? 0.4 : 1;
   const commit = (patch: Partial<EditableStyle>) => {
     if (isEnv) {
@@ -9652,13 +9722,37 @@ function MtThresholdSurfaceControls({
           </label>
         ))}
         <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-          <span style={nestedFieldLabelStyle}>Wireframe</span>
+          <span style={nestedFieldLabelStyle}>Diagnostic wireframe</span>
           <input
             type="checkbox"
             checked={wireframe}
             disabled={disabled}
             onChange={(e) =>
               commit({ mtThresholdSurfaceWireframe: e.target.checked })
+            }
+            style={{ opacity: controlOpacity }}
+          />
+          <span style={{ flex: 1 }} />
+        </label>
+        <EnvSelectRow<"double" | "front">
+          label="Surface side"
+          value={surfaceSide}
+          testId="mt-threshold-side"
+          options={[
+            { value: "double", label: "Double-sided" },
+            { value: "front", label: "Front only" },
+          ]}
+          disabled={disabled}
+          onChange={(value) => commit({ mtThresholdSurfaceSide: value })}
+        />
+        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+          <span style={nestedFieldLabelStyle}>Smooth normals</span>
+          <input
+            type="checkbox"
+            checked={smoothNormals}
+            disabled={disabled}
+            onChange={(e) =>
+              commit({ mtThresholdSurfaceSmoothNormals: e.target.checked })
             }
             style={{ opacity: controlOpacity }}
           />
@@ -9684,6 +9778,119 @@ function MtThresholdSurfaceControls({
             }
           />
           <span style={sliderNumberReadoutStyle}>{opacity.toFixed(2)}</span>
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Roughness</label>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={roughness}
+            disabled={disabled}
+            onChange={(e) =>
+              commit({
+                mtThresholdSurfaceRoughness: parseFloat(e.target.value),
+              })
+            }
+            style={
+              {
+                flex: 1,
+                opacity: controlOpacity,
+                "--editor-slider-fill": `${roughness * 100}%`,
+              } as React.CSSProperties
+            }
+          />
+          <span style={sliderNumberReadoutStyle}>{roughness.toFixed(2)}</span>
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Metalness</label>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={metalness}
+            disabled={disabled}
+            onChange={(e) =>
+              commit({
+                mtThresholdSurfaceMetalness: parseFloat(e.target.value),
+              })
+            }
+            style={
+              {
+                flex: 1,
+                opacity: controlOpacity,
+                "--editor-slider-fill": `${metalness * 100}%`,
+              } as React.CSSProperties
+            }
+          />
+          <span style={sliderNumberReadoutStyle}>{metalness.toFixed(2)}</span>
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Light boost</label>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={emissiveBoost}
+            disabled={disabled}
+            onChange={(e) =>
+              commit({
+                mtThresholdSurfaceEmissiveBoost: parseFloat(e.target.value),
+              })
+            }
+            style={
+              {
+                flex: 1,
+                opacity: controlOpacity,
+                "--editor-slider-fill": `${emissiveBoost * 100}%`,
+              } as React.CSSProperties
+            }
+          />
+          <span style={sliderNumberReadoutStyle}>
+            {emissiveBoost.toFixed(2)}
+          </span>
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Wire color</label>
+          <input
+            type="color"
+            value={wireframeColor}
+            disabled={disabled}
+            onChange={(e) =>
+              commit({ mtThresholdSurfaceWireframeColor: e.target.value })
+            }
+            style={{ opacity: controlOpacity }}
+          />
+          <span style={{ flex: 1 }} />
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Wire opacity</label>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={wireframeOpacity}
+            disabled={disabled}
+            onChange={(e) =>
+              commit({
+                mtThresholdSurfaceWireframeOpacity: parseFloat(e.target.value),
+              })
+            }
+            style={
+              {
+                flex: 1,
+                opacity: controlOpacity,
+                "--editor-slider-fill": `${wireframeOpacity * 100}%`,
+              } as React.CSSProperties
+            }
+          />
+          <span style={sliderNumberReadoutStyle}>
+            {wireframeOpacity.toFixed(2)}
+          </span>
         </div>
       </div>
     </details>

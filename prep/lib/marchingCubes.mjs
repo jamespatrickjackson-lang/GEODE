@@ -62,6 +62,141 @@ function transformedValue(value, comparison) {
   return comparison === ">=" ? -value : value;
 }
 
+function weldMeshVertices({ vertices, colors, scalarValues, indices }) {
+  const keyToIndex = new Map();
+  const remap = new Array(vertices.length / 3);
+  const weldedVertices = [];
+  const weldedColors = [];
+  const weldedScalarValues = [];
+
+  for (let i = 0; i < vertices.length / 3; i += 1) {
+    const x = vertices[i * 3];
+    const y = vertices[i * 3 + 1];
+    const z = vertices[i * 3 + 2];
+    const key = `${x}|${y}|${z}`;
+    let nextIndex = keyToIndex.get(key);
+    if (nextIndex === undefined) {
+      nextIndex = weldedVertices.length / 3;
+      keyToIndex.set(key, nextIndex);
+      weldedVertices.push(x, y, z);
+      weldedColors.push(colors[i * 3], colors[i * 3 + 1], colors[i * 3 + 2]);
+      weldedScalarValues.push(scalarValues[i]);
+    }
+    remap[i] = nextIndex;
+  }
+
+  const weldedIndices = [];
+  let removedDegenerateTriangleCount = 0;
+  for (let i = 0; i < indices.length; i += 3) {
+    const a = remap[indices[i]];
+    const b = remap[indices[i + 1]];
+    const c = remap[indices[i + 2]];
+    if (a === b || b === c || a === c) {
+      removedDegenerateTriangleCount += 1;
+      continue;
+    }
+    weldedIndices.push(a, b, c);
+  }
+
+  return {
+    vertices: weldedVertices,
+    colors: weldedColors,
+    scalarValues: weldedScalarValues,
+    indices: weldedIndices,
+    stats: {
+      inputVertexCount: vertices.length / 3,
+      weldedVertexCount: weldedVertices.length / 3,
+      inputTriangleCount: indices.length / 3,
+      weldedTriangleCount: weldedIndices.length / 3,
+      removedDegenerateTriangleCount,
+    },
+  };
+}
+
+function edgeKey(a, b) {
+  return a < b ? `${a}:${b}` : `${b}:${a}`;
+}
+
+function smoothMeshVertices({ vertices, indices, round }) {
+  const vertexCount = vertices.length / 3;
+  const adjacency = Array.from({ length: vertexCount }, () => new Set());
+  const edgeUseCounts = new Map();
+
+  for (let i = 0; i < indices.length; i += 3) {
+    const a = indices[i];
+    const b = indices[i + 1];
+    const c = indices[i + 2];
+    adjacency[a].add(b);
+    adjacency[a].add(c);
+    adjacency[b].add(a);
+    adjacency[b].add(c);
+    adjacency[c].add(a);
+    adjacency[c].add(b);
+    for (const [u, v] of [
+      [a, b],
+      [b, c],
+      [c, a],
+    ]) {
+      const key = edgeKey(u, v);
+      edgeUseCounts.set(key, (edgeUseCounts.get(key) ?? 0) + 1);
+    }
+  }
+
+  const boundaryVertices = new Set();
+  for (const [key, count] of edgeUseCounts) {
+    if (count !== 1) continue;
+    const [a, b] = key.split(":").map(Number);
+    boundaryVertices.add(a);
+    boundaryVertices.add(b);
+  }
+
+  const lambda = 0.15;
+  const mu = -0.16;
+  const iterations = 2;
+  let current = vertices.slice();
+  const passFactors = Array.from({ length: iterations }, () => [
+    lambda,
+    mu,
+  ]).flat();
+
+  for (const factor of passFactors) {
+    const next = current.slice();
+    for (let i = 0; i < vertexCount; i += 1) {
+      if (boundaryVertices.has(i) || adjacency[i].size === 0) continue;
+      let avgX = 0;
+      let avgY = 0;
+      let avgZ = 0;
+      for (const neighbor of adjacency[i]) {
+        avgX += current[neighbor * 3];
+        avgY += current[neighbor * 3 + 1];
+        avgZ += current[neighbor * 3 + 2];
+      }
+      const count = adjacency[i].size;
+      avgX /= count;
+      avgY /= count;
+      avgZ /= count;
+      next[i * 3] = current[i * 3] + (avgX - current[i * 3]) * factor;
+      next[i * 3 + 1] =
+        current[i * 3 + 1] + (avgY - current[i * 3 + 1]) * factor;
+      next[i * 3 + 2] =
+        current[i * 3 + 2] + (avgZ - current[i * 3 + 2]) * factor;
+    }
+    current = next;
+  }
+
+  return {
+    vertices: current.map((value) => round(value, 2)),
+    stats: {
+      method: "taubin-laplacian",
+      iterations,
+      lambda,
+      mu,
+      boundaryVertexCount: boundaryVertices.size,
+      smoothedVertexCount: vertexCount - boundaryVertices.size,
+    },
+  };
+}
+
 export function extractMaskAwareMarchingCubes({
   values,
   mask,
@@ -158,18 +293,26 @@ export function extractMaskAwareMarchingCubes({
     }
   }
 
+  const welded = weldMeshVertices({ vertices, colors, scalarValues, indices });
+  const smoothed = smoothMeshVertices({
+    vertices: welded.vertices,
+    indices: welded.indices,
+    round,
+  });
+
   return {
-    vertices,
-    colors,
-    scalarValues,
-    indices,
+    vertices: smoothed.vertices,
+    colors: welded.colors,
+    scalarValues: welded.scalarValues,
+    indices: welded.indices,
     stats: {
       visitedCubeCount,
       skippedMaskedCubeCount,
       activeCubeCount,
-      triangleCount: indices.length / 3,
-      vertexCount: vertices.length / 3,
+      triangleCount: welded.indices.length / 3,
+      vertexCount: welded.vertices.length / 3,
+      welding: welded.stats,
+      smoothing: smoothed.stats,
     },
   };
 }
-

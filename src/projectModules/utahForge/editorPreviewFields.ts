@@ -86,6 +86,13 @@ const MT_THRESHOLD_PREVIEW_FIELDS = [
   "mtIsosurfaceProductId",
   "mtThresholdSurfaceVisibility",
   "mtThresholdSurfaceWireframe",
+  "mtThresholdSurfaceRoughness",
+  "mtThresholdSurfaceMetalness",
+  "mtThresholdSurfaceSide",
+  "mtThresholdSurfaceSmoothNormals",
+  "mtThresholdSurfaceEmissiveBoost",
+  "mtThresholdSurfaceWireframeColor",
+  "mtThresholdSurfaceWireframeOpacity",
   "opacity",
 ] as const;
 

@@ -2,6 +2,7 @@ import * as THREE from "three";
 import {
   SURFACE_RENDER_ORDER,
   SURFACE_PREVIEW_DEPTH_POLICY,
+  createMtThresholdSurfaceMaterial,
   createSurfaceDepthOccluderMaterial,
   createSurfacePreviewMaterial,
 } from "./surfaceRenderPolicy";
@@ -134,8 +135,12 @@ function createPreviewMesh(
   payload: MeshPreviewPayload,
   renderOrder: number,
   label: string,
+  materialKind: "surface-preview" | "mt-threshold-surface" = "surface-preview",
 ): THREE.Mesh {
-  const material = createSurfacePreviewMaterial();
+  const material =
+    materialKind === "mt-threshold-surface"
+      ? createMtThresholdSurfaceMaterial()
+      : createSurfacePreviewMaterial();
   applyMaterialSide(material, payload.material?.side);
   if (payload.material?.flatShading === true) {
     material.flatShading = true;
@@ -355,6 +360,9 @@ export async function loadMeshPreview(
         payload,
         options.renderOrder ?? SURFACE_RENDER_ORDER.meshPreview,
         label,
+        thresholdSurfaces.length > 0
+          ? "mt-threshold-surface"
+          : "surface-preview",
       );
       if (thresholdSurfaces.length > 0) {
         mesh.userData.mtThresholdSurfacePreview = true;

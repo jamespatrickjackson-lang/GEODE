@@ -1,11 +1,11 @@
-# Interpreted Basement / Top-of-Granite Surface
+# MT Top-Contact Surface
 
-Status: proposed / needs_review
+Status: source-derived visualization / needs_review
 
-This page is a seismic context page for the requested basement/top-of-granite product.
+This page isolates the source-derived top contact of the full-density MT model.
 
-- Target product: interpreted basement/top-of-granite surface tied to seismic and well 58-32.
-- Do not manually place a surface from a PNG or report screenshot.
-- Use an app dataset if available; otherwise keep it explicitly report-derived.
+- The surface comes from MT cell-center model support, not interpreted geology.
+- It is not public topo, a DEM, a fault, or a basement interpretation.
+- Site details are retained only for orientation.
 
-Missing / unresolved: no gridded basement surface, interpreted contact overlay, well tie, or contour-label layer is confirmed.
+Missing / unresolved: a qualified interpreted basement/top-of-granite product is still not confirmed as an app-native dataset.

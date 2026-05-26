@@ -6,6 +6,11 @@ function layerOverride(pageId, layerId) {
   return page.layerOverrides?.[layerId];
 }
 
+function pageVisibility(pageId, layerId) {
+  const page = readJson(`projects/utah-forge/pages/${pageId}.json`);
+  return page.visibilityOverrides?.[layerId];
+}
+
 function validateEnvironment() {
   const environment = readJson("projects/utah-forge/environment.json");
   assert.equal(environment.renderPreset, "user-3");
@@ -82,6 +87,20 @@ function validateEnvironment() {
       scalarVolumeMaskVisible: true,
     },
     "MT volume style",
+  );
+
+  assertSubset(
+    environment.layerStyles["utah-forge-mt-resistivity-threshold-surfaces"],
+    {
+      opacity: 0.86,
+      mtThresholdSurfaceRoughness: 0.64,
+      mtThresholdSurfaceMetalness: 0,
+      mtThresholdSurfaceSide: "double",
+      mtThresholdSurfaceSmoothNormals: true,
+      mtThresholdSurfaceEmissiveBoost: 0.08,
+      mtThresholdSurfaceWireframe: false,
+    },
+    "MT threshold surface style",
   );
 
   const fullDensityStyle =
@@ -184,20 +203,18 @@ function validatePages() {
     "04_mt_high_resistivity_seismic",
     "06_mt_low_resistivity_seismic",
   ]) {
+    assert.equal(
+      pageVisibility(pageId, "utah-forge-phase3-seismic-browser"),
+      false,
+      `${pageId} seismic hidden`,
+    );
     assertSubset(
       layerOverride(pageId, "utah-forge-phase3-seismic-browser"),
       {
-        opacity: 0.42,
-        seismicProductId: "gdr-1015-forge3d-velo5d-float-01312018",
-        seismicProductVisibility: {
-          "gdr-1015-forge3d-velo5d-float-01312018": true,
-        },
-        seismicRenderMode: "raymarch",
-        seismicSliceAxis: "inline",
-        seismicSliceThroughVolume: false,
-        seismicColormap: "velocity",
+        opacity: 0,
+        seismicLegendVisible: false,
       },
-      `${pageId} seismic override`,
+      `${pageId} seismic disabled override`,
     );
   }
 
@@ -252,26 +269,48 @@ function validatePages() {
     "52 full-extent isosurface override",
   );
   assertSubset(
-    layerOverride("53_mt_product_stack_demo", "utah-forge-mt-resistivity-volume"),
+    layerOverride("53_mt_product_stack_demo", "utah-forge-mt-top-surface"),
     {
-      scalarVolumeProductId: "mt-resistivity-forge-focused-volume",
-      scalarVolumeTransferMode: "balanced",
-      scalarLegendVisible: true,
+      opacity: 0.64,
+      meshWireframe: false,
+      meshRoughness: 0.7,
     },
-    "53 product stack volume override",
+    "53 top envelope override",
   );
-  assertSubset(
-    layerOverride(
-      "53_mt_product_stack_demo",
-      "utah-forge-mt-resistivity-slices",
-    ),
-    {
-      resistivityHorizontalSlicesVisible: true,
-      resistivityVerticalSectionsVisible: true,
-      scalarLegendVisible: true,
-    },
-    "53 product stack slice override",
-  );
+
+  const mtLayers = [
+    "utah-forge-mt-stations",
+    "utah-forge-mt-resistivity-preview",
+    "utah-forge-mt-resistivity-full-density",
+    "utah-forge-mt-resistivity-volume",
+    "utah-forge-mt-resistivity-threshold-surfaces",
+    "utah-forge-mt-top-surface",
+    "utah-forge-mt-top-contact-surface",
+    "utah-forge-mt-resistivity-slices",
+  ];
+  const standaloneStart = 5;
+  const seismicPages = new Set([
+    "47_seismic_footprint_velocity_support",
+    "49_seismic_fence_panels",
+  ]);
+  for (const pageId of project.pageOrder.slice(standaloneStart)) {
+    if (pageId === "99_unresolved_missing_tools") continue;
+    const activeMtLayers = mtLayers.filter(
+      (layerId) => pageVisibility(pageId, layerId) === true,
+    );
+    const seismicVisible =
+      pageVisibility(pageId, "utah-forge-phase3-seismic-browser") === true;
+    if (seismicPages.has(pageId)) {
+      assert.equal(seismicVisible, true, `${pageId} seismic page active`);
+      assert.equal(activeMtLayers.length, 0, `${pageId} has no active MT`);
+    } else {
+      assert.equal(seismicVisible, false, `${pageId} has no active seismic`);
+      assert.ok(
+        activeMtLayers.length <= 1,
+        `${pageId} has at most one active MT product`,
+      );
+    }
+  }
 }
 
 runValidation("Utah FORGE presentation snapshot", () => {
