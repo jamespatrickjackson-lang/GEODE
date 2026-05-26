@@ -4008,6 +4008,36 @@ export class SceneManager {
     return material.opacity;
   }
 
+  private shaderOpacityForMaterial(material: THREE.Material): number | null {
+    if (
+      material instanceof THREE.ShaderMaterial &&
+      typeof material.uniforms?.uOpacity?.value === "number" &&
+      Number.isFinite(material.uniforms.uOpacity.value)
+    ) {
+      return material.uniforms.uOpacity.value;
+    }
+    return null;
+  }
+
+  private productOpacityBaseForMaterial(material: THREE.Material): number {
+    const authoredBase = material.userData?.preserveMaterialOpacityBase;
+    if (typeof authoredBase === "number" && Number.isFinite(authoredBase)) {
+      return clamp01(authoredBase);
+    }
+    const shaderOpacity = this.shaderOpacityForMaterial(material);
+    if (shaderOpacity !== null) return clamp01(shaderOpacity);
+    return clamp01(this.baseOpacityForMaterial(material));
+  }
+
+  private setProductOpacityBaseForMaterial(
+    material: THREE.Material,
+    opacity: number,
+  ): void {
+    if (material.userData?.preserveMaterialOpacity !== true) return;
+    if (!Number.isFinite(opacity)) return;
+    material.userData.preserveMaterialOpacityBase = clamp01(opacity);
+  }
+
   private baseOpacityForLayer(id: string): number {
     const group = this.layers.get(id);
     if (!group) return 1;
@@ -4041,12 +4071,16 @@ export class SceneManager {
       if (!mat) return;
       const mats = Array.isArray(mat) ? mat : [mat];
       for (const material of mats) {
-        if (material.userData?.ignoreLayerStyle === true) continue;
-        const shaderOpacity =
-          material instanceof THREE.ShaderMaterial &&
-          typeof material.uniforms?.uOpacity?.value === "number"
-            ? material.uniforms.uOpacity.value
-            : null;
+        const isTransitionEntity =
+          obj.userData?.scalarSectionIsoOverlay === true ||
+          material.userData?.scalarSectionIsoOverlay === true;
+        if (
+          material.userData?.ignoreLayerStyle === true &&
+          !isTransitionEntity
+        ) {
+          continue;
+        }
+        const shaderOpacity = this.shaderOpacityForMaterial(material);
         const next =
           typeof shaderOpacity === "number" && Number.isFinite(shaderOpacity)
             ? shaderOpacity
@@ -4110,15 +4144,24 @@ export class SceneManager {
       const mats = Array.isArray(mat) ? mat : [mat];
       for (const m of mats) {
         if (m.userData?.ignoreLayerStyle === true) continue;
+        const preserveProductOpacity =
+          m.userData?.preserveMaterialOpacity === true;
+        const productBase = preserveProductOpacity
+          ? this.productOpacityBaseForMaterial(m)
+          : 1;
+        const materialOpacity = preserveProductOpacity
+          ? clamp01(productBase * next)
+          : next;
         this.baseOpacityForMaterial(m);
-        m.opacity = next;
-        m.transparent = m.userData?.forceTransparent === true || next < 1;
+        m.opacity = materialOpacity;
+        m.transparent =
+          m.userData?.forceTransparent === true || materialOpacity < 1;
         if (m instanceof THREE.ShaderMaterial && m.uniforms.uOpacity) {
-          m.uniforms.uOpacity.value = next;
+          m.uniforms.uOpacity.value = materialOpacity;
         }
         if (m.userData?.terrainMaterial === true) {
           m.transparent = true;
-          m.depthWrite = next >= 0.999;
+          m.depthWrite = materialOpacity >= 0.999;
         }
         m.needsUpdate = true;
       }
@@ -9113,6 +9156,7 @@ export class SceneManager {
         if (uniforms.uMidpoint) uniforms.uMidpoint.value = midpoint;
         if (uniforms.uContrast) uniforms.uContrast.value = contrast;
         if (uniforms.uOpacity) uniforms.uOpacity.value = renderOpacity;
+        this.setProductOpacityBaseForMaterial(m, renderOpacity);
         if (uniforms.uDensity) uniforms.uDensity.value = density;
         if (uniforms.uSampleSteps) uniforms.uSampleSteps.value = sampleSteps;
         if (uniforms.uTransferMode) uniforms.uTransferMode.value = transferMode;
@@ -10601,6 +10645,7 @@ export class SceneManager {
         }
         const uniforms = obj.material.uniforms;
         if (uniforms.uOpacity) uniforms.uOpacity.value = sourceOpacity;
+        this.setProductOpacityBaseForMaterial(obj.material, sourceOpacity);
         if (uniforms.uAmplitudeMin) uniforms.uAmplitudeMin.value = amplitudeMin;
         if (uniforms.uAmplitudeMax) uniforms.uAmplitudeMax.value = amplitudeMax;
         if (uniforms.uAmplitudeGamma) {
@@ -10752,9 +10797,11 @@ export class SceneManager {
             if (material.uniforms.uOpacity) {
               material.uniforms.uOpacity.value = sourceOpacity;
             }
+            this.setProductOpacityBaseForMaterial(material, sourceOpacity);
           } else if ("opacity" in material) {
             material.opacity = sourceOpacity;
             material.transparent = true;
+            this.setProductOpacityBaseForMaterial(material, sourceOpacity);
           }
           material.needsUpdate = true;
         }
