@@ -1543,6 +1543,7 @@ export function EditorProvider({
 
   useEffect(() => {
     sceneHandle.setSceneSectionWindowCommitHandler((axis, kind, valueM) => {
+      if (axis !== "x" && axis !== "y") return;
       const cur = stateRef.current;
       const selectedPageId = cur.selectedPageId;
       const page =
@@ -1565,6 +1566,7 @@ export function EditorProvider({
         sceneSectionEnabled: true,
         sceneSectionActiveAxis: axis,
         sceneSectionWindowEnabled: true,
+        sceneSectionWindowActiveAxis: axis,
         sceneSectionWindowByAxis: {
           ...currentByAxis,
           [axis]: {

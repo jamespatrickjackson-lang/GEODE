@@ -6989,6 +6989,7 @@ function SceneSectionPlanesContainer({
     commit({
       sceneSectionActiveAxis: axis,
       sceneSectionWindowEnabled: true,
+      sceneSectionWindowActiveAxis: axis,
       sceneSectionWindowByAxis: {
         ...windowByAxis,
         [axis]: {

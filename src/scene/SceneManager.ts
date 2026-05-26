@@ -4934,14 +4934,32 @@ export class SceneManager {
     bounds: THREE.Box3,
   ): ResolvedSceneSectionWindow | null {
     if (style.sceneSectionWindowEnabled !== true) return null;
-    const axis =
+    const activeWindowAxis =
+      style.sceneSectionWindowActiveAxis === "x" ||
+      style.sceneSectionWindowActiveAxis === "y"
+        ? style.sceneSectionWindowActiveAxis
+        : null;
+    const activeSectionAxis =
       style.sceneSectionActiveAxis === "x" || style.sceneSectionActiveAxis === "y"
         ? style.sceneSectionActiveAxis
         : null;
+    const planes = style.sceneSectionPlanes ?? {};
+    const windowByAxis = style.sceneSectionWindowByAxis ?? {};
+    const fallbackAxis =
+      planes.x?.enabled === true && windowByAxis.x
+        ? "x"
+        : planes.y?.enabled === true && windowByAxis.y
+          ? "y"
+          : windowByAxis.x
+            ? "x"
+            : windowByAxis.y
+              ? "y"
+              : null;
+    const axis = activeWindowAxis ?? activeSectionAxis ?? fallbackAxis;
     if (!axis) return null;
     const alongIndex = this.sceneSectionAxisAlongIndex(axis);
     if (alongIndex === null) return null;
-    const raw = style.sceneSectionWindowByAxis?.[axis] ?? {};
+    const raw = windowByAxis[axis] ?? {};
     const minBound = bounds.min.getComponent(alongIndex);
     const maxBound = bounds.max.getComponent(alongIndex);
     const bottomBound = bounds.min.z;
@@ -5766,6 +5784,7 @@ export class SceneManager {
     axis: SceneSectionAxis,
     kind: SceneSectionWindowHandleKind,
   ): number | null {
+    if (axis !== "x" && axis !== "y") return null;
     const bounds = this.sceneSectionBounds(
       this.lastSceneSectionStyle,
       this.sceneSectionLayerIds(this.lastSceneSectionStyle),
@@ -5776,6 +5795,7 @@ export class SceneManager {
         ...this.lastSceneSectionStyle,
         sceneSectionActiveAxis: axis,
         sceneSectionWindowEnabled: true,
+        sceneSectionWindowActiveAxis: axis,
       },
       bounds,
     );
@@ -6631,6 +6651,7 @@ export class SceneManager {
       sceneSectionEnabled: true,
       sceneSectionActiveAxis: axis,
       sceneSectionWindowEnabled: true,
+      sceneSectionWindowActiveAxis: axis,
       sceneSectionWindowByAxis: {
         ...byAxis,
         [axis]: {

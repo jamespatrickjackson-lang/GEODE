@@ -258,7 +258,7 @@
       "scalarVolumeOpacity": 0.48,
       "scalarVolumeDensity": 0.72,
       "scalarVolumeSampleSteps": 112,
-      "scalarVolumeTransferMode": "dense",
+      "scalarVolumeTransferMode": "soft",
       "scalarVolumeThresholdMin": -2,
       "scalarVolumeThresholdMax": 4.5,
       "scalarVolumeMaskVisible": true,
@@ -279,10 +279,16 @@
       "sectionIsoEnabled": true,
       "sectionIsoBandsVisible": true,
       "sectionIsoLinesVisible": true,
-      "sectionIsoLevelCount": 32,
+      "sectionIsoLevelCount": 19,
       "sectionIsoSourceOpacity": 0,
       "sectionIsoMin": -2,
-      "sectionIsoMax": 4.5
+      "sectionIsoMax": 4.5,
+      "sectionIsoTargetIds": {
+        "utah-forge-mt-resistivity-volume:mt-resistivity-forge-focused-volume:x": true,
+        "utah-forge-mt-resistivity-volume:mt-resistivity-forge-focused-volume:y": true
+      },
+      "sectionIsoLineStyle": "dashed",
+      "sectionIsoLineWidth": 1.2
     },
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "opacity": 0.86,
@@ -436,12 +442,12 @@
       "sceneSectionPlanes": {
         "x": {
           "enabled": true,
-          "positionM": -2718.3432159080403,
+          "positionM": -5753.338077166321,
           "invert": false
         },
         "y": {
           "enabled": true,
-          "positionM": -10300,
+          "positionM": -14276.695748094688,
           "invert": false
         },
         "z": {
@@ -460,13 +466,13 @@
       "sceneSectionWindowEnabled": true,
       "sceneSectionWindowByAxis": {
         "x": {
-          "minAlongM": -113000,
-          "maxAlongM": 113000,
-          "bottomElevationM": -25000
+          "minAlongM": -31841.698353892432,
+          "maxAlongM": 20526.81071996565,
+          "bottomElevationM": -2358.537359315418
         },
         "y": {
-          "minAlongM": -140000,
-          "maxAlongM": 140000,
+          "minAlongM": -118667.98253963646,
+          "maxAlongM": 34046.04347254154,
           "bottomElevationM": -25000
         }
       },
@@ -1960,12 +1966,18 @@
           "sectionIsoEnabled": true,
           "sectionIsoBandsVisible": true,
           "sectionIsoLinesVisible": true,
-          "sectionIsoLevelCount": 32,
+          "sectionIsoLevelCount": 19,
           "sectionIsoSourceOpacity": 0,
           "sectionIsoMin": -2,
           "sectionIsoMax": 4.5,
-          "scalarVolumeTransferMode": "dense",
-          "scalarVolumeMaskVisible": true
+          "scalarVolumeTransferMode": "soft",
+          "scalarVolumeMaskVisible": true,
+          "sectionIsoTargetIds": {
+            "utah-forge-mt-resistivity-volume:mt-resistivity-forge-focused-volume:x": true,
+            "utah-forge-mt-resistivity-volume:mt-resistivity-forge-focused-volume:y": true
+          },
+          "sectionIsoLineStyle": "dashed",
+          "sectionIsoLineWidth": 1.2
         },
         "utah-forge-scene-section-planes": {
           "sceneSectionEnabled": true,
@@ -1979,13 +1991,13 @@
           "sceneSectionWindowEnabled": true,
           "sceneSectionWindowByAxis": {
             "x": {
-              "minAlongM": -113000,
-              "maxAlongM": 113000,
-              "bottomElevationM": -25000
+              "minAlongM": -31841.698353892432,
+              "maxAlongM": 20526.81071996565,
+              "bottomElevationM": -2358.537359315418
             },
             "y": {
-              "minAlongM": -140000,
-              "maxAlongM": 140000,
+              "minAlongM": -118667.98253963646,
+              "maxAlongM": 34046.04347254154,
               "bottomElevationM": -25000
             }
           },
@@ -1996,12 +2008,12 @@
           "sceneSectionPlanes": {
             "x": {
               "enabled": true,
-              "positionM": -2718.3432159080403,
+              "positionM": -5753.338077166321,
               "invert": false
             },
             "y": {
               "enabled": true,
-              "positionM": -10300,
+              "positionM": -14276.695748094688,
               "invert": false
             },
             "z": {

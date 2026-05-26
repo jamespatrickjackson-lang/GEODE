@@ -402,7 +402,7 @@ export function mountScene(
         kind: "plane" | SceneSectionWindowHandleKind;
         normal: THREE.Vector3;
         originalPositionM: number;
-        grabOffsetM: number;
+        startWorld: THREE.Vector3;
         dragPlane: THREE.Plane;
       }
     | null = null;
@@ -751,7 +751,10 @@ export function mountScene(
       raycaster.setFromCamera(ndc, camera);
       if (raycaster.ray.intersectPlane(dragSceneSectionPlane.dragPlane, cur)) {
         const positionM = THREE.MathUtils.clamp(
-          cur.dot(dragSceneSectionPlane.normal) - dragSceneSectionPlane.grabOffsetM,
+          dragSceneSectionPlane.originalPositionM +
+            cur
+              .sub(dragSceneSectionPlane.startWorld)
+              .dot(dragSceneSectionPlane.normal),
           -250_000,
           250_000,
         );
@@ -1020,11 +1023,12 @@ export function mountScene(
               sceneSectionHandle.axis,
               sceneSectionHandle.kind,
             ) ?? sceneSectionHandle.world.dot(normal));
-      const cameraRight = new THREE.Vector3()
-        .setFromMatrixColumn(camera.matrixWorld, 0)
+      const cameraForward = new THREE.Vector3();
+      camera.getWorldDirection(cameraForward);
+      const dragPlaneNormal = cameraForward
         .normalize();
       const dragPlane = new THREE.Plane().setFromNormalAndCoplanarPoint(
-        cameraRight,
+        dragPlaneNormal,
         sceneSectionHandle.world,
       );
       dragSceneSectionPlane = {
@@ -1032,7 +1036,7 @@ export function mountScene(
         kind: sceneSectionHandle.kind,
         normal,
         originalPositionM: originalPosition,
-        grabOffsetM: sceneSectionHandle.world.dot(normal) - originalPosition,
+        startWorld: sceneSectionHandle.world.clone(),
         dragPlane,
       };
       controls.enabled = false;

@@ -52,9 +52,65 @@
     "pathAwareBlend": true
   },
   "overlayLayout": {
-    "x": 0.039843749999999956,
-    "y": 0.03749058971141782,
-    "width": 0.2022916666666667,
-    "height": 0.4330771720244863
+    "x": 0.007028045341341882,
+    "y": 0.023374271247273266,
+    "width": 0.15,
+    "height": 0.462439114429907
+  },
+  "layerOverrides": {
+    "utah-forge-scene-section-planes": {
+      "sceneSectionEnabled": true,
+      "sceneSectionActiveAxis": "x",
+      "sceneSectionWindowEnabled": true,
+      "sceneSectionWindowActiveAxis": "x",
+      "sceneSectionWindowByAxis": {
+        "x": {
+          "minAlongM": -48559.10562502691,
+          "maxAlongM": -13749.110206885776,
+          "bottomElevationM": -14609.101887030438
+        },
+        "y": {
+          "minAlongM": -118667.98253963646,
+          "maxAlongM": 34046.04347254154,
+          "bottomElevationM": -25000
+        }
+      },
+      "sceneSectionPlanes": {
+        "x": {
+          "enabled": true,
+          "positionM": -7731.786191810479,
+          "invert": false
+        },
+        "y": {
+          "enabled": true,
+          "positionM": -14276.695748094688,
+          "invert": false
+        },
+        "z": {
+          "enabled": false,
+          "positionM": -2200,
+          "invert": false
+        }
+      }
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": true,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": true
+      },
+      "mtIsosurfaceProductId": "mt-isosurface-full-extent"
+    },
+    "utah-forge-site-boundary": {
+      "color": "#47c299"
+    },
+    "utah-forge-mt-resistivity-full-density": {
+      "opacity": 0.36,
+      "scalarLegendVisible": true
+    }
+  },
+  "visibilityOverrides": {
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
+    "utah-forge-phase3-seismic-browser": true
   }
 }

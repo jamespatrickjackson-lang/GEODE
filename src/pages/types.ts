@@ -313,6 +313,7 @@ export interface EditableStyle {
     z?: SceneSectionPlaneState;
   };
   sceneSectionWindowEnabled?: boolean;
+  sceneSectionWindowActiveAxis?: "x" | "y";
   sceneSectionWindowByAxis?: {
     x?: SceneSectionWindowState;
     y?: SceneSectionWindowState;
