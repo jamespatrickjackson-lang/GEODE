@@ -523,3 +523,13 @@ Each decision records:
 **Why:** The UI may still be useful later, but stale intake artifacts were non-current context and were distorting agent behavior.
 
 **Trade-off accepted:** Add to Project work must be explicitly resumed by the human before agents use old intake concepts as active direction.
+
+## DEC-051 - Agent-instruction files are their own commit-policy category
+
+**Considered:** continue classifying `CLAUDE.md` under `entry-routing-docs`, fold AGENTS.md into `other`, and treat nested `CLAUDE.md` under `src/` as `app-code`; or define a dedicated `agent-instructions` category that captures every operating-contract file regardless of path.
+
+**Chose:** add `agent-instructions` as a first-class category in `tools/check-workspace-state.mjs`. The category matches `CLAUDE.md` at any depth, `AGENTS.md` at any depth, `docs/dev-context/Active-Build-Context.md`, and `docs/dev-context/Verification-Routing.md`. `README.md` and `docs/START-HERE.md` remain in `entry-routing-docs` as human-facing landings.
+
+**Why:** Phase 1 of the 2026-05-26 agent-slowness audit shipped a coordinated update to the agent operating contracts (root + nested files for both Claude Code and Codex CLI). Under the previous classifier those files split across three categories (`entry-routing-docs`, `app-code`, `other`), so the commit policy rejected the focused change. Treating operating-contract files as one category lets coordinated agent-context updates ship as a single focused commit.
+
+**Trade-off accepted:** Subsequent agent-context edits will need to keep agent-instruction changes separate from runtime, app-code, snapshot, or docs work to stay inside the policy's two-category WARN allowance. New nested `CLAUDE.md` or `AGENTS.md` files anywhere in the tree are automatically grouped under this category.
