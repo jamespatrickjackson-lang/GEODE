@@ -447,6 +447,43 @@ test("Utah FORGE data layers follow page camera transitions", async ({
   expect(consoleErrors).toEqual([]);
 });
 
+test("MT section page transitions do not reveal the hidden volume source", async ({
+  page,
+}) => {
+  const forgeEnvironment = readJsonFile<EnvironmentSetup>(
+    UTAH_FORGE_ENVIRONMENT_PATH,
+  );
+  const sectionPageA = readJsonFile<PresentationPage>(
+    "projects/utah-forge/pages/102_page.json",
+  );
+  const sectionPageB = readJsonFile<PresentationPage>(
+    "projects/utah-forge/pages/103_page.json",
+  );
+
+  await page.goto("/?project=utah-forge", {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(page.locator("body")).toContainText("Utah FORGE");
+
+  await runForgeDataTransitionProbe(
+    page,
+    forgeEnvironment,
+    sectionPageA,
+    sectionPageB,
+  );
+  await page.waitForTimeout(1500);
+
+  const midTransitionState = await mtVolumeSceneState(page);
+  expect(midTransitionState.volumeLayerVisible).toBe(true);
+  expect(midTransitionState.firstVisibleUniforms?.sceneSectionEnabled).toBe(1);
+  expect(
+    midTransitionState.firstVisibleUniforms?.sceneSectionPlaneCount ?? 0,
+  ).toBeGreaterThan(0);
+  expect(midTransitionState.firstVisibleUniforms?.opacity ?? 1).toBeLessThan(
+    0.001,
+  );
+});
+
 test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", async ({
   page,
 }) => {
