@@ -75,6 +75,24 @@ appearing during camera/page transitions.
 - Data/artifact status maps: `docs/dev-context/Dataset-Map.md`, `docs/dev-context/Computed-Artifact-Pipeline.md`, `docs/dev-context/Layer-Artifact-Classification.md`
 - Runtime/project load classes: `docs/dev-context/Project-Load-Class-Table.md`, `docs/dev-context/Runtime-Loading-Policy.md`
 
+## Inactive / Historical Reference Docs
+
+The following dev-context docs are reference-only or superseded. Do not
+pull them into routine exploration; load only when the task explicitly
+needs the captured history.
+
+- `docs/dev-context/Loader-Project-Module-Audit.md` — read-only audit
+  feeding `Data-System-App-Refinement-Plan.md`; not a routing entry.
+- `docs/dev-context/Working-Area-Focus-Clip-Audit.md` — historical audit;
+  no active routing references.
+- `docs/dev-context/Topo-Graticule-Edge-Fade-Audit.md` — historical
+  audit; superseded by `Topo-Graticule-Edge-Fade-Implementation-Plan.md`.
+
+Receipt and audit subdirs (`Archive/`, `Change-Receipts/`,
+`Verification-Receipts/`, `Generated-Reports/`, `Audits/`, `Backups/`,
+`Prompts/`, `DHF-Links/`, `System-Requirements/`, `Future-Holds/`,
+`Visual-Review/`) are gitignored and are not part of normal routing.
+
 ## Default Guardrails
 
 - Run `npm run check:workspace` before commits or broad verification.

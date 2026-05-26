@@ -51,6 +51,39 @@ copy under review, and required wording from tools, tests, or external APIs.
 - Do not stage, rewrite, delete, or normalize excluded user work while doing
   unrelated changes.
 
+## Search Hygiene
+
+Default search scope is `src/`, `docs/` (top level only), `tools/`,
+`tests/`, and root config files. Do not `Grep` or `Glob` into the
+following paths unless the task explicitly requires them:
+
+- `projects/*/data/**` — large GeoJSON, .bin scalar/position tiles, WebP,
+  raster manifests. Single search can stream tens of MB of vector text.
+- `data/**` — root vector data (includes `hydrography_streams.geojson`
+  at 17 MB).
+- `dist/**`, `dist-tsbuild/**`, `node_modules/**` — build output and
+  dependencies; gitignored but reachable by Glob.
+- `docs/dev-context/Archive/**`,
+  `docs/dev-context/Change-Receipts/**`,
+  `docs/dev-context/Verification-Receipts/**`,
+  `docs/dev-context/Generated-Reports/**`,
+  `docs/dev-context/Audits/**` — historical receipts and audit evidence.
+- `playwright-report/**`, `test-results/**` — Playwright artefacts.
+
+When a search must hit those paths, scope it: pass `glob` or `path`
+arguments narrowed to the specific subtree.
+
+The following source files are very large; never `Read` them in full
+without `offset`+`limit`, and prefer `Grep` first to locate the target
+range:
+
+- `src/editor/LayerPanel.tsx` (~14,300 lines)
+- `src/scene/SceneManager.ts` (~12,000 lines)
+- `src/editor/EnvironmentScenePanel.tsx` (~3,800 lines)
+- `src/editor/PagePanel.tsx` (~2,400 lines)
+- `src/editor/topoMap/TopoMapPanel.tsx` (~2,100 lines)
+- `src/editor/EditorContext.tsx` (~1,900 lines)
+
 ## Decision Discipline
 
 - If a change would contradict `/docs`, stop and surface it before acting.

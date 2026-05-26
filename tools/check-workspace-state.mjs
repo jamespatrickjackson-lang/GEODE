@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 
 const SNAPSHOT_SENSITIVE = "presentation-snapshot";
 const RUNTIME_DATA = "runtime-data";
+const AGENT_INSTRUCTIONS = "agent-instructions";
 const VERIFICATION_SYSTEM = "verification-system";
 const ENTRY_ROUTING = "entry-routing-docs";
 const APP_CODE = "app-code";
@@ -85,6 +86,15 @@ function classify(path) {
   }
 
   if (
+    /(^|\/)CLAUDE\.md$/.test(path) ||
+    /(^|\/)AGENTS\.md$/.test(path) ||
+    path === "docs/dev-context/Active-Build-Context.md" ||
+    path === "docs/dev-context/Verification-Routing.md"
+  ) {
+    return AGENT_INSTRUCTIONS;
+  }
+
+  if (
     path === "package.json" ||
     path.startsWith("tools/") ||
     path.startsWith("tests/") ||
@@ -95,9 +105,7 @@ function classify(path) {
 
   if (
     path === "README.md" ||
-    path === "CLAUDE.md" ||
-    path === "docs/START-HERE.md" ||
-    path === "docs/dev-context/Active-Build-Context.md"
+    path === "docs/START-HERE.md"
   ) {
     return ENTRY_ROUTING;
   }
@@ -202,7 +210,15 @@ function evaluateBroadPolicy(snapshotEntries) {
 
 function main() {
   const policy = parseArgs(process.argv.slice(2));
-  const entries = parseStatus(git(["status", "--porcelain=v1"]));
+  const entries = parseStatus(
+    git([
+      "-c",
+      "core.untrackedCache=true",
+      "status",
+      "--porcelain=v1",
+      "--no-renames",
+    ]),
+  );
   const snapshotEntries = entries.filter(
     (entry) => classify(entry.path) === SNAPSHOT_SENSITIVE,
   );
