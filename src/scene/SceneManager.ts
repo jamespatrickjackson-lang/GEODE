@@ -19,8 +19,6 @@ import {
 } from "../pages/renderPresets";
 import type { PostHandle } from "./postprocessing";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
-import { RectAreaLightHelper } from "three/examples/jsm/helpers/RectAreaLightHelper.js";
-import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import type { SceneOverlayHandle } from "../loaders/loadSceneOverlays";
 import type { GeologyHandle } from "../loaders/loadGeology";
 import {
@@ -201,6 +199,38 @@ import {
 } from "./terrain/terrainStyleController";
 import { transitionEffectiveLayersForPage as transitionEffectiveLayersForPageImpl } from "./transitions/transitionEffectiveLayersForPage";
 import { applyStyle as applyStyleImpl } from "./styles/applyLayerStyle";
+import {
+  addLightingStudioHandleImpl,
+  addLightingStudioSourceImpl,
+  clearLightingStudioSourcesImpl,
+  createOrbitCenterHandleImpl,
+  createPageCameraLabelImpl,
+  createPageCameraMarkerImpl,
+  lightingHandleKeyImpl,
+  listPageCameraMarkerPickablesImpl,
+  makeLightingHandleMaterialImpl,
+  makeOrbitCenterMaterialImpl,
+  markLightingPickableImpl,
+  markOrbitCenterPickableImpl,
+  markPageCameraPickableImpl,
+  setGlobalPageCameraMarkersImpl,
+  setPageCameraMarkerImpl,
+  setStudioSceneElementsVisibleImpl,
+  updateDynamicCameraOrbitCenterScaleImpl,
+  updateLightingStudioElementScaleImpl,
+  updateLightingStudioHelpersImpl,
+  updatePageCameraMarkerLineImpl,
+  updatePageCameraMarkerPoseImpl,
+  updatePageCameraMarkerScaleImpl,
+  updatePageCameraMarkerVisibilityImpl,
+  updatePageCameraMarkersScaleImpl,
+  type LightingHandleKind,
+  type LightingHandleMode,
+  type LightingHandleRuntime,
+  type LightingStudioRuntime,
+  type OrbitCenterHandleRuntime,
+  type PageCameraMarkerRuntime,
+} from "./handles/sceneHandleControllers";
 import { extractRuntimeMarchingCubesGeometry } from "../mtResistivity/runtimeMarchingCubes";
 
 export type {
@@ -217,15 +247,8 @@ const DEFAULT_CONTOUR_DISTANCE_FADE_FAR_M = 420;
 const DEFAULT_CONTOUR_FAR_LINE_SCALE = 0.28;
 const DEFAULT_CONTOUR_FAR_OPACITY = 0.72;
 const DEFAULT_CONTOUR_LIFT_M = 0;
-const STUDIO_HANDLE_SCREEN_SCALE_DISTANCE_M = 4200;
-const STUDIO_HANDLE_MIN_SCALE = 0.55;
-const STUDIO_HANDLE_MAX_SCALE = 7.5;
-const ORBIT_CENTER_HANDLE_SCREEN_SCALE_DISTANCE_M = 5200;
-const ORBIT_CENTER_HANDLE_MIN_SCALE = 0.65;
-const ORBIT_CENTER_HANDLE_MAX_SCALE = 1;
 const DEFAULT_SCENE_FOG_DENSITY = 0.00018;
 
-let rectAreaLightsReady = false;
 
 // SceneManager. Owns lights, fog, post chain config, layer registry.
 //
@@ -248,54 +271,6 @@ function isContourLikeLayerId(id: string): boolean {
 type PresentationLightSource = NonNullable<
   NonNullable<SceneProperties["lighting"]>["sources"]
 >[number];
-type PresentationLightType = NonNullable<PresentationLightSource["type"]>;
-type LightingHandleKind = "position" | "target";
-type LightingHandleMode = "plane" | "height";
-
-interface LightingStudioRuntime {
-  type: PresentationLightType;
-  light: THREE.Object3D;
-  target?: THREE.Object3D;
-  helper?: THREE.Object3D;
-}
-
-function presentationLightGain(type: PresentationLightType): number {
-  switch (type) {
-    case "point":
-      return 220000;
-    case "spot":
-      return 140000;
-    case "area":
-      return 160;
-    case "directional":
-    default:
-      return 1;
-  }
-}
-
-interface LightingHandleRuntime {
-  sourceId: string;
-  kind: LightingHandleKind;
-  group: THREE.Group;
-  pickables: THREE.Object3D[];
-}
-
-interface OrbitCenterHandleRuntime {
-  group: THREE.Group;
-  pickables: THREE.Object3D[];
-  directionArrow: THREE.Object3D;
-}
-
-interface PageCameraMarkerRuntime {
-  group: THREE.Group;
-  pickables: THREE.Object3D[];
-  line: THREE.Line;
-  label: THREE.Sprite;
-  targetLocal: THREE.Vector3;
-  labelBaseWidth: number;
-  labelBaseHeight: number;
-  labelLift: number;
-}
 
 export type OrbitCenterHandleMode = "plane" | "x" | "y" | "z";
 export type SceneSectionAxis = "x" | "y" | "z";
@@ -352,56 +327,6 @@ export interface PageCameraMarkerSpec {
   color: string;
 }
 
-function ensureRectAreaLights(): void {
-  if (rectAreaLightsReady) return;
-  RectAreaLightUniformsLib.init();
-  rectAreaLightsReady = true;
-}
-
-function roundRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number,
-): void {
-  const r = Math.min(radius, width / 2, height / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + width - r, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
-  ctx.lineTo(x + width, y + height - r);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-  ctx.lineTo(x + r, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-
-function hardenStudioHelperMaterial(material: THREE.Material): void {
-  material.depthTest = false;
-  material.depthWrite = false;
-  material.toneMapped = false;
-  material.userData.ignoreLayerFog = true;
-  (material as THREE.Material & { fog?: boolean }).fog = false;
-  material.transparent = true;
-  material.needsUpdate = true;
-}
-
-function hardenStudioHelperTree(obj: THREE.Object3D): void {
-  obj.renderOrder = 4500;
-  obj.traverse((child) => {
-    child.renderOrder = 4500;
-    const mesh = child as THREE.Object3D & {
-      material?: THREE.Material | THREE.Material[];
-    };
-    if (!mesh.material) return;
-    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-    for (const mat of mats) hardenStudioHelperMaterial(mat);
-  });
-}
 
 export class SceneManager {
   private layers = new Map<string, THREE.Group>();
@@ -410,15 +335,15 @@ export class SceneManager {
   private envKeyLight: THREE.DirectionalLight | null = null;
   envFillLight: THREE.DirectionalLight | null = null;
   envRimLight: THREE.DirectionalLight | null = null;
-  private envCustomLights: THREE.Light[] = [];
-  private envCustomLightTargets: THREE.Object3D[] = [];
-  private envLightHelperGroup: THREE.Group | null = null;
-  private envLightRuntimes = new Map<string, LightingStudioRuntime>();
-  private envLightHandles = new Map<string, LightingHandleRuntime>();
-  private envLightHandlePickables: THREE.Object3D[] = [];
-  private orbitCenterHandle: OrbitCenterHandleRuntime | null = null;
-  private pageCameraMarker: PageCameraMarkerRuntime | null = null;
-  private globalPageCameraMarkers = new Map<string, PageCameraMarkerRuntime>();
+  envCustomLights: THREE.Light[] = [];
+  envCustomLightTargets: THREE.Object3D[] = [];
+  envLightHelperGroup: THREE.Group | null = null;
+  envLightRuntimes = new Map<string, LightingStudioRuntime>();
+  envLightHandles = new Map<string, LightingHandleRuntime>();
+  envLightHandlePickables: THREE.Object3D[] = [];
+  orbitCenterHandle: OrbitCenterHandleRuntime | null = null;
+  pageCameraMarker: PageCameraMarkerRuntime | null = null;
+  globalPageCameraMarkers = new Map<string, PageCameraMarkerRuntime>();
   private sceneSectionRuntime: SceneSectionRuntime | null = null;
   private readonly topoRuntime: TopoMapRuntime;
   private workingAreaFocusRuntime: WorkingAreaFocusRuntime | null = null;
@@ -429,7 +354,7 @@ export class SceneManager {
   private publicSurfaceClippingActive = false;
   private appliedLayerStyles = new Map<string, EditableStyle>();
   private editorMode = true;
-  private studioSceneElementsVisible = true;
+  studioSceneElementsVisible = true;
   envFog: THREE.FogExp2 | null = null;
   envFogEnabled = true;
   envFogDensity = DEFAULT_SCENE_FOG_DENSITY;
@@ -458,9 +383,9 @@ export class SceneManager {
   private readonly boreLensPos = new THREE.Vector3();
   private readonly boreLensNormal = new THREE.Vector3();
   private readonly boreLensToCamera = new THREE.Vector3();
-  private readonly studioHandleWorldPos = new THREE.Vector3();
-  private readonly orbitCenterWorldPos = new THREE.Vector3();
-  private readonly pageCameraMarkerWorldPos = new THREE.Vector3();
+  readonly studioHandleWorldPos = new THREE.Vector3();
+  readonly orbitCenterWorldPos = new THREE.Vector3();
+  readonly pageCameraMarkerWorldPos = new THREE.Vector3();
   private readonly ezGammaWorldPos = new THREE.Vector3();
   private readonly ezGammaToCamera = new THREE.Vector3();
   // Last env applied. Stashed so a layer that arrives after the initial
@@ -659,267 +584,50 @@ export class SceneManager {
   }
 
   setStudioSceneElementsVisible(enabled: boolean): void {
-    this.studioSceneElementsVisible = enabled;
-    if (this.envLightHelperGroup) {
-      this.envLightHelperGroup.visible = this.editorMode && enabled;
-    }
+    return setStudioSceneElementsVisibleImpl.call(this, enabled);
   }
 
   clearLightingStudioSources(): void {
-    for (const light of this.envCustomLights) {
-      this.scene.remove(light);
-      (light as { dispose?: () => void }).dispose?.();
-    }
-    for (const target of this.envCustomLightTargets) {
-      this.scene.remove(target);
-    }
-    this.envCustomLights = [];
-    this.envCustomLightTargets = [];
-    this.envLightRuntimes.clear();
-    this.envLightHandles.clear();
-    this.envLightHandlePickables = [];
-    if (this.envLightHelperGroup) {
-      this.scene.remove(this.envLightHelperGroup);
-      disposeObjectTree(this.envLightHelperGroup);
-      this.envLightHelperGroup = null;
-    }
+    return clearLightingStudioSourcesImpl.call(this);
   }
 
-  private lightingHandleKey(
-    sourceId: string,
-    kind: LightingHandleKind,
-  ): string {
-    return `${sourceId}:${kind}`;
+  lightingHandleKey(sourceId: string, kind: LightingHandleKind): string {
+    return lightingHandleKeyImpl.call(this, sourceId, kind);
   }
 
-  private makeLightingHandleMaterial(
-    color: THREE.ColorRepresentation,
-    opacity = 0.92,
-  ): THREE.MeshBasicMaterial {
-    const mat = new THREE.MeshBasicMaterial({
-      color,
-      transparent: opacity < 1,
-      opacity,
-      depthTest: false,
-      depthWrite: false,
-      toneMapped: false,
-      fog: false,
-    });
-    hardenStudioHelperMaterial(mat);
-    return mat;
+  makeLightingHandleMaterial(color: THREE.ColorRepresentation, opacity = 0.92): THREE.MeshBasicMaterial {
+    return makeLightingHandleMaterialImpl.call(this, color, opacity);
   }
 
-  private markLightingPickable(
-    obj: THREE.Object3D,
-    sourceId: string,
-    kind: LightingHandleKind,
-    mode: LightingHandleMode,
-    pickables: THREE.Object3D[],
-  ): void {
-    obj.userData.lightingHandle = true;
-    obj.userData.lightingSourceId = sourceId;
-    obj.userData.lightingHandleKind = kind;
-    obj.userData.lightingHandleMode = mode;
-    obj.renderOrder = 4500;
-    pickables.push(obj);
+  markLightingPickable(obj: THREE.Object3D, sourceId: string, kind: LightingHandleKind, mode: LightingHandleMode, pickables: THREE.Object3D[]): void {
+    return markLightingPickableImpl.call(this, obj, sourceId, kind, mode, pickables);
   }
 
-  private addLightingStudioHandle(
-    sourceId: string,
-    kind: LightingHandleKind,
-    position: THREE.Vector3,
-    color: THREE.Color,
-    helperGroup: THREE.Group,
-  ): void {
-    const group = new THREE.Group();
-    group.name = `lighting-handle-${kind}-${sourceId}`;
-    group.position.copy(position);
-    group.renderOrder = 4500;
-
-    const pickables: THREE.Object3D[] = [];
-    const scale = kind === "target" ? 0.68 : 1;
-    const axisLength = 720 * scale;
-    const coneLength = 150 * scale;
-    const axisRadius = 16 * scale;
-    const ringRadius = 360 * scale;
-    const coreRadius = 120 * scale;
-
-    const core = new THREE.Mesh(
-      new THREE.SphereGeometry(coreRadius, 18, 12),
-      this.makeLightingHandleMaterial(color, kind === "target" ? 0.45 : 0.55),
-    );
-    this.markLightingPickable(core, sourceId, kind, "plane", pickables);
-    group.add(core);
-
-    const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(ringRadius, 9 * scale, 8, 72),
-      this.makeLightingHandleMaterial("#ffffff", 0.72),
-    );
-    this.markLightingPickable(ring, sourceId, kind, "plane", pickables);
-    group.add(ring);
-
-    const addAxis = (
-      axis: "x" | "y" | "z",
-      axisColor: THREE.ColorRepresentation,
-    ) => {
-      const mode: LightingHandleMode = axis === "z" ? "height" : "plane";
-      const shaft = new THREE.Mesh(
-        new THREE.CylinderGeometry(axisRadius, axisRadius, axisLength, 12),
-        this.makeLightingHandleMaterial(axisColor, 0.88),
-      );
-      const head = new THREE.Mesh(
-        new THREE.ConeGeometry(48 * scale, coneLength, 18),
-        this.makeLightingHandleMaterial(axisColor, 0.92),
-      );
-      if (axis === "x") {
-        shaft.rotation.z = -Math.PI / 2;
-        shaft.position.x = axisLength / 2;
-        head.rotation.z = -Math.PI / 2;
-        head.position.x = axisLength + coneLength / 2;
-      } else if (axis === "z") {
-        shaft.rotation.x = Math.PI / 2;
-        shaft.position.z = axisLength / 2;
-        head.rotation.x = Math.PI / 2;
-        head.position.z = axisLength + coneLength / 2;
-      } else {
-        shaft.position.y = axisLength / 2;
-        head.position.y = axisLength + coneLength / 2;
-      }
-      this.markLightingPickable(shaft, sourceId, kind, mode, pickables);
-      this.markLightingPickable(head, sourceId, kind, mode, pickables);
-      group.add(shaft, head);
-    };
-
-    addAxis("x", "#ff4f4f");
-    addAxis("y", "#4ddf9a");
-    addAxis("z", "#58a6ff");
-
-    const labelColor = kind === "target" ? "#ffcc66" : "#ffffff";
-    const targetRing = new THREE.Mesh(
-      new THREE.TorusGeometry(185 * scale, 7 * scale, 8, 48),
-      this.makeLightingHandleMaterial(
-        labelColor,
-        kind === "target" ? 0.85 : 0.35,
-      ),
-    );
-    targetRing.rotation.x = Math.PI / 2;
-    targetRing.position.z = 8 * scale;
-    this.markLightingPickable(targetRing, sourceId, kind, "plane", pickables);
-    group.add(targetRing);
-
-    helperGroup.add(group);
-    hardenStudioHelperTree(group);
-    const runtime: LightingHandleRuntime = { sourceId, kind, group, pickables };
-    this.envLightHandles.set(this.lightingHandleKey(sourceId, kind), runtime);
-    this.envLightHandlePickables.push(...pickables);
+  addLightingStudioHandle(sourceId: string, kind: LightingHandleKind, position: THREE.Vector3, color: THREE.Color, helperGroup: THREE.Group): void {
+    return addLightingStudioHandleImpl.call(this, sourceId, kind, position, color, helperGroup);
   }
 
-  private updateLightingStudioHelpers(): void {
-    if (!this.envLightHelperGroup) return;
-    this.envLightHelperGroup.traverse((obj) => {
-      (obj as { update?: () => void }).update?.();
-    });
-    hardenStudioHelperTree(this.envLightHelperGroup);
+  updateLightingStudioHelpers(): void {
+    return updateLightingStudioHelpersImpl.call(this);
   }
 
-  private makeOrbitCenterMaterial(
-    color: THREE.ColorRepresentation,
-    opacity = 0.9,
-  ): THREE.MeshStandardMaterial {
-    const tint = new THREE.Color(color);
-    const mat = new THREE.MeshStandardMaterial({
-      color: tint,
-      emissive: tint.clone().multiplyScalar(0.28),
-      emissiveIntensity: 0.18,
-      roughness: 0.46,
-      metalness: 0.08,
-      transparent: opacity < 1,
-      opacity,
-      depthTest: false,
-      depthWrite: false,
-      toneMapped: false,
-      fog: false,
-    });
-    mat.side = THREE.DoubleSide;
-    hardenStudioHelperMaterial(mat);
-    return mat;
+  makeOrbitCenterMaterial(color: THREE.ColorRepresentation, opacity = 0.9): THREE.MeshStandardMaterial {
+    return makeOrbitCenterMaterialImpl.call(this, color, opacity);
   }
 
-  private markOrbitCenterPickable(
-    obj: THREE.Object3D,
-    mode: OrbitCenterHandleMode,
-    pickables: THREE.Object3D[],
-  ): void {
-    obj.userData.dynamicCameraOrbitCenter = true;
-    obj.userData.dynamicCameraOrbitCenterMode = mode;
-    obj.renderOrder = 4520;
-    pickables.push(obj);
+  markOrbitCenterPickable(obj: THREE.Object3D, mode: OrbitCenterHandleMode, pickables: THREE.Object3D[]): void {
+    return markOrbitCenterPickableImpl.call(this, obj, mode, pickables);
   }
 
-  private markPageCameraPickable(
-    obj: THREE.Object3D,
-    pickables: THREE.Object3D[],
-    id: string,
-    kind: "current" | "global",
-  ): void {
-    obj.userData.pageCameraMarker = true;
-    obj.userData.pageCameraMarkerId = id;
-    obj.userData.pageCameraMarkerKind = kind;
-    obj.renderOrder = 4540;
-    pickables.push(obj);
+  markPageCameraPickable(obj: THREE.Object3D, pickables: THREE.Object3D[], id: string, kind: "current" | "global"): void {
+    return markPageCameraPickableImpl.call(this, obj, pickables, id, kind);
   }
 
-  private createPageCameraLabel(
-    text = "Camera",
-    accentColor = "rgba(48, 48, 48, 0.22)",
-    fillColor = "rgba(255, 255, 255, 0.92)",
-  ): THREE.Sprite {
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 104;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = fillColor;
-      roundRect(ctx, 12, 12, 488, 70, 18);
-      ctx.fill();
-      ctx.strokeStyle = accentColor;
-      ctx.lineWidth = 7;
-      roundRect(ctx, 12, 12, 488, 70, 18);
-      ctx.stroke();
-      ctx.fillStyle = "rgba(0, 0, 0, 0.76)";
-      let fontSize = 27;
-      const fontFamily = "system-ui, -apple-system, Segoe UI, sans-serif";
-      ctx.font = `700 ${fontSize}px ${fontFamily}`;
-      while (fontSize > 17 && ctx.measureText(text).width > 420) {
-        fontSize -= 1;
-        ctx.font = `700 ${fontSize}px ${fontFamily}`;
-      }
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(text, canvas.width / 2, 47);
-    }
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    const material = new THREE.SpriteMaterial({
-      map: texture,
-      transparent: true,
-      opacity: 0.95,
-      depthTest: false,
-      depthWrite: false,
-      toneMapped: false,
-      fog: false,
-    });
-    hardenStudioHelperMaterial(material);
-    const sprite = new THREE.Sprite(material);
-    sprite.name = "page-camera-label";
-    sprite.renderOrder = 4540;
-    return sprite;
+  createPageCameraLabel(text = "Camera", accentColor = "rgba(48, 48, 48, 0.22)", fillColor = "rgba(255, 255, 255, 0.92)"): THREE.Sprite {
+    return createPageCameraLabelImpl.call(this, text, accentColor, fillColor);
   }
 
-  private createPageCameraMarker(
-    pose: Pose,
-    opts: {
+  createPageCameraMarker(pose: Pose, opts: {
       id: string;
       kind: "current" | "global";
       label: string;
@@ -928,202 +636,24 @@ export class SceneManager {
       labelBaseWidth?: number;
       labelBaseHeight?: number;
       labelLift?: number;
-    },
-  ): PageCameraMarkerRuntime {
-    const group = new THREE.Group();
-    group.name = `__page_camera_marker_${opts.kind}_${opts.id}__`;
-    group.visible = this.editorMode;
-    group.renderOrder = 4540;
-
-    const pickables: THREE.Object3D[] = [];
-    const labelStroke =
-      opts.kind === "global"
-        ? (opts.color ?? "rgba(48, 48, 48, 0.22)")
-        : "rgba(48, 48, 48, 0.22)";
-    const label = this.createPageCameraLabel(
-      opts.label,
-      labelStroke,
-      opts.fillColor,
-    );
-    this.markPageCameraPickable(label, pickables, opts.id, opts.kind);
-    group.add(label);
-
-    const lineMaterial = new THREE.LineDashedMaterial({
-      color: opts.color ?? "#ffffff",
-      transparent: true,
-      opacity: 0.82,
-      dashSize: 120,
-      gapSize: 72,
-      depthTest: false,
-      depthWrite: false,
-      toneMapped: false,
-      fog: false,
-    });
-    hardenStudioHelperMaterial(lineMaterial);
-    const line = new THREE.Line(new THREE.BufferGeometry(), lineMaterial);
-    line.name = "page-camera-to-target-line";
-    line.renderOrder = 4538;
-    group.add(line);
-
-    this.scene.add(group);
-    const runtime = {
-      group,
-      pickables,
-      line,
-      label,
-      targetLocal: new THREE.Vector3(),
-      labelBaseWidth: opts.labelBaseWidth ?? 520,
-      labelBaseHeight: opts.labelBaseHeight ?? 106,
-      labelLift: opts.labelLift ?? 250,
-    };
-    this.updatePageCameraMarkerPose(runtime, pose);
-    return runtime;
+    }): PageCameraMarkerRuntime {
+    return createPageCameraMarkerImpl.call(this, pose, opts);
   }
 
-  private updatePageCameraMarkerLine(marker: PageCameraMarkerRuntime): void {
-    const start = marker.label.position;
-    const end = marker.targetLocal;
-    const positionAttribute = marker.line.geometry.getAttribute("position");
-    if (
-      positionAttribute instanceof THREE.BufferAttribute &&
-      positionAttribute.count >= 2
-    ) {
-      positionAttribute.setXYZ(0, start.x, start.y, start.z);
-      positionAttribute.setXYZ(1, end.x, end.y, end.z);
-      positionAttribute.needsUpdate = true;
-      marker.line.geometry.computeBoundingSphere();
-    } else {
-      marker.line.geometry.dispose();
-      marker.line.geometry = new THREE.BufferGeometry().setFromPoints([
-        start.clone(),
-        end.clone(),
-      ]);
-    }
-    marker.line.computeLineDistances();
+  updatePageCameraMarkerLine(marker: PageCameraMarkerRuntime): void {
+    return updatePageCameraMarkerLineImpl.call(this, marker);
   }
 
-  private updatePageCameraMarkerPose(
-    marker: PageCameraMarkerRuntime,
-    pose: Pose,
-  ): void {
-    const position = new THREE.Vector3(...pose.position);
-    const target = new THREE.Vector3(...pose.target);
-    marker.group.position.copy(position);
-    marker.label.position.set(0, 0, marker.labelLift);
-    marker.targetLocal.copy(target.sub(position));
-    this.updatePageCameraMarkerLine(marker);
-    hardenStudioHelperTree(marker.group);
+  updatePageCameraMarkerPose(marker: PageCameraMarkerRuntime, pose: Pose): void {
+    return updatePageCameraMarkerPoseImpl.call(this, marker, pose);
   }
 
-  private updatePageCameraMarkerVisibility(): void {
-    const showGlobal = this.editorMode && this.globalPageCameraMarkers.size > 0;
-    for (const marker of this.globalPageCameraMarkers.values()) {
-      marker.group.visible = showGlobal;
-    }
-    if (this.pageCameraMarker) {
-      this.pageCameraMarker.group.visible = this.editorMode && !showGlobal;
-    }
+  updatePageCameraMarkerVisibility(): void {
+    return updatePageCameraMarkerVisibilityImpl.call(this);
   }
 
-  private createOrbitCenterHandle(
-    position: THREE.Vector3,
-  ): OrbitCenterHandleRuntime {
-    const group = new THREE.Group();
-    group.name = "__dynamic_camera_orbit_center__";
-    group.position.copy(position);
-    group.visible = this.editorMode;
-    group.renderOrder = 4520;
-
-    const pickables: THREE.Object3D[] = [];
-    const ringRadius = 150;
-    const innerRadius = 78;
-    const axisLength = 260;
-    const coneLength = 60;
-    const axisRadius = 6;
-    const ringZ = 16;
-
-    const halo = new THREE.Mesh(
-      new THREE.TorusGeometry(ringRadius, 5, 8, 72),
-      this.makeOrbitCenterMaterial("#ffffff", 0.8),
-    );
-    halo.position.z = ringZ;
-    this.markOrbitCenterPickable(halo, "plane", pickables);
-
-    const directionArrow = new THREE.Mesh(
-      new THREE.ConeGeometry(18, 38, 3),
-      this.makeOrbitCenterMaterial("#ffffff", 0.8),
-    );
-    directionArrow.position.set(ringRadius, 0, ringZ);
-    this.markOrbitCenterPickable(directionArrow, "plane", pickables);
-
-    const inner = new THREE.Mesh(
-      new THREE.TorusGeometry(innerRadius, 4, 8, 64),
-      this.makeOrbitCenterMaterial("#34d5ff", 0.8),
-    );
-    inner.position.z = 18;
-    this.markOrbitCenterPickable(inner, "plane", pickables);
-
-    const addAxis = (
-      axis: OrbitCenterHandleMode,
-      axisColor: THREE.ColorRepresentation,
-    ) => {
-      if (axis === "plane") return;
-      const shaft = new THREE.Mesh(
-        new THREE.CylinderGeometry(axisRadius, axisRadius, axisLength, 12),
-        this.makeOrbitCenterMaterial(axisColor, 0.8),
-      );
-      const head = new THREE.Mesh(
-        new THREE.ConeGeometry(22, coneLength, 18),
-        this.makeOrbitCenterMaterial(axisColor, 0.8),
-      );
-      if (axis === "x") {
-        shaft.rotation.z = -Math.PI / 2;
-        shaft.position.x = axisLength / 2;
-        head.rotation.z = -Math.PI / 2;
-        head.position.x = axisLength + coneLength / 2;
-      } else if (axis === "z") {
-        shaft.rotation.x = Math.PI / 2;
-        shaft.position.z = axisLength / 2;
-        head.rotation.x = Math.PI / 2;
-        head.position.z = axisLength + coneLength / 2;
-      } else {
-        shaft.position.y = axisLength / 2;
-        head.position.y = axisLength + coneLength / 2;
-      }
-      this.markOrbitCenterPickable(shaft, axis, pickables);
-      this.markOrbitCenterPickable(head, axis, pickables);
-      group.add(shaft, head);
-    };
-
-    addAxis("x", "#ff4f4f");
-    addAxis("y", "#4ddf9a");
-    addAxis("z", "#58a6ff");
-
-    const cameraIcon = new THREE.Group();
-    cameraIcon.name = "dynamic-camera-orbit-center-camera-icon";
-    cameraIcon.position.set(0, -205, 122);
-    const iconMaterial = this.makeOrbitCenterMaterial("#ffffff", 0.8);
-    const iconBody = new THREE.Mesh(
-      new THREE.BoxGeometry(8, 58, 34),
-      iconMaterial,
-    );
-    const iconPrism = new THREE.Mesh(
-      new THREE.BoxGeometry(8, 24, 12),
-      iconMaterial,
-    );
-    iconPrism.position.set(0, -8, 23);
-    const iconLens = new THREE.Mesh(
-      new THREE.CylinderGeometry(11, 11, 8, 24),
-      this.makeOrbitCenterMaterial("#34d5ff", 0.8),
-    );
-    iconLens.rotation.z = Math.PI / 2;
-    iconLens.position.set(-6, 8, 0);
-    cameraIcon.add(iconBody, iconPrism, iconLens);
-
-    group.add(halo, directionArrow, inner, cameraIcon);
-    hardenStudioHelperTree(group);
-    this.scene.add(group);
-    return { group, pickables, directionArrow };
+  createOrbitCenterHandle(position: THREE.Vector3): OrbitCenterHandleRuntime {
+    return createOrbitCenterHandleImpl.call(this, position);
   }
 
   private updateOrbitCenterDirection(direction: 1 | -1): void {
@@ -1173,221 +703,19 @@ export class SceneManager {
   }
 
   setPageCameraMarker(pose: Pose | null): void {
-    if (!pose) {
-      if (this.pageCameraMarker) {
-        this.scene.remove(this.pageCameraMarker.group);
-        disposeObjectTree(this.pageCameraMarker.group);
-        this.pageCameraMarker = null;
-      }
-      return;
-    }
-    if (!this.pageCameraMarker) {
-      this.pageCameraMarker = this.createPageCameraMarker(pose, {
-        id: "__current_page_camera__",
-        kind: "current",
-        label: "Camera",
-        color: "#ffffff",
-      });
-      this.updatePageCameraMarkerVisibility();
-      return;
-    }
-    this.updatePageCameraMarkerPose(this.pageCameraMarker, pose);
-    this.updatePageCameraMarkerVisibility();
+    return setPageCameraMarkerImpl.call(this, pose);
   }
 
   setGlobalPageCameraMarkers(markers: PageCameraMarkerSpec[] | null): void {
-    for (const marker of this.globalPageCameraMarkers.values()) {
-      this.scene.remove(marker.group);
-      disposeObjectTree(marker.group);
-    }
-    this.globalPageCameraMarkers.clear();
-    if (!markers || markers.length === 0) {
-      this.updatePageCameraMarkerVisibility();
-      return;
-    }
-    for (const marker of markers) {
-      const runtime = this.createPageCameraMarker(marker.pose, {
-        id: marker.id,
-        kind: "global",
-        label: marker.title,
-        color: marker.color,
-        fillColor: marker.color,
-        labelBaseWidth: 760,
-        labelBaseHeight: 154,
-        labelLift: 270,
-      });
-      this.globalPageCameraMarkers.set(marker.id, runtime);
-    }
-    this.updatePageCameraMarkerVisibility();
+    return setGlobalPageCameraMarkersImpl.call(this, markers);
   }
 
   listPageCameraMarkerPickables(): THREE.Object3D[] {
-    if (!this.editorMode) return [];
-    const pickables: THREE.Object3D[] = [];
-    if (this.pageCameraMarker?.group.visible) {
-      pickables.push(...this.pageCameraMarker.pickables);
-    }
-    for (const marker of this.globalPageCameraMarkers.values()) {
-      if (marker.group.visible) pickables.push(...marker.pickables);
-    }
-    return pickables;
+    return listPageCameraMarkerPickablesImpl.call(this);
   }
 
-  addLightingStudioSource(
-    source: PresentationLightSource,
-    helperGroup: THREE.Group,
-  ): void {
-    if (source.enabled === false) return;
-    const color = new THREE.Color(source.color ?? "#ffffff");
-    const [px, py, pz] = source.position ?? [0, -3500, 2500];
-    const [tx, ty, tz] = source.target ?? [0, 0, 0];
-    const type = source.type ?? "spot";
-    const intensity =
-      (source.intensity ?? 1) * (source.gain ?? presentationLightGain(type));
-
-    if (type === "point") {
-      const light = new THREE.PointLight(
-        color,
-        intensity,
-        source.distance ?? 9000,
-        source.decay ?? 1.6,
-      );
-      light.position.set(px, py, pz);
-      light.castShadow = false;
-      light.name = source.label ?? source.id;
-      this.scene.add(light);
-      this.envCustomLights.push(light);
-      const helper = new THREE.PointLightHelper(light, 300, color);
-      hardenStudioHelperTree(helper);
-      helperGroup.add(helper);
-      this.envLightRuntimes.set(source.id, { type, light, helper });
-      this.addLightingStudioHandle(
-        source.id,
-        "position",
-        light.position,
-        color,
-        helperGroup,
-      );
-      return;
-    }
-
-    if (type === "area") {
-      ensureRectAreaLights();
-      const light = new THREE.RectAreaLight(
-        color,
-        intensity,
-        source.width ?? 1600,
-        source.height ?? 900,
-      );
-      light.position.set(px, py, pz);
-      light.lookAt(tx, ty, tz);
-      light.name = source.label ?? source.id;
-      const target = new THREE.Object3D();
-      target.position.set(tx, ty, tz);
-      target.name = `${source.id}-target`;
-      this.scene.add(target);
-      this.envCustomLightTargets.push(target);
-      this.scene.add(light);
-      this.envCustomLights.push(light);
-      const helper = new RectAreaLightHelper(light);
-      hardenStudioHelperTree(helper);
-      helperGroup.add(helper);
-      this.envLightRuntimes.set(source.id, { type, light, target, helper });
-      this.addLightingStudioHandle(
-        source.id,
-        "position",
-        light.position,
-        color,
-        helperGroup,
-      );
-      this.addLightingStudioHandle(
-        source.id,
-        "target",
-        target.position,
-        color,
-        helperGroup,
-      );
-      return;
-    }
-
-    if (type === "directional") {
-      const light = new THREE.DirectionalLight(color, intensity);
-      light.position.set(px, py, pz);
-      light.target.position.set(tx, ty, tz);
-      this.scene.add(light.target);
-      this.envCustomLightTargets.push(light.target);
-      light.target.updateMatrixWorld();
-      light.castShadow = false;
-      light.name = source.label ?? source.id;
-      this.scene.add(light);
-      this.envCustomLights.push(light);
-      const helper = new THREE.DirectionalLightHelper(light, 650, color);
-      hardenStudioHelperTree(helper);
-      helperGroup.add(helper);
-      this.envLightRuntimes.set(source.id, {
-        type,
-        light,
-        target: light.target,
-        helper,
-      });
-      this.addLightingStudioHandle(
-        source.id,
-        "position",
-        light.position,
-        color,
-        helperGroup,
-      );
-      this.addLightingStudioHandle(
-        source.id,
-        "target",
-        light.target.position,
-        color,
-        helperGroup,
-      );
-      return;
-    }
-
-    const light = new THREE.SpotLight(
-      color,
-      intensity,
-      source.distance ?? 12000,
-      THREE.MathUtils.degToRad(source.angle ?? 24),
-      source.penumbra ?? 0.35,
-      source.decay ?? 1.4,
-    );
-    light.position.set(px, py, pz);
-    light.target.position.set(tx, ty, tz);
-    this.scene.add(light.target);
-    this.envCustomLightTargets.push(light.target);
-    light.target.updateMatrixWorld();
-    light.castShadow = false;
-    light.name = source.label ?? source.id;
-    this.scene.add(light);
-    this.envCustomLights.push(light);
-    const helper = new THREE.SpotLightHelper(light, color);
-    helper.update();
-    hardenStudioHelperTree(helper);
-    helperGroup.add(helper);
-    this.envLightRuntimes.set(source.id, {
-      type,
-      light,
-      target: light.target,
-      helper,
-    });
-    this.addLightingStudioHandle(
-      source.id,
-      "position",
-      light.position,
-      color,
-      helperGroup,
-    );
-    this.addLightingStudioHandle(
-      source.id,
-      "target",
-      light.target.position,
-      color,
-      helperGroup,
-    );
+  addLightingStudioSource(source: PresentationLightSource, helperGroup: THREE.Group): void {
+    return addLightingStudioSourceImpl.call(this, source, helperGroup);
   }
 
   listLightingHandlePickables(): THREE.Object3D[] {
@@ -4130,56 +3458,20 @@ export class SceneManager {
     }
   }
 
-  private updateLightingStudioElementScale(camera: THREE.Camera): void {
-    if (!this.envLightHelperGroup || !this.studioSceneElementsVisible) return;
-    for (const handle of this.envLightHandles.values()) {
-      handle.group.getWorldPosition(this.studioHandleWorldPos);
-      const distance = camera.position.distanceTo(this.studioHandleWorldPos);
-      const scale = clampRange(
-        distance / STUDIO_HANDLE_SCREEN_SCALE_DISTANCE_M,
-        STUDIO_HANDLE_MIN_SCALE,
-        STUDIO_HANDLE_MAX_SCALE,
-      );
-      handle.group.scale.setScalar(scale);
-    }
+  updateLightingStudioElementScale(camera: THREE.Camera): void {
+    return updateLightingStudioElementScaleImpl.call(this, camera);
   }
 
-  private updateDynamicCameraOrbitCenterScale(camera: THREE.Camera): void {
-    if (!this.orbitCenterHandle) return;
-    this.orbitCenterHandle.group.getWorldPosition(this.orbitCenterWorldPos);
-    const distance = camera.position.distanceTo(this.orbitCenterWorldPos);
-    const scale = clampRange(
-      distance / ORBIT_CENTER_HANDLE_SCREEN_SCALE_DISTANCE_M,
-      ORBIT_CENTER_HANDLE_MIN_SCALE,
-      ORBIT_CENTER_HANDLE_MAX_SCALE,
-    );
-    this.orbitCenterHandle.group.scale.setScalar(scale);
+  updateDynamicCameraOrbitCenterScale(camera: THREE.Camera): void {
+    return updateDynamicCameraOrbitCenterScaleImpl.call(this, camera);
   }
 
-  private updatePageCameraMarkerScale(
-    marker: PageCameraMarkerRuntime,
-    camera: THREE.Camera,
-  ): void {
-    marker.group.getWorldPosition(this.pageCameraMarkerWorldPos);
-    const distance = camera.position.distanceTo(this.pageCameraMarkerWorldPos);
-    const scale = clampRange(distance / 5200, 0.62, 2.8);
-    marker.label.scale.set(
-      marker.labelBaseWidth * scale,
-      marker.labelBaseHeight * scale,
-      1,
-    );
-    marker.label.position.z = marker.labelLift * scale;
-    this.updatePageCameraMarkerLine(marker);
+  updatePageCameraMarkerScale(marker: PageCameraMarkerRuntime, camera: THREE.Camera): void {
+    return updatePageCameraMarkerScaleImpl.call(this, marker, camera);
   }
 
-  private updatePageCameraMarkersScale(camera: THREE.Camera): void {
-    if (this.pageCameraMarker?.group.visible) {
-      this.updatePageCameraMarkerScale(this.pageCameraMarker, camera);
-    }
-    for (const marker of this.globalPageCameraMarkers.values()) {
-      if (marker.group.visible)
-        this.updatePageCameraMarkerScale(marker, camera);
-    }
+  updatePageCameraMarkersScale(camera: THREE.Camera): void {
+    return updatePageCameraMarkersScaleImpl.call(this, camera);
   }
 
   /**
