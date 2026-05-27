@@ -11,7 +11,6 @@ import type {
   Vec3,
 } from "../pages/types";
 import {
-  effectiveSceneOverlays,
   effectiveStyle,
   effectiveVisibility,
 } from "../pages/effective";
@@ -28,16 +27,7 @@ import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeometry.js";
 import { RectAreaLightHelper } from "three/examples/jsm/helpers/RectAreaLightHelper.js";
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
-import {
-  disposeSceneOverlay,
-  fadeSceneOverlayTo,
-  loadSingleSceneOverlay,
-  rebuildSceneOverlayGeometry,
-  setSceneOverlayTint,
-  tickSceneOverlayTweens,
-  type SceneOverlayHandle,
-} from "../loaders/loadSceneOverlays";
-import { debugLog } from "../utils/debugLog";
+import type { SceneOverlayHandle } from "../loaders/loadSceneOverlays";
 import type { GeologyHandle } from "../loaders/loadGeology";
 import {
   setDistanceAttenuatedLineWidth,
@@ -161,6 +151,7 @@ import {
   applyDrillingAssayDisplay as applyDrillingAssayDisplayToLayers,
   applyTopoDetailDistanceDisplay as applyTopoDetailDistanceDisplayToLayers,
 } from "./styles/drillingAndTopoDisplay";
+import { SceneOverlaysController } from "./overlays/SceneOverlaysController";
 import {
   isTopoMapGraticuleLayer,
   isTopoMapSurfaceLayer,
@@ -186,7 +177,6 @@ export type {
 
 // Fade duration matches the markdown overlay panel (OverlayDisplay's
 // FADE_MS) so chapter transitions feel coherent across UI surfaces.
-const SCENE_OVERLAY_FADE_MS = 800;
 const DEFAULT_LAYER_FADE_MS = 800;
 const WORKING_AREA_FOCUS_RENDER_ORDER = 4575;
 const SCENE_SECTION_AXIS_NORMALS = {
@@ -656,30 +646,11 @@ export class SceneManager {
   private sceneSectionReapplySuspended = false;
   private materialBaseOpacity = new WeakMap<THREE.Material, number>();
   private currentVisibleLayerIds: ReadonlySet<string> | null = null;
-  // Scene overlay registry: one handle per env.sceneOverlays entry.
-  // Loaded eagerly at scene mount; opacity is per-page and tweened by
-  // applySceneOverlaysForPage.
-  private sceneOverlays = new Map<string, SceneOverlayHandle>();
-  private sceneOverlayGroup: THREE.Group | null = null;
+  private readonly sceneOverlayController: SceneOverlaysController;
   private readonly areaOutlineController = new AreaOutlineController(
     this.layers,
     () => this.editorMode,
   );
-  // Last (env, page) applied to scene overlays. Cached so that when the
-  // async loader resolves AFTER PageController's initial mount-time
-  // applySceneOverlaysForPage call, we can replay the apply against
-  // the freshly-registered handles. Same race pattern as terrain shader
-  // uniforms (see lastEnv / reapplyEnvironment above).
-  private lastOverlayPage: PresentationPage | null = null;
-  private lastOverlayEnv: EnvironmentSetup | null = null;
-  // Hooks passed in by scene.ts so SceneManager can load a single
-  // overlay at runtime (when the user adds one via the editor) without
-  // taking a hard dependency on the renderer or path resolver.
-  private overlayResolveAssetPath: (rel: string) => string = (p) => "/" + p;
-  private overlayMaxAnisotropy = 1;
-  // Currently hovered overlay id (for drag-handle cursor + visual
-  // brightness boost).
-  private hoveredOverlayId: string | null = null;
   // Geology layer handle. Stashed so applyEffectiveStylesForPage can
   // forward env overrides (per-unit visibility / colour) into the
   // mask rebuild, and the editor's sub-layer panel can read the
@@ -692,11 +663,13 @@ export class SceneManager {
     private scene: THREE.Scene,
     private renderer: THREE.WebGLRenderer,
   ) {
+    this.sceneOverlayController = new SceneOverlaysController(scene);
     this.topoRuntime = createTopoMapRuntime({
       scene,
       renderer,
-      resolveAssetPath: (path) => this.overlayResolveAssetPath(path),
-      getMaxAnisotropy: () => this.overlayMaxAnisotropy,
+      resolveAssetPath: (path) =>
+        this.sceneOverlayController.resolveAssetPath(path),
+      getMaxAnisotropy: () => this.sceneOverlayController.getMaxAnisotropy(),
       getLayerGroup: (id) => this.layers.get(id),
       getLayerStyle: (id) => this.styleForLayer(id),
       getSurfaceLayerId: () => this.topoSurfaceLayerId(),
@@ -9234,9 +9207,7 @@ export class SceneManager {
     this.updatePageCameraMarkersScale(camera);
     this.updateEzGammaBillboards(camera);
     this.topoRuntime.updateGridCameraVisibility(camera);
-    if (this.sceneOverlays.size > 0) {
-      tickSceneOverlayTweens(this.sceneOverlays.values(), nowMs);
-    }
+    this.sceneOverlayController.tick(nowMs);
   }
 
   /**
@@ -9247,39 +9218,14 @@ export class SceneManager {
    * applySceneOverlaysForPage.
    */
   registerSceneOverlays(handles: Map<string, SceneOverlayHandle>): void {
-    this.ensureSceneOverlayGroup();
-    for (const handle of handles.values()) {
-      this.sceneOverlays.set(handle.id, handle);
-      this.sceneOverlayGroup!.add(handle.mesh);
-      this.sceneOverlayGroup!.add(handle.outlineMesh);
-    }
-    // Replay any apply that landed before the loader resolved. Without
-    // this, freshly-registered handles stay at their construction-time
-    // opacity 0 because PageController's mount-time apply found an
-    // empty registry and silently no-op'd.
-    if (this.lastOverlayEnv && this.lastOverlayPage) {
-      this.applySceneOverlaysForPage(this.lastOverlayEnv, this.lastOverlayPage);
-    }
+    this.sceneOverlayController.registerSceneOverlays(handles);
   }
 
-  private ensureSceneOverlayGroup(): void {
-    if (this.sceneOverlayGroup) return;
-    this.sceneOverlayGroup = new THREE.Group();
-    this.sceneOverlayGroup.name = "__scene_overlays__";
-    this.scene.add(this.sceneOverlayGroup);
-  }
-
-  /**
-   * Wired by scene.ts at mount with the renderer's anisotropy + the
-   * data-path resolver, so SceneManager can hot-load a new overlay at
-   * runtime (editor add flow) without depending on the renderer.
-   */
   setSceneOverlayLoaderHooks(opts: {
     resolveAssetPath: (rel: string) => string;
     maxAnisotropy: number;
   }): void {
-    this.overlayResolveAssetPath = opts.resolveAssetPath;
-    this.overlayMaxAnisotropy = opts.maxAnisotropy;
+    this.sceneOverlayController.setSceneOverlayLoaderHooks(opts);
   }
 
   disposeTerrainOrthoPhotoTexture(): void {
@@ -9292,188 +9238,57 @@ export class SceneManager {
    * mesh's z drape is correct on the first frame.
    */
   async addSceneOverlay(id: string, def: SceneOverlayDef): Promise<void> {
-    if (this.sceneOverlays.has(id)) {
-      console.warn(`[SceneManager] addSceneOverlay: ${id} already exists`);
-      return;
-    }
-    const handle = await loadSingleSceneOverlay(
-      id,
-      def,
-      this.overlayResolveAssetPath,
-      this.overlayMaxAnisotropy,
-    );
-    if (!handle) return;
-    this.ensureSceneOverlayGroup();
-    this.sceneOverlays.set(id, handle);
-    this.sceneOverlayGroup!.add(handle.mesh);
-    this.sceneOverlayGroup!.add(handle.outlineMesh);
-    if (this.lastOverlayEnv && this.lastOverlayPage) {
-      this.applySceneOverlaysForPage(this.lastOverlayEnv, this.lastOverlayPage);
-    }
+    return this.sceneOverlayController.addSceneOverlay(id, def);
   }
 
-  /**
-   * Editor entry point: tear down an overlay's GPU resources and drop
-   * it from the registry. Caller is responsible for stripping page
-   * references too (handled in the editor reducer).
-   */
   removeSceneOverlay(id: string): void {
-    const handle = this.sceneOverlays.get(id);
-    if (!handle) return;
-    if (this.hoveredOverlayId === id) this.hoveredOverlayId = null;
-    handle.mesh.parent?.remove(handle.mesh);
-    handle.outlineMesh.parent?.remove(handle.outlineMesh);
-    disposeSceneOverlay(handle);
-    this.sceneOverlays.delete(id);
+    this.sceneOverlayController.removeSceneOverlay(id);
   }
 
-  /**
-   * Editor entry point: rebuild geometry for an overlay whose bounds
-   * just changed (drag commit). Existing material + texture are
-   * preserved -- only positions/UVs are recomputed.
-   */
   async rebuildSceneOverlayBounds(
     id: string,
     newBounds: SceneOverlayDef["bounds"],
   ): Promise<void> {
-    const handle = this.sceneOverlays.get(id);
-    if (!handle) return;
-    const sample = await getHeightSampler();
-    rebuildSceneOverlayGeometry(handle, newBounds, sample);
+    return this.sceneOverlayController.rebuildSceneOverlayBounds(id, newBounds);
   }
 
-  /**
-   * Look up a handle by id. Used by scene.ts's drag interaction.
-   */
   getSceneOverlay(id: string): SceneOverlayHandle | undefined {
-    return this.sceneOverlays.get(id);
+    return this.sceneOverlayController.getSceneOverlay(id);
   }
 
-  /**
-   * Set hover state on an overlay; brightens the outline opacity
-   * directly. Restores the previous overlay's outline to its current
-   * tween target (the steady-state value).
-   */
   setHoveredSceneOverlay(id: string | null): void {
-    if (id === this.hoveredOverlayId) return;
-    const prev = this.hoveredOverlayId
-      ? this.sceneOverlays.get(this.hoveredOverlayId)
-      : null;
-    if (prev && !prev.outlineTween) {
-      prev.outlineMaterial.opacity = prev.outlineTarget;
-    }
-    this.hoveredOverlayId = id;
-    if (id) {
-      const handle = this.sceneOverlays.get(id);
-      if (handle && handle.outlineTarget > 0) {
-        handle.outlineMaterial.opacity = Math.min(
-          1,
-          handle.outlineTarget + 0.3,
-        );
-      }
-    }
+    this.sceneOverlayController.setHoveredSceneOverlay(id);
   }
 
-  /** Snapshot of registered overlays. Used by editor read-only views. */
   listSceneOverlays(): SceneOverlayHandle[] {
-    return Array.from(this.sceneOverlays.values());
+    return this.sceneOverlayController.listSceneOverlays();
   }
 
-  /**
-   * Resolve effective per-page overlay state and kick off opacity
-   * tweens to the targets. Used on initial mount and on env reapplies
-   * (no transition split).
-   */
   applySceneOverlaysForPage(
     environment: EnvironmentSetup,
     page: PresentationPage,
   ): void {
-    // Cache BEFORE the early-return so a mount-time apply that lands
-    // before the loader resolves still gets replayed once handles
-    // register. Without this, the race in the original Week 5 wiring
-    // left overlays stuck at opacity 0.
-    this.lastOverlayEnv = environment;
-    this.lastOverlayPage = page;
-    if (this.sceneOverlays.size === 0) {
-      debugLog(
-        `[applySceneOverlaysForPage:${page.id}] no handles registered yet, caching for later replay`,
-      );
-      return;
-    }
-    const resolved = effectiveSceneOverlays(environment, page);
-    debugLog(
-      `[applySceneOverlaysForPage:${page.id}] resolved:`,
-      resolved.map((r) => ({
-        id: r.id,
-        visible: r.visible,
-        opacity: r.opacity,
-        tint: r.tint,
-        enabled: r.def.enabled,
-      })),
-    );
-    const now = performance.now();
-    for (const r of resolved) {
-      const handle = this.sceneOverlays.get(r.id);
-      if (!handle) continue;
-      setSceneOverlayTint(handle, r.tint);
-      fadeSceneOverlayTo(handle, r.opacity, now, SCENE_OVERLAY_FADE_MS);
-    }
+    this.sceneOverlayController.applySceneOverlaysForPage(environment, page);
   }
 
-  /**
-   * Tween-start half of the per-page overlay update. Only fades OUT
-   * overlays whose target opacity on the next page is lower than the
-   * current value (i.e., overlays leaving the chapter). Show-ins are
-   * deferred to applySceneOverlaysAtTransitionEnd so they appear
-   * synced with the camera's arrival rather than fading up over the
-   * tweening scene.
-   */
   applySceneOverlaysAtTransitionStart(
     environment: EnvironmentSetup,
     nextPage: PresentationPage,
   ): void {
-    // Cache the target page so a registration during the tween replays
-    // the correct end-state instead of the previous page's.
-    this.lastOverlayEnv = environment;
-    this.lastOverlayPage = nextPage;
-    if (this.sceneOverlays.size === 0) return;
-    const resolved = effectiveSceneOverlays(environment, nextPage);
-    const now = performance.now();
-    for (const r of resolved) {
-      const handle = this.sceneOverlays.get(r.id);
-      if (!handle) continue;
-      if (r.opacity < handle.target) {
-        fadeSceneOverlayTo(handle, r.opacity, now, SCENE_OVERLAY_FADE_MS);
-      }
-    }
+    this.sceneOverlayController.applySceneOverlaysAtTransitionStart(
+      environment,
+      nextPage,
+    );
   }
 
-  /**
-   * Tween-end half: fades IN overlays the next page reveals (and tweens
-   * any same-overlay opacity changes). Called from the camera tween's
-   * onComplete in PageController.
-   */
   applySceneOverlaysAtTransitionEnd(
     environment: EnvironmentSetup,
     nextPage: PresentationPage,
   ): void {
-    this.lastOverlayEnv = environment;
-    this.lastOverlayPage = nextPage;
-    if (this.sceneOverlays.size === 0) return;
-    const resolved = effectiveSceneOverlays(environment, nextPage);
-    const now = performance.now();
-    for (const r of resolved) {
-      const handle = this.sceneOverlays.get(r.id);
-      if (!handle) continue;
-      // Tint is direct (no tween) so apply unconditionally.
-      setSceneOverlayTint(handle, r.tint);
-      // Anything not already at target (which includes the show-ins
-      // skipped by the start half, plus opacity-shifts on overlays
-      // that stayed visible across the transition).
-      if (r.opacity !== handle.target) {
-        fadeSceneOverlayTo(handle, r.opacity, now, SCENE_OVERLAY_FADE_MS);
-      }
-    }
+    this.sceneOverlayController.applySceneOverlaysAtTransitionEnd(
+      environment,
+      nextPage,
+    );
   }
 
   notifyResize(width: number, height: number): void {
@@ -9493,10 +9308,7 @@ export class SceneManager {
         .traceMaterial;
       if (tm) tm.resolution.set(width, height);
     }
-    // Scene overlay bounds outlines live outside the layer registry.
-    for (const h of this.sceneOverlays.values()) {
-      h.outlineMaterial.resolution.set(width, height);
-    }
+    this.sceneOverlayController.notifyResize(width, height);
     this.topoRuntime.notifyResize(width, height);
     const focusMaterial = this.workingAreaFocusRuntime?.line.material;
     if (focusMaterial instanceof LineMaterial) {
