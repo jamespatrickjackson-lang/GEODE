@@ -1,0 +1,3 @@
+export const SURFACE_GRADIENT_DEFAULT_LOW = "#2cc9ff";
+export const SURFACE_GRADIENT_DEFAULT_MID = "#69f0b4";
+export const SURFACE_GRADIENT_DEFAULT_HIGH = "#f8dd6d";
