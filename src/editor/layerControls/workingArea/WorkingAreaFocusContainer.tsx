@@ -12,7 +12,7 @@ import {
 } from "../../styleControls";
 import { compactCheckboxRowStyle } from "../layout/layoutStyles";
 import { editorLayerLabel } from "../layerLabels";
-import { SeismicCapabilityLayerItem } from "../seismic/SeismicControls";
+import { SeismicCapabilityLayerItem } from "../seismic/SeismicCapabilityLayerItem";
 import type { EditableStyle, PresentationPage, ProjectLayerSpec } from "../../../pages/types";
 import type { SceneHandle } from "../../../scene";
 import {
