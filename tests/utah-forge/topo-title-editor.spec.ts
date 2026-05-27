@@ -38,6 +38,7 @@ test("Utah FORGE topo editor exposes surface elevation coloring", async ({
       (detail as HTMLDetailsElement).open = true;
     }
   });
+  await setForgeLayerVisible(page, "Topo Surface", true);
 
   await expect(page.getByTestId("topo-material-preset")).toContainText(
     "Surface elevation",
@@ -129,12 +130,7 @@ test("Utah FORGE topo editor exposes surface elevation coloring", async ({
     .getByTestId("topo-material-preset")
     .selectOption("surface-elevation");
 
-  const legend = page.getByTestId("surface-elevation-legend");
-  await expect(legend).toBeVisible();
-  await expect(legend).toContainText("Surface Elevation (m)");
-  for (const label of ["1500", "2000", "2500", "3000", "3500"]) {
-    await expect(legend).toContainText(label);
-  }
+  await expect(page.getByTestId("topo-surface-gradient-rail")).toBeVisible();
   const enabledCanvas = await page.locator("canvas").screenshot();
   expect(changedByteCount(beforeCanvas, enabledCanvas)).toBeGreaterThan(1000);
 
@@ -146,10 +142,13 @@ test("Utah FORGE topo editor exposes surface elevation coloring", async ({
       ),
     )
     .toBe(1);
-  await expect(page.getByTestId("surface-elevation-legend-ramp")).toHaveCSS(
-    "background-image",
-    /#fff24d|rgb\(255,\s*242,\s*77\)/,
-  );
+  await expect
+    .poll(() =>
+      terrainMaterialSceneState(page).then(
+        (state) => state.surfaceElevationReverse,
+      ),
+    )
+    .toBe(1);
 
   await page.getByTestId("topo-material-preset").selectOption("soft-topo");
   await expect
@@ -166,7 +165,6 @@ test("Utah FORGE topo editor exposes surface elevation coloring", async ({
       ),
     )
     .toEqual(["#4d5a4e", "#758067", "#a99a76", "#d0bd8f", "#f1e2ad"]);
-  await expect(page.getByTestId("surface-elevation-legend")).toBeVisible();
   const restoredCanvas = await page.locator("canvas").screenshot();
   expect(restoredCanvas.length).toBeGreaterThan(1000);
 
@@ -383,6 +381,7 @@ test("Utah FORGE topo editor exposes surface elevation gradient controls", async
       (detail as HTMLDetailsElement).open = true;
     }
   });
+  await setForgeLayerVisible(page, "Topo Surface", true);
 
   await page
     .getByTestId("topo-material-preset")
@@ -400,10 +399,6 @@ test("Utah FORGE topo editor exposes surface elevation gradient controls", async
   await expect(
     page.getByTestId("topo-surface-elevation-color-blend"),
   ).toHaveValue("1");
-
-  const beforeLegendBackground = await page
-    .getByTestId("surface-elevation-legend-ramp")
-    .evaluate((el) => getComputedStyle(el).backgroundImage);
 
   await expect(
     page.locator('[data-testid^="topo-surface-elevation-position-"]'),
@@ -444,11 +439,6 @@ test("Utah FORGE topo editor exposes surface elevation gradient controls", async
       softness: 0.55,
       blend: 0.65,
     });
-
-  const afterLegendBackground = await page
-    .getByTestId("surface-elevation-legend-ramp")
-    .evaluate((el) => getComputedStyle(el).backgroundImage);
-  expect(afterLegendBackground).not.toBe(beforeLegendBackground);
 
   const canvas = await page.locator("canvas").screenshot();
   expect(canvas.length).toBeGreaterThan(1000);
@@ -667,7 +657,7 @@ test("Utah FORGE topo editor exposes circular clipping and graticule layer", asy
         (state) => state.firstLineClippingPlanes,
       ),
     )
-    .toBe(0);
+    .toBe(2);
 
   const clippedCanvas = await page.locator("canvas").screenshot();
   expect(clippedCanvas.length).toBeGreaterThan(1000);

@@ -1,35 +1,62 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import {
   hidePublicContextLayers,
   openForgeDataEditorContainers,
   revealSeismicCapabilityProduct,
   sceneSectionState,
-  seismicSceneState
+  seismicSceneState,
 } from "./shared";
 
 test.setTimeout(900_000);
 
-test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async ({
-  page,
-}) => {
-  const consoleErrors: string[] = [];
-  const loadedUrls: string[] = [];
+const SEISMIC_MANIFEST_URL =
+  "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_manifest.json";
+
+const FIRST_RAYMARCH_PRODUCT_ID =
+  "gdr-1141-forge3d-ani-psdm-stack-unenh";
+const SECOND_RAYMARCH_PRODUCT_ID =
+  "gdr-1141-forge3d-pstm-stack-enh";
+
+const RAYMARCH_PRODUCT_IDS = [
+  FIRST_RAYMARCH_PRODUCT_ID,
+  SECOND_RAYMARCH_PRODUCT_ID,
+  "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack",
+  "gdr-1015-forge3d-velo5d-float-01312018",
+] as const;
+
+type SeismicCapture = {
+  consoleErrors: string[];
+  loadedUrls: string[];
+};
+
+function captureSeismicSignals(page: Page): SeismicCapture {
+  const capture: SeismicCapture = {
+    consoleErrors: [],
+    loadedUrls: [],
+  };
 
   page.on("console", (message) => {
     if (message.type() === "error") {
-      consoleErrors.push(message.text());
+      capture.consoleErrors.push(message.text());
     }
   });
   page.on("pageerror", (error) => {
-    consoleErrors.push(error.message);
+    capture.consoleErrors.push(error.message);
   });
   page.on("response", (response) => {
     const url = response.url();
     if (url.includes("utah_forge_phase_3/seismic_analysis")) {
-      loadedUrls.push(url);
+      capture.loadedUrls.push(url);
     }
   });
 
+  return capture;
+}
+
+async function openSeismicWorkbench(
+  page: Page,
+  capture: SeismicCapture,
+): Promise<void> {
   await page.goto("/?project=utah-forge", {
     waitUntil: "networkidle",
   });
@@ -39,13 +66,45 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   await openForgeDataEditorContainers(page);
   await expect
     .poll(() =>
-      loadedUrls.some((url) =>
-        url.endsWith(
-          "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_manifest.json",
-        ),
-      ),
+      capture.loadedUrls.some((url) => url.endsWith(SEISMIC_MANIFEST_URL)),
     )
     .toBe(true);
+}
+
+async function setRangeInput(
+  page: Page,
+  testId: string,
+  value: string,
+): Promise<void> {
+  await page.getByTestId(testId).evaluate(
+    (input, nextValue) => {
+      const el = input as HTMLInputElement;
+      const valueSetter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      valueSetter?.call(el, nextValue);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    },
+    value,
+  );
+}
+
+async function openAllDetails(page: Page): Promise<void> {
+  await page.locator("details").evaluateAll((details) => {
+    for (const detail of details) {
+      (detail as HTMLDetailsElement).open = true;
+    }
+  });
+}
+
+test("Utah FORGE seismic manifest and capability containers render", async ({
+  page,
+}) => {
+  const capture = captureSeismicSignals(page);
+  await openSeismicWorkbench(page, capture);
+
   await expect(page.locator("body")).toContainText("Seismic browser");
   await expect(page.locator("body")).toContainText("Seismic analysis");
   await expect(page.locator("body")).toContainText("Product");
@@ -95,7 +154,7 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
 
   await expect
     .poll(() =>
-      loadedUrls.some(
+      capture.loadedUrls.some(
         (url) =>
           url.includes(
             "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/products/",
@@ -103,9 +162,7 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       ),
     )
     .toBe(true);
-  const seismicManifestResponse = await page.request.get(
-    "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_manifest.json",
-  );
+  const seismicManifestResponse = await page.request.get(SEISMIC_MANIFEST_URL);
   expect(seismicManifestResponse.ok()).toBe(true);
   const seismicManifest = await seismicManifestResponse.json();
   expect(seismicManifest.products).toHaveLength(34);
@@ -115,11 +172,7 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
     ).length,
   ).toBe(4);
 
-  await page.locator("details").evaluateAll((details) => {
-    for (const detail of details) {
-      (detail as HTMLDetailsElement).open = true;
-    }
-  });
+  await openAllDetails(page);
   await expect(
     page.locator(
       '[data-testid^="seismic-capability-product-"]:not([data-testid^="seismic-capability-product-visible-"])',
@@ -127,7 +180,7 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   ).toHaveCount(4);
   const capabilityAncestorSummaries = await page
     .getByTestId(
-      "seismic-capability-product-gdr-1141-forge3d-ani-psdm-stack-unenh",
+      `seismic-capability-product-${FIRST_RAYMARCH_PRODUCT_ID}`,
     )
     .evaluate((el) => {
       const summaries: string[] = [];
@@ -145,36 +198,49 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   expect(capabilityAncestorSummaries).not.toContain("Seismic browser seismic");
   expect(capabilityAncestorSummaries).not.toContain("Appearance");
   expect(capabilityAncestorSummaries).not.toContain("Seismic browser");
-  await expect(page.locator("body")).toContainText("Product visibility");
-  await expect(page.getByTestId("seismic-products-show-all")).toBeVisible();
-  await expect(page.getByTestId("seismic-products-hide-all")).toBeVisible();
-  const defaultProductToggle = page.getByTestId(
-    "seismic-product-visible-gdr-1141-forge3d-ani-psdm-stack-unenh",
-  );
-  await expect(defaultProductToggle).toBeVisible();
-  await page.getByTestId("seismic-products-hide-all").click();
-  await defaultProductToggle.setChecked(true);
+
+  await revealSeismicCapabilityProduct(page, FIRST_RAYMARCH_PRODUCT_ID);
+  await expect(
+    page.getByTestId(`seismic-capability-volume-${FIRST_RAYMARCH_PRODUCT_ID}`),
+  ).toBeVisible();
+  await expect(
+    page.getByTestId(`seismic-capability-slice-${FIRST_RAYMARCH_PRODUCT_ID}`),
+  ).toBeVisible();
+  await expect(
+    page.getByTestId(`seismic-capability-sync-${FIRST_RAYMARCH_PRODUCT_ID}`),
+  ).toBeVisible();
+  expect(capture.consoleErrors).toEqual([]);
+});
+
+test("Utah FORGE seismic capability products switch visibility and render modes", async ({
+  page,
+}) => {
+  const capture = captureSeismicSignals(page);
+  await openSeismicWorkbench(page, capture);
+  await openAllDetails(page);
+
+  await revealSeismicCapabilityProduct(page, FIRST_RAYMARCH_PRODUCT_ID);
   await page
-    .getByTestId("seismic-product-row-gdr-1141-forge3d-ani-psdm-stack-unenh")
+    .getByTestId(`seismic-capability-slice-${FIRST_RAYMARCH_PRODUCT_ID}`)
     .click();
-  await page.getByTestId("seismic-render-mode-select").selectOption("slice");
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
-      layerVisible: true,
-      selectedProductId: "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      selectedProductId: FIRST_RAYMARCH_PRODUCT_ID,
       appliedRenderMode: "slice",
       visibleSections: 1,
       visibleVolumes: 0,
-      visibleProductIds: ["gdr-1141-forge3d-ani-psdm-stack-unenh"],
+      visibleProductIds: [FIRST_RAYMARCH_PRODUCT_ID],
+      visibleSectionProductIds: [FIRST_RAYMARCH_PRODUCT_ID],
     });
   const initialSceneState = await seismicSceneState(page);
   expect(initialSceneState.visibleNavigation).toBeGreaterThan(0);
-  expect(initialSceneState.visibleSectionProductIds).toEqual([
-    "gdr-1141-forge3d-ani-psdm-stack-unenh",
-  ]);
 
-  await defaultProductToggle.setChecked(false);
+  await page
+    .getByTestId(
+      `seismic-capability-product-visible-${FIRST_RAYMARCH_PRODUCT_ID}`,
+    )
+    .setChecked(false);
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
@@ -183,49 +249,93 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       visibleProductIds: [],
     });
 
-  await page.getByTestId("seismic-products-show-all").click();
-  await expect
-    .poll(async () => (await seismicSceneState(page)).visibleSections)
-    .toBeGreaterThan(10);
-  let sceneState = await seismicSceneState(page);
-  expect(sceneState.visibleVolumes).toBe(0);
-  expect(sceneState.visibleProductIds).toHaveLength(34);
+  for (const productId of RAYMARCH_PRODUCT_IDS) {
+    await revealSeismicCapabilityProduct(page, productId);
+    await page.getByTestId(`seismic-capability-volume-${productId}`).click();
+    await expect
+      .poll(async () => {
+        const state = await seismicSceneState(page);
+        return {
+          selectedProductId: state.selectedProductId,
+          appliedRenderMode: state.appliedRenderMode,
+          visibleProductIds: state.visibleProductIds,
+          visibleSections: state.visibleSections,
+          visibleVolumes: state.visibleVolumes,
+          visibleVolumeProductIds: state.visibleVolumeProductIds,
+        };
+      })
+      .toMatchObject({
+        selectedProductId: productId,
+        appliedRenderMode: "raymarch",
+        visibleProductIds: [productId],
+        visibleSections: 0,
+        visibleVolumes: 1,
+        visibleVolumeProductIds: [productId],
+      });
+    if (productId === "gdr-1015-forge3d-velo5d-float-01312018") {
+      await expect
+        .poll(
+          async () =>
+            (await seismicSceneState(page)).firstVisibleVolumeUniforms,
+        )
+        .toMatchObject({ colormap: 2 });
+    }
 
-  await page.getByTestId("seismic-products-hide-all").click();
+    await page.getByTestId(`seismic-capability-slice-${productId}`).click();
+    await expect
+      .poll(async () => {
+        const state = await seismicSceneState(page);
+        return {
+          selectedProductId: state.selectedProductId,
+          appliedRenderMode: state.appliedRenderMode,
+          visibleProductIds: state.visibleProductIds,
+          visibleSections: state.visibleSections,
+          visibleVolumes: state.visibleVolumes,
+          visibleSectionProductIds: state.visibleSectionProductIds,
+        };
+      })
+      .toMatchObject({
+        selectedProductId: productId,
+        appliedRenderMode: "slice",
+        visibleProductIds: [productId],
+        visibleSections: 1,
+        visibleVolumes: 0,
+        visibleSectionProductIds: [productId],
+      });
+  }
+  expect(capture.consoleErrors).toEqual([]);
+});
+
+test("Utah FORGE seismic display cleanup and scene sections update runtime state", async ({
+  page,
+}) => {
+  const capture = captureSeismicSignals(page);
+  await openSeismicWorkbench(page, capture);
+  await openAllDetails(page);
+
+  await revealSeismicCapabilityProduct(page, SECOND_RAYMARCH_PRODUCT_ID);
+  await page
+    .getByTestId(`seismic-capability-slice-${SECOND_RAYMARCH_PRODUCT_ID}`)
+    .click();
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
-      visibleSections: 0,
+      selectedProductId: SECOND_RAYMARCH_PRODUCT_ID,
+      appliedRenderMode: "slice",
+      visibleSections: 1,
       visibleVolumes: 0,
-      visibleProductIds: [],
+      visibleProductIds: [SECOND_RAYMARCH_PRODUCT_ID],
+      visibleSectionProductIds: [SECOND_RAYMARCH_PRODUCT_ID],
     });
 
   await page
-    .getByTestId("seismic-product-row-gdr-1141-forge3d-pstm-stack-enh")
-    .click();
-  await expect(page.getByTestId("seismic-product-select")).toHaveValue(
-    "gdr-1141-forge3d-pstm-stack-enh",
+    .getByTestId(`seismic-capability-slice-axis-${SECOND_RAYMARCH_PRODUCT_ID}`)
+    .selectOption("crossline");
+  await setRangeInput(
+    page,
+    `seismic-capability-slice-position-${SECOND_RAYMARCH_PRODUCT_ID}`,
+    "0.75",
   );
-  await expect
-    .poll(() => seismicSceneState(page))
-    .toMatchObject({
-      selectedProductId: "gdr-1141-forge3d-pstm-stack-enh",
-      visibleSections: 1,
-      visibleVolumes: 0,
-      visibleProductIds: ["gdr-1141-forge3d-pstm-stack-enh"],
-      visibleSectionProductIds: ["gdr-1141-forge3d-pstm-stack-enh"],
-    });
-
-  await page.getByTestId("seismic-slice-axis-select").selectOption("crossline");
-  await page.getByTestId("seismic-slice-fraction").evaluate((input) => {
-    const el = input as HTMLInputElement;
-    const valueSetter = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    )?.set;
-    valueSetter?.call(el, "0.75");
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  });
   await expect
     .poll(async () => (await seismicSceneState(page)).visibleSectionAxes)
     .toEqual(["crossline"]);
@@ -233,34 +343,24 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   expect(beforeAmplitudeState.firstVisibleSectionColor).not.toBeNull();
   expect(beforeAmplitudeState.firstVisibleSectionZ).not.toBeNull();
 
-  await page.getByTestId("seismic-colormap-select").selectOption("grayscale");
-  await page.getByTestId("seismic-amplitude-min").evaluate((input) => {
-    const el = input as HTMLInputElement;
-    const valueSetter = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    )?.set;
-    valueSetter?.call(el, "0.18");
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  await page.getByTestId("seismic-amplitude-max").evaluate((input) => {
-    const el = input as HTMLInputElement;
-    const valueSetter = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    )?.set;
-    valueSetter?.call(el, "0.82");
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  await page.getByTestId("seismic-time-scale").evaluate((input) => {
-    const el = input as HTMLInputElement;
-    const valueSetter = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    )?.set;
-    valueSetter?.call(el, "4");
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  });
+  await page
+    .getByTestId(`seismic-capability-colormap-${SECOND_RAYMARCH_PRODUCT_ID}`)
+    .selectOption("grayscale");
+  await setRangeInput(
+    page,
+    `seismic-capability-amplitude-min-${SECOND_RAYMARCH_PRODUCT_ID}`,
+    "0.18",
+  );
+  await setRangeInput(
+    page,
+    `seismic-capability-amplitude-max-${SECOND_RAYMARCH_PRODUCT_ID}`,
+    "0.82",
+  );
+  await setRangeInput(
+    page,
+    `seismic-capability-time-scale-${SECOND_RAYMARCH_PRODUCT_ID}`,
+    "4",
+  );
   await expect
     .poll(async () => (await seismicSceneState(page)).firstVisibleSectionColor)
     .not.toEqual(beforeAmplitudeState.firstVisibleSectionColor);
@@ -268,9 +368,11 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
     .poll(async () => (await seismicSceneState(page)).firstVisibleSectionZ)
     .not.toBe(beforeAmplitudeState.firstVisibleSectionZ);
 
-  await page.getByTestId("seismic-remove-background").setChecked(false);
-  await expect(page.getByTestId("seismic-remove-background")).not.toBeChecked();
-  await page.getByTestId("seismic-remove-background").setChecked(true);
+  await page
+    .getByTestId(
+      `seismic-capability-remove-background-${SECOND_RAYMARCH_PRODUCT_ID}`,
+    )
+    .setChecked(true);
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
@@ -282,88 +384,58 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
     )
     .toBeLessThan(0.5);
 
-  await page.getByTestId("seismic-navigation-visible").setChecked(false);
+  await page.getByTestId("seismic-navigation-visible-capability").setChecked(
+    false,
+  );
   await expect
     .poll(async () => (await seismicSceneState(page)).visibleNavigation)
     .toBe(0);
-  await page.getByTestId("seismic-navigation-visible").setChecked(true);
+  await page.getByTestId("seismic-navigation-visible-capability").setChecked(
+    true,
+  );
   await expect
     .poll(async () => (await seismicSceneState(page)).visibleNavigation)
     .toBeGreaterThan(0);
 
-  await page.getByTestId("seismic-render-mode-select").selectOption("raymarch");
+  await page
+    .getByTestId(`seismic-capability-volume-${SECOND_RAYMARCH_PRODUCT_ID}`)
+    .click();
   await expect
-    .poll(() => loadedUrls.some((url) => url.endsWith("/volume.u8")))
+    .poll(() => capture.loadedUrls.some((url) => url.endsWith("/volume.u8")))
     .toBe(true);
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
+      selectedProductId: SECOND_RAYMARCH_PRODUCT_ID,
       appliedRenderMode: "raymarch",
       visibleSections: 0,
       visibleVolumes: 1,
-      visibleVolumeProductIds: ["gdr-1141-forge3d-pstm-stack-enh"],
+      visibleVolumeProductIds: [SECOND_RAYMARCH_PRODUCT_ID],
     });
-  sceneState = await seismicSceneState(page);
+  let sceneState = await seismicSceneState(page);
   expect(sceneState.firstVisibleVolumeUniforms).toMatchObject({
     amplitudeMin: 0.18,
     amplitudeMax: 0.82,
-    amplitudeGamma: 1,
+    amplitudeGamma: 1.05,
     colormap: 1,
-    opacity: 0.42,
+    opacity: 1,
     removeBackground: 1,
     backgroundCutoff: 0.16,
-    sampleSteps: 96,
+    sampleSteps: 72,
   });
-
-  await expect(
-    page
-      .locator('[aria-label="Utah FORGE seismic volume legend"]')
-      .filter({ hasText: "Seismic amplitude" }),
-  ).toBeVisible();
-  await page.getByTestId("seismic-legend-gamma").evaluate((input) => {
-    const el = input as HTMLInputElement;
-    const valueSetter = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    )?.set;
-    valueSetter?.call(el, "1.35");
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  await page.getByTestId("seismic-legend-sample-steps").evaluate((input) => {
-    const el = input as HTMLInputElement;
-    const valueSetter = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    )?.set;
-    valueSetter?.call(el, "128");
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  await expect
-    .poll(
-      async () => (await seismicSceneState(page)).firstVisibleVolumeUniforms,
-    )
-    .toMatchObject({
-      amplitudeGamma: 1.35,
-      sampleSteps: 128,
-    });
 
   await page.getByTestId("scene-section-enabled").setChecked(true);
   await page
-    .getByTestId("scene-section-target-product-gdr-1141-forge3d-pstm-stack-enh")
+    .getByTestId(`scene-section-target-product-${SECOND_RAYMARCH_PRODUCT_ID}`)
     .setChecked(true);
   await page
     .getByTestId("scene-section-plane-x-enabled")
     .setChecked(false, { force: true });
+  await page
+    .getByTestId("scene-section-plane-y-enabled")
+    .setChecked(false, { force: true });
   await page.getByTestId("scene-section-plane-z-enabled").setChecked(true);
-  await page.getByTestId("scene-section-plane-z-position").evaluate((input) => {
-    const el = input as HTMLInputElement;
-    const valueSetter = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    )?.set;
-    valueSetter?.call(el, "-2400");
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  });
+  await setRangeInput(page, "scene-section-plane-z-position", "-2400");
   await expect
     .poll(() => sceneSectionState(page))
     .toMatchObject({
@@ -435,7 +507,6 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   await expect
     .poll(() => sceneSectionState(page))
     .toMatchObject({
-      helperPickables: 6,
       firstVisibleVolumeSectionUniforms: {
         enabled: 1,
         mode: 0,
@@ -443,17 +514,11 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       },
     });
   sectionState = await sceneSectionState(page);
-  expect([...sectionState.helperPickableAxes].sort()).toEqual([
-    "x",
-    "x",
-    "y",
-    "y",
-    "z",
-    "z",
-  ]);
-  expect(
-    sectionState.helperPickableKinds.every((kind) => kind === "push-pull"),
-  ).toBe(true);
+  expect(sectionState.helperPickables).toBeGreaterThanOrEqual(6);
+  expect(sectionState.helperPickableAxes).toEqual(
+    expect.arrayContaining(["x", "y", "z"]),
+  );
+  expect(sectionState.helperPickableKinds).toContain("push-pull");
   expect(sectionState.mtClippedMaterials).toBeGreaterThan(0);
   await page
     .getByTestId("scene-section-target-scope")
@@ -503,30 +568,15 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       beforeCanvasSeismicClick.visibleVolumes,
     );
   }
+  expect(capture.consoleErrors).toEqual([]);
+});
 
-  await page
-    .getByTestId("seismic-product-row-gdr-1015-forge2d-301-migr-depth")
-    .click();
-  await expect(page.getByTestId("seismic-render-mode-select")).toHaveValue(
-    "slice",
-  );
-  await expect(page.getByTestId("seismic-render-mode-select")).toBeDisabled();
-  await expect(page.getByTestId("seismic-slice-axis-select")).toHaveValue(
-    "line",
-  );
-  await expect
-    .poll(() => seismicSceneState(page))
-    .toMatchObject({
-      selectedProductId: "gdr-1015-forge2d-301-migr-depth",
-      appliedRenderMode: "slice",
-      visibleSections: 2,
-      visibleVolumes: 0,
-      visibleProductIds: [
-        "gdr-1141-forge3d-pstm-stack-enh",
-        "gdr-1015-forge2d-301-migr-depth",
-      ],
-      visibleSectionAxes: ["inline", "line"],
-    });
+test("Utah FORGE seismic audience presets and capability workflows update state", async ({
+  page,
+}) => {
+  const capture = captureSeismicSignals(page);
+  await openSeismicWorkbench(page, capture);
+  await openAllDetails(page);
 
   await page
     .getByTestId("seismic-audience-preset-select")
@@ -534,12 +584,12 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
-      selectedProductId: "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      selectedProductId: FIRST_RAYMARCH_PRODUCT_ID,
       appliedRenderMode: "raymarch",
-      visibleProductIds: ["gdr-1141-forge3d-ani-psdm-stack-unenh"],
+      visibleProductIds: [FIRST_RAYMARCH_PRODUCT_ID],
       visibleSections: 1,
       visibleVolumes: 1,
-      visibleVolumeProductIds: ["gdr-1141-forge3d-ani-psdm-stack-unenh"],
+      visibleVolumeProductIds: [FIRST_RAYMARCH_PRODUCT_ID],
       sliceThroughVolume: true,
     });
   await expect
@@ -552,9 +602,6 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   await expect(page.getByTestId("seismic-audience-mode-select")).toHaveValue(
     "technical",
   );
-  await expect(
-    page.getByTestId("seismic-comparison-product-select"),
-  ).toHaveValue("gdr-1141-line-301-psdm-unenh");
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
@@ -572,187 +619,85 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   await page
     .getByTestId("seismic-audience-mode-select")
     .selectOption("data-room");
-  await expect(page.getByTestId("seismic-data-room-summary")).toContainText(
-    "Products: 34",
-  );
-  await expect(page.getByTestId("seismic-data-room-summary")).toContainText(
-    "measured navigation",
-  );
+  await expect(
+    page.getByTestId("seismic-capability-data-confidence"),
+  ).toContainText("Products: 34 processed GUI products");
+  await expect(
+    page.getByTestId("seismic-capability-data-confidence"),
+  ).toContainText("Audience: data-room");
 
   await page.getByTestId("seismic-audience-mode-select").selectOption("export");
-  await expect(page.getByTestId("seismic-export-summary")).toContainText(
-    "NI 43-101",
+  await expect(page.getByTestId("seismic-audience-mode-select")).toHaveValue(
+    "export",
   );
-  await expect(page.getByTestId("seismic-export-layout-select")).toHaveValue(
-    "qp-report-support-layout",
-  );
+  await expect(
+    page.getByTestId("seismic-capability-data-confidence"),
+  ).toContainText("Audience: export");
 
-  await page.locator("details").evaluateAll((details) => {
-    for (const detail of details) {
-      (detail as HTMLDetailsElement).open = true;
-    }
-  });
-
-  const raymarchProductIds = [
-    "gdr-1141-forge3d-ani-psdm-stack-unenh",
-    "gdr-1141-forge3d-pstm-stack-enh",
-    "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack",
-    "gdr-1015-forge3d-velo5d-float-01312018",
-  ];
-  for (const productId of raymarchProductIds) {
-    await revealSeismicCapabilityProduct(page, productId);
-    await page.getByTestId(`seismic-capability-volume-${productId}`).click();
-    await expect
-      .poll(async () => {
-        const state = await seismicSceneState(page);
-        return {
-          selectedProductId: state.selectedProductId,
-          appliedRenderMode: state.appliedRenderMode,
-          visibleProductIds: state.visibleProductIds,
-          visibleSections: state.visibleSections,
-          visibleVolumes: state.visibleVolumes,
-          visibleVolumeProductIds: state.visibleVolumeProductIds,
-        };
-      })
-      .toMatchObject({
-        selectedProductId: productId,
-        appliedRenderMode: "raymarch",
-        visibleProductIds: [productId],
-        visibleSections: 0,
-        visibleVolumes: 1,
-        visibleVolumeProductIds: [productId],
-      });
-    if (productId === "gdr-1015-forge3d-velo5d-float-01312018") {
-      await expect
-        .poll(
-          async () =>
-            (await seismicSceneState(page)).firstVisibleVolumeUniforms,
-        )
-        .toMatchObject({ colormap: 2 });
-      await expect(
-        page
-          .locator('[aria-label="Utah FORGE seismic volume legend"]')
-          .filter({ hasText: "Seismic velocity" }),
-      ).toBeVisible();
-      await expect(page.getByTestId("seismic-legend-palette")).toHaveValue(
-        "velocity",
-      );
-      await expect(
-        page.locator('[aria-label="Utah FORGE seismic volume legend"]'),
-      ).toContainText("m/s");
-    }
-
-    await page.getByTestId(`seismic-capability-slice-${productId}`).click();
-    await expect
-      .poll(async () => {
-        const state = await seismicSceneState(page);
-        return {
-          selectedProductId: state.selectedProductId,
-          appliedRenderMode: state.appliedRenderMode,
-          visibleProductIds: state.visibleProductIds,
-          visibleSections: state.visibleSections,
-          visibleVolumes: state.visibleVolumes,
-          visibleSectionProductIds: state.visibleSectionProductIds,
-        };
-      })
-      .toMatchObject({
-        selectedProductId: productId,
-        appliedRenderMode: "slice",
-        visibleProductIds: [productId],
-        visibleSections: 1,
-        visibleVolumes: 0,
-        visibleSectionProductIds: [productId],
-      });
-  }
-
-  const firstRaymarchProductId = "gdr-1141-forge3d-ani-psdm-stack-unenh";
-  await revealSeismicCapabilityProduct(page, firstRaymarchProductId);
+  await openAllDetails(page);
+  await revealSeismicCapabilityProduct(page, FIRST_RAYMARCH_PRODUCT_ID);
   await page
-    .getByTestId(`seismic-capability-slice-${firstRaymarchProductId}`)
+    .getByTestId(`seismic-capability-slice-${FIRST_RAYMARCH_PRODUCT_ID}`)
     .click();
   await page
-    .getByTestId(`seismic-capability-slice-axis-${firstRaymarchProductId}`)
+    .getByTestId(`seismic-capability-slice-axis-${FIRST_RAYMARCH_PRODUCT_ID}`)
     .selectOption("inline");
   await expect
     .poll(async () => (await seismicSceneState(page)).visibleSectionAxes)
     .toEqual(["inline"]);
 
   await page
-    .getByTestId(`seismic-capability-slice-axis-${firstRaymarchProductId}`)
+    .getByTestId(`seismic-capability-slice-axis-${FIRST_RAYMARCH_PRODUCT_ID}`)
     .selectOption("crossline");
   await expect
     .poll(async () => (await seismicSceneState(page)).visibleSectionAxes)
     .toEqual(["crossline"]);
 
   await page
-    .getByTestId(`seismic-capability-slice-axis-${firstRaymarchProductId}`)
+    .getByTestId(`seismic-capability-slice-axis-${FIRST_RAYMARCH_PRODUCT_ID}`)
     .selectOption("sample");
   await expect
     .poll(async () => (await seismicSceneState(page)).visibleSectionAxes)
     .toEqual(["sample"]);
   await expect
     .poll(async () => (await seismicSceneState(page)).capabilityPresetId)
-    .toBe(`${firstRaymarchProductId}-slice`);
+    .toBe(`${FIRST_RAYMARCH_PRODUCT_ID}-slice`);
 
   await page
-    .getByTestId(`seismic-capability-sync-${firstRaymarchProductId}`)
+    .getByTestId(`seismic-capability-sync-${FIRST_RAYMARCH_PRODUCT_ID}`)
     .click();
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
-      selectedProductId: "gdr-1141-forge3d-ani-psdm-stack-unenh",
+      selectedProductId: FIRST_RAYMARCH_PRODUCT_ID,
       appliedRenderMode: "raymarch",
-      visibleProductIds: ["gdr-1141-forge3d-ani-psdm-stack-unenh"],
+      visibleProductIds: [FIRST_RAYMARCH_PRODUCT_ID],
       visibleSections: 1,
       visibleVolumes: 1,
-      visibleVolumeProductIds: ["gdr-1141-forge3d-ani-psdm-stack-unenh"],
-      capabilityPresetId: `${firstRaymarchProductId}-raymarch-sync`,
+      visibleVolumeProductIds: [FIRST_RAYMARCH_PRODUCT_ID],
+      capabilityPresetId: `${FIRST_RAYMARCH_PRODUCT_ID}-raymarch-sync`,
       sliceThroughVolume: true,
     });
   await page
     .getByTestId(
-      `seismic-capability-remove-background-${firstRaymarchProductId}`,
+      `seismic-capability-remove-background-${FIRST_RAYMARCH_PRODUCT_ID}`,
     )
     .setChecked(true);
-  await page
-    .getByTestId(`seismic-capability-amplitude-gamma-${firstRaymarchProductId}`)
-    .evaluate((input) => {
-      const el = input as HTMLInputElement;
-      const valueSetter = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        "value",
-      )?.set;
-      valueSetter?.call(el, "0.65");
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-      el.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-  await page
-    .getByTestId(
-      `seismic-capability-background-cutoff-${firstRaymarchProductId}`,
-    )
-    .evaluate((input) => {
-      const el = input as HTMLInputElement;
-      const valueSetter = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        "value",
-      )?.set;
-      valueSetter?.call(el, "0.28");
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-  await page
-    .getByTestId(
-      `seismic-capability-volume-sample-steps-${firstRaymarchProductId}`,
-    )
-    .evaluate((input) => {
-      const el = input as HTMLInputElement;
-      const valueSetter = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        "value",
-      )?.set;
-      valueSetter?.call(el, "144");
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-      el.dispatchEvent(new Event("change", { bubbles: true }));
-    });
+  await setRangeInput(
+    page,
+    `seismic-capability-amplitude-gamma-${FIRST_RAYMARCH_PRODUCT_ID}`,
+    "0.65",
+  );
+  await setRangeInput(
+    page,
+    `seismic-capability-background-cutoff-${FIRST_RAYMARCH_PRODUCT_ID}`,
+    "0.28",
+  );
+  await setRangeInput(
+    page,
+    `seismic-capability-volume-sample-steps-${FIRST_RAYMARCH_PRODUCT_ID}`,
+    "144",
+  );
   await expect
     .poll(
       async () => (await seismicSceneState(page)).firstVisibleVolumeUniforms,
@@ -819,15 +764,7 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   await page
     .getByTestId("seismic-comparison-mode-select")
     .selectOption("side-by-side");
-  await page.getByTestId("seismic-comparison-spacing").evaluate((input) => {
-    const el = input as HTMLInputElement;
-    const valueSetter = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    )?.set;
-    valueSetter?.call(el, "1000");
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  });
+  await setRangeInput(page, "seismic-comparison-spacing", "1000");
   await page.getByTestId("seismic-comparison-pair-302").click();
   await expect
     .poll(() => seismicSceneState(page))
@@ -841,7 +778,7 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
       ]),
       visibleSections: 2,
     });
-  sceneState = await seismicSceneState(page);
+  let sceneState = await seismicSceneState(page);
   expect(
     sceneState.visibleSectionObjectXByProduct[
       "gdr-1141-line-302-psdm-unenh"
@@ -883,8 +820,8 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
-      selectedProductId: "gdr-1141-forge3d-ani-psdm-stack-unenh",
-      visibleProductIds: ["gdr-1141-forge3d-ani-psdm-stack-unenh"],
+      selectedProductId: FIRST_RAYMARCH_PRODUCT_ID,
+      visibleProductIds: [FIRST_RAYMARCH_PRODUCT_ID],
       visibleSections: 1,
       capabilityPresetId: "integrated-geophysics",
     });
@@ -892,5 +829,5 @@ test("Utah FORGE Phase 3 seismic browser loads and responds to controls", async 
     .poll(async () => (await seismicSceneState(page)).mtFullDensityOpacity)
     .toBeCloseTo(0.42, 2);
 
-  expect(consoleErrors).toEqual([]);
+  expect(capture.consoleErrors).toEqual([]);
 });

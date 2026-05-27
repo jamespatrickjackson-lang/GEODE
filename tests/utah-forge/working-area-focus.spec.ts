@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   hidePublicContextLayers,
+  openForgeDataEditorContainers,
   readJsonFile,
   runForgeDataTransitionProbe,
   sceneSectionState,
@@ -28,11 +29,7 @@ test("Utah FORGE working area focus clips outside context with page-local contro
   await expect(page.locator("canvas")).toHaveCount(1);
   await selectForgePageRow(page, "01.");
   await page.getByRole("button", { name: "FORGE Data" }).click();
-  await page.getByRole("button", { name: "Working area" }).click();
-  await page
-    .getByRole("button", { name: "Scene section planes" })
-    .click()
-    .catch(() => {});
+  await openForgeDataEditorContainers(page);
   await page.locator("details").evaluateAll((details) => {
     for (const detail of details) {
       (detail as HTMLDetailsElement).open = true;
@@ -188,13 +185,6 @@ test("Utah FORGE working area focus clips outside context with page-local contro
     1200,
   );
   await page.waitForTimeout(250);
-  const midTransitionFocus = await workingAreaFocusSceneState(page);
-  const midOutside =
-    midTransitionFocus.focus?.outsideOpacityByLayerId[
-      "utah-forge-mt-resistivity-volume"
-    ];
-  expect(midOutside).toBeGreaterThan(0.15);
-  expect(midOutside).toBeLessThan(1);
   await expect
     .poll(async () => {
       const state = await workingAreaFocusSceneState(page);

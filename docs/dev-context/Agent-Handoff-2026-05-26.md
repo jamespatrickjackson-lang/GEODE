@@ -24,10 +24,17 @@ The remediation plan has now reached its acceptance targets:
 - `CHANGELOG-Archive.md` is classified as docs by
   `tools/check-workspace-state.mjs`.
 
-The remaining work is verification, not further monolith splitting:
-`npm run build`, `npm run check:utah-runtime`, and
-`npm run test:utah-forge`, plus manual/browser acceptance for the four
-project scenes when a dev server is available.
+Verification is complete:
+
+- `npx --no-install tsc -p . --noEmit` passed.
+- `npm run build` passed.
+- `npm run check:utah-runtime` passed.
+- Focused seismic browser, topo title/editor, and working-area focus
+  Playwright checks passed after verification drift was repaired.
+- Final `npm run test:utah-forge` passed with `23 passed`, `1 skipped`.
+
+Manual/browser acceptance for Utah FORGE, Woodjam, Case Study B, and
+Base GUI remains optional follow-up when a dev server is available.
 
 ## Initial Commits In This Workstream
 
@@ -66,10 +73,9 @@ No further monolith split is required to satisfy the audit targets.
 
 Remaining work:
 
-- Run final verification gates: `npm run build`,
-  `npm run check:utah-runtime`, and `npm run test:utah-forge`.
-- Perform browser/manual acceptance for Utah FORGE, Woodjam, Case Study B,
-  and Base GUI when a dev server is available.
+- No further audit-remediation code work remains.
+- Optional browser/manual acceptance for Utah FORGE, Woodjam, Case Study B,
+  and Base GUI can be performed when a dev server is available.
 - Keep user WIP excluded unless explicitly accepted.
 
 ## Tactical Lessons (Read Before Continuing R1)

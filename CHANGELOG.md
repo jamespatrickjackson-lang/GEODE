@@ -14,7 +14,9 @@
 - Classified `CHANGELOG-Archive.md` as docs in `tools/check-workspace-state.mjs`.
 - Trimmed `CHANGELOG.md` from 772 to 76 lines by moving the 2026-05-11 and 2026-05-12 session-snapshot entries into a new `CHANGELOG-Archive.md`.
 - Added `docs/dev-context/Agent-Handoff-2026-05-26.md` capturing what landed, what is left, tactical lessons, and concrete next-step instructions for the agent picking up the work.
-- Status: audit remediation targets met; final verification gates remain `npm run build`, `npm run check:utah-runtime`, and `npm run test:utah-forge`.
+- Modernized Utah FORGE verification after the split work: seismic browser coverage now targets capability-product controls instead of stale legacy global controls, topo tests no longer require a floating surface-elevation legend for editor-control assertions, and working-area focus coverage uses the shared FORGE Data container opener.
+- Verified `npx --no-install tsc -p . --noEmit`, `npm run build`, `npm run check:utah-runtime`, focused seismic/topo/working-area Playwright checks, and final `npm run test:utah-forge` (`23 passed`, `1 skipped`).
+- Status: AI-agent slowness audit remediation complete. Manual browser acceptance for Utah FORGE, Woodjam, Case Study B, and Base GUI remains optional follow-up when a dev server is available.
 
 ## 2026-05-26 - MT Surface Boundaries And Transition Stability
 
