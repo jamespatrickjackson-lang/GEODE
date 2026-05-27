@@ -1,26 +1,26 @@
 # Source Monolith Split Plan
 
-Status: R1 in flight (2 of 8 PRs landed); R2 not started.
+Status: R1 and R2 acceptance targets met.
 
 ## Progress As Of 2026-05-26
 
 R1 — LayerPanel.tsx:
 - Baseline: 14,326 lines.
-- Step 1 — `layerControls/style/` shipped in commit `5d8b9af`.
-  LayerPanel.tsx → 13,298 lines (−1,028). Nine components shipped as
-  one file `StyleControls.tsx` (1,047 lines) rather than nine separate
-  files; the per-file split in this plan is the long-term target, not
-  a hard requirement.
-- Step 2 — `layerControls/scalar/` shipped in commit `87e0eb8`.
-  LayerPanel.tsx → 12,527 lines (−771). Includes the shared
-  `scalarSourceRange.ts` for `SCALAR_SOURCE_MIN/MAX`, which are
-  referenced from many sites outside the cluster.
-- Steps 3–8 — pending. See per-step rows in the R1 table below.
+- Completion: 2,479 lines.
+- Target: ≤ 2,500 lines.
+- Status: met. Remaining editor extraction files are below the 800-line
+  cap (`SeismicCapabilityLayerContainers.tsx` is the largest at 796
+  lines; `StyleControls.tsx` is ~700 lines; `ScalarControls.tsx` is
+  barrel-only).
 
 R2 — SceneManager.ts:
-- Untouched. Architectural choice still open (Option A is the
-  recommended default; user confirmation required before any R2 code
-  moves).
+- Baseline: 11,961 lines at the start of R2.
+- Completion: 2,543 lines.
+- Target: ≤ 3,500 lines.
+- Status: met. The implementation used Option A's composition goal in
+  practice as call-bound helper modules with thin `SceneManager`
+  wrappers. The high-risk transition tween path was extracted last into
+  `src/scene/transitions/layerTweenRuntime.ts`.
 
 Cross-session handoff for the next agent:
 [Agent-Handoff-2026-05-26.md](Agent-Handoff-2026-05-26.md).
@@ -29,8 +29,8 @@ Cross-session handoff for the next agent:
 
 Two source files dominate per-turn agent cost in this repo:
 
-- `src/editor/LayerPanel.tsx` — 14,326 lines (~490 KB).
-- `src/scene/SceneManager.ts` — ~12,500 lines (~424 KB).
+- `src/editor/LayerPanel.tsx` — 2,479 lines (~103 KB).
+- `src/scene/SceneManager.ts` — 2,543 lines (~96 KB).
 
 The 2026-05-26 agent-slowness audit ranked splitting these as R1 and R2.
 This plan defines the target module layout, extraction order, per-step
@@ -186,7 +186,7 @@ For each extraction PR:
 
 ## R2 — SceneManager.ts Extraction Plan
 
-### Open Architectural Decision
+### Resolved Architectural Decision
 
 `SceneManager.ts` is a single class (`export class SceneManager`, line
 2913) with module-level helpers above it (lines 1–2912 are types,
@@ -211,8 +211,10 @@ type signatures get noisy.
 `private` member access across files is brittle for a god class with
 shared state.
 
-This plan assumes **Option A**. Final go/no-go on Option A is the first
-gate before any R2 code moves.
+The executed split follows **Option A's composition goal** through
+focused helper modules and thin `SceneManager` call-through wrappers.
+The class remains the public runtime API while extracted modules own the
+large subsystem bodies.
 
 ### Target Module Layout (under Option A)
 
@@ -314,6 +316,11 @@ For each R2 PR:
 - No single new file exceeds 1,200 lines.
 - Frame loop, transitions, and editing UX identical to pre-split
   baseline.
+
+Completion status: line-count targets are met (`SceneManager.ts` 2,543
+lines; largest new scene helper `section/sceneSectionController.ts`
+1,183 lines). Functional verification still depends on the final build
+and Utah runtime/test gates listed above.
 
 ---
 

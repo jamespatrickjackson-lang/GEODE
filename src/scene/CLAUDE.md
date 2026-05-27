@@ -1,20 +1,24 @@
 # src/scene — Agent Guardrails
 
-Three.js scene runtime. One monolithic file dominates; the rest are
-focused subsystems.
+Three.js scene runtime. R2 split work reduced `SceneManager.ts` below
+the target and moved scene subsystems into focused helper modules.
 
 ## File Size Map
 
-Large — never `Read` in full; locate via `Grep` and read by line range:
+Large — prefer `Grep` and read by line range:
 
-- `SceneManager.ts` — ~12,000 lines. Scene lifecycle, layer registration,
-  animation loop, layer ordering, opacity scaling, transitions, MT
-  surfaces, resistivity volumes, terrain wiring.
+- `SceneManager.ts` — ~2,550 lines (down from ~12,000; target met).
+  Still central orchestration for scene lifecycle and public runtime API.
 - `terrainMaterial.ts` — ~1,550 lines. Terrain shader material, draping,
   edge fade.
 
 Smaller (safe to read whole):
 
+- `section/sceneSectionController.ts` — ~1,180 lines; largest extracted
+  scene helper and still below the 1,200-line cap.
+- `handles/sceneHandleControllers.ts`, `isoOverlays/volumeCutIsoOverlays.ts`,
+  `terrain/terrainStyleController.ts`, `workingArea/workingAreaFocusController.ts`,
+  and `transitions/layerTweenRuntime.ts` — R2 extracted helpers.
 - `heightSampler.ts` — terrain height lookup.
 - `postprocessing.ts` — post-effect chain.
 - `disposeObjectTree.ts` — Three.js cleanup helper.

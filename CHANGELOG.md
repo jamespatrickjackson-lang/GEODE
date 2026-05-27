@@ -1,6 +1,6 @@
 # GeoSee Change Log
 
-## 2026-05-26 - AI-Agent Slowness Audit And Phase 1 Remediation
+## 2026-05-26 - AI-Agent Slowness Audit And Monolith Remediation
 
 - Audited why AI coding agents (Claude Code and Codex CLI) felt slow inside `c:\GeoSee\GeoSee_Dev`. Dominant causes: `src/editor/LayerPanel.tsx` (14,326 lines), `src/scene/SceneManager.ts` (~12,000 lines), unfiltered Glob/Grep into `projects/*/data/**` and `data/**`, and no `AGENTS.md` for Codex CLI.
 - Added a `Search Hygiene` section to `CLAUDE.md` and mirrored the operating contract into a new root `AGENTS.md` so Codex CLI no longer cold-starts the project every session.
@@ -8,10 +8,13 @@
 - Added `Inactive / Historical Reference Docs` routing in `docs/dev-context/Active-Build-Context.md` so agents skip the historical audit-style docs by default.
 - Added `agent-instructions` as a first-class category in `tools/check-workspace-state.mjs` (DEC-051) so coordinated operating-contract changes ship as a single focused commit instead of splitting across `entry-routing-docs`, `app-code`, and `other`. Also enabled `core.untrackedCache=true` and `--no-renames` in the script's `git status` call; `check:workspace` runs ~50 ms faster.
 - Added `docs/dev-context/Source-Monolith-Split-Plan.md` defining target module layout, extraction order, and per-PR verification gates for the `LayerPanel.tsx` (R1) and `SceneManager.ts` (R2) refactors.
-- Began R1. Step 1 extracted nine style/area-outline components into `src/editor/layerControls/style/StyleControls.tsx` plus a shared `labelKindOptions.ts`; LayerPanel.tsx dropped from 14,326 to 13,298 lines. Step 2 extracted three scalar-control components into `src/editor/layerControls/scalar/ScalarControls.tsx` plus shared `scalarSourceRange.ts`; LayerPanel.tsx dropped to 12,527 lines.
+- Completed R1. `LayerPanel.tsx` dropped from 14,326 to 2,479 lines, with extracted editor clusters under `src/editor/layerControls/`; no new editor extraction file exceeds 800 lines.
+- Completed R2. `SceneManager.ts` dropped from 11,961 to 2,543 lines, with extracted scene helpers for style application, scene sections, overlays, terrain/site guides, working-area focus, handles, volume-cut ISO overlays, and transition tween runtime; no new scene extraction file exceeds 1,200 lines.
+- Archived confirmed historical dev-context audit docs under `docs/dev-context/Archive/` with tracked renames and kept `Data-System-App-Refinement-Plan.md` active in place.
+- Classified `CHANGELOG-Archive.md` as docs in `tools/check-workspace-state.mjs`.
 - Trimmed `CHANGELOG.md` from 772 to 76 lines by moving the 2026-05-11 and 2026-05-12 session-snapshot entries into a new `CHANGELOG-Archive.md`.
 - Added `docs/dev-context/Agent-Handoff-2026-05-26.md` capturing what landed, what is left, tactical lessons, and concrete next-step instructions for the agent picking up the work.
-- Status: Phase 1 guardrails complete; R1 in flight (2 of 8 PRs done); R2 not started; R2 still has one open architectural decision (helper-class composition vs free-standing module functions).
+- Status: audit remediation targets met; final verification gates remain `npm run build`, `npm run check:utah-runtime`, and `npm run test:utah-forge`.
 
 ## 2026-05-26 - MT Surface Boundaries And Transition Stability
 

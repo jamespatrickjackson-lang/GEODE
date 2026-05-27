@@ -1,18 +1,14 @@
 # src/editor — Agent Guardrails
 
-The editor UI dir contains two very large monolithic React panels and a
-handful of smaller companion files. Reading these files in full is
-expensive.
+The editor UI dir used to contain a very large `LayerPanel.tsx`
+monolith. R1 split work reduced it below the target; several companion
+panels remain large enough to read by range.
 
 ## File Size Map
 
 Large — never `Read` in full; use `Grep` to locate the target, then `Read`
 with `offset`+`limit`:
 
-- `LayerPanel.tsx` — ~12,500 lines (down from ~14,300; in-flight R1
-  split per `docs/dev-context/Source-Monolith-Split-Plan.md`). Per-layer
-  panel rendering, layer ordering, opacity controls, terrain/MT/
-  resistivity/hydrography sub-panels inline.
 - `EnvironmentScenePanel.tsx` — ~3,800 lines. Environment, lighting, fog,
   background, sky/sun controls.
 - `PagePanel.tsx` — ~2,400 lines. Page authoring, scene-section
@@ -24,13 +20,16 @@ with `offset`+`limit`:
 - `UtahForgeAddToProjectDrop.tsx` — ~1,700 lines. Utah FORGE asset
   drop-in flow.
 
-Already extracted (use as templates for further R1 work):
+R1 completed (use these as extraction-pattern references):
 
-- `layerControls/style/StyleControls.tsx` — ~1,050 lines, 9 style/area
-  outline components. Re-imported back into LayerPanel.tsx for the
-  consumers that still live there.
-- `layerControls/scalar/ScalarControls.tsx` — ~800 lines, three scalar
-  ramp / point-marker components.
+- `LayerPanel.tsx` — ~2,500 lines (down from 14,326; target met).
+- `layerControls/style/StyleControls.tsx` — ~700 lines.
+- `layerControls/scalar/ScalarControls.tsx` — barrel-only; scalar
+  controls live in per-component files.
+- `layerControls/mt/`, `env/`, `page/`, `overlays/`, `layout/`,
+  `seismic/`, `workingArea/`, and `geology/` hold the extracted
+  LayerPanel sub-controls. No new editor extraction file exceeds 800
+  lines.
 - `layerControls/labelKindOptions.ts`,
   `layerControls/scalarSourceRange.ts` — tiny shared constants used
   both inside and outside their clusters.

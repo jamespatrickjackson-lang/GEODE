@@ -11,9 +11,27 @@ noticeably slow while working in this repo and asked for a full audit
 to find the cause, plus a ranked list of any other improvement
 opportunities.
 
-## What Landed In This Session
+## Completion Addendum
 
-Six commits on `main`, in this order:
+The remediation plan has now reached its acceptance targets:
+
+- `src/editor/LayerPanel.tsx` is 2,479 lines (target ≤ 2,500).
+- `src/scene/SceneManager.ts` is 2,543 lines (target ≤ 3,500).
+- No new editor extraction file exceeds 800 lines.
+- No new scene extraction file exceeds 1,200 lines.
+- Historical audit docs moved into `docs/dev-context/Archive/` with
+  tracked renames.
+- `CHANGELOG-Archive.md` is classified as docs by
+  `tools/check-workspace-state.mjs`.
+
+The remaining work is verification, not further monolith splitting:
+`npm run build`, `npm run check:utah-runtime`, and
+`npm run test:utah-forge`, plus manual/browser acceptance for the four
+project scenes when a dev server is available.
+
+## Initial Commits In This Workstream
+
+Initial commits on `main`, in this order:
 
 | Commit | Scope |
 |---|---|
@@ -31,59 +49,28 @@ Code memory dir). Codex CLI does not read this dir; Codex relies on
 
 ## Where Things Stand (Numbers)
 
-- `src/editor/LayerPanel.tsx` — **12,527 lines** (was 14,326).
-  Plan target ≤ 2,500.
-- `src/scene/SceneManager.ts` — **11,961 lines** (untouched this
-  session). Plan target ≤ 3,500.
-- `src/editor/layerControls/style/StyleControls.tsx` — 1,047 lines.
-- `src/editor/layerControls/scalar/ScalarControls.tsx` — 804 lines.
-- `CHANGELOG.md` — 76 lines (was 772).
-- `tools/check-workspace-state.mjs` — `check:workspace` baseline ~414 ms
-  → ~342–359 ms after Phase 1 tweaks.
+- `src/editor/LayerPanel.tsx` ? **2,479 lines** (was 14,326).
+  Plan target ? 2,500.
+- `src/scene/SceneManager.ts` ? **2,543 lines** (was 11,961 at R2
+  start). Plan target ? 3,500.
+- `src/editor/layerControls/style/StyleControls.tsx` ? 699 lines.
+- `src/editor/layerControls/scalar/ScalarControls.tsx` ? 3-line barrel.
+- `CHANGELOG.md` ? compact active log; older session snapshots live in
+  `CHANGELOG-Archive.md`.
+- `tools/check-workspace-state.mjs` ? `check:workspace` baseline ~414 ms
+  ? ~342?359 ms after Phase 1 tweaks.
 
 ## What's Left
 
-### R1 — LayerPanel.tsx extraction (6 of 8 PRs remaining)
+No further monolith split is required to satisfy the audit targets.
 
-Plan target: `LayerPanel.tsx` ≤ 2,500 lines. Currently 12,527. Need
-to move ~10,000 more lines across the remaining six PRs.
+Remaining work:
 
-| Next | Cluster | Est. lines | Risk |
-|---|---|---|---|
-| Step 3 | `mt/` — `SurfaceGradientControls`, `MtTopSurfaceControls`, `IsobandControls`, `MtVolumeControls`, `MtThresholdSurfaceControls`, `MtStationQcControls`, `ResistivitySliceControls` | ~1,400 | low–medium |
-| Step 4 | `env/` + `page/` rows | ~600 | low |
-| Step 5 | `overlays/` | ~440 | low |
-| Step 6 | `layout/` group + drilling assay + topo distance | ~900 | medium |
-| Step 7 | `seismic/` | ~3,000 | medium |
-| Step 8 | `workingArea/` + `geology/` | ~900 | medium |
-
-Find current line numbers with:
-```
-Grep ^function (Mt|Scene|Working|Page|Env)
-  --path src/editor/LayerPanel.tsx --output_mode content --n true
-```
-Line numbers shift after every extraction — always re-grep.
-
-### R2 — SceneManager.ts split (entirely unstarted)
-
-Plan recommends **Option A (helper classes composed by SceneManager)**.
-The user has not confirmed Option A yet; that confirmation is the first
-gate before any R2 code moves. See `Source-Monolith-Split-Plan.md` →
-"Open Architectural Decision".
-
-### Other deferred remediations
-
-- Historical audit-style docs have moved into `docs/dev-context/Archive/`
-  with tracked renames:
-  `Loader-Project-Module-Audit.md`,
-  `Working-Area-Focus-Clip-Audit.md`, and
-  `Topo-Graticule-Edge-Fade-Audit.md`.
-- Optional: classify `CHANGELOG-Archive.md` under `docs` (currently
-  falls to `other`) by tweaking the classifier in
-  `tools/check-workspace-state.mjs`. Low impact.
-- Optional: split `StyleControls.tsx` (1,047 lines) into per-component
-  files matching the plan's per-file layout. Not needed for
-  correctness; only matters if reading the file becomes inconvenient.
+- Run final verification gates: `npm run build`,
+  `npm run check:utah-runtime`, and `npm run test:utah-forge`.
+- Perform browser/manual acceptance for Utah FORGE, Woodjam, Case Study B,
+  and Base GUI when a dev server is available.
+- Keep user WIP excluded unless explicitly accepted.
 
 ## Tactical Lessons (Read Before Continuing R1)
 
@@ -150,71 +137,13 @@ gate before any R2 code moves. See `Source-Monolith-Split-Plan.md` →
    `.claude/settings.local.json` file is harness-managed and also
    must not be staged.
 
-## How To Resume R1 — Step 3 (mt/ cluster)
+## Completed Split Notes
 
-1. Re-grep current line numbers:
-   ```
-   Grep ^function (SurfaceGradientControls|MtTopSurfaceControls|IsobandControls|MtVolumeControls|MtThresholdSurfaceControls|MtStationQcControls|ResistivitySliceControls)
-     --path src/editor/LayerPanel.tsx --output_mode content --n true
-   ```
-   The interfaces at the start of the cluster
-   (`MtStationQcVariant`, `MtStationQcStation`, `MtStationQcPayload`)
-   move with the cluster.
-
-2. Find every module-level constant the mt cluster references but that
-   is **also** used elsewhere in LayerPanel.tsx. Use
-   `output_mode: content` + `-n true`, not `files_with_matches`.
-   Candidates to vet: any `MT_*` constants, surface-gradient defaults
-   already moved into `StyleControls.tsx`, MT layer-id imports already
-   at the top of LayerPanel.tsx.
-
-3. Create `src/editor/layerControls/mt/MtControls.tsx`. Import
-   `SurfaceGradientColorInput` from `../style/StyleControls`.
-   Import shared helpers (`styleString`, `styleNumber`, etc.) from
-   `../../styleControls`. Move any cluster-only constants into the
-   new file. Move cross-used constants into a small sibling
-   `src/editor/layerControls/<name>.ts` (see existing examples).
-
-4. Edit LayerPanel.tsx:
-   - Add the new import block.
-   - Remove the cluster's module-level constants (only ones the
-     cluster uses exclusively).
-   - Remove the seven function declarations + the three interfaces,
-     anchored on the **next** thing in the file.
-
-5. Verify:
-   ```
-   npx --no-install tsc -p . --noEmit
-   ```
-   Expect empty output.
-
-6. Stage and commit:
-   ```
-   git add src/editor/LayerPanel.tsx src/editor/layerControls/
-   npm run check:workspace -- --commit
-   ```
-   Should PASS as single-category `app-code`.
-
-7. Commit message template (matches recent commit style; no
-   first/second-person pronouns per the operating contract):
-   ```
-   Extract layerControls/mt cluster from LayerPanel
-
-   R1 step 3 from the Source Monolith Split Plan. Moves seven
-   mt-control sub-components ... LayerPanel.tsx drops from <X> to
-   <Y> lines (-<Z>). tsc passes.
-
-   Co-Authored-By: ...
-   ```
-
-## How To Resume R2
-
-Do not start R2 until the user confirms **Option A** (helper-class
-composition) from `Source-Monolith-Split-Plan.md`. The architectural
-choice changes every subsequent step. Open the plan, read the "Open
-Architectural Decision" section, ask the user which option, then
-proceed in the listed order (shaders first — they have no class-state
-coupling and are the safest first cut).
+R1 completed through extracted editor clusters under
+`src/editor/layerControls/`. R2 completed through extracted scene
+helpers under `src/scene/` subsystem dirs, including the final transition
+tween runtime cut. The tactical extraction lessons below remain useful for
+future refactors, but no R1/R2 continuation step is pending.
 
 ## Operating Contract Reminders
 
