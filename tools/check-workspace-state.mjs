@@ -114,7 +114,11 @@ function classify(path) {
     return APP_CODE;
   }
 
-  if (path.startsWith("docs/") || path === "CHANGELOG.md") {
+  if (
+    path.startsWith("docs/") ||
+    path === "CHANGELOG.md" ||
+    path === "CHANGELOG-Archive.md"
+  ) {
     return DOCS;
   }
 
