@@ -73,13 +73,11 @@ gate before any R2 code moves. See `Source-Monolith-Split-Plan.md` →
 
 ### Other deferred remediations
 
-- Move historical audit-style docs (`Loader-Project-Module-Audit.md`,
-  `Working-Area-Focus-Clip-Audit.md`,
-  `Topo-Graticule-Edge-Fade-Audit.md`) into
-  `docs/dev-context/Archive/`. Deferred because the Archive dir is
-  gitignored, so moves would silently drop tracked content. The
-  Inactive Docs routing note in `Active-Build-Context.md` already
-  steers agents away from these.
+- Historical audit-style docs have moved into `docs/dev-context/Archive/`
+  with tracked renames:
+  `Loader-Project-Module-Audit.md`,
+  `Working-Area-Focus-Clip-Audit.md`, and
+  `Topo-Graticule-Edge-Fade-Audit.md`.
 - Optional: classify `CHANGELOG-Archive.md` under `docs` (currently
   falls to `other`) by tweaking the classifier in
   `tools/check-workspace-state.mjs`. Low impact.

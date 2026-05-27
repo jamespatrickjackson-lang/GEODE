@@ -6,7 +6,7 @@ This file tracks proposed app-foundation refactor notes without approving implem
 
 ## Loader / Project Module Boundary Audit
 
-Observed: `docs/dev-context/Loader-Project-Module-Audit.md` now documents the current project load flow and loader dispatch boundary from project selection through `loadProject`, `mountScene`, `SceneManager`, `loadLayerInto`, and concrete loader calls.
+Observed: `docs/dev-context/Archive/Loader-Project-Module-Audit.md` now documents the current project load flow and loader dispatch boundary from project selection through `loadProject`, `mountScene`, `SceneManager`, `loadLayerInto`, and concrete loader calls.
 
 Status: no refactor has happened yet. The audit is planning input for human review before any loader registry, project-module split, lifecycle/disposal work, lazy loading, SceneManager split, editor split, page/schema change, render/material change, or project data/config/page change.
 

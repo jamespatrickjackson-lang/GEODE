@@ -83,11 +83,11 @@ The following dev-context docs are reference-only or superseded. Do not
 pull them into routine exploration; load only when the task explicitly
 needs the captured history.
 
-- `docs/dev-context/Loader-Project-Module-Audit.md` — read-only audit
+- `docs/dev-context/Archive/Loader-Project-Module-Audit.md` — read-only audit
   feeding `Data-System-App-Refinement-Plan.md`; not a routing entry.
-- `docs/dev-context/Working-Area-Focus-Clip-Audit.md` — historical audit;
+- `docs/dev-context/Archive/Working-Area-Focus-Clip-Audit.md` — historical audit;
   no active routing references.
-- `docs/dev-context/Topo-Graticule-Edge-Fade-Audit.md` — historical
+- `docs/dev-context/Archive/Topo-Graticule-Edge-Fade-Audit.md` — historical
   audit; superseded by `Topo-Graticule-Edge-Fade-Implementation-Plan.md`.
 
 Receipt and audit subdirs (`Archive/`, `Change-Receipts/`,

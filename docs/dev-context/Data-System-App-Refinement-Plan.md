@@ -55,7 +55,7 @@ Any performance, bundle, loader, data, or module-size recommendation is unsafe u
 | Dev-only runtime diagnostics | Observed present | `src/scene/layerDiagnostics.ts` exposes read-only dev diagnostics via `window.__GEOVOX_DIAGNOSTICS__`; capture fresh focused evidence when a current task needs it. |
 | Utah FORGE MT + seismic demo page | Observed present | `projects/utah-forge/pages/20_mt_seismic_integration_check.json` creates a bounded verification page for MT slices plus Phase 3 seismic browser. It is pending visual/human review and is not accepted final demo scope. |
 | Utah FORGE demo walkthrough v0 | Observed present | `projects/utah-forge/pages/30_demo_site_context.json` through `35_demo_provenance_review.json` create a six-page page/overlay walkthrough with screenshot and diagnostics evidence. It is pending visual/human review and is not accepted demo scope. |
-| `docs/dev-context/Loader-Project-Module-Audit.md` | Observed present | Read-only audit of future loader/project-module boundary; planning input only, with no loader registry, SceneManager refactor, runtime behavior, rendering, project config, page, data, or prep changes. |
+| `docs/dev-context/Archive/Loader-Project-Module-Audit.md` | Observed present | Read-only audit of future loader/project-module boundary; planning input only, with no loader registry, SceneManager refactor, runtime behavior, rendering, project config, page, data, or prep changes. |
 | Loader Registry Slice 1 | Observed implemented | `src/scene/layerLoaderRegistry.ts` exists and `src/scene/layerLoaders.ts` uses it internally while preserving `loadLayerInto(spec, manager)` and keeping all handlers in place. Project-specific extraction, lazy loading, lifecycle/disposal, and SceneManager split remain future work. |
 | Loader Registry Slice 1B | Observed implemented | Project-module sentinel extraction moved only `base-gui-reference-stage` and `utah-forge-reference-stage` handler definitions into project-module registration files. Heavy/data handlers, lazy loading, lifecycle/disposal, and SceneManager split remain future work. |
 | Loader Registry Slice 1B visual/runtime checks | Observed present | Base GUI and Utah FORGE open checks, diagnostics, wrapper validation, coverage, and build results should be recaptured when this area is reopened. |
@@ -144,7 +144,7 @@ Proposed only: The table is a planning input for human review. It should not be 
 
 ## Loader / Project Module Boundary Audit
 
-Observed: `Loader-Project-Module-Audit.md` now maps project selection, `loadProject`, `mountScene`, `SceneManager`, `loadLayerInto`, current ordered loader dispatch, generic loader candidates, and project-specific loader candidates.
+Observed: `Archive/Loader-Project-Module-Audit.md` now maps project selection, `loadProject`, `mountScene`, `SceneManager`, `loadLayerInto`, current ordered loader dispatch, generic loader candidates, and project-specific loader candidates.
 
 Boundary: This is completed planning input only. It does not implement a loader registry, move loader code, change `SceneManager`, change pages/manifests/environment files, alter runtime loading, change visibility, change rendering/material/depth behavior, or change computed artifacts. Human review is still needed before deciding whether the first implementation slice should create a registry with generic handlers only.
 
