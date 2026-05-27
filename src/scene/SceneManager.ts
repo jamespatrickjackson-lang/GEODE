@@ -16,8 +16,6 @@ import {
 } from "../pages/effective";
 import {
   activeRenderPresetIdForPage,
-  projectRenderPresets,
-  scenePatchForRenderPreset,
 } from "../pages/renderPresets";
 import type { PostHandle } from "./postprocessing";
 import type { TerrainMaterialHandle } from "./terrainMaterial";
@@ -189,7 +187,7 @@ import {
   createTopoMapRuntime,
   type TopoMapRuntime,
 } from "../topoMap/runtime";
-import { applyTopoMaterialAuthority } from "../topoMap/materialAuthority";
+import { applyEnvironment as applyEnvironmentImpl } from "./environment/applyEnvironment";
 import { extractRuntimeMarchingCubesGeometry } from "../mtResistivity/runtimeMarchingCubes";
 import { DEFAULT_MT_RESISTIVITY_SLICE_ID } from "../mtResistivity/sliceProducts";
 
@@ -218,12 +216,6 @@ const ORBIT_CENTER_HANDLE_MIN_SCALE = 0.65;
 const ORBIT_CENTER_HANDLE_MAX_SCALE = 1;
 const DEFAULT_SCENE_FOG_DENSITY = 0.00018;
 
-// Greyscale render-time overrides. When env.scene.lightMode === true
-// these supplant the authored terrain ramp + fog/background colors.
-// Values are picked to read with proper hillshade contrast against
-// the existing sun direction; tweaks should keep the low/mid/high
-// progression so elevation reads even without color.
-const LIGHT_MODE_BG = "#a0a0a0";
 let rectAreaLightsReady = false;
 
 // SceneManager. Owns lights, fog, post chain config, layer registry.
@@ -237,32 +229,6 @@ let rectAreaLightsReady = false;
 // Sun direction can stay world/model anchored or follow the camera when
 // env.scene.sun.lockToCamera is enabled. The same vector drives the key
 // light and terrain hillshade.
-
-const TONE_MAPPING_MAP: Record<
-  NonNullable<SceneProperties["toneMapping"]>,
-  THREE.ToneMapping
-> = {
-  none: THREE.NoToneMapping,
-  linear: THREE.LinearToneMapping,
-  reinhard: THREE.ReinhardToneMapping,
-  cineon: THREE.CineonToneMapping,
-  aces: THREE.ACESFilmicToneMapping,
-  agx: THREE.AgXToneMapping ?? THREE.ACESFilmicToneMapping,
-};
-
-function sunDirectionFromAngles(
-  azimuthDeg: number,
-  elevationDeg: number,
-): THREE.Vector3 {
-  const az = THREE.MathUtils.degToRad(azimuthDeg);
-  const elev = THREE.MathUtils.degToRad(elevationDeg);
-  const cosE = Math.cos(elev);
-  return new THREE.Vector3(
-    Math.sin(az) * cosE,
-    Math.cos(az) * cosE,
-    Math.sin(elev),
-  );
-}
 
 function styleAffectedByFog(style: EditableStyle): boolean {
   return style.affectedByFog !== false;
@@ -278,66 +244,6 @@ function styleFogDensity(style: EditableStyle, fallback: number): number {
 function isContourLikeLayerId(id: string): boolean {
   const lower = id.toLowerCase();
   return lower.includes("contour") || lower.includes("isoline");
-}
-
-function mergeSceneProperties(
-  base: SceneProperties | undefined,
-  patch: Partial<SceneProperties> | null,
-): SceneProperties {
-  const scene = base ?? {};
-  if (!patch) return scene;
-  return {
-    ...scene,
-    ...patch,
-    fog: { ...(scene.fog ?? {}), ...(patch.fog ?? {}) },
-    bloom: { ...(scene.bloom ?? {}), ...(patch.bloom ?? {}) },
-    camera: { ...(scene.camera ?? {}), ...(patch.camera ?? {}) },
-    lighting: {
-      ...(scene.lighting ?? {}),
-      ...(patch.lighting ?? {}),
-      hemisphere: {
-        ...(scene.lighting?.hemisphere ?? {}),
-        ...(patch.lighting?.hemisphere ?? {}),
-      },
-      directional: {
-        ...(scene.lighting?.directional ?? {}),
-        ...(patch.lighting?.directional ?? {}),
-      },
-      fill: {
-        ...(scene.lighting?.fill ?? {}),
-        ...(patch.lighting?.fill ?? {}),
-      },
-      rim: {
-        ...(scene.lighting?.rim ?? {}),
-        ...(patch.lighting?.rim ?? {}),
-      },
-    },
-    ambientOcclusion: {
-      ...(scene.ambientOcclusion ?? {}),
-      ...(patch.ambientOcclusion ?? {}),
-    },
-    terrain: {
-      ...(scene.terrain ?? {}),
-      ...(patch.terrain ?? {}),
-    },
-    colorGrade: {
-      ...(scene.colorGrade ?? {}),
-      ...(patch.colorGrade ?? {}),
-    },
-    vignette: {
-      ...(scene.vignette ?? {}),
-      ...(patch.vignette ?? {}),
-    },
-    sun: { ...(scene.sun ?? {}), ...(patch.sun ?? {}) },
-    gui: {
-      ...(scene.gui ?? {}),
-      ...(patch.gui ?? {}),
-      labels: {
-        ...(scene.gui?.labels ?? {}),
-        ...(patch.gui?.labels ?? {}),
-      },
-    },
-  };
 }
 
 function hasSurfaceGradientStyle(style: EditableStyle): boolean {
@@ -526,10 +432,10 @@ function hardenStudioHelperTree(obj: THREE.Object3D): void {
 export class SceneManager {
   private layers = new Map<string, THREE.Group>();
   private layerSpecs = new Map<string, ProjectLayerSpec>();
-  private envHemiLight: THREE.HemisphereLight | null = null;
+  envHemiLight: THREE.HemisphereLight | null = null;
   private envKeyLight: THREE.DirectionalLight | null = null;
-  private envFillLight: THREE.DirectionalLight | null = null;
-  private envRimLight: THREE.DirectionalLight | null = null;
+  envFillLight: THREE.DirectionalLight | null = null;
+  envRimLight: THREE.DirectionalLight | null = null;
   private envCustomLights: THREE.Light[] = [];
   private envCustomLightTargets: THREE.Object3D[] = [];
   private envLightHelperGroup: THREE.Group | null = null;
@@ -550,9 +456,9 @@ export class SceneManager {
   private appliedLayerStyles = new Map<string, EditableStyle>();
   private editorMode = true;
   private studioSceneElementsVisible = true;
-  private envFog: THREE.FogExp2 | null = null;
-  private envFogEnabled = true;
-  private envFogDensity = DEFAULT_SCENE_FOG_DENSITY;
+  envFog: THREE.FogExp2 | null = null;
+  envFogEnabled = true;
+  envFogDensity = DEFAULT_SCENE_FOG_DENSITY;
   private postHandle: PostHandle | null = null;
   private baseExposure = 1.0;
   private currentSunDir = new THREE.Vector3(0.6, -0.4, 0.7).normalize();
@@ -560,7 +466,7 @@ export class SceneManager {
   private baseSunLockToCamera = false;
   private sunLockToCamera = false;
   private pendingCameraSunCapture = false;
-  private lastSunConfigKey = "";
+  lastSunConfigKey = "";
   private readonly cameraLocalSunDir = new THREE.Vector3(
     0.6,
     -0.4,
@@ -574,7 +480,7 @@ export class SceneManager {
   private readonly cameraSunRight = new THREE.Vector3();
   private readonly cameraSunUp = new THREE.Vector3();
   private readonly cameraSunBack = new THREE.Vector3();
-  private readonly previousSunDir = new THREE.Vector3();
+  readonly previousSunDir = new THREE.Vector3();
   private readonly boreLensPos = new THREE.Vector3();
   private readonly boreLensNormal = new THREE.Vector3();
   private readonly boreLensToCamera = new THREE.Vector3();
@@ -617,7 +523,7 @@ export class SceneManager {
   // mask rebuild, and the editor's sub-layer panel can read the
   // distinct-units list.
   private geologyHandle: GeologyHandle | null = null;
-  private environmentScenePreviewPatch: Partial<SceneProperties> | null = null;
+  environmentScenePreviewPatch: Partial<SceneProperties> | null = null;
   private lastAppliedRenderPresetId: string | null = null;
 
   constructor(
@@ -778,14 +684,14 @@ export class SceneManager {
     this.applySunDirectionToRuntime();
   }
 
-  private setStudioSceneElementsVisible(enabled: boolean): void {
+  setStudioSceneElementsVisible(enabled: boolean): void {
     this.studioSceneElementsVisible = enabled;
     if (this.envLightHelperGroup) {
       this.envLightHelperGroup.visible = this.editorMode && enabled;
     }
   }
 
-  private clearLightingStudioSources(): void {
+  clearLightingStudioSources(): void {
     for (const light of this.envCustomLights) {
       this.scene.remove(light);
       (light as { dispose?: () => void }).dispose?.();
@@ -1353,7 +1259,7 @@ export class SceneManager {
     return pickables;
   }
 
-  private addLightingStudioSource(
+  addLightingStudioSource(
     source: PresentationLightSource,
     helperGroup: THREE.Group,
   ): void {
@@ -3360,15 +3266,15 @@ export class SceneManager {
     return this.areaOutlineController.getAreaOutlinePreview(id);
   }
 
-  private rebuildAreaOutlines(outlines: AreaOutlineDef[] = []): void {
+  rebuildAreaOutlines(outlines: AreaOutlineDef[] = []): void {
     this.areaOutlineController.rebuild(outlines);
   }
 
-  private applyDrillingAssayDisplay(sp: SceneProperties): void {
+  applyDrillingAssayDisplay(sp: SceneProperties): void {
     applyDrillingAssayDisplayToLayers(this.layers, sp);
   }
 
-  private applyTopoDetailDistanceDisplay(sp: SceneProperties): void {
+  applyTopoDetailDistanceDisplay(sp: SceneProperties): void {
     applyTopoDetailDistanceDisplayToLayers(this.layers, sp);
   }
 
@@ -6000,271 +5906,7 @@ export class SceneManager {
   }
 
   applyEnvironment(environment: EnvironmentSetup): void {
-    this.lastEnv = environment;
-    const presetId = activeRenderPresetIdForPage(
-      environment,
-      this.lastEffectivePage,
-    );
-    this.lastAppliedRenderPresetId = presetId ?? null;
-    const presetPatch = scenePatchForRenderPreset(
-      presetId,
-      projectRenderPresets(environment),
-    );
-    // Precedence: authored environment.scene is the base. Current / Custom
-    // leaves presetId empty, so no preset patch is applied. An explicit
-    // environment renderPreset patches cinematic/world-building fields, an
-    // optional page.renderPreset wins over the environment default, preview/
-    // editor patches still win, and existing page mood overrides are applied
-    // afterward in applyPageScene. Technical layer renderers are not touched.
-    const sp = mergeSceneProperties(
-      mergeSceneProperties(environment.scene, presetPatch),
-      this.environmentScenePreviewPatch,
-    );
-    const authoritativeTerrain = applyTopoMaterialAuthority(
-      sp.terrain,
-      environment.scene?.terrain,
-    );
-    if (authoritativeTerrain) sp.terrain = authoritativeTerrain;
-    this.topoRuntime.setCurrentTerrain(sp.terrain ?? {});
-    this.setStudioSceneElementsVisible(sp.lighting?.showSceneElements ?? true);
-    this.applyDrillingAssayDisplay(sp);
-    this.applyTopoDetailDistanceDisplay(sp);
-    this.rebuildAreaOutlines(sp.areaOutlines ?? []);
-
-    // ---- tone mapping + exposure ---------------------------------------
-    const tm = sp.toneMapping ?? "aces";
-    this.renderer.toneMapping = TONE_MAPPING_MAP[tm];
-    this.baseExposure = sp.exposure ?? 1.0;
-    this.renderer.toneMappingExposure = this.baseExposure;
-
-    // ---- background -- the universal "fade to" color -------------------
-    // Renderer clear color and fog share this so terrain dissolves into
-    // the same value visible at every screen edge. lightMode overrides
-    // the authored value with a neutral grey so the whole frame reads
-    // as light/grey rather than warm/dark.
-    const lightMode = sp.lightMode === true;
-    const bgHex = lightMode ? LIGHT_MODE_BG : (sp.background ?? "#23252a");
-    const bgColor = new THREE.Color(bgHex);
-    this.renderer.setClearColor(bgColor);
-    this.scene.background = bgColor;
-
-    // ---- sun direction (drives key light + terrain hillshade) ---------
-    const sunAz = sp.sun?.azimuth ?? 235;
-    const sunEl = sp.sun?.elevation ?? 22;
-    const sunConfigKey = `${sunAz}:${sunEl}`;
-    const sunConfigChanged = sunConfigKey !== this.lastSunConfigKey;
-    this.lastSunConfigKey = sunConfigKey;
-    this.previousSunDir.copy(this.currentSunDir);
-    this.authoredWorldSunDir.copy(sunDirectionFromAngles(sunAz, sunEl));
-    this.baseSunLockToCamera = sp.sun?.lockToCamera === true;
-    const nextSunLockToCamera =
-      this.lastEffectivePage?.sunLockToCamera ?? this.baseSunLockToCamera;
-    const keepCameraLockedSun =
-      nextSunLockToCamera && this.sunLockToCamera && !sunConfigChanged;
-    if (keepCameraLockedSun) {
-      this.currentSunDir.copy(this.previousSunDir);
-    } else {
-      this.currentSunDir.copy(this.authoredWorldSunDir);
-      this.cameraLocalSunDir.copy(this.authoredWorldSunDir);
-    }
-    this.sunLockToCamera = nextSunLockToCamera;
-    this.pendingCameraSunCapture = false;
-    if (this.sunLockToCamera && !keepCameraLockedSun) {
-      this.requestCameraSunCapture(this.currentSunDir);
-    }
-
-    // ---- lights --------------------------------------------------------
-    const tearDown = (light: THREE.Light | null) => {
-      if (!light) return;
-      this.scene.remove(light);
-      (light as { dispose?: () => void }).dispose?.();
-    };
-    tearDown(this.envHemiLight);
-    tearDown(this.envKeyLight);
-    tearDown(this.envFillLight);
-    tearDown(this.envRimLight);
-    this.clearLightingStudioSources();
-    this.envHemiLight = null;
-    this.envKeyLight = null;
-    this.envFillLight = null;
-    this.envRimLight = null;
-
-    const studioLights = sp.lighting?.enabled !== false;
-    const showStudioSceneElements =
-      this.editorMode && this.studioSceneElementsVisible;
-
-    // Hemisphere with strong floor: "sky" tint (since there's no actual
-    // sky now, just a top-coming wash) on top, warm "ground" tint below.
-    // Studio off falls back to a neutral wash: useful for checking the
-    // presentation lighting treatment without introducing measuring-tool
-    // style controls.
-    const hemi = sp.lighting?.hemisphere;
-    const h = new THREE.HemisphereLight(
-      new THREE.Color(hemi?.sky ?? "#c4d4ee"),
-      new THREE.Color(hemi?.ground ?? "#48362a"),
-      studioLights ? (hemi?.intensity ?? 0.42) : 0,
-    );
-    this.scene.add(h);
-    this.envHemiLight = h;
-
-    // Key light (sun). Position from sun direction.
-    const dir = sp.lighting?.directional ?? {};
-    const k = new THREE.DirectionalLight(
-      new THREE.Color(dir.color ?? "#ffe2b8"),
-      studioLights ? (dir.intensity ?? 2.35) : 0,
-    );
-    k.position.copy(this.currentSunDir).multiplyScalar(8000);
-    k.target.position.set(0, 0, 0);
-    k.target.updateMatrixWorld();
-    // Cast shadows are forced OFF regardless of env config. At 40km
-    // terrain scale shadow maps alias visibly even at 8192^2, and the
-    // foreground objects (drill collars, target outlines) are emissive
-    // HDR pieces rendered through bloom -- shadow casting from them
-    // would just add noise. All depth and form on terrain comes from
-    // the analytical hillshade in the terrain shader.
-    k.castShadow = false;
-    this.scene.add(k);
-    this.envKeyLight = k;
-
-    if (studioLights) {
-      // Fill light: counter to the key, kept modest so scene objects retain
-      // visible light direction instead of becoming evenly washed.
-      const fill = sp.lighting?.fill ?? {};
-      const f = new THREE.DirectionalLight(
-        new THREE.Color(fill.color ?? "#9ab7d8"),
-        fill.intensity ?? 0.22,
-      );
-      const [fpx, fpy, fpz] = fill.position ?? [-3500, 3500, 3000];
-      f.position.set(fpx, fpy, fpz);
-      f.target.position.set(0, 0, 0);
-      f.target.updateMatrixWorld();
-      this.scene.add(f);
-      this.envFillLight = f;
-
-      const rim = sp.lighting?.rim ?? {};
-      const r = new THREE.DirectionalLight(
-        new THREE.Color(rim.color ?? "#ffd9a0"),
-        rim.intensity ?? 0.28,
-      );
-      const [rpx, rpy, rpz] = rim.position ?? [0, -6000, 1500];
-      r.position.set(rpx, rpy, rpz);
-      r.target.position.set(0, 0, 0);
-      r.target.updateMatrixWorld();
-      this.scene.add(r);
-      this.envRimLight = r;
-
-      const sources = sp.lighting?.sources ?? [];
-      if (sources.length > 0) {
-        const helperGroup = new THREE.Group();
-        helperGroup.name = "__lighting_studio_helpers__";
-        helperGroup.visible = showStudioSceneElements;
-        for (const source of sources) {
-          this.addLightingStudioSource(source, helperGroup);
-        }
-        hardenStudioHelperTree(helperGroup);
-        if (helperGroup.children.length > 0) {
-          this.scene.add(helperGroup);
-          this.envLightHelperGroup = helperGroup;
-        } else {
-          disposeObjectTree(helperGroup);
-        }
-      }
-    }
-
-    // ---- exponential fog ----------------------------------------------
-    if (this.envFog) {
-      this.scene.fog = null;
-      this.envFog = null;
-    }
-    // Fog color matches background so terrain dissolves into the same
-    // tone as the surrounding frame. Density tuned so the far edge of
-    // the 27x20 km terrain is lost in fog (reachable visibility ~12 km).
-    const fogColor = lightMode
-      ? bgColor // fog matches lightMode background, ignoring authored fog tint
-      : sp.fog?.color
-        ? new THREE.Color(sp.fog.color)
-        : bgColor;
-    const density = sp.fog?.density ?? DEFAULT_SCENE_FOG_DENSITY;
-    const fogEnabled = sp.fog?.enabled !== false;
-    this.envFogEnabled = fogEnabled;
-    this.envFogDensity = density;
-    if (fogEnabled) {
-      const fog = new THREE.FogExp2(fogColor, density);
-      this.scene.fog = fog;
-      this.envFog = fog;
-      // Keep the renderer clear color in sync with fog if both diverged.
-      this.renderer.setClearColor(fogColor);
-      this.scene.background = fogColor;
-    } else {
-      this.scene.fog = null;
-      this.envFog = null;
-    }
-
-    // Shadow pass disabled -- no caster, no receiver, no work for the
-    // renderer. Hillshade in the terrain shader carries all the depth
-    // cues we want.
-    this.renderer.shadowMap.enabled = false;
-
-    // ---- terrain shader uniforms --------------------------------------
-    const terrainGroup = this.topoSurfaceGroup();
-    if (terrainGroup) {
-      this.topoRuntime.applyEnvironment({
-        sceneProperties: sp,
-        sunDirection: this.currentSunDir,
-        fogColor,
-        fogDensity: density,
-        lightMode,
-      });
-      const surfaceLayerId = this.topoSurfaceLayerId();
-      for (const layerId of [
-        surfaceLayerId,
-        "hydrography-lakes",
-        "three-firs-target",
-        "great-plains-target",
-        "claim-boundary",
-        "bedrock-geology",
-        "trees-vri",
-      ]) {
-        const style = this.styleForLayer(layerId);
-        this.applyTerrainFogStyle(
-          layerId,
-          styleAffectedByFog(style),
-          styleFogDensity(style, density),
-        );
-      }
-      this.topoRuntime.applyAllGraticuleStyles();
-      this.topoRuntime.rebuildBranding(sp);
-    }
-
-    // ---- post-processing -----------------------------------------------
-    if (this.postHandle) {
-      const bp = this.postHandle.bloomPass;
-      const b = sp.bloom ?? {};
-      this.postHandle.baseBloomStrength = b.strength ?? 0;
-      bp.radius = b.radius ?? 0.7;
-      bp.threshold = b.threshold ?? 0.82;
-
-      const ao = sp.ambientOcclusion ?? {};
-      const ssao = this.postHandle.ssaoPass;
-      ssao.enabled = ao.enabled ?? true;
-      ssao.kernelRadius = ao.radius ?? 7;
-      ssao.minDistance = ao.minDistance ?? 0.004;
-      ssao.maxDistance = ao.maxDistance ?? 0.12;
-
-      const gp = this.postHandle.gradePass.uniforms;
-      const grade = sp.colorGrade ?? {};
-      gp.contrast.value = grade.contrast ?? 1.06;
-      gp.saturation.value = grade.saturation ?? 1.06;
-      if (grade.tint) {
-        gp.tint.value.set(grade.tint);
-      } else {
-        gp.tint.value.copy(fogColor);
-      }
-      gp.tintStrength.value = grade.tintStrength ?? 0.04;
-      const v = sp.vignette ?? {};
-      gp.vignetteStrength.value = v.strength ?? 0.95;
-      gp.vignetteSmoothness.value = v.smoothness ?? 0.75;
-    }
+    return applyEnvironmentImpl.call(this, environment);
   }
 
   /**
