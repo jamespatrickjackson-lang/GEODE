@@ -81,8 +81,9 @@ The following source files are very large; never read them in full. Use
 `rg`/grep to locate the target range first, then read the relevant lines
 only:
 
-- `src/editor/LayerPanel.tsx` (~14,300 lines)
-- `src/scene/SceneManager.ts` (~12,000 lines)
+- `src/editor/LayerPanel.tsx` (~12,500 lines; in-flight R1 split per
+  `docs/dev-context/Source-Monolith-Split-Plan.md`)
+- `src/scene/SceneManager.ts` (~12,000 lines; R2 split queued)
 - `src/editor/EnvironmentScenePanel.tsx` (~3,800 lines)
 - `src/editor/PagePanel.tsx` (~2,400 lines)
 - `src/editor/topoMap/TopoMapPanel.tsx` (~2,100 lines)

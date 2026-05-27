@@ -74,6 +74,8 @@ appearing during camera/page transitions.
 - Large code surfaces and extraction guidance: `docs/dev-context/Architecture-Hotspots.md`
 - Data/artifact status maps: `docs/dev-context/Dataset-Map.md`, `docs/dev-context/Computed-Artifact-Pipeline.md`, `docs/dev-context/Layer-Artifact-Classification.md`
 - Runtime/project load classes: `docs/dev-context/Project-Load-Class-Table.md`, `docs/dev-context/Runtime-Loading-Policy.md`
+- Source monolith split plan and progress: `docs/dev-context/Source-Monolith-Split-Plan.md`
+- Most recent cross-session handoff: `docs/dev-context/Agent-Handoff-2026-05-26.md`
 
 ## Inactive / Historical Reference Docs
 

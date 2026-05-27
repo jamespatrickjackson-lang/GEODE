@@ -1,6 +1,29 @@
 # Source Monolith Split Plan
 
-Status: planning input. No code moves yet.
+Status: R1 in flight (2 of 8 PRs landed); R2 not started.
+
+## Progress As Of 2026-05-26
+
+R1 — LayerPanel.tsx:
+- Baseline: 14,326 lines.
+- Step 1 — `layerControls/style/` shipped in commit `5d8b9af`.
+  LayerPanel.tsx → 13,298 lines (−1,028). Nine components shipped as
+  one file `StyleControls.tsx` (1,047 lines) rather than nine separate
+  files; the per-file split in this plan is the long-term target, not
+  a hard requirement.
+- Step 2 — `layerControls/scalar/` shipped in commit `87e0eb8`.
+  LayerPanel.tsx → 12,527 lines (−771). Includes the shared
+  `scalarSourceRange.ts` for `SCALAR_SOURCE_MIN/MAX`, which are
+  referenced from many sites outside the cluster.
+- Steps 3–8 — pending. See per-step rows in the R1 table below.
+
+R2 — SceneManager.ts:
+- Untouched. Architectural choice still open (Option A is the
+  recommended default; user confirmation required before any R2 code
+  moves).
+
+Cross-session handoff for the next agent:
+[Agent-Handoff-2026-05-26.md](Agent-Handoff-2026-05-26.md).
 
 ## Context
 
