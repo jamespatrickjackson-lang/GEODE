@@ -5,31 +5,54 @@ import {
   nestedDetailsStyle,
   nestedFieldLabelStyle,
 } from "../../styleControls";
+import type { EditableStyle } from "../../../pages/types";
 import type { SeismicProductOption } from "./seismicModel";
 
 export function SeismicProductVisibilityControls({
   products,
   productVisibility,
   productId,
-  visibleProductCount,
   disabled,
   controlOpacity,
-  setVisibilityForProducts,
-  setProductVisible,
-  selectProduct,
+  commit,
 }: {
   products: SeismicProductOption[];
   productVisibility: Record<string, boolean>;
   productId: string;
-  visibleProductCount: number;
   disabled: boolean;
   controlOpacity: number;
-  setVisibilityForProducts: (
-    predicate: (product: SeismicProductOption) => boolean,
-  ) => void;
-  setProductVisible: (id: string, visible: boolean) => void;
-  selectProduct: (id: string) => void;
+  commit: (patch: Partial<EditableStyle>) => void;
 }) {
+  const visibleProductCount = products.filter(
+    (product) => productVisibility[product.id] === true,
+  ).length;
+  const setProductVisible = (id: string, visible: boolean) => {
+    commit({
+      seismicProductVisibility: {
+        ...productVisibility,
+        [id]: visible,
+      },
+    });
+  };
+  const setVisibilityForProducts = (
+    predicate: (product: SeismicProductOption) => boolean,
+  ) => {
+    commit({
+      seismicProductVisibility: Object.fromEntries(
+        products.map((product) => [product.id, predicate(product)]),
+      ),
+    });
+  };
+  const selectProduct = (id: string) => {
+    commit({
+      seismicProductId: id,
+      seismicProductVisibility: {
+        ...productVisibility,
+        [id]: true,
+      },
+    });
+  };
+
   return (
     <details style={nestedDetailsStyle}>
       <summary style={panelStyles.summary}>

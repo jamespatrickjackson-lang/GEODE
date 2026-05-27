@@ -31,7 +31,6 @@ import {
   seismicProductVisibilityFromStyle,
   SEISMIC_AUDIENCE_MODE_OPTIONS,
   SEISMIC_DEMO_DISCLOSURE_LABELS,
-  type SeismicProductOption,
 } from "./seismicModel";
 export function SeismicBrowserControls({
   layer,
@@ -180,23 +179,6 @@ export function SeismicBrowserControls({
   };
   const commit = (patch: Partial<EditableStyle>) => {
     commitLayerStyle(layerId, patch);
-  };
-  const setProductVisible = (id: string, visible: boolean) => {
-    commit({
-      seismicProductVisibility: {
-        ...productVisibility,
-        [id]: visible,
-      },
-    });
-  };
-  const setVisibilityForProducts = (
-    predicate: (product: SeismicProductOption) => boolean,
-  ) => {
-    commit({
-      seismicProductVisibility: Object.fromEntries(
-        products.map((product) => [product.id, predicate(product)]),
-      ),
-    });
   };
   const setMtCoRender = (
     value: NonNullable<EditableStyle["seismicMtCoRender"]>,
@@ -528,12 +510,9 @@ export function SeismicBrowserControls({
             products={products}
             productVisibility={productVisibility}
             productId={productId}
-            visibleProductCount={visibleProductCount}
             disabled={disabled}
             controlOpacity={controlOpacity}
-            setVisibilityForProducts={setVisibilityForProducts}
-            setProductVisible={setProductVisible}
-            selectProduct={selectProduct}
+            commit={commit}
           />
 
           <div style={nestedControlRowStyle}>

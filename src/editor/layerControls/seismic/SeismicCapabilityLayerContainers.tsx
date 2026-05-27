@@ -16,8 +16,10 @@ import {
 import type { EditableStyle, PresentationPage, ProjectLayerSpec } from "../../../pages/types";
 import type { SceneHandle } from "../../../scene";
 import { UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID } from "../../../projectModules/utahForge/layerIds";
+import { SeismicAudienceAndDataConfidenceControls } from "./SeismicAudienceAndDataConfidenceControls";
 import { SeismicCapabilityLayerItem } from "./SeismicCapabilityLayerItem";
 import { SeismicProductDisplayVariables } from "./SeismicProductDisplayVariables";
+import { SeismicProductVisibilityControls } from "./SeismicProductVisibilityControls";
 import {
   isVelocityProduct,
   seismicColormapFromValue,
@@ -27,7 +29,6 @@ import {
   seismicPresetPatch,
   seismicProductOptions,
   seismicProductVisibilityFromStyle,
-  SEISMIC_DEMO_DISCLOSURE_LABELS,
   type SeismicProductOption,
 } from "./seismicModel";
 export function SeismicCapabilityLayerContainers({
@@ -271,6 +272,15 @@ export function SeismicCapabilityLayerContainers({
 
   return (
     <>
+      <SeismicProductVisibilityControls
+        products={products}
+        productVisibility={productVisibility}
+        productId={productId}
+        disabled={disabled}
+        controlOpacity={controlOpacity}
+        commit={commit}
+      />
+
       {raymarchProducts.map((product) => {
         const productVisible = productVisibility[product.id] === true;
         return (
@@ -776,32 +786,21 @@ export function SeismicCapabilityLayerContainers({
         </div>
       </SeismicCapabilityLayerItem>
 
-      <SeismicCapabilityLayerItem
-        testId="seismic-capability-data-confidence"
-        title="Data confidence"
-        type="metadata"
-      >
-        <div
-          style={{
-            color: vibrancyTertiaryLabel,
-            fontSize: 11,
-            lineHeight: 1.35,
-          }}
-        >
-          <div>Products: {products.length} processed GUI products</div>
-          <div>3D raymarch-capable: {raymarchProducts.length}</div>
-          <div>RenderMode: {renderMode}</div>
-          <div>Audience: {style.seismicAudienceMode ?? "investor"}</div>
-          <div>
-            {isVelocityProduct(selectedProduct) ? "Vel min" : "Amp min"}:{" "}
-            {amplitudeMin.toFixed(2)}
-          </div>
-          <div>
-            Active capability: {currentCapabilityPresetId || "manual controls"}
-          </div>
-          <div>{SEISMIC_DEMO_DISCLOSURE_LABELS.join(" / ")}</div>
-        </div>
-      </SeismicCapabilityLayerItem>
+      <SeismicAudienceAndDataConfidenceControls
+        layer={layer}
+        style={style}
+        products={products}
+        productId={productId}
+        selectedProduct={selectedProduct}
+        raymarchProductCount={raymarchProducts.length}
+        renderMode={renderMode}
+        amplitudeMin={amplitudeMin}
+        currentCapabilityPresetId={currentCapabilityPresetId}
+        disabled={disabled}
+        controlOpacity={controlOpacity}
+        commit={commit}
+        commitLayerStyle={commitLayerStyle}
+      />
     </>
   );
 }
