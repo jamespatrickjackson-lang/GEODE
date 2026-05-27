@@ -1,6 +1,5 @@
-import { useState } from "react";
 import type React from "react";
-import { panelStyles, vibrancyLabel, vibrancySecondaryLabel, vibrancyTertiaryLabel } from "../../styles";
+import { panelStyles, vibrancySecondaryLabel, vibrancyTertiaryLabel } from "../../styles";
 import {
   detailsContentStyle,
   nestedControlRowStyle,
@@ -18,19 +17,18 @@ import {
 import type { EditableStyle, PresentationPage, ProjectLayerSpec } from "../../../pages/types";
 import type { SceneHandle } from "../../../scene";
 import { UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID } from "../../../projectModules/utahForge/layerIds";
-import { IsobandControls } from "../mt/IsobandControls";
+import { SeismicDisplayTuningControls } from "./SeismicDisplayTuningControls";
+import { SeismicProductVisibilityControls } from "./SeismicProductVisibilityControls";
 import {
   isVelocityProduct,
   seismicAudienceModeFromStyle,
   seismicAudiencePresets,
-  seismicCapabilityPresets,
   seismicColormapFromValue,
   seismicDefaultProductId,
   seismicExportLayouts,
   seismicPresetPatch,
   seismicProductOptions,
   seismicProductVisibilityFromStyle,
-  seismicWindowValueLabel,
   SEISMIC_AUDIENCE_MODE_OPTIONS,
   SEISMIC_DEMO_DISCLOSURE_LABELS,
   type SeismicProductOption,
@@ -64,7 +62,6 @@ export function SeismicBrowserControls({
 }) {
   const products = seismicProductOptions(layer);
   const presets = seismicAudiencePresets(layer);
-  const capabilityPresets = seismicCapabilityPresets(layer);
   const exportLayouts = seismicExportLayouts(layer);
   const defaultProductId = seismicDefaultProductId(layer);
   const rawProductId = styleString(style, "seismicProductId", defaultProductId);
@@ -144,10 +141,6 @@ export function SeismicBrowserControls({
     selectedProduct?.raymarchCapable === true &&
     styleBoolean(style, "seismicSliceThroughVolume", false);
   const selectedProductVisible = productVisibility[productId] === true;
-  const seismicOpacity = Math.max(
-    0,
-    Math.min(1, styleNumber(style, "opacity", 0.62)),
-  );
   const controlOpacity = disabled ? 0.4 : 1;
   const exportLayoutId =
     typeof style.seismicExportLayoutId === "string"
@@ -173,20 +166,6 @@ export function SeismicBrowserControls({
       : selectedPreset?.comparisonProductId;
   const comparisonMode =
     style.seismicComparisonMode === "side-by-side" ? "side-by-side" : "overlay";
-  const comparisonSpacingM = Math.max(
-    0,
-    Math.min(3000, styleNumber(style, "seismicComparisonSpacingM", 650)),
-  );
-  const navigationRoleVisibility =
-    typeof style.seismicNavigationRoleVisibility === "object" &&
-    style.seismicNavigationRoleVisibility !== null
-      ? style.seismicNavigationRoleVisibility
-      : {};
-  const navigationSourcesVisible = navigationRoleVisibility.sources !== false;
-  const navigationReceiversVisible =
-    navigationRoleVisibility.receivers !== false;
-  const navigationLinesVisible = navigationRoleVisibility.lines !== false;
-  const [technicalOpen, setTechnicalOpen] = useState(false);
 
   const commitLayerStyle = (
     targetLayerId: string,
@@ -253,57 +232,6 @@ export function SeismicBrowserControls({
       );
     }
   };
-  const applyCapabilityPreset = (presetId: string) => {
-    const preset = capabilityPresets.find(
-      (candidate) => candidate.id === presetId,
-    );
-    if (!preset) return;
-    commit(seismicPresetPatch(preset, products, productId));
-    if (preset.mtStylePatch) {
-      commitLayerStyle(
-        UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
-        preset.mtStylePatch,
-      );
-    }
-  };
-  const selectedOnlyVisibility = (id: string) =>
-    Object.fromEntries(
-      products.map((product) => [product.id, product.id === id]),
-    );
-  const setCapabilityForProduct = (
-    product: SeismicProductOption,
-    mode: "slice" | "raymarch",
-    syncSlice: boolean,
-  ) => {
-    if (!product.id) return;
-    const renderMode =
-      mode === "raymarch" && product.raymarchCapable ? "raymarch" : "slice";
-    commit({
-      seismicCapabilityPresetId: `${product.id}-${renderMode}${
-        syncSlice ? "-sync" : ""
-      }`,
-      seismicProductId: product.id,
-      seismicProductVisibility: selectedOnlyVisibility(product.id),
-      seismicRenderMode: renderMode,
-      seismicColormap: isVelocityProduct(product) ? "velocity" : colormap,
-      seismicSliceAxis:
-        product.surveyKind === "3d"
-          ? sliceAxis === "line"
-            ? "inline"
-            : sliceAxis
-          : "line",
-      seismicSliceThroughVolume:
-        renderMode === "raymarch" &&
-        syncSlice &&
-        product.raymarchCapable === true,
-      seismicNavigationVisible: true,
-      seismicNavigationRoleVisibility: {
-        sources: true,
-        receivers: true,
-        lines: true,
-      },
-    });
-  };
   const applyAudienceMode = (
     value: NonNullable<EditableStyle["seismicAudienceMode"]>,
   ) => {
@@ -354,20 +282,6 @@ export function SeismicBrowserControls({
       seismicRenderMode: "slice",
     });
   };
-  const setNavigationRoleVisible = (
-    role: "sources" | "receivers" | "lines",
-    visible: boolean,
-  ) => {
-    commit({
-      seismicNavigationVisible: true,
-      seismicNavigationRoleVisibility: {
-        sources: navigationSourcesVisible,
-        receivers: navigationReceiversVisible,
-        lines: navigationLinesVisible,
-        [role]: visible,
-      },
-    });
-  };
   const productKindCounts = products.reduce<Record<string, number>>(
     (counts, product) => {
       const key = product.productKind ?? "unknown";
@@ -384,44 +298,6 @@ export function SeismicBrowserControls({
     },
     {},
   );
-  const raymarchProducts = products.filter(
-    (product) => product.raymarchCapable === true,
-  );
-  const lineTheatreActions = [
-    { id: "line-301-theatre", label: "Line 301" },
-    { id: "line-302-theatre", label: "Line 302" },
-    { id: "legacy-l5-l11-theatre", label: "L5 + L11" },
-  ];
-  const comparisonActions = [
-    {
-      label: "301",
-      primary: "gdr-1141-line-301-pdm-enh",
-      compare: "gdr-1141-line-301-psdm-unenh",
-    },
-    {
-      label: "302",
-      primary: "gdr-1141-line-302-psdm-enh",
-      compare: "gdr-1141-line-302-psdm-unenh",
-    },
-    {
-      label: "L5",
-      primary: "gdr-1141-line-l5-psdm-enh",
-      compare: "gdr-1141-line-l5-psdm-unenh",
-    },
-    {
-      label: "L11",
-      primary: "gdr-1141-line-l11-psdm-enh",
-      compare: "gdr-1141-line-l11-psdm-unenh",
-    },
-  ].filter(
-    (action) =>
-      products.some((product) => product.id === action.primary) &&
-      products.some((product) => product.id === action.compare),
-  );
-  const currentCapabilityPresetId =
-    typeof style.seismicCapabilityPresetId === "string"
-      ? style.seismicCapabilityPresetId
-      : "";
   return (
     <>
       <details style={nestedDetailsStyle}>
@@ -641,748 +517,24 @@ export function SeismicBrowserControls({
         </div>
       </details>
 
-      {false ? (
-        <>
-          <details
-            data-testid="seismic-capability-3d-products"
-            style={nestedDetailsStyle}
-            open
-          >
-            <summary style={panelStyles.summary}>3D volume products</summary>
-            <div style={detailsContentStyle}>
-              {raymarchProducts.map((product) => (
-                <div
-                  key={product.id}
-                  style={{ ...nestedControlRowStyle, gap: 6 }}
-                >
-                  <label
-                    style={{
-                      ...nestedFieldLabelStyle,
-                      flex: 1,
-                      minWidth: 0,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                    title={product.label}
-                  >
-                    {product.label}
-                  </label>
-                  {[
-                    {
-                      label: "Volume",
-                      testId: `seismic-capability-volume-${product.id}`,
-                      onClick: () =>
-                        setCapabilityForProduct(product, "raymarch", false),
-                    },
-                    {
-                      label: "Slice",
-                      testId: `seismic-capability-slice-${product.id}`,
-                      onClick: () =>
-                        setCapabilityForProduct(product, "slice", false),
-                    },
-                    {
-                      label: "Sync",
-                      testId: `seismic-capability-sync-${product.id}`,
-                      onClick: () =>
-                        setCapabilityForProduct(product, "raymarch", true),
-                    },
-                  ].map((action) => (
-                    <button
-                      key={action.testId}
-                      type="button"
-                      data-testid={action.testId}
-                      disabled={disabled}
-                      onClick={action.onClick}
-                      style={{
-                        ...panelStyles.iconButton,
-                        width: "auto",
-                        padding: "3px 7px",
-                        fontSize: 10,
-                        opacity: controlOpacity,
-                      }}
-                    >
-                      {action.label}
-                    </button>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </details>
-
-          <details
-            data-testid="seismic-capability-slice-planes"
-            style={nestedDetailsStyle}
-            open
-          >
-            <summary style={panelStyles.summary}>3D slice planes</summary>
-            <div style={detailsContentStyle}>
-              <div
-                style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}
-              >
-                <label style={nestedFieldLabelStyle}>Plane</label>
-                {[
-                  { id: "inline-slice", label: "Inline" },
-                  { id: "crossline-slice", label: "Crossline" },
-                  { id: "time-depth-plane", label: "Time/depth" },
-                ].map((action) => (
-                  <button
-                    key={action.id}
-                    type="button"
-                    data-testid={`seismic-capability-${action.id}`}
-                    disabled={disabled}
-                    onClick={() => applyCapabilityPreset(action.id)}
-                    style={{
-                      ...panelStyles.iconButton,
-                      width: "auto",
-                      padding: "3px 7px",
-                      fontSize: 10,
-                      opacity: controlOpacity,
-                    }}
-                  >
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Position</label>
-                <input
-                  data-testid="seismic-capability-slice-position"
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={sliceFraction}
-                  disabled={disabled}
-                  onChange={(e) =>
-                    commit({ seismicSliceFraction: parseFloat(e.target.value) })
-                  }
-                  style={
-                    {
-                      flex: 1,
-                      opacity: controlOpacity,
-                      "--editor-slider-fill": `${sliceFraction * 100}%`,
-                    } as React.CSSProperties
-                  }
-                />
-                <span style={sliderNumberReadoutStyle}>
-                  {sliceFraction.toFixed(2)}
-                </span>
-              </div>
-            </div>
-          </details>
-
-          <details
-            data-testid="seismic-capability-volume-sync"
-            style={nestedDetailsStyle}
-            open
-          >
-            <summary style={panelStyles.summary}>Volume + slice sync</summary>
-            <div style={detailsContentStyle}>
-              <div style={{ ...nestedControlRowStyle, gap: 6 }}>
-                <label style={nestedFieldLabelStyle}>Synced view</label>
-                <button
-                  type="button"
-                  data-testid="seismic-capability-volume-slice-sync"
-                  disabled={disabled}
-                  onClick={() => applyCapabilityPreset("volume-slice-sync")}
-                  style={{
-                    ...panelStyles.iconButton,
-                    width: "auto",
-                    padding: "3px 7px",
-                    fontSize: 10,
-                    opacity: controlOpacity,
-                  }}
-                >
-                  Apply
-                </button>
-                <span
-                  style={{
-                    flex: 1,
-                    color: vibrancyTertiaryLabel,
-                    fontSize: 11,
-                    opacity: controlOpacity,
-                  }}
-                >
-                  volume plus movable cut plane
-                </span>
-              </div>
-            </div>
-          </details>
-
-          <details
-            data-testid="seismic-capability-line-theatre"
-            style={nestedDetailsStyle}
-            open
-          >
-            <summary style={panelStyles.summary}>
-              2D / legacy section theatre
-            </summary>
-            <div style={detailsContentStyle}>
-              <div
-                style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}
-              >
-                <label style={nestedFieldLabelStyle}>Curtain</label>
-                {lineTheatreActions.map((action) => (
-                  <button
-                    key={action.id}
-                    type="button"
-                    data-testid={`seismic-capability-${action.id}`}
-                    disabled={disabled}
-                    onClick={() => applyCapabilityPreset(action.id)}
-                    style={{
-                      ...panelStyles.iconButton,
-                      width: "auto",
-                      padding: "3px 7px",
-                      fontSize: 10,
-                      opacity: controlOpacity,
-                    }}
-                  >
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </details>
-
-          <details
-            data-testid="seismic-capability-processing-comparison"
-            style={nestedDetailsStyle}
-            open
-          >
-            <summary style={panelStyles.summary}>Processing comparison</summary>
-            <div style={detailsContentStyle}>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Mode</label>
-                <select
-                  data-testid="seismic-comparison-mode-select"
-                  value={comparisonMode}
-                  disabled={disabled}
-                  onChange={(e) =>
-                    commit({
-                      seismicComparisonMode:
-                        e.target.value === "side-by-side"
-                          ? "side-by-side"
-                          : "overlay",
-                    })
-                  }
-                  style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-                >
-                  <option value="overlay">Overlay</option>
-                  <option value="side-by-side">Side-by-side</option>
-                </select>
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Spacing</label>
-                <input
-                  data-testid="seismic-comparison-spacing"
-                  type="range"
-                  min={0}
-                  max={3000}
-                  step={50}
-                  value={comparisonSpacingM}
-                  disabled={disabled || comparisonMode !== "side-by-side"}
-                  onChange={(e) =>
-                    commit({
-                      seismicComparisonSpacingM: parseFloat(e.target.value),
-                    })
-                  }
-                  style={
-                    {
-                      flex: 1,
-                      opacity:
-                        comparisonMode === "side-by-side"
-                          ? controlOpacity
-                          : 0.35,
-                      "--editor-slider-fill": `${(comparisonSpacingM / 3000) * 100}%`,
-                    } as React.CSSProperties
-                  }
-                />
-                <span style={sliderNumberReadoutStyle}>
-                  {comparisonSpacingM.toFixed(0)} m
-                </span>
-              </div>
-              <div
-                style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}
-              >
-                <label style={nestedFieldLabelStyle}>Pair</label>
-                {comparisonActions.map((action) => (
-                  <button
-                    key={action.label}
-                    type="button"
-                    data-testid={`seismic-comparison-pair-${action.label.toLowerCase()}`}
-                    disabled={disabled}
-                    onClick={() =>
-                      commit({
-                        seismicCapabilityPresetId:
-                          action.label === "301"
-                            ? "enhanced-vs-unenhanced"
-                            : `enhanced-vs-unenhanced-${action.label.toLowerCase()}`,
-                        seismicProductId: action.primary,
-                        seismicProductVisibility: Object.fromEntries(
-                          products.map((product) => [
-                            product.id,
-                            product.id === action.primary ||
-                              product.id === action.compare,
-                          ]),
-                        ),
-                        seismicRenderMode: "slice",
-                        seismicSliceAxis: "line",
-                        seismicComparisonProductId: action.compare,
-                        seismicComparisonMode: comparisonMode,
-                      })
-                    }
-                    style={{
-                      ...panelStyles.iconButton,
-                      width: "auto",
-                      padding: "3px 7px",
-                      fontSize: 10,
-                      opacity: controlOpacity,
-                    }}
-                  >
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </details>
-
-          <details
-            data-testid="seismic-capability-display-cleanup"
-            style={nestedDetailsStyle}
-            open
-          >
-            <summary style={panelStyles.summary}>Display cleanup</summary>
-            <div style={detailsContentStyle}>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Opacity</label>
-                <input
-                  data-testid="seismic-capability-opacity"
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.02}
-                  value={seismicOpacity}
-                  disabled={disabled}
-                  onChange={(e) =>
-                    commit({ opacity: parseFloat(e.target.value) })
-                  }
-                  style={
-                    {
-                      flex: 1,
-                      opacity: controlOpacity,
-                      "--editor-slider-fill": `${seismicOpacity * 100}%`,
-                    } as React.CSSProperties
-                  }
-                />
-                <span style={sliderNumberReadoutStyle}>
-                  {seismicOpacity.toFixed(2)}
-                </span>
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>
-                  {isVelocityProduct(selectedProduct) ? "Vel min" : "Amp min"}
-                </label>
-                <input
-                  data-testid="seismic-capability-amplitude-min"
-                  type="range"
-                  min={0}
-                  max={0.98}
-                  step={0.01}
-                  value={amplitudeMin}
-                  disabled={disabled}
-                  onChange={(e) =>
-                    commit({ seismicAmplitudeMin: parseFloat(e.target.value) })
-                  }
-                  style={
-                    {
-                      flex: 1,
-                      opacity: controlOpacity,
-                      "--editor-slider-fill": `${amplitudeMin * 100}%`,
-                    } as React.CSSProperties
-                  }
-                />
-                <span style={sliderNumberReadoutStyle}>
-                  {seismicWindowValueLabel(selectedProduct, amplitudeMin)}
-                </span>
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>
-                  {isVelocityProduct(selectedProduct) ? "Vel max" : "Amp max"}
-                </label>
-                <input
-                  data-testid="seismic-capability-amplitude-max"
-                  type="range"
-                  min={0.02}
-                  max={1}
-                  step={0.01}
-                  value={amplitudeMax}
-                  disabled={disabled}
-                  onChange={(e) =>
-                    commit({ seismicAmplitudeMax: parseFloat(e.target.value) })
-                  }
-                  style={
-                    {
-                      flex: 1,
-                      opacity: controlOpacity,
-                      "--editor-slider-fill": `${amplitudeMax * 100}%`,
-                    } as React.CSSProperties
-                  }
-                />
-                <span style={sliderNumberReadoutStyle}>
-                  {seismicWindowValueLabel(selectedProduct, amplitudeMax)}
-                </span>
-              </div>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Palette</label>
-                <select
-                  data-testid="seismic-capability-colormap-select"
-                  value={colormap}
-                  disabled={disabled}
-                  onChange={(e) =>
-                    commit({
-                      seismicColormap: seismicColormapFromValue(e.target.value),
-                    })
-                  }
-                  style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-                >
-                  <option value="blue-white-red">Blue-white-red</option>
-                  <option value="grayscale">Grayscale</option>
-                  <option value="velocity">Velocity</option>
-                </select>
-              </div>
-              <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-                <span style={nestedFieldLabelStyle}>White bg</span>
-                <input
-                  data-testid="seismic-capability-remove-background"
-                  type="checkbox"
-                  checked={removeBackground}
-                  disabled={disabled}
-                  onChange={(e) =>
-                    commit({ seismicRemoveBackground: e.target.checked })
-                  }
-                  style={{ opacity: controlOpacity }}
-                />
-                <span
-                  style={{
-                    flex: 1,
-                    color: vibrancyTertiaryLabel,
-                    fontSize: 11,
-                    opacity: controlOpacity,
-                  }}
-                >
-                  remove neutral fill
-                </span>
-              </label>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Time scale</label>
-                <input
-                  data-testid="seismic-capability-time-scale"
-                  type="range"
-                  min={0.25}
-                  max={8}
-                  step={0.25}
-                  value={timeScale}
-                  disabled={disabled}
-                  onChange={(e) =>
-                    commit({ seismicTimeScale: parseFloat(e.target.value) })
-                  }
-                  style={
-                    {
-                      flex: 1,
-                      opacity: controlOpacity,
-                      "--editor-slider-fill": `${
-                        ((timeScale - 0.25) / 7.75) * 100
-                      }%`,
-                    } as React.CSSProperties
-                  }
-                />
-                <span style={sliderNumberReadoutStyle}>
-                  {timeScale.toFixed(2)}
-                </span>
-              </div>
-            </div>
-          </details>
-
-          <details
-            data-testid="seismic-capability-survey-geometry"
-            style={nestedDetailsStyle}
-            open
-          >
-            <summary style={panelStyles.summary}>Survey geometry</summary>
-            <div style={detailsContentStyle}>
-              <div
-                style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}
-              >
-                <label style={nestedFieldLabelStyle}>Preset</label>
-                <button
-                  type="button"
-                  data-testid="seismic-capability-survey-geometry-preset"
-                  disabled={disabled}
-                  onClick={() => applyCapabilityPreset("survey-geometry")}
-                  style={{
-                    ...panelStyles.iconButton,
-                    width: "auto",
-                    padding: "3px 7px",
-                    fontSize: 10,
-                    opacity: controlOpacity,
-                  }}
-                >
-                  Show survey
-                </button>
-              </div>
-              {[
-                {
-                  role: "sources" as const,
-                  label: "Sources",
-                  checked: navigationSourcesVisible,
-                },
-                {
-                  role: "receivers" as const,
-                  label: "Receivers",
-                  checked: navigationReceiversVisible,
-                },
-                {
-                  role: "lines" as const,
-                  label: "Lines",
-                  checked: navigationLinesVisible,
-                },
-              ].map((item) => (
-                <label
-                  key={item.role}
-                  style={{ ...nestedControlRowStyle, cursor: "pointer" }}
-                >
-                  <span style={nestedFieldLabelStyle}>{item.label}</span>
-                  <input
-                    data-testid={`seismic-navigation-role-${item.role}`}
-                    type="checkbox"
-                    checked={item.checked}
-                    disabled={disabled}
-                    onChange={(e) =>
-                      setNavigationRoleVisible(item.role, e.target.checked)
-                    }
-                    style={{ opacity: controlOpacity }}
-                  />
-                  <span style={{ flex: 1 }} />
-                </label>
-              ))}
-            </div>
-          </details>
-
-          <details
-            data-testid="seismic-capability-integrated-geophysics"
-            style={nestedDetailsStyle}
-            open
-          >
-            <summary style={panelStyles.summary}>Integrated geophysics</summary>
-            <div style={detailsContentStyle}>
-              <div
-                style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}
-              >
-                <label style={nestedFieldLabelStyle}>View</label>
-                {[
-                  {
-                    label: "Seismic",
-                    testId: "seismic-capability-seismic-only",
-                    onClick: () => setMtCoRender("seismic"),
-                  },
-                  {
-                    label: "MT",
-                    testId: "seismic-capability-mt-only",
-                    onClick: () => setMtCoRender("mt"),
-                  },
-                  {
-                    label: "Integrated",
-                    testId: "seismic-capability-integrated",
-                    onClick: () =>
-                      applyCapabilityPreset("integrated-geophysics"),
-                  },
-                ].map((action) => (
-                  <button
-                    key={action.testId}
-                    type="button"
-                    data-testid={action.testId}
-                    disabled={disabled}
-                    onClick={action.onClick}
-                    style={{
-                      ...panelStyles.iconButton,
-                      width: "auto",
-                      padding: "3px 7px",
-                      fontSize: 10,
-                      opacity: controlOpacity,
-                    }}
-                  >
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </details>
-
-          <details
-            data-testid="seismic-capability-data-confidence"
-            style={nestedDetailsStyle}
-            open
-          >
-            <summary style={panelStyles.summary}>Data confidence</summary>
-            <div
-              style={{
-                ...detailsContentStyle,
-                color: vibrancyTertiaryLabel,
-                fontSize: 11,
-                lineHeight: 1.35,
-              }}
-            >
-              <div>Products: {products.length} processed GUI products</div>
-              <div>3D raymarch-capable: {raymarchProducts.length}</div>
-              <div>
-                Active capability:{" "}
-                {currentCapabilityPresetId || "manual controls"}
-              </div>
-              <div>{SEISMIC_DEMO_DISCLOSURE_LABELS.join(" / ")}</div>
-            </div>
-          </details>
-        </>
-      ) : null}
 
       <details
         data-testid="seismic-technical-controls"
         style={nestedDetailsStyle}
-        open={technicalOpen}
-        onToggle={(event) =>
-          setTechnicalOpen((event.currentTarget as HTMLDetailsElement).open)
-        }
       >
         <summary style={panelStyles.summary}>Technical controls</summary>
         <div style={detailsContentStyle}>
-          <details style={nestedDetailsStyle}>
-            <summary style={panelStyles.summary}>
-              Product visibility ({visibleProductCount}/{products.length})
-            </summary>
-            <div style={detailsContentStyle}>
-              <div
-                style={{
-                  ...nestedControlRowStyle,
-                  gap: 6,
-                  flexWrap: "wrap",
-                }}
-              >
-                <label style={nestedFieldLabelStyle}>Visibility</label>
-                {[
-                  {
-                    label: "Show all",
-                    testId: "seismic-products-show-all",
-                    onClick: () => setVisibilityForProducts(() => true),
-                  },
-                  {
-                    label: "Hide all",
-                    testId: "seismic-products-hide-all",
-                    onClick: () => setVisibilityForProducts(() => false),
-                  },
-                  {
-                    label: "3D only",
-                    testId: "seismic-products-show-3d-only",
-                    onClick: () =>
-                      setVisibilityForProducts(
-                        (product) => product.surveyKind === "3d",
-                      ),
-                  },
-                  {
-                    label: "2D only",
-                    testId: "seismic-products-show-2d-only",
-                    onClick: () =>
-                      setVisibilityForProducts(
-                        (product) => product.surveyKind !== "3d",
-                      ),
-                  },
-                ].map((action) => (
-                  <button
-                    key={action.testId}
-                    type="button"
-                    data-testid={action.testId}
-                    disabled={disabled}
-                    onClick={action.onClick}
-                    style={{
-                      ...panelStyles.iconButton,
-                      width: "auto",
-                      padding: "3px 7px",
-                      fontSize: 10,
-                      opacity: controlOpacity,
-                    }}
-                  >
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-              {products.map((product) => {
-                const selected = product.id === productId;
-                return (
-                  <div
-                    key={product.id}
-                    style={{
-                      ...nestedControlRowStyle,
-                      borderRadius: 6,
-                      background: selected
-                        ? "rgba(244, 240, 232, 0.08)"
-                        : "transparent",
-                    }}
-                  >
-                    <input
-                      data-testid={`seismic-product-visible-${product.id}`}
-                      type="checkbox"
-                      checked={productVisibility[product.id] === true}
-                      disabled={disabled}
-                      onChange={(e) =>
-                        setProductVisible(product.id, e.target.checked)
-                      }
-                      title="Show or hide this product"
-                      style={{ opacity: controlOpacity }}
-                    />
-                    <button
-                      type="button"
-                      data-testid={`seismic-product-row-${product.id}`}
-                      disabled={disabled}
-                      onClick={() => selectProduct(product.id)}
-                      style={{
-                        flex: 1,
-                        minWidth: 0,
-                        appearance: "none",
-                        border: "none",
-                        background: "transparent",
-                        color: selected ? vibrancyLabel : vibrancyTertiaryLabel,
-                        font: "inherit",
-                        fontSize: 11,
-                        fontWeight: selected ? 800 : 650,
-                        textAlign: "left",
-                        cursor: disabled ? "default" : "pointer",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        opacity: controlOpacity,
-                      }}
-                      title={product.label}
-                    >
-                      {product.label}
-                    </button>
-                    <span
-                      style={{
-                        color: vibrancyTertiaryLabel,
-                        fontSize: 11,
-                        opacity: controlOpacity,
-                        minWidth: 54,
-                        textAlign: "right",
-                      }}
-                    >
-                      {product.raymarchCapable
-                        ? "3D"
-                        : (product.surveyKind ?? "2D")}
-                      {product.domainUnit ? ` / ${product.domainUnit}` : ""}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </details>
+          <SeismicProductVisibilityControls
+            products={products}
+            productVisibility={productVisibility}
+            productId={productId}
+            visibleProductCount={visibleProductCount}
+            disabled={disabled}
+            controlOpacity={controlOpacity}
+            setVisibilityForProducts={setVisibilityForProducts}
+            setProductVisible={setProductVisible}
+            selectProduct={selectProduct}
+          />
 
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Product</label>
@@ -1422,7 +574,7 @@ export function SeismicBrowserControls({
           </div>
 
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Mode</label>
+            <label style={nestedFieldLabelStyle}>RenderMode</label>
             <select
               data-testid="seismic-render-mode-select"
               value={renderMode}
@@ -1525,279 +677,31 @@ export function SeismicBrowserControls({
             </span>
           </div>
 
-          <IsobandControls
+          <SeismicDisplayTuningControls
             style={style}
             disabled={disabled}
             isEnv={isEnv}
             currentPage={currentPage}
             layerId={layerId}
-            rangeKind="seismic"
-            volumePlanes={
-              selectedProduct?.raymarchCapable === true &&
-              renderMode === "raymarch"
-            }
             sceneSectionStyle={sceneSectionStyle}
             sceneHandle={sceneHandle}
+            selectedProduct={selectedProduct}
+            renderMode={renderMode}
+            amplitudeMin={amplitudeMin}
+            amplitudeMax={amplitudeMax}
+            amplitudeGamma={amplitudeGamma}
+            colormap={colormap}
+            legendVisible={legendVisible}
+            removeBackground={removeBackground}
+            backgroundCutoff={backgroundCutoff}
+            volumeSampleSteps={volumeSampleSteps}
+            timeScale={timeScale}
+            navigationVisible={navigationVisible}
+            controlOpacity={controlOpacity}
+            commit={commit}
             setEnvLayerStyle={setEnvLayerStyle}
             setPageLayerOverride={setPageLayerOverride}
           />
-
-          <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>
-              {isVelocityProduct(selectedProduct) ? "Vel min" : "Amp min"}
-            </label>
-            <input
-              data-testid="seismic-amplitude-min"
-              type="range"
-              min={0}
-              max={0.98}
-              step={0.01}
-              value={amplitudeMin}
-              disabled={disabled}
-              onChange={(e) =>
-                commit({ seismicAmplitudeMin: parseFloat(e.target.value) })
-              }
-              style={
-                {
-                  flex: 1,
-                  opacity: controlOpacity,
-                  "--editor-slider-fill": `${amplitudeMin * 100}%`,
-                } as React.CSSProperties
-              }
-            />
-            <span style={sliderNumberReadoutStyle}>
-              {seismicWindowValueLabel(selectedProduct, amplitudeMin)}
-            </span>
-          </div>
-
-          <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>
-              {isVelocityProduct(selectedProduct) ? "Vel max" : "Amp max"}
-            </label>
-            <input
-              data-testid="seismic-amplitude-max"
-              type="range"
-              min={0.02}
-              max={1}
-              step={0.01}
-              value={amplitudeMax}
-              disabled={disabled}
-              onChange={(e) =>
-                commit({ seismicAmplitudeMax: parseFloat(e.target.value) })
-              }
-              style={
-                {
-                  flex: 1,
-                  opacity: controlOpacity,
-                  "--editor-slider-fill": `${amplitudeMax * 100}%`,
-                } as React.CSSProperties
-              }
-            />
-            <span style={sliderNumberReadoutStyle}>
-              {seismicWindowValueLabel(selectedProduct, amplitudeMax)}
-            </span>
-          </div>
-
-          <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Gain curve</label>
-            <input
-              data-testid="seismic-amplitude-gamma"
-              type="range"
-              min={0.35}
-              max={2.5}
-              step={0.05}
-              value={amplitudeGamma}
-              disabled={disabled}
-              onChange={(e) =>
-                commit({ seismicAmplitudeGamma: parseFloat(e.target.value) })
-              }
-              style={
-                {
-                  flex: 1,
-                  opacity: controlOpacity,
-                  "--editor-slider-fill": `${
-                    ((amplitudeGamma - 0.35) / 2.15) * 100
-                  }%`,
-                } as React.CSSProperties
-              }
-            />
-            <span style={sliderNumberReadoutStyle}>
-              {amplitudeGamma.toFixed(2)}
-            </span>
-          </div>
-
-          <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Palette</label>
-            <select
-              data-testid="seismic-colormap-select"
-              value={colormap}
-              disabled={disabled}
-              onChange={(e) =>
-                commit({
-                  seismicColormap: seismicColormapFromValue(e.target.value),
-                })
-              }
-              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-            >
-              <option value="blue-white-red">Blue-white-red</option>
-              <option value="grayscale">Grayscale</option>
-              <option value="velocity">Velocity</option>
-            </select>
-          </div>
-
-          <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-            <span style={nestedFieldLabelStyle}>Legend</span>
-            <input
-              data-testid="seismic-legend-visible"
-              type="checkbox"
-              checked={legendVisible}
-              disabled={disabled}
-              onChange={(e) =>
-                commit({ seismicLegendVisible: e.target.checked })
-              }
-              style={{ opacity: controlOpacity }}
-            />
-            <span
-              style={{
-                flex: 1,
-                color: vibrancyTertiaryLabel,
-                fontSize: 11,
-                opacity: controlOpacity,
-              }}
-            >
-              amplitude controls
-            </span>
-          </label>
-
-          <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-            <span style={nestedFieldLabelStyle}>White bg</span>
-            <input
-              data-testid="seismic-remove-background"
-              type="checkbox"
-              checked={removeBackground}
-              disabled={disabled}
-              onChange={(e) =>
-                commit({ seismicRemoveBackground: e.target.checked })
-              }
-              style={{ opacity: controlOpacity }}
-            />
-            <span
-              style={{
-                flex: 1,
-                color: vibrancyTertiaryLabel,
-                fontSize: 11,
-                opacity: controlOpacity,
-              }}
-            >
-              remove neutral fill
-            </span>
-          </label>
-
-          <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Zero mute</label>
-            <input
-              data-testid="seismic-background-cutoff"
-              type="range"
-              min={0}
-              max={0.45}
-              step={0.01}
-              value={backgroundCutoff}
-              disabled={disabled || !removeBackground}
-              onChange={(e) =>
-                commit({ seismicBackgroundCutoff: parseFloat(e.target.value) })
-              }
-              style={
-                {
-                  flex: 1,
-                  opacity: removeBackground ? controlOpacity : 0.35,
-                  "--editor-slider-fill": `${(backgroundCutoff / 0.45) * 100}%`,
-                } as React.CSSProperties
-              }
-            />
-            <span style={sliderNumberReadoutStyle}>
-              {backgroundCutoff.toFixed(2)}
-            </span>
-          </div>
-
-          {selectedProduct?.raymarchCapable ? (
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Ray steps</label>
-              <input
-                data-testid="seismic-volume-sample-steps"
-                type="range"
-                min={24}
-                max={160}
-                step={8}
-                value={volumeSampleSteps}
-                disabled={disabled}
-                onChange={(e) =>
-                  commit({
-                    seismicVolumeSampleSteps: parseFloat(e.target.value),
-                  })
-                }
-                style={
-                  {
-                    flex: 1,
-                    opacity: controlOpacity,
-                    "--editor-slider-fill": `${
-                      ((volumeSampleSteps - 24) / 136) * 100
-                    }%`,
-                  } as React.CSSProperties
-                }
-              />
-              <span style={sliderNumberReadoutStyle}>{volumeSampleSteps}</span>
-            </div>
-          ) : null}
-
-          <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Time scale</label>
-            <input
-              data-testid="seismic-time-scale"
-              type="range"
-              min={0.25}
-              max={8}
-              step={0.25}
-              value={timeScale}
-              disabled={disabled}
-              onChange={(e) =>
-                commit({ seismicTimeScale: parseFloat(e.target.value) })
-              }
-              style={
-                {
-                  flex: 1,
-                  opacity: controlOpacity,
-                  "--editor-slider-fill": `${
-                    ((timeScale - 0.25) / 7.75) * 100
-                  }%`,
-                } as React.CSSProperties
-              }
-            />
-            <span style={sliderNumberReadoutStyle}>{timeScale.toFixed(2)}</span>
-          </div>
-
-          <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-            <span style={nestedFieldLabelStyle}>Navigation</span>
-            <input
-              data-testid="seismic-navigation-visible"
-              type="checkbox"
-              checked={navigationVisible}
-              disabled={disabled}
-              onChange={(e) =>
-                commit({ seismicNavigationVisible: e.target.checked })
-              }
-              style={{ opacity: controlOpacity }}
-            />
-            <span
-              style={{
-                flex: 1,
-                color: vibrancyTertiaryLabel,
-                fontSize: 11,
-                opacity: controlOpacity,
-              }}
-            >
-              source/receiver lines
-            </span>
-          </label>
         </div>
       </details>
     </>

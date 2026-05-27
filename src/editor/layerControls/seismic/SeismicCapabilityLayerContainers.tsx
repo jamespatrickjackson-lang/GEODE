@@ -322,7 +322,7 @@ export function SeismicCapabilityLayerContainers({
                         flexWrap: "wrap",
                       }}
                     >
-                      <label style={nestedFieldLabelStyle}>Mode</label>
+                      <label style={nestedFieldLabelStyle}>RenderMode</label>
                       {[
                         {
                           label: "Volume",
@@ -790,6 +790,12 @@ export function SeismicCapabilityLayerContainers({
         >
           <div>Products: {products.length} processed GUI products</div>
           <div>3D raymarch-capable: {raymarchProducts.length}</div>
+          <div>RenderMode: {renderMode}</div>
+          <div>Audience: {style.seismicAudienceMode ?? "investor"}</div>
+          <div>
+            {isVelocityProduct(selectedProduct) ? "Vel min" : "Amp min"}:{" "}
+            {amplitudeMin.toFixed(2)}
+          </div>
           <div>
             Active capability: {currentCapabilityPresetId || "manual controls"}
           </div>
