@@ -151,6 +151,12 @@ import {
   applyDrillingAssayDisplay as applyDrillingAssayDisplayToLayers,
   applyTopoDetailDistanceDisplay as applyTopoDetailDistanceDisplayToLayers,
 } from "./styles/drillingAndTopoDisplay";
+import {
+  clamp01,
+  clampRange,
+  styleColor,
+  styleNumber,
+} from "./styles/styleUtils";
 import { SceneOverlaysController } from "./overlays/SceneOverlaysController";
 import {
   isTopoMapGraticuleLayer,
@@ -267,14 +273,6 @@ function sunDirectionFromAngles(
   );
 }
 
-function clamp01(v: number): number {
-  return Math.min(1, Math.max(0, v));
-}
-
-function clampRange(v: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, v));
-}
-
 function styleAffectedByFog(style: EditableStyle): boolean {
   return style.affectedByFog !== false;
 }
@@ -359,34 +357,6 @@ function hasSurfaceGradientStyle(style: EditableStyle): boolean {
     typeof style.surfaceGradientMidpoint === "number" ||
     typeof style.surfaceGradientContrast === "number"
   );
-}
-
-function styleColor(
-  style: EditableStyle,
-  key: keyof EditableStyle,
-  fallback: string,
-): THREE.Color {
-  const color = new THREE.Color();
-  const value = style[key];
-  try {
-    color.set(typeof value === "string" ? value : fallback);
-  } catch {
-    color.set(fallback);
-  }
-  return color;
-}
-
-function styleNumber(
-  style: EditableStyle,
-  key: keyof EditableStyle,
-  fallback: number,
-  min: number,
-  max: number,
-): number {
-  const value = style[key];
-  return typeof value === "number" && Number.isFinite(value)
-    ? clampRange(value, min, max)
-    : fallback;
 }
 
 type PresentationLightSource = NonNullable<
