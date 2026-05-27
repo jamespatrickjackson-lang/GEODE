@@ -22,17 +22,12 @@ Current kept state:
 - Southwestern/regional MT is not active yet
 - Phase 3 seismic browser outputs are generated under `geosee_processed/` and wired in current project files
 
-## Planning And Handoff Docs
+## Data Status Doc
 
-Read these before moving or processing data:
+For a full summary of current data / layer state, artifact roles, and open review items:
 
 ```text
-projects/utah-forge/Utah_Forge_Decisions.md
-projects/utah-forge/Utah_Forge_DevPlan.md
-projects/utah-forge/Utah_Forge_Data_Intake_Checklist.md
-projects/utah-forge/AI_NEXT_AGENT_START_HERE.md
-projects/utah-forge/AI_FUTURE_DATA_INPUT_PLAYBOOK.md
-projects/utah-forge/Utah_Forge_Next_Stage_Gates.md
+projects/utah-forge/DATA_LAYER_STATUS.md
 ```
 
 ## Locked Folder Rule
