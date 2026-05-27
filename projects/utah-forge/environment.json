@@ -476,7 +476,7 @@
     "utah-forge-scene-section-planes": {
       "sceneSectionEnabled": true,
       "sceneSectionMode": "cutaway",
-      "sceneSectionTargetScope": "selected-targets",
+      "sceneSectionTargetScope": "all-visible",
       "sceneSectionActiveAxis": "x",
       "sceneSectionPlanes": {
         "x": {
@@ -2023,7 +2023,7 @@
           "sceneSectionEnabled": true,
           "sceneSectionMode": "cutaway",
           "sceneSectionActiveAxis": "x",
-          "sceneSectionTargetScope": "selected-targets",
+          "sceneSectionTargetScope": "all-visible",
           "sceneSectionTargetLayerIds": [
             "utah-forge-mt-resistivity-volume",
             "utah-forge-mt-resistivity-slices"
