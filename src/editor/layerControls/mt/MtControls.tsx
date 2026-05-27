@@ -20,6 +20,7 @@ import {
   type PageStyleSetter,
 } from "../../styleControls";
 import type { EditableStyle, PresentationPage, ProjectLayerSpec } from "../../../pages/types";
+import type { SceneHandle } from "../../../scene";
 import { appAssetUrl } from "../../../projects/projectPathsRuntime";
 import {
   DEFAULT_MT_RESISTIVITY_SLICE_ID,
@@ -517,6 +518,7 @@ export function ResistivitySliceControls({
   isEnv,
   currentPage,
   layerId,
+  sceneHandle,
   setEnvLayerStyle,
   setPageLayerOverride,
   clearPageLayerOverride,
@@ -525,6 +527,7 @@ export function ResistivitySliceControls({
   isEnv: boolean;
   currentPage: PresentationPage | null;
   layerId: string;
+  sceneHandle: SceneHandle;
   setEnvLayerStyle: LayerStyleSetter;
   setPageLayerOverride: PageStyleSetter;
   clearPageLayerOverride: PageStyleClearer;
@@ -690,6 +693,7 @@ export function ResistivitySliceControls({
         currentPage={currentPage}
         layerId={layerId}
         rangeKind="mt"
+        sceneHandle={sceneHandle}
         setEnvLayerStyle={setEnvLayerStyle}
         setPageLayerOverride={setPageLayerOverride}
       />

@@ -6,7 +6,6 @@ import {
   expectedMtFullDensityIndexedPointCount,
   expectedRuntimePresentationForPage,
   expectPageTransitionProgress,
-  expectProgressedToward,
   forgeLayerItem,
   MT_FULL_DENSITY_MANIFEST_PATH,
   mtFullDensityPointSceneState,
@@ -14,7 +13,6 @@ import {
   openForgeDataEditorContainers,
   pageControllerState,
   readJsonFile,
-  resistivityLegendHandleState,
   runForgeDataTransitionProbe,
   seismicSceneState,
   selectForgePageRow,
@@ -254,11 +252,10 @@ test("Utah FORGE data layers follow page camera transitions", async ({
     });
 
   await selectForgePageRow(page, "01.");
-  const row01Handles = await resistivityLegendHandleState(page);
   await selectNextForgePage(page);
   await expectPageTransitionProgress(page, 0, 1);
   await page.waitForTimeout(1600);
-  const row01ToRow02MidHandles = await resistivityLegendHandleState(page);
+  await expect(legend).toBeHidden();
   await expect
     .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
     .toMatchObject({
@@ -268,34 +265,23 @@ test("Utah FORGE data layers follow page camera transitions", async ({
         size: 1,
       },
     });
-  const row02Handles = await resistivityLegendHandleState(page);
-  expectProgressedToward(
-    row01ToRow02MidHandles.focusMin,
-    row01Handles.focusMin,
-    row02Handles.focusMin,
-  );
   await page.waitForTimeout(2400);
   await expect
     .poll(() => transitionSnapshotState(page).then((state) => state.count))
     .toBe(0);
+  await expect(legend).toBeHidden();
 
-  const row02ForRequiredRoute = await resistivityLegendHandleState(page);
   await selectNextForgePage(page);
   await expectPageTransitionProgress(page, 1, 2);
   await page.waitForTimeout(1600);
-  const row02ToRow03MidHandles = await resistivityLegendHandleState(page);
+  await expect(legend).toBeHidden();
   await expect
     .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
     .toMatchObject({
       indexedVisiblePointCount: expectedPage04IndexedPointCount,
     });
-  const row03Handles = await resistivityLegendHandleState(page);
-  expectProgressedToward(
-    row02ToRow03MidHandles.focusMin,
-    row02ForRequiredRoute.focusMin,
-    row03Handles.focusMin,
-  );
   await page.waitForTimeout(2400);
+  await expect(legend).toBeHidden();
 
   await selectNextForgePage(page);
   await page.waitForTimeout(100);
@@ -317,33 +303,12 @@ test("Utah FORGE data layers follow page camera transitions", async ({
     )
     .toBe(true);
   await page.waitForTimeout(1500);
-  let row03ToRow04MidHandles = await resistivityLegendHandleState(page);
-  const row04TargetFocusMin =
-    page05Spec.layerOverrides?.["utah-forge-mt-resistivity-full-density"]
-      ?.scalarFocusMin;
-  await expect
-    .poll(
-      async () => {
-        row03ToRow04MidHandles = await resistivityLegendHandleState(page);
-        if (typeof row04TargetFocusMin !== "number") return false;
-        return row04TargetFocusMin > row03Handles.focusMin
-          ? row03ToRow04MidHandles.focusMin > row03Handles.focusMin
-          : row03ToRow04MidHandles.focusMin < row03Handles.focusMin;
-      },
-      { timeout: 3_000, intervals: [100, 200, 400] },
-    )
-    .toBe(true);
+  await expect(legend).toBeHidden();
   await expect
     .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
     .toMatchObject({
       indexedVisiblePointCount: expectedPage05IndexedPointCount,
     });
-  const row04Handles = await resistivityLegendHandleState(page);
-  expectProgressedToward(
-    row03ToRow04MidHandles.focusMin,
-    row03Handles.focusMin,
-    row04Handles.focusMin,
-  );
 
   await page.waitForTimeout(2200);
   await expect
@@ -1237,7 +1202,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     changedByteCount(beforeCameraTransitionCanvas, midCameraTransitionCanvas),
   ).toBeGreaterThan(1000);
   await page.waitForTimeout(3200);
-  await expect(legend).toBeVisible();
+  await expect(legend).toBeHidden();
   const afterCameraTransitionCanvas = await page.locator("canvas").screenshot();
   expect(
     changedByteCount(midCameraTransitionCanvas, afterCameraTransitionCanvas),

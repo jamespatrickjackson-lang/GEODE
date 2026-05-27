@@ -1788,6 +1788,7 @@ export function LayerPanel({
                   isEnv={isEnv}
                   currentPage={currentPage}
                   layerId={layer.id}
+                  sceneHandle={sceneHandle}
                   setEnvLayerStyle={setEnvLayerStyle}
                   setPageLayerOverride={setPageLayerOverride}
                   clearPageLayerOverride={clearPageLayerOverride}

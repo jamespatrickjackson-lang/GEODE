@@ -3,8 +3,10 @@ import {
   hidePublicContextLayers,
   mtVolumeSceneState,
   openForgeDataEditorContainers,
+  openForgeMtResistivityEditorContainers,
   sectionIsoSceneState,
-  seismicSceneState
+  seismicSceneState,
+  selectForgePageRow,
 } from "./shared";
 
 test.setTimeout(900_000);
@@ -28,7 +30,7 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
   await hidePublicContextLayers(page);
 
   await page.getByRole("button", { name: "FORGE Data" }).click();
-  await openForgeDataEditorContainers(page);
+  await openForgeMtResistivityEditorContainers(page);
   const slicesLayerItem = page
     .locator('[data-dev-note*="layerItemStyle"]')
     .filter({ hasText: "2D MT resistivity slices" })
@@ -107,7 +109,23 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
   await expect(
     slicesLayerItem.getByTestId("layer-isobands-controls"),
   ).toBeVisible();
-  await slicesLayerItem.getByTestId("layer-isobands-enabled").setChecked(true);
+  const sliceIsobandsToggle = slicesLayerItem.getByTestId(
+    "layer-isobands-enabled",
+  );
+  await slicesLayerItem.getByTestId("mt-slice-mode").selectOption("stack");
+  await sliceIsobandsToggle.setChecked(false);
+  await expect
+    .poll(() =>
+      sectionIsoSceneState(page).then(
+        (state) => state.firstSourceOpacity ?? -1,
+      ),
+    )
+    .toBeGreaterThan(0);
+  const sourceOpacityBeforeIsobands =
+    (await sectionIsoSceneState(page)).firstSourceOpacity ?? 1;
+  expect((await sectionIsoSceneState(page)).lineOverlayCount).toBe(0);
+  expect((await sectionIsoSceneState(page)).bandOverlayCount).toBe(0);
+  await sliceIsobandsToggle.setChecked(true);
   await expect
     .poll(() =>
       sectionIsoSceneState(page).then((state) => ({
@@ -121,15 +139,16 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
       sourceOpacity: 0,
       bandsReady: true,
     });
-  await setInputValue(
-    slicesLayerItem.getByTestId("layer-isobands-source-opacity"),
-    "0.35",
+  const sourceOpacityInput = slicesLayerItem.getByTestId(
+    "layer-isobands-source-opacity",
   );
+  await expect(sourceOpacityInput).toBeVisible();
+  await setInputValue(sourceOpacityInput, "0.35");
   await expect
     .poll(() =>
       sectionIsoSceneState(page).then((state) => state.firstSourceOpacity),
     )
-    .toBeCloseTo(0.273, 2);
+    .toBeCloseTo(sourceOpacityBeforeIsobands * 0.35, 2);
   await slicesLayerItem.getByTestId("layer-isobands-enabled").setChecked(false);
   await expect
     .poll(() =>
@@ -139,26 +158,40 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
         sourceOpacity: state.firstSourceOpacity,
       })),
     )
-    .toEqual({ lines: 0, bands: 0, sourceOpacity: 0.78 });
+    .toEqual({
+      lines: 0,
+      bands: 0,
+      sourceOpacity: sourceOpacityBeforeIsobands,
+    });
 
   await expect(page.getByTestId("section-iso-legend")).toBeVisible();
+  await page.getByTestId("section-iso-dataset").selectOption("mt-slices");
   await page.getByTestId("section-iso-toggle").setChecked(true);
+  await expect(page.getByTestId("section-iso-configure")).toBeVisible();
   await page.getByTestId("section-iso-configure").click();
   await expect(page.getByTestId("section-iso-popout")).toBeVisible();
 
-  const disabledTarget = initialIsoState.targets[1];
-  await page
-    .getByTestId(`section-iso-target-${disabledTarget.sectionId}`)
-    .setChecked(false);
+  const activeIsoState = await sectionIsoSceneState(page);
+  expect(activeIsoState.targets.length).toBeGreaterThanOrEqual(2);
+  const disabledTarget = activeIsoState.targets[1];
+  const disabledTargetToggle = page.getByTestId(
+    `section-iso-target-${disabledTarget.sectionId}`,
+  );
+  await expect(disabledTargetToggle).toBeVisible();
+  await disabledTargetToggle.setChecked(false);
 
   const setRange = async (testId: string, value: string) => {
-    await setInputValue(page.getByTestId(testId), value);
+    const input = page.getByTestId(testId);
+    await expect(input).toBeVisible();
+    await setInputValue(input, value);
   };
   await setRange("section-iso-level-count", "7");
   await setRange("section-iso-line-width", "5.5");
   await setRange("section-iso-band-opacity", "0.44");
   await setRange("section-iso-fill-offset", "-0.35");
-  await page.getByTestId("section-iso-line-style").selectOption("dashed");
+  const lineStyleSelect = page.getByTestId("section-iso-line-style");
+  await expect(lineStyleSelect).toBeVisible();
+  await lineStyleSelect.selectOption("dashed");
 
   await expect(page.locator("body")).toContainText("Bands 7");
   await expect(page.locator("body")).toContainText("Line 5.5px");
@@ -176,7 +209,7 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
       };
     })
     .toEqual({
-      bandOverlayCount: initialIsoState.targets.length - 1,
+      bandOverlayCount: activeIsoState.targets.length - 1,
       disabledTargetHasOverlay: false,
     });
   const enabledIsoState = await sectionIsoSceneState(page);
@@ -188,7 +221,9 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
     fillOffset: -0.35,
   });
 
-  await page.getByTestId("section-iso-bands-visible").setChecked(false);
+  const bandsVisibleToggle = page.getByTestId("section-iso-bands-visible");
+  await expect(bandsVisibleToggle).toBeVisible();
+  await bandsVisibleToggle.setChecked(false);
   await expect
     .poll(() =>
       sectionIsoSceneState(page).then((state) => state.bandOverlayCount),
@@ -198,7 +233,9 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
     0,
   );
 
-  await page.getByTestId("section-iso-toggle").setChecked(false);
+  const sectionIsoToggle = page.getByTestId("section-iso-toggle");
+  await expect(sectionIsoToggle).toBeVisible();
+  await sectionIsoToggle.setChecked(false);
   await expect
     .poll(() =>
       sectionIsoSceneState(page).then((state) => ({
@@ -228,8 +265,10 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
     waitUntil: "networkidle",
   });
   await hidePublicContextLayers(page);
+  await selectForgePageRow(page, "18.");
+  const seismicSectionProductId = "gdr-1141-line-301-pdm-enh";
 
-  await page.evaluate(() => {
+  await page.evaluate((productId) => {
     const manager = (
       window as unknown as {
         __scene?: {
@@ -243,8 +282,12 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
     const seismic = manager?.getLayer?.("utah-forge-phase3-seismic-browser");
     if (seismic) seismic.visible = true;
     manager?.applyStyle?.("utah-forge-phase3-seismic-browser", {
+      seismicProductId: productId,
+      seismicProductVisibility: {
+        [productId]: true,
+      },
       seismicRenderMode: "slice",
-      seismicSliceAxis: "inline",
+      seismicSliceAxis: "line",
       seismicSliceFraction: 0.5,
       seismicAmplitudeMin: 0.08,
       seismicAmplitudeMax: 0.92,
@@ -262,7 +305,7 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
       sectionIsoFillOffset: 0,
       opacity: 0.68,
     });
-  });
+  }, seismicSectionProductId);
   await expect
     .poll(
       () => seismicSceneState(page).then((state) => state.visibleSections),
@@ -282,7 +325,7 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
     (await sectionIsoSceneState(page, "seismic-sections")).lineOverlayCount,
   ).toBe(0);
 
-  await page.evaluate(() => {
+  await page.evaluate((productId) => {
     const manager = (
       window as unknown as {
         __scene?: {
@@ -293,8 +336,12 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
       }
     ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-phase3-seismic-browser", {
+      seismicProductId: productId,
+      seismicProductVisibility: {
+        [productId]: true,
+      },
       seismicRenderMode: "slice",
-      seismicSliceAxis: "inline",
+      seismicSliceAxis: "line",
       seismicSliceFraction: 0.5,
       seismicAmplitudeMin: 0.08,
       seismicAmplitudeMax: 0.92,
@@ -312,7 +359,7 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
       sectionIsoFillOffset: 0.2,
       opacity: 0.68,
     });
-  });
+  }, seismicSectionProductId);
   await expect
     .poll(() =>
       sectionIsoSceneState(page, "seismic-sections").then((state) => ({
@@ -347,8 +394,12 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
       }
     ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-phase3-seismic-browser", {
+      seismicProductId: targetKey.productId,
+      seismicProductVisibility: {
+        [targetKey.productId]: true,
+      },
       seismicRenderMode: "slice",
-      seismicSliceAxis: "inline",
+      seismicSliceAxis: "line",
       seismicSliceFraction: 0.5,
       seismicAmplitudeMin: 0.08,
       seismicAmplitudeMax: 0.92,
@@ -359,7 +410,7 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
       sectionIsoEnabled: true,
       sectionIsoLinesVisible: true,
       sectionIsoBandsVisible: true,
-      sectionIsoTargetIds: { [targetKey]: false },
+      sectionIsoTargetIds: { [targetKey.targetId]: false },
       sectionIsoLevelCount: 6,
       sectionIsoLineWidth: 4.2,
       sectionIsoLineStyle: "dashed",
@@ -367,7 +418,7 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
       sectionIsoFillOffset: 0.2,
       opacity: 0.68,
     });
-  }, disabledSeismicTarget);
+  }, { targetId: disabledSeismicTarget, productId: seismicSectionProductId });
   await expect
     .poll(() =>
       sectionIsoSceneState(page, "seismic-sections").then((state) =>

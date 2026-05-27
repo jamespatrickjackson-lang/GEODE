@@ -19,6 +19,7 @@ function validateEnvironment() {
     "utah-forge-site-boundary",
     "utah-forge-phase3-demo-boreholes",
     "utah-forge-mt-resistivity-volume",
+    "utah-forge-mt-resistivity-full-density",
   ]);
   assertSubset(
     environment.scene,
@@ -68,7 +69,7 @@ function validateEnvironment() {
     {
       sceneSectionEnabled: true,
       sceneSectionMode: "cutaway",
-      sceneSectionTargetScope: "selected-targets",
+      sceneSectionTargetScope: "all-visible",
       sceneSectionWindowEnabled: true,
       sceneSectionGroundTraceVisible: true,
       sceneSectionAxesVisible: true,
@@ -85,7 +86,7 @@ function validateEnvironment() {
     {
       scalarVolumeProductId: "mt-resistivity-full-extent-volume",
       scalarVolumeRenderMode: "raymarch",
-      scalarVolumeTransferMode: "dense",
+      scalarVolumeTransferMode: "soft",
       scalarVolumeMaskVisible: true,
     },
     "MT volume style",
@@ -296,12 +297,18 @@ function validatePages() {
     "49_seismic_fence_panels",
   ]);
   for (const pageId of project.pageOrder.slice(standaloneStart)) {
-    if (pageId === "99_unresolved_missing_tools") continue;
+    const page = readJson(`projects/utah-forge/pages/${pageId}.json`);
+    if (
+      pageId === "99_unresolved_missing_tools" ||
+      page.title?.startsWith("Unresolved / Missing Tools")
+    ) {
+      continue;
+    }
     const activeMtLayers = mtLayers.filter(
-      (layerId) => pageVisibility(pageId, layerId) === true,
+      (layerId) => page.visibilityOverrides?.[layerId] === true,
     );
     const seismicVisible =
-      pageVisibility(pageId, "utah-forge-phase3-seismic-browser") === true;
+      page.visibilityOverrides?.["utah-forge-phase3-seismic-browser"] === true;
     if (seismicPages.has(pageId)) {
       assert.equal(seismicVisible, true, `${pageId} seismic page active`);
       assert.equal(activeMtLayers.length, 0, `${pageId} has no active MT`);

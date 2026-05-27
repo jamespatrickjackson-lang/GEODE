@@ -92,7 +92,7 @@ export function applyMtThresholdSurfaceStyle(this: any, id: string, style: Edita
       }
       if ("vertexColors" in m) {
         (m as THREE.Material & { vertexColors: boolean }).vertexColors =
-          false;
+          !wireframe;
       }
       if ("roughness" in m) {
         (m as THREE.Material & { roughness: number }).roughness = roughness;

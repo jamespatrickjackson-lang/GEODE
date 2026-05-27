@@ -27,7 +27,7 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
-    "test:utah:browser": "playwright test tests/utah-forge",
+    "test:utah:browser": "playwright test tests/utah-forge --workers=1",
     "test:utah:seismic": "playwright test tests/utah-forge/seismic-browser.spec.ts",
     "test:utah:topo": "playwright test tests/utah-forge/topo-title-editor.spec.ts",
     "test:utah:sections": "playwright test tests/utah-forge/section-iso.spec.ts",

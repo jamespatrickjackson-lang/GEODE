@@ -130,6 +130,7 @@ export function IsobandControls({
   );
   const commit = (patch: Partial<EditableStyle>) => {
     if (disabled) return;
+    sceneHandle?.manager.applyStyle(layerId, { ...style, ...patch });
     if (isEnv) {
       setEnvLayerStyle(layerId, patch);
     } else if (currentPage) {

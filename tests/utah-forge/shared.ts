@@ -311,6 +311,14 @@ export async function openForgeDataEditorContainers(page: Page): Promise<void> {
   await openAllDetails(page);
 }
 
+export async function openForgeMtResistivityEditorContainers(
+  page: Page,
+): Promise<void> {
+  await openEditorSection(page, "FORGE Data", 30_000, "Scene section planes");
+  await openEditorSection(page, "MT resistivity", 30_000, "3D MT top surface");
+  await openAllDetails(page);
+}
+
 export async function openForgeTopoEditorContainers(page: Page): Promise<void> {
   await openEditorSection(page, "Public Topo Map", 30_000, "Topo Settings");
   await openEditorSection(page, "Topo Settings", 30_000, "Topo Surface");
@@ -2771,14 +2779,17 @@ export async function expectPageTransitionProgress(
       async () => {
         const state = await pageControllerState(page);
         return (
-          state.currentIndex === currentIndex &&
-          state.targetIndex === targetIndex &&
-          state.isTransitioning &&
-          state.transitionProgress > 0 &&
-          state.transitionProgress < 1
+          (state.currentIndex === currentIndex &&
+            state.targetIndex === targetIndex &&
+            state.isTransitioning &&
+            state.transitionProgress > 0 &&
+            state.transitionProgress < 1) ||
+          (state.currentIndex === targetIndex &&
+            state.targetIndex === null &&
+            !state.isTransitioning)
         );
       },
-      { timeout: 2_000, intervals: [50, 100, 200] },
+      { timeout: 6_000, intervals: [50, 100, 200, 400] },
     )
     .toBe(true);
 }

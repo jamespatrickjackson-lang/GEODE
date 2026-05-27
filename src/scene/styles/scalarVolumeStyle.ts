@@ -76,7 +76,7 @@ export function applyScalarVolumeStyle(this: any, id: string, style: EditableSty
     192,
   );
   const maskVisible = style.scalarVolumeMaskVisible !== false ? 1 : 0;
-  const transferMode = this.scalarVolumeTransferModeCode(style);
+  const transferMode = scalarVolumeTransferModeCode(style);
 
   group.traverse((obj: THREE.Object3D) => {
     if (obj.userData?.scalarVolume !== true || !(obj instanceof THREE.Mesh))
