@@ -1,5 +1,12 @@
 # GeoSee Change Log
 
+## 2026-05-27 - Documentation Housekeeping
+
+- Added a user-facing editor tool manifest at `docs/tool-manifest.md` and routed it from `docs/dev-context/Active-Build-Context.md`.
+- Added and routed the Utah FORGE project-local data/layer status guide at `projects/utah-forge/DATA_LAYER_STATUS.md`, with `projects/utah-forge/data/README.md` pointing to it as the status summary.
+- Updated `docs/dev-context/Current-State.md` to correct the Utah FORGE data-status entry and record the tool manifest as reference documentation.
+- Removed the local `.claude/settings.local.json` permission-cache artifact from the working tree during housekeeping; it was not committed.
+
 ## 2026-05-26 - AI-Agent Slowness Audit And Monolith Remediation
 
 - Audited why AI coding agents (Claude Code and Codex CLI) felt slow inside `c:\GeoSee\GeoSee_Dev`. Dominant causes: `src/editor/LayerPanel.tsx` (14,326 lines), `src/scene/SceneManager.ts` (~12,000 lines), unfiltered Glob/Grep into `projects/*/data/**` and `data/**`, and no `AGENTS.md` for Codex CLI.

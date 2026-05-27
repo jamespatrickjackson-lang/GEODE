@@ -42,10 +42,11 @@
 | Utah FORGE verification is split across runtime validators, presentation snapshot checks, and focused browser suites. | Observed | `tools/validate-utah-derived-assets.mjs`, `tools/validate-utah-presentation-snapshot.mjs`, `tests/utah-forge/`, `package.json` |
 | A layer/artifact/computed-artifact classification matrix now exists for Utah FORGE, Case Study B / Shahbazi, and Woodjam. | Observed | `docs/dev-context/Layer-Artifact-Classification.md` |
 | A computed-artifact pipeline guardrail now exists and explicitly protects raw-to-derived analytical/render-ready output generation. | Observed | `docs/dev-context/Computed-Artifact-Pipeline.md` |
-| Utah FORGE now has a project-local data/layer status guide. | Observed | `projects/utah-forge/DATA_LAYER_STATUS.md`; covers source/client/public, processed/browser-ready, render-ready, QA/validation, provenance/status wrappers, MT, seismic, demo candidates, and unclear/future artifacts; docs/status only, no runtime behavior change |
+| Utah FORGE now has a project-local data/layer status guide. | Observed | `projects/utah-forge/DATA_LAYER_STATUS.md`; covers source/client/archived, processed/browser-ready, render-ready, QA/validation, provenance/status wrappers, MT, seismic, public context, and unclear/future artifacts; docs only, no runtime behavior change. Created 2026-05-26 after earlier session entries incorrectly listed this as already present. |
 | Public topo map is the first global toolset pattern. | Observed | `src/topoMap/`, `src/editor/topoMap/`, `docs/dev-context/Global-Toolset-Structure.md`, `tests/topo-map/` |
 | MT resistivity now has product-aware transition handling for sectioned scalar volumes, section ISO overlays, and threshold boundaries. | Observed | `src/scene/SceneManager.ts`, `tests/utah-forge/mt-rendering.spec.ts`, `docs/dev-context/Global-Toolset-Structure.md` |
 | Editor sidebar structure is mid-iteration toward peer-level tool/workflow sections. | Observed | `src/editor/EditorRoot.tsx`, `src/editor/PagePanel.tsx`, `src/editor/styles.ts`, `docs/dev-context/Global-Toolset-Structure.md` |
+| A user-facing editor tool inventory now exists as a reference doc. | Observed | `docs/tool-manifest.md`; grouped by presentation, scene/rendering, client UI, camera, geographic context, site/spatial, MT, seismic, layer controls, audience, and workflow. Docs only; does not constrain implementation. |
 
 ## Placeholder / Future / Parked
 
