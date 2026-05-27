@@ -28,7 +28,6 @@ import type { SceneOverlayHandle } from "../loaders/loadSceneOverlays";
 import type { GeologyHandle } from "../loaders/loadGeology";
 import {
   setDistanceAttenuatedLineWidth,
-  setTerrainShadowInfluence,
 } from "../loaders/topoLineMaterial";
 import { SURFACE_RENDER_ORDER } from "../loaders/surfaceRenderPolicy";
 import { getHeightSampler } from "./heightSampler";
@@ -80,8 +79,6 @@ import {
   surfaceGradientColorAt,
 } from "./styles/colorScales";
 import { applyMtSurfaceMaskPointMaterial } from "./shaders/mtSurfaceMaskShader";
-import { applyPointDistanceLightMaterial } from "./shaders/pointDistanceLightShader";
-import { setMaterialFog } from "./shaders/layerFogShader";
 import {
   applyWorkingAreaFocusBuiltInMaterial,
   setWorkingAreaFocusShaderUniforms,
@@ -188,6 +185,7 @@ import {
   type TopoMapRuntime,
 } from "../topoMap/runtime";
 import { applyEnvironment as applyEnvironmentImpl } from "./environment/applyEnvironment";
+import { applyStyle as applyStyleImpl } from "./styles/applyLayerStyle";
 import { extractRuntimeMarchingCubesGeometry } from "../mtResistivity/runtimeMarchingCubes";
 import { DEFAULT_MT_RESISTIVITY_SLICE_ID } from "../mtResistivity/sliceProducts";
 
@@ -1878,7 +1876,7 @@ export class SceneManager {
     }
   }
 
-  private applyTerrainFogStyle(
+  applyTerrainFogStyle(
     layerId: string,
     affectedByFog: boolean,
     fogDensity: number,
@@ -2285,7 +2283,7 @@ export class SceneManager {
     });
   }
 
-  private reapplySiteSurfaceGuides(): void {
+  reapplySiteSurfaceGuides(): void {
     for (const id of [
       UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
       UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
@@ -2294,7 +2292,7 @@ export class SceneManager {
     }
   }
 
-  private applyMtSurfaceMaskStyle(id: string, style: EditableStyle): void {
+  applyMtSurfaceMaskStyle(id: string, style: EditableStyle): void {
     if (id !== UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID) return;
     const group = this.layers.get(id);
     if (!group) return;
@@ -2692,7 +2690,7 @@ export class SceneManager {
     });
   }
 
-  private applyTerrainLiftStyle(layerId: string, style: EditableStyle): void {
+  applyTerrainLiftStyle(layerId: string, style: EditableStyle): void {
     this.topoRuntime.applySurfaceLiftStyle(layerId, style);
   }
 
@@ -3065,7 +3063,7 @@ export class SceneManager {
     };
   }
 
-  private applyTerrainCompositeStyle(
+  applyTerrainCompositeStyle(
     layerId: string,
     style: EditableStyle,
   ): void {
@@ -3180,7 +3178,7 @@ export class SceneManager {
     }
   }
 
-  private applyEzGammaStyle(layerId: string, style: EditableStyle): void {
+  applyEzGammaStyle(layerId: string, style: EditableStyle): void {
     applyEzGammaStyleToLayer.call(this, layerId, style);
   }
 
@@ -3218,19 +3216,19 @@ export class SceneManager {
     return previewSceneSectionWindowImpl.call(this, axis, kind, valueM);
   }
 
-  private applyDemoBoreholeStyle(layerId: string, style: EditableStyle): void {
+  applyDemoBoreholeStyle(layerId: string, style: EditableStyle): void {
     applyDemoBoreholeStyleToLayer.call(this, layerId, style);
   }
 
-  private applyGeochemStyle(layerId: string, style: EditableStyle): void {
+  applyGeochemStyle(layerId: string, style: EditableStyle): void {
     applyGeochemStyleToLayer.call(this, layerId, style);
   }
 
-  private applyHyperspectralStyle(layerId: string, style: EditableStyle): void {
+  applyHyperspectralStyle(layerId: string, style: EditableStyle): void {
     applyHyperspectralStyleToLayer.call(this, layerId, style);
   }
 
-  private applyImageryLidarAoiStyle(layerId: string, style: EditableStyle): void {
+  applyImageryLidarAoiStyle(layerId: string, style: EditableStyle): void {
     applyImageryLidarAoiStyleToLayer.call(this, layerId, style);
   }
 
@@ -3530,7 +3528,7 @@ export class SceneManager {
     return this.layers.entries();
   }
 
-  private applySurfaceGradientStyle(id: string, style: EditableStyle): void {
+  applySurfaceGradientStyle(id: string, style: EditableStyle): void {
     if (
       id !== SHAHBAZI_GROUND_SURFACE_LAYER_ID ||
       !hasSurfaceGradientStyle(style)
@@ -3642,7 +3640,7 @@ export class SceneManager {
     }
   }
 
-  private applyMtTopSurfaceStyle(id: string, style: EditableStyle): void {
+  applyMtTopSurfaceStyle(id: string, style: EditableStyle): void {
     if (id !== UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID) return;
     const group = this.layers.get(id);
     if (!group) return;
@@ -3687,11 +3685,11 @@ export class SceneManager {
     });
   }
 
-  private applyScalarPreviewStyle(id: string, style: EditableStyle): void {
+  applyScalarPreviewStyle(id: string, style: EditableStyle): void {
     applyScalarPreviewStyleToLayer.call(this, id, style);
   }
 
-  private applyPointMarkerStyle(id: string, style: EditableStyle): void {
+  applyPointMarkerStyle(id: string, style: EditableStyle): void {
     if (id !== UTAH_FORGE_MT_STATIONS_LAYER_ID) return;
     const group = this.layers.get(id);
     if (!group) return;
@@ -3784,7 +3782,7 @@ export class SceneManager {
     });
   }
 
-  private applyResistivitySliceStyle(id: string, style: EditableStyle): void {
+  applyResistivitySliceStyle(id: string, style: EditableStyle): void {
     if (id !== UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID) return;
     const group = this.layers.get(id);
     if (!group) return;
@@ -3837,7 +3835,7 @@ export class SceneManager {
     return 1;
   }
 
-  private applyScalarVolumeStyle(id: string, style: EditableStyle): void {
+  applyScalarVolumeStyle(id: string, style: EditableStyle): void {
     if (id !== UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID) return;
     const group = this.layers.get(id);
     if (!group) return;
@@ -4818,7 +4816,7 @@ export class SceneManager {
     }
   }
 
-  private applyMtThresholdSurfaceStyle(id: string, style: EditableStyle): void {
+  applyMtThresholdSurfaceStyle(id: string, style: EditableStyle): void {
     if (id !== UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID) return;
     const group = this.layers.get(id);
     if (!group) return;
@@ -5107,11 +5105,11 @@ export class SceneManager {
     return index;
   }
 
-  private applySeismicBrowserStyle(id: string, style: EditableStyle): void {
+  applySeismicBrowserStyle(id: string, style: EditableStyle): void {
     applySeismicBrowserStyleToLayer.call(this, id, style);
   }
 
-  private applyContourDisplayStyle(id: string, style: EditableStyle): void {
+  applyContourDisplayStyle(id: string, style: EditableStyle): void {
     if (id !== SHAHBAZI_GROUND_CONTOUR_LAYER_ID && !isContourLikeLayerId(id)) {
       return;
     }
@@ -5229,174 +5227,7 @@ export class SceneManager {
   }
 
   applyStyle(id: string, style: EditableStyle): void {
-    this.appliedLayerStyles.set(id, style);
-    if (id === UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID) {
-      this.applyWorkingAreaFocusStyle(style);
-      return;
-    }
-    const group = this.layers.get(id);
-    const affectedByFog = styleAffectedByFog(style);
-    const fogDensity = styleFogDensity(style, this.envFogDensity);
-    if (group) {
-      group.traverse((obj) => {
-        const mat = (obj as THREE.Mesh | THREE.Line).material as
-          | THREE.Material
-          | THREE.Material[]
-          | undefined;
-        if (!mat) return;
-        const mats = Array.isArray(mat) ? mat : [mat];
-        for (const m of mats) {
-          if (m.userData?.ignoreLayerStyle === true) continue;
-          const targetOpacity =
-            m.userData?.lakeFillMaterial === true &&
-            typeof style.fillOpacity === "number"
-              ? clamp01(style.fillOpacity)
-              : typeof style.opacity === "number"
-                ? style.opacity
-                : this.baseOpacityForMaterial(m);
-          const colored = m as THREE.Material & {
-            color?: THREE.Color;
-            emissive?: THREE.Color;
-          };
-          const preserveVertexColors =
-            m.userData?.preserveVertexColors === true;
-          const preserveMaterialColor =
-            m.userData?.preserveMaterialColor === true;
-          const preserveMaterialOpacity =
-            m.userData?.preserveMaterialOpacity === true;
-          const materialColor =
-            m.userData?.lakeOutlineMaterial === true &&
-            typeof style.outlineColor === "string"
-              ? style.outlineColor
-              : m.userData?.lakeFillMaterial === true &&
-                  typeof style.color === "string"
-                ? style.color
-                : style.color;
-          if (
-            typeof materialColor === "string" &&
-            colored.color &&
-            !preserveVertexColors &&
-            !preserveMaterialColor
-          ) {
-            colored.color.set(materialColor);
-            if (colored.emissive) {
-              colored.emissive.set(materialColor);
-            }
-          }
-          if (
-            m instanceof LineMaterial &&
-            typeof style.lineWidth === "number" &&
-            m.userData?.drillAssayRole === undefined
-          ) {
-            const worldLineWidthScale =
-              typeof m.userData?.worldLineWidthScale === "number"
-                ? m.userData.worldLineWidthScale
-                : 1;
-            const minLineWidth =
-              typeof m.userData?.worldLineWidthMin === "number"
-                ? m.userData.worldLineWidthMin
-                : 0.5;
-            const maxLineWidth =
-              typeof m.userData?.worldLineWidthMax === "number"
-                ? m.userData.worldLineWidthMax
-                : 12;
-            m.linewidth = clampRange(
-              style.lineWidth * worldLineWidthScale,
-              minLineWidth,
-              maxLineWidth,
-            );
-          }
-          if (m instanceof THREE.PointsMaterial) {
-            m.size = clampRange(
-              typeof style.pointSizePx === "number"
-                ? style.pointSizePx
-                : m.size,
-              0.5,
-              24,
-            );
-            applyPointDistanceLightMaterial(
-              m,
-              styleNumber(style, "scalarDistanceLightStrength", 0, 0, 1),
-            );
-          }
-          if (
-            m instanceof LineMaterial &&
-            m.userData?.terrainShadowInfluence !== undefined
-          ) {
-            setTerrainShadowInfluence(
-              m,
-              typeof style.terrainShadowInfluence === "number"
-                ? style.terrainShadowInfluence
-                : 0.09,
-            );
-          }
-          if (!preserveMaterialOpacity) {
-            m.opacity = targetOpacity;
-            m.transparent =
-              m.userData?.forceTransparent === true || targetOpacity < 1;
-            if (m instanceof THREE.ShaderMaterial && m.uniforms.uOpacity) {
-              m.uniforms.uOpacity.value = targetOpacity;
-            }
-            if (m.userData?.terrainMaterial === true) {
-              m.transparent = true;
-              m.depthWrite = targetOpacity >= 0.999;
-            }
-          }
-          setMaterialFog(m, this.envFogEnabled && affectedByFog, fogDensity);
-          m.needsUpdate = true;
-        }
-      });
-    }
-    this.applyTerrainFogStyle(id, affectedByFog, fogDensity);
-    this.applyTerrainLiftStyle(id, style);
-    if (
-      this.isTopoSurfaceLayerId(id) ||
-      this.topoPublicSurfaceLayerIds().includes(id)
-    ) {
-      this.topoRuntime.applyPublicSurfaceClipStyle(
-        this.styleForLayer(this.topoSurfaceLayerId()),
-      );
-    }
-    if (this.isTopoSurfaceLayerId(id)) {
-      for (const graticuleLayerId of this.topoGraticuleLayerIds()) {
-        this.topoRuntime.applyGraticuleStyle(
-          graticuleLayerId,
-          this.styleForLayer(graticuleLayerId),
-        );
-      }
-      this.reapplySiteSurfaceGuides();
-      this.applyMtSurfaceMaskStyle(
-        UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
-        this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID),
-      );
-    }
-    this.applyTerrainCompositeStyle(id, style);
-    this.topoRuntime.applyGraticuleStyle(id, style);
-    this.applyGeochemStyle(id, style);
-    this.applyHyperspectralStyle(id, style);
-    this.applyImageryLidarAoiStyle(id, style);
-    this.applyEzGammaStyle(id, style);
-    this.applyDemoBoreholeStyle(id, style);
-    this.applyCaseStudyBDemoLayerAlias(id, style);
-    this.applySurfaceGradientStyle(id, style);
-    this.applyScalarPreviewStyle(id, style);
-    this.applyMtSurfaceMaskStyle(id, style);
-    this.applyScalarVolumeStyle(id, style);
-    this.applyMtThresholdSurfaceStyle(id, style);
-    this.applyMtTopSurfaceStyle(id, style);
-    this.applyPointMarkerStyle(id, style);
-    this.applyResistivitySliceStyle(id, style);
-    this.applySeismicBrowserStyle(id, style);
-    this.applyContourDisplayStyle(id, style);
-    this.applySiteSurfaceGuideStyle(id, style);
-    if (id === UTAH_FORGE_SCENE_SECTION_LAYER_ID) {
-      this.sceneSectionStyleTween = null;
-      this.sceneSectionHelperTransitionOpacity = 1;
-      this.applySceneSectionPlanes(style);
-    } else {
-      this.reapplySceneSectionPlanes();
-    }
-    this.reapplyWorkingAreaFocus();
+    return applyStyleImpl.call(this, id, style);
   }
 
   applyEffectiveStylesForPage(
