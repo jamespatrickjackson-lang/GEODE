@@ -92,12 +92,12 @@ import {
   SurfaceGradientControls,
 } from "./layerControls/mt/MtControls";
 import {
-  AreaOutlinesControls,
   EzGammaStyleControls,
   GeochemStyleControls,
   HyperspectralStyleControls,
   ImageryLidarStyleControls,
 } from "./layerControls/style/StyleControls";
+import { AreaOutlinesControls } from "./layerControls/style/AreaOutlinesControls";
 import {
   PointMarkerControls,
   ScalarPointDrawReadout,
