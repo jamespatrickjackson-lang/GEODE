@@ -372,7 +372,12 @@ function chooseLabelAnchors(group: THREE.Group): Map<string, THREE.Object3D> {
   const choices = new Map<string, LabelAnchorChoice>();
   group.traverse((obj) => {
     if (obj.visible === false) return;
-    const dn = (obj.userData as { displayName?: string }).displayName;
+    const data = obj.userData as {
+      displayName?: string;
+      sceneSectionLabelHidden?: boolean;
+    };
+    if (data.sceneSectionLabelHidden === true) return;
+    const dn = data.displayName;
     if (typeof dn !== "string" || dn.length === 0) return;
     const rank = labelAnchorRank(obj);
     const current = choices.get(dn);

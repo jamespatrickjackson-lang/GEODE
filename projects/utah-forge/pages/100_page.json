@@ -60,19 +60,19 @@
   "layerOverrides": {
     "utah-forge-scene-section-planes": {
       "sceneSectionEnabled": true,
-      "sceneSectionActiveAxis": "x",
+      "sceneSectionActiveAxis": "y",
       "sceneSectionWindowEnabled": true,
-      "sceneSectionWindowActiveAxis": "x",
+      "sceneSectionWindowActiveAxis": "y",
       "sceneSectionWindowByAxis": {
         "x": {
-          "minAlongM": -49109.66796010506,
-          "maxAlongM": -14216.341507179926,
-          "bottomElevationM": -14609.101887030438
+          "minAlongM": -44293.7774015172,
+          "maxAlongM": 43207.05956060888,
+          "bottomElevationM": -12142.201438124524
         },
         "y": {
-          "minAlongM": -118667.98253963646,
-          "maxAlongM": 34046.04347254154,
-          "bottomElevationM": -25000
+          "minAlongM": -53489.89739256331,
+          "maxAlongM": 51899.56879474051,
+          "bottomElevationM": -12230.111040055865
         }
       },
       "sceneSectionPlanes": {
@@ -91,7 +91,23 @@
           "positionM": -2200,
           "invert": false
         }
-      }
+      },
+      "sceneSectionFrameEnabled": true,
+      "sceneSectionFrameByAxis": {
+        "y": {
+          "minBM": -12230.111040055865,
+          "minAM": -53489.89739256331,
+          "maxBM": 8660.259052379133,
+          "maxAM": 51899.56879474051
+        },
+        "x": {
+          "minBM": -12142.201438124524,
+          "maxBM": 8642.298303337717,
+          "maxAM": 43207.05956060888,
+          "minAM": -44293.7774015172
+        }
+      },
+      "sceneSectionLegendVisible": false
     },
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "mtThresholdSurfaceVisibility": {

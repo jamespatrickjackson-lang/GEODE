@@ -342,6 +342,8 @@ export interface EditableStyle {
   };
   sceneSectionGroundTraceVisible?: boolean;
   sceneSectionAxesVisible?: boolean;
+  sceneSectionAxisIntervalM?: number;
+  sceneSectionAxisTextScale?: number;
   sceneSectionTargetLayerIds?: string[];
   sceneSectionTargetProductIds?: string[];
   sceneSectionHelperVisible?: boolean;
@@ -487,10 +489,22 @@ export interface SceneSectionWindowState {
 }
 
 export interface SceneSectionFrameState {
+  enabled?: boolean;
   minAM?: number;
   maxAM?: number;
   minBM?: number;
   maxBM?: number;
+  groundTraceVisible?: boolean;
+  groundTraceWidthM?: number;
+  axesVisible?: boolean;
+  axisIntervalM?: number;
+  axisTextScale?: number;
+  axisTextPaddingM?: number;
+  axisAHeading?: string;
+  axisBHeading?: string;
+  axisHeadingPaddingM?: number;
+  axisHeadingColor?: string;
+  axisHeadingScale?: number;
 }
 
 // ---------- Environment (the "world") ---------------------------------------

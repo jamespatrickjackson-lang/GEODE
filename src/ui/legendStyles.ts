@@ -8,7 +8,7 @@ import type { BoxOverlayStyle } from "../pages/types";
 
 export const LEGEND_PANEL_WIDTH_PX = 282;
 export const LEGEND_PAGE_EDGE_MARGIN_PX = 16;
-export const LEGEND_BOTTOM_EDGE_OFFSET_PX = 50;
+export const LEGEND_BOTTOM_EDGE_OFFSET_PX = 100;
 export const LEGEND_STACK_GAP_PX = 14;
 export const LEGEND_CHECKBOX_SIZE_PX = 13;
 export const legendControlSpacing = {

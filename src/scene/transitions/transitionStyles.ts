@@ -284,6 +284,8 @@ const SCENE_SECTION_TRANSITION_STYLE_FIELDS: readonly (keyof EditableStyle)[] =
     "sceneSectionHelperVisible",
     "sceneSectionGroundTraceVisible",
     "sceneSectionAxesVisible",
+    "sceneSectionAxisIntervalM",
+    "sceneSectionAxisTextScale",
   ];
 
 export const SCENE_SECTION_AFFECTED_LAYER_IDS = new Set<string>([
@@ -297,6 +299,7 @@ export const SCENE_SECTION_AFFECTED_LAYER_IDS = new Set<string>([
 
 export function sceneSectionDiscreteSignature(style: EditableStyle): string {
   const planes = style.sceneSectionPlanes ?? {};
+  const frames = style.sceneSectionFrameByAxis ?? {};
   return JSON.stringify({
     enabled: style.sceneSectionEnabled === true,
     mode: style.sceneSectionMode ?? null,
@@ -310,6 +313,14 @@ export function sceneSectionDiscreteSignature(style: EditableStyle): string {
     helperVisible: style.sceneSectionHelperVisible !== false,
     groundTraceVisible: style.sceneSectionGroundTraceVisible === true,
     axesVisible: style.sceneSectionAxesVisible === true,
+    axisIntervalM:
+      typeof style.sceneSectionAxisIntervalM === "number"
+        ? style.sceneSectionAxisIntervalM
+        : null,
+    axisTextScale:
+      typeof style.sceneSectionAxisTextScale === "number"
+        ? style.sceneSectionAxisTextScale
+        : null,
     planes: {
       x: {
         enabled: planes.x?.enabled === true,
@@ -322,6 +333,23 @@ export function sceneSectionDiscreteSignature(style: EditableStyle): string {
       z: {
         enabled: planes.z?.enabled === true,
         invert: planes.z?.invert === true,
+      },
+    },
+    frameControls: {
+      x: {
+        enabled: frames.x?.enabled ?? null,
+        groundTraceVisible: frames.x?.groundTraceVisible ?? null,
+        axesVisible: frames.x?.axesVisible ?? null,
+      },
+      y: {
+        enabled: frames.y?.enabled ?? null,
+        groundTraceVisible: frames.y?.groundTraceVisible ?? null,
+        axesVisible: frames.y?.axesVisible ?? null,
+      },
+      z: {
+        enabled: frames.z?.enabled ?? null,
+        groundTraceVisible: frames.z?.groundTraceVisible ?? null,
+        axesVisible: frames.z?.axesVisible ?? null,
       },
     },
   });

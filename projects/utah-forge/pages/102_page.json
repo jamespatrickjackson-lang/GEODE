@@ -60,7 +60,7 @@
   "layerOverrides": {
     "utah-forge-scene-section-planes": {
       "sceneSectionEnabled": true,
-      "sceneSectionActiveAxis": "x",
+      "sceneSectionActiveAxis": "y",
       "sceneSectionWindowEnabled": true,
       "sceneSectionWindowActiveAxis": "x",
       "sceneSectionWindowByAxis": {
@@ -90,6 +90,12 @@
           "enabled": false,
           "positionM": -2200,
           "invert": false
+        }
+      },
+      "sceneSectionHelperVisible": false,
+      "sceneSectionFrameByAxis": {
+        "y": {
+          "axisTextScale": 3
         }
       }
     },
@@ -161,6 +167,9 @@
   "visibilityOverrides": {
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-phase3-seismic-browser": true,
-    "utah-forge-mt-resistivity-full-density": false
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-mt-top-surface": true,
+    "utah-forge-mt-top-contact-surface": false,
+    "utah-forge-mt-resistivity-slices": true
   }
 }

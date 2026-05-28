@@ -364,9 +364,18 @@ export function mountScene(
       // Walk up to find the first ancestor (including self) carrying a
       // displayName. Lets a child-mesh-of-a-group pattern still resolve.
       let node: THREE.Object3D | null = hit.object;
+      let hiddenBySection = false;
       while (node) {
-        const name = (node.userData as { displayName?: string }).displayName;
-        if (typeof name === "string" && name.length > 0) return name;
+        const data = node.userData as {
+          displayName?: string;
+          sceneSectionLabelHidden?: boolean;
+        };
+        hiddenBySection =
+          hiddenBySection || data.sceneSectionLabelHidden === true;
+        const name = data.displayName;
+        if (!hiddenBySection && typeof name === "string" && name.length > 0) {
+          return name;
+        }
         node = node.parent;
       }
     }

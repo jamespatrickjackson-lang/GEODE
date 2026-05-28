@@ -593,3 +593,133 @@ Each decision records:
 **Why:** Legend placement needs to match the standard viewport edge rhythm and avoid each legend drifting as panel layouts change. The bottom-most legend row also needs a stable visual anchor independent of the number of visible containers.
 
 **Trade-off accepted:** Older standalone legend offsets are now expressed relative to the shared bottom anchor. Individual legends can still own vertical ordering when they render outside the Utah FORGE stack, but page-edge and bottom-anchor values stay centralized.
+
+## DEC-058 - Viewport legend bottom anchor is 100px
+
+**Considered:** keep the bottom-most viewport legend container 50px from the bottom edge, or increase that shared offset.
+
+**Chose:** set `LEGEND_BOTTOM_EDGE_OFFSET_PX = 100` in `src/ui/legendStyles.ts`.
+
+**Why:** The 50px anchor placed the bottom legend container too close to the viewport bottom during visual review.
+
+**Trade-off accepted:** All legends using the shared bottom anchor move upward together. Standalone legends that express their vertical position relative to the shared anchor keep their relative ordering.
+
+**Supersedes:** DEC-057 for the bottom-anchor value only. DEC-057 still applies to using shared edge-anchor tokens.
+
+## DEC-059 - Section scale axes are independent presenter helpers
+
+**Considered:** keep section scale axes tied to section gizmo/P Controle visibility, or let scale axes persist as their own presenter-readable helper when enabled.
+
+**Chose:** section scale axes are controlled by `sceneSectionAxesVisible` and remain visible in presenter mode when enabled, even when `sceneSectionHelperVisible` hides clipping outlines and push/pull cones.
+
+**Why:** Scale axes are interpretive presentation context, not edit handles. Hiding the gizmo in presenter mode should not remove authored distance/elevation references.
+
+**Trade-off accepted:** Section scale axes now have separate authoring values for tick interval and text size: `sceneSectionAxisIntervalM` and `sceneSectionAxisTextScale`. Ground traces remain limited to X/Y frames.
+
+## DEC-060 - Section frame controls are per axis
+
+**Considered:** keep frame crop, ground trace, scale-axis visibility, tick interval, and text size as one shared `Section frames` control set, or move those controls into each X/Y/Z frame.
+
+**Chose:** frame crop, ground trace, scale axes, axis interval, and text size are authored per axis through `sceneSectionFrameByAxis.<axis>`. Legacy global fields remain readable as fallback values for existing pages.
+
+**Why:** Section frames are independent authoring surfaces. Changing the Y frame scale or crop state should not alter X or Z frame controls.
+
+**Trade-off accepted:** Existing global `sceneSectionFrameEnabled`, `sceneSectionGroundTraceVisible`, `sceneSectionAxesVisible`, `sceneSectionAxisIntervalM`, and `sceneSectionAxisTextScale` fields remain compatibility fallbacks, but new editor writes target the per-axis frame object.
+
+**Supersedes:** DEC-059 for scale-axis authoring field location only. DEC-059 still applies to presenter visibility being independent from P Controle.
+
+## DEC-061 - Section scale-axis labels use kilometer controls and planar camera-facing text
+
+**Considered:** keep scale-axis intervals and labels as fixed meter-based helper output, or expose kilometer-based authoring controls with explicit label and heading typography.
+
+**Chose:** section scale-axis intervals are edited in kilometers while persisted as meters. Per-frame label controls now include tick text size, tick text padding, editable A/B headings, heading padding, heading color, and heading size.
+
+**Why:** Section frames need readable measurement context at presentation scale. Authors need direct control over label density and typography without moving text farther from the axis just because text size increases.
+
+**Trade-off accepted:** Scale-axis text remains flat on the section plane and flips to face the camera per frame. Heading text defaults are generated from the in-plane axis names with measurement type, such as `Northing (km)`.
+
+## DEC-062 - Ground trace trims section cut overlays above terrain
+
+**Considered:** keep ground trace as a visual helper only, or make it a cut boundary for generated section volume-cut overlays.
+
+**Chose:** when an X or Y section frame has ground trace enabled, generated MT and seismic volume-cut ISO overlays suppress sampled vertices above the terrain height sampler.
+
+**Why:** The ground trace communicates the terrain intersection. Section data above that sampled surface reads as bleed outside the meaningful crop and should be hidden with the same authoring toggle.
+
+**Trade-off accepted:** The trim is applied to generated section volume-cut overlays, where per-vertex alpha already drives bands and contour output. Generic material clipping remains rectangular because Three.js clipping planes cannot represent the sampled terrain curve.
+
+## DEC-063 - Section clipping culls floating labels at their anchors
+
+**Considered:** let HTML floating labels continue to render when their source object is clipped by a scene section, or evaluate label anchors against the active section clipping state.
+
+**Chose:** labelable objects receive a transient `sceneSectionLabelHidden` runtime flag when their label anchor point is outside the active section clipping planes. `SceneLabels` skips those anchors.
+
+**Why:** Floating HTML labels are rendered outside Three.js material clipping. Without a parallel anchor check, a clipped feature can disappear while its label remains visible.
+
+**Trade-off accepted:** Label culling is anchor-based. Objects spanning a section boundary can keep a label when their chosen label anchor remains on the visible side.
+
+## DEC-064 - MT threshold surfaces draw dashed section-frame intersections
+
+**Considered:** rely on clipped MT threshold surface edges to show where a threshold surface crosses a scene section, or generate an explicit section-frame intersection trace.
+
+**Chose:** active section frames slice visible MT threshold surface meshes and render the resulting in-frame polylines as white dashed helper lines using the same visual contract as ground traces.
+
+**Why:** Transparent and clipped surfaces can make the exact intersection hard to read. A stable dashed trace gives the section frame a CAD-like intersection cue without changing the underlying surface opacity behavior.
+
+**Trade-off accepted:** The trace is generated from the visible triangle mesh at runtime and stitched by endpoint tolerance. It is a visual helper, not a source-data artifact.
+
+## DEC-065 - Section frame headers own section plane controls
+
+**Considered:** keep separate `X Section active`, `Y Section`, and `Z Section` editor subsections beside the newer `X/Y/Z Section frame` subsections, or collapse section-plane authoring into each frame.
+
+**Chose:** each `X/Y/Z Section frame` header owns the matching section plane enable, flip-side, and active-handle controls. Cut position remains inside the same frame body. Separate section-plane subsections are removed.
+
+**Why:** Section frames are now the primary authoring surface for X/Y/Z sections. Keeping a second set of section controls made enable/active state feel redundant and split related plane and frame edits across two editor locations.
+
+**Trade-off accepted:** Existing style fields and test IDs remain stable. The UI placement changes, but persisted page/environment JSON still uses `sceneSectionPlanes.<axis>` for plane state and `sceneSectionFrameByAxis.<axis>` for frame state.
+
+## DEC-066 - Section intersection traces belong to section frames
+
+**Considered:** draw dashed white intersection traces where visible MT threshold surface meshes cross a section frame, or draw them where two enabled section frames overlap and section ISO surfaces visually meet.
+
+**Chose:** when Section ISO is enabled, dashed white traces are generated from active section-plane positions and per-axis frame bounds. MT threshold boundaries no longer generate section-frame intersection traces.
+
+**Why:** The intended cue is the seam where authored section ISO overlays meet, not where independent threshold boundary surfaces happen to cross a section. Binding the trace to section frames keeps the cue stable and independent from threshold boundary visibility.
+
+**Trade-off accepted:** The X/Y vertical frame intersection can be trimmed to sampled ground when either frame has ground trace enabled. Other frame-pair intersections are rectangular frame overlaps until a terrain-trim model is explicitly defined for those pairings.
+
+**Supersedes:** DEC-064.
+
+## DEC-067 - Section ISO ground trim is a hard geometry mask
+
+**Considered:** use interpolated alpha to hide section ISO content above a ground trace, or hard-mask section ISO triangles at the sampled ground boundary.
+
+**Chose:** section ISO bands and contour ribbons use a separate hard mask for ground-trace trim. Triangles touching masked above-ground vertices are excluded from both band geometry and stitched contour generation.
+
+**Why:** Interpolated alpha can leave faint band bleed and contour protrusions across the ground-trace boundary. A hard geometry mask keeps ISO output from crossing the authored ground trace.
+
+**Trade-off accepted:** The trim follows the generated section grid resolution, so the boundary can step at grid-cell scale. This is preferable to visible above-ground bleed.
+
+**Supersedes:** DEC-062 for section ISO overlay trim behavior only. DEC-062 still applies to the authoring intent of hiding above-ground section data when ground trace is enabled.
+
+## DEC-068 - Section ISO bands conform to ground-trace geometry
+
+**Considered:** keep section ISO bands as a rectangular grid with hard-masked boundary triangles, or reshape X/Y section cut grids so their top boundary follows the sampled ground trace.
+
+**Chose:** when ground trace is enabled, generated X/Y section ISO cut grids clamp each along-axis column to the sampled ground elevation. Ground trace width is authored per section frame through `sceneSectionFrameByAxis.<axis>.groundTraceWidthM`.
+
+**Why:** Hard-masked rectangular grids remove above-ground bleed but create stepped or torn-looking band edges. Reshaping the generated cut mesh makes the band boundary follow the same sampled ground profile as the visual trace.
+
+**Trade-off accepted:** The band edge follows the section cut grid resolution and terrain sampler. Increasing section cut resolution remains a separate performance tradeoff.
+
+**Supersedes:** DEC-067 for Section ISO band geometry only. DEC-067 still applies to contour-ribbon masking.
+
+## DEC-069 - Section ISO isolines define band boundaries
+
+**Considered:** quantize Section ISO fills into `sectionIsoLevelCount` bands, or treat `sectionIsoLevelCount` as the number of isoline boundaries and fill the `levelCount + 1` intervals between them.
+
+**Chose:** Section ISO lines and bands share the same scalar thresholds. The fill shader renders one more band than the line count so every visible isoline lies on a color boundary.
+
+**Why:** When bands and lines use different threshold spacing, contours visually drift through the middle of fill regions instead of matching the band changes. Shared thresholds make the legend and section surface read as one contour system.
+
+**Trade-off accepted:** A setting of 5 levels now means 5 isolines and 6 fill bands. Existing persisted style values still represent isoline count.

@@ -35,9 +35,9 @@ test("scene section frames stay independent across X Y and Z planes", async ({
   await openForgeMtResistivityEditorContainers(page);
 
   await page.getByTestId("scene-section-enabled").setChecked(true);
-  await page.getByTestId("scene-section-window-enabled").setChecked(true);
   for (const axis of ["x", "y", "z"] as const) {
     await page.getByTestId(`scene-section-plane-${axis}-enabled`).setChecked(true);
+    await page.getByTestId(`scene-section-frame-${axis}-enabled`).setChecked(true);
   }
   await setRangeInput(page, "scene-section-plane-x-position", "-6000");
   await setRangeInput(page, "scene-section-plane-y-position", "-10300");

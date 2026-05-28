@@ -6,6 +6,11 @@ import {
 } from "../../projectModules/utahForge/layerIds";
 import { disposeObjectTree } from "../disposeObjectTree";
 import {
+  getHeightSampler,
+  peekHeightSampler,
+  type HeightSampler,
+} from "../heightSampler";
+import {
   DEFAULT_SCALAR_HIGH_COLOR,
   DEFAULT_SCALAR_LOW_COLOR,
   DEFAULT_SCALAR_MID_COLOR,
@@ -30,6 +35,98 @@ import type {
 } from "../SceneManager";
 
 const MT_VOLUME_SECTION_ISO_GRID_SIZE = 96;
+const SECTION_GROUND_TRIM_EPSILON_M = 0.01;
+const SECTION_GROUND_TRACE_LIFT_M = 26;
+
+type SectionGroundTrimContext = {
+  sampleHeight: HeightSampler;
+  origin: { easting: number; northing: number; elevation: number };
+};
+
+function sectionCutFrameRange(
+  plane: ResolvedSceneSectionPlane,
+  min: [number, number, number],
+  max: [number, number, number],
+  frame?: ResolvedSceneSectionFrame | null,
+): {
+  axisA: 0 | 1 | 2;
+  axisB: 0 | 1 | 2;
+  minA: number;
+  maxA: number;
+  minB: number;
+  maxB: number;
+} | null {
+  const axisA = (plane.axis === "x" ? 1 : 0) as 0 | 1 | 2;
+  const axisB = (plane.axis === "z" ? 1 : 2) as 0 | 1 | 2;
+  const matchingFrame =
+    frame?.axis === plane.axis &&
+    frame.axisAIndex === axisA &&
+    frame.axisBIndex === axisB
+      ? frame
+      : null;
+  const minA = matchingFrame
+    ? clampRange(matchingFrame.minAM, min[axisA], max[axisA])
+    : min[axisA];
+  const maxA = matchingFrame
+    ? clampRange(matchingFrame.maxAM, min[axisA], max[axisA])
+    : max[axisA];
+  const minB = matchingFrame
+    ? clampRange(matchingFrame.minBM, min[axisB], max[axisB])
+    : min[axisB];
+  const maxB = matchingFrame
+    ? clampRange(matchingFrame.maxBM, min[axisB], max[axisB])
+    : max[axisB];
+  if (maxA <= minA + 0.000001 || maxB <= minB + 0.000001) return null;
+  return { axisA, axisB, minA, maxA, minB, maxB };
+}
+
+function sectionGroundTrimContext(
+  host: any,
+  plane: ResolvedSceneSectionPlane,
+  frame?: ResolvedSceneSectionFrame | null,
+): SectionGroundTrimContext | null {
+  if (plane.axis === "z" || frame?.groundTraceVisible !== true) return null;
+  const sampleHeight = peekHeightSampler();
+  if (!sampleHeight) return null;
+  return {
+    sampleHeight,
+    origin: host.siteSurfaceGuideOrigin(
+      host.layers.get(host.topoSurfaceLayerId()),
+    ),
+  };
+}
+
+function sectionGroundCeilingM(
+  host: any,
+  groundTrim: SectionGroundTrimContext | null,
+  x: number,
+  y: number,
+  fallbackM: number,
+): number {
+  if (!groundTrim) return fallbackM;
+  return Math.min(
+    fallbackM,
+    host.siteGuideSurfaceZ(
+      x,
+      y,
+      groundTrim.sampleHeight,
+      groundTrim.origin,
+      SECTION_GROUND_TRACE_LIFT_M,
+    ),
+  );
+}
+
+function sectionGroundTrimRequested(
+  planes: ResolvedSceneSectionPlane[],
+  frames: ResolvedSceneSectionFrame[],
+): boolean {
+  return planes.some((plane) => {
+    if (plane.axis === "z") return false;
+    return frames.some(
+      (frame) => frame.axis === plane.axis && frame.groundTraceVisible,
+    );
+  });
+}
 
 export function listMtVolumeCutIsoTargetsImpl(this: any, layerId?: string): ScalarSectionIsoTarget[] {
     if (layerId && layerId !== UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID)
@@ -174,6 +271,7 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
     mesh: THREE.Mesh;
     values: Float32Array;
     alphaValues: Float32Array;
+    hardMaskValues: Float32Array;
   } | null {
     const dimensions = Array.isArray(mesh.userData.scalarVolumeDimensions)
       ? (mesh.userData.scalarVolumeDimensions as [number, number, number])
@@ -200,31 +298,49 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
     const positions = new Float32Array(grid * grid * 3);
     const values = new Float32Array(grid * grid);
     const alphaValues = new Float32Array(grid * grid);
-    const axisA = plane.axis === "x" ? 1 : 0;
-    const axisB = plane.axis === "z" ? 1 : 2;
+    const hardMaskValues = new Float32Array(grid * grid);
+    const frameRange = sectionCutFrameRange(
+      plane,
+      min,
+      max,
+      options.sectionFrame,
+    );
+    if (!frameRange) return null;
+    const { axisA, axisB, minA, maxA, minB, maxB } = frameRange;
     const coords = [0, 0, 0];
+    const groundTrim = sectionGroundTrimContext(
+      this,
+      plane,
+      options.sectionFrame,
+    );
 
     for (let j = 0; j < grid; j += 1) {
       const bT = j / (grid - 1);
       for (let i = 0; i < grid; i += 1) {
         const aT = i / (grid - 1);
         coords[axisIndex] = plane.positionM;
-        coords[axisA] = min[axisA] + (max[axisA] - min[axisA]) * aT;
-        coords[axisB] = min[axisB] + (max[axisB] - min[axisB]) * bT;
+        coords[axisA] = minA + (maxA - minA) * aT;
+        const columnX = plane.axis === "y" ? coords[axisA] : plane.positionM;
+        const columnY = plane.axis === "x" ? coords[axisA] : plane.positionM;
+        const columnMaxB =
+          axisB === 2
+            ? sectionGroundCeilingM(
+                this,
+                groundTrim,
+                columnX,
+                columnY,
+                maxB,
+              )
+            : maxB;
+        const columnVisible =
+          columnMaxB > minB + SECTION_GROUND_TRIM_EPSILON_M;
+        coords[axisB] = columnVisible
+          ? minB + (columnMaxB - minB) * bT
+          : minB;
         const vertexIndex = i + j * grid;
         positions[vertexIndex * 3] = coords[0];
         positions[vertexIndex * 3 + 1] = coords[1];
         positions[vertexIndex * 3 + 2] = coords[2];
-        const insideSectionFrame =
-          !options.sectionFrame ||
-          (coords[options.sectionFrame.axisAIndex] >=
-            options.sectionFrame.minAM &&
-            coords[options.sectionFrame.axisAIndex] <=
-              options.sectionFrame.maxAM &&
-            coords[options.sectionFrame.axisBIndex] >=
-              options.sectionFrame.minBM &&
-            coords[options.sectionFrame.axisBIndex] <=
-              options.sectionFrame.maxBM);
         const u = (coords[0] - min[0]) / Math.max(0.000001, max[0] - min[0]);
         const v = (coords[1] - min[1]) / Math.max(0.000001, max[1] - min[1]);
         const w = (coords[2] - min[2]) / Math.max(0.000001, max[2] - min[2]);
@@ -238,8 +354,8 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
             ? this.sampleScalarVolumeByte(maskData, dimensions, u, v, w) / 255
             : 1;
         values[vertexIndex] = scalar;
+        hardMaskValues[vertexIndex] = columnVisible ? 1 : 0;
         alphaValues[vertexIndex] =
-          insideSectionFrame &&
           scalar >= options.thresholdMin &&
           scalar <= options.thresholdMax &&
           mask > 0.01
@@ -284,7 +400,9 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
     cut.userData.sectionIsoTargetKey = options.targetKey;
     cut.userData.sectionIsoPlaneAxis = plane.axis;
     cut.userData.sectionIsoPlanePositionM = plane.positionM;
-    return { mesh: cut, values, alphaValues };
+    cut.userData.sectionGroundTrimEnabled = groundTrim !== null;
+    cut.userData.sectionGroundTrimSource = "ground-trace";
+    return { mesh: cut, values, alphaValues, hardMaskValues };
   }
 
 export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle): void {
@@ -307,6 +425,16 @@ export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle
       this.lastSceneSectionStyle,
       sectionBounds,
     );
+    if (
+      sectionGroundTrimRequested(planes, sectionFrames) &&
+      !peekHeightSampler()
+    ) {
+      void getHeightSampler().then(() => {
+        this.updateMtVolumeCutIsoOverlays(
+          this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID),
+        );
+      });
+    }
 
     const productId =
       typeof mesh.userData.scalarVolumeProductId === "string"
@@ -426,6 +554,7 @@ export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle
         ...baseOptions,
         targetKey,
         alphaValues: cut.alphaValues,
+        hardMaskValues: cut.hardMaskValues,
       });
       if (cut.mesh.userData.scalarSectionIsoOverlayRoot) {
         overlayGroup.add(cut.mesh);
@@ -472,10 +601,12 @@ export function buildSeismicVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane
       removeBackground: boolean;
       backgroundCutoff: number;
       targetKey: string;
+      sectionFrame?: ResolvedSceneSectionFrame | null;
     }): {
     mesh: THREE.Mesh;
     values: Float32Array;
     alphaValues: Float32Array;
+    hardMaskValues: Float32Array;
   } | null {
     const dimensions = Array.isArray(mesh.userData.seismicVolumeDimensions)
       ? (mesh.userData.seismicVolumeDimensions as [number, number, number])
@@ -505,17 +636,45 @@ export function buildSeismicVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane
     const positions = new Float32Array(grid * grid * 3);
     const values = new Float32Array(grid * grid);
     const alphaValues = new Float32Array(grid * grid);
-    const axisA = plane.axis === "x" ? 1 : 0;
-    const axisB = plane.axis === "z" ? 1 : 2;
+    const hardMaskValues = new Float32Array(grid * grid);
+    const frameRange = sectionCutFrameRange(
+      plane,
+      min,
+      max,
+      options.sectionFrame,
+    );
+    if (!frameRange) return null;
+    const { axisA, axisB, minA, maxA, minB, maxB } = frameRange;
     const coords = [0, 0, 0];
+    const groundTrim = sectionGroundTrimContext(
+      this,
+      plane,
+      options.sectionFrame,
+    );
 
     for (let j = 0; j < grid; j += 1) {
       const bT = j / (grid - 1);
       for (let i = 0; i < grid; i += 1) {
         const aT = i / (grid - 1);
         coords[axisIndex] = plane.positionM;
-        coords[axisA] = min[axisA] + (max[axisA] - min[axisA]) * aT;
-        coords[axisB] = min[axisB] + (max[axisB] - min[axisB]) * bT;
+        coords[axisA] = minA + (maxA - minA) * aT;
+        const columnX = plane.axis === "y" ? coords[axisA] : plane.positionM;
+        const columnY = plane.axis === "x" ? coords[axisA] : plane.positionM;
+        const columnMaxB =
+          axisB === 2
+            ? sectionGroundCeilingM(
+                this,
+                groundTrim,
+                columnX,
+                columnY,
+                maxB,
+              )
+            : maxB;
+        const columnVisible =
+          columnMaxB > minB + SECTION_GROUND_TRIM_EPSILON_M;
+        coords[axisB] = columnVisible
+          ? minB + (columnMaxB - minB) * bT
+          : minB;
         const vertexIndex = i + j * grid;
         positions[vertexIndex * 3] = coords[0];
         positions[vertexIndex * 3 + 1] = coords[1];
@@ -526,6 +685,7 @@ export function buildSeismicVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane
         const amplitude =
           this.sampleScalarVolumeByte(volumeData, dimensions, u, v, w) / 255;
         values[vertexIndex] = amplitude;
+        hardMaskValues[vertexIndex] = columnVisible ? 1 : 0;
         alphaValues[vertexIndex] = seismicBackgroundAlphaAt(
           amplitude,
           options.amplitudeMin,
@@ -573,7 +733,9 @@ export function buildSeismicVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane
     cut.userData.sectionIsoTargetKey = options.targetKey;
     cut.userData.sectionIsoPlaneAxis = plane.axis;
     cut.userData.sectionIsoPlanePositionM = plane.positionM;
-    return { mesh: cut, values, alphaValues };
+    cut.userData.sectionGroundTrimEnabled = groundTrim !== null;
+    cut.userData.sectionGroundTrimSource = "ground-trace";
+    return { mesh: cut, values, alphaValues, hardMaskValues };
   }
 
 export function updateSeismicVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle): void {
@@ -585,6 +747,25 @@ export function updateSeismicVolumeCutIsoOverlaysImpl(this: any, style: Editable
     if (!mesh) return;
     const planes = this.sceneSectionActivePlanes(this.lastSceneSectionStyle);
     if (planes.length === 0) return;
+    const sectionBounds = this.sceneSectionBounds(
+      this.lastSceneSectionStyle,
+      this.sceneSectionLayerIds(this.lastSceneSectionStyle),
+      this.sceneSectionProductIds(this.lastSceneSectionStyle),
+    );
+    const sectionFrames = this.resolveSceneSectionFrames(
+      this.lastSceneSectionStyle,
+      sectionBounds,
+    );
+    if (
+      sectionGroundTrimRequested(planes, sectionFrames) &&
+      !peekHeightSampler()
+    ) {
+      void getHeightSampler().then(() => {
+        this.updateSeismicVolumeCutIsoOverlays(
+          this.styleForLayer(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID),
+        );
+      });
+    }
 
     const productId =
       typeof mesh.userData.seismicProductId === "string"
@@ -676,12 +857,17 @@ export function updateSeismicVolumeCutIsoOverlaysImpl(this: any, style: Editable
         removeBackground,
         backgroundCutoff,
         targetKey,
+        sectionFrame:
+          sectionFrames.find(
+            (frame: ResolvedSceneSectionFrame) => frame.axis === plane.axis,
+          ) ?? null,
       });
       if (!cut) continue;
       updateScalarSectionIsoOverlay(cut.mesh, cut.values, {
         ...baseOptions,
         targetKey,
         alphaValues: cut.alphaValues,
+        hardMaskValues: cut.hardMaskValues,
       });
       if (cut.mesh.userData.scalarSectionIsoOverlayRoot) {
         overlayGroup.add(cut.mesh);

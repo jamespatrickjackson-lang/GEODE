@@ -150,6 +150,7 @@ import {
   sceneSectionObjectTargeted as sceneSectionObjectTargetedImpl,
   sceneSectionProductIds as sceneSectionProductIdsImpl,
   setSceneSectionUniforms as setSceneSectionUniformsImpl,
+  updateSceneSectionPlanarTextFacing as updateSceneSectionPlanarTextFacingImpl,
 } from "./section/sceneSectionController";
 import {
   applyWorkingAreaFocusMaterialImpl,
@@ -327,12 +328,24 @@ export interface ResolvedSceneSectionWindow {
 
 export interface ResolvedSceneSectionFrame {
   axis: SceneSectionAxis;
+  enabled: boolean;
   minAM: number;
   maxAM: number;
   minBM: number;
   maxBM: number;
   axisAIndex: 0 | 1 | 2;
   axisBIndex: 0 | 1 | 2;
+  groundTraceVisible: boolean;
+  groundTraceWidthM: number;
+  axesVisible: boolean;
+  axisIntervalM: number;
+  axisTextScale: number;
+  axisTextPaddingM: number;
+  axisAHeading: string;
+  axisBHeading: string;
+  axisHeadingPaddingM: number;
+  axisHeadingColor: string;
+  axisHeadingScale: number;
 }
 
 export interface SceneSectionRuntime {
@@ -1385,8 +1398,12 @@ export class SceneManager {
     return createSceneSectionLabelImpl.call(this, text, color);
   }
 
-  createSceneSectionScaleLabel(text: string): THREE.Mesh {
-    return createSceneSectionScaleLabelImpl.call(this, text);
+  createSceneSectionScaleLabel(
+    text: string,
+    textScale?: number,
+    color?: string,
+  ): THREE.Mesh {
+    return createSceneSectionScaleLabelImpl.call(this, text, textScale, color);
   }
 
   rebuildSceneSectionHelpers(
@@ -1400,6 +1417,10 @@ export class SceneManager {
 
   applySceneSectionPlanes(style: EditableStyle): void {
     return applySceneSectionPlanesImpl.call(this, style);
+  }
+
+  updateSceneSectionPlanarTextFacing(camera: THREE.Camera): void {
+    return updateSceneSectionPlanarTextFacingImpl.call(this, camera);
   }
 
   reapplySceneSectionPlanes(): void {
@@ -2725,6 +2746,7 @@ export class SceneManager {
     this.updateDynamicCameraOrbitCenterScale(camera);
     this.updatePageCameraMarkersScale(camera);
     this.updateEzGammaBillboards(camera);
+    this.updateSceneSectionPlanarTextFacing(camera);
     this.topoRuntime.updateGridCameraVisibility(camera);
     this.sceneOverlayController.tick(nowMs);
   }

@@ -37,6 +37,10 @@ export function getHeightSampler(): Promise<HeightSampler> {
   return new Promise<HeightSampler>((resolve) => samplerWaiters.push(resolve));
 }
 
+export function peekHeightSampler(): HeightSampler | null {
+  return currentSampler;
+}
+
 // ---- Overlay masks -------------------------------------------------------
 
 const overlayMasks = new Map<string, OverlayMaskInfo>();

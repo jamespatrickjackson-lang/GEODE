@@ -34,6 +34,7 @@ export interface ScalarSectionIsoOptions {
   selectedTargetIds: Record<string, boolean>;
   targetKey?: string;
   alphaValues?: Float32Array | number[];
+  hardMaskValues?: Float32Array | number[];
   colorMode?:
     | "scalar"
     | "seismic-blue-white-red"
@@ -223,7 +224,7 @@ function sectionIsoAlphaAt(
   return Number.isFinite(value) ? clamp01(value) : 0;
 }
 
-function sectionIsoTriangleSuppressed(
+function sectionIsoTriangleMasked(
   alphaValues: Float32Array | number[] | undefined,
   ia: number,
   ib: number,
@@ -231,10 +232,32 @@ function sectionIsoTriangleSuppressed(
 ): boolean {
   if (!alphaValues) return false;
   return (
-    sectionIsoAlphaAt(alphaValues, ia) <= 0.01 &&
-    sectionIsoAlphaAt(alphaValues, ib) <= 0.01 &&
+    sectionIsoAlphaAt(alphaValues, ia) <= 0.01 ||
+    sectionIsoAlphaAt(alphaValues, ib) <= 0.01 ||
     sectionIsoAlphaAt(alphaValues, ic) <= 0.01
   );
+}
+
+function sectionIsoVisibleTriangleIndices(
+  geometry: THREE.BufferGeometry,
+  alphaValues: Float32Array | number[] | undefined,
+): number[] | null {
+  if (!alphaValues) return null;
+  const position = geometry.getAttribute("position");
+  if (!(position instanceof THREE.BufferAttribute)) return null;
+  const sourceIndex = geometry.getIndex();
+  const triangleIndexCount = sourceIndex
+    ? sourceIndex.count
+    : position.count - (position.count % 3);
+  const visible: number[] = [];
+  for (let i = 0; i < triangleIndexCount; i += 3) {
+    const ia = sourceIndex ? sourceIndex.getX(i) : i;
+    const ib = sourceIndex ? sourceIndex.getX(i + 1) : i + 1;
+    const ic = sourceIndex ? sourceIndex.getX(i + 2) : i + 2;
+    if (sectionIsoTriangleMasked(alphaValues, ia, ib, ic)) continue;
+    visible.push(ia, ib, ic);
+  }
+  return visible.length > 0 ? visible : [];
 }
 
 export function sectionIsoAttributeValues(
@@ -739,7 +762,7 @@ function buildSectionIsoLineGeometry(
     const ia = sourceIndex[i];
     const ib = sourceIndex[i + 1];
     const ic = sourceIndex[i + 2];
-    if (sectionIsoTriangleSuppressed(options.alphaValues, ia, ib, ic)) continue;
+    if (sectionIsoTriangleMasked(options.hardMaskValues, ia, ib, ic)) continue;
     const va = values[ia];
     const vb = values[ib];
     const vc = values[ic];
@@ -978,9 +1001,13 @@ function makeSectionIsoBandMaterial(
         if (vSectionIsoAlpha <= 0.01) discard;
         if (vSectionIsoScalar < uIsoMin || vSectionIsoScalar > uIsoMax) discard;
         float range = max(0.000001, uIsoMax - uIsoMin);
-        float count = max(2.0, floor(uLevelCount + 0.5));
-        float band = floor(saturate((vSectionIsoScalar - uIsoMin) / range) * count);
-        float value = uIsoMin + ((band + 0.5) / count) * range;
+        float isoLevelCount = max(2.0, floor(uLevelCount + 0.5));
+        float bandCount = isoLevelCount + 1.0;
+        float band = min(
+          floor(saturate((vSectionIsoScalar - uIsoMin) / range) * bandCount),
+          bandCount - 1.0
+        );
+        float value = uIsoMin + ((band + 0.5) / bandCount) * range;
         vec3 color = rampColor(value);
         if (abs(uFillOffset) > 0.0001) {
           color = mix(color, uFillOffset < 0.0 ? vec3(1.0) : vec3(0.0), abs(uFillOffset));
@@ -1015,6 +1042,14 @@ function buildSectionIsoBandMesh(
         ? new Float32Array(options.alphaValues)
         : Float32Array.from(options.alphaValues)
       : new Float32Array(position.count).fill(1);
+  const visibleIndices = sectionIsoVisibleTriangleIndices(
+    geometry,
+    options.hardMaskValues && options.hardMaskValues.length === position.count
+      ? options.hardMaskValues
+      : undefined,
+  );
+  if (visibleIndices?.length === 0) return null;
+  if (visibleIndices) geometry.setIndex(visibleIndices);
   geometry.setAttribute(
     "sectionIsoScalar",
     new THREE.Float32BufferAttribute(scalarValues, 1),

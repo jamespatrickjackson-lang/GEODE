@@ -71,6 +71,7 @@ const SCENE_SECTION_DEFAULT_POSITIONS = {
   z: -2200,
 } as const;
 const SCENE_SECTION_RENDER_ORDER = 4560;
+const SCENE_SECTION_CLIP_EPSILON_M = 0.001;
 const SCENE_SECTION_MIN_HELPER_SIZE_M = 1200;
 const SCENE_SECTION_HELPER_PADDING = 1.14;
 const SCENE_SECTION_LABEL_WIDTH_M = 980;
@@ -84,8 +85,29 @@ const SCENE_SECTION_CONE_VISUAL_SCALE = SCENE_SECTION_HANDLE_VISUAL_SCALE * 0.7;
 const SCENE_SECTION_OUTLINE_WIDTH_SCALE = 0.018;
 const SCENE_SECTION_OUTLINE_MIN_WIDTH_M = 240;
 const SCENE_SECTION_OUTLINE_MAX_WIDTH_M = 600;
-const SCENE_SECTION_AXIS_TICK_COUNT = 5;
+const SCENE_SECTION_AXIS_INTERVAL_DEFAULT_M = 5000;
+const SCENE_SECTION_AXIS_INTERVAL_MIN_M = 100;
+const SCENE_SECTION_AXIS_INTERVAL_MAX_M = 50000;
+const SCENE_SECTION_AXIS_MAX_TICKS = 80;
+const SCENE_SECTION_AXIS_TEXT_SCALE_DEFAULT = 1;
+const SCENE_SECTION_AXIS_TEXT_SCALE_MIN = 0.4;
+const SCENE_SECTION_AXIS_TEXT_SCALE_MAX = 100;
+const SCENE_SECTION_AXIS_TEXT_PADDING_DEFAULT_M = 420;
+const SCENE_SECTION_AXIS_TEXT_PADDING_MIN_M = 0;
+const SCENE_SECTION_AXIS_TEXT_PADDING_MAX_M = 10000;
+const SCENE_SECTION_AXIS_HEADING_SCALE_DEFAULT = 1.2;
+const SCENE_SECTION_AXIS_HEADING_SCALE_MIN = 0.4;
+const SCENE_SECTION_AXIS_HEADING_SCALE_MAX = 100;
+const SCENE_SECTION_AXIS_HEADING_PADDING_DEFAULT_M = 1100;
+const SCENE_SECTION_AXIS_HEADING_PADDING_MIN_M = 0;
+const SCENE_SECTION_AXIS_HEADING_PADDING_MAX_M = 20000;
+const SCENE_SECTION_AXIS_HEADING_COLOR_DEFAULT = "#f8f4e8";
 const SCENE_SECTION_GROUND_TRACE_SAMPLES = 96;
+const SCENE_SECTION_GROUND_TRACE_WIDTH_DEFAULT_M = 360;
+const SCENE_SECTION_GROUND_TRACE_WIDTH_MIN_M = 30;
+const SCENE_SECTION_GROUND_TRACE_WIDTH_MAX_M = 2000;
+const SCENE_SECTION_SURFACE_TRACE_EPSILON_M = 0.01;
+const SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M = 18;
 
 function hardenStudioHelperMaterial(material: THREE.Material): void {
   material.depthTest = false;
@@ -95,6 +117,116 @@ function hardenStudioHelperMaterial(material: THREE.Material): void {
   (material as THREE.Material & { fog?: boolean }).fog = false;
   material.transparent = true;
   material.needsUpdate = true;
+}
+
+function makeSceneSectionIntersectionDashMaterial(): THREE.LineDashedMaterial {
+  const material = new THREE.LineDashedMaterial({
+    color: "#ffffff",
+    transparent: true,
+    opacity: 0.96,
+    dashSize: 150,
+    gapSize: 90,
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false,
+    fog: false,
+  });
+  hardenStudioHelperMaterial(material);
+  material.userData.sceneSectionHelper = true;
+  return material;
+}
+
+function makeSceneSectionTraceRibbonMaterial(): THREE.MeshBasicMaterial {
+  const material = new THREE.MeshBasicMaterial({
+    color: "#ffffff",
+    transparent: true,
+    opacity: 0.96,
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false,
+    fog: false,
+    side: THREE.DoubleSide,
+  });
+  hardenStudioHelperMaterial(material);
+  material.userData.sceneSectionHelper = true;
+  return material;
+}
+
+function appendSceneSectionTraceRibbonSegment(
+  positions: number[],
+  indices: number[],
+  start: THREE.Vector3,
+  end: THREE.Vector3,
+  planeNormal: THREE.Vector3,
+  halfWidthM: number,
+): void {
+  const direction = end.clone().sub(start);
+  if (direction.lengthSq() < 0.000001) return;
+  direction.normalize();
+  const widthDirection = direction.clone().cross(planeNormal).normalize();
+  if (widthDirection.lengthSq() < 0.000001) return;
+  widthDirection.multiplyScalar(halfWidthM);
+  const base = positions.length / 3;
+  for (const point of [
+    start.clone().add(widthDirection),
+    start.clone().sub(widthDirection),
+    end.clone().add(widthDirection),
+    end.clone().sub(widthDirection),
+  ]) {
+    positions.push(point.x, point.y, point.z);
+  }
+  indices.push(base, base + 1, base + 2, base + 2, base + 1, base + 3);
+}
+
+function buildSceneSectionDashedTraceRibbonGeometry(
+  points: THREE.Vector3[],
+  widthM: number,
+  planeNormal: THREE.Vector3,
+): THREE.BufferGeometry | null {
+  if (points.length < 2) return null;
+  const halfWidthM = Math.max(1, widthM * 0.5);
+  const dashSizeM = 150;
+  const gapSizeM = 90;
+  const cycleM = dashSizeM + gapSizeM;
+  const positions: number[] = [];
+  const indices: number[] = [];
+  let distanceM = 0;
+  for (let index = 1; index < points.length; index += 1) {
+    const start = points[index - 1];
+    const end = points[index];
+    const segment = end.clone().sub(start);
+    const segmentLengthM = segment.length();
+    if (segmentLengthM < 0.000001) continue;
+    const direction = segment.multiplyScalar(1 / segmentLengthM);
+    let localM = 0;
+    while (localM < segmentLengthM) {
+      const cyclePositionM = distanceM % cycleM;
+      const inDash = cyclePositionM < dashSizeM;
+      const boundaryM = inDash ? dashSizeM : cycleM;
+      const stepM = Math.min(segmentLengthM - localM, boundaryM - cyclePositionM);
+      if (inDash && stepM > 0.000001) {
+        appendSceneSectionTraceRibbonSegment(
+          positions,
+          indices,
+          start.clone().addScaledVector(direction, localM),
+          start.clone().addScaledVector(direction, localM + stepM),
+          planeNormal,
+          halfWidthM,
+        );
+      }
+      localM += stepM;
+      distanceM += stepM;
+    }
+  }
+  if (positions.length === 0) return null;
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(positions, 3),
+  );
+  geometry.setIndex(indices);
+  geometry.computeBoundingSphere();
+  return geometry;
 }
 
 function finiteNumber(value: unknown): number | null {
@@ -138,6 +270,52 @@ function axisComponentVector(index: 0 | 1 | 2, direction = 1): THREE.Vector3 {
   const normal = new THREE.Vector3();
   normal.setComponent(index, direction);
   return normal;
+}
+
+function sceneSectionAxisTicks(
+  minValue: number,
+  maxValue: number,
+  intervalM: number,
+  originOffsetM = 0,
+): number[] {
+  const low = Math.min(minValue, maxValue);
+  const high = Math.max(minValue, maxValue);
+  const interval = clampRange(
+    Math.abs(intervalM),
+    SCENE_SECTION_AXIS_INTERVAL_MIN_M,
+    SCENE_SECTION_AXIS_INTERVAL_MAX_M,
+  );
+  const start =
+    Math.ceil((low + originOffsetM) / interval) * interval - originOffsetM;
+  const ticks: number[] = [];
+  for (
+    let value = start;
+    value <= high + interval * 0.001 &&
+    ticks.length < SCENE_SECTION_AXIS_MAX_TICKS;
+    value += interval
+  ) {
+    if (value >= low - interval * 0.001) ticks.push(value);
+  }
+  if (ticks.length > 0) return ticks;
+  return low === high ? [low] : [low, high];
+}
+
+function sceneSectionAxisValueLabel(
+  componentIndex: 0 | 1 | 2,
+  valueM: number,
+  origin: { easting: number; northing: number },
+): string {
+  if (componentIndex === 0)
+    return `${((origin.easting + valueM) / 1000).toFixed(1)} E km`;
+  if (componentIndex === 1)
+    return `${((origin.northing + valueM) / 1000).toFixed(1)} N km`;
+  return `${(valueM / 1000).toFixed(1)} elev km`;
+}
+
+function sceneSectionAxisHeading(componentIndex: 0 | 1 | 2): string {
+  if (componentIndex === 0) return "Easting (km)";
+  if (componentIndex === 1) return "Northing (km)";
+  return "Elevation (km)";
 }
 
 function sceneSectionOutlineWidthM(width: number, height: number): number {
@@ -422,6 +600,249 @@ export function sceneSectionClippingPlanes(this: any,
   return clippingPlanes;
 }
 
+function sceneSectionLabelAnchorPosition(
+  obj: THREE.Object3D,
+  out: THREE.Vector3,
+): void {
+  const candidate = obj as THREE.Object3D & {
+    geometry?: THREE.BufferGeometry;
+  };
+  if (candidate.geometry) {
+    if (!candidate.geometry.boundingBox) candidate.geometry.computeBoundingBox();
+    const boundingBox = candidate.geometry.boundingBox;
+    if (boundingBox) {
+      boundingBox.getCenter(out);
+      candidate.localToWorld(out);
+      return;
+    }
+  }
+  obj.getWorldPosition(out);
+}
+
+function sceneSectionPointClippedByPlanes(
+  point: THREE.Vector3,
+  planes: THREE.Plane[],
+): boolean {
+  return planes.some(
+    (plane) => plane.distanceToPoint(point) < -SCENE_SECTION_CLIP_EPSILON_M,
+  );
+}
+
+function updateSceneSectionLabelCullState(
+  obj: THREE.Object3D,
+  targeted: boolean,
+  clippingPlanes: THREE.Plane[],
+  frameClippingPlanes: THREE.Plane[],
+  anchorPoint: THREE.Vector3,
+): void {
+  const data = obj.userData as {
+    displayName?: unknown;
+    sceneSectionLabelHidden?: boolean;
+    sceneSectionLabelHiddenBy?: string;
+  };
+  if (typeof data.displayName !== "string" || data.displayName.length === 0) {
+    return;
+  }
+  const activePlanes = targeted
+    ? [...clippingPlanes, ...frameClippingPlanes]
+    : [];
+  if (activePlanes.length === 0) {
+    data.sceneSectionLabelHidden = false;
+    delete data.sceneSectionLabelHiddenBy;
+    return;
+  }
+  sceneSectionLabelAnchorPosition(obj, anchorPoint);
+  const hidden = sceneSectionPointClippedByPlanes(anchorPoint, activePlanes);
+  data.sceneSectionLabelHidden = hidden;
+  if (hidden) {
+    data.sceneSectionLabelHiddenBy = "scene-section";
+  } else {
+    delete data.sceneSectionLabelHiddenBy;
+  }
+}
+
+type SceneSectionSurfaceTraceSegment = {
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+};
+
+function clipSectionSurfaceTraceSegmentToFrame(
+  start: THREE.Vector3,
+  end: THREE.Vector3,
+  frame: ResolvedSceneSectionFrame,
+): SceneSectionSurfaceTraceSegment | null {
+  const d = end.clone().sub(start);
+  let t0 = 0;
+  let t1 = 1;
+  const clip = (p: number, q: number): boolean => {
+    if (Math.abs(p) < 0.000001) return q >= 0;
+    const r = q / p;
+    if (p < 0) {
+      if (r > t1) return false;
+      if (r > t0) t0 = r;
+    } else {
+      if (r < t0) return false;
+      if (r < t1) t1 = r;
+    }
+    return true;
+  };
+  const startA = start.getComponent(frame.axisAIndex);
+  const startB = start.getComponent(frame.axisBIndex);
+  const deltaA = d.getComponent(frame.axisAIndex);
+  const deltaB = d.getComponent(frame.axisBIndex);
+  if (!clip(-deltaA, startA - frame.minAM)) return null;
+  if (!clip(deltaA, frame.maxAM - startA)) return null;
+  if (!clip(-deltaB, startB - frame.minBM)) return null;
+  if (!clip(deltaB, frame.maxBM - startB)) return null;
+  if (t1 <= t0) return null;
+  const clippedStart = start.clone().addScaledVector(d, t0);
+  const clippedEnd = start.clone().addScaledVector(d, t1);
+  if (
+    clippedStart.distanceToSquared(clippedEnd) <
+    SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M *
+      SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M
+  ) {
+    return null;
+  }
+  return { start: clippedStart, end: clippedEnd };
+}
+
+type SceneSectionFrameIntersectionTrace = SceneSectionSurfaceTraceSegment & {
+  axes: [SceneSectionAxis, SceneSectionAxis];
+  freeAxisIndex: 0 | 1 | 2;
+  trimToGround: boolean;
+};
+
+function sectionFrameCoordinateRange(
+  frame: ResolvedSceneSectionFrame,
+  axisIndex: 0 | 1 | 2,
+): [number, number] | null {
+  if (frame.axisAIndex === axisIndex) return [frame.minAM, frame.maxAM];
+  if (frame.axisBIndex === axisIndex) return [frame.minBM, frame.maxBM];
+  return null;
+}
+
+function sectionFrameContainsCoordinate(
+  frame: ResolvedSceneSectionFrame,
+  axisIndex: 0 | 1 | 2,
+  value: number,
+): boolean {
+  const range = sectionFrameCoordinateRange(frame, axisIndex);
+  return (
+    range !== null &&
+    value >= range[0] - SCENE_SECTION_SURFACE_TRACE_EPSILON_M &&
+    value <= range[1] + SCENE_SECTION_SURFACE_TRACE_EPSILON_M
+  );
+}
+
+function sectionFrameIntersectionRange(
+  frame: ResolvedSceneSectionFrame,
+  otherPlane: ResolvedSceneSectionPlane,
+  freeAxisIndex: 0 | 1 | 2,
+): [number, number] | null {
+  const otherPositionIndex =
+    SCENE_SECTION_AXIS_SPECS[otherPlane.axis].positionIndex;
+  if (
+    !sectionFrameContainsCoordinate(
+      frame,
+      otherPositionIndex,
+      otherPlane.positionM,
+    )
+  ) {
+    return null;
+  }
+  return sectionFrameCoordinateRange(frame, freeAxisIndex);
+}
+
+function sectionFrameIntersectionTrace(
+  firstPlane: ResolvedSceneSectionPlane,
+  firstFrame: ResolvedSceneSectionFrame,
+  secondPlane: ResolvedSceneSectionPlane,
+  secondFrame: ResolvedSceneSectionFrame,
+): SceneSectionFrameIntersectionTrace | null {
+  const firstPositionIndex =
+    SCENE_SECTION_AXIS_SPECS[firstPlane.axis].positionIndex;
+  const secondPositionIndex =
+    SCENE_SECTION_AXIS_SPECS[secondPlane.axis].positionIndex;
+  if (firstPositionIndex === secondPositionIndex) return null;
+  const freeAxisIndex = ([0, 1, 2] as const).find(
+    (index) => index !== firstPositionIndex && index !== secondPositionIndex,
+  );
+  if (freeAxisIndex === undefined) return null;
+  const firstRange = sectionFrameIntersectionRange(
+    firstFrame,
+    secondPlane,
+    freeAxisIndex,
+  );
+  const secondRange = sectionFrameIntersectionRange(
+    secondFrame,
+    firstPlane,
+    freeAxisIndex,
+  );
+  if (!firstRange || !secondRange) return null;
+  const minAlong = Math.max(firstRange[0], secondRange[0]);
+  const maxAlong = Math.min(firstRange[1], secondRange[1]);
+  if (maxAlong - minAlong < SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M) {
+    return null;
+  }
+  const start = new THREE.Vector3();
+  const end = new THREE.Vector3();
+  start.setComponent(firstPositionIndex, firstPlane.positionM);
+  start.setComponent(secondPositionIndex, secondPlane.positionM);
+  start.setComponent(freeAxisIndex, minAlong);
+  end.copy(start);
+  end.setComponent(freeAxisIndex, maxAlong);
+  const clippedToFirst = clipSectionSurfaceTraceSegmentToFrame(
+    start,
+    end,
+    firstFrame,
+  );
+  if (!clippedToFirst) return null;
+  const clippedToBoth = clipSectionSurfaceTraceSegmentToFrame(
+    clippedToFirst.start,
+    clippedToFirst.end,
+    secondFrame,
+  );
+  if (!clippedToBoth) return null;
+  return {
+    ...clippedToBoth,
+    axes: [firstPlane.axis, secondPlane.axis],
+    freeAxisIndex,
+    trimToGround:
+      freeAxisIndex === 2 &&
+      (firstFrame.groundTraceVisible || secondFrame.groundTraceVisible),
+  };
+}
+
+function sectionFrameIntersectionTraces(
+  planes: ResolvedSceneSectionPlane[],
+  frames: ResolvedSceneSectionFrame[],
+): SceneSectionFrameIntersectionTrace[] {
+  const traces: SceneSectionFrameIntersectionTrace[] = [];
+  for (let firstIndex = 0; firstIndex < planes.length; firstIndex += 1) {
+    const firstPlane = planes[firstIndex];
+    const firstFrame = frameForAxis(frames, firstPlane.axis);
+    if (!firstFrame) continue;
+    for (
+      let secondIndex = firstIndex + 1;
+      secondIndex < planes.length;
+      secondIndex += 1
+    ) {
+      const secondPlane = planes[secondIndex];
+      const secondFrame = frameForAxis(frames, secondPlane.axis);
+      if (!secondFrame) continue;
+      const trace = sectionFrameIntersectionTrace(
+        firstPlane,
+        firstFrame,
+        secondPlane,
+        secondFrame,
+      );
+      if (trace) traces.push(trace);
+    }
+  }
+  return traces;
+}
+
 export function sceneSectionAxisAlongIndex(this: any, 
   axis: SceneSectionAxis,
 ): 0 | 1 | null {
@@ -444,12 +865,18 @@ export function resolveSceneSectionFrames(this: any,
   const windowByAxis = style.sceneSectionWindowByAxis ?? {};
   const frames: ResolvedSceneSectionFrame[] = [];
   const explicitFrameEnabled = style.sceneSectionFrameEnabled === true;
+  const legacyFrameEnabled =
+    explicitFrameEnabled || style.sceneSectionWindowEnabled === true;
   for (const axis of sceneSectionAxes()) {
     const spec = SCENE_SECTION_AXIS_SPECS[axis];
     const frame = frameByAxis[axis];
     const legacyWindow =
       axis === "x" || axis === "y" ? windowByAxis[axis] : undefined;
-    if (!explicitFrameEnabled && !frame && !legacyWindow) continue;
+    const frameEnabled =
+      typeof frame?.enabled === "boolean"
+        ? frame.enabled
+        : legacyFrameEnabled || Boolean(frame) || Boolean(legacyWindow);
+    if (!frameEnabled) continue;
     const minABound = bounds.min.getComponent(spec.frameAIndex);
     const maxABound = bounds.max.getComponent(spec.frameAIndex);
     const minBBound = bounds.min.getComponent(spec.frameBIndex);
@@ -479,14 +906,81 @@ export function resolveSceneSectionFrames(this: any,
       minBBound,
       maxBBound,
     );
+    const axisIntervalM = clampRange(
+      finiteNumber(frame?.axisIntervalM) ??
+        finiteNumber(style.sceneSectionAxisIntervalM) ??
+        SCENE_SECTION_AXIS_INTERVAL_DEFAULT_M,
+      SCENE_SECTION_AXIS_INTERVAL_MIN_M,
+      SCENE_SECTION_AXIS_INTERVAL_MAX_M,
+    );
+    const axisTextScale = clampRange(
+      finiteNumber(frame?.axisTextScale) ??
+        finiteNumber(style.sceneSectionAxisTextScale) ??
+        SCENE_SECTION_AXIS_TEXT_SCALE_DEFAULT,
+      SCENE_SECTION_AXIS_TEXT_SCALE_MIN,
+      SCENE_SECTION_AXIS_TEXT_SCALE_MAX,
+    );
+    const axisTextPaddingM = clampRange(
+      finiteNumber(frame?.axisTextPaddingM) ??
+        SCENE_SECTION_AXIS_TEXT_PADDING_DEFAULT_M,
+      SCENE_SECTION_AXIS_TEXT_PADDING_MIN_M,
+      SCENE_SECTION_AXIS_TEXT_PADDING_MAX_M,
+    );
+    const axisHeadingPaddingM = clampRange(
+      finiteNumber(frame?.axisHeadingPaddingM) ??
+        SCENE_SECTION_AXIS_HEADING_PADDING_DEFAULT_M,
+      SCENE_SECTION_AXIS_HEADING_PADDING_MIN_M,
+      SCENE_SECTION_AXIS_HEADING_PADDING_MAX_M,
+    );
+    const axisHeadingScale = clampRange(
+      finiteNumber(frame?.axisHeadingScale) ??
+        SCENE_SECTION_AXIS_HEADING_SCALE_DEFAULT,
+      SCENE_SECTION_AXIS_HEADING_SCALE_MIN,
+      SCENE_SECTION_AXIS_HEADING_SCALE_MAX,
+    );
+    const groundTraceWidthM = clampRange(
+      finiteNumber(frame?.groundTraceWidthM) ??
+        SCENE_SECTION_GROUND_TRACE_WIDTH_DEFAULT_M,
+      SCENE_SECTION_GROUND_TRACE_WIDTH_MIN_M,
+      SCENE_SECTION_GROUND_TRACE_WIDTH_MAX_M,
+    );
+    const axisHeadingColor =
+      typeof frame?.axisHeadingColor === "string" &&
+      frame.axisHeadingColor.trim()
+        ? frame.axisHeadingColor
+        : spec.color;
     frames.push({
       axis,
+      enabled: true,
       minAM,
       maxAM,
       minBM,
       maxBM,
       axisAIndex: spec.frameAIndex,
       axisBIndex: spec.frameBIndex,
+      groundTraceVisible:
+        typeof frame?.groundTraceVisible === "boolean"
+          ? frame.groundTraceVisible
+          : style.sceneSectionGroundTraceVisible === true,
+      groundTraceWidthM,
+      axesVisible:
+        typeof frame?.axesVisible === "boolean"
+          ? frame.axesVisible
+          : style.sceneSectionAxesVisible === true,
+      axisIntervalM,
+      axisTextScale,
+      axisTextPaddingM,
+      axisAHeading:
+        typeof frame?.axisAHeading === "string" && frame.axisAHeading.trim()
+          ? frame.axisAHeading
+          : sceneSectionAxisHeading(spec.frameAIndex),
+      axisBHeading:
+        typeof frame?.axisBHeading === "string" && frame.axisBHeading.trim()
+          ? frame.axisBHeading
+          : sceneSectionAxisHeading(spec.frameBIndex),
+      axisHeadingPaddingM,
+      axisHeadingColor,
+      axisHeadingScale,
     });
   }
   return frames;
@@ -754,7 +1248,18 @@ export function interpolatedSceneSectionStyle(this: any,
     const toFrame = toFrameByAxis[axis];
     if (!toFrame) continue;
     const nextFrame = { ...toFrame };
-    for (const key of ["minAM", "maxAM", "minBM", "maxBM"] as const) {
+    for (const key of [
+      "minAM",
+      "maxAM",
+      "minBM",
+      "maxBM",
+      "axisIntervalM",
+      "axisTextScale",
+      "axisTextPaddingM",
+      "axisHeadingPaddingM",
+      "axisHeadingScale",
+      "groundTraceWidthM",
+    ] as const) {
       const from = fromFrame?.[key];
       const to = toFrame[key];
       if (
@@ -827,6 +1332,36 @@ export function applySceneSectionHelperTransitionOpacity(this: any): void {
         material.uniforms.uOpacity.value = material.opacity;
       }
       material.needsUpdate = true;
+    }
+  });
+}
+
+const sceneSectionTextWorldPosition = new THREE.Vector3();
+const sceneSectionTextToCamera = new THREE.Vector3();
+
+export function updateSceneSectionPlanarTextFacing(
+  this: any,
+  camera: THREE.Camera,
+): void {
+  const runtime = this.sceneSectionRuntime;
+  if (!runtime?.group.visible) return;
+  runtime.group.traverse((obj: THREE.Object3D) => {
+    if (obj.userData?.sceneSectionPlanarText !== true) return;
+    const baseQuaternion = obj.userData.sceneSectionBaseQuaternion;
+    const planeNormal = obj.userData.sceneSectionPlaneNormal;
+    if (
+      !(baseQuaternion instanceof THREE.Quaternion) ||
+      !(planeNormal instanceof THREE.Vector3)
+    ) {
+      return;
+    }
+    obj.quaternion.copy(baseQuaternion);
+    obj.getWorldPosition(sceneSectionTextWorldPosition);
+    sceneSectionTextToCamera
+      .copy(camera.position)
+      .sub(sceneSectionTextWorldPosition);
+    if (sceneSectionTextToCamera.dot(planeNormal) < 0) {
+      obj.rotateY(Math.PI);
     }
   });
 }
@@ -928,7 +1463,16 @@ export function createSceneSectionLabel(this: any, text: string, color: string):
   return mesh;
 }
 
-export function createSceneSectionScaleLabel(this: any, text: string): THREE.Mesh {
+export function createSceneSectionScaleLabel(this: any,
+  text: string,
+  textScale = SCENE_SECTION_AXIS_TEXT_SCALE_DEFAULT,
+  color = SCENE_SECTION_AXIS_HEADING_COLOR_DEFAULT,
+): THREE.Mesh {
+  const scale = clampRange(
+    textScale,
+    SCENE_SECTION_AXIS_TEXT_SCALE_MIN,
+    SCENE_SECTION_AXIS_TEXT_SCALE_MAX,
+  );
   const canvas = document.createElement("canvas");
   canvas.width = 384;
   canvas.height = 112;
@@ -941,7 +1485,7 @@ export function createSceneSectionScaleLabel(this: any, text: string): THREE.Mes
     ctx.lineWidth = 10;
     ctx.strokeStyle = "rgba(0, 0, 0, 0.82)";
     ctx.strokeText(text, canvas.width / 2, canvas.height / 2);
-    ctx.fillStyle = "#f8f4e8";
+    ctx.fillStyle = color;
     ctx.fillText(text, canvas.width / 2, canvas.height / 2);
   }
   const texture = new THREE.CanvasTexture(canvas);
@@ -950,7 +1494,7 @@ export function createSceneSectionScaleLabel(this: any, text: string): THREE.Mes
     map: texture,
     transparent: true,
     opacity: 0.94,
-    side: THREE.DoubleSide,
+    side: THREE.FrontSide,
     depthTest: false,
     depthWrite: false,
     toneMapped: false,
@@ -958,10 +1502,27 @@ export function createSceneSectionScaleLabel(this: any, text: string): THREE.Mes
   });
   hardenStudioHelperMaterial(material);
   material.userData.sceneSectionHelper = true;
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(620, 180), material);
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(620 * scale, 180 * scale),
+    material,
+  );
   mesh.userData.sceneSectionHelper = true;
+  mesh.userData.sceneSectionScaleLabel = true;
+  mesh.userData.sceneSectionAxisTextScale = scale;
+  mesh.userData.sceneSectionLabelColor = color;
   mesh.renderOrder = SCENE_SECTION_RENDER_ORDER + 3;
   return mesh;
+}
+
+function makeSceneSectionPlanarTextCameraAware(
+  obj: THREE.Object3D,
+  baseQuaternion: THREE.Quaternion,
+  planeNormal: THREE.Vector3,
+): void {
+  obj.quaternion.copy(baseQuaternion);
+  obj.userData.sceneSectionPlanarText = true;
+  obj.userData.sceneSectionBaseQuaternion = baseQuaternion.clone();
+  obj.userData.sceneSectionPlaneNormal = planeNormal.clone().normalize();
 }
 
 export function ensureSceneSectionRuntime(this: any): SceneSectionRuntime {
@@ -998,12 +1559,6 @@ export function rebuildSceneSectionHelpers(this: any,
     typeof style.sceneSectionHelperVisible === "boolean"
       ? style.sceneSectionHelperVisible
       : this.editorMode;
-  runtime.group.visible =
-    style.sceneSectionEnabled === true &&
-    helperVisible &&
-    planes.length > 0;
-  if (!runtime.group.visible) return;
-
   const bounds = this.sceneSectionBounds(style, layerTargets, productTargets);
   const center = bounds.getCenter(new THREE.Vector3());
   const size = bounds.getSize(new THREE.Vector3());
@@ -1021,8 +1576,24 @@ export function rebuildSceneSectionHelpers(this: any,
     .filter((frame: ResolvedSceneSectionFrame) =>
       activePlaneAxes.has(frame.axis),
     );
-  const showGroundTrace = style.sceneSectionGroundTraceVisible === true;
-  const showAxes = style.sceneSectionAxesVisible === true;
+  const showGroundTrace = sectionFrames.some(
+    (frame: ResolvedSceneSectionFrame) => frame.groundTraceVisible,
+  );
+  const showAxes = sectionFrames.some(
+    (frame: ResolvedSceneSectionFrame) => frame.axesVisible,
+  );
+  const frameIntersectionTraces = sectionFrameIntersectionTraces(
+    planes,
+    sectionFrames,
+  );
+  const showFrameIntersections =
+    style.sectionIsoEnabled === true && frameIntersectionTraces.length > 0;
+  runtime.group.visible =
+    style.sceneSectionEnabled === true &&
+    (helperVisible || showGroundTrace || showAxes || showFrameIntersections) &&
+    planes.length > 0;
+  if (!runtime.group.visible) return;
+
   const referenceOutlineWidthM = sceneSectionOutlineWidthM(
     Math.max(
       SCENE_SECTION_MIN_HELPER_SIZE_M,
@@ -1033,6 +1604,72 @@ export function rebuildSceneSectionHelpers(this: any,
       size.z * SCENE_SECTION_HELPER_PADDING,
     ),
   );
+
+  if (showFrameIntersections) {
+    const traceGroup = new THREE.Group();
+    traceGroup.name = "Section ISO frame intersections";
+    traceGroup.userData.sceneSectionHelper = true;
+    traceGroup.userData.sceneSectionIsoIntersectionTrace = true;
+    runtime.group.add(traceGroup);
+    const addTraceLine = (
+      trace: SceneSectionFrameIntersectionTrace,
+      start: THREE.Vector3,
+      end: THREE.Vector3,
+    ) => {
+      if (
+        start.distanceToSquared(end) <
+        SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M *
+          SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M
+      ) {
+        return;
+      }
+      const material = makeSceneSectionIntersectionDashMaterial();
+      const line = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([start, end]),
+        material,
+      );
+      line.name = `${trace.axes[0].toUpperCase()}/${trace.axes[1].toUpperCase()} dashed section ISO intersection`;
+      line.userData.sceneSectionHelper = true;
+      line.userData.sceneSectionIsoIntersectionTrace = true;
+      line.userData.sceneSectionIntersectionAxes = trace.axes;
+      line.userData.sceneSectionFreeAxisIndex = trace.freeAxisIndex;
+      line.renderOrder = SCENE_SECTION_RENDER_ORDER + 2;
+      line.computeLineDistances();
+      traceGroup.add(line);
+    };
+    for (const trace of frameIntersectionTraces) {
+      if (trace.trimToGround) {
+        void getHeightSampler().then((sampleHeight) => {
+          if (!traceGroup.parent) return;
+          const origin = this.siteSurfaceGuideOrigin(
+            this.layers.get(this.topoSurfaceLayerId()),
+          );
+          const x = trace.start.x;
+          const y = trace.start.y;
+          const minZ = Math.min(trace.start.z, trace.end.z);
+          const maxZ = Math.max(trace.start.z, trace.end.z);
+          const groundZ = this.siteGuideSurfaceZ(
+            x,
+            y,
+            sampleHeight,
+            origin,
+            26,
+          );
+          const clippedMaxZ = Math.min(maxZ, groundZ);
+          if (clippedMaxZ - minZ < SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M) {
+            return;
+          }
+          addTraceLine(
+            trace,
+            new THREE.Vector3(x, y, minZ),
+            new THREE.Vector3(x, y, clippedMaxZ),
+          );
+        });
+      } else {
+        addTraceLine(trace, trace.start, trace.end);
+      }
+    }
+  }
 
   for (const plane of planes) {
     const spec = SCENE_SECTION_AXIS_SPECS[plane.axis];
@@ -1064,13 +1701,6 @@ export function rebuildSceneSectionHelpers(this: any,
       planeBasis,
     );
 
-    const controlGroup = new THREE.Group();
-    controlGroup.name = `${plane.axis.toUpperCase()} Section push/pull controls`;
-    controlGroup.position.copy(planeCenter);
-    controlGroup.quaternion.copy(planeQuaternion);
-    controlGroup.userData.sceneSectionHelper = true;
-    controlGroup.renderOrder = SCENE_SECTION_RENDER_ORDER + 1;
-
     const minLocalA = frame
       ? frame.minAM - planeCenter.getComponent(spec.frameAIndex)
       : -halfWidth;
@@ -1089,284 +1719,401 @@ export function rebuildSceneSectionHelpers(this: any,
       0,
     );
 
-    const outlineWidthM = referenceOutlineWidthM;
-    const outlineGeometry = buildSceneSectionOutlineGeometry(
-      minLocalA,
-      maxLocalA,
-      minLocalB,
-      maxLocalB,
-      outlineWidthM,
-    );
-    const outlineOpacity = frame
-      ? plane.axis === activeAxis
-        ? 1
-        : 0.82
-      : plane.axis === activeAxis
-        ? 1
-        : 0.76;
-    const outlineMaterial = makeSceneSectionOutlineMaterial(
-      color,
-      outlineOpacity,
-    );
-    const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
-    outline.name = frame
-      ? `${plane.axis.toUpperCase()} Section frame`
-      : `${plane.axis.toUpperCase()} Section outline`;
-    outline.castShadow = false;
-    outline.receiveShadow = false;
-    outline.userData.sceneSectionHelper = true;
-    outline.userData.sceneSectionOutline = true;
-    outline.userData.sceneSectionFrameOutline = frame !== null;
-    outline.userData.sceneSectionAxis = plane.axis;
-    outline.userData.sceneSectionPlaneCoordinateIndex = spec.positionIndex;
-    outline.userData.sceneSectionPlanePositionM = plane.positionM;
-    outline.userData.sceneSectionFrameColor = color;
-    outline.userData.sceneSectionFrameLineWidthM = outlineWidthM;
-    outline.userData.sceneSectionFrameBounds = frame
-      ? {
-          minAM: frame.minAM,
-          maxAM: frame.maxAM,
-          minBM: frame.minBM,
-          maxBM: frame.maxBM,
-          axisAIndex: frame.axisAIndex,
-          axisBIndex: frame.axisBIndex,
-        }
-      : null;
-    outline.renderOrder = SCENE_SECTION_RENDER_ORDER;
-    controlGroup.add(outline);
+    if (helperVisible) {
+      const controlGroup = new THREE.Group();
+      controlGroup.name = `${plane.axis.toUpperCase()} Section push/pull controls`;
+      controlGroup.position.copy(planeCenter);
+      controlGroup.quaternion.copy(planeQuaternion);
+      controlGroup.userData.sceneSectionHelper = true;
+      controlGroup.renderOrder = SCENE_SECTION_RENDER_ORDER + 1;
 
-    const handleSpan = clampRange(
-      Math.min(paddedWidth, paddedHeight) * 0.16,
-      SCENE_SECTION_HANDLE_MIN_SPAN_M,
-      SCENE_SECTION_HANDLE_MAX_SPAN_M,
-    );
-    const coneLength =
-      clampRange(handleSpan * 1.12, 520, 1120) *
-      SCENE_SECTION_CONE_VISUAL_SCALE;
-    const coneRadius = coneLength * 0.28;
-    const arrowSpan = coneLength * 1.28;
-    const preservedPickRadius =
-      coneRadius *
-      (SCENE_SECTION_HANDLE_VISUAL_SCALE / SCENE_SECTION_CONE_VISUAL_SCALE) *
-      1.8;
-    const pickSize = Math.max(
-      SCENE_SECTION_WINDOW_HANDLE_RADIUS_M * SCENE_SECTION_HANDLE_VISUAL_SCALE,
-      preservedPickRadius,
-    ) * 3;
-    const makeDoubleArrowHandle = (
-      kind: "push-pull" | SceneSectionWindowHandleKind,
-      name: string,
-      position: THREE.Vector3,
-      localDirection: THREE.Vector3,
-      direction?: 1 | -1,
-    ): THREE.Group => {
-      const group = new THREE.Group();
-      group.name = `${name} visual`;
-      group.position.copy(position);
-      group.quaternion.setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        localDirection.clone().normalize(),
+      const outlineWidthM = referenceOutlineWidthM;
+      const outlineGeometry = buildSceneSectionOutlineGeometry(
+        minLocalA,
+        maxLocalA,
+        minLocalB,
+        maxLocalB,
+        outlineWidthM,
       );
-      group.userData.sceneSectionHelper = true;
-      group.userData.sceneSectionPlaneHandle = true;
-      group.userData.sceneSectionAxis = plane.axis;
-      group.userData.sceneSectionPlaneHandleKind = kind;
-      group.userData.sceneSectionHandleVisual = "double-arrow";
-      group.userData.sceneSectionHandleScale = SCENE_SECTION_HANDLE_VISUAL_SCALE;
-      group.renderOrder = SCENE_SECTION_RENDER_ORDER + 3;
-
-      const material = makeSceneSectionConeMaterial(color, outlineOpacity);
-
-      const coneGeometry = new THREE.ConeGeometry(
-        coneRadius,
-        coneLength,
-        18,
-        1,
-        true,
-      );
-      coneGeometry.computeVertexNormals();
-      const topCone = new THREE.Mesh(coneGeometry, material);
-      topCone.position.y = arrowSpan * 0.5;
-      topCone.castShadow = false;
-      topCone.receiveShadow = false;
-      topCone.userData.sceneSectionHelper = true;
-      const bottomCone = new THREE.Mesh(coneGeometry.clone(), material);
-      bottomCone.position.y = -arrowSpan * 0.5;
-      bottomCone.rotation.z = Math.PI;
-      bottomCone.castShadow = false;
-      bottomCone.receiveShadow = false;
-      bottomCone.userData.sceneSectionHelper = true;
-      group.add(topCone, bottomCone);
-
-      const pickMaterial = new THREE.MeshBasicMaterial({
+      const outlineOpacity = frame
+        ? plane.axis === activeAxis
+          ? 1
+          : 0.82
+        : plane.axis === activeAxis
+          ? 1
+          : 0.76;
+      const outlineMaterial = makeSceneSectionOutlineMaterial(
         color,
-        transparent: true,
-        opacity: 0,
-        depthTest: false,
-        depthWrite: false,
-        toneMapped: false,
-        fog: false,
-      });
-      pickMaterial.userData.sceneSectionHelper = true;
-      const pickProxy = new THREE.Mesh(
-        new THREE.BoxGeometry(pickSize, pickSize, pickSize),
-        pickMaterial,
+        outlineOpacity,
       );
-      pickProxy.name = name;
-      pickProxy.userData.sceneSectionHelper = true;
-      pickProxy.userData.sceneSectionPlaneHandle = true;
-      pickProxy.userData.sceneSectionAxis = plane.axis;
-      pickProxy.userData.sceneSectionPlaneHandleKind = kind;
-      pickProxy.userData.sceneSectionHandleVisual = "double-arrow";
-      pickProxy.userData.sceneSectionHandleScale =
-        SCENE_SECTION_HANDLE_VISUAL_SCALE;
-      pickProxy.userData.sceneSectionPickProxy = true;
-      pickProxy.userData.sceneSectionPickRadius = pickSize * 0.5;
-      if (direction) {
-        pickProxy.userData.sceneSectionPlaneHandleDirection = direction;
-      }
-      pickProxy.renderOrder = SCENE_SECTION_RENDER_ORDER + 4;
-      group.add(pickProxy);
-      runtime.pickables.push(pickProxy);
-      return group;
-    };
+      const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
+      outline.name = frame
+        ? `${plane.axis.toUpperCase()} Section frame`
+        : `${plane.axis.toUpperCase()} Section outline`;
+      outline.castShadow = false;
+      outline.receiveShadow = false;
+      outline.userData.sceneSectionHelper = true;
+      outline.userData.sceneSectionOutline = true;
+      outline.userData.sceneSectionFrameOutline = frame !== null;
+      outline.userData.sceneSectionAxis = plane.axis;
+      outline.userData.sceneSectionPlaneCoordinateIndex = spec.positionIndex;
+      outline.userData.sceneSectionPlanePositionM = plane.positionM;
+      outline.userData.sceneSectionFrameColor = color;
+      outline.userData.sceneSectionFrameLineWidthM = outlineWidthM;
+      outline.userData.sceneSectionFrameBounds = frame
+        ? {
+            minAM: frame.minAM,
+            maxAM: frame.maxAM,
+            minBM: frame.minBM,
+            maxBM: frame.maxBM,
+            axisAIndex: frame.axisAIndex,
+            axisBIndex: frame.axisBIndex,
+          }
+        : null;
+      outline.renderOrder = SCENE_SECTION_RENDER_ORDER;
+      controlGroup.add(outline);
 
-    controlGroup.add(
-      makeDoubleArrowHandle(
-        "push-pull",
-        `${plane.axis.toUpperCase()} Section push/pull handle`,
-        new THREE.Vector3(frameCenterLocal.x, frameCenterLocal.y, 0),
-        new THREE.Vector3(0, 0, 1),
-      ),
-    );
-
-    if (frame) {
-      const midA = (minLocalA + maxLocalA) * 0.5;
-      const midB = (minLocalB + maxLocalB) * 0.5;
-      controlGroup.add(
-        makeDoubleArrowHandle(
-          "frame-min-a",
-          `${plane.axis.toUpperCase()} Section frame-min-a handle`,
-          new THREE.Vector3(minLocalA, midB, 0),
-          new THREE.Vector3(1, 0, 0),
-        ),
-        makeDoubleArrowHandle(
-          "frame-max-a",
-          `${plane.axis.toUpperCase()} Section frame-max-a handle`,
-          new THREE.Vector3(maxLocalA, midB, 0),
-          new THREE.Vector3(1, 0, 0),
-        ),
-        makeDoubleArrowHandle(
-          "frame-min-b",
-          `${plane.axis.toUpperCase()} Section frame-min-b handle`,
-          new THREE.Vector3(midA, minLocalB, 0),
+      const handleSpan = clampRange(
+        Math.min(paddedWidth, paddedHeight) * 0.16,
+        SCENE_SECTION_HANDLE_MIN_SPAN_M,
+        SCENE_SECTION_HANDLE_MAX_SPAN_M,
+      );
+      const coneLength =
+        clampRange(handleSpan * 1.12, 520, 1120) *
+        SCENE_SECTION_CONE_VISUAL_SCALE;
+      const coneRadius = coneLength * 0.28;
+      const arrowSpan = coneLength * 1.28;
+      const preservedPickRadius =
+        coneRadius *
+        (SCENE_SECTION_HANDLE_VISUAL_SCALE / SCENE_SECTION_CONE_VISUAL_SCALE) *
+        1.8;
+      const pickSize = Math.max(
+        SCENE_SECTION_WINDOW_HANDLE_RADIUS_M * SCENE_SECTION_HANDLE_VISUAL_SCALE,
+        preservedPickRadius,
+      ) * 3;
+      const makeDoubleArrowHandle = (
+        kind: "push-pull" | SceneSectionWindowHandleKind,
+        name: string,
+        position: THREE.Vector3,
+        localDirection: THREE.Vector3,
+        direction?: 1 | -1,
+      ): THREE.Group => {
+        const group = new THREE.Group();
+        group.name = `${name} visual`;
+        group.position.copy(position);
+        group.quaternion.setFromUnitVectors(
           new THREE.Vector3(0, 1, 0),
-        ),
-        makeDoubleArrowHandle(
-          "frame-max-b",
-          `${plane.axis.toUpperCase()} Section frame-max-b handle`,
-          new THREE.Vector3(midA, maxLocalB, 0),
-          new THREE.Vector3(0, 1, 0),
-        ),
-      );
-    }
+          localDirection.clone().normalize(),
+        );
+        group.userData.sceneSectionHelper = true;
+        group.userData.sceneSectionPlaneHandle = true;
+        group.userData.sceneSectionAxis = plane.axis;
+        group.userData.sceneSectionPlaneHandleKind = kind;
+        group.userData.sceneSectionHandleVisual = "double-arrow";
+        group.userData.sceneSectionHandleScale = SCENE_SECTION_HANDLE_VISUAL_SCALE;
+        group.renderOrder = SCENE_SECTION_RENDER_ORDER + 3;
 
-    runtime.group.add(controlGroup);
-    runtime.planes.set(plane.axis, controlGroup);
+        const material = makeSceneSectionConeMaterial(color, outlineOpacity);
 
-    const label = this.createSceneSectionLabel(
-      `${plane.axis.toUpperCase()} Section`,
-      color,
-    );
-    label.position
-      .copy(planeCenter)
-      .addScaledVector(
-        tangentA,
-        halfWidth -
-          SCENE_SECTION_LABEL_INSET_M -
-          SCENE_SECTION_LABEL_WIDTH_M * 0.5,
-      )
-      .addScaledVector(
-        tangentB,
-        halfHeight -
-          SCENE_SECTION_LABEL_INSET_M -
-          SCENE_SECTION_LABEL_HEIGHT_M * 0.5,
-      );
-    label.quaternion.copy(planeQuaternion);
-    runtime.group.add(label);
+        const coneGeometry = new THREE.ConeGeometry(
+          coneRadius,
+          coneLength,
+          18,
+          1,
+          true,
+        );
+        coneGeometry.computeVertexNormals();
+        const topCone = new THREE.Mesh(coneGeometry, material);
+        topCone.position.y = arrowSpan * 0.5;
+        topCone.castShadow = false;
+        topCone.receiveShadow = false;
+        topCone.userData.sceneSectionHelper = true;
+        const bottomCone = new THREE.Mesh(coneGeometry.clone(), material);
+        bottomCone.position.y = -arrowSpan * 0.5;
+        bottomCone.rotation.z = Math.PI;
+        bottomCone.castShadow = false;
+        bottomCone.receiveShadow = false;
+        bottomCone.userData.sceneSectionHelper = true;
+        group.add(topCone, bottomCone);
 
-    if (frame && (showGroundTrace || showAxes) && plane.axis !== "z") {
-      if (showAxes) {
-        const axisMaterial = new THREE.LineBasicMaterial({
-          color: "#f8f4e8",
+        const pickMaterial = new THREE.MeshBasicMaterial({
+          color,
           transparent: true,
-          opacity: 0.82,
+          opacity: 0,
           depthTest: false,
           depthWrite: false,
           toneMapped: false,
           fog: false,
         });
-        hardenStudioHelperMaterial(axisMaterial);
-        axisMaterial.userData.sceneSectionHelper = true;
-        const axisLine = new THREE.LineSegments(
-          new THREE.BufferGeometry().setFromPoints([
-            planeCenter
-              .clone()
-              .addScaledVector(tangentA, minLocalA)
-              .addScaledVector(tangentB, minLocalB),
-            planeCenter
-              .clone()
-              .addScaledVector(tangentA, maxLocalA)
-              .addScaledVector(tangentB, minLocalB),
-            planeCenter
-              .clone()
-              .addScaledVector(tangentA, minLocalA)
-              .addScaledVector(tangentB, minLocalB),
-            planeCenter
-              .clone()
-              .addScaledVector(tangentA, minLocalA)
-              .addScaledVector(tangentB, maxLocalB),
-          ]),
-          axisMaterial,
+        pickMaterial.userData.sceneSectionHelper = true;
+        const pickProxy = new THREE.Mesh(
+          new THREE.BoxGeometry(pickSize, pickSize, pickSize),
+          pickMaterial,
         );
-        axisLine.name = `${plane.axis.toUpperCase()} section scale axes`;
-        axisLine.userData.sceneSectionHelper = true;
-        axisLine.renderOrder = SCENE_SECTION_RENDER_ORDER + 1;
-        runtime.group.add(axisLine);
-        const tickCount = SCENE_SECTION_AXIS_TICK_COUNT;
-        const origin = this.siteSurfaceGuideOrigin(
-          this.layers.get(this.topoSurfaceLayerId()),
+        pickProxy.name = name;
+        pickProxy.userData.sceneSectionHelper = true;
+        pickProxy.userData.sceneSectionPlaneHandle = true;
+        pickProxy.userData.sceneSectionAxis = plane.axis;
+        pickProxy.userData.sceneSectionPlaneHandleKind = kind;
+        pickProxy.userData.sceneSectionHandleVisual = "double-arrow";
+        pickProxy.userData.sceneSectionHandleScale =
+          SCENE_SECTION_HANDLE_VISUAL_SCALE;
+        pickProxy.userData.sceneSectionPickProxy = true;
+        pickProxy.userData.sceneSectionPickRadius = pickSize * 0.5;
+        if (direction) {
+          pickProxy.userData.sceneSectionPlaneHandleDirection = direction;
+        }
+        pickProxy.renderOrder = SCENE_SECTION_RENDER_ORDER + 4;
+        group.add(pickProxy);
+        runtime.pickables.push(pickProxy);
+        return group;
+      };
+
+      controlGroup.add(
+        makeDoubleArrowHandle(
+          "push-pull",
+          `${plane.axis.toUpperCase()} Section push/pull handle`,
+          new THREE.Vector3(frameCenterLocal.x, frameCenterLocal.y, 0),
+          new THREE.Vector3(0, 0, 1),
+        ),
+      );
+
+      if (frame) {
+        const midA = (minLocalA + maxLocalA) * 0.5;
+        const midB = (minLocalB + maxLocalB) * 0.5;
+        controlGroup.add(
+          makeDoubleArrowHandle(
+            "frame-min-a",
+            `${plane.axis.toUpperCase()} Section frame-min-a handle`,
+            new THREE.Vector3(minLocalA, midB, 0),
+            new THREE.Vector3(1, 0, 0),
+          ),
+          makeDoubleArrowHandle(
+            "frame-max-a",
+            `${plane.axis.toUpperCase()} Section frame-max-a handle`,
+            new THREE.Vector3(maxLocalA, midB, 0),
+            new THREE.Vector3(1, 0, 0),
+          ),
+          makeDoubleArrowHandle(
+            "frame-min-b",
+            `${plane.axis.toUpperCase()} Section frame-min-b handle`,
+            new THREE.Vector3(midA, minLocalB, 0),
+            new THREE.Vector3(0, 1, 0),
+          ),
+          makeDoubleArrowHandle(
+            "frame-max-b",
+            `${plane.axis.toUpperCase()} Section frame-max-b handle`,
+            new THREE.Vector3(midA, maxLocalB, 0),
+            new THREE.Vector3(0, 1, 0),
+          ),
         );
-        for (let i = 0; i < tickCount; i += 1) {
-          const t = i / (tickCount - 1);
-          const along = frame.minAM + (frame.maxAM - frame.minAM) * t;
-          const horizontalLabel =
-            plane.axis === "y"
-              ? `${((origin.easting + along) / 1000).toFixed(1)} E km`
-              : `${((origin.northing + along) / 1000).toFixed(1)} N km`;
-          const labelMesh = this.createSceneSectionScaleLabel(horizontalLabel);
-          labelMesh.position
-            .copy(planeCenter)
-            .addScaledVector(tangentA, minLocalA + (maxLocalA - minLocalA) * t)
-            .addScaledVector(tangentB, minLocalB - 420);
-          labelMesh.quaternion.copy(planeQuaternion);
-          runtime.group.add(labelMesh);
-        }
-        for (let i = 0; i < tickCount; i += 1) {
-          const t = i / (tickCount - 1);
-          const z = frame.minBM + (frame.maxBM - frame.minBM) * t;
-          const labelMesh = this.createSceneSectionScaleLabel(
-            `${(z / 1000).toFixed(1)} elev km`,
-          );
-          labelMesh.position
-            .copy(planeCenter)
-            .addScaledVector(tangentA, minLocalA - 620)
-            .addScaledVector(tangentB, minLocalB + (maxLocalB - minLocalB) * t);
-          labelMesh.quaternion.copy(planeQuaternion);
-          runtime.group.add(labelMesh);
-        }
       }
-      if (showGroundTrace) {
+
+      runtime.group.add(controlGroup);
+      runtime.planes.set(plane.axis, controlGroup);
+
+      const label = this.createSceneSectionLabel(
+        `${plane.axis.toUpperCase()} Section`,
+        color,
+      );
+      label.position
+        .copy(planeCenter)
+        .addScaledVector(
+          tangentA,
+          halfWidth -
+            SCENE_SECTION_LABEL_INSET_M -
+            SCENE_SECTION_LABEL_WIDTH_M * 0.5,
+        )
+        .addScaledVector(
+          tangentB,
+          halfHeight -
+            SCENE_SECTION_LABEL_INSET_M -
+            SCENE_SECTION_LABEL_HEIGHT_M * 0.5,
+        );
+      label.quaternion.copy(planeQuaternion);
+      runtime.group.add(label);
+    }
+
+    if (frame && frame.axesVisible) {
+      const origin = this.siteSurfaceGuideOrigin(
+        this.layers.get(this.topoSurfaceLayerId()),
+      );
+      const axisAOriginOffset =
+        spec.frameAIndex === 0
+          ? origin.easting
+          : spec.frameAIndex === 1
+            ? origin.northing
+            : 0;
+      const axisBOriginOffset =
+        spec.frameBIndex === 0
+          ? origin.easting
+          : spec.frameBIndex === 1
+            ? origin.northing
+            : 0;
+      const axisATicks = sceneSectionAxisTicks(
+        frame.minAM,
+        frame.maxAM,
+        frame.axisIntervalM,
+        axisAOriginOffset,
+      );
+      const axisBTicks = sceneSectionAxisTicks(
+        frame.minBM,
+        frame.maxBM,
+        frame.axisIntervalM,
+        axisBOriginOffset,
+      );
+      const tickLength = Math.max(referenceOutlineWidthM * 1.25, 260);
+      const axisPoints: THREE.Vector3[] = [
+        planeCenter
+          .clone()
+          .addScaledVector(tangentA, minLocalA)
+          .addScaledVector(tangentB, minLocalB),
+        planeCenter
+          .clone()
+          .addScaledVector(tangentA, maxLocalA)
+          .addScaledVector(tangentB, minLocalB),
+        planeCenter
+          .clone()
+          .addScaledVector(tangentA, minLocalA)
+          .addScaledVector(tangentB, minLocalB),
+        planeCenter
+          .clone()
+          .addScaledVector(tangentA, minLocalA)
+          .addScaledVector(tangentB, maxLocalB),
+      ];
+      for (const along of axisATicks) {
+        const localA = along - planeCenter.getComponent(spec.frameAIndex);
+        axisPoints.push(
+          planeCenter
+            .clone()
+            .addScaledVector(tangentA, localA)
+            .addScaledVector(tangentB, minLocalB - tickLength * 0.5),
+          planeCenter
+            .clone()
+            .addScaledVector(tangentA, localA)
+            .addScaledVector(tangentB, minLocalB + tickLength * 0.5),
+        );
+      }
+      for (const along of axisBTicks) {
+        const localB = along - planeCenter.getComponent(spec.frameBIndex);
+        axisPoints.push(
+          planeCenter
+            .clone()
+            .addScaledVector(tangentA, minLocalA - tickLength * 0.5)
+            .addScaledVector(tangentB, localB),
+          planeCenter
+            .clone()
+            .addScaledVector(tangentA, minLocalA + tickLength * 0.5)
+            .addScaledVector(tangentB, localB),
+        );
+      }
+
+      const axisMaterial = new THREE.LineBasicMaterial({
+        color: "#f8f4e8",
+        transparent: true,
+        opacity: 0.82,
+        depthTest: false,
+        depthWrite: false,
+        toneMapped: false,
+        fog: false,
+      });
+      hardenStudioHelperMaterial(axisMaterial);
+      axisMaterial.userData.sceneSectionHelper = true;
+      const axisLine = new THREE.LineSegments(
+        new THREE.BufferGeometry().setFromPoints(axisPoints),
+        axisMaterial,
+      );
+      axisLine.name = `${plane.axis.toUpperCase()} section scale axes`;
+      axisLine.userData.sceneSectionHelper = true;
+      axisLine.userData.sceneSectionScaleAxes = true;
+      axisLine.userData.sceneSectionAxisIntervalM = frame.axisIntervalM;
+      axisLine.userData.sceneSectionAxisTextScale = frame.axisTextScale;
+      axisLine.renderOrder = SCENE_SECTION_RENDER_ORDER + 1;
+      runtime.group.add(axisLine);
+
+      const axisBHeadingQuaternion = planeQuaternion.clone().multiply(
+        new THREE.Quaternion().setFromAxisAngle(
+          new THREE.Vector3(0, 0, 1),
+          Math.PI / 2,
+        ),
+      );
+      const axisALabelOffsetM = frame.axisTextPaddingM;
+      const axisBLabelOffsetM = frame.axisTextPaddingM;
+      const axisAHeading = this.createSceneSectionScaleLabel(
+        frame.axisAHeading,
+        frame.axisHeadingScale,
+        frame.axisHeadingColor,
+      );
+      axisAHeading.name = `${plane.axis.toUpperCase()} section ${frame.axisAHeading} heading`;
+      axisAHeading.position
+        .copy(planeCenter)
+        .addScaledVector(tangentA, (minLocalA + maxLocalA) * 0.5)
+        .addScaledVector(tangentB, minLocalB - frame.axisHeadingPaddingM);
+      makeSceneSectionPlanarTextCameraAware(
+        axisAHeading,
+        planeQuaternion,
+        basisNormal,
+      );
+      runtime.group.add(axisAHeading);
+
+      const axisBHeading = this.createSceneSectionScaleLabel(
+        frame.axisBHeading,
+        frame.axisHeadingScale,
+        frame.axisHeadingColor,
+      );
+      axisBHeading.name = `${plane.axis.toUpperCase()} section ${frame.axisBHeading} heading`;
+      axisBHeading.position
+        .copy(planeCenter)
+        .addScaledVector(tangentA, minLocalA - frame.axisHeadingPaddingM)
+        .addScaledVector(tangentB, (minLocalB + maxLocalB) * 0.5);
+      makeSceneSectionPlanarTextCameraAware(
+        axisBHeading,
+        axisBHeadingQuaternion,
+        basisNormal,
+      );
+      runtime.group.add(axisBHeading);
+
+      for (const along of axisATicks) {
+        const labelMesh = this.createSceneSectionScaleLabel(
+          sceneSectionAxisValueLabel(spec.frameAIndex, along, origin),
+          frame.axisTextScale,
+        );
+        labelMesh.position
+          .copy(planeCenter)
+          .addScaledVector(
+            tangentA,
+            along - planeCenter.getComponent(spec.frameAIndex),
+          )
+          .addScaledVector(tangentB, minLocalB - axisALabelOffsetM);
+        makeSceneSectionPlanarTextCameraAware(
+          labelMesh,
+          planeQuaternion,
+          basisNormal,
+        );
+        runtime.group.add(labelMesh);
+      }
+      for (const along of axisBTicks) {
+        const labelMesh = this.createSceneSectionScaleLabel(
+          sceneSectionAxisValueLabel(spec.frameBIndex, along, origin),
+          frame.axisTextScale,
+        );
+        labelMesh.position
+          .copy(planeCenter)
+          .addScaledVector(tangentA, minLocalA - axisBLabelOffsetM)
+          .addScaledVector(
+            tangentB,
+            along - planeCenter.getComponent(spec.frameBIndex),
+          );
+        makeSceneSectionPlanarTextCameraAware(
+          labelMesh,
+          planeQuaternion,
+          basisNormal,
+        );
+        runtime.group.add(labelMesh);
+      }
+    }
+
+    if (frame && frame.groundTraceVisible && plane.axis !== "z") {
         const traceGroup = new THREE.Group();
         traceGroup.name = `${plane.axis.toUpperCase()} section ground trace`;
         traceGroup.userData.sceneSectionHelper = true;
@@ -1390,31 +2137,25 @@ export function rebuildSceneSectionHelpers(this: any,
               ),
             );
           }
-          const material = new THREE.LineDashedMaterial({
-            color: "#ffffff",
-            transparent: true,
-            opacity: 0.96,
-            dashSize: 150,
-            gapSize: 90,
-            depthTest: false,
-            depthWrite: false,
-            toneMapped: false,
-            fog: false,
-          });
-          hardenStudioHelperMaterial(material);
-          material.userData.sceneSectionHelper = true;
-          const line = new THREE.Line(
-            new THREE.BufferGeometry().setFromPoints(points),
-            material,
+          const geometry = buildSceneSectionDashedTraceRibbonGeometry(
+            points,
+            frame.groundTraceWidthM,
+            basisNormal,
           );
-          line.name = `${plane.axis.toUpperCase()} dashed ground intersection`;
-          line.userData.sceneSectionHelper = true;
-          line.renderOrder = SCENE_SECTION_RENDER_ORDER + 2;
-          line.computeLineDistances();
-          traceGroup.add(line);
+          if (!geometry) return;
+          const mesh = new THREE.Mesh(
+            geometry,
+            makeSceneSectionTraceRibbonMaterial(),
+          );
+          mesh.name = `${plane.axis.toUpperCase()} dashed ground intersection`;
+          mesh.userData.sceneSectionHelper = true;
+          mesh.userData.sceneSectionGroundTrace = true;
+          mesh.userData.sceneSectionGroundTraceWidthM = frame.groundTraceWidthM;
+          mesh.renderOrder = SCENE_SECTION_RENDER_ORDER + 2;
+          traceGroup.add(mesh);
         });
-      }
     }
+
   }
 }
 
@@ -1437,12 +2178,9 @@ export function applySceneSectionPlanes(this: any, style: EditableStyle): void {
     planes.length > 0 || sectionFrames.length > 0;
   this.updateRendererLocalClipping();
 
+  const labelAnchorPoint = new THREE.Vector3();
   for (const [layerId, group] of this.layers) {
     group.traverse((obj: THREE.Object3D) => {
-      const material = (
-        obj as { material?: THREE.Material | THREE.Material[] }
-      ).material;
-      if (!material) return;
       const targeted = this.sceneSectionObjectTargeted(
         layerId,
         obj,
@@ -1450,12 +2188,23 @@ export function applySceneSectionPlanes(this: any, style: EditableStyle): void {
         layerTargets,
         productTargets,
       );
-      const materials = Array.isArray(material) ? material : [material];
       const objectFrame = targeted
         ? this.sceneSectionFrameForObject(layerId, obj, sectionFrames)
         : null;
       const frameClippingPlanes =
         this.sceneSectionFrameClippingPlanes(objectFrame);
+      updateSceneSectionLabelCullState(
+        obj,
+        targeted,
+        clippingPlanes,
+        frameClippingPlanes,
+        labelAnchorPoint,
+      );
+      const material = (
+        obj as { material?: THREE.Material | THREE.Material[] }
+      ).material;
+      if (!material) return;
+      const materials = Array.isArray(material) ? material : [material];
       for (const m of materials) {
         this.applySceneSectionMaterial(
           m,
@@ -1570,6 +2319,7 @@ export function previewSceneSectionWindow(this: any,
           : { minBM: valueM };
   const nextFrame = {
     ...currentFrame,
+    enabled: true,
     ...patch,
   };
   const legacyPatch =

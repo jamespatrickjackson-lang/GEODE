@@ -16,6 +16,7 @@ contract and points to the owning source files. Durable rationale belongs in
 | Surface | Executable source | Notes |
 | --- | --- | --- |
 | Viewport legend panel, stack, circular toggles, and row spacing | `src/ui/legendStyles.ts` | Shared legend constants and helpers. |
+| Section frame scale axes | `src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx`, `src/scene/section/sceneSectionController.ts` | Editor controls plus runtime helper generation. |
 | Native range slider height, track, thumb, and fill variables | `src/styles/global.css` | App-wide native slider styling. |
 | MT resistivity ramp trim/feather handles | `src/ui/ResistivityLegend.tsx` | Ramp-specific draggable handle sizing. |
 | Visual rationale / durable UI choices | `docs/03-decisions.md` | Use decision entries for persistent policy changes. |
@@ -31,7 +32,7 @@ contract and points to the owning source files. Durable rationale belongs in
 - Viewport legends align to the standard page-edge margin:
   `LEGEND_PAGE_EDGE_MARGIN_PX = 16px`.
 - The bottom-most visible legend container sits
-  `LEGEND_BOTTOM_EDGE_OFFSET_PX = 50px` above the viewport bottom.
+  `LEGEND_BOTTOM_EDGE_OFFSET_PX = 100px` above the viewport bottom.
 - Stacked viewport legend containers use `LEGEND_STACK_GAP_PX`.
 - Current reviewed stack gap is `14px`.
 - Inter-legend stack spacing should stay centralized in `src/ui/legendStyles.ts`
@@ -125,6 +126,12 @@ Current color swatch toggle examples:
   planes.
 - `P Controle` shows/hides section clipping outlines and push/pull cones. It
   defaults on in editor mode and off in presenter mode unless overridden.
+- Section frame scale axes are independent from `P Controle`; when an axis
+  frame has scale axes enabled, they remain visible in presenter mode even if
+  clipping outlines and push/pull cones are hidden.
+- Floating labels follow scene-section clipping by testing each label anchor
+  against active section planes; clipped anchors are hidden with their source
+  feature.
 - Surface boundary rows use their color circles as show/hide controls for each
   MT threshold boundary. Hidden rows stay listed while the boundary opacity is
   non-zero so they can be restored from the legend.
@@ -133,6 +140,56 @@ Current color swatch toggle examples:
 - Section ISO dataset selection and detailed line/band controls live in the
   `Options` popout.
 - MT resistivity volume fine controls are hidden in the viewport legend.
+
+## Section Frame Scale Axes
+
+Section frame controls live inside each `X Section frame`, `Y Section frame`,
+and `Z Section frame` editor subsection:
+
+| Control | Style field | Range | Default |
+| --- | --- | ---: | ---: |
+| Section enable | `sceneSectionPlanes.<axis>.enabled` | on/off | off |
+| Flip side | `sceneSectionPlanes.<axis>.invert` | on/off | off |
+| Active handle | `sceneSectionActiveAxis` | X/Y/Z | Z |
+| Cut position | `sceneSectionPlanes.<axis>.positionM` | axis bounds | project default |
+| Frame crop | `sceneSectionFrameByAxis.<axis>.enabled` | on/off | legacy/global fallback |
+| Ground trace | `sceneSectionFrameByAxis.<axis>.groundTraceVisible` | on/off | legacy/global fallback |
+| Ground line width | `sceneSectionFrameByAxis.<axis>.groundTraceWidthM` | `30m` to `2000m` | `360m` |
+| Scale axes | `sceneSectionFrameByAxis.<axis>.axesVisible` | on/off | legacy/global fallback |
+| Axis interval | `sceneSectionFrameByAxis.<axis>.axisIntervalM` | `0.1km` to `50km` | `5km` |
+| Text size | `sceneSectionFrameByAxis.<axis>.axisTextScale` | `0.4x` to `100x` | `1x` |
+| Text padding | `sceneSectionFrameByAxis.<axis>.axisTextPaddingM` | `0km` to `10km` | `0.42km` |
+| A heading | `sceneSectionFrameByAxis.<axis>.axisAHeading` | text | `<axis name> (km)` |
+| B heading | `sceneSectionFrameByAxis.<axis>.axisBHeading` | text | `<axis name> (km)` |
+| Heading padding | `sceneSectionFrameByAxis.<axis>.axisHeadingPaddingM` | `0km` to `20km` | `1.1km` |
+| Heading color | `sceneSectionFrameByAxis.<axis>.axisHeadingColor` | color | section axis color |
+| Heading size | `sceneSectionFrameByAxis.<axis>.axisHeadingScale` | `0.4x` to `100x` | `1.2x` |
+
+- Axis interval has both slider and numeric inputs per frame, displayed in
+  kilometers. For example, `0.1` means 100m and `1` means 1km.
+- Section enable, flip side, and active-handle controls are compact header
+  controls on each X/Y/Z frame; there is no separate `X Section active` /
+  `Y Section` / `Z Section` editor subsection.
+- Text size has both slider and numeric inputs per frame, displayed as a scale
+  factor.
+- Axis interval and text-size numeric fields render `km` / `x` as
+  non-editable suffixes inside the edit field, not as separate row text.
+- Labels are derived from the active frame axis metadata: easting, northing, or
+  elevation.
+- Ground trace trims generated X/Y section volume-cut overlays above the
+  sampled terrain surface; Z frames do not render ground traces. Ground line
+  width is authored per frame.
+- Ground-trace trim is a hard geometry mask for Section ISO bands and contour
+  ribbons so generated ISO output does not protrude past the ground boundary.
+- When Section ISO is enabled, section frame intersections draw white dashed
+  traces where two enabled section frames overlap. These traces use the same
+  dash, opacity, and depth behavior as ground traces. MT threshold boundaries
+  do not create these traces.
+- Axis labels stay flat to the section plane and flip to face the camera when
+  viewed from the opposite side.
+- Axis headings align to their scale axis. Default heading copy includes the
+  measurement type in brackets, for example `Northing (km)`.
+- X/Y/Z section frames can all draw scale axes; ground trace remains X/Y only.
 
 ## Sliders
 
