@@ -21,7 +21,9 @@ import { UTAH_FORGE_MT_STATIONS_LAYER_ID } from "./projectModules/utahForge/laye
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
 const CAMERA_NEAR_M = 50;
-const CAMERA_FAR_M = 1_000_000;
+// Presentation/topo context must stay inside the frustum at overview zoom.
+// Do not use the camera far plane as a visual crop; use authored clip tools.
+const CAMERA_FAR_M = 5_000_000;
 
 type SceneDepthBufferMode = "reverse" | "logarithmic" | "standard";
 type SceneSectionHandlePick = {

@@ -30,6 +30,7 @@ narrow patch
 - Still wrong / under review:
   - Final sidebar polish and toolset grouping remain iterative.
   - Legend panel behavior has a first implementation pass: sequenced per-container left slide, row gap closure after exit, row opening before entry, and MT resistivity fixed at the bottom. It remains under human visual review.
+  - Zoom-out camera far-plane clipping is being handled before the oblique longitude/latitude grid line artifact. The grid line issue remains held until clipping is verified visually.
 - Do not revisit unless asked:
   - Intake directives or intake drops for normal software-build work.
   - Full broad Utah FORGE smoke runs during visual iteration.

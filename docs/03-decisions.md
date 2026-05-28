@@ -723,3 +723,13 @@ Each decision records:
 **Why:** When bands and lines use different threshold spacing, contours visually drift through the middle of fill regions instead of matching the band changes. Shared thresholds make the legend and section surface read as one contour system.
 
 **Trade-off accepted:** A setting of 5 levels now means 5 isolines and 6 fill bands. Existing persisted style values still represent isoline count.
+
+## DEC-072 - Camera far plane is not a visual crop
+
+**Considered:** allow the fixed camera far plane to clip distant topo imagery during overview zoom, or keep topo imagery and graticule context inside the scene frustum and reserve crop behavior for authored clip tools.
+
+**Chose:** the scene camera far plane is raised to `5_000_000m` while keeping the near plane at `50m` and preserving the existing reversed/logarithmic depth-buffer selection.
+
+**Why:** Public topo imagery, graticule context, and presentation overview shots should not slice away when the author zooms out. Far-plane clipping reads as missing image content rather than intentional composition.
+
+**Trade-off accepted:** Camera depth range is wider, but the renderer already uses reversed depth where supported and logarithmic depth otherwise. Public surface crop and scene-section clipping remain the explicit mechanisms for authored cropping.

@@ -71,6 +71,12 @@ threshold surfaces remain editable material surfaces: opacity 1 renders as an
 opaque depth-writing solid, and partial master or per-boundary opacity renders
 as a transparent non-depth-writing surface.
 
+Camera far-plane clipping is not a visual crop. Topo imagery, terrain context,
+and longitude/latitude graticules must remain inside the scene frustum during
+normal presentation overview zooms. Use authored public surface crop, scene
+sections, or opacity/fade tools for composition instead of relying on the camera
+far plane to trim imagery.
+
 ## Focused Routing
 
 - Workspace state and verification tiers: `docs/dev-context/Verification-Routing.md`

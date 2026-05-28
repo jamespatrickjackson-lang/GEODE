@@ -191,6 +191,13 @@ and `Z Section frame` editor subsection:
   measurement type in brackets, for example `Northing (km)`.
 - X/Y/Z section frames can all draw scale axes; ground trace remains X/Y only.
 
+## Scene Overlay And Transition Rendering
+
+- Camera far-plane clipping is not a visual crop. Topo imagery, terrain
+  context, and graticules must remain inside the camera frustum at presentation
+  overview zoom; authored public surface crop and scene-section tools own
+  intentional trimming.
+
 ## Sliders
 
 Native range sliders inherit app-wide sizing from `src/styles/global.css`:
