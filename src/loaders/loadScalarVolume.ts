@@ -135,6 +135,9 @@ uniform int uSceneSectionWindowAxis;
 uniform float uSceneSectionWindowMinAlong;
 uniform float uSceneSectionWindowMaxAlong;
 uniform float uSceneSectionWindowBottomZ;
+uniform int uSceneSectionFrameCount;
+uniform int uSceneSectionFrameAxes[3];
+uniform vec4 uSceneSectionFrameBounds[3];
 uniform int uWorkingAreaFocusEnabled;
 uniform vec3 uWorkingAreaFocusBoundsMin;
 uniform vec3 uWorkingAreaFocusBoundsMax;
@@ -183,15 +186,18 @@ bool sceneSectionAllows(vec3 position) {
 }
 
 bool sceneSectionWindowAllows(vec3 position) {
-  if (uSceneSectionWindowEnabled == 0) return true;
-  float along = uSceneSectionWindowAxis == 0 ? position.y : position.x;
-  if (along < uSceneSectionWindowMinAlong || along > uSceneSectionWindowMaxAlong) {
-    return false;
+  if (uSceneSectionFrameCount <= 0) return true;
+  for (int i = 0; i < 3; i += 1) {
+    if (i >= uSceneSectionFrameCount) break;
+    int axis = uSceneSectionFrameAxes[i];
+    vec4 bounds = uSceneSectionFrameBounds[i];
+    float a = axis == 0 ? position.y : position.x;
+    float b = axis == 2 ? position.y : position.z;
+    if (a >= bounds.x && a <= bounds.y && b >= bounds.z && b <= bounds.w) {
+      return true;
+    }
   }
-  if (position.z < uSceneSectionWindowBottomZ) {
-    return false;
-  }
-  return true;
+  return false;
 }
 
 float workingAreaFocusAlpha(vec3 position) {
@@ -380,6 +386,15 @@ async function buildVolumeMesh(
       uSceneSectionWindowMinAlong: { value: -250000 },
       uSceneSectionWindowMaxAlong: { value: 250000 },
       uSceneSectionWindowBottomZ: { value: -250000 },
+      uSceneSectionFrameCount: { value: 0 },
+      uSceneSectionFrameAxes: { value: [0, 1, 2] },
+      uSceneSectionFrameBounds: {
+        value: [
+          new THREE.Vector4(-250000, 250000, -250000, 250000),
+          new THREE.Vector4(-250000, 250000, -250000, 250000),
+          new THREE.Vector4(-250000, 250000, -250000, 250000),
+        ],
+      },
       uWorkingAreaFocusEnabled: { value: 0 },
       uWorkingAreaFocusBoundsMin: { value: new THREE.Vector3() },
       uWorkingAreaFocusBoundsMax: { value: new THREE.Vector3() },

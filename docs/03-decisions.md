@@ -543,3 +543,53 @@ Each decision records:
 **Why:** Utah FORGE section ISO lines must stay visually stable at surface intersections, but surface-boundary editor controls must still support full opacity and per-boundary opacity changes.
 
 **Trade-off accepted:** Section ISO line overlays intentionally prioritize readable contours over strict physical occlusion at intersections. Opaque threshold surfaces still write depth for normal surface rendering.
+
+## DEC-053 - Scene-section frames are independent per axis
+
+**Considered:** keep the legacy single active MT section window, or persist independent X/Y/Z section frames.
+
+**Chose:** scene-section frames persist by axis through `sceneSectionFrameByAxis`, with legacy X/Y `sceneSectionWindowByAxis` still readable.
+
+**Why:** Section crop frames are plane-specific authoring state. Editing one frame must not hide, reset, or move the other active plane frames, and helper geometry must share one X/Y/Z axis model for clipping, outlines, labels, and handles.
+
+**Trade-off accepted:** Legacy window fields remain as compatibility input and X/Y mirror output, but new runtime/editor behavior is driven by per-axis frame state. Z frames do not create ground traces unless a future requirement defines that model.
+
+## DEC-054 - Viewport legend toggle rows use shared spacing tokens
+
+**Considered:** keep per-legend hand-tuned spacing for checkbox/swatch rows, or promote the current reviewed spacing to shared UI tokens.
+
+**Chose:** viewport legend checkbox/swatch rows should use `src/ui/legendStyles.ts` as the spacing, shape, and text-color contract. Current reviewed tokens are 13px outline-free, tickless circles, a 16px box column, 4px row inset under the heading, 14px box-to-label gap, 11.475px heading-to-first-row gap, and 9px subsequent row gap. Legend heading, subtext, and body colors resolve from Overlay box text settings, and generic active circles use the resolved heading color.
+
+**Why:** Lightweight viewport legends are edited visually and need consistent alignment as new controls are added. Keeping the spacing in shared code gives future legends an executable rule instead of relying on screenshots or memory.
+
+**Trade-off accepted:** Individual legends can still opt out when their layout is not a checkbox/swatch row, but new circle-toggle legend rows should start from the shared spacing helper before introducing local exceptions.
+
+## DEC-055 - Viewport legend stacks use shared container spacing
+
+**Considered:** tune each stacked viewport legend container independently, or control inter-legend spacing through the shared legend style module.
+
+**Chose:** stacked viewport legend containers use `LEGEND_STACK_GAP_PX` from `src/ui/legendStyles.ts`. The current reviewed stack gap is 14px.
+
+**Why:** Legend containers need consistent vertical rhythm across editor and preview states, especially when multiple technical legends are visible together.
+
+**Trade-off accepted:** Individual legends can still own internal layout, but the gap between stacked legend containers should remain centralized unless a specific overlay stack needs a documented exception.
+
+## DEC-056 - Utah FORGE legend transitions are per-container with MT resistivity bottom-anchored
+
+**Considered:** crossfade whole source/target legend stacks during page transitions, or transition each legend container independently in a single ordered stack.
+
+**Chose:** Utah FORGE viewport legends transition per container through sequenced straight-line phases. Exiting containers slide horizontally left while keeping full row height, then their rows collapse so remaining rows close the gap. Entering containers reserve/open their target row space first, then slide horizontally in from the left. Stable containers remain horizontally fixed, and MT resistivity remains the final bottom legend row.
+
+**Why:** Whole-stack crossfades produce overlapping, drifting legend panels and allow MT resistivity to appear in the middle of the stack. Per-container transition state matches page-to-page legend membership changes while preserving a stable bottom anchor for the primary MT resistivity legend.
+
+**Trade-off accepted:** Presence checks are centralized in `EditorChrome` for the Utah FORGE stack, while each legend component still owns its detailed rendering and null-render guards.
+
+## DEC-057 - Viewport legends use shared page-edge anchors
+
+**Considered:** continue positioning each viewport legend with local offsets, or centralize edge anchors alongside existing legend spacing tokens.
+
+**Chose:** viewport legends align to shared edge constants in `src/ui/legendStyles.ts`: `LEGEND_PAGE_EDGE_MARGIN_PX = 16` for the page-edge inset and `LEGEND_BOTTOM_EDGE_OFFSET_PX = 50` for the bottom-most visible legend container.
+
+**Why:** Legend placement needs to match the standard viewport edge rhythm and avoid each legend drifting as panel layouts change. The bottom-most legend row also needs a stable visual anchor independent of the number of visible containers.
+
+**Trade-off accepted:** Older standalone legend offsets are now expressed relative to the shared bottom anchor. Individual legends can still own vertical ordering when they render outside the Utah FORGE stack, but page-edge and bottom-anchor values stay centralized.

@@ -59,7 +59,7 @@ export function editorLayerLabel(layer: ProjectLayerSpec): string {
     [UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID]: "3D MT resistivity preview",
     [UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID]: "2D MT resistivity slices",
     [UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID]: "3D MT resistivity volume",
-    [UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID]: "3D MT threshold surfaces",
+    [UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID]: "MT thresholds",
   };
   const label =
     layer.id === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID

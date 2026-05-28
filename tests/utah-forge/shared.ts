@@ -363,10 +363,16 @@ export async function openForgeDataEditorContainers(page: Page): Promise<void> {
   );
   await openEditorSection(page, "Title block", 30_000, "Logo file");
   await openEditorSection(page, "Reference layers", 30_000, "Public roads");
-  await openEditorSection(page, "FORGE Data", 30_000, "Scene section planes");
+  await openEditorSection(
+    page,
+    "Sections & Cropping",
+    30_000,
+    "Scene section planes",
+  );
   await openEditorSection(page, "Working area focus", 3000, "Working area");
-  await openEditorSection(page, "Working area", 3000, "Phase 3 required working area");
+  await openEditorSection(page, "Working area", 3000, "Phase 3 working area");
   await openEditorSection(page, "Scene section planes", 10_000, "section plane");
+  await openEditorSection(page, "FORGE Data", 30_000, "Seismic analysis");
   await openEditorSection(page, "Seismic analysis", 10_000, "Seismic browser");
   await openEditorSection(page, "MT resistivity", 30_000, "3D MT top surface");
   await openEditorSection(page, "Other", 5_000, "Foundation");
@@ -376,7 +382,14 @@ export async function openForgeDataEditorContainers(page: Page): Promise<void> {
 export async function openForgeMtResistivityEditorContainers(
   page: Page,
 ): Promise<void> {
-  await openEditorSection(page, "FORGE Data", 30_000, "Scene section planes");
+  await openEditorSection(
+    page,
+    "Sections & Cropping",
+    30_000,
+    "Scene section planes",
+  );
+  await openEditorSection(page, "Scene section planes", 10_000, "section plane");
+  await openEditorSection(page, "FORGE Data", 30_000, "MT resistivity");
   await openEditorSection(page, "MT resistivity", 30_000, "3D MT top surface");
   await openAllDetails(page);
 }
@@ -513,6 +526,38 @@ export async function hidePublicContextLayers(page: Page): Promise<void> {
     const manager = (
       window as unknown as {
         __scene?: {
+          scene?: {
+            updateMatrixWorld?: (force?: boolean) => void;
+            traverse: (
+              fn: (obj: {
+                name?: string;
+                visible?: boolean;
+                userData?: Record<string, unknown>;
+                geometry?: {
+                  type?: string;
+                  attributes?: {
+                    position?: {
+                      count?: number;
+                      getX?: (index: number) => number;
+                      getY?: (index: number) => number;
+                      getZ?: (index: number) => number;
+                    };
+                  };
+                };
+                material?:
+                  | {
+                      type?: string;
+                      color?: { getHexString?: () => string };
+                    }
+                  | Array<{
+                      type?: string;
+                      color?: { getHexString?: () => string };
+                    }>;
+                matrixWorld?: { elements?: number[] };
+                parent?: { matrixWorld?: { elements?: number[] } };
+              }) => void,
+            ) => void;
+          };
           manager?: {
             getLayer?: (id: string) => { visible: boolean } | undefined;
           };
@@ -598,6 +643,31 @@ export type SceneSectionState = {
   helperPickableAxes: string[];
   helperPickableKinds: string[];
   helperPickableDirections: number[];
+  helperPickableGeometryTypes: string[];
+  helperPickableVisuals: string[];
+  helperPickableScales: number[];
+  helperPickablePickRadii: number[];
+  frameOutlines: Array<{
+    name: string;
+    axis: string;
+    color: string | null;
+    dashed: boolean;
+    lineWidthM: number | null;
+    materialType: string | null;
+    isFrame: boolean;
+    planeCoordinateIndex: number | null;
+    planePositionM: number | null;
+    bounds: {
+      minAM: number;
+      maxAM: number;
+      minBM: number;
+      maxBM: number;
+      axisAIndex: number;
+      axisBIndex: number;
+    } | null;
+    worldPoints: number[][];
+  }>;
+  whiteFrameOutlineCount: number;
   firstVisibleVolumeSectionUniforms: {
     enabled: number | null;
     mode: number | null;
@@ -606,6 +676,9 @@ export type SceneSectionState = {
     positions: number[] | null;
     thickness: number[] | null;
     inverts: number[] | null;
+    frameCount: number | null;
+    frameAxes: number[] | null;
+    frameBounds: number[][] | null;
   } | null;
   mtClippedMaterials: number;
   mtFirstClippingPlane: {
@@ -1073,12 +1146,14 @@ export async function sceneSectionState(page: Page): Promise<SceneSectionState> 
             listSceneSectionPlanePickables?: () => Array<{
               name?: string;
               userData?: Record<string, unknown>;
+              geometry?: { type?: string };
             }>;
           };
         };
       }
     ).__scene;
     const manager = sceneHandle?.manager;
+    sceneHandle?.scene?.updateMatrixWorld?.(true);
     const seismicLayer = manager?.getLayer?.(
       "utah-forge-phase3-seismic-browser",
     );
@@ -1100,6 +1175,36 @@ export async function sceneSectionState(page: Page): Promise<SceneSectionState> 
       null;
     let mtClippedMaterials = 0;
     let mtFirstClippingPlane: SceneSectionState["mtFirstClippingPlane"] = null;
+    const vector4ToArray = (value: unknown): number[] | null => {
+      if (typeof value !== "object" || value === null) return null;
+      const vector = value as {
+        x?: unknown;
+        y?: unknown;
+        z?: unknown;
+        w?: unknown;
+      };
+      return typeof vector.x === "number" &&
+        typeof vector.y === "number" &&
+        typeof vector.z === "number" &&
+        typeof vector.w === "number"
+        ? [vector.x, vector.y, vector.z, vector.w]
+        : null;
+    };
+    const worldPoint = (
+      matrix: { elements?: number[] } | undefined,
+      x: number,
+      y: number,
+      z: number,
+    ): number[] => {
+      const e = matrix?.elements as ArrayLike<number> | undefined;
+      if (!e || e.length < 16) return [x, y, z];
+      return [
+        e[0] * x + e[4] * y + e[8] * z + e[12],
+        e[1] * x + e[5] * y + e[9] * z + e[13],
+        e[2] * x + e[6] * y + e[10] * z + e[14],
+      ];
+    };
+    const frameOutlines: SceneSectionState["frameOutlines"] = [];
 
     seismicLayer?.traverse((obj) => {
       if (
@@ -1140,7 +1245,89 @@ export async function sceneSectionState(page: Page): Promise<SceneSectionState> 
         inverts: Array.isArray(uniforms.uSceneSectionInvert?.value)
           ? (uniforms.uSceneSectionInvert.value as number[])
           : null,
+        frameCount:
+          typeof uniforms.uSceneSectionFrameCount?.value === "number"
+            ? uniforms.uSceneSectionFrameCount.value
+            : null,
+        frameAxes: Array.isArray(uniforms.uSceneSectionFrameAxes?.value)
+          ? (uniforms.uSceneSectionFrameAxes.value as number[])
+          : null,
+        frameBounds: Array.isArray(uniforms.uSceneSectionFrameBounds?.value)
+          ? (uniforms.uSceneSectionFrameBounds.value as unknown[])
+              .map(vector4ToArray)
+              .filter((bounds): bounds is number[] => !!bounds)
+          : null,
       };
+    });
+
+    sceneHandle?.scene?.traverse((obj) => {
+      if (obj.userData?.sceneSectionOutline !== true) return;
+      const material = Array.isArray(obj.material)
+        ? obj.material[0]
+        : obj.material;
+      const position = obj.geometry?.attributes?.position;
+      const worldPoints: number[][] = [];
+      const count = typeof position?.count === "number" ? position.count : 0;
+      for (let index = 0; index < count; index += 1) {
+        const x = position?.getX?.(index);
+        const y = position?.getY?.(index);
+        const z = position?.getZ?.(index);
+        if (
+          typeof x === "number" &&
+          typeof y === "number" &&
+          typeof z === "number"
+        ) {
+          worldPoints.push(
+            worldPoint(obj.parent?.matrixWorld ?? obj.matrixWorld, x, y, z),
+          );
+        }
+      }
+      const rawBounds = obj.userData.sceneSectionFrameBounds as
+        | Record<string, unknown>
+        | null
+        | undefined;
+      const bounds =
+        rawBounds &&
+        typeof rawBounds.minAM === "number" &&
+        typeof rawBounds.maxAM === "number" &&
+        typeof rawBounds.minBM === "number" &&
+        typeof rawBounds.maxBM === "number" &&
+        typeof rawBounds.axisAIndex === "number" &&
+        typeof rawBounds.axisBIndex === "number"
+          ? {
+              minAM: rawBounds.minAM,
+              maxAM: rawBounds.maxAM,
+              minBM: rawBounds.minBM,
+              maxBM: rawBounds.maxBM,
+              axisAIndex: rawBounds.axisAIndex,
+              axisBIndex: rawBounds.axisBIndex,
+            }
+          : null;
+      frameOutlines.push({
+        name: obj.name ?? "",
+        axis:
+          typeof obj.userData.sceneSectionAxis === "string"
+            ? obj.userData.sceneSectionAxis
+            : "",
+        color: material?.color?.getHexString?.() ?? null,
+        dashed: material?.type === "LineDashedMaterial",
+        lineWidthM:
+          typeof obj.userData.sceneSectionFrameLineWidthM === "number"
+            ? obj.userData.sceneSectionFrameLineWidthM
+            : null,
+        materialType: typeof material?.type === "string" ? material.type : null,
+        isFrame: obj.userData.sceneSectionFrameOutline === true,
+        planeCoordinateIndex:
+          typeof obj.userData.sceneSectionPlaneCoordinateIndex === "number"
+            ? obj.userData.sceneSectionPlaneCoordinateIndex
+            : null,
+        planePositionM:
+          typeof obj.userData.sceneSectionPlanePositionM === "number"
+            ? obj.userData.sceneSectionPlanePositionM
+            : null,
+        bounds,
+        worldPoints,
+      });
     });
 
     mtLayer?.traverse((obj) => {
@@ -1189,6 +1376,26 @@ export async function sceneSectionState(page: Page): Promise<SceneSectionState> 
         .filter(
           (direction): direction is number => typeof direction === "number",
         ),
+      helperPickableGeometryTypes: helperPickables.map(
+        (pickable) => pickable.geometry?.type ?? "",
+      ),
+      helperPickableVisuals: helperPickables.map((pickable) =>
+        typeof pickable.userData?.sceneSectionHandleVisual === "string"
+          ? pickable.userData.sceneSectionHandleVisual
+          : "",
+      ),
+      helperPickableScales: helperPickables
+        .map((pickable) => pickable.userData?.sceneSectionHandleScale)
+        .filter((scale): scale is number => typeof scale === "number"),
+      helperPickablePickRadii: helperPickables
+        .map((pickable) => pickable.userData?.sceneSectionPickRadius)
+        .filter((radius): radius is number => typeof radius === "number"),
+      frameOutlines,
+      whiteFrameOutlineCount: frameOutlines.filter(
+        (outline) =>
+          outline.isFrame &&
+          (outline.color === "ffffff" || outline.color === "f8f4e8"),
+      ).length,
       firstVisibleVolumeSectionUniforms,
       mtClippedMaterials,
       mtFirstClippingPlane,

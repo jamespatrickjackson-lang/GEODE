@@ -33,13 +33,13 @@ import {
   PUBLIC_TOPO_LAYER_GROUP_TITLE,
   UTAH_FORGE_CUSTOMER_LAYER_GROUPS,
   UTAH_FORGE_PUBLIC_LAYER_GROUPS,
+  UTAH_FORGE_SECTIONS_CROPPING_LAYER_GROUPS,
   type LayerDataSection,
   type LayerGroupDef,
 } from "./layerControls/layerPanelConfig";
 import { layerHasRenderableControl } from "./layerControls/layerLabels";
 import {
   UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
-  UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
   UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
@@ -113,9 +113,14 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
       : state.projectSlug === "utah-forge"
         ? UTAH_FORGE_CUSTOMER_LAYER_GROUPS
         : CUSTOMER_LAYER_GROUPS;
+  const projectSectionsCroppingLayerGroups =
+    state.projectSlug === "utah-forge"
+      ? UTAH_FORGE_SECTIONS_CROPPING_LAYER_GROUPS
+      : ([] as const satisfies readonly LayerGroupDef[]);
   const projectLayerGroups = [
     ...projectPublicLayerGroups,
     ...projectPublicTopoLayerGroups,
+    ...projectSectionsCroppingLayerGroups,
     ...projectCustomerLayerGroups,
   ];
   const layerGroups =
@@ -123,7 +128,9 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
       ? projectPublicLayerGroups
       : section === "publicTopo"
         ? projectPublicTopoLayerGroups
-        : projectCustomerLayerGroups;
+        : section === "sectionsCropping"
+          ? projectSectionsCroppingLayerGroups
+          : projectCustomerLayerGroups;
   const groupedIds = new Set<string>(
     projectLayerGroups.flatMap((group) => group.ids),
   );
@@ -192,7 +199,10 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
     ? ENVIRONMENT_SENTINEL
     : (currentPage?.id ?? "no-page");
   const activeLayerOpenSignal = (layerIds: readonly string[]) => {
-    if (state.projectSlug !== "utah-forge" || section !== "public") {
+    if (
+      state.projectSlug !== "utah-forge" ||
+      (section !== "public" && section !== "sectionsCropping")
+    ) {
       return undefined;
     }
     const activeIds = layerIds.filter((layerId) => {
@@ -208,16 +218,22 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
   };
   const sceneSectionOpenSignal =
     state.projectSlug === "utah-forge" &&
-    section === "public" &&
+    section === "sectionsCropping" &&
     sceneSectionStyle.sceneSectionEnabled === true
       ? `${activeOpenSignalPrefix}:${UTAH_FORGE_SCENE_SECTION_LAYER_ID}`
+      : undefined;
+  const workingAreaFocusOpenSignal =
+    state.projectSlug === "utah-forge" &&
+    section === "sectionsCropping" &&
+    workingAreaFocusStyle.workingAreaFocusEnabled === true
+      ? `${activeOpenSignalPrefix}:${UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID}`
       : undefined;
 
   return (
     <div
       style={panelStyles.body}
       data-dev-source="src/editor/LayerPanel.tsx:398"
-      data-dev-note="LayerPanel renders either Public Data or Customer Data layer controls, depending on its section prop."
+      data-dev-note="LayerPanel renders Public Data, Sections & Cropping, Public Topo, or Customer Data controls, depending on its section prop."
     >
       {!isEnv && !currentPage && (
         <div style={panelStyles.muted}>
@@ -231,11 +247,12 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
           accentColor={selectedPageAccent}
         />
       )}
-      {state.projectSlug === "utah-forge" && section === "public" ? (
+      {state.projectSlug === "utah-forge" &&
+      section === "sectionsCropping" ? (
         <LayerGroup
           title="Scene section planes"
           devSource="src/editor/LayerPanel.tsx:scene-section"
-          devNote="Scene section planes are a virtual FORGE Data tool; controls patch a virtual layer style and SceneManager applies it across targeted visible scene objects."
+          devNote="Scene section planes are a virtual Sections & Cropping tool; controls patch a virtual layer style and SceneManager applies it across targeted visible scene objects."
           accentColor={selectedPageAccent}
           defaultOpen={!!sceneSectionOpenSignal}
           openSignal={sceneSectionOpenSignal}
@@ -293,9 +310,6 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
           group.title === "Site Details"
         ) {
           const boreholeLayer = byId.get(UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID);
-          const workingAreaLayer = byId.get(
-            UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
-          );
           const boundaryLayer = byId.get(UTAH_FORGE_SITE_BOUNDARY_LAYER_ID);
           const boreholeStyle = isEnv
             ? (state.environment.layerStyles[
@@ -310,12 +324,6 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
               : (state.environment.layerStyles[
                   UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID
                 ] ?? {});
-          const workingAreaFocusOpenSignal =
-            workingAreaFocusStyle.workingAreaFocusEnabled === true
-              ? `${activeOpenSignalPrefix}:${UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID}`
-              : undefined;
-          const siteDetailsOpenSignal =
-            groupOpenSignal ?? workingAreaFocusOpenSignal;
           return (
             <LayerGroup
               key={group.title}
@@ -323,12 +331,11 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
               devSource="src/editor/LayerPanel.tsx:site-details"
               devNote="Site Details contains the FORGE site boundary, demo boreholes, and schematic orientation block."
               accentColor={selectedPageAccent}
-              defaultOpen={!!siteDetailsOpenSignal}
-              openSignal={siteDetailsOpenSignal}
+              defaultOpen={!!groupOpenSignal}
+              openSignal={groupOpenSignal}
             >
               <SiteDetailsPanel
                 boreholeLayer={boreholeLayer}
-                workingAreaLayer={workingAreaLayer}
                 boundaryLayer={boundaryLayer}
                 renderLayer={renderLayer}
                 style={boreholeStyle}
@@ -342,6 +349,27 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
                   undefined
                 }
               />
+            </LayerGroup>
+          );
+        }
+        if (
+          state.projectSlug === "utah-forge" &&
+          section === "sectionsCropping" &&
+          group.title === "Working area"
+        ) {
+          const sectionsCroppingOpenSignal =
+            groupOpenSignal ?? workingAreaFocusOpenSignal;
+          return (
+            <LayerGroup
+              key={group.title}
+              title="Working area"
+              devSource="src/editor/LayerPanel.tsx:sections-cropping-working-area"
+              devNote="Working area groups the Phase 3 boundary controls and the Working Area Focus crop/focus tool under Sections & Cropping."
+              accentColor={selectedPageAccent}
+              defaultOpen={!!sectionsCroppingOpenSignal}
+              openSignal={sectionsCroppingOpenSignal}
+            >
+              {renderedLayers.map(renderLayer)}
               <WorkingAreaFocusContainer
                 allLayers={state.manifest.layers}
                 style={workingAreaFocusStyle}

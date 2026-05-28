@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { SceneHandle } from "../scene";
 import type { PresentationPage } from "../pages/types";
 import {
@@ -22,7 +22,12 @@ import { SeismicVolumeLegend } from "../ui/SeismicVolumeLegend";
 import { SurfaceElevationLegend } from "../ui/SurfaceElevationLegend";
 import { SceneSectionLegend } from "../ui/SceneSectionLegend";
 import { ScaleBar } from "../ui/ScaleBar";
-import { LEGEND_STACK_GAP_PX } from "../ui/legendStyles";
+import {
+  LEGEND_BOTTOM_EDGE_OFFSET_PX,
+  LEGEND_PAGE_EDGE_MARGIN_PX,
+  LEGEND_STACK_GAP_PX,
+} from "../ui/legendStyles";
+import { effectiveStyle, effectiveVisibility } from "../pages/effective";
 import {
   applyAudienceLensSceneToEnvironment,
   applyAudienceLensToState,
@@ -30,6 +35,16 @@ import {
 } from "../audience/audienceLenses";
 import { audienceLensById } from "../projectModules/caseStudyB/audienceLenses";
 import { UTAH_FORGE_PREVIEW_LAYER_OVERRIDE_FIELDS } from "../projectModules/utahForge/editorPreviewFields";
+import {
+  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+  UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+} from "../projectModules/utahForge/layerIds";
+import { resolveTopoMapSettings } from "../topoMap/settings";
 
 const utahForgeLegendStackStyle: CSSProperties = {
   position: "absolute",
@@ -37,11 +52,125 @@ const utahForgeLegendStackStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
   alignItems: "flex-start",
-  gap: LEGEND_STACK_GAP_PX,
-  maxHeight: "calc(100vh - 104px)",
+  maxHeight: `calc(100vh - ${
+    LEGEND_BOTTOM_EDGE_OFFSET_PX + LEGEND_PAGE_EDGE_MARGIN_PX
+  }px)`,
   overflowY: "auto",
   pointerEvents: "none",
 };
+
+const UTAH_FORGE_LEGEND_SLIDE_PX = 64;
+const UTAH_FORGE_LEGEND_EXIT_END = 0.34;
+const UTAH_FORGE_LEGEND_LAYOUT_END = 0.68;
+
+type UtahForgeLegendId =
+  | "seismic"
+  | "scene-section"
+  | "section-iso"
+  | "mt-boundaries"
+  | "surface-elevation"
+  | "mt-resistivity";
+
+const UTAH_FORGE_NON_RESISTIVITY_LEGENDS: readonly UtahForgeLegendId[] = [
+  "seismic",
+  "scene-section",
+  "section-iso",
+  "mt-boundaries",
+  "surface-elevation",
+];
+
+const UTAH_FORGE_LEGENDS: readonly UtahForgeLegendId[] = [
+  ...UTAH_FORGE_NON_RESISTIVITY_LEGENDS,
+  "mt-resistivity",
+];
+
+const UTAH_FORGE_MT_RESISTIVITY_LEGEND_LAYER_IDS = [
+  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
+] as const;
+
+interface UtahForgeLegendTransitionItem {
+  id: UtahForgeLegendId;
+  pageOverride: PresentationPage | null;
+  layoutWeight: number;
+  offsetX: number;
+  interactive: boolean;
+}
+
+type UtahForgeLegendPresence = Record<UtahForgeLegendId, boolean>;
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function styleBoolean(
+  style: Record<string, unknown>,
+  key: string,
+  fallback: boolean,
+): boolean {
+  const value = style[key];
+  return typeof value === "boolean" ? value : fallback;
+}
+
+function utahForgeLegendPresenceForPage(
+  state: ReturnType<typeof useEditor>["state"],
+  page: PresentationPage | null,
+  sectionIsoTargetsVisible: boolean,
+): UtahForgeLegendPresence {
+  if (!page) {
+    return {
+      seismic: false,
+      "scene-section": false,
+      "section-iso": false,
+      "mt-boundaries": false,
+      "surface-elevation": false,
+      "mt-resistivity": false,
+    };
+  }
+  const visible = effectiveVisibility(state.environment, page);
+  const styleFor = (layerId: string) =>
+    effectiveStyle(state.environment, page, layerId);
+  const scalarVisible = UTAH_FORGE_MT_RESISTIVITY_LEGEND_LAYER_IDS.some(
+    (layerId) =>
+      visible.has(layerId) &&
+      styleFor(layerId).scalarLegendVisible !== false,
+  );
+  const seismicStyle = styleFor(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID);
+  const sceneSectionStyle = styleFor(UTAH_FORGE_SCENE_SECTION_LAYER_ID);
+  const thresholdStyle = styleFor(UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID);
+  const topoMapSettings = resolveTopoMapSettings({
+    manifest: state.manifest,
+    environment: state.environment,
+    page,
+  });
+  const terrain = topoMapSettings.terrain;
+  const surfaceElevationVisible =
+    terrain.surfaceElevationEnabled === true &&
+    terrain.surfaceElevationLegendVisible !== false &&
+    (!topoMapSettings.surfaceLayerId ||
+      visible.has(topoMapSettings.surfaceLayerId));
+  const possibleSectionIsoTargetVisible =
+    visible.has(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID) ||
+    visible.has(UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID) ||
+    visible.has(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID);
+
+  return {
+    seismic:
+      visible.has(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) &&
+      styleBoolean(seismicStyle, "seismicLegendVisible", true),
+    "scene-section":
+      sceneSectionStyle.sceneSectionEnabled === true &&
+      styleBoolean(sceneSectionStyle, "sceneSectionLegendVisible", true),
+    "section-iso": possibleSectionIsoTargetVisible && sectionIsoTargetsVisible,
+    "mt-boundaries":
+      visible.has(UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID) &&
+      thresholdStyle.mtSurfaceBoundaryLegendVisible !== false,
+    "surface-elevation": surfaceElevationVisible,
+    "mt-resistivity": scalarVisible,
+  };
+}
 
 export function EditorChrome({
   sceneHandle,
@@ -53,10 +182,6 @@ export function EditorChrome({
   const { state } = useEditor();
   const [activeAudienceLens, setActiveAudienceLens] =
     useState<AudienceLensId>("investor");
-  const gui = state.environment.scene?.gui ?? {};
-  const navigator = gui.navigator ?? {};
-  const legendInset =
-    navigator.useOverride === true ? (navigator.bottom ?? 34) : 34;
   const presentationStateTransform = useCallback(
     (
       environment: typeof state.environment,
@@ -102,7 +227,7 @@ export function EditorChrome({
       <LightModeToggle sceneHandle={sceneHandle} onReturnHome={onReturnHome} />
       <AssayLegend sceneHandle={sceneHandle} />
       {state.projectSlug === "utah-forge" ? (
-        <UtahForgeLegendStack legendInset={legendInset} />
+        <UtahForgeLegendStack sceneHandle={sceneHandle} />
       ) : (
         <>
           <ResistivityLegend />
@@ -125,10 +250,11 @@ export function EditorChrome({
 }
 
 function UtahForgeLegendStack({
-  legendInset,
+  sceneHandle,
 }: {
-  legendInset: number;
+  sceneHandle: SceneHandle;
 }) {
+  const { state } = useEditor();
   const {
     pages,
     currentIndex,
@@ -144,95 +270,174 @@ function UtahForgeLegendStack({
     !!sourcePage &&
     !!targetPage &&
     sourcePage.id !== targetPage.id;
-  const direction =
-    typeof targetIndex === "number" && targetIndex < currentIndex ? -1 : 1;
+  const sectionIsoTargetsVisible = sceneHandle.manager
+    .listSectionIsoTargets()
+    .some((target) => target.visible);
 
   if (!transitionActive || !sourcePage || !targetPage) {
+    const currentPresence = utahForgeLegendPresenceForPage(
+      state,
+      sourcePage,
+      sectionIsoTargetsVisible,
+    );
     return (
-      <UtahForgeLegendStackFrame
-        legendInset={legendInset}
-        opacity={1}
-        offsetY={0}
-        pageOverride={null}
+      <UtahForgeLegendStackLayout
+        items={UTAH_FORGE_LEGENDS.filter((id) => currentPresence[id]).map(
+          (id) => ({
+            id,
+            pageOverride: null,
+            layoutWeight: 1,
+            offsetX: 0,
+            interactive: true,
+          }),
+        )}
       />
     );
   }
 
-  const t = Math.max(0, Math.min(1, transitionProgress));
-  const slidePx = 12;
+  const t = clamp01(transitionProgress);
+  const exitT = clamp01(t / UTAH_FORGE_LEGEND_EXIT_END);
+  const layoutT = clamp01(
+    (t - UTAH_FORGE_LEGEND_EXIT_END) /
+      (UTAH_FORGE_LEGEND_LAYOUT_END - UTAH_FORGE_LEGEND_EXIT_END),
+  );
+  const enterT = clamp01(
+    (t - UTAH_FORGE_LEGEND_LAYOUT_END) /
+      (1 - UTAH_FORGE_LEGEND_LAYOUT_END),
+  );
+  const sourcePresence = utahForgeLegendPresenceForPage(
+    state,
+    sourcePage,
+    sectionIsoTargetsVisible,
+  );
+  const targetPresence = utahForgeLegendPresenceForPage(
+    state,
+    targetPage,
+    sectionIsoTargetsVisible,
+  );
+  const items = UTAH_FORGE_LEGENDS.flatMap((id): UtahForgeLegendTransitionItem[] => {
+    const inSource = sourcePresence[id];
+    const inTarget = targetPresence[id];
+    if (!inSource && !inTarget) return [];
+    if (inSource && inTarget) {
+      return [
+        {
+          id,
+          pageOverride: id === "mt-resistivity" ? null : targetPage,
+          layoutWeight: 1,
+          offsetX: 0,
+          interactive: true,
+        },
+      ];
+    }
+    if (inSource) {
+      return [
+        {
+          id,
+          pageOverride: sourcePage,
+          layoutWeight: 1 - layoutT,
+          offsetX: -UTAH_FORGE_LEGEND_SLIDE_PX * exitT,
+          interactive: false,
+        },
+      ];
+    }
+    return [
+      {
+        id,
+        pageOverride: targetPage,
+        layoutWeight: layoutT,
+        offsetX: -UTAH_FORGE_LEGEND_SLIDE_PX * (1 - enterT),
+        interactive: t > 0.92,
+      },
+    ];
+  });
   return (
-    <>
-      <UtahForgeLegendStackFrame
-        legendInset={legendInset}
-        opacity={1 - t}
-        offsetY={-direction * slidePx * t}
-        pageOverride={sourcePage}
-        includeResistivity={false}
-      />
-      <UtahForgeLegendStackFrame
-        legendInset={legendInset}
-        opacity={t}
-        offsetY={direction * slidePx * (1 - t)}
-        pageOverride={targetPage}
-        includeResistivity={false}
-      />
-      <UtahForgeResistivityLegendFrame legendInset={legendInset} />
-    </>
+    <UtahForgeLegendStackLayout items={items} />
   );
 }
 
-function UtahForgeLegendStackFrame({
-  legendInset,
-  opacity,
-  offsetY,
-  pageOverride,
-  includeResistivity = true,
+function UtahForgeLegendStackLayout({
+  items,
 }: {
-  legendInset: number;
-  opacity: number;
-  offsetY: number;
-  pageOverride: PresentationPage | null;
-  includeResistivity?: boolean;
+  items: readonly UtahForgeLegendTransitionItem[];
 }) {
-  if (opacity <= 0.001) return null;
+  const visibleItems = items.filter((item) => item.layoutWeight > 0.001);
+  if (visibleItems.length === 0) return null;
   return (
     <div
       style={{
         ...utahForgeLegendStackStyle,
-        left: legendInset,
-        bottom: legendInset + 34,
-        opacity,
-        transform: `translate3d(0, ${offsetY.toFixed(1)}px, 0)`,
+        left: LEGEND_PAGE_EDGE_MARGIN_PX,
+        bottom: LEGEND_BOTTOM_EDGE_OFFSET_PX,
       }}
     >
-      <SeismicVolumeLegend stacked pageOverride={pageOverride} />
-      <SceneSectionLegend stacked pageOverride={pageOverride} />
-      <SectionIsoLegend stacked pageOverride={pageOverride} />
-      {includeResistivity ? (
-        <ResistivityLegend stacked pageOverride={pageOverride} />
-      ) : null}
-      <MtSurfaceBoundaryLegend stacked pageOverride={pageOverride} />
-      <SurfaceElevationLegend stacked pageOverride={pageOverride} />
+      {visibleItems.map((item, index) => (
+        <UtahForgeLegendStackItem
+          key={item.id}
+          item={item}
+          marginTop={index === 0 ? 0 : LEGEND_STACK_GAP_PX * item.layoutWeight}
+        />
+      ))}
     </div>
   );
 }
 
-function UtahForgeResistivityLegendFrame({
-  legendInset,
+function UtahForgeLegendStackItem({
+  item,
+  marginTop,
 }: {
-  legendInset: number;
+  item: UtahForgeLegendTransitionItem;
+  marginTop: number;
 }) {
+  const content = renderUtahForgeLegendItem(item.id, item.pageOverride);
   return (
     <div
       style={{
-        ...utahForgeLegendStackStyle,
-        left: legendInset,
-        bottom: legendInset + 34,
+        display: "grid",
+        gridTemplateRows: `${Math.max(0.001, item.layoutWeight).toFixed(3)}fr`,
+        marginTop,
+        pointerEvents: item.interactive ? "auto" : "none",
       }}
     >
-      <ResistivityLegend stacked />
+      <div
+        style={{
+          minHeight: 0,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            transform: `translate3d(${item.offsetX.toFixed(1)}px, 0, 0)`,
+            willChange: item.offsetX === 0 ? undefined : "transform",
+          }}
+        >
+          {content}
+        </div>
+      </div>
     </div>
   );
+}
+
+function renderUtahForgeLegendItem(
+  id: UtahForgeLegendId,
+  pageOverride: PresentationPage | null,
+): ReactNode {
+  switch (id) {
+    case "seismic":
+      return <SeismicVolumeLegend stacked pageOverride={pageOverride} />;
+    case "scene-section":
+      return <SceneSectionLegend stacked pageOverride={pageOverride} />;
+    case "section-iso":
+      return <SectionIsoLegend stacked pageOverride={pageOverride} />;
+    case "mt-boundaries":
+      return <MtSurfaceBoundaryLegend stacked pageOverride={pageOverride} />;
+    case "surface-elevation":
+      return <SurfaceElevationLegend stacked pageOverride={pageOverride} />;
+    case "mt-resistivity":
+      return <ResistivityLegend stacked pageOverride={pageOverride} />;
+    default:
+      return null;
+  }
 }
 
 // Mirrors PageController.currentIndex to EditorContext.selectedPageId only when

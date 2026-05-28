@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type React from "react";
-import { panelStyles, vibrancySecondaryLabel } from "../../styles";
+import { panelStyles } from "../../styles";
 import {
   detailsContentStyle,
   nestedControlRowStyle,
@@ -27,6 +27,13 @@ import {
 } from "../../../projectModules/utahForge/layerIds";
 import { SeismicCapabilityLayerItem } from "./SeismicCapabilityLayerItem";
 import { seismicDefaultProductId, seismicProductOptions } from "./seismicModel";
+
+const sceneSectionAxisColors = {
+  x: "#ff6b78",
+  y: "#35c7e8",
+  z: "#f6d76b",
+} as const;
+
 export function SceneSectionPlanesContainer({
   seismicLayer,
   allLayers,
@@ -84,7 +91,11 @@ export function SceneSectionPlanesContainer({
   );
   const helperVisible = styleBoolean(style, "sceneSectionHelperVisible", true);
   const legendVisible = styleBoolean(style, "sceneSectionLegendVisible", true);
-  const windowEnabled = styleBoolean(style, "sceneSectionWindowEnabled", false);
+  const frameEnabled = styleBoolean(
+    style,
+    "sceneSectionFrameEnabled",
+    styleBoolean(style, "sceneSectionWindowEnabled", false),
+  );
   const groundTraceVisible = styleBoolean(
     style,
     "sceneSectionGroundTraceVisible",
@@ -92,6 +103,7 @@ export function SceneSectionPlanesContainer({
   );
   const axesVisible = styleBoolean(style, "sceneSectionAxesVisible", true);
   const windowByAxis = style.sceneSectionWindowByAxis ?? {};
+  const frameByAxis = style.sceneSectionFrameByAxis ?? {};
   const liveStyleRef = useRef(style);
   useEffect(() => {
     liveStyleRef.current = style;
@@ -126,21 +138,42 @@ export function SceneSectionPlanesContainer({
       },
     });
   };
-  const setWindowPatch = (
-    axis: "x" | "y",
-    patch: { minAlongM?: number; maxAlongM?: number; bottomElevationM?: number },
+  const setFramePatch = (
+    axis: "x" | "y" | "z",
+    patch: { minAM?: number; maxAM?: number; minBM?: number; maxBM?: number },
   ) => {
+    const current = frameByAxis[axis] ?? {};
+    const nextFrame = {
+      ...current,
+      ...patch,
+    };
+    const legacyPatch: Partial<EditableStyle> =
+      axis === "x" || axis === "y"
+        ? {
+            sceneSectionWindowEnabled: true,
+            sceneSectionWindowActiveAxis: axis,
+            sceneSectionWindowByAxis: {
+              ...windowByAxis,
+              [axis]: {
+                ...(windowByAxis[axis] ?? {}),
+                minAlongM: nextFrame.minAM ?? windowByAxis[axis]?.minAlongM,
+                maxAlongM: nextFrame.maxAM ?? windowByAxis[axis]?.maxAlongM,
+                bottomElevationM:
+                  nextFrame.minBM ?? windowByAxis[axis]?.bottomElevationM,
+              },
+            },
+          }
+        : {};
     commit({
       sceneSectionActiveAxis: axis,
-      sceneSectionWindowEnabled: true,
-      sceneSectionWindowActiveAxis: axis,
-      sceneSectionWindowByAxis: {
-        ...windowByAxis,
+      sceneSectionFrameEnabled: true,
+      sceneSectionFrameByAxis: {
+        ...frameByAxis,
         [axis]: {
-          ...(windowByAxis[axis] ?? {}),
-          ...patch,
+          ...nextFrame,
         },
       },
+      ...legacyPatch,
     });
   };
   const toggleLayerTarget = (id: string, checked: boolean) => {
@@ -176,7 +209,7 @@ export function SceneSectionPlanesContainer({
           : layer.id === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID
             ? "3D MT resistivity volume"
             : layer.id === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID
-              ? "3D MT threshold surfaces"
+              ? "MT thresholds"
               : editorLayerLabel(layer),
       supported:
         layer.id !== UTAH_FORGE_MT_STATIONS_LAYER_ID ||
@@ -213,9 +246,7 @@ export function SceneSectionPlanesContainer({
         <summary
           style={{
             ...panelStyles.summary,
-            color: isActiveAxis
-              ? vibrancySecondaryLabel
-              : panelStyles.summary.color,
+            color: sceneSectionAxisColors[axis],
           }}
         >
           {range.label}
@@ -380,17 +411,20 @@ export function SceneSectionPlanesContainer({
           />
         </label>
         <details style={nestedDetailsStyle} data-testid="scene-section-window">
-          <summary style={panelStyles.summary}>MT section window</summary>
+          <summary style={panelStyles.summary}>Section frames</summary>
           <div style={detailsContentStyle}>
             <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-              <span style={nestedFieldLabelStyle}>Window crop</span>
+              <span style={nestedFieldLabelStyle}>Frame crop</span>
               <input
                 data-testid="scene-section-window-enabled"
                 type="checkbox"
                 disabled={disabled}
-                checked={windowEnabled}
+                checked={frameEnabled}
                 onChange={(e) =>
-                  commit({ sceneSectionWindowEnabled: e.target.checked })
+                  commit({
+                    sceneSectionFrameEnabled: e.target.checked,
+                    sceneSectionWindowEnabled: e.target.checked,
+                  })
                 }
               />
             </label>
@@ -399,7 +433,7 @@ export function SceneSectionPlanesContainer({
               <input
                 data-testid="scene-section-ground-trace-visible"
                 type="checkbox"
-                disabled={disabled || !windowEnabled}
+                disabled={disabled || !frameEnabled}
                 checked={groundTraceVisible}
                 onChange={(e) =>
                   commit({ sceneSectionGroundTraceVisible: e.target.checked })
@@ -411,109 +445,158 @@ export function SceneSectionPlanesContainer({
               <input
                 data-testid="scene-section-axes-visible"
                 type="checkbox"
-                disabled={disabled || !windowEnabled}
+                disabled={disabled || !frameEnabled}
                 checked={axesVisible}
                 onChange={(e) =>
                   commit({ sceneSectionAxesVisible: e.target.checked })
                 }
               />
             </label>
-            {(["x", "y"] as const).map((axis) => {
-              const axisWindow = windowByAxis[axis] ?? {};
-              const minLimit = axis === "x" ? -115000 : -140000;
-              const maxLimit = axis === "x" ? 115000 : 140000;
-              const minAlong =
-                typeof axisWindow.minAlongM === "number" &&
-                Number.isFinite(axisWindow.minAlongM)
-                  ? axisWindow.minAlongM
-                  : minLimit;
-              const maxAlong =
-                typeof axisWindow.maxAlongM === "number" &&
-                Number.isFinite(axisWindow.maxAlongM)
-                  ? axisWindow.maxAlongM
-                  : maxLimit;
-              const bottomElevation =
-                typeof axisWindow.bottomElevationM === "number" &&
-                Number.isFinite(axisWindow.bottomElevationM)
-                  ? axisWindow.bottomElevationM
-                  : -25000;
-              const alongLabel =
-                axis === "x" ? "Northing window" : "Easting window";
+            {(["x", "y", "z"] as const).map((axis) => {
+              const axisFrame = frameByAxis[axis] ?? {};
+              const axisWindow =
+                axis === "x" || axis === "y" ? windowByAxis[axis] ?? {} : {};
+              const aMinLimit = axis === "x" ? -115000 : -140000;
+              const aMaxLimit = axis === "x" ? 115000 : 140000;
+              const bMinLimit = axis === "z" ? -115000 : -122000;
+              const bMaxLimit = axis === "z" ? 115000 : 4000;
+              const minA =
+                typeof axisFrame.minAM === "number" &&
+                Number.isFinite(axisFrame.minAM)
+                  ? axisFrame.minAM
+                  : typeof axisWindow.minAlongM === "number" &&
+                      Number.isFinite(axisWindow.minAlongM)
+                    ? axisWindow.minAlongM
+                    : aMinLimit;
+              const maxA =
+                typeof axisFrame.maxAM === "number" &&
+                Number.isFinite(axisFrame.maxAM)
+                  ? axisFrame.maxAM
+                  : typeof axisWindow.maxAlongM === "number" &&
+                      Number.isFinite(axisWindow.maxAlongM)
+                    ? axisWindow.maxAlongM
+                    : aMaxLimit;
+              const minB =
+                typeof axisFrame.minBM === "number" &&
+                Number.isFinite(axisFrame.minBM)
+                  ? axisFrame.minBM
+                  : typeof axisWindow.bottomElevationM === "number" &&
+                      Number.isFinite(axisWindow.bottomElevationM)
+                    ? axisWindow.bottomElevationM
+                    : bMinLimit;
+              const maxB =
+                typeof axisFrame.maxBM === "number" &&
+                Number.isFinite(axisFrame.maxBM)
+                  ? axisFrame.maxBM
+                  : bMaxLimit;
+              const aLabel =
+                axis === "x" ? "Northing" : "Easting";
+              const bLabel = axis === "z" ? "Northing" : "Elevation";
               return (
                 <details
                   key={axis}
                   style={nestedDetailsStyle}
                   data-testid={`scene-section-window-${axis}`}
                 >
-                  <summary style={panelStyles.summary}>
-                    {axis.toUpperCase()} section frame
+                  <summary
+                    style={{
+                      ...panelStyles.summary,
+                      color: sceneSectionAxisColors[axis],
+                    }}
+                  >
+                    {axis.toUpperCase()} Section frame
                   </summary>
                   <div style={detailsContentStyle}>
                     <div style={nestedControlRowStyle}>
                       <label style={nestedFieldLabelStyle}>
-                        {alongLabel} min
+                        {aLabel} min
                       </label>
                       <input
-                        data-testid={`scene-section-window-${axis}-min`}
+                        data-testid={`scene-section-frame-${axis}-min-a`}
                         type="range"
-                        min={minLimit}
-                        max={maxLimit}
+                        min={aMinLimit}
+                        max={aMaxLimit}
                         step={100}
-                        disabled={disabled || !windowEnabled}
-                        value={minAlong}
+                        disabled={disabled || !frameEnabled}
+                        value={minA}
                         onChange={(e) =>
-                          setWindowPatch(axis, {
-                            minAlongM: parseFloat(e.target.value),
+                          setFramePatch(axis, {
+                            minAM: parseFloat(e.target.value),
                           })
                         }
                         style={{ flex: 1 }}
                       />
                       <span style={sliderNumberReadoutStyle}>
-                        {Math.round(minAlong)} m
+                        {Math.round(minA)} m
                       </span>
                     </div>
                     <div style={nestedControlRowStyle}>
                       <label style={nestedFieldLabelStyle}>
-                        {alongLabel} max
+                        {aLabel} max
                       </label>
                       <input
-                        data-testid={`scene-section-window-${axis}-max`}
+                        data-testid={`scene-section-frame-${axis}-max-a`}
                         type="range"
-                        min={minLimit}
-                        max={maxLimit}
+                        min={aMinLimit}
+                        max={aMaxLimit}
                         step={100}
-                        disabled={disabled || !windowEnabled}
-                        value={maxAlong}
+                        disabled={disabled || !frameEnabled}
+                        value={maxA}
                         onChange={(e) =>
-                          setWindowPatch(axis, {
-                            maxAlongM: parseFloat(e.target.value),
+                          setFramePatch(axis, {
+                            maxAM: parseFloat(e.target.value),
                           })
                         }
                         style={{ flex: 1 }}
                       />
                       <span style={sliderNumberReadoutStyle}>
-                        {Math.round(maxAlong)} m
+                        {Math.round(maxA)} m
                       </span>
                     </div>
                     <div style={nestedControlRowStyle}>
-                      <label style={nestedFieldLabelStyle}>Bottom elev.</label>
+                      <label style={nestedFieldLabelStyle}>{bLabel} min</label>
                       <input
-                        data-testid={`scene-section-window-${axis}-bottom`}
+                        data-testid={`scene-section-frame-${axis}-min-b`}
                         type="range"
-                        min={-122000}
-                        max={4000}
+                        min={bMinLimit}
+                        max={bMaxLimit}
                         step={100}
-                        disabled={disabled || !windowEnabled}
-                        value={bottomElevation}
+                        disabled={disabled || !frameEnabled}
+                        value={minB}
                         onChange={(e) =>
-                          setWindowPatch(axis, {
-                            bottomElevationM: parseFloat(e.target.value),
+                          setFramePatch(axis, {
+                            minBM: parseFloat(e.target.value),
                           })
                         }
                         style={{ flex: 1 }}
                       />
                       <span style={sliderNumberReadoutStyle}>
-                        {(bottomElevation / 1000).toFixed(1)} km
+                        {bLabel === "Elevation"
+                          ? `${(minB / 1000).toFixed(1)} km`
+                          : `${Math.round(minB)} m`}
+                      </span>
+                    </div>
+                    <div style={nestedControlRowStyle}>
+                      <label style={nestedFieldLabelStyle}>{bLabel} max</label>
+                      <input
+                        data-testid={`scene-section-frame-${axis}-max-b`}
+                        type="range"
+                        min={bMinLimit}
+                        max={bMaxLimit}
+                        step={100}
+                        disabled={disabled || !frameEnabled}
+                        value={maxB}
+                        onChange={(e) =>
+                          setFramePatch(axis, {
+                            maxBM: parseFloat(e.target.value),
+                          })
+                        }
+                        style={{ flex: 1 }}
+                      />
+                      <span style={sliderNumberReadoutStyle}>
+                        {bLabel === "Elevation"
+                          ? `${(maxB / 1000).toFixed(1)} km`
+                          : `${Math.round(maxB)} m`}
                       </span>
                     </div>
                   </div>
@@ -584,4 +667,3 @@ export function SceneSectionPlanesContainer({
     </SeismicCapabilityLayerItem>
   );
 }
-

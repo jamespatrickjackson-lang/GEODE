@@ -55,11 +55,8 @@ const BOTTOM_HUD_SAFE_ZONE = 112;
 const HEADER_SAVE_TRASH_ALIGN_OFFSET = 21;
 
 const UTAH_FORGE_DATA_LAYER_IDS = [
-  UTAH_FORGE_SCENE_SECTION_LAYER_ID,
-  UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
   UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
   UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
-  UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
   UTAH_FORGE_MT_STATIONS_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
@@ -70,6 +67,11 @@ const UTAH_FORGE_DATA_LAYER_IDS = [
   UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
   "utah-forge-reference-stage",
+] as const;
+const UTAH_FORGE_SECTIONS_CROPPING_LAYER_IDS = [
+  UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+  UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+  UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
 ] as const;
 
 function styleOpacityForActiveState(
@@ -211,6 +213,7 @@ const previewLensButtonStyle: React.CSSProperties = {
 // The current top-level sections are created near the bottom of EditorRoot:
 // - Page Manager   -> PagePanel
 // - Camera Dynamics -> DynamicCameraPanel
+// - Sections & Cropping -> LayerPanel(section="sectionsCropping")
 // - FORGE/Public Data -> LayerPanel(section="public")
 // - Customer Data  -> LayerPanel(section="customer")
 // - Page GUI       -> OverlayPanel
@@ -272,12 +275,13 @@ export function EditorRoot({
   const publicDataTitle =
     state.projectSlug === "utah-forge" ? "FORGE Data" : "Public Data";
   const hasPublicTopoMap = topoMapLayerIds(state.manifest.layers).length > 0;
+  const hasSectionsCropping = state.projectSlug === "utah-forge";
   const forgeDataVisibleLayerIds = selectedPage
     ? effectiveVisibility(state.environment, selectedPage)
     : new Set(state.environment.defaultVisibleLayers);
-  const forgeDataActiveLayerIds =
+  const utahForgeActiveLayerIds = (layerIds: readonly string[]) =>
     state.projectSlug === "utah-forge"
-      ? UTAH_FORGE_DATA_LAYER_IDS.filter((layerId) => {
+      ? layerIds.filter((layerId) => {
           const style = selectedPage
             ? effectiveStyle(state.environment, selectedPage, layerId)
             : (state.environment.layerStyles[layerId] ?? {});
@@ -291,6 +295,12 @@ export function EditorRoot({
           return styleOpacityForActiveState(layerId, style) > 0.001;
         })
       : [];
+  const forgeDataActiveLayerIds = utahForgeActiveLayerIds(
+    UTAH_FORGE_DATA_LAYER_IDS,
+  );
+  const sectionsCroppingActiveLayerIds = utahForgeActiveLayerIds(
+    UTAH_FORGE_SECTIONS_CROPPING_LAYER_IDS,
+  );
   const forgeDataActiveSignal =
     forgeDataActiveLayerIds.length > 0
       ? `${selectedPage?.id ?? ENVIRONMENT_SENTINEL}:${forgeDataActiveLayerIds.join(
@@ -299,6 +309,12 @@ export function EditorRoot({
       : publicDataOpenSignal > 0
         ? `event:${publicDataOpenSignal}`
         : undefined;
+  const sectionsCroppingActiveSignal =
+    sectionsCroppingActiveLayerIds.length > 0
+      ? `${selectedPage?.id ?? ENVIRONMENT_SENTINEL}:${sectionsCroppingActiveLayerIds.join(
+          ",",
+        )}`
+      : undefined;
   const selectedPageAccent =
     selectedPageIndex >= 0
       ? pageAccentForPage(
@@ -738,6 +754,17 @@ export function EditorRoot({
                   selectedPageHasLanded ? 0.368 : 0.192,
                 )}
               />
+            </CollapsibleSection>
+          )}
+          {hasSectionsCropping && (
+            <CollapsibleSection
+              title="Sections & Cropping"
+              defaultOpen={sectionsCroppingActiveLayerIds.length > 0}
+              openSignal={sectionsCroppingActiveSignal}
+              accentColor={selectedPageAccent}
+              closeSignal={selectedPage?.id}
+            >
+              <LayerPanel section="sectionsCropping" />
             </CollapsibleSection>
           )}
           {hasPublicTopoMap && (

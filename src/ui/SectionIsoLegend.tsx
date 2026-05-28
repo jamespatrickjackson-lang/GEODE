@@ -5,11 +5,15 @@ import { useEditor } from "../editor/EditorContext";
 import {
   FROSTED_HAIRLINE,
   TECHNICAL_MONO_FONT,
-  vibrancyLabel,
-  vibrancySecondaryLabel,
-  vibrancyTertiaryLabel,
 } from "../editor/styles";
-import { transparentLegendPanelStyle } from "./legendStyles";
+import {
+  LEGEND_BOTTOM_EDGE_OFFSET_PX,
+  LEGEND_PAGE_EDGE_MARGIN_PX,
+  legendCheckboxStyle,
+  legendControlRowStyle,
+  resolveLegendTextColors,
+  transparentLegendPanelStyle,
+} from "./legendStyles";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import { effectiveStyle } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
@@ -35,37 +39,33 @@ const titleStyle: CSSProperties = {
   fontWeight: 700,
 };
 
-const subtitleStyle: CSSProperties = {
-  marginTop: 5,
-  color: vibrancySecondaryLabel,
+const rowStyle: CSSProperties = {
+  display: "grid",
+  marginTop: 10,
   fontSize: 10,
-  lineHeight: 1.25,
 };
 
-const rowStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 8,
-  marginTop: 10,
-  color: vibrancySecondaryLabel,
-  fontSize: 10,
+const toggleStackStyle: CSSProperties = {
+  display: "grid",
+};
+
+const toggleLabelStyle: CSSProperties = {
+  ...legendControlRowStyle(),
+};
+
+const firstToggleLabelStyle: CSSProperties = {
+  ...toggleLabelStyle,
+  marginTop: 0,
 };
 
 const closeButtonStyle: CSSProperties = {
   border: "1px solid rgba(255, 255, 255, 0.24)",
   borderRadius: 6,
   background: "rgba(255, 255, 255, 0.08)",
-  color: vibrancySecondaryLabel,
   fontFamily: TECHNICAL_MONO_FONT,
   fontSize: 9,
   padding: "3px 7px",
   cursor: "pointer",
-};
-
-const configureButtonStyle: CSSProperties = {
-  ...closeButtonStyle,
-  color: vibrancyLabel,
 };
 
 const selectStyle: CSSProperties = {
@@ -74,7 +74,6 @@ const selectStyle: CSSProperties = {
   border: "1px solid rgba(255, 255, 255, 0.18)",
   borderRadius: 6,
   background: "rgba(255, 255, 255, 0.08)",
-  color: vibrancyLabel,
   fontFamily: TECHNICAL_MONO_FONT,
   fontSize: 10,
   padding: "5px 7px",
@@ -89,7 +88,6 @@ const popoverStyle: CSSProperties = {
   zIndex: 12,
   padding: 12,
   boxSizing: "border-box",
-  color: vibrancyLabel,
   background: "rgba(12, 15, 18, 0.88)",
   border: FROSTED_HAIRLINE,
   borderRadius: 8,
@@ -104,7 +102,6 @@ const popoverHeaderStyle: CSSProperties = {
   justifyContent: "space-between",
   gap: 10,
   marginBottom: 10,
-  color: vibrancyLabel,
   fontSize: 10,
   fontWeight: 700,
 };
@@ -122,7 +119,6 @@ const fullRowStyle: CSSProperties = {
 const fineControlLabelStyle: CSSProperties = {
   display: "grid",
   gap: 4,
-  color: vibrancySecondaryLabel,
   fontSize: 9,
   lineHeight: 1.1,
 };
@@ -267,6 +263,10 @@ function defaultDisplayMax(
   return styleNumber(style, "scalarDisplayMax", fallback);
 }
 
+function groupSupportsVolumeToggle(group: SectionIsoTargetGroup): boolean {
+  return group === "mt-volume-cuts" || group === "seismic-volume-cuts";
+}
+
 export function SectionIsoLegend({
   stacked = false,
   pageOverride = null,
@@ -330,6 +330,9 @@ export function SectionIsoLegend({
   }, [popoverOpen, targets]);
 
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
+  const legendTextColors = resolveLegendTextColors(
+    state.environment.scene?.gui?.overlay,
+  );
   if (targets.length === 0) return null;
 
   const groups = targetGroups(targets);
@@ -387,20 +390,18 @@ export function SectionIsoLegend({
   const enabled = style.sectionIsoEnabled === true;
   const linesVisible = styleBoolean(style, "sectionIsoLinesVisible", true);
   const bandsVisible = styleBoolean(style, "sectionIsoBandsVisible", true);
+  const sourceOpacity = clamp(
+    styleNumber(style, "sectionIsoSourceOpacity", 0),
+    0,
+    1,
+  );
+  const showVolume = sourceOpacity > 0.001;
+  const supportsVolumeToggle = groupSupportsVolumeToggle(resolvedGroup);
   const targetIds =
     typeof style.sectionIsoTargetIds === "object" &&
     style.sectionIsoTargetIds !== null
       ? (style.sectionIsoTargetIds as Record<string, boolean>)
       : {};
-  const selectedCount = targets.filter(
-    (target) => target.group === resolvedGroup,
-  ).filter(
-    (target) => targetIds[target.targetKey] !== false,
-  ).length;
-  const gui = state.environment.scene?.gui ?? {};
-  const navigator = gui.navigator ?? {};
-  const inset = navigator.useOverride === true ? navigator.bottom ?? 34 : 34;
-
   const commit = (patch: Partial<EditableStyle>) => {
     const merged = { ...style, ...patch };
     sceneHandle.manager.applyStyle(layerId, merged);
@@ -426,51 +427,66 @@ export function SectionIsoLegend({
         ...rootStyle,
         ...(stacked
           ? { position: "relative" }
-          : { left: inset, bottom: inset + 194 }),
+          : {
+              left: LEGEND_PAGE_EDGE_MARGIN_PX,
+              bottom: LEGEND_BOTTOM_EDGE_OFFSET_PX + 160,
+            }),
       }}
       aria-label="Scalar section ISO legend"
       data-testid="section-iso-legend"
     >
-      <h2 style={titleStyle}>Section ISO</h2>
-      <div style={subtitleStyle}>
-        {selectedCount}/{activeTargets.length} {groups.find((group) => group.id === resolvedGroup)?.label ?? "sections"}
-      </div>
-      {groups.length > 1 ? (
-        <select
-          value={resolvedGroup}
-          data-testid="section-iso-dataset"
-          style={{ ...selectStyle, marginTop: 9 }}
-          onChange={(event) =>
-            setActiveGroup(event.currentTarget.value as SectionIsoTargetGroup)
-          }
-        >
-          {groups.map((group) => (
-            <option key={group.id} value={group.id}>
-              {group.label}
-            </option>
-          ))}
-        </select>
-      ) : null}
-      <div style={rowStyle}>
-        <label style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
-          <input
-            type="checkbox"
-            data-testid="section-iso-toggle"
-            checked={enabled}
-            onChange={(event) =>
-              commit({ sectionIsoEnabled: event.currentTarget.checked })
-            }
-          />
-          ISO overlay
-        </label>
-        <button
-          type="button"
-          style={configureButtonStyle}
-          data-testid="section-iso-configure"
-          onClick={() => setPopoverOpen((open) => !open)}
-        >
-          Options
-        </button>
+      <h2 style={{ ...titleStyle, color: legendTextColors.heading }}>
+        Section ISO
+      </h2>
+      <div style={{ ...rowStyle, color: legendTextColors.body }}>
+        <div style={toggleStackStyle}>
+          <label style={firstToggleLabelStyle}>
+            <input
+              type="checkbox"
+              data-testid="section-iso-toggle"
+              checked={enabled}
+              onChange={(event) =>
+                commit({ sectionIsoEnabled: event.currentTarget.checked })
+              }
+              style={legendCheckboxStyle(enabled, {
+                checkedColor: legendTextColors.heading,
+              })}
+            />
+            ISO overlay
+          </label>
+          {supportsVolumeToggle ? (
+            <label style={toggleLabelStyle}>
+              <input
+                type="checkbox"
+                data-testid="section-iso-show-volume"
+                checked={showVolume}
+                onChange={(event) =>
+                  commit({
+                    sectionIsoSourceOpacity: event.currentTarget.checked ? 1 : 0,
+                  })
+                }
+                style={legendCheckboxStyle(showVolume, {
+                  checkedColor: legendTextColors.heading,
+                })}
+              />
+              Show volume
+            </label>
+          ) : null}
+          <label style={toggleLabelStyle}>
+            <input
+              type="checkbox"
+              data-testid="section-iso-configure"
+              checked={popoverOpen}
+              onChange={(event) =>
+                setPopoverOpen(event.currentTarget.checked)
+              }
+              style={legendCheckboxStyle(popoverOpen, {
+                checkedColor: legendTextColors.heading,
+              })}
+            />
+            Options
+          </label>
+        </div>
       </div>
       {popoverOpen && typeof document !== "undefined"
         ? createPortal(
@@ -480,28 +496,35 @@ export function SectionIsoLegend({
                 ...popoverStyle,
                 left: popoverPosition.left,
                 top: popoverPosition.top,
+                color: legendTextColors.body,
               }}
               data-testid="section-iso-popout"
               onPointerDown={(event) => event.stopPropagation()}
             >
-              <div style={popoverHeaderStyle}>
+              <div style={{ ...popoverHeaderStyle, color: legendTextColors.heading }}>
                 <span>Section ISO</span>
                 <button
                   type="button"
-                  style={closeButtonStyle}
+                  style={{ ...closeButtonStyle, color: legendTextColors.body }}
                   onClick={() => setPopoverOpen(false)}
                 >
                   Close
                 </button>
               </div>
               <div style={popoverGridStyle}>
-                {groups.length > 1 ? (
-                  <label style={{ ...fineControlLabelStyle, ...fullRowStyle }}>
+                {groups.length > 0 ? (
+                  <label
+                    style={{
+                      ...fineControlLabelStyle,
+                      ...fullRowStyle,
+                      color: legendTextColors.body,
+                    }}
+                  >
                     Dataset
                     <select
                       value={resolvedGroup}
                       data-testid="section-iso-popout-dataset"
-                      style={selectStyle}
+                      style={{ ...selectStyle, color: legendTextColors.body }}
                       onPointerDown={(event) => event.stopPropagation()}
                       onChange={(event) =>
                         setActiveGroup(
@@ -517,7 +540,7 @@ export function SectionIsoLegend({
                     </select>
                   </label>
                 ) : null}
-                <label style={fineControlLabelStyle}>
+                <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
                   Lines
                   <input
                     type="checkbox"
@@ -526,9 +549,12 @@ export function SectionIsoLegend({
                     onChange={(event) =>
                       commit({ sectionIsoLinesVisible: event.currentTarget.checked })
                     }
+                    style={legendCheckboxStyle(linesVisible, {
+                      checkedColor: legendTextColors.heading,
+                    })}
                   />
                 </label>
-                <label style={fineControlLabelStyle}>
+                <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
                   Bands
                   <input
                     type="checkbox"
@@ -537,9 +563,12 @@ export function SectionIsoLegend({
                     onChange={(event) =>
                       commit({ sectionIsoBandsVisible: event.currentTarget.checked })
                     }
+                    style={legendCheckboxStyle(bandsVisible, {
+                      checkedColor: legendTextColors.heading,
+                    })}
                   />
                 </label>
-                <label style={fineControlLabelStyle}>
+                <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
                   Min {formatValue(isoMin)}
                   <input
                     type="range"
@@ -561,7 +590,7 @@ export function SectionIsoLegend({
                     style={rangeStyle}
                   />
                 </label>
-                <label style={fineControlLabelStyle}>
+                <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
                   Max {formatValue(isoMax)}
                   <input
                     type="range"
@@ -583,7 +612,7 @@ export function SectionIsoLegend({
                     style={rangeStyle}
                   />
                 </label>
-                <label style={fineControlLabelStyle}>
+                <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
                   Bands {levelCount}
                   <input
                     type="range"
@@ -603,11 +632,12 @@ export function SectionIsoLegend({
                     style={rangeStyle}
                   />
                 </label>
-                <label style={fineControlLabelStyle}>
+                <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
                   Style
                   <select
                     value={lineStyle}
                     data-testid="section-iso-line-style"
+                    style={{ ...selectStyle, color: legendTextColors.body }}
                     onPointerDown={(event) => event.stopPropagation()}
                     onChange={(event) =>
                       commit({
@@ -620,7 +650,7 @@ export function SectionIsoLegend({
                     <option value="dashed">Dashed</option>
                   </select>
                 </label>
-                <label style={fineControlLabelStyle}>
+                <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
                   Line {lineWidth.toFixed(1)}px
                   <input
                     type="range"
@@ -642,7 +672,7 @@ export function SectionIsoLegend({
                     style={rangeStyle}
                   />
                 </label>
-                <label style={fineControlLabelStyle}>
+                <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
                   Band {Math.round(bandOpacity * 100)}%
                   <input
                     type="range"
@@ -664,7 +694,13 @@ export function SectionIsoLegend({
                     style={rangeStyle}
                   />
                 </label>
-                <label style={{ ...fineControlLabelStyle, ...fullRowStyle }}>
+                <label
+                  style={{
+                    ...fineControlLabelStyle,
+                    ...fullRowStyle,
+                    color: legendTextColors.body,
+                  }}
+                >
                   Fill {fillOffset === 0 ? "0%" : `${Math.round(fillOffset * 100)}%`}
                   <input
                     type="range"
@@ -686,7 +722,13 @@ export function SectionIsoLegend({
                     style={fillRangeStyle(fillOffset)}
                   />
                 </label>
-                <div style={{ ...fineControlLabelStyle, ...fullRowStyle }}>
+                <div
+                  style={{
+                    ...fineControlLabelStyle,
+                    ...fullRowStyle,
+                    color: legendTextColors.body,
+                  }}
+                >
                   Targets
                   <div style={targetListStyle}>
                     {activeTargets.map((target) => (
@@ -698,8 +740,8 @@ export function SectionIsoLegend({
                           alignItems: "center",
                           gap: 8,
                           color: targetIds[target.targetKey] === false
-                            ? vibrancyTertiaryLabel
-                            : vibrancySecondaryLabel,
+                            ? legendTextColors.subtext
+                            : legendTextColors.body,
                         }}
                       >
                         <span>{target.label}</span>
@@ -710,6 +752,10 @@ export function SectionIsoLegend({
                           onChange={(event) =>
                             setTargetSelected(target, event.currentTarget.checked)
                           }
+                          style={legendCheckboxStyle(
+                            targetIds[target.targetKey] !== false,
+                            { checkedColor: legendTextColors.heading },
+                          )}
                         />
                       </label>
                     ))}

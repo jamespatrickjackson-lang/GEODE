@@ -77,6 +77,7 @@ as a transparent non-depth-writing surface.
 - Operating vocabulary: `docs/dev-context/GeoSee-Terms.md`
 - Global toolset structure and topo map precedent: `docs/dev-context/Global-Toolset-Structure.md`
 - Current visual review loop: `docs/dev-context/Visual-Review-Current.md`
+- UI visual standards and shared legend/slider rules: `docs/dev-context/UI-Visual-Standards.md`
 - Large code surfaces and extraction guidance: `docs/dev-context/Architecture-Hotspots.md`
 - Data/artifact status maps: `docs/dev-context/Dataset-Map.md`, `docs/dev-context/Computed-Artifact-Pipeline.md`, `docs/dev-context/Layer-Artifact-Classification.md`
 - Runtime/project load classes: `docs/dev-context/Project-Load-Class-Table.md`, `docs/dev-context/Runtime-Loading-Policy.md`

@@ -24,6 +24,82 @@ const CAMERA_NEAR_M = 50;
 const CAMERA_FAR_M = 1_000_000;
 
 type SceneDepthBufferMode = "reverse" | "logarithmic" | "standard";
+type SceneSectionHandlePick = {
+  axis: SceneSectionAxis;
+  kind: "plane" | SceneSectionWindowHandleKind;
+  world: THREE.Vector3;
+};
+
+function sceneSectionHandleKind(
+  kind: unknown,
+): SceneSectionWindowHandleKind | null {
+  return kind === "window-min" ||
+    kind === "window-max" ||
+    kind === "window-bottom" ||
+    kind === "frame-min-a" ||
+    kind === "frame-max-a" ||
+    kind === "frame-min-b" ||
+    kind === "frame-max-b"
+    ? kind
+    : null;
+}
+
+function sceneSectionFrameDragNormal(
+  axis: SceneSectionAxis,
+  kind: SceneSectionWindowHandleKind,
+): THREE.Vector3 {
+  if (
+    kind === "window-min" ||
+    kind === "window-max" ||
+    kind === "frame-min-a" ||
+    kind === "frame-max-a"
+  ) {
+    if (axis === "x") return new THREE.Vector3(0, 1, 0);
+    return new THREE.Vector3(1, 0, 0);
+  }
+  if (axis === "z") return new THREE.Vector3(0, 1, 0);
+  return new THREE.Vector3(0, 0, 1);
+}
+
+function projectToClient(
+  camera: THREE.Camera,
+  world: THREE.Vector3,
+  rect: DOMRect,
+): THREE.Vector2 {
+  const projected = world.clone().project(camera);
+  return new THREE.Vector2(
+    rect.left + (projected.x * 0.5 + 0.5) * rect.width,
+    rect.top + (-projected.y * 0.5 + 0.5) * rect.height,
+  );
+}
+
+function sceneSectionScreenDragProjection(
+  camera: THREE.Camera,
+  world: THREE.Vector3,
+  normal: THREE.Vector3,
+  rect: DOMRect,
+): { screenAxis: THREE.Vector2; metersPerPixel: number } {
+  const distance = camera.position.distanceTo(world);
+  const stepM = THREE.MathUtils.clamp(distance * 0.035, 250, 8_000);
+  const p0 = projectToClient(camera, world, rect);
+  const p1 = projectToClient(
+    camera,
+    world.clone().addScaledVector(normal.clone().normalize(), stepM),
+    rect,
+  );
+  const delta = p1.sub(p0);
+  const pixels = delta.length();
+  if (Number.isFinite(pixels) && pixels > 2) {
+    return {
+      screenAxis: delta.multiplyScalar(1 / pixels),
+      metersPerPixel: stepM / pixels,
+    };
+  }
+  return {
+    screenAxis: new THREE.Vector2(0, -1),
+    metersPerPixel: THREE.MathUtils.clamp(distance * 0.0035, 35, 1_800),
+  };
+}
 
 function browserSupportsReverseDepthBuffer(): boolean {
   const canvas = document.createElement("canvas");
@@ -424,10 +500,10 @@ export function mountScene(
     | {
         axis: SceneSectionAxis;
         kind: "plane" | SceneSectionWindowHandleKind;
-        normal: THREE.Vector3;
         originalPositionM: number;
-        startWorld: THREE.Vector3;
-        dragPlane: THREE.Plane;
+        startClient: THREE.Vector2;
+        screenAxis: THREE.Vector2;
+        metersPerPixel: number;
       }
     | null = null;
   let focusPointerDown: { x: number; y: number } | null = null;
@@ -703,11 +779,7 @@ export function mountScene(
   const pickSceneSectionPlaneHandle = (
     clientX: number,
     clientY: number,
-  ): {
-    axis: SceneSectionAxis;
-    kind: "plane" | SceneSectionWindowHandleKind;
-    world: THREE.Vector3;
-  } | null => {
+  ): SceneSectionHandlePick | null => {
     const pickables = manager.listSceneSectionPlanePickables();
     if (pickables.length === 0) return null;
     const rect = renderer.domElement.getBoundingClientRect();
@@ -728,15 +800,55 @@ export function mountScene(
           data.sceneSectionAxis === "z")
       ) {
         const kind =
-          data.sceneSectionPlaneHandleKind === "window-min" ||
-          data.sceneSectionPlaneHandleKind === "window-max" ||
-          data.sceneSectionPlaneHandleKind === "window-bottom"
-            ? data.sceneSectionPlaneHandleKind
-            : "plane";
+          sceneSectionHandleKind(data.sceneSectionPlaneHandleKind) ?? "plane";
         return { axis: data.sceneSectionAxis, kind, world: hit.point.clone() };
       }
     }
     return null;
+  };
+
+  const beginSceneSectionHandleDrag = (
+    sceneSectionHandle: SceneSectionHandlePick,
+    ev: MouseEvent,
+  ): void => {
+    suppressNextDrillFocusClick = true;
+    const normal =
+      sceneSectionHandle.kind === "plane"
+        ? sceneSectionHandle.axis === "x"
+          ? new THREE.Vector3(1, 0, 0)
+          : sceneSectionHandle.axis === "y"
+            ? new THREE.Vector3(0, 1, 0)
+            : new THREE.Vector3(0, 0, 1)
+        : sceneSectionFrameDragNormal(
+            sceneSectionHandle.axis,
+            sceneSectionHandle.kind,
+          );
+    const originalPosition =
+      sceneSectionHandle.kind === "plane"
+        ? (manager.getSceneSectionPlaneScalar(sceneSectionHandle.axis) ??
+          sceneSectionHandle.world.dot(normal))
+        : (manager.getSceneSectionWindowValue(
+            sceneSectionHandle.axis,
+            sceneSectionHandle.kind,
+          ) ?? sceneSectionHandle.world.dot(normal));
+    const rect = renderer.domElement.getBoundingClientRect();
+    const dragProjection = sceneSectionScreenDragProjection(
+      camera,
+      sceneSectionHandle.world,
+      normal,
+      rect,
+    );
+    dragSceneSectionPlane = {
+      axis: sceneSectionHandle.axis,
+      kind: sceneSectionHandle.kind,
+      originalPositionM: originalPosition,
+      startClient: new THREE.Vector2(ev.clientX, ev.clientY),
+      screenAxis: dragProjection.screenAxis,
+      metersPerPixel: dragProjection.metersPerPixel,
+    };
+    controls.enabled = false;
+    renderer.domElement.style.cursor = "grabbing";
+    ev.preventDefault();
   };
 
   const pickPageCameraMarker = (
@@ -768,29 +880,25 @@ export function mountScene(
 
   const onCanvasMouseMove = (ev: MouseEvent) => {
     if (dragSceneSectionPlane) {
-      const cur = new THREE.Vector3();
-      const rect = renderer.domElement.getBoundingClientRect();
-      ndc.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
-      ndc.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(ndc, camera);
-      if (raycaster.ray.intersectPlane(dragSceneSectionPlane.dragPlane, cur)) {
-        const positionM = THREE.MathUtils.clamp(
-          dragSceneSectionPlane.originalPositionM +
-            cur
-              .sub(dragSceneSectionPlane.startWorld)
-              .dot(dragSceneSectionPlane.normal),
-          -250_000,
-          250_000,
+      const pointerDelta = new THREE.Vector2(
+        ev.clientX - dragSceneSectionPlane.startClient.x,
+        ev.clientY - dragSceneSectionPlane.startClient.y,
+      );
+      const positionM = THREE.MathUtils.clamp(
+        dragSceneSectionPlane.originalPositionM +
+          pointerDelta.dot(dragSceneSectionPlane.screenAxis) *
+            dragSceneSectionPlane.metersPerPixel,
+        -250_000,
+        250_000,
+      );
+      if (dragSceneSectionPlane.kind === "plane") {
+        manager.previewSceneSectionPlane(dragSceneSectionPlane.axis, positionM);
+      } else {
+        manager.previewSceneSectionWindow(
+          dragSceneSectionPlane.axis,
+          dragSceneSectionPlane.kind,
+          positionM,
         );
-        if (dragSceneSectionPlane.kind === "plane") {
-          manager.previewSceneSectionPlane(dragSceneSectionPlane.axis, positionM);
-        } else {
-          manager.previewSceneSectionWindow(
-            dragSceneSectionPlane.axis,
-            dragSceneSectionPlane.kind,
-            positionM,
-          );
-        }
       }
       return;
     }
@@ -951,6 +1059,17 @@ export function mountScene(
       } else {
         renderer.domElement.style.cursor = "";
       }
+    } else {
+      const sceneSectionHandle = pickSceneSectionPlaneHandle(
+        ev.clientX,
+        ev.clientY,
+      );
+      if (sceneSectionHandle) {
+        renderer.domElement.style.cursor = "grab";
+        applyHover(null, ev.clientX, ev.clientY);
+        return;
+      }
+      renderer.domElement.style.cursor = "";
     }
     const label = pickLabel(ev.clientX, ev.clientY);
     applyHover(label, ev.clientX, ev.clientY);
@@ -966,7 +1085,17 @@ export function mountScene(
       focusPointerDown = { x: ev.clientX, y: ev.clientY };
       suppressNextDrillFocusClick = false;
     }
-    if (!editorMode || ev.button !== 0) return;
+    if (ev.button !== 0) return;
+    if (!editorMode) {
+      const sceneSectionHandle = pickSceneSectionPlaneHandle(
+        ev.clientX,
+        ev.clientY,
+      );
+      if (sceneSectionHandle) {
+        beginSceneSectionHandleDrag(sceneSectionHandle, ev);
+      }
+      return;
+    }
     if (orbitCenterPick) {
       suppressNextDrillFocusClick = true;
       controls.enabled = false;
@@ -1025,47 +1154,7 @@ export function mountScene(
     }
     const sceneSectionHandle = pickSceneSectionPlaneHandle(ev.clientX, ev.clientY);
     if (sceneSectionHandle) {
-      suppressNextDrillFocusClick = true;
-      const normal =
-        sceneSectionHandle.kind === "window-bottom"
-          ? new THREE.Vector3(0, 0, 1)
-          : sceneSectionHandle.kind === "window-min" ||
-              sceneSectionHandle.kind === "window-max"
-            ? sceneSectionHandle.axis === "x"
-              ? new THREE.Vector3(0, 1, 0)
-              : new THREE.Vector3(1, 0, 0)
-            : sceneSectionHandle.axis === "x"
-              ? new THREE.Vector3(1, 0, 0)
-              : sceneSectionHandle.axis === "y"
-                ? new THREE.Vector3(0, 1, 0)
-                : new THREE.Vector3(0, 0, 1);
-      const originalPosition =
-        sceneSectionHandle.kind === "plane"
-          ? (manager.getSceneSectionPlaneScalar(sceneSectionHandle.axis) ??
-            sceneSectionHandle.world.dot(normal))
-          : (manager.getSceneSectionWindowValue(
-              sceneSectionHandle.axis,
-              sceneSectionHandle.kind,
-            ) ?? sceneSectionHandle.world.dot(normal));
-      const cameraForward = new THREE.Vector3();
-      camera.getWorldDirection(cameraForward);
-      const dragPlaneNormal = cameraForward
-        .normalize();
-      const dragPlane = new THREE.Plane().setFromNormalAndCoplanarPoint(
-        dragPlaneNormal,
-        sceneSectionHandle.world,
-      );
-      dragSceneSectionPlane = {
-        axis: sceneSectionHandle.axis,
-        kind: sceneSectionHandle.kind,
-        normal,
-        originalPositionM: originalPosition,
-        startWorld: sceneSectionHandle.world.clone(),
-        dragPlane,
-      };
-      controls.enabled = false;
-      renderer.domElement.style.cursor = "grabbing";
-      ev.preventDefault();
+      beginSceneSectionHandleDrag(sceneSectionHandle, ev);
       return;
     }
     const lightHandle = pickLightingHandle(ev.clientX, ev.clientY);

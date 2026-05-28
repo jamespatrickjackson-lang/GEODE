@@ -136,18 +136,19 @@ import {
   previewSceneSectionWindow as previewSceneSectionWindowImpl,
   rebuildSceneSectionHelpers as rebuildSceneSectionHelpersImpl,
   reapplySceneSectionPlanes as reapplySceneSectionPlanesImpl,
+  resolveSceneSectionFrames as resolveSceneSectionFramesImpl,
   resolveSceneSectionPlanes as resolveSceneSectionPlanesImpl,
   resolveSceneSectionWindow as resolveSceneSectionWindowImpl,
   sceneSectionActivePlanes as sceneSectionActivePlanesImpl,
   sceneSectionAxisAlongIndex as sceneSectionAxisAlongIndexImpl,
   sceneSectionBounds as sceneSectionBoundsImpl,
   sceneSectionClippingPlanes as sceneSectionClippingPlanesImpl,
+  sceneSectionFrameClippingPlanes as sceneSectionFrameClippingPlanesImpl,
+  sceneSectionFrameForObject as sceneSectionFrameForObjectImpl,
   sceneSectionHelperOpacityForTween as sceneSectionHelperOpacityForTweenImpl,
   sceneSectionLayerIds as sceneSectionLayerIdsImpl,
   sceneSectionObjectTargeted as sceneSectionObjectTargetedImpl,
   sceneSectionProductIds as sceneSectionProductIdsImpl,
-  sceneSectionWindowAppliesToObject as sceneSectionWindowAppliesToObjectImpl,
-  sceneSectionWindowClippingPlanes as sceneSectionWindowClippingPlanesImpl,
   setSceneSectionUniforms as setSceneSectionUniformsImpl,
 } from "./section/sceneSectionController";
 import {
@@ -284,7 +285,11 @@ export type SceneSectionAxis = "x" | "y" | "z";
 export type SceneSectionWindowHandleKind =
   | "window-min"
   | "window-max"
-  | "window-bottom";
+  | "window-bottom"
+  | "frame-min-a"
+  | "frame-max-a"
+  | "frame-min-b"
+  | "frame-max-b";
 export type SectionIsoTargetGroup =
   | "mt-slices"
   | "mt-volume-cuts"
@@ -318,6 +323,16 @@ export interface ResolvedSceneSectionWindow {
   maxAlongM: number;
   bottomElevationM: number;
   alongIndex: 0 | 1;
+}
+
+export interface ResolvedSceneSectionFrame {
+  axis: SceneSectionAxis;
+  minAM: number;
+  maxAM: number;
+  minBM: number;
+  maxBM: number;
+  axisAIndex: 0 | 1 | 2;
+  axisBIndex: 0 | 1 | 2;
 }
 
 export interface SceneSectionRuntime {
@@ -512,9 +527,10 @@ export class SceneManager {
     }
     if (this.sceneSectionRuntime) {
       const helperVisible =
-        this.lastSceneSectionStyle.sceneSectionHelperVisible !== false;
+        typeof this.lastSceneSectionStyle.sceneSectionHelperVisible === "boolean"
+          ? this.lastSceneSectionStyle.sceneSectionHelperVisible
+          : enabled;
       this.sceneSectionRuntime.group.visible =
-        enabled &&
         this.lastSceneSectionStyle.sceneSectionEnabled === true &&
         helperVisible;
     }
@@ -1289,26 +1305,34 @@ export class SceneManager {
     return resolveSceneSectionWindowImpl.call(this, style, bounds);
   }
 
-  sceneSectionWindowClippingPlanes(
-    window: ResolvedSceneSectionWindow | null,
-  ): THREE.Plane[] {
-    return sceneSectionWindowClippingPlanesImpl.call(this, window);
+  resolveSceneSectionFrames(
+    style: EditableStyle,
+    bounds: THREE.Box3,
+  ): ResolvedSceneSectionFrame[] {
+    return resolveSceneSectionFramesImpl.call(this, style, bounds);
   }
 
-  sceneSectionWindowAppliesToObject(
+  sceneSectionFrameClippingPlanes(
+    frame: ResolvedSceneSectionFrame | null,
+  ): THREE.Plane[] {
+    return sceneSectionFrameClippingPlanesImpl.call(this, frame);
+  }
+
+  sceneSectionFrameForObject(
     layerId: string,
     obj: THREE.Object3D,
-  ): boolean {
-    return sceneSectionWindowAppliesToObjectImpl.call(this, layerId, obj);
+    frames: ResolvedSceneSectionFrame[],
+  ): ResolvedSceneSectionFrame | null {
+    return sceneSectionFrameForObjectImpl.call(this, layerId, obj, frames);
   }
 
   setSceneSectionUniforms(
     material: THREE.ShaderMaterial,
     planes: ResolvedSceneSectionPlane[],
     targeted: boolean,
-    window: ResolvedSceneSectionWindow | null,
+    frames: ResolvedSceneSectionFrame[],
   ): void {
-    return setSceneSectionUniformsImpl.call(this, material, planes, targeted, window);
+    return setSceneSectionUniformsImpl.call(this, material, planes, targeted, frames);
   }
 
   applySceneSectionMaterial(
@@ -1316,11 +1340,10 @@ export class SceneManager {
     planes: ResolvedSceneSectionPlane[],
     targeted: boolean,
     clippingPlanes: THREE.Plane[],
-    window: ResolvedSceneSectionWindow | null,
-    windowClippingPlanes: THREE.Plane[],
-    windowTargeted: boolean,
+    frames: ResolvedSceneSectionFrame[],
+    frameClippingPlanes: THREE.Plane[],
   ): void {
-    return applySceneSectionMaterialImpl.call(this, material, planes, targeted, clippingPlanes, window, windowClippingPlanes, windowTargeted);
+    return applySceneSectionMaterialImpl.call(this, material, planes, targeted, clippingPlanes, frames, frameClippingPlanes);
   }
 
   interpolatedSceneSectionStyle(
@@ -1892,7 +1915,7 @@ export class SceneManager {
       thresholdMax: number;
       maskVisible: boolean;
       targetKey: string;
-      sectionWindow?: ResolvedSceneSectionWindow | null;
+      sectionFrame?: ResolvedSceneSectionFrame | null;
     }): {
     mesh: THREE.Mesh;
     values: Float32Array;

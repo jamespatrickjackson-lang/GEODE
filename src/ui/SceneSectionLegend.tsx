@@ -1,10 +1,13 @@
 import type { CSSProperties } from "react";
 import { useEditor } from "../editor/EditorContext";
 import {
-  vibrancySecondaryLabel,
-  vibrancyTertiaryLabel,
-} from "../editor/styles";
-import { transparentLegendPanelStyle } from "./legendStyles";
+  LEGEND_BOTTOM_EDGE_OFFSET_PX,
+  LEGEND_PAGE_EDGE_MARGIN_PX,
+  legendCheckboxStyle,
+  legendControlRowStyle,
+  resolveLegendTextColors,
+  transparentLegendPanelStyle,
+} from "./legendStyles";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import { effectiveStyle } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
@@ -20,8 +23,8 @@ const AXIS_COLORS = {
 
 const rootStyle: CSSProperties = {
   ...transparentLegendPanelStyle,
-  left: 34,
-  bottom: 306,
+  left: LEGEND_PAGE_EDGE_MARGIN_PX,
+  bottom: LEGEND_BOTTOM_EDGE_OFFSET_PX + 256,
   padding: 13,
 };
 
@@ -32,35 +35,19 @@ const titleStyle: CSSProperties = {
   fontWeight: 700,
 };
 
-const subtitleStyle: CSSProperties = {
-  marginTop: 5,
-  color: vibrancySecondaryLabel,
-  fontSize: 10,
-  lineHeight: 1.25,
-};
-
 const rowStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "16px 1fr auto",
-  alignItems: "center",
-  gap: 7,
-  marginTop: 9,
-  color: vibrancySecondaryLabel,
+  ...legendControlRowStyle(),
   fontSize: 10,
 };
 
-const swatchBaseStyle: CSSProperties = {
-  width: 13,
-  height: 13,
-  borderRadius: 2,
-  boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.36)",
+const firstRowStyle: CSSProperties = {
+  ...rowStyle,
+  ...legendControlRowStyle({ first: true }),
 };
 
-const footerStyle: CSSProperties = {
-  marginTop: 9,
-  color: vibrancyTertiaryLabel,
-  fontSize: 10,
-  lineHeight: 1.25,
+const helperRowStyle: CSSProperties = {
+  ...rowStyle,
+  ...legendControlRowStyle({ cursor: "pointer" }),
 };
 
 function styleBoolean(
@@ -70,18 +57,6 @@ function styleBoolean(
 ): boolean {
   const value = style[key];
   return typeof value === "boolean" ? value : fallback;
-}
-
-function planePositionLabel(value: unknown): string {
-  return typeof value === "number" && Number.isFinite(value)
-    ? `${Math.round(value).toLocaleString()} m`
-    : "default";
-}
-
-function scopeLabel(scope: EditableStyle["sceneSectionTargetScope"]): string {
-  if (scope === "all-visible") return "all visible";
-  if (scope === "active-selection") return "active selection";
-  return "selected targets";
 }
 
 export function SceneSectionLegend({
@@ -94,6 +69,9 @@ export function SceneSectionLegend({
   const { state, sceneHandle, setEnvLayerStyle, setPageLayerOverride } = useEditor();
   const { pages, currentIndex, targetIndex } = usePageController();
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
+  const legendTextColors = resolveLegendTextColors(
+    state.environment.scene?.gui?.overlay,
+  );
 
   const controllerPage =
     pageOverride ?? pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
@@ -114,13 +92,22 @@ export function SceneSectionLegend({
   if (!styleBoolean(style, "sceneSectionLegendVisible", true)) return null;
 
   const planes = style.sceneSectionPlanes ?? {};
-  const activeAxis =
-    style.sceneSectionActiveAxis === "x" ||
-    style.sceneSectionActiveAxis === "y" ||
-    style.sceneSectionActiveAxis === "z"
-      ? style.sceneSectionActiveAxis
-      : "z";
-  const helperVisible = style.sceneSectionHelperVisible !== false;
+  const bodyRowStyle: CSSProperties = {
+    ...rowStyle,
+    color: legendTextColors.body,
+  };
+  const firstBodyRowStyle: CSSProperties = {
+    ...firstRowStyle,
+    color: legendTextColors.body,
+  };
+  const helperBodyRowStyle: CSSProperties = {
+    ...helperRowStyle,
+    color: legendTextColors.body,
+  };
+  const helperVisible =
+    typeof style.sceneSectionHelperVisible === "boolean"
+      ? style.sceneSectionHelperVisible
+      : !state.presenterMode;
   const commit = (patch: Partial<EditableStyle>) => {
     const merged = { ...style, ...patch };
     sceneHandle.manager.applyStyle(SCENE_SECTION_LAYER_ID, merged);
@@ -151,59 +138,47 @@ export function SceneSectionLegend({
       }}
       aria-label="Utah FORGE scene section plane legend"
     >
-      <h2 style={titleStyle}>Scene section planes</h2>
-      <div style={subtitleStyle}>
-        Cutaway clip - {scopeLabel(style.sceneSectionTargetScope)}
-      </div>
-      {(["x", "y", "z"] as const).map((axis) => {
+      <h2 style={{ ...titleStyle, color: legendTextColors.heading }}>
+        Section Planes
+      </h2>
+      {(["x", "y", "z"] as const).map((axis, index) => {
         const plane = planes[axis] ?? {};
         const enabled = plane.enabled === true;
-        const side = plane.invert === true ? "+ side kept" : "- side kept";
         return (
-          <label key={axis} style={{ ...rowStyle, cursor: "pointer" }}>
-            <span
-              style={{
-                ...swatchBaseStyle,
-                background: AXIS_COLORS[axis],
-                opacity: enabled ? 1 : 0.28,
-              }}
+          <div key={axis} style={index === 0 ? firstBodyRowStyle : bodyRowStyle}>
+            <input
+              type="checkbox"
+              aria-label={`${axis.toUpperCase()} Section`}
+              checked={enabled}
+              data-testid={`scene-section-legend-${axis}-enabled`}
+              onChange={(event) => setAxisEnabled(axis, event.currentTarget.checked)}
+              style={legendCheckboxStyle(enabled, {
+                checkedColor: AXIS_COLORS[axis],
+              })}
             />
             <span>
               <strong>{axis.toUpperCase()} Section</strong>
-              {axis === activeAxis ? " active" : ""}
-              <br />
-              {planePositionLabel(plane.positionM)} - {side}
             </span>
-            <input
-              data-testid={`scene-section-legend-${axis}-enabled`}
-              type="checkbox"
-              checked={enabled}
-              onChange={(event) => setAxisEnabled(axis, event.currentTarget.checked)}
-            />
-          </label>
+          </div>
         );
       })}
-      <label
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          marginTop: 10,
-          color: vibrancySecondaryLabel,
-          fontSize: 10,
-        }}
-      >
+      <label style={helperBodyRowStyle}>
         <input
-          data-testid="scene-section-legend-helper-visible"
           type="checkbox"
+          aria-label="P Controle"
           checked={helperVisible}
+          data-testid="scene-section-legend-helper-visible"
           onChange={(event) =>
             commit({ sceneSectionHelperVisible: event.currentTarget.checked })
           }
+          style={legendCheckboxStyle(helperVisible, {
+            checkedColor: legendTextColors.heading,
+          })}
         />
-        Show outline handles
+        <span>
+          <strong>P Controle</strong>
+        </span>
       </label>
-      <div style={footerStyle}>Outlined planes mark the cut location; hidden side is clipped.</div>
     </aside>
   );
 }

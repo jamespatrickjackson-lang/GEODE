@@ -2,10 +2,11 @@ import type { CSSProperties } from "react";
 import { useEditor } from "../editor/EditorContext";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import {
-  vibrancyLabel,
-  vibrancySecondaryLabel,
-} from "../editor/styles";
-import { transparentLegendPanelStyle } from "./legendStyles";
+  LEGEND_BOTTOM_EDGE_OFFSET_PX,
+  LEGEND_PAGE_EDGE_MARGIN_PX,
+  resolveLegendTextColors,
+  transparentLegendPanelStyle,
+} from "./legendStyles";
 import { usePageController } from "../pages/PageController";
 import { effectiveVisibility } from "../pages/effective";
 import { resolveTopoMapSettings } from "../topoMap/settings";
@@ -27,14 +28,13 @@ const STOP_GAP = 0.01;
 
 const rootStyle: CSSProperties = {
   ...transparentLegendPanelStyle,
-  left: 34,
-  bottom: 500,
+  left: LEGEND_PAGE_EDGE_MARGIN_PX,
+  bottom: LEGEND_BOTTOM_EDGE_OFFSET_PX + 450,
   pointerEvents: "none",
 };
 
 const titleStyle: CSSProperties = {
   margin: 0,
-  color: vibrancyLabel,
   fontSize: 12,
   lineHeight: 1.15,
   fontWeight: 700,
@@ -53,7 +53,6 @@ const ticksStyle: CSSProperties = {
   gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
   gap: 4,
   marginTop: 8,
-  color: vibrancySecondaryLabel,
   fontSize: 9,
   lineHeight: 1.2,
   fontVariantNumeric: "tabular-nums",
@@ -129,6 +128,9 @@ export function SurfaceElevationLegend({
   const { state } = useEditor();
   const { pages, currentIndex, targetIndex } = usePageController();
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
+  const legendTextColors = resolveLegendTextColors(
+    state.environment.scene?.gui?.overlay,
+  );
 
   const controllerPage =
     pageOverride ?? pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
@@ -192,7 +194,9 @@ export function SurfaceElevationLegend({
       data-testid="surface-elevation-legend"
       aria-label="Utah FORGE surface elevation legend"
     >
-      <h2 style={titleStyle}>Surface Elevation (m)</h2>
+      <h2 style={{ ...titleStyle, color: legendTextColors.heading }}>
+        Surface Elevation (m)
+      </h2>
       <div
         data-testid="surface-elevation-legend-ramp"
         style={{
@@ -200,7 +204,10 @@ export function SurfaceElevationLegend({
           background: `linear-gradient(90deg, ${rampStops})`,
         }}
       />
-      <div data-testid="surface-elevation-legend-ticks" style={ticksStyle}>
+      <div
+        data-testid="surface-elevation-legend-ticks"
+        style={{ ...ticksStyle, color: legendTextColors.body }}
+      >
         {Array.from({ length: 5 }, (_, index) => (
           <span
             key={index}

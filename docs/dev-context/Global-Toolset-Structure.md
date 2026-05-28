@@ -96,6 +96,9 @@ Current top-level peer sections include:
 - `Visual Studio`: global render preset, environment, lighting, camera, and
   terrain-grid controls.
 - `UI`: global client-facing chrome controls such as logo and GUI style.
+- `Sections & Cropping`: Utah FORGE spatial-section workflow container for
+  scene section planes, the Phase 3 working-area boundary, and working-area
+  focus cropping.
 - `Public Topo Map`: the topo tool editor, including topo surface settings,
   longitude/latitude grid, title block, and topo reference layers.
 - project data sections and overlay tools.

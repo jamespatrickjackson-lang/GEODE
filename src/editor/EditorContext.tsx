@@ -1543,7 +1543,6 @@ export function EditorProvider({
 
   useEffect(() => {
     sceneHandle.setSceneSectionWindowCommitHandler((axis, kind, valueM) => {
-      if (axis !== "x" && axis !== "y") return;
       const cur = stateRef.current;
       const selectedPageId = cur.selectedPageId;
       const page =
@@ -1555,25 +1554,56 @@ export function EditorProvider({
         ? effectiveStyle(cur.environment, page, layerId)
         : (cur.environment.layerStyles[layerId] ?? {});
       const currentByAxis = currentStyle.sceneSectionWindowByAxis ?? {};
-      const currentWindow = currentByAxis[axis] ?? {};
-      const windowPatch =
-        kind === "window-min"
-          ? { minAlongM: valueM }
-          : kind === "window-max"
-            ? { maxAlongM: valueM }
-            : { bottomElevationM: valueM };
+      const currentFrameByAxis = currentStyle.sceneSectionFrameByAxis ?? {};
+      const currentFrame = currentFrameByAxis[axis] ?? {};
+      const frameKind =
+        kind === "window-min" || kind === "frame-min-a"
+          ? "minA"
+          : kind === "window-max" || kind === "frame-max-a"
+            ? "maxA"
+            : kind === "frame-max-b"
+              ? "maxB"
+              : "minB";
+      const framePatch =
+        frameKind === "minA"
+          ? { minAM: valueM }
+          : frameKind === "maxA"
+            ? { maxAM: valueM }
+            : frameKind === "maxB"
+              ? { maxBM: valueM }
+              : { minBM: valueM };
+      const nextFrame = {
+        ...currentFrame,
+        ...framePatch,
+      };
+      const legacyPatch: Partial<EditableStyle> =
+        axis === "x" || axis === "y"
+          ? {
+              sceneSectionWindowEnabled: true,
+              sceneSectionWindowActiveAxis: axis,
+              sceneSectionWindowByAxis: {
+                ...currentByAxis,
+                [axis]: {
+                  ...(currentByAxis[axis] ?? {}),
+                  minAlongM: nextFrame.minAM ?? currentByAxis[axis]?.minAlongM,
+                  maxAlongM: nextFrame.maxAM ?? currentByAxis[axis]?.maxAlongM,
+                  bottomElevationM:
+                    nextFrame.minBM ?? currentByAxis[axis]?.bottomElevationM,
+                },
+              },
+            }
+          : {};
       const patch: Partial<EditableStyle> = {
         sceneSectionEnabled: true,
         sceneSectionActiveAxis: axis,
-        sceneSectionWindowEnabled: true,
-        sceneSectionWindowActiveAxis: axis,
-        sceneSectionWindowByAxis: {
-          ...currentByAxis,
+        sceneSectionFrameEnabled: true,
+        sceneSectionFrameByAxis: {
+          ...currentFrameByAxis,
           [axis]: {
-            ...currentWindow,
-            ...windowPatch,
+            ...nextFrame,
           },
         },
+        ...legacyPatch,
       };
       sceneHandle.manager.applyStyle(layerId, { ...currentStyle, ...patch });
       if (page) {

@@ -6,6 +6,10 @@ import { DEFAULT_ASSAY_COLOR_STOPS } from "../loaders/assayPalette";
 import { effectiveVisibility } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { DrillFocus, SceneHandle } from "../scene";
+import {
+  LEGEND_BOTTOM_EDGE_OFFSET_PX,
+  LEGEND_PAGE_EDGE_MARGIN_PX,
+} from "./legendStyles";
 
 const ASSAY_LAYER_ID = "assay-samples";
 
@@ -23,8 +27,8 @@ const leaderSvgStyle: CSSProperties = {
 
 const rootStyle: CSSProperties = {
   position: "absolute",
-  left: 24,
-  bottom: 70,
+  left: LEGEND_PAGE_EDGE_MARGIN_PX,
+  bottom: LEGEND_BOTTOM_EDGE_OFFSET_PX,
   zIndex: 17,
   display: "grid",
   gap: 8,

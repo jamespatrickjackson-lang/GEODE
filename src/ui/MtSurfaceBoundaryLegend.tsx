@@ -3,10 +3,15 @@ import { useEditor } from "../editor/EditorContext";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import {
   TECHNICAL_MONO_FONT,
-  vibrancyLabel,
-  vibrancySecondaryLabel,
 } from "../editor/styles";
-import { transparentLegendPanelStyle } from "./legendStyles";
+import {
+  LEGEND_BOTTOM_EDGE_OFFSET_PX,
+  LEGEND_PAGE_EDGE_MARGIN_PX,
+  legendCheckboxStyle,
+  legendControlRowStyle,
+  resolveLegendTextColors,
+  transparentLegendPanelStyle,
+} from "./legendStyles";
 import { effectiveStyle, effectiveVisibility } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
@@ -28,26 +33,13 @@ const rootStyle: CSSProperties = {
 
 const titleStyle: CSSProperties = {
   margin: 0,
-  color: vibrancyLabel,
   fontSize: 12,
   lineHeight: 1.15,
   fontWeight: 700,
 };
 
-const subtitleStyle: CSSProperties = {
-  marginTop: 5,
-  color: vibrancySecondaryLabel,
-  fontSize: 10,
-  lineHeight: 1.25,
-};
-
 const rowStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "12px 18px minmax(0, 1fr)",
-  gap: 7,
-  alignItems: "center",
-  marginTop: 7,
-  color: vibrancySecondaryLabel,
+  ...legendControlRowStyle(),
   fontSize: 10,
   lineHeight: 1.2,
 };
@@ -63,6 +55,9 @@ export function MtSurfaceBoundaryLegend({
     useEditor();
   const { pages, currentIndex, targetIndex } = usePageController();
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
+  const legendTextColors = resolveLegendTextColors(
+    state.environment.scene?.gui?.overlay,
+  );
 
   const controllerPage =
     pageOverride ?? pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
@@ -94,13 +89,10 @@ export function MtSurfaceBoundaryLegend({
   );
   const definitions = mtSurfaceBoundaryDefinitionsFromMetadata(layer?.metadata);
   const boundaries = resolveMtSurfaceBoundaries(style, definitions).filter(
-    (boundary) => boundary.visible && boundary.opacity > 0.001,
+    (boundary) => boundary.opacity > 0.001,
   );
   if (boundaries.length === 0) return null;
 
-  const gui = state.environment.scene?.gui ?? {};
-  const navigator = gui.navigator ?? {};
-  const inset = navigator.useOverride === true ? navigator.bottom ?? 34 : 34;
   const order = mtSurfaceBoundaryOrder(style, definitions);
   const boundaryStyles =
     typeof style.mtSurfaceBoundariesById === "object" &&
@@ -142,29 +134,31 @@ export function MtSurfaceBoundaryLegend({
         ...rootStyle,
         ...(stacked
           ? { position: "relative" }
-          : { left: inset, bottom: inset + 34 }),
+          : {
+              left: LEGEND_PAGE_EDGE_MARGIN_PX,
+              bottom: LEGEND_BOTTOM_EDGE_OFFSET_PX,
+            }),
       }}
-      aria-label="MT surface boundaries legend"
+      aria-label="MT threshold boundaries legend"
     >
-      <h2 style={titleStyle}>Surface boundaries</h2>
-      <div style={subtitleStyle}>3D MT threshold surfaces</div>
+      <h2 style={{ ...titleStyle, color: legendTextColors.heading }}>
+        MT Threshold Boundaries
+      </h2>
       {boundaries.map((boundary) => (
-        <label key={boundary.id} style={rowStyle}>
-          <span
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: 3,
-              background: boundary.color,
-              opacity: boundary.opacity,
-            }}
-          />
+        <label
+          key={boundary.id}
+          style={{ ...rowStyle, color: legendTextColors.body }}
+        >
           <input
             type="checkbox"
+            aria-label={`${boundary.label} surface boundary`}
             checked={boundary.visible}
             onChange={(event) =>
               setBoundaryVisibility(boundary.id, event.currentTarget.checked)
             }
+            style={legendCheckboxStyle(boundary.visible, {
+              checkedColor: boundary.color,
+            })}
           />
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {boundary.label}

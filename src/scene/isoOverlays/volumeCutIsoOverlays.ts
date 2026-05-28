@@ -24,8 +24,8 @@ import {
   type ScalarSectionIsoOptions,
 } from "./sectionIsoOverlay";
 import type {
+  ResolvedSceneSectionFrame,
   ResolvedSceneSectionPlane,
-  ResolvedSceneSectionWindow,
   ScalarSectionIsoTarget,
 } from "../SceneManager";
 
@@ -169,7 +169,7 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
       thresholdMax: number;
       maskVisible: boolean;
       targetKey: string;
-      sectionWindow?: ResolvedSceneSectionWindow | null;
+      sectionFrame?: ResolvedSceneSectionFrame | null;
     }): {
     mesh: THREE.Mesh;
     values: Float32Array;
@@ -215,13 +215,16 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
         positions[vertexIndex * 3] = coords[0];
         positions[vertexIndex * 3 + 1] = coords[1];
         positions[vertexIndex * 3 + 2] = coords[2];
-        const insideSectionWindow =
-          !options.sectionWindow ||
-          (coords[options.sectionWindow.alongIndex] >=
-            options.sectionWindow.minAlongM &&
-            coords[options.sectionWindow.alongIndex] <=
-              options.sectionWindow.maxAlongM &&
-            coords[2] >= options.sectionWindow.bottomElevationM);
+        const insideSectionFrame =
+          !options.sectionFrame ||
+          (coords[options.sectionFrame.axisAIndex] >=
+            options.sectionFrame.minAM &&
+            coords[options.sectionFrame.axisAIndex] <=
+              options.sectionFrame.maxAM &&
+            coords[options.sectionFrame.axisBIndex] >=
+              options.sectionFrame.minBM &&
+            coords[options.sectionFrame.axisBIndex] <=
+              options.sectionFrame.maxBM);
         const u = (coords[0] - min[0]) / Math.max(0.000001, max[0] - min[0]);
         const v = (coords[1] - min[1]) / Math.max(0.000001, max[1] - min[1]);
         const w = (coords[2] - min[2]) / Math.max(0.000001, max[2] - min[2]);
@@ -236,7 +239,7 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
             : 1;
         values[vertexIndex] = scalar;
         alphaValues[vertexIndex] =
-          insideSectionWindow &&
+          insideSectionFrame &&
           scalar >= options.thresholdMin &&
           scalar <= options.thresholdMax &&
           mask > 0.01
@@ -300,7 +303,7 @@ export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle
       this.sceneSectionLayerIds(this.lastSceneSectionStyle),
       this.sceneSectionProductIds(this.lastSceneSectionStyle),
     );
-    const sectionWindow = this.resolveSceneSectionWindow(
+    const sectionFrames = this.resolveSceneSectionFrames(
       this.lastSceneSectionStyle,
       sectionBounds,
     );
@@ -413,10 +416,10 @@ export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle
         thresholdMax,
         maskVisible: style.scalarVolumeMaskVisible !== false,
         targetKey,
-        sectionWindow:
-          sectionWindow && sectionWindow.axis === plane.axis
-            ? sectionWindow
-            : null,
+        sectionFrame:
+          sectionFrames.find(
+            (frame: ResolvedSceneSectionFrame) => frame.axis === plane.axis,
+          ) ?? null,
       });
       if (!cut) continue;
       updateScalarSectionIsoOverlay(cut.mesh, cut.values, {

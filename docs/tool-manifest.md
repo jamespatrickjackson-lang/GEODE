@@ -61,6 +61,19 @@ Tools that control how the camera behaves per page.
 
 ---
 
+## Sections & Cropping
+
+Tools that define authored spatial cuts and site-of-interest cropping. Currently Utah FORGE only.
+
+| Tool | Description | Scope |
+| --- | --- | --- |
+| **Sections & Cropping** | Top-level editor container for section planes, crop/focus controls, and the Phase 3 working-area boundary. | Utah FORGE |
+| **Scene Section Planes** | Virtual cross-section tool. Selects the target geophysical product and controls plane position along each axis. | Utah FORGE |
+| **Phase 3 Working Area** | Visibility and style control for the required Phase 3 working-area boundary. | Utah FORGE |
+| **Working Area Focus** | Targets a layer as the focal zone; reduces outside-zone opacity and boosts inside-zone brightness for client presentations. | Utah FORGE |
+
+---
+
 ## Geographic Context
 
 Tools for the public topographic map surface and associated cartographic layers.
@@ -81,8 +94,6 @@ Tools for spatial framing and site-level orientation. Currently Utah FORGE only.
 
 | Tool | Description | Scope |
 | --- | --- | --- |
-| **Scene Section Planes** | Virtual cross-section tool. Selects the target geophysical product and controls plane position along each axis. | Utah FORGE |
-| **Working Area Focus** | Targets a layer as the focal zone; reduces outside-zone opacity and boosts inside-zone brightness for client presentations. | Utah FORGE |
 | **Site Boundary** | Visibility and style control for the site polygon boundary layer. | Utah FORGE |
 | **Demo Boreholes** | Controls for well trajectory visualization (16A injection, 16B production). Line style (solid/dashed), path treatment (survey/smoothed/normalized), and color. | Utah FORGE |
 

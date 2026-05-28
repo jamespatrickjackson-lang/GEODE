@@ -49,7 +49,6 @@ const PATH_TREATMENT_OPTIONS = [
 
 interface SiteDetailsPanelProps {
   boreholeLayer?: ProjectLayerSpec;
-  workingAreaLayer?: ProjectLayerSpec;
   boundaryLayer?: ProjectLayerSpec;
   renderLayer: (layer: ProjectLayerSpec) => React.ReactNode;
   style: EditableStyle;
@@ -265,7 +264,6 @@ function SiteDetailsSelectRow<T extends string>({
 
 export function SiteDetailsPanel({
   boreholeLayer,
-  workingAreaLayer,
   boundaryLayer,
   renderLayer,
   style,
@@ -295,7 +293,6 @@ export function SiteDetailsPanel({
 
   return (
     <>
-      {workingAreaLayer ? renderLayer(workingAreaLayer) : null}
       {boundaryLayer ? renderLayer(boundaryLayer) : null}
       {boreholeLayer ? (
         <>

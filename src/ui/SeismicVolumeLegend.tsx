@@ -5,11 +5,13 @@ import type {
 import { useRef } from "react";
 import { useEditor } from "../editor/EditorContext";
 import {
-  vibrancyLabel,
-  vibrancySecondaryLabel,
-  vibrancyTertiaryLabel,
-} from "../editor/styles";
-import { transparentLegendPanelStyle } from "./legendStyles";
+  LEGEND_BOTTOM_EDGE_OFFSET_PX,
+  LEGEND_PAGE_EDGE_MARGIN_PX,
+  legendCheckboxStyle,
+  legendControlRowStyle,
+  resolveLegendTextColors,
+  transparentLegendPanelStyle,
+} from "./legendStyles";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import { effectiveStyle, effectiveVisibility } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
@@ -22,13 +24,12 @@ const LEGEND_HANDLE_FILL = "#f4f5f7";
 
 const rootStyle: CSSProperties = {
   ...transparentLegendPanelStyle,
-  left: 34,
-  bottom: 500,
+  left: LEGEND_PAGE_EDGE_MARGIN_PX,
+  bottom: LEGEND_BOTTOM_EDGE_OFFSET_PX + 450,
 };
 
 const titleStyle: CSSProperties = {
   margin: 0,
-  color: vibrancyLabel,
   fontSize: 12,
   lineHeight: 1.15,
   fontWeight: 700,
@@ -36,7 +37,6 @@ const titleStyle: CSSProperties = {
 
 const subtitleStyle: CSSProperties = {
   marginTop: 5,
-  color: vibrancySecondaryLabel,
   fontSize: 10,
   lineHeight: 1.25,
 };
@@ -64,7 +64,6 @@ const ticksStyle: CSSProperties = {
   gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
   gap: 8,
   marginTop: 8,
-  color: vibrancySecondaryLabel,
   fontSize: 10,
   lineHeight: 1.25,
   fontVariantNumeric: "tabular-nums",
@@ -80,14 +79,12 @@ const fineControlsStyle: CSSProperties = {
 const fineControlLabelStyle: CSSProperties = {
   display: "grid",
   gap: 4,
-  color: vibrancySecondaryLabel,
   fontSize: 9,
   lineHeight: 1.1,
 };
 
 const footerStyle: CSSProperties = {
   marginTop: 9,
-  color: vibrancyTertiaryLabel,
   fontSize: 10,
   lineHeight: 1.25,
 };
@@ -262,6 +259,9 @@ export function SeismicVolumeLegend({
   const { pages, currentIndex, targetIndex } = usePageController();
   const rampRef = useRef<HTMLDivElement | null>(null);
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
+  const legendTextColors = resolveLegendTextColors(
+    state.environment.scene?.gui?.overlay,
+  );
 
   const controllerPage =
     pageOverride ?? pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
@@ -389,8 +389,10 @@ export function SeismicVolumeLegend({
       }}
       aria-label="Utah FORGE seismic volume legend"
     >
-      <h2 style={titleStyle}>{isVelocity ? "Seismic velocity" : "Seismic amplitude"}</h2>
-      <div style={subtitleStyle}>
+      <h2 style={{ ...titleStyle, color: legendTextColors.heading }}>
+        {isVelocity ? "Seismic velocity" : "Seismic amplitude"}
+      </h2>
+      <div style={{ ...subtitleStyle, color: legendTextColors.subtext }}>
         {displayMode} - {isVelocity ? "interval velocity model" : "source-normalized amplitude"}
       </div>
       <div
@@ -446,12 +448,12 @@ export function SeismicVolumeLegend({
           style={handleStyle(maxPercent, false)}
         />
       </div>
-      <div style={ticksStyle}>
+      <div style={{ ...ticksStyle, color: legendTextColors.body }}>
         <span>{lowTick}</span>
         <span style={{ textAlign: "center" }}>{midTick}</span>
         <span style={{ textAlign: "right" }}>{highTick}</span>
       </div>
-      <div style={footerStyle}>
+      <div style={{ ...footerStyle, color: legendTextColors.subtext }}>
         {selectedProductInfo.label}
         {isVelocity ? (
           <>
@@ -461,7 +463,7 @@ export function SeismicVolumeLegend({
         ) : null}
       </div>
       <div style={fineControlsStyle}>
-        <label style={fineControlLabelStyle}>
+        <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
           Opacity {Math.round(opacity * 100)}%
           <input
             data-testid="seismic-legend-opacity"
@@ -474,7 +476,7 @@ export function SeismicVolumeLegend({
             style={sliderStyle(opacity, 0, 1)}
           />
         </label>
-        <label style={fineControlLabelStyle}>
+        <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
           Gain {gamma.toFixed(2)}
           <input
             data-testid="seismic-legend-gamma"
@@ -489,7 +491,7 @@ export function SeismicVolumeLegend({
             style={sliderStyle(gamma, 0.35, 2.5)}
           />
         </label>
-        <label style={fineControlLabelStyle}>
+        <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
           Steps {Math.round(sampleSteps)}
           <input
             data-testid="seismic-legend-sample-steps"
@@ -508,11 +510,12 @@ export function SeismicVolumeLegend({
         </label>
       </div>
       <div style={{ ...fineControlsStyle, gridTemplateColumns: "1fr 1fr" }}>
-        <label style={fineControlLabelStyle}>
+        <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
           Palette
           <select
             data-testid="seismic-legend-palette"
             value={palette}
+            style={{ color: legendTextColors.body }}
             onChange={(event) =>
               patchStyle({
                 seismicColormap:
@@ -527,7 +530,7 @@ export function SeismicVolumeLegend({
             <option value="velocity">Velocity</option>
           </select>
         </label>
-        <label style={fineControlLabelStyle}>
+        <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
           Zero mute {backgroundCutoff.toFixed(2)}
           <input
             data-testid="seismic-legend-background-cutoff"
@@ -548,11 +551,8 @@ export function SeismicVolumeLegend({
       </div>
       <label
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          marginTop: 9,
-          color: vibrancySecondaryLabel,
+          ...legendControlRowStyle(),
+          color: legendTextColors.body,
           fontSize: 10,
         }}
       >
@@ -563,6 +563,9 @@ export function SeismicVolumeLegend({
           onChange={(event) =>
             patchStyle({ seismicRemoveBackground: event.target.checked })
           }
+          style={legendCheckboxStyle(removeBackground, {
+            checkedColor: legendTextColors.heading,
+          })}
         />
         Remove neutral background
       </label>

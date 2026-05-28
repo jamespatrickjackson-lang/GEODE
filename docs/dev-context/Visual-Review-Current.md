@@ -19,16 +19,17 @@ narrow patch
 ## Current Visual Contract
 
 - Goal: make Utah FORGE visual/topo/editor changes converge by direct human review before slow smoke tests.
-- Current focus: editor sidebar structure, global settings/toolset containers, Page Manager spacing, and lightweight viewport legends.
+- Current focus: editor sidebar structure, global settings/toolset containers, Page Manager spacing, lightweight viewport legends, and next-pass legend panel behavior.
 - Accepted decisions:
   - Top-level editor containers are peers when they represent real workflows or tools.
   - Container shape, fill, spacing, and contrast should come from shared editor tokens.
   - Page Manager keeps compact page-list spacing; full-panel end padding belongs to the scroll extent.
   - Viewport legends should be lightweight overlays unless a specific tool requires a card/backplate.
+  - Viewport legend edge anchoring, stack spacing, circular toggle rows, overlay text-color mapping, slider variables, and MT ramp handle sizes are captured in `docs/dev-context/UI-Visual-Standards.md`.
   - Human visual judgment is the first acceptance filter for composition.
 - Still wrong / under review:
   - Final sidebar polish and toolset grouping remain iterative.
-  - Legend spacing/background should be visually checked in current Utah FORGE scenes before broader regression.
+  - Legend panel behavior has a first implementation pass: sequenced per-container left slide, row gap closure after exit, row opening before entry, and MT resistivity fixed at the bottom. It remains under human visual review.
 - Do not revisit unless asked:
   - Intake directives or intake drops for normal software-build work.
   - Full broad Utah FORGE smoke runs during visual iteration.

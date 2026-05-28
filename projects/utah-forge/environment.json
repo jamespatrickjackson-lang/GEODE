@@ -517,7 +517,6 @@
       },
       "sceneSectionGroundTraceVisible": true,
       "sceneSectionAxesVisible": true,
-      "sceneSectionHelperVisible": true,
       "sceneSectionLegendVisible": true,
       "affectedByFog": false,
       "showLabels": false
@@ -2043,7 +2042,6 @@
           },
           "sceneSectionGroundTraceVisible": true,
           "sceneSectionAxesVisible": true,
-          "sceneSectionHelperVisible": true,
           "sceneSectionLegendVisible": true,
           "sceneSectionPlanes": {
             "x": {

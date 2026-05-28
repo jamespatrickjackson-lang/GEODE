@@ -10,10 +10,13 @@ import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import {
   FROSTED_HAIRLINE,
   TECHNICAL_MONO_FONT,
-  vibrancyLabel,
-  vibrancySecondaryLabel,
 } from "../editor/styles";
-import { transparentLegendPanelStyle } from "./legendStyles";
+import {
+  LEGEND_BOTTOM_EDGE_OFFSET_PX,
+  LEGEND_PAGE_EDGE_MARGIN_PX,
+  resolveLegendTextColors,
+  transparentLegendPanelStyle,
+} from "./legendStyles";
 import { effectiveStyle, effectiveVisibility } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
@@ -43,15 +46,21 @@ const rootBaseStyle: CSSProperties = {
 
 const titleStyle: CSSProperties = {
   margin: 0,
-  color: vibrancyLabel,
   fontSize: 12,
   lineHeight: 1.15,
   fontWeight: 700,
 };
 
+const headerRowStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "baseline",
+  flexWrap: "wrap",
+  columnGap: 10,
+  rowGap: 2,
+};
+
 const subtitleStyle: CSSProperties = {
-  marginTop: 5,
-  color: vibrancySecondaryLabel,
+  margin: 0,
   fontSize: 10,
   lineHeight: 1.25,
 };
@@ -66,8 +75,8 @@ const rampStyle: CSSProperties = {
 
 const rampWrapStyle: CSSProperties = {
   position: "relative",
-  height: 23,
-  marginTop: 10,
+  height: 28,
+  marginTop: 18,
   touchAction: "none",
 };
 
@@ -84,7 +93,6 @@ const ticksStyle: CSSProperties = {
   gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
   gap: 8,
   marginTop: 8,
-  color: vibrancySecondaryLabel,
   fontSize: 10,
   lineHeight: 1.25,
   fontVariantNumeric: "tabular-nums",
@@ -98,13 +106,6 @@ const tickRightStyle: CSSProperties = {
   textAlign: "right",
 };
 
-const fineControlsStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-  gap: 8,
-  marginTop: 10,
-};
-
 const targetSelectorStyle: CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit, minmax(74px, 1fr))",
@@ -116,7 +117,6 @@ const targetButtonBaseStyle: CSSProperties = {
   border: "1px solid rgba(255, 255, 255, 0.18)",
   borderRadius: 6,
   background: "rgba(255, 255, 255, 0.07)",
-  color: vibrancySecondaryLabel,
   fontFamily: TECHNICAL_MONO_FONT,
   fontSize: 9,
   lineHeight: 1.1,
@@ -126,10 +126,11 @@ const targetButtonBaseStyle: CSSProperties = {
 
 const fineControlLabelStyle: CSSProperties = {
   display: "grid",
-  gap: 4,
-  color: vibrancySecondaryLabel,
+  justifyItems: "center",
+  gap: 2,
   fontSize: 9,
   lineHeight: 1.1,
+  textAlign: "center",
 };
 
 const fineControlRangeStyle: CSSProperties = {
@@ -146,7 +147,6 @@ const edgePopoverStyle: CSSProperties = {
   zIndex: 8,
   padding: 12,
   boxSizing: "border-box",
-  color: vibrancyLabel,
   background: "rgba(12, 15, 18, 0.88)",
   border: FROSTED_HAIRLINE,
   borderRadius: 8,
@@ -161,7 +161,6 @@ const edgePopoverHeaderStyle: CSSProperties = {
   justifyContent: "space-between",
   gap: 10,
   marginBottom: 10,
-  color: vibrancyLabel,
   fontSize: 10,
   fontWeight: 700,
 };
@@ -180,7 +179,6 @@ const closeButtonStyle: CSSProperties = {
   border: "1px solid rgba(255, 255, 255, 0.24)",
   borderRadius: 6,
   background: "rgba(255, 255, 255, 0.08)",
-  color: vibrancySecondaryLabel,
   fontFamily: TECHNICAL_MONO_FONT,
   fontSize: 9,
   padding: "3px 7px",
@@ -285,13 +283,15 @@ const SCALAR_LEGEND_SLIDE_FIELDS: readonly (keyof EditableStyle)[] = [
   "scalarNoiseThreshold",
 ];
 
-function spectralHandleStyle(leftPercent: number, inner: boolean): CSSProperties {
+function spectralHandleStyle(leftPercent: number, trimHandle: boolean): CSSProperties {
+  const width = 5;
+  const height = trimHandle ? 16 : 14;
   return {
     position: "absolute",
     left: `${leftPercent}%`,
-    top: 0,
-    width: 7,
-    height: 20,
+    top: 20 - height,
+    width,
+    height,
     borderRadius: 999,
     transform: "translateX(-50%)",
     background: LEGEND_HANDLE_FILL,
@@ -299,7 +299,7 @@ function spectralHandleStyle(leftPercent: number, inner: boolean): CSSProperties
     padding: 0,
     cursor: "ew-resize",
     pointerEvents: "auto",
-    zIndex: inner ? 4 : 3,
+    zIndex: trimHandle ? 4 : 3,
     boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.32)",
     touchAction: "none",
   };
@@ -492,6 +492,11 @@ function scalarLegendLayerSubtitle(layer: ScalarLegendLayer): string {
   return "Point preview";
 }
 
+function scalarLegendSubtitleLine(layer: ScalarLegendLayer): string {
+  if (layer === "volume") return "Scalar - log10";
+  return `${scalarLegendLayerSubtitle(layer)} - log10 resistivity`;
+}
+
 function activeScalarLayers(visible: Set<string>): ScalarLegendLayer[] {
   const layers: ScalarLegendLayer[] = [];
   if (visible.has(MT_RESISTIVITY_FULL_DENSITY_LAYER_ID)) {
@@ -542,6 +547,9 @@ export function ResistivityLegend({
     };
   }, [edgePopoverOpen]);
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
+  const legendTextColors = resolveLegendTextColors(
+    state.environment.scene?.gui?.overlay,
+  );
 
   const controllerPage =
     pageOverride ?? pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
@@ -566,9 +574,6 @@ export function ResistivityLegend({
     selectedLayer && visibleScalarLayers.includes(selectedLayer)
       ? selectedLayer
       : visibleScalarLayers[0] ?? null;
-  const gui = state.environment.scene?.gui ?? {};
-  const navigator = gui.navigator ?? {};
-  const inset = navigator.useOverride === true ? navigator.bottom ?? 34 : 34;
   if (!activeLayer) {
     return null;
   }
@@ -874,17 +879,6 @@ export function ResistivityLegend({
   );
   const testId = (id: string): string | undefined =>
     testIdsEnabled ? id : undefined;
-  const volumeOpacity = clamp(styleNumber(style, "scalarVolumeOpacity", 0.48), 0, 1);
-  const volumeDensity = clamp(styleNumber(style, "scalarVolumeDensity", 0.72), 0, 2);
-  const volumeSamples = clamp(styleNumber(style, "scalarVolumeSampleSteps", 112), 24, 192);
-  const setVolumePatch = (patch: Partial<EditableStyle>) => {
-    sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
-    if (editingEnvironment) {
-      setEnvLayerStyle(layerId, patch);
-    } else {
-      setPageLayerOverride(page.id, layerId, patch);
-    }
-  };
   return (
     <aside
       ref={rootRef}
@@ -892,13 +886,20 @@ export function ResistivityLegend({
         ...rootBaseStyle,
         ...(stacked
           ? { position: "relative" }
-          : { left: inset, bottom: inset + 34 }),
+          : {
+              left: LEGEND_PAGE_EDGE_MARGIN_PX,
+              bottom: LEGEND_BOTTOM_EDGE_OFFSET_PX,
+            }),
       }}
       aria-label="Utah FORGE MT resistivity color legend"
     >
-      <h2 style={titleStyle}>MT resistivity</h2>
-      <div style={subtitleStyle}>
-        {scalarLegendLayerSubtitle(activeLayer)} - log10 resistivity
+      <div style={headerRowStyle}>
+        <h2 style={{ ...titleStyle, color: legendTextColors.heading }}>
+          MT resistivity
+        </h2>
+        <div style={{ ...subtitleStyle, color: legendTextColors.subtext }}>
+          {scalarLegendSubtitleLine(activeLayer)}
+        </div>
       </div>
       {visibleScalarLayers.length > 1 ? (
         <div style={targetSelectorStyle} aria-label="MT resistivity legend target">
@@ -920,7 +921,9 @@ export function ResistivityLegend({
                   background: selected
                     ? "rgba(255, 255, 255, 0.18)"
                     : targetButtonBaseStyle.background,
-                  color: selected ? vibrancyLabel : vibrancySecondaryLabel,
+                  color: selected
+                    ? legendTextColors.heading
+                    : legendTextColors.body,
                 }}
               >
                 {scalarLegendLayerLabel(layer)}
@@ -1054,7 +1057,7 @@ export function ResistivityLegend({
           style={edgeHandleStyle(edgeUpperPercent, edgeUpperColor)}
         />
       </div>
-      <div style={ticksStyle}>
+      <div style={{ ...ticksStyle, color: legendTextColors.body }}>
         <div>
           <strong>{formatLogValue(colorMin)}</strong>
           <br />
@@ -1080,22 +1083,29 @@ export function ResistivityLegend({
             ...edgePopoverStyle,
             left: edgePopoverPosition.left,
             top: edgePopoverPosition.top,
+            color: legendTextColors.body,
           }}
           data-testid={testId("resistivity-legend-edge-popout")}
           onPointerDown={(event) => event.stopPropagation()}
         >
-          <div style={edgePopoverHeaderStyle}>
+          <div style={{ ...edgePopoverHeaderStyle, color: legendTextColors.heading }}>
             <span>Iso line</span>
             <button
               type="button"
-              style={closeButtonStyle}
+              style={{ ...closeButtonStyle, color: legendTextColors.body }}
               onClick={() => setEdgePopoverOpen(false)}
             >
               Close
             </button>
           </div>
           <div style={edgePopoverGridStyle}>
-            <label style={{ ...fineControlLabelStyle, ...edgePopoverFullRowStyle }}>
+            <label
+              style={{
+                ...fineControlLabelStyle,
+                ...edgePopoverFullRowStyle,
+                color: legendTextColors.body,
+              }}
+            >
               Fill {edgeFillOffset === 0 ? "0%" : `${Math.round(edgeFillOffset * 100)}%`}
               <input
                 type="range"
@@ -1118,12 +1128,13 @@ export function ResistivityLegend({
                 style={edgeFillRangeStyle(edgeFillOffset)}
               />
             </label>
-            <label style={fineControlLabelStyle}>
+            <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
               Style
               <select
                 value={edgeLineStyle}
                 data-testid={testId("resistivity-legend-edge-line-style")}
                 title="Iso line style"
+                style={{ color: legendTextColors.body }}
                 onPointerDown={(event) => event.stopPropagation()}
                 onChange={(event) =>
                   setScalarRenderPatch({
@@ -1136,7 +1147,7 @@ export function ResistivityLegend({
                 <option value="dashed">Dashed</option>
               </select>
             </label>
-            <label style={fineControlLabelStyle}>
+            <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
               Line {edgeLineWidth.toFixed(1)}px
               <input
                 type="range"
@@ -1159,7 +1170,7 @@ export function ResistivityLegend({
                 style={fineControlRangeStyle}
               />
             </label>
-            <label style={fineControlLabelStyle}>
+            <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
               Avg {Math.round(edgeAverage * 100)}%
               <input
                 type="range"
@@ -1183,7 +1194,13 @@ export function ResistivityLegend({
               />
             </label>
             {thresholdControlsActive ? (
-              <label style={{ ...fineControlLabelStyle, ...edgePopoverFullRowStyle }}>
+              <label
+                style={{
+                  ...fineControlLabelStyle,
+                  ...edgePopoverFullRowStyle,
+                  color: legendTextColors.body,
+                }}
+              >
                 Noise {Math.round(noiseThreshold * 100)}%
                 <input
                   type="range"
@@ -1213,86 +1230,6 @@ export function ResistivityLegend({
             document.body,
           )
         : null}
-      {activeLayer === "volume" ? (
-        <>
-          <div style={fineControlsStyle}>
-            <label style={fineControlLabelStyle}>
-              Opac {Math.round(volumeOpacity * 100)}%
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.01}
-                value={volumeOpacity}
-                data-testid={testId("resistivity-legend-volume-opacity")}
-                title="Volume opacity"
-                onPointerDown={(event) => event.stopPropagation()}
-                onChange={(event) =>
-                  setVolumePatch({
-                    scalarVolumeOpacity: clamp(
-                      Number.parseFloat(event.currentTarget.value),
-                      0,
-                      1,
-                    ),
-                    opacity: clamp(
-                      Number.parseFloat(event.currentTarget.value),
-                      0,
-                      1,
-                    ),
-                  })
-                }
-                style={fineControlRangeStyle}
-              />
-            </label>
-            <label style={fineControlLabelStyle}>
-              Dens {volumeDensity.toFixed(2)}
-              <input
-                type="range"
-                min={0}
-                max={2}
-                step={0.01}
-                value={volumeDensity}
-                data-testid={testId("resistivity-legend-volume-density")}
-                title="Volume density"
-                onPointerDown={(event) => event.stopPropagation()}
-                onChange={(event) =>
-                  setVolumePatch({
-                    scalarVolumeDensity: clamp(
-                      Number.parseFloat(event.currentTarget.value),
-                      0,
-                      2,
-                    ),
-                  })
-                }
-                style={fineControlRangeStyle}
-              />
-            </label>
-            <label style={fineControlLabelStyle}>
-              Steps {Math.round(volumeSamples)}
-              <input
-                type="range"
-                min={24}
-                max={192}
-                step={4}
-                value={volumeSamples}
-                data-testid={testId("resistivity-legend-volume-samples")}
-                title="Raymarch sample steps"
-                onPointerDown={(event) => event.stopPropagation()}
-                onChange={(event) =>
-                  setVolumePatch({
-                    scalarVolumeSampleSteps: clamp(
-                      Number.parseFloat(event.currentTarget.value),
-                      24,
-                      192,
-                    ),
-                  })
-                }
-                style={fineControlRangeStyle}
-              />
-            </label>
-          </div>
-        </>
-      ) : null}
     </aside>
   );
 }

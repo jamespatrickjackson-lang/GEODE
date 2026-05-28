@@ -24,7 +24,11 @@ export const CLASSIFICATIONS = [
 
 export const CONFIDENTIALITIES = ["public", "private"] as const;
 
-export type LayerDataSection = "public" | "publicTopo" | "customer";
+export type LayerDataSection =
+  | "public"
+  | "publicTopo"
+  | "sectionsCropping"
+  | "customer";
 
 export const SURFACE_GRADIENT_FIELDS = [
   "surfaceGradientLowColor",
@@ -368,7 +372,6 @@ export const UTAH_FORGE_PUBLIC_LAYER_GROUPS = [
   {
     title: "Site Details",
     ids: [
-      UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
       UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
       UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
     ],
@@ -395,6 +398,12 @@ export const UTAH_FORGE_PUBLIC_LAYER_GROUPS = [
     ids: ["utah-forge-reference-stage"],
   },
 ] as const satisfies readonly LayerGroupDef[];
+export const UTAH_FORGE_SECTIONS_CROPPING_LAYER_GROUPS = [
+  {
+    title: "Working area",
+    ids: [UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID],
+  },
+] as const satisfies readonly LayerGroupDef[];
 export const PUBLIC_TOPO_LAYER_GROUP_TITLE = "Topo Settings";
 export const UTAH_FORGE_CUSTOMER_LAYER_GROUPS =
   [] as const satisfies readonly LayerGroupDef[];
@@ -412,6 +421,9 @@ export const CUSTOMER_LAYER_IDS: Set<string> = new Set(
     ...CASE_STUDY_B_CUSTOMER_LAYER_GROUPS,
     ...UTAH_FORGE_CUSTOMER_LAYER_GROUPS,
   ].flatMap((group) => group.ids),
+);
+export const SECTIONS_CROPPING_LAYER_IDS: Set<string> = new Set(
+  UTAH_FORGE_SECTIONS_CROPPING_LAYER_GROUPS.flatMap((group) => group.ids),
 );
 
 export const LINE_WIDTH_LAYER_DEFAULTS: Record<string, number> = {
@@ -521,6 +533,7 @@ export function labelPointerVisibleControlValue(style: EditableStyle): boolean {
 
 export function layerDataSection(layer: ProjectLayerSpec): LayerDataSection {
   if (isTopoMapLayer(layer)) return "publicTopo";
+  if (SECTIONS_CROPPING_LAYER_IDS.has(layer.id)) return "sectionsCropping";
   if (PUBLIC_LAYER_IDS.has(layer.id)) return "public";
   if (CUSTOMER_LAYER_IDS.has(layer.id)) return "customer";
 
