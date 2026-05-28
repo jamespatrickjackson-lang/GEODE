@@ -20,8 +20,27 @@ import { UTAH_FORGE_MT_STATIONS_LAYER_ID } from "./projectModules/utahForge/laye
 // Z-up convention for the whole scene.
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
-const CAMERA_NEAR_M = 5;
-const CAMERA_FAR_M = 5_000_000;
+const CAMERA_NEAR_M = 50;
+const CAMERA_FAR_M = 1_000_000;
+
+type SceneDepthBufferMode = "reverse" | "logarithmic" | "standard";
+
+function browserSupportsReverseDepthBuffer(): boolean {
+  const canvas = document.createElement("canvas");
+  const gl = canvas.getContext("webgl2");
+  if (!gl) return false;
+  const supported = !!gl.getExtension("EXT_clip_control");
+  gl.getExtension("WEBGL_lose_context")?.loseContext();
+  return supported;
+}
+
+function sceneDepthBufferMode(
+  renderer: THREE.WebGLRenderer,
+): SceneDepthBufferMode {
+  if (renderer.capabilities.reverseDepthBuffer) return "reverse";
+  if (renderer.capabilities.logarithmicDepthBuffer) return "logarithmic";
+  return "standard";
+}
 
 export interface DrillFocus {
   holeId: string;
@@ -108,10 +127,15 @@ export function mountScene(
   layerSpecs: ProjectLayerSpec[],
   sceneOverlays: Record<string, SceneOverlayDef> = {},
 ): SceneHandle {
+  const useReverseDepthBuffer = browserSupportsReverseDepthBuffer();
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     powerPreference: "high-performance",
+    reverseDepthBuffer: useReverseDepthBuffer,
+    logarithmicDepthBuffer: !useReverseDepthBuffer,
   });
+  const depthBufferMode = sceneDepthBufferMode(renderer);
+  renderer.domElement.dataset.depthBufferMode = depthBufferMode;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(container.clientWidth, container.clientHeight);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -1293,9 +1317,15 @@ export function mountScene(
   (window as unknown as { __scene?: unknown }).__scene = {
     scene,
     camera,
+    controls,
     renderer,
     manager,
     post,
+    depthBufferMode,
+    cameraClip: {
+      near: CAMERA_NEAR_M,
+      far: CAMERA_FAR_M,
+    },
   };
 
   return {

@@ -62,17 +62,17 @@
       "sceneSectionEnabled": true,
       "sceneSectionActiveAxis": "x",
       "sceneSectionWindowEnabled": true,
-      "sceneSectionWindowActiveAxis": "x",
+      "sceneSectionWindowActiveAxis": "y",
       "sceneSectionWindowByAxis": {
         "x": {
-          "minAlongM": -49109.66796010506,
-          "maxAlongM": -14216.341507179926,
+          "minAlongM": -52100,
+          "maxAlongM": 22900,
           "bottomElevationM": -14609.101887030438
         },
         "y": {
-          "minAlongM": -118667.98253963646,
-          "maxAlongM": 34046.04347254154,
-          "bottomElevationM": -25000
+          "minAlongM": -56400,
+          "maxAlongM": 61100,
+          "bottomElevationM": -15000
         }
       },
       "sceneSectionPlanes": {
@@ -92,7 +92,11 @@
           "invert": false
         }
       },
-      "sceneSectionHelperVisible": true
+      "sceneSectionHelperVisible": true,
+      "sceneSectionMode": "cutaway",
+      "sceneSectionTargetScope": "all-visible",
+      "sceneSectionGroundTraceVisible": true,
+      "sceneSectionAxesVisible": true
     },
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "mtThresholdSurfaceVisibility": {
@@ -149,7 +153,8 @@
           "source": "precomputed"
         }
       },
-      "mtThresholdSurfaceMetalness": 0.31
+      "mtThresholdSurfaceMetalness": 0.31,
+      "opacity": 1
     },
     "utah-forge-site-boundary": {
       "color": "#47c299"
@@ -162,6 +167,7 @@
   "visibilityOverrides": {
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-phase3-seismic-browser": true,
-    "utah-forge-mt-resistivity-full-density": false
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-topo-graticule": false
   }
 }

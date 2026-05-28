@@ -7,6 +7,7 @@ export const SURFACE_RENDER_ORDER = {
   boundaryLine: 13.1,
   depthOccluder: 12.7,
   photoOverlayPreview: 13.2,
+  sectionIsoOverlay: 13.4,
 } as const;
 
 export const SURFACE_PREVIEW_DEPTH_POLICY = {
@@ -35,6 +36,7 @@ export const PHOTO_OVERLAY_PREVIEW_POLICY = {
 
 export const MT_THRESHOLD_SURFACE_POLICY = {
   name: "solid-mt-threshold-surface-preview",
+  opaqueOpacityThreshold: 0.999,
   material: {
     opacity: 0.86,
     roughness: 0.64,
@@ -42,6 +44,46 @@ export const MT_THRESHOLD_SURFACE_POLICY = {
     emissiveIntensity: 0.08,
     polygonOffsetFactor: -2,
     polygonOffsetUnits: -2,
+  },
+} as const;
+
+export function applyMtThresholdSurfaceMaterialOpacity(
+  material: THREE.Material,
+  opacity: number,
+  wireframe: boolean,
+  preserveBase: boolean,
+): void {
+  const next = THREE.MathUtils.clamp(
+    Number.isFinite(opacity) ? opacity : MT_THRESHOLD_SURFACE_POLICY.material.opacity,
+    0,
+    1,
+  );
+  const opaque =
+    !wireframe && next >= MT_THRESHOLD_SURFACE_POLICY.opaqueOpacityThreshold;
+  material.opacity = opaque ? 1 : next;
+  material.transparent = !opaque;
+  material.depthTest = true;
+  material.depthWrite = opaque;
+  material.userData.preserveMaterialOpacity = true;
+  material.userData.mtThresholdSurfaceEffectiveOpacity = material.opacity;
+  material.userData.mtThresholdSurfaceOpaque = opaque;
+  if (preserveBase) {
+    material.userData.preserveMaterialOpacityBase = material.opacity;
+  }
+  material.needsUpdate = true;
+}
+
+export const SECTION_ISO_OVERLAY_POLICY = {
+  name: "section-iso-overlay",
+  liftM: 18,
+  lineWidthMPerPx: 45,
+  renderOrder: SURFACE_RENDER_ORDER.sectionIsoOverlay,
+  material: {
+    bandDepthTest: true,
+    lineDepthTest: false,
+    depthWrite: false,
+    polygonOffsetFactor: -4,
+    polygonOffsetUnits: -4,
   },
 } as const;
 
@@ -75,7 +117,7 @@ export function createMtThresholdSurfaceMaterial(): THREE.MeshStandardMaterial {
     transparent: true,
     opacity: MT_THRESHOLD_SURFACE_POLICY.material.opacity,
     depthTest: true,
-    depthWrite: true,
+    depthWrite: false,
     side: THREE.DoubleSide,
     roughness: MT_THRESHOLD_SURFACE_POLICY.material.roughness,
     metalness: MT_THRESHOLD_SURFACE_POLICY.material.metalness,
@@ -89,6 +131,12 @@ export function createMtThresholdSurfaceMaterial(): THREE.MeshStandardMaterial {
   });
   material.userData.preserveVertexColors = true;
   material.userData.surfaceRenderPolicy = MT_THRESHOLD_SURFACE_POLICY.name;
+  applyMtThresholdSurfaceMaterialOpacity(
+    material,
+    MT_THRESHOLD_SURFACE_POLICY.material.opacity,
+    false,
+    true,
+  );
   return material;
 }
 

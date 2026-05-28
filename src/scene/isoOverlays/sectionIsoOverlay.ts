@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { SECTION_ISO_OVERLAY_POLICY } from "../../loaders/surfaceRenderPolicy";
 import { disposeObjectTree } from "../disposeObjectTree";
 import {
   deterministicScalarSample,
@@ -10,11 +11,12 @@ import { scalarColorAt, seismicColorAt } from "../styles/colorScales";
 
 type SceneSectionAxis = "x" | "y" | "z";
 
-const SECTION_ISO_RENDER_ORDER = 7.15;
-const SECTION_ISO_LIFT_M = 18;
-const SECTION_ISO_LINE_WIDTH_M_PER_PX = 45;
-const SECTION_ISO_MAX_TRIANGLES = 24_000;
-const SECTION_ISO_MAX_RIBBON_SEGMENTS = 24_000;
+const SECTION_ISO_RENDER_ORDER = SECTION_ISO_OVERLAY_POLICY.renderOrder;
+const SECTION_ISO_LINE_RENDER_ORDER = SECTION_ISO_RENDER_ORDER + 0.05;
+const SECTION_ISO_LIFT_M = SECTION_ISO_OVERLAY_POLICY.liftM;
+const SECTION_ISO_LINE_WIDTH_M_PER_PX =
+  SECTION_ISO_OVERLAY_POLICY.lineWidthMPerPx;
+const SECTION_ISO_MAX_RIBBON_SEGMENTS = 48_000;
 
 function clamp01(v: number): number {
   return Math.min(1, Math.max(0, v));
@@ -390,6 +392,201 @@ function farthestIsoPair(
   return bestDistance > 1 ? [bestA, bestB] : null;
 }
 
+type SectionIsoContourSegment = {
+  a: THREE.Vector3;
+  b: THREE.Vector3;
+  normal: THREE.Vector3;
+  level: number;
+};
+
+type SectionIsoContourNode = {
+  key: string;
+  point: THREE.Vector3;
+  count: number;
+  segmentIds: number[];
+};
+
+type SectionIsoPolyline = {
+  points: THREE.Vector3[];
+  normal: THREE.Vector3;
+  level: number;
+};
+
+function sectionIsoSnapTolerance(
+  position: THREE.BufferAttribute,
+): number {
+  const bounds = new THREE.Box3();
+  const point = new THREE.Vector3();
+  for (let i = 0; i < position.count; i += 1) {
+    point.set(position.getX(i), position.getY(i), position.getZ(i));
+    bounds.expandByPoint(point);
+  }
+  if (bounds.isEmpty()) return 1;
+  const diagonal = bounds.getSize(new THREE.Vector3()).length();
+  return clampRange(diagonal * 0.00001, 1, 90);
+}
+
+function sectionIsoPointKey(point: THREE.Vector3, toleranceM: number): string {
+  return [
+    Math.round(point.x / toleranceM),
+    Math.round(point.y / toleranceM),
+    Math.round(point.z / toleranceM),
+  ].join(":");
+}
+
+function sectionIsoPolylineLength(points: THREE.Vector3[]): number {
+  let length = 0;
+  for (let i = 1; i < points.length; i += 1) {
+    length += points[i - 1].distanceTo(points[i]);
+  }
+  return length;
+}
+
+function sectionIsoPointLineDistance(
+  point: THREE.Vector3,
+  start: THREE.Vector3,
+  end: THREE.Vector3,
+): number {
+  const segment = end.clone().sub(start);
+  const lengthSq = segment.lengthSq();
+  if (lengthSq <= 0.000001) return point.distanceTo(start);
+  const t = clampRange(point.clone().sub(start).dot(segment) / lengthSq, 0, 1);
+  return point.distanceTo(start.clone().addScaledVector(segment, t));
+}
+
+function simplifySectionIsoPolyline(
+  points: THREE.Vector3[],
+  toleranceM: number,
+): THREE.Vector3[] {
+  if (points.length <= 2) return points.map((point) => point.clone());
+  const keep = new Uint8Array(points.length);
+  keep[0] = 1;
+  keep[points.length - 1] = 1;
+  const stack: Array<[number, number]> = [[0, points.length - 1]];
+  while (stack.length > 0) {
+    const [startIndex, endIndex] = stack.pop()!;
+    let bestIndex = -1;
+    let bestDistance = 0;
+    for (let i = startIndex + 1; i < endIndex; i += 1) {
+      const distance = sectionIsoPointLineDistance(
+        points[i],
+        points[startIndex],
+        points[endIndex],
+      );
+      if (distance > bestDistance) {
+        bestDistance = distance;
+        bestIndex = i;
+      }
+    }
+    if (bestIndex >= 0 && bestDistance > toleranceM) {
+      keep[bestIndex] = 1;
+      stack.push([startIndex, bestIndex], [bestIndex, endIndex]);
+    }
+  }
+  return points.filter((_, index) => keep[index] === 1).map((point) => point.clone());
+}
+
+function stitchSectionIsoSegments(
+  segments: SectionIsoContourSegment[],
+  toleranceM: number,
+  minPolylineLengthM: number,
+): SectionIsoPolyline[] {
+  type SegmentRecord = SectionIsoContourSegment & {
+    aKey: string;
+    bKey: string;
+  };
+  const nodes = new Map<string, SectionIsoContourNode>();
+  const nodeFor = (point: THREE.Vector3): SectionIsoContourNode => {
+    const key = sectionIsoPointKey(point, toleranceM);
+    let node = nodes.get(key);
+    if (!node) {
+      node = {
+        key,
+        point: point.clone(),
+        count: 1,
+        segmentIds: [],
+      };
+      nodes.set(key, node);
+      return node;
+    }
+    node.point
+      .multiplyScalar(node.count)
+      .add(point)
+      .multiplyScalar(1 / (node.count + 1));
+    node.count += 1;
+    return node;
+  };
+  const records: SegmentRecord[] = segments.map((segment, segmentId) => {
+    const aNode = nodeFor(segment.a);
+    const bNode = nodeFor(segment.b);
+    aNode.segmentIds.push(segmentId);
+    bNode.segmentIds.push(segmentId);
+    return {
+      ...segment,
+      aKey: aNode.key,
+      bKey: bNode.key,
+    };
+  });
+  const visited = new Uint8Array(records.length);
+  const nextUnvisitedSegment = (nodeKey: string): number => {
+    const node = nodes.get(nodeKey);
+    if (!node) return -1;
+    for (const segmentId of node.segmentIds) {
+      if (visited[segmentId] === 0) return segmentId;
+    }
+    return -1;
+  };
+  const extendPolyline = (
+    points: THREE.Vector3[],
+    usedSegmentIds: number[],
+    startKey: string,
+    append: boolean,
+  ): void => {
+    let currentKey = startKey;
+    while (true) {
+      const nextId = nextUnvisitedSegment(currentKey);
+      if (nextId < 0) return;
+      visited[nextId] = 1;
+      usedSegmentIds.push(nextId);
+      const record = records[nextId];
+      const nextKey = record.aKey === currentKey ? record.bKey : record.aKey;
+      const nextNode = nodes.get(nextKey);
+      if (!nextNode) return;
+      if (append) points.push(nextNode.point.clone());
+      else points.unshift(nextNode.point.clone());
+      currentKey = nextKey;
+      if (points.length > records.length + 2) return;
+    }
+  };
+
+  const polylines: SectionIsoPolyline[] = [];
+  for (let segmentId = 0; segmentId < records.length; segmentId += 1) {
+    if (visited[segmentId] !== 0) continue;
+    const record = records[segmentId];
+    const aNode = nodes.get(record.aKey);
+    const bNode = nodes.get(record.bKey);
+    if (!aNode || !bNode) continue;
+    visited[segmentId] = 1;
+    const points = [aNode.point.clone(), bNode.point.clone()];
+    const usedSegmentIds = [segmentId];
+    extendPolyline(points, usedSegmentIds, record.bKey, true);
+    extendPolyline(points, usedSegmentIds, record.aKey, false);
+    if (points.length < 2 || sectionIsoPolylineLength(points) < minPolylineLengthM) {
+      continue;
+    }
+    const normal = new THREE.Vector3();
+    for (const usedId of usedSegmentIds) normal.add(records[usedId].normal);
+    normal.normalize();
+    if (normal.lengthSq() < 0.000001) normal.copy(record.normal);
+    polylines.push({
+      points,
+      normal,
+      level: record.level,
+    });
+  }
+  return polylines;
+}
+
 function appendSectionIsoRibbonSegment(
   positions: number[],
   colors: number[],
@@ -399,14 +596,14 @@ function appendSectionIsoRibbonSegment(
   normal: THREE.Vector3,
   color: THREE.Color,
   halfWidthM: number,
-): void {
-  if (positions.length / 12 >= SECTION_ISO_MAX_RIBBON_SEGMENTS) return;
+): boolean {
+  if (positions.length / 12 >= SECTION_ISO_MAX_RIBBON_SEGMENTS) return false;
   const direction = b.clone().sub(a);
   const length = direction.length();
-  if (length < 1) return;
+  if (length < 1) return false;
   direction.multiplyScalar(1 / length);
   const side = direction.clone().cross(normal).normalize();
-  if (side.lengthSq() < 0.000001) return;
+  if (side.lengthSq() < 0.000001) return false;
   side.multiplyScalar(halfWidthM);
   const lift = normal.clone().multiplyScalar(SECTION_ISO_LIFT_M);
   const p0 = a.clone().add(lift).add(side);
@@ -432,54 +629,69 @@ function appendSectionIsoRibbonSegment(
     colors.push(color.r, color.g, color.b);
   }
   indices.push(base, base + 1, base + 2, base + 2, base + 1, base + 3);
+  return true;
 }
 
-function appendSectionIsoRibbon(
+function appendSectionIsoPolylineRibbon(
   positions: number[],
   colors: number[],
   indices: number[],
-  a: THREE.Vector3,
-  b: THREE.Vector3,
+  points: THREE.Vector3[],
   normal: THREE.Vector3,
   color: THREE.Color,
   halfWidthM: number,
   dashed: boolean,
 ): void {
+  if (points.length < 2) return;
   if (!dashed) {
-    appendSectionIsoRibbonSegment(
-      positions,
-      colors,
-      indices,
-      a,
-      b,
-      normal,
-      color,
-      halfWidthM,
-    );
+    for (let i = 1; i < points.length; i += 1) {
+      appendSectionIsoRibbonSegment(
+        positions,
+        colors,
+        indices,
+        points[i - 1],
+        points[i],
+        normal,
+        color,
+        halfWidthM,
+      );
+      if (positions.length / 12 >= SECTION_ISO_MAX_RIBBON_SEGMENTS) return;
+    }
     return;
   }
-  const length = a.distanceTo(b);
-  if (length < 1) return;
-  const direction = b
-    .clone()
-    .sub(a)
-    .multiplyScalar(1 / length);
   const dashLength = Math.max(halfWidthM * 8, 220);
   const gapLength = Math.max(halfWidthM * 4, 140);
   const cycle = dashLength + gapLength;
-  for (let start = 0; start < length; start += cycle) {
-    const end = Math.min(start + dashLength, length);
-    if (end <= start) continue;
-    appendSectionIsoRibbonSegment(
-      positions,
-      colors,
-      indices,
-      a.clone().addScaledVector(direction, start),
-      a.clone().addScaledVector(direction, end),
-      normal,
-      color,
-      halfWidthM,
-    );
+  let traveled = 0;
+  for (let i = 1; i < points.length; i += 1) {
+    const a = points[i - 1];
+    const b = points[i];
+    const length = a.distanceTo(b);
+    if (length < 1) continue;
+    const direction = b.clone().sub(a).multiplyScalar(1 / length);
+    let offset = 0;
+    while (offset < length) {
+      const cyclePosition = traveled % cycle;
+      const inDash = cyclePosition < dashLength;
+      const boundary = inDash ? dashLength : cycle;
+      const step = Math.min(length - offset, boundary - cyclePosition);
+      if (step <= 0.0001) break;
+      if (inDash) {
+        appendSectionIsoRibbonSegment(
+          positions,
+          colors,
+          indices,
+          a.clone().addScaledVector(direction, offset),
+          a.clone().addScaledVector(direction, offset + step),
+          normal,
+          color,
+          halfWidthM,
+        );
+        if (positions.length / 12 >= SECTION_ISO_MAX_RIBBON_SEGMENTS) return;
+      }
+      offset += step;
+      traveled += step;
+    }
   }
 }
 
@@ -496,12 +708,6 @@ function buildSectionIsoLineGeometry(
     : Array.from({ length: position.count }, (_, i) => i);
   const triangleLimit = sourceIndex.length - (sourceIndex.length % 3);
   if (triangleLimit <= 0) return null;
-  const triangleCount = triangleLimit / 3;
-  const triangleStride = Math.max(
-    1,
-    Math.ceil(triangleCount / SECTION_ISO_MAX_TRIANGLES),
-  );
-
   const levels = sectionIsoLevels(
     options.isoMin,
     options.isoMax,
@@ -514,6 +720,7 @@ function buildSectionIsoLineGeometry(
   const positions: number[] = [];
   const colors: number[] = [];
   const indices: number[] = [];
+  const segmentsByLevel = new Map<number, SectionIsoContourSegment[]>();
   const intersections: THREE.Vector3[] = [];
   const triangleA = new THREE.Vector3();
   const triangleB = new THREE.Vector3();
@@ -521,12 +728,26 @@ function buildSectionIsoLineGeometry(
   const normal = new THREE.Vector3();
   const color = new THREE.Color();
   const dashed = options.lineStyle === "dashed";
+  const snapToleranceM = sectionIsoSnapTolerance(position);
+  const minSegmentLengthM = Math.max(1, snapToleranceM * 1.25);
+  const minPolylineLengthM = Math.max(halfWidthM * 0.5, snapToleranceM * 2);
+  const simplifyToleranceM = Math.max(snapToleranceM * 0.65, halfWidthM * 0.12);
+  let sourceSegmentCount = 0;
+  let tinySegmentCount = 0;
 
-  triangleLoop: for (let i = 0; i < triangleLimit; i += 3 * triangleStride) {
+  for (let i = 0; i < triangleLimit; i += 3) {
     const ia = sourceIndex[i];
     const ib = sourceIndex[i + 1];
     const ic = sourceIndex[i + 2];
     if (sectionIsoTriangleSuppressed(options.alphaValues, ia, ib, ic)) continue;
+    const va = values[ia];
+    const vb = values[ib];
+    const vc = values[ic];
+    if (!Number.isFinite(va) || !Number.isFinite(vb) || !Number.isFinite(vc)) {
+      continue;
+    }
+    const minValue = Math.min(va, vb, vc);
+    const maxValue = Math.max(va, vb, vc);
     triangleA.set(position.getX(ia), position.getY(ia), position.getZ(ia));
     triangleB.set(position.getX(ib), position.getY(ib), position.getZ(ib));
     triangleC.set(position.getX(ic), position.getY(ic), position.getZ(ic));
@@ -538,6 +759,7 @@ function buildSectionIsoLineGeometry(
     if (normal.lengthSq() < 0.000001) continue;
 
     for (const level of levels) {
+      if (level < minValue || level > maxValue) continue;
       sectionIsoTriangleIntersections(
         position,
         values,
@@ -549,20 +771,60 @@ function buildSectionIsoLineGeometry(
       );
       const pair = farthestIsoPair(intersections);
       if (!pair) continue;
+      const segmentLength = pair[0].distanceTo(pair[1]);
+      if (segmentLength < minSegmentLengthM) {
+        tinySegmentCount += 1;
+        continue;
+      }
+      sourceSegmentCount += 1;
+      let segments = segmentsByLevel.get(level);
+      if (!segments) {
+        segments = [];
+        segmentsByLevel.set(level, segments);
+      }
+      segments.push({
+        a: pair[0].clone(),
+        b: pair[1].clone(),
+        normal: normal.clone(),
+        level,
+      });
+    }
+  }
+
+  let polylineCount = 0;
+  let simplifiedPointCount = 0;
+  polylineLoop: for (const [level, segments] of segmentsByLevel) {
+    const polylines = stitchSectionIsoSegments(
+      segments,
+      snapToleranceM,
+      minPolylineLengthM,
+    );
+    for (const polyline of polylines) {
+      const simplified = simplifySectionIsoPolyline(
+        polyline.points,
+        simplifyToleranceM,
+      );
+      if (
+        simplified.length < 2 ||
+        sectionIsoPolylineLength(simplified) < minPolylineLengthM
+      ) {
+        continue;
+      }
       sectionIsoColorAt(level, options, color);
-      appendSectionIsoRibbon(
+      polylineCount += 1;
+      simplifiedPointCount += simplified.length;
+      appendSectionIsoPolylineRibbon(
         positions,
         colors,
         indices,
-        pair[0],
-        pair[1],
-        normal,
+        simplified,
+        polyline.normal,
         color,
         halfWidthM,
         dashed,
       );
       if (positions.length / 12 >= SECTION_ISO_MAX_RIBBON_SEGMENTS) {
-        break triangleLoop;
+        break polylineLoop;
       }
     }
   }
@@ -575,6 +837,13 @@ function buildSectionIsoLineGeometry(
   );
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   geometry.setIndex(indices);
+  geometry.userData.sectionIsoRenderPolicy = SECTION_ISO_OVERLAY_POLICY.name;
+  geometry.userData.sectionIsoSourceSegmentCount = sourceSegmentCount;
+  geometry.userData.sectionIsoTinySegmentCount = tinySegmentCount;
+  geometry.userData.sectionIsoPolylineCount = polylineCount;
+  geometry.userData.sectionIsoSimplifiedPointCount = simplifiedPointCount;
+  geometry.userData.sectionIsoRibbonSegmentCount = positions.length / 12;
+  geometry.userData.sectionIsoSnapToleranceM = snapToleranceM;
   geometry.computeBoundingSphere();
   return geometry;
 }
@@ -585,14 +854,16 @@ function makeSectionIsoBandMaterial(
   const fillOffset = clampRange(options.fillOffset, -1, 1);
   const material = new THREE.ShaderMaterial({
     transparent: true,
-    depthTest: true,
-    depthWrite: false,
+    depthTest: SECTION_ISO_OVERLAY_POLICY.material.bandDepthTest,
+    depthWrite: SECTION_ISO_OVERLAY_POLICY.material.depthWrite,
     side: THREE.DoubleSide,
     toneMapped: false,
     fog: false,
     polygonOffset: true,
-    polygonOffsetFactor: -4,
-    polygonOffsetUnits: -4,
+    polygonOffsetFactor:
+      SECTION_ISO_OVERLAY_POLICY.material.polygonOffsetFactor,
+    polygonOffsetUnits:
+      SECTION_ISO_OVERLAY_POLICY.material.polygonOffsetUnits,
     uniforms: {
       uIsoMin: { value: options.isoMin },
       uIsoMax: { value: options.isoMax },
@@ -622,6 +893,7 @@ function makeSectionIsoBandMaterial(
       uHighColor: { value: options.highColor.clone() },
     },
     vertexShader: `
+      #include <logdepthbuf_pars_vertex>
       attribute float sectionIsoScalar;
       attribute float sectionIsoAlpha;
       uniform float uLiftM;
@@ -632,9 +904,11 @@ function makeSectionIsoBandMaterial(
         vSectionIsoAlpha = sectionIsoAlpha;
         vec3 lifted = position + normal * uLiftM;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(lifted, 1.0);
+        #include <logdepthbuf_vertex>
       }
     `,
     fragmentShader: `
+      #include <logdepthbuf_pars_fragment>
       varying float vSectionIsoScalar;
       varying float vSectionIsoAlpha;
       uniform float uIsoMin;
@@ -711,12 +985,14 @@ function makeSectionIsoBandMaterial(
         if (abs(uFillOffset) > 0.0001) {
           color = mix(color, uFillOffset < 0.0 ? vec3(1.0) : vec3(0.0), abs(uFillOffset));
         }
+        #include <logdepthbuf_fragment>
         gl_FragColor = vec4(color, uOpacity * saturate(vSectionIsoAlpha));
       }
     `,
   });
   material.userData.ignoreLayerStyle = true;
   material.userData.scalarSectionIsoOverlay = true;
+  material.userData.surfaceRenderPolicy = SECTION_ISO_OVERLAY_POLICY.name;
   return material;
 }
 
@@ -753,6 +1029,7 @@ function buildSectionIsoBandMesh(
   mesh.renderOrder = SECTION_ISO_RENDER_ORDER;
   mesh.userData.ignoreLayerStyle = true;
   mesh.userData.scalarSectionIsoOverlay = true;
+  mesh.userData.surfaceRenderPolicy = SECTION_ISO_OVERLAY_POLICY.name;
   if (options.skipSceneSectionClipping) {
     mesh.userData.sceneSectionHelper = true;
     if (mesh.material instanceof THREE.Material) {
@@ -803,19 +1080,22 @@ export function updateScalarSectionIsoOverlay(
         transparent: true,
         opacity: 0.96,
         vertexColors: true,
-        depthTest: true,
-        depthWrite: false,
+        depthTest: SECTION_ISO_OVERLAY_POLICY.material.lineDepthTest,
+        depthWrite: SECTION_ISO_OVERLAY_POLICY.material.depthWrite,
         toneMapped: false,
         fog: false,
         side: THREE.DoubleSide,
       });
       lineMaterial.userData.ignoreLayerStyle = true;
       lineMaterial.userData.scalarSectionIsoOverlay = true;
+      lineMaterial.userData.surfaceRenderPolicy =
+        SECTION_ISO_OVERLAY_POLICY.name;
       const line = new THREE.Mesh(lineGeometry, lineMaterial);
       line.name = "scalar-section-iso-line-overlay";
-      line.renderOrder = SECTION_ISO_RENDER_ORDER + 0.05;
+      line.renderOrder = SECTION_ISO_LINE_RENDER_ORDER;
       line.userData.ignoreLayerStyle = true;
       line.userData.scalarSectionIsoOverlay = true;
+      line.userData.surfaceRenderPolicy = SECTION_ISO_OVERLAY_POLICY.name;
       if (options.skipSceneSectionClipping) {
         line.userData.sceneSectionHelper = true;
         lineMaterial.userData.sceneSectionHelper = true;

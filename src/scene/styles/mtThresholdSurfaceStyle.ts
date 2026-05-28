@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { applyMtThresholdSurfaceMaterialOpacity } from "../../loaders/surfaceRenderPolicy";
 import type { EditableStyle } from "../../pages/types";
 import { UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID } from "../../projectModules/utahForge/layerIds";
 import { resolveMtSurfaceBoundaries } from "../../projectModules/utahForge/mtSurfaceBoundaries";
@@ -123,13 +124,19 @@ export function applyMtThresholdSurfaceStyle(this: any, id: string, style: Edita
         );
       }
       m.side = side;
-      m.opacity = wireframe
+      const boundaryOpacity = boundary?.opacity ?? 1;
+      const effectiveOpacity = wireframe
         ? wireframeOpacity
-        : opacity * (boundary?.opacity ?? 1);
-      m.transparent = true;
-      m.depthWrite = !wireframe;
-      m.depthTest = true;
-      m.needsUpdate = true;
+        : opacity * boundaryOpacity;
+      applyMtThresholdSurfaceMaterialOpacity(
+        m,
+        effectiveOpacity,
+        wireframe,
+        true,
+      );
+      m.userData.mtThresholdSurfaceMasterOpacity = opacity;
+      m.userData.mtThresholdSurfaceBoundaryOpacity = boundaryOpacity;
+      m.userData.mtThresholdSurfaceWireframe = wireframe;
     }
   });
 }

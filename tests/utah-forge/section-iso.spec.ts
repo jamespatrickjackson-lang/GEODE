@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  changedByteCount,
   hidePublicContextLayers,
   mtVolumeSceneState,
   openForgeDataEditorContainers,
@@ -504,6 +505,121 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
   const volumeIsoState = await sectionIsoSceneState(page, "mt-volume-cuts");
   expect(volumeIsoState.lineOverlayCount).toBeGreaterThan(0);
   expect(volumeIsoState.bandOverlayCount).toBeGreaterThan(0);
+  expect(volumeIsoState.firstLineMaterial).toMatchObject({
+    depthTest: false,
+    depthWrite: false,
+    surfaceRenderPolicy: "section-iso-overlay",
+  });
+  expect(volumeIsoState.firstBandMaterial).toMatchObject({
+    depthTest: true,
+    depthWrite: false,
+    surfaceRenderPolicy: "section-iso-overlay",
+  });
+  expect(volumeIsoState.firstLineMaterial?.renderOrder ?? 0).toBeGreaterThan(
+    volumeIsoState.firstBandMaterial?.renderOrder ?? 0,
+  );
+  expect(volumeIsoState.firstBandMaterial?.renderOrder ?? 0).toBeGreaterThan(
+    13.2,
+  );
+  expect(
+    volumeIsoState.firstLineGeometryMetrics?.sourceSegmentCount ?? 0,
+  ).toBeGreaterThan(0);
+  expect(
+    volumeIsoState.firstLineGeometryMetrics?.polylineCount ?? 0,
+  ).toBeGreaterThan(0);
+  expect(
+    volumeIsoState.firstLineGeometryMetrics?.polylineCount ?? Number.MAX_VALUE,
+  ).toBeLessThan(
+    volumeIsoState.firstLineGeometryMetrics?.sourceSegmentCount ?? 0,
+  );
+  expect(
+    volumeIsoState.firstLineGeometryMetrics?.tinySegmentCount ?? 0,
+  ).toBeLessThan(
+    volumeIsoState.firstLineGeometryMetrics?.sourceSegmentCount ?? 1,
+  );
+  await page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          camera?: {
+            position: { set: (x: number, y: number, z: number) => void };
+          };
+          controls?: {
+            target: { set: (x: number, y: number, z: number) => void };
+            update: () => void;
+          };
+          manager?: {
+            getLayer?: (id: string) => { visible: boolean } | undefined;
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
+        };
+      }
+    ).__scene;
+    const threshold = sceneHandle?.manager?.getLayer?.(
+      "utah-forge-mt-resistivity-threshold-surfaces",
+    );
+    if (threshold) threshold.visible = true;
+    sceneHandle?.manager?.applyStyle?.(
+      "utah-forge-mt-resistivity-threshold-surfaces",
+      {
+        opacity: 0.86,
+        mtIsosurfaceProductId: "mt-isosurface-forge-focused",
+        mtThresholdSurfaceVisibility: {
+          "conductive-le-10-ohm-m": false,
+          "conductive-le-30-ohm-m": true,
+          "resistive-ge-1000-ohm-m": true,
+        },
+        mtThresholdSurfaceWireframe: false,
+        mtThresholdSurfaceSide: "double",
+      },
+    );
+    sceneHandle?.camera?.position.set(-92_000, 158_000, 46_000);
+    sceneHandle?.controls?.target.set(-4_000, -6_000, -18_000);
+    sceneHandle?.controls?.update();
+  });
+  await expect
+    .poll(() =>
+      mtVolumeSceneState(page).then((state) => ({
+        thresholdLayerVisible: state.thresholdLayerVisible,
+        thresholdDepthWrite: state.thresholdMaterial?.depthWrite,
+        thresholdDepthTest: state.thresholdMaterial?.depthTest,
+      })),
+    )
+    .toEqual({
+      thresholdLayerVisible: true,
+      thresholdDepthWrite: false,
+      thresholdDepthTest: true,
+    });
+  await page.waitForTimeout(900);
+  const settledBeforeMoveCanvas = await page.locator("canvas").screenshot();
+  await page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          camera?: {
+            position: { set: (x: number, y: number, z: number) => void };
+          };
+          controls?: { update: () => void };
+        };
+      }
+    ).__scene;
+    sceneHandle?.camera?.position.set(-99_000, 151_000, 50_000);
+    sceneHandle?.controls?.update();
+  });
+  await page.waitForTimeout(150);
+  const movingCanvas = await page.locator("canvas").screenshot();
+  expect(
+    changedByteCount(settledBeforeMoveCanvas, movingCanvas),
+  ).toBeGreaterThan(200);
+  await page.waitForTimeout(1_600);
+  const settledAfterMoveCanvasA = await page.locator("canvas").screenshot();
+  await page.waitForTimeout(700);
+  const settledAfterMoveCanvasB = await page.locator("canvas").screenshot();
+  expect(
+    changedByteCount(settledAfterMoveCanvasA, settledAfterMoveCanvasB),
+  ).toBeLessThan(
+    Math.max(5_000, Math.floor(settledAfterMoveCanvasA.length * 0.02)),
+  );
   expect(volumeIsoState.firstBandUniforms).toMatchObject({
     opacity: 0.36,
     fillOffset: -0.15,

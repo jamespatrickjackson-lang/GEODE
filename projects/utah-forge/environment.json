@@ -480,12 +480,12 @@
       "sceneSectionActiveAxis": "x",
       "sceneSectionPlanes": {
         "x": {
-          "enabled": true,
+          "enabled": false,
           "positionM": -5753.338077166321,
           "invert": false
         },
         "y": {
-          "enabled": true,
+          "enabled": false,
           "positionM": -14276.695748094688,
           "invert": false
         },
@@ -2047,12 +2047,12 @@
           "sceneSectionLegendVisible": true,
           "sceneSectionPlanes": {
             "x": {
-              "enabled": true,
+              "enabled": false,
               "positionM": -5753.338077166321,
               "invert": false
             },
             "y": {
-              "enabled": true,
+              "enabled": false,
               "positionM": -14276.695748094688,
               "invert": false
             },

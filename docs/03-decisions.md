@@ -533,3 +533,13 @@ Each decision records:
 **Why:** Phase 1 of the 2026-05-26 agent-slowness audit shipped a coordinated update to the agent operating contracts (root + nested files for both Claude Code and Codex CLI). Under the previous classifier those files split across three categories (`entry-routing-docs`, `app-code`, `other`), so the commit policy rejected the focused change. Treating operating-contract files as one category lets coordinated agent-context updates ship as a single focused commit.
 
 **Trade-off accepted:** Subsequent agent-context edits will need to keep agent-instruction changes separate from runtime, app-code, snapshot, or docs work to stay inside the policy's two-category WARN allowance. New nested `CLAUDE.md` or `AGENTS.md` files anywhere in the tree are automatically grouped under this category.
+
+## DEC-052 - MT section ISO overlays and threshold surfaces use separate render policies
+
+**Considered:** stabilize section ISO / threshold-surface intersections by making threshold surfaces permanently transparent, or split the rendering policy between overlay readability and surface opacity semantics.
+
+**Chose:** section ISO lines render as a late overlay for readability, while MT threshold surfaces keep true material opacity semantics. Fully opaque threshold surfaces render as opaque depth-writing solids; translucent threshold surfaces render as transparent non-depth-writing solids.
+
+**Why:** Utah FORGE section ISO lines must stay visually stable at surface intersections, but surface-boundary editor controls must still support full opacity and per-boundary opacity changes.
+
+**Trade-off accepted:** Section ISO line overlays intentionally prioritize readable contours over strict physical occlusion at intersections. Opaque threshold surfaces still write depth for normal surface rendering.

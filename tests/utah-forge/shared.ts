@@ -43,6 +43,68 @@ export function changedByteCount(before: Buffer, after: Buffer): number {
   return changedBytes;
 }
 
+export type SceneRendererState = {
+  depthBufferMode: string | null;
+  canvasDepthBufferMode: string | null;
+  reverseDepthBuffer: boolean | null;
+  logarithmicDepthBuffer: boolean | null;
+  cameraNear: number | null;
+  cameraFar: number | null;
+};
+
+export async function sceneRendererState(
+  page: Page,
+): Promise<SceneRendererState> {
+  return page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          depthBufferMode?: unknown;
+          camera?: { near?: unknown; far?: unknown };
+          cameraClip?: { near?: unknown; far?: unknown };
+          renderer?: {
+            domElement?: { dataset?: Record<string, string | undefined> };
+            capabilities?: {
+              reverseDepthBuffer?: unknown;
+              logarithmicDepthBuffer?: unknown;
+            };
+          };
+        };
+      }
+    ).__scene;
+    return {
+      depthBufferMode:
+        typeof sceneHandle?.depthBufferMode === "string"
+          ? sceneHandle.depthBufferMode
+          : null,
+      canvasDepthBufferMode:
+        sceneHandle?.renderer?.domElement?.dataset?.depthBufferMode ?? null,
+      reverseDepthBuffer:
+        typeof sceneHandle?.renderer?.capabilities?.reverseDepthBuffer ===
+        "boolean"
+          ? sceneHandle.renderer.capabilities.reverseDepthBuffer
+          : null,
+      logarithmicDepthBuffer:
+        typeof sceneHandle?.renderer?.capabilities?.logarithmicDepthBuffer ===
+        "boolean"
+          ? sceneHandle.renderer.capabilities.logarithmicDepthBuffer
+          : null,
+      cameraNear:
+        typeof sceneHandle?.camera?.near === "number"
+          ? sceneHandle.camera.near
+          : typeof sceneHandle?.cameraClip?.near === "number"
+            ? sceneHandle.cameraClip.near
+            : null,
+      cameraFar:
+        typeof sceneHandle?.camera?.far === "number"
+          ? sceneHandle.camera.far
+          : typeof sceneHandle?.cameraClip?.far === "number"
+            ? sceneHandle.cameraClip.far
+            : null,
+    };
+  });
+}
+
 type MtFullDensityManifest = {
   attributes?: {
     scalar?: {
@@ -552,6 +614,24 @@ export type SceneSectionState = {
   } | null;
 };
 
+export type MtThresholdMaterialState = {
+  opacity: number | null;
+  transparent: boolean | null;
+  depthWrite: boolean | null;
+  depthTest: boolean | null;
+  roughness: number | null;
+  metalness: number | null;
+  side: number | null;
+  flatShading: boolean | null;
+  emissiveIntensity: number | null;
+  vertexColors: boolean | null;
+  effectiveOpacity: number | null;
+  masterOpacity: number | null;
+  boundaryOpacity: number | null;
+  preserveOpacityBase: number | null;
+  opaque: boolean | null;
+};
+
 export type MtVolumeSceneState = {
   volumeLayerVisible: boolean;
   selectedProductId: string | null;
@@ -573,18 +653,8 @@ export type MtVolumeSceneState = {
   visibleThresholdSurfaceIds: string[];
   visibleThresholdProductIds: string[];
   thresholdWireframe: boolean | null;
-  thresholdMaterial: {
-    opacity: number | null;
-    transparent: boolean | null;
-    depthWrite: boolean | null;
-    depthTest: boolean | null;
-    roughness: number | null;
-    metalness: number | null;
-    side: number | null;
-    flatShading: boolean | null;
-    emissiveIntensity: number | null;
-    vertexColors: boolean | null;
-  } | null;
+  thresholdMaterial: MtThresholdMaterialState | null;
+  thresholdMaterialsBySurfaceId: Record<string, MtThresholdMaterialState>;
   selectedStationId: string | null;
 };
 
@@ -671,6 +741,26 @@ export type SectionIsoSceneState = {
   bandOverlayCount: number;
   firstSourceOpacity: number | null;
   firstLineVertexCount: number | null;
+  firstLineMaterial: {
+    depthTest: boolean | null;
+    depthWrite: boolean | null;
+    renderOrder: number | null;
+    surfaceRenderPolicy: string | null;
+  } | null;
+  firstLineGeometryMetrics: {
+    sourceSegmentCount: number | null;
+    tinySegmentCount: number | null;
+    polylineCount: number | null;
+    simplifiedPointCount: number | null;
+    ribbonSegmentCount: number | null;
+    snapToleranceM: number | null;
+  } | null;
+  firstBandMaterial: {
+    depthTest: boolean | null;
+    depthWrite: boolean | null;
+    renderOrder: number | null;
+    surfaceRenderPolicy: string | null;
+  } | null;
   firstBandUniforms: {
     isoMin: number | null;
     isoMax: number | null;
@@ -2353,6 +2443,75 @@ export async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState
     const visibleThresholdProductIds = new Set<string>();
     let thresholdWireframe: boolean | null = null;
     let thresholdMaterial: MtVolumeSceneState["thresholdMaterial"] = null;
+    const thresholdMaterialsBySurfaceId: Record<
+      string,
+      NonNullable<MtVolumeSceneState["thresholdMaterial"]>
+    > = {};
+    const readThresholdMaterial = (
+      material: {
+        opacity?: unknown;
+        transparent?: unknown;
+        depthWrite?: unknown;
+        depthTest?: unknown;
+        roughness?: unknown;
+        metalness?: unknown;
+        side?: unknown;
+        flatShading?: unknown;
+        emissiveIntensity?: unknown;
+        vertexColors?: unknown;
+        userData?: Record<string, unknown>;
+      },
+    ): NonNullable<MtVolumeSceneState["thresholdMaterial"]> => ({
+      opacity: typeof material.opacity === "number" ? material.opacity : null,
+      transparent:
+        typeof material.transparent === "boolean"
+          ? material.transparent
+          : null,
+      depthWrite:
+        typeof material.depthWrite === "boolean"
+          ? material.depthWrite
+          : null,
+      depthTest:
+        typeof material.depthTest === "boolean" ? material.depthTest : null,
+      roughness:
+        typeof material.roughness === "number" ? material.roughness : null,
+      metalness:
+        typeof material.metalness === "number" ? material.metalness : null,
+      side: typeof material.side === "number" ? material.side : null,
+      flatShading:
+        typeof material.flatShading === "boolean"
+          ? material.flatShading
+          : null,
+      emissiveIntensity:
+        typeof material.emissiveIntensity === "number"
+          ? material.emissiveIntensity
+          : null,
+      vertexColors:
+        typeof material.vertexColors === "boolean"
+          ? material.vertexColors
+          : null,
+      effectiveOpacity:
+        typeof material.userData?.mtThresholdSurfaceEffectiveOpacity ===
+        "number"
+          ? material.userData.mtThresholdSurfaceEffectiveOpacity
+          : null,
+      masterOpacity:
+        typeof material.userData?.mtThresholdSurfaceMasterOpacity === "number"
+          ? material.userData.mtThresholdSurfaceMasterOpacity
+          : null,
+      boundaryOpacity:
+        typeof material.userData?.mtThresholdSurfaceBoundaryOpacity === "number"
+          ? material.userData.mtThresholdSurfaceBoundaryOpacity
+          : null,
+      preserveOpacityBase:
+        typeof material.userData?.preserveMaterialOpacityBase === "number"
+          ? material.userData.preserveMaterialOpacityBase
+          : null,
+      opaque:
+        typeof material.userData?.mtThresholdSurfaceOpaque === "boolean"
+          ? material.userData.mtThresholdSurfaceOpaque
+          : null,
+    });
     thresholdLayer?.traverse((obj) => {
       if (obj.userData?.mtThresholdSurfacePreview !== true || !obj.visible)
         return;
@@ -2367,38 +2526,12 @@ export async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState
       if (typeof material?.wireframe === "boolean") {
         thresholdWireframe = material.wireframe;
       }
-      if (!thresholdMaterial && material) {
-        thresholdMaterial = {
-          opacity:
-            typeof material.opacity === "number" ? material.opacity : null,
-          transparent:
-            typeof material.transparent === "boolean"
-              ? material.transparent
-              : null,
-          depthWrite:
-            typeof material.depthWrite === "boolean"
-              ? material.depthWrite
-              : null,
-          depthTest:
-            typeof material.depthTest === "boolean" ? material.depthTest : null,
-          roughness:
-            typeof material.roughness === "number" ? material.roughness : null,
-          metalness:
-            typeof material.metalness === "number" ? material.metalness : null,
-          side: typeof material.side === "number" ? material.side : null,
-          flatShading:
-            typeof material.flatShading === "boolean"
-              ? material.flatShading
-              : null,
-          emissiveIntensity:
-            typeof material.emissiveIntensity === "number"
-              ? material.emissiveIntensity
-              : null,
-          vertexColors:
-            typeof material.vertexColors === "boolean"
-              ? material.vertexColors
-              : null,
-        };
+      if (material) {
+        const materialState = readThresholdMaterial(material);
+        if (typeof surfaceId === "string") {
+          thresholdMaterialsBySurfaceId[surfaceId] = materialState;
+        }
+        thresholdMaterial = thresholdMaterial ?? materialState;
       }
     });
     return {
@@ -2416,6 +2549,7 @@ export async function mtVolumeSceneState(page: Page): Promise<MtVolumeSceneState
       visibleThresholdProductIds: Array.from(visibleThresholdProductIds),
       thresholdWireframe,
       thresholdMaterial,
+      thresholdMaterialsBySurfaceId,
       selectedStationId:
         typeof stationLayer?.userData.mtStationQcSelectedStationId === "string"
           ? stationLayer.userData.mtStationQcSelectedStationId
@@ -2858,18 +2992,26 @@ export async function sectionIsoSceneState(
                       traverse?: (
                         fn: (child: {
                           name?: string;
+                          renderOrder?: number;
                           userData?: Record<string, unknown>;
                           geometry?: {
+                            userData?: Record<string, unknown>;
                             getAttribute?: (
                               name: string,
                             ) => { count: number } | undefined;
                           };
                           material?:
                             | {
+                                depthTest?: unknown;
+                                depthWrite?: unknown;
+                                userData?: Record<string, unknown>;
                                 opacity?: unknown;
                                 uniforms?: Record<string, { value: unknown }>;
                               }
                             | Array<{
+                                depthTest?: unknown;
+                                depthWrite?: unknown;
+                                userData?: Record<string, unknown>;
                                 opacity?: unknown;
                                 uniforms?: Record<string, { value: unknown }>;
                               }>;
@@ -2914,6 +3056,10 @@ export async function sectionIsoSceneState(
     let lineOverlayCount = 0;
     let bandOverlayCount = 0;
     let firstLineVertexCount: number | null = null;
+    let firstLineMaterial: SectionIsoSceneState["firstLineMaterial"] = null;
+    let firstLineGeometryMetrics: SectionIsoSceneState["firstLineGeometryMetrics"] =
+      null;
+    let firstBandMaterial: SectionIsoSceneState["firstBandMaterial"] = null;
     let firstBandUniforms: SectionIsoSceneState["firstBandUniforms"] = null;
     let firstSourceOpacity: number | null = null;
     const overlayTargets = new Set<string>();
@@ -2937,6 +3083,41 @@ export async function sectionIsoSceneState(
       }
       if (typeof first.opacity === "number") return first.opacity;
       return null;
+    };
+    const readOverlayMaterial = (
+      material:
+        | {
+            depthTest?: unknown;
+            depthWrite?: unknown;
+            userData?: Record<string, unknown>;
+          }
+        | Array<{
+            depthTest?: unknown;
+            depthWrite?: unknown;
+            userData?: Record<string, unknown>;
+          }>
+        | undefined,
+      renderOrder: unknown,
+    ) => {
+      const first = Array.isArray(material) ? material[0] : material;
+      return {
+        depthTest:
+          typeof first?.depthTest === "boolean" ? first.depthTest : null,
+        depthWrite:
+          typeof first?.depthWrite === "boolean" ? first.depthWrite : null,
+        renderOrder: typeof renderOrder === "number" ? renderOrder : null,
+        surfaceRenderPolicy:
+          typeof first?.userData?.surfaceRenderPolicy === "string"
+            ? first.userData.surfaceRenderPolicy
+            : null,
+      };
+    };
+    const readGeometryNumber = (
+      geometry: { userData?: Record<string, unknown> } | undefined,
+      key: string,
+    ): number | null => {
+      const value = geometry?.userData?.[key];
+      return typeof value === "number" ? value : null;
     };
     const matchesSourceGroup = (obj: {
       visible: boolean;
@@ -2972,17 +3153,25 @@ export async function sectionIsoSceneState(
               traverse?: (
                 fn: (child: {
                   name?: string;
+                  renderOrder?: number;
                   userData?: Record<string, unknown>;
                   geometry?: {
+                    userData?: Record<string, unknown>;
                     getAttribute?: (
                       name: string,
                     ) => { count: number } | undefined;
                   };
                   material?:
                     | {
+                        depthTest?: unknown;
+                        depthWrite?: unknown;
+                        userData?: Record<string, unknown>;
                         uniforms?: Record<string, { value: unknown }>;
                       }
                     | Array<{
+                        depthTest?: unknown;
+                        depthWrite?: unknown;
+                        userData?: Record<string, unknown>;
                         uniforms?: Record<string, { value: unknown }>;
                       }>;
                 }) => void,
@@ -3004,12 +3193,44 @@ export async function sectionIsoSceneState(
               firstLineVertexCount ??
               child.geometry?.getAttribute?.("position")?.count ??
               null;
+            firstLineMaterial =
+              firstLineMaterial ??
+              readOverlayMaterial(child.material, child.renderOrder);
+            firstLineGeometryMetrics = firstLineGeometryMetrics ?? {
+              sourceSegmentCount: readGeometryNumber(
+                child.geometry,
+                "sectionIsoSourceSegmentCount",
+              ),
+              tinySegmentCount: readGeometryNumber(
+                child.geometry,
+                "sectionIsoTinySegmentCount",
+              ),
+              polylineCount: readGeometryNumber(
+                child.geometry,
+                "sectionIsoPolylineCount",
+              ),
+              simplifiedPointCount: readGeometryNumber(
+                child.geometry,
+                "sectionIsoSimplifiedPointCount",
+              ),
+              ribbonSegmentCount: readGeometryNumber(
+                child.geometry,
+                "sectionIsoRibbonSegmentCount",
+              ),
+              snapToleranceM: readGeometryNumber(
+                child.geometry,
+                "sectionIsoSnapToleranceM",
+              ),
+            };
           }
           if (child.name === "scalar-section-iso-band-overlay") {
             bandOverlayCount += 1;
             const material = Array.isArray(child.material)
               ? child.material[0]
               : child.material;
+            firstBandMaterial =
+              firstBandMaterial ??
+              readOverlayMaterial(child.material, child.renderOrder);
             const uniforms = material?.uniforms ?? {};
             firstBandUniforms = firstBandUniforms ?? {
               isoMin:
@@ -3046,6 +3267,9 @@ export async function sectionIsoSceneState(
       bandOverlayCount,
       firstSourceOpacity,
       firstLineVertexCount,
+      firstLineMaterial,
+      firstLineGeometryMetrics,
+      firstBandMaterial,
       firstBandUniforms,
     };
   }, groupFilter);

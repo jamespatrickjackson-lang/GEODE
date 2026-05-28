@@ -65,6 +65,12 @@ and seismic section/volume source opacity must be multiplied by layer/page fade
 opacity, not overwritten by it. This prevents hidden section sources from
 appearing during camera/page transitions.
 
+Current MT threshold-surface rendering separates overlay stability from surface
+opacity semantics. Section ISO lines are late readability overlays, while MT
+threshold surfaces remain editable material surfaces: opacity 1 renders as an
+opaque depth-writing solid, and partial master or per-boundary opacity renders
+as a transparent non-depth-writing surface.
+
 ## Focused Routing
 
 - Workspace state and verification tiers: `docs/dev-context/Verification-Routing.md`

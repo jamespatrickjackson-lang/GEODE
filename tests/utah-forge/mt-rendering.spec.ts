@@ -14,6 +14,7 @@ import {
   pageControllerState,
   readJsonFile,
   runForgeDataTransitionProbe,
+  sceneRendererState,
   seismicSceneState,
   selectForgePageRow,
   selectNextForgePage,
@@ -73,10 +74,17 @@ test("Utah FORGE full-density MT point cloud renders all-valid and thresholded s
   });
 
   await page.goto("/?project=utah-forge", {
-    waitUntil: "domcontentloaded",
+    waitUntil: "networkidle",
   });
-  await expect(page.locator("body")).toContainText("Utah FORGE");
+  await expect(page.locator("body")).toContainText("Utah FORGE", {
+    timeout: 90_000,
+  });
   await expect(page.locator("canvas")).toHaveCount(1);
+  const rendererState = await sceneRendererState(page);
+  expect(rendererState.depthBufferMode).not.toBe("standard");
+  expect(rendererState.canvasDepthBufferMode).toBe(rendererState.depthBufferMode);
+  expect(rendererState.cameraNear).toBeGreaterThanOrEqual(50);
+  expect(rendererState.cameraFar).toBeLessThanOrEqual(1_000_000);
 
   await expect
     .poll(() =>
@@ -234,9 +242,11 @@ test("Utah FORGE data layers follow page camera transitions", async ({
   });
 
   await page.goto("/?project=utah-forge", {
-    waitUntil: "domcontentloaded",
+    waitUntil: "networkidle",
   });
-  await expect(page.locator("body")).toContainText("Utah FORGE");
+  await expect(page.locator("body")).toContainText("Utah FORGE", {
+    timeout: 90_000,
+  });
   await expect(page.locator("canvas")).toHaveCount(1);
   const legend = page
     .locator('[aria-label="Utah FORGE MT resistivity color legend"]')
@@ -426,9 +436,11 @@ test("MT section page transitions do not reveal the hidden volume source", async
   );
 
   await page.goto("/?project=utah-forge", {
-    waitUntil: "domcontentloaded",
+    waitUntil: "networkidle",
   });
-  await expect(page.locator("body")).toContainText("Utah FORGE");
+  await expect(page.locator("body")).toContainText("Utah FORGE", {
+    timeout: 90_000,
+  });
 
   await runForgeDataTransitionProbe(
     page,
@@ -764,7 +776,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   expect(mtVolumeState.thresholdMaterial).toMatchObject({
     opacity: 0.86,
     transparent: true,
-    depthWrite: true,
+    depthWrite: false,
     depthTest: true,
     roughness: 0.58,
     metalness: 0.03,
@@ -772,6 +784,104 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     flatShading: false,
     emissiveIntensity: 0.12,
     vertexColors: true,
+  });
+
+  await page.evaluate(() => {
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
+        };
+      }
+    ).__scene?.manager;
+    manager?.applyStyle?.("utah-forge-mt-resistivity-threshold-surfaces", {
+      opacity: 1,
+      mtIsosurfaceProductId: "mt-isosurface-forge-focused",
+      mtSurfaceBoundaryOrder: [
+        "conductive-le-30-ohm-m",
+        "resistive-ge-1000-ohm-m",
+      ],
+      mtSurfaceBoundariesById: {
+        "conductive-le-30-ohm-m": {
+          visible: true,
+          opacity: 1,
+        },
+        "resistive-ge-1000-ohm-m": {
+          visible: true,
+          opacity: 0.37,
+        },
+      },
+      mtThresholdSurfaceWireframe: false,
+      mtThresholdSurfaceSide: "double",
+      mtThresholdSurfaceSmoothNormals: true,
+    });
+  });
+  mtVolumeState = await mtVolumeSceneState(page);
+  expect(
+    mtVolumeState.thresholdMaterialsBySurfaceId["conductive-le-30-ohm-m"],
+  ).toMatchObject({
+    opacity: 1,
+    transparent: false,
+    depthWrite: true,
+    depthTest: true,
+    effectiveOpacity: 1,
+    masterOpacity: 1,
+    boundaryOpacity: 1,
+    preserveOpacityBase: 1,
+    opaque: true,
+  });
+  expect(
+    mtVolumeState.thresholdMaterialsBySurfaceId["resistive-ge-1000-ohm-m"],
+  ).toMatchObject({
+    opacity: 0.37,
+    transparent: true,
+    depthWrite: false,
+    depthTest: true,
+    effectiveOpacity: 0.37,
+    masterOpacity: 1,
+    boundaryOpacity: 0.37,
+    preserveOpacityBase: 0.37,
+    opaque: false,
+  });
+
+  await page.evaluate(() => {
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
+        };
+      }
+    ).__scene?.manager;
+    manager?.applyStyle?.("utah-forge-mt-resistivity-threshold-surfaces", {
+      opacity: 0.5,
+      mtIsosurfaceProductId: "mt-isosurface-forge-focused",
+      mtSurfaceBoundaryOrder: ["conductive-le-30-ohm-m"],
+      mtSurfaceBoundariesById: {
+        "conductive-le-30-ohm-m": {
+          visible: true,
+          opacity: 0.5,
+        },
+      },
+      mtThresholdSurfaceWireframe: false,
+    });
+  });
+  mtVolumeState = await mtVolumeSceneState(page);
+  expect(
+    mtVolumeState.thresholdMaterialsBySurfaceId["conductive-le-30-ohm-m"],
+  ).toMatchObject({
+    opacity: 0.25,
+    transparent: true,
+    depthWrite: false,
+    depthTest: true,
+    effectiveOpacity: 0.25,
+    masterOpacity: 0.5,
+    boundaryOpacity: 0.5,
+    preserveOpacityBase: 0.25,
+    opaque: false,
   });
 
   await page.evaluate(() => {

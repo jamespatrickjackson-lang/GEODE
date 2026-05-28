@@ -24,7 +24,11 @@ import type { GeologyHandle } from "../loaders/loadGeology";
 import {
   setDistanceAttenuatedLineWidth,
 } from "../loaders/topoLineMaterial";
-import { SURFACE_RENDER_ORDER } from "../loaders/surfaceRenderPolicy";
+import {
+  applyMtThresholdSurfaceMaterialOpacity,
+  MT_THRESHOLD_SURFACE_POLICY,
+  SURFACE_RENDER_ORDER,
+} from "../loaders/surfaceRenderPolicy";
 import type { SceneOverlayDef } from "../pages/types";
 import { disposeObjectTree } from "./disposeObjectTree";
 import {
@@ -962,9 +966,21 @@ export class SceneManager {
           ? clamp01(productBase * next)
           : next;
         this.baseOpacityForMaterial(m);
-        m.opacity = materialOpacity;
-        m.transparent =
-          m.userData?.forceTransparent === true || materialOpacity < 1;
+        if (
+          m.userData?.surfaceRenderPolicy === MT_THRESHOLD_SURFACE_POLICY.name
+        ) {
+          applyMtThresholdSurfaceMaterialOpacity(
+            m,
+            materialOpacity,
+            "wireframe" in m &&
+              (m as THREE.Material & { wireframe?: boolean }).wireframe === true,
+            false,
+          );
+        } else {
+          m.opacity = materialOpacity;
+          m.transparent =
+            m.userData?.forceTransparent === true || materialOpacity < 1;
+        }
         if (m instanceof THREE.ShaderMaterial && m.uniforms.uOpacity) {
           m.uniforms.uOpacity.value = materialOpacity;
         }
