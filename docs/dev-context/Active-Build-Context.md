@@ -60,16 +60,30 @@ cell-center model unless they are explicitly labeled presentation crops.
 
 Current transition work is product-aware. Page navigation should treat visible
 render entities as `layer id + product/object id + section state`, not just
-layer ids. Product-owned shader opacity such as MT scalar-volume source opacity
-and seismic section/volume source opacity must be multiplied by layer/page fade
-opacity, not overwritten by it. This prevents hidden section sources from
-appearing during camera/page transitions.
+layer ids. Product-owned shader opacity such as MT scalar-volume source opacity,
+seismic section/volume source opacity, and Section ISO overlay opacity must be
+composed with layer/page fade opacity, not overwritten by it. This prevents
+hidden section sources from appearing during camera/page transitions and keeps
+ISO overlays from changing color or brightness mid-transition.
 
 Current MT threshold-surface rendering separates overlay stability from surface
 opacity semantics. Section ISO lines are late readability overlays, while MT
 threshold surfaces remain editable material surfaces: opacity 1 renders as an
 opaque depth-writing solid, and partial master or per-boundary opacity renders
 as a transparent non-depth-writing surface.
+
+Current topo/graticule rendering treats longitude/latitude graticules as
+reference geometry on the topo surface. Graticule lines depth-test against
+terrain and scene geometry, do not write depth, and should not render as
+through-scene white overlays. Edge-aware graticule behavior clips interior grid
+lines near the topo boundary; it must not recolor interior grid lines to edge
+colors, apply a directional edge-gradient fade, or draw long through-page edge
+leaders. Short white edge leaders are allowed as boundary cues, must attach to
+the same boundary-side crossing used by the edge label, and remain hard-clipped
+to the public surface clip. Edge leaders are capped boundary ticks, not full
+label-offset extensions, and topo graticule lines/labels are excluded from
+scene-section clipping. Terrain underside grid helpers use camera-side hysteresis
+so they do not chatter during small camera movements.
 
 Camera far-plane clipping is not a visual crop. Topo imagery, terrain context,
 and longitude/latitude graticules must remain inside the scene frustum during

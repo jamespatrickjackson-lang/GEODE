@@ -99,6 +99,9 @@ export function transitionEffectiveLayersForPage(this: any,
     };
     this.sceneSectionHelperTransitionOpacity =
       this.sceneSectionHelperOpacityForTween(this.sceneSectionStyleTween, 0);
+    if (sceneSectionDiscreteChanged) {
+      this.beginSceneSectionHelperTransitionSnapshot?.(now, duration, easing);
+    }
   }
 
   this.sceneSectionReapplySuspended = true;

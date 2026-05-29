@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { appAssetUrl } from "../projects/projectPathsRuntime";
 
+const SCENE_SECTION_SHADER_SLOT_COUNT = 8;
+
 type Vec3 = [number, number, number];
 
 interface SeismicBounds {
@@ -175,6 +177,24 @@ function seismicColor(t: number, colormap = "blue-white-red"): THREE.Color {
   );
 }
 
+function sceneSectionVectorSlots(): THREE.Vector3[] {
+  return Array.from(
+    { length: SCENE_SECTION_SHADER_SLOT_COUNT },
+    () => new THREE.Vector3(),
+  );
+}
+
+function sceneSectionVector4Slots(): THREE.Vector4[] {
+  return Array.from(
+    { length: SCENE_SECTION_SHADER_SLOT_COUNT },
+    () => new THREE.Vector4(-250000, 250000, -250000, 250000),
+  );
+}
+
+function sceneSectionNumberSlots(value: number): number[] {
+  return Array.from({ length: SCENE_SECTION_SHADER_SLOT_COUNT }, () => value);
+}
+
 function sectionVertexShader(): string {
   return `
 attribute float seismicAlpha;
@@ -200,10 +220,15 @@ uniform float uOpacity;
 uniform int uSceneSectionEnabled;
 uniform int uSceneSectionMode;
 uniform int uSceneSectionPlaneCount;
-uniform vec3 uSceneSectionNormals[3];
-uniform float uSceneSectionPositions[3];
-uniform float uSceneSectionThickness[3];
-uniform int uSceneSectionInvert[3];
+uniform vec3 uSceneSectionNormals[8];
+uniform float uSceneSectionPositions[8];
+uniform float uSceneSectionThickness[8];
+uniform int uSceneSectionInvert[8];
+uniform float uSceneSectionPlaneOutsideOpacity[8];
+uniform int uSceneSectionFrameCount;
+uniform int uSceneSectionFrameAxes[8];
+uniform vec4 uSceneSectionFrameBounds[8];
+uniform float uSceneSectionFrameOutsideOpacity[8];
 uniform int uWorkingAreaFocusEnabled;
 uniform vec3 uWorkingAreaFocusBoundsMin;
 uniform vec3 uWorkingAreaFocusBoundsMax;
@@ -212,18 +237,30 @@ varying vec3 vColor;
 varying float vAlpha;
 varying vec3 vWorldPosition;
 
-bool sceneSectionAllows(vec3 position) {
-  if (uSceneSectionEnabled == 0) return true;
-  for (int i = 0; i < 3; i += 1) {
+float sceneSectionAlpha(vec3 position) {
+  if (uSceneSectionEnabled == 0) return 1.0;
+  float alpha = 1.0;
+  for (int i = 0; i < 8; i += 1) {
     if (i >= uSceneSectionPlaneCount) break;
     vec3 normal = normalize(uSceneSectionNormals[i]);
     float distance = dot(position, normal) - uSceneSectionPositions[i];
     if (uSceneSectionInvert[i] == 1) distance = -distance;
     if (distance > 0.0) {
-      return false;
+      alpha = min(alpha, clamp(uSceneSectionPlaneOutsideOpacity[i], 0.0, 1.0));
     }
   }
-  return true;
+  for (int i = 0; i < 8; i += 1) {
+    if (i >= uSceneSectionFrameCount) break;
+    int axis = uSceneSectionFrameAxes[i];
+    vec4 bounds = uSceneSectionFrameBounds[i];
+    float a = axis == 0 ? position.y : position.x;
+    float b = axis == 2 ? position.y : position.z;
+    bool inside = a >= bounds.x && a <= bounds.y && b >= bounds.z && b <= bounds.w;
+    if (!inside) {
+      alpha = min(alpha, clamp(uSceneSectionFrameOutsideOpacity[i], 0.0, 1.0));
+    }
+  }
+  return alpha;
 }
 
 float workingAreaFocusAlpha(vec3 position) {
@@ -235,8 +272,9 @@ float workingAreaFocusAlpha(vec3 position) {
 }
 
 void main() {
-  if (!sceneSectionAllows(vWorldPosition)) discard;
-  float alpha = clamp(vAlpha * uOpacity, 0.0, 1.0) * workingAreaFocusAlpha(vWorldPosition);
+  float sectionAlpha = sceneSectionAlpha(vWorldPosition);
+  if (sectionAlpha <= 0.0001) discard;
+  float alpha = clamp(vAlpha * uOpacity, 0.0, 1.0) * workingAreaFocusAlpha(vWorldPosition) * sectionAlpha;
   if (alpha <= 0.01) discard;
   gl_FragColor = vec4(vColor, alpha);
 }
@@ -378,12 +416,15 @@ async function buildSectionMesh(
       uSceneSectionEnabled: { value: 0 },
       uSceneSectionMode: { value: 0 },
       uSceneSectionPlaneCount: { value: 0 },
-      uSceneSectionNormals: {
-        value: [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()],
-      },
-      uSceneSectionPositions: { value: [0, 0, 0] },
-      uSceneSectionThickness: { value: [1, 1, 1] },
-      uSceneSectionInvert: { value: [0, 0, 0] },
+      uSceneSectionNormals: { value: sceneSectionVectorSlots() },
+      uSceneSectionPositions: { value: sceneSectionNumberSlots(0) },
+      uSceneSectionThickness: { value: sceneSectionNumberSlots(1) },
+      uSceneSectionInvert: { value: sceneSectionNumberSlots(0) },
+      uSceneSectionPlaneOutsideOpacity: { value: sceneSectionNumberSlots(1) },
+      uSceneSectionFrameCount: { value: 0 },
+      uSceneSectionFrameAxes: { value: sceneSectionNumberSlots(0) },
+      uSceneSectionFrameBounds: { value: sceneSectionVector4Slots() },
+      uSceneSectionFrameOutsideOpacity: { value: sceneSectionNumberSlots(1) },
       uWorkingAreaFocusEnabled: { value: 0 },
       uWorkingAreaFocusBoundsMin: { value: new THREE.Vector3() },
       uWorkingAreaFocusBoundsMax: { value: new THREE.Vector3() },
@@ -454,10 +495,15 @@ uniform float uSampleSteps;
 uniform int uSceneSectionEnabled;
 uniform int uSceneSectionMode;
 uniform int uSceneSectionPlaneCount;
-uniform vec3 uSceneSectionNormals[3];
-uniform float uSceneSectionPositions[3];
-uniform float uSceneSectionThickness[3];
-uniform int uSceneSectionInvert[3];
+uniform vec3 uSceneSectionNormals[8];
+uniform float uSceneSectionPositions[8];
+uniform float uSceneSectionThickness[8];
+uniform int uSceneSectionInvert[8];
+uniform float uSceneSectionPlaneOutsideOpacity[8];
+uniform int uSceneSectionFrameCount;
+uniform int uSceneSectionFrameAxes[8];
+uniform vec4 uSceneSectionFrameBounds[8];
+uniform float uSceneSectionFrameOutsideOpacity[8];
 uniform int uWorkingAreaFocusEnabled;
 uniform vec3 uWorkingAreaFocusBoundsMin;
 uniform vec3 uWorkingAreaFocusBoundsMax;
@@ -507,18 +553,30 @@ vec2 intersectBox(vec3 origin, vec3 direction) {
   return vec2(tNear, tFar);
 }
 
-bool sceneSectionAllows(vec3 position) {
-  if (uSceneSectionEnabled == 0) return true;
-  for (int i = 0; i < 3; i += 1) {
+float sceneSectionAlpha(vec3 position) {
+  if (uSceneSectionEnabled == 0) return 1.0;
+  float alpha = 1.0;
+  for (int i = 0; i < 8; i += 1) {
     if (i >= uSceneSectionPlaneCount) break;
     vec3 normal = normalize(uSceneSectionNormals[i]);
     float distance = dot(position, normal) - uSceneSectionPositions[i];
     if (uSceneSectionInvert[i] == 1) distance = -distance;
     if (distance > 0.0) {
-      return false;
+      alpha = min(alpha, clamp(uSceneSectionPlaneOutsideOpacity[i], 0.0, 1.0));
     }
   }
-  return true;
+  for (int i = 0; i < 8; i += 1) {
+    if (i >= uSceneSectionFrameCount) break;
+    int axis = uSceneSectionFrameAxes[i];
+    vec4 bounds = uSceneSectionFrameBounds[i];
+    float a = axis == 0 ? position.y : position.x;
+    float b = axis == 2 ? position.y : position.z;
+    bool inside = a >= bounds.x && a <= bounds.y && b >= bounds.z && b <= bounds.w;
+    if (!inside) {
+      alpha = min(alpha, clamp(uSceneSectionFrameOutsideOpacity[i], 0.0, 1.0));
+    }
+  }
+  return alpha;
 }
 
 float workingAreaFocusAlpha(vec3 position) {
@@ -545,7 +603,8 @@ void main() {
     if (float(i) >= sampleSteps) break;
     if (t > tEnd || accum.a > 0.96) break;
     vec3 position = cameraPosition + rayDirection * t;
-    if (!sceneSectionAllows(position)) {
+    float sectionAlpha = sceneSectionAlpha(position);
+    if (sectionAlpha <= 0.0001) {
       t += stepSize;
       continue;
     }
@@ -559,7 +618,7 @@ void main() {
     float rampT = clamp((amplitude - uAmplitudeMin) / (windowMax - uAmplitudeMin), 0.0, 1.0);
     float displayT = shapedAmplitude(rampT);
     float contrast = abs(displayT - 0.5) * 2.0;
-    float alpha = smoothstep(0.06, 0.92, contrast) * uOpacity * 0.085 * focusAlpha;
+    float alpha = smoothstep(0.06, 0.92, contrast) * uOpacity * 0.085 * focusAlpha * sectionAlpha;
     if (uRemoveBackground == 1) {
       float muteHigh = min(0.96, max(0.62, uBackgroundCutoff + 0.22));
       alpha *= smoothstep(uBackgroundCutoff, muteHigh, contrast);
@@ -631,12 +690,15 @@ async function buildRaymarchMesh(
       uSceneSectionEnabled: { value: 0 },
       uSceneSectionMode: { value: 0 },
       uSceneSectionPlaneCount: { value: 0 },
-      uSceneSectionNormals: {
-        value: [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()],
-      },
-      uSceneSectionPositions: { value: [0, 0, 0] },
-      uSceneSectionThickness: { value: [1, 1, 1] },
-      uSceneSectionInvert: { value: [0, 0, 0] },
+      uSceneSectionNormals: { value: sceneSectionVectorSlots() },
+      uSceneSectionPositions: { value: sceneSectionNumberSlots(0) },
+      uSceneSectionThickness: { value: sceneSectionNumberSlots(1) },
+      uSceneSectionInvert: { value: sceneSectionNumberSlots(0) },
+      uSceneSectionPlaneOutsideOpacity: { value: sceneSectionNumberSlots(1) },
+      uSceneSectionFrameCount: { value: 0 },
+      uSceneSectionFrameAxes: { value: sceneSectionNumberSlots(0) },
+      uSceneSectionFrameBounds: { value: sceneSectionVector4Slots() },
+      uSceneSectionFrameOutsideOpacity: { value: sceneSectionNumberSlots(1) },
       uWorkingAreaFocusEnabled: { value: 0 },
       uWorkingAreaFocusBoundsMin: { value: new THREE.Vector3() },
       uWorkingAreaFocusBoundsMax: { value: new THREE.Vector3() },

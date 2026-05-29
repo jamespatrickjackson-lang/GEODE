@@ -326,10 +326,12 @@ export class PublicSurfaceClipRuntime {
           if (item.userData?.publicSurfaceClipHelper === true) continue;
           const terrainShaderHandlesClip =
             box.shape === "circle" && item.userData?.terrainMaterial === true;
+          const graticuleLineMaterial =
+            item.userData?.topoGraticuleLineMaterial === true;
           const publicSurfaceClipPlanes =
             box.enabled &&
             !terrainShaderHandlesClip &&
-            !graticuleUsesTerrainEdgeFrame
+            (!graticuleUsesTerrainEdgeFrame || graticuleLineMaterial)
               ? planes
               : null;
           item.userData.publicSurfaceClipPlanes = publicSurfaceClipPlanes;

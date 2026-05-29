@@ -42,6 +42,18 @@ inside it is intentionally hidden. The important invariant is that product-owned
 shader opacity, for example MT scalar-volume `uOpacity` after
 `sectionIsoSourceOpacity`, is not overwritten by the layer fade.
 
+For Section ISO transition regressions, inspect overlay material `userData`
+fields as well as layer visibility. ISO line and band materials expose
+authored base opacity, transition opacity, threshold-surface attenuation,
+composed opacity, and threshold occlusion count so tests can prove the final
+opacity came through the single composed path.
+
+For graticule/grid regressions, focused tests should inspect the line material
+depth flags and terrain underside-grid camera state. Topo graticule line
+materials report depth-test/depth-write settings, role, and opacity. Terrain
+underside grids report camera-side visibility, hidden reason, camera offset
+from sampled terrain, and hysteresis thresholds when the helper exists.
+
 ## How To Call It
 
 In a Vite dev session, open the browser console and run:

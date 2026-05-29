@@ -15,6 +15,7 @@ import {
   readJsonFile,
   runForgeDataTransitionProbe,
   sceneRendererState,
+  sectionIsoSceneState,
   seismicSceneState,
   selectForgePageRow,
   selectNextForgePage,
@@ -448,7 +449,28 @@ test("MT section page transitions do not reveal the hidden volume source", async
     sectionPageA,
     sectionPageB,
   );
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(900);
+
+  const helperTransitionState = await transitionSnapshotState(page);
+  expect(
+    helperTransitionState.byLayer["utah-forge-scene-section-planes"] ?? 0,
+  ).toBe(0);
+  const transitionIsoState = await sectionIsoSceneState(page, "mt-volume-cuts");
+  if (transitionIsoState.lineOverlayCount > 0) {
+    const lineMaterial = transitionIsoState.firstLineMaterial;
+    expect(lineMaterial?.opacity ?? 0).toBeCloseTo(
+      lineMaterial?.composedOpacity ?? 0,
+      4,
+    );
+    expect(lineMaterial?.composedOpacity ?? 0).toBeCloseTo(
+      (lineMaterial?.baseOpacity ?? 1) *
+        (lineMaterial?.transitionOpacity ?? 1) *
+        (lineMaterial?.thresholdAttenuation ?? 1),
+      3,
+    );
+  }
+
+  await page.waitForTimeout(600);
 
   const midTransitionState = await mtVolumeSceneState(page);
   expect(midTransitionState.volumeLayerVisible).toBe(true);
@@ -651,7 +673,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   for (const label of [
     "3D MT top surface",
     "3D MT resistivity volume",
-    "3D MT threshold surfaces",
+    "MT thresholds",
     "2D MT station locations",
   ]) {
     await ensureForgeLayerVisible(page, label);
@@ -680,7 +702,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   await expect(page.locator("body")).toContainText("3D MT resistivity volume");
   await expect(page.locator("body")).toContainText("3D volume products");
   await expect(page.locator("body")).toContainText("3D cut window");
-  await expect(page.locator("body")).toContainText("3D MT threshold surfaces");
+  await expect(page.locator("body")).toContainText("MT thresholds");
   await expect(page.locator("body")).toContainText(
     "2D MT station response / QC",
   );

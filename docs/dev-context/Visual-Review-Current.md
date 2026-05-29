@@ -26,6 +26,9 @@ narrow patch
   - Page Manager keeps compact page-list spacing; full-panel end padding belongs to the scroll extent.
   - Viewport legends should be lightweight overlays unless a specific tool requires a card/backplate.
   - Viewport legend edge anchoring, stack spacing, circular toggle rows, overlay text-color mapping, slider variables, and MT ramp handle sizes are captured in `docs/dev-context/UI-Visual-Standards.md`.
+  - Topo graticules are depth-tested reference lines, not through-scene overlays.
+  - Section ISO overlay opacity is composed from authored opacity, transition opacity, and threshold-surface attenuation.
+  - Compatible section-frame page changes slide/interpolate; incompatible helper states crossfade by outgoing snapshot plus incoming fade.
   - Human visual judgment is the first acceptance filter for composition.
 - Still wrong / under review:
   - Final sidebar polish and toolset grouping remain iterative.

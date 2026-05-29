@@ -335,11 +335,22 @@ export interface EditableStyle {
     z?: SceneSectionWindowState;
   };
   sceneSectionFrameEnabled?: boolean;
+  sceneSectionActiveFrameId?: string;
+  sceneSectionFrames?: SceneSectionFrameEntry[];
   sceneSectionFrameByAxis?: {
     x?: SceneSectionFrameState;
     y?: SceneSectionFrameState;
     z?: SceneSectionFrameState;
   };
+  sceneSectionObjectVisibilityByAxis?: {
+    x?: Record<string, SceneSectionObjectVisibilityState>;
+    y?: Record<string, SceneSectionObjectVisibilityState>;
+    z?: Record<string, SceneSectionObjectVisibilityState>;
+  };
+  sceneSectionObjectVisibilityByFrameId?: Record<
+    string,
+    Record<string, SceneSectionObjectVisibilityState>
+  >;
   sceneSectionGroundTraceVisible?: boolean;
   sceneSectionAxesVisible?: boolean;
   sceneSectionAxisIntervalM?: number;
@@ -488,6 +499,14 @@ export interface SceneSectionWindowState {
   bottomElevationM?: number;
 }
 
+export interface SceneSectionFrameEntry {
+  id: string;
+  label?: string;
+  axis: "x" | "y" | "z";
+  plane?: SceneSectionPlaneState;
+  frame?: SceneSectionFrameState;
+}
+
 export interface SceneSectionFrameState {
   enabled?: boolean;
   minAM?: number;
@@ -505,6 +524,10 @@ export interface SceneSectionFrameState {
   axisHeadingPaddingM?: number;
   axisHeadingColor?: string;
   axisHeadingScale?: number;
+}
+
+export interface SceneSectionObjectVisibilityState {
+  outsideOpacity?: number;
 }
 
 // ---------- Environment (the "world") ---------------------------------------

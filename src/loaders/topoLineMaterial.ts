@@ -110,8 +110,8 @@ export function enableDistanceAttenuatedLineWidth(
   setDistanceAttenuatedLineWidth(material, options);
   material.customProgramCacheKey = () =>
     material.dashed
-      ? "topo-distance-line-width:v4:dashed"
-      : "topo-distance-line-width:v4:solid";
+      ? "topo-distance-line-width:v6:dashed"
+      : "topo-distance-line-width:v6:solid";
 
   material.onBeforeCompile = (shader) => {
     const settings = resolveSettings(
@@ -194,6 +194,7 @@ export function enableDistanceAttenuatedLineWidth(
 		uniform float topoGraticuleEdgeFadeCornerRadius;
 		varying float vTopoDistanceFade;
 		varying float vTopoGraticuleEdgeFade;
+		varying float vTopoLineNearClipVisible;
 		${TOPO_EDGE_FADE_GLSL}`,
     );
 
@@ -204,6 +205,28 @@ export function enableDistanceAttenuatedLineWidth(
 			vec4 end = modelViewMatrix * vec4( instanceEnd, 1.0 );
 			vec4 startWorld = modelMatrix * vec4( instanceStart, 1.0 );
 			vec4 endWorld = modelMatrix * vec4( instanceEnd, 1.0 );
+			// Near-plane clipping for LineSegments2. View-space z = 0 is the camera plane;
+			// vertices in front have z < 0. Segments straddling z = 0 otherwise project as
+			// screen-aligned streaks because the standard LineMaterial shader expands width
+			// in NDC without clipping endpoints behind the camera. Use a clip distance
+			// safely beyond the standard CAMERA_NEAR_M (50m) so the new endpoint stays
+			// well inside the visible frustum and NDC w-divide does not blow up.
+			float topoNearClipDistance = 100.0;
+			float topoLineNearClipVisible = 1.0;
+			if ( start.z >= - topoNearClipDistance && end.z >= - topoNearClipDistance ) {
+				topoLineNearClipVisible = 0.0;
+				start = vec4( 0.0, 0.0, - topoNearClipDistance, 1.0 );
+				end = vec4( 1.0, 0.0, - topoNearClipDistance, 1.0 );
+			} else if ( start.z >= - topoNearClipDistance ) {
+				float topoClipT = ( - topoNearClipDistance - end.z ) / ( start.z - end.z );
+				start = mix( end, start, topoClipT );
+				startWorld = mix( endWorld, startWorld, topoClipT );
+			} else if ( end.z >= - topoNearClipDistance ) {
+				float topoClipT = ( - topoNearClipDistance - start.z ) / ( end.z - start.z );
+				end = mix( start, end, topoClipT );
+				endWorld = mix( startWorld, endWorld, topoClipT );
+			}
+			vTopoLineNearClipVisible = topoLineNearClipVisible;
 			float topoLineDepth = max( 0.0, - mix( start.z, end.z, 0.5 ) );
 			float topoDistanceT = smoothstep( distanceLineWidthNear, distanceLineWidthFar, topoLineDepth );
 			float topoWidthScale = mix( 1.0, distanceLineMinScale, topoDistanceT );
@@ -255,7 +278,8 @@ export function enableDistanceAttenuatedLineWidth(
 		uniform float terrainShadowInfluence;
 		uniform vec3 topoGraticuleEdgeLineColor;
 		varying float vTopoDistanceFade;
-		varying float vTopoGraticuleEdgeFade;`,
+		varying float vTopoGraticuleEdgeFade;
+		varying float vTopoLineNearClipVisible;`,
     );
 
     shader.fragmentShader = shader.fragmentShader.replace(
@@ -264,17 +288,12 @@ export function enableDistanceAttenuatedLineWidth(
 			diffuseColor *= vec4( mix( vec3( 1.0 ), vColor.xyz, clamp( terrainShadowInfluence, 0.0, 1.0 ) ), vColor.w );
 		#elif defined( USE_COLOR )
 			diffuseColor.rgb *= mix( vec3( 1.0 ), vColor.xyz, clamp( terrainShadowInfluence, 0.0, 1.0 ) );
-		#endif
-			diffuseColor.rgb = mix(
-				diffuseColor.rgb,
-				topoGraticuleEdgeLineColor,
-				clamp( vTopoGraticuleEdgeFade, 0.0, 1.0 )
-			);`,
+		#endif`,
     );
 
     shader.fragmentShader = shader.fragmentShader.replace(
       "\t\t\tfloat alpha = opacity;",
-      `			float alpha = opacity * clamp( vTopoDistanceFade, 0.0, 1.0 );`,
+      `			float alpha = opacity * clamp( vTopoDistanceFade, 0.0, 1.0 ) * clamp( vTopoLineNearClipVisible, 0.0, 1.0 );`,
     );
   };
 
@@ -314,6 +333,8 @@ export function setTopoGraticuleEdgeFade(
 ): void {
   const settings = resolveEdgeFadeSettings(options);
   material.userData.topoGraticuleEdgeFadeSettings = settings;
+  material.userData.topoGraticuleEdgeColorBlendEnabled = false;
+  material.userData.topoGraticuleEdgeAlphaFadeEnabled = false;
   const uniforms = material.userData
     .topoGraticuleEdgeFadeUniforms as
     | TopoGraticuleEdgeFadeUniforms

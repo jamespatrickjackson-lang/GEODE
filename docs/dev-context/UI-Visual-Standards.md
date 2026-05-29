@@ -197,6 +197,33 @@ and `Z Section frame` editor subsection:
   context, and graticules must remain inside the camera frustum at presentation
   overview zoom; authored public surface crop and scene-section tools own
   intentional trimming.
+- Topo graticule lines are CAD/reference lines on the terrain context. They
+  depth-test against terrain and scene geometry and keep `depthWrite: false`.
+- Longitude/latitude grid edge awareness clips interior grid lines near the topo
+  boundary. It must not blend interior grid color toward white/gray edge colors
+  or apply a directional edge-gradient fade. White edge leaders are short
+  boundary cues; they attach to the same boundary-side crossing used by the edge
+  label, are capped to boundary-tick length rather than label-offset length, and
+  must stay clipped to the public surface clip rather than crossing the page.
+- Topo graticule lines and edge labels are terrain/reference context and are not
+  affected by scene-section clipping planes.
+- Terrain underside grid helpers use camera-side hysteresis. The grid appears
+  only when the camera is clearly below terrain and hides only after returning
+  clearly above terrain; it also stays hidden outside terrain XY bounds.
+- Section ISO overlay opacity is composed, not overwritten. Effective opacity
+  equals authored overlay opacity multiplied by page/layer transition opacity
+  and the threshold-surface occlusion attenuation.
+- ISO line attenuation through MT threshold surfaces remains `0.8^surfaceCount`,
+  with short-frame smoothing so camera motion does not cause flicker.
+- Compatible section-frame transitions interpolate numeric frame geometry by
+  stable frame id: plane position, crop bounds, scale interval, label/heading
+  sizing and padding, and ground trace width.
+- Incompatible section-frame transitions crossfade helpers. Frame identity,
+  orientation, enable state, flip state, object visibility target state, and
+  added or removed frame ids are discrete.
+- Section ISO and MT/seismic cut identities include section frame id so multiple
+  same-orientation section frames do not overwrite one another during page
+  transitions.
 
 ## Sliders
 

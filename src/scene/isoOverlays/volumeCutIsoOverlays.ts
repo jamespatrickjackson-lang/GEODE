@@ -123,7 +123,7 @@ function sectionGroundTrimRequested(
   return planes.some((plane) => {
     if (plane.axis === "z") return false;
     return frames.some(
-      (frame) => frame.axis === plane.axis && frame.groundTraceVisible,
+      (frame) => frame.frameId === plane.frameId && frame.groundTraceVisible,
     );
   });
 }
@@ -152,10 +152,11 @@ export function listMtVolumeCutIsoTargetsImpl(this: any, layerId?: string): Scal
           UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
           productId,
           plane.axis,
+          plane.frameId,
         ),
         layerId: UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
-        sectionId: mtVolumeCutSectionId(productId, plane.axis),
-        label: `${productLabel} ${plane.axis.toUpperCase()} cut`,
+        sectionId: mtVolumeCutSectionId(productId, plane.axis, plane.frameId),
+        label: `${productLabel} ${plane.label.replace(/\s*frame$/i, "")} cut`,
         kind: "MT volume cut",
         group: "mt-volume-cuts",
         groupLabel: "MT volume cuts",
@@ -184,10 +185,15 @@ export function listSeismicVolumeCutIsoTargetsImpl(this: any, layerId?: string):
           UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
           productId,
           plane.axis,
+          plane.frameId,
         ),
         layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
-        sectionId: seismicVolumeCutSectionId(productId, plane.axis),
-        label: `${productLabel} ${plane.axis.toUpperCase()} volume cut`,
+        sectionId: seismicVolumeCutSectionId(
+          productId,
+          plane.axis,
+          plane.frameId,
+        ),
+        label: `${productLabel} ${plane.label.replace(/\s*frame$/i, "")} volume cut`,
         kind: "seismic volume cut",
         group: "seismic-volume-cuts",
         groupLabel: "Seismic volume cuts",
@@ -399,6 +405,8 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
     cut.userData.sceneSectionHelper = true;
     cut.userData.sectionIsoTargetKey = options.targetKey;
     cut.userData.sectionIsoPlaneAxis = plane.axis;
+    cut.userData.sectionIsoFrameId = plane.frameId;
+    cut.userData.sectionIsoFrameLabel = plane.label;
     cut.userData.sectionIsoPlanePositionM = plane.positionM;
     cut.userData.sectionGroundTrimEnabled = groundTrim !== null;
     cut.userData.sectionGroundTrimSource = "ground-trace";
@@ -535,6 +543,7 @@ export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle
         UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
         productId,
         plane.axis,
+        plane.frameId,
       );
       if (selectedTargets[targetKey] === false) continue;
       const cut = this.buildMtVolumeCutMesh(mesh, plane, {
@@ -546,7 +555,8 @@ export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle
         targetKey,
         sectionFrame:
           sectionFrames.find(
-            (frame: ResolvedSceneSectionFrame) => frame.axis === plane.axis,
+            (frame: ResolvedSceneSectionFrame) =>
+              frame.frameId === plane.frameId,
           ) ?? null,
       });
       if (!cut) continue;
@@ -732,6 +742,8 @@ export function buildSeismicVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane
     cut.userData.sceneSectionHelper = true;
     cut.userData.sectionIsoTargetKey = options.targetKey;
     cut.userData.sectionIsoPlaneAxis = plane.axis;
+    cut.userData.sectionIsoFrameId = plane.frameId;
+    cut.userData.sectionIsoFrameLabel = plane.label;
     cut.userData.sectionIsoPlanePositionM = plane.positionM;
     cut.userData.sectionGroundTrimEnabled = groundTrim !== null;
     cut.userData.sectionGroundTrimSource = "ground-trace";
@@ -848,6 +860,7 @@ export function updateSeismicVolumeCutIsoOverlaysImpl(this: any, style: Editable
         UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
         productId,
         plane.axis,
+        plane.frameId,
       );
       if (selectedTargets[targetKey] === false) continue;
       const cut = this.buildSeismicVolumeCutMesh(mesh, plane, {
@@ -859,7 +872,8 @@ export function updateSeismicVolumeCutIsoOverlaysImpl(this: any, style: Editable
         targetKey,
         sectionFrame:
           sectionFrames.find(
-            (frame: ResolvedSceneSectionFrame) => frame.axis === plane.axis,
+            (frame: ResolvedSceneSectionFrame) =>
+              frame.frameId === plane.frameId,
           ) ?? null,
       });
       if (!cut) continue;

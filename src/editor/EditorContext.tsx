@@ -1502,7 +1502,7 @@ export function EditorProvider({
   }, [sceneHandle]);
 
   useEffect(() => {
-    sceneHandle.setSceneSectionPlaneCommitHandler((axis, positionM) => {
+    sceneHandle.setSceneSectionPlaneCommitHandler((axis, positionM, frameId) => {
       const cur = stateRef.current;
       const selectedPageId = cur.selectedPageId;
       const page =
@@ -1514,17 +1514,45 @@ export function EditorProvider({
         ? effectiveStyle(cur.environment, page, layerId)
         : (cur.environment.layerStyles[layerId] ?? {});
       const currentPlanes = currentStyle.sceneSectionPlanes ?? {};
+      const targetFrameId = frameId ?? `axis:${axis}`;
+      const isBuiltIn = targetFrameId === `axis:${axis}`;
+      const currentFrames = Array.isArray(currentStyle.sceneSectionFrames)
+        ? currentStyle.sceneSectionFrames
+        : (["x", "y", "z"] as const).map((entryAxis) => ({
+            id: `axis:${entryAxis}`,
+            label: `${entryAxis.toUpperCase()} Section frame`,
+            axis: entryAxis,
+            plane: currentStyle.sceneSectionPlanes?.[entryAxis] ?? {},
+            frame: currentStyle.sceneSectionFrameByAxis?.[entryAxis] ?? {},
+          }));
+      const nextFrames = currentFrames.map((entry) =>
+        entry.id === targetFrameId
+          ? {
+              ...entry,
+              axis,
+              plane: {
+                ...(entry.plane ?? {}),
+                enabled: true,
+                positionM,
+              },
+            }
+          : entry,
+      );
       const patch: Partial<EditableStyle> = {
         sceneSectionEnabled: true,
         sceneSectionActiveAxis: axis,
-        sceneSectionPlanes: {
-          ...currentPlanes,
-          [axis]: {
-            ...(currentPlanes[axis] ?? {}),
-            enabled: true,
-            positionM,
-          },
-        },
+        sceneSectionActiveFrameId: targetFrameId,
+        sceneSectionFrames: nextFrames,
+        sceneSectionPlanes: isBuiltIn
+          ? {
+              ...currentPlanes,
+              [axis]: {
+                ...(currentPlanes[axis] ?? {}),
+                enabled: true,
+                positionM,
+              },
+            }
+          : currentPlanes,
       };
       sceneHandle.manager.applyStyle(layerId, { ...currentStyle, ...patch });
       if (page) {
@@ -1542,7 +1570,7 @@ export function EditorProvider({
   }, [sceneHandle]);
 
   useEffect(() => {
-    sceneHandle.setSceneSectionWindowCommitHandler((axis, kind, valueM) => {
+    sceneHandle.setSceneSectionWindowCommitHandler((axis, kind, valueM, frameId) => {
       const cur = stateRef.current;
       const selectedPageId = cur.selectedPageId;
       const page =
@@ -1555,7 +1583,21 @@ export function EditorProvider({
         : (cur.environment.layerStyles[layerId] ?? {});
       const currentByAxis = currentStyle.sceneSectionWindowByAxis ?? {};
       const currentFrameByAxis = currentStyle.sceneSectionFrameByAxis ?? {};
-      const currentFrame = currentFrameByAxis[axis] ?? {};
+      const targetFrameId = frameId ?? `axis:${axis}`;
+      const isBuiltIn = targetFrameId === `axis:${axis}`;
+      const currentFrames = Array.isArray(currentStyle.sceneSectionFrames)
+        ? currentStyle.sceneSectionFrames
+        : (["x", "y", "z"] as const).map((entryAxis) => ({
+            id: `axis:${entryAxis}`,
+            label: `${entryAxis.toUpperCase()} Section frame`,
+            axis: entryAxis,
+            plane: currentStyle.sceneSectionPlanes?.[entryAxis] ?? {},
+            frame: currentStyle.sceneSectionFrameByAxis?.[entryAxis] ?? {},
+          }));
+      const currentFrame =
+        currentFrames.find((entry) => entry.id === targetFrameId)?.frame ??
+        currentFrameByAxis[axis] ??
+        {};
       const frameKind =
         kind === "window-min" || kind === "frame-min-a"
           ? "minA"
@@ -1576,8 +1618,17 @@ export function EditorProvider({
         ...currentFrame,
         ...framePatch,
       };
+      const nextFrames = currentFrames.map((entry) =>
+        entry.id === targetFrameId
+          ? {
+              ...entry,
+              axis,
+              frame: nextFrame,
+            }
+          : entry,
+      );
       const legacyPatch: Partial<EditableStyle> =
-        axis === "x" || axis === "y"
+        isBuiltIn && (axis === "x" || axis === "y")
           ? {
               sceneSectionWindowEnabled: true,
               sceneSectionWindowActiveAxis: axis,
@@ -1596,13 +1647,17 @@ export function EditorProvider({
       const patch: Partial<EditableStyle> = {
         sceneSectionEnabled: true,
         sceneSectionActiveAxis: axis,
+        sceneSectionActiveFrameId: targetFrameId,
         sceneSectionFrameEnabled: true,
-        sceneSectionFrameByAxis: {
-          ...currentFrameByAxis,
-          [axis]: {
-            ...nextFrame,
-          },
-        },
+        sceneSectionFrames: nextFrames,
+        sceneSectionFrameByAxis: isBuiltIn
+          ? {
+              ...currentFrameByAxis,
+              [axis]: {
+                ...nextFrame,
+              },
+            }
+          : currentFrameByAxis,
         ...legacyPatch,
       };
       sceneHandle.manager.applyStyle(layerId, { ...currentStyle, ...patch });

@@ -11,13 +11,15 @@ import {
   type LayerStyleSetter,
   type PageStyleSetter,
 } from "../../styleControls";
-import { compactCheckboxRowStyle, miniGroupTitleStyle, smallActionButtonStyle } from "../layout/layoutStyles";
+import { smallActionButtonStyle } from "../layout/layoutStyles";
 import { editorLayerLabel } from "../layerLabels";
 import type {
   EditableStyle,
   PresentationPage,
   ProjectLayerSpec,
+  SceneSectionFrameEntry,
   SceneSectionFrameState,
+  SceneSectionPlaneState,
 } from "../../../pages/types";
 import type { SceneHandle } from "../../../scene";
 import {
@@ -26,11 +28,11 @@ import {
   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
   UTAH_FORGE_MT_STATIONS_LAYER_ID,
   UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+  UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
   UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 } from "../../../projectModules/utahForge/layerIds";
-import { SeismicCapabilityLayerItem } from "./SeismicCapabilityLayerItem";
 import { seismicDefaultProductId, seismicProductOptions } from "./seismicModel";
 
 const sceneSectionAxisColors = {
@@ -38,6 +40,26 @@ const sceneSectionAxisColors = {
   y: "#35c7e8",
   z: "#f6d76b",
 } as const;
+
+const sceneSectionDefaultPositions = {
+  x: -6000,
+  y: -10300,
+  z: -2200,
+} as const;
+
+const SCENE_SECTION_MAX_FRAME_COUNT = 8;
+const sceneSectionAxes = ["x", "y", "z"] as const;
+
+const builtInFrameId = (axis: SceneSectionAxis) => `axis:${axis}`;
+
+type SceneSectionFrameUiEntry = {
+  id: string;
+  label: string;
+  axis: SceneSectionAxis;
+  builtIn: boolean;
+  plane: SceneSectionPlaneState;
+  frame: SceneSectionFrameState;
+};
 
 const frameNumberInputStyle: React.CSSProperties = {
   flex: "0 0 74px",
@@ -92,6 +114,30 @@ const frameColorInputStyle: React.CSSProperties = {
   padding: 1,
 };
 
+const sectionFrameListStyle: React.CSSProperties = {
+  paddingTop: 4,
+};
+
+const frameObjectVisibilityRowStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1.2fr) minmax(100px, 1fr) 48px",
+  alignItems: "center",
+  gap: 8,
+  marginBottom: 6,
+};
+
+type SceneSectionAxis = "x" | "y" | "z";
+
+type SceneSectionObjectTarget = {
+  objectId: string;
+  label: string;
+  layerId: string;
+  productId?: string;
+  supported: boolean;
+  visible: boolean;
+  axes: SceneSectionAxis[];
+};
+
 const frameSummaryContentStyle: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
@@ -130,10 +176,14 @@ const frameSummaryToggleInputStyle: React.CSSProperties = {
 
 const frameSummaryActiveButtonStyle: React.CSSProperties = {
   ...smallActionButtonStyle,
+  width: 72,
   minHeight: 18,
   padding: "1px 6px",
   fontSize: 11,
   lineHeight: 1.1,
+  border: "none",
+  background: "transparent",
+  boxShadow: "none",
 };
 
 function clampNumber(value: number, min: number, max: number): number {
@@ -159,6 +209,138 @@ function colorInputValue(value: unknown, fallback: string): string {
 
 function stopSummaryToggle(event: React.SyntheticEvent) {
   event.stopPropagation();
+}
+
+function layerObjectId(layerId: string): string {
+  return `layer:${layerId}`;
+}
+
+function productObjectId(layerId: string, productId: string): string {
+  return `product:${layerId}:${productId}`;
+}
+
+function legacyDefaultObjectOpacity({
+  target,
+  targetScope,
+  targetLayerIds,
+  targetProductIds,
+}: {
+  target: SceneSectionObjectTarget;
+  targetScope: "selected-targets" | "all-visible" | "active-selection";
+  targetLayerIds: Set<string>;
+  targetProductIds: Set<string>;
+}): number {
+  if (targetScope === "all-visible") return target.visible ? 0 : 1;
+  if (target.productId) {
+    return targetProductIds.has(target.productId) ? 0 : 1;
+  }
+  return targetLayerIds.has(target.layerId) ? 0 : 1;
+}
+
+function objectVisibilityOpacity(
+  style: EditableStyle,
+  axis: SceneSectionAxis,
+  frameId: string,
+  target: SceneSectionObjectTarget,
+  targetScope: "selected-targets" | "all-visible" | "active-selection",
+  targetLayerIds: Set<string>,
+  targetProductIds: Set<string>,
+): number {
+  const frameValue =
+    style.sceneSectionObjectVisibilityByFrameId?.[frameId]?.[target.objectId]
+      ?.outsideOpacity;
+  if (typeof frameValue === "number" && Number.isFinite(frameValue)) {
+    return clampNumber(frameValue, 0, 1);
+  }
+  const value =
+    style.sceneSectionObjectVisibilityByAxis?.[axis]?.[target.objectId]
+      ?.outsideOpacity;
+  return typeof value === "number" && Number.isFinite(value)
+    ? clampNumber(value, 0, 1)
+    : legacyDefaultObjectOpacity({
+        target,
+        targetScope,
+        targetLayerIds,
+        targetProductIds,
+      });
+}
+
+function frameDefaultLabel(id: string, axis: SceneSectionAxis): string {
+  if (id === builtInFrameId(axis)) return `${axis.toUpperCase()} Section frame`;
+  const custom = /^custom:([a-z])$/i.exec(id);
+  return custom ? `${custom[1].toUpperCase()} Section frame` : `${axis.toUpperCase()} Section frame`;
+}
+
+function normalizeSceneSectionFrameEntries(
+  style: EditableStyle,
+): SceneSectionFrameUiEntry[] {
+  const explicit = Array.isArray(style.sceneSectionFrames)
+    ? style.sceneSectionFrames
+    : [];
+  const explicitById = new Map(
+    explicit
+      .filter((entry) => typeof entry?.id === "string" && entry.id.trim())
+      .map((entry) => [entry.id, entry]),
+  );
+  const planes = style.sceneSectionPlanes ?? {};
+  const frameByAxis = style.sceneSectionFrameByAxis ?? {};
+  const builtIns: SceneSectionFrameUiEntry[] = sceneSectionAxes.map((axis) => {
+    const id = builtInFrameId(axis);
+    const entry = explicitById.get(id);
+    return {
+      id,
+      label:
+        typeof entry?.label === "string" && entry.label.trim()
+          ? entry.label
+          : frameDefaultLabel(id, axis),
+      axis,
+      builtIn: true,
+      plane: {
+        ...(planes[axis] ?? {}),
+        ...(entry?.plane ?? {}),
+      },
+      frame: {
+        ...(frameByAxis[axis] ?? {}),
+        ...(entry?.frame ?? {}),
+      },
+    };
+  });
+  const custom: SceneSectionFrameUiEntry[] = [];
+  for (const entry of explicit) {
+    if (
+      !entry ||
+      typeof entry.id !== "string" ||
+      !entry.id.trim() ||
+      entry.id.startsWith("axis:") ||
+      (entry.axis !== "x" && entry.axis !== "y" && entry.axis !== "z")
+    ) {
+      continue;
+    }
+    custom.push({
+      id: entry.id,
+      label:
+        typeof entry.label === "string" && entry.label.trim()
+          ? entry.label
+          : frameDefaultLabel(entry.id, entry.axis),
+      axis: entry.axis,
+      builtIn: false,
+      plane: { ...(entry.plane ?? {}) },
+      frame: { ...(entry.frame ?? {}) },
+    });
+  }
+  return [...builtIns, ...custom].slice(0, SCENE_SECTION_MAX_FRAME_COUNT);
+}
+
+function serializeFrameEntries(
+  entries: SceneSectionFrameUiEntry[],
+): SceneSectionFrameEntry[] {
+  return entries.map((entry) => ({
+    id: entry.id,
+    label: entry.label,
+    axis: entry.axis,
+    plane: { ...entry.plane },
+    frame: { ...entry.frame },
+  }));
 }
 
 export function SceneSectionPlanesContainer({
@@ -187,7 +369,6 @@ export function SceneSectionPlanesContainer({
     ? seismicDefaultProductId(seismicLayer)
     : (products[0]?.id ?? "");
   const enabled = styleBoolean(style, "sceneSectionEnabled", false);
-  const mode = "cutaway";
   const targetScope =
     style.sceneSectionTargetScope === "all-visible" ||
     style.sceneSectionTargetScope === "active-selection"
@@ -199,7 +380,6 @@ export function SceneSectionPlanesContainer({
     style.sceneSectionActiveAxis === "z"
       ? style.sceneSectionActiveAxis
       : "z";
-  const planes = style.sceneSectionPlanes ?? {};
   const targetLayerIds = new Set(
     Array.isArray(style.sceneSectionTargetLayerIds)
       ? style.sceneSectionTargetLayerIds
@@ -242,7 +422,65 @@ export function SceneSectionPlanesContainer({
     100,
   );
   const windowByAxis = style.sceneSectionWindowByAxis ?? {};
-  const frameByAxis = style.sceneSectionFrameByAxis ?? {};
+  const frameEntries = normalizeSceneSectionFrameEntries(style);
+  const activeFrameId =
+    typeof style.sceneSectionActiveFrameId === "string" &&
+    style.sceneSectionActiveFrameId.trim()
+      ? style.sceneSectionActiveFrameId
+      : builtInFrameId(activeAxis);
+  const fallbackObjectTargets: SceneSectionObjectTarget[] = [
+    ...products.map((product) => ({
+      objectId: productObjectId(
+        UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+        product.id,
+      ),
+      label: `Seismic: ${product.label}`,
+      layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+      productId: product.id,
+      supported: true,
+      visible: true,
+      axes: ["x", "y", "z"] as SceneSectionAxis[],
+    })),
+    ...[
+      UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+      UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+      UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+      UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+      UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
+      UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
+      "utah-forge-reference-stage",
+      UTAH_FORGE_MT_STATIONS_LAYER_ID,
+    ].map((layerId) => {
+      const layer = allLayers.find((candidate) => candidate.id === layerId);
+      return {
+        objectId: layerObjectId(layerId),
+        label:
+          layerId === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID
+            ? "3D MT resistivity volume"
+            : layerId === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID
+              ? "MT thresholds"
+              : layer
+                ? editorLayerLabel(layer)
+                : layerId,
+        layerId,
+        supported: layerId !== UTAH_FORGE_MT_STATIONS_LAYER_ID,
+        visible: true,
+        axes: ["x", "y", "z"] as SceneSectionAxis[],
+      };
+    }),
+  ];
+  const objectTargetMap = new Map<string, SceneSectionObjectTarget>();
+  for (const target of fallbackObjectTargets) objectTargetMap.set(target.objectId, target);
+  for (const target of sceneHandle.manager.listSceneSectionObjectTargets()) {
+    objectTargetMap.set(target.objectId, {
+      ...target,
+      label: objectTargetMap.get(target.objectId)?.label ?? target.label,
+      axes: target.axes as SceneSectionAxis[],
+    });
+  }
+  const objectTargets = Array.from(objectTargetMap.values()).filter((target) =>
+    target.axes.length > 0,
+  );
   const liveStyleRef = useRef(style);
   useEffect(() => {
     liveStyleRef.current = style;
@@ -262,154 +500,213 @@ export function SceneSectionPlanesContainer({
       );
     }
   };
-  const setPlanePatch = (
-    axis: "x" | "y" | "z",
-    patch: { enabled?: boolean; positionM?: number; invert?: boolean },
+  const commitFrameEntries = (
+    entries: SceneSectionFrameUiEntry[],
+    patch: Partial<EditableStyle> = {},
   ) => {
     commit({
-      sceneSectionActiveAxis: axis,
-      sceneSectionPlanes: {
-        ...planes,
-        [axis]: {
-          ...(planes[axis] ?? {}),
-          ...patch,
-        },
-      },
+      sceneSectionFrames: serializeFrameEntries(entries),
+      ...patch,
     });
   };
-  const setFramePatch = (
-    axis: "x" | "y" | "z",
-    patch: Partial<SceneSectionFrameState>,
+  const setFrameEntryPatch = (
+    id: string,
+    patch: {
+      axis?: SceneSectionAxis;
+      plane?: Partial<SceneSectionPlaneState>;
+      frame?: Partial<SceneSectionFrameState>;
+      label?: string;
+    },
   ) => {
-    const current = frameByAxis[axis] ?? {};
-    const nextFrame = {
-      ...current,
-      ...patch,
+    const currentEntries = normalizeSceneSectionFrameEntries(liveStyleRef.current);
+    const currentEntry = currentEntries.find((entry) => entry.id === id);
+    if (!currentEntry) return;
+    const nextAxis = patch.axis ?? currentEntry.axis;
+    const nextPlane = {
+      ...currentEntry.plane,
+      ...(patch.plane ?? {}),
     };
-    const hasCoordinatePatch =
-      patch.minAM !== undefined ||
-      patch.maxAM !== undefined ||
-      patch.minBM !== undefined ||
-      patch.maxBM !== undefined;
-    const legacyPatch: Partial<EditableStyle> =
-      (axis === "x" || axis === "y") &&
-      (hasCoordinatePatch || patch.enabled === true)
+    const nextFrame = {
+      ...currentEntry.frame,
+      ...(patch.frame ?? {}),
+    };
+    const nextEntries = currentEntries.map((entry) =>
+      entry.id === id
+        ? {
+            ...entry,
+            label: patch.label ?? entry.label,
+            axis: nextAxis,
+            plane: nextPlane,
+            frame: nextFrame,
+          }
+        : entry,
+    );
+    const isBuiltIn = currentEntry.builtIn && id === builtInFrameId(nextAxis);
+    const legacyPatch: Partial<EditableStyle> = isBuiltIn
+      ? {
+          sceneSectionActiveAxis: nextAxis,
+          sceneSectionPlanes: {
+            ...(liveStyleRef.current.sceneSectionPlanes ?? {}),
+            [nextAxis]: nextPlane,
+          },
+          sceneSectionFrameByAxis: {
+            ...(liveStyleRef.current.sceneSectionFrameByAxis ?? {}),
+            [nextAxis]: nextFrame,
+          },
+        }
+      : {
+          sceneSectionActiveAxis: nextAxis,
+        };
+    const hasFramePatch = Boolean(patch.frame);
+    const xOrYLegacyWindow =
+      isBuiltIn &&
+      (nextAxis === "x" || nextAxis === "y") &&
+      (hasFramePatch || patch.frame?.enabled === true)
         ? {
             sceneSectionWindowEnabled: true,
-            sceneSectionWindowActiveAxis: axis,
+            sceneSectionWindowActiveAxis: nextAxis,
             sceneSectionWindowByAxis: {
-              ...windowByAxis,
-              [axis]: {
-                ...(windowByAxis[axis] ?? {}),
-                minAlongM: nextFrame.minAM ?? windowByAxis[axis]?.minAlongM,
-                maxAlongM: nextFrame.maxAM ?? windowByAxis[axis]?.maxAlongM,
+              ...(liveStyleRef.current.sceneSectionWindowByAxis ?? {}),
+              [nextAxis]: {
+                ...(liveStyleRef.current.sceneSectionWindowByAxis?.[nextAxis] ??
+                  {}),
+                minAlongM:
+                  nextFrame.minAM ??
+                  liveStyleRef.current.sceneSectionWindowByAxis?.[nextAxis]
+                    ?.minAlongM,
+                maxAlongM:
+                  nextFrame.maxAM ??
+                  liveStyleRef.current.sceneSectionWindowByAxis?.[nextAxis]
+                    ?.maxAlongM,
                 bottomElevationM:
-                  nextFrame.minBM ?? windowByAxis[axis]?.bottomElevationM,
+                  nextFrame.minBM ??
+                  liveStyleRef.current.sceneSectionWindowByAxis?.[nextAxis]
+                    ?.bottomElevationM,
               },
             },
           }
         : {};
-    const compatibilityPatch: Partial<EditableStyle> =
-      patch.enabled === true || hasCoordinatePatch
-        ? {
-            sceneSectionFrameEnabled: true,
-          }
-        : {};
-    commit({
-      sceneSectionActiveAxis: axis,
-      sceneSectionFrameByAxis: {
-        ...frameByAxis,
-        [axis]: {
-          ...nextFrame,
-        },
-      },
-      ...compatibilityPatch,
+    commitFrameEntries(nextEntries, {
+      sceneSectionActiveFrameId: id,
+      sceneSectionFrameEnabled: true,
       ...legacyPatch,
+      ...xOrYLegacyWindow,
     });
   };
-  const toggleLayerTarget = (id: string, checked: boolean) => {
-    const next = new Set(targetLayerIds);
-    if (checked) next.add(id);
-    else next.delete(id);
-    commit({ sceneSectionTargetLayerIds: Array.from(next) });
+  const setFrameSpecificPatch = (
+    id: string,
+    patch: Partial<SceneSectionFrameState>,
+  ) => setFrameEntryPatch(id, { frame: patch });
+  const setPlaneSpecificPatch = (
+    id: string,
+    patch: Partial<SceneSectionPlaneState>,
+  ) => setFrameEntryPatch(id, { plane: patch });
+  const addCustomFrame = () => {
+    const currentEntries = normalizeSceneSectionFrameEntries(liveStyleRef.current);
+    if (currentEntries.length >= SCENE_SECTION_MAX_FRAME_COUNT) return;
+    const usedLetters = new Set(
+      currentEntries
+        .map((entry) => /^custom:([a-z])$/i.exec(entry.id)?.[1]?.toLowerCase())
+        .filter((letter): letter is string => Boolean(letter)),
+    );
+    const letter =
+      "abcdefghijklmnopqrstuvwxyz"
+        .split("")
+        .find((candidate) => !usedLetters.has(candidate)) ?? "a";
+    const source =
+      currentEntries.find((entry) => entry.id === activeFrameId) ??
+      currentEntries[0];
+    const id = `custom:${letter}`;
+    const label = `${letter.toUpperCase()} Section frame`;
+    const nextEntry: SceneSectionFrameUiEntry = {
+      id,
+      label,
+      axis: source.axis,
+      builtIn: false,
+      plane: {
+        ...source.plane,
+        enabled: true,
+      },
+      frame: {
+        ...source.frame,
+        enabled: true,
+      },
+    };
+    commitFrameEntries([...currentEntries, nextEntry], {
+      sceneSectionEnabled: true,
+      sceneSectionFrameEnabled: true,
+      sceneSectionActiveAxis: source.axis,
+      sceneSectionActiveFrameId: id,
+    });
   };
-  const toggleProductTarget = (id: string, checked: boolean) => {
-    const next = new Set(targetProductIds);
-    if (checked) next.add(id);
-    else next.delete(id);
-    commit({ sceneSectionTargetProductIds: Array.from(next) });
+  const setObjectVisibilityOpacity = (
+    axis: SceneSectionAxis,
+    frameId: string,
+    objectId: string,
+    value: number,
+  ) => {
+    if (!Number.isFinite(value)) return;
+    const byFrame =
+      liveStyleRef.current.sceneSectionObjectVisibilityByFrameId ?? {};
+    commit({
+      sceneSectionActiveAxis: axis,
+      sceneSectionActiveFrameId: frameId,
+      sceneSectionObjectVisibilityByFrameId: {
+        ...byFrame,
+        [frameId]: {
+          ...(byFrame[frameId] ?? {}),
+          [objectId]: {
+            ...(byFrame[frameId]?.[objectId] ?? {}),
+            outsideOpacity: clampNumber(value, 0, 1),
+          },
+        },
+      },
+    });
   };
-  const layerOptions = allLayers
-    .filter((layer) =>
-      [
-        UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
-        UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
-        UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
-        UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
-        UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
-        UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
-        UTAH_FORGE_MT_STATIONS_LAYER_ID,
-        "utah-forge-reference-stage",
-      ].includes(layer.id),
-    )
-    .map((layer) => ({
-      id: layer.id,
-      label:
-        layer.id === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID
-          ? "Seismic browser / survey geometry"
-          : layer.id === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID
-            ? "3D MT resistivity volume"
-            : layer.id === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID
-              ? "MT thresholds"
-              : editorLayerLabel(layer),
-      supported:
-        layer.id !== UTAH_FORGE_MT_STATIONS_LAYER_ID ||
-        targetScope === "all-visible",
-    }));
   const axisRanges = {
     x: { min: -140000, max: 140000 },
     y: { min: -115000, max: 115000 },
     z: { min: -122000, max: 4000 },
   } as const;
   const controlDisabled = disabled || !enabled;
-  const setAxisIntervalKm = (axis: "x" | "y" | "z", rawKm: number) => {
+  const setAxisIntervalKm = (frameId: string, rawKm: number) => {
     if (!Number.isFinite(rawKm)) return;
-    setFramePatch(axis, {
+    setFrameSpecificPatch(frameId, {
       axisIntervalM: clampNumber(rawKm * 1000, 100, 50000),
     });
   };
-  const setAxisTextScale = (axis: "x" | "y" | "z", rawScale: number) => {
+  const setAxisTextScale = (frameId: string, rawScale: number) => {
     if (!Number.isFinite(rawScale)) return;
-    setFramePatch(axis, {
+    setFrameSpecificPatch(frameId, {
       axisTextScale: clampNumber(rawScale, 0.4, 100),
     });
   };
-  const setAxisTextPaddingKm = (axis: "x" | "y" | "z", rawKm: number) => {
+  const setAxisTextPaddingKm = (frameId: string, rawKm: number) => {
     if (!Number.isFinite(rawKm)) return;
-    setFramePatch(axis, {
+    setFrameSpecificPatch(frameId, {
       axisTextPaddingM: clampNumber(rawKm * 1000, 0, 10000),
     });
   };
-  const setGroundTraceWidthM = (axis: "x" | "y" | "z", rawM: number) => {
+  const setGroundTraceWidthM = (frameId: string, rawM: number) => {
     if (!Number.isFinite(rawM)) return;
-    setFramePatch(axis, {
+    setFrameSpecificPatch(frameId, {
       groundTraceWidthM: clampNumber(rawM, 30, 2000),
     });
   };
-  const setAxisHeadingPaddingKm = (axis: "x" | "y" | "z", rawKm: number) => {
+  const setAxisHeadingPaddingKm = (frameId: string, rawKm: number) => {
     if (!Number.isFinite(rawKm)) return;
-    setFramePatch(axis, {
+    setFrameSpecificPatch(frameId, {
       axisHeadingPaddingM: clampNumber(rawKm * 1000, 0, 20000),
     });
   };
-  const setAxisHeadingScale = (axis: "x" | "y" | "z", rawScale: number) => {
+  const setAxisHeadingScale = (frameId: string, rawScale: number) => {
     if (!Number.isFinite(rawScale)) return;
-    setFramePatch(axis, {
+    setFrameSpecificPatch(frameId, {
       axisHeadingScale: clampNumber(rawScale, 0.4, 100),
     });
   };
   const renderFrameRangeRow = ({
-    axis,
+    frameId,
     kind,
     label,
     valueM,
@@ -419,6 +716,7 @@ export function SceneSectionPlanesContainer({
     frameActive,
   }: {
     axis: "x" | "y" | "z";
+    frameId: string;
     kind: "min-a" | "max-a" | "min-b" | "max-b";
     label: string;
     valueM: number;
@@ -444,15 +742,16 @@ export function SceneSectionPlanesContainer({
     const commitValue = (raw: number) => {
       if (!Number.isFinite(raw)) return;
       const meters = elevation ? raw * 1000 : raw;
-      setFramePatch(axis, {
+      setFrameSpecificPatch(frameId, {
         [patchKey]: clampNumber(meters, minM, maxM),
       });
     };
+    const testKey = frameId.replace(/[^a-z0-9]+/gi, "-");
     return (
       <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>{label}</label>
         <input
-          data-testid={`scene-section-frame-${axis}-${kind}`}
+          data-testid={`scene-section-frame-${testKey}-${kind}`}
           type="range"
           min={minM}
           max={maxM}
@@ -463,7 +762,7 @@ export function SceneSectionPlanesContainer({
           style={{ flex: 1 }}
         />
         <input
-          data-testid={`scene-section-frame-${axis}-${kind}-number`}
+          data-testid={`scene-section-frame-${testKey}-${kind}-number`}
           type="number"
           min={numberMin}
           max={numberMax}
@@ -479,11 +778,7 @@ export function SceneSectionPlanesContainer({
   };
 
   return (
-    <SeismicCapabilityLayerItem
-      title="Scene section planes"
-      type="section"
-      testId="scene-section-planes-container"
-    >
+    <div data-testid="scene-section-planes-container">
       <div style={detailsContentStyle}>
         <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
           <span style={nestedFieldLabelStyle}>Enabled</span>
@@ -500,45 +795,6 @@ export function SceneSectionPlanesContainer({
             }
           />
         </label>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Type</label>
-          <select
-            data-testid="scene-section-mode"
-            disabled={disabled}
-            value={mode}
-            onChange={() =>
-              commit({
-                sceneSectionMode: "cutaway",
-              })
-            }
-            style={{ flex: 1 }}
-          >
-            <option value="cutaway">Cutaway clip</option>
-          </select>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Targets</label>
-          <select
-            data-testid="scene-section-target-scope"
-            disabled={disabled}
-            value={targetScope}
-            onChange={(e) =>
-              commit({
-                sceneSectionTargetScope:
-                  e.target.value === "all-visible"
-                    ? "all-visible"
-                    : e.target.value === "active-selection"
-                      ? "active-selection"
-                      : "selected-targets",
-              })
-            }
-            style={{ flex: 1 }}
-          >
-            <option value="selected-targets">Selected targets</option>
-            <option value="all-visible">All visible</option>
-            <option value="active-selection">Active selection</option>
-          </select>
-        </div>
         <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
           <span style={nestedFieldLabelStyle}>Gizmo</span>
           <input
@@ -563,30 +819,29 @@ export function SceneSectionPlanesContainer({
             }
           />
         </label>
-        <details style={nestedDetailsStyle} data-testid="scene-section-window">
-          <summary style={panelStyles.summary}>Section frames</summary>
-          <div style={detailsContentStyle}>
-            {(["x", "y", "z"] as const).map((axis) => {
-              const plane = planes[axis] ?? {};
+        <div data-testid="scene-section-window" style={sectionFrameListStyle}>
+          {frameEntries.map((frame) => {
+              const axis = frame.axis;
+              const testKey = frame.id.replace(/[^a-z0-9]+/gi, "-");
+              const plane = frame.plane ?? {};
               const planeRange = axisRanges[axis];
-              const isActiveAxis = axis === activeAxis;
+              const isActiveFrame = frame.id === activeFrameId;
+              const controlKey = frame.builtIn ? axis : testKey;
               const planeEnabled = plane.enabled === true;
               const position =
                 typeof plane.positionM === "number" &&
                 Number.isFinite(plane.positionM)
                   ? plane.positionM
-                  : axis === "x"
-                    ? -6000
-                    : axis === "y"
-                      ? -10300
-                      : -2200;
+                  : sceneSectionDefaultPositions[axis];
               const positionFill =
                 ((position - planeRange.min) /
                   Math.max(1, planeRange.max - planeRange.min)) *
                 100;
-              const axisFrame = frameByAxis[axis] ?? {};
+              const axisFrame = frame.frame ?? {};
               const axisWindow =
-                axis === "x" || axis === "y" ? windowByAxis[axis] : undefined;
+                frame.builtIn && (axis === "x" || axis === "y")
+                  ? windowByAxis[axis]
+                  : undefined;
               const aMinLimit = axis === "x" ? -115000 : -140000;
               const aMaxLimit = axis === "x" ? 115000 : 140000;
               const bMinLimit = axis === "z" ? -115000 : -122000;
@@ -692,9 +947,9 @@ export function SceneSectionPlanesContainer({
               );
               return (
                 <details
-                  key={axis}
+                  key={frame.id}
                   style={nestedDetailsStyle}
-                  data-testid={`scene-section-window-${axis}`}
+                  data-testid={`scene-section-window-${testKey}`}
                 >
                   <summary
                     style={{
@@ -704,7 +959,7 @@ export function SceneSectionPlanesContainer({
                   >
                     <span style={frameSummaryContentStyle}>
                       <span style={frameSummaryTitleStyle}>
-                        {axis.toUpperCase()} Section frame
+                        {frame.label}
                       </span>
                       <span
                         style={frameSummaryControlGroupStyle}
@@ -713,21 +968,13 @@ export function SceneSectionPlanesContainer({
                       >
                         <label style={frameSummaryToggleStyle}>
                           <input
-                            data-testid={`scene-section-plane-${axis}-enabled`}
+                            data-testid={`scene-section-plane-${controlKey}-enabled`}
                             type="checkbox"
                             disabled={disabled}
                             checked={planeEnabled}
                             onChange={(e) =>
-                              commit({
-                                sceneSectionMode: "cutaway",
-                                sceneSectionActiveAxis: axis,
-                                sceneSectionPlanes: {
-                                  ...planes,
-                                  [axis]: {
-                                    ...(planes[axis] ?? {}),
-                                    enabled: e.target.checked,
-                                  },
-                                },
+                              setPlaneSpecificPatch(frame.id, {
+                                enabled: e.target.checked,
                               })
                             }
                             style={frameSummaryToggleInputStyle}
@@ -741,12 +988,12 @@ export function SceneSectionPlanesContainer({
                           }}
                         >
                           <input
-                            data-testid={`scene-section-plane-${axis}-invert`}
+                            data-testid={`scene-section-plane-${controlKey}-invert`}
                             type="checkbox"
                             disabled={controlDisabled || !planeEnabled}
                             checked={plane.invert === true}
                             onChange={(e) =>
-                              setPlanePatch(axis, {
+                              setPlaneSpecificPatch(frame.id, {
                                 invert: e.target.checked,
                               })
                             }
@@ -756,35 +1003,68 @@ export function SceneSectionPlanesContainer({
                         </label>
                         <button
                           type="button"
-                          data-testid={`scene-section-plane-${axis}-active`}
+                          data-testid={`scene-section-plane-${controlKey}-active`}
                           disabled={disabled}
                           onClick={(event) => {
                             event.stopPropagation();
-                            commit({ sceneSectionActiveAxis: axis });
+                            commit({
+                              sceneSectionActiveAxis: axis,
+                              sceneSectionActiveFrameId: frame.id,
+                            });
                           }}
                           style={{
                             ...frameSummaryActiveButtonStyle,
-                            color: isActiveAxis
+                            color: isActiveFrame
                               ? sceneSectionAxisColors[axis]
                               : "rgba(238, 238, 238, 0.78)",
-                            borderColor: isActiveAxis
-                              ? sceneSectionAxisColors[axis]
-                              : "rgba(238, 238, 238, 0.26)",
                           }}
                         >
-                          {isActiveAxis ? "Active" : "Set active"}
+                          {isActiveFrame ? "Active" : "Set active"}
                         </button>
                       </span>
                     </span>
                   </summary>
                   <div
                     style={detailsContentStyle}
-                    data-testid={`scene-section-plane-${axis}`}
+                    data-testid={`scene-section-plane-${testKey}`}
                   >
+                    {!frame.builtIn && (
+                      <div style={nestedControlRowStyle}>
+                        <label style={nestedFieldLabelStyle}>Orientation</label>
+                        <select
+                          data-testid={`scene-section-frame-${testKey}-axis`}
+                          disabled={disabled}
+                          value={axis}
+                          onChange={(e) => {
+                            const nextAxis =
+                              e.target.value === "x" ||
+                              e.target.value === "y" ||
+                              e.target.value === "z"
+                                ? e.target.value
+                                : axis;
+                            const nextRange = axisRanges[nextAxis];
+                            const nextPosition =
+                              position >= nextRange.min &&
+                              position <= nextRange.max
+                                ? position
+                                : sceneSectionDefaultPositions[nextAxis];
+                            setFrameEntryPatch(frame.id, {
+                              axis: nextAxis,
+                              plane: { positionM: nextPosition },
+                            });
+                          }}
+                          style={{ flex: 1 }}
+                        >
+                          <option value="x">X orientation</option>
+                          <option value="y">Y orientation</option>
+                          <option value="z">Z orientation</option>
+                        </select>
+                      </div>
+                    )}
                     <div style={nestedControlRowStyle}>
                       <label style={nestedFieldLabelStyle}>Cut position</label>
                       <input
-                        data-testid={`scene-section-plane-${axis}-position`}
+                        data-testid={`scene-section-plane-${controlKey}-position`}
                         type="range"
                         min={planeRange.min}
                         max={planeRange.max}
@@ -792,7 +1072,7 @@ export function SceneSectionPlanesContainer({
                         disabled={controlDisabled || !planeEnabled}
                         value={position}
                         onChange={(e) =>
-                          setPlanePatch(axis, {
+                          setPlaneSpecificPatch(frame.id, {
                             positionM: parseFloat(e.target.value),
                           })
                         }
@@ -813,24 +1093,26 @@ export function SceneSectionPlanesContainer({
                     <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
                       <span style={nestedFieldLabelStyle}>Frame crop</span>
                       <input
-                        data-testid={`scene-section-frame-${axis}-enabled`}
+                        data-testid={`scene-section-frame-${controlKey}-enabled`}
                         type="checkbox"
                         disabled={disabled}
                         checked={axisFrameEnabled}
                         onChange={(e) =>
-                          setFramePatch(axis, { enabled: e.target.checked })
+                          setFrameSpecificPatch(frame.id, {
+                            enabled: e.target.checked,
+                          })
                         }
                       />
                     </label>
                     <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
                       <span style={nestedFieldLabelStyle}>Ground trace</span>
                       <input
-                        data-testid={`scene-section-frame-${axis}-ground-trace-visible`}
+                        data-testid={`scene-section-frame-${controlKey}-ground-trace-visible`}
                         type="checkbox"
                         disabled={disabled || !axisFrameEnabled}
                         checked={axisGroundTraceVisible}
                         onChange={(e) =>
-                          setFramePatch(axis, {
+                          setFrameSpecificPatch(frame.id, {
                             groundTraceVisible: e.target.checked,
                           })
                         }
@@ -839,7 +1121,7 @@ export function SceneSectionPlanesContainer({
                     <div style={nestedControlRowStyle}>
                       <label style={nestedFieldLabelStyle}>Ground line width</label>
                       <input
-                        data-testid={`scene-section-frame-${axis}-ground-trace-width`}
+                        data-testid={`scene-section-frame-${controlKey}-ground-trace-width`}
                         type="range"
                         min={30}
                         max={2000}
@@ -852,7 +1134,7 @@ export function SceneSectionPlanesContainer({
                         value={axisGroundTraceWidthM}
                         onChange={(e) =>
                           setGroundTraceWidthM(
-                            axis,
+                            frame.id,
                             parseFloat(e.target.value),
                           )
                         }
@@ -860,7 +1142,7 @@ export function SceneSectionPlanesContainer({
                       />
                       <span style={frameInlineUnitInputWrapStyle}>
                         <input
-                          data-testid={`scene-section-frame-${axis}-ground-trace-width-number`}
+                          data-testid={`scene-section-frame-${controlKey}-ground-trace-width-number`}
                           type="number"
                           min={30}
                           max={2000}
@@ -873,7 +1155,7 @@ export function SceneSectionPlanesContainer({
                           value={Math.round(axisGroundTraceWidthM)}
                           onChange={(e) =>
                             setGroundTraceWidthM(
-                              axis,
+                              frame.id,
                               parseFloat(e.target.value),
                             )
                           }
@@ -890,19 +1172,21 @@ export function SceneSectionPlanesContainer({
                     <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
                       <span style={nestedFieldLabelStyle}>Scale axes</span>
                       <input
-                        data-testid={`scene-section-frame-${axis}-axes-visible`}
+                        data-testid={`scene-section-frame-${controlKey}-axes-visible`}
                         type="checkbox"
                         disabled={disabled || !axisFrameEnabled}
                         checked={axisAxesVisible}
                         onChange={(e) =>
-                          setFramePatch(axis, { axesVisible: e.target.checked })
+                          setFrameSpecificPatch(frame.id, {
+                            axesVisible: e.target.checked,
+                          })
                         }
                       />
                     </label>
                     <div style={nestedControlRowStyle}>
                       <label style={nestedFieldLabelStyle}>Axis interval</label>
                       <input
-                        data-testid={`scene-section-frame-${axis}-axis-interval`}
+                        data-testid={`scene-section-frame-${controlKey}-axis-interval`}
                         type="range"
                         min={0.1}
                         max={50}
@@ -912,13 +1196,13 @@ export function SceneSectionPlanesContainer({
                         }
                         value={axisIntervalM / 1000}
                         onChange={(e) =>
-                          setAxisIntervalKm(axis, parseFloat(e.target.value))
+                          setAxisIntervalKm(frame.id, parseFloat(e.target.value))
                         }
                         style={{ flex: 1 }}
                       />
                       <span style={frameInlineUnitInputWrapStyle}>
                         <input
-                          data-testid={`scene-section-frame-${axis}-axis-interval-number`}
+                          data-testid={`scene-section-frame-${controlKey}-axis-interval-number`}
                           type="number"
                           min={0.1}
                           max={50}
@@ -929,7 +1213,7 @@ export function SceneSectionPlanesContainer({
                           value={Number((axisIntervalM / 1000).toFixed(1))}
                           onChange={(e) =>
                             setAxisIntervalKm(
-                              axis,
+                              frame.id,
                               parseFloat(e.target.value),
                             )
                           }
@@ -946,7 +1230,7 @@ export function SceneSectionPlanesContainer({
                     <div style={nestedControlRowStyle}>
                       <label style={nestedFieldLabelStyle}>Text size</label>
                       <input
-                        data-testid={`scene-section-frame-${axis}-axis-text-size`}
+                        data-testid={`scene-section-frame-${controlKey}-axis-text-size`}
                         type="range"
                         min={0.4}
                         max={100}
@@ -956,13 +1240,13 @@ export function SceneSectionPlanesContainer({
                         }
                         value={axisTextScale}
                         onChange={(e) =>
-                          setAxisTextScale(axis, parseFloat(e.target.value))
+                          setAxisTextScale(frame.id, parseFloat(e.target.value))
                         }
                         style={{ flex: 1 }}
                       />
                       <span style={frameInlineUnitInputWrapStyle}>
                         <input
-                          data-testid={`scene-section-frame-${axis}-axis-text-size-number`}
+                          data-testid={`scene-section-frame-${controlKey}-axis-text-size-number`}
                           type="number"
                           min={0.4}
                           max={100}
@@ -973,7 +1257,7 @@ export function SceneSectionPlanesContainer({
                           value={Number(axisTextScale.toFixed(1))}
                           onChange={(e) =>
                             setAxisTextScale(
-                              axis,
+                              frame.id,
                               parseFloat(e.target.value),
                             )
                           }
@@ -990,7 +1274,7 @@ export function SceneSectionPlanesContainer({
                     <div style={nestedControlRowStyle}>
                       <label style={nestedFieldLabelStyle}>Text padding</label>
                       <input
-                        data-testid={`scene-section-frame-${axis}-axis-text-padding`}
+                        data-testid={`scene-section-frame-${controlKey}-axis-text-padding`}
                         type="range"
                         min={0}
                         max={10}
@@ -1000,13 +1284,16 @@ export function SceneSectionPlanesContainer({
                         }
                         value={axisTextPaddingM / 1000}
                         onChange={(e) =>
-                          setAxisTextPaddingKm(axis, parseFloat(e.target.value))
+                          setAxisTextPaddingKm(
+                            frame.id,
+                            parseFloat(e.target.value),
+                          )
                         }
                         style={{ flex: 1 }}
                       />
                       <span style={frameInlineUnitInputWrapStyle}>
                         <input
-                          data-testid={`scene-section-frame-${axis}-axis-text-padding-number`}
+                          data-testid={`scene-section-frame-${controlKey}-axis-text-padding-number`}
                           type="number"
                           min={0}
                           max={10}
@@ -1017,7 +1304,7 @@ export function SceneSectionPlanesContainer({
                           value={Number((axisTextPaddingM / 1000).toFixed(1))}
                           onChange={(e) =>
                             setAxisTextPaddingKm(
-                              axis,
+                              frame.id,
                               parseFloat(e.target.value),
                             )
                           }
@@ -1034,14 +1321,16 @@ export function SceneSectionPlanesContainer({
                     <div style={nestedControlRowStyle}>
                       <label style={nestedFieldLabelStyle}>A heading</label>
                       <input
-                        data-testid={`scene-section-frame-${axis}-axis-a-heading`}
+                        data-testid={`scene-section-frame-${controlKey}-axis-a-heading`}
                         type="text"
                         disabled={
                           disabled || !axisFrameEnabled || !axisAxesVisible
                         }
                         value={axisAHeading}
                         onChange={(e) =>
-                          setFramePatch(axis, { axisAHeading: e.target.value })
+                          setFrameSpecificPatch(frame.id, {
+                            axisAHeading: e.target.value,
+                          })
                         }
                         style={frameTextInputStyle}
                       />
@@ -1049,14 +1338,16 @@ export function SceneSectionPlanesContainer({
                     <div style={nestedControlRowStyle}>
                       <label style={nestedFieldLabelStyle}>B heading</label>
                       <input
-                        data-testid={`scene-section-frame-${axis}-axis-b-heading`}
+                        data-testid={`scene-section-frame-${controlKey}-axis-b-heading`}
                         type="text"
                         disabled={
                           disabled || !axisFrameEnabled || !axisAxesVisible
                         }
                         value={axisBHeading}
                         onChange={(e) =>
-                          setFramePatch(axis, { axisBHeading: e.target.value })
+                          setFrameSpecificPatch(frame.id, {
+                            axisBHeading: e.target.value,
+                          })
                         }
                         style={frameTextInputStyle}
                       />
@@ -1064,7 +1355,7 @@ export function SceneSectionPlanesContainer({
                     <div style={nestedControlRowStyle}>
                       <label style={nestedFieldLabelStyle}>Heading padding</label>
                       <input
-                        data-testid={`scene-section-frame-${axis}-axis-heading-padding`}
+                        data-testid={`scene-section-frame-${controlKey}-axis-heading-padding`}
                         type="range"
                         min={0}
                         max={20}
@@ -1075,7 +1366,7 @@ export function SceneSectionPlanesContainer({
                         value={axisHeadingPaddingM / 1000}
                         onChange={(e) =>
                           setAxisHeadingPaddingKm(
-                            axis,
+                            frame.id,
                             parseFloat(e.target.value),
                           )
                         }
@@ -1083,7 +1374,7 @@ export function SceneSectionPlanesContainer({
                       />
                       <span style={frameInlineUnitInputWrapStyle}>
                         <input
-                          data-testid={`scene-section-frame-${axis}-axis-heading-padding-number`}
+                          data-testid={`scene-section-frame-${controlKey}-axis-heading-padding-number`}
                           type="number"
                           min={0}
                           max={20}
@@ -1096,7 +1387,7 @@ export function SceneSectionPlanesContainer({
                           )}
                           onChange={(e) =>
                             setAxisHeadingPaddingKm(
-                              axis,
+                              frame.id,
                               parseFloat(e.target.value),
                             )
                           }
@@ -1113,7 +1404,7 @@ export function SceneSectionPlanesContainer({
                     <div style={nestedControlRowStyle}>
                       <label style={nestedFieldLabelStyle}>Heading size</label>
                       <input
-                        data-testid={`scene-section-frame-${axis}-axis-heading-size`}
+                        data-testid={`scene-section-frame-${controlKey}-axis-heading-size`}
                         type="range"
                         min={0.4}
                         max={100}
@@ -1123,13 +1414,16 @@ export function SceneSectionPlanesContainer({
                         }
                         value={axisHeadingScale}
                         onChange={(e) =>
-                          setAxisHeadingScale(axis, parseFloat(e.target.value))
+                          setAxisHeadingScale(
+                            frame.id,
+                            parseFloat(e.target.value),
+                          )
                         }
                         style={{ flex: 1 }}
                       />
                       <span style={frameInlineUnitInputWrapStyle}>
                         <input
-                          data-testid={`scene-section-frame-${axis}-axis-heading-size-number`}
+                          data-testid={`scene-section-frame-${controlKey}-axis-heading-size-number`}
                           type="number"
                           min={0.4}
                           max={100}
@@ -1140,7 +1434,7 @@ export function SceneSectionPlanesContainer({
                           value={Number(axisHeadingScale.toFixed(1))}
                           onChange={(e) =>
                             setAxisHeadingScale(
-                              axis,
+                              frame.id,
                               parseFloat(e.target.value),
                             )
                           }
@@ -1157,14 +1451,14 @@ export function SceneSectionPlanesContainer({
                     <div style={nestedControlRowStyle}>
                       <label style={nestedFieldLabelStyle}>Heading color</label>
                       <input
-                        data-testid={`scene-section-frame-${axis}-axis-heading-color`}
+                        data-testid={`scene-section-frame-${controlKey}-axis-heading-color`}
                         type="color"
                         disabled={
                           disabled || !axisFrameEnabled || !axisAxesVisible
                         }
                         value={axisHeadingColor}
                         onChange={(e) =>
-                          setFramePatch(axis, {
+                          setFrameSpecificPatch(frame.id, {
                             axisHeadingColor: e.target.value,
                           })
                         }
@@ -1173,6 +1467,7 @@ export function SceneSectionPlanesContainer({
                     </div>
                     {renderFrameRangeRow({
                       axis,
+                      frameId: frame.id,
                       kind: "min-a",
                       label: `${aLabel} min`,
                       valueM: minA,
@@ -1183,6 +1478,7 @@ export function SceneSectionPlanesContainer({
                     })}
                     {renderFrameRangeRow({
                       axis,
+                      frameId: frame.id,
                       kind: "max-a",
                       label: `${aLabel} max`,
                       valueM: maxA,
@@ -1193,6 +1489,7 @@ export function SceneSectionPlanesContainer({
                     })}
                     {renderFrameRangeRow({
                       axis,
+                      frameId: frame.id,
                       kind: "min-b",
                       label: `${bLabel} min`,
                       valueM: minB,
@@ -1203,6 +1500,7 @@ export function SceneSectionPlanesContainer({
                     })}
                     {renderFrameRangeRow({
                       axis,
+                      frameId: frame.id,
                       kind: "max-b",
                       label: `${bLabel} max`,
                       valueM: maxB,
@@ -1211,70 +1509,95 @@ export function SceneSectionPlanesContainer({
                       elevation: bLabel === "Elevation",
                       frameActive: axisFrameEnabled,
                     })}
+                    <details open style={nestedDetailsStyle}>
+                      <summary style={panelStyles.summary}>
+                        Section object visibility
+                      </summary>
+                      <div style={detailsContentStyle}>
+                        {objectTargets.map((target) => {
+                          const supported =
+                            target.supported && target.axes.includes(axis);
+                          const opacity = objectVisibilityOpacity(
+                            style,
+                            axis,
+                            frame.id,
+                            target,
+                            targetScope,
+                            targetLayerIds,
+                            targetProductIds,
+                          );
+                          const sliderDisabled =
+                            disabled ||
+                            !enabled ||
+                            !planeEnabled ||
+                            !axisFrameEnabled ||
+                            !supported;
+                          return (
+                            <div
+                              key={target.objectId}
+                              style={{
+                                ...frameObjectVisibilityRowStyle,
+                                opacity: supported ? 1 : 0.45,
+                              }}
+                            >
+                              <span
+                                title={target.label}
+                                style={{
+                                  minWidth: 0,
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {target.label}
+                              </span>
+                              <input
+                                data-testid={`scene-section-object-opacity-${controlKey}-${target.objectId}`}
+                                type="range"
+                                min={0}
+                                max={1}
+                                step={0.01}
+                                disabled={sliderDisabled}
+                                value={opacity}
+                                onChange={(e) =>
+                                  setObjectVisibilityOpacity(
+                                    axis,
+                                    frame.id,
+                                    target.objectId,
+                                    parseFloat(e.target.value),
+                                  )
+                                }
+                                style={{ minWidth: 0 }}
+                              />
+                              <span style={sliderNumberReadoutStyle}>
+                                {opacity.toFixed(2)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </details>
                   </div>
                 </details>
               );
-            })}
-          </div>
-        </details>
-        <details style={nestedDetailsStyle}>
-          <summary style={panelStyles.summary}>Target checklist</summary>
-          <div style={detailsContentStyle}>
-            <div style={miniGroupTitleStyle}>Volume products</div>
-            {products
-              .filter((product) => product.raymarchCapable)
-              .map((product) => (
-                <label
-                  key={product.id}
-                  style={{ ...compactCheckboxRowStyle, cursor: "pointer" }}
-                >
-                  <input
-                    data-testid={`scene-section-target-product-${product.id}`}
-                    type="checkbox"
-                    disabled={disabled || targetScope === "all-visible"}
-                    checked={
-                      targetScope === "all-visible" ||
-                      targetProductIds.has(product.id)
-                    }
-                    onChange={(e) =>
-                      toggleProductTarget(product.id, e.target.checked)
-                    }
-                  />
-                  <span>{product.label}</span>
-                </label>
-              ))}
-            <div style={miniGroupTitleStyle}>Scene layers</div>
-            {layerOptions.map((layer) => (
-              <label
-                key={layer.id}
-                style={{
-                  ...compactCheckboxRowStyle,
-                  cursor: layer.supported ? "pointer" : "not-allowed",
-                  opacity: layer.supported ? 1 : 0.45,
-                }}
-              >
-                <input
-                  data-testid={`scene-section-target-layer-${layer.id}`}
-                  type="checkbox"
-                  disabled={
-                    disabled ||
-                    targetScope === "all-visible" ||
-                    !layer.supported
-                  }
-                  checked={
-                    targetScope === "all-visible" ||
-                    targetLayerIds.has(layer.id)
-                  }
-                  onChange={(e) =>
-                    toggleLayerTarget(layer.id, e.target.checked)
-                  }
-                />
-                <span>{layer.label}</span>
-              </label>
-            ))}
-          </div>
-        </details>
+          })}
+          <button
+            type="button"
+            data-testid="scene-section-add-frame"
+            disabled={
+              disabled || frameEntries.length >= SCENE_SECTION_MAX_FRAME_COUNT
+            }
+            onClick={addCustomFrame}
+            style={{
+              ...smallActionButtonStyle,
+              marginTop: 8,
+              width: "100%",
+            }}
+          >
+            Add section frame
+          </button>
+        </div>
       </div>
-    </SeismicCapabilityLayerItem>
+    </div>
   );
 }

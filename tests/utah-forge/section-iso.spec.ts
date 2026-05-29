@@ -591,6 +591,25 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
       thresholdDepthTest: true,
     });
   await page.waitForTimeout(900);
+  const occludedIsoState = await sectionIsoSceneState(page, "mt-volume-cuts");
+  const occludedLineMaterial = occludedIsoState.firstLineMaterial;
+  expect(occludedLineMaterial).not.toBeNull();
+  expect(occludedLineMaterial?.baseOpacity).toBeCloseTo(0.96, 2);
+  expect(occludedLineMaterial?.transitionOpacity ?? 1).toBeGreaterThan(0.99);
+  expect(occludedLineMaterial?.thresholdAttenuation ?? 1).toBeGreaterThan(0);
+  expect(occludedLineMaterial?.thresholdAttenuation ?? 1).toBeLessThanOrEqual(
+    1,
+  );
+  expect(occludedLineMaterial?.opacity ?? 0).toBeCloseTo(
+    occludedLineMaterial?.composedOpacity ?? 0,
+    4,
+  );
+  expect(occludedLineMaterial?.composedOpacity ?? 0).toBeCloseTo(
+    (occludedLineMaterial?.baseOpacity ?? 1) *
+      (occludedLineMaterial?.transitionOpacity ?? 1) *
+      (occludedLineMaterial?.thresholdAttenuation ?? 1),
+    3,
+  );
   const settledBeforeMoveCanvas = await page.locator("canvas").screenshot();
   await page.evaluate(() => {
     const sceneHandle = (
@@ -613,13 +632,24 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
   ).toBeGreaterThan(200);
   await page.waitForTimeout(1_600);
   const settledAfterMoveCanvasA = await page.locator("canvas").screenshot();
+  const settledIsoStateA = await sectionIsoSceneState(page, "mt-volume-cuts");
   await page.waitForTimeout(700);
   const settledAfterMoveCanvasB = await page.locator("canvas").screenshot();
+  const settledIsoStateB = await sectionIsoSceneState(page, "mt-volume-cuts");
   expect(
     changedByteCount(settledAfterMoveCanvasA, settledAfterMoveCanvasB),
   ).toBeLessThan(
     Math.max(5_000, Math.floor(settledAfterMoveCanvasA.length * 0.02)),
   );
+  expect(settledIsoStateB.firstLineMaterial?.thresholdOcclusionCount).toBe(
+    settledIsoStateA.firstLineMaterial?.thresholdOcclusionCount,
+  );
+  expect(
+    Math.abs(
+      (settledIsoStateB.firstLineMaterial?.composedOpacity ?? 0) -
+        (settledIsoStateA.firstLineMaterial?.composedOpacity ?? 0),
+    ),
+  ).toBeLessThan(0.03);
   expect(volumeIsoState.firstBandUniforms).toMatchObject({
     opacity: 0.36,
     fillOffset: -0.15,

@@ -89,6 +89,8 @@ function buildTerrainGridHandle(
   terrainOffset: THREE.Vector3,
   transform: GeoSceneTransform,
 ): TerrainGridHandle {
+  const showBelowTerrainM = 20;
+  const hideAboveTerrainM = 20;
   const material = new LineMaterial({
     color: 0xbababa,
     linewidth: 2.75,
@@ -112,10 +114,14 @@ function buildTerrainGridHandle(
   line.renderOrder = -1;
   line.userData.terrainUndersideGrid = true;
   line.userData.ignoreLayerStyle = true;
+  line.userData.terrainUndersideGridVisibleByCamera = false;
+  line.userData.terrainUndersideGridShowBelowTerrainM = showBelowTerrainM;
+  line.userData.terrainUndersideGridHideAboveTerrainM = hideAboveTerrainM;
 
   let currentSpacing = -1;
   let enabledBySettings = true;
   let opacityBySettings = 0.72;
+  let visibleByCamera = false;
   const rebuild = (spacing: number) => {
     const next = buildGridPositions(
       bbox,
@@ -141,27 +147,53 @@ function buildTerrainGridHandle(
     }
     enabledBySettings = visible;
     opacityBySettings = opacity;
-    line.visible = visible && opacity > 0.001;
+    line.visible = visible && opacity > 0.001 && visibleByCamera;
     material.color.set(params.gridColor ?? "#bababa");
     material.opacity = opacity;
     material.linewidth = clampRange(params.gridLineWidthM ?? 2.75, 0.25, 8);
+    line.userData.terrainUndersideGridEnabledBySettings = enabledBySettings;
+    line.userData.terrainUndersideGridOpacity = opacityBySettings;
+    line.userData.terrainUndersideGridSpacingM = spacing;
+    line.userData.terrainUndersideGridLineWidthPx = material.linewidth;
     material.needsUpdate = true;
   };
 
   const updateCameraVisibility = (camera: THREE.Camera) => {
     if (!enabledBySettings || opacityBySettings <= 0.001) {
+      visibleByCamera = false;
       line.visible = false;
+      line.userData.terrainUndersideGridVisibleByCamera = visibleByCamera;
+      line.userData.terrainUndersideGridHiddenReason = "settings";
       return;
     }
     const [minX, minY, maxX, maxY] = bbox;
     const utmX = camera.position.x + transform.origin.easting;
     const utmY = camera.position.y + transform.origin.northing;
     if (utmX < minX || utmX > maxX || utmY < minY || utmY > maxY) {
+      visibleByCamera = false;
       line.visible = false;
+      line.userData.terrainUndersideGridVisibleByCamera = visibleByCamera;
+      line.userData.terrainUndersideGridHiddenReason = "outside-bounds";
       return;
     }
     const surfaceSceneZ = sample(utmX, utmY) - transform.origin.elevation;
-    line.visible = camera.position.z < surfaceSceneZ - 2;
+    const cameraOffsetFromSurfaceM = camera.position.z - surfaceSceneZ;
+    if (!visibleByCamera && cameraOffsetFromSurfaceM < -showBelowTerrainM) {
+      visibleByCamera = true;
+    } else if (
+      visibleByCamera &&
+      cameraOffsetFromSurfaceM > hideAboveTerrainM
+    ) {
+      visibleByCamera = false;
+    }
+    line.visible = visibleByCamera;
+    line.userData.terrainUndersideGridVisibleByCamera = visibleByCamera;
+    line.userData.terrainUndersideGridHiddenReason = visibleByCamera
+      ? null
+      : "camera-side";
+    line.userData.terrainUndersideGridCameraOffsetFromSurfaceM =
+      cameraOffsetFromSurfaceM;
+    line.userData.terrainUndersideGridSurfaceSceneZ = surfaceSceneZ;
   };
   update();
 

@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { appAssetUrl } from "../projects/projectPathsRuntime";
 
+const SCENE_SECTION_SHADER_SLOT_COUNT = 8;
+
 type Vec3 = [number, number, number];
 
 interface ScalarVolumeBounds {
@@ -126,18 +128,20 @@ uniform int uMaskVisible;
 uniform int uSceneSectionEnabled;
 uniform int uSceneSectionMode;
 uniform int uSceneSectionPlaneCount;
-uniform vec3 uSceneSectionNormals[3];
-uniform float uSceneSectionPositions[3];
-uniform float uSceneSectionThickness[3];
-uniform int uSceneSectionInvert[3];
+uniform vec3 uSceneSectionNormals[8];
+uniform float uSceneSectionPositions[8];
+uniform float uSceneSectionThickness[8];
+uniform int uSceneSectionInvert[8];
+uniform float uSceneSectionPlaneOutsideOpacity[8];
 uniform int uSceneSectionWindowEnabled;
 uniform int uSceneSectionWindowAxis;
 uniform float uSceneSectionWindowMinAlong;
 uniform float uSceneSectionWindowMaxAlong;
 uniform float uSceneSectionWindowBottomZ;
 uniform int uSceneSectionFrameCount;
-uniform int uSceneSectionFrameAxes[3];
-uniform vec4 uSceneSectionFrameBounds[3];
+uniform int uSceneSectionFrameAxes[8];
+uniform vec4 uSceneSectionFrameBounds[8];
+uniform float uSceneSectionFrameOutsideOpacity[8];
 uniform int uWorkingAreaFocusEnabled;
 uniform vec3 uWorkingAreaFocusBoundsMin;
 uniform vec3 uWorkingAreaFocusBoundsMax;
@@ -171,33 +175,36 @@ vec2 intersectBox(vec3 origin, vec3 direction) {
   return vec2(tNear, tFar);
 }
 
-bool sceneSectionAllows(vec3 position) {
-  if (uSceneSectionEnabled == 0) return true;
-  for (int i = 0; i < 3; i += 1) {
+float sceneSectionAlpha(vec3 position) {
+  if (uSceneSectionEnabled == 0) return 1.0;
+  float alpha = 1.0;
+  for (int i = 0; i < 8; i += 1) {
     if (i >= uSceneSectionPlaneCount) break;
     vec3 normal = normalize(uSceneSectionNormals[i]);
     float distance = dot(position, normal) - uSceneSectionPositions[i];
     if (uSceneSectionInvert[i] == 1) distance = -distance;
     if (distance > 0.0) {
-      return false;
+      alpha = min(alpha, clamp(uSceneSectionPlaneOutsideOpacity[i], 0.0, 1.0));
     }
   }
-  return true;
+  return alpha;
 }
 
-bool sceneSectionWindowAllows(vec3 position) {
-  if (uSceneSectionFrameCount <= 0) return true;
-  for (int i = 0; i < 3; i += 1) {
+float sceneSectionFrameAlpha(vec3 position) {
+  if (uSceneSectionFrameCount <= 0) return 1.0;
+  float alpha = 1.0;
+  for (int i = 0; i < 8; i += 1) {
     if (i >= uSceneSectionFrameCount) break;
     int axis = uSceneSectionFrameAxes[i];
     vec4 bounds = uSceneSectionFrameBounds[i];
     float a = axis == 0 ? position.y : position.x;
     float b = axis == 2 ? position.y : position.z;
-    if (a >= bounds.x && a <= bounds.y && b >= bounds.z && b <= bounds.w) {
-      return true;
+    bool inside = a >= bounds.x && a <= bounds.y && b >= bounds.z && b <= bounds.w;
+    if (!inside) {
+      alpha = min(alpha, clamp(uSceneSectionFrameOutsideOpacity[i], 0.0, 1.0));
     }
   }
-  return false;
+  return alpha;
 }
 
 float workingAreaFocusAlpha(vec3 position) {
@@ -237,7 +244,8 @@ void main() {
     if (float(i) >= sampleSteps) break;
     if (t > tEnd || accum.a > 0.96) break;
     vec3 position = cameraPosition + rayDirection * t;
-    if (!sceneSectionAllows(position) || !sceneSectionWindowAllows(position)) {
+    float sectionAlpha = sceneSectionAlpha(position) * sceneSectionFrameAlpha(position);
+    if (sectionAlpha <= 0.0001) {
       t += stepSize;
       continue;
     }
@@ -256,7 +264,7 @@ void main() {
     float normalized = texture(uVolume, uvw).r;
     float scalarValue = mix(uSourceMin, uSourceMax, normalized);
     float rampT = saturate((scalarValue - uDisplayMin) / max(0.000001, uDisplayMax - uDisplayMin));
-    float alpha = transferAlpha(scalarValue, rampT, uMaskVisible == 1 ? maskValue : 1.0) * focusAlpha;
+    float alpha = transferAlpha(scalarValue, rampT, uMaskVisible == 1 ? maskValue : 1.0) * focusAlpha * sectionAlpha;
     if (alpha <= 0.0001) {
       t += stepSize;
       continue;
@@ -293,6 +301,24 @@ function transferModeCode(mode: string | undefined): number {
   if (mode === "soft") return 0;
   if (mode === "dense") return 2;
   return 1;
+}
+
+function sceneSectionVectorSlots(): THREE.Vector3[] {
+  return Array.from(
+    { length: SCENE_SECTION_SHADER_SLOT_COUNT },
+    () => new THREE.Vector3(),
+  );
+}
+
+function sceneSectionVector4Slots(): THREE.Vector4[] {
+  return Array.from(
+    { length: SCENE_SECTION_SHADER_SLOT_COUNT },
+    () => new THREE.Vector4(-250000, 250000, -250000, 250000),
+  );
+}
+
+function sceneSectionNumberSlots(value: number): number[] {
+  return Array.from({ length: SCENE_SECTION_SHADER_SLOT_COUNT }, () => value);
 }
 
 async function buildVolumeMesh(
@@ -375,26 +401,20 @@ async function buildVolumeMesh(
       uSceneSectionEnabled: { value: 0 },
       uSceneSectionMode: { value: 0 },
       uSceneSectionPlaneCount: { value: 0 },
-      uSceneSectionNormals: {
-        value: [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()],
-      },
-      uSceneSectionPositions: { value: [0, 0, 0] },
-      uSceneSectionThickness: { value: [1, 1, 1] },
-      uSceneSectionInvert: { value: [0, 0, 0] },
+      uSceneSectionNormals: { value: sceneSectionVectorSlots() },
+      uSceneSectionPositions: { value: sceneSectionNumberSlots(0) },
+      uSceneSectionThickness: { value: sceneSectionNumberSlots(1) },
+      uSceneSectionInvert: { value: sceneSectionNumberSlots(0) },
+      uSceneSectionPlaneOutsideOpacity: { value: sceneSectionNumberSlots(1) },
       uSceneSectionWindowEnabled: { value: 0 },
       uSceneSectionWindowAxis: { value: 0 },
       uSceneSectionWindowMinAlong: { value: -250000 },
       uSceneSectionWindowMaxAlong: { value: 250000 },
       uSceneSectionWindowBottomZ: { value: -250000 },
       uSceneSectionFrameCount: { value: 0 },
-      uSceneSectionFrameAxes: { value: [0, 1, 2] },
-      uSceneSectionFrameBounds: {
-        value: [
-          new THREE.Vector4(-250000, 250000, -250000, 250000),
-          new THREE.Vector4(-250000, 250000, -250000, 250000),
-          new THREE.Vector4(-250000, 250000, -250000, 250000),
-        ],
-      },
+      uSceneSectionFrameAxes: { value: sceneSectionNumberSlots(0) },
+      uSceneSectionFrameBounds: { value: sceneSectionVector4Slots() },
+      uSceneSectionFrameOutsideOpacity: { value: sceneSectionNumberSlots(1) },
       uWorkingAreaFocusEnabled: { value: 0 },
       uWorkingAreaFocusBoundsMin: { value: new THREE.Vector3() },
       uWorkingAreaFocusBoundsMax: { value: new THREE.Vector3() },

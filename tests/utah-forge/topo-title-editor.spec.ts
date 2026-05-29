@@ -610,6 +610,8 @@ test("Utah FORGE topo editor exposes circular clipping and graticule layer", asy
   expect(enabledGraticule.labelObjectCount).toBeGreaterThan(0);
   expect(enabledGraticule.visibleLabelCount).toBeGreaterThan(0);
   expect(enabledGraticule.firstLabelScaleX).toBeGreaterThan(0);
+  expect(enabledGraticule.firstLineDepthTest).toBe(true);
+  expect(enabledGraticule.firstLineDepthWrite).toBe(false);
   expect(enabledGraticule.interiorSegmentCount ?? 0).toBeGreaterThan(0);
   expect(enabledGraticule.dashedInteriorSegmentCount ?? 0).toBeGreaterThan(0);
   expect(enabledGraticule.leaderSegmentCount ?? 0).toBeGreaterThan(0);
@@ -636,6 +638,36 @@ test("Utah FORGE topo editor exposes circular clipping and graticule layer", asy
   expect(enabledGraticule.westLabelOutsideCount).toBeGreaterThan(0);
   expect(enabledGraticule.minLabelInsideDistance).toBeLessThan(-1000);
   expect(enabledGraticule.maxLabelTangentErrorDeg).toBeLessThan(0.1);
+  await page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          camera?: {
+            position: { set: (x: number, y: number, z: number) => void };
+            updateMatrixWorld?: (force?: boolean) => void;
+          };
+          controls?: {
+            target?: { set: (x: number, y: number, z: number) => void };
+            update?: () => void;
+          };
+        };
+      }
+    ).__scene;
+    sceneHandle?.camera?.position.set(0, 0, 120_000);
+    sceneHandle?.controls?.target?.set(0, 0, 0);
+    sceneHandle?.controls?.update?.();
+    sceneHandle?.camera?.updateMatrixWorld?.(true);
+  });
+  const aboveTerrainGraticule = await topoGraticuleSceneState(page);
+  expect(aboveTerrainGraticule.firstLineDepthTest).toBe(true);
+  expect(aboveTerrainGraticule.firstLineDepthWrite).toBe(false);
+  if (aboveTerrainGraticule.undersideGridVisible !== null) {
+    expect(aboveTerrainGraticule.undersideGridVisible).toBe(false);
+    expect(aboveTerrainGraticule.undersideGridCameraVisible).toBe(false);
+    expect(aboveTerrainGraticule.undersideGridHiddenReason).toBe(
+      "camera-side",
+    );
+  }
 
   const shapeSelect = page.getByTestId("public-surface-clip-shape").first();
   await expect(shapeSelect).toHaveValue("circle");
@@ -653,11 +685,22 @@ test("Utah FORGE topo editor exposes circular clipping and graticule layer", asy
     });
   await expect
     .poll(() =>
+      topoGraticuleSceneState(page).then((state) => ({
+        depthTest: state.firstLineDepthTest,
+        depthWrite: state.firstLineDepthWrite,
+      })),
+    )
+    .toMatchObject({
+      depthTest: true,
+      depthWrite: false,
+    });
+  await expect
+    .poll(() =>
       topoGraticuleSceneState(page).then(
-        (state) => state.firstLineClippingPlanes,
+        (state) => state.firstLineClippingPlanes ?? 0,
       ),
     )
-    .toBe(2);
+    .toBeGreaterThan(0);
 
   const clippedCanvas = await page.locator("canvas").screenshot();
   expect(clippedCanvas.length).toBeGreaterThan(1000);

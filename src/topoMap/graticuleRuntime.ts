@@ -22,6 +22,11 @@ interface TopoGraticuleLabelCandidate {
   tangent: THREE.Vector3;
 }
 
+interface TopoGraticuleIndexedCrossing {
+  crossing: TopoGraticuleLabelCandidate;
+  segmentIndex: number;
+}
+
 interface TopoGraticuleSourceLine {
   kind: "lat" | "lon";
   value: number;
@@ -37,6 +42,11 @@ interface TopoGraticuleLabelTarget {
   insideDistance: number;
   minor: boolean;
 }
+
+const TOPO_GRATICULE_EDGE_LEADER_MIN_M = 6_000;
+const TOPO_GRATICULE_EDGE_LEADER_MAX_M = 24_000;
+const TOPO_GRATICULE_EDGE_CLIP_SUBDIVISIONS = 6;
+const TOPO_GRATICULE_EDGE_CROSSING_WINDOW = 2;
 
 export interface ApplyTopoGraticuleStyleParams {
   group: THREE.Group;
@@ -297,13 +307,13 @@ export function topoGraticuleThresholdCrossing(
   return { position, tangent };
 }
 
-function topoGraticulePreferredCrossing(
+function topoGraticulePreferredCrossingWithIndex(
   candidates: TopoGraticuleLabelCandidate[],
   edge: TerrainEdgeFadeState,
   preference: "west" | "north",
   threshold: number,
-): TopoGraticuleLabelCandidate | null {
-  let best: TopoGraticuleLabelCandidate | null = null;
+): TopoGraticuleIndexedCrossing | null {
+  let best: TopoGraticuleIndexedCrossing | null = null;
   let bestScore = -Infinity;
   for (let index = 1; index < candidates.length; index += 1) {
     const crossing = topoGraticuleThresholdCrossing(
@@ -320,6 +330,49 @@ function topoGraticulePreferredCrossing(
     );
     if (score > bestScore) {
       bestScore = score;
+      best = { crossing, segmentIndex: index };
+    }
+  }
+  return best;
+}
+
+function topoGraticulePreferredCrossing(
+  candidates: TopoGraticuleLabelCandidate[],
+  edge: TerrainEdgeFadeState,
+  preference: "west" | "north",
+  threshold: number,
+): TopoGraticuleLabelCandidate | null {
+  return topoGraticulePreferredCrossingWithIndex(
+    candidates,
+    edge,
+    preference,
+    threshold,
+  )?.crossing ?? null;
+}
+
+function topoGraticuleNearestCrossing(
+  candidates: TopoGraticuleLabelCandidate[],
+  edge: TerrainEdgeFadeState,
+  threshold: number,
+  reference: THREE.Vector3,
+  startIndex = 1,
+  endIndex = candidates.length - 1,
+): TopoGraticuleLabelCandidate | null {
+  let best: TopoGraticuleLabelCandidate | null = null;
+  let bestDistanceSq = Infinity;
+  const firstIndex = Math.max(1, Math.floor(startIndex));
+  const lastIndex = Math.min(candidates.length - 1, Math.floor(endIndex));
+  for (let index = firstIndex; index <= lastIndex; index += 1) {
+    const crossing = topoGraticuleThresholdCrossing(
+      candidates[index - 1],
+      candidates[index],
+      edge,
+      threshold,
+    );
+    if (!crossing) continue;
+    const distanceSq = crossing.position.distanceToSquared(reference);
+    if (distanceSq < bestDistanceSq) {
+      bestDistanceSq = distanceSq;
       best = crossing;
     }
   }
@@ -349,6 +402,75 @@ function topoGraticuleVisibleSegment(
   return aValue >= 0
     ? [a.position, crossing.position]
     : [crossing.position, b.position];
+}
+
+function topoGraticulePairTangent(
+  a: TopoGraticuleLabelCandidate,
+  b: TopoGraticuleLabelCandidate,
+): THREE.Vector3 {
+  const tangent = b.position.clone().sub(a.position);
+  tangent.z = 0;
+  if (tangent.lengthSq() <= 0.000001) tangent.copy(a.tangent);
+  tangent.z = 0;
+  if (tangent.lengthSq() <= 0.000001) tangent.set(1, 0, 0);
+  else tangent.normalize();
+  return tangent;
+}
+
+function topoGraticuleInterpolatedCandidate(
+  a: TopoGraticuleLabelCandidate,
+  b: TopoGraticuleLabelCandidate,
+  t: number,
+  tangent: THREE.Vector3,
+): TopoGraticuleLabelCandidate {
+  return {
+    position: a.position.clone().lerp(b.position, t),
+    tangent: tangent.clone(),
+  };
+}
+
+function pushTopoGraticuleVisibleSegmentParts(
+  positions: number[],
+  a: TopoGraticuleLabelCandidate,
+  b: TopoGraticuleLabelCandidate,
+  edge: TerrainEdgeFadeState,
+  threshold: number,
+): void {
+  const tangent = topoGraticulePairTangent(a, b);
+  let runStart: THREE.Vector3 | null = null;
+  let runEnd: THREE.Vector3 | null = null;
+  const flushRun = () => {
+    if (runStart && runEnd && runStart.distanceToSquared(runEnd) > 1) {
+      pushTopoGraticuleSegment(positions, runStart, runEnd);
+    }
+    runStart = null;
+    runEnd = null;
+  };
+
+  for (let step = 1; step <= TOPO_GRATICULE_EDGE_CLIP_SUBDIVISIONS; step += 1) {
+    const t0 = (step - 1) / TOPO_GRATICULE_EDGE_CLIP_SUBDIVISIONS;
+    const t1 = step / TOPO_GRATICULE_EDGE_CLIP_SUBDIVISIONS;
+    const subA = topoGraticuleInterpolatedCandidate(a, b, t0, tangent);
+    const subB = topoGraticuleInterpolatedCandidate(a, b, t1, tangent);
+    const clipped = topoGraticuleVisibleSegment(subA, subB, edge, threshold);
+    if (!clipped) {
+      flushRun();
+      continue;
+    }
+    if (!runStart || !runEnd) {
+      runStart = clipped[0].clone();
+      runEnd = clipped[1].clone();
+      continue;
+    }
+    if (runEnd.distanceToSquared(clipped[0]) <= 1) {
+      runEnd.copy(clipped[1]);
+      continue;
+    }
+    flushRun();
+    runStart = clipped[0].clone();
+    runEnd = clipped[1].clone();
+  }
+  flushRun();
 }
 
 function setTopoGraticuleLinePositions(
@@ -433,53 +555,58 @@ export function rebuildTopoGraticuleEdgeLines(
         );
         continue;
       }
-      const clipped = topoGraticuleVisibleSegment(
+      pushTopoGraticuleVisibleSegmentParts(
+        sourceInteriorPositions,
         candidates[index - 1],
         candidates[index],
         edge,
         innerThreshold,
       );
-      if (clipped) {
-        pushTopoGraticuleSegment(
-          sourceInteriorPositions,
-          clipped[0],
-          clipped[1],
-        );
-      }
     }
 
     if (!edgeAware || !edge) continue;
-    const inner = topoGraticulePreferredCrossing(
+    const innerResult = topoGraticulePreferredCrossingWithIndex(
       candidates,
       edge,
       sourceLine.preference,
       innerThreshold,
     );
-    if (!inner) continue;
-    const outer = topoGraticulePreferredCrossing(
+    if (!innerResult) continue;
+    const inner = innerResult.crossing;
+    const outerStartIndex = Math.max(
+      1,
+      innerResult.segmentIndex - TOPO_GRATICULE_EDGE_CROSSING_WINDOW,
+    );
+    const outerEndIndex = Math.min(
+      candidates.length - 1,
+      innerResult.segmentIndex + TOPO_GRATICULE_EDGE_CROSSING_WINDOW,
+    );
+    const outer = topoGraticuleNearestCrossing(
       candidates,
       edge,
-      sourceLine.preference,
       0,
+      inner.position,
+      outerStartIndex,
+      outerEndIndex,
     );
-    if (
-      !terrainEdgeStraightSideEligible(
-        outer?.position ?? inner.position,
+    const eligibleOuter =
+      outer &&
+      terrainEdgeStraightSideEligible(
+        outer.position,
         edge,
         sourceLine.preference,
       )
-    ) {
-      continue;
-    }
+        ? outer
+        : null;
     const effectiveLabelOffsetM =
       labelOffsetM * (isMinor ? TOPO_GRATICULE_MINOR_SCALE : 1);
     const effectiveLabelThreshold = -Math.max(0, effectiveLabelOffsetM);
     const target =
-      topoGraticulePreferredCrossing(
+      topoGraticuleNearestCrossing(
         candidates,
         edge,
-        sourceLine.preference,
         effectiveLabelThreshold,
+        inner.position,
       ) ??
       (() => {
         const outward = edgeOutwardLineTangent(inner, edge);
@@ -491,17 +618,22 @@ export function rebuildTopoGraticuleEdgeLines(
           tangent: inner.tangent.clone(),
         };
       })();
-    const leaderDirection = target.position.clone().sub(inner.position);
-    leaderDirection.z = 0;
-    if (leaderDirection.lengthSq() <= 0.000001) {
-      leaderDirection.copy(edgeOutwardLineTangent(inner, edge));
-    } else {
-      leaderDirection.normalize();
-    }
     const edgeTextBasis = topoGraticuleEdgeTextBasis(sourceLine.preference);
     const readableTangent = edgeTextBasis.tangent;
     const positions = isMinor ? dashedLeaderPositions : leaderPositions;
-    pushTopoGraticuleSegment(positions, inner.position, target.position);
+    if (eligibleOuter) {
+      const leaderLengthM =
+        clampRange(
+          Math.abs(labelGapM),
+          TOPO_GRATICULE_EDGE_LEADER_MIN_M,
+          TOPO_GRATICULE_EDGE_LEADER_MAX_M,
+        ) * (isMinor ? TOPO_GRATICULE_MINOR_SCALE : 1);
+      const leaderEnd = eligibleOuter.position
+        .clone()
+        .addScaledVector(edgeTextBasis.outward, leaderLengthM);
+      leaderEnd.z = eligibleOuter.position.z;
+      pushTopoGraticuleSegment(positions, eligibleOuter.position, leaderEnd);
+    }
     labelTargets.set(
       topoGraticuleLineKey(
         sourceLine.kind,
@@ -528,6 +660,12 @@ export function rebuildTopoGraticuleEdgeLines(
   leader.visible = edgeAware && leaderPositions.length > 0;
   dashedLeader.visible = edgeAware && dashedLeaderPositions.length > 0;
   for (const target of [group, sourceRoot]) {
+    const leaderLinesVisible =
+      edgeAware && leaderPositions.length + dashedLeaderPositions.length > 0;
+    target.userData.topoGraticuleEdgeAware = edgeAware;
+    target.userData.topoGraticuleEdgeColorBlendEnabled = false;
+    target.userData.topoGraticuleEdgeAlphaFadeEnabled = false;
+    target.userData.topoGraticuleEdgeLeaderLinesVisible = leaderLinesVisible;
     target.userData.topoGraticuleInteriorSegmentCount =
       (interiorPositions.length + dashedInteriorPositions.length) / 6;
     target.userData.topoGraticuleDashedInteriorSegmentCount =
@@ -539,6 +677,14 @@ export function rebuildTopoGraticuleEdgeLines(
     target.userData.topoGraticuleInnerTrimInsideDistance = innerThreshold;
     target.userData.topoGraticuleLabelOffsetM = labelOffsetM;
     target.userData.topoGraticuleLabelGapM = labelGap;
+    target.userData.topoGraticuleEdgeLeaderMinM =
+      TOPO_GRATICULE_EDGE_LEADER_MIN_M;
+    target.userData.topoGraticuleEdgeLeaderMaxM =
+      TOPO_GRATICULE_EDGE_LEADER_MAX_M;
+    target.userData.topoGraticuleEdgeClipSubdivisions =
+      TOPO_GRATICULE_EDGE_CLIP_SUBDIVISIONS;
+    target.userData.topoGraticuleEdgeCrossingWindow =
+      TOPO_GRATICULE_EDGE_CROSSING_WINDOW;
     target.userData.topoGraticuleLabelTargets = labelTargets;
   }
 }
@@ -773,6 +919,12 @@ export function applyTopoGraticuleStyle({
     const materials = Array.isArray(material) ? material : [material];
     for (const item of materials) {
       const lineRole = obj.userData?.topoGraticuleLineRole;
+      const isGraticuleLineObject =
+        lineRole === "interior" ||
+        lineRole === "interior-dashed" ||
+        lineRole === "leader" ||
+        lineRole === "leader-dashed" ||
+        obj.userData?.topoGraticuleLines === true;
       const minorLine =
         lineRole === "interior-dashed" || lineRole === "leader-dashed";
       const minorLabel =
@@ -787,6 +939,20 @@ export function applyTopoGraticuleStyle({
               ? edgeLineColor
               : color,
         );
+      }
+      if (isGraticuleLineObject) {
+        item.depthTest = true;
+        item.depthWrite = false;
+        item.userData.topoGraticuleDepthTest = item.depthTest;
+        item.userData.topoGraticuleDepthWrite = item.depthWrite;
+        item.userData.topoGraticuleLineOpacity = opacity;
+        item.userData.topoGraticuleLineRole = lineRole;
+        item.userData.topoGraticuleEdgeAware = edgeAware;
+        item.userData.topoGraticuleEdgeColorBlendEnabled = false;
+        item.userData.topoGraticuleEdgeAlphaFadeEnabled = false;
+        item.userData.topoGraticuleEdgeLeaderLinesVisible =
+          (lineRole === "leader" || lineRole === "leader-dashed") &&
+          obj.visible !== false;
       }
       if (item instanceof LineMaterial && item.userData?.topoGraticuleLineMaterial) {
         const edgeLine =
@@ -818,7 +984,10 @@ export function applyTopoGraticuleStyle({
       item.transparent = true;
       item.depthWrite = false;
       const publicSurfaceClipPlanes =
-        clipBox.enabled && !edgeAware ? clipPlanes : null;
+        clipBox.enabled &&
+        (isGraticuleLineObject || !edgeAware)
+          ? clipPlanes
+          : null;
       item.userData.publicSurfaceClipPlanes = publicSurfaceClipPlanes;
       item.clippingPlanes = publicSurfaceClipPlanes;
       item.clipIntersection = false;

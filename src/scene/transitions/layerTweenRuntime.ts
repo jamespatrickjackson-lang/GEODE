@@ -80,6 +80,7 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
       this.scalarStyleTweens.size === 0 &&
       this.layerTransitionSnapshots.size === 0 &&
       !this.sceneSectionStyleTween &&
+      !this.sceneSectionHelperTransitionSnapshot &&
       !this.workingAreaFocusTween &&
       !this.activeSceneTransitionContext
     ) {
@@ -160,12 +161,28 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
       );
       if (done) this.removeLayerTransitionSnapshot(id);
     }
+    if (this.sceneSectionHelperTransitionSnapshot) {
+      const snapshot = this.sceneSectionHelperTransitionSnapshot;
+      const t =
+        snapshot.durationMs <= 0
+          ? 1
+          : (nowMs - snapshot.startMs) / snapshot.durationMs;
+      const done = t >= 1;
+      const eased = done ? 1 : easeProgress(t, snapshot.easing);
+      const opacity = snapshot.from + (snapshot.to - snapshot.from) * eased;
+      this.applyRenderOpacityToTree(
+        snapshot.group,
+        done ? snapshot.to : opacity,
+      );
+      if (done) this.removeSceneSectionHelperTransitionSnapshot();
+    }
     this.enforceTransitionVisibilityEnvelope();
     if (
       this.layerTweens.size === 0 &&
       this.scalarStyleTweens.size === 0 &&
       this.layerTransitionSnapshots.size === 0 &&
       !this.sceneSectionStyleTween &&
+      !this.sceneSectionHelperTransitionSnapshot &&
       !this.workingAreaFocusTween
     ) {
       const transition = this.activeSceneTransitionContext;

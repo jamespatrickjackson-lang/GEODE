@@ -724,6 +724,26 @@ Each decision records:
 
 **Trade-off accepted:** A setting of 5 levels now means 5 isolines and 6 fill bands. Existing persisted style values still represent isoline count.
 
+## DEC-070 - Section frames own object hidden-opacity controls
+
+**Considered:** keep global scene-section Type/Target controls, or move object visibility into each X/Y/Z section frame.
+
+**Chose:** section object visibility is authored per frame axis through `sceneSectionObjectVisibilityByAxis`. Stable object IDs use `layer:<layerId>` and `product:<layerId>:<productId>`.
+
+**Why:** Frame editing needs to answer which objects that specific frame hides and how strongly hidden content should remain visible. A global target selector split that decision from the frame being edited.
+
+**Trade-off accepted:** Legacy `sceneSectionTargetScope`, `sceneSectionTargetLayerIds`, and `sceneSectionTargetProductIds` remain readable as defaults. When multiple frames hide the same object, the lowest outside opacity wins.
+
+## DEC-071 - Grid and section ISO transitions use stable render composition
+
+**Considered:** keep topo graticules and Section ISO overlays as late overlay-style helpers with independent opacity writes, or make their depth and opacity behavior deterministic during camera and page transitions.
+
+**Chose:** topo graticule line materials depth-test against terrain and scene geometry while keeping `depthWrite: false`. Terrain underside grids use camera-side hysteresis. Section ISO line and band opacity is composed from authored opacity, page/layer transition opacity, and threshold-surface occlusion attenuation. Compatible section-frame transitions interpolate numeric frame geometry by stable frame id; incompatible section helper states crossfade through an outgoing helper snapshot and incoming helper fade.
+
+**Why:** Camera motion was causing graticule/grid ghosting and snapping, and page transitions could let ISO overlays brighten, darken, or swap abruptly. A single opacity composition path plus deterministic section-frame compatibility rules prevents transition-time overwrite bugs.
+
+**Trade-off accepted:** Edge-aware graticule lines are governed by generated bounds and depth testing rather than forcing public clip planes onto every line role. Edge awareness clips interior grid lines, but it does not recolor them into white/gray edge strokes or apply directional edge-gradient fading. White edge leaders remain as capped boundary ticks, attach to the same boundary-side crossing used by their edge labels, and are hard-clipped to the public surface clip. Topo graticule lines and labels are terrain/reference context and are excluded from scene-section clipping. Threshold-surface attenuation for ISO lines is smoothed over short frames, so it prioritizes visual stability over per-frame exact raycast changes.
+
 ## DEC-072 - Camera far plane is not a visual crop
 
 **Considered:** allow the fixed camera far plane to clip distant topo imagery during overview zoom, or keep topo imagery and graticule context inside the scene frustum and reserve crop behavior for authored clip tools.
@@ -733,3 +753,13 @@ Each decision records:
 **Why:** Public topo imagery, graticule context, and presentation overview shots should not slice away when the author zooms out. Far-plane clipping reads as missing image content rather than intentional composition.
 
 **Trade-off accepted:** Camera depth range is wider, but the renderer already uses reversed depth where supported and logarithmic depth otherwise. Public surface crop and scene-section clipping remain the explicit mechanisms for authored cropping.
+
+## DEC-073 - Topo line shader clips segments at the camera near plane
+
+**Considered:** continue relying on the default `LineMaterial` screen-space line expansion for topo and graticule lines, or add a vertex-shader near-plane clip that prevents segments straddling the camera from rendering as full-screen streaks.
+
+**Chose:** the patched `LineMaterial` in `src/loaders/topoLineMaterial.ts` clips segments behind a 100m view-space threshold inside `enableDistanceAttenuatedLineWidth`. When one endpoint is behind the threshold, the vertex shader parametrically moves it onto the threshold plane and lerps the world-space endpoint by the same parameter so edge-fade math stays consistent. When both endpoints are behind the threshold, the segment is collapsed and the fragment shader receives zero alpha through a new `vTopoLineNearClipVisible` varying.
+
+**Why:** The default `LineMaterial` expands width in NDC after the perspective divide and does not clip segments that cross the camera near plane. A segment with one endpoint in front of the camera and one behind has midpoint view-space z near zero, which the previous `topoLineDepth = max(0, -mix(start.z, end.z, 0.5))` clamp resolved to full width and full alpha. The segment then projected as a long screen-aligned chord, which matched the long stray green and white lines reported at oblique camera angles in the longitude/latitude graticule. The shader-level clip is independent of the geometry-side edge-aware clipping and removes the artifact without altering the four graticule roles, render orders, white edge leaders, or scene-section exclusion.
+
+**Trade-off accepted:** Topo line shaders are recompiled (cache key bumped to `v6`). A 100m clip distance is chosen to land safely beyond the standard `CAMERA_NEAR_M` of 50m; the visible gap between the camera and the clipped endpoint is imperceptible at the typical camera-to-graticule distances in the project. The clip distance is hard-coded inside the shader patch rather than exposed as a uniform.

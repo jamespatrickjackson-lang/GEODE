@@ -28,6 +28,7 @@ const CAMERA_FAR_M = 5_000_000;
 type SceneDepthBufferMode = "reverse" | "logarithmic" | "standard";
 type SceneSectionHandlePick = {
   axis: SceneSectionAxis;
+  frameId?: string;
   kind: "plane" | SceneSectionWindowHandleKind;
   world: THREE.Vector3;
 };
@@ -180,7 +181,9 @@ export interface SceneHandle {
     fn: ((id: string, patch: AreaOutlinePreview) => void) | null,
   ): void;
   setSceneSectionPlaneCommitHandler(
-    fn: ((axis: SceneSectionAxis, positionM: number) => void) | null,
+    fn:
+      | ((axis: SceneSectionAxis, positionM: number, frameId?: string) => void)
+      | null,
   ): void;
   setSceneSectionWindowCommitHandler(
     fn:
@@ -188,6 +191,7 @@ export interface SceneHandle {
           axis: SceneSectionAxis,
           kind: SceneSectionWindowHandleKind,
           valueM: number,
+          frameId?: string,
         ) => void)
       | null,
   ): void;
@@ -510,6 +514,7 @@ export function mountScene(
   let dragSceneSectionPlane:
     | {
         axis: SceneSectionAxis;
+        frameId?: string;
         kind: "plane" | SceneSectionWindowHandleKind;
         originalPositionM: number;
         startClient: THREE.Vector2;
@@ -530,13 +535,14 @@ export function mountScene(
     | ((id: string, patch: AreaOutlinePreview) => void)
     | null = null;
   let sceneSectionPlaneCommit:
-    | ((axis: SceneSectionAxis, positionM: number) => void)
+    | ((axis: SceneSectionAxis, positionM: number, frameId?: string) => void)
     | null = null;
   let sceneSectionWindowCommit:
     | ((
         axis: SceneSectionAxis,
         kind: SceneSectionWindowHandleKind,
         valueM: number,
+        frameId?: string,
       ) => void)
     | null = null;
   let orbitCenterPick: ((point: Vec3) => void) | null = null;
@@ -597,7 +603,9 @@ export function mountScene(
     areaOutlineCommit = fn;
   };
   const setSceneSectionPlaneCommitHandler = (
-    fn: ((axis: SceneSectionAxis, positionM: number) => void) | null,
+    fn:
+      | ((axis: SceneSectionAxis, positionM: number, frameId?: string) => void)
+      | null,
   ) => {
     sceneSectionPlaneCommit = fn;
   };
@@ -607,6 +615,7 @@ export function mountScene(
           axis: SceneSectionAxis,
           kind: SceneSectionWindowHandleKind,
           valueM: number,
+          frameId?: string,
         ) => void)
       | null,
   ) => {
@@ -802,6 +811,7 @@ export function mountScene(
       const data = hit.object.userData as {
         sceneSectionPlaneHandle?: boolean;
         sceneSectionAxis?: SceneSectionAxis;
+        sceneSectionFrameId?: string;
         sceneSectionPlaneHandleKind?: string;
       };
       if (
@@ -812,7 +822,15 @@ export function mountScene(
       ) {
         const kind =
           sceneSectionHandleKind(data.sceneSectionPlaneHandleKind) ?? "plane";
-        return { axis: data.sceneSectionAxis, kind, world: hit.point.clone() };
+        return {
+          axis: data.sceneSectionAxis,
+          frameId:
+            typeof data.sceneSectionFrameId === "string"
+              ? data.sceneSectionFrameId
+              : undefined,
+          kind,
+          world: hit.point.clone(),
+        };
       }
     }
     return null;
@@ -834,13 +852,17 @@ export function mountScene(
             sceneSectionHandle.axis,
             sceneSectionHandle.kind,
           );
-    const originalPosition =
+      const originalPosition =
       sceneSectionHandle.kind === "plane"
-        ? (manager.getSceneSectionPlaneScalar(sceneSectionHandle.axis) ??
+        ? (manager.getSceneSectionPlaneScalar(
+            sceneSectionHandle.axis,
+            sceneSectionHandle.frameId,
+          ) ??
           sceneSectionHandle.world.dot(normal))
         : (manager.getSceneSectionWindowValue(
             sceneSectionHandle.axis,
             sceneSectionHandle.kind,
+            sceneSectionHandle.frameId,
           ) ?? sceneSectionHandle.world.dot(normal));
     const rect = renderer.domElement.getBoundingClientRect();
     const dragProjection = sceneSectionScreenDragProjection(
@@ -851,6 +873,7 @@ export function mountScene(
     );
     dragSceneSectionPlane = {
       axis: sceneSectionHandle.axis,
+      frameId: sceneSectionHandle.frameId,
       kind: sceneSectionHandle.kind,
       originalPositionM: originalPosition,
       startClient: new THREE.Vector2(ev.clientX, ev.clientY),
@@ -903,12 +926,17 @@ export function mountScene(
         250_000,
       );
       if (dragSceneSectionPlane.kind === "plane") {
-        manager.previewSceneSectionPlane(dragSceneSectionPlane.axis, positionM);
+        manager.previewSceneSectionPlane(
+          dragSceneSectionPlane.axis,
+          positionM,
+          dragSceneSectionPlane.frameId,
+        );
       } else {
         manager.previewSceneSectionWindow(
           dragSceneSectionPlane.axis,
           dragSceneSectionPlane.kind,
           positionM,
+          dragSceneSectionPlane.frameId,
         );
       }
       return;
@@ -1272,17 +1300,25 @@ export function mountScene(
     if (dragSceneSectionPlane) {
       const positionM =
         dragSceneSectionPlane.kind === "plane"
-          ? manager.getSceneSectionPlaneScalar(dragSceneSectionPlane.axis)
+          ? manager.getSceneSectionPlaneScalar(
+              dragSceneSectionPlane.axis,
+              dragSceneSectionPlane.frameId,
+            )
           : manager.getSceneSectionWindowValue(
               dragSceneSectionPlane.axis,
               dragSceneSectionPlane.kind,
+              dragSceneSectionPlane.frameId,
             );
       if (
         positionM !== null &&
         dragSceneSectionPlane.kind === "plane" &&
         sceneSectionPlaneCommit
       ) {
-        sceneSectionPlaneCommit(dragSceneSectionPlane.axis, positionM);
+        sceneSectionPlaneCommit(
+          dragSceneSectionPlane.axis,
+          positionM,
+          dragSceneSectionPlane.frameId,
+        );
       } else if (
         positionM !== null &&
         dragSceneSectionPlane.kind !== "plane" &&
@@ -1292,6 +1328,7 @@ export function mountScene(
           dragSceneSectionPlane.axis,
           dragSceneSectionPlane.kind,
           positionM,
+          dragSceneSectionPlane.frameId,
         );
       }
       dragSceneSectionPlane = null;

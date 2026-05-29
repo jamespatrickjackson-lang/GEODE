@@ -148,7 +148,7 @@
       "fogDensity": 0.00002
     },
     "utah-forge-topo-graticule": {
-      "color": "#212121",
+      "color": "#37f312",
       "opacity": 0.78,
       "lineWidth": 4.75,
       "graticuleLabelVisible": true,
@@ -477,7 +477,7 @@
       "sceneSectionEnabled": true,
       "sceneSectionMode": "cutaway",
       "sceneSectionTargetScope": "all-visible",
-      "sceneSectionActiveAxis": "x",
+      "sceneSectionActiveAxis": "y",
       "sceneSectionPlanes": {
         "x": {
           "enabled": false,
@@ -2021,7 +2021,7 @@
         "utah-forge-scene-section-planes": {
           "sceneSectionEnabled": true,
           "sceneSectionMode": "cutaway",
-          "sceneSectionActiveAxis": "x",
+          "sceneSectionActiveAxis": "y",
           "sceneSectionTargetScope": "all-visible",
           "sceneSectionTargetLayerIds": [
             "utah-forge-mt-resistivity-volume",
@@ -2062,7 +2062,8 @@
           }
         },
         "utah-forge-topo-graticule": {
-          "opacity": 0.78
+          "opacity": 0.78,
+          "color": "#37f312"
         },
         "utah-forge-phase3-demo-boreholes": {
           "demoBoreholeBlock": {

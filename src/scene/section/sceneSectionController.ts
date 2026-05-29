@@ -6,6 +6,10 @@ import {
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_MT_STATIONS_LAYER_ID,
+  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+  UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
+  UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 } from "../../projectModules/utahForge/layerIds";
@@ -19,9 +23,15 @@ import type {
   ResolvedSceneSectionPlane,
   ResolvedSceneSectionWindow,
   SceneSectionAxis,
+  SceneSectionObjectTarget,
+  SceneSectionObjectVisibility,
   SceneSectionRuntime,
   SceneSectionWindowHandleKind,
 } from "../SceneManager";
+import {
+  applySceneSectionObjectVisibilityBuiltInMaterial,
+  setSceneSectionObjectVisibilityUniforms,
+} from "../shaders/sceneSectionObjectVisibilityShader";
 
 const SCENE_SECTION_AXIS_NORMALS = {
   x: new THREE.Vector3(1, 0, 0),
@@ -108,6 +118,12 @@ const SCENE_SECTION_GROUND_TRACE_WIDTH_MIN_M = 30;
 const SCENE_SECTION_GROUND_TRACE_WIDTH_MAX_M = 2000;
 const SCENE_SECTION_SURFACE_TRACE_EPSILON_M = 0.01;
 const SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M = 18;
+const SCENE_SECTION_MAX_FRAME_COUNT = 8;
+const SCENE_SECTION_BUILT_IN_FRAME_IDS = {
+  x: "axis:x",
+  y: "axis:y",
+  z: "axis:z",
+} as const;
 
 function hardenStudioHelperMaterial(material: THREE.Material): void {
   material.depthTest = false;
@@ -235,6 +251,26 @@ function finiteNumber(value: unknown): number | null {
 
 function sceneSectionAxes(): SceneSectionAxis[] {
   return ["x", "y", "z"];
+}
+
+function sceneSectionBuiltInFrameId(axis: SceneSectionAxis): string {
+  return SCENE_SECTION_BUILT_IN_FRAME_IDS[axis];
+}
+
+function sceneSectionValidAxis(value: unknown): value is SceneSectionAxis {
+  return value === "x" || value === "y" || value === "z";
+}
+
+function sceneSectionDefaultFrameLabel(
+  id: string,
+  axis: SceneSectionAxis,
+): string {
+  if (id === sceneSectionBuiltInFrameId(axis)) {
+    return `${axis.toUpperCase()} Section frame`;
+  }
+  const custom = /^custom:([a-z])$/i.exec(id);
+  if (custom) return `${custom[1].toUpperCase()} Section frame`;
+  return `${axis.toUpperCase()} Section frame`;
 }
 
 function sortedClampedRange(
@@ -483,6 +519,16 @@ function frameForAxis(
   return frames.find((frame) => frame.axis === axis) ?? null;
 }
 
+function frameForPlane(
+  frames: ResolvedSceneSectionFrame[],
+  plane: ResolvedSceneSectionPlane,
+): ResolvedSceneSectionFrame | null {
+  return (
+    frames.find((frame) => frame.frameId === plane.frameId) ??
+    frameForAxis(frames, plane.axis)
+  );
+}
+
 export function sceneSectionProductIds(this: any, style: EditableStyle): Set<string> {
   const seismic = this.layers.get(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID);
   const selected =
@@ -532,26 +578,378 @@ export function sceneSectionLayerIds(this: any, style: EditableStyle): Set<strin
       : [
           UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
           UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
-        ],
+      ],
   );
+}
+
+const SCENE_SECTION_OBJECT_AXES: SceneSectionAxis[] = ["x", "y", "z"];
+
+function sceneSectionLayerObjectId(layerId: string): string {
+  return `layer:${layerId}`;
+}
+
+function sceneSectionProductObjectId(layerId: string, productId: string): string {
+  return `product:${layerId}:${productId}`;
+}
+
+function sceneSectionObjectIdForObject(
+  layerId: string,
+  obj: THREE.Object3D,
+): string {
+  const productId = obj.userData?.seismicProductId;
+  if (
+    layerId === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID &&
+    typeof productId === "string" &&
+    productId
+  ) {
+    return sceneSectionProductObjectId(layerId, productId);
+  }
+  return sceneSectionLayerObjectId(layerId);
+}
+
+function sceneSectionTargetLabel(this: any, layerId: string): string {
+  const spec = this.layerSpecs?.get?.(layerId) as
+    | { label?: unknown }
+    | undefined;
+  if (typeof spec?.label === "string" && spec.label.trim()) {
+    return spec.label;
+  }
+  if (layerId === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID) {
+    return "3D MT resistivity volume";
+  }
+  if (layerId === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID) {
+    return "MT thresholds";
+  }
+  if (layerId === UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID) {
+    return "MT top surface";
+  }
+  if (layerId === UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID) {
+    return "MT top contact surface";
+  }
+  return layerId;
+}
+
+export function listSceneSectionObjectTargets(this: any): SceneSectionObjectTarget[] {
+  const targets = new Map<string, SceneSectionObjectTarget>();
+  const addLayer = (layerId: string, supported = true) => {
+    const layer = this.layers.get(layerId) as THREE.Group | undefined;
+    const objectId = sceneSectionLayerObjectId(layerId);
+    targets.set(objectId, {
+      objectId,
+      label: sceneSectionTargetLabel.call(this, layerId),
+      layerId,
+      supported,
+      visible: layer?.visible === true,
+      axes: SCENE_SECTION_OBJECT_AXES,
+    });
+  };
+  for (const layerId of [
+    UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+    UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+    UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+    UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+    UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
+    UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
+    "utah-forge-reference-stage",
+  ]) {
+    addLayer(layerId, true);
+  }
+  addLayer(UTAH_FORGE_MT_STATIONS_LAYER_ID, false);
+
+  const seismicLayer = this.layers.get(
+    UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+  ) as THREE.Group | undefined;
+  const productLabels = new Map<string, string>();
+  seismicLayer?.traverse((obj: THREE.Object3D) => {
+    const productId = obj.userData?.seismicProductId;
+    if (typeof productId !== "string" || !productId) return;
+    if (!productLabels.has(productId)) {
+      const displayName = obj.userData?.displayName;
+      productLabels.set(
+        productId,
+        typeof displayName === "string" && displayName.trim()
+          ? displayName
+          : productId,
+      );
+    }
+  });
+  for (const [productId, label] of productLabels) {
+    const objectId = sceneSectionProductObjectId(
+      UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+      productId,
+    );
+    targets.set(objectId, {
+      objectId,
+      label: `Seismic: ${label}`,
+      layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+      productId,
+      supported: true,
+      visible: seismicLayer?.visible === true,
+      axes: SCENE_SECTION_OBJECT_AXES,
+    });
+  }
+  return Array.from(targets.values());
+}
+
+function sceneSectionLegacyObjectTargeted(
+  layerId: string,
+  obj: THREE.Object3D,
+  style: EditableStyle,
+  layerTargets: Set<string>,
+  productTargets: Set<string>,
+): boolean {
+  if (sceneSectionObjectExcludedFromClipping(obj)) return false;
+  if (obj.userData?.sceneSectionHelper === true) return false;
+  if (style.sceneSectionTargetScope === "all-visible") return true;
+  if (layerId === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) {
+    const productId = obj.userData?.seismicProductId;
+    if (typeof productId === "string") return productTargets.has(productId);
+    if (obj.userData?.seismicNavigation === true)
+      return layerTargets.has(layerId);
+    return layerTargets.has(layerId);
+  }
+  return layerTargets.has(layerId);
+}
+
+function sceneSectionObjectExcludedFromClipping(obj: THREE.Object3D): boolean {
+  return (
+    obj.userData?.topoGraticule === true ||
+    obj.userData?.topoGraticuleLines === true ||
+    obj.userData?.topoGraticuleLabel === true ||
+    obj.userData?.topoMapBranding === true
+  );
+}
+
+function sceneSectionVisibilityInactive(
+  objectId: string,
+): SceneSectionObjectVisibility {
+  return {
+    objectId,
+    outsideOpacityByAxis: { x: 1, y: 1, z: 1 },
+    outsideOpacityByFrameId: {},
+    active: false,
+    hasSoftOpacity: false,
+  };
+}
+
+function sceneSectionAxisOutsideOpacity(
+  style: EditableStyle,
+  axis: SceneSectionAxis,
+  objectId: string,
+  legacyTargeted: boolean,
+): number {
+  const entry = style.sceneSectionObjectVisibilityByAxis?.[axis]?.[objectId];
+  const value = entry?.outsideOpacity;
+  return typeof value === "number" && Number.isFinite(value)
+    ? clamp01(value)
+    : legacyTargeted
+      ? 0
+      : 1;
+}
+
+type SceneSectionResolvedFrameEntry = {
+  id: string;
+  label: string;
+  axis: SceneSectionAxis;
+  plane: NonNullable<EditableStyle["sceneSectionPlanes"]>[SceneSectionAxis];
+  frame: NonNullable<EditableStyle["sceneSectionFrameByAxis"]>[SceneSectionAxis];
+};
+
+function sceneSectionResolvedFrameEntries(
+  style: EditableStyle,
+): SceneSectionResolvedFrameEntry[] {
+  const explicitEntries = Array.isArray(style.sceneSectionFrames)
+    ? style.sceneSectionFrames
+    : [];
+  const explicitById = new Map(
+    explicitEntries
+      .filter((entry) => typeof entry?.id === "string" && entry.id.trim())
+      .map((entry) => [entry.id, entry]),
+  );
+  const planes = style.sceneSectionPlanes ?? {};
+  const frames = style.sceneSectionFrameByAxis ?? {};
+  const resolved: SceneSectionResolvedFrameEntry[] = [];
+  for (const axis of sceneSectionAxes()) {
+    const id = sceneSectionBuiltInFrameId(axis);
+    const explicit = explicitById.get(id);
+    resolved.push({
+      id,
+      label:
+        typeof explicit?.label === "string" && explicit.label.trim()
+          ? explicit.label
+          : sceneSectionDefaultFrameLabel(id, axis),
+      axis,
+      plane: {
+        ...(planes[axis] ?? {}),
+        ...(explicit?.plane ?? {}),
+      },
+      frame: {
+        ...(frames[axis] ?? {}),
+        ...(explicit?.frame ?? {}),
+      },
+    });
+  }
+  for (const entry of explicitEntries) {
+    if (
+      !entry ||
+      typeof entry.id !== "string" ||
+      !entry.id.trim() ||
+      entry.id.startsWith("axis:") ||
+      !sceneSectionValidAxis(entry.axis)
+    ) {
+      continue;
+    }
+    resolved.push({
+      id: entry.id,
+      label:
+        typeof entry.label === "string" && entry.label.trim()
+          ? entry.label
+          : sceneSectionDefaultFrameLabel(entry.id, entry.axis),
+      axis: entry.axis,
+      plane: { ...(entry.plane ?? {}) },
+      frame: { ...(entry.frame ?? {}) },
+    });
+    if (resolved.length >= SCENE_SECTION_MAX_FRAME_COUNT) break;
+  }
+  return resolved.slice(0, SCENE_SECTION_MAX_FRAME_COUNT);
+}
+
+function sceneSectionFrameListWithPatch(
+  style: EditableStyle,
+  frameId: string,
+  axis: SceneSectionAxis,
+  patch: {
+    plane?: NonNullable<EditableStyle["sceneSectionPlanes"]>[SceneSectionAxis];
+    frame?: NonNullable<EditableStyle["sceneSectionFrameByAxis"]>[SceneSectionAxis];
+  },
+): NonNullable<EditableStyle["sceneSectionFrames"]> {
+  const entries = sceneSectionResolvedFrameEntries(style);
+  const existing = entries.find((entry) => entry.id === frameId);
+  const next = entries.map((entry) =>
+    entry.id === frameId
+      ? {
+          id: entry.id,
+          label: entry.label,
+          axis,
+          plane: {
+            ...(entry.plane ?? {}),
+            ...(patch.plane ?? {}),
+          },
+          frame: {
+            ...(entry.frame ?? {}),
+            ...(patch.frame ?? {}),
+          },
+        }
+      : {
+          id: entry.id,
+          label: entry.label,
+          axis: entry.axis,
+          plane: entry.plane,
+          frame: entry.frame,
+        },
+  );
+  if (!existing && next.length < SCENE_SECTION_MAX_FRAME_COUNT) {
+    next.push({
+      id: frameId,
+      label: sceneSectionDefaultFrameLabel(frameId, axis),
+      axis,
+      plane: patch.plane ?? {},
+      frame: patch.frame ?? {},
+    });
+  }
+  return next;
+}
+
+function sceneSectionFrameOutsideOpacity(
+  style: EditableStyle,
+  frameId: string,
+  axis: SceneSectionAxis,
+  objectId: string,
+  legacyTargeted: boolean,
+): number {
+  const byFrameValue =
+    style.sceneSectionObjectVisibilityByFrameId?.[frameId]?.[objectId]
+      ?.outsideOpacity;
+  if (typeof byFrameValue === "number" && Number.isFinite(byFrameValue)) {
+    return clamp01(byFrameValue);
+  }
+  return sceneSectionAxisOutsideOpacity(style, axis, objectId, legacyTargeted);
+}
+
+export function sceneSectionObjectVisibilityForObject(this: any,
+  layerId: string,
+  obj: THREE.Object3D,
+  style: EditableStyle,
+  layerTargets: Set<string>,
+  productTargets: Set<string>,
+): SceneSectionObjectVisibility {
+  const objectId = sceneSectionObjectIdForObject(layerId, obj);
+  if (sceneSectionObjectExcludedFromClipping(obj)) {
+    return sceneSectionVisibilityInactive(objectId);
+  }
+  const legacyTargeted = sceneSectionLegacyObjectTargeted(
+    layerId,
+    obj,
+    style,
+    layerTargets,
+    productTargets,
+  );
+  const outsideOpacityByAxis = {
+    x: sceneSectionAxisOutsideOpacity(style, "x", objectId, legacyTargeted),
+    y: sceneSectionAxisOutsideOpacity(style, "y", objectId, legacyTargeted),
+    z: sceneSectionAxisOutsideOpacity(style, "z", objectId, legacyTargeted),
+  };
+  const outsideOpacityByFrameId: Record<string, number> = {};
+  for (const entry of sceneSectionResolvedFrameEntries(style)) {
+    const value = sceneSectionFrameOutsideOpacity(
+      style,
+      entry.id,
+      entry.axis,
+      objectId,
+      legacyTargeted,
+    );
+    outsideOpacityByFrameId[entry.id] = value;
+    outsideOpacityByAxis[entry.axis] = Math.min(
+      outsideOpacityByAxis[entry.axis],
+      value,
+    );
+  }
+  const opacityValues = [
+    ...Object.values(outsideOpacityByAxis),
+    ...Object.values(outsideOpacityByFrameId),
+  ];
+  const active = opacityValues.some(
+    (value) => value < 0.999,
+  );
+  const hasSoftOpacity = opacityValues.some(
+    (value) => value > 0.001 && value < 0.999,
+  );
+  return {
+    objectId,
+    outsideOpacityByAxis,
+    outsideOpacityByFrameId,
+    active,
+    hasSoftOpacity,
+  };
 }
 
 export function resolveSceneSectionPlanes(this: any, 
   style: EditableStyle,
 ): ResolvedSceneSectionPlane[] {
-  const planes = style.sceneSectionPlanes ?? {};
-  return sceneSectionAxes().map((axis) => {
-    const plane = planes[axis] ?? {};
-    const spec = SCENE_SECTION_AXIS_SPECS[axis];
+  return sceneSectionResolvedFrameEntries(style).map((entry) => {
+    const spec = SCENE_SECTION_AXIS_SPECS[entry.axis];
     const position =
-      typeof plane.positionM === "number" && Number.isFinite(plane.positionM)
-        ? clampRange(plane.positionM, -250_000, 250_000)
-        : SCENE_SECTION_DEFAULT_POSITIONS[axis];
+      typeof entry.plane?.positionM === "number" &&
+      Number.isFinite(entry.plane.positionM)
+        ? clampRange(entry.plane.positionM, -250_000, 250_000)
+        : SCENE_SECTION_DEFAULT_POSITIONS[entry.axis];
     return {
-      axis,
-      enabled: plane.enabled === true,
+      frameId: entry.id,
+      label: entry.label,
+      axis: entry.axis,
+      enabled: entry.plane?.enabled === true,
       positionM: position,
-      invert: plane.invert === true,
+      invert: entry.plane?.invert === true,
       normal: spec.normal.clone(),
     };
   });
@@ -573,16 +971,13 @@ export function sceneSectionObjectTargeted(this: any,
   layerTargets: Set<string>,
   productTargets: Set<string>,
 ): boolean {
-  if (obj.userData?.sceneSectionHelper === true) return false;
-  if (style.sceneSectionTargetScope === "all-visible") return true;
-  if (layerId === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) {
-    const productId = obj.userData?.seismicProductId;
-    if (typeof productId === "string") return productTargets.has(productId);
-    if (obj.userData?.seismicNavigation === true)
-      return layerTargets.has(layerId);
-    return layerTargets.has(layerId);
-  }
-  return layerTargets.has(layerId);
+  return sceneSectionLegacyObjectTargeted(
+    layerId,
+    obj,
+    style,
+    layerTargets,
+    productTargets,
+  );
 }
 
 export function sceneSectionClippingPlanes(this: any, 
@@ -821,7 +1216,7 @@ function sectionFrameIntersectionTraces(
   const traces: SceneSectionFrameIntersectionTrace[] = [];
   for (let firstIndex = 0; firstIndex < planes.length; firstIndex += 1) {
     const firstPlane = planes[firstIndex];
-    const firstFrame = frameForAxis(frames, firstPlane.axis);
+    const firstFrame = frameForPlane(frames, firstPlane);
     if (!firstFrame) continue;
     for (
       let secondIndex = firstIndex + 1;
@@ -829,7 +1224,7 @@ function sectionFrameIntersectionTraces(
       secondIndex += 1
     ) {
       const secondPlane = planes[secondIndex];
-      const secondFrame = frameForAxis(frames, secondPlane.axis);
+      const secondFrame = frameForPlane(frames, secondPlane);
       if (!secondFrame) continue;
       const trace = sectionFrameIntersectionTrace(
         firstPlane,
@@ -857,25 +1252,29 @@ export function resolveSceneSectionFrames(this: any,
 ): ResolvedSceneSectionFrame[] {
   if (
     style.sceneSectionFrameEnabled !== true &&
-    style.sceneSectionWindowEnabled !== true
+    style.sceneSectionWindowEnabled !== true &&
+    !Array.isArray(style.sceneSectionFrames)
   ) {
     return [];
   }
-  const frameByAxis = style.sceneSectionFrameByAxis ?? {};
   const windowByAxis = style.sceneSectionWindowByAxis ?? {};
   const frames: ResolvedSceneSectionFrame[] = [];
   const explicitFrameEnabled = style.sceneSectionFrameEnabled === true;
   const legacyFrameEnabled =
     explicitFrameEnabled || style.sceneSectionWindowEnabled === true;
-  for (const axis of sceneSectionAxes()) {
+  for (const entry of sceneSectionResolvedFrameEntries(style)) {
+    const axis = entry.axis;
     const spec = SCENE_SECTION_AXIS_SPECS[axis];
-    const frame = frameByAxis[axis];
+    const frame = entry.frame;
     const legacyWindow =
       axis === "x" || axis === "y" ? windowByAxis[axis] : undefined;
+    const hasFrameConfig = !!frame && Object.keys(frame).length > 0;
     const frameEnabled =
       typeof frame?.enabled === "boolean"
         ? frame.enabled
-        : legacyFrameEnabled || Boolean(frame) || Boolean(legacyWindow);
+        : entry.id.startsWith("custom:")
+          ? hasFrameConfig
+          : legacyFrameEnabled || hasFrameConfig || Boolean(legacyWindow);
     if (!frameEnabled) continue;
     const minABound = bounds.min.getComponent(spec.frameAIndex);
     const maxABound = bounds.max.getComponent(spec.frameAIndex);
@@ -950,6 +1349,8 @@ export function resolveSceneSectionFrames(this: any,
         ? frame.axisHeadingColor
         : spec.color;
     frames.push({
+      frameId: entry.id,
+      label: entry.label,
       axis,
       enabled: true,
       minAM,
@@ -1036,6 +1437,17 @@ export function sceneSectionFrameForObject(this: any,
     return null;
   }
   if (layerId !== UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID) return null;
+  const overlayFrameId =
+    typeof obj.userData?.sectionIsoFrameId === "string"
+      ? obj.userData.sectionIsoFrameId
+      : null;
+  if (overlayFrameId) {
+    return (
+      frames.find(
+        (frame: ResolvedSceneSectionFrame) => frame.frameId === overlayFrameId,
+      ) ?? null
+    );
+  }
   const overlayAxis =
     typeof obj.userData?.sectionIsoPlaneAxis === "string"
       ? (obj.userData.sectionIsoPlaneAxis as SceneSectionAxis)
@@ -1069,7 +1481,7 @@ export function sceneSectionFrameForObject(this: any,
 export function setSceneSectionUniforms(this: any, 
   material: THREE.ShaderMaterial,
   planes: ResolvedSceneSectionPlane[],
-  targeted: boolean,
+  visibility: SceneSectionObjectVisibility,
   frames: ResolvedSceneSectionFrame[],
 ): void {
   const uniforms = material.uniforms;
@@ -1077,57 +1489,109 @@ export function setSceneSectionUniforms(this: any,
     if (!uniforms[key]) uniforms[key] = { value };
     return uniforms[key] as { value: T };
   };
+  const targeted = visibility.active;
   ensure<number>("uSceneSectionEnabled", 0).value =
     targeted && planes.length > 0 ? 1 : 0;
   ensure<number>("uSceneSectionMode", 0).value = 0;
   ensure<number>("uSceneSectionPlaneCount", 0).value = targeted
-    ? planes.length
+    ? Math.min(SCENE_SECTION_MAX_FRAME_COUNT, planes.length)
     : 0;
   const normalUniform = ensure<THREE.Vector3[]>("uSceneSectionNormals", [
+    new THREE.Vector3(),
+    new THREE.Vector3(),
+    new THREE.Vector3(),
+    new THREE.Vector3(),
+    new THREE.Vector3(),
     new THREE.Vector3(),
     new THREE.Vector3(),
     new THREE.Vector3(),
   ]);
   const positionUniform = ensure<number[]>(
     "uSceneSectionPositions",
-    [0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
   );
   const thicknessUniform = ensure<number[]>(
     "uSceneSectionThickness",
-    [1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1],
   );
-  const invertUniform = ensure<number[]>("uSceneSectionInvert", [0, 0, 0]);
+  const invertUniform = ensure<number[]>(
+    "uSceneSectionInvert",
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  );
   const normals = normalUniform.value;
   const positions = positionUniform.value;
   const thickness = thicknessUniform.value;
   const invert = invertUniform.value;
-  for (let i = 0; i < 3; i += 1) {
+  for (let i = 0; i < SCENE_SECTION_MAX_FRAME_COUNT; i += 1) {
     const plane = planes[i];
+    if (!normals[i]) normals[i] = new THREE.Vector3();
     normals[i].copy(plane?.normal ?? new THREE.Vector3());
     positions[i] = plane?.positionM ?? 0;
     thickness[i] = 1;
     invert[i] = plane?.invert ? 1 : 0;
   }
-  const activeFrames = targeted ? frames.slice(0, 3) : [];
+  const planeOpacityUniform = ensure<number[]>(
+    "uSceneSectionPlaneOutsideOpacity",
+    [1, 1, 1, 1, 1, 1, 1, 1],
+  );
+  for (let i = 0; i < SCENE_SECTION_MAX_FRAME_COUNT; i += 1) {
+    const plane = planes[i];
+    planeOpacityUniform.value[i] = plane
+      ? clamp01(
+          visibility.outsideOpacityByFrameId[plane.frameId] ??
+            visibility.outsideOpacityByAxis[plane.axis] ??
+            1,
+        )
+      : 1;
+  }
+  const activeFrames = targeted
+    ? frames.slice(0, SCENE_SECTION_MAX_FRAME_COUNT)
+    : [];
   ensure<number>("uSceneSectionFrameCount", 0).value = activeFrames.length;
   const frameAxesUniform = ensure<number[]>(
     "uSceneSectionFrameAxes",
-    [0, 1, 2],
+    [0, 1, 2, 0, 0, 0, 0, 0],
   );
   const frameBoundsUniform = ensure<THREE.Vector4[]>(
     "uSceneSectionFrameBounds",
-    [new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4()],
+    [
+      new THREE.Vector4(),
+      new THREE.Vector4(),
+      new THREE.Vector4(),
+      new THREE.Vector4(),
+      new THREE.Vector4(),
+      new THREE.Vector4(),
+      new THREE.Vector4(),
+      new THREE.Vector4(),
+    ],
   );
-  for (let i = 0; i < 3; i += 1) {
+  for (let i = 0; i < SCENE_SECTION_MAX_FRAME_COUNT; i += 1) {
     const frame = activeFrames[i];
     frameAxesUniform.value[i] =
       frame?.axis === "y" ? 1 : frame?.axis === "z" ? 2 : 0;
+    if (!frameBoundsUniform.value[i]) {
+      frameBoundsUniform.value[i] = new THREE.Vector4();
+    }
     frameBoundsUniform.value[i].set(
       frame?.minAM ?? -250_000,
       frame?.maxAM ?? 250_000,
       frame?.minBM ?? -250_000,
       frame?.maxBM ?? 250_000,
     );
+  }
+  const frameOpacityUniform = ensure<number[]>(
+    "uSceneSectionFrameOutsideOpacity",
+    [1, 1, 1, 1, 1, 1, 1, 1],
+  );
+  for (let i = 0; i < SCENE_SECTION_MAX_FRAME_COUNT; i += 1) {
+    const frame = activeFrames[i];
+    frameOpacityUniform.value[i] = frame
+      ? clamp01(
+          visibility.outsideOpacityByFrameId[frame.frameId] ??
+            visibility.outsideOpacityByAxis[frame.axis] ??
+            1,
+        )
+      : 1;
   }
   const legacyFrame = activeFrames.find(
     (frame) => frame.axis === "x" || frame.axis === "y",
@@ -1147,32 +1611,100 @@ export function setSceneSectionUniforms(this: any,
 export function applySceneSectionMaterial(this: any, 
   material: THREE.Material,
   planes: ResolvedSceneSectionPlane[],
-  targeted: boolean,
+  visibility: SceneSectionObjectVisibility,
   clippingPlanes: THREE.Plane[],
   frames: ResolvedSceneSectionFrame[],
   frameClippingPlanes: THREE.Plane[],
 ): void {
   if (material.userData?.sceneSectionHelper === true) return;
+  if (
+    material.userData?.topoGraticuleLineMaterial === true ||
+    material.userData?.topoGraticuleLabelMaterial === true
+  ) {
+    const publicSurfaceClipPlanes = Array.isArray(
+      material.userData?.publicSurfaceClipPlanes,
+    )
+      ? (material.userData.publicSurfaceClipPlanes as THREE.Plane[])
+      : [];
+    material.clippingPlanes =
+      publicSurfaceClipPlanes.length > 0 ? publicSurfaceClipPlanes : null;
+    material.clipIntersection = false;
+    material.needsUpdate = true;
+    return;
+  }
+  const affectedAxes = new Set<SceneSectionAxis>([
+    ...planes.map((plane) => plane.axis),
+    ...frames.map((frame) => frame.axis),
+  ]);
+  const affectedFrameIds = [
+    ...planes.map((plane) => plane.frameId),
+    ...frames.map((frame) => frame.frameId),
+  ];
+  const sectionAffectsMaterial =
+    affectedFrameIds.some(
+      (frameId) => (visibility.outsideOpacityByFrameId[frameId] ?? 1) < 0.999,
+    ) ||
+    Array.from(affectedAxes).some(
+      (axis) => (visibility.outsideOpacityByAxis[axis] ?? 1) < 0.999,
+    );
+  const requiresShaderVisibility =
+    sectionAffectsMaterial &&
+    (affectedFrameIds.some(
+      (frameId) => (visibility.outsideOpacityByFrameId[frameId] ?? 1) > 0.001,
+    ) ||
+      Array.from(affectedAxes).some(
+        (axis) => (visibility.outsideOpacityByAxis[axis] ?? 1) > 0.001,
+      ));
   const seismicShader =
     material instanceof THREE.ShaderMaterial &&
     (material.userData?.seismicRaymarchMaterial === true ||
       material.userData?.seismicSectionMaterial === true ||
       material.userData?.scalarVolumeRaymarchMaterial === true);
   if (seismicShader) {
-    this.setSceneSectionUniforms(material, planes, targeted, frames);
+    this.setSceneSectionUniforms(material, planes, visibility, frames);
+    setSceneSectionObjectVisibilityUniforms(
+      material.uniforms,
+      sectionAffectsMaterial,
+      planes,
+      frames,
+      visibility,
+    );
     material.needsUpdate = true;
     return;
   }
-  const active = targeted && clippingPlanes.length > 0;
+  const active = sectionAffectsMaterial;
   const publicSurfaceClipPlanes = Array.isArray(
     material.userData?.publicSurfaceClipPlanes,
   )
     ? (material.userData.publicSurfaceClipPlanes as THREE.Plane[])
     : [];
+  if (requiresShaderVisibility) {
+    applySceneSectionObjectVisibilityBuiltInMaterial(
+      material,
+      true,
+      planes,
+      frames,
+      visibility,
+    );
+    material.clippingPlanes =
+      publicSurfaceClipPlanes.length > 0 ? publicSurfaceClipPlanes : null;
+    material.clipIntersection = false;
+    material.needsUpdate = true;
+    return;
+  }
+  if (material.userData?.sceneSectionObjectVisibilityPatched === true) {
+    applySceneSectionObjectVisibilityBuiltInMaterial(
+      material,
+      false,
+      planes,
+      frames,
+      visibility,
+    );
+  }
   const combinedPlanes = [
     ...publicSurfaceClipPlanes,
     ...(active ? clippingPlanes : []),
-    ...frameClippingPlanes,
+    ...(active ? frameClippingPlanes : []),
   ];
   material.clippingPlanes = combinedPlanes.length > 0 ? combinedPlanes : null;
   material.clipIntersection = false;
@@ -1274,6 +1806,57 @@ export function interpolatedSceneSectionStyle(this: any,
     frameByAxis[axis] = nextFrame;
   }
   next.sceneSectionFrameByAxis = frameByAxis;
+  if (Array.isArray(toStyle.sceneSectionFrames)) {
+    const fromEntries = new Map(
+      sceneSectionResolvedFrameEntries(fromStyle).map((entry) => [
+        entry.id,
+        entry,
+      ]),
+    );
+    next.sceneSectionFrames = toStyle.sceneSectionFrames.map((entry) => {
+      const fromEntry = fromEntries.get(entry.id);
+      const nextPlane = { ...(entry.plane ?? {}) };
+      const fromPosition = fromEntry?.plane?.positionM;
+      const toPosition = entry.plane?.positionM;
+      if (
+        typeof fromPosition === "number" &&
+        Number.isFinite(fromPosition) &&
+        typeof toPosition === "number" &&
+        Number.isFinite(toPosition)
+      ) {
+        nextPlane.positionM = fromPosition + (toPosition - fromPosition) * t;
+      }
+      const nextFrame = { ...(entry.frame ?? {}) };
+      for (const key of [
+        "minAM",
+        "maxAM",
+        "minBM",
+        "maxBM",
+        "axisIntervalM",
+        "axisTextScale",
+        "axisTextPaddingM",
+        "axisHeadingPaddingM",
+        "axisHeadingScale",
+        "groundTraceWidthM",
+      ] as const) {
+        const from = fromEntry?.frame?.[key];
+        const to = entry.frame?.[key];
+        if (
+          typeof from === "number" &&
+          Number.isFinite(from) &&
+          typeof to === "number" &&
+          Number.isFinite(to)
+        ) {
+          nextFrame[key] = from + (to - from) * t;
+        }
+      }
+      return {
+        ...entry,
+        plane: nextPlane,
+        frame: nextFrame,
+      };
+    });
+  }
   return next;
 }
 
@@ -1306,6 +1889,7 @@ export function sceneSectionHelperOpacityForTween(this: any,
     helperVisible(tween.toStyle);
   if (!fromActive && toActive) return clamp01(eased);
   if (fromActive && !toActive) return 1 - clamp01(eased);
+  if (fromActive && toActive && tween.discreteChanged) return clamp01(eased);
   return 1;
 }
 
@@ -1568,13 +2152,18 @@ export function rebuildSceneSectionHelpers(this: any,
     style.sceneSectionActiveAxis === "z"
       ? style.sceneSectionActiveAxis
       : "z";
-  const activePlaneAxes = new Set(
-    planes.map((plane: ResolvedSceneSectionPlane) => plane.axis),
+  const activeFrameId =
+    typeof style.sceneSectionActiveFrameId === "string" &&
+    style.sceneSectionActiveFrameId.trim()
+      ? style.sceneSectionActiveFrameId
+      : sceneSectionBuiltInFrameId(activeAxis);
+  const activePlaneFrameIds = new Set(
+    planes.map((plane: ResolvedSceneSectionPlane) => plane.frameId),
   );
   const sectionFrames = this
     .resolveSceneSectionFrames(style, bounds)
     .filter((frame: ResolvedSceneSectionFrame) =>
-      activePlaneAxes.has(frame.axis),
+      activePlaneFrameIds.has(frame.frameId),
     );
   const showGroundTrace = sectionFrames.some(
     (frame: ResolvedSceneSectionFrame) => frame.groundTraceVisible,
@@ -1688,7 +2277,11 @@ export function rebuildSceneSectionHelpers(this: any,
     );
     const halfWidth = paddedWidth * 0.5;
     const halfHeight = paddedHeight * 0.5;
-    const frame = frameForAxis(sectionFrames, plane.axis);
+    const frame =
+      sectionFrames.find(
+        (candidate: ResolvedSceneSectionFrame) =>
+          candidate.frameId === plane.frameId,
+      ) ?? null;
     const planeCenter = center.clone();
     planeCenter.setComponent(spec.positionIndex, plane.positionM);
     const basisNormal = tangentA.clone().cross(tangentB).normalize();
@@ -1721,7 +2314,7 @@ export function rebuildSceneSectionHelpers(this: any,
 
     if (helperVisible) {
       const controlGroup = new THREE.Group();
-      controlGroup.name = `${plane.axis.toUpperCase()} Section push/pull controls`;
+      controlGroup.name = `${plane.label} push/pull controls`;
       controlGroup.position.copy(planeCenter);
       controlGroup.quaternion.copy(planeQuaternion);
       controlGroup.userData.sceneSectionHelper = true;
@@ -1736,10 +2329,10 @@ export function rebuildSceneSectionHelpers(this: any,
         outlineWidthM,
       );
       const outlineOpacity = frame
-        ? plane.axis === activeAxis
+        ? plane.frameId === activeFrameId
           ? 1
           : 0.82
-        : plane.axis === activeAxis
+        : plane.frameId === activeFrameId
           ? 1
           : 0.76;
       const outlineMaterial = makeSceneSectionOutlineMaterial(
@@ -1748,14 +2341,15 @@ export function rebuildSceneSectionHelpers(this: any,
       );
       const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
       outline.name = frame
-        ? `${plane.axis.toUpperCase()} Section frame`
-        : `${plane.axis.toUpperCase()} Section outline`;
+        ? plane.label
+        : `${plane.label} outline`;
       outline.castShadow = false;
       outline.receiveShadow = false;
       outline.userData.sceneSectionHelper = true;
       outline.userData.sceneSectionOutline = true;
       outline.userData.sceneSectionFrameOutline = frame !== null;
       outline.userData.sceneSectionAxis = plane.axis;
+      outline.userData.sceneSectionFrameId = plane.frameId;
       outline.userData.sceneSectionPlaneCoordinateIndex = spec.positionIndex;
       outline.userData.sceneSectionPlanePositionM = plane.positionM;
       outline.userData.sceneSectionFrameColor = color;
@@ -1808,6 +2402,7 @@ export function rebuildSceneSectionHelpers(this: any,
         group.userData.sceneSectionHelper = true;
         group.userData.sceneSectionPlaneHandle = true;
         group.userData.sceneSectionAxis = plane.axis;
+        group.userData.sceneSectionFrameId = plane.frameId;
         group.userData.sceneSectionPlaneHandleKind = kind;
         group.userData.sceneSectionHandleVisual = "double-arrow";
         group.userData.sceneSectionHandleScale = SCENE_SECTION_HANDLE_VISUAL_SCALE;
@@ -1854,6 +2449,7 @@ export function rebuildSceneSectionHelpers(this: any,
         pickProxy.userData.sceneSectionHelper = true;
         pickProxy.userData.sceneSectionPlaneHandle = true;
         pickProxy.userData.sceneSectionAxis = plane.axis;
+        pickProxy.userData.sceneSectionFrameId = plane.frameId;
         pickProxy.userData.sceneSectionPlaneHandleKind = kind;
         pickProxy.userData.sceneSectionHandleVisual = "double-arrow";
         pickProxy.userData.sceneSectionHandleScale =
@@ -1910,10 +2506,10 @@ export function rebuildSceneSectionHelpers(this: any,
       }
 
       runtime.group.add(controlGroup);
-      runtime.planes.set(plane.axis, controlGroup);
+      runtime.planes.set(plane.frameId, controlGroup);
 
       const label = this.createSceneSectionLabel(
-        `${plane.axis.toUpperCase()} Section`,
+        plane.label.replace(/\s*frame$/i, ""),
         color,
       );
       label.position
@@ -2179,25 +2775,44 @@ export function applySceneSectionPlanes(this: any, style: EditableStyle): void {
   this.updateRendererLocalClipping();
 
   const labelAnchorPoint = new THREE.Vector3();
+  const allFrameClippingPlanes = sectionFrames.flatMap(
+    (frame: ResolvedSceneSectionFrame) =>
+      this.sceneSectionFrameClippingPlanes(frame),
+  );
   for (const [layerId, group] of this.layers) {
     group.traverse((obj: THREE.Object3D) => {
-      const targeted = this.sceneSectionObjectTargeted(
+      const visibility = this.sceneSectionObjectVisibilityForObject(
         layerId,
         obj,
         style,
         layerTargets,
         productTargets,
       );
-      const objectFrame = targeted
-        ? this.sceneSectionFrameForObject(layerId, obj, sectionFrames)
-        : null;
-      const frameClippingPlanes =
-        this.sceneSectionFrameClippingPlanes(objectFrame);
+      const frameClippingPlanes = visibility.active
+        ? allFrameClippingPlanes
+        : [];
+      const hardPlanes = planes.filter(
+        (plane: ResolvedSceneSectionPlane) =>
+          (visibility.outsideOpacityByFrameId[plane.frameId] ??
+            visibility.outsideOpacityByAxis[plane.axis] ??
+            1) <= 0.001,
+      );
+      const hardPlaneClippingPlanes = this.sceneSectionClippingPlanes(hardPlanes);
+      const hardFrameClippingPlanes = sectionFrames
+        .filter(
+          (frame: ResolvedSceneSectionFrame) =>
+            (visibility.outsideOpacityByFrameId[frame.frameId] ??
+              visibility.outsideOpacityByAxis[frame.axis] ??
+              1) <= 0.001,
+        )
+        .flatMap((frame: ResolvedSceneSectionFrame) =>
+          this.sceneSectionFrameClippingPlanes(frame),
+        );
       updateSceneSectionLabelCullState(
         obj,
-        targeted,
-        clippingPlanes,
-        frameClippingPlanes,
+        visibility.active,
+        hardPlaneClippingPlanes,
+        hardFrameClippingPlanes,
         labelAnchorPoint,
       );
       const material = (
@@ -2209,7 +2824,7 @@ export function applySceneSectionPlanes(this: any, style: EditableStyle): void {
         this.applySceneSectionMaterial(
           m,
           planes,
-          targeted,
+          visibility,
           clippingPlanes,
           sectionFrames,
           frameClippingPlanes,
@@ -2242,38 +2857,50 @@ export function listSceneSectionPlanePickables(this: any): THREE.Object3D[] {
   return runtime?.group.visible ? runtime.pickables : [];
 }
 
-export function getSceneSectionPlanePosition(this: any, axis: SceneSectionAxis): THREE.Vector3 | null {
-  const obj = this.sceneSectionRuntime?.planes.get(axis);
+export function getSceneSectionPlanePosition(this: any, axis: SceneSectionAxis, frameId?: string): THREE.Vector3 | null {
+  const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+  const obj =
+    this.sceneSectionRuntime?.planes.get(targetFrameId) ??
+    this.sceneSectionRuntime?.planes.get(axis);
   return obj ? obj.position.clone() : null;
 }
 
-export function getSceneSectionPlaneScalar(this: any, axis: SceneSectionAxis): number | null {
+export function getSceneSectionPlaneScalar(this: any, axis: SceneSectionAxis, frameId?: string): number | null {
+  const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
   const plane = this.resolveSceneSectionPlanes(
     this.lastSceneSectionStyle,
-  ).find((candidate: ResolvedSceneSectionPlane) => candidate.axis === axis);
+  ).find(
+    (candidate: ResolvedSceneSectionPlane) =>
+      candidate.frameId === targetFrameId || candidate.axis === axis,
+  );
   return plane ? plane.positionM : null;
 }
 
 export function getSceneSectionWindowValue(this: any, 
   axis: SceneSectionAxis,
   kind: SceneSectionWindowHandleKind,
+  frameId?: string,
 ): number | null {
   const bounds = this.sceneSectionBounds(
     this.lastSceneSectionStyle,
     this.sceneSectionLayerIds(this.lastSceneSectionStyle),
     this.sceneSectionProductIds(this.lastSceneSectionStyle),
   );
-  const frame = frameForAxis(
-    this.resolveSceneSectionFrames(
+  const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+  const frame = this
+    .resolveSceneSectionFrames(
     {
       ...this.lastSceneSectionStyle,
       sceneSectionActiveAxis: axis,
+      sceneSectionActiveFrameId: targetFrameId,
       sceneSectionFrameEnabled: true,
     },
     bounds,
-    ),
-    axis,
-  );
+    )
+    .find(
+      (candidate: ResolvedSceneSectionFrame) =>
+        candidate.frameId === targetFrameId || candidate.axis === axis,
+    );
   if (!frame) return null;
   const frameKind = frameKindForHandle(kind);
   if (frameKind === "minA") return frame.minAM;
@@ -2282,21 +2909,33 @@ export function getSceneSectionWindowValue(this: any,
   return frame.minBM;
 }
 
-export function previewSceneSectionPlane(this: any, axis: SceneSectionAxis, positionM: number): void {
+export function previewSceneSectionPlane(this: any, axis: SceneSectionAxis, positionM: number, frameId?: string): void {
   const style = this.lastSceneSectionStyle;
   const planes = style.sceneSectionPlanes ?? {};
+  const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+  const isBuiltIn = targetFrameId === sceneSectionBuiltInFrameId(axis);
+  const frameList = sceneSectionFrameListWithPatch(style, targetFrameId, axis, {
+    plane: {
+      enabled: true,
+      positionM,
+    },
+  });
   this.applySceneSectionPlanes({
     ...style,
     sceneSectionEnabled: true,
     sceneSectionActiveAxis: axis,
-    sceneSectionPlanes: {
-      ...planes,
-      [axis]: {
-        ...(planes[axis] ?? {}),
-        enabled: true,
-        positionM,
-      },
-    },
+    sceneSectionActiveFrameId: targetFrameId,
+    sceneSectionFrames: frameList,
+    sceneSectionPlanes: isBuiltIn
+      ? {
+          ...planes,
+          [axis]: {
+            ...(planes[axis] ?? {}),
+            enabled: true,
+            positionM,
+          },
+        }
+      : planes,
   });
 }
 
@@ -2304,10 +2943,18 @@ export function previewSceneSectionWindow(this: any,
   axis: SceneSectionAxis,
   kind: SceneSectionWindowHandleKind,
   valueM: number,
+  frameId?: string,
 ): void {
   const style = this.lastSceneSectionStyle;
   const frameByAxis = style.sceneSectionFrameByAxis ?? {};
-  const currentFrame = frameByAxis[axis] ?? {};
+  const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+  const currentEntry = sceneSectionResolvedFrameEntries(style).find(
+    (entry) => entry.id === targetFrameId,
+  );
+  const currentFrame =
+    currentEntry?.frame ??
+    frameByAxis[axis] ??
+    {};
   const legacyByAxis = style.sceneSectionWindowByAxis ?? {};
   const patch =
     frameKindForHandle(kind) === "minA"
@@ -2322,8 +2969,12 @@ export function previewSceneSectionWindow(this: any,
     enabled: true,
     ...patch,
   };
+  const frameList = sceneSectionFrameListWithPatch(style, targetFrameId, axis, {
+    frame: nextFrame,
+  });
+  const isBuiltIn = targetFrameId === sceneSectionBuiltInFrameId(axis);
   const legacyPatch =
-    axis === "x" || axis === "y"
+    isBuiltIn && (axis === "x" || axis === "y")
       ? {
           sceneSectionWindowEnabled: true,
           sceneSectionWindowActiveAxis: axis,
@@ -2343,13 +2994,17 @@ export function previewSceneSectionWindow(this: any,
     ...style,
     sceneSectionEnabled: true,
     sceneSectionActiveAxis: axis,
+    sceneSectionActiveFrameId: targetFrameId,
     sceneSectionFrameEnabled: true,
-    sceneSectionFrameByAxis: {
-      ...frameByAxis,
-      [axis]: {
-        ...nextFrame,
-      },
-    },
+    sceneSectionFrames: frameList,
+    sceneSectionFrameByAxis: isBuiltIn
+      ? {
+          ...frameByAxis,
+          [axis]: {
+            ...nextFrame,
+          },
+        }
+      : frameByAxis,
     ...legacyPatch,
   });
 }

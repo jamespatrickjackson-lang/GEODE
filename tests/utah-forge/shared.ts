@@ -819,6 +819,12 @@ export type SectionIsoSceneState = {
     depthWrite: boolean | null;
     renderOrder: number | null;
     surfaceRenderPolicy: string | null;
+    opacity: number | null;
+    baseOpacity: number | null;
+    transitionOpacity: number | null;
+    composedOpacity: number | null;
+    thresholdAttenuation: number | null;
+    thresholdOcclusionCount: number | null;
   } | null;
   firstLineGeometryMetrics: {
     sourceSegmentCount: number | null;
@@ -833,6 +839,12 @@ export type SectionIsoSceneState = {
     depthWrite: boolean | null;
     renderOrder: number | null;
     surfaceRenderPolicy: string | null;
+    opacity: number | null;
+    baseOpacity: number | null;
+    transitionOpacity: number | null;
+    composedOpacity: number | null;
+    thresholdAttenuation: number | null;
+    thresholdOcclusionCount: number | null;
   } | null;
   firstBandUniforms: {
     isoMin: number | null;
@@ -1988,6 +2000,8 @@ export type TopoGraticuleSceneState = {
   firstLabelRotationDeg: number | null;
   firstLabelColor: string | null;
   firstLineClippingPlanes: number | null;
+  firstLineDepthTest: boolean | null;
+  firstLineDepthWrite: boolean | null;
   firstLineEdgeEnabled: boolean | null;
   firstLineEdgeStrength: number | null;
   firstLineEdgeShape: string | null;
@@ -2016,6 +2030,10 @@ export type TopoGraticuleSceneState = {
   maxLabelTangentErrorDeg: number | null;
   northLabelOutsideCount: number;
   westLabelOutsideCount: number;
+  undersideGridVisible: boolean | null;
+  undersideGridCameraVisible: boolean | null;
+  undersideGridHiddenReason: string | null;
+  undersideGridCameraOffsetFromSurfaceM: number | null;
 };
 
 export type TitleBlockSceneState = {
@@ -2059,11 +2077,15 @@ export async function topoGraticuleSceneState(
                       material?:
                         | {
                             clippingPlanes?: unknown[] | null;
+                            depthTest?: boolean;
+                            depthWrite?: boolean;
                             color?: { getHexString?: () => string };
                             userData?: Record<string, unknown>;
                           }
                         | Array<{
                             clippingPlanes?: unknown[] | null;
+                            depthTest?: boolean;
+                            depthWrite?: boolean;
                             color?: { getHexString?: () => string };
                             userData?: Record<string, unknown>;
                           }>;
@@ -2153,6 +2175,8 @@ export async function topoGraticuleSceneState(
     let firstLabelRotationDeg: number | null = null;
     let firstLabelColor: string | null = null;
     let firstLineClippingPlanes: number | null = null;
+    let firstLineDepthTest: boolean | null = null;
+    let firstLineDepthWrite: boolean | null = null;
     let firstLineEdgeEnabled: boolean | null = null;
     let firstLineEdgeStrength: number | null = null;
     let firstLineEdgeShape: string | null = null;
@@ -2170,6 +2194,27 @@ export async function topoGraticuleSceneState(
     let maxLabelTangentErrorDeg: number | null = null;
     let northLabelOutsideCount = 0;
     let westLabelOutsideCount = 0;
+    let undersideGridVisible: boolean | null = null;
+    let undersideGridCameraVisible: boolean | null = null;
+    let undersideGridHiddenReason: string | null = null;
+    let undersideGridCameraOffsetFromSurfaceM: number | null = null;
+    terrain?.traverse((obj) => {
+      if (obj.userData?.terrainUndersideGrid !== true) return;
+      undersideGridVisible = obj.visible !== false;
+      undersideGridCameraVisible =
+        typeof obj.userData?.terrainUndersideGridVisibleByCamera === "boolean"
+          ? obj.userData.terrainUndersideGridVisibleByCamera
+          : null;
+      undersideGridHiddenReason =
+        typeof obj.userData?.terrainUndersideGridHiddenReason === "string"
+          ? obj.userData.terrainUndersideGridHiddenReason
+          : null;
+      undersideGridCameraOffsetFromSurfaceM =
+        typeof obj.userData?.terrainUndersideGridCameraOffsetFromSurfaceM ===
+        "number"
+          ? obj.userData.terrainUndersideGridCameraOffsetFromSurfaceM
+          : null;
+    });
     layer?.traverse((obj) => {
       if (obj.userData?.topoGraticule === true) {
         const trim = obj.userData?.topoGraticuleInnerTrimInsideDistance;
@@ -2258,6 +2303,16 @@ export async function topoGraticuleSceneState(
           firstLineClippingPlanes = Array.isArray(material?.clippingPlanes)
             ? material.clippingPlanes.length
             : 0;
+        }
+        if (firstLineDepthTest === null) {
+          firstLineDepthTest =
+            typeof material?.depthTest === "boolean"
+              ? material.depthTest
+              : null;
+          firstLineDepthWrite =
+            typeof material?.depthWrite === "boolean"
+              ? material.depthWrite
+              : null;
         }
       }
       if (obj.userData?.topoGraticuleLabel === true) {
@@ -2350,6 +2405,8 @@ export async function topoGraticuleSceneState(
       firstLabelRotationDeg,
       firstLabelColor,
       firstLineClippingPlanes,
+      firstLineDepthTest,
+      firstLineDepthWrite,
       firstLineEdgeEnabled,
       firstLineEdgeStrength,
       firstLineEdgeShape,
@@ -2368,6 +2425,10 @@ export async function topoGraticuleSceneState(
       maxLabelTangentErrorDeg,
       northLabelOutsideCount,
       westLabelOutsideCount,
+      undersideGridVisible,
+      undersideGridCameraVisible,
+      undersideGridHiddenReason,
+      undersideGridCameraOffsetFromSurfaceM,
     };
   });
 }
@@ -3297,16 +3358,19 @@ export async function sectionIsoSceneState(
             depthTest?: unknown;
             depthWrite?: unknown;
             userData?: Record<string, unknown>;
+            opacity?: unknown;
           }
         | Array<{
             depthTest?: unknown;
             depthWrite?: unknown;
             userData?: Record<string, unknown>;
+            opacity?: unknown;
           }>
         | undefined,
       renderOrder: unknown,
     ) => {
       const first = Array.isArray(material) ? material[0] : material;
+      const data = first?.userData ?? {};
       return {
         depthTest:
           typeof first?.depthTest === "boolean" ? first.depthTest : null,
@@ -3314,8 +3378,29 @@ export async function sectionIsoSceneState(
           typeof first?.depthWrite === "boolean" ? first.depthWrite : null,
         renderOrder: typeof renderOrder === "number" ? renderOrder : null,
         surfaceRenderPolicy:
-          typeof first?.userData?.surfaceRenderPolicy === "string"
-            ? first.userData.surfaceRenderPolicy
+          typeof data.surfaceRenderPolicy === "string"
+            ? data.surfaceRenderPolicy
+            : null,
+        opacity: typeof first?.opacity === "number" ? first.opacity : null,
+        baseOpacity:
+          typeof data.sectionIsoBaseOpacity === "number"
+            ? data.sectionIsoBaseOpacity
+            : null,
+        transitionOpacity:
+          typeof data.sectionIsoTransitionOpacity === "number"
+            ? data.sectionIsoTransitionOpacity
+            : null,
+        composedOpacity:
+          typeof data.sectionIsoComposedOpacity === "number"
+            ? data.sectionIsoComposedOpacity
+            : null,
+        thresholdAttenuation:
+          typeof data.sectionIsoThresholdOcclusionAttenuation === "number"
+            ? data.sectionIsoThresholdOcclusionAttenuation
+            : null,
+        thresholdOcclusionCount:
+          typeof data.sectionIsoThresholdOcclusionCount === "number"
+            ? data.sectionIsoThresholdOcclusionCount
             : null,
       };
     };

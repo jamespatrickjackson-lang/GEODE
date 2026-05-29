@@ -278,7 +278,11 @@ const SCENE_SECTION_TRANSITION_STYLE_FIELDS: readonly (keyof EditableStyle)[] =
     "sceneSectionWindowActiveAxis",
     "sceneSectionWindowByAxis",
     "sceneSectionFrameEnabled",
+    "sceneSectionActiveFrameId",
+    "sceneSectionFrames",
     "sceneSectionFrameByAxis",
+    "sceneSectionObjectVisibilityByAxis",
+    "sceneSectionObjectVisibilityByFrameId",
     "sceneSectionTargetLayerIds",
     "sceneSectionTargetProductIds",
     "sceneSectionHelperVisible",
@@ -297,61 +301,116 @@ export const SCENE_SECTION_AFFECTED_LAYER_IDS = new Set<string>([
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 ]);
 
-export function sceneSectionDiscreteSignature(style: EditableStyle): string {
+function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
+  id: string;
+  axis: string | null;
+  enabled: boolean;
+  invert: boolean;
+  frameEnabled: boolean | null;
+  groundTraceVisible: boolean | null;
+  axisAHeading: string | null;
+  axisBHeading: string | null;
+  axisHeadingColor: string | null;
+}> {
   const planes = style.sceneSectionPlanes ?? {};
   const frames = style.sceneSectionFrameByAxis ?? {};
+  const explicit = Array.isArray(style.sceneSectionFrames)
+    ? style.sceneSectionFrames
+    : [];
+  const explicitById = new Map(
+    explicit
+      .filter((entry) => typeof entry?.id === "string" && entry.id.trim())
+      .map((entry) => [entry.id, entry]),
+  );
+  const signatures: Array<{
+    id: string;
+    axis: string | null;
+    enabled: boolean;
+    invert: boolean;
+    frameEnabled: boolean | null;
+    groundTraceVisible: boolean | null;
+    axisAHeading: string | null;
+    axisBHeading: string | null;
+    axisHeadingColor: string | null;
+  }> = [];
+  for (const axis of ["x", "y", "z"] as const) {
+    const id = `axis:${axis}`;
+    const explicitEntry = explicitById.get(id);
+    const plane = { ...(planes[axis] ?? {}), ...(explicitEntry?.plane ?? {}) };
+    const frame = { ...(frames[axis] ?? {}), ...(explicitEntry?.frame ?? {}) };
+    signatures.push({
+      id,
+      axis,
+      enabled: plane.enabled === true,
+      invert: plane.invert === true,
+      frameEnabled:
+        typeof frame.enabled === "boolean" ? frame.enabled : null,
+      groundTraceVisible:
+        typeof frame.groundTraceVisible === "boolean"
+          ? frame.groundTraceVisible
+          : null,
+      axisAHeading:
+        typeof frame.axisAHeading === "string" ? frame.axisAHeading : null,
+      axisBHeading:
+        typeof frame.axisBHeading === "string" ? frame.axisBHeading : null,
+      axisHeadingColor:
+        typeof frame.axisHeadingColor === "string"
+          ? frame.axisHeadingColor
+          : null,
+    });
+  }
+  for (const entry of explicit) {
+    if (
+      !entry ||
+      typeof entry.id !== "string" ||
+      !entry.id.trim() ||
+      entry.id.startsWith("axis:")
+    ) {
+      continue;
+    }
+    const plane = entry.plane ?? {};
+    const frame = entry.frame ?? {};
+    signatures.push({
+      id: entry.id,
+      axis:
+        entry.axis === "x" || entry.axis === "y" || entry.axis === "z"
+          ? entry.axis
+          : null,
+      enabled: plane.enabled === true,
+      invert: plane.invert === true,
+      frameEnabled:
+        typeof frame.enabled === "boolean" ? frame.enabled : null,
+      groundTraceVisible:
+        typeof frame.groundTraceVisible === "boolean"
+          ? frame.groundTraceVisible
+          : null,
+      axisAHeading:
+        typeof frame.axisAHeading === "string" ? frame.axisAHeading : null,
+      axisBHeading:
+        typeof frame.axisBHeading === "string" ? frame.axisBHeading : null,
+      axisHeadingColor:
+        typeof frame.axisHeadingColor === "string"
+          ? frame.axisHeadingColor
+          : null,
+    });
+  }
+  return signatures.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+export function sceneSectionDiscreteSignature(style: EditableStyle): string {
   return JSON.stringify({
     enabled: style.sceneSectionEnabled === true,
     mode: style.sceneSectionMode ?? null,
     targetScope: style.sceneSectionTargetScope ?? null,
-    activeAxis: style.sceneSectionActiveAxis ?? null,
     windowEnabled: style.sceneSectionWindowEnabled === true,
     windowActiveAxis: style.sceneSectionWindowActiveAxis ?? null,
     frameEnabled: style.sceneSectionFrameEnabled === true,
+    frames: sceneSectionFrameDiscreteSignature(style),
+    objectVisibilityByAxis: style.sceneSectionObjectVisibilityByAxis ?? {},
+    objectVisibilityByFrameId: style.sceneSectionObjectVisibilityByFrameId ?? {},
     targetLayerIds: style.sceneSectionTargetLayerIds ?? [],
     targetProductIds: style.sceneSectionTargetProductIds ?? [],
-    helperVisible: style.sceneSectionHelperVisible !== false,
     groundTraceVisible: style.sceneSectionGroundTraceVisible === true,
-    axesVisible: style.sceneSectionAxesVisible === true,
-    axisIntervalM:
-      typeof style.sceneSectionAxisIntervalM === "number"
-        ? style.sceneSectionAxisIntervalM
-        : null,
-    axisTextScale:
-      typeof style.sceneSectionAxisTextScale === "number"
-        ? style.sceneSectionAxisTextScale
-        : null,
-    planes: {
-      x: {
-        enabled: planes.x?.enabled === true,
-        invert: planes.x?.invert === true,
-      },
-      y: {
-        enabled: planes.y?.enabled === true,
-        invert: planes.y?.invert === true,
-      },
-      z: {
-        enabled: planes.z?.enabled === true,
-        invert: planes.z?.invert === true,
-      },
-    },
-    frameControls: {
-      x: {
-        enabled: frames.x?.enabled ?? null,
-        groundTraceVisible: frames.x?.groundTraceVisible ?? null,
-        axesVisible: frames.x?.axesVisible ?? null,
-      },
-      y: {
-        enabled: frames.y?.enabled ?? null,
-        groundTraceVisible: frames.y?.groundTraceVisible ?? null,
-        axesVisible: frames.y?.axesVisible ?? null,
-      },
-      z: {
-        enabled: frames.z?.enabled ?? null,
-        groundTraceVisible: frames.z?.groundTraceVisible ?? null,
-        axesVisible: frames.z?.axesVisible ?? null,
-      },
-    },
   });
 }
 

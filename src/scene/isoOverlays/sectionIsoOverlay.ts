@@ -162,31 +162,47 @@ export function seismicSectionMeshKind(obj: THREE.Object3D): string {
 export function mtVolumeCutSectionId(
   productId: string,
   axis: SceneSectionAxis,
+  frameId?: string,
 ): string {
-  return `${productId}-${axis}-section`;
+  const frameToken =
+    frameId && frameId !== `axis:${axis}`
+      ? `${axis}-${frameId.replace(/[^a-z0-9]+/gi, "-")}`
+      : axis;
+  return `${productId}-${frameToken}-section`;
 }
 
 export function mtVolumeCutTargetKey(
   layerId: string,
   productId: string,
   axis: SceneSectionAxis,
+  frameId?: string,
 ): string {
-  return `${layerId}:${productId}:${axis}`;
+  return frameId && frameId !== `axis:${axis}`
+    ? `${layerId}:${productId}:${axis}:${frameId}`
+    : `${layerId}:${productId}:${axis}`;
 }
 
 export function seismicVolumeCutSectionId(
   productId: string,
   axis: SceneSectionAxis,
+  frameId?: string,
 ): string {
-  return `${productId}-volume-${axis}-section`;
+  const frameToken =
+    frameId && frameId !== `axis:${axis}`
+      ? `${axis}-${frameId.replace(/[^a-z0-9]+/gi, "-")}`
+      : axis;
+  return `${productId}-volume-${frameToken}-section`;
 }
 
 export function seismicVolumeCutTargetKey(
   layerId: string,
   productId: string,
   axis: SceneSectionAxis,
+  frameId?: string,
 ): string {
-  return `${layerId}:${productId}:volume:${axis}`;
+  return frameId && frameId !== `axis:${axis}`
+    ? `${layerId}:${productId}:volume:${axis}:${frameId}`
+    : `${layerId}:${productId}:volume:${axis}`;
 }
 
 export function isScalarSectionMesh(obj: THREE.Object3D): obj is THREE.Mesh {
@@ -875,6 +891,7 @@ function makeSectionIsoBandMaterial(
   options: ScalarSectionIsoOptions,
 ): THREE.ShaderMaterial {
   const fillOffset = clampRange(options.fillOffset, -1, 1);
+  const authoredOpacity = clampRange(options.bandOpacity, 0, 0.85);
   const material = new THREE.ShaderMaterial({
     transparent: true,
     depthTest: SECTION_ISO_OVERLAY_POLICY.material.bandDepthTest,
@@ -891,7 +908,7 @@ function makeSectionIsoBandMaterial(
       uIsoMin: { value: options.isoMin },
       uIsoMax: { value: options.isoMax },
       uLevelCount: { value: options.levelCount },
-      uOpacity: { value: clampRange(options.bandOpacity, 0, 0.85) },
+      uOpacity: { value: authoredOpacity },
       uFillOffset: { value: fillOffset },
       uColorMin: { value: options.colorMin },
       uColorMax: { value: options.colorMax },
@@ -1019,6 +1036,7 @@ function makeSectionIsoBandMaterial(
   });
   material.userData.ignoreLayerStyle = true;
   material.userData.scalarSectionIsoOverlay = true;
+  material.userData.sectionIsoBaseOpacity = authoredOpacity;
   material.userData.surfaceRenderPolicy = SECTION_ISO_OVERLAY_POLICY.name;
   return material;
 }
@@ -1123,6 +1141,7 @@ export function updateScalarSectionIsoOverlay(
       });
       lineMaterial.userData.ignoreLayerStyle = true;
       lineMaterial.userData.scalarSectionIsoOverlay = true;
+      lineMaterial.userData.sectionIsoBaseOpacity = 0.96;
       lineMaterial.userData.surfaceRenderPolicy =
         SECTION_ISO_OVERLAY_POLICY.name;
       const line = new THREE.Mesh(lineGeometry, lineMaterial);
@@ -1130,6 +1149,7 @@ export function updateScalarSectionIsoOverlay(
       line.renderOrder = SECTION_ISO_LINE_RENDER_ORDER;
       line.userData.ignoreLayerStyle = true;
       line.userData.scalarSectionIsoOverlay = true;
+      line.userData.sectionIsoLineOverlay = true;
       line.userData.surfaceRenderPolicy = SECTION_ISO_OVERLAY_POLICY.name;
       if (options.skipSceneSectionClipping) {
         line.userData.sceneSectionHelper = true;

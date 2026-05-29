@@ -333,7 +333,7 @@ function makeGraticuleLine(
     linewidth: lineWidth,
     transparent: true,
     opacity,
-    depthTest: false,
+    depthTest: true,
     depthWrite: false,
     dashed,
     dashSize: 18000,
@@ -342,6 +342,8 @@ function makeGraticuleLine(
   material.fog = false;
   material.userData.forceTransparent = true;
   material.userData.topoGraticuleLineMaterial = true;
+  material.userData.topoGraticuleDepthTest = true;
+  material.userData.topoGraticuleDepthWrite = false;
   enableDistanceAttenuatedLineWidth(material);
   material.resolution.set(
     window.innerWidth || 1920,
