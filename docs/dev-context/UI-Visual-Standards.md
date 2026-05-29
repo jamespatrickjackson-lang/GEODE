@@ -156,6 +156,11 @@ and `Z Section frame` editor subsection:
 | Ground trace | `sceneSectionFrameByAxis.<axis>.groundTraceVisible` | on/off | legacy/global fallback |
 | Ground line width | `sceneSectionFrameByAxis.<axis>.groundTraceWidthM` | `30m` to `2000m` | `360m` |
 | Scale axes | `sceneSectionFrameByAxis.<axis>.axesVisible` | on/off | legacy/global fallback |
+| Alignment | `sceneSectionFrameByAxis.<axis>.axisAlignment` | `utm`, `cardinal` | `utm` |
+| Datum | `sceneSectionFrameByAxis.<axis>.axisDatum` | `utm`, `local`, `latlon` | `utm` |
+| Local datum easting | `sceneSectionFrameByAxis.<axis>.axisDatumOriginEastingM` | UTM metres | frame center |
+| Local datum northing | `sceneSectionFrameByAxis.<axis>.axisDatumOriginNorthingM` | UTM metres | frame center |
+| Lat/Lon decimals | `sceneSectionFrameByAxis.<axis>.axisDatumLatLonDecimals` | `0` to `6` | `3` |
 | Axis interval | `sceneSectionFrameByAxis.<axis>.axisIntervalM` | `0.1km` to `50km` | `5km` |
 | Text size | `sceneSectionFrameByAxis.<axis>.axisTextScale` | `0.4x` to `100x` | `1x` |
 | Text padding | `sceneSectionFrameByAxis.<axis>.axisTextPaddingM` | `0km` to `10km` | `0.42km` |
@@ -167,6 +172,15 @@ and `Z Section frame` editor subsection:
 
 - Axis interval has both slider and numeric inputs per frame, displayed in
   kilometers. For example, `0.1` means 100m and `1` means 1km.
+- Alignment and datum are independent per frame. `utm` alignment keeps the
+  current grid-axis section geometry. `cardinal` alignment rotates only the
+  section frame and its helpers by local UTM convergence around the frame
+  center. Scene data, saved cameras, terrain, MT volumes, drillholes, and topo
+  graticules are not globally reprojected or rotated.
+- Datum changes scale-axis tick/readout behavior only. `utm` keeps absolute
+  easting/northing labels, `local` uses the frame's local datum origin for
+  distance ticks, and `latlon` shows decimal-degree longitude/latitude.
+  Elevation labels remain absolute elevation in kilometres.
 - Section enable, flip side, and active-handle controls are compact header
   controls on each X/Y/Z frame; there is no separate `X Section active` /
   `Y Section` / `Z Section` editor subsection.
@@ -174,8 +188,8 @@ and `Z Section frame` editor subsection:
   factor.
 - Axis interval and text-size numeric fields render `km` / `x` as
   non-editable suffixes inside the edit field, not as separate row text.
-- Labels are derived from the active frame axis metadata: easting, northing, or
-  elevation.
+- Scale-axis labels are derived from the active frame axis and datum: UTM
+  easting/northing/elevation, local distance, or decimal longitude/latitude.
 - Ground trace trims generated X/Y section volume-cut overlays above the
   sampled terrain surface; Z frames do not render ground traces. Ground line
   width is authored per frame.

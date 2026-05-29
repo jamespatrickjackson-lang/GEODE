@@ -843,16 +843,25 @@ export function mountScene(
     suppressNextDrillFocusClick = true;
     const normal =
       sceneSectionHandle.kind === "plane"
-        ? sceneSectionHandle.axis === "x"
-          ? new THREE.Vector3(1, 0, 0)
-          : sceneSectionHandle.axis === "y"
-            ? new THREE.Vector3(0, 1, 0)
-            : new THREE.Vector3(0, 0, 1)
-        : sceneSectionFrameDragNormal(
+        ? (manager.getSceneSectionPlaneNormal(
+            sceneSectionHandle.axis,
+            sceneSectionHandle.frameId,
+          ) ??
+          (sceneSectionHandle.axis === "x"
+            ? new THREE.Vector3(1, 0, 0)
+            : sceneSectionHandle.axis === "y"
+              ? new THREE.Vector3(0, 1, 0)
+              : new THREE.Vector3(0, 0, 1)))
+        : (manager.getSceneSectionWindowNormal(
             sceneSectionHandle.axis,
             sceneSectionHandle.kind,
-          );
-      const originalPosition =
+            sceneSectionHandle.frameId,
+          ) ??
+          sceneSectionFrameDragNormal(
+            sceneSectionHandle.axis,
+            sceneSectionHandle.kind,
+          ));
+    const originalPosition =
       sceneSectionHandle.kind === "plane"
         ? (manager.getSceneSectionPlaneScalar(
             sceneSectionHandle.axis,

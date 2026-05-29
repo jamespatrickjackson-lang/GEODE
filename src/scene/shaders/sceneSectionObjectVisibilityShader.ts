@@ -2,7 +2,6 @@ import * as THREE from "three";
 import type {
   ResolvedSceneSectionFrame,
   ResolvedSceneSectionPlane,
-  SceneSectionAxis,
   SceneSectionObjectVisibility,
 } from "../SceneManager";
 
@@ -16,10 +15,6 @@ interface SceneSectionObjectVisibilityShader {
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
-}
-
-function axisCode(axis: SceneSectionAxis): number {
-  return axis === "y" ? 1 : axis === "z" ? 2 : 0;
 }
 
 export function setSceneSectionObjectVisibilityUniforms(
@@ -63,7 +58,7 @@ export function setSceneSectionObjectVisibilityUniforms(
     const plane = planes[i];
     if (!normalUniform.value[i]) normalUniform.value[i] = new THREE.Vector3();
     normalUniform.value[i].copy(plane?.normal ?? new THREE.Vector3());
-    positionUniform.value[i] = plane?.positionM ?? 0;
+    positionUniform.value[i] = plane?.signedDistanceM ?? 0;
     invertUniform.value[i] = plane?.invert ? 1 : 0;
     planeOpacityUniform.value[i] = plane
       ? clamp01(
@@ -79,9 +74,19 @@ export function setSceneSectionObjectVisibilityUniforms(
     : [];
   ensure<number>("uSceneSectionObjectVisibilityFrameCount", 0).value =
     activeFrames.length;
-  const frameAxesUniform = ensure<number[]>(
-    "uSceneSectionObjectVisibilityFrameAxes",
-    Array.from({ length: SCENE_SECTION_OBJECT_VISIBILITY_SLOT_COUNT }, () => 0),
+  const frameAxisAUniform = ensure<THREE.Vector3[]>(
+    "uSceneSectionObjectVisibilityFrameAxisA",
+    Array.from(
+      { length: SCENE_SECTION_OBJECT_VISIBILITY_SLOT_COUNT },
+      () => new THREE.Vector3(),
+    ),
+  );
+  const frameAxisBUniform = ensure<THREE.Vector3[]>(
+    "uSceneSectionObjectVisibilityFrameAxisB",
+    Array.from(
+      { length: SCENE_SECTION_OBJECT_VISIBILITY_SLOT_COUNT },
+      () => new THREE.Vector3(),
+    ),
   );
   const frameBoundsUniform = ensure<THREE.Vector4[]>(
     "uSceneSectionObjectVisibilityFrameBounds",
@@ -96,7 +101,18 @@ export function setSceneSectionObjectVisibilityUniforms(
   );
   for (let i = 0; i < SCENE_SECTION_OBJECT_VISIBILITY_SLOT_COUNT; i += 1) {
     const frame = activeFrames[i];
-    frameAxesUniform.value[i] = frame ? axisCode(frame.axis) : 0;
+    if (!frameAxisAUniform.value[i]) {
+      frameAxisAUniform.value[i] = new THREE.Vector3();
+    }
+    if (!frameAxisBUniform.value[i]) {
+      frameAxisBUniform.value[i] = new THREE.Vector3();
+    }
+    frameAxisAUniform.value[i].copy(
+      frame?.axisAVector ?? new THREE.Vector3(1, 0, 0),
+    );
+    frameAxisBUniform.value[i].copy(
+      frame?.axisBVector ?? new THREE.Vector3(0, 1, 0),
+    );
     if (!frameBoundsUniform.value[i]) {
       frameBoundsUniform.value[i] = new THREE.Vector4();
     }
@@ -171,7 +187,8 @@ export function applySceneSectionObjectVisibilityBuiltInMaterial(
             "uniform int uSceneSectionObjectVisibilityInvert[8];",
             "uniform float uSceneSectionObjectVisibilityPlaneOpacity[8];",
             "uniform int uSceneSectionObjectVisibilityFrameCount;",
-            "uniform int uSceneSectionObjectVisibilityFrameAxes[8];",
+            "uniform vec3 uSceneSectionObjectVisibilityFrameAxisA[8];",
+            "uniform vec3 uSceneSectionObjectVisibilityFrameAxisB[8];",
             "uniform vec4 uSceneSectionObjectVisibilityFrameBounds[8];",
             "uniform float uSceneSectionObjectVisibilityFrameOpacity[8];",
             "varying vec3 vSceneSectionObjectVisibilityWorldPosition;",
@@ -187,10 +204,11 @@ export function applySceneSectionObjectVisibilityBuiltInMaterial(
             "  }",
             "  for (int i = 0; i < 8; i += 1) {",
             "    if (i >= uSceneSectionObjectVisibilityFrameCount) break;",
-            "    int axis = uSceneSectionObjectVisibilityFrameAxes[i];",
+            "    vec3 axisA = normalize(uSceneSectionObjectVisibilityFrameAxisA[i]);",
+            "    vec3 axisB = normalize(uSceneSectionObjectVisibilityFrameAxisB[i]);",
             "    vec4 bounds = uSceneSectionObjectVisibilityFrameBounds[i];",
-            "    float a = axis == 0 ? position.y : position.x;",
-            "    float b = axis == 2 ? position.y : position.z;",
+            "    float a = dot(position, axisA);",
+            "    float b = dot(position, axisB);",
             "    bool inside = a >= bounds.x && a <= bounds.y && b >= bounds.z && b <= bounds.w;",
             "    if (!inside) alpha = min(alpha, clamp(uSceneSectionObjectVisibilityFrameOpacity[i], 0.0, 1.0));",
             "  }",
@@ -221,7 +239,7 @@ export function applySceneSectionObjectVisibilityBuiltInMaterial(
       material.userData.sceneSectionObjectVisibilityShader = patchedShader;
     };
     material.customProgramCacheKey = () =>
-      `${previousKey()}|geosee-scene-section-object-visibility-v1`;
+      `${previousKey()}|geosee-scene-section-object-visibility-v2`;
     material.userData.sceneSectionObjectVisibilityPatched = true;
     material.needsUpdate = true;
   }

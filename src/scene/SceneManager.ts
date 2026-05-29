@@ -128,8 +128,10 @@ import {
   createSceneSectionScaleLabel as createSceneSectionScaleLabelImpl,
   currentSceneSectionStyle as currentSceneSectionStyleImpl,
   ensureSceneSectionRuntime as ensureSceneSectionRuntimeImpl,
+  getSceneSectionPlaneNormal as getSceneSectionPlaneNormalImpl,
   getSceneSectionPlanePosition as getSceneSectionPlanePositionImpl,
   getSceneSectionPlaneScalar as getSceneSectionPlaneScalarImpl,
+  getSceneSectionWindowNormal as getSceneSectionWindowNormalImpl,
   getSceneSectionWindowValue as getSceneSectionWindowValueImpl,
   interpolatedSceneSectionStyle as interpolatedSceneSectionStyleImpl,
   listSceneSectionObjectTargets as listSceneSectionObjectTargetsImpl,
@@ -319,8 +321,12 @@ export interface ResolvedSceneSectionPlane {
   axis: SceneSectionAxis;
   enabled: boolean;
   positionM: number;
+  signedDistanceM: number;
+  point: THREE.Vector3;
   invert: boolean;
   normal: THREE.Vector3;
+  axisAVector: THREE.Vector3;
+  axisBVector: THREE.Vector3;
 }
 
 export interface ResolvedSceneSectionWindow {
@@ -343,6 +349,17 @@ export interface ResolvedSceneSectionFrame {
   maxBM: number;
   axisAIndex: 0 | 1 | 2;
   axisBIndex: 0 | 1 | 2;
+  signedDistanceM: number;
+  axisAVector: THREE.Vector3;
+  axisBVector: THREE.Vector3;
+  normal: THREE.Vector3;
+  center: THREE.Vector3;
+  axisAlignment: "utm" | "cardinal";
+  axisDatum: "utm" | "local" | "latlon";
+  axisDatumOriginEastingM: number;
+  axisDatumOriginNorthingM: number;
+  axisDatumLatLonDecimals: number;
+  utmZone: number | null;
   groundTraceVisible: boolean;
   groundTraceWidthM: number;
   axesVisible: boolean;
@@ -1599,12 +1616,24 @@ export class SceneManager {
     return getSceneSectionPlaneScalarImpl.call(this, axis, frameId);
   }
 
+  getSceneSectionPlaneNormal(axis: SceneSectionAxis, frameId?: string): THREE.Vector3 | null {
+    return getSceneSectionPlaneNormalImpl.call(this, axis, frameId);
+  }
+
   getSceneSectionWindowValue(
     axis: SceneSectionAxis,
     kind: SceneSectionWindowHandleKind,
     frameId?: string,
   ): number | null {
     return getSceneSectionWindowValueImpl.call(this, axis, kind, frameId);
+  }
+
+  getSceneSectionWindowNormal(
+    axis: SceneSectionAxis,
+    kind: SceneSectionWindowHandleKind,
+    frameId?: string,
+  ): THREE.Vector3 | null {
+    return getSceneSectionWindowNormalImpl.call(this, axis, kind, frameId);
   }
 
   previewSceneSectionPlane(axis: SceneSectionAxis, positionM: number, frameId?: string): void {
@@ -3238,4 +3267,3 @@ export class SceneManager {
     }
   }
 }
-

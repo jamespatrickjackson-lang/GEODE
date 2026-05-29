@@ -226,7 +226,8 @@ uniform float uSceneSectionThickness[8];
 uniform int uSceneSectionInvert[8];
 uniform float uSceneSectionPlaneOutsideOpacity[8];
 uniform int uSceneSectionFrameCount;
-uniform int uSceneSectionFrameAxes[8];
+uniform vec3 uSceneSectionFrameAxisA[8];
+uniform vec3 uSceneSectionFrameAxisB[8];
 uniform vec4 uSceneSectionFrameBounds[8];
 uniform float uSceneSectionFrameOutsideOpacity[8];
 uniform int uWorkingAreaFocusEnabled;
@@ -251,10 +252,11 @@ float sceneSectionAlpha(vec3 position) {
   }
   for (int i = 0; i < 8; i += 1) {
     if (i >= uSceneSectionFrameCount) break;
-    int axis = uSceneSectionFrameAxes[i];
+    vec3 axisA = normalize(uSceneSectionFrameAxisA[i]);
+    vec3 axisB = normalize(uSceneSectionFrameAxisB[i]);
     vec4 bounds = uSceneSectionFrameBounds[i];
-    float a = axis == 0 ? position.y : position.x;
-    float b = axis == 2 ? position.y : position.z;
+    float a = dot(position, axisA);
+    float b = dot(position, axisB);
     bool inside = a >= bounds.x && a <= bounds.y && b >= bounds.z && b <= bounds.w;
     if (!inside) {
       alpha = min(alpha, clamp(uSceneSectionFrameOutsideOpacity[i], 0.0, 1.0));
@@ -422,7 +424,8 @@ async function buildSectionMesh(
       uSceneSectionInvert: { value: sceneSectionNumberSlots(0) },
       uSceneSectionPlaneOutsideOpacity: { value: sceneSectionNumberSlots(1) },
       uSceneSectionFrameCount: { value: 0 },
-      uSceneSectionFrameAxes: { value: sceneSectionNumberSlots(0) },
+      uSceneSectionFrameAxisA: { value: sceneSectionVectorSlots() },
+      uSceneSectionFrameAxisB: { value: sceneSectionVectorSlots() },
       uSceneSectionFrameBounds: { value: sceneSectionVector4Slots() },
       uSceneSectionFrameOutsideOpacity: { value: sceneSectionNumberSlots(1) },
       uWorkingAreaFocusEnabled: { value: 0 },
@@ -501,7 +504,8 @@ uniform float uSceneSectionThickness[8];
 uniform int uSceneSectionInvert[8];
 uniform float uSceneSectionPlaneOutsideOpacity[8];
 uniform int uSceneSectionFrameCount;
-uniform int uSceneSectionFrameAxes[8];
+uniform vec3 uSceneSectionFrameAxisA[8];
+uniform vec3 uSceneSectionFrameAxisB[8];
 uniform vec4 uSceneSectionFrameBounds[8];
 uniform float uSceneSectionFrameOutsideOpacity[8];
 uniform int uWorkingAreaFocusEnabled;
@@ -567,10 +571,11 @@ float sceneSectionAlpha(vec3 position) {
   }
   for (int i = 0; i < 8; i += 1) {
     if (i >= uSceneSectionFrameCount) break;
-    int axis = uSceneSectionFrameAxes[i];
+    vec3 axisA = normalize(uSceneSectionFrameAxisA[i]);
+    vec3 axisB = normalize(uSceneSectionFrameAxisB[i]);
     vec4 bounds = uSceneSectionFrameBounds[i];
-    float a = axis == 0 ? position.y : position.x;
-    float b = axis == 2 ? position.y : position.z;
+    float a = dot(position, axisA);
+    float b = dot(position, axisB);
     bool inside = a >= bounds.x && a <= bounds.y && b >= bounds.z && b <= bounds.w;
     if (!inside) {
       alpha = min(alpha, clamp(uSceneSectionFrameOutsideOpacity[i], 0.0, 1.0));
@@ -696,7 +701,8 @@ async function buildRaymarchMesh(
       uSceneSectionInvert: { value: sceneSectionNumberSlots(0) },
       uSceneSectionPlaneOutsideOpacity: { value: sceneSectionNumberSlots(1) },
       uSceneSectionFrameCount: { value: 0 },
-      uSceneSectionFrameAxes: { value: sceneSectionNumberSlots(0) },
+      uSceneSectionFrameAxisA: { value: sceneSectionVectorSlots() },
+      uSceneSectionFrameAxisB: { value: sceneSectionVectorSlots() },
       uSceneSectionFrameBounds: { value: sceneSectionVector4Slots() },
       uSceneSectionFrameOutsideOpacity: { value: sceneSectionNumberSlots(1) },
       uWorkingAreaFocusEnabled: { value: 0 },

@@ -1,5 +1,9 @@
 import * as THREE from "three";
-import type { EditableStyle } from "../../pages/types";
+import type {
+  EditableStyle,
+  SceneSectionAxisAlignment,
+  SceneSectionAxisDatum,
+} from "../../pages/types";
 import { getHeightSampler } from "../heightSampler";
 import { disposeObjectTree } from "../disposeObjectTree";
 import {
@@ -32,6 +36,11 @@ import {
   applySceneSectionObjectVisibilityBuiltInMaterial,
   setSceneSectionObjectVisibilityUniforms,
 } from "../shaders/sceneSectionObjectVisibilityShader";
+import {
+  utmConvergenceRadians,
+  utmToLatLon,
+  utmZoneFromSourceCrs,
+} from "../../loaders/utmProjection";
 
 const SCENE_SECTION_AXIS_NORMALS = {
   x: new THREE.Vector3(1, 0, 0),
@@ -308,6 +317,73 @@ function axisComponentVector(index: 0 | 1 | 2, direction = 1): THREE.Vector3 {
   return normal;
 }
 
+function sceneSectionVectorComponentIndex(
+  vector: THREE.Vector3,
+): 0 | 1 | 2 {
+  const ax = Math.abs(vector.x);
+  const ay = Math.abs(vector.y);
+  const az = Math.abs(vector.z);
+  return ax >= ay && ax >= az ? 0 : ay >= az ? 1 : 2;
+}
+
+function sceneSectionHorizontalComponentIndex(
+  vector: THREE.Vector3,
+): 0 | 1 {
+  return Math.abs(vector.x) >= Math.abs(vector.y) ? 0 : 1;
+}
+
+function sceneSectionRotateHorizontal(
+  vector: THREE.Vector3,
+  convergenceRad: number,
+): THREE.Vector3 {
+  return vector
+    .clone()
+    .applyAxisAngle(new THREE.Vector3(0, 0, 1), -convergenceRad)
+    .normalize();
+}
+
+type SceneSectionGeoContext = {
+  origin: { easting: number; northing: number; elevation: number };
+  sourceCrs?: string;
+  utmZone: number | null;
+};
+
+function sceneSectionSourceCrs(this: any): string | undefined {
+  const metadata = this.layerSpecFor?.(this.topoSurfaceLayerId?.())?.metadata as
+    | Record<string, unknown>
+    | undefined;
+  const transform =
+    metadata?.geoTransform && typeof metadata.geoTransform === "object"
+      ? (metadata.geoTransform as Record<string, unknown>)
+      : null;
+  return typeof transform?.sourceCrs === "string"
+    ? transform.sourceCrs
+    : undefined;
+}
+
+function sceneSectionGeoContext(this: any): SceneSectionGeoContext {
+  const origin = this.siteSurfaceGuideOrigin(
+    this.layers.get(this.topoSurfaceLayerId()),
+  );
+  const sourceCrs = sceneSectionSourceCrs.call(this);
+  return {
+    origin,
+    sourceCrs,
+    utmZone: utmZoneFromSourceCrs(sourceCrs),
+  };
+}
+
+function sceneSectionWorldToUtm(
+  point: THREE.Vector3,
+  origin: { easting: number; northing: number; elevation: number },
+): { easting: number; northing: number; elevation: number } {
+  return {
+    easting: origin.easting + point.x,
+    northing: origin.northing + point.y,
+    elevation: origin.elevation + point.z,
+  };
+}
+
 function sceneSectionAxisTicks(
   minValue: number,
   maxValue: number,
@@ -352,6 +428,74 @@ function sceneSectionAxisHeading(componentIndex: 0 | 1 | 2): string {
   if (componentIndex === 0) return "Easting (km)";
   if (componentIndex === 1) return "Northing (km)";
   return "Elevation (km)";
+}
+
+function sceneSectionDefaultAxisHeading(
+  datum: SceneSectionAxisDatum,
+  vector: THREE.Vector3,
+): string {
+  const component = sceneSectionVectorComponentIndex(vector);
+  if (component === 2) return "Elevation (km)";
+  if (datum === "local") return "Distance (km)";
+  if (datum === "latlon") {
+    return sceneSectionHorizontalComponentIndex(vector) === 0
+      ? "Longitude (°)"
+      : "Latitude (°)";
+  }
+  return sceneSectionAxisHeading(component);
+}
+
+function formatSceneSectionLonLat(value: number, positive: string, negative: string, decimals: number): string {
+  return `${Math.abs(value).toFixed(decimals)}° ${value >= 0 ? positive : negative}`;
+}
+
+function sceneSectionAxisValueLabelForPoint(
+  frame: ResolvedSceneSectionFrame,
+  vector: THREE.Vector3,
+  alongM: number,
+  point: THREE.Vector3,
+  origin: { easting: number; northing: number; elevation: number },
+): string {
+  const component = sceneSectionVectorComponentIndex(vector);
+  if (component === 2) return `${(point.z / 1000).toFixed(1)} elev km`;
+  if (frame.axisDatum === "local") {
+    const datumPoint = new THREE.Vector3(
+      frame.axisDatumOriginEastingM - origin.easting,
+      frame.axisDatumOriginNorthingM - origin.northing,
+      point.z,
+    );
+    const datumAlong = datumPoint.dot(vector);
+    return `${((alongM - datumAlong) / 1000).toFixed(1)} km`;
+  }
+  if (frame.axisDatum === "latlon" && frame.utmZone !== null) {
+    const utm = sceneSectionWorldToUtm(point, origin);
+    const latLon = utmToLatLon(utm.easting, utm.northing, frame.utmZone);
+    const decimals = clampRange(frame.axisDatumLatLonDecimals, 0, 6);
+    return sceneSectionHorizontalComponentIndex(vector) === 0
+      ? formatSceneSectionLonLat(latLon.lon, "E", "W", decimals)
+      : formatSceneSectionLonLat(latLon.lat, "N", "S", decimals);
+  }
+  return sceneSectionAxisValueLabel(component, point.getComponent(component), origin);
+}
+
+function sceneSectionAxisTickOffset(
+  frame: ResolvedSceneSectionFrame,
+  vector: THREE.Vector3,
+  origin: { easting: number; northing: number; elevation: number },
+): number {
+  const component = sceneSectionVectorComponentIndex(vector);
+  if (frame.axisDatum === "local") {
+    const datumPoint = new THREE.Vector3(
+      frame.axisDatumOriginEastingM - origin.easting,
+      frame.axisDatumOriginNorthingM - origin.northing,
+      0,
+    );
+    return -datumPoint.dot(vector);
+  }
+  if (frame.axisAlignment !== "utm") return 0;
+  if (component === 0) return origin.easting;
+  if (component === 1) return origin.northing;
+  return 0;
 }
 
 function sceneSectionOutlineWidthM(width: number, height: number): number {
@@ -945,24 +1089,196 @@ export function sceneSectionObjectVisibilityForObject(this: any,
   };
 }
 
+type SceneSectionFrameBasis = {
+  normal: THREE.Vector3;
+  axisAVector: THREE.Vector3;
+  axisBVector: THREE.Vector3;
+  center: THREE.Vector3;
+  signedDistanceM: number;
+  minAM: number;
+  maxAM: number;
+  minBM: number;
+  maxBM: number;
+  alignment: SceneSectionAxisAlignment;
+  datum: SceneSectionAxisDatum;
+  datumOriginEastingM: number;
+  datumOriginNorthingM: number;
+  datumLatLonDecimals: number;
+  utmZone: number | null;
+};
+
+function sceneSectionAlignment(value: unknown): SceneSectionAxisAlignment {
+  return value === "cardinal" ? "cardinal" : "utm";
+}
+
+function sceneSectionDatum(value: unknown): SceneSectionAxisDatum {
+  return value === "local" || value === "latlon" ? value : "utm";
+}
+
+function sceneSectionBasisVectors(
+  axis: SceneSectionAxis,
+  alignment: SceneSectionAxisAlignment,
+  convergenceRad: number,
+): {
+  normal: THREE.Vector3;
+  axisAVector: THREE.Vector3;
+  axisBVector: THREE.Vector3;
+} {
+  const east =
+    alignment === "cardinal"
+      ? sceneSectionRotateHorizontal(axisComponentVector(0), convergenceRad)
+      : axisComponentVector(0);
+  const north =
+    alignment === "cardinal"
+      ? sceneSectionRotateHorizontal(axisComponentVector(1), convergenceRad)
+      : axisComponentVector(1);
+  const up = axisComponentVector(2);
+  if (axis === "x") {
+    return { normal: east.clone(), axisAVector: north.clone(), axisBVector: up };
+  }
+  if (axis === "y") {
+    return { normal: north.clone(), axisAVector: east.clone(), axisBVector: up };
+  }
+  return { normal: up, axisAVector: east.clone(), axisBVector: north.clone() };
+}
+
+function sceneSectionFrameCenterFromRanges(
+  axis: SceneSectionAxis,
+  positionM: number,
+  minAM: number,
+  maxAM: number,
+  minBM: number,
+  maxBM: number,
+): THREE.Vector3 {
+  const spec = SCENE_SECTION_AXIS_SPECS[axis];
+  const center = new THREE.Vector3();
+  center.setComponent(spec.positionIndex, positionM);
+  center.setComponent(spec.frameAIndex, (minAM + maxAM) * 0.5);
+  center.setComponent(spec.frameBIndex, (minBM + maxBM) * 0.5);
+  return center;
+}
+
+function sceneSectionResolvedFrameBasis(
+  axis: SceneSectionAxis,
+  frame: NonNullable<EditableStyle["sceneSectionFrameByAxis"]>[SceneSectionAxis] | undefined,
+  positionM: number,
+  minAM: number,
+  maxAM: number,
+  minBM: number,
+  maxBM: number,
+  geo: SceneSectionGeoContext,
+): SceneSectionFrameBasis {
+  const alignment = sceneSectionAlignment(frame?.axisAlignment);
+  const datum = sceneSectionDatum(frame?.axisDatum);
+  const center = sceneSectionFrameCenterFromRanges(
+    axis,
+    positionM,
+    minAM,
+    maxAM,
+    minBM,
+    maxBM,
+  );
+  const centerUtm = sceneSectionWorldToUtm(center, geo.origin);
+  const convergenceRad =
+    alignment === "cardinal" && geo.utmZone !== null
+      ? utmConvergenceRadians(centerUtm.easting, centerUtm.northing, geo.utmZone)
+      : 0;
+  const vectors = sceneSectionBasisVectors(axis, alignment, convergenceRad);
+  const spanA = Math.abs(maxAM - minAM);
+  const spanB = Math.abs(maxBM - minBM);
+  const centerA = center.dot(vectors.axisAVector);
+  const centerB = center.dot(vectors.axisBVector);
+  const datumOriginEastingM =
+    finiteNumber(frame?.axisDatumOriginEastingM) ?? centerUtm.easting;
+  const datumOriginNorthingM =
+    finiteNumber(frame?.axisDatumOriginNorthingM) ?? centerUtm.northing;
+  const datumLatLonDecimals = Math.round(
+    clampRange(finiteNumber(frame?.axisDatumLatLonDecimals) ?? 3, 0, 6),
+  );
+  return {
+    ...vectors,
+    center,
+    signedDistanceM: center.dot(vectors.normal),
+    minAM: centerA - spanA * 0.5,
+    maxAM: centerA + spanA * 0.5,
+    minBM: centerB - spanB * 0.5,
+    maxBM: centerB + spanB * 0.5,
+    alignment,
+    datum,
+    datumOriginEastingM,
+    datumOriginNorthingM,
+    datumLatLonDecimals,
+    utmZone: geo.utmZone,
+  };
+}
+
 export function resolveSceneSectionPlanes(this: any, 
   style: EditableStyle,
+  bounds?: THREE.Box3,
 ): ResolvedSceneSectionPlane[] {
+  const resolvedBounds =
+    bounds ??
+    this.sceneSectionBounds(
+      style,
+      this.sceneSectionLayerIds(style),
+      this.sceneSectionProductIds(style),
+    );
+  const geo = sceneSectionGeoContext.call(this);
+  const frames = new Map(
+    this
+      .resolveSceneSectionFrames(style, resolvedBounds)
+      .map((frame: ResolvedSceneSectionFrame) => [frame.frameId, frame]),
+  );
   return sceneSectionResolvedFrameEntries(style).map((entry) => {
     const spec = SCENE_SECTION_AXIS_SPECS[entry.axis];
     const position =
       typeof entry.plane?.positionM === "number" &&
       Number.isFinite(entry.plane.positionM)
-        ? clampRange(entry.plane.positionM, -250_000, 250_000)
-        : SCENE_SECTION_DEFAULT_POSITIONS[entry.axis];
+      ? clampRange(entry.plane.positionM, -250_000, 250_000)
+      : SCENE_SECTION_DEFAULT_POSITIONS[entry.axis];
+    const frame = frames.get(entry.id);
+    const fallbackMinA = resolvedBounds.min.getComponent(spec.frameAIndex);
+    const fallbackMaxA = resolvedBounds.max.getComponent(spec.frameAIndex);
+    const fallbackMinB = resolvedBounds.min.getComponent(spec.frameBIndex);
+    const fallbackMaxB = resolvedBounds.max.getComponent(spec.frameBIndex);
+    const basis =
+      frame ??
+      (() => {
+        const [minAM, maxAM] = sortedClampedRange(
+          fallbackMinA,
+          fallbackMaxA,
+          fallbackMinA,
+          fallbackMaxA,
+        );
+        const [minBM, maxBM] = sortedClampedRange(
+          fallbackMinB,
+          fallbackMaxB,
+          fallbackMinB,
+          fallbackMaxB,
+        );
+        return sceneSectionResolvedFrameBasis(
+          entry.axis,
+          entry.frame,
+          position,
+          minAM,
+          maxAM,
+          minBM,
+          maxBM,
+          geo,
+        );
+      })();
     return {
       frameId: entry.id,
       label: entry.label,
       axis: entry.axis,
       enabled: entry.plane?.enabled === true,
       positionM: position,
+      signedDistanceM: basis.signedDistanceM,
+      point: basis.center.clone(),
       invert: entry.plane?.invert === true,
-      normal: spec.normal.clone(),
+      normal: basis.normal.clone(),
+      axisAVector: basis.axisAVector.clone(),
+      axisBVector: basis.axisBVector.clone(),
     };
   });
 }
@@ -997,7 +1313,7 @@ export function sceneSectionClippingPlanes(this: any,
 ): THREE.Plane[] {
   const clippingPlanes: THREE.Plane[] = [];
   for (const plane of planes) {
-    const position = plane.positionM;
+    const position = plane.signedDistanceM;
     const normal = plane.invert
       ? plane.normal.clone()
       : plane.normal.clone().multiplyScalar(-1);
@@ -1093,10 +1409,10 @@ function clipSectionSurfaceTraceSegmentToFrame(
     }
     return true;
   };
-  const startA = start.getComponent(frame.axisAIndex);
-  const startB = start.getComponent(frame.axisBIndex);
-  const deltaA = d.getComponent(frame.axisAIndex);
-  const deltaB = d.getComponent(frame.axisBIndex);
+  const startA = start.dot(frame.axisAVector);
+  const startB = start.dot(frame.axisBVector);
+  const deltaA = d.dot(frame.axisAVector);
+  const deltaB = d.dot(frame.axisBVector);
   if (!clip(-deltaA, startA - frame.minAM)) return null;
   if (!clip(deltaA, frame.maxAM - startA)) return null;
   if (!clip(-deltaB, startB - frame.minBM)) return null;
@@ -1120,85 +1436,33 @@ type SceneSectionFrameIntersectionTrace = SceneSectionSurfaceTraceSegment & {
   trimToGround: boolean;
 };
 
-function sectionFrameCoordinateRange(
-  frame: ResolvedSceneSectionFrame,
-  axisIndex: 0 | 1 | 2,
-): [number, number] | null {
-  if (frame.axisAIndex === axisIndex) return [frame.minAM, frame.maxAM];
-  if (frame.axisBIndex === axisIndex) return [frame.minBM, frame.maxBM];
-  return null;
-}
-
-function sectionFrameContainsCoordinate(
-  frame: ResolvedSceneSectionFrame,
-  axisIndex: 0 | 1 | 2,
-  value: number,
-): boolean {
-  const range = sectionFrameCoordinateRange(frame, axisIndex);
-  return (
-    range !== null &&
-    value >= range[0] - SCENE_SECTION_SURFACE_TRACE_EPSILON_M &&
-    value <= range[1] + SCENE_SECTION_SURFACE_TRACE_EPSILON_M
-  );
-}
-
-function sectionFrameIntersectionRange(
-  frame: ResolvedSceneSectionFrame,
-  otherPlane: ResolvedSceneSectionPlane,
-  freeAxisIndex: 0 | 1 | 2,
-): [number, number] | null {
-  const otherPositionIndex =
-    SCENE_SECTION_AXIS_SPECS[otherPlane.axis].positionIndex;
-  if (
-    !sectionFrameContainsCoordinate(
-      frame,
-      otherPositionIndex,
-      otherPlane.positionM,
-    )
-  ) {
-    return null;
-  }
-  return sectionFrameCoordinateRange(frame, freeAxisIndex);
-}
-
 function sectionFrameIntersectionTrace(
   firstPlane: ResolvedSceneSectionPlane,
   firstFrame: ResolvedSceneSectionFrame,
   secondPlane: ResolvedSceneSectionPlane,
   secondFrame: ResolvedSceneSectionFrame,
 ): SceneSectionFrameIntersectionTrace | null {
-  const firstPositionIndex =
-    SCENE_SECTION_AXIS_SPECS[firstPlane.axis].positionIndex;
-  const secondPositionIndex =
-    SCENE_SECTION_AXIS_SPECS[secondPlane.axis].positionIndex;
-  if (firstPositionIndex === secondPositionIndex) return null;
-  const freeAxisIndex = ([0, 1, 2] as const).find(
-    (index) => index !== firstPositionIndex && index !== secondPositionIndex,
+  const n1 = firstPlane.normal.clone().normalize();
+  const n2 = secondPlane.normal.clone().normalize();
+  const direction = n1.clone().cross(n2);
+  const denom = direction.lengthSq();
+  if (denom < 0.000001) return null;
+  const point = n2
+    .clone()
+    .cross(direction)
+    .multiplyScalar(firstPlane.signedDistanceM)
+    .add(direction.clone().cross(n1).multiplyScalar(secondPlane.signedDistanceM))
+    .divideScalar(denom);
+  const lineDir = direction.normalize();
+  const span = Math.max(
+    firstFrame.maxAM - firstFrame.minAM,
+    firstFrame.maxBM - firstFrame.minBM,
+    secondFrame.maxAM - secondFrame.minAM,
+    secondFrame.maxBM - secondFrame.minBM,
+    SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M,
   );
-  if (freeAxisIndex === undefined) return null;
-  const firstRange = sectionFrameIntersectionRange(
-    firstFrame,
-    secondPlane,
-    freeAxisIndex,
-  );
-  const secondRange = sectionFrameIntersectionRange(
-    secondFrame,
-    firstPlane,
-    freeAxisIndex,
-  );
-  if (!firstRange || !secondRange) return null;
-  const minAlong = Math.max(firstRange[0], secondRange[0]);
-  const maxAlong = Math.min(firstRange[1], secondRange[1]);
-  if (maxAlong - minAlong < SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M) {
-    return null;
-  }
-  const start = new THREE.Vector3();
-  const end = new THREE.Vector3();
-  start.setComponent(firstPositionIndex, firstPlane.positionM);
-  start.setComponent(secondPositionIndex, secondPlane.positionM);
-  start.setComponent(freeAxisIndex, minAlong);
-  end.copy(start);
-  end.setComponent(freeAxisIndex, maxAlong);
+  const start = point.clone().addScaledVector(lineDir, -span * 2);
+  const end = point.clone().addScaledVector(lineDir, span * 2);
   const clippedToFirst = clipSectionSurfaceTraceSegmentToFrame(
     start,
     end,
@@ -1211,12 +1475,19 @@ function sectionFrameIntersectionTrace(
     secondFrame,
   );
   if (!clippedToBoth) return null;
+  if (
+    clippedToBoth.start.distanceToSquared(clippedToBoth.end) <
+    SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M *
+      SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M
+  ) {
+    return null;
+  }
   return {
     ...clippedToBoth,
     axes: [firstPlane.axis, secondPlane.axis],
-    freeAxisIndex,
+    freeAxisIndex: sceneSectionVectorComponentIndex(lineDir),
     trimToGround:
-      freeAxisIndex === 2 &&
+      Math.abs(lineDir.z) > 0.82 &&
       (firstFrame.groundTraceVisible || secondFrame.groundTraceVisible),
   };
 }
@@ -1271,6 +1542,7 @@ export function resolveSceneSectionFrames(this: any,
   }
   const windowByAxis = style.sceneSectionWindowByAxis ?? {};
   const frames: ResolvedSceneSectionFrame[] = [];
+  const geo = sceneSectionGeoContext.call(this);
   const explicitFrameEnabled = style.sceneSectionFrameEnabled === true;
   const legacyFrameEnabled =
     explicitFrameEnabled || style.sceneSectionWindowEnabled === true;
@@ -1316,6 +1588,21 @@ export function resolveSceneSectionFrames(this: any,
       rawMaxB,
       minBBound,
       maxBBound,
+    );
+    const position =
+      typeof entry.plane?.positionM === "number" &&
+      Number.isFinite(entry.plane.positionM)
+        ? clampRange(entry.plane.positionM, -250_000, 250_000)
+        : SCENE_SECTION_DEFAULT_POSITIONS[axis];
+    const basis = sceneSectionResolvedFrameBasis(
+      axis,
+      frame,
+      position,
+      minAM,
+      maxAM,
+      minBM,
+      maxBM,
+      geo,
     );
     const axisIntervalM = clampRange(
       finiteNumber(frame?.axisIntervalM) ??
@@ -1366,12 +1653,23 @@ export function resolveSceneSectionFrames(this: any,
       axis,
       enabled: true,
       legendVisible: entry.legendVisible,
-      minAM,
-      maxAM,
-      minBM,
-      maxBM,
+      minAM: basis.minAM,
+      maxAM: basis.maxAM,
+      minBM: basis.minBM,
+      maxBM: basis.maxBM,
       axisAIndex: spec.frameAIndex,
       axisBIndex: spec.frameBIndex,
+      signedDistanceM: basis.signedDistanceM,
+      axisAVector: basis.axisAVector.clone(),
+      axisBVector: basis.axisBVector.clone(),
+      normal: basis.normal.clone(),
+      center: basis.center.clone(),
+      axisAlignment: basis.alignment,
+      axisDatum: basis.datum,
+      axisDatumOriginEastingM: basis.datumOriginEastingM,
+      axisDatumOriginNorthingM: basis.datumOriginNorthingM,
+      axisDatumLatLonDecimals: basis.datumLatLonDecimals,
+      utmZone: basis.utmZone,
       groundTraceVisible:
         typeof frame?.groundTraceVisible === "boolean"
           ? frame.groundTraceVisible
@@ -1387,11 +1685,11 @@ export function resolveSceneSectionFrames(this: any,
       axisAHeading:
         typeof frame?.axisAHeading === "string" && frame.axisAHeading.trim()
           ? frame.axisAHeading
-          : sceneSectionAxisHeading(spec.frameAIndex),
+          : sceneSectionDefaultAxisHeading(basis.datum, basis.axisAVector),
       axisBHeading:
         typeof frame?.axisBHeading === "string" && frame.axisBHeading.trim()
           ? frame.axisBHeading
-          : sceneSectionAxisHeading(spec.frameBIndex),
+          : sceneSectionDefaultAxisHeading(basis.datum, basis.axisBVector),
       axisHeadingPaddingM,
       axisHeadingColor,
       axisHeadingScale,
@@ -1433,10 +1731,10 @@ export function sceneSectionFrameClippingPlanes(this: any,
 ): THREE.Plane[] {
   if (!frame) return [];
   return [
-    new THREE.Plane(axisComponentVector(frame.axisAIndex, 1), -frame.minAM),
-    new THREE.Plane(axisComponentVector(frame.axisAIndex, -1), frame.maxAM),
-    new THREE.Plane(axisComponentVector(frame.axisBIndex, 1), -frame.minBM),
-    new THREE.Plane(axisComponentVector(frame.axisBIndex, -1), frame.maxBM),
+    new THREE.Plane(frame.axisAVector.clone(), -frame.minAM),
+    new THREE.Plane(frame.axisAVector.clone().multiplyScalar(-1), frame.maxAM),
+    new THREE.Plane(frame.axisBVector.clone(), -frame.minBM),
+    new THREE.Plane(frame.axisBVector.clone().multiplyScalar(-1), frame.maxBM),
   ];
 }
 
@@ -1539,7 +1837,7 @@ export function setSceneSectionUniforms(this: any,
     const plane = planes[i];
     if (!normals[i]) normals[i] = new THREE.Vector3();
     normals[i].copy(plane?.normal ?? new THREE.Vector3());
-    positions[i] = plane?.positionM ?? 0;
+    positions[i] = plane?.signedDistanceM ?? 0;
     thickness[i] = 1;
     invert[i] = plane?.invert ? 1 : 0;
   }
@@ -1561,9 +1859,13 @@ export function setSceneSectionUniforms(this: any,
     ? frames.slice(0, SCENE_SECTION_MAX_FRAME_COUNT)
     : [];
   ensure<number>("uSceneSectionFrameCount", 0).value = activeFrames.length;
-  const frameAxesUniform = ensure<number[]>(
-    "uSceneSectionFrameAxes",
-    [0, 1, 2, 0, 0, 0, 0, 0],
+  const frameAxisAUniform = ensure<THREE.Vector3[]>(
+    "uSceneSectionFrameAxisA",
+    Array.from({ length: SCENE_SECTION_MAX_FRAME_COUNT }, () => new THREE.Vector3()),
+  );
+  const frameAxisBUniform = ensure<THREE.Vector3[]>(
+    "uSceneSectionFrameAxisB",
+    Array.from({ length: SCENE_SECTION_MAX_FRAME_COUNT }, () => new THREE.Vector3()),
   );
   const frameBoundsUniform = ensure<THREE.Vector4[]>(
     "uSceneSectionFrameBounds",
@@ -1580,8 +1882,14 @@ export function setSceneSectionUniforms(this: any,
   );
   for (let i = 0; i < SCENE_SECTION_MAX_FRAME_COUNT; i += 1) {
     const frame = activeFrames[i];
-    frameAxesUniform.value[i] =
-      frame?.axis === "y" ? 1 : frame?.axis === "z" ? 2 : 0;
+    if (!frameAxisAUniform.value[i]) {
+      frameAxisAUniform.value[i] = new THREE.Vector3();
+    }
+    if (!frameAxisBUniform.value[i]) {
+      frameAxisBUniform.value[i] = new THREE.Vector3();
+    }
+    frameAxisAUniform.value[i].copy(frame?.axisAVector ?? new THREE.Vector3(1, 0, 0));
+    frameAxisBUniform.value[i].copy(frame?.axisBVector ?? new THREE.Vector3(0, 1, 0));
     if (!frameBoundsUniform.value[i]) {
       frameBoundsUniform.value[i] = new THREE.Vector4();
     }
@@ -2162,7 +2470,6 @@ export function rebuildSceneSectionHelpers(this: any,
       ? style.sceneSectionHelperVisible
       : this.editorMode;
   const bounds = this.sceneSectionBounds(style, layerTargets, productTargets);
-  const center = bounds.getCenter(new THREE.Vector3());
   const size = bounds.getSize(new THREE.Vector3());
   const activeAxis =
     style.sceneSectionActiveAxis === "x" ||
@@ -2281,28 +2588,31 @@ export function rebuildSceneSectionHelpers(this: any,
   for (const plane of planes) {
     const spec = SCENE_SECTION_AXIS_SPECS[plane.axis];
     const color = spec.color;
-    const tangentA = axisComponentVector(spec.frameAIndex);
-    const tangentB = axisComponentVector(spec.frameBIndex);
-    const width = size.getComponent(spec.frameAIndex);
-    const height = size.getComponent(spec.frameBIndex);
-    const paddedWidth = Math.max(
-      SCENE_SECTION_MIN_HELPER_SIZE_M,
-      width * SCENE_SECTION_HELPER_PADDING,
-    );
-    const paddedHeight = Math.max(
-      SCENE_SECTION_MIN_HELPER_SIZE_M,
-      height * SCENE_SECTION_HELPER_PADDING,
-    );
-    const halfWidth = paddedWidth * 0.5;
-    const halfHeight = paddedHeight * 0.5;
     const frame =
       sectionFrames.find(
         (candidate: ResolvedSceneSectionFrame) =>
           candidate.frameId === plane.frameId,
       ) ?? null;
-    const planeCenter = center.clone();
-    planeCenter.setComponent(spec.positionIndex, plane.positionM);
-    const basisNormal = tangentA.clone().cross(tangentB).normalize();
+    const tangentA = frame?.axisAVector.clone() ?? plane.axisAVector.clone();
+    const tangentB = frame?.axisBVector.clone() ?? plane.axisBVector.clone();
+    const rawWidth = frame
+      ? frame.maxAM - frame.minAM
+      : size.getComponent(spec.frameAIndex);
+    const rawHeight = frame
+      ? frame.maxBM - frame.minBM
+      : size.getComponent(spec.frameBIndex);
+    const paddedWidth = Math.max(
+      SCENE_SECTION_MIN_HELPER_SIZE_M,
+      rawWidth * SCENE_SECTION_HELPER_PADDING,
+    );
+    const paddedHeight = Math.max(
+      SCENE_SECTION_MIN_HELPER_SIZE_M,
+      rawHeight * SCENE_SECTION_HELPER_PADDING,
+    );
+    const halfWidth = paddedWidth * 0.5;
+    const halfHeight = paddedHeight * 0.5;
+    const planeCenter = frame?.center.clone() ?? plane.point.clone();
+    const basisNormal = plane.normal.clone().normalize();
     const planeBasis = new THREE.Matrix4().makeBasis(
       tangentA,
       tangentB,
@@ -2313,16 +2623,16 @@ export function rebuildSceneSectionHelpers(this: any,
     );
 
     const minLocalA = frame
-      ? frame.minAM - planeCenter.getComponent(spec.frameAIndex)
+      ? frame.minAM - planeCenter.dot(tangentA)
       : -halfWidth;
     const maxLocalA = frame
-      ? frame.maxAM - planeCenter.getComponent(spec.frameAIndex)
+      ? frame.maxAM - planeCenter.dot(tangentA)
       : halfWidth;
     const minLocalB = frame
-      ? frame.minBM - planeCenter.getComponent(spec.frameBIndex)
+      ? frame.minBM - planeCenter.dot(tangentB)
       : -halfHeight;
     const maxLocalB = frame
-      ? frame.maxBM - planeCenter.getComponent(spec.frameBIndex)
+      ? frame.maxBM - planeCenter.dot(tangentB)
       : halfHeight;
     const frameCenterLocal = new THREE.Vector3(
       (minLocalA + maxLocalA) * 0.5,
@@ -2371,6 +2681,7 @@ export function rebuildSceneSectionHelpers(this: any,
       outline.userData.sceneSectionFrameId = plane.frameId;
       outline.userData.sceneSectionPlaneCoordinateIndex = spec.positionIndex;
       outline.userData.sceneSectionPlanePositionM = plane.positionM;
+      outline.userData.sceneSectionPlaneSignedDistanceM = plane.signedDistanceM;
       outline.userData.sceneSectionFrameColor = color;
       outline.userData.sceneSectionFrameLineWidthM = outlineWidthM;
       outline.userData.sceneSectionFrameBounds = frame
@@ -2381,6 +2692,8 @@ export function rebuildSceneSectionHelpers(this: any,
             maxBM: frame.maxBM,
             axisAIndex: frame.axisAIndex,
             axisBIndex: frame.axisBIndex,
+            axisAVector: frame.axisAVector.toArray(),
+            axisBVector: frame.axisBVector.toArray(),
           }
         : null;
       outline.renderOrder = SCENE_SECTION_RENDER_ORDER;
@@ -2553,29 +2866,17 @@ export function rebuildSceneSectionHelpers(this: any,
       const origin = this.siteSurfaceGuideOrigin(
         this.layers.get(this.topoSurfaceLayerId()),
       );
-      const axisAOriginOffset =
-        spec.frameAIndex === 0
-          ? origin.easting
-          : spec.frameAIndex === 1
-            ? origin.northing
-            : 0;
-      const axisBOriginOffset =
-        spec.frameBIndex === 0
-          ? origin.easting
-          : spec.frameBIndex === 1
-            ? origin.northing
-            : 0;
       const axisATicks = sceneSectionAxisTicks(
         frame.minAM,
         frame.maxAM,
         frame.axisIntervalM,
-        axisAOriginOffset,
+        sceneSectionAxisTickOffset(frame, tangentA, origin),
       );
       const axisBTicks = sceneSectionAxisTicks(
         frame.minBM,
         frame.maxBM,
         frame.axisIntervalM,
-        axisBOriginOffset,
+        sceneSectionAxisTickOffset(frame, tangentB, origin),
       );
       const tickLength = Math.max(referenceOutlineWidthM * 1.25, 260);
       const axisPoints: THREE.Vector3[] = [
@@ -2597,7 +2898,7 @@ export function rebuildSceneSectionHelpers(this: any,
           .addScaledVector(tangentB, maxLocalB),
       ];
       for (const along of axisATicks) {
-        const localA = along - planeCenter.getComponent(spec.frameAIndex);
+        const localA = along - planeCenter.dot(tangentA);
         axisPoints.push(
           planeCenter
             .clone()
@@ -2610,7 +2911,7 @@ export function rebuildSceneSectionHelpers(this: any,
         );
       }
       for (const along of axisBTicks) {
-        const localB = along - planeCenter.getComponent(spec.frameBIndex);
+        const localB = along - planeCenter.dot(tangentB);
         axisPoints.push(
           planeCenter
             .clone()
@@ -2689,17 +2990,21 @@ export function rebuildSceneSectionHelpers(this: any,
       runtime.group.add(axisBHeading);
 
       for (const along of axisATicks) {
+        const labelPosition = planeCenter
+          .clone()
+          .addScaledVector(tangentA, along - planeCenter.dot(tangentA))
+          .addScaledVector(tangentB, minLocalB - axisALabelOffsetM);
         const labelMesh = this.createSceneSectionScaleLabel(
-          sceneSectionAxisValueLabel(spec.frameAIndex, along, origin),
+          sceneSectionAxisValueLabelForPoint(
+            frame,
+            tangentA,
+            along,
+            labelPosition,
+            origin,
+          ),
           frame.axisTextScale,
         );
-        labelMesh.position
-          .copy(planeCenter)
-          .addScaledVector(
-            tangentA,
-            along - planeCenter.getComponent(spec.frameAIndex),
-          )
-          .addScaledVector(tangentB, minLocalB - axisALabelOffsetM);
+        labelMesh.position.copy(labelPosition);
         makeSceneSectionPlanarTextCameraAware(
           labelMesh,
           planeQuaternion,
@@ -2708,17 +3013,21 @@ export function rebuildSceneSectionHelpers(this: any,
         runtime.group.add(labelMesh);
       }
       for (const along of axisBTicks) {
+        const labelPosition = planeCenter
+          .clone()
+          .addScaledVector(tangentA, minLocalA - axisBLabelOffsetM)
+          .addScaledVector(tangentB, along - planeCenter.dot(tangentB));
         const labelMesh = this.createSceneSectionScaleLabel(
-          sceneSectionAxisValueLabel(spec.frameBIndex, along, origin),
+          sceneSectionAxisValueLabelForPoint(
+            frame,
+            tangentB,
+            along,
+            labelPosition,
+            origin,
+          ),
           frame.axisTextScale,
         );
-        labelMesh.position
-          .copy(planeCenter)
-          .addScaledVector(tangentA, minLocalA - axisBLabelOffsetM)
-          .addScaledVector(
-            tangentB,
-            along - planeCenter.getComponent(spec.frameBIndex),
-          );
+        labelMesh.position.copy(labelPosition);
         makeSceneSectionPlanarTextCameraAware(
           labelMesh,
           planeQuaternion,
@@ -2729,48 +3038,50 @@ export function rebuildSceneSectionHelpers(this: any,
     }
 
     if (frame && frame.groundTraceVisible && plane.axis !== "z") {
-        const traceGroup = new THREE.Group();
-        traceGroup.name = `${plane.axis.toUpperCase()} section ground trace`;
-        traceGroup.userData.sceneSectionHelper = true;
-        runtime.group.add(traceGroup);
-        const origin = this.siteSurfaceGuideOrigin(
-          this.layers.get(this.topoSurfaceLayerId()),
+      const traceGroup = new THREE.Group();
+      traceGroup.name = `${plane.axis.toUpperCase()} section ground trace`;
+      traceGroup.userData.sceneSectionHelper = true;
+      runtime.group.add(traceGroup);
+      const origin = this.siteSurfaceGuideOrigin(
+        this.layers.get(this.topoSurfaceLayerId()),
+      );
+      void getHeightSampler().then((sampleHeight) => {
+        if (!traceGroup.parent) return;
+        const points: THREE.Vector3[] = [];
+        for (let i = 0; i < SCENE_SECTION_GROUND_TRACE_SAMPLES; i += 1) {
+          const t = i / (SCENE_SECTION_GROUND_TRACE_SAMPLES - 1);
+          const along = frame.minAM + (frame.maxAM - frame.minAM) * t;
+          const basePoint = planeCenter
+            .clone()
+            .addScaledVector(tangentA, along - planeCenter.dot(tangentA));
+          const x = basePoint.x;
+          const y = basePoint.y;
+          points.push(
+            new THREE.Vector3(
+              x,
+              y,
+              this.siteGuideSurfaceZ(x, y, sampleHeight, origin, 26),
+            ),
+          );
+        }
+        const geometry = buildSceneSectionDashedTraceRibbonGeometry(
+          points,
+          frame.groundTraceWidthM,
+          basisNormal,
         );
-        void getHeightSampler().then((sampleHeight) => {
-          if (!traceGroup.parent) return;
-          const points: THREE.Vector3[] = [];
-          for (let i = 0; i < SCENE_SECTION_GROUND_TRACE_SAMPLES; i += 1) {
-            const t = i / (SCENE_SECTION_GROUND_TRACE_SAMPLES - 1);
-            const along = frame.minAM + (frame.maxAM - frame.minAM) * t;
-            const x = plane.axis === "y" ? along : plane.positionM;
-            const y = plane.axis === "x" ? along : plane.positionM;
-            points.push(
-              new THREE.Vector3(
-                x,
-                y,
-                this.siteGuideSurfaceZ(x, y, sampleHeight, origin, 26),
-              ),
-            );
-          }
-          const geometry = buildSceneSectionDashedTraceRibbonGeometry(
-            points,
-            frame.groundTraceWidthM,
-            basisNormal,
-          );
-          if (!geometry) return;
-          const mesh = new THREE.Mesh(
-            geometry,
-            makeSceneSectionTraceRibbonMaterial(),
-          );
-          mesh.name = `${plane.axis.toUpperCase()} dashed ground intersection`;
-          mesh.userData.sceneSectionHelper = true;
-          mesh.userData.sceneSectionGroundTrace = true;
-          mesh.userData.sceneSectionGroundTraceWidthM = frame.groundTraceWidthM;
-          mesh.renderOrder = SCENE_SECTION_RENDER_ORDER + 2;
-          traceGroup.add(mesh);
-        });
+        if (!geometry) return;
+        const mesh = new THREE.Mesh(
+          geometry,
+          makeSceneSectionTraceRibbonMaterial(),
+        );
+        mesh.name = `${plane.axis.toUpperCase()} dashed ground intersection`;
+        mesh.userData.sceneSectionHelper = true;
+        mesh.userData.sceneSectionGroundTrace = true;
+        mesh.userData.sceneSectionGroundTraceWidthM = frame.groundTraceWidthM;
+        mesh.renderOrder = SCENE_SECTION_RENDER_ORDER + 2;
+        traceGroup.add(mesh);
+      });
     }
-
   }
 }
 
@@ -2781,13 +3092,13 @@ export function applySceneSectionPlanes(this: any, style: EditableStyle): void {
   const layerTargets = this.sceneSectionLayerIds(style);
   const productTargets = this.sceneSectionProductIds(style);
   const bounds = this.sceneSectionBounds(style, layerTargets, productTargets);
-  const activePlaneAxes = new Set(
-    planes.map((plane: ResolvedSceneSectionPlane) => plane.axis),
+  const activePlaneFrameIds = new Set(
+    planes.map((plane: ResolvedSceneSectionPlane) => plane.frameId),
   );
   const sectionFrames = this
     .resolveSceneSectionFrames(style, bounds)
     .filter((frame: ResolvedSceneSectionFrame) =>
-      activePlaneAxes.has(frame.axis),
+      activePlaneFrameIds.has(frame.frameId),
     );
   this.sceneSectionClippingActive =
     planes.length > 0 || sectionFrames.length > 0;
@@ -2895,6 +3206,17 @@ export function getSceneSectionPlaneScalar(this: any, axis: SceneSectionAxis, fr
   return plane ? plane.positionM : null;
 }
 
+export function getSceneSectionPlaneNormal(this: any, axis: SceneSectionAxis, frameId?: string): THREE.Vector3 | null {
+  const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+  const plane = this.resolveSceneSectionPlanes(
+    this.lastSceneSectionStyle,
+  ).find(
+    (candidate: ResolvedSceneSectionPlane) =>
+      candidate.frameId === targetFrameId || candidate.axis === axis,
+  );
+  return plane ? plane.normal.clone() : null;
+}
+
 export function getSceneSectionWindowValue(this: any, 
   axis: SceneSectionAxis,
   kind: SceneSectionWindowHandleKind,
@@ -2926,6 +3248,38 @@ export function getSceneSectionWindowValue(this: any,
   if (frameKind === "maxA") return frame.maxAM;
   if (frameKind === "maxB") return frame.maxBM;
   return frame.minBM;
+}
+
+export function getSceneSectionWindowNormal(this: any,
+  axis: SceneSectionAxis,
+  kind: SceneSectionWindowHandleKind,
+  frameId?: string,
+): THREE.Vector3 | null {
+  const bounds = this.sceneSectionBounds(
+    this.lastSceneSectionStyle,
+    this.sceneSectionLayerIds(this.lastSceneSectionStyle),
+    this.sceneSectionProductIds(this.lastSceneSectionStyle),
+  );
+  const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+  const frame = this
+    .resolveSceneSectionFrames(
+    {
+      ...this.lastSceneSectionStyle,
+      sceneSectionActiveAxis: axis,
+      sceneSectionActiveFrameId: targetFrameId,
+      sceneSectionFrameEnabled: true,
+    },
+    bounds,
+    )
+    .find(
+      (candidate: ResolvedSceneSectionFrame) =>
+        candidate.frameId === targetFrameId || candidate.axis === axis,
+    );
+  if (!frame) return null;
+  const frameKind = frameKindForHandle(kind);
+  return frameKind === "minA" || frameKind === "maxA"
+    ? frame.axisAVector.clone()
+    : frame.axisBVector.clone();
 }
 
 export function previewSceneSectionPlane(this: any, axis: SceneSectionAxis, positionM: number, frameId?: string): void {

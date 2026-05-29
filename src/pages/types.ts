@@ -566,6 +566,9 @@ export interface SceneSectionFrameEntry {
   frame?: SceneSectionFrameState;
 }
 
+export type SceneSectionAxisAlignment = "utm" | "cardinal";
+export type SceneSectionAxisDatum = "utm" | "local" | "latlon";
+
 export interface SceneSectionFrameState {
   enabled?: boolean;
   minAM?: number;
@@ -583,6 +586,11 @@ export interface SceneSectionFrameState {
   axisHeadingPaddingM?: number;
   axisHeadingColor?: string;
   axisHeadingScale?: number;
+  axisAlignment?: SceneSectionAxisAlignment;
+  axisDatum?: SceneSectionAxisDatum;
+  axisDatumOriginEastingM?: number;
+  axisDatumOriginNorthingM?: number;
+  axisDatumLatLonDecimals?: number;
 }
 
 export interface SceneSectionObjectVisibilityState {

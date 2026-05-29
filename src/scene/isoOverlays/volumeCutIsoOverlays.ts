@@ -49,35 +49,88 @@ function sectionCutFrameRange(
   max: [number, number, number],
   frame?: ResolvedSceneSectionFrame | null,
 ): {
-  axisA: 0 | 1 | 2;
-  axisB: 0 | 1 | 2;
+  axisA: THREE.Vector3;
+  axisB: THREE.Vector3;
+  center: THREE.Vector3;
   minA: number;
   maxA: number;
   minB: number;
   maxB: number;
 } | null {
-  const axisA = (plane.axis === "x" ? 1 : 0) as 0 | 1 | 2;
-  const axisB = (plane.axis === "z" ? 1 : 2) as 0 | 1 | 2;
-  const matchingFrame =
-    frame?.axis === plane.axis &&
-    frame.axisAIndex === axisA &&
-    frame.axisBIndex === axisB
-      ? frame
-      : null;
+  const corners = sectionBoundsCorners(min, max);
+  const normalValues = corners.map((corner) => corner.dot(plane.normal));
+  const normalMin = Math.min(...normalValues);
+  const normalMax = Math.max(...normalValues);
+  if (
+    plane.signedDistanceM < normalMin - 0.000001 ||
+    plane.signedDistanceM > normalMax + 0.000001
+  ) {
+    return null;
+  }
+  const matchingFrame = frame?.frameId === plane.frameId ? frame : null;
+  const axisA = (matchingFrame?.axisAVector ?? plane.axisAVector).clone();
+  const axisB = (matchingFrame?.axisBVector ?? plane.axisBVector).clone();
+  const center = (matchingFrame?.center ?? plane.point).clone();
+  const [boundsMinA, boundsMaxA] = sectionProjectedRange(corners, axisA);
+  const [boundsMinB, boundsMaxB] = sectionProjectedRange(corners, axisB);
   const minA = matchingFrame
-    ? clampRange(matchingFrame.minAM, min[axisA], max[axisA])
-    : min[axisA];
+    ? clampRange(matchingFrame.minAM, boundsMinA, boundsMaxA)
+    : boundsMinA;
   const maxA = matchingFrame
-    ? clampRange(matchingFrame.maxAM, min[axisA], max[axisA])
-    : max[axisA];
+    ? clampRange(matchingFrame.maxAM, boundsMinA, boundsMaxA)
+    : boundsMaxA;
   const minB = matchingFrame
-    ? clampRange(matchingFrame.minBM, min[axisB], max[axisB])
-    : min[axisB];
+    ? clampRange(matchingFrame.minBM, boundsMinB, boundsMaxB)
+    : boundsMinB;
   const maxB = matchingFrame
-    ? clampRange(matchingFrame.maxBM, min[axisB], max[axisB])
-    : max[axisB];
+    ? clampRange(matchingFrame.maxBM, boundsMinB, boundsMaxB)
+    : boundsMaxB;
   if (maxA <= minA + 0.000001 || maxB <= minB + 0.000001) return null;
-  return { axisA, axisB, minA, maxA, minB, maxB };
+  return { axisA, axisB, center, minA, maxA, minB, maxB };
+}
+
+function sectionBoundsCorners(
+  min: [number, number, number],
+  max: [number, number, number],
+): THREE.Vector3[] {
+  const corners: THREE.Vector3[] = [];
+  for (const x of [min[0], max[0]]) {
+    for (const y of [min[1], max[1]]) {
+      for (const z of [min[2], max[2]]) {
+        corners.push(new THREE.Vector3(x, y, z));
+      }
+    }
+  }
+  return corners;
+}
+
+function sectionProjectedRange(
+  points: THREE.Vector3[],
+  axis: THREE.Vector3,
+): [number, number] {
+  let low = Number.POSITIVE_INFINITY;
+  let high = Number.NEGATIVE_INFINITY;
+  for (const point of points) {
+    const value = point.dot(axis);
+    low = Math.min(low, value);
+    high = Math.max(high, value);
+  }
+  return [low, high];
+}
+
+function sectionPointWithinBounds(
+  point: THREE.Vector3,
+  min: [number, number, number],
+  max: [number, number, number],
+): boolean {
+  return (
+    point.x >= min[0] &&
+    point.x <= max[0] &&
+    point.y >= min[1] &&
+    point.y <= max[1] &&
+    point.z >= min[2] &&
+    point.z <= max[2]
+  );
 }
 
 function sectionGroundTrimContext(
@@ -295,10 +348,6 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
 
     const min = bounds.min;
     const max = bounds.max;
-    const axisIndex = plane.axis === "x" ? 0 : plane.axis === "y" ? 1 : 2;
-    if (plane.positionM < min[axisIndex] || plane.positionM > max[axisIndex]) {
-      return null;
-    }
 
     const grid = MT_VOLUME_SECTION_ISO_GRID_SIZE;
     const positions = new Float32Array(grid * grid * 3);
@@ -312,8 +361,10 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
       options.sectionFrame,
     );
     if (!frameRange) return null;
-    const { axisA, axisB, minA, maxA, minB, maxB } = frameRange;
-    const coords = [0, 0, 0];
+    const { axisA, axisB, center, minA, maxA, minB, maxB } = frameRange;
+    const centerA = center.dot(axisA);
+    const centerB = center.dot(axisB);
+    const point = new THREE.Vector3();
     const groundTrim = sectionGroundTrimContext(
       this,
       plane,
@@ -324,12 +375,14 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
       const bT = j / (grid - 1);
       for (let i = 0; i < grid; i += 1) {
         const aT = i / (grid - 1);
-        coords[axisIndex] = plane.positionM;
-        coords[axisA] = minA + (maxA - minA) * aT;
-        const columnX = plane.axis === "y" ? coords[axisA] : plane.positionM;
-        const columnY = plane.axis === "x" ? coords[axisA] : plane.positionM;
+        const alongA = minA + (maxA - minA) * aT;
+        const columnPoint = center
+          .clone()
+          .addScaledVector(axisA, alongA - centerA);
+        const columnX = columnPoint.x;
+        const columnY = columnPoint.y;
         const columnMaxB =
-          axisB === 2
+          Math.abs(axisB.z) > 0.82
             ? sectionGroundCeilingM(
                 this,
                 groundTrim,
@@ -340,27 +393,36 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
             : maxB;
         const columnVisible =
           columnMaxB > minB + SECTION_GROUND_TRIM_EPSILON_M;
-        coords[axisB] = columnVisible
+        const alongB = columnVisible
           ? minB + (columnMaxB - minB) * bT
           : minB;
+        point
+          .copy(center)
+          .addScaledVector(axisA, alongA - centerA)
+          .addScaledVector(axisB, alongB - centerB);
         const vertexIndex = i + j * grid;
-        positions[vertexIndex * 3] = coords[0];
-        positions[vertexIndex * 3 + 1] = coords[1];
-        positions[vertexIndex * 3 + 2] = coords[2];
-        const u = (coords[0] - min[0]) / Math.max(0.000001, max[0] - min[0]);
-        const v = (coords[1] - min[1]) / Math.max(0.000001, max[1] - min[1]);
-        const w = (coords[2] - min[2]) / Math.max(0.000001, max[2] - min[2]);
+        positions[vertexIndex * 3] = point.x;
+        positions[vertexIndex * 3 + 1] = point.y;
+        positions[vertexIndex * 3 + 2] = point.z;
+        const insideVolume = sectionPointWithinBounds(point, min, max);
+        const u = (point.x - min[0]) / Math.max(0.000001, max[0] - min[0]);
+        const v = (point.y - min[1]) / Math.max(0.000001, max[1] - min[1]);
+        const w = (point.z - min[2]) / Math.max(0.000001, max[2] - min[2]);
         const normalized =
-          this.sampleScalarVolumeByte(volumeData, dimensions, u, v, w) / 255;
+          insideVolume
+            ? this.sampleScalarVolumeByte(volumeData, dimensions, u, v, w) / 255
+            : 0;
         const scalar =
           options.sourceMin +
           normalized * (options.sourceMax - options.sourceMin);
         const mask =
-          options.maskVisible && maskData
+          insideVolume && options.maskVisible && maskData
             ? this.sampleScalarVolumeByte(maskData, dimensions, u, v, w) / 255
-            : 1;
+            : insideVolume
+              ? 1
+              : 0;
         values[vertexIndex] = scalar;
-        hardMaskValues[vertexIndex] = columnVisible ? 1 : 0;
+        hardMaskValues[vertexIndex] = columnVisible && insideVolume ? 1 : 0;
         alphaValues[vertexIndex] =
           scalar >= options.thresholdMin &&
           scalar <= options.thresholdMax &&
@@ -637,10 +699,6 @@ export function buildSeismicVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane
 
     const min = bounds.min;
     const max = bounds.max;
-    const axisIndex = plane.axis === "x" ? 0 : plane.axis === "y" ? 1 : 2;
-    if (plane.positionM < min[axisIndex] || plane.positionM > max[axisIndex]) {
-      return null;
-    }
 
     const grid = MT_VOLUME_SECTION_ISO_GRID_SIZE;
     const positions = new Float32Array(grid * grid * 3);
@@ -654,8 +712,10 @@ export function buildSeismicVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane
       options.sectionFrame,
     );
     if (!frameRange) return null;
-    const { axisA, axisB, minA, maxA, minB, maxB } = frameRange;
-    const coords = [0, 0, 0];
+    const { axisA, axisB, center, minA, maxA, minB, maxB } = frameRange;
+    const centerA = center.dot(axisA);
+    const centerB = center.dot(axisB);
+    const point = new THREE.Vector3();
     const groundTrim = sectionGroundTrimContext(
       this,
       plane,
@@ -666,12 +726,14 @@ export function buildSeismicVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane
       const bT = j / (grid - 1);
       for (let i = 0; i < grid; i += 1) {
         const aT = i / (grid - 1);
-        coords[axisIndex] = plane.positionM;
-        coords[axisA] = minA + (maxA - minA) * aT;
-        const columnX = plane.axis === "y" ? coords[axisA] : plane.positionM;
-        const columnY = plane.axis === "x" ? coords[axisA] : plane.positionM;
+        const alongA = minA + (maxA - minA) * aT;
+        const columnPoint = center
+          .clone()
+          .addScaledVector(axisA, alongA - centerA);
+        const columnX = columnPoint.x;
+        const columnY = columnPoint.y;
         const columnMaxB =
-          axisB === 2
+          Math.abs(axisB.z) > 0.82
             ? sectionGroundCeilingM(
                 this,
                 groundTrim,
@@ -682,28 +744,37 @@ export function buildSeismicVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane
             : maxB;
         const columnVisible =
           columnMaxB > minB + SECTION_GROUND_TRIM_EPSILON_M;
-        coords[axisB] = columnVisible
+        const alongB = columnVisible
           ? minB + (columnMaxB - minB) * bT
           : minB;
+        point
+          .copy(center)
+          .addScaledVector(axisA, alongA - centerA)
+          .addScaledVector(axisB, alongB - centerB);
         const vertexIndex = i + j * grid;
-        positions[vertexIndex * 3] = coords[0];
-        positions[vertexIndex * 3 + 1] = coords[1];
-        positions[vertexIndex * 3 + 2] = coords[2];
-        const u = (coords[0] - min[0]) / Math.max(0.000001, max[0] - min[0]);
-        const v = (coords[1] - min[1]) / Math.max(0.000001, max[1] - min[1]);
-        const w = (coords[2] - min[2]) / Math.max(0.000001, max[2] - min[2]);
+        positions[vertexIndex * 3] = point.x;
+        positions[vertexIndex * 3 + 1] = point.y;
+        positions[vertexIndex * 3 + 2] = point.z;
+        const insideVolume = sectionPointWithinBounds(point, min, max);
+        const u = (point.x - min[0]) / Math.max(0.000001, max[0] - min[0]);
+        const v = (point.y - min[1]) / Math.max(0.000001, max[1] - min[1]);
+        const w = (point.z - min[2]) / Math.max(0.000001, max[2] - min[2]);
         const amplitude =
-          this.sampleScalarVolumeByte(volumeData, dimensions, u, v, w) / 255;
+          insideVolume
+            ? this.sampleScalarVolumeByte(volumeData, dimensions, u, v, w) / 255
+            : 0;
         values[vertexIndex] = amplitude;
-        hardMaskValues[vertexIndex] = columnVisible ? 1 : 0;
-        alphaValues[vertexIndex] = seismicBackgroundAlphaAt(
-          amplitude,
-          options.amplitudeMin,
-          options.amplitudeMax,
-          options.removeBackground,
-          options.amplitudeGamma,
-          options.backgroundCutoff,
-        );
+        hardMaskValues[vertexIndex] = columnVisible && insideVolume ? 1 : 0;
+        alphaValues[vertexIndex] = insideVolume
+          ? seismicBackgroundAlphaAt(
+              amplitude,
+              options.amplitudeMin,
+              options.amplitudeMax,
+              options.removeBackground,
+              options.amplitudeGamma,
+              options.backgroundCutoff,
+            )
+          : 0;
       }
     }
 

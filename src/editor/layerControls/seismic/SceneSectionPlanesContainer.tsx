@@ -18,6 +18,8 @@ import type {
   EditableStyle,
   PresentationPage,
   ProjectLayerSpec,
+  SceneSectionAxisAlignment,
+  SceneSectionAxisDatum,
   SceneSectionFrameEntry,
   SceneSectionFrameState,
   SceneSectionPlaneState,
@@ -188,6 +190,19 @@ const frameSummaryActiveButtonStyle: React.CSSProperties = {
   boxShadow: "none",
 };
 
+const frameSegmentedControlStyle: React.CSSProperties = {
+  display: "inline-flex",
+  gap: 4,
+  flex: 1,
+};
+
+const frameSegmentButtonStyle: React.CSSProperties = {
+  ...smallActionButtonStyle,
+  flex: 1,
+  minHeight: 22,
+  padding: "2px 8px",
+};
+
 function clampNumber(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
@@ -207,6 +222,61 @@ function colorInputValue(value: unknown, fallback: string): string {
   return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value)
     ? value
     : fallback;
+}
+
+function sceneSectionGeneratedHeading(
+  axis: SceneSectionAxis,
+  slot: "a" | "b",
+  datum: SceneSectionAxisDatum,
+): string {
+  const isElevation = slot === "b" && axis !== "z";
+  if (isElevation) return "Elevation (km)";
+  if (datum === "local") return "Distance (km)";
+  if (datum === "latlon") {
+    if (axis === "x" && slot === "a") return "Latitude (°)";
+    if (axis === "y" && slot === "a") return "Longitude (°)";
+    if (axis === "z" && slot === "a") return "Longitude (°)";
+    return "Latitude (°)";
+  }
+  if (axis === "x" && slot === "a") return "Northing (km)";
+  if (axis === "y" && slot === "a") return "Easting (km)";
+  if (axis === "z" && slot === "a") return "Easting (km)";
+  return "Northing (km)";
+}
+
+function sceneSectionKnownGeneratedHeadings(
+  axis: SceneSectionAxis,
+  slot: "a" | "b",
+): Set<string> {
+  return new Set(
+    (["utm", "local", "latlon"] as const).map((datum) =>
+      sceneSectionGeneratedHeading(axis, slot, datum),
+    ),
+  );
+}
+
+function withGeneratedHeadingDefaults(
+  axis: SceneSectionAxis,
+  current: SceneSectionFrameState,
+  patch: Partial<SceneSectionFrameState>,
+): Partial<SceneSectionFrameState> {
+  const nextDatum = patch.axisDatum ?? current.axisDatum ?? "utm";
+  const nextPatch: Partial<SceneSectionFrameState> = { ...patch };
+  const updateSlot = (slot: "a" | "b") => {
+    const key = slot === "a" ? "axisAHeading" : "axisBHeading";
+    const currentValue = current[key];
+    const known = sceneSectionKnownGeneratedHeadings(axis, slot);
+    if (
+      typeof currentValue !== "string" ||
+      currentValue.trim() === "" ||
+      known.has(currentValue)
+    ) {
+      nextPatch[key] = sceneSectionGeneratedHeading(axis, slot, nextDatum);
+    }
+  };
+  updateSlot("a");
+  updateSlot("b");
+  return nextPatch;
 }
 
 function stopSummaryToggle(event: React.SyntheticEvent) {
@@ -606,6 +676,15 @@ export function SceneSectionPlanesContainer({
     id: string,
     patch: Partial<SceneSectionFrameState>,
   ) => setFrameEntryPatch(id, { frame: patch });
+  const setFrameBasisPatch = (
+    entry: SceneSectionFrameUiEntry,
+    patch: Partial<SceneSectionFrameState>,
+  ) => {
+    setFrameSpecificPatch(
+      entry.id,
+      withGeneratedHeadingDefaults(entry.axis, entry.frame ?? {}, patch),
+    );
+  };
   const setPlaneSpecificPatch = (
     id: string,
     patch: Partial<SceneSectionPlaneState>,
@@ -679,6 +758,7 @@ export function SceneSectionPlanesContainer({
     z: { min: -122000, max: 4000 },
   } as const;
   const controlDisabled = disabled || !enabled;
+  const sectionOrigin = sceneHandle.manager.siteSurfaceGuideOrigin();
   const setAxisIntervalKm = (frameId: string, rawKm: number) => {
     if (!Number.isFinite(rawKm)) return;
     setFrameSpecificPatch(frameId, {
@@ -923,6 +1003,13 @@ export function SceneSectionPlanesContainer({
               const aLabel =
                 axis === "x" ? "Northing" : "Easting";
               const bLabel = axis === "z" ? "Northing" : "Elevation";
+              const axisAlignment: SceneSectionAxisAlignment =
+                axisFrame.axisAlignment === "cardinal" ? "cardinal" : "utm";
+              const axisDatum: SceneSectionAxisDatum =
+                axisFrame.axisDatum === "local" ||
+                axisFrame.axisDatum === "latlon"
+                  ? axisFrame.axisDatum
+                  : "utm";
               const axisTextPaddingM = finiteStyleNumber(
                 axisFrame.axisTextPaddingM,
                 420,
@@ -933,12 +1020,12 @@ export function SceneSectionPlanesContainer({
                 typeof axisFrame.axisAHeading === "string" &&
                 axisFrame.axisAHeading.trim()
                   ? axisFrame.axisAHeading
-                  : `${aLabel} (km)`;
+                  : sceneSectionGeneratedHeading(axis, "a", axisDatum);
               const axisBHeading =
                 typeof axisFrame.axisBHeading === "string" &&
                 axisFrame.axisBHeading.trim()
                   ? axisFrame.axisBHeading
-                  : `${bLabel} (km)`;
+                  : sceneSectionGeneratedHeading(axis, "b", axisDatum);
               const axisHeadingPaddingM = finiteStyleNumber(
                 axisFrame.axisHeadingPaddingM,
                 1100,
@@ -955,6 +1042,42 @@ export function SceneSectionPlanesContainer({
                 axisFrame.axisHeadingColor,
                 sceneSectionAxisColors[axis],
               );
+              const frameCenterSceneX =
+                axis === "y"
+                  ? (minA + maxA) * 0.5
+                  : axis === "z"
+                    ? (minA + maxA) * 0.5
+                    : position;
+              const frameCenterSceneY =
+                axis === "x"
+                  ? (minA + maxA) * 0.5
+                  : axis === "z"
+                    ? (minB + maxB) * 0.5
+                    : position;
+              const defaultDatumEastingM =
+                sectionOrigin.easting + frameCenterSceneX;
+              const defaultDatumNorthingM =
+                sectionOrigin.northing + frameCenterSceneY;
+              const axisDatumOriginEastingM = finiteStyleNumber(
+                axisFrame.axisDatumOriginEastingM,
+                defaultDatumEastingM,
+                -10_000_000,
+                10_000_000,
+              );
+              const axisDatumOriginNorthingM = finiteStyleNumber(
+                axisFrame.axisDatumOriginNorthingM,
+                defaultDatumNorthingM,
+                -10_000_000,
+                10_000_000,
+              );
+              const axisDatumLatLonDecimals = finiteStyleNumber(
+                axisFrame.axisDatumLatLonDecimals,
+                3,
+                0,
+                6,
+              );
+              const basisControlDisabled =
+                disabled || !axisFrameEnabled || !axisAxesVisible;
               return (
                 <details
                   key={frame.id}
@@ -1230,6 +1353,146 @@ export function SceneSectionPlanesContainer({
                         }
                       />
                     </label>
+                    <div style={nestedControlRowStyle}>
+                      <label style={nestedFieldLabelStyle}>Alignment</label>
+                      <div style={frameSegmentedControlStyle}>
+                        {(["utm", "cardinal"] as const).map((value) => (
+                          <button
+                            key={value}
+                            type="button"
+                            data-testid={`scene-section-frame-${controlKey}-alignment-${value}`}
+                            disabled={basisControlDisabled}
+                            onClick={() =>
+                              setFrameBasisPatch(frame, {
+                                axisAlignment: value,
+                              })
+                            }
+                            style={{
+                              ...frameSegmentButtonStyle,
+                              color:
+                                axisAlignment === value
+                                  ? sceneSectionAxisColors[axis]
+                                  : "rgba(238, 238, 238, 0.78)",
+                              borderColor:
+                                axisAlignment === value
+                                  ? sceneSectionAxisColors[axis]
+                                  : "rgba(238, 238, 238, 0.26)",
+                            }}
+                          >
+                            {value === "utm" ? "UTM grid" : "Cardinal"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={nestedControlRowStyle}>
+                      <label style={nestedFieldLabelStyle}>Datum</label>
+                      <div style={frameSegmentedControlStyle}>
+                        {(["utm", "local", "latlon"] as const).map((value) => (
+                          <button
+                            key={value}
+                            type="button"
+                            data-testid={`scene-section-frame-${controlKey}-datum-${value}`}
+                            disabled={basisControlDisabled}
+                            onClick={() =>
+                              setFrameBasisPatch(frame, {
+                                axisDatum: value,
+                                ...(value === "local" &&
+                                typeof axisFrame.axisDatumOriginEastingM !==
+                                  "number"
+                                  ? {
+                                      axisDatumOriginEastingM:
+                                        defaultDatumEastingM,
+                                      axisDatumOriginNorthingM:
+                                        defaultDatumNorthingM,
+                                    }
+                                  : {}),
+                              })
+                            }
+                            style={{
+                              ...frameSegmentButtonStyle,
+                              color:
+                                axisDatum === value
+                                  ? sceneSectionAxisColors[axis]
+                                  : "rgba(238, 238, 238, 0.78)",
+                              borderColor:
+                                axisDatum === value
+                                  ? sceneSectionAxisColors[axis]
+                                  : "rgba(238, 238, 238, 0.26)",
+                            }}
+                          >
+                            {value === "utm"
+                              ? "UTM"
+                              : value === "local"
+                                ? "Local"
+                                : "Lat/Lon"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {axisDatum === "local" && (
+                      <>
+                        <div style={nestedControlRowStyle}>
+                          <label style={nestedFieldLabelStyle}>Datum easting</label>
+                          <input
+                            data-testid={`scene-section-frame-${controlKey}-datum-easting`}
+                            type="number"
+                            step={1}
+                            disabled={basisControlDisabled}
+                            value={Math.round(axisDatumOriginEastingM)}
+                            onChange={(e) => {
+                              const value = parseFloat(e.target.value);
+                              if (!Number.isFinite(value)) return;
+                              setFrameSpecificPatch(frame.id, {
+                                axisDatumOriginEastingM: value,
+                              });
+                            }}
+                            style={{ flex: 1 }}
+                          />
+                          <span style={frameUnitStyle}>m</span>
+                        </div>
+                        <div style={nestedControlRowStyle}>
+                          <label style={nestedFieldLabelStyle}>Datum northing</label>
+                          <input
+                            data-testid={`scene-section-frame-${controlKey}-datum-northing`}
+                            type="number"
+                            step={1}
+                            disabled={basisControlDisabled}
+                            value={Math.round(axisDatumOriginNorthingM)}
+                            onChange={(e) => {
+                              const value = parseFloat(e.target.value);
+                              if (!Number.isFinite(value)) return;
+                              setFrameSpecificPatch(frame.id, {
+                                axisDatumOriginNorthingM: value,
+                              });
+                            }}
+                            style={{ flex: 1 }}
+                          />
+                          <span style={frameUnitStyle}>m</span>
+                        </div>
+                      </>
+                    )}
+                    {axisDatum === "latlon" && (
+                      <div style={nestedControlRowStyle}>
+                        <label style={nestedFieldLabelStyle}>Lat/Lon decimals</label>
+                        <input
+                          data-testid={`scene-section-frame-${controlKey}-datum-decimals`}
+                          type="number"
+                          min={0}
+                          max={6}
+                          step={1}
+                          disabled={basisControlDisabled}
+                          value={Math.round(axisDatumLatLonDecimals)}
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value);
+                            if (!Number.isFinite(value)) return;
+                            setFrameBasisPatch(frame, {
+                              axisDatumLatLonDecimals: clampNumber(value, 0, 6),
+                            });
+                          }}
+                          style={frameNumberInputStyle}
+                        />
+                      </div>
+                    )}
                     <div style={nestedControlRowStyle}>
                       <label style={nestedFieldLabelStyle}>Axis interval</label>
                       <input

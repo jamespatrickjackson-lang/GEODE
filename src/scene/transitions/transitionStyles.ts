@@ -1,5 +1,10 @@
 import * as THREE from "three";
-import type { EditableStyle, EasingName, ProjectLayerSpec } from "../../pages/types";
+import type {
+  EditableStyle,
+  EasingName,
+  ProjectLayerSpec,
+  SceneSectionFrameState,
+} from "../../pages/types";
 import {
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
@@ -301,6 +306,24 @@ export const SCENE_SECTION_AFFECTED_LAYER_IDS = new Set<string>([
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 ]);
 
+function sceneSectionFrameAlignmentSignature(
+  frame: Partial<SceneSectionFrameState>,
+): "utm" | "cardinal" {
+  return frame.axisAlignment === "cardinal" ? "cardinal" : "utm";
+}
+
+function sceneSectionFrameDatumSignature(
+  frame: Partial<SceneSectionFrameState>,
+): "utm" | "local" | "latlon" {
+  return frame.axisDatum === "local" || frame.axisDatum === "latlon"
+    ? frame.axisDatum
+    : "utm";
+}
+
+function finiteSceneSectionFrameNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
 function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
   id: string;
   axis: string | null;
@@ -311,6 +334,11 @@ function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
   axisAHeading: string | null;
   axisBHeading: string | null;
   axisHeadingColor: string | null;
+  axisAlignment: string | null;
+  axisDatum: string | null;
+  axisDatumOriginEastingM: number | null;
+  axisDatumOriginNorthingM: number | null;
+  axisDatumLatLonDecimals: number | null;
 }> {
   const planes = style.sceneSectionPlanes ?? {};
   const frames = style.sceneSectionFrameByAxis ?? {};
@@ -332,12 +360,18 @@ function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
     axisAHeading: string | null;
     axisBHeading: string | null;
     axisHeadingColor: string | null;
+    axisAlignment: string | null;
+    axisDatum: string | null;
+    axisDatumOriginEastingM: number | null;
+    axisDatumOriginNorthingM: number | null;
+    axisDatumLatLonDecimals: number | null;
   }> = [];
   for (const axis of ["x", "y", "z"] as const) {
     const id = `axis:${axis}`;
     const explicitEntry = explicitById.get(id);
     const plane = { ...(planes[axis] ?? {}), ...(explicitEntry?.plane ?? {}) };
     const frame = { ...(frames[axis] ?? {}), ...(explicitEntry?.frame ?? {}) };
+    const axisDatum = sceneSectionFrameDatumSignature(frame);
     signatures.push({
       id,
       axis,
@@ -357,6 +391,20 @@ function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
         typeof frame.axisHeadingColor === "string"
           ? frame.axisHeadingColor
           : null,
+      axisAlignment: sceneSectionFrameAlignmentSignature(frame),
+      axisDatum,
+      axisDatumOriginEastingM:
+        axisDatum === "local"
+          ? finiteSceneSectionFrameNumber(frame.axisDatumOriginEastingM)
+          : null,
+      axisDatumOriginNorthingM:
+        axisDatum === "local"
+          ? finiteSceneSectionFrameNumber(frame.axisDatumOriginNorthingM)
+          : null,
+      axisDatumLatLonDecimals:
+        axisDatum === "latlon"
+          ? finiteSceneSectionFrameNumber(frame.axisDatumLatLonDecimals) ?? 3
+          : null,
     });
   }
   for (const entry of explicit) {
@@ -370,6 +418,7 @@ function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
     }
     const plane = entry.plane ?? {};
     const frame = entry.frame ?? {};
+    const axisDatum = sceneSectionFrameDatumSignature(frame);
     signatures.push({
       id: entry.id,
       axis:
@@ -391,6 +440,20 @@ function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
       axisHeadingColor:
         typeof frame.axisHeadingColor === "string"
           ? frame.axisHeadingColor
+          : null,
+      axisAlignment: sceneSectionFrameAlignmentSignature(frame),
+      axisDatum,
+      axisDatumOriginEastingM:
+        axisDatum === "local"
+          ? finiteSceneSectionFrameNumber(frame.axisDatumOriginEastingM)
+          : null,
+      axisDatumOriginNorthingM:
+        axisDatum === "local"
+          ? finiteSceneSectionFrameNumber(frame.axisDatumOriginNorthingM)
+          : null,
+      axisDatumLatLonDecimals:
+        axisDatum === "latlon"
+          ? finiteSceneSectionFrameNumber(frame.axisDatumLatLonDecimals) ?? 3
           : null,
     });
   }
