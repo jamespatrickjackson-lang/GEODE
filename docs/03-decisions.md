@@ -744,6 +744,8 @@ Each decision records:
 
 **Trade-off accepted:** Edge-aware graticule lines are governed by generated bounds and depth testing rather than forcing public clip planes onto every line role. Edge awareness clips interior grid lines, but it does not recolor them into white/gray edge strokes or apply directional edge-gradient fading. White edge leaders remain as capped boundary ticks, attach to the same boundary-side crossing used by their edge labels, and are hard-clipped to the public surface clip. Topo graticule lines and labels are terrain/reference context and are excluded from scene-section clipping. Threshold-surface attenuation for ISO lines is smoothed over short frames, so it prioritizes visual stability over per-frame exact raycast changes.
 
+**See also:** `docs/dev-context/Page-Transitions-And-Section-Frames.md` is the canonical directives doc for the section-frame helper stability contract that DEC-071 enforces at composition time. DEC-076 formalises that contract.
+
 ## DEC-072 - Camera far plane is not a visual crop
 
 **Considered:** allow the fixed camera far plane to clip distant topo imagery during overview zoom, or keep topo imagery and graticule context inside the scene frustum and reserve crop behavior for authored clip tools.
@@ -783,3 +785,13 @@ Each decision records:
 **Why:** `mix(grey, rgb, adj)` extrapolates past `rgb` whenever `adj > 1`. On a bright additive ribbon pixel like `(0, 2, 0)` with the default saturation of 1.06, the off-hue red and blue channels resolve to approximately `(-0.12, …, -0.12)`. The negatives cascade into ACES tone mapping and the SMAA edge pass, which interpret the discontinuity as an edge and paint the dark dotted fringe reported by the user. Clamping after each operation prevents the negative values from leaving the grade pass. Vibrancy gives the user a way to lift muted regions without re-triggering the artifact, since the smart curve scales adjustment by `1 - currentSat` so already-saturated pixels (e.g. the graticule itself) receive minimal additional boost.
 
 **Trade-off accepted:** at extreme settings (very high contrast/saturation against bright HDR-ish content), the grade pass loses a small amount of darkening on the off-hue channels relative to the previous behaviour. Authored looks at default values are visually unchanged.
+
+## DEC-076 - Page-transition and section-frame helper directives live in one doc
+
+**Considered:** keep the page-transition / section-frame helper rules scattered across `docs/03-decisions.md` (DEC-053 → DEC-075), `docs/dev-context/UI-Visual-Standards.md`, `docs/dev-context/Active-Build-Context.md`, and `docs/dev-context/Runtime-Diagnostics.md`, or consolidate the runtime contract into one named directives file that the other docs and `CLAUDE.md` route to.
+
+**Chose:** `docs/dev-context/Page-Transitions-And-Section-Frames.md` is the canonical directives doc. `CLAUDE.md` Source Of Truth, `Active-Build-Context.md`, `UI-Visual-Standards.md`, `Runtime-Diagnostics.md`, and DEC-071 each carry a one-line pointer to it. The pre-existing visual-standard tables, decision entries, and rendering-mode notes stay where they are; the directives doc is the routing entry point that ties them together and codifies the helper-stability contract the runtime must obey.
+
+**Why:** The current runtime mis-call site is `rebuildSceneSectionHelpers()` inside `tickLayerTweens()` ([layerTweenRuntime.ts:104-110](../src/scene/transitions/layerTweenRuntime.ts#L104-L110), [sceneSectionController.ts:2845-2851](../src/scene/section/sceneSectionController.ts#L2845-L2851)). The rule that prevents it — helper geometry built at tween start and tween end only, with material instances stable across the tween and per-frame motion limited to opacity and uniforms — was not stated anywhere as a contract. An agent following the established docs would still have to infer it from four files plus the runtime trace. The directives doc states the contract once and the cross-links make sure agents arriving via any of the older docs reach it.
+
+**Trade-off accepted:** One additional doc to maintain. Updates to the helper-stability contract must edit the directives doc and may need a new decision entry referencing this one. The visual-standard tables stay readable as standards (numeric ranges, defaults) rather than absorbing prose contract language. DEC-076 does not change runtime behaviour by itself; Phase 2 of the rollout implements the gated rebuild.

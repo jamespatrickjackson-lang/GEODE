@@ -35,6 +35,8 @@ copy under review, and required wording from tools, tests, or external APIs.
 - Decision log: `docs/03-decisions.md`
 - Active software-work routing: `docs/dev-context/Active-Build-Context.md`
 - Workspace and verification routing: `docs/dev-context/Verification-Routing.md`
+- Page transitions and section-frame helpers (directives doc):
+  `docs/dev-context/Page-Transitions-And-Section-Frames.md`
 
 ## Workspace Rules
 

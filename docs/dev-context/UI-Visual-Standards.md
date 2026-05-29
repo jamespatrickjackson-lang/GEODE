@@ -193,6 +193,11 @@ and `Z Section frame` editor subsection:
 
 ## Scene Overlay And Transition Rendering
 
+Canonical contract: `docs/dev-context/Page-Transitions-And-Section-Frames.md`.
+The directives doc names the helper-stability rules and the transition-kind
+registry. The bullets below are the visual standards (numeric ranges,
+defaults, depth/compositing rules) that the contract enforces.
+
 - Camera far-plane clipping is not a visual crop. Topo imagery, terrain
   context, and graticules must remain inside the camera frustum at presentation
   overview zoom; authored public surface crop and scene-section tools own

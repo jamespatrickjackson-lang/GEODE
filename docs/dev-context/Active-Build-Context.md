@@ -66,6 +66,12 @@ composed with layer/page fade opacity, not overwritten by it. This prevents
 hidden section sources from appearing during camera/page transitions and keeps
 ISO overlays from changing color or brightness mid-transition.
 
+Before touching page-to-page transition runtime or section-frame helper
+visuals, read `docs/dev-context/Page-Transitions-And-Section-Frames.md`. It is
+the canonical directives doc for transition kinds, ISO opacity composition,
+and the helper-stability contract (no mid-tween rebuild, material instances
+stable across the tween).
+
 Current MT threshold-surface rendering separates overlay stability from surface
 opacity semantics. Section ISO lines are late readability overlays, while MT
 threshold surfaces remain editable material surfaces: opacity 1 renders as an

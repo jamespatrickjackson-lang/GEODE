@@ -31,6 +31,11 @@ Fields that are unavailable remain `null`, empty, or noted rather than forcing r
 
 ## Transition Diagnostics
 
+For the contract these diagnostics protect, see
+`docs/dev-context/Page-Transitions-And-Section-Frames.md`. The directives doc
+states the helper-stability rules; the fields below are the inspection surface
+that proves the rules held during a tween.
+
 `SceneManager.getTransitionDebugState()` is available through the page
 controller debug state during browser tests. It reports whether a transition is
 active, source/target page ids, transition reason, active data-transition count,
