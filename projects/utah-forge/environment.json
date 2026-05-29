@@ -149,22 +149,25 @@
     },
     "utah-forge-topo-graticule": {
       "color": "#37f312",
-      "opacity": 0.78,
-      "lineWidth": 4.75,
+      "opacity": 1,
+      "lineWidth": 5,
       "graticuleLabelVisible": true,
       "graticuleLabelSizeM": 29000,
-      "graticuleLiftM": 244,
+      "graticuleLiftM": 168,
       "graticuleEdgeFadeAware": true,
       "graticuleEdgeFadeStrength": 1,
       "graticuleEdgeLineColor": "#d4d4d4",
-      "graticuleEdgeLineWidth": 2.85,
+      "graticuleEdgeLineWidth": 18.1,
       "graticuleEdgeLabelColor": "#d6d6d6",
       "graticuleEdgeLabelVisible": true,
       "graticuleEdgeLabelOffsetM": 31000,
       "graticuleEdgeLabelGapM": -32000,
       "affectedByFog": false,
       "showLabels": false,
-      "fogDensity": 0.00002
+      "fogDensity": 0.00002,
+      "graticulePerspectiveLineWidth": false,
+      "graticuleRibbonMode": true,
+      "graticuleRibbonWidthM": 825
     },
     "transport-roads": {
       "color": "#5a4f3d",
@@ -2062,8 +2065,16 @@
           }
         },
         "utah-forge-topo-graticule": {
-          "opacity": 0.78,
-          "color": "#37f312"
+          "opacity": 1,
+          "color": "#37f312",
+          "graticuleEdgeFadeAware": true,
+          "graticuleLiftM": 168,
+          "lineWidth": 5,
+          "graticulePerspectiveLineWidth": false,
+          "graticuleEdgeLabelVisible": true,
+          "graticuleRibbonMode": true,
+          "graticuleEdgeLineWidth": 18.1,
+          "graticuleRibbonWidthM": 825
         },
         "utah-forge-phase3-demo-boreholes": {
           "demoBoreholeBlock": {

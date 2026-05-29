@@ -184,6 +184,53 @@ export interface EditableStyle {
   graticuleEdgeFadeStrength?: number;
   graticuleEdgeLineColor?: string;
   graticuleEdgeLineWidth?: number;
+  // When true, graticule line widths are interpreted in world meters instead
+  // of screen-space pixels, so lines visibly shrink with camera distance
+  // (true perspective). Defaults to false so existing pages keep the
+  // current screen-space line weight behavior.
+  graticulePerspectiveLineWidth?: boolean;
+  // When true, render the four graticule roles as flat ribbon meshes
+  // (unlit, no shadow, world-space width) instead of LineSegments2. Ribbons
+  // naturally exhibit perspective foreshortening — far portions of a ribbon
+  // render thinner than near portions without any shader trickery.
+  graticuleRibbonMode?: boolean;
+  // Ribbon width in world meters when graticuleRibbonMode is true.
+  graticuleRibbonWidthM?: number;
+  // When true, ribbons use additive blending so their color survives the
+  // scene's SSAO/post-processing darkening — keeps ribbons vibrant against
+  // terrain. Defaults to true.
+  graticuleRibbonAdditive?: boolean;
+  // Brightness multiplier applied to ribbon material color. Useful when
+  // additive blending alone isn't enough or the user wants extra punch.
+  graticuleRibbonBrightness?: number;
+  // Reserved for a future depth-aware overlay pass that soft-fades ribbon
+  // alpha when ribbons pass behind other scene geometry. Currently a no-op —
+  // ribbons render with `depthTest: true` against the existing scene depth
+  // buffer (MT volume's `depthWrite: false` means MT does not yet occlude).
+  graticuleRibbonOcclude?: boolean;
+  // Falloff distance (metres) the future soft-mask would use. Currently a
+  // no-op; see `graticuleRibbonOcclude`.
+  graticuleRibbonOcclusionSoftnessM?: number;
+  // ---- Half-degree (.5) line overrides ---------------------------------
+  // When set, override the default major-line width/opacity/color for the
+  // half-degree interior + leader dashed roles. Unset = fall back to the
+  // main `lineWidth`/`opacity`/`color` scaled by TOPO_GRATICULE_MINOR_SCALE
+  // (legacy behavior).
+  graticuleMinorLineWidth?: number;
+  graticuleMinorOpacity?: number;
+  graticuleMinorColor?: string;
+  graticuleMinorRibbonWidthM?: number;
+  // ---- Leader colour blend --------------------------------------------
+  // When true, leader segments (white edge ticks) fade their colour along
+  // their length: inner end (at terrain edge) uses the inner colour, outer
+  // end (at label end) uses the outer colour. Bridges the gap between the
+  // interior graticule colour and the edge label colour visually.
+  graticuleLeaderBlendEnabled?: boolean;
+  // Defaults: inner = main graticule colour, outer = edge line colour.
+  graticuleLeaderBlendInnerColor?: string;
+  graticuleLeaderBlendOuterColor?: string;
+  // Curve shape for the gradient: 0 = linear, 1 = smoothstep. Defaults to 1.
+  graticuleLeaderBlendSmoothstep?: boolean;
   graticuleEdgeLabelColor?: string;
   graticuleEdgeLabelVisible?: boolean;
   graticuleEdgeLabelOffsetM?: number;
@@ -502,6 +549,11 @@ export interface SceneSectionWindowState {
 export interface SceneSectionFrameEntry {
   id: string;
   label?: string;
+  // When false, the frame is hidden from the section legend AND its on-canvas
+  // helper visuals (crop-box outline, push/pull handles, frame label) are
+  // suppressed. The section cut itself remains active, so the frame keeps
+  // clipping/sectioning targeted objects silently. Defaults to true.
+  legendVisible?: boolean;
   axis: "x" | "y" | "z";
   plane?: SceneSectionPlaneState;
   frame?: SceneSectionFrameState;
@@ -878,6 +930,9 @@ export interface SceneProperties {
   colorGrade?: {
     contrast?: number;
     saturation?: number;
+    // Smart-saturation curve that mostly affects flat / pastel regions
+    // and leaves already-saturated pixels alone. 1.0 = no effect.
+    vibrancy?: number;
     tint?: string;
     tintStrength?: number;
   };

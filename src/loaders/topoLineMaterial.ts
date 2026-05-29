@@ -25,6 +25,11 @@ interface DistanceLineUniforms {
   minAlpha: { value: number };
 }
 
+interface TopoPerspectiveLineWidthUniforms {
+  enabled: { value: number };
+  referenceM: { value: number };
+}
+
 interface TerrainShadeLineUniforms {
   influence: { value: number };
 }
@@ -110,8 +115,8 @@ export function enableDistanceAttenuatedLineWidth(
   setDistanceAttenuatedLineWidth(material, options);
   material.customProgramCacheKey = () =>
     material.dashed
-      ? "topo-distance-line-width:v6:dashed"
-      : "topo-distance-line-width:v6:solid";
+      ? "topo-distance-line-width:v7:dashed"
+      : "topo-distance-line-width:v7:solid";
 
   material.onBeforeCompile = (shader) => {
     const settings = resolveSettings(
@@ -123,6 +128,17 @@ export function enableDistanceAttenuatedLineWidth(
     shader.uniforms.distanceLineMinAlpha = { value: settings.minAlpha };
     shader.uniforms.terrainShadowInfluence = {
       value: material.userData.terrainShadowInfluence ?? 0,
+    };
+    shader.uniforms.topoPerspectiveEnabled = {
+      value: material.userData.topoPerspectiveEnabled === true ? 1 : 0,
+    };
+    shader.uniforms.topoPerspectiveReferenceM = {
+      value:
+        typeof material.userData.topoPerspectiveReferenceM === "number" &&
+        Number.isFinite(material.userData.topoPerspectiveReferenceM) &&
+        material.userData.topoPerspectiveReferenceM > 0
+          ? material.userData.topoPerspectiveReferenceM
+          : 30_000,
     };
     const edgeSettings = resolveEdgeFadeSettings(
       material.userData
@@ -161,6 +177,10 @@ export function enableDistanceAttenuatedLineWidth(
       minScale: shader.uniforms.distanceLineMinScale,
       minAlpha: shader.uniforms.distanceLineMinAlpha,
     } satisfies DistanceLineUniforms;
+    material.userData.topoPerspectiveUniforms = {
+      enabled: shader.uniforms.topoPerspectiveEnabled,
+      referenceM: shader.uniforms.topoPerspectiveReferenceM,
+    } satisfies TopoPerspectiveLineWidthUniforms;
     material.userData.terrainShadeLineUniforms = {
       influence: shader.uniforms.terrainShadowInfluence,
     } satisfies TerrainShadeLineUniforms;
@@ -192,6 +212,8 @@ export function enableDistanceAttenuatedLineWidth(
 		uniform float topoGraticuleEdgeFadeShape;
 		uniform float topoGraticuleEdgeFadeInset;
 		uniform float topoGraticuleEdgeFadeCornerRadius;
+		uniform float topoPerspectiveEnabled;
+		uniform float topoPerspectiveReferenceM;
 		varying float vTopoDistanceFade;
 		varying float vTopoGraticuleEdgeFade;
 		varying float vTopoLineNearClipVisible;
@@ -230,7 +252,14 @@ export function enableDistanceAttenuatedLineWidth(
 			float topoLineDepth = max( 0.0, - mix( start.z, end.z, 0.5 ) );
 			float topoDistanceT = smoothstep( distanceLineWidthNear, distanceLineWidthFar, topoLineDepth );
 			float topoWidthScale = mix( 1.0, distanceLineMinScale, topoDistanceT );
-			vTopoDistanceFade = mix( 1.0, distanceLineMinAlpha, topoDistanceT );
+			// Hold alpha at 1.0 when perspective is on — the per-vertex taper already
+			// communicates depth; layering the distance alpha fade on top reads as a
+			// vignette and washes far lines out unnecessarily.
+			vTopoDistanceFade = mix(
+				mix( 1.0, distanceLineMinAlpha, topoDistanceT ),
+				1.0,
+				clamp( topoPerspectiveEnabled, 0.0, 1.0 )
+			);
 			float topoEdgeWidth = max( topoGraticuleEdgeFadeDistance, 1.0 );
 			float topoStartEdgeFade = 1.0 - smoothstep(
 				0.0,
@@ -268,8 +297,43 @@ export function enableDistanceAttenuatedLineWidth(
 
     shader.vertexShader = shader.vertexShader.replace(
       "\t\t\t\t// adjust for linewidth\n\t\t\t\toffset *= linewidth;",
-      `				// adjust for linewidth, then perspectively soften distant topo ink
-				offset *= linewidth * topoWidthScale;`,
+      `				// Per-vertex perspective taper anchored to a per-frame reference depth.
+				// Reference = camera distance to terrain footprint center. All segments
+				// in the frame share this reference, so absolute depth differences
+				// across the polyline produce visible width differences (near = thick,
+				// far = thin). The ratio is zoom-invariant because camera distance and
+				// vertex depths scale together when the camera moves.
+				vec3 topoTerrainCenter = vec3(
+					( topoGraticuleTerrainBoundsMin.x + topoGraticuleTerrainBoundsMax.x ) * 0.5,
+					( topoGraticuleTerrainBoundsMin.y + topoGraticuleTerrainBoundsMax.y ) * 0.5,
+					0.0
+				);
+				float topoFrameReferenceDepth = max(
+					length( cameraPosition - topoTerrainCenter ),
+					1.0
+				);
+				float topoStartDepth = max( - start.z, 1.0 );
+				float topoEndDepth   = max( - end.z,   1.0 );
+				float topoVertexDepth = ( position.y < 0.5 ) ? topoStartDepth : topoEndDepth;
+				float topoPerVertexScale = clamp(
+					topoFrameReferenceDepth / topoVertexDepth,
+					0.3,
+					3.0
+				);
+				float topoPerspectiveScale = mix(
+					1.0,
+					topoPerVertexScale,
+					clamp( topoPerspectiveEnabled, 0.0, 1.0 )
+				);
+				// When perspective is on, neutralize the distance-soften width fade.
+				// It was tuned for non-perspective screen-space lines and reads as
+				// global thinning on top of the per-vertex taper.
+				float topoEffectiveWidthScale = mix(
+					topoWidthScale,
+					1.0,
+					clamp( topoPerspectiveEnabled, 0.0, 1.0 )
+				);
+				offset *= linewidth * topoEffectiveWidthScale * topoPerspectiveScale;`,
     );
 
     shader.fragmentShader = shader.fragmentShader.replace(
@@ -313,6 +377,23 @@ export function setDistanceAttenuatedLineWidth(
     uniforms.far.value = settings.far;
     uniforms.minScale.value = settings.minScale;
     uniforms.minAlpha.value = settings.minAlpha;
+  }
+}
+
+export function setTopoPerspectiveLineWidth(
+  material: LineMaterial,
+  enabled: boolean,
+  referenceM = 30_000,
+): void {
+  material.userData.topoPerspectiveEnabled = enabled === true;
+  material.userData.topoPerspectiveReferenceM =
+    Number.isFinite(referenceM) && referenceM > 0 ? referenceM : 30_000;
+  const uniforms = material.userData
+    .topoPerspectiveUniforms as TopoPerspectiveLineWidthUniforms | undefined;
+  if (uniforms) {
+    uniforms.enabled.value = enabled === true ? 1 : 0;
+    uniforms.referenceM.value = material.userData
+      .topoPerspectiveReferenceM as number;
   }
 }
 

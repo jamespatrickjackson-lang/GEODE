@@ -23,6 +23,7 @@ const grdShader = {
     tDiffuse: { value: null as THREE.Texture | null },
     contrast: { value: 1.06 },
     saturation: { value: 1.06 },
+    vibrancy: { value: 1.0 },
     tint: { value: new THREE.Color(0x101418) },
     tintStrength: { value: 0.04 },
     vignetteStrength: { value: 0.95 },
@@ -39,24 +40,50 @@ const grdShader = {
     uniform sampler2D tDiffuse;
     uniform float contrast;
     uniform float saturation;
+    uniform float vibrancy;
     uniform vec3 tint;
     uniform float tintStrength;
     uniform float vignetteStrength;
     uniform float vignetteSmoothness;
     varying vec2 vUv;
 
+    // Linear saturation: mix between luma-grey and rgb. Values of adj > 1
+    // extrapolate past rgb, which on bright saturated input (e.g. additive
+    // green graticule ribbons) drives the off-hue channels below zero.
+    // The caller must clamp the result before any subsequent grade step.
     vec3 saturationAdj(vec3 rgb, float adj) {
       const vec3 W = vec3(0.2126, 0.7152, 0.0722);
       vec3 grey = vec3(dot(rgb, W));
       return mix(grey, rgb, adj);
     }
 
+    // Vibrancy: smart saturation curve that pushes less-saturated pixels
+    // harder than already-saturated ones. Avoids the over-saturation
+    // halos that uniform saturation produces on already-vivid pixels.
+    // adj = 1.0 → no effect. adj > 1.0 → boost. adj < 1.0 → desaturate.
+    vec3 vibrancyAdj(vec3 rgb, float adj) {
+      float mx = max(max(rgb.r, rgb.g), rgb.b);
+      float mn = min(min(rgb.r, rgb.g), rgb.b);
+      float currentSat = (mx > 0.0001) ? (mx - mn) / mx : 0.0;
+      float headroom = clamp(1.0 - currentSat, 0.0, 1.0);
+      float effectiveAdj = mix(1.0, adj, headroom);
+      return saturationAdj(rgb, effectiveAdj);
+    }
+
     void main() {
       vec4 c = texture2D(tDiffuse, vUv);
-      // Contrast around 0.5
+      // Contrast around 0.5. Clamp negatives before the next step to keep
+      // off-hue channels from cascading into the saturation extrapolation,
+      // which is what produces black fringes around bright additive lines.
       c.rgb = (c.rgb - 0.5) * contrast + 0.5;
-      // Saturation
+      c.rgb = max(c.rgb, vec3(0.0));
+      // Saturation, then clamp again for the same reason.
       c.rgb = saturationAdj(c.rgb, saturation);
+      c.rgb = max(c.rgb, vec3(0.0));
+      // Vibrancy: smart saturation that mostly affects flat / pastel
+      // regions and leaves already-saturated pixels alone.
+      c.rgb = vibrancyAdj(c.rgb, vibrancy);
+      c.rgb = max(c.rgb, vec3(0.0));
       // Color tint blend
       c.rgb = mix(c.rgb, c.rgb * tint * 8.0, tintStrength);
       // Smooth vignette

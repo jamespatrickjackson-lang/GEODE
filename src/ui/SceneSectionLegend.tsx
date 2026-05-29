@@ -92,6 +92,22 @@ export function SceneSectionLegend({
   if (!styleBoolean(style, "sceneSectionLegendVisible", true)) return null;
 
   const planes = style.sceneSectionPlanes ?? {};
+  const explicitFrameById = new Map(
+    (Array.isArray(style.sceneSectionFrames) ? style.sceneSectionFrames : [])
+      .filter((entry) => typeof entry?.id === "string" && entry.id.trim())
+      .map((entry) => [entry.id, entry] as const),
+  );
+  const axisFrameEntry = (axis: "x" | "y" | "z") =>
+    explicitFrameById.get(`axis:${axis}`);
+  const axisLabel = (axis: "x" | "y" | "z") => {
+    const entry = axisFrameEntry(axis);
+    const label = typeof entry?.label === "string" && entry.label.trim()
+      ? entry.label
+      : `${axis.toUpperCase()} Section`;
+    return label;
+  };
+  const axisInLegend = (axis: "x" | "y" | "z") =>
+    axisFrameEntry(axis)?.legendVisible !== false;
   const bodyRowStyle: CSSProperties = {
     ...rowStyle,
     color: legendTextColors.body,
@@ -141,27 +157,30 @@ export function SceneSectionLegend({
       <h2 style={{ ...titleStyle, color: legendTextColors.heading }}>
         Section Planes
       </h2>
-      {(["x", "y", "z"] as const).map((axis, index) => {
-        const plane = planes[axis] ?? {};
-        const enabled = plane.enabled === true;
-        return (
-          <div key={axis} style={index === 0 ? firstBodyRowStyle : bodyRowStyle}>
-            <input
-              type="checkbox"
-              aria-label={`${axis.toUpperCase()} Section`}
-              checked={enabled}
-              data-testid={`scene-section-legend-${axis}-enabled`}
-              onChange={(event) => setAxisEnabled(axis, event.currentTarget.checked)}
-              style={legendCheckboxStyle(enabled, {
-                checkedColor: AXIS_COLORS[axis],
-              })}
-            />
-            <span>
-              <strong>{axis.toUpperCase()} Section</strong>
-            </span>
-          </div>
-        );
-      })}
+      {(["x", "y", "z"] as const)
+        .filter((axis) => axisInLegend(axis))
+        .map((axis, index) => {
+          const plane = planes[axis] ?? {};
+          const enabled = plane.enabled === true;
+          const label = axisLabel(axis);
+          return (
+            <div key={axis} style={index === 0 ? firstBodyRowStyle : bodyRowStyle}>
+              <input
+                type="checkbox"
+                aria-label={label}
+                checked={enabled}
+                data-testid={`scene-section-legend-${axis}-enabled`}
+                onChange={(event) => setAxisEnabled(axis, event.currentTarget.checked)}
+                style={legendCheckboxStyle(enabled, {
+                  checkedColor: AXIS_COLORS[axis],
+                })}
+              />
+              <span>
+                <strong>{label}</strong>
+              </span>
+            </div>
+          );
+        })}
       <label style={helperBodyRowStyle}>
         <input
           type="checkbox"

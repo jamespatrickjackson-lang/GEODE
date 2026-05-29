@@ -13,6 +13,7 @@ import {
 } from "../../styleControls";
 import { smallActionButtonStyle } from "../layout/layoutStyles";
 import { editorLayerLabel } from "../layerLabels";
+import { InlineEditableTitle } from "../../InlineEditableTitle";
 import type {
   EditableStyle,
   PresentationPage,
@@ -55,6 +56,7 @@ const builtInFrameId = (axis: SceneSectionAxis) => `axis:${axis}`;
 type SceneSectionFrameUiEntry = {
   id: string;
   label: string;
+  legendVisible: boolean;
   axis: SceneSectionAxis;
   builtIn: boolean;
   plane: SceneSectionPlaneState;
@@ -293,6 +295,7 @@ function normalizeSceneSectionFrameEntries(
         typeof entry?.label === "string" && entry.label.trim()
           ? entry.label
           : frameDefaultLabel(id, axis),
+      legendVisible: entry?.legendVisible !== false,
       axis,
       builtIn: true,
       plane: {
@@ -322,6 +325,7 @@ function normalizeSceneSectionFrameEntries(
         typeof entry.label === "string" && entry.label.trim()
           ? entry.label
           : frameDefaultLabel(entry.id, entry.axis),
+      legendVisible: entry.legendVisible !== false,
       axis: entry.axis,
       builtIn: false,
       plane: { ...(entry.plane ?? {}) },
@@ -337,6 +341,7 @@ function serializeFrameEntries(
   return entries.map((entry) => ({
     id: entry.id,
     label: entry.label,
+    legendVisible: entry.legendVisible,
     axis: entry.axis,
     plane: { ...entry.plane },
     frame: { ...entry.frame },
@@ -516,6 +521,7 @@ export function SceneSectionPlanesContainer({
       plane?: Partial<SceneSectionPlaneState>;
       frame?: Partial<SceneSectionFrameState>;
       label?: string;
+      legendVisible?: boolean;
     },
   ) => {
     const currentEntries = normalizeSceneSectionFrameEntries(liveStyleRef.current);
@@ -530,11 +536,14 @@ export function SceneSectionPlanesContainer({
       ...currentEntry.frame,
       ...(patch.frame ?? {}),
     };
+    const nextLegendVisible =
+      patch.legendVisible ?? currentEntry.legendVisible;
     const nextEntries = currentEntries.map((entry) =>
       entry.id === id
         ? {
             ...entry,
             label: patch.label ?? entry.label,
+            legendVisible: nextLegendVisible,
             axis: nextAxis,
             plane: nextPlane,
             frame: nextFrame,
@@ -621,6 +630,7 @@ export function SceneSectionPlanesContainer({
     const nextEntry: SceneSectionFrameUiEntry = {
       id,
       label,
+      legendVisible: true,
       axis: source.axis,
       builtIn: false,
       plane: {
@@ -958,8 +968,24 @@ export function SceneSectionPlanesContainer({
                     }}
                   >
                     <span style={frameSummaryContentStyle}>
-                      <span style={frameSummaryTitleStyle}>
-                        {frame.label}
+                      <span
+                        style={frameSummaryTitleStyle}
+                        onClick={stopSummaryToggle}
+                        onKeyDown={stopSummaryToggle}
+                      >
+                        <InlineEditableTitle
+                          value={frame.label}
+                          onCommit={(next) => {
+                            const trimmed = next.trim();
+                            if (!trimmed || trimmed === frame.label) return;
+                            setFrameEntryPatch(frame.id, { label: trimmed });
+                          }}
+                          textStyle={{
+                            color: sceneSectionAxisColors[axis],
+                            fontWeight: 600,
+                          }}
+                          title="Click to rename section frame"
+                        />
                       </span>
                       <span
                         style={frameSummaryControlGroupStyle}
@@ -1000,6 +1026,27 @@ export function SceneSectionPlanesContainer({
                             style={frameSummaryToggleInputStyle}
                           />
                           <span>Flip</span>
+                        </label>
+                        <label
+                          style={{
+                            ...frameSummaryToggleStyle,
+                            opacity: planeEnabled ? 1 : 0.48,
+                          }}
+                          title="When off: section still cuts onscreen objects, but no legend entry or push/pull handles render"
+                        >
+                          <input
+                            data-testid={`scene-section-plane-${controlKey}-show`}
+                            type="checkbox"
+                            disabled={disabled || !planeEnabled}
+                            checked={frame.legendVisible}
+                            onChange={(e) =>
+                              setFrameEntryPatch(frame.id, {
+                                legendVisible: e.target.checked,
+                              })
+                            }
+                            style={frameSummaryToggleInputStyle}
+                          />
+                          <span>Show</span>
                         </label>
                         <button
                           type="button"

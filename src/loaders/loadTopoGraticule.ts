@@ -360,6 +360,46 @@ function makeGraticuleLine(
   return line;
 }
 
+function makeGraticuleRibbon(
+  name: string,
+  role: "interior" | "interior-dashed" | "leader" | "leader-dashed",
+  color: string,
+  opacity: number,
+): THREE.Mesh {
+  const geometry = new THREE.BufferGeometry();
+  // Per-vertex colors so the runtime can drive a per-segment leader colour
+  // blend (inner → outer) without recompiling the material. Set up the
+  // attribute as a placeholder; geometry rebuild fills it.
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    transparent: true,
+    opacity,
+    depthTest: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    fog: false,
+    toneMapped: false,
+    vertexColors: true,
+    // Additive blending keeps ribbons vibrant against the post-processed
+    // scene. Runtime can switch to NormalBlending via the
+    // graticuleRibbonAdditive style toggle.
+    blending: THREE.AdditiveBlending,
+  });
+  material.userData.forceTransparent = true;
+  material.userData.topoGraticuleRibbonMaterial = true;
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.name = name;
+  mesh.castShadow = false;
+  mesh.receiveShadow = false;
+  mesh.visible = false;
+  mesh.renderOrder =
+    role === "interior" || role === "interior-dashed" ? 4560 : 4561;
+  mesh.userData.topoGraticuleRibbon = true;
+  mesh.userData.topoGraticuleLineRole = role;
+  return mesh;
+}
+
 export async function loadTopoGraticule(
   metadata: Record<string, unknown>,
   transformOptions?: GeoSceneTransformOptions,
@@ -512,6 +552,35 @@ export async function loadTopoGraticule(
   );
   dashedLeaderLine.userData.topoGraticuleGeneratedBounds = generatedBounds;
 
+  const interiorRibbon = makeGraticuleRibbon(
+    "Longitude / latitude interior graticule ribbon",
+    "interior",
+    "#d7d1c7",
+    0.62,
+  );
+  interiorRibbon.userData.topoGraticuleGeneratedBounds = generatedBounds;
+  const dashedInteriorRibbon = makeGraticuleRibbon(
+    "Longitude / latitude half-degree interior graticule ribbon",
+    "interior-dashed",
+    "#d7d1c7",
+    0.5,
+  );
+  dashedInteriorRibbon.userData.topoGraticuleGeneratedBounds = generatedBounds;
+  const leaderRibbon = makeGraticuleRibbon(
+    "Longitude / latitude edge leader ribbon",
+    "leader",
+    "#ffffff",
+    0.88,
+  );
+  leaderRibbon.userData.topoGraticuleGeneratedBounds = generatedBounds;
+  const dashedLeaderRibbon = makeGraticuleRibbon(
+    "Longitude / latitude half-degree edge leader ribbon",
+    "leader-dashed",
+    "#ffffff",
+    0.88,
+  );
+  dashedLeaderRibbon.userData.topoGraticuleGeneratedBounds = generatedBounds;
+
   const group = new THREE.Group();
   group.name = "Longitude / latitude grid";
   group.userData.displayName = "Longitude / latitude grid";
@@ -524,6 +593,10 @@ export async function loadTopoGraticule(
     dashedInteriorLine,
     leaderLine,
     dashedLeaderLine,
+    interiorRibbon,
+    dashedInteriorRibbon,
+    leaderRibbon,
+    dashedLeaderRibbon,
     ...labels,
   );
   return group;

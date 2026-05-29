@@ -3,7 +3,10 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeometry.js";
 import type { EditableStyle } from "../pages/types";
-import { setTopoGraticuleEdgeFade } from "../loaders/topoLineMaterial";
+import {
+  setTopoGraticuleEdgeFade,
+  setTopoPerspectiveLineWidth,
+} from "../loaders/topoLineMaterial";
 import {
   topoEdgeFadeInsideDistance,
   topoEdgeFadePreferenceScore,
@@ -43,8 +46,8 @@ interface TopoGraticuleLabelTarget {
   minor: boolean;
 }
 
-const TOPO_GRATICULE_EDGE_LEADER_MIN_M = 6_000;
-const TOPO_GRATICULE_EDGE_LEADER_MAX_M = 24_000;
+const TOPO_GRATICULE_EDGE_LEADER_MIN_M = 1_000;
+const TOPO_GRATICULE_EDGE_LEADER_MAX_M = 120_000;
 const TOPO_GRATICULE_EDGE_CLIP_SUBDIVISIONS = 6;
 const TOPO_GRATICULE_EDGE_CROSSING_WINDOW = 2;
 
@@ -379,12 +382,29 @@ function topoGraticuleNearestCrossing(
   return best;
 }
 
+// Tracks per-segment line distances so dashed `LineSegments2` instances can
+// share a coherent dash phase per source polyline instead of the cumulative
+// across-the-whole-buffer phase that `computeLineDistances()` produces.
+type DashDistanceTracker = {
+  // Two entries per pushed segment: [d_start, d_end].
+  distances: number[];
+  // Distance accumulator for the current source polyline.
+  current: number;
+};
+
 function pushTopoGraticuleSegment(
   positions: number[],
   a: THREE.Vector3,
   b: THREE.Vector3,
+  tracker: DashDistanceTracker | null = null,
 ): void {
   positions.push(a.x, a.y, a.z, b.x, b.y, b.z);
+  if (tracker) {
+    const length = a.distanceTo(b);
+    tracker.distances.push(tracker.current);
+    tracker.distances.push(tracker.current + length);
+    tracker.current += length;
+  }
 }
 
 function topoGraticuleVisibleSegment(
@@ -435,13 +455,14 @@ function pushTopoGraticuleVisibleSegmentParts(
   b: TopoGraticuleLabelCandidate,
   edge: TerrainEdgeFadeState,
   threshold: number,
+  tracker: DashDistanceTracker | null = null,
 ): void {
   const tangent = topoGraticulePairTangent(a, b);
   let runStart: THREE.Vector3 | null = null;
   let runEnd: THREE.Vector3 | null = null;
   const flushRun = () => {
     if (runStart && runEnd && runStart.distanceToSquared(runEnd) > 1) {
-      pushTopoGraticuleSegment(positions, runStart, runEnd);
+      pushTopoGraticuleSegment(positions, runStart, runEnd, tracker);
     }
     runStart = null;
     runEnd = null;
@@ -473,16 +494,156 @@ function pushTopoGraticuleVisibleSegmentParts(
   flushRun();
 }
 
+type RibbonBlendColors = {
+  // Per-segment two-stop gradient (start = inner end, end = outer end). RGB
+  // floats in [0, 1]. When null, every vertex of every segment uses (1,1,1)
+  // and the material color carries the look.
+  innerRGB: [number, number, number];
+  outerRGB: [number, number, number];
+};
+
+function setTopoGraticuleRibbonPositions(
+  mesh: THREE.Mesh,
+  positions: number[],
+  ribbonWidthM: number,
+  blend: RibbonBlendColors | null = null,
+): void {
+  // Build a flat strip quad for each segment in `positions` (which holds
+  // [ax, ay, az, bx, by, bz, …]). Quads are perpendicular to the line in
+  // the XY plane; z is interpolated linearly between segment endpoints so
+  // ribbons drape on terrain the same way the lines do.
+  const segmentCount = Math.floor(positions.length / 6);
+  if (segmentCount === 0) {
+    mesh.geometry.dispose();
+    mesh.geometry = new THREE.BufferGeometry();
+    mesh.userData.topoGraticuleSegmentCount = 0;
+    return;
+  }
+  const halfWidth = Math.max(1, ribbonWidthM) * 0.5;
+  const vertexFloats = new Float32Array(segmentCount * 12); // 4 verts × 3 = 12 per quad
+  const colorFloats = new Float32Array(segmentCount * 12);
+  const indices = new Uint32Array(segmentCount * 6); // 2 tris × 3 indices
+  const innerR = blend ? blend.innerRGB[0] : 1;
+  const innerG = blend ? blend.innerRGB[1] : 1;
+  const innerB = blend ? blend.innerRGB[2] : 1;
+  const outerR = blend ? blend.outerRGB[0] : 1;
+  const outerG = blend ? blend.outerRGB[1] : 1;
+  const outerB = blend ? blend.outerRGB[2] : 1;
+  for (let i = 0; i < segmentCount; i += 1) {
+    const offset = i * 6;
+    const ax = positions[offset];
+    const ay = positions[offset + 1];
+    const az = positions[offset + 2];
+    const bx = positions[offset + 3];
+    const by = positions[offset + 4];
+    const bz = positions[offset + 5];
+    let dx = bx - ax;
+    let dy = by - ay;
+    const len = Math.hypot(dx, dy);
+    if (len > 0.000001) {
+      dx /= len;
+      dy /= len;
+    } else {
+      dx = 1;
+      dy = 0;
+    }
+    const px = -dy * halfWidth;
+    const py = dx * halfWidth;
+    const vBase = i * 12;
+    // start - perp (inner end, side 0)
+    vertexFloats[vBase + 0] = ax - px;
+    vertexFloats[vBase + 1] = ay - py;
+    vertexFloats[vBase + 2] = az;
+    // start + perp (inner end, side 1)
+    vertexFloats[vBase + 3] = ax + px;
+    vertexFloats[vBase + 4] = ay + py;
+    vertexFloats[vBase + 5] = az;
+    // end - perp (outer end, side 0)
+    vertexFloats[vBase + 6] = bx - px;
+    vertexFloats[vBase + 7] = by - py;
+    vertexFloats[vBase + 8] = bz;
+    // end + perp (outer end, side 1)
+    vertexFloats[vBase + 9] = bx + px;
+    vertexFloats[vBase + 10] = by + py;
+    vertexFloats[vBase + 11] = bz;
+    // Per-vertex colour: start verts get inner, end verts get outer.
+    colorFloats[vBase + 0] = innerR;
+    colorFloats[vBase + 1] = innerG;
+    colorFloats[vBase + 2] = innerB;
+    colorFloats[vBase + 3] = innerR;
+    colorFloats[vBase + 4] = innerG;
+    colorFloats[vBase + 5] = innerB;
+    colorFloats[vBase + 6] = outerR;
+    colorFloats[vBase + 7] = outerG;
+    colorFloats[vBase + 8] = outerB;
+    colorFloats[vBase + 9] = outerR;
+    colorFloats[vBase + 10] = outerG;
+    colorFloats[vBase + 11] = outerB;
+    const iBase = i * 6;
+    const vIndex = i * 4;
+    indices[iBase + 0] = vIndex + 0;
+    indices[iBase + 1] = vIndex + 2;
+    indices[iBase + 2] = vIndex + 1;
+    indices[iBase + 3] = vIndex + 1;
+    indices[iBase + 4] = vIndex + 2;
+    indices[iBase + 5] = vIndex + 3;
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(vertexFloats, 3),
+  );
+  geometry.setAttribute(
+    "color",
+    new THREE.BufferAttribute(colorFloats, 3),
+  );
+  geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+  geometry.computeBoundingSphere();
+  mesh.geometry.dispose();
+  mesh.geometry = geometry;
+  mesh.userData.topoGraticuleSegmentCount = segmentCount;
+}
+
 function setTopoGraticuleLinePositions(
   line: LineSegments2,
   positions: number[],
+  // When supplied, [d0_seg0, d1_seg0, d0_seg1, d1_seg1, …]. Used for dashed
+  // roles so each source polyline restarts its dash phase at 0 instead of
+  // inheriting whatever cumulative distance the previous polyline left
+  // (which makes dashes look randomly placed inside each grid box).
+  lineDistances: number[] | null = null,
 ): void {
   const geometry = new LineSegmentsGeometry();
   geometry.setPositions(positions);
   line.geometry.dispose();
   line.geometry = geometry;
-  line.computeLineDistances();
+  if (lineDistances && lineDistances.length === (positions.length / 6) * 2) {
+    const buffer = new THREE.InstancedInterleavedBuffer(
+      new Float32Array(lineDistances),
+      2,
+      1,
+    );
+    geometry.setAttribute(
+      "instanceDistanceStart",
+      new THREE.InterleavedBufferAttribute(buffer, 1, 0),
+    );
+    geometry.setAttribute(
+      "instanceDistanceEnd",
+      new THREE.InterleavedBufferAttribute(buffer, 1, 1),
+    );
+  } else {
+    line.computeLineDistances();
+  }
   line.userData.topoGraticuleSegmentCount = positions.length / 6;
+}
+
+export interface TopoGraticuleRebuildOptions {
+  ribbonMode?: boolean;
+  ribbonWidthM?: number;
+  minorRibbonWidthM?: number | null;
+  leaderBlendEnabled?: boolean;
+  leaderBlendInnerRGB?: [number, number, number];
+  leaderBlendOuterRGB?: [number, number, number];
 }
 
 export function rebuildTopoGraticuleEdgeLines(
@@ -491,7 +652,17 @@ export function rebuildTopoGraticuleEdgeLines(
   edgeAware: boolean,
   labelOffsetM: number,
   labelGapM: number,
+  options: TopoGraticuleRebuildOptions = {},
 ): void {
+  const ribbonMode = options.ribbonMode === true;
+  const ribbonWidthM = options.ribbonWidthM ?? 250;
+  const minorRibbonWidthM =
+    options.minorRibbonWidthM ?? ribbonWidthM * TOPO_GRATICULE_MINOR_SCALE;
+  const leaderBlendEnabled = options.leaderBlendEnabled === true;
+  const leaderInner: [number, number, number] =
+    options.leaderBlendInnerRGB ?? [1, 1, 1];
+  const leaderOuter: [number, number, number] =
+    options.leaderBlendOuterRGB ?? [1, 1, 1];
   let sourceRoot: THREE.Object3D | null =
     group.userData?.topoGraticule === true ? group : null;
   group.traverse((obj) => {
@@ -513,29 +684,62 @@ export function rebuildTopoGraticuleEdgeLines(
   let dashedInteriorLine: LineSegments2 | null = null;
   let leaderLine: LineSegments2 | null = null;
   let dashedLeaderLine: LineSegments2 | null = null;
+  let interiorRibbon: THREE.Mesh | null = null;
+  let dashedInteriorRibbon: THREE.Mesh | null = null;
+  let leaderRibbon: THREE.Mesh | null = null;
+  let dashedLeaderRibbon: THREE.Mesh | null = null;
   group.traverse((obj) => {
-    if (!(obj instanceof LineSegments2)) return;
-    if (obj.userData?.topoGraticuleLineRole === "leader") leaderLine = obj;
-    else if (obj.userData?.topoGraticuleLineRole === "leader-dashed") {
-      dashedLeaderLine = obj;
+    if (obj instanceof LineSegments2) {
+      if (obj.userData?.topoGraticuleLineRole === "leader") leaderLine = obj;
+      else if (obj.userData?.topoGraticuleLineRole === "leader-dashed") {
+        dashedLeaderLine = obj;
+      } else if (obj.userData?.topoGraticuleLineRole === "interior-dashed") {
+        dashedInteriorLine = obj;
+      } else if (obj.userData?.topoGraticuleLineRole === "interior") {
+        interiorLine = obj;
+      }
+      return;
     }
-    else if (obj.userData?.topoGraticuleLineRole === "interior-dashed") {
-      dashedInteriorLine = obj;
-    }
-    else if (obj.userData?.topoGraticuleLineRole === "interior") {
-      interiorLine = obj;
+    if (
+      obj instanceof THREE.Mesh &&
+      obj.userData?.topoGraticuleRibbon === true
+    ) {
+      if (obj.userData?.topoGraticuleLineRole === "leader") leaderRibbon = obj;
+      else if (obj.userData?.topoGraticuleLineRole === "leader-dashed") {
+        dashedLeaderRibbon = obj;
+      } else if (obj.userData?.topoGraticuleLineRole === "interior-dashed") {
+        dashedInteriorRibbon = obj;
+      } else if (obj.userData?.topoGraticuleLineRole === "interior") {
+        interiorRibbon = obj;
+      }
     }
   });
   const interior = interiorLine as LineSegments2 | null;
   const dashedInterior = dashedInteriorLine as LineSegments2 | null;
   const leader = leaderLine as LineSegments2 | null;
   const dashedLeader = dashedLeaderLine as LineSegments2 | null;
+  const interiorRibbonMesh = interiorRibbon as THREE.Mesh | null;
+  const dashedInteriorRibbonMesh = dashedInteriorRibbon as THREE.Mesh | null;
+  const leaderRibbonMesh = leaderRibbon as THREE.Mesh | null;
+  const dashedLeaderRibbonMesh = dashedLeaderRibbon as THREE.Mesh | null;
   if (!interior || !dashedInterior || !leader || !dashedLeader) return;
 
   const interiorPositions: number[] = [];
   const dashedInteriorPositions: number[] = [];
   const leaderPositions: number[] = [];
   const dashedLeaderPositions: number[] = [];
+  // Dash distance is tracked per source polyline (one constant-latitude or
+  // constant-longitude line). Reset at the top of each source-line loop so
+  // every polyline starts its dash phase at 0, giving a coherent dashed
+  // grid pattern across boxes.
+  const dashedInteriorTracker: DashDistanceTracker = {
+    distances: [],
+    current: 0,
+  };
+  const dashedLeaderTracker: DashDistanceTracker = {
+    distances: [],
+    current: 0,
+  };
   const labelTargets = new Map<string, TopoGraticuleLabelTarget>();
   const innerThreshold = edgeAware && edge ? edge.fadeDistanceM : -Infinity;
   const labelGap = labelGapM;
@@ -546,12 +750,15 @@ export function rebuildTopoGraticuleEdgeLines(
     const sourceInteriorPositions = isMinor
       ? dashedInteriorPositions
       : interiorPositions;
+    const sourceInteriorTracker = isMinor ? dashedInteriorTracker : null;
+    if (sourceInteriorTracker) sourceInteriorTracker.current = 0;
     for (let index = 1; index < candidates.length; index += 1) {
       if (!edgeAware || !edge) {
         pushTopoGraticuleSegment(
           sourceInteriorPositions,
           candidates[index - 1].position,
           candidates[index].position,
+          sourceInteriorTracker,
         );
         continue;
       }
@@ -561,6 +768,7 @@ export function rebuildTopoGraticuleEdgeLines(
         candidates[index],
         edge,
         innerThreshold,
+        sourceInteriorTracker,
       );
     }
 
@@ -598,8 +806,11 @@ export function rebuildTopoGraticuleEdgeLines(
       )
         ? outer
         : null;
-    const effectiveLabelOffsetM =
-      labelOffsetM * (isMinor ? TOPO_GRATICULE_MINOR_SCALE : 1);
+    // Minor (.5) labels keep the same offset from their anchor as major
+    // labels — only the text scale shrinks via TOPO_GRATICULE_MINOR_SCALE
+    // downstream. Scaling the offset here previously made minor labels look
+    // crowded against their leader.
+    const effectiveLabelOffsetM = labelOffsetM;
     const effectiveLabelThreshold = -Math.max(0, effectiveLabelOffsetM);
     const target =
       topoGraticuleNearestCrossing(
@@ -622,17 +833,26 @@ export function rebuildTopoGraticuleEdgeLines(
     const readableTangent = edgeTextBasis.tangent;
     const positions = isMinor ? dashedLeaderPositions : leaderPositions;
     if (eligibleOuter) {
-      const leaderLengthM =
-        clampRange(
-          Math.abs(labelGapM),
-          TOPO_GRATICULE_EDGE_LEADER_MIN_M,
-          TOPO_GRATICULE_EDGE_LEADER_MAX_M,
-        ) * (isMinor ? TOPO_GRATICULE_MINOR_SCALE : 1);
+      // Leader length is no longer scaled by TOPO_GRATICULE_MINOR_SCALE —
+      // minor leaders match the length of major leaders so the .5 labels sit
+      // at the same distance from the map edge as the whole-degree labels.
+      const leaderLengthM = clampRange(
+        Math.abs(labelGapM),
+        TOPO_GRATICULE_EDGE_LEADER_MIN_M,
+        TOPO_GRATICULE_EDGE_LEADER_MAX_M,
+      );
       const leaderEnd = eligibleOuter.position
         .clone()
         .addScaledVector(edgeTextBasis.outward, leaderLengthM);
       leaderEnd.z = eligibleOuter.position.z;
-      pushTopoGraticuleSegment(positions, eligibleOuter.position, leaderEnd);
+      const leaderTracker = isMinor ? dashedLeaderTracker : null;
+      if (leaderTracker) leaderTracker.current = 0;
+      pushTopoGraticuleSegment(
+        positions,
+        eligibleOuter.position,
+        leaderEnd,
+        leaderTracker,
+      );
     }
     labelTargets.set(
       topoGraticuleLineKey(
@@ -652,13 +872,72 @@ export function rebuildTopoGraticuleEdgeLines(
   }
 
   setTopoGraticuleLinePositions(interior, interiorPositions);
-  setTopoGraticuleLinePositions(dashedInterior, dashedInteriorPositions);
+  setTopoGraticuleLinePositions(
+    dashedInterior,
+    dashedInteriorPositions,
+    dashedInteriorTracker.distances,
+  );
   setTopoGraticuleLinePositions(leader, leaderPositions);
-  setTopoGraticuleLinePositions(dashedLeader, dashedLeaderPositions);
-  interior.visible = interiorPositions.length > 0;
-  dashedInterior.visible = dashedInteriorPositions.length > 0;
-  leader.visible = edgeAware && leaderPositions.length > 0;
-  dashedLeader.visible = edgeAware && dashedLeaderPositions.length > 0;
+  setTopoGraticuleLinePositions(
+    dashedLeader,
+    dashedLeaderPositions,
+    dashedLeaderTracker.distances,
+  );
+  const interiorVisible = interiorPositions.length > 0;
+  const dashedInteriorVisible = dashedInteriorPositions.length > 0;
+  const leaderVisible = edgeAware && leaderPositions.length > 0;
+  const dashedLeaderVisible = edgeAware && dashedLeaderPositions.length > 0;
+  interior.visible = interiorVisible && !ribbonMode;
+  dashedInterior.visible = dashedInteriorVisible && !ribbonMode;
+  leader.visible = leaderVisible && !ribbonMode;
+  dashedLeader.visible = dashedLeaderVisible && !ribbonMode;
+  // Only rebuild ribbon geometry when ribbon mode is on. When toggled off,
+  // the ribbon meshes stay hidden with their last (possibly stale) geometry;
+  // no perf cost from rebuilding strips that are never rendered.
+  if (ribbonMode) {
+    const leaderBlend: RibbonBlendColors | null = leaderBlendEnabled
+      ? { innerRGB: leaderInner, outerRGB: leaderOuter }
+      : null;
+    if (interiorRibbonMesh) {
+      setTopoGraticuleRibbonPositions(
+        interiorRibbonMesh,
+        interiorPositions,
+        ribbonWidthM,
+      );
+      interiorRibbonMesh.visible = interiorVisible;
+    }
+    if (dashedInteriorRibbonMesh) {
+      setTopoGraticuleRibbonPositions(
+        dashedInteriorRibbonMesh,
+        dashedInteriorPositions,
+        minorRibbonWidthM,
+      );
+      dashedInteriorRibbonMesh.visible = dashedInteriorVisible;
+    }
+    if (leaderRibbonMesh) {
+      setTopoGraticuleRibbonPositions(
+        leaderRibbonMesh,
+        leaderPositions,
+        ribbonWidthM,
+        leaderBlend,
+      );
+      leaderRibbonMesh.visible = leaderVisible;
+    }
+    if (dashedLeaderRibbonMesh) {
+      setTopoGraticuleRibbonPositions(
+        dashedLeaderRibbonMesh,
+        dashedLeaderPositions,
+        minorRibbonWidthM,
+        leaderBlend,
+      );
+      dashedLeaderRibbonMesh.visible = dashedLeaderVisible;
+    }
+  } else {
+    if (interiorRibbonMesh) interiorRibbonMesh.visible = false;
+    if (dashedInteriorRibbonMesh) dashedInteriorRibbonMesh.visible = false;
+    if (leaderRibbonMesh) leaderRibbonMesh.visible = false;
+    if (dashedLeaderRibbonMesh) dashedLeaderRibbonMesh.visible = false;
+  }
   for (const target of [group, sourceRoot]) {
     const leaderLinesVisible =
       edgeAware && leaderPositions.length + dashedLeaderPositions.length > 0;
@@ -877,12 +1156,79 @@ export function applyTopoGraticuleStyle({
     0.1,
     32,
   );
+  const perspectiveLineWidth = style.graticulePerspectiveLineWidth === true;
+  // Reference camera-space depth (m) at which a perspective-mode line keeps
+  // its authored width. Closer than this → lines look thicker; farther →
+  // lines look thinner. Tuned for typical Utah FORGE oblique camera ranges.
+  const perspectiveReferenceM = 30_000;
+  const ribbonMode = style.graticuleRibbonMode === true;
+  const ribbonAdditive = style.graticuleRibbonAdditive !== false;
+  const ribbonBrightness = styleNumber(
+    style,
+    "graticuleRibbonBrightness",
+    1,
+    0.1,
+    8,
+  );
+  // Ribbon soft-occlusion style fields (graticuleRibbonOcclude /
+  // graticuleRibbonOcclusionSoftnessM) are reserved for a future depth-aware
+  // overlay pass; current implementation renders ribbons unconditionally on
+  // top of the composed canvas and does not consult these fields.
+  void style.graticuleRibbonOcclude;
+  void style.graticuleRibbonOcclusionSoftnessM;
+  const ribbonWidthM = styleNumber(
+    style,
+    "graticuleRibbonWidthM",
+    250,
+    50,
+    3000,
+  );
+  const minorRibbonWidthM =
+    typeof style.graticuleMinorRibbonWidthM === "number" &&
+    Number.isFinite(style.graticuleMinorRibbonWidthM)
+      ? clampRange(style.graticuleMinorRibbonWidthM, 10, 3000)
+      : null;
+  const minorLineWidth =
+    typeof style.graticuleMinorLineWidth === "number" &&
+    Number.isFinite(style.graticuleMinorLineWidth)
+      ? clampRange(style.graticuleMinorLineWidth, 0.1, 32)
+      : null;
+  const minorOpacity =
+    typeof style.graticuleMinorOpacity === "number" &&
+    Number.isFinite(style.graticuleMinorOpacity)
+      ? clamp01(style.graticuleMinorOpacity)
+      : null;
+  const minorColor =
+    typeof style.graticuleMinorColor === "string"
+      ? style.graticuleMinorColor
+      : null;
+  const leaderBlendEnabled = style.graticuleLeaderBlendEnabled === true;
+  const leaderBlendInnerColor =
+    typeof style.graticuleLeaderBlendInnerColor === "string"
+      ? style.graticuleLeaderBlendInnerColor
+      : color;
+  const leaderBlendOuterColor =
+    typeof style.graticuleLeaderBlendOuterColor === "string"
+      ? style.graticuleLeaderBlendOuterColor
+      : edgeLineColor;
+  const colorToRGB = (hex: string): [number, number, number] => {
+    const c = new THREE.Color(hex);
+    return [c.r, c.g, c.b];
+  };
   rebuildTopoGraticuleEdgeLines(
     group,
     terrainEdge,
     edgeAware,
     edgeLabelOffsetM,
     edgeLabelGapM,
+    {
+      ribbonMode,
+      ribbonWidthM,
+      minorRibbonWidthM,
+      leaderBlendEnabled,
+      leaderBlendInnerRGB: colorToRGB(leaderBlendInnerColor),
+      leaderBlendOuterRGB: colorToRGB(leaderBlendOuterColor),
+    },
   );
   group.traverse((obj) => {
     if (obj.userData?.topoGraticuleLabel === true) {
@@ -931,14 +1277,17 @@ export function applyTopoGraticuleStyle({
         obj.userData?.topoGraticuleLabel === true &&
         obj.userData.topoGraticuleLabelMinor === true;
       if ("color" in item && item.color instanceof THREE.Color) {
-        item.color.set(
-          obj.userData?.topoGraticuleLabel === true && edgeAware
-            ? edgeLabelColor
-            : (lineRole === "leader" || lineRole === "leader-dashed") &&
-                edgeAware
-              ? edgeLineColor
-              : color,
-        );
+        const isLeaderRole =
+          lineRole === "leader" || lineRole === "leader-dashed";
+        const isLabel = obj.userData?.topoGraticuleLabel === true;
+        const effectiveColor = isLabel && edgeAware
+          ? edgeLabelColor
+          : isLeaderRole && edgeAware
+            ? edgeLineColor
+            : minorLine && minorColor
+              ? minorColor
+              : color;
+        item.color.set(effectiveColor);
       }
       if (isGraticuleLineObject) {
         item.depthTest = true;
@@ -960,8 +1309,18 @@ export function applyTopoGraticuleStyle({
         const baseLineWidth = edgeLine
           ? graticuleEdgeLineWidth
           : graticuleLineWidth;
-        item.linewidth =
-          baseLineWidth * (minorLine ? TOPO_GRATICULE_MINOR_SCALE : 1);
+        // Minor (.5) lines use an explicit width override when authored,
+        // otherwise fall back to the legacy MINOR_SCALE multiplier.
+        const effectiveMinorWidth =
+          minorLineWidth !== null
+            ? minorLineWidth
+            : baseLineWidth * TOPO_GRATICULE_MINOR_SCALE;
+        item.linewidth = minorLine ? effectiveMinorWidth : baseLineWidth;
+        setTopoPerspectiveLineWidth(
+          item,
+          perspectiveLineWidth,
+          perspectiveReferenceM,
+        );
         setTopoGraticuleEdgeFade(item, {
           enabled: edgeAware,
           strength: edgeStrength,
@@ -978,9 +1337,45 @@ export function applyTopoGraticuleStyle({
           edgeFadeCornerRadiusM: terrainEdge?.cornerRadiusM ?? 0,
         });
       }
-      item.opacity =
-        opacity *
-        (minorLine || minorLabel ? TOPO_GRATICULE_MINOR_SCALE : 1);
+      // Ribbon material settings: additive vs normal blending and brightness
+      // multiplier baked into material color. Note: the per-vertex color
+      // attribute carries the leader blend; here we just gate the global
+      // material color back to white when leader blend is on (so the vertex
+      // colours show through unmodified) for leader roles.
+      if (
+        item instanceof THREE.MeshBasicMaterial &&
+        item.userData?.topoGraticuleRibbonMaterial === true
+      ) {
+        item.blending = ribbonAdditive
+          ? THREE.AdditiveBlending
+          : THREE.NormalBlending;
+        item.vertexColors = true;
+        if ("color" in item && item.color instanceof THREE.Color) {
+          const isLeaderRibbon =
+            lineRole === "leader" || lineRole === "leader-dashed";
+          if (isLeaderRibbon && leaderBlendEnabled) {
+            // White material colour lets per-vertex colours (inner/outer)
+            // pass through with no modulation.
+            item.color.setRGB(
+              ribbonBrightness,
+              ribbonBrightness,
+              ribbonBrightness,
+            );
+          } else {
+            // Apply brightness to whatever colour was set above.
+            const r = item.color.r * ribbonBrightness;
+            const g = item.color.g * ribbonBrightness;
+            const b = item.color.b * ribbonBrightness;
+            item.color.setRGB(r, g, b);
+          }
+        }
+      }
+      const effectiveOpacity = minorLine || minorLabel
+        ? minorOpacity !== null
+          ? minorOpacity
+          : opacity * TOPO_GRATICULE_MINOR_SCALE
+        : opacity;
+      item.opacity = effectiveOpacity;
       item.transparent = true;
       item.depthWrite = false;
       const publicSurfaceClipPlanes =

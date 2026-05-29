@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { convertBrandingAsset, writeFile } from "../save";
 import {
   detailsContentStyle,
@@ -80,6 +80,16 @@ const TITLE_BLOCK_DIRECT_IMAGE_EXTENSIONS = new Set([
 ]);
 const TITLE_BLOCK_CONVERTED_EXTENSIONS = new Set(["pdf", "eps"]);
 const DEFAULT_FOG_DENSITY = 0.00018;
+
+const topoGraticuleSubheaderStyle: CSSProperties = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: vibrancyTertiaryLabel,
+  textTransform: "uppercase",
+  letterSpacing: 0.4,
+  marginTop: 12,
+  marginBottom: 6,
+};
 
 type TerrainSettings = NonNullable<SceneProperties["terrain"]>;
 type TopoMapBranding = NonNullable<TerrainSettings["topoMapBranding"]>;
@@ -1907,6 +1917,83 @@ function TopoGraticulePanel({
         testId="topo-graticule-edge-line-width"
         {...controlProps}
       />
+      <div style={topoGraticuleSubheaderStyle}>Half-degree (.5) lines</div>
+      <LayerNumberStyleControl
+        label="Minor line weight"
+        field="graticuleMinorLineWidth"
+        fallback={0.92}
+        min={0.1}
+        max={32}
+        step={0.25}
+        decimals={2}
+        {...controlProps}
+      />
+      <LayerNumberStyleControl
+        label="Minor opacity"
+        field="graticuleMinorOpacity"
+        fallback={0.5}
+        min={0}
+        max={1}
+        step={0.05}
+        decimals={2}
+        {...controlProps}
+      />
+      <LayerColorStyleControl
+        label="Minor colour"
+        field="graticuleMinorColor"
+        fallback="#d7d1c7"
+        {...controlProps}
+      />
+      <div style={topoGraticuleSubheaderStyle}>Rendering mode</div>
+      <LayerBooleanStyleControl
+        label="Perspective line width"
+        field="graticulePerspectiveLineWidth"
+        fallback={false}
+        {...controlProps}
+      />
+      <LayerBooleanStyleControl
+        label="Ribbon mode"
+        field="graticuleRibbonMode"
+        fallback={false}
+        {...controlProps}
+      />
+      <LayerNumberStyleControl
+        label="Ribbon width (m)"
+        field="graticuleRibbonWidthM"
+        fallback={250}
+        min={50}
+        max={3000}
+        step={25}
+        decimals={0}
+        {...controlProps}
+      />
+      <LayerNumberStyleControl
+        label="Minor ribbon width (m)"
+        field="graticuleMinorRibbonWidthM"
+        fallback={200}
+        min={10}
+        max={3000}
+        step={10}
+        decimals={0}
+        {...controlProps}
+      />
+      <LayerBooleanStyleControl
+        label="Ribbon additive blending"
+        field="graticuleRibbonAdditive"
+        fallback={true}
+        {...controlProps}
+      />
+      <LayerNumberStyleControl
+        label="Ribbon brightness"
+        field="graticuleRibbonBrightness"
+        fallback={1}
+        min={0.1}
+        max={8}
+        step={0.1}
+        decimals={2}
+        {...controlProps}
+      />
+      <div style={topoGraticuleSubheaderStyle}>Labels &amp; leaders</div>
       <LayerColorStyleControl
         label="Edge label"
         field="graticuleEdgeLabelColor"
@@ -1940,6 +2027,25 @@ function TopoGraticulePanel({
         step={1000}
         decimals={0}
         testId="topo-graticule-edge-label-gap"
+        {...controlProps}
+      />
+      <div style={topoGraticuleSubheaderStyle}>Leader colour blend</div>
+      <LayerBooleanStyleControl
+        label="Leader blend on"
+        field="graticuleLeaderBlendEnabled"
+        fallback={false}
+        {...controlProps}
+      />
+      <LayerColorStyleControl
+        label="Blend inner colour"
+        field="graticuleLeaderBlendInnerColor"
+        fallback="#d7d1c7"
+        {...controlProps}
+      />
+      <LayerColorStyleControl
+        label="Blend outer colour"
+        field="graticuleLeaderBlendOuterColor"
+        fallback="#ffffff"
         {...controlProps}
       />
     </div>

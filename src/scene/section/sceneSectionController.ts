@@ -715,6 +715,7 @@ function sceneSectionObjectExcludedFromClipping(obj: THREE.Object3D): boolean {
   return (
     obj.userData?.topoGraticule === true ||
     obj.userData?.topoGraticuleLines === true ||
+    obj.userData?.topoGraticuleRibbon === true ||
     obj.userData?.topoGraticuleLabel === true ||
     obj.userData?.topoMapBranding === true
   );
@@ -750,6 +751,7 @@ function sceneSectionAxisOutsideOpacity(
 type SceneSectionResolvedFrameEntry = {
   id: string;
   label: string;
+  legendVisible: boolean;
   axis: SceneSectionAxis;
   plane: NonNullable<EditableStyle["sceneSectionPlanes"]>[SceneSectionAxis];
   frame: NonNullable<EditableStyle["sceneSectionFrameByAxis"]>[SceneSectionAxis];
@@ -778,6 +780,7 @@ function sceneSectionResolvedFrameEntries(
         typeof explicit?.label === "string" && explicit.label.trim()
           ? explicit.label
           : sceneSectionDefaultFrameLabel(id, axis),
+      legendVisible: explicit?.legendVisible !== false,
       axis,
       plane: {
         ...(planes[axis] ?? {}),
@@ -805,6 +808,7 @@ function sceneSectionResolvedFrameEntries(
         typeof entry.label === "string" && entry.label.trim()
           ? entry.label
           : sceneSectionDefaultFrameLabel(entry.id, entry.axis),
+      legendVisible: entry.legendVisible !== false,
       axis: entry.axis,
       plane: { ...(entry.plane ?? {}) },
       frame: { ...(entry.frame ?? {}) },
@@ -830,6 +834,7 @@ function sceneSectionFrameListWithPatch(
       ? {
           id: entry.id,
           label: entry.label,
+          legendVisible: entry.legendVisible,
           axis,
           plane: {
             ...(entry.plane ?? {}),
@@ -843,6 +848,7 @@ function sceneSectionFrameListWithPatch(
       : {
           id: entry.id,
           label: entry.label,
+          legendVisible: entry.legendVisible,
           axis: entry.axis,
           plane: entry.plane,
           frame: entry.frame,
@@ -852,6 +858,7 @@ function sceneSectionFrameListWithPatch(
     next.push({
       id: frameId,
       label: sceneSectionDefaultFrameLabel(frameId, axis),
+      legendVisible: true,
       axis,
       plane: patch.plane ?? {},
       frame: patch.frame ?? {},
@@ -1353,6 +1360,7 @@ export function resolveSceneSectionFrames(this: any,
       label: entry.label,
       axis,
       enabled: true,
+      legendVisible: entry.legendVisible,
       minAM,
       maxAM,
       minBM,
@@ -1619,6 +1627,7 @@ export function applySceneSectionMaterial(this: any,
   if (material.userData?.sceneSectionHelper === true) return;
   if (
     material.userData?.topoGraticuleLineMaterial === true ||
+    material.userData?.topoGraticuleRibbonMaterial === true ||
     material.userData?.topoGraticuleLabelMaterial === true
   ) {
     const publicSurfaceClipPlanes = Array.isArray(
@@ -2312,7 +2321,8 @@ export function rebuildSceneSectionHelpers(this: any,
       0,
     );
 
-    if (helperVisible) {
+    const frameHelperVisible = frame?.legendVisible !== false;
+    if (helperVisible && frameHelperVisible) {
       const controlGroup = new THREE.Group();
       controlGroup.name = `${plane.label} push/pull controls`;
       controlGroup.position.copy(planeCenter);

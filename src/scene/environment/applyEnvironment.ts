@@ -387,6 +387,7 @@ export function applyEnvironment(this: any, environment: EnvironmentSetup): void
     const grade = sp.colorGrade ?? {};
     gp.contrast.value = grade.contrast ?? 1.06;
     gp.saturation.value = grade.saturation ?? 1.06;
+    gp.vibrancy.value = grade.vibrancy ?? 1.0;
     if (grade.tint) {
       gp.tint.value.set(grade.tint);
     } else {

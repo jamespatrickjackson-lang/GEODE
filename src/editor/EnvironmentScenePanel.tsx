@@ -1634,6 +1634,15 @@ export function CameraSetupPanel({
                 onChange={(v) => setColorGrade({ saturation: v })}
               />
             </Row>
+            <Row label="Vibrancy">
+              <Range
+                value={scene.colorGrade?.vibrancy ?? 1.0}
+                min={0.5}
+                max={1.8}
+                step={0.01}
+                onChange={(v) => setColorGrade({ vibrancy: v })}
+              />
+            </Row>
             <Row label="Tint color">
               <input
                 data-dev-source="src/editor/EnvironmentScenePanel.tsx:342"
