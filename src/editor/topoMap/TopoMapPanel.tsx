@@ -1888,6 +1888,12 @@ function TopoGraticulePanel({
         fallback={true}
         {...controlProps}
       />
+      <LayerBooleanStyleControl
+        label="Section frames clip grid"
+        field="topoSectionable"
+        fallback={false}
+        {...controlProps}
+      />
       <LayerNumberStyleControl
         label="Edge strength"
         field="graticuleEdgeFadeStrength"

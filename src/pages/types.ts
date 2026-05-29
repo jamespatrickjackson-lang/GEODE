@@ -174,6 +174,13 @@ export interface EditableStyle {
   publicSurfaceClipSizeZ?: number;
   publicSurfaceClipRotationZDeg?: number;
   publicSurfaceClipShape?: "box" | "circle";
+  // Opt-in: when true, this layer's topo-context objects (topo map surface
+  // labels/legends, longitude/latitude graticule lines, ribbons, and labels,
+  // topo map branding) participate in scene-section clipping instead of
+  // being hard-excluded by sceneSectionObjectExcludedFromClipping. Default
+  // unset/false preserves the prior reference-context behavior (DEC-071);
+  // setting this true follows DEC-077.
+  topoSectionable?: boolean;
   // Terrain-draped longitude/latitude grid controls. Used by the Utah FORGE
   // topomap graticule layer; coordinates are generated from project CRS and
   // rendered as visual reference only.

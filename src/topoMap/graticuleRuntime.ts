@@ -1230,7 +1230,14 @@ export function applyTopoGraticuleStyle({
       leaderBlendOuterRGB: colorToRGB(leaderBlendOuterColor),
     },
   );
+  // DEC-077: graticule layers opt in to scene-section clipping via
+  // style.topoSectionable. Stamp on the group AND every traversed object;
+  // material loop below stamps materials. Cleared to undefined when off so
+  // sceneSectionObjectExcludedFromClipping returns its default exclusion.
+  const sectionable = style.topoSectionable === true;
+  group.userData.topoSectionable = sectionable;
   group.traverse((obj) => {
+    obj.userData.topoSectionable = sectionable;
     if (obj.userData?.topoGraticuleLabel === true) {
       obj.visible = labelVisible && (!edgeAware || edgeLabelVisible);
       applyTopoGraticuleLabelPlacement(
@@ -1264,6 +1271,10 @@ export function applyTopoGraticuleStyle({
     if (!material) return;
     const materials = Array.isArray(material) ? material : [material];
     for (const item of materials) {
+      // DEC-077: mirror the per-object sectionable flag on the material so
+      // applySceneSectionMaterial's early-return path can honor the opt-in
+      // without re-walking the object tree.
+      item.userData.topoSectionable = sectionable;
       const lineRole = obj.userData?.topoGraticuleLineRole;
       const isGraticuleLineObject =
         lineRole === "interior" ||

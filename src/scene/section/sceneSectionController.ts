@@ -712,6 +712,11 @@ function sceneSectionLegacyObjectTargeted(
 }
 
 function sceneSectionObjectExcludedFromClipping(obj: THREE.Object3D): boolean {
+  // DEC-077: any topo-context object whose owning layer's style has
+  // `topoSectionable: true` opts in to scene-section clipping. The runtime
+  // (graticuleRuntime / brandingRuntime) mirrors that flag onto every child
+  // so the exclusion check is local.
+  if (obj.userData?.topoSectionable === true) return false;
   return (
     obj.userData?.topoGraticule === true ||
     obj.userData?.topoGraticuleLines === true ||
@@ -1626,9 +1631,13 @@ export function applySceneSectionMaterial(this: any,
 ): void {
   if (material.userData?.sceneSectionHelper === true) return;
   if (
-    material.userData?.topoGraticuleLineMaterial === true ||
-    material.userData?.topoGraticuleRibbonMaterial === true ||
-    material.userData?.topoGraticuleLabelMaterial === true
+    // DEC-077: when the owning layer's style opts in via topoSectionable,
+    // skip this early-return and let the material fall through to the
+    // standard section-clipping path below.
+    material.userData?.topoSectionable !== true &&
+    (material.userData?.topoGraticuleLineMaterial === true ||
+      material.userData?.topoGraticuleRibbonMaterial === true ||
+      material.userData?.topoGraticuleLabelMaterial === true)
   ) {
     const publicSurfaceClipPlanes = Array.isArray(
       material.userData?.publicSurfaceClipPlanes,
