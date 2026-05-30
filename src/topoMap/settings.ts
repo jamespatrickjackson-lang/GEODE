@@ -29,6 +29,7 @@ export type TopoMapToolRole = "surface" | "graticule" | "reference";
 export type BuiltInTopoMaterialPresetId =
   | "custom"
   | "utah"
+  | "utah-2"
   | "soft-topo"
   | "surface-elevation"
   | "ortho-photo"
@@ -99,6 +100,7 @@ export const SURFACE_ELEVATION_STOP_GAP = 0.01;
 
 export const SURFACE_ELEVATION_PRESET_PALETTES = {
   utah: ["#8b806c", "#b5aa8d", "#8ea083", "#53675c", "#f1eee4"],
+  utah2: ["#5d2a1d", "#8a3f29", "#c46a3d", "#e09969", "#f8e3c4"],
   softTopo: ["#4d5a4e", "#758067", "#a99a76", "#d0bd8f", "#f1e2ad"],
   surfaceElevation: ["#5147b8", "#2e8fd8", "#4fc3c7", "#93d66b", "#fff24d"],
   desertRelief: ["#5b4130", "#8b6240", "#bf8f54", "#dec37a", "#f4e6aa"],
@@ -557,6 +559,34 @@ export function topoMapPresetPatch(
         surfaceElevationMidpoints: [0.58, 0.44, 0.52, 0.46],
         surfaceElevationColorBlend: 0.92,
       };
+    case "utah-2":
+      // Red-rock complement to the "utah" preset (Moab / Zion read):
+      // deep canyon shadow → slickrock orange → terracotta cliff → warm
+      // highlight → bright slickrock. Cool blue-violet shadow tint to
+      // throw the warm dominant forward. Elev range and hillshade tuning
+      // mirror the "utah" preset so the two switch interchangeably on the
+      // same scene without re-tuning the terrain shader. DEC-079 stretch.
+      return {
+        ...proceduralPresetPatch(
+          "utah-2",
+          SURFACE_ELEVATION_PRESET_PALETTES.utah2,
+          {
+            rampLow: "#4a2419",
+            rampMid: "#c46a3d",
+            rampHigh: "#f8e3c4",
+            elevLowM: 0,
+            elevHighM: 220,
+            hillshadeIntensity: 0.94,
+            shadowSharpness: 0.34,
+            facetStrength: 0.06,
+            rockHueVariance: 0.04,
+            shadowTint: "#3a3548",
+          },
+        ),
+        surfaceElevationColorPositions: [0, 0.32, 0.56, 0.8, 1],
+        surfaceElevationMidpoints: [0.56, 0.46, 0.5, 0.48],
+        surfaceElevationColorBlend: 0.9,
+      };
     case "soft-topo":
       return proceduralPresetPatch(
         "soft-topo",
@@ -686,6 +716,7 @@ export const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
 }[] = [
   { value: "custom", label: "Custom" },
   { value: "utah", label: "Utah" },
+  { value: "utah-2", label: "Utah 2" },
   { value: "soft-topo", label: "Soft topo" },
   { value: "surface-elevation", label: "Surface elevation" },
   { value: "ortho-photo", label: "Ortho photo" },
