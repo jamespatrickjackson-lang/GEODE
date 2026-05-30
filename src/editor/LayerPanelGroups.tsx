@@ -50,9 +50,14 @@ import { isTopoMapGraticuleLayer, isTopoMapSurfaceLayer, resolveTopoMapSettings,
 interface LayerPanelGroupsProps {
   section: LayerDataSection;
   renderLayer: (layer: ProjectLayerSpec, index?: number) => React.ReactNode;
+  revealTargetId?: string | null;
 }
 
-export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps) {
+export function LayerPanelGroups({
+  section,
+  renderLayer,
+  revealTargetId = null,
+}: LayerPanelGroupsProps) {
   const {
     state,
     sceneHandle,
@@ -216,6 +221,18 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
       ? `${activeOpenSignalPrefix}:${activeIds.join(",")}`
       : undefined;
   };
+  const revealLayerId = (() => {
+    if (!revealTargetId) return null;
+    if (revealTargetId.startsWith("layer:")) {
+      return revealTargetId.slice("layer:".length);
+    }
+    if (revealTargetId.startsWith("product:")) {
+      const rest = revealTargetId.slice("product:".length);
+      const separator = rest.indexOf(":");
+      return separator > 0 ? rest.slice(0, separator) : null;
+    }
+    return null;
+  })();
   const sceneSectionOpenSignal =
     state.projectSlug === "utah-forge" &&
     section === "sectionsCropping" &&
@@ -254,8 +271,16 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
           devSource="src/editor/LayerPanel.tsx:scene-section"
           devNote="Scene section planes are a virtual Sections & Cropping tool; controls patch a virtual layer style and SceneManager applies it across targeted visible scene objects."
           accentColor={selectedPageAccent}
-          defaultOpen={!!sceneSectionOpenSignal}
-          openSignal={sceneSectionOpenSignal}
+          openSignal={
+            sceneSectionOpenSignal &&
+            revealLayerId === UTAH_FORGE_SCENE_SECTION_LAYER_ID &&
+            revealTargetId
+              ? `${sceneSectionOpenSignal}:${revealTargetId}`
+              : (sceneSectionOpenSignal ??
+                (revealLayerId === UTAH_FORGE_SCENE_SECTION_LAYER_ID
+                  ? revealTargetId
+                  : undefined))
+          }
         >
           <SceneSectionPlanesContainer
             seismicLayer={utahForgeSeismicLayer}
@@ -303,6 +328,21 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
         const groupOpenSignal = activeLayerOpenSignal(
           layers.map((layer) => layer.id),
         );
+        const revealGroupOpenSignal =
+          revealLayerId && layers.some((layer) => layer.id === revealLayerId)
+            ? revealTargetId
+            : undefined;
+        const resolvedGroupOpenSignal =
+          groupOpenSignal && revealGroupOpenSignal
+            ? `${groupOpenSignal}:${revealGroupOpenSignal}`
+            : (groupOpenSignal ?? revealGroupOpenSignal);
+        if (
+          state.projectSlug === "utah-forge" &&
+          section === "public" &&
+          group.title === "Foundation"
+        ) {
+          return null;
+        }
         if (layers.length === 0) return null;
         if (
           state.projectSlug === "utah-forge" &&
@@ -331,8 +371,7 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
               devSource="src/editor/LayerPanel.tsx:site-details"
               devNote="Site Details contains the FORGE site boundary, demo boreholes, and schematic orientation block."
               accentColor={selectedPageAccent}
-              defaultOpen={!!groupOpenSignal}
-              openSignal={groupOpenSignal}
+              openSignal={resolvedGroupOpenSignal}
             >
               <SiteDetailsPanel
                 boreholeLayer={boreholeLayer}
@@ -358,7 +397,7 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
           group.title === "Working area"
         ) {
           const sectionsCroppingOpenSignal =
-            groupOpenSignal ?? workingAreaFocusOpenSignal;
+            resolvedGroupOpenSignal ?? workingAreaFocusOpenSignal;
           return (
             <LayerGroup
               key={group.title}
@@ -366,7 +405,6 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
               devSource="src/editor/LayerPanel.tsx:sections-cropping-working-area"
               devNote="Working area groups the Phase 3 boundary controls and the Working Area Focus crop/focus tool under Sections & Cropping."
               accentColor={selectedPageAccent}
-              defaultOpen={!!sectionsCroppingOpenSignal}
               openSignal={sectionsCroppingOpenSignal}
             >
               {renderedLayers.map(renderLayer)}
@@ -470,20 +508,6 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
                   />
                 </LayerGroup>
               ) : null}
-              {renderedLayers.length > 0 ? (
-                <LayerGroup
-                  title="Reference layers"
-                  devSource="src/editor/LayerPanel.tsx:topo-reference-layers"
-                  devNote="Reference layers contains roads, streams, waterbodies, and shared distance fade controls for the public topo map tool."
-                  accentColor={selectedPageAccent}
-                >
-                  <TopoDetailDistancePanel
-                    scene={state.environment.scene ?? {}}
-                    setEnvScene={setEnvScene}
-                  />
-                  {renderedLayers.map(renderLayer)}
-                </LayerGroup>
-              ) : null}
             </Fragment>
           );
         }
@@ -494,8 +518,7 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
             devSource="src/editor/LayerPanel.tsx:880"
             devNote="layerGroupSummaryStyle controls layer-category subheading pills like Topo map tile and Drilling."
             accentColor={selectedPageAccent}
-            defaultOpen={!!groupOpenSignal}
-            openSignal={groupOpenSignal}
+            openSignal={resolvedGroupOpenSignal}
           >
             {group.title !== PUBLIC_TOPO_LAYER_GROUP_TITLE ? (
               <LayerGroupFogControl
@@ -610,12 +633,19 @@ export function LayerPanelGroups({ section, renderLayer }: LayerPanelGroupsProps
           devSource="src/editor/LayerPanel.tsx:880"
           devNote="layerGroupSummaryStyle controls layer-category subheading pills."
           accentColor={selectedPageAccent}
-          defaultOpen={!!activeLayerOpenSignal(
-            otherLayers.map((layer) => layer.id),
-          )}
-          openSignal={activeLayerOpenSignal(
-            otherLayers.map((layer) => layer.id),
-          )}
+          openSignal={(() => {
+            const activeSignal = activeLayerOpenSignal(
+              otherLayers.map((layer) => layer.id),
+            );
+            const revealSignal =
+              revealLayerId &&
+              otherLayers.some((layer) => layer.id === revealLayerId)
+                ? revealTargetId
+                : undefined;
+            return activeSignal && revealSignal
+              ? `${activeSignal}:${revealSignal}`
+              : (activeSignal ?? revealSignal);
+          })()}
         >
           {otherLayers.map(renderLayer)}
         </LayerGroup>

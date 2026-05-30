@@ -27,6 +27,9 @@ narrow patch
   - Viewport legends should be lightweight overlays unless a specific tool requires a card/backplate.
   - Viewport legend edge anchoring, stack spacing, circular toggle rows, overlay text-color mapping, slider variables, and MT ramp handle sizes are captured in `docs/dev-context/UI-Visual-Standards.md`.
   - Topo graticules are depth-tested reference lines, not through-scene overlays.
+  - Public topo surface colour defaults now use the named `Utah` material preset:
+    khaki desert lows, muted sage/tree middle elevations, and warm snow/rock
+    high peaks.
   - Section ISO overlay opacity is composed from authored opacity, transition opacity, and threshold-surface attenuation.
   - Compatible section-frame page changes slide/interpolate; incompatible helper states crossfade by outgoing snapshot plus incoming fade.
   - Human visual judgment is the first acceptance filter for composition.

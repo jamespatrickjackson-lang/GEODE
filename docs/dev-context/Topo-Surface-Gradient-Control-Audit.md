@@ -21,6 +21,7 @@ This is a visual terrain shader/editor feature. It does not create higher-resolu
 - Topo editor: `src/editor/LayerPanel.tsx` exposes the Global Settings topo controls.
 - Legend UI: `src/ui/SurfaceElevationLegend.tsx` displays the same ramp controls as the shader.
 - Utah FORGE defaults: `projects/utah-forge/environment.json` stores the active terrain defaults.
+- Current named default: `Utah`, a five-stop public topo material preset in `src/topoMap/settings.ts`.
 - Smoke coverage: `tests/utah-forge-smoke.spec.ts` checks editor controls and shader uniforms.
 
 ## New control model
@@ -31,6 +32,20 @@ This is a visual terrain shader/editor feature. It does not create higher-resolu
 - `surfaceElevationColorBlend`: mixes the surface-elevation ramp back toward the underlying soft-topo ramp.
 
 The v1 editor keeps exactly five color stops, matching the existing PDF-style palette model.
+
+## Utah preset
+
+The `Utah` preset is the current Utah FORGE public topo default. It is based on
+the satellite-style visual read requested during review:
+
+- khaki high-desert and basin floor tones at low elevations,
+- muted alluvial/sage and pastel tree greens through the middle elevations,
+- darker forested relief before the high end,
+- warm off-white snow and pale peak tones at the highest elevations.
+
+This preset changes only material defaults. It does not modify the terrain
+raster, graticule geometry, public surface crop, MT/seismic products, CRS, or
+camera state.
 
 ## Runtime behavior
 
@@ -49,6 +64,7 @@ The v1 editor keeps exactly five color stops, matching the existing PDF-style pa
 
 ## Verification
 
+- Current pass: `npx tsc --noEmit` passed after adding the named `Utah` preset.
 - Targeted Playwright: `npx playwright test tests/utah-forge-smoke.spec.ts -g "surface elevation gradient controls"` passed.
 - Build: `npm run build` passed.
 - Artifact metadata: `node tools/validate-artifact-metadata.mjs --project projects/utah-forge` passed.

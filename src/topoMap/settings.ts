@@ -28,6 +28,7 @@ export const TOPO_MAP_LEGACY_PUBLIC_SURFACE_LAYER_IDS = [
 export type TopoMapToolRole = "surface" | "graticule" | "reference";
 export type BuiltInTopoMaterialPresetId =
   | "custom"
+  | "utah"
   | "soft-topo"
   | "surface-elevation"
   | "ortho-photo"
@@ -97,6 +98,7 @@ export const SURFACE_ELEVATION_DEFAULT_BLEND = 1;
 export const SURFACE_ELEVATION_STOP_GAP = 0.01;
 
 export const SURFACE_ELEVATION_PRESET_PALETTES = {
+  utah: ["#8b806c", "#b5aa8d", "#8ea083", "#53675c", "#f1eee4"],
   softTopo: ["#4d5a4e", "#758067", "#a99a76", "#d0bd8f", "#f1e2ad"],
   surfaceElevation: ["#5147b8", "#2e8fd8", "#4fc3c7", "#93d66b", "#fff24d"],
   desertRelief: ["#5b4130", "#8b6240", "#bf8f54", "#dec37a", "#f4e6aa"],
@@ -533,6 +535,28 @@ export function topoMapPresetPatch(
   switch (preset) {
     case "custom":
       return null;
+    case "utah":
+      return {
+        ...proceduralPresetPatch(
+          "utah",
+          SURFACE_ELEVATION_PRESET_PALETTES.utah,
+          {
+            rampLow: "#5f594c",
+            rampMid: "#8ea083",
+            rampHigh: "#e9e4d8",
+            elevLowM: 0,
+            elevHighM: 220,
+            hillshadeIntensity: 0.94,
+            shadowSharpness: 0.32,
+            facetStrength: 0.05,
+            rockHueVariance: 0.035,
+            shadowTint: "#35413c",
+          },
+        ),
+        surfaceElevationColorPositions: [0, 0.34, 0.58, 0.82, 1],
+        surfaceElevationMidpoints: [0.58, 0.44, 0.52, 0.46],
+        surfaceElevationColorBlend: 0.92,
+      };
     case "soft-topo":
       return proceduralPresetPatch(
         "soft-topo",
@@ -661,6 +685,7 @@ export const PUBLIC_TOPO_MATERIAL_PRESETS: readonly {
   label: string;
 }[] = [
   { value: "custom", label: "Custom" },
+  { value: "utah", label: "Utah" },
   { value: "soft-topo", label: "Soft topo" },
   { value: "surface-elevation", label: "Surface elevation" },
   { value: "ortho-photo", label: "Ortho photo" },

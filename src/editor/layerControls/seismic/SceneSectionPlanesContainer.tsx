@@ -1819,7 +1819,7 @@ export function SceneSectionPlanesContainer({
                       elevation: bLabel === "Elevation",
                       frameActive: axisFrameEnabled,
                     })}
-                    <details open style={nestedDetailsStyle}>
+                    <details style={nestedDetailsStyle}>
                       <summary style={panelStyles.summary}>
                         Section object visibility
                       </summary>

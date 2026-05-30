@@ -67,8 +67,8 @@ export const layerGroupDisclosureStyle: React.CSSProperties = {
 export const layerGroupChevronStyle: React.CSSProperties = {
   width: 7,
   height: 7,
-  borderRight: "2px solid rgba(0, 0, 0, 0.74)",
-  borderBottom: "2px solid rgba(0, 0, 0, 0.74)",
+  borderRight: "2px solid rgba(244, 240, 232, 0.82)",
+  borderBottom: "2px solid rgba(244, 240, 232, 0.82)",
   transformOrigin: "center",
   transition: "transform 160ms ease",
 };
@@ -169,4 +169,3 @@ export const assayOutlineColorInputStyle: React.CSSProperties = {
   background: "transparent",
   cursor: "pointer",
 };
-

@@ -125,7 +125,6 @@ const SCENE_SECTION_GROUND_TRACE_SAMPLES = 96;
 const SCENE_SECTION_GROUND_TRACE_WIDTH_DEFAULT_M = 360;
 const SCENE_SECTION_GROUND_TRACE_WIDTH_MIN_M = 30;
 const SCENE_SECTION_GROUND_TRACE_WIDTH_MAX_M = 2000;
-const SCENE_SECTION_SURFACE_TRACE_EPSILON_M = 0.01;
 const SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M = 18;
 const SCENE_SECTION_MAX_FRAME_COUNT = 8;
 const SCENE_SECTION_BUILT_IN_FRAME_IDS = {
@@ -1224,7 +1223,7 @@ export function resolveSceneSectionPlanes(this: any,
       this.sceneSectionProductIds(style),
     );
   const geo = sceneSectionGeoContext.call(this);
-  const frames = new Map(
+  const frames = new Map<string, ResolvedSceneSectionFrame>(
     this
       .resolveSceneSectionFrames(style, resolvedBounds)
       .map((frame: ResolvedSceneSectionFrame) => [frame.frameId, frame]),
@@ -1241,7 +1240,7 @@ export function resolveSceneSectionPlanes(this: any,
     const fallbackMaxA = resolvedBounds.max.getComponent(spec.frameAIndex);
     const fallbackMinB = resolvedBounds.min.getComponent(spec.frameBIndex);
     const fallbackMaxB = resolvedBounds.max.getComponent(spec.frameBIndex);
-    const basis =
+    const basis: SceneSectionFrameBasis | ResolvedSceneSectionFrame =
       frame ??
       (() => {
         const [minAM, maxAM] = sortedClampedRange(

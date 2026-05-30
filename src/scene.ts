@@ -126,6 +126,29 @@ export interface DrillFocus {
   point: THREE.Vector3;
 }
 
+export interface SceneTargetBox {
+  min: Vec3;
+  max: Vec3;
+}
+
+export interface SceneTargetEventDetail {
+  targetId: string;
+  layerId: string;
+  productId?: string;
+  objectId?: string;
+  label: string;
+  worldPoint: Vec3;
+  worldBox: SceneTargetBox | null;
+}
+
+export interface SceneTargetResolution {
+  targetId: string;
+  layerId: string;
+  productId?: string;
+  label: string;
+  worldBox: SceneTargetBox | null;
+}
+
 export interface SceneHandle {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
@@ -140,6 +163,7 @@ export interface SceneHandle {
    * tooltip doesn't pop up as the camera flies past objects mid-tween.
    */
   setRaycastEnabled(enabled: boolean): void;
+  resolveSceneTarget(targetId: string): SceneTargetResolution | null;
   /**
    * Editor flag: when true, hovering a scene-overlay outline shows a
    * grab cursor + brightens the outline; mousedown begins a translate
@@ -449,6 +473,214 @@ export function mountScene(
       }
     }
     return null;
+  };
+
+  const isIgnoredSceneTargetNode = (node: THREE.Object3D): boolean => {
+    const data = node.userData as Record<string, unknown>;
+    return (
+      data.geoseePickIgnore === true ||
+      data.terrainHandle === true ||
+      data.topoGraticule === true ||
+      data.topoGraticuleLines === true ||
+      data.topoGraticuleLabel === true ||
+      data.topoMapBranding === true ||
+      data.sceneSectionHelper === true ||
+      data.sceneSectionPlaneHandle === true ||
+      data.pageCameraMarker === true ||
+      data.publicSurfaceClipHelper === true ||
+      data.workingAreaFocusHelper === true ||
+      data.lightingSourceHandle === true ||
+      data.dynamicCameraOrbitCenter === true ||
+      data.areaOutlineEditorHandle === true
+    );
+  };
+
+  const ancestorChainVisible = (node: THREE.Object3D): boolean => {
+    let cursor: THREE.Object3D | null = node;
+    while (cursor) {
+      if (cursor.visible === false) return false;
+      if (isIgnoredSceneTargetNode(cursor)) return false;
+      cursor = cursor.parent;
+    }
+    return true;
+  };
+
+  const vec3ToSceneArray = (value: THREE.Vector3): Vec3 => [
+    value.x,
+    value.y,
+    value.z,
+  ];
+
+  const boxToSceneTargetBox = (box: THREE.Box3): SceneTargetBox | null => {
+    if (box.isEmpty() || !Number.isFinite(box.min.x) || !Number.isFinite(box.max.x)) {
+      return null;
+    }
+    return {
+      min: vec3ToSceneArray(box.min),
+      max: vec3ToSceneArray(box.max),
+    };
+  };
+
+  const sceneTargetProductId = (
+    node: THREE.Object3D | null,
+  ): { productId?: string; productNode?: THREE.Object3D } => {
+    let cursor = node;
+    while (cursor) {
+      const data = cursor.userData as Record<string, unknown>;
+      const candidates = [
+        data.seismicProductId,
+        data.scalarVolumeProductId,
+        data.resistivitySliceId,
+        data.mtThresholdSurfaceId,
+        data.mtIsosurfaceProductId,
+        data.markerId,
+      ];
+      for (const candidate of candidates) {
+        if (typeof candidate === "string" && candidate.length > 0) {
+          return { productId: candidate, productNode: cursor };
+        }
+      }
+      cursor = cursor.parent;
+    }
+    return {};
+  };
+
+  const sceneTargetLabel = (
+    node: THREE.Object3D | null,
+    layerSpec: ProjectLayerSpec | undefined,
+    productId?: string,
+  ): string => {
+    let cursor = node;
+    while (cursor) {
+      const name = (cursor.userData as { displayName?: unknown }).displayName;
+      if (typeof name === "string" && name.trim().length > 0) return name;
+      cursor = cursor.parent;
+    }
+    return layerSpec?.label ?? productId ?? "Scene object";
+  };
+
+  const sceneTargetBounds = (
+    primary: THREE.Object3D | null,
+    fallback: THREE.Object3D | null,
+  ): SceneTargetBox | null => {
+    const box = new THREE.Box3();
+    if (primary) {
+      box.setFromObject(primary);
+      const converted = boxToSceneTargetBox(box);
+      if (converted) return converted;
+    }
+    if (fallback) {
+      box.setFromObject(fallback);
+      return boxToSceneTargetBox(box);
+    }
+    return null;
+  };
+
+  const layerIdFromTargetId = (
+    targetId: string,
+  ): { layerId: string; productId?: string } | null => {
+    if (targetId.startsWith("layer:")) {
+      const layerId = targetId.slice("layer:".length);
+      return layerId ? { layerId } : null;
+    }
+    if (targetId.startsWith("product:")) {
+      const rest = targetId.slice("product:".length);
+      const separator = rest.indexOf(":");
+      if (separator <= 0) return null;
+      return {
+        layerId: rest.slice(0, separator),
+        productId: rest.slice(separator + 1),
+      };
+    }
+    return null;
+  };
+
+  const resolveSceneTarget = (
+    targetId: string,
+  ): SceneTargetResolution | null => {
+    const parsed = layerIdFromTargetId(targetId);
+    if (!parsed) return null;
+    const group = manager.getLayer(parsed.layerId);
+    if (!group) return null;
+    const layerSpec = (group.userData as { layerSpec?: ProjectLayerSpec }).layerSpec;
+    let productNode: THREE.Object3D | null = null;
+    if (parsed.productId) {
+      group.traverse((node) => {
+        if (productNode) return;
+        const product = sceneTargetProductId(node).productId;
+        if (product === parsed.productId) productNode = node;
+      });
+      if (!productNode) return null;
+    }
+    return {
+      targetId,
+      layerId: parsed.layerId,
+      productId: parsed.productId,
+      label: sceneTargetLabel(productNode ?? group, layerSpec, parsed.productId),
+      worldBox: sceneTargetBounds(productNode ?? group, group),
+    };
+  };
+
+  const pickSceneTarget = (
+    clientX: number,
+    clientY: number,
+  ): SceneTargetEventDetail | null => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    ndc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    ndc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(ndc, camera);
+    const layerByObject = new WeakMap<THREE.Object3D, string>();
+    const targets: THREE.Object3D[] = [];
+    for (const [id, group] of manager.layerEntries()) {
+      if (id === "terrain" || id.toLowerCase().includes("graticule")) continue;
+      if (!group.visible || isIgnoredSceneTargetNode(group)) continue;
+      layerByObject.set(group, id);
+      targets.push(group);
+    }
+    if (targets.length === 0) return null;
+    const hits = raycaster.intersectObjects(targets, true);
+    for (const hit of hits) {
+      if (!ancestorChainVisible(hit.object)) continue;
+      let layerGroup: THREE.Object3D | null = hit.object;
+      let layerId: string | undefined;
+      while (layerGroup) {
+        layerId = layerByObject.get(layerGroup);
+        if (layerId) break;
+        layerGroup = layerGroup.parent;
+      }
+      if (!layerId || !layerGroup) continue;
+      const layerSpec = (layerGroup.userData as { layerSpec?: ProjectLayerSpec })
+        .layerSpec;
+      const { productId, productNode } = sceneTargetProductId(hit.object);
+      const targetId = productId
+        ? `product:${layerId}:${productId}`
+        : `layer:${layerId}`;
+      return {
+        targetId,
+        layerId,
+        productId,
+        objectId:
+          typeof hit.object.uuid === "string" && hit.object.uuid.length > 0
+            ? hit.object.uuid
+            : undefined,
+        label: sceneTargetLabel(hit.object, layerSpec, productId),
+        worldPoint: vec3ToSceneArray(hit.point),
+        worldBox: sceneTargetBounds(productNode ?? hit.object, layerGroup),
+      };
+    }
+    return null;
+  };
+
+  const dispatchSceneTargetClick = (detail: SceneTargetEventDetail): void => {
+    window.dispatchEvent(
+      new CustomEvent("geosee:scene-target-click", { detail }),
+    );
+  };
+
+  const dispatchSceneTargetFocus = (detail: SceneTargetEventDetail): void => {
+    window.dispatchEvent(
+      new CustomEvent("geosee:scene-target-focus", { detail }),
+    );
   };
 
   const applyHover = (label: string | null, x: number, y: number) => {
@@ -1129,6 +1361,15 @@ export function mountScene(
   };
 
   const onCanvasMouseDown = (ev: MouseEvent) => {
+    if (ev.button === 2) {
+      window.dispatchEvent(
+        new CustomEvent("geosee:camera-focus-release-request", {
+          detail: { clientX: ev.clientX, clientY: ev.clientY, distancePx: 0 },
+        }),
+      );
+      ev.preventDefault();
+      return;
+    }
     if (ev.button === 0) {
       focusPointerDown = { x: ev.clientX, y: ev.clientY };
       suppressNextDrillFocusClick = false;
@@ -1292,6 +1533,10 @@ export function mountScene(
       focusPointerDown = null;
       if (Math.hypot(dx, dy) > 8) return;
     }
+    const sceneTarget = pickSceneTarget(ev.clientX, ev.clientY);
+    if (sceneTarget) {
+      dispatchSceneTargetClick(sceneTarget);
+    }
     const mtStation = pickMtStation(ev.clientX, ev.clientY);
     if (mtStation) {
       window.dispatchEvent(
@@ -1303,6 +1548,20 @@ export function mountScene(
       return;
     }
     emitDrillFocus(pickDrillFocus(ev.clientX, ev.clientY));
+  };
+
+  const onCanvasDblClick = (ev: MouseEvent) => {
+    if (ev.button !== 0) return;
+    const sceneTarget = pickSceneTarget(ev.clientX, ev.clientY);
+    if (!sceneTarget) return;
+    dispatchSceneTargetFocus(sceneTarget);
+    suppressNextDrillFocusClick = true;
+    focusPointerDown = null;
+    ev.preventDefault();
+  };
+
+  const onCanvasContextMenu = (ev: MouseEvent) => {
+    ev.preventDefault();
   };
 
   const onWindowMouseUp = () => {
@@ -1424,6 +1683,8 @@ export function mountScene(
   renderer.domElement.addEventListener("mouseleave", onCanvasMouseLeave);
   renderer.domElement.addEventListener("mousedown", onCanvasMouseDown);
   renderer.domElement.addEventListener("click", onCanvasClick);
+  renderer.domElement.addEventListener("dblclick", onCanvasDblClick);
+  renderer.domElement.addEventListener("contextmenu", onCanvasContextMenu);
   window.addEventListener("mouseup", onWindowMouseUp);
 
   const setRaycastEnabled = (enabled: boolean) => {
@@ -1448,6 +1709,8 @@ export function mountScene(
     renderer.domElement.removeEventListener("mouseleave", onCanvasMouseLeave);
     renderer.domElement.removeEventListener("mousedown", onCanvasMouseDown);
     renderer.domElement.removeEventListener("click", onCanvasClick);
+    renderer.domElement.removeEventListener("dblclick", onCanvasDblClick);
+    renderer.domElement.removeEventListener("contextmenu", onCanvasContextMenu);
     window.removeEventListener("mouseup", onWindowMouseUp);
     if (hoverTimer !== null) window.clearTimeout(hoverTimer);
     setHoverTooltip(null);
@@ -1483,6 +1746,7 @@ export function mountScene(
     onTick,
     onDrillFocus,
     setRaycastEnabled,
+    resolveSceneTarget,
     setEditorMode,
     setOverlayBoundsCommitHandler,
     setLightingSourceCommitHandler,

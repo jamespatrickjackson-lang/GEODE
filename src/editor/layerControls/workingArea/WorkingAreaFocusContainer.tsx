@@ -318,7 +318,7 @@ export function WorkingAreaFocusContainer({
             }
           />
         </label>
-        <details open style={nestedDetailsStyle}>
+        <details style={nestedDetailsStyle}>
           <summary style={panelStyles.summary}>Affected layers</summary>
           <div style={detailsContentStyle}>
             {layerOptions.map((layer) => {

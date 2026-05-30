@@ -73,7 +73,7 @@ function AutoOpenDetails({
   children: React.ReactNode;
   openSignal?: unknown;
 }) {
-  const [open, setOpen] = useState(openSignal !== undefined);
+  const [open, setOpen] = useState(false);
   const previousOpenSignal = useRef(openSignal);
   useEffect(() => {
     if (openSignal === undefined || openSignal === previousOpenSignal.current) {

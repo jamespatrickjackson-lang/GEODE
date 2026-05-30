@@ -10,7 +10,6 @@ import {
 import { OverlayPanel } from "./OverlayPanel";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { DevModeInspector } from "./DevModeInspector";
-import { UtahForgeAddToProjectDrop } from "./UtahForgeAddToProjectDrop";
 import { ENVIRONMENT_SENTINEL } from "./types";
 import { usePageController } from "../pages/PageController";
 import { AudienceLensControls } from "../audience/AudienceLensControls";
@@ -20,7 +19,9 @@ import {
   audienceLensById,
 } from "../projectModules/caseStudyB/audienceLenses";
 import {
+  EDITOR_PILL_TEXT_INSET_PX,
   EDITOR_SCROLL_END_PADDING_Y,
+  EDITOR_SECTION_MARGIN_X,
   FROSTED_HAIRLINE,
   FROSTED_PANEL_OUTLINE,
   TECHNICAL_MONO_FONT,
@@ -29,8 +30,9 @@ import {
   vibrancyLabel,
 } from "./styles";
 import type { SceneHandle } from "../scene";
-import type { EditableStyle } from "../pages/types";
+import type { EditableStyle, ProjectLayerSpec } from "../pages/types";
 import { effectiveStyle, effectiveVisibility } from "../pages/effective";
+import { layerDataSection } from "./layerControls/layerPanelConfig";
 import {
   UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
   UTAH_FORGE_MT_STATIONS_LAYER_ID,
@@ -52,7 +54,14 @@ import { topoMapLayerIds } from "../topoMap/settings";
 const SIDEBAR_WIDTH = 512;
 const FLOATING_PANEL_MARGIN = 44;
 const BOTTOM_HUD_SAFE_ZONE = 112;
-const HEADER_SAVE_TRASH_ALIGN_OFFSET = 21;
+const EDITOR_INNER_BAR_RADIUS_PX = 22;
+const EDITOR_DEFAULT_OUTER_RADIUS_PX =
+  EDITOR_INNER_BAR_RADIUS_PX + EDITOR_SECTION_MARGIN_X;
+const DEFAULT_SINGLE_CLICK_DELAY_MS = 250;
+const DEFAULT_SCROLL_SETTLE_MS = 250;
+const DEFAULT_PULSE_PILL_MS = 600;
+const DEFAULT_PULSE_TEXT_MS = 480;
+const DEFAULT_PULSE_STATIC_MS = 1200;
 
 const UTAH_FORGE_DATA_LAYER_IDS = [
   UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
@@ -68,6 +77,40 @@ const UTAH_FORGE_DATA_LAYER_IDS = [
   UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
   "utah-forge-reference-stage",
 ] as const;
+
+function clampEditorNumber(
+  value: number | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.min(max, Math.max(min, value))
+    : fallback;
+}
+
+function sceneTargetLayerId(targetId: string): string | null {
+  if (targetId.startsWith("layer:")) return targetId.slice("layer:".length);
+  if (!targetId.startsWith("product:")) return null;
+  const rest = targetId.slice("product:".length);
+  const separator = rest.indexOf(":");
+  return separator > 0 ? rest.slice(0, separator) : null;
+}
+
+function cssEscape(value: string): string {
+  const css = window.CSS as { escape?: (value: string) => string } | undefined;
+  return css?.escape ? css.escape(value) : value.replace(/["\\]/g, "\\$&");
+}
+
+function layerSectionForTarget(
+  layers: readonly ProjectLayerSpec[],
+  targetId: string,
+): ReturnType<typeof layerDataSection> | null {
+  const layerId = sceneTargetLayerId(targetId);
+  if (!layerId) return null;
+  const layer = layers.find((candidate) => candidate.id === layerId);
+  return layer ? layerDataSection(layer) : null;
+}
 const UTAH_FORGE_SECTIONS_CROPPING_LAYER_IDS = [
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
@@ -121,7 +164,7 @@ function initialPanelPosition(): PanelPosition {
 
 const headerStyle: React.CSSProperties = {
   minHeight: 54,
-  padding: "0 20px",
+  padding: `0 ${EDITOR_SECTION_MARGIN_X + EDITOR_PILL_TEXT_INSET_PX}px`,
   display: "flex",
   alignItems: "center",
   gap: 16,
@@ -136,20 +179,6 @@ const headerStyle: React.CSSProperties = {
   boxShadow: "none",
 };
 
-const addToProjectButtonStyle: React.CSSProperties = {
-  minHeight: 28,
-  padding: "0 10px",
-  border: "1px solid transparent",
-  borderRadius: 7,
-  background: "rgba(107, 197, 255, 0.104)",
-  color: "rgba(244, 240, 232, 0.94)",
-  cursor: "pointer",
-  fontFamily: TECHNICAL_MONO_FONT,
-  fontSize: 11,
-  fontWeight: 700,
-  whiteSpace: "nowrap",
-};
-
 const sidebarStyle: React.CSSProperties = {
   position: "absolute",
   width: SIDEBAR_WIDTH,
@@ -162,7 +191,7 @@ const sidebarStyle: React.CSSProperties = {
   fontFamily: TECHNICAL_MONO_FONT,
   zIndex: 20,
   border: FROSTED_PANEL_OUTLINE,
-  borderRadius: 12,
+  borderRadius: EDITOR_DEFAULT_OUTER_RADIUS_PX,
   overflow: "hidden",
   boxShadow: "none",
   outline: "none",
@@ -245,16 +274,21 @@ export function EditorRoot({
     setEnvLayerStyle,
     setPageLayerOverride,
   } = useEditor();
-  const { currentIndex, isTransitioning, targetIndex, goto } =
+  const { currentIndex, isTransitioning, targetIndex, cameraObjectFocus } =
     usePageController();
   const panelRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const [panelPosition, setPanelPosition] = useState(initialPanelPosition);
   const [dragging, setDragging] = useState(false);
-  const [showGlobalPageCameras, setShowGlobalPageCameras] = useState(false);
   const [previewLensPromptOpen, setPreviewLensPromptOpen] = useState(false);
   const [publicDataOpenSignal, setPublicDataOpenSignal] = useState(0);
-  const [utahForgeIntakeOpen, setUtahForgeIntakeOpen] = useState(false);
+  const [publicTopoOpenSignal, setPublicTopoOpenSignal] = useState(0);
+  const [sectionsRevealOpenSignal, setSectionsRevealOpenSignal] = useState(0);
+  const [sceneRevealTargetId, setSceneRevealTargetId] = useState<string | null>(
+    null,
+  );
+  const sceneRevealTimerRef = useRef<number | null>(null);
+  const sceneRevealPulseTimerRef = useRef<number | null>(null);
   const selectedPageIndex =
     state.selectedPageId && state.selectedPageId !== ENVIRONMENT_SENTINEL
       ? state.pages.findIndex((page) => page.id === state.selectedPageId)
@@ -266,12 +300,44 @@ export function EditorRoot({
     selectedPageIndex === currentIndex &&
     !isTransitioning &&
     targetIndex === null;
+  const cameraFocusSettings = state.environment.scene?.cameraFocus ?? {};
+  const sceneRevealDelayMs = clampEditorNumber(
+    cameraFocusSettings.singleClickDelayMs,
+    DEFAULT_SINGLE_CLICK_DELAY_MS,
+    120,
+    500,
+  );
+  const sceneRevealScrollSettleMs = clampEditorNumber(
+    cameraFocusSettings.scrollSettleMs,
+    DEFAULT_SCROLL_SETTLE_MS,
+    80,
+    800,
+  );
+  const sceneRevealScrollBehavior =
+    cameraFocusSettings.revealScrollBehavior === "auto" ? "auto" : "smooth";
+  const editorScrollStyle = {
+    ...stackStyle,
+    "--editor-pulse-pill-ms": `${clampEditorNumber(
+      cameraFocusSettings.pulsePillMs,
+      DEFAULT_PULSE_PILL_MS,
+      200,
+      1600,
+    )}ms`,
+    "--editor-pulse-text-ms": `${clampEditorNumber(
+      cameraFocusSettings.pulseTextMs,
+      DEFAULT_PULSE_TEXT_MS,
+      200,
+      1600,
+    )}ms`,
+    "--editor-pulse-static-ms": `${clampEditorNumber(
+      cameraFocusSettings.pulseStaticMs,
+      DEFAULT_PULSE_STATIC_MS,
+      400,
+      3000,
+    )}ms`,
+  } as React.CSSProperties;
   const globalSettingsSelected = state.selectedPageId === ENVIRONMENT_SENTINEL;
   const isCaseStudyB = state.projectSlug === "case-study-b";
-  const showUtahForgeIntake =
-    import.meta.env.DEV &&
-    !state.presenterMode &&
-    state.projectSlug === "utah-forge";
   const publicDataTitle =
     state.projectSlug === "utah-forge" ? "FORGE Data" : "Public Data";
   const hasPublicTopoMap = topoMapLayerIds(state.manifest.layers).length > 0;
@@ -479,45 +545,120 @@ export function EditorRoot({
     state.pages,
     state.selectedPageId,
   ]);
+
   useEffect(() => {
-    if (
-      !globalSettingsSelected ||
-      state.presenterMode ||
-      !showGlobalPageCameras
-    ) {
-      sceneHandle.setGlobalPageCameraMarkers(null);
-      sceneHandle.setGlobalPageCameraMarkerClickHandler(null);
-      return;
-    }
-    sceneHandle.setGlobalPageCameraMarkers(
-      state.pages.map((page, index) => ({
-        id: page.id,
-        title: `${String(index + 1).padStart(2, "0")}. ${page.title}`,
-        pose: {
-          ...page.camera,
-          fov: state.environment.scene?.camera?.fov ?? page.camera.fov,
-        },
-        color: pageAccentForPage(page, index, 0.82),
-      })),
-    );
-    sceneHandle.setGlobalPageCameraMarkerClickHandler((pageId) => {
-      const index = state.pages.findIndex((page) => page.id === pageId);
-      if (index < 0) return;
-      selectPage(pageId);
-      goto(index);
-    });
+    const clearRevealTimers = () => {
+      if (sceneRevealTimerRef.current !== null) {
+        window.clearTimeout(sceneRevealTimerRef.current);
+        sceneRevealTimerRef.current = null;
+      }
+      if (sceneRevealPulseTimerRef.current !== null) {
+        window.clearTimeout(sceneRevealPulseTimerRef.current);
+        sceneRevealPulseTimerRef.current = null;
+      }
+    };
+    const findTarget = (targetId: string): HTMLElement | null => {
+      const panel = panelRef.current;
+      if (!panel) return null;
+      const candidates = [targetId];
+      const layerId = sceneTargetLayerId(targetId);
+      if (layerId && targetId !== `layer:${layerId}`) {
+        candidates.push(`layer:${layerId}`);
+      }
+      for (const candidate of candidates) {
+        const node = panel.querySelector<HTMLElement>(
+          `[data-editor-target="${cssEscape(candidate)}"]`,
+        );
+        if (node) return node;
+      }
+      return null;
+    };
+    const revealTarget = (targetId: string) => {
+      const scheduleRevealWork = (callback: () => void, delayMs: number) => {
+        if (sceneRevealPulseTimerRef.current !== null) {
+          window.clearTimeout(sceneRevealPulseTimerRef.current);
+        }
+        sceneRevealPulseTimerRef.current = window.setTimeout(() => {
+          sceneRevealPulseTimerRef.current = null;
+          callback();
+        }, delayMs);
+      };
+      const pulseTarget = () => {
+        const latestTarget = findTarget(targetId);
+        if (!latestTarget) return;
+        const rawKind = latestTarget.dataset.editorTargetKind;
+        const kind =
+          rawKind === "text"
+            ? "text"
+            : rawKind === "container"
+              ? "container"
+              : "pill";
+        latestTarget.removeAttribute("data-editor-pulse");
+        void latestTarget.offsetWidth;
+        latestTarget.setAttribute("data-editor-pulse", kind);
+      };
+      const scrollAndPulse = (attempt = 0) => {
+        const scroll = panelRef.current?.querySelector<HTMLElement>(
+          ".editor-sidebar-scroll",
+        );
+        const target = findTarget(targetId);
+        if (!scroll || !target) {
+          if (attempt === 0) {
+            scheduleRevealWork(() => scrollAndPulse(1), 80);
+          }
+          return;
+        }
+        const scrollRect = scroll.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        const nextTop =
+          scroll.scrollTop + targetRect.top - scrollRect.top - 12;
+        scroll.scrollTo({
+          top: Math.max(0, nextTop),
+          behavior: sceneRevealScrollBehavior,
+        });
+        scheduleRevealWork(pulseTarget, sceneRevealScrollSettleMs);
+      };
+      const section = layerSectionForTarget(state.manifest.layers, targetId);
+      if (section === "public") {
+        setPublicDataOpenSignal((value) => value + 1);
+      } else if (section === "publicTopo") {
+        setPublicTopoOpenSignal((value) => value + 1);
+      } else if (section === "sectionsCropping") {
+        setSectionsRevealOpenSignal((value) => value + 1);
+      }
+      setSceneRevealTargetId(targetId);
+      scheduleRevealWork(() => scrollAndPulse(), 32);
+    };
+    const handleSceneTargetClick = (event: Event) => {
+      const detail = (event as CustomEvent<{ targetId?: unknown }>).detail;
+      if (!detail || typeof detail.targetId !== "string") return;
+      clearRevealTimers();
+      sceneRevealTimerRef.current = window.setTimeout(() => {
+        sceneRevealTimerRef.current = null;
+        revealTarget(detail.targetId as string);
+      }, sceneRevealDelayMs);
+    };
+    const handleSceneTargetFocus = () => {
+      clearRevealTimers();
+    };
+    window.addEventListener("geosee:scene-target-click", handleSceneTargetClick);
+    window.addEventListener("geosee:scene-target-focus", handleSceneTargetFocus);
     return () => {
-      sceneHandle.setGlobalPageCameraMarkers(null);
-      sceneHandle.setGlobalPageCameraMarkerClickHandler(null);
+      clearRevealTimers();
+      window.removeEventListener(
+        "geosee:scene-target-click",
+        handleSceneTargetClick,
+      );
+      window.removeEventListener(
+        "geosee:scene-target-focus",
+        handleSceneTargetFocus,
+      );
     };
   }, [
-    globalSettingsSelected,
-    goto,
-    sceneHandle,
-    selectPage,
-    showGlobalPageCameras,
-    state.pages,
-    state.presenterMode,
+    sceneRevealDelayMs,
+    sceneRevealScrollBehavior,
+    sceneRevealScrollSettleMs,
+    state.manifest.layers,
   ]);
 
   const clampPanelPosition = useCallback((position: PanelPosition) => {
@@ -646,6 +787,11 @@ export function EditorRoot({
           .editor-action-button:not(:disabled):active {
             transform: translateY(1px) scale(0.985);
           }
+
+          .editor-icon-only-button:not(:disabled):hover {
+            border-color: transparent !important;
+            box-shadow: none !important;
+          }
         `}
       </style>
       <div
@@ -685,18 +831,6 @@ export function EditorRoot({
           >
             {state.manifest.name}
           </div>
-          {showUtahForgeIntake && (
-            <button
-              type="button"
-              className="editor-action-button"
-              style={addToProjectButtonStyle}
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={() => setUtahForgeIntakeOpen(true)}
-              title="Stage small local files under Utah FORGE intake_staging"
-            >
-              Add to Project
-            </button>
-          )}
           <SaveButton />
         </div>
 
@@ -708,19 +842,12 @@ export function EditorRoot({
 
         <div
           className="editor-sidebar-scroll"
-          style={stackStyle}
+          style={editorScrollStyle}
           data-dev-source="src/editor/EditorRoot.tsx:50"
           data-dev-note="stackStyle controls the scrollable sidebar content; global.css hides this scrollbar."
         >
-          <CollapsibleSection title="Page Manager" defaultOpen>
-            <PagePanel
-              sceneHandle={sceneHandle}
-              showGlobalPageCameras={showGlobalPageCameras}
-              onToggleGlobalPageCameras={() =>
-                setShowGlobalPageCameras((value) => !value)
-              }
-              onShowGlobalPageCameras={() => setShowGlobalPageCameras(true)}
-            />
+          <CollapsibleSection title="Page Manager">
+            <PagePanel sceneHandle={sceneHandle} />
           </CollapsibleSection>
           <CollapsibleSection
             title="Visual Studio"
@@ -747,6 +874,7 @@ export function EditorRoot({
                 sceneHandle={sceneHandle}
                 setPageField={setPageField}
                 capturePoseForPage={capturePoseForPage}
+                cameraObjectFocus={cameraObjectFocus}
                 disabled={isTransitioning}
                 pageAccent={pageAccentForPage(
                   selectedPage,
@@ -759,38 +887,44 @@ export function EditorRoot({
           {hasSectionsCropping && (
             <CollapsibleSection
               title="Sections & Cropping"
-              defaultOpen={sectionsCroppingActiveLayerIds.length > 0}
-              openSignal={sectionsCroppingActiveSignal}
+              openSignal={
+                sectionsCroppingActiveSignal && sectionsRevealOpenSignal > 0
+                  ? `${sectionsCroppingActiveSignal}:${sectionsRevealOpenSignal}`
+                  : (sectionsCroppingActiveSignal ??
+                    (sectionsRevealOpenSignal > 0
+                      ? sectionsRevealOpenSignal
+                      : undefined))
+              }
               accentColor={selectedPageAccent}
               closeSignal={selectedPage?.id}
             >
-              <LayerPanel section="sectionsCropping" />
+              <LayerPanel
+                section="sectionsCropping"
+                revealTargetId={sceneRevealTargetId}
+              />
             </CollapsibleSection>
           )}
           {hasPublicTopoMap && (
             <CollapsibleSection
               title="Public Topo Map"
+              openSignal={
+                publicTopoOpenSignal > 0 ? publicTopoOpenSignal : undefined
+              }
               accentColor={selectedPageAccent}
               closeSignal={selectedPage?.id}
             >
-              <LayerPanel section="publicTopo" />
+              <LayerPanel
+                section="publicTopo"
+                revealTargetId={sceneRevealTargetId}
+              />
             </CollapsibleSection>
           )}
           <CollapsibleSection
             title={publicDataTitle}
-            defaultOpen={isCaseStudyB || forgeDataActiveLayerIds.length > 0}
             openSignal={forgeDataActiveSignal}
             accentColor={selectedPageAccent}
           >
-            <LayerPanel section="public" />
-          </CollapsibleSection>
-          <CollapsibleSection
-            title="Customer Data"
-            defaultOpen={isCaseStudyB}
-            accentColor={selectedPageAccent}
-            closeSignal={selectedPage?.id}
-          >
-            <LayerPanel section="customer" />
+            <LayerPanel section="public" revealTargetId={sceneRevealTargetId} />
           </CollapsibleSection>
           <CollapsibleSection
             title="Overlay Box Manager"
@@ -812,11 +946,6 @@ export function EditorRoot({
           onCancel={cancelPreviewLensPrompt}
         />
       )}
-      <UtahForgeAddToProjectDrop
-        open={utahForgeIntakeOpen}
-        projectRoot={state.projectRoot}
-        onClose={() => setUtahForgeIntakeOpen(false)}
-      />
     </>
   );
 }
@@ -827,41 +956,6 @@ function SaveButton() {
   const isSaving = state.saveStatus === "saving";
   const isError = state.saveStatus === "error";
   const isClean = dirtyCount === 0 && !isError;
-  const gui = state.environment.scene?.gui ?? {};
-  const overlay = gui.overlay ?? {};
-  const navigator = gui.navigator ?? {};
-  const navigatorOverride = navigator.useOverride === true;
-  const textColor = navigatorOverride
-    ? navigator.textColor ?? overlay.textColor ?? vibrancyLabel
-    : overlay.textColor ?? vibrancyLabel;
-  const borderColor = navigatorOverride
-    ? navigator.borderColor ?? overlay.borderColor ?? "#ffffff"
-    : overlay.borderColor ?? "#ffffff";
-  const borderAlpha = clamp01(
-    navigatorOverride
-      ? navigator.borderAlpha ?? overlay.borderAlpha ?? 0.2
-      : overlay.borderAlpha ?? 0.2,
-  );
-  const backgroundColor = navigatorOverride
-    ? navigator.backgroundColor ?? overlay.backgroundColor ?? "#121518"
-    : overlay.backgroundColor ?? "#121518";
-  const backgroundAlpha = clamp01(
-    navigatorOverride
-      ? navigator.backgroundAlpha ?? overlay.backgroundAlpha ?? 0.55
-      : overlay.backgroundAlpha ?? 0.55,
-  );
-  const backdropBlur = Math.max(
-    0,
-    navigatorOverride
-      ? navigator.backdropBlurPx ?? overlay.backdropBlurPx ?? 20
-      : overlay.backdropBlurPx ?? 20,
-  );
-  const backdropSaturation = Math.max(
-    0,
-    navigatorOverride
-      ? navigator.backdropSaturation ?? overlay.backdropSaturation ?? 145
-      : overlay.backdropSaturation ?? 145,
-  );
 
   let disabled = false;
   const hasUnsaved = dirtyCount > 0 || isError;
@@ -875,16 +969,20 @@ function SaveButton() {
   return (
     <div
       style={{
+        height: 24,
         display: "inline-flex",
         alignItems: "center",
-        gap: 7,
+        gap: 8,
         flex: "none",
-        marginRight: HEADER_SAVE_TRASH_ALIGN_OFFSET,
       }}
     >
       <span
         style={{
           minWidth: 12,
+          height: 24,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
           textAlign: "right",
           fontSize: 11,
           fontWeight: 700,
@@ -896,25 +994,27 @@ function SaveButton() {
         {dirtyCount}
       </span>
       <button
+        className="editor-action-button"
         style={{
-          width: 28,
-          height: 28,
+          width: 24,
+          height: 24,
+          minWidth: 24,
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
           padding: 0,
-          borderRadius: "50%",
-          border: `1px solid ${hexToRgba(borderColor, borderAlpha)}`,
+          borderRadius: 999,
+          border: "1px solid transparent",
           background: hasUnsaved
             ? "rgba(255, 111, 127, 0.34)"
-            : hexToRgba(backgroundColor, backgroundAlpha),
-          color: textColor,
+            : "rgba(244, 240, 232, 0.066)",
+          color: hasUnsaved ? "#fff0f2" : vibrancyLabel,
           opacity: isSaving ? 0.72 : 1,
           cursor: disabled ? "default" : "pointer",
           boxShadow: "none",
           fontFamily: TECHNICAL_MONO_FONT,
-          backdropFilter: `blur(${backdropBlur}px) saturate(${backdropSaturation}%)`,
-          WebkitBackdropFilter: `blur(${backdropBlur}px) saturate(${backdropSaturation}%)`,
+          lineHeight: 0,
+          boxSizing: "border-box",
         }}
         disabled={disabled}
         onClick={() => void commitPending()}
@@ -1056,8 +1156,8 @@ function PreviewLensPrompt({
 function SaveDiskIcon() {
   return (
     <svg
-      width="12"
-      height="12"
+      width="13"
+      height="13"
       viewBox="0 0 24 24"
       aria-hidden="true"
       focusable="false"
@@ -1188,7 +1288,9 @@ function editorShellStyleFromGui(gui: unknown): React.CSSProperties {
   const borderWidth =
     typeof overlay.borderWidth === "number" ? Math.max(0, overlay.borderWidth) : 1;
   const radius =
-    typeof overlay.radius === "number" ? Math.max(0, overlay.radius) * 2 : 24;
+    typeof overlay.radius === "number"
+      ? Math.max(0, overlay.radius) * 2
+      : EDITOR_DEFAULT_OUTER_RADIUS_PX;
   const blur =
     typeof overlay.backdropBlurPx === "number"
       ? Math.max(0, overlay.backdropBlurPx)

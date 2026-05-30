@@ -81,7 +81,7 @@ Tools for the public topographic map surface and associated cartographic layers.
 | Tool | Description |
 | --- | --- |
 | **Public Topo Map** | Global toolset container for the topographic surface, graticule, title block, and reference layers. Present when the project has topo-tagged layers. |
-| **Topo Settings** | Elevation gradient: low/mid/high color stops, midpoint position, contrast, and blend mode. |
+| **Topo Settings** | Terrain material preset and elevation gradient controls, including the named Utah high-desert/topo preset, low/mid/high color stops, midpoint position, contrast, and blend mode. |
 | **Longitude / Latitude Grid** | Graticule appearance: line spacing, color, width, opacity, and label distance from the surface. |
 | **Title Block** | Upload and position a map title or branding image on the topo surface. Supports anchor and XY offset. |
 | **Reference Layers** | Fine cartographic detail layers (roads, streams, etc.). Controls distance fade near/far, far-plane scale, far opacity, and surface lift. |

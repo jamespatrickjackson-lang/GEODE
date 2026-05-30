@@ -33,6 +33,27 @@ export interface Transition {
   easing: EasingName;
 }
 
+export type RevealScrollBehavior = "auto" | "smooth";
+
+export interface SceneCameraFocusSettings {
+  durationMs?: number;
+  easing?: EasingName;
+  fitPaddingPx?: number;
+  sameTargetZoomFactor?: number;
+  singleClickDelayMs?: number;
+  scrollSettleMs?: number;
+  pulsePillMs?: number;
+  pulseTextMs?: number;
+  pulseStaticMs?: number;
+  revealScrollBehavior?: RevealScrollBehavior;
+  rmbExitDragPx?: number;
+}
+
+export interface CameraObjectFocus {
+  targetId: string;
+  worldPoint: Vec3;
+}
+
 export type DynamicCameraCurve = "linear" | "smooth" | "cinematic";
 
 export interface DynamicCamera {
@@ -819,6 +840,7 @@ export interface SceneProperties {
   // optional lens value overrides page FOV so the whole presentation can be
   // made wider or flatter without re-capturing every page.
   camera?: { fov?: number };
+  cameraFocus?: SceneCameraFocusSettings;
 
   // Lighting rig. Tuned in code defaults; not user-touched in the
   // stripped editor panel except for the studio on/off switch. This is a
@@ -1339,6 +1361,7 @@ export interface PresentationPage {
   accentColor?: string;
   hidden?: boolean;
   camera: Pose;
+  cameraObjectFocus?: CameraObjectFocus;
   dynamicCamera?: DynamicCamera;
   transition: Transition;
   holdDuration: number;

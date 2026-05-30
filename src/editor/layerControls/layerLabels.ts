@@ -50,7 +50,7 @@ export function editorLayerLabel(layer: ProjectLayerSpec): string {
   if (topoLabel) return topoLabel;
   const mtLabels: Record<string, string> = {
     [UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID]: "Phase 3 working area",
-    [UTAH_FORGE_MT_STATIONS_LAYER_ID]: "2D MT station locations",
+    [UTAH_FORGE_MT_STATIONS_LAYER_ID]: "GDR 1255 Station Locations",
     [UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID]:
       "3D MT resistivity full-density model",
     [UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID]: "3D MT top surface",
@@ -69,4 +69,8 @@ export function editorLayerLabel(layer: ProjectLayerSpec): string {
     return label;
   }
   return `${label} (placeholder)`;
+}
+
+export function editorLayerTypeLabel(layer: ProjectLayerSpec): string {
+  return layer.type === "pointcloud" ? "point cloud" : layer.type;
 }

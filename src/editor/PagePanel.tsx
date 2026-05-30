@@ -52,17 +52,9 @@ const PAGE_EASINGS: EasingName[] = [
 
 interface Props {
   sceneHandle: SceneHandle;
-  showGlobalPageCameras: boolean;
-  onToggleGlobalPageCameras: () => void;
-  onShowGlobalPageCameras: () => void;
 }
 
-export function PagePanel({
-  sceneHandle,
-  showGlobalPageCameras,
-  onToggleGlobalPageCameras,
-  onShowGlobalPageCameras,
-}: Props) {
+export function PagePanel({ sceneHandle }: Props) {
   const [hoveredPageId, setHoveredPageId] = useState<string | null>(null);
   const [visualSelectedPageId, setVisualSelectedPageId] = useState<
     string | null
@@ -79,8 +71,12 @@ export function PagePanel({
     setPageField,
     resetPageOverrides,
   } = useEditor();
-  const { currentIndex, goto, isTransitioning, targetIndex } =
-    usePageController();
+  const {
+    currentIndex,
+    goto,
+    isTransitioning,
+    targetIndex,
+  } = usePageController();
   const selectedActionPage =
     state.pages.find((p) => p.id === visualSelectedPageId) ??
     (state.selectedPageId && state.selectedPageId !== ENVIRONMENT_SENTINEL
@@ -173,6 +169,13 @@ export function PagePanel({
     }
   };
 
+  const onDeleteSelected = () => {
+    if (!selectedActionPage || state.pages.length <= 1) return;
+    if (confirm(`Delete page "${selectedActionPage.title}"?`)) {
+      deletePageById(selectedActionPage.id);
+    }
+  };
+
   return (
     <div
       style={panelStyles.body}
@@ -237,38 +240,6 @@ export function PagePanel({
               00.
             </span>
             <span>Global Settings</span>
-          </span>
-          <span style={globalSettingsActionSlotStyle}>
-            <button
-              className="editor-action-button"
-              data-dev-source="src/editor/PagePanel.tsx:195"
-              data-dev-note="Global Settings camera button toggles the in-scene page camera markers."
-              style={pageManagerIconButtonStyle({
-                surface: globalSettingsSelected ? "tinted" : "dark",
-              })}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (globalSettingsSelected) {
-                  onToggleGlobalPageCameras();
-                } else {
-                  selectGlobalSettings();
-                  onShowGlobalPageCameras();
-                }
-              }}
-              title={
-                showGlobalPageCameras
-                  ? "Hide page cameras"
-                  : "Show page cameras"
-              }
-              aria-label={
-                showGlobalPageCameras
-                  ? "Hide page cameras"
-                  : "Show page cameras"
-              }
-              aria-pressed={showGlobalPageCameras}
-            >
-              <CameraIcon />
-            </button>
           </span>
         </div>
       </div>
@@ -350,6 +321,14 @@ export function PagePanel({
                     •
                   </span>
                 )}
+                {p.cameraObjectFocus && (
+                  <span
+                    style={pageFocusCueStyle}
+                    title="Camera object focus saved"
+                  >
+                    F
+                  </span>
+                )}
                 <span
                   style={{ marginRight: 4 }}
                   data-dev-text-source="src/editor/PagePanel.tsx:90"
@@ -396,7 +375,7 @@ export function PagePanel({
                 <button
                   className="editor-action-button"
                   data-dev-source="src/editor/styles.ts:148"
-                  data-dev-note="panelStyles.iconButton controls these reorder/show-hide/delete button circles."
+                  data-dev-note="panelStyles.iconButton controls these reorder and visibility button circles."
                   style={pageManagerIconButtonStyle({
                     surface: actionSurface,
                     disabled: i === 0,
@@ -414,7 +393,7 @@ export function PagePanel({
                 <button
                   className="editor-action-button"
                   data-dev-source="src/editor/styles.ts:148"
-                  data-dev-note="panelStyles.iconButton controls these reorder/show-hide/delete button circles."
+                  data-dev-note="panelStyles.iconButton controls these reorder and visibility button circles."
                   style={pageManagerIconButtonStyle({
                     surface: actionSurface,
                     disabled: i === state.pages.length - 1,
@@ -432,7 +411,7 @@ export function PagePanel({
                 <button
                   className="editor-action-button"
                   data-dev-source="src/editor/styles.ts:148"
-                  data-dev-note="panelStyles.iconButton controls these reorder/show-hide/delete button circles."
+                  data-dev-note="panelStyles.iconButton controls these reorder and visibility button circles."
                   style={pageManagerIconButtonStyle({ surface: actionSurface })}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -443,26 +422,6 @@ export function PagePanel({
                 >
                   {pageHidden ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
-                <button
-                  className="editor-action-button"
-                  data-dev-source="src/editor/styles.ts:148"
-                  data-dev-note="panelStyles.iconButton controls these reorder/show-hide/delete button circles."
-                  style={pageManagerIconButtonStyle({
-                    surface: actionSurface,
-                    disabled: state.pages.length <= 1,
-                  })}
-                  disabled={state.pages.length <= 1}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm(`Delete page "${p.title}"?`)) {
-                      deletePageById(p.id);
-                    }
-                  }}
-                  title="Delete"
-                  aria-label="Delete page"
-                >
-                  <TrashIcon />
-                </button>
               </span>
             </div>
           );
@@ -472,19 +431,21 @@ export function PagePanel({
       <div
         style={pageActionsStyle}
         data-dev-source="src/editor/PagePanel.tsx:280"
-        data-dev-note="pageActionsStyle aligns Pages action buttons to the delete button right edge."
+        data-dev-note="pageActionsStyle aligns Pages footer icon buttons to the page-row action column."
       >
         <span style={pageFooterActionsStyle}>
           <button
             className="editor-action-button"
-            style={pageFooterActionButtonStyle(36)}
+            style={pageFooterActionButtonStyle()}
             onClick={onAdd}
+            title="Add page"
+            aria-label="Add page"
           >
-            Add
+            <AddIcon />
           </button>
           <button
             className="editor-action-button"
-            style={pageFooterActionButtonStyle(76, !selectedActionPage)}
+            style={pageFooterActionButtonStyle(!selectedActionPage)}
             disabled={!selectedActionPage}
             onClick={onDuplicateSelected}
             title={
@@ -492,12 +453,13 @@ export function PagePanel({
                 ? `Duplicate ${selectedActionPage.title}`
                 : "Select a page first"
             }
+            aria-label="Duplicate selected page"
           >
-            Duplicate
+            <DuplicateIcon />
           </button>
           <button
             className="editor-action-button"
-            style={pageFooterActionButtonStyle(44, !selectedActionPage)}
+            style={pageFooterActionButtonStyle(!selectedActionPage)}
             disabled={!selectedActionPage}
             onClick={() => {
               if (!selectedActionPage) return;
@@ -510,8 +472,25 @@ export function PagePanel({
               }
             }}
             title="Strip layer, visibility, exposure, and bloom overrides from the selected page only."
+            aria-label="Reset selected page overrides"
           >
-            Reset
+            <ResetIcon />
+          </button>
+          <button
+            className="editor-action-button"
+            style={pageFooterActionButtonStyle(
+              !selectedActionPage || state.pages.length <= 1,
+            )}
+            disabled={!selectedActionPage || state.pages.length <= 1}
+            onClick={onDeleteSelected}
+            title={
+              selectedActionPage
+                ? `Delete ${selectedActionPage.title}`
+                : "Select a page first"
+            }
+            aria-label="Delete selected page"
+          >
+            <TrashIcon />
           </button>
         </span>
       </div>
@@ -570,23 +549,6 @@ export function VisualStudioPanel({
       style={globalToolPanelBodyStyle}
       onPointerDownCapture={activateGlobalSettings}
     >
-      <RenderPresetContainer
-        title="Cinematic Render Preset"
-        label="Project preset"
-        value={state.environment.renderPreset ?? ""}
-        options={renderPresetOptions}
-        accentColor={accentColor}
-        emptyLabel="Current / Custom"
-        revertLabel="Revert to Current / Custom"
-        saveCustomLabel="Save Custom Preset"
-        updateCustomLabel="Update Selected Custom Preset"
-        showUpdateCustom={selectedProjectPresetIsCustom}
-        onSaveCustom={saveEnvCustomRenderPreset}
-        onUpdateCustom={updateSelectedEnvCustomRenderPreset}
-        onChange={(value) =>
-          setEnvRenderPreset(value ? (value as RenderPresetId) : null)
-        }
-      />
       <EnvironmentScenePanel
         title="Environment"
         onActivate={activateGlobalSettings}
@@ -602,6 +564,25 @@ export function VisualStudioPanel({
         title="Camera Studio"
         onActivate={activateGlobalSettings}
         accentColor={accentColor}
+        topSlot={
+          <RenderPresetContainer
+            title="Cinematic Render Preset"
+            label="Project preset"
+            value={state.environment.renderPreset ?? ""}
+            options={renderPresetOptions}
+            accentColor={accentColor}
+            emptyLabel="Current / Custom"
+            revertLabel="Revert to Current / Custom"
+            saveCustomLabel="Save Custom Preset"
+            updateCustomLabel="Update Selected Custom Preset"
+            showUpdateCustom={selectedProjectPresetIsCustom}
+            onSaveCustom={saveEnvCustomRenderPreset}
+            onUpdateCustom={updateSelectedEnvCustomRenderPreset}
+            onChange={(value) =>
+              setEnvRenderPreset(value ? (value as RenderPresetId) : null)
+            }
+          />
+        }
       />
       <EnvironmentScenePanel
         title="Terrain grid"
@@ -761,7 +742,12 @@ interface DynamicCameraPanelProps {
       Pick<PresentationPage, "dynamicCamera" | "holdDuration">
     >,
   ) => void;
-  capturePoseForPage: (pageId: string, pose: PresentationPage["camera"]) => void;
+  capturePoseForPage: (
+    pageId: string,
+    pose: PresentationPage["camera"],
+    cameraObjectFocus?: PresentationPage["cameraObjectFocus"],
+  ) => void;
+  cameraObjectFocus?: PresentationPage["cameraObjectFocus"] | null;
   pageAccent: string;
 }
 
@@ -771,6 +757,7 @@ export function DynamicCameraPanel({
   disabled,
   setPageField,
   capturePoseForPage,
+  cameraObjectFocus,
   pageAccent,
 }: DynamicCameraPanelProps) {
   const [pickingOrbitCenter, setPickingOrbitCenter] = useState(false);
@@ -810,9 +797,9 @@ export function DynamicCameraPanel({
   const saveCurrentCameraAsPageStart = useCallback(
     (target: Vec3) => {
       const pose = capturePose(sceneHandle.camera, sceneHandle.controls);
-      capturePoseForPage(page.id, { ...pose, target });
+      capturePoseForPage(page.id, { ...pose, target }, cameraObjectFocus ?? undefined);
     },
-    [capturePoseForPage, page.id, sceneHandle],
+    [cameraObjectFocus, capturePoseForPage, page.id, sceneHandle],
   );
 
   const writeOrbitPoint = useCallback(
@@ -915,6 +902,7 @@ export function DynamicCameraPanel({
         historyOpen={historyOpen}
         setHistoryOpen={setHistoryOpen}
         capturePoseForPage={capturePoseForPage}
+        cameraObjectFocus={cameraObjectFocus}
         getPoseHistory={getPoseHistory}
         restorePoseFromHistory={restorePoseFromHistory}
         tweenToPose={tweenToPose}
@@ -1594,6 +1582,7 @@ function DynamicCameraPoseCapture({
   historyOpen,
   setHistoryOpen,
   capturePoseForPage,
+  cameraObjectFocus,
   getPoseHistory,
   restorePoseFromHistory,
   tweenToPose,
@@ -1603,7 +1592,12 @@ function DynamicCameraPoseCapture({
   disabled: boolean;
   historyOpen: boolean;
   setHistoryOpen: (value: boolean | ((value: boolean) => boolean)) => void;
-  capturePoseForPage: (pageId: string, pose: PresentationPage["camera"]) => void;
+  capturePoseForPage: (
+    pageId: string,
+    pose: PresentationPage["camera"],
+    cameraObjectFocus?: PresentationPage["cameraObjectFocus"],
+  ) => void;
+  cameraObjectFocus?: PresentationPage["cameraObjectFocus"] | null;
   getPoseHistory: (pageId: string) => readonly Pose[];
   restorePoseFromHistory: (pageId: string, index: number) => void;
   tweenToPose: (pose: PresentationPage["camera"]) => void;
@@ -1620,7 +1614,7 @@ function DynamicCameraPoseCapture({
           disabled={disabled}
           onClick={() => {
             const pose = capturePose(sceneHandle.camera, sceneHandle.controls);
-            capturePoseForPage(page.id, pose);
+            capturePoseForPage(page.id, pose, cameraObjectFocus ?? undefined);
             setHistoryOpen(false);
           }}
           title={
@@ -1786,6 +1780,15 @@ const dirtyDotStyle: React.CSSProperties = {
   lineHeight: 1,
 };
 
+const pageFocusCueStyle: React.CSSProperties = {
+  color: "#8fd7ff",
+  fontSize: 10,
+  fontWeight: 700,
+  marginRight: 5,
+  lineHeight: 1,
+  letterSpacing: 0,
+};
+
 function pageRowHoverStyle(_accentColor: string): React.CSSProperties {
   return {
     background: "transparent",
@@ -1819,15 +1822,26 @@ const hiddenPageRowStyle: React.CSSProperties = {
 
 type PageManagerActionSurface = "dark" | "tinted";
 
-const PAGE_ROW_ACTION_EXTENT = 168;
-const PAGE_ROW_ACTION_RIGHT_INSET = 26;
+const PAGE_MANAGER_ACTION_SIZE = 24;
+const PAGE_MANAGER_ACTION_GAP = 12;
+const PAGE_ROW_ACTION_EXTENT =
+  PAGE_MANAGER_ACTION_SIZE * 4 + PAGE_MANAGER_ACTION_GAP * 3;
+const PAGE_ROW_ACTION_RIGHT_INSET = EDITOR_PAGE_LIST_INDENT_X + 8;
 const PAGE_MANAGER_DARK_SURFACE_FILL = "rgba(244, 240, 232, 0.066)";
 const PAGE_MANAGER_TINTED_SURFACE_FILL = "rgba(18, 21, 24, 0.192)";
 const PAGE_MANAGER_DISABLED_FILL = "rgba(244, 240, 232, 0.038)";
 
 const pageActionButtonBaseStyle: React.CSSProperties = {
   ...panelStyles.iconButton,
-  color: vibrancySecondaryLabel,
+  width: PAGE_MANAGER_ACTION_SIZE,
+  height: PAGE_MANAGER_ACTION_SIZE,
+  minWidth: PAGE_MANAGER_ACTION_SIZE,
+  flex: `0 0 ${PAGE_MANAGER_ACTION_SIZE}px`,
+  boxSizing: "border-box",
+  lineHeight: 0,
+  padding: 0,
+  alignSelf: "center",
+  color: vibrancyLabel,
 };
 
 function pageManagerActionContrastStyle(
@@ -1848,7 +1862,7 @@ function pageManagerActionContrastStyle(
       surface === "tinted"
         ? PAGE_MANAGER_TINTED_SURFACE_FILL
         : PAGE_MANAGER_DARK_SURFACE_FILL,
-    color: surface === "tinted" ? vibrancyLabel : vibrancySecondaryLabel,
+    color: vibrancyLabel,
     opacity: 1,
     cursor: "pointer",
   };
@@ -1870,22 +1884,25 @@ function pageManagerIconButtonStyle({
 const pageRowActionsStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: 12,
+  justifyContent: "flex-end",
+  gap: PAGE_MANAGER_ACTION_GAP,
+  width: PAGE_ROW_ACTION_EXTENT,
   flex: "none",
   marginLeft: 12,
 };
 
 function pageColorButtonStyle(accentColor: string): React.CSSProperties {
   return {
-    width: 24,
-    height: 24,
+    width: PAGE_MANAGER_ACTION_SIZE,
+    height: PAGE_MANAGER_ACTION_SIZE,
+    flex: `0 0 ${PAGE_MANAGER_ACTION_SIZE}px`,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    boxSizing: "border-box",
     borderRadius: 999,
     cursor: "pointer",
     padding: 0,
-    flex: "none",
     position: "relative",
     overflow: "hidden",
     background: accentColor,
@@ -1911,42 +1928,6 @@ const pageActionSvgStyle: React.CSSProperties = {
   display: "block",
   flex: "none",
 };
-
-const globalSettingsActionSlotStyle: React.CSSProperties = {
-  width: PAGE_ROW_ACTION_EXTENT,
-  height: 24,
-  display: "flex",
-  justifyContent: "flex-end",
-  flex: "none",
-  marginRight: 8,
-};
-
-function CameraIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      focusable="false"
-      style={pageActionSvgStyle}
-    >
-      <path
-        d="M4.5 8.5h3.2l1.15-2h6.3l1.15 2h3.2a1.7 1.7 0 0 1 1.7 1.7v7.1a1.7 1.7 0 0 1-1.7 1.7h-15a1.7 1.7 0 0 1-1.7-1.7v-7.1a1.7 1.7 0 0 1 1.7-1.7Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <circle
-        cx="12"
-        cy="13.7"
-        r="3.15"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-}
 
 function EyeIcon() {
   return (
@@ -1995,6 +1976,64 @@ function EyeOffIcon() {
   );
 }
 
+function AddIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      style={pageActionSvgStyle}
+    >
+      <path
+        d="M12 5v14M5 12h14"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function DuplicateIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      style={pageActionSvgStyle}
+    >
+      <path
+        d="M8 8.5h9.5v9.5H8zM5.5 15.5V6h9.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ResetIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      style={pageActionSvgStyle}
+    >
+      <path
+        d="M5.5 7.5v5h5M6 12a6 6 0 1 0 1.8-4.25L5.5 10"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function TrashIcon() {
   return (
     <svg
@@ -2026,24 +2065,15 @@ const pageActionsStyle: React.CSSProperties = {
 const pageFooterActionsStyle: React.CSSProperties = {
   width: PAGE_ROW_ACTION_EXTENT,
   display: "grid",
-  gridTemplateColumns: "36px 76px 44px",
-  gap: 6,
+  gridTemplateColumns: `repeat(4, ${PAGE_MANAGER_ACTION_SIZE}px)`,
+  justifyContent: "end",
+  gap: PAGE_MANAGER_ACTION_GAP,
 };
 
-function pageFooterActionButtonStyle(
-  width: number,
-  disabled = false,
-): React.CSSProperties {
+function pageFooterActionButtonStyle(disabled = false): React.CSSProperties {
   return {
     ...pageActionButtonBaseStyle,
     ...pageManagerActionContrastStyle("dark", disabled),
-    width,
-    minWidth: width,
-    height: 24,
-    padding: "0 6px",
-    fontSize: 10.5,
-    lineHeight: 1,
-    whiteSpace: "nowrap",
   };
 }
 
@@ -2274,8 +2304,8 @@ const dynamicCameraGroupDisclosureStyle: React.CSSProperties = {
 const dynamicCameraGroupChevronStyle: React.CSSProperties = {
   width: 7,
   height: 7,
-  borderRight: "2px solid rgba(0, 0, 0, 0.74)",
-  borderBottom: "2px solid rgba(0, 0, 0, 0.74)",
+  borderRight: "2px solid rgba(244, 240, 232, 0.82)",
+  borderBottom: "2px solid rgba(244, 240, 232, 0.82)",
   transformOrigin: "center",
   transition: "transform 160ms ease",
 };

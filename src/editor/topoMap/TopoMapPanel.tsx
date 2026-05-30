@@ -59,6 +59,7 @@ import {
   type PublicTopoMaterialPresetId,
   type ResolvedTopoMapSettings,
 } from "../../topoMap/settings";
+import { editorLayerTypeLabel } from "../layerControls/layerLabels";
 import { useTopoGradientHandles } from "./useTopoGradientHandles";
 
 const CLASSIFICATIONS = [
@@ -402,17 +403,17 @@ export function TopoMapPanel({
               >
                 {TOPO_MAP_SURFACE_LABEL}
               </span>
+              <span
+                style={{
+                  ...panelStyles.layerType,
+                  color: terrainEffectiveVisible
+                    ? vibrancySecondaryLabel
+                    : vibrancyTertiaryLabel,
+                }}
+              >
+                ({editorLayerTypeLabel(terrainLayer)})
+              </span>
             </div>
-            <span
-              style={{
-                ...panelStyles.layerType,
-                color: terrainEffectiveVisible
-                  ? vibrancySecondaryLabel
-                  : vibrancyTertiaryLabel,
-              }}
-            >
-              {terrainLayer.type}
-            </span>
           </div>
         ) : null}
         {isEnv ? (
@@ -475,32 +476,36 @@ export function TopoMapPanel({
                   value={sceneFog.color ?? scene.background ?? "#383838"}
                   onChange={(v) => setSceneFog({ color: v })}
                 />
-                <EnvStyleRow
-                  label="Fog dens."
-                  inputType="range"
-                  value={String(sceneFogDensity * 10000)}
-                  min={0.01}
-                  max={6}
-                  step={0.01}
-                  decimals={2}
-                  onChange={(v) =>
-                    setSceneFog({ density: parseFloat(v) / 10000 })
-                  }
-                />
-                <EnvStyleRow
-                  label="Fog reach"
-                  inputType="range"
-                  value={String(sceneFogReachKm)}
-                  min={5}
-                  max={3000}
-                  step={5}
-                  decimals={0}
-                  onChange={(v) =>
-                    setSceneFog({
-                      density: 3 / Math.max(parseFloat(v) * 1000, 1),
-                    })
-                  }
-                />
+                {sceneFogEnabled ? (
+                  <>
+                    <EnvStyleRow
+                      label="Fog dens."
+                      inputType="range"
+                      value={String(sceneFogDensity * 10000)}
+                      min={0.01}
+                      max={6}
+                      step={0.01}
+                      decimals={2}
+                      onChange={(v) =>
+                        setSceneFog({ density: parseFloat(v) / 10000 })
+                      }
+                    />
+                    <EnvStyleRow
+                      label="Fog reach"
+                      inputType="range"
+                      value={String(sceneFogReachKm)}
+                      min={5}
+                      max={3000}
+                      step={5}
+                      decimals={0}
+                      onChange={(v) =>
+                        setSceneFog({
+                          density: 3 / Math.max(parseFloat(v) * 1000, 1),
+                        })
+                      }
+                    />
+                  </>
+                ) : null}
               </>
             )}
             <EzGammaCheckboxRow
@@ -510,32 +515,38 @@ export function TopoMapPanel({
                 setPublicTopoLayerStyle({ affectedByFog: checked })
               }
             />
-            <EnvStyleRow
-              label="Layer dens."
-              inputType="range"
-              value={String(topoFogDensity * 10000)}
-              min={0.01}
-              max={6}
-              step={0.01}
-              decimals={2}
-              onChange={(v) =>
-                setPublicTopoLayerStyle({ fogDensity: parseFloat(v) / 10000 })
-              }
-            />
-            <EnvStyleRow
-              label="Layer reach"
-              inputType="range"
-              value={String(topoFogReachKm)}
-              min={5}
-              max={3000}
-              step={5}
-              decimals={0}
-              onChange={(v) =>
-                setPublicTopoLayerStyle({
-                  fogDensity: 3 / Math.max(parseFloat(v) * 1000, 1),
-                })
-              }
-            />
+            {topoFogIncluded ? (
+              <>
+                <EnvStyleRow
+                  label="Layer dens."
+                  inputType="range"
+                  value={String(topoFogDensity * 10000)}
+                  min={0.01}
+                  max={6}
+                  step={0.01}
+                  decimals={2}
+                  onChange={(v) =>
+                    setPublicTopoLayerStyle({
+                      fogDensity: parseFloat(v) / 10000,
+                    })
+                  }
+                />
+                <EnvStyleRow
+                  label="Layer reach"
+                  inputType="range"
+                  value={String(topoFogReachKm)}
+                  min={5}
+                  max={3000}
+                  step={5}
+                  decimals={0}
+                  onChange={(v) =>
+                    setPublicTopoLayerStyle({
+                      fogDensity: 3 / Math.max(parseFloat(v) * 1000, 1),
+                    })
+                  }
+                />
+              </>
+            ) : null}
           </div>
         </details>
         {!isEnv ? (
@@ -1802,17 +1813,17 @@ function TopoGraticulePanel({
           >
             {layer.label ?? "Longitude / latitude grid"}
           </span>
+          <span
+            style={{
+              ...panelStyles.layerType,
+              color: effectiveVisible
+                ? vibrancySecondaryLabel
+                : vibrancyTertiaryLabel,
+            }}
+          >
+            ({editorLayerTypeLabel(layer)})
+          </span>
         </div>
-        <span
-          style={{
-            ...panelStyles.layerType,
-            color: effectiveVisible
-              ? vibrancySecondaryLabel
-              : vibrancyTertiaryLabel,
-          }}
-        >
-          {layer.type}
-        </span>
       </div>
       {isEnv ? (
         <EnvVisibilityRow

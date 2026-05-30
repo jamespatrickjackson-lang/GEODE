@@ -165,6 +165,7 @@ export type EditorAction =
           | "sunLockToCamera"
           | "renderPreset"
           | "renderPresetId"
+          | "cameraObjectFocus"
         >
       >;
     }
@@ -173,7 +174,12 @@ export type EditorAction =
       pageId: string;
       patch: Partial<{ duration: number; easing: EasingName }>;
     }
-  | { type: "CAPTURE_POSE"; pageId: string; pose: Pose }
+  | {
+      type: "CAPTURE_POSE";
+      pageId: string;
+      pose: Pose;
+      cameraObjectFocus?: PresentationPage["cameraObjectFocus"];
+    }
   | { type: "RESTORE_POSE_FROM_HISTORY"; pageId: string; index: number }
   | {
       type: "SET_PAGE_OVERLAY_LAYOUT";

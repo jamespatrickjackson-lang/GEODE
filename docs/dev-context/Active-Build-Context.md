@@ -91,6 +91,11 @@ label-offset extensions, and topo graticule lines/labels are excluded from
 scene-section clipping. Terrain underside grid helpers use camera-side hysteresis
 so they do not chatter during small camera movements.
 
+The current Utah FORGE public topo surface uses the named `Utah` material
+preset: khaki desert lows, muted sage/tree middle elevations, and warm
+snow/rock high peaks. This is a reusable five-stop terrain shader preset, not a
+new raster or CRS transform.
+
 Camera far-plane clipping is not a visual crop. Topo imagery, terrain context,
 and longitude/latitude graticules must remain inside the scene frustum during
 normal presentation overview zooms. Use authored public surface crop, scene

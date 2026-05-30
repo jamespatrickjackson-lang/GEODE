@@ -815,3 +815,23 @@ Each decision records:
 **Why:** Utah FORGE data is authored in UTM, but geological section presentation sometimes needs true-cardinal frame geometry and sometimes needs labels as local distance or longitude/latitude. Bundling those concerns would make geometry and text behavior ambiguous. Per-frame settings keep old pages unchanged while allowing a single page to mix UTM, cardinal, local-distance, and lat/lon section readouts.
 
 **Trade-off accepted:** `axisAlignment` defaults to `"utm"` and `axisDatum` defaults to `"utm"` for all persisted projects, so existing frames render unchanged. If a UTM zone cannot be resolved from the active source CRS, cardinal alignment falls back to UTM geometry. Local datum origins default to the frame center in absolute UTM metres. Lat/lon labels use the existing UTM conversion helpers extracted for shared runtime use rather than introducing a new projection dependency.
+
+## DEC-080 - Scene clicks reveal editor rows and double-clicks lock camera focus
+
+**Considered:** keep viewport picking limited to specialised tools such as MT station selection and seismic product selection, or add a shared scene-target interaction path for editor reveal and camera inspection.
+
+**Chose:** scene picking emits additive target events with stable ids (`layer:<layerId>` and `product:<layerId>:<productId>`). Single click reveals the owning editor row without opening nested disclosure sections. Double click enters camera object focus at the exact picked world point and uses the target bounds only to compute fit distance. Focus persists until right mouse button release or page navigation releases it.
+
+**Why:** Large editor panels make manual layer discovery slow, and large scene objects are difficult to inspect when the orbit target stays elsewhere. A shared picking contract keeps MT/seismic side effects intact while giving every visible scene object a predictable reveal and focus affordance.
+
+**Trade-off accepted:** `DEC-079` remains reserved for Sub Master pages. Camera focus settings live under global `SceneProperties.cameraFocus`, while per-page `cameraObjectFocus` stores only the durable target id and picked world point. Focus is re-engaged after a page's normal transition; missing saved targets log a warning and leave the camera at the transitioned pose. This does not introduce a second camera tween pipeline: the existing `CameraTweener` remains the sole focus transition path.
+
+## DEC-081 - Utah public topo gradient is a named terrain preset
+
+**Considered:** keep Utah FORGE topo colour as an ad hoc `surface-elevation` edit in `environment.json`, or add a reusable named Public Topo Map material preset.
+
+**Chose:** add a built-in `Utah` public topo material preset. The preset uses a five-stop ramp derived from regional satellite colour reads: khaki desert floor, muted alluvial/sage tones, pastel green tree belts, darker forested relief, and warm snow/rock peaks. Utah FORGE's active terrain default points at this preset.
+
+**Why:** The regional public topo map needs a recognizable Utah high-desert read without behaving like a custom one-off. A named preset keeps the editor affordance clear, lets authors reselect the same style after experimentation, and avoids changing terrain data, CRS, camera, graticule, or geophysical products.
+
+**Trade-off accepted:** This is visual presentation only. The terrain raster, elevation range, topo graticules, public surface crop, and MT/seismic products remain unchanged. The preset still uses the existing five-stop surface-elevation shader model, so future palette refinements should update the preset and Utah FORGE default together rather than hand-editing only persisted project JSON.

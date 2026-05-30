@@ -148,12 +148,12 @@
       "fogDensity": 0.00002
     },
     "utah-forge-topo-graticule": {
-      "color": "#37f312",
-      "opacity": 1,
-      "lineWidth": 5,
+      "color": "#5e5e5e",
+      "opacity": 0.55,
+      "lineWidth": 4.75,
       "graticuleLabelVisible": true,
       "graticuleLabelSizeM": 29000,
-      "graticuleLiftM": 168,
+      "graticuleLiftM": 228,
       "graticuleEdgeFadeAware": true,
       "graticuleEdgeFadeStrength": 1,
       "graticuleEdgeLineColor": "#d4d4d4",
@@ -167,7 +167,10 @@
       "fogDensity": 0.00002,
       "graticulePerspectiveLineWidth": false,
       "graticuleRibbonMode": true,
-      "graticuleRibbonWidthM": 825
+      "graticuleRibbonWidthM": 825,
+      "graticuleLeaderBlendEnabled": true,
+      "topoSectionable": true,
+      "graticuleMinorOpacity": 0.25
     },
     "transport-roads": {
       "color": "#5a4f3d",
@@ -196,13 +199,15 @@
       "fogDensity": 0.00002
     },
     "utah-forge-mt-stations": {
-      "color": "#999999",
-      "opacity": 0.55,
-      "pointMarkerRadiusM": 500,
+      "color": "#6f6767",
+      "opacity": 1,
+      "pointMarkerRadiusM": 350,
       "pointMarkerLiftM": 750,
       "pointMarkerLabelLiftM": 0,
       "affectedByFog": false,
-      "showLabels": false
+      "showLabels": false,
+      "mtStationQcSelectedStationId": "FRG19100",
+      "mtStationQcPanelOpen": true
     },
     "utah-forge-mt-resistivity-preview": {
       "opacity": 0.7,
@@ -477,10 +482,10 @@
       "sectionIsoEnabled": false
     },
     "utah-forge-scene-section-planes": {
-      "sceneSectionEnabled": true,
+      "sceneSectionEnabled": false,
       "sceneSectionMode": "cutaway",
       "sceneSectionTargetScope": "all-visible",
-      "sceneSectionActiveAxis": "y",
+      "sceneSectionActiveAxis": "x",
       "sceneSectionPlanes": {
         "x": {
           "enabled": false,
@@ -522,7 +527,61 @@
       "sceneSectionAxesVisible": true,
       "sceneSectionLegendVisible": true,
       "affectedByFog": false,
-      "showLabels": false
+      "showLabels": false,
+      "sceneSectionFrames": [
+        {
+          "id": "axis:x",
+          "label": "X Section frame",
+          "legendVisible": true,
+          "axis": "x",
+          "plane": {
+            "enabled": true,
+            "positionM": -5753.338077166321,
+            "invert": false
+          },
+          "frame": {
+            "axisAlignment": "cardinal",
+            "axisAHeading": "Latitude (°)",
+            "axisBHeading": "Elevation (km)",
+            "axisDatum": "latlon"
+          }
+        },
+        {
+          "id": "axis:y",
+          "label": "Y Section frame",
+          "legendVisible": true,
+          "axis": "y",
+          "plane": {
+            "enabled": false,
+            "positionM": -14276.695748094688,
+            "invert": false
+          },
+          "frame": {}
+        },
+        {
+          "id": "axis:z",
+          "label": "Z Section frame",
+          "legendVisible": true,
+          "axis": "z",
+          "plane": {
+            "enabled": false,
+            "positionM": -2200,
+            "invert": false
+          },
+          "frame": {}
+        }
+      ],
+      "sceneSectionActiveFrameId": "axis:x",
+      "sceneSectionFrameEnabled": true,
+      "sceneSectionFrameByAxis": {
+        "x": {
+          "axisAlignment": "cardinal",
+          "axisAHeading": "Latitude (°)",
+          "axisBHeading": "Elevation (km)",
+          "axisDatum": "latlon"
+        }
+      },
+      "sceneSectionWindowActiveAxis": "x"
     },
     "utah-forge-mt-top-contact-surface": {
       "color": "#f8dd6d",
@@ -540,7 +599,9 @@
     "utah-forge-site-boundary",
     "utah-forge-phase3-demo-boreholes",
     "utah-forge-mt-resistivity-volume",
-    "utah-forge-mt-resistivity-full-density"
+    "utah-forge-mt-resistivity-full-density",
+    "utah-forge-mt-stations",
+    "terrain"
   ],
   "scene": {
     "background": "#383838",
@@ -609,30 +670,30 @@
       "threshold": 0.86
     },
     "terrain": {
-      "materialPreset": "image:naip-2024-aerial",
-      "rampLow": "#575145",
-      "rampMid": "#958a72",
-      "rampHigh": "#d9cba3",
+      "materialPreset": "utah",
+      "rampLow": "#5f594c",
+      "rampMid": "#8ea083",
+      "rampHigh": "#e9e4d8",
       "elevLowM": 0,
-      "elevHighM": 180,
-      "surfaceElevationEnabled": false,
+      "elevHighM": 220,
+      "surfaceElevationEnabled": true,
       "surfaceElevationLegendVisible": true,
       "surfaceElevationColors": [
-        "#5147b8",
-        "#2e8fd8",
-        "#4fc3c7",
-        "#93d66b",
-        "#fff24d"
+        "#8b806c",
+        "#b5aa8d",
+        "#8ea083",
+        "#53675c",
+        "#f1eee4"
       ],
-      "hillshadeIntensity": 0.86,
-      "rockHueVariance": 0,
-      "shadowSharpness": 0.34,
-      "facetStrength": 0.04,
+      "hillshadeIntensity": 0.94,
+      "rockHueVariance": 0.035,
+      "shadowSharpness": 0.32,
+      "facetStrength": 0.05,
       "edgeFadeDistanceM": 15000,
       "edgeFadeShape": "rounded-square",
       "edgeFadeInsetM": 0,
       "edgeFadeCornerRadiusM": 95000,
-      "shadowTint": "#303640",
+      "shadowTint": "#2c302e",
       "gridEnabled": false,
       "gridColor": "#d7d1c7",
       "gridOpacity": 0.34,
@@ -705,8 +766,8 @@
           ]
         }
       ],
-      "orthoPhotoTextureBudget": 4096,
-      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_4096.webp",
+      "orthoPhotoTextureBudget": 8192,
+      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_8192.webp",
       "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_4096.webp",
       "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_8192.webp",
       "orthoPhotoBounds": [
@@ -715,7 +776,7 @@
         385650,
         4279999.8
       ],
-      "orthoPhotoOpacity": 1,
+      "orthoPhotoOpacity": 0,
       "orthoPhotoHillshadeBlend": 0.12,
       "orthoPhotoBrightness": 0.08,
       "orthoPhotoContrast": 1.28,
@@ -752,20 +813,21 @@
       "surfaceElevationMaxM": 3500,
       "surfaceElevationColorPositions": [
         0,
-        0.25,
-        0.5,
-        0.75,
+        0.34,
+        0.58,
+        0.8745431075202879,
         1
       ],
       "surfaceElevationMidpoints": [
-        0.5,
-        0.5,
-        0.5,
-        0.5
+        0.58,
+        0.44,
+        0.52,
+        0.6684269618243944
       ],
       "surfaceElevationTransitionSoftness": 1,
-      "surfaceElevationColorBlend": 1,
-      "surfaceElevationReverse": false
+      "surfaceElevationColorBlend": 0.92,
+      "surfaceElevationReverse": false,
+      "edgeTopShine": 0
     },
     "gui": {
       "overlay": {
@@ -1622,11 +1684,11 @@
         },
         "terrain": {
           "materialPreset": "ortho-photo",
-          "rampLow": "#575145",
-          "rampMid": "#958a72",
-          "rampHigh": "#d9cba3",
+          "rampLow": "#5f594c",
+          "rampMid": "#8ea083",
+          "rampHigh": "#e9e4d8",
           "elevLowM": 0,
-          "elevHighM": 180,
+          "elevHighM": 220,
           "surfaceElevationEnabled": false,
           "surfaceElevationLegendVisible": true,
           "surfaceElevationColors": [
@@ -1636,15 +1698,15 @@
             "#93d66b",
             "#fff24d"
           ],
-          "hillshadeIntensity": 0.86,
-          "rockHueVariance": 0,
-          "shadowSharpness": 0.34,
-          "facetStrength": 0.04,
+          "hillshadeIntensity": 0.94,
+          "rockHueVariance": 0.035,
+          "shadowSharpness": 0.32,
+          "facetStrength": 0.05,
           "edgeFadeDistanceM": 15000,
           "edgeFadeShape": "rounded-square",
           "edgeFadeInsetM": 0,
           "edgeFadeCornerRadiusM": 95000,
-          "shadowTint": "#303640",
+          "shadowTint": "#2c302e",
           "gridEnabled": false,
           "gridColor": "#d7d1c7",
           "gridOpacity": 0.34,
@@ -2022,9 +2084,9 @@
           "sectionIsoLineWidth": 1.2
         },
         "utah-forge-scene-section-planes": {
-          "sceneSectionEnabled": true,
+          "sceneSectionEnabled": false,
           "sceneSectionMode": "cutaway",
-          "sceneSectionActiveAxis": "y",
+          "sceneSectionActiveAxis": "x",
           "sceneSectionTargetScope": "all-visible",
           "sceneSectionTargetLayerIds": [
             "utah-forge-mt-resistivity-volume",
@@ -2062,19 +2124,76 @@
               "positionM": -2200,
               "invert": false
             }
-          }
+          },
+          "sceneSectionFrames": [
+            {
+              "id": "axis:x",
+              "label": "X Section frame",
+              "legendVisible": true,
+              "axis": "x",
+              "plane": {
+                "enabled": true,
+                "positionM": -5753.338077166321,
+                "invert": false
+              },
+              "frame": {
+                "axisAlignment": "cardinal",
+                "axisAHeading": "Latitude (°)",
+                "axisBHeading": "Elevation (km)",
+                "axisDatum": "latlon"
+              }
+            },
+            {
+              "id": "axis:y",
+              "label": "Y Section frame",
+              "legendVisible": true,
+              "axis": "y",
+              "plane": {
+                "enabled": false,
+                "positionM": -14276.695748094688,
+                "invert": false
+              },
+              "frame": {}
+            },
+            {
+              "id": "axis:z",
+              "label": "Z Section frame",
+              "legendVisible": true,
+              "axis": "z",
+              "plane": {
+                "enabled": false,
+                "positionM": -2200,
+                "invert": false
+              },
+              "frame": {}
+            }
+          ],
+          "sceneSectionActiveFrameId": "axis:x",
+          "sceneSectionFrameEnabled": true,
+          "sceneSectionFrameByAxis": {
+            "x": {
+              "axisAlignment": "cardinal",
+              "axisAHeading": "Latitude (°)",
+              "axisBHeading": "Elevation (km)",
+              "axisDatum": "latlon"
+            }
+          },
+          "sceneSectionWindowActiveAxis": "x"
         },
         "utah-forge-topo-graticule": {
-          "opacity": 1,
-          "color": "#37f312",
+          "opacity": 0.55,
+          "color": "#5e5e5e",
           "graticuleEdgeFadeAware": true,
-          "graticuleLiftM": 168,
-          "lineWidth": 5,
+          "graticuleLiftM": 228,
+          "lineWidth": 4.75,
           "graticulePerspectiveLineWidth": false,
           "graticuleEdgeLabelVisible": true,
           "graticuleRibbonMode": true,
           "graticuleEdgeLineWidth": 18.1,
-          "graticuleRibbonWidthM": 825
+          "graticuleRibbonWidthM": 825,
+          "graticuleLeaderBlendEnabled": true,
+          "topoSectionable": true,
+          "graticuleMinorOpacity": 0.25
         },
         "utah-forge-phase3-demo-boreholes": {
           "demoBoreholeBlock": {
@@ -2142,6 +2261,14 @@
               "toeLabelLiftM": 40
             }
           }
+        },
+        "utah-forge-mt-stations": {
+          "opacity": 1,
+          "color": "#6f6767",
+          "pointMarkerLabelLiftM": 0,
+          "pointMarkerRadiusM": 350,
+          "mtStationQcSelectedStationId": "FRG19100",
+          "mtStationQcPanelOpen": true
         }
       }
     }

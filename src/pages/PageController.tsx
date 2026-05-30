@@ -10,16 +10,24 @@ import {
 import type { ReactNode } from "react";
 import * as THREE from "three";
 import type {
+  CameraObjectFocus,
   DynamicCamera,
   DynamicCameraCurve,
   EditableStyle,
+  EasingName,
   EnvironmentSetup,
   PresentationPage,
+  SceneCameraFocusSettings,
 } from "./types";
 import type { Pose } from "./types";
-import type { SceneHandle } from "../scene";
+import type { SceneHandle, SceneTargetBox, SceneTargetEventDetail } from "../scene";
 import { CameraTweener } from "./cameraTween";
 import { applyPose } from "./capturePose";
+import {
+  poseForFocusFit,
+  poseForFocusZoom,
+  vec3FromArray,
+} from "../scene/cameraFocus";
 
 // PageController owns:
 //   - which page is "captured" as current (currentIndex)
@@ -38,6 +46,7 @@ interface PageControllerValue {
   transitionProgress: number;
   isTransitioning: boolean;
   freelookActive: boolean;
+  cameraObjectFocus: CameraObjectFocus | null;
   goto: (index: number, reason?: NavigationReason) => void;
   next: () => void;
   prev: () => void;
@@ -63,6 +72,109 @@ interface SceneTransitionContext {
   durationMs: number;
   sourcePose: Pose;
   targetPose: Pose;
+}
+
+const DEFAULT_CAMERA_FOCUS_SETTINGS: Required<SceneCameraFocusSettings> = {
+  durationMs: 900,
+  easing: "easeOutCubic",
+  fitPaddingPx: 500,
+  sameTargetZoomFactor: 0.7,
+  singleClickDelayMs: 250,
+  scrollSettleMs: 250,
+  pulsePillMs: 600,
+  pulseTextMs: 480,
+  pulseStaticMs: 1200,
+  revealScrollBehavior: "smooth",
+  rmbExitDragPx: 0,
+};
+
+function clampNumber(
+  value: number | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  return typeof value === "number" && Number.isFinite(value)
+    ? THREE.MathUtils.clamp(value, min, max)
+    : fallback;
+}
+
+function resolveCameraFocusSettings(
+  settings?: SceneCameraFocusSettings,
+): Required<SceneCameraFocusSettings> {
+  return {
+    durationMs: clampNumber(
+      settings?.durationMs,
+      DEFAULT_CAMERA_FOCUS_SETTINGS.durationMs,
+      0,
+      5000,
+    ),
+    easing: settings?.easing ?? DEFAULT_CAMERA_FOCUS_SETTINGS.easing,
+    fitPaddingPx: clampNumber(
+      settings?.fitPaddingPx,
+      DEFAULT_CAMERA_FOCUS_SETTINGS.fitPaddingPx,
+      0,
+      2000,
+    ),
+    sameTargetZoomFactor: clampNumber(
+      settings?.sameTargetZoomFactor,
+      DEFAULT_CAMERA_FOCUS_SETTINGS.sameTargetZoomFactor,
+      0.05,
+      1.5,
+    ),
+    singleClickDelayMs: clampNumber(
+      settings?.singleClickDelayMs,
+      DEFAULT_CAMERA_FOCUS_SETTINGS.singleClickDelayMs,
+      120,
+      500,
+    ),
+    scrollSettleMs: clampNumber(
+      settings?.scrollSettleMs,
+      DEFAULT_CAMERA_FOCUS_SETTINGS.scrollSettleMs,
+      80,
+      800,
+    ),
+    pulsePillMs: clampNumber(
+      settings?.pulsePillMs,
+      DEFAULT_CAMERA_FOCUS_SETTINGS.pulsePillMs,
+      200,
+      1600,
+    ),
+    pulseTextMs: clampNumber(
+      settings?.pulseTextMs,
+      DEFAULT_CAMERA_FOCUS_SETTINGS.pulseTextMs,
+      200,
+      1600,
+    ),
+    pulseStaticMs: clampNumber(
+      settings?.pulseStaticMs,
+      DEFAULT_CAMERA_FOCUS_SETTINGS.pulseStaticMs,
+      400,
+      3000,
+    ),
+    revealScrollBehavior:
+      settings?.revealScrollBehavior === "auto"
+        ? "auto"
+        : DEFAULT_CAMERA_FOCUS_SETTINGS.revealScrollBehavior,
+    rmbExitDragPx: clampNumber(
+      settings?.rmbExitDragPx,
+      DEFAULT_CAMERA_FOCUS_SETTINGS.rmbExitDragPx,
+      0,
+      24,
+    ),
+  };
+}
+
+function boxFromSceneTargetBox(box: SceneTargetBox | null): THREE.Box3 | null {
+  if (!box) return null;
+  return new THREE.Box3(vec3FromArray(box.min), vec3FromArray(box.max));
+}
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return false;
+  }
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 export type PreviewLayerOverrideFields = Readonly<
@@ -463,6 +575,8 @@ export function PageControllerProvider({
   const [transitionProgress, setTransitionProgress] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [freelookActive, setFreelookActive] = useState(false);
+  const [cameraObjectFocus, setCameraObjectFocus] =
+    useState<CameraObjectFocus | null>(null);
 
   const tweenerRef = useRef<CameraTweener | null>(null);
   const arrivalPoseRef = useRef<PresentationPage["camera"] | null>(null);
@@ -503,6 +617,9 @@ export function PageControllerProvider({
   const currentCameraKeyRef = useRef<string | null>(null);
   const isTransitioningRef = useRef(false);
   const suppressControlsChangeRef = useRef(false);
+  const cameraObjectFocusRef = useRef<CameraObjectFocus | null>(null);
+  const focusTweeningRef = useRef(false);
+  const focusPreviousPanEnabledRef = useRef<boolean | null>(null);
   const pagesRef = useRef(pages);
   const currentIndexRef = useRef(currentIndex);
   const targetIndexRef = useRef<number | null>(targetIndex);
@@ -517,6 +634,7 @@ export function PageControllerProvider({
   currentIndexRef.current = currentIndex;
   targetIndexRef.current = targetIndex;
   freelookActiveRef.current = freelookActive;
+  cameraObjectFocusRef.current = cameraObjectFocus;
 
   const resolvePresentationState = useCallback(
     (
@@ -532,6 +650,50 @@ export function PageControllerProvider({
         : { environment: env, page: layerPage };
     },
     [previewEnvironmentBase, previewLayerOverrideFields],
+  );
+
+  const setFocusState = useCallback((focus: CameraObjectFocus | null) => {
+    cameraObjectFocusRef.current = focus;
+    setCameraObjectFocus(focus);
+  }, []);
+
+  const releaseCameraFocus = useCallback(
+    (reason: "rmb" | "navigation" | "pose" | "missing-target") => {
+      const hadFocus = cameraObjectFocusRef.current !== null;
+      const wasTweening = focusTweeningRef.current;
+      if (!hadFocus && !wasTweening) return;
+      focusTweeningRef.current = false;
+      setFocusState(null);
+      if (focusPreviousPanEnabledRef.current !== null) {
+        sceneHandle.controls.enablePan = focusPreviousPanEnabledRef.current;
+        focusPreviousPanEnabledRef.current = null;
+      }
+      window.dispatchEvent(
+        new CustomEvent("geosee:camera-focus-released", {
+          detail: { reason },
+        }),
+      );
+    },
+    [sceneHandle.controls, setFocusState],
+  );
+
+  const activateCameraFocus = useCallback(
+    (focus: CameraObjectFocus) => {
+      focusTweeningRef.current = false;
+      if (focusPreviousPanEnabledRef.current === null) {
+        focusPreviousPanEnabledRef.current = sceneHandle.controls.enablePan;
+      }
+      sceneHandle.controls.enablePan = false;
+      setFocusState(focus);
+      freelookActiveRef.current = false;
+      setFreelookActive(false);
+    },
+    [sceneHandle.controls, setFocusState],
+  );
+
+  const focusSettings = useCallback(
+    () => resolveCameraFocusSettings(environmentRef.current.scene?.cameraFocus),
+    [],
   );
 
   // One-time wiring against the scene handle.
@@ -568,6 +730,18 @@ export function PageControllerProvider({
       firstResolved.environment,
       firstResolved.page,
     );
+    if (first.cameraObjectFocus) {
+      const resolvedTarget = sceneHandle.resolveSceneTarget(
+        first.cameraObjectFocus.targetId,
+      );
+      if (resolvedTarget) {
+        activateCameraFocus(first.cameraObjectFocus);
+      } else {
+        console.warn(
+          `[GeoSee] Saved camera object focus target missing: ${first.cameraObjectFocus.targetId}`,
+        );
+      }
+    }
 
     const readCurrentPose = (): Pose => ({
       position: [camera.position.x, camera.position.y, camera.position.z],
@@ -593,7 +767,14 @@ export function PageControllerProvider({
     };
 
     const applyDynamicCamera = (timeMs: number) => {
-      if (isTransitioningRef.current || freelookActiveRef.current) return;
+      if (
+        isTransitioningRef.current ||
+        freelookActiveRef.current ||
+        focusTweeningRef.current ||
+        cameraObjectFocusRef.current
+      ) {
+        return;
+      }
       const page = pagesRef.current[currentIndexRef.current];
       const dynamic = page?.dynamicCamera;
       if (!page || dynamic?.enabled !== true) {
@@ -701,11 +882,31 @@ export function PageControllerProvider({
       if (done) pageTransitionRef.current = null;
     };
 
+    const applyLockedCameraFocus = () => {
+      const focus = cameraObjectFocusRef.current;
+      if (!focus || focusTweeningRef.current) return;
+      if (focusPreviousPanEnabledRef.current === null) {
+        focusPreviousPanEnabledRef.current = controls.enablePan;
+      }
+      controls.enablePan = false;
+      const point = vec3FromArray(focus.worldPoint);
+      if (!controls.target.equals(point)) {
+        controls.target.copy(point);
+        suppressControlsChangeRef.current = true;
+        try {
+          controls.update();
+        } finally {
+          suppressControlsChangeRef.current = false;
+        }
+      }
+    };
+
     const offTick = onTick((t) => {
       tweener.update(t);
       applyPageTransitionProgress(t);
       applyTransitionDynamicCamera(t);
       applyDynamicCamera(t);
+      applyLockedCameraFocus();
     });
 
     const onChange = () => {
@@ -720,6 +921,93 @@ export function PageControllerProvider({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const tweenToCameraObjectFocus = useCallback(
+    (detail: SceneTargetEventDetail) => {
+      const tweener = tweenerRef.current;
+      if (!tweener) return;
+      const settings = focusSettings();
+      const focus: CameraObjectFocus = {
+        targetId: detail.targetId,
+        worldPoint: detail.worldPoint,
+      };
+      const focusPoint = vec3FromArray(detail.worldPoint);
+      const sameTarget =
+        cameraObjectFocusRef.current?.targetId === detail.targetId;
+      const viewport = {
+        width: sceneHandle.renderer.domElement.clientWidth,
+        height: sceneHandle.renderer.domElement.clientHeight,
+      };
+      const targetPose = sameTarget
+        ? poseForFocusZoom({
+            camera: sceneHandle.camera,
+            focusPoint,
+            zoomFactor: settings.sameTargetZoomFactor,
+          })
+        : poseForFocusFit({
+            camera: sceneHandle.camera,
+            focusPoint,
+            worldBox: boxFromSceneTargetBox(detail.worldBox),
+            viewport,
+            paddingPx: settings.fitPaddingPx,
+          });
+      focusTweeningRef.current = true;
+      freelookActiveRef.current = false;
+      setFreelookActive(false);
+      sceneHandle.setRaycastEnabled(false);
+      const finish = () => {
+        arrivalPoseRef.current = targetPose;
+        dynamicBasePoseRef.current = targetPose;
+        dynamicPageIdRef.current = null;
+        dynamicStartMsRef.current = null;
+        dynamicOrbitBlendMsRef.current = null;
+        sceneHandle.setRaycastEnabled(true);
+        activateCameraFocus(focus);
+      };
+      if (prefersReducedMotion() || settings.durationMs <= 0) {
+        applyPose(sceneHandle.camera, sceneHandle.controls, targetPose);
+        finish();
+        return;
+      }
+      tweener.tweenTo(
+        targetPose,
+        settings.durationMs,
+        settings.easing as EasingName,
+        finish,
+      );
+    },
+    [activateCameraFocus, focusSettings, sceneHandle],
+  );
+
+  useEffect(() => {
+    const handleFocus = (event: Event) => {
+      const detail = (event as CustomEvent<SceneTargetEventDetail>).detail;
+      if (!detail?.targetId) return;
+      tweenToCameraObjectFocus(detail);
+    };
+    const handleReleaseRequest = (event: Event) => {
+      const detail = (
+        event as CustomEvent<{ distancePx?: number } | undefined>
+      ).detail;
+      const settings = focusSettings();
+      const distancePx =
+        typeof detail?.distancePx === "number" ? detail.distancePx : 0;
+      if (distancePx > settings.rmbExitDragPx) return;
+      releaseCameraFocus("rmb");
+    };
+    window.addEventListener("geosee:scene-target-focus", handleFocus);
+    window.addEventListener(
+      "geosee:camera-focus-release-request",
+      handleReleaseRequest,
+    );
+    return () => {
+      window.removeEventListener("geosee:scene-target-focus", handleFocus);
+      window.removeEventListener(
+        "geosee:camera-focus-release-request",
+        handleReleaseRequest,
+      );
+    };
+  }, [focusSettings, releaseCameraFocus, tweenToCameraObjectFocus]);
 
   useEffect(() => {
     isTransitioningRef.current = isTransitioning;
@@ -806,6 +1094,9 @@ export function PageControllerProvider({
       const target = pages[index];
       const tweener = tweenerRef.current;
       if (!tweener) return;
+      if (cameraObjectFocusRef.current || focusTweeningRef.current) {
+        releaseCameraFocus("navigation");
+      }
       const wasTransitioning = isTransitioningRef.current;
       const wasFreelook = freelookActiveRef.current;
       const sourceIndex = wasTransitioning
@@ -1043,10 +1334,30 @@ export function PageControllerProvider({
             targetResolved.environment,
             targetResolved.page,
           );
+          const savedFocus = target.cameraObjectFocus;
+          if (savedFocus) {
+            const resolvedTarget = sceneHandle.resolveSceneTarget(
+              savedFocus.targetId,
+            );
+            if (!resolvedTarget) {
+              console.warn(
+                `[GeoSee] Saved camera object focus target missing: ${savedFocus.targetId}`,
+              );
+              releaseCameraFocus("missing-target");
+            } else {
+              activateCameraFocus(savedFocus);
+            }
+          }
         },
       );
     },
-    [pages, sceneHandle, resolvePresentationState],
+    [
+      pages,
+      sceneHandle,
+      resolvePresentationState,
+      releaseCameraFocus,
+      activateCameraFocus,
+    ],
   );
 
   const next = useCallback(() => {
@@ -1064,6 +1375,9 @@ export function PageControllerProvider({
     (pose: PresentationPage["camera"]) => {
       const tweener = tweenerRef.current;
       if (!tweener) return;
+      if (cameraObjectFocusRef.current || focusTweeningRef.current) {
+        releaseCameraFocus("pose");
+      }
       const targetPose = poseWithEnvironmentCamera(pose, environmentRef.current);
       isTransitioningRef.current = true;
       targetIndexRef.current = null;
@@ -1099,13 +1413,16 @@ export function PageControllerProvider({
         sceneHandle.setRaycastEnabled(true);
       });
     },
-    [sceneHandle],
+    [releaseCameraFocus, sceneHandle],
   );
 
   const resetToPose = useCallback(() => {
     const arrival = arrivalPoseRef.current;
     const tweener = tweenerRef.current;
     if (!arrival || !tweener) return;
+    if (cameraObjectFocusRef.current || focusTweeningRef.current) {
+      releaseCameraFocus("pose");
+    }
     isTransitioningRef.current = true;
     targetIndexRef.current = null;
     activeSceneTransitionRef.current = null;
@@ -1138,7 +1455,7 @@ export function PageControllerProvider({
       setTargetIndex(null);
       sceneHandle.setRaycastEnabled(true);
     });
-  }, [sceneHandle]);
+  }, [releaseCameraFocus, sceneHandle]);
 
   useEffect(() => {
     sceneHandle.setPageCameraMarkerClickHandler(resetToPose);
@@ -1247,13 +1564,27 @@ export function PageControllerProvider({
       transitionProgress,
       isTransitioning,
       freelookActive,
+      cameraObjectFocus,
       goto,
       next,
       prev,
       resetToPose,
       tweenToPose,
     }),
-    [pages, currentIndex, targetIndex, transitionProgress, isTransitioning, freelookActive, goto, next, prev, resetToPose, tweenToPose],
+    [
+      pages,
+      currentIndex,
+      targetIndex,
+      transitionProgress,
+      isTransitioning,
+      freelookActive,
+      cameraObjectFocus,
+      goto,
+      next,
+      prev,
+      resetToPose,
+      tweenToPose,
+    ],
   );
 
   return (

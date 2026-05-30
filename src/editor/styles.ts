@@ -212,6 +212,8 @@ export const panelStyles: Record<string, CSSProperties> = {
     fontSize: 11,
     color: vibrancySecondaryLabel,
     fontFamily: TECHNICAL_MONO_FONT,
+    fontStyle: "italic",
+    whiteSpace: "nowrap",
   },
   row: {
     display: "flex",

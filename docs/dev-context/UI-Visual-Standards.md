@@ -22,6 +22,36 @@ contract and points to the owning source files. Durable rationale belongs in
 | Visual rationale / durable UI choices | `docs/03-decisions.md` | Use decision entries for persistent policy changes. |
 | Current visual review loop | `docs/dev-context/Visual-Review-Current.md` | Keep short and current. |
 
+## Editor Reveal And Camera Focus
+
+- Single-clicking a rendered scene element reveals the corresponding editor row
+  using stable target ids such as `layer:<layerId>` and
+  `product:<layerId>:<productId>`.
+- Reveal opens only the owning top-level workflow and the minimum parent group
+  needed to make the row visible. Arrow/disclosure child containers such as
+  `Appearance`, `Labels`, and `Provenance` keep their authored state.
+- The active editor scroll container aligns the selected row as close to the
+  top as available content allows.
+- When scrolling settles, a pill-shaped target pulses once. A plain text target
+  pulses twice. Pulse effects must not change layout: use box-shadow,
+  text-shadow, transform, or opacity only.
+- Reduced-motion mode replaces pulse animation with a static highlight and
+  snaps camera focus instead of tweening.
+- Double-clicking a rendered scene element enters camera object focus at the
+  exact picked surface point. The object bounds are used only to compute the fit
+  distance.
+- Left-clicking empty space is a no-op in focus mode. Right mouse button exits
+  focus without snapping the camera back.
+- Same-target double-click re-anchors to the newly picked point and uses the
+  authored same-target zoom factor.
+- `Camera Studio` owns the focus tuning controls under `Focus transition`.
+  These controls affect double-click focus only, not page-to-page transitions.
+- `Cinematic Render Preset` belongs at the top of `Camera Studio`, above
+  `Perspective`.
+- Pages may persist `cameraObjectFocus`. A page with saved focus re-engages the
+  lock after its normal camera transition. A page without saved focus releases
+  any existing lock at navigation start.
+
 ## Viewport Legend Containers
 
 - Viewport legends are lightweight transparent overlays unless a specific tool
@@ -212,6 +242,12 @@ The directives doc names the helper-stability rules and the transition-kind
 registry. The bullets below are the visual standards (numeric ranges,
 defaults, depth/compositing rules) that the contract enforces.
 
+- Public topo material presets are reusable authoring choices, not hidden
+  environment-only edits. The `Utah` preset is the default Utah FORGE public
+  topo look: khaki high-desert lows, muted sage/tree greens through the middle
+  elevations, darker forested relief, and warm snow/rock peak tones at the
+  highest elevations. It remains a five-stop terrain shader ramp and does not
+  imply terrain reprojection, new raster data, or geophysical product changes.
 - Camera far-plane clipping is not a visual crop. Topo imagery, terrain
   context, and graticules must remain inside the camera frustum at presentation
   overview zoom; authored public surface crop and scene-section tools own

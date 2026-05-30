@@ -123,6 +123,7 @@ interface EditorContextValue {
         | "sunLockToCamera"
         | "renderPreset"
         | "renderPresetId"
+        | "cameraObjectFocus"
       >
     >,
   ) => void;
@@ -130,7 +131,11 @@ interface EditorContextValue {
     pageId: string,
     patch: Partial<{ duration: number; easing: EasingName }>,
   ) => void;
-  capturePoseForPage: (pageId: string, pose: Pose) => void;
+  capturePoseForPage: (
+    pageId: string,
+    pose: Pose,
+    cameraObjectFocus?: PresentationPage["cameraObjectFocus"],
+  ) => void;
   setPageOverlayLayout: (
     pageId: string,
     layout: NonNullable<PresentationPage["overlayLayout"]>,
@@ -620,9 +625,16 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       };
     }
     case "CAPTURE_POSE": {
-      const pages = state.pages.map((p) =>
-        p.id === action.pageId ? { ...p, camera: action.pose } : p,
-      );
+      const pages = state.pages.map((p) => {
+        if (p.id !== action.pageId) return p;
+        const next: PresentationPage = { ...p, camera: action.pose };
+        if (action.cameraObjectFocus) {
+          next.cameraObjectFocus = action.cameraObjectFocus;
+        } else {
+          delete next.cameraObjectFocus;
+        }
+        return next;
+      });
       // Push the captured pose onto the page's rolling history (cap 5).
       // Most recent first; user-facing labels are "Capture #N" newest->oldest.
       const prevHistory = state.poseHistory[action.pageId] ?? [];
@@ -1810,7 +1822,8 @@ export function EditorProvider({
     [],
   );
   const capturePoseForPage = useCallback<EditorContextValue["capturePoseForPage"]>(
-    (pageId, pose) => dispatch({ type: "CAPTURE_POSE", pageId, pose }),
+    (pageId, pose, cameraObjectFocus) =>
+      dispatch({ type: "CAPTURE_POSE", pageId, pose, cameraObjectFocus }),
     [],
   );
 

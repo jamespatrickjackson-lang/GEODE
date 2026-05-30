@@ -183,33 +183,37 @@ export function LayerGroupFogControl({
           {mixed ? "mixed" : allOn ? "included" : "excluded"}
         </span>
       </div>
-      <div style={layerGroupFogControlRowStyle}>
-        <label style={nestedFieldLabelStyle}>Fog dens.</label>
-        <input
-          type="range"
-          min={FOG_DENSITY_UI_MIN}
-          max={FOG_DENSITY_UI_MAX}
-          step={FOG_DENSITY_UI_STEP}
-          value={densityUi}
-          disabled={allOff || disabled}
-          onChange={(e) => setDensity(parseFloat(e.target.value))}
-          style={
-            {
-              flex: 1,
-              opacity: allOff || disabled ? 0.42 : 1,
-              "--editor-slider-fill": `${
-                ((densityUi - FOG_DENSITY_UI_MIN) /
-                  (FOG_DENSITY_UI_MAX - FOG_DENSITY_UI_MIN)) *
-                100
-              }%`,
-            } as React.CSSProperties
-          }
-        />
-        <span style={sliderNumberReadoutStyle}>{densityUi.toFixed(2)}</span>
-        <span style={densityMixed ? overrideTagActiveStyle : overrideTagStyle}>
-          {densityMixed ? "mixed" : "density"}
-        </span>
-      </div>
+      {!allOff ? (
+        <div style={layerGroupFogControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Fog dens.</label>
+          <input
+            type="range"
+            min={FOG_DENSITY_UI_MIN}
+            max={FOG_DENSITY_UI_MAX}
+            step={FOG_DENSITY_UI_STEP}
+            value={densityUi}
+            disabled={disabled}
+            onChange={(e) => setDensity(parseFloat(e.target.value))}
+            style={
+              {
+                flex: 1,
+                opacity: disabled ? 0.42 : 1,
+                "--editor-slider-fill": `${
+                  ((densityUi - FOG_DENSITY_UI_MIN) /
+                    (FOG_DENSITY_UI_MAX - FOG_DENSITY_UI_MIN)) *
+                  100
+                }%`,
+              } as React.CSSProperties
+            }
+          />
+          <span style={sliderNumberReadoutStyle}>{densityUi.toFixed(2)}</span>
+          <span
+            style={densityMixed ? overrideTagActiveStyle : overrideTagStyle}
+          >
+            {densityMixed ? "mixed" : "density"}
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -240,7 +244,6 @@ export function TopoDetailDistancePanel({
       style={drillingAssayDetailsStyle}
       data-dev-source="src/editor/LayerPanel.tsx:632"
       data-dev-note="TopoDetailDistancePanel controls global distance thinning/fade for roads, streams, and power lines."
-      open
     >
       <summary style={drillingAssaySummaryStyle}>Distance fade</summary>
       <div style={detailsContentStyle}>

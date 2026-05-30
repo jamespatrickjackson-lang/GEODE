@@ -10,7 +10,6 @@ import {
 import {
   detailsContentStyle,
   EnvStyleRow,
-  EnvVisibilityRow,
   LayerBooleanStyleControl,
   LayerColorStyleControl,
   LayerNumberStyleControl,
@@ -18,7 +17,6 @@ import {
   nestedDetailsStyle,
   nestedFieldLabelStyle,
   PageStyleRow,
-  PageVisibilityRow,
   styleNumber,
 } from "./styleControls";
 import {
@@ -56,7 +54,10 @@ import {
   UTAH_FORGE_SCALAR_LAYER_IDS,
   type LayerDataSection,
 } from "./layerControls/layerPanelConfig";
-import { editorLayerLabel } from "./layerControls/layerLabels";
+import {
+  editorLayerLabel,
+  editorLayerTypeLabel,
+} from "./layerControls/layerLabels";
 import {
   mtThresholdSurfacePatchFromStyle,
   mtTopSurfacePatchFromStyle,
@@ -75,13 +76,11 @@ import {
   EnvLabelPointerSideRow,
   EnvLabelPointerVisibleRow,
   EnvShowLabelsRow,
-  EnvTreeVisibilityToggle,
   PageAffectedByFogRow,
   PageLabelKindRow,
   PageLabelPointerSideRow,
   PageLabelPointerVisibleRow,
   PageShowLabelsRow,
-  PageTreeVisibilityToggle,
 } from "./layerControls/env/EnvRows";
 import {
   MtStationQcControls,
@@ -135,6 +134,92 @@ import {
   isTopoMapSurfaceLayer,
 } from "../topoMap/settings";
 
+const layerVisibilityButtonBaseStyle = {
+  ...panelStyles.iconButton,
+  width: 24,
+  height: 24,
+  flex: "0 0 24px",
+  marginLeft: 8,
+  marginRight: 12,
+  padding: 0,
+  border: "1px solid transparent",
+  background: "transparent",
+  boxShadow: "none",
+  color: vibrancySecondaryLabel,
+};
+
+const layerVisibilitySvgStyle = {
+  width: 13,
+  height: 13,
+  display: "block",
+  flex: "none",
+};
+
+function layerVisibilityButtonStyle(
+  visible: boolean,
+  overridden: boolean,
+) {
+  return {
+    ...layerVisibilityButtonBaseStyle,
+    background: "transparent",
+    boxShadow: "none",
+    color: overridden
+      ? "rgba(143, 215, 255, 0.92)"
+      : visible
+        ? vibrancyLabel
+        : vibrancyTertiaryLabel,
+    opacity: visible ? 1 : 0.72,
+    border: "1px solid transparent",
+  };
+}
+
+function LayerEyeIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      style={layerVisibilitySvgStyle}
+    >
+      <path
+        d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function LayerEyeOffIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      style={layerVisibilitySvgStyle}
+    >
+      <path
+        d="M3 3l18 18"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M2.5 12s3.5-6 9.5-6c1.3 0 2.5.28 3.55.73M21.5 12s-3.5 6-9.5 6c-1.31 0-2.51-.28-3.58-.74"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 // LayerPanel has two modes driven by selectedPageId:
 //   "environment"      -> editing the base; controls write env.layerStyles
 //                         and env.defaultVisibleLayers directly. No
@@ -146,8 +231,10 @@ import {
 
 export function LayerPanel({
   section = "customer",
+  revealTargetId = null,
 }: {
   section?: LayerDataSection;
+  revealTargetId?: string | null;
 }) {
   const {
     state,
@@ -178,6 +265,22 @@ export function LayerPanel({
         ? currentPage.visibilityOverrides?.[layer.id] === true
         : envVisible
       : envVisible;
+    const pageVisibilityOverridden = currentPage
+      ? isVisibilityOverridden(currentPage, layer.id)
+      : false;
+    const toggleLayerVisibility = () => {
+      if (isEnv) {
+        toggleEnvDefaultVisible(layer.id);
+        return;
+      }
+      if (!currentPage) return;
+      const nextVisible = !effectiveLayerVisible;
+      if (nextVisible === envVisible) {
+        clearPageVisibilityOverride(currentPage.id, layer.id);
+      } else {
+        setPageVisibilityOverride(currentPage.id, layer.id, nextVisible);
+      }
+    };
     const isGeology = layer.id === "bedrock-geology";
     const isTrees = layer.id === "trees-vri";
     const isEzGamma = layer.id === "ez-gamma-2024";
@@ -272,6 +375,9 @@ export function LayerPanel({
     return (
       <div
         key={layer.id}
+        data-editor-target={`layer:${layer.id}`}
+        data-editor-target-kind="container"
+        data-editor-target-level="layer"
         data-dev-source="src/editor/LayerPanel.tsx:937"
         data-dev-note="layerItemStyle controls spacing and separators for individual layer rows."
         style={{
@@ -281,7 +387,12 @@ export function LayerPanel({
       >
         <div style={panelStyles.sectionHeader}>
           <div
-            style={panelStyles.checkboxRow}
+            style={{
+              ...panelStyles.checkboxRow,
+              flex: "1 1 auto",
+              minWidth: 0,
+              overflow: "hidden",
+            }}
             data-dev-source="src/editor/styles.ts:82"
             data-dev-note="panelStyles.checkboxRow controls layer-title row alignment."
           >
@@ -296,17 +407,34 @@ export function LayerPanel({
             >
               {editorLayerLabel(layer)}
             </span>
+            <span
+              style={{
+                ...panelStyles.layerType,
+                color: effectiveLayerVisible
+                  ? vibrancySecondaryLabel
+                  : vibrancyTertiaryLabel,
+              }}
+            >
+              ({editorLayerTypeLabel(layer)})
+            </span>
           </div>
-          <span
-            style={{
-              ...panelStyles.layerType,
-              color: effectiveLayerVisible
-                ? vibrancySecondaryLabel
-                : vibrancyTertiaryLabel,
+          <button
+            type="button"
+            className="editor-action-button editor-icon-only-button"
+            style={layerVisibilityButtonStyle(
+              effectiveLayerVisible,
+              pageVisibilityOverridden,
+            )}
+            onClick={(event) => {
+              event.stopPropagation();
+              toggleLayerVisibility();
             }}
+            title={effectiveLayerVisible ? "Hide layer" : "Show layer"}
+            aria-label={effectiveLayerVisible ? "Hide layer" : "Show layer"}
+            aria-pressed={effectiveLayerVisible}
           >
-            {layer.type}
-          </span>
+            {effectiveLayerVisible ? <LayerEyeIcon /> : <LayerEyeOffIcon />}
+          </button>
         </div>
 
         <div
@@ -314,42 +442,6 @@ export function LayerPanel({
           data-dev-source="src/editor/LayerPanel.tsx:946"
           data-dev-note="layerControlsStyle controls indentation of Visible, Appearance, Labels, and Provenance under each layer."
         >
-          {isTrees && isEnv ? (
-            <EnvTreeVisibilityToggle
-              visible={envVisible}
-              onToggle={() => toggleEnvDefaultVisible(layer.id)}
-            />
-          ) : isTrees && currentPage ? (
-            <PageTreeVisibilityToggle
-              page={currentPage}
-              layerId={layer.id}
-              envVisible={envVisible}
-              onSet={(v) =>
-                setPageVisibilityOverride(currentPage.id, layer.id, v)
-              }
-              onClear={() =>
-                clearPageVisibilityOverride(currentPage.id, layer.id)
-              }
-            />
-          ) : isEnv ? (
-            <EnvVisibilityRow
-              visible={envVisible}
-              onToggle={() => toggleEnvDefaultVisible(layer.id)}
-            />
-          ) : currentPage ? (
-            <PageVisibilityRow
-              page={currentPage}
-              layerId={layer.id}
-              envVisible={envVisible}
-              onSet={(v) =>
-                setPageVisibilityOverride(currentPage.id, layer.id, v)
-              }
-              onClear={() =>
-                clearPageVisibilityOverride(currentPage.id, layer.id)
-              }
-            />
-          ) : null}
-
           {effectiveLayerVisible ? (
             <>
               {!isAreaOutlines ? (
@@ -2524,5 +2616,11 @@ export function LayerPanel({
     );
   };
 
-  return <LayerPanelGroups section={section} renderLayer={renderLayer} />;
+  return (
+    <LayerPanelGroups
+      section={section}
+      renderLayer={renderLayer}
+      revealTargetId={revealTargetId}
+    />
+  );
 }

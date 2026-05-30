@@ -95,14 +95,12 @@ function GuiSubsection({
 function GuiDetail({
   title,
   children,
-  defaultOpen = false,
 }: {
   title: string;
   children: React.ReactNode;
-  defaultOpen?: boolean;
 }) {
   return (
-    <details style={guiDetailStyle} open={defaultOpen}>
+    <details style={guiDetailStyle}>
       <summary style={guiDetailSummaryStyle}>{title}</summary>
       <div style={guiDetailBodyStyle}>{children}</div>
     </details>
@@ -597,6 +595,25 @@ function Range({
   );
 }
 
+const CAMERA_FOCUS_EASINGS = [
+  "linear",
+  "easeInOutCubic",
+  "easeOutCubic",
+  "easeInOutSine",
+  "easeOutQuart",
+] as const;
+
+function cameraFocusNumber(
+  value: number | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.min(max, Math.max(min, value))
+    : fallback;
+}
+
 function LabelInteractionControls({
   labels,
   setLabels,
@@ -645,6 +662,7 @@ interface EnvironmentScenePanelProps {
   onActivate?: () => void;
   accentColor?: string | null;
   content?: "environment" | "lighting" | "terrain" | "overlay" | "labels" | "logo";
+  topSlot?: React.ReactNode;
 }
 
 type PresentationLightSource = NonNullable<
@@ -1397,26 +1415,32 @@ export function EnvironmentScenePanel({
                     }
                   />
                 </Row>
-                <Row label="Fog density">
-                  <Range
-                    value={fogDensity * 10000}
-                    min={0.02}
-                    max={6}
-                    step={0.05}
-                    onChange={(v) => setFogDensity(v / 10000)}
-                    format={(v) => v.toFixed(2)}
-                  />
-                </Row>
-                <Row label="Fog reach">
-                  <Range
-                    value={fogReachKm}
-                    min={5}
-                    max={3000}
-                    step={5}
-                    onChange={(v) => setFogDensity(3 / Math.max(v * 1000, 1))}
-                    format={(v) => `${v.toFixed(0)} km`}
-                  />
-                </Row>
+                {scene.fog?.enabled !== false ? (
+                  <>
+                    <Row label="Fog density">
+                      <Range
+                        value={fogDensity * 10000}
+                        min={0.02}
+                        max={6}
+                        step={0.05}
+                        onChange={(v) => setFogDensity(v / 10000)}
+                        format={(v) => v.toFixed(2)}
+                      />
+                    </Row>
+                    <Row label="Fog reach">
+                      <Range
+                        value={fogReachKm}
+                        min={5}
+                        max={3000}
+                        step={5}
+                        onChange={(v) =>
+                          setFogDensity(3 / Math.max(v * 1000, 1))
+                        }
+                        format={(v) => `${v.toFixed(0)} km`}
+                      />
+                    </Row>
+                  </>
+                ) : null}
                 <Row label="Fog color">
                   <input
                     data-dev-source="src/editor/EnvironmentScenePanel.tsx:192"
@@ -1512,6 +1536,7 @@ export function CameraSetupPanel({
   title = "Camera Setup",
   onActivate,
   accentColor,
+  topSlot,
 }: EnvironmentScenePanelProps) {
   const { state, setEnvScene } = useEditor();
   const scene: SceneProperties = state.environment.scene ?? {};
@@ -1533,6 +1558,16 @@ export function CameraSetupPanel({
         ...patch,
       },
     });
+  const setCameraFocus = (
+    patch: NonNullable<SceneProperties["cameraFocus"]>,
+  ) =>
+    setEnvScene({
+      cameraFocus: {
+        ...(scene.cameraFocus ?? {}),
+        ...patch,
+      },
+    });
+  const cameraFocus = scene.cameraFocus ?? {};
 
   return (
     <div
@@ -1578,6 +1613,160 @@ export function CameraSetupPanel({
           data-dev-source="src/editor/EnvironmentScenePanel.tsx:275"
           data-dev-note="environmentBodyStyle controls indentation below Camera Setup."
         >
+          {topSlot}
+
+          <div style={sectionHeaderStyle}>Focus transition</div>
+          <div style={panelStyles.section}>
+            <div style={panelStyles.muted}>
+              Affects double-click focus only.
+            </div>
+            <Row label="Duration">
+              <Range
+                value={cameraFocusNumber(cameraFocus.durationMs, 900, 0, 5000)}
+                min={0}
+                max={5000}
+                step={50}
+                format={(v) => `${v.toFixed(0)} ms`}
+                onChange={(v) => setCameraFocus({ durationMs: v })}
+              />
+            </Row>
+            <Row label="Easing">
+              <select
+                value={cameraFocus.easing ?? "easeOutCubic"}
+                onChange={(e) =>
+                  setCameraFocus({
+                    easing: e.target.value as NonNullable<
+                      SceneProperties["cameraFocus"]
+                    >["easing"],
+                  })
+                }
+                style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
+              >
+                {CAMERA_FOCUS_EASINGS.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </Row>
+            <Row label="Fit padding">
+              <Range
+                value={cameraFocusNumber(cameraFocus.fitPaddingPx, 500, 0, 2000)}
+                min={0}
+                max={2000}
+                step={25}
+                format={(v) => `${v.toFixed(0)} px`}
+                onChange={(v) => setCameraFocus({ fitPaddingPx: v })}
+              />
+            </Row>
+            <Row label="Same target">
+              <Range
+                value={cameraFocusNumber(
+                  cameraFocus.sameTargetZoomFactor,
+                  0.7,
+                  0.05,
+                  1.5,
+                )}
+                min={0.05}
+                max={1.5}
+                step={0.05}
+                format={(v) => `${v.toFixed(2)}x`}
+                onChange={(v) => setCameraFocus({ sameTargetZoomFactor: v })}
+              />
+            </Row>
+            <Row label="Click delay">
+              <Range
+                value={cameraFocusNumber(
+                  cameraFocus.singleClickDelayMs,
+                  250,
+                  120,
+                  500,
+                )}
+                min={120}
+                max={500}
+                step={10}
+                format={(v) => `${v.toFixed(0)} ms`}
+                onChange={(v) => setCameraFocus({ singleClickDelayMs: v })}
+              />
+            </Row>
+            <Row label="Scroll settle">
+              <Range
+                value={cameraFocusNumber(
+                  cameraFocus.scrollSettleMs,
+                  250,
+                  80,
+                  800,
+                )}
+                min={80}
+                max={800}
+                step={10}
+                format={(v) => `${v.toFixed(0)} ms`}
+                onChange={(v) => setCameraFocus({ scrollSettleMs: v })}
+              />
+            </Row>
+            <Row label="Pill pulse">
+              <Range
+                value={cameraFocusNumber(cameraFocus.pulsePillMs, 600, 200, 1600)}
+                min={200}
+                max={1600}
+                step={20}
+                format={(v) => `${v.toFixed(0)} ms`}
+                onChange={(v) => setCameraFocus({ pulsePillMs: v })}
+              />
+            </Row>
+            <Row label="Text pulse">
+              <Range
+                value={cameraFocusNumber(cameraFocus.pulseTextMs, 480, 200, 1600)}
+                min={200}
+                max={1600}
+                step={20}
+                format={(v) => `${v.toFixed(0)} ms`}
+                onChange={(v) => setCameraFocus({ pulseTextMs: v })}
+              />
+            </Row>
+            <Row label="Static pulse">
+              <Range
+                value={cameraFocusNumber(
+                  cameraFocus.pulseStaticMs,
+                  1200,
+                  400,
+                  3000,
+                )}
+                min={400}
+                max={3000}
+                step={50}
+                format={(v) => `${v.toFixed(0)} ms`}
+                onChange={(v) => setCameraFocus({ pulseStaticMs: v })}
+              />
+            </Row>
+            <Row label="Reveal scroll">
+              <select
+                value={cameraFocus.revealScrollBehavior ?? "smooth"}
+                onChange={(e) =>
+                  setCameraFocus({
+                    revealScrollBehavior: e.target.value as NonNullable<
+                      SceneProperties["cameraFocus"]
+                    >["revealScrollBehavior"],
+                  })
+                }
+                style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
+              >
+                <option value="smooth">smooth</option>
+                <option value="auto">auto</option>
+              </select>
+            </Row>
+            <Row label="RMB threshold">
+              <Range
+                value={cameraFocusNumber(cameraFocus.rmbExitDragPx, 0, 0, 24)}
+                min={0}
+                max={24}
+                step={1}
+                format={(v) => `${v.toFixed(0)} px`}
+                onChange={(v) => setCameraFocus({ rmbExitDragPx: v })}
+              />
+            </Row>
+          </div>
+
           <div style={sectionHeaderStyle}>Perspective</div>
           <div style={panelStyles.section}>
             <Row label="Lens">
