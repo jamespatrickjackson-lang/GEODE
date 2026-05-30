@@ -292,6 +292,10 @@ Presentation pages apply deltas through:
 - presenter preview
 - current-page environment application
 
+### Sub Master pages (DEC-079)
+
+A Sub Master is a renderable `PresentationPage` that carries a frozen `envSnapshot: EnvironmentSetup` captured from the live global environment at creation time. Pages with `parentMasterId` referencing a Sub Master inherit from that snapshot instead of from `environment.json`. The hierarchy is single-level (Global → Sub Master → child) and `pageOrder` keeps Sub Master blocks (master + children) contiguous. `PageController.resolvePresentationState` chooses the inheritance base per page; the env-change re-apply effect depends on the resolved environment, not the raw `environment`, so editing `environment.json` does not re-apply on Sub Master pages or their children. The author re-syncs explicitly via a `Re-snapshot from Global` affordance on the Sub Master row. Display numbering is `XX.M.NN` (slot, ordinal, child rank); `pageOrder` slug is unchanged.
+
 ## Audience Lens
 
 Audience Lens is currently runtime-only and Shahbazi-only.

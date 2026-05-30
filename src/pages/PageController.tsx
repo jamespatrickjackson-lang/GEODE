@@ -641,13 +641,36 @@ export function PageControllerProvider({
       page: PresentationPage,
       env: EnvironmentSetup = environmentRef.current,
     ): { environment: EnvironmentSetup; page: PresentationPage } => {
+      // DEC-079 — Sub Master inheritance chain. A Sub Master page uses its
+      // own frozen envSnapshot as the base. A child of a Sub Master uses
+      // the parent's envSnapshot. Global children (no parentMasterId, or
+      // parentMasterId === "global") use the live environment, preserving
+      // today's behaviour.
+      let resolvedBase: EnvironmentSetup = env;
+      const isMaster =
+        page.envSnapshot != null &&
+        (!page.parentMasterId || page.parentMasterId === "global");
+      if (isMaster) {
+        resolvedBase = page.envSnapshot!;
+      } else if (page.parentMasterId && page.parentMasterId !== "global") {
+        const parent = pagesRef.current.find(
+          (p) => p.id === page.parentMasterId,
+        );
+        if (parent?.envSnapshot) {
+          resolvedBase = parent.envSnapshot;
+        } else if (typeof console !== "undefined") {
+          console.warn(
+            `[GeoSee] Sub Master child '${page.id}' references missing or invalid parent '${page.parentMasterId}'; falling back to global environment.`,
+          );
+        }
+      }
       const layerPage = previewEnvironmentBase
         ? pageWithoutLayerDeltas(page, previewLayerOverrideFields)
         : page;
       const transform = presentationStateTransformRef.current;
       return transform
-        ? transform(env, layerPage, { previewEnvironmentBase })
-        : { environment: env, page: layerPage };
+        ? transform(resolvedBase, layerPage, { previewEnvironmentBase })
+        : { environment: resolvedBase, page: layerPage };
     },
     [previewEnvironmentBase, previewLayerOverrideFields],
   );
@@ -1013,9 +1036,22 @@ export function PageControllerProvider({
     isTransitioningRef.current = isTransitioning;
   }, [isTransitioning]);
 
-  // When environment changes (editor edits to base styles, scene chrome,
-  // or default visibility), reapply against the currently-displayed page
-  // so the live scene reflects the change without waiting for a transition.
+  // When the resolved environment for the currently-displayed page changes
+  // (editor edits to base styles, scene chrome, or default visibility),
+  // reapply against the page so the live scene reflects the change without
+  // waiting for a transition. DEC-079 — for Sub Master pages and their
+  // children, "resolved environment" is the Sub Master's frozen envSnapshot,
+  // not the global environment. So global `environment.json` edits do not
+  // trigger re-apply on those pages, which is the central runtime invariant
+  // that prevents cascade pollution.
+  const currentPageForReapply = pages[currentIndex];
+  const resolvedEnvForReapply = useMemo(
+    () =>
+      currentPageForReapply
+        ? resolvePresentationState(currentPageForReapply, environment).environment
+        : environment,
+    [currentPageForReapply, environment, pages, resolvePresentationState],
+  );
   useEffect(() => {
     const page = pages[currentIndex];
     if (!page) return;
@@ -1070,7 +1106,7 @@ export function PageControllerProvider({
       }
     }
   }, [
-    environment,
+    resolvedEnvForReapply,
     pages,
     currentIndex,
     sceneHandle,

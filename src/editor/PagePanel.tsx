@@ -18,12 +18,17 @@ import {
   globalSettingsAccent,
   globalSettingsHoverAccent,
   pageAccentForPage,
+  pageAccentForPageWithGroup,
   pageAccentHexForIndex,
   panelStyles,
   regularLightMaterial,
+  subMasterAccentHexForOrdinal,
+  subMasterChildIndentStyle,
+  subMasterRowBorderStyle,
   vibrancyLabel,
   vibrancySecondaryLabel,
   vibrancyTertiaryLabel,
+  type PageRowRole,
 } from "./styles";
 import { ENVIRONMENT_SENTINEL } from "./types";
 import { InlineEditableTitle } from "./InlineEditableTitle";
@@ -50,6 +55,116 @@ const PAGE_EASINGS: EasingName[] = [
   "easeInOutSine",
 ];
 
+// ---- Sub Master row metadata (DEC-079) ----
+
+interface PageRowMeta {
+  role: PageRowRole;
+  // 1-based global slot rank. For Global children and Sub Masters: their
+  // position in the playback sequence counting Sub Masters as one slot
+  // each. For Sub Master children: their parent Sub Master's rank.
+  globalRank: number;
+  // 1-based rank among siblings of the same parent Sub Master, used in
+  // numbering for Sub Master children only.
+  childRank?: number;
+  // Total number of siblings (children sharing the same parentMasterId).
+  // Filled only for subMasterChild rows; used for arrow-disable bounds.
+  siblingCount?: number;
+  // Sub Master ordinal (1, 2, 3, ...). Present for Sub Master rows and
+  // their children (children inherit the parent's ordinal).
+  ordinal?: number;
+  // Pre-formatted display label, e.g. "05", "05.1.00", "05.1.01".
+  label: string;
+}
+
+function isSubMasterPage(page: PresentationPage): boolean {
+  return (
+    page.envSnapshot != null &&
+    (!page.parentMasterId || page.parentMasterId === "global")
+  );
+}
+
+function isSubMasterChildPage(page: PresentationPage): boolean {
+  return page.parentMasterId != null && page.parentMasterId !== "global";
+}
+
+function pageRowRoleOf(page: PresentationPage): PageRowRole {
+  if (isSubMasterPage(page)) return "subMaster";
+  if (isSubMasterChildPage(page)) return "subMasterChild";
+  return "global";
+}
+
+function computePageRowMetas(pages: PresentationPage[]): PageRowMeta[] {
+  const metas: PageRowMeta[] = [];
+  let globalCount = 0;
+  let childCounter = 0;
+  let lastMasterId: string | null = null;
+  for (let i = 0; i < pages.length; i++) {
+    const p = pages[i];
+    const role = pageRowRoleOf(p);
+    if (role === "subMaster") {
+      globalCount += 1;
+      lastMasterId = p.id;
+      childCounter = 0;
+      const ordinal = p.subMasterOrdinal ?? 0;
+      metas.push({
+        role,
+        globalRank: globalCount,
+        ordinal,
+        label: `${String(globalCount).padStart(2, "0")}.${ordinal}.00`,
+      });
+    } else if (role === "subMasterChild") {
+      // Reset child counter if this is a different parent than the last
+      // child we saw (defensive against any future non-contiguous groups).
+      if (p.parentMasterId !== lastMasterId) {
+        childCounter = 0;
+        lastMasterId = p.parentMasterId ?? null;
+      }
+      childCounter += 1;
+      const parentIdx = pages.findIndex((q) => q.id === p.parentMasterId);
+      const parentMeta = parentIdx >= 0 ? metas[parentIdx] : undefined;
+      const parentRank = parentMeta?.globalRank ?? 0;
+      const ordinal = parentMeta?.ordinal ?? p.subMasterOrdinal ?? 0;
+      metas.push({
+        role,
+        globalRank: parentRank,
+        childRank: childCounter,
+        ordinal,
+        label: `${String(parentRank).padStart(2, "0")}.${ordinal}.${String(
+          childCounter,
+        ).padStart(2, "0")}`,
+      });
+    } else {
+      globalCount += 1;
+      lastMasterId = null;
+      childCounter = 0;
+      metas.push({
+        role,
+        globalRank: globalCount,
+        label: String(globalCount).padStart(2, "0"),
+      });
+    }
+  }
+  // Second pass: stamp siblingCount on every subMasterChild meta so the
+  // "down" arrow can be disabled at the last sibling without an O(N) lookup
+  // per row.
+  const siblingCounts = new Map<string, number>();
+  for (const p of pages) {
+    if (p.parentMasterId && p.parentMasterId !== "global") {
+      siblingCounts.set(
+        p.parentMasterId,
+        (siblingCounts.get(p.parentMasterId) ?? 0) + 1,
+      );
+    }
+  }
+  for (let i = 0; i < pages.length; i++) {
+    const p = pages[i];
+    if (p.parentMasterId && p.parentMasterId !== "global") {
+      metas[i].siblingCount = siblingCounts.get(p.parentMasterId) ?? 0;
+    }
+  }
+  return metas;
+}
+
 interface Props {
   sceneHandle: SceneHandle;
 }
@@ -64,6 +179,10 @@ export function PagePanel({ sceneHandle }: Props) {
   const {
     state,
     addPage,
+    addSubMaster,
+    addSubMasterChild,
+    reSnapshotSubMaster,
+    deleteSubMasterById,
     deletePageById,
     duplicatePageById,
     reorderPage,
@@ -71,6 +190,14 @@ export function PagePanel({ sceneHandle }: Props) {
     setPageField,
     resetPageOverrides,
   } = useEditor();
+  // Per-render Sub Master row metadata. Cheap to recompute since pages list
+  // changes infrequently. Indexed by the same i as the page-list .map.
+  const pageRowMetas = computePageRowMetas(state.pages);
+  // Inline confirm state for the Sub Master "Re-snapshot from Global"
+  // affordance. Holds the pageId currently in confirm mode (one at a time).
+  const [reSnapshotConfirmId, setReSnapshotConfirmId] = useState<string | null>(
+    null,
+  );
   const {
     currentIndex,
     goto,
@@ -97,6 +224,17 @@ export function PagePanel({ sceneHandle }: Props) {
   useEffect(() => {
     setVisualSelectedPageId(state.selectedPageId);
   }, [state.selectedPageId]);
+
+  // Auto-cancel the Sub Master re-snapshot confirm prompt after 5 seconds
+  // of inactivity. Prevents an accidentally-armed confirm from lingering.
+  useEffect(() => {
+    if (!reSnapshotConfirmId) return undefined;
+    const timer = window.setTimeout(
+      () => setReSnapshotConfirmId(null),
+      5000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [reSnapshotConfirmId]);
 
   useEffect(() => {
     return () => {
@@ -156,6 +294,25 @@ export function PagePanel({ sceneHandle }: Props) {
     goto(idx);
   };
 
+  const onAddSubMaster = () => {
+    const pose = capturePose(sceneHandle.camera, sceneHandle.controls);
+    addSubMaster(pose);
+  };
+
+  const onAddSubMasterChild = (parentMasterId: string) => {
+    const pose = capturePose(sceneHandle.camera, sceneHandle.controls);
+    addSubMasterChild(parentMasterId, pose);
+  };
+
+  const onReSnapshotClick = (pageId: string) => {
+    if (reSnapshotConfirmId === pageId) {
+      reSnapshotSubMaster(pageId);
+      setReSnapshotConfirmId(null);
+    } else {
+      setReSnapshotConfirmId(pageId);
+    }
+  };
+
   const onDuplicateSelected = () => {
     if (!selectedActionPage) return;
     const sourceIndex = state.pages.findIndex(
@@ -171,6 +328,23 @@ export function PagePanel({ sceneHandle }: Props) {
 
   const onDeleteSelected = () => {
     if (!selectedActionPage || state.pages.length <= 1) return;
+    // Sub Master deletion cascades to every child (DEC-079). Surface the
+    // child count so the author cannot delete a populated group by accident.
+    if (isSubMasterPage(selectedActionPage)) {
+      const childCount = state.pages.filter(
+        (p) => p.parentMasterId === selectedActionPage.id,
+      ).length;
+      const message =
+        childCount > 0
+          ? `Delete Sub Master "${selectedActionPage.title}" and ${childCount} ${
+              childCount === 1 ? "child" : "children"
+            }? This cannot be undone.`
+          : `Delete Sub Master "${selectedActionPage.title}"? This cannot be undone.`;
+      if (confirm(message)) {
+        deleteSubMasterById(selectedActionPage.id);
+      }
+      return;
+    }
     if (confirm(`Delete page "${selectedActionPage.title}"?`)) {
       deletePageById(selectedActionPage.id);
     }
@@ -241,6 +415,22 @@ export function PagePanel({ sceneHandle }: Props) {
             </span>
             <span>Global Settings</span>
           </span>
+          <span style={pageRowActionsStyle}>
+            <button
+              className="editor-action-button"
+              style={pageManagerIconButtonStyle({
+                surface: globalSettingsSelected ? "tinted" : "dark",
+              })}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddSubMaster();
+              }}
+              title="Add Sub Master (snapshot global environment for a group)"
+              aria-label="Add Sub Master"
+            >
+              <AddIcon />
+            </button>
+          </span>
         </div>
       </div>
 
@@ -259,19 +449,64 @@ export function PagePanel({ sceneHandle }: Props) {
             targetIndex === null;
           const pageIsWaiting = pageIsChosen && !pageHasLanded;
           const hovered = p.id === hoveredPageId;
-          const pageAccent = pageAccentForPage(p, i);
-          const pageHoverAccent = pageAccentForPage(p, i, 0.384);
-          const pagePendingAccent = pageAccentForPage(p, i, 0.192);
-          const pageAccentHex = p.accentColor ?? pageAccentHexForIndex(i);
+          // DEC-079 — role-aware accent and chrome.
+          const meta = pageRowMetas[i] ?? {
+            role: "global" as PageRowRole,
+            globalRank: i + 1,
+            label: String(i + 1).padStart(2, "0"),
+          };
+          const isMasterRow = meta.role === "subMaster";
+          const isMasterChildRow = meta.role === "subMasterChild";
+          const accentGlobalIdx = meta.globalRank - 1;
+          const pageAccent = pageAccentForPageWithGroup(
+            p,
+            meta.role,
+            accentGlobalIdx,
+            meta.ordinal,
+          );
+          const pageHoverAccent = pageAccentForPageWithGroup(
+            p,
+            meta.role,
+            accentGlobalIdx,
+            meta.ordinal,
+            0.384,
+          );
+          const pagePendingAccent = pageAccentForPageWithGroup(
+            p,
+            meta.role,
+            accentGlobalIdx,
+            meta.ordinal,
+            0.192,
+          );
+          const pageAccentHex =
+            p.accentColor ??
+            (meta.role === "global"
+              ? pageAccentHexForIndex(accentGlobalIdx)
+              : subMasterAccentHexForOrdinal(meta.ordinal ?? 1));
           const actionSurface = pageIsChosen ? "tinted" : "dark";
+          const canMoveUp = isMasterChildRow
+            ? (meta.childRank ?? 1) > 1
+            : i > 0;
+          const canMoveDown = isMasterChildRow
+            ? (meta.childRank ?? 1) < (meta.siblingCount ?? 1)
+            : i < state.pages.length - 1;
+          const reSnapshotPending = reSnapshotConfirmId === p.id;
           return (
             <div
               key={p.id}
               data-dev-source="src/editor/styles.ts:135"
               data-dev-padding-source="src/editor/styles.ts:140"
               data-dev-note="panelStyles.pageRow and pageRowSelected control page row shape, selection material, and row spacing."
+              data-page-role={meta.role}
+              data-sub-master-ordinal={meta.ordinal ?? ""}
               style={{
                 ...panelStyles.pageRow,
+                ...(isMasterRow
+                  ? subMasterRowBorderStyle(
+                      subMasterAccentHexForOrdinal(meta.ordinal ?? 1),
+                    )
+                  : {}),
+                ...(isMasterChildRow ? subMasterChildIndentStyle : {}),
                 ...(hovered && !pageIsChosen
                   ? pageRowHoverStyle(pageHoverAccent)
                   : {}),
@@ -333,7 +568,8 @@ export function PagePanel({ sceneHandle }: Props) {
                   style={{ marginRight: 4 }}
                   data-dev-text-source="src/editor/PagePanel.tsx:90"
                 >
-                  {String(i + 1).padStart(2, "0")}.
+                  {meta.label}
+                  {meta.role === "global" ? "." : " "}
                 </span>
                 <InlineEditableTitle
                   value={p.title}
@@ -351,6 +587,48 @@ export function PagePanel({ sceneHandle }: Props) {
                 />
               </span>
               <span style={pageRowActionsStyle}>
+                {isMasterRow && (
+                  <>
+                    <button
+                      className="editor-action-button"
+                      style={pageManagerIconButtonStyle({
+                        surface: actionSurface,
+                      })}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddSubMasterChild(p.id);
+                      }}
+                      title="Add child page inheriting this Sub Master"
+                      aria-label="Add Sub Master child"
+                    >
+                      <AddIcon />
+                    </button>
+                    <button
+                      className="editor-action-button"
+                      style={pageManagerIconButtonStyle({
+                        surface: reSnapshotPending ? "tinted" : actionSurface,
+                      })}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onReSnapshotClick(p.id);
+                      }}
+                      title={
+                        reSnapshotPending
+                          ? "Click again to confirm — replace this Sub Master's frozen snapshot with the current global environment"
+                          : "Re-snapshot from Global"
+                      }
+                      aria-label={
+                        reSnapshotPending
+                          ? "Confirm re-snapshot from Global"
+                          : "Re-snapshot from Global"
+                      }
+                    >
+                      <span aria-hidden="true">
+                        {reSnapshotPending ? "?" : "↻"}
+                      </span>
+                    </button>
+                  </>
+                )}
                 <label
                   data-dev-source="src/editor/PagePanel.tsx:322"
                   data-dev-note="Page color circle stores the page accent color used for row and section fill states."
@@ -378,9 +656,9 @@ export function PagePanel({ sceneHandle }: Props) {
                   data-dev-note="panelStyles.iconButton controls these reorder and visibility button circles."
                   style={pageManagerIconButtonStyle({
                     surface: actionSurface,
-                    disabled: i === 0,
+                    disabled: !canMoveUp,
                   })}
-                  disabled={i === 0}
+                  disabled={!canMoveUp}
                   onClick={(e) => {
                     e.stopPropagation();
                     reorderPage(p.id, "up");
@@ -396,9 +674,9 @@ export function PagePanel({ sceneHandle }: Props) {
                   data-dev-note="panelStyles.iconButton controls these reorder and visibility button circles."
                   style={pageManagerIconButtonStyle({
                     surface: actionSurface,
-                    disabled: i === state.pages.length - 1,
+                    disabled: !canMoveDown,
                   })}
-                  disabled={i === state.pages.length - 1}
+                  disabled={!canMoveDown}
                   onClick={(e) => {
                     e.stopPropagation();
                     reorderPage(p.id, "down");

@@ -309,6 +309,38 @@ The MT resistivity ramp uses four draggable spectral handles:
 - Trim and feather handles stay bottom-aligned on the ramp.
 - Handle dimensions live in `src/ui/ResistivityLegend.tsx`.
 
+## Sub Master Page Rows (DEC-079)
+
+The page list distinguishes three row roles:
+
+- **Global child** — uses the existing `pageAccentRgbPalette` cycled by
+  position among Global children. Label is `XX.` (zero-padded slot number
+  + trailing dot).
+- **Sub Master** — uses a reserved `subMasterRgbPalette` cycled by
+  `subMasterOrdinal`. Row carries a `4px` solid left border in the
+  saturated hue (`subMasterRowBorderStyle`). Label is `XX.M.00` where
+  `XX` is the slot the master occupies if Sub Masters were counted as
+  Global children, and `M` is the ordinal.
+- **Sub Master child** — same hue as its master (via the parent's
+  ordinal). Row is indented `12px` left (`subMasterChildIndentStyle`).
+  Label is `XX.M.NN` where `NN` is the 1-based child rank.
+
+The `+` button on the Global Settings row creates a new Sub Master at the
+end of `pageOrder`. The `+` button on each Sub Master row adds a child
+under that Sub Master, preserving group contiguity. The `↻` button on
+each Sub Master row arms a `Re-snapshot from Global` confirm (two-click
+inline confirm; auto-cancel after 5 seconds). Deleting a Sub Master shows
+a confirm dialog that names the child count and cascade-deletes the
+entire group.
+
+The author's per-page `accentColor` override continues to win on any row
+kind. Helpers live in [styles.ts](../../src/editor/styles.ts):
+`pageAccentForPageWithGroup`, `subMasterAccentForOrdinal`,
+`subMasterAccentHexForOrdinal`, `subMasterRowBorderStyle`,
+`subMasterChildIndentStyle`. Row metadata for numbering and reorder
+bounds is computed once per render by `computePageRowMetas` in
+[PagePanel.tsx](../../src/editor/PagePanel.tsx).
+
 ## Change Discipline
 
 - Change executable tokens first.

@@ -119,6 +119,66 @@ export function pageAccentForPage(
     : pageAccentForIndex(index, alpha);
 }
 
+// Sub Master accent palette (DEC-079). Distinct from the Global page palette
+// so authors can tell a Sub Master group apart at a glance. Each Sub Master
+// is assigned an ordinal at creation; the master row and its children all
+// share the hue derived from that ordinal.
+const subMasterRgbPalette = [
+  [120, 180, 200], // deep teal
+  [196, 130, 180], // magenta
+  [212, 168, 96], // amber
+  [168, 198, 110], // lime
+  [142, 144, 200], // indigo
+  [220, 142, 116], // coral
+];
+
+export function subMasterAccentForOrdinal(
+  ordinal: number,
+  alpha = 0.496,
+): string {
+  const safeOrdinal = Math.max(1, Math.floor(ordinal));
+  const idx = (safeOrdinal - 1) % subMasterRgbPalette.length;
+  const [r, g, b] = subMasterRgbPalette[idx];
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export function subMasterAccentHexForOrdinal(ordinal: number): string {
+  const safeOrdinal = Math.max(1, Math.floor(ordinal));
+  const idx = (safeOrdinal - 1) % subMasterRgbPalette.length;
+  const [r, g, b] = subMasterRgbPalette[idx];
+  return rgbToHex(r, g, b);
+}
+
+export type PageRowRole = "global" | "subMaster" | "subMasterChild";
+
+// Returns the row accent for any page kind, honouring a per-page
+// accentColor override when present. globalIndex is the page's position
+// among global children only (used only when role === "global"). ordinal
+// is the Sub Master's subMasterOrdinal (used when role !== "global"); for
+// a child, pass the parent's ordinal so the group shares one hue.
+export function pageAccentForPageWithGroup(
+  page: { accentColor?: string | null },
+  role: PageRowRole,
+  globalIndex: number,
+  ordinal: number | undefined,
+  alpha = 0.496,
+): string {
+  if (page.accentColor) return colorWithAlpha(page.accentColor, alpha);
+  if (role === "global") return pageAccentForIndex(globalIndex, alpha);
+  return subMasterAccentForOrdinal(ordinal ?? 1, alpha);
+}
+
+// Chrome variants for Sub Master rows. The master gets a saturated 4 px left
+// border in its hue; children share the hue at the standard alpha but are
+// indented 12 px to read as nested.
+export function subMasterRowBorderStyle(hex: string): CSSProperties {
+  return { borderLeft: `4px solid ${hex}` };
+}
+
+export const subMasterChildIndentStyle: CSSProperties = {
+  paddingLeft: 12,
+};
+
 // DEV NOTES: sidebar material system
 // ----------------------------------
 // This file is the first place to look when changing the editor sidebar.

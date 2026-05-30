@@ -199,6 +199,17 @@ export type EditorAction =
     }
   | { type: "DELETE_PAGE"; pageId: string }
   | { type: "REORDER_PAGE"; pageId: string; direction: "up" | "down" }
+  // Sub Master page hierarchy (DEC-079). ADD_SUB_MASTER creates a new
+  // renderable page that snapshots the current global environment and acts
+  // as the inheritance base for its own children. ADD_SUB_MASTER_CHILD
+  // creates a regular page parented to that Sub Master. RE_SNAPSHOT replaces
+  // only the Sub Master's frozen envSnapshot (preserving its own page-level
+  // overrides). DELETE_SUB_MASTER cascade-deletes the master and every page
+  // whose parentMasterId references it.
+  | { type: "ADD_SUB_MASTER"; page: PresentationPage; afterPageId?: string }
+  | { type: "ADD_SUB_MASTER_CHILD"; page: PresentationPage }
+  | { type: "RE_SNAPSHOT_SUB_MASTER"; pageId: string }
+  | { type: "DELETE_SUB_MASTER"; pageId: string }
   | { type: "SELECT_PAGE"; pageId: string | EnvironmentSentinel }
   | { type: "SET_OVERLAY_TEXT"; pageId: string; text: string }
   | {

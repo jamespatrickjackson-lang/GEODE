@@ -1362,6 +1362,17 @@ export interface PresentationPage {
   hidden?: boolean;
   camera: Pose;
   cameraObjectFocus?: CameraObjectFocus;
+  // Page hierarchy. "global" or undefined: inherits directly from
+  // environment.json. Any other value MUST equal the id of an existing Sub
+  // Master page (a page whose envSnapshot is present). DEC-079.
+  parentMasterId?: string;
+  // Frozen environment snapshot at the moment this page became a Sub Master.
+  // Present iff this page IS a Sub Master. parentMasterId must be "global"
+  // or undefined when envSnapshot is present. DEC-079.
+  envSnapshot?: EnvironmentSetup;
+  // Assigned-once ordinal (1, 2, 3, ...) for display-time numbering and
+  // palette indexing. Stable across reorders and child changes. DEC-079.
+  subMasterOrdinal?: number;
   dynamicCamera?: DynamicCamera;
   transition: Transition;
   holdDuration: number;
