@@ -192,6 +192,9 @@ Before claiming a transition fix:
 
 ## Cross-reference index
 
+- `docs/dev-context/Page-Transition-Orchestration-Audit-2026-05-30.md` -
+  companion audit mapping page-transition clocks, state owners, divergence
+  paths, and the recommended repair order before transition smoothing work.
 - `docs/03-decisions.md`:
   - DEC-053 through DEC-075 — section-frame policy, ISO band geometry, scale
     axes, ground trace, intersection traces, MT / seismic cut composition.
