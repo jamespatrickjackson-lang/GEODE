@@ -12,7 +12,7 @@ git status                                        # confirm clean tree
 git checkout -b ui-editor-v1-build                # dedicated branch
 node --version                                    # confirm ≥ 20.x
 npm --version                                     # confirm ≥ 10.x
-ls UI_EDITOR/docs_v1/ | wc -l                     # confirm 20 docs (00-19 + this one if added)
+ls UI_EDITOR/docs_v1/ | wc -l                     # confirm 23 docs (00-22)
 git log --oneline -1 -- UI_EDITOR/docs_v1/        # capture docs pack commit sha for the prompt
 ```
 

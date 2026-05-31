@@ -73,7 +73,8 @@ export type TokenCategory =
   | "font-family"
   | "duration"
   | "shadow"
-  | "z-index";
+  | "z-index"
+  | "padding";          // doc 21 §10.3 — JSON-string values parseable as a Padding object
 
 export interface TokenLibraryEntry {
   id: string;                        // e.g. "space.md", "radius.full", "font.mono"

@@ -391,7 +391,93 @@ See §2.6 above. Six bundled Styles in the straw-subject package.
 | `shadow.lg` | shadow | `{ "offsetX": 0, "offsetY": 24, "blur": 80, "colour": { "hex": "#000000", "alpha": 0.24 } }` |
 | `shadow.frosted-elevated` | shadow | Multi-shadow stack for the frosted panel material (use a JSON array). |
 
-## 7. Change Record kinds (new)
+## 7. Reducer action shapes
+
+These actions extend the `EditorAction` union (see [02_architecture.md](02_architecture.md) §4 state model). Every action flows through `core/editing/applyEdit.ts` per the [02_architecture.md](02_architecture.md) §3.1 invariants. Per-element rules:
+
+- `editClass` field on the `applyEdit` result must be set to `"schema"` for every action in this section. This triggers the Draft demotion per [16_change_state_machine.md](16_change_state_machine.md) §5.
+- Restricted Surface rules ([08_validation_rules.md](08_validation_rules.md) §4.6) run before each action's body executes; refusal returns `{ ok: false, refused: true, findings }` and the action does not mutate state.
+- Each action produces exactly one Change Record (kinds listed in §7.x → §8 below).
+
+```ts
+// Style Library actions
+| { type: "STYLE_ADD"; entry: StyleLibraryEntry }
+| { type: "STYLE_EDIT"; styleId: string; patch: Partial<StyleLibraryEntry> }
+| { type: "STYLE_REMOVE"; styleId: string; orphanPolicy: "literal-replace" | "warn-only" }
+| { type: "STYLE_APPLIED"; selectionIds: SelectionIds; styleId: string }
+| { type: "STYLE_DETACHED"; selectionIds: SelectionIds }
+
+// Grouping actions
+| { type: "ELEMENTS_GROUP"; selectionIds: SelectionIds; frameId: string }
+| { type: "ELEMENTS_UNGROUP"; groupId: string }
+
+// Effects actions
+| {
+    type: "EFFECTS_CHANGED";
+    elementId: string;
+    patch: Partial<Effects>;          // partial — caller patches only the fields it changes
+  }
+| { type: "SHADOW_ADDED"; elementId: string; shadow: Shadow }
+| { type: "SHADOW_REMOVED"; elementId: string; shadowIndex: number }
+
+// Shape primitive instantiation (created by Rectangle/Ellipse/Line Tools)
+| { type: "RECTANGLE_ADDED"; component: Component /* archetype === "rectangle" */ }
+| { type: "ELLIPSE_ADDED"; component: Component /* archetype === "ellipse" */ }
+| { type: "LINE_ADDED"; component: Component /* archetype === "line" */ }
+| { type: "IMAGE_PLACEHOLDER_ADDED"; component: Component /* archetype === "image-placeholder" */ }
+```
+
+### 7.1 STYLE_APPLIED semantics
+
+For each id in `selectionIds`:
+
+1. Resolve the StyleLibraryEntry by `styleId`.
+2. For each field that the Style sets (fill / border / effects / padding), assign `{ styleRef: styleId }` on the element.
+3. If an element's archetype does not support a field (e.g. `padding` on a `divider`), skip that field silently — no finding.
+4. Append one `style_applied` Change Record per element with the original literal values captured for audit.
+
+### 7.2 STYLE_DETACHED semantics
+
+For each id in `selectionIds`:
+
+1. For every field on the element that holds `{ styleRef }`, resolve to the literal value at detach time.
+2. Replace the `{ styleRef }` with the resolved literal — rendering is preserved; subsequent Style edits do not affect this element.
+3. Append `style_detached` Change Record.
+
+### 7.3 STYLE_REMOVE semantics
+
+When `orphanPolicy: "literal-replace"` (default in v1):
+
+1. Walk every element. For each `{ styleRef: targetId }` found, replace with the literal value the Style would have resolved to.
+2. Remove the entry from `libraries.styles`.
+3. Append `style_removed` Change Record listing the literal-replaced element count.
+
+When `orphanPolicy: "warn-only"`:
+
+1. Remove the entry from `libraries.styles` without touching elements.
+2. Every dangling `{ styleRef }` now produces `library.unresolved-style-ref` Warnings on next validation.
+3. Append `style_removed` Change Record with dangling-ref count.
+
+### 7.4 EFFECTS_CHANGED semantics
+
+- `patch` shape: any subset of `{ shadows?, blur?, opacity? }`. Caller specifies only the fields changing.
+- Merge semantics: replace `shadows` array wholesale if provided (don't deep-merge — too brittle); shallow merge `blur` and `opacity` (the latter two are scalars).
+- Validation rules (`effects.shadow-no-colour.warning`, `effects.opacity-out-of-range.error`, `effects.blur-excessive.suggestion`) run after the patch on the affected element.
+- Change Record kind: `effects_changed`. Affected: `{ componentIds: [elementId] }` or `{ containerIds: [elementId] }`.
+
+### 7.5 ELEMENTS_GROUP / ELEMENTS_UNGROUP semantics
+
+Already specified in §3.2. The action shapes above are the canonical typed forms; the reducer cases honour every rule from §3.2 (cross-parent refusal, rect translation to group-local, group-local back to parent-local on ungroup, Selection update).
+
+### 7.6 Multi-target broadcast
+
+`STYLE_APPLIED`, `STYLE_DETACHED`, and `EFFECTS_CHANGED` all support multi-target operation:
+- `STYLE_APPLIED` / `STYLE_DETACHED` take `selectionIds` (an array).
+- `EFFECTS_CHANGED` takes a single `elementId`; for multi-target, the shell dispatches one action per id and batches them into a single Change Record group (linked by `batchId`).
+
+This satisfies gap L6 from [22_mvp_coherence_audit.md](22_mvp_coherence_audit.md) §5.1.
+
+## 8. Change Record kinds (new)
 
 Append to [09_glossary.md](09_glossary.md) §5.6:
 

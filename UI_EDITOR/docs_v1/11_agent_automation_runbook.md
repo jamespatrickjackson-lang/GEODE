@@ -13,7 +13,7 @@ Before invoking the runbook:
 | # | Precondition | Verification |
 | --- | --- | --- |
 | 1 | Repo is at `C:\GeoSee\GeoSee_Dev\` with a clean working tree on `main` (or a designated feature branch). | `git status --porcelain` is empty. |
-| 2 | `UI_EDITOR/docs_v1/` contains all 12 docs (00 – 12) referenced by this runbook. | `ls UI_EDITOR/docs_v1/` shows `00_README.md` through `12_deferred_to_v2.md`. |
+| 2 | `UI_EDITOR/docs_v1/` contains all 23 docs (00 – 22) referenced by this runbook. | `ls UI_EDITOR/docs_v1/` shows `00_README.md` through `22_mvp_coherence_audit.md` (23 files total). |
 | 3 | `UI_EDITOR/docs/` (the v0.1 concept pack) is untouched. | `git status` shows no modifications to `UI_EDITOR/docs/`. |
 | 4 | Node.js ≥ 20.x available; npm ≥ 10.x available. | `node --version && npm --version`. |
 | 5 | Agent has read [00_README.md](00_README.md), [09_glossary.md](09_glossary.md), [01_scope.md](01_scope.md), [02_architecture.md](02_architecture.md), [10_build_phases.md](10_build_phases.md) in full. | Agent must self-verify before step 0. |

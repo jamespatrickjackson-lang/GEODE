@@ -74,7 +74,7 @@ A standalone visual editor — Figma-lite — that loads a GUI Package from disk
 | 18 | [codex_cold_start_prompt](18_codex_cold_start_prompt.md) | The exact prompt the human pastes into Codex to begin the v1 build run. Single entry point. |
 | 19 | [known_pitfalls](19_known_pitfalls.md) | Per-phase failure-mode register: symptom + diagnostic + fix for the patterns most likely to halt the run. Consult before declaring "the docs are wrong." |
 | 20 | [materials_and_shapes](20_materials_and_shapes.md) | Style Library (Materials), Grouping (Ctrl/Cmd+G), Shape primitives (Rectangle / Ellipse / Line / Image placeholder), Effects (shadow / blur / opacity). Promotes v1 from "structured panel layout" to true Figma-lite. |
-| 21 | _(pending)_ interactive_overlays_and_primitives | **Not yet written.** Scope approved: per-side padding + tooltip / modal / tabs / dropdown-menu / carousel archetypes + toggle / segmented / loading button states. Tracked as gap X1 in [22_mvp_coherence_audit.md](22_mvp_coherence_audit.md) §5.7. |
+| 21 | [interactive_overlays_and_primitives](21_interactive_overlays_and_primitives.md) | Per-side padding + tooltip / modal-overlay / modal-content / tabs / dropdown-menu / carousel archetypes + toggle-button / segmented-control / loading button states. Closes the X1 gap from [22_mvp_coherence_audit.md](22_mvp_coherence_audit.md) §5.7. |
 | 22 | [mvp_coherence_audit](22_mvp_coherence_audit.md) | End-to-end audit: 8 use cases walked, 18 gaps catalogued by category (logic / data flow / architecture / tool / runtime UI / systems / docs), runtime UI deepening, MVP test plan, system invariants recap. Last gate before Codex handoff. |
 
 ## 6. Conventions for the pack

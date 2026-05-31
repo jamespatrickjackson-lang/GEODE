@@ -52,7 +52,38 @@ UI_EDITOR/
 │   │   │   ├── RulerVertical.tsx
 │   │   │   ├── SafeAreaOverlay.tsx
 │   │   │   ├── BackgroundStressOverlay.tsx
-│   │   │   └── canvasMath.ts              # screen↔canvas coord helpers, snap math
+│   │   │   ├── canvasMath.ts              # screen↔canvas coord helpers, snap math
+│   │   │   ├── elements/                  # per-archetype React components
+│   │   │   │   ├── RenderDispatcher.tsx   # switches on Component.archetype → renders the right element
+│   │   │   │   ├── pillButton.tsx
+│   │   │   │   ├── iconButton.tsx
+│   │   │   │   ├── footerActionButton.tsx
+│   │   │   │   ├── inlineEditableText.tsx
+│   │   │   │   ├── dirtyDot.tsx
+│   │   │   │   ├── letterGlyph.tsx
+│   │   │   │   ├── numericLabel.tsx
+│   │   │   │   ├── colourSwatch.tsx
+│   │   │   │   ├── slider.tsx
+│   │   │   │   ├── numericInput.tsx
+│   │   │   │   ├── selectDropdown.tsx
+│   │   │   │   ├── checkbox.tsx
+│   │   │   │   ├── nativeDetails.tsx
+│   │   │   │   ├── ariaExpandedRow.tsx
+│   │   │   │   ├── divider.tsx
+│   │   │   │   ├── icon.tsx
+│   │   │   │   ├── text.tsx
+│   │   │   │   ├── rectangle.tsx          # shape primitives (doc 20 §4)
+│   │   │   │   ├── ellipse.tsx
+│   │   │   │   ├── line.tsx
+│   │   │   │   ├── imagePlaceholder.tsx
+│   │   │   │   ├── tooltip.tsx            # interactive primitives (doc 21)
+│   │   │   │   ├── tabTrigger.tsx
+│   │   │   │   ├── menuItem.tsx
+│   │   │   │   ├── menuDivider.tsx
+│   │   │   │   ├── carouselIndicators.tsx
+│   │   │   │   └── toggleButton.tsx
+│   │   │   └── selection/
+│   │   │       └── selectionLogic.ts      # cascade rules, edit-inside mode (doc 20 §3.4)
 │   │   ├── toolkit/                       # tool palette
 │   │   │   ├── ToolkitBar.tsx
 │   │   │   ├── tools/
@@ -76,7 +107,8 @@ UI_EDITOR/
 │   │   │   ├── ComponentLibraryView.tsx
 │   │   │   ├── ColourLibraryView.tsx
 │   │   │   ├── IconLibraryView.tsx
-│   │   │   └── TokenLibraryView.tsx
+│   │   │   ├── TokenLibraryView.tsx
+│   │   │   └── StyleLibraryView.tsx       # see doc 20 §2.4
 │   │   ├── propertiesInspector/
 │   │   │   ├── PropertiesInspector.tsx
 │   │   │   ├── PropertyEditors/           # one editor per property type
@@ -146,6 +178,7 @@ UI_EDITOR/
 │   │   │   ├── instantiateComponent.ts    # library entry → live Component on Frame
 │   │   │   ├── applySwatch.ts             # Swatch → element fill
 │   │   │   ├── applyToken.ts              # Token → element property
+│   │   │   ├── applyStyle.ts              # Style → element fields (doc 20 §2.2)
 │   │   │   └── libraryMerge.ts            # how multiple libraries combine in a package
 │   │   ├── export/
 │   │   │   ├── exportSpec.ts              # produces docs/spec.md

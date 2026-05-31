@@ -392,6 +392,82 @@ Export = Save + an additional regeneration step that ensures `docs/spec.md` and 
 
 Export does NOT advance to `Approved`. That state is set explicitly via a TopBar action that requires the author to type a one-line confirmation.
 
+### 14.4 Create (`core/packageIO/createPackage.ts`)
+
+Closes gap L1 from [22_mvp_coherence_audit.md](22_mvp_coherence_audit.md) §5.1. The "Create new package" flow the shell invokes from `File → New Package…` (per [22_mvp_coherence_audit.md](22_mvp_coherence_audit.md) §7.6).
+
+```ts
+export interface NewPackageInput {
+  id: string;                          // kebab-case; must match /^[a-z0-9_]+$/
+  name: string;                        // human-readable
+  description?: string;
+  targetHostApp: { name: string; version?: string };
+  profileDefaults?: {
+    deviceId?: string;                 // default "desktop-1080p"
+    inputId?: string;                  // default "mouse-keyboard"
+    useCaseId?: string;                // default "technical-editing"
+  };
+  rulePackId?: string;                 // default "desktop-technical-editing"
+  author?: string;                     // free text; defaults to git config user.name if available
+}
+
+export interface NewPackageResult {
+  ok: boolean;
+  packageId: string;                   // echo of input id on success
+  manifestPath: string;                // absolute disk path of the new manifest.json
+  error?: { code: string; message: string };
+}
+
+export async function createPackage(
+  input: NewPackageInput,
+): Promise<NewPackageResult>;
+```
+
+**Behaviour:**
+
+1. Validate `input.id` against `^[a-z0-9_]+$`. If invalid, return `{ ok: false, error: { code: "id_invalid", message: "id must be lower-case alphanumeric with underscores" } }`.
+2. Validate that `packages/<id>/` does not already exist. If it does, return `{ ok: false, error: { code: "id_taken", message: "..." } }`.
+3. Compose a minimal `PackageManifest`:
+   - `id`, `name`, `description` from input.
+   - `schemaVersion: 1`, `workbenchVersion` = current workbench version.
+   - `packageState: "Draft"`.
+   - `createdAt` / `updatedAt` = current ISO-8601 UTC.
+   - `author` from input or git config or absent.
+   - `targetHostApp` from input.
+   - `profileDefaults` merged with the defaults above.
+   - `rulePackId` from input or `"desktop-technical-editing"`.
+4. Write the full minimal Package Folder layout via `writePackage`:
+   - `manifest.json` (the composed manifest).
+   - `frames.json` with `{ schemaVersion: 1, frames: [], activeFrameId: null }`.
+   - `containers.json` with `{ schemaVersion: 1, containers: {} }`.
+   - `components.json` with `{ schemaVersion: 1, components: {} }`.
+   - `tokens.json` with `{ schemaVersion: 1, tokens: {} }`.
+   - `libraries.json` with `{ schemaVersion: 1, libraries: { components: [], colours: [], icons: [], tokens: [], styles: [] } }`.
+   - `guides.json` with `{ schemaVersion: 1, guides: [] }`.
+   - `validation/rule_pack.json` referencing the chosen rule pack.
+   - `validation/findings.json` with `{ schemaVersion: 1, generatedAt: <now>, rulePackId, rulePackVersion: 1, findings: [] }`.
+   - `change_log.json` with a single `package_created` Change Record.
+   - `docs/spec.md` and `docs/ai_agent_brief.md` with placeholder content ("Empty package — author has not created any Frames yet.").
+   - `assets/backgrounds/` empty directory (asset generation happens on first need).
+5. Return `{ ok: true, packageId, manifestPath }`.
+
+**Shell flow:**
+
+- `File → New Package…` opens a modal collecting `id`, `name`, `targetHostApp.name`, and optionally `description`. Profile defaults pre-fill from the active workbench profile.
+- On modal Confirm, shell dispatches `{ type: "PACKAGE_CREATE", input }`.
+- Reducer awaits `createPackage(input)`; on `ok: true`, loads the new package (`PACKAGE_LOADED`); on `ok: false`, surfaces an Error toast with the returned message.
+- Package Browser refreshes to show the new entry; it is auto-selected.
+
+**Acceptance:**
+
+1. `File → New Package` opens a modal with id / name / target / profile fields.
+2. Submitting valid input creates the package folder under `packages/<id>/`; all files in §2 layout present.
+3. Submitting a duplicate id returns the `id_taken` error visibly in the modal.
+4. Submitting an invalid id (uppercase, spaces, special chars) returns `id_invalid` in the modal.
+5. The new package's `change_log.json` has exactly one record (`package_created`).
+6. The new package's `packageState` is `Draft`.
+7. The new package round-trips: re-import produces byte-identical files (after canonicalisation).
+
 ## 15. Round-trip guarantee
 
 Export-then-import must produce a byte-identical Package object after canonicalisation (consistent key ordering, consistent decimal precision). v1's writePackage canonicalises by:

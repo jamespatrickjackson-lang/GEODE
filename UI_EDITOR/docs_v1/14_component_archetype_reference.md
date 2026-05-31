@@ -409,6 +409,100 @@ export interface ImagePlaceholderProps {
 - **Rendering:** a labelled box with the chosen placeholder fill (checkerboard / diagonal stripes / plain box with alt-text label).
 - **Default intent:** "Image content placeholder. Final image sourced by the implementing agent at build time."
 
+### 3.22 `tooltip` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §3)
+
+Small popover representing a hover-tooltip in the implementing app.
+
+```ts
+export interface TooltipProps {
+  archetype: "tooltip";
+  text: string;
+  arrowPosition?: "none" | "top" | "right" | "bottom" | "left";
+  fill?: { hex: string; alpha: number } | { tokenRef: string } | { styleRef: string };
+  text_colour?: { hex: string; alpha: number } | { tokenRef: string };
+  border?: { width: number | { tokenRef: string }; colour: { hex: string; alpha: number } | { tokenRef: string }; radius?: number | { tokenRef: string } };
+  padding?: Padding;
+  effects?: Effects;
+  describesElementId?: string;
+}
+```
+
+- **Default size:** 140×32 px.
+- **Default intent:** "Hover hint or contextual explanation. `describesElementId` carries the relationship for downstream agents."
+
+### 3.23 `tab-trigger` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §5.2)
+
+```ts
+export interface TabTriggerProps {
+  archetype: "tab-trigger";
+  label: string;
+  tabId: string;
+  iconLibraryEntryId?: string;
+  badge?: string;
+  isActive: boolean;
+}
+```
+
+- **Default size:** 100×32 px.
+
+### 3.24 `menu-item` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §6.2)
+
+```ts
+export interface MenuItemProps {
+  archetype: "menu-item";
+  label: string;
+  iconLibraryEntryId?: string;
+  description?: string;
+  trailingHint?: string;
+  destructive?: boolean;
+  disabled?: boolean;
+  onClickAction?: string;
+}
+```
+
+- **Default size:** 180×32 px.
+
+### 3.25 `menu-divider` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §6.3)
+
+```ts
+export interface MenuDividerProps {
+  archetype: "menu-divider";
+}
+```
+
+- **Default size:** 180×1 px.
+
+### 3.26 `carousel-indicators` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §7.3)
+
+```ts
+export interface CarouselIndicatorsProps {
+  archetype: "carousel-indicators";
+  count: number;
+  activeIndex: number;
+  shape: "dot" | "bar" | "number";
+  position: "below" | "above" | "overlay-bottom" | "overlay-top";
+}
+```
+
+- **Default size:** 120×8 px.
+
+### 3.27 `toggle-button` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §8.1)
+
+```ts
+export interface ToggleButtonProps {
+  archetype: "toggle-button";
+  label?: string;
+  iconLibraryEntryId?: string;
+  pressed: boolean;
+  surface: "dark" | "tinted";
+  size: 24 | 28 | 32;
+  onPressedChangeAction?: string;
+}
+```
+
+- **Default size:** 28×28 px (icon-only) or 80×28 px (with label).
+- **States:** default, hover, pressed, focus, disabled.
+
 ## 4. Container archetypes
 
 Containers carry the same `Container` schema (see [07_package_format.md](07_package_format.md) §5) with the archetype id determining the chrome variant and the expected children.
@@ -576,6 +670,108 @@ export interface ContainerGroupExtras {
 - **Default fill / border / effects:** none.
 - **Default intent:** "A layout grouping wrapper. Holds elements that move together."
 - **Applicable rules:** `group.empty.warning`, `group.cycle.blocker`, `group.depth-excessive.warning`.
+
+### 4.12 `modal-overlay` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §4.1)
+
+```ts
+export interface ModalOverlayExtras {
+  archetype: "modal-overlay";
+  backdrop: { fill: { hex: string; alpha: number } | { tokenRef: string }; blur?: number | { tokenRef: string } };
+  dismissOnBackdropClick?: boolean;
+}
+```
+
+- **Default size:** spans Frame.
+- **Children:** typically exactly one `modal-content`.
+
+### 4.13 `modal-content` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §4.2)
+
+```ts
+export interface ModalContentExtras {
+  archetype: "modal-content";
+  modalKind?: "alert" | "confirm" | "form" | "info" | "destructive";
+  trapFocus?: boolean;
+  closeAffordance?: "x-button" | "esc-only" | "neither";
+}
+```
+
+- **Default size:** 480×320 px, centred.
+
+### 4.14 `tabs` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §5.1)
+
+```ts
+export interface TabsExtras {
+  archetype: "tabs";
+  activeTabId: string;
+  orientation: "horizontal" | "vertical";
+  triggerAlignment?: "start" | "centre" | "end" | "stretch";
+}
+```
+
+- **Default size:** 320×400 px.
+
+### 4.15 `tab-content` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §5.3)
+
+```ts
+export interface TabContentExtras {
+  archetype: "tab-content";
+  tabId: string;
+}
+```
+
+- **Default size:** 320×320 px.
+- **Visible iff** parent tabs `activeTabId === tabId`.
+
+### 4.16 `dropdown-menu` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §6.1)
+
+```ts
+export interface DropdownMenuExtras {
+  archetype: "dropdown-menu";
+  triggerLabel?: string;
+  anchorPosition: "top" | "right" | "bottom" | "left";
+  isOpen: boolean;
+  dismissOnOutsideClick?: boolean;
+}
+```
+
+- **Default size when open:** 200×240 px.
+
+### 4.17 `carousel` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §7.1)
+
+```ts
+export interface CarouselExtras {
+  archetype: "carousel";
+  activeSlideIndex: number;
+  autoAdvance?: { intervalMs: number; pauseOnHover?: boolean };
+  loop?: boolean;
+}
+```
+
+- **Default size:** 400×240 px.
+
+### 4.18 `carousel-slide` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §7.2)
+
+```ts
+export interface CarouselSlideExtras {
+  archetype: "carousel-slide";
+  slideIndex: number;
+}
+```
+
+- **Default size:** matches parent carousel.
+
+### 4.19 `segmented-control` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §8.2)
+
+```ts
+export interface SegmentedControlExtras {
+  archetype: "segmented-control";
+  activeSegmentId: string;
+  orientation: "horizontal" | "vertical";
+}
+```
+
+- **Default size:** 240×28 px.
+- **Children:** N `toggle-button` Components forming a mutually-exclusive radio group.
 
 ## 5. Variants vs. props
 
