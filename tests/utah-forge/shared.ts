@@ -943,6 +943,8 @@ export type SectionIsoSceneState = {
     depthWrite: boolean | null;
     renderOrder: number | null;
     surfaceRenderPolicy: string | null;
+    opacityPolicy: string | null;
+    layerRenderOpacity: number | null;
     opacity: number | null;
     baseOpacity: number | null;
     transitionOpacity: number | null;
@@ -963,6 +965,8 @@ export type SectionIsoSceneState = {
     depthWrite: boolean | null;
     renderOrder: number | null;
     surfaceRenderPolicy: string | null;
+    opacityPolicy: string | null;
+    layerRenderOpacity: number | null;
     opacity: number | null;
     baseOpacity: number | null;
     transitionOpacity: number | null;
@@ -3506,6 +3510,14 @@ export async function sectionIsoSceneState(
         surfaceRenderPolicy:
           typeof data.surfaceRenderPolicy === "string"
             ? data.surfaceRenderPolicy
+            : null,
+        opacityPolicy:
+          typeof data.sectionIsoOpacityPolicy === "string"
+            ? data.sectionIsoOpacityPolicy
+            : null,
+        layerRenderOpacity:
+          typeof data.sectionIsoLayerRenderOpacity === "number"
+            ? data.sectionIsoLayerRenderOpacity
             : null,
         opacity: typeof first?.opacity === "number" ? first.opacity : null,
         baseOpacity:

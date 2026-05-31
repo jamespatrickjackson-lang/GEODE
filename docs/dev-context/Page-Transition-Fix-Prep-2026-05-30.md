@@ -1527,3 +1527,3385 @@ Recommendations before runtime fixes:
    summaries for precise causality.
 5. Then proceed to the first runtime fix: split section ISO overlay opacity from
    scalar-volume layer opacity.
+
+## All-Adjacent Matrix Expansion - 2026-05-31
+
+User correction accepted: pages are disposable examples. The transition audit
+must therefore target base transition rules and systemic state orchestration,
+not hard-code repairs between specific page numbers. The matrix generator now
+derives normal cases from `projects/utah-forge/project.json:pageOrder`:
+
+- `A01` through `A25`: every adjacent `pageOrder[n] -> pageOrder[n + 1]`
+  handoff.
+- `S01`: supplemental non-adjacent section-frame stress path, page index
+  `22 -> 24`.
+- `06`: rapid interruption stress path, retained separately.
+
+Tooling changes:
+
+- `tools/capture-transition-matrix.mjs`
+  - Replaced the hand-picked core matrix with generated all-adjacent coverage.
+  - Added `matrixScope` metadata to the manifest with generated adjacent,
+    supplemental, and interruption case counts.
+  - Added failure recovery so a bad handoff writes `failure.json`, optional
+    `failure.png`, and continues instead of aborting the entire audit.
+  - Added trace failure recording so replay failures are visible in the matrix
+    manifest.
+- `tools/analyze-transition-matrix.mjs`
+  - Added `matrixCaptureFailures` so capture/trace failures are reported
+    separately from visual policy divergences and coverage gaps.
+  - Kept `adjacentTransitionCoverageGaps` as a missing-case detector; it now
+    drops to zero when all adjacent pairs are represented.
+- `tests/tools/analyze-transition-matrix.test.mjs`
+  - Added analyzer coverage for trace/capture failure reporting.
+
+Capture history:
+
+1. First all-adjacent attempt:
+   - Artifact:
+     `test-results/transition-matrix-debug-2026-05-31T02-34-59-419Z`
+   - Result: aborted at `A19`
+     (`50_integrated_seismic_resistivity_context -> 99_unresolved_missing_tools`)
+     with `gotoAndSettle` timeout.
+   - Finding: the tool needed per-case failure recording/recovery before the
+     all-page audit could be trusted.
+2. Recovery-enabled attempt:
+   - Artifact:
+     `test-results/transition-matrix-debug-2026-05-31T02-46-04-834Z`
+   - Result: completed 27 cases but included Vite HMR/provider contamination:
+     `unexpectedConsole: 4`, `matrixCaptureFailures: 1`.
+   - Finding: because the dev server hot-reloaded while tooling changed, this
+     run was not accepted as a visual baseline.
+3. Clean restarted-server baseline:
+   - Artifact:
+     `test-results/transition-matrix-debug-2026-05-31T03-04-43-870Z`
+   - Report:
+     `test-results/transition-matrix-debug-2026-05-31T03-04-43-870Z/transition-analysis.md`
+   - Manifest:
+     `test-results/transition-matrix-debug-2026-05-31T03-04-43-870Z/manifest.json`
+   - Video:
+     `test-results/transition-matrix-debug-2026-05-31T03-04-43-870Z/videos/`
+   - Result: accepted as the current all-adjacent audit baseline.
+
+Clean baseline counts:
+
+| Metric | Count |
+| --- | ---: |
+| cases | 27 |
+| generated adjacent cases | 25 |
+| supplemental cases | 1 |
+| interruption cases | 1 |
+| productEntries | 747 |
+| stateSourceOnly | 156 |
+| loadedAtStartFalse | 24 |
+| unloadedDormantHelperState | 24 |
+| unloadedUnresolvedState | 0 |
+| opacityJumps | 82 |
+| opacityJumpCovered | 82 |
+| opacityJumpUnresolved | 0 |
+| policyMismatches | 0 |
+| hiddenProductState | 132 |
+| hiddenDormantState | 132 |
+| hiddenUnresolvedState | 0 |
+| sectionIsoEntries | 0 |
+| sectionIsoRenderOpacityMismatch | 20 |
+| sceneSectionGroundTraceRisk | 3 |
+| cameraPathRisk | 2 |
+| adjacentTransitionCoverageGaps | 0 |
+| matrixCaptureFailures | 0 |
+| interruptionDivergences | 0 |
+| lateReapplyDuringTransition | 1 |
+| unexpectedConsole | 0 |
+| expectedReadPixelsWarnings | 4 |
+
+Important interpretation:
+
+- All adjacent page transitions are now represented. The previous
+  `adjacentTransitionCoverageGaps: 20` blind spot is closed.
+- The user-reported page example is still useful evidence, but not a fix target
+  by itself. The clean matrix says the remaining work belongs in base visual
+  policy/rule families:
+  - MT/section ISO opacity channels are still under-modeled:
+    `sectionIsoRenderOpacityMismatch: 20`.
+  - Scene-section helper/ground-trace handoff still has visible-risk rows:
+    `sceneSectionGroundTraceRisk: 3`.
+  - Camera path risk is concentrated in large authored/default handoffs:
+    `A20` and `A25`.
+- Hidden seismic/MT authored state is now classified as dormant and safe to
+  preserve without interpolation unless it becomes visible.
+- Loaded-at-start false scene-section helper state is still classified as
+  debug-only dormant helper state, not an unresolved visual transition risk.
+- No policy/transitionKind mismatches, interruption source/target divergences,
+  unresolved opacity jumps, capture failures, or unexpected console errors were
+  present in the clean all-adjacent baseline.
+
+Current recommendations before runtime fixes:
+
+1. First runtime fix should still be systemic, not page-specific: split
+   section ISO overlay render opacity from parent scalar-volume layer opacity
+   and expose the resulting overlay policy in the matrix/debug artifacts.
+2. Then fix scene-section helper/ground-trace handoff so helper fade/translation
+   does not snap the ground trace on/off when source/target visibility changes.
+3. Defer camera-only smoothing until after visual-layer snaps are reduced.
+   Current camera risk rows:
+   - `A20`: `99_unresolved_missing_tools -> 101_page`, position distance about
+     `518,379`, max frame position distance about `290,953` over about `983ms`.
+   - `A25`: `103_page -> 105_page`, position distance about `1,778,907`,
+     max frame position distance about `1,030,477` over about `833ms`.
+4. Add a presentation-mode or UI-hidden capture option before relying on
+   screenshots for final smoothness judgment; current app-side traces are
+   stronger for timing but do not replace human visual review.
+5. Keep the all-adjacent matrix as the default audit gate. Future page edits
+   should not require new hard-coded matrix cases unless they introduce a
+   non-adjacent, interruption, or special timing path.
+
+Verification for this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `node --check tools\capture-transition-matrix.mjs` | PASS | Matrix generator syntax clean. |
+| `node --check tools\analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --test tests\tools\analyze-transition-matrix.test.mjs` | PASS | Escalated because sandbox blocks Node test worker spawn. |
+| `npm run audit:transition-report` | PASS | Clean all-adjacent report written with zero unexpected console messages. |
+| `npx tsc --noEmit --pretty false` | PASS | Typecheck clean. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `npm run build` | PASS | Production build completed. |
+| `git diff --check` | FAIL | Existing whitespace/line-ending findings remain, including `src/editor/LayerPanel.tsx:2626: new blank line at EOF`; not changed in this pass. |
+
+## RAF Smoothness Evidence Pass - 2026-05-31T03:24Z heartbeat
+
+Preflight:
+
+- Current working path is the real repo path:
+  `C:\GeoSee\GeoSee_Dev`.
+- Latest accepted matrix before this pass:
+  `test-results/transition-matrix-debug-2026-05-31T03-04-43-870Z`.
+- The older heartbeat baseline
+  `test-results/transition-matrix-debug-2026-05-31T00-29-31-503Z` is now
+  superseded by the all-adjacent baseline.
+- Git worktree is still dirty from transition instrumentation and unrelated
+  local UI/editor changes. No unrelated files were reverted.
+
+Why this pass happened:
+
+- The all-adjacent baseline closed matrix coverage, but its app-side traces
+  were still too sparse for visual smoothness decisions: roughly `4-7` active
+  samples per transition with gaps around `0.8-1.4s`.
+- The user-reported camera stalls/jumps cannot be fixed responsibly from
+  source/mid/end screenshots or sparse timing traces. The next safe step was to
+  strengthen smoothness evidence, not change runtime visual policy.
+
+Tooling/runtime instrumentation changes:
+
+- `src/pages/PageController.tsx`
+  - Added a debug-only `requestAnimationFrame` sampler loop while
+    `startSmoothnessTrace(...)` is active.
+  - Trace `sampling` is now `app-raf` for new captures.
+  - The RAF loop is cancelled on `stopSmoothnessTrace(...)` and provider
+    cleanup.
+  - This is instrumentation only; it does not change page transition visuals.
+- `tools/analyze-transition-matrix.mjs`
+  - Added `smoothnessTraceQualityRisk`.
+  - Flags traces with fewer than `12` active samples or active sample gaps over
+    `150ms`.
+  - Adds a blocking recommendation when trace/video evidence is too sparse for
+    visual smoothing decisions.
+- `tests/tools/analyze-transition-matrix.test.mjs`
+  - Added coverage for `smoothnessTraceQualityRisk`.
+
+New matrix:
+
+- Artifact:
+  `test-results/transition-matrix-debug-2026-05-31T03-32-28-434Z`
+- Manifest:
+  `test-results/transition-matrix-debug-2026-05-31T03-32-28-434Z/manifest.json`
+- Report:
+  `test-results/transition-matrix-debug-2026-05-31T03-32-28-434Z/transition-analysis.md`
+- Video:
+  `test-results/transition-matrix-debug-2026-05-31T03-32-28-434Z/videos/`
+
+Clean matrix status:
+
+| Metric | Count |
+| --- | ---: |
+| cases | 27 |
+| productEntries | 747 |
+| adjacentTransitionCoverageGaps | 0 |
+| matrixCaptureFailures | 0 |
+| interruptionDivergences | 0 |
+| unexpectedConsole | 0 |
+| expectedReadPixelsWarnings | 4 |
+| sectionIsoRenderOpacityMismatch | 20 |
+| sceneSectionGroundTraceRisk | 3 |
+| cameraPathRisk | 2 |
+| smoothnessTraceQualityRisk | 27 |
+
+Smoothness evidence result:
+
+- All `27` traces are now marked `app-raf`.
+- RAF sampling improved density but did not make it good enough for visual
+  smoothing decisions:
+  - minimum active samples: `5`
+  - maximum active samples: `15`
+  - maximum active sample gap: about `1416.7ms`
+  - high-risk `A20`: `8` active samples, max gap about `1166.6ms`
+  - high-risk `A25`: `10` active samples, max gap about `1283.2ms`
+- Interpretation: the trace is no longer just "too coarse evidence"; it is also
+  evidence that transition runs can have long app-frame gaps under matrix
+  conditions. This matches the user's observed "stall and jump" symptom better
+  than a simple easing bug.
+
+Decision:
+
+- Do not make section/ISO visual runtime fixes yet.
+- The next safe investigation is to classify why RAF/app frames are sparse:
+  heavy scene rebuilds, synchronous material/geometry work during transition,
+  async section/ISO rebuilds landing mid-run, renderer invalidation cadence, or
+  Playwright/video/headless throttling.
+- Prefer adding per-sample/per-gap instrumentation before runtime policy fixes:
+  record `dtMs`, long-gap buckets, transition frame phase, active product family
+  counts, scene snapshot/rebuild counters, and whether section ISO/ground-trace
+  async work completed during the gap.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `node --check tools\analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --check tools\capture-transition-matrix.mjs` | PASS | Matrix generator syntax clean. |
+| `node --test tests\tools\analyze-transition-matrix.test.mjs` | PASS | Escalated because sandbox blocks Node test worker spawn. |
+| `npx tsc --noEmit --pretty false` | PASS | Typecheck clean after RAF sampler change. |
+| `npm run audit:transition-matrix` | PASS | Captured all 27 cases from the real repo path via Vite on `127.0.0.1:5174`. |
+| `npm run audit:transition-report` | PASS | Report now includes `smoothnessTraceQualityRisk: 27`. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `npm run build` | PASS | Production build completed after RAF sampler change. |
+| `npx playwright test tests/utah-forge/transition-orchestration.spec.ts --workers=1` | PASS | Escalated because sandbox blocked Playwright test-results cleanup; all 4 transition-orchestration tests pass after updating smoothness trace expectations to `app-raf`. |
+| `git diff --check` | FAIL | Existing whitespace/line-ending findings remain, including `src/editor/LayerPanel.tsx:2626: new blank line at EOF`; not changed in this pass. |
+
+Blocker after verification:
+
+- The Playwright orchestration rerun cleaned `test-results`, removing the fresh
+  matrix artifact
+  `test-results/transition-matrix-debug-2026-05-31T03-32-28-434Z`.
+- This means the counts above are valid from the completed report output in the
+  thread/log, but the artifact files are no longer available on disk for human
+  review.
+- Stop condition triggered: generated artifacts unexpectedly disappeared.
+
+Next unattended run should:
+
+1. Move transition matrix outputs outside Playwright's cleaned `test-results`
+   path, or regenerate the matrix after all Playwright tests have finished.
+2. Prefer a stable artifact root such as
+   `docs/dev-context/artifacts/transition-matrix/` or another non-cleaned
+   directory.
+3. Regenerate the RAF-sampled matrix/report and confirm the artifact remains on
+   disk before any visual runtime fixes.
+4. Continue investigating long RAF sample gaps before changing section/ISO or
+   camera smoothing behavior.
+
+## Stable Matrix Artifact Root - 2026-05-31T04:01Z heartbeat
+
+Preflight:
+
+- Working from the real repo path: `C:\GeoSee\GeoSee_Dev`.
+- `test-results` had already been cleaned by Playwright and contained only
+  `.last-run.json`.
+- The latest on-disk prep checkpoint was the RAF smoothness evidence blocker
+  above.
+- Git worktree remained dirty from transition instrumentation plus unrelated
+  editor/UI changes. No unrelated changes were reverted.
+
+Tooling change:
+
+- `tools/capture-transition-matrix.mjs`
+  - Default matrix output root moved from `test-results/...` to
+    `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-...`.
+  - `TRANSITION_MATRIX_OUT` still overrides the default.
+- `tools/analyze-transition-matrix.mjs`
+  - Default report search root moved from `test-results` to
+    `docs/dev-context/artifacts/transition-matrix`.
+
+New durable matrix:
+
+- Artifact:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T04-04-03-526Z`
+- Manifest:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T04-04-03-526Z/manifest.json`
+- Report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T04-04-03-526Z/transition-analysis.md`
+- Video:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T04-04-03-526Z/videos/page@0536a7f6362c2a348580993ea5489c27.webm`
+- Trace files on disk after Playwright cleanup: `27`.
+
+Clean matrix status:
+
+| Metric | Count |
+| --- | ---: |
+| cases | 27 |
+| productEntries | 747 |
+| stateSourceOnly | 156 |
+| loadedAtStartFalse | 24 |
+| unloadedDormantHelperState | 24 |
+| unloadedUnresolvedState | 0 |
+| opacityJumps | 82 |
+| opacityJumpCovered | 82 |
+| opacityJumpUnresolved | 0 |
+| policyMismatches | 0 |
+| hiddenProductState | 132 |
+| hiddenDormantState | 132 |
+| hiddenUnresolvedState | 0 |
+| sectionIsoEntries | 0 |
+| sectionIsoRenderOpacityMismatch | 20 |
+| sceneSectionGroundTraceRisk | 3 |
+| cameraPathRisk | 2 |
+| smoothnessTraceQualityRisk | 27 |
+| adjacentTransitionCoverageGaps | 0 |
+| matrixCaptureFailures | 0 |
+| interruptionDivergences | 0 |
+| lateReapplyDuringTransition | 1 |
+| unexpectedConsole | 0 |
+| expectedReadPixelsWarnings | 4 |
+
+Smoothness evidence:
+
+- All traces are `app-raf`.
+- Active sample density is still not good enough for visual policy changes:
+  - minimum active samples: `7`
+  - maximum active samples: `14`
+  - maximum active sample gap: about `1416.6ms`
+  - `A20` (`99_unresolved_missing_tools` -> `101_page`): `8` active samples,
+    max active gap about `1216.6ms`, stopped at max duration.
+  - `A25` (`103_page` -> `105_page`): `10` active samples, max active gap
+    about `1250ms`, settled.
+- Compared with the logged 03:32Z RAF baseline, the durable rerun preserved the
+  same high-level result: no capture failures, no unexpected console errors, no
+  interruption divergence, and all `27` transitions still have smoothness trace
+  quality risk.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `node --check tools\capture-transition-matrix.mjs` | PASS | Stable output-root change is syntax clean. |
+| `node --check tools\analyze-transition-matrix.mjs` | PASS | Stable results-root change is syntax clean. |
+| `node --test tests\tools\analyze-transition-matrix.test.mjs` | PASS | Escalated because sandbox blocks Node test worker spawn. |
+| `npx tsc --noEmit --pretty false` | PASS | Typecheck clean. |
+| `npm run audit:transition-matrix` | PASS | Captured all 27 cases to the durable docs artifact root from Vite on `127.0.0.1:5174`. |
+| `npm run audit:transition-report` | PASS | Report defaults to the durable artifact root and wrote `transition-analysis.md`. |
+| `npx playwright test tests/utah-forge/transition-orchestration.spec.ts --workers=1` | PASS | All 4 focused orchestration tests passed. Playwright cleaned `test-results`, but the durable matrix artifact remained on disk. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `npm run build` | PASS | Production build completed. |
+| `git diff --check` | FAIL | Existing line-ending warnings and the existing `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF finding remain. Not introduced or fixed in this pass. |
+
+Decision:
+
+- Do not start section/ISO or camera runtime smoothing yet.
+- The user-reported camera stall/jump and ISO opacity snap are now best treated
+  as base orchestration/root-rule issues, not page-specific fixtures.
+- Next safest pass is deeper root-cause instrumentation around long active RAF
+  gaps:
+  - record per-sample `dtMs` and long-gap buckets in smoothness traces;
+  - record page-source, scene-source, transition source/target, and camera pose
+    source/target on every sample;
+  - record scene snapshot/rebuild counters and product-family rebuild counters;
+  - record whether section ISO/ground-trace async work completed during each
+    active transition gap;
+  - expose camera interpolation inputs and page-source selection so pages that
+    already share a layer cannot accidentally fade/translate it as if it were a
+    new object.
+
+## Root-Rule Timing Pass and Working-Area No-Op Fix - 2026-05-31T06:10Z heartbeat
+
+Preflight:
+
+- Worked from the real repo path: `C:\GeoSee\GeoSee_Dev`.
+- Latest durable baseline before this pass:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T05-12-30-880Z`.
+- The worktree was already dirty from transition instrumentation and unrelated
+  editor/UI files. No unrelated changes were reverted.
+- User clarification for this pass: pages are throwaway examples; fix/audit
+  base transition rules, clocks, ownership, and state-source logic.
+
+Instrumentation added:
+
+- `src/pages/PageController.tsx`
+  - Smoothness trace samples now include `dtMs`, long-gap classification,
+    camera source/target pose diagnostics, and scene transition debug state.
+  - Scene samples now carry the latest frame-stage timing and layer-tween
+    substage timing from `SceneManager`.
+- `src/scene/SceneManager.ts`
+  - `getTransitionDebugState()` now exposes frame-update timing, layer-tween
+    tick timing, scene-section helper opacity, working-area tween state,
+    scene-section style tween state, helper snapshot state, product-family
+    counts, and late-reapply counters.
+- `src/scene/transitions/layerTweenRuntime.ts`
+  - Layer-tween ticks now record substage timings for scene-section planes,
+    working-area focus, scalar style, layer opacity, layer snapshots, helper
+    snapshots, and transition-envelope enforcement.
+- `tools/analyze-transition-matrix.mjs`
+  - Long active trace gaps now report frame/tick timings, active layer tween
+    ids, active snapshot ids, scene-section/helper flags, camera step distance,
+    and late-reapply deltas.
+
+First root-cause finding:
+
+- Diagnostic matrix `transition-matrix-debug-2026-05-31T04-49-43-810Z`
+  showed all `111` long active gaps had `workingAreaFocusTweenActive=true`
+  and `activeDataTransitionCount=2`.
+- Root cause: `transitionWorkingAreaFocusForPageImpl` started a working-area
+  focus tween on every duration-based page transition even when resolved
+  working-area focus state was unchanged.
+- Regression added:
+  `Unchanged working-area focus state does not start a transition tween`.
+  - Red result: `workingAreaFocusTweenActive` was `true`.
+  - Fix: compare resolved working-area focus states and apply final style
+    immediately when they are equal.
+  - Green result: focused regression passed.
+
+Post-fix baseline:
+
+- Artifact:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T05-12-30-880Z`
+- Report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T05-12-30-880Z/transition-analysis.md`
+- Key result:
+  - `workingAreaFocusTweenActive` in long gaps: `111 -> 0`.
+  - active data transitions in long gaps: `2 -> 1`.
+  - `sceneSectionGroundTraceRisk`: `3 -> 0`.
+  - `longActiveTraceGaps`: still `111`.
+- Decision: the working-area no-op bug was real and is fixed, but it was not
+  the final stall source. Continue root-cause instrumentation before any visual
+  policy changes.
+
+Capture-tool hardening:
+
+- A full video-enabled timing run wrote all case artifacts under
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T05-37-15-220Z`,
+  including a WebM in `videos/`, but hung before writing `manifest.json`.
+- Cause of evidence loss: the capture tool waited for video finalization before
+  writing the manifest.
+- Tooling fix:
+  - `tools/capture-transition-matrix.mjs` now writes a preliminary
+    `manifest.json` before browser/video finalization.
+  - Added `TRANSITION_MATRIX_VIDEO=0` for diagnostic runs where manifest
+    durability is more important than another video.
+  - Manifest now includes `videoStatus`.
+
+Latest diagnostic matrix:
+
+- Artifact:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T05-54-38-342Z`
+- Manifest:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T05-54-38-342Z/manifest.json`
+- Report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T05-54-38-342Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T05-12-30-880Z`
+- Video:
+  disabled for this rerun with `TRANSITION_MATRIX_VIDEO=0`; use the prior
+  `05-37-15-220Z/videos/page@5d7ff8da342444084966ad14e43998c6.webm`
+  for human review.
+
+Latest matrix counts:
+
+| Metric | Count | Delta vs 05:12Z |
+| --- | ---: | ---: |
+| cases | 27 | 0 |
+| productEntries | 318 | 19 |
+| stateSourceOnly | 68 | 4 |
+| loadedAtStartFalse | 12 | 1 |
+| opacityJumps | 33 | 3 |
+| opacityJumpCovered | 33 | 3 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| hiddenDormantState | 56 | 3 |
+| hiddenUnresolvedState | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 12 | 1 |
+| sceneSectionGroundTraceRisk | 1 | 1 |
+| cameraPathRisk | 2 | 0 |
+| smoothnessTraceQualityRisk | 26 | -1 |
+| longActiveTraceGaps | 106 | -5 |
+| matrixCaptureFailures | 1 | 1 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 1 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Timing aggregate from latest matrix:
+
+- Long active gaps: `106`.
+- Long gaps with scene-section style tween active: `25`.
+- Long gaps without scene-section style tween: `81`.
+- Long gaps with scene-section helper snapshot active: `4`.
+- Average `frameLayerTweensMs` when scene-section tween is active: `11.892ms`.
+- Average `frameLayerTweensMs` when scene-section tween is not active:
+  `0.321ms`.
+- Average `tickSceneSectionMs` for scene-section long gaps: `11.512ms`.
+- Max `tickSceneSectionMs`: `22.8ms`.
+- Max frame time recorded in a long-gap sample: `23.3ms`.
+- Top stall rows are dominated by `sceneSectionStyleTweenActive=true` and
+  `tickLayerIds=utah-forge-mt-resistivity-volume`; the expensive substage is
+  scene-section plane application, not the MT volume opacity tween itself.
+- A25 remains important because it combines:
+  - large camera path risk (`103_page -> 105_page`, sampled position distance
+    about `1,767,188.9`);
+  - scene-section helper translation (`opacity 1 -> 0`);
+  - helper snapshot active;
+  - MT volume discrete crossfade;
+  - section ISO render-opacity mismatch risk.
+
+Blocking matrix finding:
+
+- `A04` (`05_mt_threshold_focus -> 08_mt_threshold_surfaces`) failed in
+  `source-settle`.
+- Observed state at failure: `12_mt_volume_overview -> unknown`.
+- Message: `page.waitForFunction: Timeout 20000ms exceeded.`
+- Screenshot:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T05-54-38-342Z/A04-adjacent-05_mt_threshold_focus-to-08_mt_threshold_surfaces/failure.png`
+- Decision: stop before visual smoothing. The next pass must classify whether
+  this is a capture recovery/source-settle bug or an app navigation/setCurrent
+  bug. Do not patch section/ISO opacity or camera motion until this is known.
+
+Recommendations:
+
+1. Fix or classify `A04` source-settle failure first. This is now the blocking
+   audit item because the matrix cannot be treated as fully green.
+2. After `A04` is classified, make the next base-rule pass on scene-section
+   plane tween cost/ownership:
+   - avoid reapplying unchanged scene-section planes every transition frame;
+   - split helper translation/fade from ground-trace visibility so the ground
+     trace cannot snap out before the target/source policy says it should;
+   - keep this as a base rule, not a page-specific patch.
+3. Keep section ISO opacity separate from MT volume layer opacity. Current
+   evidence still shows section ISO render-opacity mismatch risk in A20/A25.
+4. Treat A25 camera movement separately from visual layer handoff. It has a
+   large camera path, but the measured frame-stage cost on the top A25 gap is
+   low; the visible jump is likely path distance plus layer/helper policy, not
+   one heavy frame alone.
+5. Preserve the working-area no-op comparison permanently; it removed one
+   false active transition source without changing visual policy.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `node --check tools\capture-transition-matrix.mjs` | PASS | Capture tool syntax clean after preliminary manifest/video toggle. |
+| `node --check tools\analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean after timing fields. |
+| `node --test tests\tools\analyze-transition-matrix.test.mjs` | PASS | Escalated because Node test worker spawn is sandbox-blocked. |
+| `npx tsc --noEmit --pretty false` | PASS | Typecheck clean. |
+| `npm run audit:transition-report` | PASS | Wrote latest `transition-analysis.md`; includes one matrix capture failure. |
+| `npm run audit:transition-matrix` | PASS with captured failure | No-video rerun completed and wrote manifest; A04 source-settle failure is recorded as blocking evidence. |
+| `npx playwright test tests/utah-forge/transition-orchestration.spec.ts --workers=1` | PASS | First run hit sandbox artifact unlink; escalated rerun passed all 5 tests. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `npm run build` | PASS | Production build completed. |
+| `git diff --check` | FAIL | Existing line-ending warnings plus the known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF finding remain. Not fixed in this pass. |
+
+Operational cleanup:
+
+- Vite and transition-matrix processes from this pass were stopped.
+- Process inspection after cleanup showed no remaining `node_modules.*vite` or
+  `capture-transition-matrix` process except the inspection command itself.
+- Heartbeat automation `transition-smoothing-unattended-pass` was updated to
+  use `05-54-38-342Z` as the diagnostic baseline and to prioritize the A04
+  source-settle blocker before scene-section/ISO/camera visual fixes.
+
+## A04 Source-Settle Classification and Tooling Fix - 2026-05-31T06:39Z heartbeat
+
+Preflight:
+
+- Worked from the real repo path: `C:\GeoSee\GeoSee_Dev`.
+- Latest baseline before this pass:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T05-54-38-342Z`.
+- Blocking item from prior pass: `A04` source-settle failed while observed
+  page state had reset to `12_mt_volume_overview -> unknown`.
+- No unrelated worktree changes were reverted.
+
+Classification:
+
+- `A03` ended correctly on `05_mt_threshold_focus` at index `3`.
+- `A04` then called `gotoAndSettle(3)`, which should have been an immediate
+  no-op settle because the page was already at index `3`.
+- During the 20s settle wait, the app reset to index `0`
+  (`12_mt_volume_overview`) with no active transition.
+- This pattern matches Vite dev-server reload during matrix artifact writes,
+  not a page transition source/target logic failure.
+- Root cause: the durable matrix artifact root lives under
+  `docs/dev-context/artifacts/transition-matrix`, inside the Vite project root.
+  Vite was already configured to ignore `projects/**` so authoring writes do
+  not reload the app, but generated matrix artifacts were not ignored.
+
+Fix:
+
+- `vite.config.ts`
+  - Added watcher ignores for:
+    - `**/docs/dev-context/artifacts/**`
+    - `**/test-results/**`
+    - `**/playwright-report/**`
+  - Updated the watch comment to describe generated verification outputs.
+- `tools/capture-transition-matrix.mjs`
+  - Hardened `gotoAndSettle()` so it verifies `window.__pageController.goto`
+    exists and throws `source-goto` immediately if the dev hook is missing,
+    instead of silently no-oping and timing out as `source-settle`.
+
+Verification matrix:
+
+- Artifact:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T06-23-28-187Z`
+- Manifest:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T06-23-28-187Z/manifest.json`
+- Report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T06-23-28-187Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T05-54-38-342Z`
+- `TRANSITION_MATRIX_VIDEO=0` was used; `videoStatus` is `disabled`.
+- Cases: `27`.
+- Matrix capture / trace failures: `0`.
+- Unexpected console messages: `0`.
+- Expected Chromium/WebGL ReadPixels warning-class messages: `4`.
+- A04 captured and replayed successfully:
+  `A04-adjacent-05_mt_threshold_focus-to-08_mt_threshold_surfaces/trace.json`.
+
+Updated counts:
+
+| Metric | Count | Delta vs 05:54Z |
+| --- | ---: | ---: |
+| productEntries | 317 | -1 |
+| stateSourceOnly | 68 | 0 |
+| loadedAtStartFalse | 11 | -1 |
+| unloadedUnresolvedState | 0 | 0 |
+| opacityJumps | 28 | -5 |
+| opacityJumpCovered | 28 | -5 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| hiddenDormantState | 57 | 1 |
+| hiddenUnresolvedState | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 11 | -1 |
+| sceneSectionGroundTraceRisk | 0 | -1 |
+| cameraPathRisk | 2 | 0 |
+| smoothnessTraceQualityRisk | 27 | 1 |
+| longActiveTraceGaps | 112 | 6 |
+| matrixCaptureFailures | 0 | -1 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 1 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Remaining transition findings:
+
+- A04 is no longer blocking. It is classified as a dev-server/tooling reload
+  issue caused by generated artifacts being watched by Vite.
+- Scene-section ground-trace handoff risk is now `0` in the analyzer.
+- Section ISO render-opacity mismatch risk remains (`11`), with A20 called out
+  in the report.
+- Camera path risk remains (`2`): A20 and A25.
+- Long active gaps remain (`112`), still dominated by the shared
+  `utah-forge-mt-resistivity-volume` layer tween and, in the larger scene
+  section cases, scene-section plane work.
+
+Next recommendation:
+
+1. Start the next visual/base-rule pass on section ISO opacity ownership and
+   scene-section plane update cost.
+2. Keep it narrow:
+   - expose the policy/debug state first or in the same pass;
+   - do not change camera-only smoothing yet;
+   - do not patch page IDs directly.
+3. Preserve the Vite watch ignore and `gotoAndSettle()` hook check as matrix
+   stability safeguards.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `node --check tools\capture-transition-matrix.mjs` | PASS | Capture syntax clean after `gotoAndSettle` hardening. |
+| `node --check tools\analyze-transition-matrix.mjs` | PASS | Analyzer syntax still clean. |
+| `npx tsc --noEmit --pretty false` | PASS | Typecheck clean before matrix rerun. |
+| `npm run audit:transition-matrix` | PASS | Full no-video matrix captured all 27 cases; A04 passed; failures `0`. |
+| `npm run audit:transition-report` | PASS | Latest report written with `matrixCaptureFailures=0`. |
+| `node --test tests\tools\analyze-transition-matrix.test.mjs` | PASS | Escalated because Node test worker spawn is sandbox-blocked. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `npm run build` | PASS | Production build completed. |
+| `npx playwright test tests/utah-forge/transition-orchestration.spec.ts --workers=1` | PASS | All 5 transition orchestration tests passed. |
+| `git diff --check` | FAIL | Existing line-ending warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Operational cleanup:
+
+- The matrix Vite server was stopped after capture/report.
+- Final process inspection showed no remaining `node_modules.*vite` or
+  `capture-transition-matrix` process except the inspection command itself.
+
+## 2026-05-31 00:56 local - Section ISO ownership and scene-section helper pass
+
+Scope:
+
+- Continued from accepted baseline:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T06-23-28-187Z`.
+- Kept the pass to base transition rules, not page-specific fixes.
+- Targeted the first narrow visual family: section ISO opacity ownership and
+  scene-section helper/plane update cost.
+
+Runtime fixes:
+
+- `src/scene/SceneManager.ts`
+  - Section ISO overlay materials are no longer used as parent scalar-volume
+    render opacity evidence.
+  - Parent layer opacity is now tracked separately as
+    `sectionIsoLayerRenderOpacity`.
+  - Overlay transition opacity is preserved independently as
+    `sectionIsoTransitionOpacity`.
+  - Debug state now exposes the policy:
+    `split-section-iso-overlay-opacity-from-layer-opacity`.
+  - This directly addresses the visible symptom where section ISO bands/lines
+    dimmed with an MT volume fade and then snapped back at the end.
+- `src/scene/transitions/layerTweenRuntime.ts`
+  and `src/scene/transitions/transitionEffectiveLayersForPage.ts`
+  - Discrete scene-section transitions now reuse the already-applied target
+    planes after the initial reapply.
+  - Active frames use a helper-opacity-only path when safe instead of
+    reapplying full scene-section planes every frame.
+  - Debug state now exposes `sceneSectionApplyMode`.
+
+Regression coverage:
+
+- Added a direct section ISO regression:
+  `Section ISO overlay opacity is independent from scalar volume layer fades`.
+- Added a scene-section helper regression:
+  `Scene section discrete helper fades reuse target planes after first frame`.
+- Hardened the MT volume opacity policy test so it no longer assumes fixed page
+  indexes. It now derives a valid source/target pair from current
+  `pageOrder` and effective MT volume visibility/opacity inputs.
+
+Important audit finding from the MT test hardening:
+
+- Authored MT volume layer visibility is not the same as actual raymarched
+  volume render opacity when section ISO is enabled.
+- Current Utah FORGE pages commonly have:
+  - `utah-forge-mt-resistivity-volume` authored/effective layer visible.
+  - `sectionIsoEnabled: true`.
+  - `sectionIsoSourceOpacity: 0`.
+  - Raymarched volume render opacity therefore resolves to `0`, while section
+    ISO overlays remain visible.
+- The previous MT test had been implicitly relying on ISO overlay material
+  opacity to make the parent volume look source-visible in transition debug.
+  That coupling is now removed.
+- Recommendation: the next MT-family pass should explicitly expose and govern
+  three separate concepts in debug/policy:
+  authored layer visibility, raymarched volume render opacity, and section ISO
+  overlay presence. Do not let a parent MT volume fade make a hidden raymarched
+  volume appear when the page is intentionally using only ISO overlays.
+
+Completed matrix/report artifact:
+
+- Valid matrix:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T07-06-37-415Z`
+- Manifest:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T07-06-37-415Z/manifest.json`
+- Report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T07-06-37-415Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T06-23-28-187Z`
+- `TRANSITION_MATRIX_VIDEO=0` was used; `videoStatus` is `disabled`.
+
+Updated counts from the valid artifact:
+
+| Metric | Count | Delta vs 06:23Z |
+| --- | ---: | ---: |
+| productEntries | 332 | 15 |
+| stateSourceOnly | 73 | 5 |
+| loadedAtStartFalse | 14 | 3 |
+| unloadedDormantHelperState | 14 | 3 |
+| unloadedUnresolvedState | 0 | 0 |
+| opacityJumps | 34 | 6 |
+| opacityJumpCovered | 34 | 6 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| hiddenDormantState | 59 | 2 |
+| hiddenUnresolvedState | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | -11 |
+| sceneSectionGroundTraceRisk | 2 | 2 |
+| cameraPathRisk | 2 | 0 |
+| smoothnessTraceQualityRisk | 27 | 0 |
+| longActiveTraceGaps | 116 | 4 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 1 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Interpretation:
+
+- Section ISO render-opacity mismatch is cleared: `11 -> 0`.
+- The discrete scene-section helper path is cheaper in the A25-style handoff:
+  latest valid report shows helper snapshot work without repeating full
+  `tickSceneSection` work on helper-only frames.
+- Continuous scene-section transitions still show expensive plane work:
+  A20, A21, and S01 remain the clearest timing rows.
+- Scene-section ground-trace handoff risk is back in view:
+  A25 reports `scene-section-ground-trace-disable-risk`.
+- Camera-path risk remains unchanged and should still wait until visual layer
+  ownership is cleaner.
+
+Incomplete matrix rerun:
+
+- A later no-video rerun created
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T07-44-36-976Z`
+  but did not write `manifest.json`.
+- It reached the final supplemental case directory and then stalled during
+  finalization. The capture process was stopped.
+- Treat this as an incomplete tooling artifact, not a valid matrix result.
+  Future preflight should ignore it unless a manifest is added.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `node --check tools\capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node --check tools\analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --test tests\tools\analyze-transition-matrix.test.mjs` | PASS | Escalated because Node test worker spawn is sandbox-blocked. |
+| `npx tsc --noEmit --pretty false` | PASS | Typecheck clean after runtime and test changes. |
+| `npx playwright test tests/utah-forge/transition-orchestration.spec.ts --workers=1` | PASS | All 7 transition orchestration tests passed. |
+| `npm run audit:transition-matrix` | PASS | Valid no-video matrix is `07-06-37-415Z`; a later rerun stalled without manifest and was stopped. |
+| `npm run audit:transition-report` | PASS | Report regenerated for valid `07-06-37-415Z` artifact. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing line-ending warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Next recommendation:
+
+1. Do not begin camera-only smoothing yet.
+2. Fix scene-section ground-trace/helper ownership next:
+   - A25 ground-trace disable handoff should hold or snapshot through helper
+     fade instead of disappearing mid-transition.
+   - Continuous scene-section plane updates in A20/A21/S01 need caching or a
+     lower-cost interpolation path before more visual families are changed.
+3. Then handle MT volume handoffs as the next separate family:
+   - expose authored layer visibility vs raymarched render opacity vs ISO
+     overlay presence;
+   - prevent hidden raymarched volume from appearing solely because parent
+     layer opacity is tweened;
+   - rerun matrix/report before moving to surfaces or seismic products.
+4. Preserve the current section ISO split and the discrete helper-only path.
+
+## 2026-05-31 ground-trace helper ownership pass
+
+Purpose:
+
+- Address the remaining scene-section helper/ground-trace ownership issue as a
+  base transition rule, not as a page-specific A25 fix.
+- Preserve the existing section ISO split and avoid starting camera-only
+  smoothing until helper ownership is cleanly exposed in debug/matrix output.
+
+Root cause:
+
+- Scene-section ground-trace mesh creation is asynchronous because it waits on
+  the height sampler.
+- If the target page disables scene-section helpers while the source helper fade
+  snapshot is active, the live helper group can be cleared before the delayed
+  ground-trace mesh resolves.
+- The helper fade snapshot previously captured only the objects that existed at
+  snapshot start, so a delayed ground-trace mesh could disappear instead of
+  fading with the rest of the helper geometry.
+
+Runtime/debug changes:
+
+- `SceneManager` now exposes `sceneSectionHelpers` in transition debug:
+  `groundTracePolicy`, live/snapshot ground-trace counts, snapshot active state,
+  and helper transition opacity.
+- Delayed scene-section ground-trace meshes are mirrored into an active helper
+  transition snapshot using the policy
+  `mirror-delayed-ground-trace-into-helper-snapshot`.
+- The app-side smoothness trace and matrix state summaries now include the
+  `sceneSectionHelpers` debug object.
+- The transition matrix analyzer now splits scene-section ground-trace handoffs
+  into unresolved risk vs snapshot-covered rows:
+  - unresolved: `scene-section-ground-trace-disable-risk`
+  - covered: `scene-section-ground-trace-snapshot-covered`
+
+Test changes:
+
+- Added a regression covering the async ground-trace case:
+  `Scene section helper snapshot receives delayed ground-trace geometry`.
+- The test failed before the runtime fix because the helper snapshot never
+  received a ground-trace object.
+- The interruption debug test was also made deterministic: it now captures the
+  interrupted run synchronously immediately after `goto(2)` instead of trying
+  to observe a short active window in a second Playwright poll. This removes the
+  full-suite timing race while still asserting the same source/target/run-id
+  contract.
+
+Matrix/tooling changes:
+
+- The capture tool now writes a manifest checkpoint before trace replay and
+  after each trace replay. A trace replay stall can no longer leave a complete
+  screenshot/state capture without a manifest.
+- Added `TRANSITION_MATRIX_TRACE=0` support. When trace replay is disabled, the
+  manifest writes `traceStatus: "disabled"` and the analyzer warns that the
+  artifact is valid for policy/source-target classification only, not camera or
+  smoothness timing conclusions.
+- Fixed final manifest writing so `traceStatus` remains `disabled` when trace
+  replay was intentionally skipped.
+
+Artifact notes:
+
+- A default no-video matrix run wrote screenshot/state artifacts to
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T08-24-39-212Z`
+  but stalled during trace replay after A19 and before manifest writing. The
+  stuck capture process was stopped. Treat this as an incomplete tooling
+  artifact.
+- The raw A25 mid-state in that incomplete artifact still confirmed the runtime
+  ownership fix:
+  - `groundTracePolicy`: `mirror-delayed-ground-trace-into-helper-snapshot`
+  - `liveGroundTraceCount`: `0`
+  - `snapshotGroundTraceCount`: `1`
+  - `snapshotActive`: `true`
+- Valid policy-classification matrix:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T08-43-10-684Z`
+- Manifest:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T08-43-10-684Z/manifest.json`
+- Report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T08-43-10-684Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T07-06-37-415Z`
+- `TRANSITION_MATRIX_VIDEO=0` and `TRANSITION_MATRIX_TRACE=0` were used for the
+  valid artifact. It is not timing/smoothness evidence.
+
+Updated policy-classification counts from the valid artifact:
+
+| Metric | Count | Delta vs 07:06Z |
+| --- | ---: | ---: |
+| productEntries | 505 | 173 |
+| traceReplayDisabled | 1 | 1 |
+| stateSourceOnly | 101 | 28 |
+| loadedAtStartFalse | 19 | 5 |
+| unloadedDormantHelperState | 19 | 5 |
+| unloadedUnresolvedState | 0 | 0 |
+| opacityJumps | 54 | 20 |
+| opacityJumpCovered | 54 | 20 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| hiddenDormantState | 82 | 23 |
+| hiddenUnresolvedState | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | -2 |
+| sceneSectionGroundTraceCovered | 1 | 1 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 1 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Interpretation:
+
+- A25 scene-section helper disable handoff is now classified as covered:
+  `scene-section-ground-trace-snapshot-covered`, with
+  `snapshotGroundTraceCount=1`.
+- `sceneSectionGroundTraceRisk` is cleared in policy/state evidence: `2 -> 0`.
+- The apparent `cameraPathRisk`, `smoothnessTraceQualityRisk`, and
+  `longActiveTraceGaps` drops in this artifact are not meaningful because trace
+  replay was disabled. Use the earlier traced artifact for timing evidence until
+  trace replay checkpointing/stall handling is further hardened.
+- The next visual/base-rule target should be continuous scene-section plane
+  update cost in A20/A21/S01, then MT volume handoffs. Camera-only smoothing
+  should still wait.
+
+Verification so far in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean after checkpoint/traceStatus changes. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean after covered/risk split and traceStatus warning. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | Escalated because Node test worker spawn is sandbox-blocked. |
+| `npx tsc --noEmit --pretty false` | PASS | Typecheck clean. |
+| Focused ground-trace Playwright regression | PASS | Snapshot receives delayed ground-trace geometry. |
+| Focused interruption Playwright regression | PASS | Deterministic immediate interrupted-run snapshot. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed after interruption test stabilization. |
+| First `npm run audit:transition-matrix` attempt | FAIL | No Vite server listening; started Vite from `C:\GeoSee\GeoSee_Dev`. |
+| Default no-video matrix with trace replay | STOPPED | Reached all screenshot cases, then stalled during trace replay after A19 before manifest. |
+| Trace-disabled no-video matrix | PASS | Valid policy-classification artifact is `08-43-10-684Z`. |
+| `npm run audit:transition-report` | PASS | Report regenerated with `traceStatus: disabled` warning. |
+
+Final verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing line-ending warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Vite dev server status: stopped before reporting.
+
+## 2026-05-31 targeted A20/A21/S01 trace diagnostics
+
+Purpose:
+
+- Restore trustworthy traced timing evidence before changing continuous
+  scene-section plane/helper behavior.
+- Classify the suspected A20 trace replay stall from the previous full traced
+  matrix run.
+
+Preflight:
+
+- Latest valid full policy-classification artifact remained
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T08-43-10-684Z`
+  with `traceStatus: "disabled"`.
+- The previous default traced artifact
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T08-24-39-212Z`
+  was incomplete because it had no manifest.
+
+Root-cause update:
+
+- The old "A20 trace replay stall" hypothesis was wrong.
+- Inspecting the incomplete traced artifact showed regular-case traces exist for
+  A20, A21, A22, A23, A24, A25, and S01.
+- The only missing trace in that artifact is the interruption case
+  `06-rapid-interruption-mt-volume-low-high`.
+- Therefore the old full traced run should be classified as "regular traces
+  completed; interruption trace/final manifest path was not checkpointed in the
+  old tool revision", not as an A20 app transition hang.
+
+Tooling changes:
+
+- Added `TRANSITION_MATRIX_CASES` to `tools/capture-transition-matrix.mjs` so
+  matrix runs can target specific case ids/names, for example
+  `A20,A21,S01`.
+- Selected-case manifests now set `matrixScope.mode: "selected-cases"` with
+  `selectedCaseIds` and `activeCaseCount`.
+- The analyzer now suppresses full adjacent-coverage-gap warnings for
+  selected-case matrices.
+- Added anti-throttling Chromium launch flags to the capture browser:
+  `--disable-background-timer-throttling`,
+  `--disable-backgrounding-occluded-windows`,
+  `--disable-features=CalculateNativeWinOcclusion`, and
+  `--disable-renderer-backgrounding`.
+- Added render-loop timing debug to `scene.ts` and app-side smoothness traces:
+  total frame time, ticker callbacks, controls update, manager frame update,
+  render time, and ticker count.
+- The analyzer now includes render-loop timing in long active trace gap rows.
+
+TDD notes:
+
+- Added a selected-case analyzer test first and verified it failed because the
+  analyzer treated a selected matrix as missing the rest of adjacent coverage.
+- Implemented selected-case coverage handling and verified the test passed.
+- Added a smoothness trace assertion for render-loop timing first and verified
+  it failed because traces did not expose render-loop timing.
+- Implemented render-loop timing instrumentation and verified the focused
+  smoothness trace test passed.
+
+Artifacts:
+
+- First selected traced artifact, before anti-throttling/render-loop detail:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T09-03-00-862Z`
+- Selected traced artifact after anti-throttling flags:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T09-07-06-652Z`
+- Latest selected traced artifact with render-loop timing:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T09-15-08-548Z`
+- Latest report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T09-15-08-548Z/transition-analysis.md`
+
+Latest selected traced counts:
+
+| Metric | Count |
+| --- | ---: |
+| cases | 3 |
+| productEntries | 80 |
+| traceReplayDisabled | 0 |
+| opacityJumps | 8 |
+| opacityJumpCovered | 8 |
+| opacityJumpUnresolved | 0 |
+| policyMismatches | 0 |
+| sectionIsoRenderOpacityMismatch | 0 |
+| sceneSectionGroundTraceRisk | 0 |
+| cameraPathRisk | 1 |
+| smoothnessTraceQualityRisk | 3 |
+| longActiveTraceGaps | 9 |
+| matrixCaptureFailures | 0 |
+| interruptionDivergences | 0 |
+| unexpectedConsole | 0 |
+| expectedReadPixelsWarnings | 4 |
+
+Timing findings:
+
+- Anti-throttling Chromium flags did not materially improve active sample
+  density. A20/A21/S01 still record only 8 active samples each, with max active
+  gaps around 900-983 ms.
+- Latest traced rows show the long gaps are not explained solely by
+  `tickSceneSection`:
+  - A20 worst row: `gapMs=983.3`, `tickSceneSectionMs=25.3`,
+    `renderLoopMs=93`, `renderLoopTickersMs=31.1`,
+    `renderLoopManagerMs=25.8`, `renderLoopRenderMs=36.1`.
+  - A21 worst row: `gapMs=949.9`, `tickSceneSectionMs=16.2`,
+    `renderLoopMs=72.1`, `renderLoopTickersMs=33.3`,
+    `renderLoopManagerMs=16.6`, `renderLoopRenderMs=22.2`.
+  - S01 worst row: `gapMs=899.9`, `tickSceneSectionMs=4.4`,
+    `renderLoopMs=53.8`, `renderLoopTickersMs=33`,
+    `renderLoopManagerMs=4.8`, `renderLoopRenderMs=16`.
+- Interpretation: there is real render-loop cadence loss in the trace
+  environment. Continuous scene-section work contributes measurable frame cost,
+  but the missing 800-980 ms is outside the currently measured per-frame
+  sections. Do not start visual smoothing until that cadence loss is classified
+  as either headless/test-environment throttling or an app/runtime main-thread
+  stall.
+- A20 still has camera-path risk: `positionDistance` about `571731.9`, maximum
+  sampled camera step about `340834.4` over `933.3ms`. This supports the user's
+  observed camera stall/jump concern, but camera-only smoothing should still
+  wait until the frame cadence question is resolved.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Analyzer selected-case red test | FAIL then PASS | Confirmed selected matrices no longer report full adjacent coverage gaps. |
+| Focused render-loop trace red test | FAIL then PASS | Confirmed traces now expose render-loop timing. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | Escalated because Node test worker spawn is sandbox-blocked. |
+| `npx tsc --noEmit --pretty false` | PASS | Fresh rerun completed. |
+| Targeted traced matrix `A20,A21,S01` | PASS | Latest artifact is `09-15-08-548Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest targeted artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Vite dev server status: stopped before reporting.
+
+Next recommendation:
+
+1. Do not begin visual smoothing yet.
+2. Classify render-loop cadence loss:
+   - add/directly expose RAF delta/cadence in `SceneRenderLoopDebugState`;
+   - compare targeted trace cadence in headless Chromium vs a human-visible or
+     video capture path if available;
+   - identify whether the 800-980 ms gaps are browser throttling, GPU/render
+     blocking, React/PageController callback cost, or unmeasured app work.
+3. Once cadence is trustworthy, reduce continuous scene-section plane update
+   cost separately from MT volume handoff policy.
+4. Keep camera-only smoothing after scene-section and MT ownership are cleaner.
+
+## 2026-05-31 02:40 - RAF Cadence Classification
+
+Goal: classify the remaining trace-quality blocker before any new visual
+smoothing. The previous targeted traces showed long active gaps, but the trace
+did not yet prove whether RAF itself was delayed or whether only app-side
+sampling/reporting was sparse.
+
+Tooling changes:
+
+- Extended `SceneRenderLoopDebugState` with direct render-loop cadence fields:
+  `frameIndex`, `rafDeltaMs`, `wallDeltaMs`, and `idleGapMs`.
+- Added those fields to app-side smoothness trace samples so matrix artifacts
+  can distinguish long transition gaps from missing RAF cadence.
+- Updated the analyzer to classify long active gaps as
+  `long-gap-with-raf-cadence-loss` when the render loop's RAF or wall-clock
+  delta itself exceeds the active-gap threshold.
+- Added analyzer output columns for `renderLoopFrame`,
+  `renderLoopRafDeltaMs`, `renderLoopWallDeltaMs`, and
+  `renderLoopIdleGapMs`.
+
+TDD notes:
+
+- Added a focused smoothness trace assertion for direct RAF cadence fields and
+  verified it failed before the scene debug state exposed those fields.
+- Implemented the render-loop cadence instrumentation and verified the focused
+  smoothness trace test passed.
+- Added an analyzer unit test for `long-gap-with-raf-cadence-loss` and verified
+  the analyzer reports the RAF/wall/idle timing in long-gap diagnostics.
+
+Artifacts:
+
+- Latest selected traced artifact with direct RAF cadence:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T09-35-09-932Z`
+- Latest report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T09-35-09-932Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T09-15-08-548Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 80 | 0 |
+| traceReplayDisabled | 0 | 0 |
+| stateSourceOnly | 16 | 0 |
+| loadedAtStartFalse | 8 | 0 |
+| opacityJumps | 8 | 0 |
+| opacityJumpCovered | 8 | 0 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 9 | 0 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Cadence findings:
+
+- All 9 long active gaps in A20/A21/S01 are now classified as
+  `long-gap-with-raf-cadence-loss`.
+- Representative worst rows:
+  - A20: `gapMs=983.3`, `renderLoopFrame=150`,
+    `renderLoopRafDeltaMs=966.6`, `renderLoopWallDeltaMs=947.3`,
+    `renderLoopIdleGapMs=889.4`, `renderLoopMs=77.1`,
+    `renderLoopTickersMs=34`, `renderLoopManagerMs=12.7`,
+    `renderLoopRenderMs=30.4`, `tickSceneSectionMs=12.3`.
+  - A21: `gapMs=983.3`, `renderLoopFrame=161`,
+    `renderLoopRafDeltaMs=899.9`, `renderLoopWallDeltaMs=913.8`,
+    `renderLoopIdleGapMs=853.5`, `renderLoopMs=70`,
+    `renderLoopTickersMs=34.8`, `renderLoopManagerMs=14`,
+    `renderLoopRenderMs=21.2`, `tickSceneSectionMs=13.5`.
+  - S01: `gapMs=966.7`, `renderLoopFrame=173`,
+    `renderLoopRafDeltaMs=733.2`, `renderLoopWallDeltaMs=1149.1`,
+    `renderLoopIdleGapMs=1114.3`, `renderLoopMs=50`,
+    `renderLoopTickersMs=32.9`, `renderLoopManagerMs=4.6`,
+    `renderLoopRenderMs=12.5`, `tickSceneSectionMs=4.3`.
+- Interpretation: the sparse trace samples are not only a trace/reporting
+  artifact. The browser render loop itself is losing RAF/wall-clock cadence in
+  this capture environment. Measured per-frame app/render work is tens of
+  milliseconds in these rows, not the full 800-980 ms gap, so the next root
+  cause split is headless/test-environment throttling or GPU/browser scheduling
+  versus still-unmeasured app main-thread work.
+- A20 still carries the camera-path risk:
+  `positionDistance=569577.1`, `maxFramePositionDistance=353821.8` over
+  `966.6ms`. This remains aligned with the user's observed camera stall/jump,
+  but camera-only smoothing should wait until RAF cadence is trustworthy.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Focused RAF-cadence trace red test | FAIL then PASS | Confirmed traces now expose direct render-loop cadence. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | Includes RAF-cadence-loss classification. |
+| `npx tsc --noEmit --pretty false` | PASS | Fresh rerun completed. |
+| Targeted traced matrix `A20,A21,S01` | PASS | Latest artifact is `09-35-09-932Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest targeted artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Vite dev server status: no listeners found on ports 5173 or 5174 before
+reporting.
+
+Next recommendation:
+
+1. Do not begin runtime visual smoothing yet.
+2. Compare the targeted A20/A21/S01 trace cadence in headless Chromium against
+   a human-visible or video-backed path, or add a non-RAF heartbeat sampler to
+   split browser RAF throttling from app main-thread blockage.
+3. If RAF cadence loss is test-environment specific, visual smoothing can
+   resume with continuous scene-section plane cost and MT handoffs. If cadence
+   loss also appears in the visible path, investigate the unmeasured main-thread
+   work before changing visual policies.
+
+## 2026-05-31 03:10 - Independent Timer Cadence Split
+
+Goal: split the `long-gap-with-raf-cadence-loss` blocker into RAF-only
+throttling versus broader browser/main-thread/timer starvation before making
+visual smoothing changes.
+
+Tooling changes:
+
+- Added an independent `setInterval` sampler to the smoothness trace path in
+  `PageController`. It records `intervalMs`, `tickIndex`, `deltaMs`,
+  `maxDeltaMs`, `ageMs`, and `ticksSinceLastSample` on each trace sample.
+- The sampler is trace-scoped and is stopped on settled, max-duration, manual
+  stop, or trace restart.
+- Updated the analyzer to include timer diagnostics in long active trace gaps:
+  `timerIntervalMs`, actual/expected timer ticks during the gap,
+  `timerDeltaMs`, `timerMaxDeltaMs`, and `timerAgeMs`.
+- Added two analyzer classifications:
+  - `long-gap-with-raf-only-cadence-loss` when RAF slips but the independent
+    timer keeps ticking.
+  - `long-gap-with-raf-and-timer-cadence-loss` when both RAF and the timer
+    lose cadence.
+
+TDD notes:
+
+- Added the trace assertion for timer diagnostics first and verified the
+  focused smoothness trace test failed because samples had no `timerDebug`.
+- Added analyzer tests for both RAF-only and RAF+timer cadence loss and
+  verified they failed against the generic RAF-cadence classification.
+- Implemented the timer sampler and analyzer split, then verified the focused
+  smoothness trace test and analyzer tests passed.
+
+Artifacts:
+
+- Latest selected traced artifact with independent timer cadence:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T10-05-35-382Z`
+- Latest report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T10-05-35-382Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T09-35-09-932Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 80 | 0 |
+| traceReplayDisabled | 0 | 0 |
+| stateSourceOnly | 16 | 0 |
+| loadedAtStartFalse | 8 | 0 |
+| opacityJumps | 8 | 0 |
+| opacityJumpCovered | 8 | 0 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 9 | 0 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Cadence findings:
+
+- All 9 long active gaps in A20/A21/S01 are now classified as
+  `long-gap-with-raf-and-timer-cadence-loss`.
+- This rules out a RAF-only explanation for the current headless capture path.
+  The independent 50 ms timer usually records only 0-1 ticks across gaps where
+  roughly 17-19 ticks were expected.
+- Representative rows:
+  - A20: `gapMs=966.6`, `renderLoopRafDeltaMs=949.9`,
+    `renderLoopWallDeltaMs=942.7`, `renderLoopIdleGapMs=888.6`,
+    `renderLoopMs=69.3`, `tickSceneSectionMs=12.3`,
+    `timerTicks=1/19.332`, `timerDeltaMs=1896.5`,
+    `timerMaxDeltaMs=1896.5`, `timerAgeMs=0`.
+  - A21: `gapMs=933.3`, `renderLoopRafDeltaMs=916.6`,
+    `renderLoopWallDeltaMs=916.9`, `renderLoopIdleGapMs=866.1`,
+    `renderLoopMs=68.6`, `tickSceneSectionMs=13.5`,
+    `timerTicks=1/18.666`, `timerDeltaMs=1851.9`,
+    `timerMaxDeltaMs=1851.9`, `timerAgeMs=0`.
+  - S01: `gapMs=950`, `renderLoopRafDeltaMs=733.3`,
+    `renderLoopWallDeltaMs=1130.3`, `renderLoopIdleGapMs=1088.2`,
+    `renderLoopMs=52.3`, `tickSceneSectionMs=4.5`,
+    `timerTicks=1/19`, `timerDeltaMs=1683.7`,
+    `timerMaxDeltaMs=1683.7`, `timerAgeMs=0`.
+- Interpretation: the trace environment loses both RAF and normal interval
+  cadence. The measured work inside sampled frames remains tens of milliseconds,
+  not the entire 850-966 ms gap. The next split must compare this headless path
+  to a visible/video-backed path or instrument unmeasured scheduling boundaries
+  such as browser/GPU stalls, long tasks, or blocking work outside the current
+  render-loop timers.
+- A20 still carries camera-path risk: `positionDistance=570772.2` and
+  `maxFramePositionDistance=344761` over `949.9ms`.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Focused timer trace red test | FAIL then PASS | Confirmed trace samples expose independent timer diagnostics. |
+| Analyzer RAF-only / RAF+timer red tests | FAIL then PASS | Confirmed long-gap classification uses timer cadence. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | 5 analyzer tests passed. |
+| Focused smoothness trace Playwright test | PASS | Browser trace includes `timerDebug`. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `npx tsc --noEmit --pretty false` | PASS | Typecheck completed. |
+| Targeted traced matrix `A20,A21,S01` | PASS | Latest artifact is `10-05-35-382Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest targeted artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Vite dev server status: stopped 5173 and 5174 listeners before reporting;
+only transient `TIME_WAIT` sockets remained.
+
+Next recommendation:
+
+1. Do not begin runtime visual smoothing yet.
+2. Compare the same A20/A21/S01 cadence in a human-visible or video-backed
+   path. If visible/video cadence is smooth, treat the headless matrix cadence
+   loss as a test-environment limitation and resume visual-policy work with
+   careful human review clips. If visible/video cadence also stalls, instrument
+   browser long tasks and unmeasured main-thread/GPU scheduling before changing
+   visual policies.
+3. Once cadence is trustworthy, proceed to continuous scene-section plane cost,
+   then MT volume handoffs, then the remaining visual families.
+
+## 2026-05-31 03:42 - Video-Backed Headless Cadence Check
+
+Goal: compare A20/A21/S01 cadence with video recording enabled before deciding
+whether the headless trace cadence loss can be treated as a test artifact.
+
+Method:
+
+- Ran the selected matrix with `TRANSITION_MATRIX_CASES=A20,A21,S01` and video
+  recording enabled.
+- This is still headless Chromium, but the artifact now includes a reviewable
+  WebM clip for visual inspection alongside trace diagnostics.
+- `ffprobe` is not available in this workspace, so video metadata was limited
+  to file existence and size from the filesystem.
+
+Artifacts:
+
+- Latest video-backed selected traced artifact:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T10-30-43-637Z`
+- Latest report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T10-30-43-637Z/transition-analysis.md`
+- Video:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T10-30-43-637Z/videos/page@67edc28dfaf2cd7ddbe639a10db7e349.webm`
+  (`11,228,828` bytes)
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T10-05-35-382Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 80 | 0 |
+| traceReplayDisabled | 0 | 0 |
+| stateSourceOnly | 16 | 0 |
+| loadedAtStartFalse | 8 | 0 |
+| opacityJumps | 8 | 0 |
+| opacityJumpCovered | 8 | 0 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 9 | 0 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Cadence findings:
+
+- Video recording did not remove the cadence issue in the headless capture
+  path. All 9 long active gaps remain
+  `long-gap-with-raf-and-timer-cadence-loss`.
+- Representative rows:
+  - A20: `gapMs=1033.3`, `renderLoopRafDeltaMs=966.6`,
+    `renderLoopWallDeltaMs=965.9`, `renderLoopIdleGapMs=907.3`,
+    `renderLoopMs=86.1`, `tickSceneSectionMs=14.5`,
+    `timerTicks=0/20.666`, `timerDeltaMs=982.6`,
+    `timerMaxDeltaMs=3189.1`, `timerAgeMs=1009.6`.
+  - A21: `gapMs=966.6`, `renderLoopRafDeltaMs=933.4`,
+    `renderLoopWallDeltaMs=526.5`, `renderLoopIdleGapMs=474.7`,
+    `renderLoopMs=58.3`, `tickSceneSectionMs=5.2`,
+    `timerTicks=0/19.332`, `timerDeltaMs=1867`,
+    `timerMaxDeltaMs=1867`, `timerAgeMs=950.3`.
+  - S01: `gapMs=933.3`, `renderLoopRafDeltaMs=799.9`,
+    `renderLoopWallDeltaMs=1228.9`, `renderLoopIdleGapMs=1191.2`,
+    `renderLoopMs=56.7`, `tickSceneSectionMs=4.3`,
+    `timerTicks=1/18.666`, `timerDeltaMs=1745.9`,
+    `timerMaxDeltaMs=1745.9`, `timerAgeMs=0`.
+- Interpretation: this is useful human-review evidence, but it is not an
+  independent visible-browser comparison. The trace still shows headless
+  browser/timer starvation, so visual smoothing should stay blocked until we
+  either run a true headed/human-visible comparison or add long-task /
+  scheduling instrumentation around unmeasured main-thread and GPU/browser
+  boundaries.
+- A20 still carries camera-path risk: `positionDistance=567042.4` and
+  `maxFramePositionDistance=351986.1` over `966.6ms`.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Targeted video-backed matrix `A20,A21,S01` | PASS | Latest artifact is `10-30-43-637Z`, video status ready. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest video-backed artifact. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | 5 analyzer tests passed. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | Fresh direct TypeScript CLI run completed; a parallel `npx tsc` wrapper session appeared stale and was not used as evidence. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Vite dev server status: stopped 5173 listeners before reporting; no 517x
+listening sockets remained.
+
+Next recommendation:
+
+1. Do not begin runtime visual smoothing yet.
+2. Add or run a true headed/human-visible cadence comparison, or add
+   `PerformanceObserver` long-task diagnostics and any available browser/GPU
+   scheduling markers to explain why both RAF and timers starve while measured
+   frame work remains tens of milliseconds.
+3. Use the WebM clip above for human review of whether the recorded headless
+   path visibly shows the reported camera/opacity snags, but do not treat it as
+   proof that a real visible browser behaves the same.
+
+## 2026-05-31 04:12 - Long-Task Attribution Pass
+
+Goal: explain why both RAF and the independent timer starve while measured
+frame work remains tens of milliseconds.
+
+Tooling changes:
+
+- Added trace-scoped `PerformanceObserver` long-task collection to
+  `PageController` smoothness traces.
+- Each trace sample now includes `longTaskDebug` with support status, total
+  count/duration, max duration, latest task timing, and per-sample deltas:
+  `countSinceLastSample`, `durationSinceLastSampleMs`, and
+  `maxDurationSinceLastSampleMs`.
+- The analyzer now includes long-task fields in long active trace gap rows.
+- Added classifications:
+  - `long-gap-with-main-thread-longtask` when timer starvation has browser
+    long-task evidence.
+  - `long-gap-with-unattributed-timer-starvation` when timers starve but the
+    Long Tasks API reports no task in that sample gap.
+
+TDD notes:
+
+- Added trace assertions for `longTaskDebug` first and verified the focused
+  smoothness trace test failed before instrumentation.
+- Added analyzer tests for long-task-backed and unattributed timer starvation
+  first and verified they failed against the generic RAF+timer classification.
+- Implemented the observer and analyzer split, then verified the focused
+  smoothness trace test and analyzer tests passed.
+
+Artifacts:
+
+- Latest selected traced artifact with long-task diagnostics:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T11-04-46-866Z`
+- Latest report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T11-04-46-866Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T10-30-43-637Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 80 | 0 |
+| traceReplayDisabled | 0 | 0 |
+| stateSourceOnly | 16 | 0 |
+| loadedAtStartFalse | 8 | 0 |
+| opacityJumps | 8 | 0 |
+| opacityJumpCovered | 8 | 0 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 9 | 0 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Cadence / long-task findings:
+
+- Long Tasks API is supported in the matrix browser (`longTaskSupported=true`).
+- Of 9 long active gaps:
+  - 6 are `long-gap-with-main-thread-longtask`.
+  - 3 are `long-gap-with-unattributed-timer-starvation`.
+- Representative long-task-backed rows:
+  - A21: `gapMs=966.7`, `timerTicks=1/19.334`,
+    `timerDeltaMs=1854.4`, `longTaskCount=2`,
+    `longTaskDurationMs=1840`, `longTaskMaxMs=952`,
+    while `renderLoopMs=73.9` and `tickSceneSectionMs=13.2`.
+  - S01: `gapMs=916.6`, `timerTicks=1/18.332`,
+    `timerDeltaMs=3224.9`, `longTaskCount=4`,
+    `longTaskDurationMs=2820`, `longTaskMaxMs=868`,
+    while `renderLoopMs=52.6` and `tickSceneSectionMs=3.9`.
+  - A20 camera-step row: `gapMs=933.3`, `cameraStep=338662.5`,
+    `timerTicks=0/18.666`, `longTaskCount=1`,
+    `longTaskDurationMs=917`, `longTaskMaxMs=917`.
+- Representative unattributed rows:
+  - A20: `gapMs=966.7`, `timerTicks=1/19.334`,
+    `timerDeltaMs=1881.3`, `longTaskCount=0`,
+    `longTaskDurationMs=0`.
+  - A21: `gapMs=883.2`, `timerTicks=0/17.664`,
+    `timerDeltaMs=1765.3`, `longTaskCount=0`,
+    `longTaskDurationMs=0`.
+  - S01: `gapMs=816.6`, `timerTicks=0/16.332`,
+    `timerDeltaMs=3224.9`, `longTaskCount=0`,
+    `longTaskDurationMs=0`.
+- Interpretation: the blocker is no longer generic RAF/timer cadence loss.
+  Most gaps are backed by browser long-task entries, which makes real
+  main-thread blocking likely in the capture path. A minority still starve
+  timers with no long-task entry, so there may also be browser/GPU/process
+  scheduling or unreported work. Runtime visual smoothing should remain
+  blocked until the long-task source is identified or a true headed comparison
+  proves the issue is capture-only.
+- A20 still carries camera-path risk: `positionDistance=570839` and
+  `maxFramePositionDistance=338662.5` over `933.3ms`.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Focused long-task trace red test | FAIL then PASS | Confirmed trace samples expose `longTaskDebug`. |
+| Analyzer long-task attribution red tests | FAIL then PASS | Confirmed main-thread-longtask vs unattributed classification. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | 7 analyzer tests passed. |
+| Focused smoothness trace Playwright test | PASS | Browser trace includes `longTaskDebug`. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | Typecheck completed. |
+| Targeted traced matrix `A20,A21,S01` | PASS | Latest artifact is `11-04-46-866Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest targeted artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Vite dev server status: stopped 5173 listeners before reporting; no 517x
+listening sockets remained.
+
+Next recommendation:
+
+1. Do not begin runtime visual smoothing yet.
+2. Identify the long-task source. The next safest pass should add attribution
+   around expensive initialization/evaluation boundaries, or collect browser
+   performance traces for A20/A21/S01, so the `longTaskDurationMs` rows can be
+   tied to concrete work.
+3. In parallel or after that, run a true headed/human-visible comparison if
+   available. If headed cadence is smooth, treat this as capture-path overhead;
+   if not, fix the long-task source before visual-policy changes.
+
+## 2026-05-31 04:48 - Long Animation Frame Attribution Pass
+
+Goal: tie the transition-active long gaps to concrete browser script work where
+the Long Animation Frame API can provide script attribution.
+
+Tooling changes:
+
+- Added trace-scoped `PerformanceObserver` collection for
+  `long-animation-frame` entries in `PageController` smoothness traces.
+- Each trace sample now includes `animationFrameDebug` with support status,
+  total frame count/duration, total blocking duration, per-sample duration and
+  blocking deltas, and top per-sample scripts.
+- Script attribution captures source URL, function name, invoker, invoker type,
+  window attribution, script duration, execution start, forced style/layout
+  duration, and pause duration.
+- The analyzer now surfaces animation-frame fields in long active gap rows and
+  prefers `long-gap-with-animation-frame-script` when timer starvation has
+  LoAF script attribution.
+
+TDD notes:
+
+- Added an analyzer red test proving timer-starved gaps with LoAF script data
+  were still classified as `long-gap-with-main-thread-longtask`.
+- Added a focused browser trace red test proving live smoothness samples did
+  not yet expose `animationFrameDebug`.
+- Implemented the minimal trace/analyzer support and verified both tests turned
+  green.
+
+Artifacts:
+
+- Latest selected traced artifact with LoAF attribution:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T11-38-57-317Z`
+- Latest report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T11-38-57-317Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T11-04-46-866Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 80 | 0 |
+| traceReplayDisabled | 0 | 0 |
+| stateSourceOnly | 16 | 0 |
+| loadedAtStartFalse | 8 | 0 |
+| opacityJumps | 8 | 0 |
+| opacityJumpCovered | 8 | 0 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 10 | +1 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Cadence / attribution findings:
+
+- LoAF is supported in the matrix browser (`animationFrameSupported=true`).
+- Of 10 long active gaps:
+  - 6 are now `long-gap-with-animation-frame-script`.
+  - 2 remain `long-gap-with-main-thread-longtask`.
+  - 2 remain `long-gap-with-unattributed-timer-starvation`.
+- Representative script-attributed rows:
+  - A20: `gapMs=1016.6`, `timerTicks=1/20.332`,
+    `longTaskDurationMs=1010`, `animationFrameDurationMs=756.9`,
+    `animationFrameBlockingMs=697.53`,
+    `animationFrameTopScript=node_modules/.vite/deps/chunk-NUMECXU6.js`,
+    `animationFrameTopFunction=performWorkUntilDeadline`,
+    `animationFrameTopInvoker=MessagePort.onmessage`.
+  - A20: `gapMs=983.4`, `timerDeltaMs=3204.4`,
+    `longTaskDurationMs=2776`,
+    `animationFrameTopScript=src/scene.ts`,
+    `animationFrameTopFunction=tick`,
+    `animationFrameTopInvoker=FrameRequestCallback`.
+  - S01: `gapMs=799.9`, `timerTicks=0/15.998`,
+    `longTaskDurationMs=780`, `animationFrameBlockingMs=733.72`,
+    `animationFrameTopScript=node_modules/.vite/deps/chunk-NUMECXU6.js`,
+    `animationFrameTopFunction=performWorkUntilDeadline`.
+- Interpretation: the long-gap source is now partially attributed. Some gaps
+  are React scheduler work, some are scene render-loop ticks, and some remain
+  unattributed even though timers starve. This is enough to stop treating the
+  issue as only a generic capture cadence problem, but not enough to start
+  visual-policy smoothing safely.
+- A20 still carries camera-path risk: `positionDistance=570700.7` and
+  `maxFramePositionDistance=349235.6` over `949.9ms`.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Analyzer LoAF attribution red test | FAIL then PASS | Confirmed LoAF script rows override generic long-task classification. |
+| Focused smoothness trace Playwright red test | FAIL then PASS | Confirmed browser trace samples expose `animationFrameDebug`. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | 8 analyzer tests passed. |
+| Focused smoothness trace Playwright test | PASS | Browser trace includes LoAF debug fields. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | Typecheck completed. |
+| Targeted traced matrix `A20,A21,S01` | PASS | Latest artifact is `11-38-57-317Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest targeted artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Vite dev server status: stopped the 5173 listener before reporting; no 517x
+listening sockets remained.
+
+Next recommendation:
+
+1. Do not begin runtime visual smoothing yet.
+2. Next pass should split the newly attributed script work:
+   React scheduler / page-controller state work versus scene render-loop work.
+3. For React scheduler rows, add a lightweight User Timing or transition-trace
+   boundary around page-controller transition state updates and consumer debug
+   collection.
+4. For `src/scene.ts` rows, break down render-loop `tick` cost by scene-section
+   plane updates, MT volume tweening, and render submission during the same
+   LoAF sample.
+5. Keep headed/human-visible cadence comparison as a secondary check. If headed
+   cadence is smooth, classify the remaining starvation as capture-path
+   overhead; if not, fix the attributed scheduler/render-loop work before
+   visual-policy changes.
+
+## 2026-05-31 05:15 - Render-Loop Work-Source Split
+
+Goal: split the LoAF-attributed work into page-controller, scene render-loop,
+and named overlay/UI ticker buckets before changing any visual smoothing policy.
+
+Tooling changes:
+
+- Added named render-loop ticker durations to `SceneRenderLoopDebugState`.
+- Named existing tick consumers:
+  `PageController.transitionTick`, `ScaleBar.measure`,
+  `SceneLabels.layout`, `AssayLegend.leaders`, and
+  `LightModeToggle.northAngle`.
+- Added `controllerDebug` to smoothness samples, including trace-sample cost
+  and PageController transition tick substeps:
+  `tweenerMs`, `pageTransitionProgressMs`, `transitionDynamicCameraMs`,
+  `dynamicCameraMs`, `lockedCameraFocusMs`, `smoothnessSampleMs`, and whether
+  transition progress state was updated.
+- The analyzer now reports `workSource`, top render-loop ticker name/duration,
+  and controller tick substep timings on every long active trace gap.
+
+TDD / verification notes:
+
+- Added analyzer expectations for render-loop top ticker and controller tick
+  fields first; the test failed until the analyzer surfaced the new fields.
+- Added focused browser trace expectations for `controllerDebug` and
+  `renderLoop.tickerDurations`; the test failed until live traces exposed
+  those fields.
+- Added a focused ScaleBar ticker guard, but it passed immediately in the
+  focused test path. It is retained only as a broad guard; the selected matrix
+  remains the stronger evidence for the ScaleBar bottleneck.
+
+Artifacts:
+
+- Latest selected traced artifact with work-source split:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T12-11-42-870Z`
+- Latest report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T12-11-42-870Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T12-07-15-738Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 80 | 0 |
+| traceReplayDisabled | 0 | 0 |
+| stateSourceOnly | 16 | 0 |
+| loadedAtStartFalse | 8 | 0 |
+| opacityJumps | 8 | 0 |
+| opacityJumpCovered | 8 | 0 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 9 | 0 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Work-source findings:
+
+- PageController transition tick is not the main measured ticker cost in these
+  rows. Its `controllerTickMs` is about `0.3-1.8ms`, and trace sample cost is
+  about `0.2-1.7ms`.
+- `ScaleBar.measure` is the dominant named render-loop ticker in all latest
+  long-gap rows, typically about `29.4-39.7ms`.
+- Scene manager work is still visible but lower than the ScaleBar ticker in the
+  latest rows. `tickSceneSectionMs` ranges about `4.4-15.1ms`; render submit is
+  about `10.1-28.6ms`.
+- React scheduler rows are now explicitly identified as
+  `react-scheduler-transition-state-update`, and they coincide with transition
+  progress state updates:
+  - A20: `gapMs=900`, top script `performWorkUntilDeadline`, top ticker
+    `ScaleBar.measure=30.3ms`, `controllerTickMs=0.3ms`.
+  - S01: `gapMs=800`, top script `performWorkUntilDeadline`, top ticker
+    `ScaleBar.measure=32.8ms`, `controllerTickMs=1.8ms`.
+- Scene render-loop rows are identified separately:
+  - A20: `gapMs=899.9`, top script `src/scene.ts`, top ticker
+    `ScaleBar.measure=29.5ms`, `renderLoopRenderMs=24ms`.
+  - S01: `gapMs=899.9`, top script `src/scene.ts`, top ticker
+    `ScaleBar.measure=31.4ms`, `renderLoopRenderMs=19.8ms`.
+- Interpretation: the next non-visual performance fix should target
+  `ScaleBar.measure` before scene-section or MT visual policy changes. The
+  code currently recomputes surface candidates and raycasts on every tick;
+  caching/throttling/transition-aware deferral should be tested in isolation.
+- Runtime visual smoothing remains blocked until the ScaleBar ticker cost is
+  removed or classified as capture-only, then the matrix should be rerun to see
+  whether scene-section or MT handoff costs become the next dominant source.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Analyzer work-source red test | FAIL then PASS | Confirmed long-gap rows expose top ticker and controller substep fields. |
+| Focused smoothness trace red test | FAIL then PASS | Confirmed browser trace exposes `controllerDebug` and ticker durations. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | 8 analyzer tests passed. |
+| Focused smoothness trace Playwright test | PASS | Browser trace includes controller and named ticker fields. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | Typecheck completed. |
+| Targeted traced matrix `A20,A21,S01` | PASS | Latest artifact is `12-11-42-870Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest targeted artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Vite dev server status: stopped the 5173 listener before reporting; no 517x
+listening sockets remained.
+
+Next recommendation:
+
+1. Do not begin runtime visual smoothing yet.
+2. Fix or classify `ScaleBar.measure` first. It is a base render-loop cost, not
+   a page-specific transition policy issue.
+3. Safest candidate fix: cache scale surface meshes for the measure pass,
+   avoid repeated full-scene traversal per candidate point, and/or defer scale
+   recomputation while transition progress is active.
+4. Rerun targeted A20/A21/S01 with trace after the ScaleBar fix. If long gaps
+   remain and top ticker shifts away from `ScaleBar.measure`, resume the queued
+   order: scene-section plane cost, MT volume handoffs, then remaining visual
+   families one at a time.
+
+## 2026-05-31 05:45 - ScaleBar Render-Loop Deferral Pass
+
+Goal: fix or classify the concrete non-visual render-loop bottleneck before
+starting visual smoothing. The prior selected trace showed `ScaleBar.measure`
+as the dominant named ticker in all long-gap rows, about `29.4-39.7ms`.
+
+Changes:
+
+- `ScaleBar` now caches scale surface meshes for each forced measure pass
+  instead of traversing visible scene surfaces once per candidate raycast.
+- `ScaleBar` now skips nonessential render-loop measurement while a page or
+  camera transition is active, holding the previous scale label and recomputing
+  on resize or when the transition ends.
+- Added a synchronous `SceneHandle` transition flag. `PageController` sets it
+  directly at page-transition, pose-tween, and reset-tween start/end so
+  render-loop consumers do not depend on React context flush timing.
+- Kept the React-context `ScaleBar` transition prop as a UI-level hint, but the
+  render-loop guard now also reads `sceneHandle.isTransitionActive()`.
+- Tightened the focused smoothness trace guard so active transition
+  `ScaleBar.measure` ticker durations must remain below `2ms`.
+
+TDD / diagnostic notes:
+
+- Tightening the focused Playwright guard passed immediately, confirming that
+  the focused case was not representative of the A20/A21/S01 selected matrix.
+- First runtime attempt used only React transition state plus per-measure
+  surface caching. It generated
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T12-35-27-759Z`
+  and was rejected as incomplete: `ScaleBar.measure` still appeared at
+  `29.8-32.4ms` in active long-gap rows.
+- Final pass used the direct scene transition flag. The selected matrix report
+  for `12-40-32-799Z` contains no `ScaleBar.measure` long-gap entries.
+
+Artifacts:
+
+- Incomplete React-prop attempt:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T12-35-27-759Z`
+- Accepted selected traced artifact:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T12-40-32-799Z`
+- Latest report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T12-40-32-799Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T12-35-27-759Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 60 | -20 |
+| stateSourceOnly | 12 | -4 |
+| loadedAtStartFalse | 6 | -2 |
+| opacityJumps | 6 | -2 |
+| opacityJumpCovered | 6 | -2 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 10 | +1 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Work-source findings:
+
+- `ScaleBar.measure` is no longer reported in long-gap diagnostics for the
+  accepted selected matrix.
+- Active render-loop ticker cost dropped to small tickers such as
+  `PageController.transitionTick` and `LightModeToggle.northAngle`, generally
+  about `0.2-2.8ms`.
+- The next visible bottlenecks are now scene manager / render submit and React
+  scheduler rows:
+  - A20: `renderLoopRenderMs` about `22.7-29.2ms`,
+    `tickSceneSectionMs` about `4.5-14.3ms`, plus the existing large camera
+    path risk.
+  - A21: `tickSceneSectionMs` about `4.3-12.1ms`,
+    `renderLoopRenderMs` about `14.7-23.7ms`.
+  - S01: scene-section work can still spike, with one row showing
+    `tickSceneSectionMs=34.6ms` and `frameLayerTweensMs=35.1ms`.
+- Interpretation: the ScaleBar base render-loop cost is fixed enough to stop
+  blocking the next pass. Long active gaps remain, but their top named ticker
+  shifted away from ScaleBar as intended.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Focused ScaleBar guard before runtime fix | PASS immediately | Confirmed focused test was too narrow; selected matrix remained required evidence. |
+| First selected traced matrix after React-prop fix | INCOMPLETE | `ScaleBar.measure` still appeared at `29.8-32.4ms`; direct scene flag was required. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | 8 analyzer tests passed after sandbox EPERM rerun with elevation. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | Typecheck completed. |
+| Focused smoothness trace Playwright test | PASS | ScaleBar ticker guard remained under `2ms`. |
+| Targeted traced matrix `A20,A21,S01` | PASS | Latest accepted artifact is `12-40-32-799Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest targeted artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Vite dev server status: stopped the 5173 listener before reporting; no 517x
+listening sockets remained.
+
+Next recommendation:
+
+1. Treat `ScaleBar.measure` as fixed for the selected transition matrix.
+2. Continue with the next base-rule pass: continuous scene-section plane cost
+   and scene manager / render-submit work in A20/A21/S01.
+3. Keep this non-visual until scene-section update cost is separated from MT
+   volume handoff and large camera path risk.
+4. After scene-section cost is reduced or classified, resume the queued visual
+   order: MT volume handoffs, surfaces/seismic products, point clouds,
+   overlays/legends/labels/assays, then camera-only/dynamic camera smoothing.
+
+## 2026-05-31 06:25 - Scene-Section Cost Split / MT Cut-ISO Classification
+
+Goal: split the remaining scene-section/render-submit cost after the accepted
+ScaleBar deferral pass, without changing runtime visual policy yet.
+
+Changes:
+
+- Added analyzer coverage for scene-section sub-cost fields in long active gap
+  diagnostics.
+- Added app-side `sceneSectionApply` timing to layer tween debug samples:
+  bounds, frame resolve, material apply, helper rebuild, helper opacity,
+  MT cut-ISO overlay update, seismic cut-ISO overlay update, and object/count
+  totals.
+- Kept this pass diagnostic-only. No MT volume, section ISO, camera, or visual
+  smoothing policy was changed.
+
+Artifacts:
+
+- Latest selected traced artifact:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T13-05-43-486Z`
+- Latest report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T13-05-43-486Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T12-40-32-799Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 60 | 0 |
+| stateSourceOnly | 12 | 0 |
+| loadedAtStartFalse | 6 | 0 |
+| opacityJumps | 6 | 0 |
+| opacityJumpCovered | 6 | 0 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 10 | 0 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Work-source findings:
+
+- Scene-section cost is now split enough to identify the next concrete base
+  bottleneck.
+- The dominant scene-section spike is MT cut-ISO overlay rebuild, not helper
+  rebuild or material traversal:
+  - A20: `tickSceneSectionMs=18`, `materialApplyMs=2.2`,
+    `helperRebuildMs=3`, `mtCutIsoMs=12.3`, `objects=613`,
+    `materials=398`, `helpers=43`.
+  - A21: `tickSceneSectionMs=14`, `materialApplyMs=2.1`,
+    `helperRebuildMs=3.1`, `mtCutIsoMs=8.2`.
+  - S01: `tickSceneSectionMs=26`, `materialApplyMs=1.5`,
+    `helperRebuildMs=2.5`, `mtCutIsoMs=21.7`.
+- Smaller rows still show helper rebuild around `2-3ms`, material apply around
+  `1.4-2.9ms`, and bounds work around `0.3-0.6ms`.
+- Source inspection confirms `updateMtVolumeCutIsoOverlaysImpl` clears and
+  rebuilds cut meshes/section ISO overlays during scene-section plane updates.
+  That makes it the next likely contributor to section ISO stutter and snap
+  risk during continuous section transitions.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Analyzer red test for scene-section sub-costs | FAIL then PASS | Confirmed the new fields were absent before implementation, then covered. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | 8 analyzer tests passed. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | Initial direct typecheck passed; a later direct CLI session appeared stale, so `npx tsc` was rerun. |
+| `npx tsc --noEmit --pretty false` | PASS | Standalone typecheck completed in `4.7s`. |
+| Targeted traced matrix `A20,A21,S01` | PASS | Latest accepted artifact is `13-05-43-486Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest targeted artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed in about `3.3m`. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Vite dev server status: stopped 517x listeners before reporting; no 517x
+listening sockets remained.
+
+Next recommendation:
+
+1. Do not begin visual smoothing yet.
+2. Fix or classify MT volume cut-ISO overlay rebuild during active
+   scene-section transitions.
+3. Expose MT cut-ISO overlay update policy/debug state before or with any
+   runtime change.
+4. Safest candidates to evaluate next: reuse overlay group/geometry when the
+   plane signature is unchanged, split mesh-build vs overlay-render timing,
+   throttle or lower LOD only during active transitions, or decouple cut-ISO
+   refresh from every helper/plane tick while preserving a final full recompute.
+5. Treat any strategy that reduces continuous section ISO fidelity as requiring
+   human-visible review before acceptance, because the user has reported
+   isoband transparency/snap artifacts.
+
+## 2026-05-31 06:45 - MT Cut-ISO Rebuild Timing Split
+
+Goal: classify the MT volume cut-ISO overlay rebuild cost before changing
+runtime visual policy.
+
+Changes:
+
+- Added analyzer coverage for MT cut-ISO update sub-costs in long active gap
+  diagnostics.
+- Added app-side `lastMtVolumeCutIsoUpdateDebug` state and attached it to
+  `sceneSectionApply.mtCutIsoUpdate` in smoothness traces.
+- Instrumented the MT cut-ISO rebuild path with policy, skip reason, grid size,
+  plane/cut/root counts, and timing for clear, setup, mesh build, overlay
+  update, attach, and dispose.
+- Kept this pass diagnostic-only. No section ISO fidelity, refresh cadence,
+  opacity, camera, or MT volume handoff policy was changed.
+
+Artifacts:
+
+- Latest selected traced artifact:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T13-38-02-071Z`
+- Latest report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T13-38-02-071Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T13-05-43-486Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 60 | 0 |
+| stateSourceOnly | 12 | 0 |
+| loadedAtStartFalse | 6 | 0 |
+| opacityJumps | 6 | 0 |
+| opacityJumpCovered | 6 | 0 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 9 | -1 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Work-source findings:
+
+- The active MT cut-ISO rows are still `policy=full-rebuild`, `grid=96`, with
+  one selected plane and one cut/root per update.
+- Full clear/dispose is not the active-row bottleneck:
+  `clearMs=0`, `disposeMs=0` in the representative active rows.
+- Mesh sampling is a secondary cost:
+  - A20: `meshBuildMs=2.5`
+  - A21: `meshBuildMs=2.0`
+  - S01: `meshBuildMs=2.1`
+- Section ISO overlay generation is the dominant MT cut-ISO sub-cost:
+  - A20: `mtCutIsoMs=8.7`, `overlayUpdateMs=5.8`
+  - A21: `mtCutIsoMs=9.7`, `overlayUpdateMs=7.4`
+  - S01: `mtCutIsoMs=8.9`, `overlayUpdateMs=6.1`
+- Rows where the volume is hidden now carry `skippedReason=volume-layer-hidden`
+  and zero MT cut-ISO build/update cost, which keeps inactive rows from being
+  misread as real section ISO work.
+- Interpretation: the next optimization target is inside
+  `updateScalarSectionIsoOverlay` / contour overlay generation for MT volume
+  cuts, not full-group clear/dispose and not page-specific transition logic.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Analyzer red test for MT cut-ISO sub-costs | FAIL then PASS | Confirmed the new fields were absent before implementation, then covered. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | 8 analyzer tests passed. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | Direct TypeScript CLI completed after stopping a stale, non-listening Vite/npm pair. |
+| Targeted traced matrix `A20,A21,S01` | PASS | Latest artifact is `13-38-02-071Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest targeted artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed in about `3.3m`. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Vite dev server status: stopped 517x listeners before reporting; no 517x
+listening sockets remained.
+
+Next recommendation:
+
+1. Do not begin visual smoothing yet.
+2. Split `updateScalarSectionIsoOverlay` internals for MT volume cuts into
+   band mesh, line contour geometry, material/root attach, and contour stats.
+3. If line geometry dominates, evaluate contour simplification or transition
+   LOD with human-visible review. If band mesh dominates, evaluate attribute
+   reuse. If attach/material dominates, evaluate reuse without changing visual
+   fidelity.
+4. Do not throttle or skip continuous cut-ISO refresh until the visible
+   isoband snap/opacity complaint has a review clip proving the tradeoff is
+   acceptable.
+
+## 2026-05-31 07:15 - Section ISO Overlay Internal Timing Split
+
+Goal: split `updateScalarSectionIsoOverlay` internals for MT volume cuts before
+changing refresh cadence, LOD, opacity, or camera policy.
+
+Changes:
+
+- Added analyzer coverage for nested MT cut-ISO section overlay debug fields in
+  long active gap diagnostics.
+- Instrumented `updateScalarSectionIsoOverlay` with timing for dispose,
+  root creation, band mesh construction, line contour geometry construction,
+  line material setup, root attach, total overlay time, skip reason, and useful
+  contour stats.
+- Aggregated the per-cut overlay timing into
+  `lastMtVolumeCutIsoUpdateDebug.overlayDebug` so scene-section traces can show
+  whether cost comes from bands, contour lines, material/root work, or skipped
+  hidden-volume rows.
+- Kept this pass diagnostic-only. No visual refresh policy, LOD,
+  transparency/opacity, camera movement, section ISO fidelity, or MT handoff
+  policy was changed.
+
+Artifacts:
+
+- Latest selected traced artifact:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T14-04-28-149Z`
+- Latest report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T14-04-28-149Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T13-38-02-071Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 60 | 0 |
+| stateSourceOnly | 12 | 0 |
+| loadedAtStartFalse | 6 | 0 |
+| opacityJumps | 6 | 0 |
+| opacityJumpCovered | 6 | 0 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| hiddenDormantState | 6 | 0 |
+| hiddenUnresolvedState | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 9 | 0 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Work-source findings:
+
+- The selected active MT cut-ISO rows still use `policy=full-rebuild` and one
+  active selected plane/cut/root per update.
+- Section ISO line contour geometry is the dominant overlay sub-cost. Band mesh
+  generation, line material setup, and root attach are small by comparison.
+- Representative active rows:
+  - A20: `mtCutIsoMs=11.6`, `overlayUpdateMs=8.6`,
+    `bandMeshMs=0.5`, `lineGeometryMs=8.0`, `lineMaterialMs=0`,
+    `attachMs=0.1`.
+  - A21: `mtCutIsoMs=8.9`, `overlayUpdateMs=6.6`,
+    `bandMeshMs=0.5`, `lineGeometryMs=6.1`, `lineMaterialMs=0`,
+    `attachMs=0.1`.
+  - S01: `mtCutIsoMs=8.3`, `overlayUpdateMs=5.7`,
+    `bandMeshMs=0.6`, `lineGeometryMs=5.1`, `lineMaterialMs=0`,
+    `attachMs=0.1`.
+- Contour stats are stable across the selected active rows:
+  `lineSourceSegmentCount=3150`, `lineTinySegmentCount=8`,
+  `linePolylineCount=37`, `lineSimplifiedPointCount=477`,
+  `lineRibbonSegmentCount=953`, and `lineSnapToleranceM=1`.
+- Hidden-volume rows continue to skip MT cut-ISO work with
+  `skippedReason=volume-layer-hidden` and zero MT cut-ISO build/update cost.
+- Interpretation: the next concrete cost target is
+  `buildSectionIsoLineGeometry` / contour line geometry construction for MT
+  volume cuts. The current evidence does not support changing continuous
+  section ISO refresh cadence yet.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Analyzer red test for overlay internals | FAIL then PASS | Confirmed the new analyzer fields were absent before implementation, then covered. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | 8 analyzer tests passed. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | TypeScript clean. |
+| Targeted traced matrix `A20,A21,S01` | PASS | Latest artifact is `14-04-28-149Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest targeted artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed in about `3.3m`. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Vite dev server status: stopped 517x listeners before reporting; no 517x
+listening sockets remained.
+
+Next recommendation:
+
+1. Do not begin visual smoothing yet.
+2. Split `buildSectionIsoLineGeometry` internals into triangle scan and
+   intersections, segment stitching, polyline simplification, and ribbon
+   extrusion.
+3. If triangle scan/intersection dominates, evaluate transition LOD or active
+   transition contour cadence only with human-visible review clips.
+4. If stitching, simplification, or ribbon extrusion dominates, optimize
+   geometry construction without changing visual fidelity first.
+5. Do not throttle, lower LOD, or skip continuous cut-ISO refresh until the
+   visible isoband snap/opacity complaint has a review clip proving the
+   tradeoff is acceptable.
+
+## 2026-05-31 07:55 - Section ISO Line Geometry Timing Split
+
+Goal: split `buildSectionIsoLineGeometry` internals for MT volume cuts before
+optimizing contour generation or changing visual refresh policy.
+
+Changes:
+
+- Added analyzer coverage and report fields for line-geometry sub-costs:
+  setup, triangle scan, triangle intersections, segment recording, segment
+  stitching, polyline simplification, ribbon extrusion, geometry creation, and
+  a residual `other` bucket.
+- Added contour workload stats to the same long active gap rows: triangle
+  count, masked/invalid/degenerate triangle counts, level candidate count, and
+  intersection attempt count.
+- Instrumented `buildSectionIsoLineGeometry` through the nested MT cut-ISO
+  overlay debug state.
+- Reduced the diagnostic's own overhead after the first run showed a large
+  unaccounted bucket: timing now accumulates raw local durations and rounds
+  once at the end of the line-geometry build.
+- Kept this pass diagnostic-only. No visual refresh cadence, LOD, opacity,
+  transparency, camera movement, section ISO fidelity, or MT handoff policy was
+  changed.
+
+Artifacts:
+
+- Latest selected traced artifact:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T14-47-20-910Z`
+- Latest report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T14-47-20-910Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T14-43-14-248Z`
+- Intermediate diagnostic artifact:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T14-37-38-572Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 80 | +10 |
+| stateSourceOnly | 16 | +2 |
+| loadedAtStartFalse | 8 | +1 |
+| opacityJumps | 8 | 0 |
+| opacityJumpCovered | 8 | 0 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| hiddenDormantState | 8 | +1 |
+| hiddenUnresolvedState | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 9 | 0 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Work-source findings:
+
+- The first line split artifact (`14-37-38-572Z`) showed that
+  `lineGeometryMs` was about `9.7-11.1ms`, but the named phases explained only
+  about half the time. That was not good enough evidence for a fix.
+- Added `segmentRecordMs` and `lineOtherMs`, then changed timing accumulation
+  to avoid thousands of per-iteration rounded writes into debug state.
+- Latest accepted active rows:
+  - A20: `lineGeometryMs=12.1`, `setupMs=1.3`,
+    `triangleScanMs=2.0`, `triangleIntersectionMs=1.1`,
+    `segmentRecordMs=0.5`, `segmentStitchMs=4.0`,
+    `simplifyMs=0`, `ribbonMs=0`, `geometryCreateMs=0.1`,
+    `otherMs=3.1`.
+  - A21: `lineGeometryMs=10.8`, `setupMs=1.2`,
+    `triangleScanMs=2.4`, `triangleIntersectionMs=0.2`,
+    `segmentRecordMs=0.6`, `segmentStitchMs=2.2`,
+    `simplifyMs=0.1`, `ribbonMs=0.2`, `geometryCreateMs=0.1`,
+    `otherMs=3.7`.
+  - S01: `lineGeometryMs=9.4`, `setupMs=1.3`,
+    `triangleScanMs=2.8`, `triangleIntersectionMs=0.4`,
+    `segmentRecordMs=0.3`, `segmentStitchMs=1.7`,
+    `simplifyMs=0.2`, `ribbonMs=0.1`, `geometryCreateMs=0.1`,
+    `otherMs=2.5`.
+- Workload stats are stable across accepted active rows:
+  `triangleCount=18050`, `levelCandidateCount=3191`,
+  `intersectionAttemptCount=3191`, `lineSourceSegmentCount=3150`,
+  `lineTinySegmentCount=8`, `linePolylineCount=37`,
+  `lineSimplifiedPointCount=477`, and `lineRibbonSegmentCount=953`.
+- Interpretation: segment stitching is the largest named phase in A20 and is
+  consistently material, triangle scan/setup are also material, and line
+  simplification/ribbon extrusion/material/attach are not the bottleneck.
+- The residual `lineOtherMs=2.5-3.7` remains too large to ignore. It is likely
+  either residual instrumentation overhead from repeated `performance.now()`
+  calls inside the loop or uninstrumented loop plumbing around the contour
+  pass. Do not optimize or lower fidelity until that is separated.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Analyzer red test for line-geometry fields | FAIL then PASS | New fields were absent first, then covered. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | 8 analyzer tests passed after the line split and after the segment-record/other bucket. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | TypeScript clean. |
+| Targeted traced matrix `A20,A21,S01` | PASS | Latest accepted artifact is `14-47-20-910Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest targeted artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed in about `3.3m`; an initial backslash-path invocation found no tests and was rerun with the forward-slash path. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Vite dev server status: stopped 517x listeners before reporting; no 517x
+listening sockets remained.
+
+Next recommendation:
+
+1. Do not begin visual smoothing yet.
+2. Classify the remaining `lineOtherMs` by adding a lower-overhead timing mode
+   or a focused micro-benchmark around `buildSectionIsoLineGeometry` that does
+   not call `performance.now()` inside every triangle/candidate loop.
+3. If `lineOtherMs` collapses under lower-overhead timing, treat it as
+   diagnostic overhead and use the named phases: prioritize segment stitching
+   and triangle scan/setup before visual policy work.
+4. If `lineOtherMs` remains real, split the uninstrumented loop plumbing before
+   changing contour fidelity.
+5. Do not throttle, lower LOD, simplify contours further, or skip continuous
+   cut-ISO refresh until a human-visible review clip proves the isoband
+   snap/opacity complaint does not get worse.
+
+## 2026-05-31 08:10 - Section ISO Coarse Line Timing Classification
+
+Goal: classify whether the previous section ISO `lineOtherMs=2.5-3.7ms`
+was real contour work or diagnostic overhead before making any visual-fidelity
+or refresh-cadence changes.
+
+What changed:
+
+- Replaced hot-loop line-geometry timing with a lower-overhead
+  `timingMode=coarse-pass` measurement.
+- The contour pass is now timed once around the triangle/level scan while still
+  preserving workload counts: triangles, level candidates, intersection
+  attempts, source segments, polylines, simplified points, and ribbon segments.
+- Analyzer rows and markdown now expose
+  `tickSceneSectionMtCutIsoLineTimingMode` and
+  `tickSceneSectionMtCutIsoLineContourPassMs`.
+- Kept this pass diagnostic-only. No opacity, isoband color, contour fidelity,
+  cut-ISO refresh cadence, camera behavior, or transition policy changed.
+
+Artifacts:
+
+- Latest selected traced artifact:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T15-04-59-321Z`
+- Latest report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T15-04-59-321Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T14-47-20-910Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 60 | -20 |
+| stateSourceOnly | 12 | -4 |
+| loadedAtStartFalse | 6 | -2 |
+| opacityJumps | 6 | -2 |
+| opacityJumpCovered | 6 | -2 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| hiddenDormantState | 6 | -2 |
+| hiddenUnresolvedState | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 10 | +1 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Classification findings:
+
+- `lineOtherMs` collapsed under coarse timing. Active MT cut-ISO rows now show
+  `otherMs=0-0.1ms`; the prior residual was diagnostic overhead from
+  fine-grained timing inside the hot triangle/candidate loop.
+- The remaining real line-geometry costs are the coarse contour pass and segment
+  stitching:
+  - A20: `lineGeometryMs=9.3`, `contourPassMs=4.1`,
+    `segmentStitchMs=3.1`, `simplifyMs=0.2`, `ribbonMs=0`,
+    `geometryCreateMs=0.1`, `otherMs=0.1`.
+  - A21: `lineGeometryMs=5.2`, `contourPassMs=1.8`,
+    `segmentStitchMs=1.9`, `simplifyMs=0.1`, `ribbonMs=0.1`,
+    `geometryCreateMs=0.1`, `otherMs=0`.
+  - S01 active rows: `lineGeometryMs=4.9-6.1`,
+    `contourPassMs=1.6-2.7`, `segmentStitchMs=1.8-1.9`,
+    `simplifyMs=0.1-0.2`, `ribbonMs=0.1`, `otherMs=0`.
+- Workload stats are stable where MT cut-ISO line geometry runs:
+  `triangleCount=18050`, `levelCandidateCount=3191`,
+  `intersectionAttemptCount=3191`, `lineSourceSegmentCount=3150`,
+  `lineTinySegmentCount=8`, `linePolylineCount=37`,
+  `lineSimplifiedPointCount=477`, and `lineRibbonSegmentCount=953`.
+- ScaleBar remains absent from selected long-gap top-ticker diagnostics.
+- The long-gap blocker is not solved by this pass: selected matrix still has
+  10 long active gaps, 3 smoothness trace density risks, and A20 still carries
+  camera path risk. This pass only made the section ISO cost evidence cleaner.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Analyzer red test for coarse line timing | FAIL then PASS | New coarse fields were missing first, then covered. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs` | PASS | 8 analyzer tests passed. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | TypeScript clean. |
+| Targeted traced matrix `A20,A21,S01` | PASS | Latest artifact is `15-04-59-321Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest targeted artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed in about `3.3m`. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Next recommendation:
+
+1. Keep visual smoothing paused until the remaining render-loop cost and cadence
+   blockers are narrower.
+2. Optimize segment stitching without changing contour fidelity first. The
+   likely safe target is avoiding front-of-array `unshift`/clone churn while
+   preserving the same stitched polyline order and counts.
+3. After stitching, rerun selected traced matrix `A20,A21,S01` and confirm
+   `segmentStitchMs`, `lineGeometryMs`, `tickSceneSectionMtCutIsoMs`, and
+   `renderLoopRenderMs` move in the right direction.
+4. If line geometry no longer dominates, continue to contour pass optimization
+   or scene-section helper/plane cost. Do not throttle, lower LOD, skip
+   continuous cut-ISO refresh, or simplify contours further without a
+   human-visible review clip because the user specifically reported isoband
+   transparency/snap artifacts.
+
+## 2026-05-31 08:45 - Section ISO Stitch Churn Pass
+
+Goal: reduce section ISO segment-stitching overhead without changing contour
+fidelity, refresh cadence, opacity, or camera behavior.
+
+What changed:
+
+- Added a focused Node guard test:
+  `tests/tools/section-iso-stitch-source.test.mjs`.
+- The test fails if `stitchSectionIsoSegments` reintroduces front-of-array
+  insertion.
+- Reworked `stitchSectionIsoSegments` so the backward side of a contour is
+  accumulated with `push` into a temporary array, then appended in reverse order
+  when the final polyline is assembled.
+- Preserved the same node averaging, visited-segment tracking, used-segment
+  normal accumulation, polyline filtering, simplification, ribbon generation,
+  and debug workload counts.
+
+Artifacts:
+
+- First post-change selected trace:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T15-31-52-552Z`
+- Accepted selected trace after no-code rerun:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T15-35-13-863Z`
+- Accepted report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T15-35-13-863Z/transition-analysis.md`
+- Compared against pre-stitch baseline:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T15-04-59-321Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta vs `15-04-59-321Z` |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 60 | 0 |
+| stateSourceOnly | 12 | 0 |
+| loadedAtStartFalse | 6 | 0 |
+| opacityJumps | 6 | 0 |
+| opacityJumpCovered | 6 | 0 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| hiddenDormantState | 6 | 0 |
+| hiddenUnresolvedState | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 9 | -1 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Console classification:
+
+- The first post-change matrix recorded one unexpected warning:
+  `WebGL: CONTEXT_LOST_WEBGL: loseContext: context lost`.
+- No-code rerun cleared it and recorded only the four expected Chromium
+  ReadPixels warnings.
+- Treat the context-loss row as transient browser lifecycle noise for this pass,
+  not accepted baseline evidence. The accepted artifact is `15-35-13-863Z`.
+
+Timing comparison:
+
+- Pre-stitch baseline active MT cut-ISO geometry rows (`15-04-59-321Z`):
+  - Average `lineGeometryMs=6.375`.
+  - Average `contourPassMs=2.55`.
+  - Average `segmentStitchMs=2.175`.
+  - Average `mtCutIsoMs=9.4`.
+- Accepted post-stitch rows (`15-35-13-863Z`):
+  - Average `lineGeometryMs=6.033`.
+  - Average `contourPassMs=2.0`.
+  - Average `segmentStitchMs=2.2`.
+  - Average `mtCutIsoMs=9.167`.
+- Representative accepted rows:
+  - A20: `lineGeometryMs=5.1`, `contourPassMs=1.5`,
+    `segmentStitchMs=2.1`, `mtCutIsoMs=8.0`, `otherMs=0.1`.
+  - A21: `lineGeometryMs=5.2`, `contourPassMs=1.6`,
+    `segmentStitchMs=2.0`, `mtCutIsoMs=8.3`, `otherMs=0`.
+  - S01: `lineGeometryMs=7.8`, `contourPassMs=2.9`,
+    `segmentStitchMs=2.5`, `mtCutIsoMs=11.2`, `otherMs=0`.
+- Interpretation: removing `unshift` is algorithmically safer and preserves
+  counts, but it did not materially reduce `segmentStitchMs` in the selected
+  matrix. The improvement is mixed and within run-to-run variance. Do not claim
+  the stitch bottleneck is fixed.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Stitch guard red test | FAIL then PASS | Failed on `.unshift(` before the implementation change, then passed. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs tests/tools/section-iso-stitch-source.test.mjs` | PASS | 9 Node tests passed. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | TypeScript clean. |
+| Targeted traced matrix `A20,A21,S01` | PASS | Accepted artifact is `15-35-13-863Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest accepted targeted artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed in about `3.3m`. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Next recommendation:
+
+1. Keep visual smoothing paused.
+2. Split `stitchSectionIsoSegments` timing before further optimization:
+   node/key build, segment traversal, final point assembly, polyline length
+   filtering, and normal accumulation.
+3. Use that split to decide whether the real cost is Map/string-key node build,
+   traversal over node segment lists, final point assembly, or length/normal
+   work.
+4. Only optimize the named dominant sub-cost. Do not change contour density,
+   line simplification, cut-ISO refresh cadence, LOD, opacity, or camera
+   behavior without human-visible review evidence.
+
+## 2026-05-31 09:15 - Section ISO Stitch Internal Timing Split
+
+Goal: classify the remaining section ISO segment-stitching cost before making
+another optimization pass. This pass is diagnostic-only for visual behavior:
+no contour density, simplification, refresh cadence, LOD, opacity, or camera
+rules were changed.
+
+What changed:
+
+- Extended section ISO line-geometry debug state with stitch sub-cost fields:
+  node/key build, segment traversal, final point assembly, polyline length
+  filtering, and normal accumulation.
+- Wired the same fields through MT cut-ISO overlay aggregation, SceneManager
+  debug typing, the transition-matrix analyzer rows, and the markdown report.
+- Added analyzer fixture coverage so the report fails if the stitch sub-costs
+  disappear.
+- Preserved the previous source guard that prevents front-of-array insertion in
+  `stitchSectionIsoSegments`.
+
+Artifacts:
+
+- Selected trace:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T16-05-50-828Z`
+- Report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T16-05-50-828Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T15-35-13-863Z`
+
+Latest selected traced counts:
+
+| Metric | Count | Delta vs `15-35-13-863Z` |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 80 | 20 |
+| stateSourceOnly | 16 | 4 |
+| loadedAtStartFalse | 8 | 2 |
+| opacityJumps | 8 | 2 |
+| opacityJumpCovered | 8 | 2 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| hiddenDormantState | 8 | 2 |
+| hiddenUnresolvedState | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 9 | 0 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Count interpretation:
+
+- The product-entry deltas are from S01 now producing populated `mid` and `end`
+  state summaries; the previous selected artifact only had S01 `source`
+  product entries.
+- No unresolved opacity, policy, source/target, late-reapply, capture, or
+  console regressions were introduced.
+
+Stitch sub-cost classification:
+
+- Active MT cut-ISO line rows now show stitch cost is dominated by node/key
+  build:
+  - A20: `lineGeometryMs=6.5`, `segmentStitchMs=2.4`,
+    `stitchNodeBuildMs=2.1`, `stitchTraversalMs=0.2`,
+    `stitchPointAssemblyMs=0`, `stitchLengthFilterMs=0`,
+    `stitchNormalMs=0`, `contourPassMs=1.9`, `mtCutIsoMs=10.1`.
+  - A21: `lineGeometryMs=6.5`, `segmentStitchMs=2.4`,
+    `stitchNodeBuildMs=2.0`, `stitchTraversalMs=0.2`,
+    `stitchPointAssemblyMs=0.1`, `stitchLengthFilterMs=0`,
+    `stitchNormalMs=0.1`, `contourPassMs=2.1`, `mtCutIsoMs=10.4`.
+  - S01: `lineGeometryMs=7.2`, `segmentStitchMs=2.7`,
+    `stitchNodeBuildMs=2.4`, `stitchTraversalMs=0.2`,
+    `stitchPointAssemblyMs=0`, `stitchLengthFilterMs=0`,
+    `stitchNormalMs=0`, `contourPassMs=2.3`, `mtCutIsoMs=11.0`.
+- Traversal, point assembly, length filtering, and normal accumulation are not
+  the current stitch bottleneck.
+- The next safe non-visual target is node/key build in
+  `stitchSectionIsoSegments`, especially string-key creation, node Map churn,
+  and full segment-record cloning.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Analyzer red test | FAIL then PASS | Failed before analyzer row fields existed, then passed after wiring them. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs tests/tools/section-iso-stitch-source.test.mjs` | PASS | 9 Node tests passed. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | TypeScript clean. |
+| Selected traced matrix `A20,A21,S01` | PASS | Artifact `16-05-50-828Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest selected artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed in about `3.4m`. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| Dev-server cleanup | PASS | `NO_517X_LISTENERS`. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Next recommendation:
+
+1. Keep visual smoothing paused until the MT cut-ISO node/key build cost is
+   reduced or explicitly accepted.
+2. Optimize `stitchSectionIsoSegments` node/key build without changing visual
+   output. Safest candidates:
+   - Avoid cloning full segment records with object spread; store only
+     `aKey`, `bKey`, `normal`, and `level`.
+   - Reduce string-key allocation if possible while preserving snap tolerance
+     semantics.
+   - Keep the existing source guard against `unshift`.
+3. Rerun selected traced `A20,A21,S01` and compare the same sub-cost rows.
+4. If node/key build drops and line geometry remains material, move next to
+   contour-pass or scene-section helper/plane cost. Do not change contour
+   density, line simplification, cut-ISO refresh cadence, LOD, opacity, or
+   camera behavior without human-visible review evidence.
+
+## 2026-05-31 09:50 - Section ISO Stitch Node/Key Build Pass
+
+Goal: reduce the dominant section ISO segment-stitching sub-cost without
+changing visual output, contour density, simplification, cut-ISO refresh
+cadence, LOD, opacity, or camera behavior.
+
+What changed:
+
+- Added focused source-guard tests for the hot stitch path:
+  - `stitchSectionIsoSegments` must not use front-of-array insertion.
+  - `stitchSectionIsoSegments` must not clone full segment records with
+    `...segment`.
+  - `sectionIsoPointKey` must not allocate an array and call `.join()` for
+    every point key.
+- Reworked `stitchSectionIsoSegments` records to store only `aKey`, `bKey`,
+  `normal`, and `level`.
+- Replaced the point-key array/join path with direct rounded coordinates and a
+  template string. This preserves the same snap tolerance string format.
+- No visual policy, contour fidelity, opacity, camera, or refresh-cadence rule
+  changed.
+
+Artifacts:
+
+- First attempted selected trace:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T16-33-11-804Z`
+- Accepted selected trace:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T16-33-50-824Z`
+- Report:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T16-33-50-824Z/transition-analysis.md`
+- Compared against:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T16-05-50-828Z`
+
+Tooling note:
+
+- The first matrix attempt failed before capture with
+  `page.goto: net::ERR_CONNECTION_REFUSED` because no Vite server was listening
+  on `127.0.0.1:5173`.
+- The capture script reads `GEOSEE_BASE_URL`; it does not launch Vite.
+- Vite was then started from the real repo path `C:\GeoSee\GeoSee_Dev`, the
+  selected matrix was rerun successfully, and all 517x listeners were stopped
+  before reporting.
+- `16-33-11-804Z` has no manifest and is not accepted evidence.
+
+Latest selected traced counts:
+
+| Metric | Count | Delta vs `16-05-50-828Z` |
+| --- | ---: | ---: |
+| cases | 3 | 0 |
+| productEntries | 60 | -20 |
+| stateSourceOnly | 12 | -4 |
+| loadedAtStartFalse | 6 | -2 |
+| opacityJumps | 6 | -2 |
+| opacityJumpCovered | 6 | -2 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| hiddenDormantState | 6 | -2 |
+| hiddenUnresolvedState | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 10 | 1 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Count interpretation:
+
+- Product-entry count returned to 60 because this run did not include the extra
+  S01 `mid`/`end` state summaries seen in `16-05-50-828Z`.
+- No unresolved opacity, policy, source/target, late-reapply, capture, or
+  console regressions were introduced.
+
+Timing comparison:
+
+- Accepted pre-change rows (`16-05-50-828Z`, active MT cut-ISO line rows):
+  - Average `lineGeometryMs=6.733`.
+  - Average `segmentStitchMs=2.5`.
+  - Average `stitchNodeBuildMs=2.167`.
+  - Average `contourPassMs=2.1`.
+  - Average `mtCutIsoMs=10.5`.
+- Accepted post-change rows (`16-33-50-824Z`, active MT cut-ISO line rows):
+  - Average `lineGeometryMs=5.125`.
+  - Average `segmentStitchMs=1.675`.
+  - Average `stitchNodeBuildMs=1.425`.
+  - Average `contourPassMs=1.825`.
+  - Average `mtCutIsoMs=11.125`.
+- Representative post-change rows:
+  - A20: `lineGeometryMs=4.8`, `segmentStitchMs=1.6`,
+    `stitchNodeBuildMs=1.5`, `contourPassMs=1.5`, `meshBuildMs=2.0`,
+    `mtCutIsoMs=7.5`.
+  - A21: `lineGeometryMs=4.7`, `segmentStitchMs=1.6`,
+    `stitchNodeBuildMs=1.2`, `contourPassMs=1.6`, `meshBuildMs=2.1`,
+    `mtCutIsoMs=7.7`.
+  - S01 normal row: `lineGeometryMs=4.8`, `segmentStitchMs=1.3`,
+    `stitchNodeBuildMs=1.1`, `contourPassMs=1.7`, `meshBuildMs=2.1`,
+    `mtCutIsoMs=7.7`.
+  - S01 spike row: `lineGeometryMs=6.2`, `segmentStitchMs=2.2`,
+    `stitchNodeBuildMs=1.9`, `contourPassMs=2.5`, `meshBuildMs=14.4`,
+    `mtCutIsoMs=21.6`.
+- Interpretation: the node/key build pass reduced the targeted stitch cost in
+  captured browser evidence. The remaining high-risk row is no longer stitch
+  dominated; it is an MT cut mesh-build spike.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Stitch source guard red test | FAIL then PASS | Failed on `...segment` and `.join()` before implementation, then passed. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs tests/tools/section-iso-stitch-source.test.mjs` | PASS | 11 Node tests passed. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean after rerun. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | TypeScript clean. |
+| Selected traced matrix `A20,A21,S01` | PASS | Artifact `16-33-50-824Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated for latest selected artifact. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed in about `3.3m`. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| Dev-server cleanup | PASS | `NO_517X_LISTENERS`. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Next recommendation:
+
+1. Keep visual smoothing paused.
+2. Treat section ISO node/key build as reduced enough for now.
+3. Move to the new dominant MT cut-ISO risk: classify the S01 `meshBuildMs=14.4`
+   spike in `updateMtVolumeCutIsoOverlaysImpl` / MT cut mesh generation.
+4. Split MT cut mesh-build timing before changing behavior: grid sampling,
+   plane/cut geometry creation, vertex/index buffer assembly, material/root
+   setup, and any disposal or object attachment hidden in the build phase.
+5. If the spike is transient run-to-run noise, confirm with another selected
+   trace. If it persists, optimize mesh-build allocation/reuse before any
+   visual-policy change.
+6. Do not change contour density, line simplification, cut-ISO refresh cadence,
+   LOD, opacity, or camera behavior without human-visible review evidence.
+
+## 2026-05-31 10:10 - MT Cut Mesh Build Timing Split
+
+Goal for this pass:
+
+- Classify the MT cut mesh-build spike from `16-33-50-824Z` before any visual
+  smoothing or visual-policy changes.
+- Expose mesh-build sub-costs in debug/matrix artifacts: setup, frame-range
+  resolution, buffer allocation, grid sampling, index assembly, geometry
+  creation, material setup, mesh object setup, vertex count, and index count.
+
+Implementation:
+
+- Added MT cut mesh-build debug timing to
+  `src/scene/isoOverlays/volumeCutIsoOverlays.ts`.
+- Mirrored the debug shape in `src/scene/SceneManager.ts`.
+- Extended `tools/analyze-transition-matrix.mjs` rows and report output with
+  an `MT Cut Mesh Build Diagnostics` section.
+- Added analyzer coverage in `tests/tools/analyze-transition-matrix.test.mjs`
+  using a red/green pass for the new mesh-build sub-cost fields.
+
+Latest selected traced artifact:
+
+- `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T17-05-06-512Z`
+- Cases: `A20,A21,S01`
+- Trace replay: complete
+- Video: disabled
+
+Counts:
+
+| Metric | Count | Delta vs `16-33-50-824Z` |
+| --- | ---: | ---: |
+| productEntries | 80 | 20 |
+| stateSourceOnly | 16 | 4 |
+| loadedAtStartFalse | 8 | 2 |
+| opacityJumps | 8 | 2 |
+| opacityJumpCovered | 8 | 2 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| hiddenDormantState | 8 | 2 |
+| hiddenUnresolvedState | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 9 | -1 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Mesh-build classification:
+
+- The prior S01 `meshBuildMs=14.4` spike did not reproduce in the selected
+  traced rerun.
+- Active mesh-build rows are stable:
+  - A20: `meshBuildMs=2.1`, `gridSampleMs=0.8`, `geometryMs=1.2`,
+    `vertices=9216`, `indices=54150`, `mtCutIsoMs=9.1`.
+  - A21: `meshBuildMs=2.2`, `gridSampleMs=0.8`, `geometryMs=1.2`,
+    `vertices=9216`, `indices=54150`, `mtCutIsoMs=8.7`.
+  - S01: `meshBuildMs=2.1`, `gridSampleMs=0.9`, `geometryMs=1.1`,
+    `vertices=9216`, `indices=54150`, `mtCutIsoMs=8.3`.
+- Setup, frame-range resolution, buffer allocation, material setup, and mesh
+  object setup round to `0-0.1ms` in the selected evidence.
+- Interpretation: classify the prior S01 mesh-build spike as transient
+  run-to-run noise for now. Do not optimize mesh-build allocation/reuse yet
+  unless the spike returns in broader or repeated traced captures.
+
+Current remaining bottleneck:
+
+- MT cut-ISO cost is again dominated by overlay/line generation rather than cut
+  mesh build. Representative active rows still spend about `5.1-6.1ms` in
+  line geometry and `1.3-2.7ms` in segment stitching/node build.
+- The selected matrix still has `smoothnessTraceQualityRisk=3` and
+  `cameraPathRisk=1`, so visual smoothing remains blocked on timing/cadence
+  confidence and camera path classification.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Analyzer red test for mesh-build sub-cost rows | FAIL then PASS | Failed on missing `tickSceneSectionMtCutIsoMeshBuildSetupMsAfter`, then passed after analyzer implementation. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs tests/tools/section-iso-stitch-source.test.mjs` | PASS | 11 Node tests passed. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | TypeScript clean. |
+| Selected traced matrix `A20,A21,S01` | PASS | Artifact `17-05-06-512Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated and compared against `16-33-50-824Z`. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed in about `3.3m`. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| Dev-server cleanup | PASS | `NO_517X_LISTENERS`. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Next recommendation:
+
+1. Keep visual smoothing paused until the timing evidence is dense enough to
+   judge smoothness and the camera path risk is classified.
+2. Treat MT cut mesh build as classified, not a current optimization target.
+3. Return to the persistent MT cut-ISO overlay line-generation cost:
+   `lineGeometryMs` / `segmentStitchMs` / node-key build remain the repeatable
+   section ISO work during active scene-section transitions.
+4. The next safest base-rule pass is either:
+   - optimize section ISO segment/node-key build further without changing
+     contour fidelity, or
+   - run a targeted human-visible/video review for A20/A21/S01 before deciding
+     whether transition-only contour cadence or LOD changes are acceptable.
+5. Do not change contour density, line simplification, cut-ISO refresh cadence,
+   LOD, opacity, or camera behavior without human-visible review evidence.
+
+## 2026-05-31 11:10 - Section ISO Numeric Node Stitch Pass
+
+Goal for this pass:
+
+- Reduce persistent MT cut-ISO overlay line-generation cost without changing
+  contour density, line simplification, cut-ISO cadence, LOD, opacity, camera
+  behavior, or visual policy.
+- Keep the change in base geometry stitching logic rather than page-specific
+  transition behavior.
+
+Implementation:
+
+- Replaced string `aKey`/`bKey` segment records and `Map<string, ...>` node
+  lookup in `stitchSectionIsoSegments` with numeric node ids.
+- Replaced hot-path string point keys with collision-checked numeric hash
+  buckets. Snap semantics remain based on the same rounded `x/y/z` tolerance
+  coordinates; hash collisions are checked against the stored quantized
+  coordinates before nodes are reused.
+- Preserved the existing guards against front-of-array insertion, full segment
+  record cloning, and array/join point-key allocation.
+- Added a new source guard proving the stitch hot path no longer uses string
+  node records.
+
+Latest selected traced artifact:
+
+- `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T18-00-45-605Z`
+- Cases: `A20,A21,S01`
+- Trace replay: complete
+- Video: disabled
+
+Counts:
+
+| Metric | Count | Delta vs `17-05-06-512Z` |
+| --- | ---: | ---: |
+| productEntries | 70 | -10 |
+| stateSourceOnly | 14 | -2 |
+| loadedAtStartFalse | 7 | -1 |
+| opacityJumps | 8 | 0 |
+| opacityJumpCovered | 8 | 0 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| hiddenDormantState | 7 | -1 |
+| hiddenUnresolvedState | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 9 | 0 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Timing comparison:
+
+- Pre-change active MT cut-ISO line rows (`17-05-06-512Z`):
+  - Average `lineGeometryMs=5.633`.
+  - Average `contourPassMs=2.033`.
+  - Average `segmentStitchMs=1.967`.
+  - Average `stitchNodeBuildMs=1.633`.
+  - Average `meshBuildMs=2.133`.
+  - Average `mtCutIsoMs=8.7`.
+- Post-change active MT cut-ISO line rows (`18-00-45-605Z`):
+  - Average `lineGeometryMs=5.2`.
+  - Average `contourPassMs=2.033`.
+  - Average `segmentStitchMs=1.033`.
+  - Average `stitchNodeBuildMs=0.733`.
+  - Average `meshBuildMs=2.167`.
+  - Average `mtCutIsoMs=8.3`.
+- Workload counts stayed stable in all active rows:
+  - `lineSourceSegmentCount=3150`.
+  - `linePolylineCount=37`.
+  - `lineSimplifiedPointCount=477`.
+  - `lineRibbonSegmentCount=953`.
+
+Interpretation:
+
+- Numeric node ids and collision-checked hash buckets are a material
+  fidelity-preserving win for the repeated stitch/node-key cost.
+- The remaining line-generation cost is now mostly contour pass plus smaller
+  residual stitch/ribbon work. The selected trace includes one A21 row where
+  `ribbonMs=1.3`, but the average ribbon cost remains low enough to avoid a
+  new runtime change before more evidence.
+- The selected matrix still reports `smoothnessTraceQualityRisk=3` and
+  `cameraPathRisk=1`; visual smoothing remains paused.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Source guard red test for string-key records | FAIL then PASS | Failed on `Map<string, SectionIsoContourNode>` and `aKey`/`bKey` records before implementation. |
+| `node --test tests/tools/section-iso-stitch-source.test.mjs` | PASS | 4 stitch source guards passed. |
+| `node --test tests/tools/analyze-transition-matrix.test.mjs tests/tools/section-iso-stitch-source.test.mjs` | PASS | 12 Node tests passed. |
+| `node --check tools/analyze-transition-matrix.mjs` | PASS | Analyzer syntax clean. |
+| `node --check tools/capture-transition-matrix.mjs` | PASS | Capture syntax clean. |
+| `node node_modules/typescript/bin/tsc --noEmit --pretty false` | PASS | TypeScript clean after one approval-timeout retry. |
+| Selected traced matrix `A20,A21,S01` | PASS | Artifact `18-00-45-605Z`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated and compared against `17-05-06-512Z`. |
+| Full `transition-orchestration.spec.ts` | PASS | 8 tests passed in about `3.3m`. |
+| `npm run build` | PASS | Production build completed. |
+| `npm run check:pages` | PASS | Project page wiring OK. |
+| Dev-server cleanup | PASS | `NO_517X_LISTENERS`. |
+| `git diff --check` | FAIL | Existing CRLF warnings plus known `src/editor/LayerPanel.tsx:2626` blank-line-at-EOF remain. Not fixed in this pass. |
+
+Next recommendation:
+
+1. Keep visual smoothing paused.
+2. Treat section ISO stitch/node-key build as reduced enough for now.
+3. The remaining repeated section ISO cost is contour pass / triangle work plus
+   small residual stitch/ribbon work. Do not change contour density, line
+   simplification, cut-ISO cadence, LOD, opacity, or camera behavior without a
+   human-visible review clip.
+4. Next safest base-rule step: capture a targeted video/human-review packet for
+   A20/A21/S01, then decide whether transition-only contour cadence or LOD is
+   acceptable. If no visual-policy tradeoff is accepted, move to camera-path
+   classification because `cameraPathRisk=1` remains stable on A20.
+
+## 2026-05-31 11:25 - A20/A21/S01 Video Review Packet
+
+Goal for this pass:
+
+- Capture a targeted video-backed review artifact before any visual-policy
+  change to contour cadence, LOD, opacity, or camera behavior.
+- Preserve the current numeric-node section ISO stitch optimization and all
+  debug/matrix classifications.
+
+Latest video-backed selected artifact:
+
+- `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T18-09-39-937Z`
+- Cases: `A20,A21,S01`
+- Trace replay: complete
+- Video status: ready
+- Video file:
+  `C:\GeoSee\GeoSee_Dev\docs\dev-context\artifacts\transition-matrix\transition-matrix-debug-2026-05-31T18-09-39-937Z\videos\page@fa2b15c751c5bed20e02225ee0a18006.webm`
+- Human-review packet:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T18-09-39-937Z/human-review-packet.md`
+
+Counts:
+
+| Metric | Count | Delta vs `18-00-45-605Z` |
+| --- | ---: | ---: |
+| productEntries | 60 | -10 |
+| stateSourceOnly | 12 | -2 |
+| loadedAtStartFalse | 6 | -1 |
+| opacityJumps | 6 | -2 |
+| opacityJumpCovered | 6 | -2 |
+| opacityJumpUnresolved | 0 | 0 |
+| policyMismatches | 0 | 0 |
+| hiddenDormantState | 6 | -1 |
+| hiddenUnresolvedState | 0 | 0 |
+| sectionIsoRenderOpacityMismatch | 0 | 0 |
+| sceneSectionGroundTraceRisk | 0 | 0 |
+| cameraPathRisk | 1 | 0 |
+| smoothnessTraceQualityRisk | 3 | 0 |
+| longActiveTraceGaps | 9 | 0 |
+| matrixCaptureFailures | 0 | 0 |
+| interruptionDivergences | 0 | 0 |
+| lateReapplyDuringTransition | 0 | 0 |
+| unexpectedConsole | 0 | 0 |
+| expectedReadPixelsWarnings | 4 | 0 |
+
+Review focus:
+
+- A20 remains the camera-risk case:
+  - `99_unresolved_missing_tools -> 101_page`.
+  - `positionDistance=571223.8`.
+  - `maxFramePositionDistance=333566.3` over `899.9ms`.
+  - Inspect for the reported camera stall/jump and any ground-line/section
+    helper snap during that motion.
+- A20 also carries a covered MT volume opacity handoff:
+  - `utah-forge-mt-resistivity-volume`, `fade-opacity`, opacity `0 -> 0.48`.
+  - Inspect whether the transition looks unaware of already-visible products.
+- A21 and S01 are the section ISO continuity review cases:
+  - No `sectionIsoRenderOpacityMismatch`.
+  - No `sceneSectionGroundTraceRisk`.
+  - Active MT cut-ISO rows still use `full-rebuild`.
+  - Inspect whether isobands still fade too far mid-transition and snap back at
+    the end.
+
+Limitations:
+
+- The WebM is still produced by headless Chromium. It is useful for visual
+  review but does not prove true headed-browser cadence.
+- `smoothnessTraceQualityRisk=3` remains because active sample density is low.
+- Long active gaps remain and are split across main-thread long tasks,
+  animation-frame script attribution, and unattributed timer starvation.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Video-backed selected matrix `A20,A21,S01` | PASS | Artifact `18-09-39-937Z`, `videoStatus=ready`, trace replay complete. |
+| `npm run audit:transition-report` | PASS | Report regenerated and compared against `18-00-45-605Z`. |
+| Human-review packet | PASS | Packet added beside artifact with video path and review priorities. |
+
+Next recommendation:
+
+1. Keep visual smoothing paused until the video is reviewed.
+2. If the video visibly confirms the isoband transparency/snap complaint, fix
+   base transition ownership/policy for already-visible products rather than
+   changing page pairs.
+3. If the video mainly confirms A20 camera stall/jump, move next to camera-path
+   classification and path-aware duration/handoff.
+4. If the video is inconclusive because headless cadence dominates, run a true
+   headed/human-visible capture path before visual-policy changes.
+
+## 2026-05-31 11:45 - Contact-Sheet Visual Review
+
+Goal for this pass:
+
+- Inspect the video-backed review artifact without changing runtime visual
+  policy.
+- Generate frame contact sheets so the video can be reviewed quickly in the
+  thread and in future unattended runs.
+
+Generated tool/artifacts:
+
+- Contact-sheet helper:
+  `tools/extract-transition-video-contact-sheet.mjs`
+- Full contact sheet:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T18-09-39-937Z/video-review-contact-sheet.png`
+- A20 dense contact sheet:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T18-09-39-937Z/video-review-a20-contact-sheet.png`
+- S01 dense contact sheet:
+  `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T18-09-39-937Z/video-review-s01-contact-sheet.png`
+
+Contact-sheet review:
+
+- Full sheet: 16 sampled frames across the full `142.60s` WebM.
+- A20 sheet: 16 sampled frames from `16.00s` to `45.00s`.
+- S01 sheet: 16 sampled frames from `104.00s` to `142.60s`.
+- A20 is the clearest visible risk:
+  - The dense sheet shows a large camera/view change from the section/MT view
+    into terrain overview around `17.93s -> 19.87s`.
+  - It then returns into the section/MT composition around `29.53s -> 31.47s`.
+  - This aligns with `cameraPathRisk=1` and the A20 matrix camera step
+    (`positionDistance=571223.8`, `maxFramePositionDistance=333566.3`).
+- The contact sheets are not temporally dense enough to prove whether A20 is a
+  smooth long move, a stall, or a discrete jump. Treat them as camera-path
+  classification evidence, not a runtime fix decision.
+- The S01 dense sheet keeps the section/MT isoband cluster generally visible in
+  sampled frames. It does not visibly prove an isoband opacity snap, but the
+  samples are too sparse and headless to clear the user-reported opacity/snap
+  complaint.
+
+Verification in this pass:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `node --check tools/extract-transition-video-contact-sheet.mjs` | PASS | Helper syntax clean. |
+| Full video contact sheet | PASS | Generated from `0s -> 142.60s`, 16 frames. |
+| A20 dense contact sheet | PASS | Generated from `16s -> 45s`, 16 frames. |
+| S01 dense contact sheet | PASS | Generated from `104s -> 142.60s`, 16 frames. |
+
+Next recommendation:
+
+1. Keep visual smoothing paused.
+2. Move next to A20 camera-path classification and path-aware duration/handoff
+   analysis.
+3. Keep section ISO contour density, line simplification, cadence, LOD, and
+   opacity unchanged unless a denser headed/human-visible clip confirms the
+   isoband opacity/snap complaint.
+
+## 2026-05-31 12:05 - Section ISO Transition-Envelope Fade Fix
+
+Goal for this pass:
+
+- Pause the unattended automation at the user's request.
+- Fix the base logic that made some transition elements fade at different
+  rates or snap in/out, without patching specific page pairs.
+
+Root cause:
+
+- Section ISO overlays had correctly been split from authored scalar-volume
+  layer opacity, so ordinary layer opacity changes did not dim the isobands and
+  isolines.
+- The page-transition runtime reused the same layer opacity path for transition
+  fades. That path treated section ISO transition opacity as binary: `0` when
+  parent render opacity was zero, then `1` as soon as the layer tween became
+  nonzero.
+- Result: section ISO overlays could snap fully in on the first tween frame and
+  remain fully visible until snapping out at the end, while other layer
+  materials faded continuously.
+
+Runtime change:
+
+- Added a separate transition-envelope opacity path:
+  `SceneManager.applyLayerTransitionRenderOpacity(id, opacity,
+  transitionOpacity)`.
+- Page-transition layer tweens and transition snapshots now pass a normalized
+  transition envelope for section ISO overlay materials.
+- Ordinary `applyLayerRenderOpacity` still preserves section ISO independence
+  from authored layer opacity.
+- Section ISO debug policy can now report `transition-envelope-opacity` while a
+  page transition is actively fading the overlay.
+- Downstream occlusion recomposition preserves the transition-envelope policy
+  instead of relabeling it as independent layer opacity.
+
+Verification:
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| New regression: `Section ISO overlays follow the page transition envelope without using authored layer opacity as their base` | PASS | Failed first because the transition-envelope API did not exist, then passed after the fix. |
+| Existing regression: `Section ISO overlay opacity is independent from scalar volume layer fades` | PASS | Confirms authored layer opacity remains split from section ISO overlay opacity. |
+| `node node_modules\typescript\bin\tsc --noEmit --pretty false` | PASS | Typecheck clean. |
+| `npx playwright test tests/utah-forge/transition-orchestration.spec.ts --workers=1` | PASS | 9/9 tests passed. |
+
+Next recommendation:
+
+1. Run a selected matrix/video pass for `A20,A21,S01` to confirm the section ISO
+   snap is cleared in the captured artifacts.
+2. Keep the automation paused until the user confirms whether to resume.
+3. Continue camera-path classification only after the fade-uniformity fix is
+   visually checked.

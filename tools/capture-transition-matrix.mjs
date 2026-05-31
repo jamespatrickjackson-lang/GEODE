@@ -14,12 +14,23 @@ const TRACE_SAMPLE_INTERVAL_MS = Number.parseInt(
   process.env.TRANSITION_TRACE_SAMPLE_MS ?? "100",
   10,
 );
+const RECORD_VIDEO = process.env.TRANSITION_MATRIX_VIDEO !== "0";
+const ENABLE_TRACE_REPLAY = process.env.TRANSITION_MATRIX_TRACE !== "0";
+const SELECTED_CASE_IDS = new Set(
+  (process.env.TRANSITION_MATRIX_CASES ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean),
+);
+const DEFAULT_OUTPUT_ROOT = path.join(
+  "docs",
+  "dev-context",
+  "artifacts",
+  "transition-matrix",
+  `transition-matrix-debug-${new Date().toISOString().replace(/[:.]/g, "-")}`,
+);
 const OUTPUT_ROOT =
-  process.env.TRANSITION_MATRIX_OUT ??
-  path.join(
-    "test-results",
-    `transition-matrix-debug-${new Date().toISOString().replace(/[:.]/g, "-")}`,
-  );
+  process.env.TRANSITION_MATRIX_OUT ?? DEFAULT_OUTPUT_ROOT;
 const PROJECT_MANIFEST = JSON.parse(
   readFileSync(path.join("projects", "utah-forge", "project.json"), "utf8"),
 );
@@ -77,6 +88,12 @@ const SUPPLEMENTAL_MATRIX = [
 ];
 
 const TRANSITION_MATRIX = [...ALL_ADJACENT_MATRIX, ...SUPPLEMENTAL_MATRIX];
+const ACTIVE_TRANSITION_MATRIX =
+  SELECTED_CASE_IDS.size > 0
+    ? TRANSITION_MATRIX.filter(
+        (item) => SELECTED_CASE_IDS.has(item.id) || SELECTED_CASE_IDS.has(item.name),
+      )
+    : TRANSITION_MATRIX;
 
 const INTERRUPTION_CASE = {
   id: "06",
@@ -88,6 +105,20 @@ const INTERRUPTION_CASE = {
   surfaces:
     "rapid interruption, promoted source page risk, skipped old camera completion cleanup",
 };
+const ACTIVE_INTERRUPTION_CASE =
+  SELECTED_CASE_IDS.size === 0 ||
+  SELECTED_CASE_IDS.has(INTERRUPTION_CASE.id) ||
+  SELECTED_CASE_IDS.has(INTERRUPTION_CASE.name)
+    ? INTERRUPTION_CASE
+    : null;
+
+if (SELECTED_CASE_IDS.size > 0 && ACTIVE_TRANSITION_MATRIX.length === 0 && !ACTIVE_INTERRUPTION_CASE) {
+  throw new Error(
+    `TRANSITION_MATRIX_CASES did not match any case id/name: ${[
+      ...SELECTED_CASE_IDS,
+    ].join(", ")}`,
+  );
+}
 
 function artifactPath(...parts) {
   return path.join(OUTPUT_ROOT, ...parts);
@@ -99,6 +130,15 @@ function url(pathname = PROJECT_PATH) {
 
 function sanitize(value) {
   return String(value).replace(/[^a-z0-9._-]+/gi, "-").replace(/^-|-$/g, "");
+}
+
+function errorSummary(error) {
+  return {
+    name: error?.name ?? "Error",
+    message: error?.message ?? String(error),
+    stack: error?.stack ?? null,
+    matrixPhase: error?.matrixPhase ?? null,
+  };
 }
 
 async function jsonFile(filePath, value) {
@@ -223,6 +263,18 @@ async function transitionTraceSample(page, elapsedMs) {
     const summarizeWatchedProduct = (product) => ({
       ...summarizeProductPolicy(product),
     });
+    const summarizeSceneSectionHelpers = (run) => {
+      const helpers = run?.sceneTransition?.sceneSectionHelpers;
+      return helpers
+        ? {
+            groundTracePolicy: helpers.groundTracePolicy ?? null,
+            liveGroundTraceCount: helpers.liveGroundTraceCount ?? null,
+            snapshotGroundTraceCount: helpers.snapshotGroundTraceCount ?? null,
+            snapshotActive: helpers.snapshotActive ?? null,
+            transitionOpacity: rounded(helpers.transitionOpacity ?? null),
+          }
+        : null;
+    };
     const shouldWatchProduct = (product) =>
       Boolean(product?.layerId) &&
       (product.sourceVisible === true ||
@@ -305,6 +357,7 @@ async function transitionTraceSample(page, elapsedMs) {
         runEasedProgress: rounded(run?.easedProgress ?? null),
         sceneSourcePageId: run?.sceneTransition?.sourcePageId ?? null,
         sceneTargetPageId: run?.sceneTransition?.targetPageId ?? null,
+        sceneSectionHelpers: summarizeSceneSectionHelpers(run),
         cameraPosition: vector(scene?.camera?.position),
         cameraTarget: vector(scene?.controls?.target),
         consumerDebug: summarizeConsumerDebug(run),
@@ -462,6 +515,20 @@ function summarizeState(state) {
     sceneSourcePageId: run?.sceneTransition?.sourcePageId ?? null,
     sceneTargetPageId: run?.sceneTransition?.targetPageId ?? null,
     productFamilies: run?.sceneTransition?.productFamilies ?? [],
+    sceneSectionHelpers: run?.sceneTransition?.sceneSectionHelpers
+      ? {
+          groundTracePolicy:
+            run.sceneTransition.sceneSectionHelpers.groundTracePolicy ?? null,
+          liveGroundTraceCount:
+            run.sceneTransition.sceneSectionHelpers.liveGroundTraceCount ?? null,
+          snapshotGroundTraceCount:
+            run.sceneTransition.sceneSectionHelpers.snapshotGroundTraceCount ?? null,
+          snapshotActive:
+            run.sceneTransition.sceneSectionHelpers.snapshotActive ?? null,
+          transitionOpacity:
+            run.sceneTransition.sceneSectionHelpers.transitionOpacity ?? null,
+        }
+      : null,
     presenterOverlay:
       run?.consumerDebug?.presenterOverlay ?? null,
     labels: run?.consumerDebug?.labels ?? null,
@@ -509,7 +576,31 @@ async function waitForApp(page) {
 }
 
 async function gotoAndSettle(page, index) {
-  await page.evaluate((pageIndex) => window.__pageController?.goto?.(pageIndex), index);
+  const result = await page.evaluate((pageIndex) => {
+    const controller = window.__pageController;
+    const before = controller?.getState?.() ?? null;
+    if (typeof controller?.goto !== "function") {
+      return {
+        ok: false,
+        reason: "page-controller-goto-missing",
+        before,
+      };
+    }
+    controller.goto(pageIndex);
+    const after = controller.getState?.() ?? null;
+    return {
+      ok: true,
+      before,
+      after,
+    };
+  }, index);
+  if (!result.ok) {
+    const error = new Error(
+      `Page controller goto unavailable: ${JSON.stringify(result)}`,
+    );
+    error.matrixPhase = "source-goto";
+    throw error;
+  }
   await page.waitForFunction(
     (pageIndex) => {
       const state = window.__pageController?.getState?.();
@@ -670,66 +761,134 @@ async function waitForSettle(page, index) {
 async function captureTransitionCase(page, item) {
   const caseDir = artifactPath(`${item.id}-${sanitize(item.name)}`);
   await mkdir(caseDir, { recursive: true });
-  await gotoAndSettle(page, item.fromIndex);
+  let matrixPhase = "source-settle";
+  try {
+    await gotoAndSettle(page, item.fromIndex);
 
-  const sourceState = await pageState(page);
-  const sourcePageId = sourceState?.currentPageId ?? null;
-  const targetPageId = PAGE_IDS[item.toIndex] ?? null;
+    matrixPhase = "source-state";
+    const sourceState = await pageState(page);
+    const sourcePageId = sourceState?.currentPageId ?? null;
+    const targetPageId = PAGE_IDS[item.toIndex] ?? null;
 
-  const artifacts = [];
-  artifacts.push(
-    await captureStep(page, caseDir, "source", {
-      caseId: item.id,
-      caseName: item.name,
-      surfaces: item.surfaces,
-      phase: "source",
-      fromIndex: item.fromIndex,
-      toIndex: item.toIndex,
+    const artifacts = [];
+    matrixPhase = "source-capture";
+    artifacts.push(
+      await captureStep(page, caseDir, "source", {
+        caseId: item.id,
+        caseName: item.name,
+        surfaces: item.surfaces,
+        phase: "source",
+        fromIndex: item.fromIndex,
+        toIndex: item.toIndex,
+        sourcePageId,
+        targetPageId,
+      }),
+    );
+
+    matrixPhase = "target-start";
+    await page.evaluate(
+      (index) => window.__pageController?.goto?.(index),
+      item.toIndex,
+    );
+    await waitForTransitionRun(page, item.toIndex);
+    const lateReapplyProbe = item.probeLateReapply
+      ? await triggerLateReapplyProbe(page)
+      : null;
+    matrixPhase = "mid-wait";
+    await waitForProgress(page, 0.45, item.toIndex);
+    matrixPhase = "mid-capture";
+    artifacts.push(
+      await captureStep(page, caseDir, "mid", {
+        caseId: item.id,
+        caseName: item.name,
+        surfaces: item.surfaces,
+        phase: "mid",
+        fromIndex: item.fromIndex,
+        toIndex: item.toIndex,
+        sourcePageId,
+        targetPageId,
+        lateReapplyProbe,
+      }),
+    );
+
+    matrixPhase = "end-wait";
+    await waitForSettle(page, item.toIndex);
+    matrixPhase = "end-capture";
+    artifacts.push(
+      await captureStep(page, caseDir, "end", {
+        caseId: item.id,
+        caseName: item.name,
+        surfaces: item.surfaces,
+        phase: "end",
+        fromIndex: item.fromIndex,
+        toIndex: item.toIndex,
+        sourcePageId,
+        targetPageId,
+      }),
+    );
+    return {
+      ...item,
       sourcePageId,
       targetPageId,
-    }),
-  );
+      artifacts,
+      traceJson: null,
+    };
+  } catch (error) {
+    error.matrixPhase = error.matrixPhase ?? matrixPhase;
+    throw error;
+  }
+}
 
-  await page.evaluate((index) => window.__pageController?.goto?.(index), item.toIndex);
-  await waitForTransitionRun(page, item.toIndex);
-  const lateReapplyProbe = item.probeLateReapply
-    ? await triggerLateReapplyProbe(page)
-    : null;
-  await waitForProgress(page, 0.45, item.toIndex);
-  artifacts.push(
-    await captureStep(page, caseDir, "mid", {
-      caseId: item.id,
-      caseName: item.name,
-      surfaces: item.surfaces,
-      phase: "mid",
-      fromIndex: item.fromIndex,
-      toIndex: item.toIndex,
-      sourcePageId,
-      targetPageId,
-      lateReapplyProbe,
-    }),
-  );
-
-  await waitForSettle(page, item.toIndex);
-  artifacts.push(
-    await captureStep(page, caseDir, "end", {
-      caseId: item.id,
-      caseName: item.name,
-      surfaces: item.surfaces,
-      phase: "end",
-      fromIndex: item.fromIndex,
-      toIndex: item.toIndex,
-      sourcePageId,
-      targetPageId,
-    }),
-  );
-  return {
+async function captureFailedTransitionCase(page, item, error) {
+  const caseDir = artifactPath(`${item.id}-${sanitize(item.name)}`);
+  await mkdir(caseDir, { recursive: true });
+  let state = null;
+  let stateError = null;
+  let screenshot = null;
+  let screenshotError = null;
+  try {
+    state = await pageState(page);
+  } catch (stateReadError) {
+    stateError = errorSummary(stateReadError);
+  }
+  try {
+    const screenshotPath = path.join(caseDir, "failure.png");
+    await page.screenshot({ path: screenshotPath, fullPage: false });
+    screenshot = path.relative(OUTPUT_ROOT, screenshotPath).replaceAll("\\", "/");
+  } catch (captureError) {
+    screenshotError = errorSummary(captureError);
+  }
+  const failure = {
     ...item,
-    sourcePageId,
-    targetPageId,
-    artifacts,
+    failed: true,
+    sourcePageId: PAGE_IDS[item.fromIndex] ?? null,
+    targetPageId: PAGE_IDS[item.toIndex] ?? null,
     traceJson: null,
+    artifacts: [],
+    failure: {
+      capturedAt: new Date().toISOString(),
+      caseId: item.id,
+      caseName: item.name,
+      fromIndex: item.fromIndex,
+      toIndex: item.toIndex,
+      sourcePageId: PAGE_IDS[item.fromIndex] ?? null,
+      targetPageId: PAGE_IDS[item.toIndex] ?? null,
+      observedCurrentPageId: state?.currentPageId ?? null,
+      observedTargetPageId: state?.targetPageId ?? null,
+      screenshot,
+      state,
+      stateError,
+      screenshotError,
+      error: errorSummary(error),
+    },
   };
+  await jsonFile(path.join(caseDir, "failure.json"), failure.failure);
+  return failure;
+}
+
+async function recoverAfterCaseFailure(page) {
+  await waitForApp(page);
+  await page.waitForTimeout(250);
 }
 
 async function captureInterruptionCase(page, item) {
@@ -827,6 +986,7 @@ async function captureInterruptionCase(page, item) {
 }
 
 async function captureTraceReplayForCase(page, item) {
+  if (item.failed) return null;
   const caseDir = artifactPath(`${item.id}-${sanitize(item.name)}`);
   if (typeof item.finalTargetIndex === "number") {
     await gotoAndSettle(page, item.fromIndex);
@@ -883,17 +1043,28 @@ async function captureTraceReplayForCase(page, item) {
 
 async function main() {
   await mkdir(OUTPUT_ROOT, { recursive: true });
-  await mkdir(artifactPath("videos"), { recursive: true });
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({
-    viewport: VIEWPORT,
-    recordVideo: {
+  if (RECORD_VIDEO) {
+    await mkdir(artifactPath("videos"), { recursive: true });
+  }
+  const browser = await chromium.launch({
+    headless: true,
+    args: [
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-features=CalculateNativeWinOcclusion",
+      "--disable-renderer-backgrounding",
+    ],
+  });
+  const contextOptions = { viewport: VIEWPORT };
+  if (RECORD_VIDEO) {
+    contextOptions.recordVideo = {
       dir: artifactPath("videos"),
       size: VIEWPORT,
-    },
-  });
+    };
+  }
+  const context = await browser.newContext(contextOptions);
   const page = await context.newPage();
-  const video = page.video();
+  const video = RECORD_VIDEO ? page.video() : null;
   let contextClosed = false;
   const consoleMessages = [];
   page.on("console", (message) => {
@@ -912,48 +1083,117 @@ async function main() {
   try {
     await waitForApp(page);
     const ids = await pageIds(page);
-    for (const item of TRANSITION_MATRIX) {
-      captured.push(await captureTransitionCase(page, item));
+    const writeManifest = async (
+      videoPath,
+      videoStatus,
+      traceStatus = "complete",
+    ) => {
+      const manifest = {
+        generatedAt: new Date().toISOString(),
+        baseUrl: BASE_URL,
+        route: PROJECT_PATH,
+        viewport: VIEWPORT,
+        outputRoot: OUTPUT_ROOT,
+        pageIds: PAGE_IDS,
+        matrixScope: {
+          mode:
+            SELECTED_CASE_IDS.size > 0
+              ? "selected-cases"
+              : "all-adjacent-plus-supplemental",
+          pageOrderSource: "projects/utah-forge/project.json:pageOrder",
+          generatedAdjacentCaseCount: ALL_ADJACENT_MATRIX.length,
+          supplementalCaseCount: SUPPLEMENTAL_MATRIX.length,
+          interruptionCaseCount: 1,
+          selectedCaseIds:
+            SELECTED_CASE_IDS.size > 0 ? [...SELECTED_CASE_IDS].sort() : [],
+          activeCaseCount:
+            ACTIVE_TRANSITION_MATRIX.length + (ACTIVE_INTERRUPTION_CASE ? 1 : 0),
+        },
+        initialPageState: ids,
+        video: videoPath,
+        videoStatus,
+        traceStatus,
+        cases: captured,
+        consoleMessages,
+        notes: [
+          "The first mid-transition capture triggers a transition-aware late-reapply probe; authored visual policy should remain unchanged.",
+          "All adjacent pageOrder handoffs are generated from the project manifest so coverage follows page additions, removals, and renames.",
+          "Supplemental cases are reserved for non-adjacent or interruption stress paths that exercise base transition rules without treating pages as durable fixtures.",
+          "Each JSON artifact includes the full PageController debug state for that capture phase.",
+          "Each case includes trace.json from a post-screenshot replay captured inside PageController's app tick, with transition progress, camera pose, consumer timing, and product policy rows; this avoids Playwright round trips during smoothness sampling.",
+          "If TRANSITION_MATRIX_TRACE=0 is set, trace replay is skipped and traceStatus is disabled; screenshots and state summaries remain valid for policy classification but not smoothness timing.",
+          "The manifest video field points to a WebM recording of the full matrix capture and replay pass for human smoothness review when video recording is enabled.",
+          "Screenshots are headless Chromium captures and should be reviewed alongside transitionRun summaries.",
+        ],
+      };
+      await jsonFile(artifactPath("manifest.json"), manifest);
+      return manifest;
+    };
+
+    for (const item of ACTIVE_TRANSITION_MATRIX) {
+      try {
+        captured.push(await captureTransitionCase(page, item));
+      } catch (error) {
+        const failedCase = await captureFailedTransitionCase(page, item, error);
+        captured.push(failedCase);
+        console.warn(
+          `Transition matrix case failed: ${item.id} ${item.name} (${failedCase.failure.error.matrixPhase})`,
+        );
+        await recoverAfterCaseFailure(page);
+      }
     }
-    captured.push(await captureInterruptionCase(page, INTERRUPTION_CASE));
-    for (const item of captured) {
-      item.traceJson = await captureTraceReplayForCase(page, item);
+    if (ACTIVE_INTERRUPTION_CASE) {
+      captured.push(await captureInterruptionCase(page, ACTIVE_INTERRUPTION_CASE));
     }
+    await writeManifest(
+      null,
+      video ? "pending-video-finalization" : "disabled",
+      ENABLE_TRACE_REPLAY ? "pending-trace-replay" : "disabled",
+    );
+    if (ENABLE_TRACE_REPLAY) {
+      for (const item of captured) {
+        if (item.failed) continue;
+        try {
+          item.traceJson = await captureTraceReplayForCase(page, item);
+        } catch (error) {
+          item.traceFailure = {
+            capturedAt: new Date().toISOString(),
+            error: errorSummary(error),
+          };
+          await jsonFile(
+            path.join(
+              artifactPath(`${item.id}-${sanitize(item.name)}`),
+              "trace-failure.json",
+            ),
+            item.traceFailure,
+          );
+          console.warn(
+            `Transition matrix trace failed: ${item.id} ${item.name} (${item.traceFailure.error.matrixPhase})`,
+          );
+          await recoverAfterCaseFailure(page);
+        }
+        await writeManifest(
+          null,
+          video ? "pending-video-finalization" : "disabled",
+          "partial-trace-replay",
+        );
+      }
+    }
+    await writeManifest(
+      null,
+      video ? "pending-video-finalization" : "disabled",
+      ENABLE_TRACE_REPLAY ? "complete" : "disabled",
+    );
     await context.close();
     contextClosed = true;
     const videoPath = video
       ? path.relative(OUTPUT_ROOT, await video.path()).replaceAll("\\", "/")
       : null;
-
-    const manifest = {
-      generatedAt: new Date().toISOString(),
-      baseUrl: BASE_URL,
-      route: PROJECT_PATH,
-      viewport: VIEWPORT,
-      outputRoot: OUTPUT_ROOT,
-      pageIds: PAGE_IDS,
-      matrixScope: {
-        mode: "all-adjacent-plus-supplemental",
-        pageOrderSource: "projects/utah-forge/project.json:pageOrder",
-        generatedAdjacentCaseCount: ALL_ADJACENT_MATRIX.length,
-        supplementalCaseCount: SUPPLEMENTAL_MATRIX.length,
-        interruptionCaseCount: 1,
-      },
-      initialPageState: ids,
-      video: videoPath,
-      cases: captured,
-      consoleMessages,
-      notes: [
-        "The first mid-transition capture triggers a transition-aware late-reapply probe; authored visual policy should remain unchanged.",
-        "All adjacent pageOrder handoffs are generated from the project manifest so coverage follows page additions, removals, and renames.",
-        "Supplemental cases are reserved for non-adjacent or interruption stress paths that exercise base transition rules without treating pages as durable fixtures.",
-        "Each JSON artifact includes the full PageController debug state for that capture phase.",
-        "Each case includes trace.json from a post-screenshot replay captured inside PageController's app tick, with transition progress, camera pose, consumer timing, and product policy rows; this avoids Playwright round trips during smoothness sampling.",
-        "The manifest video field points to a WebM recording of the full matrix capture and replay pass for human smoothness review.",
-        "Screenshots are headless Chromium captures and should be reviewed alongside transitionRun summaries.",
-      ],
-    };
-    await jsonFile(artifactPath("manifest.json"), manifest);
+    await writeManifest(
+      videoPath,
+      video ? "ready" : "disabled",
+      ENABLE_TRACE_REPLAY ? "complete" : "disabled",
+    );
     console.log(`Transition matrix captured: ${OUTPUT_ROOT}`);
     console.log(`Cases: ${captured.length}`);
     console.log(`Console warnings/errors recorded: ${consoleMessages.length}`);
