@@ -201,6 +201,13 @@ Captured from `src/editor/styles.ts` and GeoSee conventions:
 
 ### 6.1 Component / Container instantiation
 
+Two paths exist for putting a Component on a Frame:
+
+1. **Library drag** — author drags a Library entry onto the Canvas. Calls `instantiateComponent` (below), which reads the entry's `defaultProps` and `defaultSize` and adds a new Component with the corresponding archetype id.
+2. **Toolkit creation** — the Container Tool, Text Tool, and Divider Tool create Components with archetype ids `container-blank`, `text`, and `divider` respectively. These do NOT require a matching Library entry; the archetype id is first-class in the schema (see [14_component_archetype_reference.md](14_component_archetype_reference.md) §3 for the canonical list of all valid archetype ids).
+
+Both paths produce a Change Record (`component_added` or `container_added`).
+
 `src/core/libraries/instantiateComponent.ts`:
 
 ```ts
@@ -277,5 +284,5 @@ All mutations dispatch through the editing pipeline and produce a Change Record 
 | 8 | Token apply via Inspector | Select element; in Properties Inspector, click the "padding-x" field; pick `space.md`; padding updates and stores `{ tokenRef: "space.md" }`. |
 | 9 | Token edit propagates | Change `space.md` from 12 to 16 in the Token Library Panel; any element using `{ tokenRef: "space.md" }` updates its padding-x to 16 px. |
 | 10 | Library entry add | Use Library Panel footer to add a new Swatch; new Swatch appears and is persistable. |
-| 11 | Library entry remove with references | Try to remove a Swatch that is in use; confirm dialog lists references; "remove anyway" produces a `validation.unresolved-token-ref` warning. |
+| 11 | Library entry remove with references | Try to remove a Swatch that is in use; confirm dialog lists references; "remove anyway" produces a `library.unresolved-token-ref` warning. |
 | 12 | Library search filters | Type in the Library Panel search box; entries filter case-insensitively. |

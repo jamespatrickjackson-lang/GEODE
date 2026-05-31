@@ -119,26 +119,23 @@ These extend the v0.1 Visual Editing Bench concept. None are introduced casually
 ### 5.5 Validation rule ids
 
 - `<surface>.<rule>.<variant?>` snake_case. Examples:
-  - `component.button.touch-target-min`
+  - `component.touch-target-min`
   - `component.text.font-size-min`
   - `container.section.edge-clearance-min`
-  - `frame.background.contrast-ratio-min`
-  - `layout.element-overlap.forbidden`
+  - `frame.background.contrast-text-min`
+  - `layout.element-overlap.warning`
   - `layout.element-outside-safe-area.forbidden`
 
 ### 5.6 Change Record kinds
 
-- snake_case verbs. Examples:
-  - `component_added`
-  - `component_removed`
-  - `component_property_changed`
-  - `container_reordered`
-  - `frame_created`
-  - `frame_resized`
-  - `swatch_added`
-  - `swatch_recoloured`
-  - `validation_run`
-  - `package_exported`
+snake_case verbs. The full v1 set:
+
+- Schema mutation: `component_added`, `component_removed`, `component_property_changed`, `container_added`, `container_removed`, `container_property_changed`, `container_reordered`, `frame_created`, `frame_removed`, `frame_resized`, `frame_property_changed`, `guide_added`, `guide_removed`, `guide_moved`.
+- Library mutation: `library_entry_added`, `library_entry_edited`, `library_entry_removed`, `swatch_added`, `swatch_recoloured`, `token_added`, `token_changed`.
+- Intent: `intent_edited` (any IntentAnnotations field changed on any element).
+- Validation: `validation_run`, `error_acknowledged`, `error_unacknowledged`.
+- State machine ([16_change_state_machine.md](16_change_state_machine.md)): `state_advanced_to_validated`, `state_advanced_to_approved`, `state_demoted_to_draft`.
+- Package lifecycle: `package_saved`, `package_exported`, `package_approved`.
 
 ## 6. Preferred language (carried from v0.1)
 

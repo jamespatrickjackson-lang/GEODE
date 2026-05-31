@@ -427,7 +427,54 @@ All actions (in `shellActions.ts`) follow the discriminated-union pattern. Every
 - The v0.1 docs in `..\UI_EDITOR\docs\` (read-only; never edited from v1 work).
 - The Reviews / Archive subfolders in v0.1 docs.
 
-## 7. Cross-references
+## 7. Workbench theme
+
+The workbench's own UI uses a dark frosted aesthetic visually consistent with GeoSee's editor sidebar but **does not copy code or tokens from GeoSee**. The workbench's tokens live in `src/shell/styles/theme.ts` and are independent.
+
+Concrete v1 theme values (Codex implements these exactly):
+
+| Token | Value |
+| --- | --- |
+| Background, shell body | `rgba(18, 21, 24, 1.0)` |
+| Background, panel | `rgba(28, 32, 36, 1.0)` |
+| Background, panel raised | `rgba(38, 42, 46, 1.0)` |
+| Background, field | `rgba(18, 21, 24, 0.4)` |
+| Foreground, primary text | `rgba(244, 240, 232, 1.0)` |
+| Foreground, secondary text | `rgba(244, 240, 232, 0.72)` |
+| Foreground, tertiary text | `rgba(244, 240, 232, 0.46)` |
+| Accent, active tool / selected | `rgba(120, 180, 220, 0.8)` |
+| Severity colour, Info | `rgba(120, 180, 220, 0.9)` |
+| Severity colour, Suggestion | `rgba(160, 200, 240, 0.9)` |
+| Severity colour, Warning | `rgba(240, 200, 100, 0.9)` |
+| Severity colour, Error | `rgba(240, 120, 100, 0.9)` |
+| Severity colour, Blocker | `rgba(220, 60, 60, 1.0)` |
+| Border, hairline | `1px solid rgba(255, 255, 255, 0.08)` |
+| Border, panel outline | `1px solid rgba(255, 255, 255, 0.16)` |
+| Radius, panel | `8px` |
+| Radius, control | `6px` |
+| Radius, pill | `999px` |
+| Font, UI | `system-ui, -apple-system, "Segoe UI", sans-serif` at 13 px / 1.4 line-height |
+| Font, mono | `"SFMono-Regular", Consolas, "Liberation Mono", monospace` at 12 px |
+| Spacing scale | 4, 8, 12, 16, 20, 24, 32, 48 (px) |
+
+Frosted material (backdrop-filter blur 20 px + saturate 145 %) is applied to: shell body, panel raised backgrounds, modal backdrops. Where the browser does not support `backdrop-filter`, fall back to the solid colours above.
+
+## 8. Browser support
+
+v1 supports:
+
+| Browser | Min version | Notes |
+| --- | --- | --- |
+| Chrome | 120+ | Primary dev target. |
+| Edge | 120+ | Chromium-based; equivalent to Chrome. |
+| Firefox | 120+ | `backdrop-filter` supported as of 103; works. |
+| Safari | 17+ | Backdrop-filter via `-webkit-` prefix. |
+
+Touch input on Canvas: supported via Pointer Events (covers touch, stylus, mouse uniformly). Touch-specific UX (long-press menus, two-finger gestures beyond pinch-zoom) is deferred to v2 along with the touch rule pack.
+
+Mobile / phone form factors: not supported in v1. The workbench layout assumes ≥1280×800 viewport. Smaller viewports render but layout breaks acceptably (validation may not pass against `desktop-1080p`).
+
+## 9. Cross-references
 
 | For details on… | Read… |
 | --- | --- |
@@ -438,3 +485,8 @@ All actions (in `shellActions.ts`) follow the discriminated-union pattern. Every
 | Validation rule details | [08_validation_rules.md](08_validation_rules.md) |
 | Phased build order | [10_build_phases.md](10_build_phases.md) |
 | One-shot Codex orchestration | [11_agent_automation_runbook.md](11_agent_automation_runbook.md) |
+| Element intent annotations | [13_element_intent_annotations.md](13_element_intent_annotations.md) |
+| Per-archetype props / variants / states | [14_component_archetype_reference.md](14_component_archetype_reference.md) |
+| UI states (loading / empty / error / toast / modal) | [15_ui_states_and_feedback.md](15_ui_states_and_feedback.md) |
+| Change State machine and transitions | [16_change_state_machine.md](16_change_state_machine.md) |
+| Vite plugin threat model and lockdown | [17_security_model.md](17_security_model.md) |

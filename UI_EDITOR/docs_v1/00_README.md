@@ -55,7 +55,7 @@ A standalone visual editor — Figma-lite — that loads a GUI Package from disk
 | --- | --- | --- |
 | 00 | [README](00_README.md) | This file: status, locked decisions, doc index. |
 | 01 | [scope](01_scope.md) | In/out for v1; success criteria. |
-| 02 | [architecture](02_architecture.md) | Code layout, modules, tech, state shape. |
+| 02 | [architecture](02_architecture.md) | Code layout, modules, tech, state shape, theme, browser support. |
 | 03 | [canvas_engine](03_canvas_engine.md) | Canvas, rulers, snapping, anchors, transforms, constraints. |
 | 04 | [toolkit](04_toolkit.md) | Tool palette: select / move / resize / align / distribute / draw / colour / text. |
 | 05 | [libraries](05_libraries.md) | Component library, colour library, icon library, token library. |
@@ -64,8 +64,15 @@ A standalone visual editor — Figma-lite — that loads a GUI Package from disk
 | 08 | [validation_rules](08_validation_rules.md) | Desktop Technical Editing rule pack with concrete thresholds. |
 | 09 | [glossary](09_glossary.md) | Canonical terms; v0.1 terms preserved, v1 Canvas-era terms added. |
 | 10 | [build_phases](10_build_phases.md) | Agent-executable phased plan with per-phase acceptance criteria. |
-| 11 | [agent_automation_runbook](11_agent_automation_runbook.md) | One-shot Codex orchestrator: what to run, in what order, what to commit, what to verify. |
+| 11 | [agent_automation_runbook](11_agent_automation_runbook.md) | One-shot Codex orchestrator: what to run, in what order, what to commit, what to verify, failure diagnostics. |
 | 12 | [deferred_to_v2](12_deferred_to_v2.md) | Explicit non-goals with rationale. |
+| 13 | [element_intent_annotations](13_element_intent_annotations.md) | Name / intent / behaviour / data binding / dependencies / author notes on every element; propagation to spec + AI-agent brief. |
+| 14 | [component_archetype_reference](14_component_archetype_reference.md) | Per-archetype TypeScript props, variants, states, default size, default rendering, applicable validation rules. |
+| 15 | [ui_states_and_feedback](15_ui_states_and_feedback.md) | Loading, empty, error, refusal, toast, modal, banner, inline-indicator patterns. |
+| 16 | [change_state_machine](16_change_state_machine.md) | Draft / Validated / Approved transitions, triggers, gates, acknowledgement workflow, edge cases. |
+| 17 | [security_model](17_security_model.md) | Threat posture, path policy, plugin lockdown, dependency hygiene. |
+| 18 | [codex_cold_start_prompt](18_codex_cold_start_prompt.md) | The exact prompt the human pastes into Codex to begin the v1 build run. Single entry point. |
+| 19 | [known_pitfalls](19_known_pitfalls.md) | Per-phase failure-mode register: symptom + diagnostic + fix for the patterns most likely to halt the run. Consult before declaring "the docs are wrong." |
 
 ## 6. Conventions for the pack
 

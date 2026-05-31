@@ -203,31 +203,120 @@ Suggested next: hand off to human author for visual review.
 
 ## 9. Failure report template
 
-When acceptance fails after two fix passes:
+When acceptance fails after two fix passes, emit the structured report below and halt. The report is the only output the human reviewer sees; make it information-dense and decision-ready.
 
 ```text
 v1 BUILD HALTED AT PHASE N
 
-Last successful phase: <N-1>
-Failing phase: <N>
-Failing acceptance check(s):
-  - <id>: <observed>
-  - <id>: <observed>
+═══════════════════════════════════════════════════════════════════════
+Summary
+═══════════════════════════════════════════════════════════════════════
+Last successful phase: <N-1>           Commit: <sha>
+Failing phase:         <N>             Time spent: <minutes>
+Root cause hypothesis: <one sentence — the agent's best guess>
 
-Diagnosis attempted:
-  - <attempt 1 summary>
-  - <attempt 2 summary>
+═══════════════════════════════════════════════════════════════════════
+Failing acceptance check(s)
+═══════════════════════════════════════════════════════════════════════
+- [<id>] <title from the relevant phase doc>
+  Expected: <one line>
+  Observed: <one line>
+  Reproduce: <exact command or DOM action>
 
-Files modified since last commit:
-  <git diff --stat HEAD>
+- [<id>] ...
 
-Suggested human action:
-  - Review failing acceptance against <relevant docs_v1 file>
-  - Determine whether docs_v1 needs revision (if the doc is wrong) or whether the agent missed a step.
-  - Resume the run from Phase <N> after correction.
+═══════════════════════════════════════════════════════════════════════
+Diagnosis attempts
+═══════════════════════════════════════════════════════════════════════
+Attempt 1:
+  Hypothesis: <one sentence>
+  Action:     <files changed; commands run>
+  Result:     <what changed in the failing acceptance>
 
-Working tree: dirty (changes from failed phase NOT committed).
+Attempt 2:
+  Hypothesis: <one sentence>
+  Action:     <files changed; commands run>
+  Result:     <what changed in the failing acceptance>
+
+═══════════════════════════════════════════════════════════════════════
+Environment snapshot
+═══════════════════════════════════════════════════════════════════════
+node --version:    <output>
+npm --version:     <output>
+git rev-parse HEAD:<sha>
+git status --porcelain (truncated to 50 lines):
+  <output>
+
+UI_EDITOR/package.json critical deps:
+  react:        <version>
+  vite:         <version>
+  typescript:   <version>
+
+═══════════════════════════════════════════════════════════════════════
+Suspected file(s)
+═══════════════════════════════════════════════════════════════════════
+- <path>           — <why the agent suspects it>
+- <path>           — <why the agent suspects it>
+
+═══════════════════════════════════════════════════════════════════════
+Suggested human action
+═══════════════════════════════════════════════════════════════════════
+Priority 1: <the most likely correction; cite the relevant docs_v1 section>
+Priority 2: <alternative if Priority 1 is wrong>
+Priority 3: <docs_v1 revision candidates — if the doc itself is wrong>
+
+═══════════════════════════════════════════════════════════════════════
+Working tree state
+═══════════════════════════════════════════════════════════════════════
+Uncommitted changes from the failed phase: PRESENT
+Last clean commit: <sha> "<message>"
+To roll back: git checkout -- .
+To inspect:   git diff <sha>..HEAD
 ```
+
+### 9.1 Failure modes and templated diagnoses
+
+When the failure matches a known mode, populate the "Root cause hypothesis" with the matching template:
+
+| Failure mode | Hypothesis template |
+| --- | --- |
+| `tsc` reports new errors after a new schema field added | "Type union update in `core/schema/` is incomplete; consumer in `<file>` did not absorb the new field." |
+| Acceptance check 1 fails: workbench does not launch | "Vite config or entry point misconfigured; check `vite.config.ts` plugin order and `index.html` mount point." |
+| Snap test fails: positions land 1 px off | "Snap math returns Frame-space delta but caller applies Screen-space delta (or vice versa); recheck `canvasMath.ts`." |
+| Drag-to-instantiate fails silently | "HTML5 drag-and-drop dataTransfer payload mis-keyed; check `LibraryPanel` `dragstart` handler." |
+| Save returns 403 from Vite plugin | "Path policy allowlist regex does not match the path being written; check `pathPolicy.ts` against `07_package_format.md` §2." |
+| Validation finding has wrong severity | "`SEVERITY_ORDER` array out of sync with `09_glossary.md` §2 strict ladder." |
+| Change Log entries missing for an edit | "Reducer dispatched the edit but did not append; check the `applyEdit` consumer in `shellReducer.ts`." |
+| Round-trip diff non-empty | "Canonicalisation rule violation; check JSON serialiser key ordering and decimal precision in `writePackage.ts`." |
+| Adapter stub type-check fails | "`HostAppAdapter.ts` interface drifted; recompare against `02_architecture.md` §3.3." |
+| `npm install` fails | "Lockfile version mismatch with Node version; capture `node --version` in the report and surface to human." |
+
+If the failure mode is novel (not in this table), populate the hypothesis with a freeform best guess and flag "novel mode" in the report.
+
+### 9.2 Quick triage commands
+
+The agent runs these and includes the output in the report:
+
+```bash
+# State
+git status --porcelain | head -50
+git log --oneline -10
+git diff --stat HEAD
+
+# Build / lint
+cd UI_EDITOR && npm run check 2>&1 | tail -40
+cd UI_EDITOR && npm run test 2>&1 | tail -40
+
+# Filesystem
+find UI_EDITOR/src -type f | wc -l
+ls -la UI_EDITOR/packages/geosee_editor_sidebar/ 2>&1
+
+# Env
+node --version
+npm --version
+```
+
+Output of each goes into the "Environment snapshot" / "Working tree state" sections of the report.
 
 ## 10. Resumption
 

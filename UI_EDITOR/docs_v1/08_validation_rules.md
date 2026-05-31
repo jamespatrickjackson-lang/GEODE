@@ -12,7 +12,7 @@ Provide a deterministic, predictable rule set that an agent can evaluate against
 export type Severity = "info" | "suggestion" | "warning" | "error" | "blocker";
 
 export interface ValidationFinding {
-  ruleId: string;                  // e.g. "component.button.touch-target-min"
+  ruleId: string;                  // e.g. "component.touch-target-min"
   severity: Severity;
   location: {
     packageId: string;
@@ -122,7 +122,22 @@ All rules below ship in v1. Thresholds are concrete; agents implementing v1 must
 
 Restricted Surface rules are special: they run **at edit time** as a gate inside `core/editing/applyEdit.ts`. If a Blocker is returned, the edit is refused, no Change Record is appended, and the shell surfaces the finding to the user immediately. This is why these rules are categorised separately.
 
-### 4.7 Change Log integrity rules
+### 4.7 Intent annotation rules (DEC: doc 13)
+
+| Rule id | Severity | Condition | Applies to | Message template |
+| --- | --- | --- | --- | --- |
+| `intent.missing.suggestion` | Suggestion | Element has no `intent.intent` value | Any element | "{name} lacks an intent annotation. Downstream agents will not know why this element exists." |
+| `intent.behaviour-missing.suggestion` | Suggestion | Element has `intent.intent` but no `intent.behaviour` | Any element | "{name} has intent but no behaviour. Downstream agents will not know how it should work." |
+| `intent.unresolved-dependency.warning` | Warning | `intent.dependsOn` references an element id that does not exist in the package | Any element | "{name} depends on `{missingId}` which is not in this package." |
+| `intent.depends-on-self.error` | Error | An element lists itself in `intent.dependsOn` | Any element | "{name} cannot depend on itself." |
+
+### 4.8 Migration rules
+
+| Rule id | Severity | Condition | Applies to | Message template |
+| --- | --- | --- | --- | --- |
+| `migration.rationale-to-intent` | Suggestion | Element has the legacy `rationale` field but no `intent.intent` | Any element | "{name} carries a legacy `rationale` field. The migrated value has been copied into `intent.intent`; consider editing it to capture full intent." |
+
+### 4.9 Change Log integrity rules
 
 | Rule id | Severity | Condition | Applies to | Message template |
 | --- | --- | --- | --- | --- |

@@ -304,13 +304,25 @@ Constraints are applied inside `applyMove` / `applyResize` and inside the parent
 
 - Renders a static image behind the active Frame's content layer.
 - Image swapped via `BackgroundStressBar` (a row beneath the Toolkit).
-- v1 ships four bundled backgrounds in `packages/<id>/assets/backgrounds/`:
-  - `plain_dark.png` — pure dark background.
-  - `plain_light.png` — pure light background.
-  - `noise_low_contrast.png` — low-contrast luminance noise.
-  - `terrain_capture.png` — a captured GeoSee terrain shot for realistic GOC context.
+- v1 ships four bundled backgrounds in `packages/<id>/assets/backgrounds/`. See §16.1 below for concrete generation specs.
 - The active background id is stored in `ShellState.activeBackgroundId` (not persisted; resets to `null` on load).
 - Contrast validation rule reads the active background when computing findings.
+- If a referenced background asset is missing on load, the workbench falls back to a 1920×1200 solid `#404040` placeholder and surfaces a Suggestion finding (`asset.background-missing.suggestion`).
+
+### 16.1 Bundled asset specifications
+
+All four files are 1920×1200 PNG, 8-bit RGB (no alpha). The agent generates them procedurally at Phase 10 of [10_build_phases.md](10_build_phases.md) via Node + `node-canvas` (or sharp, or a small custom PNG writer — implementer's choice). Files saved to `packages/geosee_editor_sidebar/assets/backgrounds/`.
+
+| File | Algorithm | Why |
+| --- | --- | --- |
+| `plain_dark.png` | Solid fill `#0d0e12`. | Establishes worst-case low-luminance contrast environment. Matches GeoSee's editor surround. |
+| `plain_light.png` | Solid fill `#f4f0e8`. | Establishes worst-case high-luminance contrast environment. Matches GeoSee's vibrancy label colour. |
+| `noise_low_contrast.png` | White noise (uniform random), each channel sampled independently, then normalised to luminance range `[128, 144]` (very subtle). Seeded with constant `0xC0FFEE` for reproducible round-trips. | Stresses readability against busy-but-flat backgrounds typical of low-contrast textures. |
+| `terrain_capture.png` | Procedural fake-terrain: vertical gradient from `#3a4a3a` (top) through `#7a6b4a` (mid) to `#4a3e2e` (bottom); overlay 1px-wide pseudo-contour lines at every 8th vertical pixel in `#2a2a2a` at 40% alpha; overlay diagonal noise at 8% opacity in luminance `[100, 140]`. Seeded with constant `0x12345`. | Stands in for a real GeoSee terrain screenshot until / unless one is checked in. Captures the visual character (warm earth tones + linework + texture) sufficient for stress-testing transparent panel readability. |
+
+Algorithm note: deterministic seeding matters because the round-trip acceptance test in [07_package_format.md](07_package_format.md) §15 compares package bytes after export-then-import. Non-deterministic asset generation would break that test.
+
+If a real GeoSee terrain screenshot becomes available later, drop it in at the same path with the same dimensions. The procedural fallback is generated only when the file is absent at Phase 10 build time.
 
 ## 17. Frame management
 
