@@ -124,8 +124,29 @@ export interface Container {
     x: number | { tokenRef: string };
     y: number | { tokenRef: string };
   };
+  // Optional Style reference; resolves at render time per [20_materials_and_shapes.md](20_materials_and_shapes.md) §2.
+  styleRef?: string;
+  // Optional effects (shadow / blur / opacity); see [20_materials_and_shapes.md](20_materials_and_shapes.md) §5.
+  effects?: Effects;
   hostRef?: string;                    // v2-reserved
   rationale?: string;
+  intent?: IntentAnnotations;          // see [13_element_intent_annotations.md](13_element_intent_annotations.md)
+}
+
+// Effects shape — re-exported from src/core/schema/effects.ts.
+export interface Shadow {
+  offsetX: number | { tokenRef: string };
+  offsetY: number | { tokenRef: string };
+  blur: number | { tokenRef: string };
+  spread?: number | { tokenRef: string };
+  colour: { hex: string; alpha: number } | { tokenRef: string };
+  inset?: boolean;
+}
+
+export interface Effects {
+  shadows?: Shadow[];                  // multiple stacked shadows allowed
+  blur?: number | { tokenRef: string };// CSS filter blur in px
+  opacity?: number;                    // 0..1
 }
 ```
 
@@ -152,8 +173,13 @@ export interface Component {
   // Variants (e.g. "pill-button — surface: tinted") and States are flattened into props in v1.
   variant?: string;                    // current Variant id within the archetype
   state?: "default" | "hover" | "active" | "focus" | "disabled";
+  // Optional Style reference; resolves at render time per [20_materials_and_shapes.md](20_materials_and_shapes.md) §2.
+  styleRef?: string;
+  // Optional effects (shadow / blur / opacity); see [20_materials_and_shapes.md](20_materials_and_shapes.md) §5.
+  effects?: Effects;
   hostRef?: string;                    // v2-reserved
   rationale?: string;
+  intent?: IntentAnnotations;          // see [13_element_intent_annotations.md](13_element_intent_annotations.md)
 }
 
 // Discriminated union, one branch per Component archetype.
@@ -173,7 +199,13 @@ export type ComponentProps =
   | AriaExpandedRowProps
   | DividerProps
   | IconProps
-  | TextProps;
+  | TextProps
+  // Shape primitives — see [20_materials_and_shapes.md](20_materials_and_shapes.md) §4 and
+  // [14_component_archetype_reference.md](14_component_archetype_reference.md) §3.18 – §3.21.
+  | RectangleProps
+  | EllipseProps
+  | LineProps
+  | ImagePlaceholderProps;
 
 export interface PillButtonProps {
   archetype: "pill-button";

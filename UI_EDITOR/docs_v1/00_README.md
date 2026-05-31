@@ -73,6 +73,7 @@ A standalone visual editor — Figma-lite — that loads a GUI Package from disk
 | 17 | [security_model](17_security_model.md) | Threat posture, path policy, plugin lockdown, dependency hygiene. |
 | 18 | [codex_cold_start_prompt](18_codex_cold_start_prompt.md) | The exact prompt the human pastes into Codex to begin the v1 build run. Single entry point. |
 | 19 | [known_pitfalls](19_known_pitfalls.md) | Per-phase failure-mode register: symptom + diagnostic + fix for the patterns most likely to halt the run. Consult before declaring "the docs are wrong." |
+| 20 | [materials_and_shapes](20_materials_and_shapes.md) | Style Library (Materials), Grouping (Ctrl/Cmd+G), Shape primitives (Rectangle / Ellipse / Line / Image placeholder), Effects (shadow / blur / opacity). Promotes v1 from "structured panel layout" to true Figma-lite. |
 
 ## 6. Conventions for the pack
 

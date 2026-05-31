@@ -328,6 +328,87 @@ export interface TextProps {
 }
 ```
 
+### 3.18 `rectangle` (see [20_materials_and_shapes.md](20_materials_and_shapes.md) §4.1)
+
+Lightweight rectangle as a leaf Component. Distinct from a structural Container — has no children.
+
+```ts
+export interface RectangleProps {
+  archetype: "rectangle";
+  fill?: { hex: string; alpha: number } | { tokenRef: string } | { styleRef: string };
+  border?: {
+    width: number | { tokenRef: string };
+    colour: { hex: string; alpha: number } | { tokenRef: string };
+    radius?: number | { tokenRef: string };
+    sides?: ("left" | "top" | "right" | "bottom")[];
+  };
+  effects?: Effects;
+}
+```
+
+- **Default size:** 120×80 px.
+- **States:** default.
+- **Rendering:** `<div class="rectangle" />` with CSS background / border / box-shadow / opacity per resolved properties.
+- **Default intent:** "Decorative or structural rectangle. Has no children; use a Container for layout grouping."
+- **Applicable rules:** `effects.shadow-no-colour.warning`, `effects.opacity-out-of-range.error`, `library.unresolved-style-ref`.
+
+### 3.19 `ellipse` (see [20_materials_and_shapes.md](20_materials_and_shapes.md) §4.2)
+
+Circle or oval primitive.
+
+```ts
+export interface EllipseProps {
+  archetype: "ellipse";
+  fill?: { hex: string; alpha: number } | { tokenRef: string } | { styleRef: string };
+  border?: {
+    width: number | { tokenRef: string };
+    colour: { hex: string; alpha: number } | { tokenRef: string };
+  };
+  effects?: Effects;
+}
+```
+
+- **Default size:** 80×80 px (circle).
+- **Rendering:** `<div class="ellipse" />` with `border-radius: 50%`; or `<svg><ellipse/></svg>` if effects require SVG filters.
+- **Default intent:** "Circle or oval primitive."
+
+### 3.20 `line` (see [20_materials_and_shapes.md](20_materials_and_shapes.md) §4.3)
+
+Free-angle line segment.
+
+```ts
+export interface LineProps {
+  archetype: "line";
+  start: { x: number; y: number };     // Frame space
+  end: { x: number; y: number };       // Frame space
+  thickness: number;
+  colour?: { hex: string; alpha: number } | { tokenRef: string };
+  endCap?: "butt" | "round" | "square";
+  effects?: Effects;
+}
+```
+
+- **Default size:** the bounding rect computed from `start` / `end`; the Component's `rect` is derived from them.
+- **Rendering:** `<svg><line x1 y1 x2 y2 stroke stroke-width stroke-linecap /></svg>`.
+- **Default intent:** "Free-angle line segment. Distinct from `divider`, which is row chrome."
+
+### 3.21 `image-placeholder` (see [20_materials_and_shapes.md](20_materials_and_shapes.md) §4.4)
+
+Image content placeholder for downstream agents.
+
+```ts
+export interface ImagePlaceholderProps {
+  archetype: "image-placeholder";
+  altText?: string;
+  aspectRatio?: number;
+  placeholderStyle: "checkerboard" | "diagonal-stripes" | "labeled-box";
+}
+```
+
+- **Default size:** 200×150 px.
+- **Rendering:** a labelled box with the chosen placeholder fill (checkerboard / diagonal stripes / plain box with alt-text label).
+- **Default intent:** "Image content placeholder. Final image sourced by the implementing agent at build time."
+
 ## 4. Container archetypes
 
 Containers carry the same `Container` schema (see [07_package_format.md](07_package_format.md) §5) with the archetype id determining the chrome variant and the expected children.
@@ -478,6 +559,23 @@ export interface CinematicRenderPresetExtras {
 ```
 
 - **Default size:** 280×60 px.
+
+### 4.11 `container-group` (see [20_materials_and_shapes.md](20_materials_and_shapes.md) §3.1)
+
+Layout grouping wrapper produced by Group action (Ctrl/Cmd+G). No visual chrome by default; pure structural grouping.
+
+```ts
+export interface ContainerGroupExtras {
+  archetype: "container-group";
+  groupName?: string;                  // human-readable group label
+  collapseInLayersPanel: boolean;
+}
+```
+
+- **Default size:** auto — computed as the union rect of the grouped Selection.
+- **Default fill / border / effects:** none.
+- **Default intent:** "A layout grouping wrapper. Holds elements that move together."
+- **Applicable rules:** `group.empty.warning`, `group.cycle.blocker`, `group.depth-excessive.warning`.
 
 ## 5. Variants vs. props
 

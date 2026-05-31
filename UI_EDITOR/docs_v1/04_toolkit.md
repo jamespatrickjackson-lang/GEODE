@@ -22,7 +22,11 @@ export type ToolId =
   | "eyedropper"
   | "colour"
   | "align"
-  | "distribute";
+  | "distribute"
+  // Shape primitives — added in [20_materials_and_shapes.md](20_materials_and_shapes.md) §4.5.
+  | "rectangle"
+  | "ellipse"
+  | "line";
 
 export interface ToolContext {
   state: ShellState;
@@ -89,7 +93,7 @@ The `ToolkitBar` (`src/shell/toolkit/ToolkitBar.tsx`) renders a row of buttons (
 
 ### 3.3 Resize Tool (`resize`)
 
-- **Shortcut:** `r`
+- **Shortcut:** `s` (was `r` in earlier drafts; swapped because `r` now goes to Rectangle Tool per [20_materials_and_shapes.md](20_materials_and_shapes.md) §4.6.)
 - **Cursor:** depends on hovered handle (e.g. `nw-resize`, `e-resize`).
 - **Purpose:** drag Transform Handles to resize a single element.
 - **Behaviour:**
@@ -205,6 +209,42 @@ The `ToolkitBar` (`src/shell/toolkit/ToolkitBar.tsx`) renders a row of buttons (
 - **Reference:** the Selection's outermost left+right edges (or top+bottom) anchor the distribution; intermediate elements move to produce equal gaps between adjacent elements.
 - **Implementation:** `distributeSelection(rects, axis)` in `core/geometry/distribute.ts`.
 - **Acceptance:** with 4 elements at varying x positions selected and "Distribute Horizontally" pressed, the inner 2 elements move so all 3 gaps between successive elements are equal.
+
+### 3.11 Rectangle Tool (`rectangle`)
+
+- **Shortcut:** `r`
+- **Cursor:** `crosshair`
+- **Purpose:** draw a new `rectangle` Component. Distinct from Container Tool: Rectangle is a **leaf Component** (no children) used for decorative or structural shape; Container is a **structural Container** (holds children).
+- **Behaviour:** drag to draw. Shift constrains to square.
+- **Dispatches:** `{ type: "COMPONENT_ADD", component: <rectangle> }`.
+- **Acceptance:** dragging produces a `rectangle` Component at the drawn rect.
+
+### 3.12 Ellipse Tool (`ellipse`)
+
+- **Shortcut:** `o`
+- **Cursor:** `crosshair`
+- **Purpose:** draw a new `ellipse` Component.
+- **Behaviour:** drag to draw. Shift constrains to circle (1:1 aspect).
+- **Dispatches:** `{ type: "COMPONENT_ADD", component: <ellipse> }`.
+- **Acceptance:** Shift+drag yields a circle.
+
+### 3.13 Line Tool (`line`)
+
+- **Shortcut:** `l`
+- **Cursor:** `crosshair`
+- **Purpose:** draw a free-angle `line` Component. Distinct from Divider Tool: Divider is strictly horizontal or vertical (row chrome); Line is free-form (decorative).
+- **Behaviour:** drag from start to end. Shift snaps angle to nearest 15° increment.
+- **Dispatches:** `{ type: "COMPONENT_ADD", component: <line> }`.
+- **Acceptance:** dragging at 30° produces a line at 30°; Shift+drag at 17° snaps to 15°.
+
+### 3.14 Group / Ungroup (no Tool — keyboard only)
+
+Not Tools in the modal sense; these are keyboard actions handled in `ShellRoot.tsx`'s key handler.
+
+- **Group:** Ctrl/Cmd + G — invokes `ELEMENTS_GROUP` action per [20_materials_and_shapes.md](20_materials_and_shapes.md) §3.2.
+- **Ungroup:** Ctrl/Cmd + Shift + G — invokes `ELEMENTS_UNGROUP` action per [20_materials_and_shapes.md](20_materials_and_shapes.md) §3.2.
+- **Drill-in:** Double-click a `container-group` to enter edit-inside mode per [20_materials_and_shapes.md](20_materials_and_shapes.md) §3.4.
+- **Drill-out:** Esc.
 
 ## 4. Tool switching
 

@@ -137,7 +137,20 @@ Restricted Surface rules are special: they run **at edit time** as a gate inside
 | --- | --- | --- | --- | --- |
 | `migration.rationale-to-intent` | Suggestion | Element has the legacy `rationale` field but no `intent.intent` | Any element | "{name} carries a legacy `rationale` field. The migrated value has been copied into `intent.intent`; consider editing it to capture full intent." |
 
-### 4.9 Change Log integrity rules
+### 4.9 Materials, Grouping, Shapes, Effects rules (see [20_materials_and_shapes.md](20_materials_and_shapes.md))
+
+| Rule id | Severity | Condition | Applies to | Message template |
+| --- | --- | --- | --- | --- |
+| `library.unresolved-style-ref` | Warning | An element has `styleRef` referencing a missing Style id | All elements | "{name} references Style `{styleId}` which is not in the package's Style Library." |
+| `library.unused-style` | Info | A Style in the Style Library is not referenced by any element | Style Library | "Style `{id}` is not used anywhere in the package; consider removing it." |
+| `group.empty.warning` | Warning | A `container-group` has zero children | Group containers | "Group `{id}` is empty; ungroup or add children." |
+| `group.cycle.blocker` | Blocker | A `container-group` directly or transitively contains itself | Group containers | "Group `{id}` contains itself; this is structurally invalid." |
+| `group.depth-excessive.warning` | Warning | Group nesting depth > 4 | Group containers | "Group `{id}` is nested {currentValue} levels deep; depth > 4 is suspect." |
+| `effects.shadow-no-colour.warning` | Warning | A Shadow has `colour: undefined` or `colour.alpha: 0` | Any element's `effects.shadows[]` | "{name} has a shadow with no visible colour; it contributes nothing to rendering." |
+| `effects.opacity-out-of-range.error` | Error | `effects.opacity < 0` or `> 1` | Any element's `effects.opacity` | "{name} has opacity {currentValue}; valid range is [0, 1]." |
+| `effects.blur-excessive.suggestion` | Suggestion | `effects.blur > 32` | Any element's `effects.blur` | "{name} has blur {currentValue} px; values above 32 px are usually unintentional." |
+
+### 4.10 Change Log integrity rules
 
 | Rule id | Severity | Condition | Applies to | Message template |
 | --- | --- | --- | --- | --- |

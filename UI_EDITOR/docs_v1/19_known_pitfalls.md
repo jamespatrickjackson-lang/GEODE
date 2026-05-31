@@ -136,6 +136,22 @@ Organised by phase + by category. Severity rank: 🔥 likely to halt the run; �
 | ⚠️ Smoke sequence run with active dev server already up | First few steps misleading | Kill dev server before smoke | Phase 14 procedure: kill any running server first. |
 | 🪤 README.md update forgotten | Final commit doesn't include README | `git diff HEAD~1 -- UI_EDITOR/README.md` empty | Phase 14 spec requires updating `UI_EDITOR/README.md` to point at `docs_v1/00_README.md`. |
 
+### Phase 5 / 6 / 8 / 11 additions for Materials, Grouping, Shapes, Effects (see [20_materials_and_shapes.md](20_materials_and_shapes.md))
+
+| Pitfall | Symptom | Diagnostic | Fix |
+| --- | --- | --- | --- |
+| 🔥 Rectangle Tool shortcut `r` collides with old Resize Tool `r` | Pressing `r` activates wrong Tool | Check key handler binding | Per [04](04_toolkit.md) §3.3: Resize moved to `s`. Update ToolkitBar + key handler. |
+| 🔥 `ELEMENTS_GROUP` allows cross-parent grouping | Group spans two parents; layout breaks | Try Ctrl+G on elements with different `parentId` | Per [20](20_materials_and_shapes.md) §3.2 rule 2: refuse + Toast. |
+| ⚠️ `ELEMENTS_GROUP` does not translate child rects to group-local space | Children jump to wrong positions after grouping | Group two elements; their visible positions change | Translate each child's `rect.x` / `rect.y` by `-groupRect.x` / `-groupRect.y` at group time. |
+| ⚠️ Ungroup forgets to translate children back to parent space | Children jump on ungroup | Ungroup; observe positions | Inverse translation per [20](20_materials_and_shapes.md) §3.2. |
+| 🪤 Click cascade selects too eagerly (always picks topmost group ancestor) | Author cannot select children easily | Click child of a group | Per [20](20_materials_and_shapes.md) §3.4: shift-click bypasses cascade; double-click enters edit-inside mode. Implement both. |
+| 🪤 Edit-inside mode persists across package load | Stale outline rendered on a different group after switching packages | Reload package while edit-inside is active | Edit-inside is ephemeral state; reset to `null` on package load. |
+| 🪤 Style edit re-renders only the Inspector, not the Canvas | Style change appears to apply but elements look stale | Edit a Style; observe Canvas | The renderer must read `styleRef` and re-resolve at render time; React state must propagate. Check that `STYLE_EDITED` triggers Canvas re-render. |
+| 🪤 Style removal silently breaks references | Elements render with default values, no warning | Remove a Style in use | Confirm dialog must list references and offer "remove anyway" path that sets resolved literal values + emits `library.unresolved-style-ref` warning. |
+| 🪤 `effects.shadows` array dropped to single-shadow on save | Multi-shadow stack collapses to one | Set 2 shadows; save; reload | `writePackage` must preserve array structure. Common bug: serialising as `effects.shadow` (singular) instead of `effects.shadows`. |
+| 🪤 Line Tool's start/end stored but `rect` not derived | Selection bounding box wrong | Draw a line at 30°; select; transform handles in wrong place | Compute `rect = { x: min(start.x, end.x), y: min(start.y, end.y), w: Math.abs(end.x - start.x), h: Math.abs(end.y - start.y) }` and update on every Move / Resize. |
+| 🪤 Ellipse Tool draws rectangle if Shift not held | Author expected circle | Drag without Shift | Per [20](20_materials_and_shapes.md) §4.2: free-drag yields an ellipse (potentially oval); Shift constrains to circle. Confirm UX matches expectation. |
+
 ## 3. Cross-cutting pitfalls
 
 These apply across multiple phases.

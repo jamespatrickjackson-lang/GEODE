@@ -79,7 +79,11 @@ These extend the v0.1 Visual Editing Bench concept. None are introduced casually
 | **Transform Handle** | One of the 8 resize handles drawn around a selected element when the Resize Tool is active, plus the move handle (the body of the element). |
 | **Safe Area** | A bounded region inside a Frame within which all editable content must live. Driven by the active Device Profile (e.g. desktop = full Frame; tablet portrait = Frame minus 24 px insets). Anchors snap to it. Validation flags content outside it. |
 | **Pixel Grid** | The 1-px lattice the Canvas snaps to by default. Author can change to 2 / 4 / 8 px via the View menu. |
-| **Library** | A named collection of reusable assets. v1 ships four kinds: Component Library, Colour Library, Icon Library, Token Library. See [05_libraries.md](05_libraries.md). |
+| **Library** | A named collection of reusable assets. v1 ships **five** kinds: Component Library, Colour Library, Icon Library, Token Library, Style Library. See [05_libraries.md](05_libraries.md). |
+| **Style** | A reusable Material — a named bundle of fill + border + effects + padding applied to elements as a single unit. Per-element references stored as `{ styleRef }`. See [20_materials_and_shapes.md](20_materials_and_shapes.md) §2. |
+| **Group** | A `container-group` Container wrapping a selected set of elements. Created by Ctrl/Cmd+G; reversed by Ctrl/Cmd+Shift+G. Click cascade selects the group first; double-click enters edit-inside. See [20_materials_and_shapes.md](20_materials_and_shapes.md) §3. |
+| **Effects** | Shadow / blur / opacity properties on a Component or Container. Each may carry literal values or `tokenRef` / `styleRef`. See [20_materials_and_shapes.md](20_materials_and_shapes.md) §5. |
+| **Shape primitive** | A leaf Component for free-form drawing: `rectangle`, `ellipse`, `line`, `image-placeholder`. Distinct from structural Containers — has no children. See [14_component_archetype_reference.md](14_component_archetype_reference.md) §3.18 – §3.21. |
 
 ## 4. Filesystem / package terms (new in v1)
 
@@ -132,6 +136,9 @@ snake_case verbs. The full v1 set:
 
 - Schema mutation: `component_added`, `component_removed`, `component_property_changed`, `container_added`, `container_removed`, `container_property_changed`, `container_reordered`, `frame_created`, `frame_removed`, `frame_resized`, `frame_property_changed`, `guide_added`, `guide_removed`, `guide_moved`.
 - Library mutation: `library_entry_added`, `library_entry_edited`, `library_entry_removed`, `swatch_added`, `swatch_recoloured`, `token_added`, `token_changed`.
+- Styles (see [20_materials_and_shapes.md](20_materials_and_shapes.md) §7): `style_added`, `style_edited`, `style_removed`, `style_applied`, `style_detached`.
+- Grouping (see [20_materials_and_shapes.md](20_materials_and_shapes.md) §7): `elements_grouped`, `elements_ungrouped`.
+- Effects (see [20_materials_and_shapes.md](20_materials_and_shapes.md) §7): `effects_changed`, `shadow_added`, `shadow_removed`.
 - Intent: `intent_edited` (any IntentAnnotations field changed on any element).
 - Validation: `validation_run`, `error_acknowledged`, `error_unacknowledged`.
 - State machine ([16_change_state_machine.md](16_change_state_machine.md)): `state_advanced_to_validated`, `state_advanced_to_approved`, `state_demoted_to_draft`.

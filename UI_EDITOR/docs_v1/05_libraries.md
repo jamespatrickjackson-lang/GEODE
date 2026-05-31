@@ -11,7 +11,8 @@ Provide four kinds of reusable content the author draws from while editing a Fra
 | **Component Library** | Reusable Components (button, slider, toggle, text input, etc.) and Container Archetypes (page-row, layer card, footer action row, etc.). | Drag onto Canvas to instantiate; the new Component / Container is added to the active Frame at the drop point. |
 | **Colour Library** | Named Swatches with hex + alpha + rationale. | Drag onto an element to set its fill; or activate Colour Tool and click a Swatch to apply to Selection. |
 | **Icon Library** | Small SVG glyphs. | Drag onto Canvas to instantiate as an Icon Component. |
-| **Token Library** | Design Tokens: spacing scale, border radii, font sizes, font families, animation durations. | Apply to Selection (e.g. "apply token `space.md` to padding-x"); Properties Inspector also surfaces tokens as suggested values. |
+| **Token Library** | Design Tokens: spacing scale, border radii, font sizes, font families, animation durations, shadows. | Apply to Selection (e.g. "apply token `space.md` to padding-x"); Properties Inspector also surfaces tokens as suggested values. |
+| **Style Library** | Reusable Materials — saved fill + border + effects + padding as a named Style. | Drag onto an element to apply; or pick from the Inspector's Style dropdown. See [20_materials_and_shapes.md](20_materials_and_shapes.md) §2. |
 
 ## 3. Library Panel layout
 
@@ -88,6 +89,9 @@ export interface Libraries {
   colours: ColourLibraryEntry[];
   icons: IconLibraryEntry[];
   tokens: TokenLibraryEntry[];
+  // Style Library — see [20_materials_and_shapes.md](20_materials_and_shapes.md) §2 for the
+  // StyleLibraryEntry interface. v1 ships 6 bundled Styles in the straw-subject package.
+  styles: StyleLibraryEntry[];
 }
 ```
 

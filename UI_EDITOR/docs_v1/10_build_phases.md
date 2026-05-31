@@ -20,13 +20,13 @@ An agent executing this list end-to-end produces a working v1. The orchestration
 | **2** | Package IO + plugin | `plugins/vite-plugin-package-write.ts`, `src/core/packageIO/`, hand-authored minimal sample package. Workbench reads the package on launch. | 1 commit |
 | **3** | State + Shell skeleton | `src/shell/state/`, `ShellRoot.tsx`, `TopBar.tsx`, `PackageBrowser.tsx`, empty `CanvasRoot.tsx`, empty `ValidationPanel.tsx`. Workbench loads, package browser lists sample. | 1 commit |
 | **4** | Canvas Engine | `src/shell/canvas/*`, `src/core/geometry/*`. Pan, zoom, rulers, pixel grid, anchors, snap, smart guides, guides, safe area, transforms, constraints, selection, layers. | 1 commit |
-| **5** | Toolkit | `src/shell/toolkit/*`. All 10 Tools functional. | 1 commit |
-| **6** | Libraries | `src/core/libraries/*`, `src/shell/libraryPanel/*`. Component / Colour / Icon / Token Libraries populated and drag-to-instantiate works. | 1 commit |
+| **5** | Toolkit | `src/shell/toolkit/*`. All **13** Tools functional (10 original + 3 shape tools: Rectangle, Ellipse, Line). Grouping shortcuts (Ctrl/Cmd+G, Ctrl/Cmd+Shift+G) wired in ShellRoot key handler. Resize Tool shortcut moved from `r` to `s`. | 1 commit |
+| **6** | Libraries | `src/core/libraries/*`, `src/shell/libraryPanel/*`. **All 5** Libraries populated and drag-to-instantiate works (Component / Colour / Icon / Token / Style). Bundled Styles + shape Components + Group container + shadow Tokens per [05_libraries.md](05_libraries.md) §5 + [20_materials_and_shapes.md](20_materials_and_shapes.md) §6. | 1 commit |
 | **7** | Straw-subject package | `packages/geosee_editor_sidebar/` populated with all Frames / Containers / Components / Libraries per [06_straw_subject.md](06_straw_subject.md). | 1 commit |
-| **8** | Validation | `src/core/validation/*`, `src/shell/validationPanel/*`. Desktop Technical Editing rule pack functional. Runs on demand and at save. | 1 commit |
-| **9** | Editing + Change Log | `src/core/editing/*`. Edit operations dispatched from shell flow through `applyEdit`. Change Log appends. Save round-trips. | 1 commit |
+| **8** | Validation | `src/core/validation/*`, `src/shell/validationPanel/*`. Desktop Technical Editing rule pack functional including the §4.7 intent, §4.8 migration, and §4.9 materials/grouping/effects subsections. Runs on demand and at save. | 1 commit |
+| **9** | Editing + Change Log | `src/core/editing/*`. Edit operations dispatched from shell flow through `applyEdit`. `ELEMENTS_GROUP`, `ELEMENTS_UNGROUP`, `STYLE_APPLIED`, `STYLE_DETACHED`, `EFFECTS_CHANGED` reducer cases implemented per [20_materials_and_shapes.md](20_materials_and_shapes.md) §3.2 and §7. Change Log appends. Save round-trips. | 1 commit |
 | **10** | Background Stress Test | `src/shell/backgroundStress/*`, `src/core/validation/contrast.ts`. Background switcher functional; contrast rule re-evaluates. | 1 commit |
-| **11** | Properties Inspector | `src/shell/propertiesInspector/*`. Editing through the inspector updates state; safe-edit-only enforced. | 1 commit |
+| **11** | Properties Inspector | `src/shell/propertiesInspector/*`. Editing through the inspector updates state; safe-edit-only enforced. Includes Style section (dropdown + Edit / Detach), Effects section (shadows list + blur + opacity), per-shape archetype editors (Rectangle / Ellipse / Line / Image placeholder) per [20_materials_and_shapes.md](20_materials_and_shapes.md) §2.3 and §5.1. | 1 commit |
 | **12** | Export | `src/core/export/*`. `spec.md` + `ai_agent_brief.md` + `validation_report.json` produced on export. | 1 commit |
 | **13** | Adapter contract | `src/adapter/HostAppAdapter.ts` + `src/adapter/geoSeeAdapter.stub.ts`. Type-checks. Stub throws at runtime. | 1 commit |
 | **14** | End-to-end smoke + docs lint | Full automation runbook passes. `npm run check` clean. README points to docs_v1. | 1 commit |
@@ -128,9 +128,12 @@ Implementation matches every section of [03_canvas_engine.md](03_canvas_engine.m
 **Acceptance:**
 
 - Each of the 22 acceptance checks in [04_toolkit.md](04_toolkit.md) §7 passes.
+- Three additional shape-tool checks: Rectangle Tool draws a `rectangle` Component on drag; Ellipse Tool draws an `ellipse` (Shift constrains to circle); Line Tool draws a `line` (Shift snaps angle to 15°).
+- Grouping checks: Ctrl/Cmd+G on a 2-element Selection creates a `container-group`; Ctrl/Cmd+Shift+G ungroups; cross-parent Group attempt refuses with Toast.
+- Resize Tool responds to `s` (not `r`).
 - `npm run check` clean.
 
-**Commit message:** `Phase 5: toolkit — 10 tools, modal cursors, keyboard shortcuts`.
+**Commit message:** `Phase 5: toolkit — 13 tools (incl. Rectangle/Ellipse/Line), grouping shortcuts, modal cursors`.
 
 ### Phase 6 — Libraries
 
