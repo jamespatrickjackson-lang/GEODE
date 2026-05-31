@@ -25,12 +25,16 @@ function parseArgs(argv) {
 function git(args) {
   const result = spawnSync("git", args, {
     encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
     windowsHide: true,
   });
 
   if (result.status !== 0) {
-    const stderr = result.stderr.trim();
-    throw new Error(stderr || `git ${args.join(" ")} failed`);
+    const stderr =
+      typeof result.stderr === "string" ? result.stderr.trim() : "";
+    const spawnError =
+      result.error instanceof Error ? result.error.message : "";
+    throw new Error(stderr || spawnError || `git ${args.join(" ")} failed`);
   }
 
   return result.stdout;

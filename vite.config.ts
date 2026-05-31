@@ -14,10 +14,10 @@ import { authorWritePlugin } from "./plugins/vite-plugin-author-write";
 // it's not present in `vite build` output -- shipped artifacts have no
 // write capability.
 //
-// server.watch.ignored excludes projects/ from HMR so that auto-saves don't
-// trigger full page reloads while the user is editing. The editor maintains
-// in-memory state as truth; on next manual reload the bundled JSON refreshes
-// from disk.
+// server.watch.ignored excludes authoring and generated verification outputs
+// from HMR. Those files can change while the app is open, but the editor and
+// transition matrix keep in-memory state as truth; reloads during those writes
+// invalidate the current page/transition state.
 function copyRuntimeDataPlugin(): Plugin {
   let config: ResolvedConfig;
   return {
@@ -119,7 +119,12 @@ export default defineConfig(({ command }) => ({
   },
   server: {
     watch: {
-      ignored: ["**/projects/**"],
+      ignored: [
+        "**/projects/**",
+        "**/docs/dev-context/artifacts/**",
+        "**/test-results/**",
+        "**/playwright-report/**",
+      ],
     },
   },
 }));
