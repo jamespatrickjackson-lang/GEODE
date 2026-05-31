@@ -112,6 +112,43 @@ export type LayerTransitionKind =
   | "full-density-scalar"
   | "none";
 
+export type ProductTransitionFamily =
+  | "simple-geometry"
+  | "point-markers"
+  | "point-cloud"
+  | "scalar-volume"
+  | "scalar-slices"
+  | "mt-isosurfaces"
+  | "seismic-volume"
+  | "seismic-sections"
+  | "section-iso-overlays"
+  | "scene-section-helpers";
+
+export type ProductTransitionPolicy =
+  | "preserve"
+  | "fade-opacity"
+  | "interpolate-style"
+  | "interpolate-full-density-scalar"
+  | "crossfade-discrete"
+  | "state-source-only"
+  | "translate-section-helpers"
+  | "follow-section-iso-style";
+
+export interface ProductTransitionDecision {
+  layerId: string;
+  layerType: string | null;
+  family: ProductTransitionFamily;
+  policy: ProductTransitionPolicy;
+  transitionKind: LayerTransitionKind;
+  stateSource: "loaded-layer" | "authored-layer" | "scene-section-helper";
+  loadedAtStart: boolean;
+  sourceVisible: boolean;
+  targetVisible: boolean;
+  sourceOpacity: number;
+  targetOpacity: number;
+  reason: string;
+}
+
 export interface ResolvedLayerRenderState {
   id: string;
   visible: boolean;
@@ -127,6 +164,7 @@ export interface SceneTransitionContext {
   durationMs: number;
   easing: EasingName;
   layerKinds: Record<string, LayerTransitionKind>;
+  productFamilies: ProductTransitionDecision[];
   sourceLayers: Map<string, ResolvedLayerRenderState>;
   sourceVisibleLayerIds: Set<string>;
   targetVisibleLayerIds: Set<string>;

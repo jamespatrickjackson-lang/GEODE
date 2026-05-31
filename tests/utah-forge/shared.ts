@@ -779,6 +779,17 @@ export type PageControllerDebugState = {
   targetIndex: number | null;
   targetPageId?: string | null;
   transitionProgress: number;
+  transitionFrame?: {
+    active: boolean;
+    sourceIndex: number;
+    targetIndex: number | null;
+    sourcePageId: string | null;
+    targetPageId: string | null;
+    progress: number;
+    rawProgress: number;
+    reason: string | null;
+    runId: string | null;
+  };
   isTransitioning: boolean;
   transitionContext?: {
     sourcePageId: string | null;
@@ -796,7 +807,120 @@ export type PageControllerDebugState = {
     snapshotCount: number;
     scalarTweenCount: number;
     layerTweenCount: number;
+    productFamilies: Array<{
+      layerId: string;
+      layerType: string | null;
+      family: string;
+      policy: string;
+      transitionKind: string;
+      stateSource: string;
+      loadedAtStart: boolean;
+      sourceVisible: boolean;
+      targetVisible: boolean;
+      sourceOpacity: number;
+      targetOpacity: number;
+      reason: string;
+    }>;
+    sceneOverlays: {
+      policy: string;
+      fadeDurationMs: number;
+      registeredHandleCount: number;
+      activeTweenCount: number;
+      activeOutlineTweenCount: number;
+      visibleHandleCount: number;
+      lastPhase: string | null;
+      lastPageId: string | null;
+      lastResolvedCount: number;
+      handles: Array<{
+        id: string;
+        opacity: number;
+        targetOpacity: number;
+        tweenActive: boolean;
+        outlineOpacity: number;
+        outlineTargetOpacity: number;
+        outlineTweenActive: boolean;
+      }>;
+    };
+    lateReapply: {
+      totalCount: number;
+      duringTransitionCount: number;
+      events: Array<{
+        sequence: number;
+        reason: string;
+        action: string;
+        pageId: string | null;
+        duringTransition: boolean;
+        transitionSourcePageId: string | null;
+        transitionTargetPageId: string | null;
+        transitionReason: string | null;
+        timeMs: number;
+      }>;
+    };
   } | null;
+  transitionRun?: {
+    runId: string;
+    mode: "page" | "camera-focus" | "camera-pose" | "camera-reset";
+    status: "active" | "completed" | "cancelled";
+    sourceIndex: number;
+    targetIndex: number | null;
+    sourcePageId: string | null;
+    targetPageId: string | null;
+    reason: string;
+    startedAtMs: number;
+    completedAtMs?: number;
+    cancelledAtMs?: number;
+    durationMs: number;
+    easing: string;
+    rawProgress: number;
+    easedProgress: number;
+    interruptedRunIds: string[];
+    pageTransitionActive: boolean;
+    dynamicCameraTransitionActive: boolean;
+    sceneTransition?: PageControllerDebugState["sceneTransition"];
+    consumerDebug: {
+      presenterOverlay: {
+        policy: string;
+        active: boolean;
+        sourcePageId: string | null;
+        targetPageId: string | null;
+        progress: number;
+        slideDirection: -1 | 0 | 1;
+        cssTransitionsDisabledWhileActive: boolean;
+      };
+      sceneOverlays: NonNullable<
+        PageControllerDebugState["sceneTransition"]
+      >["sceneOverlays"] | null;
+      labels: {
+        policy: string;
+        switchThreshold: number;
+        activePageId: string | null;
+        sourcePageId: string | null;
+        targetPageId: string | null;
+      };
+      assays: {
+        policy: string;
+        switchThreshold: number;
+        activePageId: string | null;
+        sourcePageId: string | null;
+        targetPageId: string | null;
+      };
+      legends: {
+        stackPolicy: string;
+        resistivityPolicy: string;
+        defaultPolicy: string;
+        sourcePageId: string | null;
+        targetPageId: string | null;
+        progress: number;
+        exitEnd: number;
+        layoutEnd: number;
+        targetInteractiveThreshold: number;
+      };
+      lateReapply: NonNullable<
+        PageControllerDebugState["sceneTransition"]
+      >["lateReapply"] | null;
+    };
+  } | null;
+  lastTransitionRun?: PageControllerDebugState["transitionRun"];
 };
 
 export type SectionIsoSceneState = {
@@ -3118,7 +3242,8 @@ export async function runForgeDataTransitionProbe(
               ) => void;
               applyPageScene?: (page: unknown) => void;
               transitionEffectiveLayersForPage?: (
-                environment: unknown,
+                fromEnvironment: unknown,
+                toEnvironment: unknown,
                 fromPage: unknown,
                 toPage: unknown,
                 durationMs: number,
@@ -3137,6 +3262,7 @@ export async function runForgeDataTransitionProbe(
       manager.applyEffectiveStylesForPage?.(environmentSpec, fromPageSpec);
       manager.applyPageScene?.(fromPageSpec);
       manager.transitionEffectiveLayersForPage(
+        environmentSpec,
         environmentSpec,
         fromPageSpec,
         toPageSpec,

@@ -519,7 +519,7 @@ export function ResistivityLegend({
 }) {
   const { state, sceneHandle, setEnvLayerStyle, setPageLayerOverride } =
     useEditor();
-  const { pages, currentIndex, targetIndex, transitionProgress } = usePageController();
+  const { pages, currentIndex, transitionFrame } = usePageController();
   const rootRef = useRef<HTMLElement | null>(null);
   const rampRef = useRef<HTMLDivElement | null>(null);
   const edgePopoverRef = useRef<HTMLDivElement | null>(null);
@@ -551,19 +551,27 @@ export function ResistivityLegend({
     state.environment.scene?.gui?.overlay,
   );
 
+  const sourceIndex = transitionFrame.sourceIndex;
+  const targetIndex = transitionFrame.targetIndex;
+  const transitionActive = transitionFrame.active;
   const controllerPage =
-    pageOverride ?? pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
+    pageOverride ??
+    pages[targetIndex ?? sourceIndex] ??
+    pages[sourceIndex] ??
+    pages[currentIndex];
   const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
   const selectedPage =
     !pageOverride &&
     !editingEnvironment &&
-    targetIndex === null &&
+    !transitionActive &&
     state.selectedPageId
       ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
       : null;
   const page =
     pageOverride ??
-    (targetIndex !== null ? controllerPage : selectedPage ?? controllerPage);
+    (transitionActive && targetIndex !== null
+      ? controllerPage
+      : selectedPage ?? controllerPage);
   if (!page) return null;
 
   const visible = editingEnvironment
@@ -589,16 +597,17 @@ export function ResistivityLegend({
   const targetStyle = editingEnvironment
     ? state.environment.layerStyles[layerId] ?? {}
     : effectiveStyle(state.environment, page, layerId);
-  const currentPage = pageOverride ?? pages[currentIndex] ?? page;
+  const currentPage =
+    pageOverride ?? pages[sourceIndex] ?? pages[currentIndex] ?? page;
   const currentStyle = editingEnvironment
     ? targetStyle
     : effectiveStyle(state.environment, currentPage, layerId);
   const style =
-    !pageOverride && !editingEnvironment && targetIndex !== null
+    !pageOverride && !editingEnvironment && transitionActive && targetIndex !== null
       ? interpolatedScalarLegendStyle(
           currentStyle,
           targetStyle,
-          transitionProgress,
+          transitionFrame.progress,
         )
       : targetStyle;
   if (!styleBoolean(style, "scalarLegendVisible", true)) return null;

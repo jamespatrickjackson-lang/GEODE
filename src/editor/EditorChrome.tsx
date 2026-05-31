@@ -27,7 +27,11 @@ import {
   LEGEND_PAGE_EDGE_MARGIN_PX,
   LEGEND_STACK_GAP_PX,
 } from "../ui/legendStyles";
-import { effectiveStyle, effectiveVisibility } from "../pages/effective";
+import {
+  effectiveStyle,
+  effectiveVisibility,
+  resolveEnvironmentForPage,
+} from "../pages/effective";
 import {
   applyAudienceLensSceneToEnvironment,
   applyAudienceLensToState,
@@ -129,9 +133,14 @@ function utahForgeLegendPresenceForPage(
       "mt-resistivity": false,
     };
   }
-  const visible = effectiveVisibility(state.environment, page);
+  const environment = resolveEnvironmentForPage(
+    state.environment,
+    state.pages,
+    page,
+  );
+  const visible = effectiveVisibility(environment, page);
   const styleFor = (layerId: string) =>
-    effectiveStyle(state.environment, page, layerId);
+    effectiveStyle(environment, page, layerId);
   const scalarVisible = UTAH_FORGE_MT_RESISTIVITY_LEGEND_LAYER_IDS.some(
     (layerId) =>
       visible.has(layerId) &&
@@ -142,7 +151,7 @@ function utahForgeLegendPresenceForPage(
   const thresholdStyle = styleFor(UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID);
   const topoMapSettings = resolveTopoMapSettings({
     manifest: state.manifest,
-    environment: state.environment,
+    environment,
     page,
   });
   const terrain = topoMapSettings.terrain;

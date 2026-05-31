@@ -1,7 +1,14 @@
 import type { EasingName, EnvironmentSetup, PresentationPage } from "../../pages/types";
 import { effectiveStyle, effectiveVisibility } from "../../pages/effective";
 import { CASE_STUDY_B_DEMO_LAYER_ALIASES } from "../../projectModules/caseStudyB/demoLayerAliases";
-import { UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID, UTAH_FORGE_SCENE_SECTION_LAYER_ID } from "../../projectModules/utahForge/layerIds";
+import {
+  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+} from "../../projectModules/utahForge/layerIds";
+import {
+  productTransitionDecisionsForLayer,
+  sceneSectionHelperDecision,
+} from "./productFamilyRegistry";
 import {
   SCENE_SECTION_AFFECTED_LAYER_IDS,
   forgeDiscreteDataStyleChanged,
@@ -14,8 +21,10 @@ import {
 
 const DEFAULT_LAYER_FADE_MS = 800;
 
-export function transitionEffectiveLayersForPage(this: any, 
-  environment: EnvironmentSetup,
+export function transitionEffectiveLayersForPage(
+  this: any,
+  fromEnvironment: EnvironmentSetup,
+  toEnvironment: EnvironmentSetup,
   fromPage: PresentationPage,
   toPage: PresentationPage,
   durationMs: number = DEFAULT_LAYER_FADE_MS,
@@ -28,8 +37,27 @@ export function transitionEffectiveLayersForPage(this: any,
     ...this.layers.keys(),
     ...Object.keys(CASE_STUDY_B_DEMO_LAYER_ALIASES),
   ]);
+  const fromVisible = effectiveVisibility(fromEnvironment, fromPage);
+  const toVisible = effectiveVisibility(toEnvironment, toPage);
+  const authoredProductLayerIds = new Set<string>();
+  for (const record of [
+    fromPage.layerOverrides,
+    toPage.layerOverrides,
+    fromPage.visibilityOverrides,
+    toPage.visibilityOverrides,
+  ]) {
+    for (const id of Object.keys(record ?? {})) {
+      authoredProductLayerIds.add(id);
+    }
+  }
+  const productFamilyLayerIds = new Set<string>([
+    ...layerIds,
+    ...fromVisible,
+    ...toVisible,
+    ...authoredProductLayerIds,
+  ]);
   const sourceLayers = this.captureLayerRenderStates(
-    environment,
+    fromEnvironment,
     fromPage,
     layerIds,
   );
@@ -39,10 +67,9 @@ export function transitionEffectiveLayersForPage(this: any,
   this.sceneSectionStyleTween = null;
   this.sceneSectionHelperTransitionOpacity = 1;
   this.clearLayerTransitionSnapshots();
-  this.lastEffectiveEnv = environment;
+  this.lastEffectiveEnv = toEnvironment;
   this.lastEffectivePage = toPage;
 
-  const toVisible = effectiveVisibility(environment, toPage);
   this.currentVisibleLayerIds = toVisible;
   const sourceVisibleLayerIds = new Set<string>();
   for (const [id, state] of sourceLayers) {
@@ -62,19 +89,80 @@ export function transitionEffectiveLayersForPage(this: any,
     durationMs: duration,
     easing,
     layerKinds,
+    productFamilies: [],
     sourceLayers,
     sourceVisibleLayerIds,
     targetVisibleLayerIds: new Set(toVisible),
     warnedUnexpectedVisibleLayerIds: new Set(),
   };
+  const recordedProductLayerIds = new Set<string>();
+  const recordProductFamily = (
+    id: string,
+    fromStyle: ReturnType<typeof effectiveStyle>,
+    targetStyle: ReturnType<typeof effectiveStyle>,
+    transitionKind: LayerTransitionKind,
+    sourceVisible: boolean,
+    targetVisible: boolean,
+    sourceOpacity: number,
+    targetOpacity: number,
+    loadedAtStart: boolean,
+  ) => {
+    recordedProductLayerIds.add(id);
+    this.activeSceneTransitionContext.productFamilies.push(
+      ...productTransitionDecisionsForLayer({
+        layerId: id,
+        layerSpec: this.layerSpecFor(id),
+        fromStyle,
+        toStyle: targetStyle,
+        transitionKind,
+        sourceVisible,
+        targetVisible,
+        sourceOpacity,
+        targetOpacity,
+        loadedAtStart,
+        stateSource: loadedAtStart ? "loaded-layer" : "authored-layer",
+        includeStateSource: authoredProductLayerIds.has(id),
+      }),
+    );
+  };
+  const authoredProductTransitionKind = (
+    id: string,
+    fromStyle: ReturnType<typeof effectiveStyle>,
+    targetStyle: ReturnType<typeof effectiveStyle>,
+    sourceVisible: boolean,
+    targetVisible: boolean,
+  ): LayerTransitionKind => {
+    if (
+      duration > 0 &&
+      forgeDiscreteDataStyleChanged(
+        id,
+        fromStyle,
+        targetStyle,
+        this.layerSpecFor(id),
+      )
+    ) {
+      return "discrete-crossfade";
+    }
+    if (
+      duration > 0 &&
+      sourceVisible &&
+      targetVisible &&
+      scalarTransitionStyleChanged(fromStyle, targetStyle)
+    ) {
+      return id === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID
+        ? "full-density-scalar"
+        : "continuous";
+    }
+    return "none";
+  };
 
   const fromSceneSectionStyle = effectiveStyle(
-    environment,
+    fromEnvironment,
     fromPage,
     UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   );
   const targetSceneSectionStyle = effectiveStyle(
-    environment,
+    toEnvironment,
     toPage,
     UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   );
@@ -102,6 +190,16 @@ export function transitionEffectiveLayersForPage(this: any,
     if (sceneSectionDiscreteChanged) {
       this.beginSceneSectionHelperTransitionSnapshot?.(now, duration, easing);
     }
+    this.activeSceneTransitionContext.productFamilies.push(
+      sceneSectionHelperDecision({
+        layerId: UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+        sourceVisible: fromSceneSectionStyle.sceneSectionEnabled === true,
+        targetVisible: targetSceneSectionStyle.sceneSectionEnabled === true,
+        sourceOpacity: fromSceneSectionStyle.sceneSectionEnabled === true ? 1 : 0,
+        targetOpacity:
+          targetSceneSectionStyle.sceneSectionEnabled === true ? 1 : 0,
+      }),
+    );
   }
 
   this.sceneSectionReapplySuspended = true;
@@ -110,11 +208,11 @@ export function transitionEffectiveLayersForPage(this: any,
       const sourceState = sourceLayers.get(id);
       const fromOpacity = sourceState?.opacity ?? 0;
       const toOpacity = toVisible.has(id)
-        ? this.targetOpacityForLayer(environment, toPage, id)
+        ? this.targetOpacityForLayer(toEnvironment, toPage, id)
         : 0;
       const fromStyle =
-        sourceState?.style ?? effectiveStyle(environment, fromPage, id);
-      const targetStyle = effectiveStyle(environment, toPage, id);
+        sourceState?.style ?? effectiveStyle(fromEnvironment, fromPage, id);
+      const targetStyle = effectiveStyle(toEnvironment, toPage, id);
       const group = this.layers.get(id);
       if (group) group.visible = fromOpacity > 0.001 || toOpacity > 0.001;
       const shouldCrossfadeDiscreteData =
@@ -165,6 +263,17 @@ export function transitionEffectiveLayersForPage(this: any,
               : "continuous"
             : "none";
       layerKinds[id] = transitionKind;
+      recordProductFamily(
+        id,
+        fromStyle,
+        targetStyle,
+        transitionKind,
+        fromOpacity > 0.001,
+        toOpacity > 0.001,
+        fromOpacity,
+        toOpacity,
+        !!group,
+      );
 
       // Apply target page colour/provenance-style immediately, but restore the
       // visual opacity to the old page value before the fade begins.
@@ -221,13 +330,45 @@ export function transitionEffectiveLayersForPage(this: any,
         easing,
       });
     }
+    for (const id of productFamilyLayerIds) {
+      if (recordedProductLayerIds.has(id)) continue;
+      const fromStyle = effectiveStyle(fromEnvironment, fromPage, id);
+      const targetStyle = effectiveStyle(toEnvironment, toPage, id);
+      const fromOpacity = fromVisible.has(id)
+        ? this.targetOpacityForLayer(fromEnvironment, fromPage, id)
+        : 0;
+      const toOpacity = toVisible.has(id)
+        ? this.targetOpacityForLayer(toEnvironment, toPage, id)
+        : 0;
+      const sourceVisible = fromOpacity > 0.001;
+      const targetVisible = toOpacity > 0.001;
+      const transitionKind = authoredProductTransitionKind(
+        id,
+        fromStyle,
+        targetStyle,
+        sourceVisible,
+        targetVisible,
+      );
+      recordProductFamily(
+        id,
+        fromStyle,
+        targetStyle,
+        transitionKind,
+        sourceVisible,
+        targetVisible,
+        fromOpacity,
+        toOpacity,
+        this.layers.has(id),
+      );
+    }
   } finally {
     this.sceneSectionReapplySuspended = false;
   }
   this.reapplySceneSectionPlanes();
 
   this.transitionWorkingAreaFocusForPage(
-    environment,
+    fromEnvironment,
+    toEnvironment,
     fromPage,
     toPage,
     duration,
@@ -239,5 +380,5 @@ export function transitionEffectiveLayersForPage(this: any,
   // materials.
   // This call sets their target colours while preserving old-page opacities;
   // frameUpdate then fades the same uniforms alongside regular materials.
-  this.applyLakesToTerrain(environment, toPage, terrainOverrides);
+  this.applyLakesToTerrain(toEnvironment, toPage, terrainOverrides);
 }

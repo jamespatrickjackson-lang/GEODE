@@ -280,7 +280,7 @@ export function SectionIsoLegend({
     setEnvLayerStyle,
     setPageLayerOverride,
   } = useEditor();
-  const { pages, currentIndex, targetIndex } = usePageController();
+  const { pages, currentIndex, transitionFrame } = usePageController();
   const rootRef = useRef<HTMLElement | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const [targets, setTargets] = useState<ScalarSectionIsoTarget[]>([]);
@@ -343,16 +343,25 @@ export function SectionIsoLegend({
   if (activeTargets.length === 0) return null;
 
   const layerId = activeTargets[0].layerId;
+  const targetIndex = transitionFrame.targetIndex;
   const controllerPage =
-    pageOverride ?? pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
+    pageOverride ??
+    pages[targetIndex ?? transitionFrame.sourceIndex] ??
+    pages[transitionFrame.sourceIndex] ??
+    pages[currentIndex];
   const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
   const selectedPage =
-    !pageOverride && !editingEnvironment && state.selectedPageId
+    !pageOverride &&
+    !editingEnvironment &&
+    !transitionFrame.active &&
+    state.selectedPageId
       ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
       : null;
   const page =
     pageOverride ??
-    (targetIndex !== null ? controllerPage : selectedPage ?? controllerPage);
+    (transitionFrame.active && targetIndex !== null
+      ? controllerPage
+      : selectedPage ?? controllerPage);
   const style = editingEnvironment
     ? state.environment.layerStyles[layerId] ?? {}
     : page

@@ -132,7 +132,7 @@
     },
     "terrain": {
       "renderMode": "elevation-mesh",
-      "opacity": 0.78,
+      "opacity": 1,
       "meshSurfaceLiftM": 0,
       "publicSurfaceClipEnabled": false,
       "publicSurfaceClipCenterX": -1750,
@@ -672,9 +672,9 @@
     },
     "terrain": {
       "materialPreset": "utah",
-      "rampLow": "#a3a099",
-      "rampMid": "#60814b",
-      "rampHigh": "#72716e",
+      "rampLow": "#dbd7cc",
+      "rampMid": "#4c5d52",
+      "rampHigh": "#dacda4",
       "elevLowM": 900,
       "elevHighM": 4475,
       "surfaceElevationEnabled": true,
@@ -814,16 +814,16 @@
       "surfaceElevationMaxM": 4000,
       "surfaceElevationColorPositions": [
         0,
-        0.28745403196781416,
-        0.5164436687222046,
-        0.796589837144484,
+        0.17783198994964322,
+        0.5505478992633684,
+        0.7624848631787478,
         1
       ],
       "surfaceElevationMidpoints": [
-        0.43965546724755267,
-        0.4166664017573028,
+        0.28766985846956494,
+        0.4066660563151042,
         0.4782608695652176,
-        0.5398761979428731
+        0.5538457445372537
       ],
       "surfaceElevationTransitionSoftness": 1,
       "surfaceElevationColorBlend": 0.75,
@@ -1686,9 +1686,9 @@
         },
         "terrain": {
           "materialPreset": "ortho-photo",
-          "rampLow": "#a3a099",
-          "rampMid": "#60814b",
-          "rampHigh": "#72716e",
+          "rampLow": "#dbd7cc",
+          "rampMid": "#4c5d52",
+          "rampHigh": "#dacda4",
           "elevLowM": 900,
           "elevHighM": 4475,
           "surfaceElevationEnabled": false,
@@ -2028,7 +2028,7 @@
           "showLabels": false
         },
         "terrain": {
-          "opacity": 0.78
+          "opacity": 1
         },
         "utah-forge-mt-resistivity-slices": {
           "sectionIsoEnabled": true,

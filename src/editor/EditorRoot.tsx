@@ -31,7 +31,11 @@ import {
 } from "./styles";
 import type { SceneHandle } from "../scene";
 import type { EditableStyle, ProjectLayerSpec } from "../pages/types";
-import { effectiveStyle, effectiveVisibility } from "../pages/effective";
+import {
+  effectiveStyle,
+  effectiveVisibility,
+  resolveEnvironmentForPage,
+} from "../pages/effective";
 import { layerDataSection } from "./layerControls/layerPanelConfig";
 import {
   UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
@@ -342,15 +346,18 @@ export function EditorRoot({
     state.projectSlug === "utah-forge" ? "FORGE Data" : "Public Data";
   const hasPublicTopoMap = topoMapLayerIds(state.manifest.layers).length > 0;
   const hasSectionsCropping = state.projectSlug === "utah-forge";
+  const selectedPageEnvironment = selectedPage
+    ? resolveEnvironmentForPage(state.environment, state.pages, selectedPage)
+    : state.environment;
   const forgeDataVisibleLayerIds = selectedPage
-    ? effectiveVisibility(state.environment, selectedPage)
+    ? effectiveVisibility(selectedPageEnvironment, selectedPage)
     : new Set(state.environment.defaultVisibleLayers);
   const utahForgeActiveLayerIds = (layerIds: readonly string[]) =>
     state.projectSlug === "utah-forge"
       ? layerIds.filter((layerId) => {
           const style = selectedPage
-            ? effectiveStyle(state.environment, selectedPage, layerId)
-            : (state.environment.layerStyles[layerId] ?? {});
+            ? effectiveStyle(selectedPageEnvironment, selectedPage, layerId)
+            : (selectedPageEnvironment.layerStyles[layerId] ?? {});
           if (layerId === UTAH_FORGE_SCENE_SECTION_LAYER_ID) {
             return style.sceneSectionEnabled === true;
           }

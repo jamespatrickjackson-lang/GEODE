@@ -13,7 +13,40 @@ import {
 import { debugLog } from "../../utils/debugLog";
 import { getHeightSampler } from "../heightSampler";
 
-const SCENE_OVERLAY_FADE_MS = 800;
+export const SCENE_OVERLAY_FADE_MS = 800;
+
+type SceneOverlayApplyPhase =
+  | "page"
+  | "transition-start"
+  | "transition-end";
+
+interface SceneOverlayApplyDebug {
+  phase: SceneOverlayApplyPhase;
+  pageId: string;
+  resolvedCount: number;
+  appliedAtMs: number;
+}
+
+export interface SceneOverlayDebugState {
+  policy: "fixed-duration-linear-fade";
+  fadeDurationMs: number;
+  registeredHandleCount: number;
+  activeTweenCount: number;
+  activeOutlineTweenCount: number;
+  visibleHandleCount: number;
+  lastPhase: SceneOverlayApplyPhase | null;
+  lastPageId: string | null;
+  lastResolvedCount: number;
+  handles: Array<{
+    id: string;
+    opacity: number;
+    targetOpacity: number;
+    tweenActive: boolean;
+    outlineOpacity: number;
+    outlineTargetOpacity: number;
+    outlineTweenActive: boolean;
+  }>;
+}
 
 export class SceneOverlaysController {
   private sceneOverlays = new Map<string, SceneOverlayHandle>();
@@ -23,6 +56,7 @@ export class SceneOverlaysController {
   private overlayResolveAssetPath: (rel: string) => string = (p) => "/" + p;
   private overlayMaxAnisotropy = 1;
   private hoveredOverlayId: string | null = null;
+  private lastApplyDebug: SceneOverlayApplyDebug | null = null;
 
   constructor(private readonly scene: THREE.Scene) {}
 
@@ -146,6 +180,32 @@ listSceneOverlays(): SceneOverlayHandle[] {
   return Array.from(this.sceneOverlays.values());
 }
 
+getDebugState(): SceneOverlayDebugState {
+  const handles = Array.from(this.sceneOverlays.values()).map((handle) => ({
+    id: handle.id,
+    opacity: handle.material.opacity,
+    targetOpacity: handle.target,
+    tweenActive: handle.tween !== null,
+    outlineOpacity: handle.outlineMaterial.opacity,
+    outlineTargetOpacity: handle.outlineTarget,
+    outlineTweenActive: handle.outlineTween !== null,
+  }));
+  return {
+    policy: "fixed-duration-linear-fade",
+    fadeDurationMs: SCENE_OVERLAY_FADE_MS,
+    registeredHandleCount: handles.length,
+    activeTweenCount: handles.filter((handle) => handle.tweenActive).length,
+    activeOutlineTweenCount: handles.filter((handle) => handle.outlineTweenActive)
+      .length,
+    visibleHandleCount: handles.filter((handle) => handle.targetOpacity > 0)
+      .length,
+    lastPhase: this.lastApplyDebug?.phase ?? null,
+    lastPageId: this.lastApplyDebug?.pageId ?? null,
+    lastResolvedCount: this.lastApplyDebug?.resolvedCount ?? 0,
+    handles,
+  };
+}
+
 applySceneOverlaysForPage(
   environment: EnvironmentSetup,
   page: PresentationPage,
@@ -156,13 +216,19 @@ applySceneOverlaysForPage(
   // left overlays stuck at opacity 0.
   this.lastOverlayEnv = environment;
   this.lastOverlayPage = page;
+  const resolved = effectiveSceneOverlays(environment, page);
+  this.lastApplyDebug = {
+    phase: "page",
+    pageId: page.id,
+    resolvedCount: resolved.length,
+    appliedAtMs: performance.now(),
+  };
   if (this.sceneOverlays.size === 0) {
     debugLog(
       `[applySceneOverlaysForPage:${page.id}] no handles registered yet, caching for later replay`,
     );
     return;
   }
-  const resolved = effectiveSceneOverlays(environment, page);
   debugLog(
     `[applySceneOverlaysForPage:${page.id}] resolved:`,
     resolved.map((r) => ({
@@ -190,9 +256,15 @@ applySceneOverlaysAtTransitionStart(
   // the correct end-state instead of the previous page's.
   this.lastOverlayEnv = environment;
   this.lastOverlayPage = nextPage;
-  if (this.sceneOverlays.size === 0) return;
   const resolved = effectiveSceneOverlays(environment, nextPage);
   const now = performance.now();
+  this.lastApplyDebug = {
+    phase: "transition-start",
+    pageId: nextPage.id,
+    resolvedCount: resolved.length,
+    appliedAtMs: now,
+  };
+  if (this.sceneOverlays.size === 0) return;
   for (const r of resolved) {
     const handle = this.sceneOverlays.get(r.id);
     if (!handle) continue;
@@ -208,9 +280,15 @@ applySceneOverlaysAtTransitionEnd(
 ): void {
   this.lastOverlayEnv = environment;
   this.lastOverlayPage = nextPage;
-  if (this.sceneOverlays.size === 0) return;
   const resolved = effectiveSceneOverlays(environment, nextPage);
   const now = performance.now();
+  this.lastApplyDebug = {
+    phase: "transition-end",
+    pageId: nextPage.id,
+    resolvedCount: resolved.length,
+    appliedAtMs: now,
+  };
+  if (this.sceneOverlays.size === 0) return;
   for (const r of resolved) {
     const handle = this.sceneOverlays.get(r.id);
     if (!handle) continue;

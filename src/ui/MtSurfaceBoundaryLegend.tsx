@@ -53,25 +53,31 @@ export function MtSurfaceBoundaryLegend({
 }) {
   const { state, sceneHandle, setEnvLayerStyle, setPageLayerOverride } =
     useEditor();
-  const { pages, currentIndex, targetIndex } = usePageController();
+  const { pages, currentIndex, transitionFrame } = usePageController();
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
   const legendTextColors = resolveLegendTextColors(
     state.environment.scene?.gui?.overlay,
   );
 
+  const targetIndex = transitionFrame.targetIndex;
   const controllerPage =
-    pageOverride ?? pages[targetIndex ?? currentIndex] ?? pages[currentIndex];
+    pageOverride ??
+    pages[targetIndex ?? transitionFrame.sourceIndex] ??
+    pages[transitionFrame.sourceIndex] ??
+    pages[currentIndex];
   const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
   const selectedPage =
     !pageOverride &&
     !editingEnvironment &&
-    targetIndex === null &&
+    !transitionFrame.active &&
     state.selectedPageId
       ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
       : null;
   const page =
     pageOverride ??
-    (targetIndex !== null ? controllerPage : selectedPage ?? controllerPage);
+    (transitionFrame.active && targetIndex !== null
+      ? controllerPage
+      : selectedPage ?? controllerPage);
   if (!page) return null;
 
   const visible = editingEnvironment

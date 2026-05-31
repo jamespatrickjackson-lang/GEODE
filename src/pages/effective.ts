@@ -69,6 +69,41 @@ export function effectiveVisibility(
   return set;
 }
 
+export function resolveEnvironmentForPage(
+  environment: EnvironmentSetup,
+  pages: readonly PresentationPage[],
+  page: PresentationPage,
+): EnvironmentSetup {
+  const isSubMaster =
+    page.envSnapshot != null &&
+    (!page.parentMasterId || page.parentMasterId === "global");
+  if (isSubMaster) return page.envSnapshot!;
+
+  if (page.parentMasterId && page.parentMasterId !== "global") {
+    const parent = pages.find((candidate) => candidate.id === page.parentMasterId);
+    if (parent?.envSnapshot) return parent.envSnapshot;
+  }
+
+  return environment;
+}
+
+export function effectiveStyleForPage(
+  environment: EnvironmentSetup,
+  pages: readonly PresentationPage[],
+  page: PresentationPage,
+  layerId: string,
+): EditableStyle {
+  return effectiveStyle(resolveEnvironmentForPage(environment, pages, page), page, layerId);
+}
+
+export function effectiveVisibilityForPage(
+  environment: EnvironmentSetup,
+  pages: readonly PresentationPage[],
+  page: PresentationPage,
+): Set<string> {
+  return effectiveVisibility(resolveEnvironmentForPage(environment, pages, page), page);
+}
+
 // Whether a specific style field on a layer is currently overridden by
 // the page. Used by the LayerPanel to decide between "inherited" and
 // "overridden" UI states. Membership-checks the override map; ignores

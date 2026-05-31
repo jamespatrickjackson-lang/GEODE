@@ -321,17 +321,17 @@ export function interpolatedWorkingAreaFocusStyleImpl(this: any, fromStyle: Edit
     };
   }
 
-export function transitionWorkingAreaFocusForPageImpl(this: any, environment: EnvironmentSetup, fromPage: PresentationPage, toPage: PresentationPage, durationMs: number, easing: EasingName): void {
+export function transitionWorkingAreaFocusForPageImpl(this: any, fromEnvironment: EnvironmentSetup, toEnvironment: EnvironmentSetup, fromPage: PresentationPage, toPage: PresentationPage, durationMs: number, easing: EasingName): void {
     const fromStyle =
       Object.keys(this.currentWorkingAreaFocusStyle).length > 0
         ? this.currentWorkingAreaFocusStyle
         : effectiveStyle(
-            environment,
+            fromEnvironment,
             fromPage,
             UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
           );
     const toStyle = effectiveStyle(
-      environment,
+      toEnvironment,
       toPage,
       UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
     );

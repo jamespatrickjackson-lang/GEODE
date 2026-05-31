@@ -195,15 +195,14 @@ async function loadOverlayHtml(
 export function OverlayDisplay() {
   const {
     pages,
-    currentIndex,
-    targetIndex,
-    isTransitioning,
-    transitionProgress,
+    transitionFrame,
   } =
     usePageController();
-  const page = pages[currentIndex];
+  const page = pages[transitionFrame.sourceIndex];
   const targetPage =
-    typeof targetIndex === "number" ? pages[targetIndex] : null;
+    typeof transitionFrame.targetIndex === "number"
+      ? pages[transitionFrame.targetIndex]
+      : null;
   const { state, setPageOverlayLayout } = useEditor();
   const projectRoot = state.projectRoot;
   const isEditor = !state.presenterMode;
@@ -431,17 +430,20 @@ export function OverlayDisplay() {
     };
 
   const transitionActive =
-    isTransitioning &&
+    transitionFrame.active &&
     !!page &&
     !!targetPage &&
     page.id !== targetPage.id;
   const direction =
-    targetIndex !== null && targetIndex < currentIndex ? -1 : 1;
+    transitionFrame.targetIndex !== null &&
+    transitionFrame.targetIndex < transitionFrame.sourceIndex
+      ? -1
+      : 1;
   const slidePx =
     transitionActive
       ? Math.max(0, overlaySlidePx(targetPage ?? page ?? null))
       : 0;
-  const transitionT = clamp(transitionProgress, 0, 1);
+  const transitionT = clamp(transitionFrame.progress, 0, 1);
 
   const panelInstances =
     transitionActive && page && targetPage

@@ -44,6 +44,7 @@ interface PageControllerValue {
   currentIndex: number;
   targetIndex: number | null;
   transitionProgress: number;
+  transitionFrame: PageTransitionFrame;
   isTransitioning: boolean;
   freelookActive: boolean;
   cameraObjectFocus: CameraObjectFocus | null;
@@ -64,6 +65,18 @@ type NavigationReason =
   | "freelook"
   | "interrupted";
 
+interface PageTransitionFrame {
+  active: boolean;
+  sourceIndex: number;
+  targetIndex: number | null;
+  sourcePageId: string | null;
+  targetPageId: string | null;
+  progress: number;
+  rawProgress: number;
+  reason: string | null;
+  runId: string | null;
+}
+
 interface SceneTransitionContext {
   sourcePageId: string | null;
   targetPageId: string | null;
@@ -73,6 +86,142 @@ interface SceneTransitionContext {
   sourcePose: Pose;
   targetPose: Pose;
 }
+
+type TransitionRunMode =
+  | "page"
+  | "camera-focus"
+  | "camera-pose"
+  | "camera-reset";
+type TransitionRunStatus = "active" | "completed" | "cancelled";
+type SceneTransitionDebugState =
+  | ReturnType<SceneHandle["manager"]["getTransitionDebugState"]>
+  | null;
+
+interface TransitionRunDebugState {
+  runId: string;
+  mode: TransitionRunMode;
+  status: TransitionRunStatus;
+  sourceIndex: number;
+  targetIndex: number | null;
+  sourcePageId: string | null;
+  targetPageId: string | null;
+  reason: string;
+  startedAtMs: number;
+  completedAtMs?: number;
+  cancelledAtMs?: number;
+  durationMs: number;
+  easing: EasingName;
+  rawProgress: number;
+  easedProgress: number;
+  interruptedRunIds: string[];
+  pageTransitionActive: boolean;
+  dynamicCameraTransitionActive: boolean;
+  sceneTransition: SceneTransitionDebugState;
+  consumerDebug: TransitionConsumerDebugState;
+}
+
+interface TransitionConsumerDebugState {
+  presenterOverlay: {
+    policy: "crossfade-slide";
+    active: boolean;
+    sourcePageId: string | null;
+    targetPageId: string | null;
+    progress: number;
+    slideDirection: -1 | 0 | 1;
+    cssTransitionsDisabledWhileActive: boolean;
+  };
+  sceneOverlays: NonNullable<SceneTransitionDebugState>["sceneOverlays"] | null;
+  labels: {
+    policy: "hold-source-until-threshold";
+    switchThreshold: number;
+    activePageId: string | null;
+    sourcePageId: string | null;
+    targetPageId: string | null;
+  };
+  assays: {
+    policy: "hold-source-until-threshold";
+    switchThreshold: number;
+    activePageId: string | null;
+    sourcePageId: string | null;
+    targetPageId: string | null;
+  };
+  legends: {
+    stackPolicy: "phased-layout-slide";
+    resistivityPolicy: "interpolate-source-target";
+    defaultPolicy: "target-from-start";
+    sourcePageId: string | null;
+    targetPageId: string | null;
+    progress: number;
+    exitEnd: number;
+    layoutEnd: number;
+    targetInteractiveThreshold: number;
+  };
+  lateReapply: NonNullable<SceneTransitionDebugState>["lateReapply"] | null;
+}
+
+type TransitionProductDebugRow =
+  NonNullable<SceneTransitionDebugState>["productFamilies"][number];
+
+interface TransitionSmoothnessTraceOptions {
+  sampleIntervalMs?: number;
+  maxDurationMs?: number;
+}
+
+interface TransitionSmoothnessTraceSample {
+  elapsedMs: number;
+  timestampMs: number;
+  currentIndex: number;
+  currentPageId: string | null;
+  targetIndex: number | null;
+  targetPageId: string | null;
+  isTransitioning: boolean;
+  transitionProgress: number;
+  transitionFrame: PageTransitionFrame;
+  runId: string | null;
+  runStatus: TransitionRunStatus | null;
+  runMode: TransitionRunMode | null;
+  runSourcePageId: string | null;
+  runTargetPageId: string | null;
+  runRawProgress: number | null;
+  runEasedProgress: number | null;
+  sceneSourcePageId: string | null;
+  sceneTargetPageId: string | null;
+  cameraPosition: { x: number; y: number; z: number };
+  cameraTarget: { x: number; y: number; z: number };
+  cameraFov: number;
+  consumerDebug: TransitionConsumerDebugState;
+}
+
+interface TransitionSmoothnessTrace {
+  traceId: string;
+  metadata: Record<string, unknown>;
+  sampling: "app-tick";
+  startedAt: string;
+  startedAtMs: number;
+  endedAt: string | null;
+  endedAtMs: number | null;
+  sampleIntervalMs: number;
+  maxDurationMs: number;
+  productFamilies: TransitionProductDebugRow[];
+  samples: TransitionSmoothnessTraceSample[];
+  seenActiveTransition: boolean;
+  completed: boolean;
+  stoppedReason: "manual" | "settled" | "max-duration" | null;
+}
+
+type TransitionRunStart = Omit<
+  TransitionRunDebugState,
+  | "runId"
+  | "status"
+  | "completedAtMs"
+  | "cancelledAtMs"
+  | "rawProgress"
+  | "easedProgress"
+  | "pageTransitionActive"
+  | "dynamicCameraTransitionActive"
+  | "sceneTransition"
+  | "consumerDebug"
+>;
 
 const DEFAULT_CAMERA_FOCUS_SETTINGS: Required<SceneCameraFocusSettings> = {
   durationMs: 900,
@@ -87,6 +236,33 @@ const DEFAULT_CAMERA_FOCUS_SETTINGS: Required<SceneCameraFocusSettings> = {
   revealScrollBehavior: "smooth",
   rmbExitDragPx: 0,
 };
+const PAGE_BOUND_UI_SWITCH_THRESHOLD = 0.92;
+const UTAH_FORGE_LEGEND_EXIT_END = 0.34;
+const UTAH_FORGE_LEGEND_LAYOUT_END = 0.68;
+const DEFAULT_SMOOTHNESS_TRACE_MAX_MS = 6000;
+
+function traceNumber(value: number | null | undefined, digits = 3): number {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Number(value.toFixed(digits))
+    : 0;
+}
+
+function traceOptionalNumber(
+  value: number | null | undefined,
+  digits = 3,
+): number | null {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Number(value.toFixed(digits))
+    : null;
+}
+
+function traceVector3(value: THREE.Vector3): { x: number; y: number; z: number } {
+  return {
+    x: traceNumber(value.x),
+    y: traceNumber(value.y),
+    z: traceNumber(value.z),
+  };
+}
 
 function clampNumber(
   value: number | undefined,
@@ -613,6 +789,11 @@ export function PageControllerProvider({
     easing: PresentationPage["transition"]["easing"];
   } | null>(null);
   const activeSceneTransitionRef = useRef<SceneTransitionContext | null>(null);
+  const transitionRunSerialRef = useRef(0);
+  const transitionRunRef = useRef<TransitionRunDebugState | null>(null);
+  const lastTransitionRunRef = useRef<TransitionRunDebugState | null>(null);
+  const smoothnessTraceSerialRef = useRef(0);
+  const smoothnessTraceRef = useRef<TransitionSmoothnessTrace | null>(null);
   const transitionProgressRef = useRef(1);
   const currentCameraKeyRef = useRef<string | null>(null);
   const isTransitioningRef = useRef(false);
@@ -717,6 +898,367 @@ export function PageControllerProvider({
   const focusSettings = useCallback(
     () => resolveCameraFocusSettings(environmentRef.current.scene?.cameraFocus),
     [],
+  );
+
+  const sceneTransitionDebugState =
+    useCallback((): SceneTransitionDebugState => {
+      return typeof sceneHandle.manager.getTransitionDebugState === "function"
+        ? sceneHandle.manager.getTransitionDebugState()
+        : null;
+    }, [sceneHandle.manager]);
+
+  const transitionFrameState = useCallback(
+    (runOverride?: TransitionRunDebugState | null): PageTransitionFrame => {
+      const activeRun =
+        runOverride === undefined ? transitionRunRef.current : runOverride;
+      if (
+        activeRun?.status === "active" &&
+        activeRun.mode === "page" &&
+        activeRun.targetIndex !== null
+      ) {
+        return {
+          active: true,
+          sourceIndex: activeRun.sourceIndex,
+          targetIndex: activeRun.targetIndex,
+          sourcePageId: activeRun.sourcePageId,
+          targetPageId: activeRun.targetPageId,
+          progress: clamp01(activeRun.easedProgress),
+          rawProgress: clamp01(activeRun.rawProgress),
+          reason: activeRun.reason,
+          runId: activeRun.runId,
+        };
+      }
+
+      const sourceIndex = currentIndexRef.current;
+      const targetIndex = targetIndexRef.current;
+      const sourcePageId = pagesRef.current[sourceIndex]?.id ?? null;
+      const targetPageId =
+        targetIndex !== null ? pagesRef.current[targetIndex]?.id ?? null : null;
+      const progress = clamp01(transitionProgressRef.current);
+      const active =
+        isTransitioningRef.current &&
+        targetIndex !== null &&
+        sourcePageId !== null &&
+        targetPageId !== null &&
+        sourcePageId !== targetPageId;
+
+      return {
+        active,
+        sourceIndex,
+        targetIndex,
+        sourcePageId,
+        targetPageId: active ? targetPageId : null,
+        progress,
+        rawProgress: progress,
+        reason: null,
+        runId: null,
+      };
+    },
+    [],
+  );
+
+  const transitionConsumerDebugState = useCallback(
+    (
+      runOverride?: TransitionRunDebugState | null,
+    ): TransitionConsumerDebugState => {
+      const frame = transitionFrameState(runOverride);
+      const sourceIndex = frame.sourceIndex;
+      const targetIndex = frame.targetIndex;
+      const sourcePageId = frame.sourcePageId;
+      const targetPageId = frame.targetPageId;
+      const progress = frame.progress;
+      const pageTransitionActive = frame.active;
+      const pageBoundActivePageId =
+        targetIndex !== null && progress >= PAGE_BOUND_UI_SWITCH_THRESHOLD
+          ? targetPageId ?? sourcePageId
+          : sourcePageId;
+      const sceneTransition = sceneTransitionDebugState();
+
+      return {
+        presenterOverlay: {
+          policy: "crossfade-slide",
+          active: pageTransitionActive,
+          sourcePageId,
+          targetPageId: pageTransitionActive ? targetPageId : null,
+          progress,
+          slideDirection:
+            !pageTransitionActive || targetIndex === null
+              ? 0
+              : targetIndex < sourceIndex
+                ? -1
+                : 1,
+          cssTransitionsDisabledWhileActive: pageTransitionActive,
+        },
+        sceneOverlays: sceneTransition?.sceneOverlays ?? null,
+        labels: {
+          policy: "hold-source-until-threshold",
+          switchThreshold: PAGE_BOUND_UI_SWITCH_THRESHOLD,
+          activePageId: pageBoundActivePageId,
+          sourcePageId,
+          targetPageId,
+        },
+        assays: {
+          policy: "hold-source-until-threshold",
+          switchThreshold: PAGE_BOUND_UI_SWITCH_THRESHOLD,
+          activePageId: pageBoundActivePageId,
+          sourcePageId,
+          targetPageId,
+        },
+        legends: {
+          stackPolicy: "phased-layout-slide",
+          resistivityPolicy: "interpolate-source-target",
+          defaultPolicy: "target-from-start",
+          sourcePageId,
+          targetPageId,
+          progress,
+          exitEnd: UTAH_FORGE_LEGEND_EXIT_END,
+          layoutEnd: UTAH_FORGE_LEGEND_LAYOUT_END,
+          targetInteractiveThreshold: PAGE_BOUND_UI_SWITCH_THRESHOLD,
+        },
+        lateReapply: sceneTransition?.lateReapply ?? null,
+      };
+    },
+    [sceneTransitionDebugState, transitionFrameState],
+  );
+
+  const snapshotTransitionRun = useCallback(
+    (
+      run: TransitionRunDebugState | null,
+      nowMs: number = performance.now(),
+    ): TransitionRunDebugState | null => {
+      if (!run) return null;
+      const isCurrentActiveRun =
+        run.status === "active" &&
+        transitionRunRef.current?.runId === run.runId;
+      const elapsedRaw =
+        run.durationMs <= 0 ? 1 : (nowMs - run.startedAtMs) / run.durationMs;
+      const rawProgress =
+        run.status === "completed"
+          ? 1
+          : isCurrentActiveRun
+            ? clamp01(elapsedRaw)
+            : run.rawProgress;
+      const easedProgress =
+        run.status === "completed"
+          ? 1
+          : isCurrentActiveRun
+            ? pageTransitionProgress(rawProgress, run.easing)
+            : run.easedProgress;
+
+      const snapshot: TransitionRunDebugState = {
+        ...run,
+        rawProgress,
+        easedProgress,
+        pageTransitionActive:
+          isCurrentActiveRun && pageTransitionRef.current !== null,
+        dynamicCameraTransitionActive:
+          isCurrentActiveRun && transitionDynamicRef.current !== null,
+        sceneTransition: isCurrentActiveRun
+          ? sceneTransitionDebugState()
+          : run.sceneTransition,
+        consumerDebug: run.consumerDebug,
+      };
+      return {
+        ...snapshot,
+        consumerDebug: isCurrentActiveRun
+          ? transitionConsumerDebugState(snapshot)
+          : run.consumerDebug,
+      };
+    },
+    [sceneTransitionDebugState, transitionConsumerDebugState],
+  );
+
+  const recordSmoothnessTraceSample = useCallback(
+    (timeMs: number = performance.now()) => {
+      const trace = smoothnessTraceRef.current;
+      if (!trace || trace.completed) return;
+      const elapsedMs = Math.max(0, timeMs - trace.startedAtMs);
+      if (
+        trace.samples.length > 0 &&
+        trace.sampleIntervalMs > 0 &&
+        elapsedMs -
+          trace.samples[trace.samples.length - 1].elapsedMs <
+          trace.sampleIntervalMs
+      ) {
+        return;
+      }
+
+      const activeRun = snapshotTransitionRun(transitionRunRef.current, timeMs);
+      const run = activeRun ?? snapshotTransitionRun(lastTransitionRunRef.current);
+      if (activeRun?.status === "active" || isTransitioningRef.current) {
+        trace.seenActiveTransition = true;
+      }
+      if (
+        trace.productFamilies.length === 0 &&
+        activeRun?.sceneTransition?.productFamilies
+      ) {
+        trace.productFamilies =
+          activeRun.sceneTransition.productFamilies.slice();
+      }
+
+      const transitionFrame = transitionFrameState(activeRun);
+      trace.samples.push({
+        elapsedMs: traceNumber(elapsedMs, 2),
+        timestampMs: traceNumber(timeMs, 2),
+        currentIndex: currentIndexRef.current,
+        currentPageId: pagesRef.current[currentIndexRef.current]?.id ?? null,
+        targetIndex: targetIndexRef.current,
+        targetPageId:
+          targetIndexRef.current !== null
+            ? pagesRef.current[targetIndexRef.current]?.id ?? null
+            : null,
+        isTransitioning: isTransitioningRef.current,
+        transitionProgress: traceNumber(transitionFrame.progress),
+        transitionFrame,
+        runId: run?.runId ?? null,
+        runStatus: run?.status ?? null,
+        runMode: run?.mode ?? null,
+        runSourcePageId: run?.sourcePageId ?? null,
+        runTargetPageId: run?.targetPageId ?? null,
+        runRawProgress: traceOptionalNumber(run?.rawProgress),
+        runEasedProgress: traceOptionalNumber(run?.easedProgress),
+        sceneSourcePageId: run?.sceneTransition?.sourcePageId ?? null,
+        sceneTargetPageId: run?.sceneTransition?.targetPageId ?? null,
+        cameraPosition: traceVector3(sceneHandle.camera.position),
+        cameraTarget: traceVector3(sceneHandle.controls.target),
+        cameraFov: traceNumber(sceneHandle.camera.fov),
+        consumerDebug: transitionConsumerDebugState(activeRun),
+      });
+
+      if (elapsedMs >= trace.maxDurationMs) {
+        trace.completed = true;
+        trace.stoppedReason = "max-duration";
+        trace.endedAtMs = timeMs;
+        trace.endedAt = new Date().toISOString();
+      } else if (
+        trace.seenActiveTransition &&
+        transitionRunRef.current === null &&
+        !isTransitioningRef.current
+      ) {
+        trace.completed = true;
+        trace.stoppedReason = "settled";
+        trace.endedAtMs = timeMs;
+        trace.endedAt = new Date().toISOString();
+      }
+    },
+    [
+      sceneHandle.camera,
+      sceneHandle.controls,
+      snapshotTransitionRun,
+      transitionConsumerDebugState,
+      transitionFrameState,
+    ],
+  );
+
+  const startSmoothnessTrace = useCallback(
+    (
+      metadata: Record<string, unknown> = {},
+      options: TransitionSmoothnessTraceOptions = {},
+    ): TransitionSmoothnessTrace => {
+      const startedAtMs = performance.now();
+      const trace: TransitionSmoothnessTrace = {
+        traceId: `smoothness-${++smoothnessTraceSerialRef.current}`,
+        metadata,
+        sampling: "app-tick",
+        startedAt: new Date().toISOString(),
+        startedAtMs,
+        endedAt: null,
+        endedAtMs: null,
+        sampleIntervalMs: Math.max(0, options.sampleIntervalMs ?? 0),
+        maxDurationMs: Math.max(
+          250,
+          options.maxDurationMs ?? DEFAULT_SMOOTHNESS_TRACE_MAX_MS,
+        ),
+        productFamilies: [],
+        samples: [],
+        seenActiveTransition: false,
+        completed: false,
+        stoppedReason: null,
+      };
+      smoothnessTraceRef.current = trace;
+      recordSmoothnessTraceSample(startedAtMs);
+      return trace;
+    },
+    [recordSmoothnessTraceSample],
+  );
+
+  const stopSmoothnessTrace = useCallback(
+    (reason: "manual" | "settled" | "max-duration" = "manual") => {
+      const trace = smoothnessTraceRef.current;
+      if (!trace) return null;
+      recordSmoothnessTraceSample(performance.now());
+      if (!trace.completed) {
+        trace.completed = true;
+        trace.stoppedReason = reason;
+        trace.endedAtMs = performance.now();
+        trace.endedAt = new Date().toISOString();
+      }
+      smoothnessTraceRef.current = null;
+      return trace;
+    },
+    [recordSmoothnessTraceSample],
+  );
+
+  const startTransitionRun = useCallback(
+    (input: TransitionRunStart): TransitionRunDebugState => {
+      const run: TransitionRunDebugState = {
+        ...input,
+        runId: `${input.mode}-${++transitionRunSerialRef.current}`,
+        status: "active",
+        rawProgress: 0,
+        easedProgress: input.mode === "page" ? transitionProgressRef.current : 0,
+        pageTransitionActive: false,
+        dynamicCameraTransitionActive: transitionDynamicRef.current !== null,
+        sceneTransition: sceneTransitionDebugState(),
+        consumerDebug: transitionConsumerDebugState(),
+      };
+      transitionRunRef.current = run;
+      run.consumerDebug = transitionConsumerDebugState(run);
+      return run;
+    },
+    [sceneTransitionDebugState, transitionConsumerDebugState],
+  );
+
+  const cancelActiveTransitionRun = useCallback(
+    (cancelledAtMs: number = performance.now()) => {
+      const run = transitionRunRef.current;
+      if (!run) return null;
+      const snapshot = snapshotTransitionRun(run, cancelledAtMs);
+      if (!snapshot) return null;
+      const cancelled: TransitionRunDebugState = {
+        ...snapshot,
+        status: "cancelled",
+        cancelledAtMs,
+        pageTransitionActive: false,
+        dynamicCameraTransitionActive: false,
+      };
+      transitionRunRef.current = null;
+      lastTransitionRunRef.current = cancelled;
+      return cancelled;
+    },
+    [snapshotTransitionRun],
+  );
+
+  const completeTransitionRun = useCallback(
+    (runId: string, completedAtMs: number = performance.now()) => {
+      const run = transitionRunRef.current;
+      if (!run || run.runId !== runId) return null;
+      const snapshot = snapshotTransitionRun(run, completedAtMs);
+      if (!snapshot) return null;
+      const completed: TransitionRunDebugState = {
+        ...snapshot,
+        status: "completed",
+        completedAtMs,
+        rawProgress: 1,
+        easedProgress: 1,
+        pageTransitionActive: false,
+        dynamicCameraTransitionActive: false,
+      };
+      transitionRunRef.current = null;
+      lastTransitionRunRef.current = completed;
+      return completed;
+    },
+    [snapshotTransitionRun],
   );
 
   // One-time wiring against the scene handle.
@@ -895,6 +1437,11 @@ export function PageControllerProvider({
       const nextProgress = done
         ? 1
         : pageTransitionProgress(raw, transition.easing);
+      const activeRun = transitionRunRef.current;
+      if (activeRun?.status === "active" && activeRun.mode === "page") {
+        activeRun.rawProgress = clamp01(raw);
+        activeRun.easedProgress = nextProgress;
+      }
       if (
         done ||
         Math.abs(nextProgress - transitionProgressRef.current) >= 0.003
@@ -930,6 +1477,7 @@ export function PageControllerProvider({
       applyTransitionDynamicCamera(t);
       applyDynamicCamera(t);
       applyLockedCameraFocus();
+      recordSmoothnessTraceSample(t);
     });
 
     const onChange = () => {
@@ -974,6 +1522,26 @@ export function PageControllerProvider({
             viewport,
             paddingPx: settings.fitPaddingPx,
           });
+      const transitionStartMs = performance.now();
+      const cancelledRun = cancelActiveTransitionRun(transitionStartMs);
+      const currentPageIndex = currentIndexRef.current;
+      const currentPage = pagesRef.current[currentPageIndex];
+      const reducedMotion = prefersReducedMotion();
+      const durationMs = reducedMotion ? 0 : settings.durationMs;
+      const transitionRun = startTransitionRun({
+        mode: "camera-focus",
+        sourceIndex: currentPageIndex,
+        targetIndex: null,
+        sourcePageId: currentPage?.id ?? null,
+        targetPageId: null,
+        reason: sameTarget ? "camera-focus-zoom" : "camera-focus",
+        startedAtMs: transitionStartMs,
+        durationMs,
+        easing: settings.easing,
+        interruptedRunIds: cancelledRun
+          ? [...cancelledRun.interruptedRunIds, cancelledRun.runId]
+          : [],
+      });
       focusTweeningRef.current = true;
       freelookActiveRef.current = false;
       setFreelookActive(false);
@@ -985,9 +1553,10 @@ export function PageControllerProvider({
         dynamicStartMsRef.current = null;
         dynamicOrbitBlendMsRef.current = null;
         sceneHandle.setRaycastEnabled(true);
+        completeTransitionRun(transitionRun.runId, performance.now());
         activateCameraFocus(focus);
       };
-      if (prefersReducedMotion() || settings.durationMs <= 0) {
+      if (reducedMotion || settings.durationMs <= 0) {
         applyPose(sceneHandle.camera, sceneHandle.controls, targetPose);
         finish();
         return;
@@ -999,7 +1568,14 @@ export function PageControllerProvider({
         finish,
       );
     },
-    [activateCameraFocus, focusSettings, sceneHandle],
+    [
+      activateCameraFocus,
+      cancelActiveTransitionRun,
+      completeTransitionRun,
+      focusSettings,
+      sceneHandle,
+      startTransitionRun,
+    ],
   );
 
   useEffect(() => {
@@ -1170,6 +1746,10 @@ export function PageControllerProvider({
           : reason;
       const transitionStartMs = performance.now();
       const transitionDuration = target.transition.duration;
+      const cancelledRun = cancelActiveTransitionRun(transitionStartMs);
+      const interruptedRunIds = cancelledRun
+        ? [...cancelledRun.interruptedRunIds, cancelledRun.runId]
+        : [];
 
       isTransitioningRef.current = true;
       targetIndexRef.current = index;
@@ -1189,11 +1769,24 @@ export function PageControllerProvider({
       freelookActiveRef.current = false;
       setFreelookActive(false);
       sceneHandle.setPageCameraMarker(null);
+      const transitionRun = startTransitionRun({
+        mode: "page",
+        sourceIndex,
+        targetIndex: index,
+        sourcePageId: source?.id ?? null,
+        targetPageId: target.id,
+        reason: transitionReason,
+        startedAtMs: transitionStartMs,
+        durationMs: transitionDuration,
+        easing: target.transition.easing,
+        interruptedRunIds,
+      });
 
       // Data-layer changes follow the page camera transition. Text overlays
       // keep their own fade timing; scene data uses page timing by default.
       const layerFadeMs = Math.max(0, transitionDuration);
       sceneHandle.manager.transitionEffectiveLayersForPage(
+        sourceResolved.environment,
         targetResolved.environment,
         sourceResolved.page,
         targetResolved.page,
@@ -1353,6 +1946,7 @@ export function PageControllerProvider({
           if (!transitionDynamic?.to) dynamicPageIdRef.current = null;
           if (!transitionDynamic?.to) dynamicStartMsRef.current = null;
           if (!transitionDynamic?.to) dynamicOrbitBlendMsRef.current = null;
+          completeTransitionRun(transitionRun.runId, performance.now());
           transitionDynamicRef.current = null;
           pageTransitionRef.current = null;
           activeSceneTransitionRef.current = null;
@@ -1393,6 +1987,9 @@ export function PageControllerProvider({
       resolvePresentationState,
       releaseCameraFocus,
       activateCameraFocus,
+      cancelActiveTransitionRun,
+      completeTransitionRun,
+      startTransitionRun,
     ],
   );
 
@@ -1415,6 +2012,24 @@ export function PageControllerProvider({
         releaseCameraFocus("pose");
       }
       const targetPose = poseWithEnvironmentCamera(pose, environmentRef.current);
+      const transitionStartMs = performance.now();
+      const cancelledRun = cancelActiveTransitionRun(transitionStartMs);
+      const currentPageIndex = currentIndexRef.current;
+      const currentPage = pagesRef.current[currentPageIndex];
+      const transitionRun = startTransitionRun({
+        mode: "camera-pose",
+        sourceIndex: currentPageIndex,
+        targetIndex: null,
+        sourcePageId: currentPage?.id ?? null,
+        targetPageId: null,
+        reason: "camera-pose",
+        startedAtMs: transitionStartMs,
+        durationMs: 1500,
+        easing: "easeOutCubic",
+        interruptedRunIds: cancelledRun
+          ? [...cancelledRun.interruptedRunIds, cancelledRun.runId]
+          : [],
+      });
       isTransitioningRef.current = true;
       targetIndexRef.current = null;
       activeSceneTransitionRef.current = null;
@@ -1444,12 +2059,19 @@ export function PageControllerProvider({
           : null;
         isTransitioningRef.current = false;
         targetIndexRef.current = null;
+        completeTransitionRun(transitionRun.runId, performance.now());
         setIsTransitioning(false);
         setTargetIndex(null);
         sceneHandle.setRaycastEnabled(true);
       });
     },
-    [releaseCameraFocus, sceneHandle],
+    [
+      cancelActiveTransitionRun,
+      completeTransitionRun,
+      releaseCameraFocus,
+      sceneHandle,
+      startTransitionRun,
+    ],
   );
 
   const resetToPose = useCallback(() => {
@@ -1459,6 +2081,24 @@ export function PageControllerProvider({
     if (cameraObjectFocusRef.current || focusTweeningRef.current) {
       releaseCameraFocus("pose");
     }
+    const transitionStartMs = performance.now();
+    const cancelledRun = cancelActiveTransitionRun(transitionStartMs);
+    const currentPageIndex = currentIndexRef.current;
+    const currentPage = pagesRef.current[currentPageIndex];
+    const transitionRun = startTransitionRun({
+      mode: "camera-reset",
+      sourceIndex: currentPageIndex,
+      targetIndex: null,
+      sourcePageId: currentPage?.id ?? null,
+      targetPageId: null,
+      reason: "camera-reset",
+      startedAtMs: transitionStartMs,
+      durationMs: 1500,
+      easing: "easeOutCubic",
+      interruptedRunIds: cancelledRun
+        ? [...cancelledRun.interruptedRunIds, cancelledRun.runId]
+        : [],
+    });
     isTransitioningRef.current = true;
     targetIndexRef.current = null;
     activeSceneTransitionRef.current = null;
@@ -1487,11 +2127,18 @@ export function PageControllerProvider({
         : null;
       isTransitioningRef.current = false;
       targetIndexRef.current = null;
+      completeTransitionRun(transitionRun.runId, performance.now());
       setIsTransitioning(false);
       setTargetIndex(null);
       sceneHandle.setRaycastEnabled(true);
     });
-  }, [releaseCameraFocus, sceneHandle]);
+  }, [
+    cancelActiveTransitionRun,
+    completeTransitionRun,
+    releaseCameraFocus,
+    sceneHandle,
+    startTransitionRun,
+  ]);
 
   useEffect(() => {
     sceneHandle.setPageCameraMarkerClickHandler(resetToPose);
@@ -1527,22 +2174,28 @@ export function PageControllerProvider({
       goto,
       next,
       prev,
-      getState: () => ({
-        currentIndex: currentIndexRef.current,
-        currentPageId: pagesRef.current[currentIndexRef.current]?.id ?? null,
-        targetIndex: targetIndexRef.current,
-        targetPageId:
-          targetIndexRef.current !== null
-            ? pagesRef.current[targetIndexRef.current]?.id ?? null
-            : null,
-        transitionProgress: transitionProgressRef.current,
-        isTransitioning: isTransitioningRef.current,
-        transitionContext: activeSceneTransitionRef.current,
-        sceneTransition:
-          typeof sceneHandle.manager.getTransitionDebugState === "function"
-            ? sceneHandle.manager.getTransitionDebugState()
-            : null,
-      }),
+      startSmoothnessTrace,
+      stopSmoothnessTrace,
+      getState: () => {
+        const transitionRun = snapshotTransitionRun(transitionRunRef.current);
+        const transitionFrame = transitionFrameState(transitionRun);
+        return {
+          currentIndex: currentIndexRef.current,
+          currentPageId: pagesRef.current[currentIndexRef.current]?.id ?? null,
+          targetIndex: targetIndexRef.current,
+          targetPageId:
+            targetIndexRef.current !== null
+              ? pagesRef.current[targetIndexRef.current]?.id ?? null
+              : null,
+          transitionProgress: transitionFrame.progress,
+          transitionFrame,
+          isTransitioning: isTransitioningRef.current,
+          transitionContext: activeSceneTransitionRef.current,
+          sceneTransition: sceneTransitionDebugState(),
+          transitionRun,
+          lastTransitionRun: snapshotTransitionRun(lastTransitionRunRef.current),
+        };
+      },
     };
     const debugWindow = window as unknown as {
       __pageController?: typeof debugHandle;
@@ -1553,7 +2206,16 @@ export function PageControllerProvider({
         delete debugWindow.__pageController;
       }
     };
-  }, [goto, next, prev, sceneHandle.manager]);
+  }, [
+    goto,
+    next,
+    prev,
+    sceneTransitionDebugState,
+    snapshotTransitionRun,
+    startSmoothnessTrace,
+    stopSmoothnessTrace,
+    transitionFrameState,
+  ]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -1598,6 +2260,7 @@ export function PageControllerProvider({
       currentIndex,
       targetIndex,
       transitionProgress,
+      transitionFrame: transitionFrameState(),
       isTransitioning,
       freelookActive,
       cameraObjectFocus,
@@ -1612,6 +2275,7 @@ export function PageControllerProvider({
       currentIndex,
       targetIndex,
       transitionProgress,
+      transitionFrameState,
       isTransitioning,
       freelookActive,
       cameraObjectFocus,

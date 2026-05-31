@@ -80,11 +80,13 @@ import {
   type LayerOpacityTween,
   type LayerTransitionSnapshot,
   type NavigationReason,
+  type ProductTransitionDecision,
   type ResolvedLayerRenderState,
   type ScalarStyleTween,
   type SceneSectionStyleTween,
   type SceneTransitionContext,
   type WorkingAreaFocusStyleTween,
+  easeProgress,
 } from "./transitions/transitionStyles";
 import {
   AreaOutlineController,
@@ -119,7 +121,10 @@ import {
   clampRange,
   styleNumber,
 } from "./styles/styleUtils";
-import { SceneOverlaysController } from "./overlays/SceneOverlaysController";
+import {
+  SceneOverlaysController,
+  type SceneOverlayDebugState,
+} from "./overlays/SceneOverlaysController";
 import {
   applySceneSectionHelperTransitionOpacity as applySceneSectionHelperTransitionOpacityImpl,
   applySceneSectionMaterial as applySceneSectionMaterialImpl,
@@ -405,6 +410,28 @@ export interface PageCameraMarkerSpec {
   color: string;
 }
 
+interface LateReapplyDebugEvent {
+  sequence: number;
+  reason: "async-layer-resolve" | "geology-register";
+  action:
+    | "transition-envelope"
+    | "transition-aware-current-page-state"
+    | "full-current-page-state";
+  pageId: string | null;
+  duringTransition: boolean;
+  transitionSourcePageId: string | null;
+  transitionTargetPageId: string | null;
+  transitionReason: NavigationReason | null;
+  transitionProgress: number | null;
+  timeMs: number;
+}
+
+interface LateReapplyDebugState {
+  totalCount: number;
+  duringTransitionCount: number;
+  events: LateReapplyDebugEvent[];
+}
+
 
 export class SceneManager {
   private layers = new Map<string, THREE.Group>();
@@ -516,6 +543,9 @@ export class SceneManager {
   private geologyHandle: GeologyHandle | null = null;
   environmentScenePreviewPatch: Partial<SceneProperties> | null = null;
   private lastAppliedRenderPresetId: string | null = null;
+  private lateReapplyDebugSequence = 0;
+  private lateReapplyDebugDuringTransitionCount = 0;
+  private readonly lateReapplyDebugEvents: LateReapplyDebugEvent[] = [];
 
   constructor(
     private scene: THREE.Scene,
@@ -1774,8 +1804,8 @@ export class SceneManager {
     return interpolatedWorkingAreaFocusStyleImpl.call(this, fromStyle, toStyle, t);
   }
 
-    transitionWorkingAreaFocusForPage(environment: EnvironmentSetup, fromPage: PresentationPage, toPage: PresentationPage, durationMs: number, easing: EasingName): void {
-    return transitionWorkingAreaFocusForPageImpl.call(this, environment, fromPage, toPage, durationMs, easing);
+    transitionWorkingAreaFocusForPage(fromEnvironment: EnvironmentSetup, toEnvironment: EnvironmentSetup, fromPage: PresentationPage, toPage: PresentationPage, durationMs: number, easing: EasingName): void {
+    return transitionWorkingAreaFocusForPageImpl.call(this, fromEnvironment, toEnvironment, fromPage, toPage, durationMs, easing);
   }
 
     getWorkingAreaFocusDebugState(): {
@@ -1908,6 +1938,9 @@ export class SceneManager {
     snapshotCount: number;
     scalarTweenCount: number;
     layerTweenCount: number;
+    productFamilies: ProductTransitionDecision[];
+    sceneOverlays: SceneOverlayDebugState;
+    lateReapply: LateReapplyDebugState;
   } {
     const transition = this.activeSceneTransitionContext;
     return {
@@ -1922,7 +1955,145 @@ export class SceneManager {
       snapshotCount: this.layerTransitionSnapshots.size,
       scalarTweenCount: this.scalarStyleTweens.size,
       layerTweenCount: this.layerTweens.size,
+      productFamilies: transition?.productFamilies.slice() ?? [],
+      sceneOverlays: this.getSceneOverlayDebugState(),
+      lateReapply: this.getLateReapplyDebugState(),
     };
+  }
+
+  getSceneOverlayDebugState(): SceneOverlayDebugState {
+    return this.sceneOverlayController.getDebugState();
+  }
+
+  getLateReapplyDebugState(): LateReapplyDebugState {
+    return {
+      totalCount: this.lateReapplyDebugSequence,
+      duringTransitionCount: this.lateReapplyDebugDuringTransitionCount,
+      events: this.lateReapplyDebugEvents.slice(),
+    };
+  }
+
+  private recordLateReapplyDebugEvent(
+    reason: LateReapplyDebugEvent["reason"],
+    action: LateReapplyDebugEvent["action"],
+  ): void {
+    const transition = this.activeSceneTransitionContext;
+    const duringTransition = transition !== null;
+    if (duringTransition) this.lateReapplyDebugDuringTransitionCount += 1;
+    const transitionProgress = this.activeTransitionEasedProgress();
+    const timeMs =
+      typeof performance !== "undefined" ? performance.now() : Date.now();
+    this.lateReapplyDebugEvents.push({
+      sequence: ++this.lateReapplyDebugSequence,
+      reason,
+      action,
+      pageId: this.lastEffectivePage?.id ?? null,
+      duringTransition,
+      transitionSourcePageId: transition?.sourcePageId ?? null,
+      transitionTargetPageId: transition?.targetPageId ?? null,
+      transitionReason: transition?.reason ?? null,
+      transitionProgress,
+      timeMs,
+    });
+    if (this.lateReapplyDebugEvents.length > 25) {
+      this.lateReapplyDebugEvents.shift();
+    }
+  }
+
+  private activeTransitionEasedProgress(nowMs = performance.now()): number | null {
+    const transition = this.activeSceneTransitionContext;
+    if (!transition) return null;
+    const raw =
+      transition.durationMs <= 0
+        ? 1
+        : (nowMs - transition.startMs) / transition.durationMs;
+    return clamp01(easeProgress(raw, transition.easing));
+  }
+
+  private transitionTweenEasedProgress(
+    tween: Pick<LayerOpacityTween, "startMs" | "durationMs" | "easing">,
+    nowMs: number,
+  ): number {
+    const raw =
+      tween.durationMs <= 0 ? 1 : (nowMs - tween.startMs) / tween.durationMs;
+    return clamp01(easeProgress(raw, tween.easing));
+  }
+
+  private transitionTerrainOpacityOverrides(): Map<string, number> {
+    const ids = [
+      "hydrography-lakes",
+      "three-firs-target",
+      "great-plains-target",
+      "claim-boundary",
+      "bedrock-geology",
+      "trees-vri",
+    ];
+    const overrides = new Map<string, number>();
+    for (const id of ids) {
+      if (!this.transitionEnvelopeAllowsLayer(id)) continue;
+      overrides.set(id, this.transitionFrameOpacityForLayer(id));
+    }
+    return overrides;
+  }
+
+  private reapplyActiveTransitionPageState(
+    environment: EnvironmentSetup,
+    page: PresentationPage,
+  ): void {
+    this.lastEffectiveEnv = environment;
+    this.lastEffectivePage = page;
+    this.applyEnvironment(environment);
+    this.applyPageScene(page);
+
+    const nowMs = performance.now();
+    this.sceneSectionReapplySuspended = true;
+    try {
+      for (const id of this.layers.keys()) {
+        const scalarTween = this.scalarStyleTweens.get(id);
+        if (scalarTween) {
+          this.applyStyle(
+            id,
+            this.interpolatedScalarStyle(
+              scalarTween.fromStyle,
+              scalarTween.toStyle,
+              this.transitionTweenEasedProgress(scalarTween, nowMs),
+            ),
+          );
+          continue;
+        }
+        this.applyStyle(id, effectiveStyle(environment, page, id));
+      }
+    } finally {
+      this.sceneSectionReapplySuspended = false;
+    }
+
+    if (this.sceneSectionStyleTween) {
+      this.sceneSectionHelperTransitionOpacity =
+        this.sceneSectionHelperOpacityForTween(
+          this.sceneSectionStyleTween,
+          this.transitionTweenEasedProgress(this.sceneSectionStyleTween, nowMs),
+        );
+    }
+    this.reapplySceneSectionPlanes();
+
+    if (this.workingAreaFocusTween) {
+      this.applyWorkingAreaFocusStyle(
+        this.interpolatedWorkingAreaFocusStyle(
+          this.workingAreaFocusTween.fromStyle,
+          this.workingAreaFocusTween.toStyle,
+          this.transitionTweenEasedProgress(this.workingAreaFocusTween, nowMs),
+        ),
+      );
+    } else {
+      this.reapplyWorkingAreaFocus();
+    }
+
+    this.applyLakesToTerrain(
+      environment,
+      page,
+      this.transitionTerrainOpacityOverrides(),
+    );
+    this.enforceTransitionVisibilityEnvelope();
   }
 
   private listAuthoredScalarSectionIsoTargets(
@@ -2727,7 +2898,8 @@ export class SceneManager {
   }
 
   transitionEffectiveLayersForPage(
-    environment: EnvironmentSetup,
+    fromEnvironment: EnvironmentSetup,
+    toEnvironment: EnvironmentSetup,
     fromPage: PresentationPage,
     toPage: PresentationPage,
     durationMs: number = DEFAULT_LAYER_FADE_MS,
@@ -2736,7 +2908,7 @@ export class SceneManager {
     scalarStyleEasing: EasingName = easing,
     reason: NavigationReason = "programmatic",
   ): void {
-    return transitionEffectiveLayersForPageImpl.call(this, environment, fromPage, toPage, durationMs, easing, scalarStyleDurationMs, scalarStyleEasing, reason);
+    return transitionEffectiveLayersForPageImpl.call(this, fromEnvironment, toEnvironment, fromPage, toPage, durationMs, easing, scalarStyleDurationMs, scalarStyleEasing, reason);
   }
 
   /**
@@ -2766,6 +2938,10 @@ export class SceneManager {
       this.lastEffectiveEnv &&
       this.lastEffectivePage
     ) {
+      this.recordLateReapplyDebugEvent(
+        "geology-register",
+        "full-current-page-state",
+      );
       this.applyEffectiveStylesForPage(
         this.lastEffectiveEnv,
         this.lastEffectivePage,
@@ -2835,13 +3011,30 @@ export class SceneManager {
    * that startup race so first open matches the saved presentation immediately.
    */
   reapplyCurrentPageState(): void {
-    if (this.activeSceneTransitionContext) {
-      this.enforceTransitionVisibilityEnvelope();
-      this.reapplySceneSectionPlanes();
-      return;
-    }
     const env = this.lastEnv ?? this.lastEffectiveEnv;
     const page = this.lastEffectivePage;
+    if (this.activeSceneTransitionContext && env && page) {
+      this.recordLateReapplyDebugEvent(
+        "async-layer-resolve",
+        "transition-aware-current-page-state",
+      );
+      this.reapplyActiveTransitionPageState(env, page);
+      return;
+    }
+    if (this.activeSceneTransitionContext) {
+      this.recordLateReapplyDebugEvent(
+        "async-layer-resolve",
+        "transition-envelope",
+      );
+      this.enforceTransitionVisibilityEnvelope();
+      this.reapplySceneSectionPlanes();
+      this.reapplyWorkingAreaFocus();
+      return;
+    }
+    this.recordLateReapplyDebugEvent(
+      "async-layer-resolve",
+      "full-current-page-state",
+    );
     if (env) this.applyEnvironment(env);
     if (env && page) {
       this.applyEffectiveVisibilityForPage(env, page);

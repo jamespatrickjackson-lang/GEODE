@@ -8,6 +8,9 @@ Companion contract: `docs/dev-context/Page-Transitions-And-Section-Frames.md`.
 That file remains the durable section-frame helper contract. This file maps the
 runtime clocks, state owners, divergence paths, and recommended repair order.
 
+Pre-fix prep log:
+`docs/dev-context/Page-Transition-Fix-Prep-2026-05-30.md`.
+
 ## Scope
 
 This audit covers page-to-page transitions across:

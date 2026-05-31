@@ -1031,8 +1031,7 @@ interface Props {
 
 export function SceneLabels({ sceneHandle }: Props) {
   const { state } = useEditor();
-  const { pages, currentIndex, targetIndex, transitionProgress } =
-    usePageController();
+  const { pages, transitionFrame } = usePageController();
   const containerRef = useRef<HTMLDivElement | null>(null);
   // Stable across frames: map `${layerId}:${displayName}` -> { chip, leader }.
   const elementsRef = useRef<
@@ -1049,10 +1048,12 @@ export function SceneLabels({ sceneHandle }: Props) {
   // need to re-bind whenever environment/page changes.
   const envRef = useRef(state.environment);
   envRef.current = state.environment;
+  const sourceIndex = transitionFrame.sourceIndex;
+  const targetIndex = transitionFrame.targetIndex;
   const page =
-    targetIndex !== null && transitionProgress >= 0.92
-      ? pages[targetIndex] ?? pages[currentIndex]
-      : pages[currentIndex];
+    targetIndex !== null && transitionFrame.progress >= 0.92
+      ? pages[targetIndex] ?? pages[sourceIndex]
+      : pages[sourceIndex];
   const pageRef = useRef(page);
   pageRef.current = page;
 
