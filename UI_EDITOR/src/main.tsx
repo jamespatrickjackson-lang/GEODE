@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { ShellRoot } from "./shell/ShellRoot";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {
@@ -8,6 +9,6 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <div>Hello Workbench</div>
+    <ShellRoot />
   </StrictMode>,
 );
