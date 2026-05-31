@@ -26,6 +26,8 @@ import {
   seismicVolumeCutSectionId,
   seismicVolumeCutTargetKey,
   updateScalarSectionIsoOverlay,
+  type ScalarSectionIsoLineGeometryDebugState,
+  type ScalarSectionIsoOverlayUpdateDebugState,
   type ScalarSectionIsoOptions,
 } from "./sectionIsoOverlay";
 import type {
@@ -42,6 +44,199 @@ type SectionGroundTrimContext = {
   sampleHeight: HeightSampler;
   origin: { easting: number; northing: number; elevation: number };
 };
+
+type MtVolumeCutIsoUpdateDebugState = {
+  policy: "full-rebuild";
+  totalMs: number;
+  clearMs: number;
+  setupMs: number;
+  meshBuildMs: number;
+  meshBuildSetupMs: number;
+  meshBuildFrameRangeMs: number;
+  meshBuildBufferAllocMs: number;
+  meshBuildGridSampleMs: number;
+  meshBuildIndexMs: number;
+  meshBuildGeometryMs: number;
+  meshBuildMaterialMs: number;
+  meshBuildMeshObjectMs: number;
+  meshBuildVertexCount: number;
+  meshBuildIndexCount: number;
+  overlayUpdateMs: number;
+  overlayDebug: ScalarSectionIsoOverlayUpdateDebugState;
+  attachMs: number;
+  disposeMs: number;
+  planesCount: number;
+  selectedPlaneCount: number;
+  cutsBuiltCount: number;
+  overlayRootCount: number;
+  gridSize: number;
+  skippedReason: string | null;
+};
+
+type MtVolumeCutMeshBuildDebugState = {
+  totalMs: number;
+  setupMs: number;
+  frameRangeMs: number;
+  bufferAllocMs: number;
+  gridSampleMs: number;
+  indexMs: number;
+  geometryMs: number;
+  materialMs: number;
+  meshObjectMs: number;
+  vertexCount: number;
+  indexCount: number;
+};
+
+function emptyMtVolumeCutMeshBuildDebug(): MtVolumeCutMeshBuildDebugState {
+  return {
+    totalMs: 0,
+    setupMs: 0,
+    frameRangeMs: 0,
+    bufferAllocMs: 0,
+    gridSampleMs: 0,
+    indexMs: 0,
+    geometryMs: 0,
+    materialMs: 0,
+    meshObjectMs: 0,
+    vertexCount: 0,
+    indexCount: 0,
+  };
+}
+
+function addMtVolumeCutMeshBuildDebug(
+  target: MtVolumeCutIsoUpdateDebugState,
+  source: MtVolumeCutMeshBuildDebugState,
+): void {
+  target.meshBuildSetupMs += source.setupMs;
+  target.meshBuildFrameRangeMs += source.frameRangeMs;
+  target.meshBuildBufferAllocMs += source.bufferAllocMs;
+  target.meshBuildGridSampleMs += source.gridSampleMs;
+  target.meshBuildIndexMs += source.indexMs;
+  target.meshBuildGeometryMs += source.geometryMs;
+  target.meshBuildMaterialMs += source.materialMs;
+  target.meshBuildMeshObjectMs += source.meshObjectMs;
+  target.meshBuildVertexCount += source.vertexCount;
+  target.meshBuildIndexCount += source.indexCount;
+}
+
+function cutIsoDebugMs(value: number): number {
+  return Number(Math.max(0, value).toFixed(3));
+}
+
+function emptyScalarSectionIsoLineGeometryDebug(): ScalarSectionIsoLineGeometryDebugState {
+  return {
+    timingMode: "coarse-pass",
+    totalMs: 0,
+    setupMs: 0,
+    contourPassMs: 0,
+    triangleScanMs: 0,
+    triangleIntersectionMs: 0,
+    segmentRecordMs: 0,
+    segmentStitchMs: 0,
+    stitchNodeBuildMs: 0,
+    stitchTraversalMs: 0,
+    stitchPointAssemblyMs: 0,
+    stitchLengthFilterMs: 0,
+    stitchNormalMs: 0,
+    polylineSimplifyMs: 0,
+    ribbonExtrudeMs: 0,
+    geometryCreateMs: 0,
+    triangleCount: 0,
+    maskedTriangleCount: 0,
+    invalidTriangleCount: 0,
+    degenerateTriangleCount: 0,
+    levelCandidateCount: 0,
+    intersectionAttemptCount: 0,
+  };
+}
+
+function emptyScalarSectionIsoOverlayDebug(): ScalarSectionIsoOverlayUpdateDebugState {
+  return {
+    totalMs: 0,
+    disposeMs: 0,
+    rootCreateMs: 0,
+    bandMeshMs: 0,
+    lineGeometryMs: 0,
+    lineMaterialMs: 0,
+    attachMs: 0,
+    lineGeometryDebug: emptyScalarSectionIsoLineGeometryDebug(),
+    bandMeshCount: 0,
+    lineMeshCount: 0,
+    lineSourceSegmentCount: 0,
+    lineTinySegmentCount: 0,
+    linePolylineCount: 0,
+    lineSimplifiedPointCount: 0,
+    lineRibbonSegmentCount: 0,
+    lineSnapToleranceM: 0,
+    skippedReason: null,
+  };
+}
+
+function addScalarSectionIsoOverlayDebug(
+  target: ScalarSectionIsoOverlayUpdateDebugState,
+  source: ScalarSectionIsoOverlayUpdateDebugState,
+): void {
+  target.totalMs += source.totalMs;
+  target.disposeMs += source.disposeMs;
+  target.rootCreateMs += source.rootCreateMs;
+  target.bandMeshMs += source.bandMeshMs;
+  target.lineGeometryMs += source.lineGeometryMs;
+  target.lineMaterialMs += source.lineMaterialMs;
+  target.attachMs += source.attachMs;
+  target.lineGeometryDebug.totalMs += source.lineGeometryDebug.totalMs;
+  target.lineGeometryDebug.timingMode = source.lineGeometryDebug.timingMode;
+  target.lineGeometryDebug.setupMs += source.lineGeometryDebug.setupMs;
+  target.lineGeometryDebug.contourPassMs +=
+    source.lineGeometryDebug.contourPassMs;
+  target.lineGeometryDebug.triangleScanMs +=
+    source.lineGeometryDebug.triangleScanMs;
+  target.lineGeometryDebug.triangleIntersectionMs +=
+    source.lineGeometryDebug.triangleIntersectionMs;
+  target.lineGeometryDebug.segmentRecordMs +=
+    source.lineGeometryDebug.segmentRecordMs;
+  target.lineGeometryDebug.segmentStitchMs +=
+    source.lineGeometryDebug.segmentStitchMs;
+  target.lineGeometryDebug.stitchNodeBuildMs +=
+    source.lineGeometryDebug.stitchNodeBuildMs;
+  target.lineGeometryDebug.stitchTraversalMs +=
+    source.lineGeometryDebug.stitchTraversalMs;
+  target.lineGeometryDebug.stitchPointAssemblyMs +=
+    source.lineGeometryDebug.stitchPointAssemblyMs;
+  target.lineGeometryDebug.stitchLengthFilterMs +=
+    source.lineGeometryDebug.stitchLengthFilterMs;
+  target.lineGeometryDebug.stitchNormalMs +=
+    source.lineGeometryDebug.stitchNormalMs;
+  target.lineGeometryDebug.polylineSimplifyMs +=
+    source.lineGeometryDebug.polylineSimplifyMs;
+  target.lineGeometryDebug.ribbonExtrudeMs +=
+    source.lineGeometryDebug.ribbonExtrudeMs;
+  target.lineGeometryDebug.geometryCreateMs +=
+    source.lineGeometryDebug.geometryCreateMs;
+  target.lineGeometryDebug.triangleCount +=
+    source.lineGeometryDebug.triangleCount;
+  target.lineGeometryDebug.maskedTriangleCount +=
+    source.lineGeometryDebug.maskedTriangleCount;
+  target.lineGeometryDebug.invalidTriangleCount +=
+    source.lineGeometryDebug.invalidTriangleCount;
+  target.lineGeometryDebug.degenerateTriangleCount +=
+    source.lineGeometryDebug.degenerateTriangleCount;
+  target.lineGeometryDebug.levelCandidateCount +=
+    source.lineGeometryDebug.levelCandidateCount;
+  target.lineGeometryDebug.intersectionAttemptCount +=
+    source.lineGeometryDebug.intersectionAttemptCount;
+  target.bandMeshCount += source.bandMeshCount;
+  target.lineMeshCount += source.lineMeshCount;
+  target.lineSourceSegmentCount += source.lineSourceSegmentCount;
+  target.lineTinySegmentCount += source.lineTinySegmentCount;
+  target.linePolylineCount += source.linePolylineCount;
+  target.lineSimplifiedPointCount += source.lineSimplifiedPointCount;
+  target.lineRibbonSegmentCount += source.lineRibbonSegmentCount;
+  target.lineSnapToleranceM = Math.max(
+    target.lineSnapToleranceM,
+    source.lineSnapToleranceM,
+  );
+  target.skippedReason = source.skippedReason ?? target.skippedReason;
+}
 
 function sectionCutFrameRange(
   plane: ResolvedSceneSectionPlane,
@@ -331,7 +526,11 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
     values: Float32Array;
     alphaValues: Float32Array;
     hardMaskValues: Float32Array;
+    debug: MtVolumeCutMeshBuildDebugState;
   } | null {
+    const startedAt = performance.now();
+    let stageStart = startedAt;
+    const debug = emptyMtVolumeCutMeshBuildDebug();
     const dimensions = Array.isArray(mesh.userData.scalarVolumeDimensions)
       ? (mesh.userData.scalarVolumeDimensions as [number, number, number])
       : null;
@@ -350,10 +549,15 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
     const max = bounds.max;
 
     const grid = MT_VOLUME_SECTION_ISO_GRID_SIZE;
+    debug.setupMs += cutIsoDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
     const positions = new Float32Array(grid * grid * 3);
     const values = new Float32Array(grid * grid);
     const alphaValues = new Float32Array(grid * grid);
     const hardMaskValues = new Float32Array(grid * grid);
+    debug.vertexCount = grid * grid;
+    debug.bufferAllocMs += cutIsoDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
     const frameRange = sectionCutFrameRange(
       plane,
       min,
@@ -370,6 +574,8 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
       plane,
       options.sectionFrame,
     );
+    debug.frameRangeMs += cutIsoDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
 
     for (let j = 0; j < grid; j += 1) {
       const bT = j / (grid - 1);
@@ -431,7 +637,9 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
             : 0;
       }
     }
+    debug.gridSampleMs += cutIsoDebugMs(performance.now() - stageStart);
 
+    stageStart = performance.now();
     const indices: number[] = [];
     for (let j = 0; j < grid - 1; j += 1) {
       for (let i = 0; i < grid - 1; i += 1) {
@@ -442,7 +650,10 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
         indices.push(a, b, c, b, d, c);
       }
     }
+    debug.indexCount = indices.length;
+    debug.indexMs += cutIsoDebugMs(performance.now() - stageStart);
 
+    stageStart = performance.now();
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute(
       "position",
@@ -452,6 +663,8 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
     geometry.computeVertexNormals();
     geometry.computeBoundingBox();
     geometry.computeBoundingSphere();
+    debug.geometryMs += cutIsoDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
     const material = new THREE.MeshBasicMaterial({
       visible: false,
       depthWrite: false,
@@ -461,6 +674,8 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
     });
     material.userData.ignoreLayerStyle = true;
     material.userData.sceneSectionHelper = true;
+    debug.materialMs += cutIsoDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
     const cut = new THREE.Mesh(geometry, material);
     cut.name = `${plane.axis.toUpperCase()} MT volume ISO cut`;
     cut.userData.ignoreLayerStyle = true;
@@ -472,20 +687,79 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
     cut.userData.sectionIsoPlanePositionM = plane.positionM;
     cut.userData.sectionGroundTrimEnabled = groundTrim !== null;
     cut.userData.sectionGroundTrimSource = "ground-trace";
-    return { mesh: cut, values, alphaValues, hardMaskValues };
+    debug.meshObjectMs += cutIsoDebugMs(performance.now() - stageStart);
+    debug.totalMs = cutIsoDebugMs(performance.now() - startedAt);
+    return { mesh: cut, values, alphaValues, hardMaskValues, debug };
   }
 
 export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle): void {
+    const startedAt = performance.now();
+    const debug: MtVolumeCutIsoUpdateDebugState = {
+      policy: "full-rebuild",
+      totalMs: 0,
+      clearMs: 0,
+      setupMs: 0,
+      meshBuildMs: 0,
+      meshBuildSetupMs: 0,
+      meshBuildFrameRangeMs: 0,
+      meshBuildBufferAllocMs: 0,
+      meshBuildGridSampleMs: 0,
+      meshBuildIndexMs: 0,
+      meshBuildGeometryMs: 0,
+      meshBuildMaterialMs: 0,
+      meshBuildMeshObjectMs: 0,
+      meshBuildVertexCount: 0,
+      meshBuildIndexCount: 0,
+      overlayUpdateMs: 0,
+      overlayDebug: emptyScalarSectionIsoOverlayDebug(),
+      attachMs: 0,
+      disposeMs: 0,
+      planesCount: 0,
+      selectedPlaneCount: 0,
+      cutsBuiltCount: 0,
+      overlayRootCount: 0,
+      gridSize: MT_VOLUME_SECTION_ISO_GRID_SIZE,
+      skippedReason: null,
+    };
+    const finish = (skippedReason: string | null = null): void => {
+      debug.skippedReason = skippedReason;
+      debug.totalMs = cutIsoDebugMs(performance.now() - startedAt);
+      this.lastMtVolumeCutIsoUpdateDebug = debug;
+    };
+
     const volumeLayer = this.layers.get(
       UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
     );
-    if (!volumeLayer) return;
+    if (!volumeLayer) {
+      finish("missing-volume-layer");
+      return;
+    }
+
+    let stageStart = performance.now();
     this.clearMtVolumeCutIsoOverlays(volumeLayer);
-    if (style.sectionIsoEnabled !== true || !volumeLayer.visible) return;
+    debug.clearMs += cutIsoDebugMs(performance.now() - stageStart);
+
+    if (style.sectionIsoEnabled !== true) {
+      finish("section-iso-disabled");
+      return;
+    }
+    if (!volumeLayer.visible) {
+      finish("volume-layer-hidden");
+      return;
+    }
     const mesh = this.activeScalarVolumeMesh();
-    if (!mesh) return;
+    if (!mesh) {
+      finish("missing-active-volume-mesh");
+      return;
+    }
     const planes = this.sceneSectionActivePlanes(this.lastSceneSectionStyle);
-    if (planes.length === 0) return;
+    debug.planesCount = planes.length;
+    if (planes.length === 0) {
+      finish("no-active-section-planes");
+      return;
+    }
+
+    stageStart = performance.now();
     const sectionBounds = this.sceneSectionBounds(
       this.lastSceneSectionStyle,
       this.sceneSectionLayerIds(this.lastSceneSectionStyle),
@@ -598,8 +872,11 @@ export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle
       ),
       skipSceneSectionClipping: true,
     } satisfies Omit<ScalarSectionIsoOptions, "targetKey" | "alphaValues">;
+    debug.setupMs += cutIsoDebugMs(performance.now() - stageStart);
 
+    stageStart = performance.now();
     const overlayGroup = this.scalarVolumeIsoOverlayGroup(volumeLayer);
+    debug.attachMs += cutIsoDebugMs(performance.now() - stageStart);
     for (const plane of planes) {
       const targetKey = mtVolumeCutTargetKey(
         UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
@@ -608,6 +885,8 @@ export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle
         plane.frameId,
       );
       if (selectedTargets[targetKey] === false) continue;
+      debug.selectedPlaneCount += 1;
+      stageStart = performance.now();
       const cut = this.buildMtVolumeCutMesh(mesh, plane, {
         sourceMin,
         sourceMax,
@@ -621,22 +900,40 @@ export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle
               frame.frameId === plane.frameId,
           ) ?? null,
       });
+      debug.meshBuildMs += cutIsoDebugMs(performance.now() - stageStart);
       if (!cut) continue;
+      addMtVolumeCutMeshBuildDebug(debug, cut.debug);
+      debug.cutsBuiltCount += 1;
+      const overlayDebug = emptyScalarSectionIsoOverlayDebug();
+      stageStart = performance.now();
       updateScalarSectionIsoOverlay(cut.mesh, cut.values, {
         ...baseOptions,
         targetKey,
         alphaValues: cut.alphaValues,
         hardMaskValues: cut.hardMaskValues,
+        debug: overlayDebug,
       });
+      addScalarSectionIsoOverlayDebug(debug.overlayDebug, overlayDebug);
+      debug.overlayUpdateMs += cutIsoDebugMs(performance.now() - stageStart);
+      stageStart = performance.now();
       if (cut.mesh.userData.scalarSectionIsoOverlayRoot) {
         overlayGroup.add(cut.mesh);
+        debug.overlayRootCount += 1;
       } else {
+        const disposeStartedAt = performance.now();
         disposeObjectTree(cut.mesh);
+        debug.disposeMs += cutIsoDebugMs(
+          performance.now() - disposeStartedAt,
+        );
       }
+      debug.attachMs += cutIsoDebugMs(performance.now() - stageStart);
     }
     if (overlayGroup.children.length === 0) {
+      stageStart = performance.now();
       this.clearMtVolumeCutIsoOverlays(volumeLayer);
+      debug.disposeMs += cutIsoDebugMs(performance.now() - stageStart);
     }
+    finish();
   }
 
 export function seismicVolumeIsoOverlayGroupImpl(this: any, seismicLayer: THREE.Group): THREE.Group {

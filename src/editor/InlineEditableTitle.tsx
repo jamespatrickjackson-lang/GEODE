@@ -19,6 +19,7 @@ interface Props {
   hoverBackground?: string;
   title?: string; // tooltip
   truncate?: boolean;
+  editTrigger?: "click" | "doubleClick";
 }
 
 export function InlineEditableTitle({
@@ -28,6 +29,7 @@ export function InlineEditableTitle({
   hoverBackground = "rgba(255, 255, 255, 0.06)",
   title = "Click to edit",
   truncate = false,
+  editTrigger = "click",
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -108,14 +110,25 @@ export function InlineEditableTitle({
       data-dev-padding-source="src/editor/InlineEditableTitle.tsx:107"
       data-dev-note="InlineEditableTitle display text. Padding and negative margin create the hover/edit hit area."
       onClick={(e) => {
-        e.stopPropagation();
-        setEditing(true);
+        if (editTrigger === "click") {
+          e.stopPropagation();
+          setEditing(true);
+        } else if (editTrigger === "doubleClick" && e.detail >= 2) {
+          e.stopPropagation();
+          setEditing(true);
+        }
+      }}
+      onDoubleClick={(e) => {
+        if (editTrigger === "doubleClick") {
+          e.stopPropagation();
+          setEditing(true);
+        }
       }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
         ...textStyle,
-        cursor: "text",
+        cursor: editTrigger === "doubleClick" ? "default" : "text",
         background: hover ? hoverBackground : "transparent",
         borderRadius: 0,
         padding: "0 2px",

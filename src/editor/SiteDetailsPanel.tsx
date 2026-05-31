@@ -58,6 +58,7 @@ interface SiteDetailsPanelProps {
   setPageLayerOverride: PageStyleSetter;
   activeSignalPrefix?: string;
   boreholeLayerActive?: boolean;
+  disabled?: boolean;
 }
 
 function controlDisabled(isEnv: boolean, currentPage: PresentationPage | null) {
@@ -68,12 +69,14 @@ function AutoOpenDetails({
   summary,
   children,
   openSignal,
+  defaultOpen = false,
 }: {
   summary: React.ReactNode;
   children: React.ReactNode;
   openSignal?: unknown;
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const previousOpenSignal = useRef(openSignal);
   useEffect(() => {
     if (openSignal === undefined || openSignal === previousOpenSignal.current) {
@@ -100,14 +103,17 @@ function SiteDetailsBooleanRow({
   checked,
   disabled,
   onChange,
+  testId,
 }: {
   label: string;
   checked: boolean;
   disabled: boolean;
   onChange: (value: boolean) => void;
+  testId?: string;
 }) {
   return (
     <label
+      data-testid={testId}
       style={{
         ...nestedControlRowStyle,
         cursor: disabled ? "default" : "pointer",
@@ -130,14 +136,19 @@ function SiteDetailsTextRow({
   value,
   disabled,
   onChange,
+  testId,
 }: {
   label: string;
   value: string;
   disabled: boolean;
   onChange: (value: string) => void;
+  testId?: string;
 }) {
   return (
-    <div style={{ ...nestedControlRowStyle, opacity: disabled ? 0.45 : 1 }}>
+    <div
+      data-testid={testId}
+      style={{ ...nestedControlRowStyle, opacity: disabled ? 0.45 : 1 }}
+    >
       <label style={nestedFieldLabelStyle}>{label}</label>
       <input
         type="text"
@@ -273,8 +284,9 @@ export function SiteDetailsPanel({
   setPageLayerOverride,
   activeSignalPrefix,
   boreholeLayerActive = false,
+  disabled: disabledProp = false,
 }: SiteDetailsPanelProps) {
-  const disabled = controlDisabled(isEnv, currentPage);
+  const disabled = disabledProp || controlDisabled(isEnv, currentPage);
   const applyPatch = (patch: Partial<EditableStyle>) => {
     if (!boreholeLayer) return;
     if (isEnv) {
@@ -290,6 +302,40 @@ export function SiteDetailsPanel({
     applyPatch(patchDemoOrientationBlockStyle(style, patch));
   };
   const block = resolveDemoOrientationBlockStyle(style);
+  const siteLabelRows = UTAH_FORGE_DEMO_BOREHOLE_WELL_IDS.flatMap((wellId) => {
+    const well = resolveDemoBoreholeWellStyle(style, wellId);
+    const keyBase = wellId.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    return [
+      {
+        id: `${keyBase}-collar`,
+        label: `${WELL_LABELS[wellId] ?? wellId} collar`,
+        visible: well.collarLabelVisible,
+        text: well.collarLabelText,
+        setVisible: (collarLabelVisible: boolean) =>
+          updateWell(wellId, { collarLabelVisible }),
+        setText: (collarLabelText: string) =>
+          updateWell(wellId, { collarLabelText }),
+      },
+      {
+        id: `${keyBase}-toe`,
+        label: `${WELL_LABELS[wellId] ?? wellId} toe`,
+        visible: well.toeLabelVisible,
+        text: well.toeLabelText,
+        setVisible: (toeLabelVisible: boolean) =>
+          updateWell(wellId, { toeLabelVisible }),
+        setText: (toeLabelText: string) =>
+          updateWell(wellId, { toeLabelText }),
+      },
+    ];
+  });
+  siteLabelRows.push({
+    id: "orientation-block",
+    label: "Surface facility / orientation block",
+    visible: block.labelVisible,
+    text: block.labelText,
+    setVisible: (labelVisible: boolean) => updateBlock({ labelVisible }),
+    setText: (labelText: string) => updateBlock({ labelText }),
+  });
 
   return (
     <>
@@ -308,6 +354,33 @@ export function SiteDetailsPanel({
             disabled={disabled}
             onChange={(checked) => applyPatch({ showLabels: checked })}
           />
+          <AutoOpenDetails summary="Site Labels" defaultOpen>
+            <div style={detailsContentStyle}>
+              {siteLabelRows.map((row) => (
+                <div
+                  key={row.id}
+                  data-testid={`site-details-label-${row.id}`}
+                  style={{
+                    borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+                    paddingTop: 6,
+                  }}
+                >
+                  <SiteDetailsBooleanRow
+                    label={row.label}
+                    checked={row.visible}
+                    disabled={disabled}
+                    onChange={row.setVisible}
+                  />
+                  <SiteDetailsTextRow
+                    label="Text"
+                    value={row.text}
+                    disabled={disabled}
+                    onChange={row.setText}
+                  />
+                </div>
+              ))}
+            </div>
+          </AutoOpenDetails>
           {UTAH_FORGE_DEMO_BOREHOLE_WELL_IDS.map((wellId) => {
             const well = resolveDemoBoreholeWellStyle(style, wellId);
             const wellOpenSignal =

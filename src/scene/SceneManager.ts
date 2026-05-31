@@ -432,6 +432,159 @@ interface LateReapplyDebugState {
   events: LateReapplyDebugEvent[];
 }
 
+interface SceneSectionApplyDebugState {
+  totalMs: number;
+  boundsMs: number;
+  frameResolveMs: number;
+  materialApplyMs: number;
+  helperRebuildMs: number;
+  helperOpacityMs: number;
+  mtCutIsoMs: number;
+  mtCutIsoUpdate: MtVolumeCutIsoUpdateDebugState | null;
+  seismicCutIsoMs: number;
+  traversedObjectCount: number;
+  materialApplyCount: number;
+  helperObjectCount: number;
+}
+
+interface MtVolumeCutIsoUpdateDebugState {
+  policy: "full-rebuild";
+  totalMs: number;
+  clearMs: number;
+  setupMs: number;
+  meshBuildMs: number;
+  meshBuildSetupMs: number;
+  meshBuildFrameRangeMs: number;
+  meshBuildBufferAllocMs: number;
+  meshBuildGridSampleMs: number;
+  meshBuildIndexMs: number;
+  meshBuildGeometryMs: number;
+  meshBuildMaterialMs: number;
+  meshBuildMeshObjectMs: number;
+  meshBuildVertexCount: number;
+  meshBuildIndexCount: number;
+  overlayUpdateMs: number;
+  overlayDebug: ScalarSectionIsoOverlayUpdateDebugState;
+  attachMs: number;
+  disposeMs: number;
+  planesCount: number;
+  selectedPlaneCount: number;
+  cutsBuiltCount: number;
+  overlayRootCount: number;
+  gridSize: number;
+  skippedReason: string | null;
+}
+
+interface ScalarSectionIsoOverlayUpdateDebugState {
+  totalMs: number;
+  disposeMs: number;
+  rootCreateMs: number;
+  bandMeshMs: number;
+  lineGeometryMs: number;
+  lineMaterialMs: number;
+  attachMs: number;
+  lineGeometryDebug: ScalarSectionIsoLineGeometryDebugState;
+  bandMeshCount: number;
+  lineMeshCount: number;
+  lineSourceSegmentCount: number;
+  lineTinySegmentCount: number;
+  linePolylineCount: number;
+  lineSimplifiedPointCount: number;
+  lineRibbonSegmentCount: number;
+  lineSnapToleranceM: number;
+  skippedReason: string | null;
+}
+
+interface ScalarSectionIsoLineGeometryDebugState {
+  timingMode: "coarse-pass";
+  totalMs: number;
+  setupMs: number;
+  contourPassMs: number;
+  triangleScanMs: number;
+  triangleIntersectionMs: number;
+  segmentRecordMs: number;
+  segmentStitchMs: number;
+  stitchNodeBuildMs: number;
+  stitchTraversalMs: number;
+  stitchPointAssemblyMs: number;
+  stitchLengthFilterMs: number;
+  stitchNormalMs: number;
+  polylineSimplifyMs: number;
+  ribbonExtrudeMs: number;
+  geometryCreateMs: number;
+  triangleCount: number;
+  maskedTriangleCount: number;
+  invalidTriangleCount: number;
+  degenerateTriangleCount: number;
+  levelCandidateCount: number;
+  intersectionAttemptCount: number;
+}
+
+interface LayerTweenTickDebugState {
+  timestampMs: number;
+  totalMs: number;
+  sceneSectionMs: number;
+  sceneSectionApply: SceneSectionApplyDebugState | null;
+  workingAreaMs: number;
+  scalarMs: number;
+  layerMs: number;
+  snapshotMs: number;
+  helperSnapshotMs: number;
+  envelopeMs: number;
+  activeSceneTransition: boolean;
+  sceneSectionApplyMode: "none" | "full" | "helper-opacity-only";
+  layerTweenIds: string[];
+  scalarTweenIds: string[];
+  snapshotIds: string[];
+  layerTweenCountBefore: number;
+  scalarTweenCountBefore: number;
+  snapshotCountBefore: number;
+  sceneSectionStyleTweenActiveBefore: boolean;
+  helperSnapshotActiveBefore: boolean;
+  workingAreaFocusTweenActiveBefore: boolean;
+}
+
+interface FrameUpdateDebugState {
+  timestampMs: number;
+  totalMs: number;
+  cameraLockedSunMs: number;
+  layerTweensMs: number;
+  boreLensMs: number;
+  lightingStudioScaleMs: number;
+  dynamicCameraOrbitCenterScaleMs: number;
+  pageCameraMarkerScaleMs: number;
+  ezGammaBillboardMs: number;
+  sceneSectionTextFacingMs: number;
+  sectionIsoThresholdOcclusionMs: number;
+  topoGridCameraVisibilityMs: number;
+  sceneOverlayTickMs: number;
+  activeSceneTransition: boolean;
+}
+
+interface SectionIsoOverlayDebugState {
+  opacityPolicy: "split-section-iso-overlay-opacity-from-layer-opacity";
+  overlayMaterialCount: number;
+  independentOverlayMaterialCount: number;
+  transitionEnvelopeOverlayMaterialCount: number;
+  hiddenWithParentMaterialCount: number;
+  layerRenderOpacityMin: number | null;
+  layerRenderOpacityMax: number | null;
+  transitionOpacityMin: number | null;
+  transitionOpacityMax: number | null;
+}
+
+interface SceneSectionHelperDebugState {
+  groundTracePolicy: "mirror-delayed-ground-trace-into-helper-snapshot";
+  liveGroundTraceCount: number;
+  snapshotGroundTraceCount: number;
+  snapshotActive: boolean;
+  transitionOpacity: number;
+}
+
+function transitionDebugMs(value: number): number {
+  return Number(Math.max(0, value).toFixed(3));
+}
+
 
 export class SceneManager {
   private layers = new Map<string, THREE.Group>();
@@ -546,6 +699,10 @@ export class SceneManager {
   private lateReapplyDebugSequence = 0;
   private lateReapplyDebugDuringTransitionCount = 0;
   private readonly lateReapplyDebugEvents: LateReapplyDebugEvent[] = [];
+  private lastLayerTweenTickDebug: LayerTweenTickDebugState | null = null;
+  lastSceneSectionApplyDebug: SceneSectionApplyDebugState | null = null;
+  lastMtVolumeCutIsoUpdateDebug: MtVolumeCutIsoUpdateDebugState | null = null;
+  private lastFrameUpdateDebug: FrameUpdateDebugState | null = null;
 
   constructor(
     private scene: THREE.Scene,
@@ -1000,12 +1157,12 @@ export class SceneManager {
       if (!mat) return;
       const mats = Array.isArray(mat) ? mat : [mat];
       for (const material of mats) {
-        const isTransitionEntity =
+        const isSectionIsoOverlay =
           obj.userData?.scalarSectionIsoOverlay === true ||
           material.userData?.scalarSectionIsoOverlay === true;
+        if (isSectionIsoOverlay) continue;
         if (
-          material.userData?.ignoreLayerStyle === true &&
-          !isTransitionEntity
+          material.userData?.ignoreLayerStyle === true
         ) {
           continue;
         }
@@ -1044,9 +1201,26 @@ export class SceneManager {
 
   private applySectionIsoOverlayMaterialOpacity(
     material: THREE.Material,
-    layerOpacity: number,
+    opacity: number,
+    layerRenderOpacity?: number,
+    mode: "layer-render-opacity" | "transition-envelope" =
+      "layer-render-opacity",
   ): void {
-    const transitionOpacity = clamp01(layerOpacity);
+    const transitionOpacity = clamp01(opacity);
+    const opacityMode =
+      mode === "layer-render-opacity" &&
+      material.userData?.sectionIsoOpacityPolicy ===
+        "transition-envelope-opacity" &&
+      transitionOpacity < 0.999
+        ? "transition-envelope"
+        : mode;
+    const parentLayerOpacity =
+      typeof layerRenderOpacity === "number" && Number.isFinite(layerRenderOpacity)
+        ? clamp01(layerRenderOpacity)
+        : typeof material.userData?.sectionIsoLayerRenderOpacity === "number" &&
+            Number.isFinite(material.userData.sectionIsoLayerRenderOpacity)
+          ? clamp01(material.userData.sectionIsoLayerRenderOpacity)
+        : transitionOpacity;
     const authoredOpacity = this.sectionIsoAuthoredOpacity(material);
     const occlusion =
       typeof material.userData?.sectionIsoThresholdOcclusionAttenuation ===
@@ -1056,6 +1230,13 @@ export class SceneManager {
         : 1;
     const nextOpacity = clamp01(authoredOpacity * transitionOpacity * occlusion);
     material.userData.sectionIsoTransitionOpacity = transitionOpacity;
+    material.userData.sectionIsoLayerRenderOpacity = parentLayerOpacity;
+    material.userData.sectionIsoOpacityPolicy =
+      transitionOpacity <= 0.001
+        ? "hidden-with-parent-layer"
+        : opacityMode === "transition-envelope"
+          ? "transition-envelope-opacity"
+        : "independent-of-layer-render-opacity";
     material.userData.sectionIsoComposedOpacity = nextOpacity;
     material.opacity = nextOpacity;
     material.transparent = true;
@@ -1105,8 +1286,14 @@ export class SceneManager {
   private applyRenderOpacityToTree(
     root: THREE.Object3D,
     opacity: number,
+    sectionIsoTransitionOpacity?: number,
   ): void {
     const next = clamp01(opacity);
+    const sectionIsoEnvelope =
+      typeof sectionIsoTransitionOpacity === "number" &&
+      Number.isFinite(sectionIsoTransitionOpacity)
+        ? clamp01(sectionIsoTransitionOpacity)
+        : null;
     root.visible = next > 0.001;
     root.traverse((obj) => {
       const mat = (obj as THREE.Mesh | THREE.Line).material as
@@ -1123,7 +1310,14 @@ export class SceneManager {
           continue;
         }
         if (isSectionIsoOverlay) {
-          this.applySectionIsoOverlayMaterialOpacity(m, next);
+          this.applySectionIsoOverlayMaterialOpacity(
+            m,
+            sectionIsoEnvelope ?? (next <= 0.001 ? 0 : 1),
+            next,
+            sectionIsoEnvelope === null
+              ? "layer-render-opacity"
+              : "transition-envelope",
+          );
           continue;
         }
         const preserveProductOpacity =
@@ -1170,6 +1364,23 @@ export class SceneManager {
       return;
     }
     this.applyRenderOpacityToTree(group, next);
+    this.applyTerrainCompositeOpacity(id, next);
+    this.applyCaseStudyBDemoLayerAlias(id, this.styleForLayer(id), next);
+  }
+
+  applyLayerTransitionRenderOpacity(
+    id: string,
+    opacity: number,
+    transitionOpacity: number,
+  ): void {
+    const group = this.layers.get(id);
+    const next = clamp01(opacity);
+    const envelope = clamp01(transitionOpacity);
+    if (!group) {
+      this.applyCaseStudyBDemoLayerAlias(id, this.styleForLayer(id), next);
+      return;
+    }
+    this.applyRenderOpacityToTree(group, next, envelope);
     this.applyTerrainCompositeOpacity(id, next);
     this.applyCaseStudyBDemoLayerAlias(id, this.styleForLayer(id), next);
   }
@@ -1367,6 +1578,31 @@ export class SceneManager {
       durationMs,
       easing,
     };
+  }
+
+  addSceneSectionHelperObjectToTransitionSnapshot(
+    source: THREE.Object3D,
+  ): boolean {
+    const snapshot = this.sceneSectionHelperTransitionSnapshot;
+    if (!snapshot) return false;
+    const elapsed =
+      snapshot.durationMs <= 0
+        ? 1
+        : (performance.now() - snapshot.startMs) / snapshot.durationMs;
+    if (elapsed >= 1) return false;
+    const eased = easeProgress(elapsed, snapshot.easing);
+    const opacity = snapshot.from + (snapshot.to - snapshot.from) * eased;
+    const clone = this.cloneTransitionObjectTree(
+      UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+      source,
+    );
+    clone.userData = {
+      ...clone.userData,
+      sceneSectionLateHelperSnapshotObject: true,
+    };
+    snapshot.group.add(clone);
+    this.applyRenderOpacityToTree(clone, opacity);
+    return true;
   }
 
   applyTerrainCompositeOpacity(layerId: string, opacity: number): void {
@@ -1929,6 +2165,112 @@ export class SceneManager {
     return this.layers.get(id);
   }
 
+  getSectionIsoOverlayDebugState(): SectionIsoOverlayDebugState {
+    let overlayMaterialCount = 0;
+    let independentOverlayMaterialCount = 0;
+    let transitionEnvelopeOverlayMaterialCount = 0;
+    let hiddenWithParentMaterialCount = 0;
+    let layerRenderOpacityMin: number | null = null;
+    let layerRenderOpacityMax: number | null = null;
+    let transitionOpacityMin: number | null = null;
+    let transitionOpacityMax: number | null = null;
+    const addRangeValue = (
+      value: unknown,
+      currentMin: number | null,
+      currentMax: number | null,
+    ): [number | null, number | null] => {
+      if (typeof value !== "number" || !Number.isFinite(value)) {
+        return [currentMin, currentMax];
+      }
+      const next = clamp01(value);
+      return [
+        currentMin === null ? next : Math.min(currentMin, next),
+        currentMax === null ? next : Math.max(currentMax, next),
+      ];
+    };
+
+    for (const group of this.layers.values()) {
+      group.traverse((obj) => {
+        const mat = (obj as THREE.Mesh | THREE.Line).material as
+          | THREE.Material
+          | THREE.Material[]
+          | undefined;
+        if (!mat) return;
+        const mats = Array.isArray(mat) ? mat : [mat];
+        for (const material of mats) {
+          const isSectionIsoOverlay =
+            obj.userData?.scalarSectionIsoOverlay === true ||
+            material.userData?.scalarSectionIsoOverlay === true;
+          if (!isSectionIsoOverlay) continue;
+          overlayMaterialCount += 1;
+          if (
+            material.userData?.sectionIsoOpacityPolicy ===
+            "independent-of-layer-render-opacity"
+          ) {
+            independentOverlayMaterialCount += 1;
+          }
+          if (
+            material.userData?.sectionIsoOpacityPolicy ===
+            "transition-envelope-opacity"
+          ) {
+            transitionEnvelopeOverlayMaterialCount += 1;
+          }
+          if (
+            material.userData?.sectionIsoOpacityPolicy ===
+            "hidden-with-parent-layer"
+          ) {
+            hiddenWithParentMaterialCount += 1;
+          }
+          [layerRenderOpacityMin, layerRenderOpacityMax] = addRangeValue(
+            material.userData?.sectionIsoLayerRenderOpacity,
+            layerRenderOpacityMin,
+            layerRenderOpacityMax,
+          );
+          [transitionOpacityMin, transitionOpacityMax] = addRangeValue(
+            material.userData?.sectionIsoTransitionOpacity,
+            transitionOpacityMin,
+            transitionOpacityMax,
+          );
+        }
+      });
+    }
+
+    return {
+      opacityPolicy: "split-section-iso-overlay-opacity-from-layer-opacity",
+      overlayMaterialCount,
+      independentOverlayMaterialCount,
+      transitionEnvelopeOverlayMaterialCount,
+      hiddenWithParentMaterialCount,
+      layerRenderOpacityMin,
+      layerRenderOpacityMax,
+      transitionOpacityMin,
+      transitionOpacityMax,
+    };
+  }
+
+  private countGroundTraceObjects(root: THREE.Object3D | null | undefined): number {
+    if (!root) return 0;
+    let count = 0;
+    root.traverse((obj) => {
+      if (obj.userData?.sceneSectionGroundTrace === true) count += 1;
+    });
+    return count;
+  }
+
+  getSceneSectionHelperDebugState(): SceneSectionHelperDebugState {
+    return {
+      groundTracePolicy: "mirror-delayed-ground-trace-into-helper-snapshot",
+      liveGroundTraceCount: this.countGroundTraceObjects(
+        this.sceneSectionRuntime?.group,
+      ),
+      snapshotGroundTraceCount: this.countGroundTraceObjects(
+        this.sceneSectionHelperTransitionSnapshot?.group,
+      ),
+      snapshotActive: this.sceneSectionHelperTransitionSnapshot !== null,
+      transitionOpacity: this.sceneSectionHelperTransitionOpacity,
+    };
+  }
+
   getTransitionDebugState(): {
     active: boolean;
     sourcePageId: string | null;
@@ -1938,6 +2280,14 @@ export class SceneManager {
     snapshotCount: number;
     scalarTweenCount: number;
     layerTweenCount: number;
+    workingAreaFocusTweenActive: boolean;
+    sceneSectionStyleTweenActive: boolean;
+    sceneSectionHelperTransitionSnapshotActive: boolean;
+    sceneSectionHelperTransitionOpacity: number;
+    layerTweenTick: LayerTweenTickDebugState | null;
+    frameUpdate: FrameUpdateDebugState | null;
+    sectionIsoOverlays: SectionIsoOverlayDebugState;
+    sceneSectionHelpers: SceneSectionHelperDebugState;
     productFamilies: ProductTransitionDecision[];
     sceneOverlays: SceneOverlayDebugState;
     lateReapply: LateReapplyDebugState;
@@ -1955,6 +2305,15 @@ export class SceneManager {
       snapshotCount: this.layerTransitionSnapshots.size,
       scalarTweenCount: this.scalarStyleTweens.size,
       layerTweenCount: this.layerTweens.size,
+      workingAreaFocusTweenActive: this.workingAreaFocusTween !== null,
+      sceneSectionStyleTweenActive: this.sceneSectionStyleTween !== null,
+      sceneSectionHelperTransitionSnapshotActive:
+        this.sceneSectionHelperTransitionSnapshot !== null,
+      sceneSectionHelperTransitionOpacity: this.sceneSectionHelperTransitionOpacity,
+      layerTweenTick: this.lastLayerTweenTickDebug,
+      frameUpdate: this.lastFrameUpdateDebug,
+      sectionIsoOverlays: this.getSectionIsoOverlayDebugState(),
+      sceneSectionHelpers: this.getSceneSectionHelperDebugState(),
       productFamilies: transition?.productFamilies.slice() ?? [],
       sceneOverlays: this.getSceneOverlayDebugState(),
       lateReapply: this.getLateReapplyDebugState(),
@@ -2303,6 +2662,20 @@ export class SceneManager {
     mesh: THREE.Mesh;
     values: Float32Array;
     alphaValues: Float32Array;
+    hardMaskValues: Float32Array;
+    debug: {
+      totalMs: number;
+      setupMs: number;
+      frameRangeMs: number;
+      bufferAllocMs: number;
+      gridSampleMs: number;
+      indexMs: number;
+      geometryMs: number;
+      materialMs: number;
+      meshObjectMs: number;
+      vertexCount: number;
+      indexCount: number;
+    };
   } | null {
     return buildMtVolumeCutMeshImpl.call(this, mesh, plane, options);
   }
@@ -3341,17 +3714,84 @@ export class SceneManager {
    * camera-locked sun updates.
    */
   frameUpdate(camera: THREE.Camera, nowMs: number = performance.now()): void {
+    const startedAt = performance.now();
+    let stageStart = startedAt;
+
     this.updateCameraLockedSun(camera);
+    const cameraLockedSunMs = transitionDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
+
     this.tickLayerTweens(nowMs);
+    const layerTweensMs = transitionDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
+
     this.updateBoreLensVisibility(camera);
+    const boreLensMs = transitionDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
+
     this.updateLightingStudioElementScale(camera);
+    const lightingStudioScaleMs = transitionDebugMs(
+      performance.now() - stageStart,
+    );
+    stageStart = performance.now();
+
     this.updateDynamicCameraOrbitCenterScale(camera);
+    const dynamicCameraOrbitCenterScaleMs = transitionDebugMs(
+      performance.now() - stageStart,
+    );
+    stageStart = performance.now();
+
     this.updatePageCameraMarkersScale(camera);
+    const pageCameraMarkerScaleMs = transitionDebugMs(
+      performance.now() - stageStart,
+    );
+    stageStart = performance.now();
+
     this.updateEzGammaBillboards(camera);
+    const ezGammaBillboardMs = transitionDebugMs(
+      performance.now() - stageStart,
+    );
+    stageStart = performance.now();
+
     this.updateSceneSectionPlanarTextFacing(camera);
+    const sceneSectionTextFacingMs = transitionDebugMs(
+      performance.now() - stageStart,
+    );
+    stageStart = performance.now();
+
     this.updateSectionIsoThresholdOcclusion(camera);
+    const sectionIsoThresholdOcclusionMs = transitionDebugMs(
+      performance.now() - stageStart,
+    );
+    stageStart = performance.now();
+
     this.topoRuntime.updateGridCameraVisibility(camera);
+    const topoGridCameraVisibilityMs = transitionDebugMs(
+      performance.now() - stageStart,
+    );
+    stageStart = performance.now();
+
     this.sceneOverlayController.tick(nowMs);
+    const sceneOverlayTickMs = transitionDebugMs(
+      performance.now() - stageStart,
+    );
+
+    this.lastFrameUpdateDebug = {
+      timestampMs: transitionDebugMs(nowMs),
+      totalMs: transitionDebugMs(performance.now() - startedAt),
+      cameraLockedSunMs,
+      layerTweensMs,
+      boreLensMs,
+      lightingStudioScaleMs,
+      dynamicCameraOrbitCenterScaleMs,
+      pageCameraMarkerScaleMs,
+      ezGammaBillboardMs,
+      sceneSectionTextFacingMs,
+      sectionIsoThresholdOcclusionMs,
+      topoGridCameraVisibilityMs,
+      sceneOverlayTickMs,
+      activeSceneTransition: this.activeSceneTransitionContext !== null,
+    };
   }
 
   /**

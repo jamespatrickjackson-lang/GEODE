@@ -13,9 +13,14 @@ import {
   transparentLegendPanelStyle,
 } from "./legendStyles";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
-import { effectiveStyle, effectiveVisibility } from "../pages/effective";
+import {
+  effectiveStyle,
+  effectiveVisibility,
+  resolveEnvironmentForPage,
+} from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
+import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const SEISMIC_LAYER_ID = "utah-forge-phase3-seismic-browser";
@@ -254,8 +259,13 @@ export function SeismicVolumeLegend({
   stacked?: boolean;
   pageOverride?: PresentationPage | null;
 }) {
-  const { state, sceneHandle, setEnvLayerStyle, setPageLayerOverride } =
-    useEditor();
+  const {
+    state,
+    sceneHandle,
+    setEnvLayerStyle,
+    setPageLayerOverride,
+    canApplyLiveSceneEdits,
+  } = useEditor();
   const { pages, currentIndex, transitionFrame } = usePageController();
   const rampRef = useRef<HTMLDivElement | null>(null);
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
@@ -270,6 +280,7 @@ export function SeismicVolumeLegend({
     pages[transitionFrame.sourceIndex] ??
     pages[currentIndex];
   const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
+  const authoringPage = selectedLegendAuthoringPage(state);
   const selectedPage =
     !pageOverride &&
     !editingEnvironment &&
@@ -282,10 +293,14 @@ export function SeismicVolumeLegend({
     (transitionFrame.active && targetIndex !== null
       ? controllerPage
       : selectedPage ?? controllerPage);
+  const writePage = authoringPage ?? page;
+  const pageEnvironment = page
+    ? resolveEnvironmentForPage(state.environment, state.pages, page)
+    : state.environment;
   const visible = editingEnvironment
     ? new Set(state.environment.defaultVisibleLayers)
     : page
-      ? effectiveVisibility(state.environment, page)
+      ? effectiveVisibility(pageEnvironment, page)
       : new Set<string>();
   if (!visible.has(SEISMIC_LAYER_ID)) return null;
 
@@ -293,8 +308,8 @@ export function SeismicVolumeLegend({
   const style = editingEnvironment
     ? state.environment.layerStyles[SEISMIC_LAYER_ID] ?? {}
     : page
-      ? effectiveStyle(state.environment, page, SEISMIC_LAYER_ID)
-      : state.environment.layerStyles[SEISMIC_LAYER_ID] ?? {};
+      ? effectiveStyle(pageEnvironment, page, SEISMIC_LAYER_ID)
+      : pageEnvironment.layerStyles[SEISMIC_LAYER_ID] ?? {};
   if (!styleBoolean(style, "seismicLegendVisible", true)) return null;
 
   const productId =
@@ -350,11 +365,15 @@ export function SeismicVolumeLegend({
     : ampMax.toFixed(2);
 
   const patchStyle = (patch: Partial<EditableStyle>) => {
-    sceneHandle.manager.applyStyle(SEISMIC_LAYER_ID, { ...style, ...patch });
-    if (editingEnvironment || !page) {
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyStyle(SEISMIC_LAYER_ID, { ...style, ...patch });
+    }
+    if (editingEnvironment) {
       setEnvLayerStyle(SEISMIC_LAYER_ID, patch);
+    } else if (writePage) {
+      setPageLayerOverride(writePage.id, SEISMIC_LAYER_ID, patch);
     } else {
-      setPageLayerOverride(page.id, SEISMIC_LAYER_ID, patch);
+      setEnvLayerStyle(SEISMIC_LAYER_ID, patch);
     }
   };
   const valueFromClientX = (clientX: number): number | null => {

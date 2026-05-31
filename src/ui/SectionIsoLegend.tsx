@@ -15,9 +15,13 @@ import {
   transparentLegendPanelStyle,
 } from "./legendStyles";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
-import { effectiveStyle } from "../pages/effective";
+import {
+  effectiveStyle,
+  resolveEnvironmentForPage,
+} from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
+import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
 import type {
   ScalarSectionIsoTarget,
   SectionIsoTargetGroup,
@@ -279,6 +283,7 @@ export function SectionIsoLegend({
     sceneHandle,
     setEnvLayerStyle,
     setPageLayerOverride,
+    canApplyLiveSceneEdits,
   } = useEditor();
   const { pages, currentIndex, transitionFrame } = usePageController();
   const rootRef = useRef<HTMLElement | null>(null);
@@ -350,6 +355,7 @@ export function SectionIsoLegend({
     pages[transitionFrame.sourceIndex] ??
     pages[currentIndex];
   const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
+  const authoringPage = selectedLegendAuthoringPage(state);
   const selectedPage =
     !pageOverride &&
     !editingEnvironment &&
@@ -362,11 +368,15 @@ export function SectionIsoLegend({
     (transitionFrame.active && targetIndex !== null
       ? controllerPage
       : selectedPage ?? controllerPage);
+  const writePage = authoringPage ?? page;
+  const pageEnvironment = page
+    ? resolveEnvironmentForPage(state.environment, state.pages, page)
+    : state.environment;
   const style = editingEnvironment
     ? state.environment.layerStyles[layerId] ?? {}
     : page
-      ? effectiveStyle(state.environment, page, layerId)
-      : state.environment.layerStyles[layerId] ?? {};
+      ? effectiveStyle(pageEnvironment, page, layerId)
+      : pageEnvironment.layerStyles[layerId] ?? {};
 
   const sourceMin = Math.min(...activeTargets.map((target) => target.scalarMin));
   const sourceMax = Math.max(...activeTargets.map((target) => target.scalarMax));
@@ -413,19 +423,55 @@ export function SectionIsoLegend({
       : {};
   const commit = (patch: Partial<EditableStyle>) => {
     const merged = { ...style, ...patch };
-    sceneHandle.manager.applyStyle(layerId, merged);
-    if (editingEnvironment || !page) {
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyStyle(layerId, merged);
+    }
+    if (editingEnvironment) {
       setEnvLayerStyle(layerId, patch);
+    } else if (writePage) {
+      setPageLayerOverride(writePage.id, layerId, patch);
     } else {
-      setPageLayerOverride(page.id, layerId, patch);
+      setEnvLayerStyle(layerId, patch);
     }
   };
-  const setTargetSelected = (target: ScalarSectionIsoTarget, checked: boolean) => {
+  const targetSelectionVisible = (ids: Record<string, boolean>) =>
+    activeTargets.some((target) => ids[target.targetKey] !== false);
+  const overlayVisibleForPatch = (patch: Partial<EditableStyle>) => {
+    const nextLinesVisible =
+      typeof patch.sectionIsoLinesVisible === "boolean"
+        ? patch.sectionIsoLinesVisible
+        : linesVisible;
+    const nextBandsVisible =
+      typeof patch.sectionIsoBandsVisible === "boolean"
+        ? patch.sectionIsoBandsVisible
+        : bandsVisible;
+    const nextTargetIds =
+      typeof patch.sectionIsoTargetIds === "object" &&
+      patch.sectionIsoTargetIds !== null
+        ? (patch.sectionIsoTargetIds as Record<string, boolean>)
+        : targetIds;
+    return (
+      (nextLinesVisible || nextBandsVisible) &&
+      targetSelectionVisible(nextTargetIds)
+    );
+  };
+  const commitIsoOverlayPatch = (patch: Partial<EditableStyle>) => {
     commit({
-      sectionIsoTargetIds: {
-        ...targetIds,
-        [target.targetKey]: checked,
-      },
+      sectionIsoEnabled: overlayVisibleForPatch(patch),
+      ...patch,
+    });
+  };
+  const setTargetSelected = (target: ScalarSectionIsoTarget, checked: boolean) => {
+    const nextTargetIds = {
+      ...targetIds,
+      [target.targetKey]: checked,
+    };
+    commit({
+      sectionIsoEnabled:
+        checked || enabled
+          ? overlayVisibleForPatch({ sectionIsoTargetIds: nextTargetIds })
+          : false,
+      sectionIsoTargetIds: nextTargetIds,
     });
   };
 
@@ -556,7 +602,9 @@ export function SectionIsoLegend({
                     data-testid="section-iso-lines-visible"
                     checked={linesVisible}
                     onChange={(event) =>
-                      commit({ sectionIsoLinesVisible: event.currentTarget.checked })
+                      commitIsoOverlayPatch({
+                        sectionIsoLinesVisible: event.currentTarget.checked,
+                      })
                     }
                     style={legendCheckboxStyle(linesVisible, {
                       checkedColor: legendTextColors.heading,
@@ -570,7 +618,9 @@ export function SectionIsoLegend({
                     data-testid="section-iso-bands-visible"
                     checked={bandsVisible}
                     onChange={(event) =>
-                      commit({ sectionIsoBandsVisible: event.currentTarget.checked })
+                      commitIsoOverlayPatch({
+                        sectionIsoBandsVisible: event.currentTarget.checked,
+                      })
                     }
                     style={legendCheckboxStyle(bandsVisible, {
                       checkedColor: legendTextColors.heading,
@@ -588,7 +638,7 @@ export function SectionIsoLegend({
                     data-testid="section-iso-min"
                     onPointerDown={(event) => event.stopPropagation()}
                     onChange={(event) =>
-                      commit({
+                      commitIsoOverlayPatch({
                         sectionIsoMin: clamp(
                           Number.parseFloat(event.currentTarget.value),
                           sourceMin,
@@ -610,7 +660,7 @@ export function SectionIsoLegend({
                     data-testid="section-iso-max"
                     onPointerDown={(event) => event.stopPropagation()}
                     onChange={(event) =>
-                      commit({
+                      commitIsoOverlayPatch({
                         sectionIsoMax: clamp(
                           Number.parseFloat(event.currentTarget.value),
                           isoMin + 0.01,
@@ -632,7 +682,7 @@ export function SectionIsoLegend({
                     data-testid="section-iso-level-count"
                     onPointerDown={(event) => event.stopPropagation()}
                     onChange={(event) =>
-                      commit({
+                      commitIsoOverlayPatch({
                         sectionIsoLevelCount: Math.round(
                           Number.parseFloat(event.currentTarget.value),
                         ),
@@ -649,7 +699,7 @@ export function SectionIsoLegend({
                     style={{ ...selectStyle, color: legendTextColors.body }}
                     onPointerDown={(event) => event.stopPropagation()}
                     onChange={(event) =>
-                      commit({
+                      commitIsoOverlayPatch({
                         sectionIsoLineStyle:
                           event.currentTarget.value === "dashed" ? "dashed" : "solid",
                       })
@@ -670,7 +720,7 @@ export function SectionIsoLegend({
                     data-testid="section-iso-line-width"
                     onPointerDown={(event) => event.stopPropagation()}
                     onChange={(event) =>
-                      commit({
+                      commitIsoOverlayPatch({
                         sectionIsoLineWidth: clamp(
                           Number.parseFloat(event.currentTarget.value),
                           0,
@@ -692,7 +742,7 @@ export function SectionIsoLegend({
                     data-testid="section-iso-band-opacity"
                     onPointerDown={(event) => event.stopPropagation()}
                     onChange={(event) =>
-                      commit({
+                      commitIsoOverlayPatch({
                         sectionIsoBandOpacity: clamp(
                           Number.parseFloat(event.currentTarget.value),
                           0,
@@ -720,7 +770,7 @@ export function SectionIsoLegend({
                     data-testid="section-iso-fill-offset"
                     onPointerDown={(event) => event.stopPropagation()}
                     onChange={(event) =>
-                      commit({
+                      commitIsoOverlayPatch({
                         sectionIsoFillOffset: clamp(
                           Number.parseFloat(event.currentTarget.value),
                           -1,

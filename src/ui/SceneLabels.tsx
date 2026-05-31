@@ -4,7 +4,10 @@ import type { SceneHandle } from "../scene";
 import type { GuiLabelVisualStyle, SceneProperties } from "../pages/types";
 import { useEditor } from "../editor/EditorContext";
 import { usePageController } from "../pages/PageController";
-import { effectiveStyle } from "../pages/effective";
+import {
+  effectiveStyle,
+  resolveEnvironmentForPage,
+} from "../pages/effective";
 import {
   activeRenderPresetIdForPage,
   labelSettingsPatchForRenderPreset,
@@ -368,14 +371,38 @@ function labelAnchorRank(obj: THREE.Object3D): number {
   return 8;
 }
 
-function chooseLabelAnchors(group: THREE.Group): Map<string, THREE.Object3D> {
-  const choices = new Map<string, LabelAnchorChoice>();
+function hasStructuredLabelAnchors(group: THREE.Group): boolean {
+  let structured = false;
   group.traverse((obj) => {
-    if (obj.visible === false) return;
     const data = obj.userData as {
+      labelAnchor?: boolean;
+      sceneLabelEligible?: boolean;
+    };
+    if (data.sceneLabelEligible === false) return;
+    if (data.labelAnchor === true || data.sceneLabelEligible === true) {
+      structured = true;
+    }
+  });
+  return structured;
+}
+
+export function chooseLabelAnchors(
+  group: THREE.Group,
+): Map<string, THREE.Object3D> {
+  const choices = new Map<string, LabelAnchorChoice>();
+  const structuredOnly = hasStructuredLabelAnchors(group);
+  group.traverse((obj) => {
+    const data = obj.userData as {
+      labelAnchor?: boolean;
       displayName?: string;
+      sceneLabelEligible?: boolean;
       sceneSectionLabelHidden?: boolean;
     };
+    if (data.sceneLabelEligible === false) return;
+    if (structuredOnly && data.labelAnchor !== true && data.sceneLabelEligible !== true) {
+      return;
+    }
+    if (obj.visible === false) return;
     if (data.sceneSectionLabelHidden === true) return;
     const dn = data.displayName;
     if (typeof dn !== "string" || dn.length === 0) return;
@@ -1046,14 +1073,17 @@ export function SceneLabels({ sceneHandle }: Props) {
 
   // Mirror live-updating state into refs so the rAF subscription doesn't
   // need to re-bind whenever environment/page changes.
-  const envRef = useRef(state.environment);
-  envRef.current = state.environment;
   const sourceIndex = transitionFrame.sourceIndex;
   const targetIndex = transitionFrame.targetIndex;
   const page =
     targetIndex !== null && transitionFrame.progress >= 0.92
       ? pages[targetIndex] ?? pages[sourceIndex]
       : pages[sourceIndex];
+  const pageEnvironment = page
+    ? resolveEnvironmentForPage(state.environment, state.pages, page)
+    : state.environment;
+  const envRef = useRef(pageEnvironment);
+  envRef.current = pageEnvironment;
   const pageRef = useRef(page);
   pageRef.current = page;
 
@@ -1421,7 +1451,7 @@ export function SceneLabels({ sceneHandle }: Props) {
           }
         }
       }
-    });
+    }, "SceneLabels.layout");
 
     return () => {
       off();

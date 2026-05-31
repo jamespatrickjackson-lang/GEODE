@@ -13,6 +13,7 @@ import {
 } from "../../styleControls";
 import type { EditableStyle, PresentationPage } from "../../../pages/types";
 import type { SceneHandle } from "../../../scene";
+import { useEditor } from "../../EditorContext";
 import { UTAH_FORGE_SCENE_SECTION_LAYER_ID } from "../../../projectModules/utahForge/layerIds";
 import { SCALAR_SOURCE_MAX, SCALAR_SOURCE_MIN } from "../scalarSourceRange";
 
@@ -55,6 +56,7 @@ export function IsobandControls({
   setEnvLayerStyle: LayerStyleSetter;
   setPageLayerOverride: PageStyleSetter;
 }) {
+  const { canApplyLiveSceneEdits } = useEditor();
   const enabled = styleBoolean(style, "sectionIsoEnabled", false);
   const linesVisible = styleBoolean(style, "sectionIsoLinesVisible", true);
   const bandsVisible = styleBoolean(style, "sectionIsoBandsVisible", true);
@@ -130,7 +132,9 @@ export function IsobandControls({
   );
   const commit = (patch: Partial<EditableStyle>) => {
     if (disabled) return;
-    sceneHandle?.manager.applyStyle(layerId, { ...style, ...patch });
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle?.manager.applyStyle(layerId, { ...style, ...patch });
+    }
     if (isEnv) {
       setEnvLayerStyle(layerId, patch);
     } else if (currentPage) {
@@ -140,7 +144,9 @@ export function IsobandControls({
   const commitScene = (patch: Partial<EditableStyle>) => {
     if (disabled || !volumePlanes || !sceneHandle) return;
     const merged = { ...sceneStyle, ...patch };
-    sceneHandle.manager.applyStyle(UTAH_FORGE_SCENE_SECTION_LAYER_ID, merged);
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyStyle(UTAH_FORGE_SCENE_SECTION_LAYER_ID, merged);
+    }
     if (isEnv) {
       setEnvLayerStyle(UTAH_FORGE_SCENE_SECTION_LAYER_ID, patch);
     } else if (currentPage) {

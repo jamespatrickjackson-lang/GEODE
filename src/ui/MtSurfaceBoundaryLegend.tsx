@@ -12,9 +12,14 @@ import {
   resolveLegendTextColors,
   transparentLegendPanelStyle,
 } from "./legendStyles";
-import { effectiveStyle, effectiveVisibility } from "../pages/effective";
+import {
+  effectiveStyle,
+  effectiveVisibility,
+  resolveEnvironmentForPage,
+} from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
+import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
 import {
   boundaryStyleFromDefinition,
   mtSurfaceBoundaryDefinitionsFromMetadata,
@@ -51,8 +56,13 @@ export function MtSurfaceBoundaryLegend({
   stacked?: boolean;
   pageOverride?: PresentationPage | null;
 }) {
-  const { state, sceneHandle, setEnvLayerStyle, setPageLayerOverride } =
-    useEditor();
+  const {
+    state,
+    sceneHandle,
+    setEnvLayerStyle,
+    setPageLayerOverride,
+    canApplyLiveSceneEdits,
+  } = useEditor();
   const { pages, currentIndex, transitionFrame } = usePageController();
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
   const legendTextColors = resolveLegendTextColors(
@@ -66,6 +76,7 @@ export function MtSurfaceBoundaryLegend({
     pages[transitionFrame.sourceIndex] ??
     pages[currentIndex];
   const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
+  const authoringPage = selectedLegendAuthoringPage(state);
   const selectedPage =
     !pageOverride &&
     !editingEnvironment &&
@@ -78,16 +89,22 @@ export function MtSurfaceBoundaryLegend({
     (transitionFrame.active && targetIndex !== null
       ? controllerPage
       : selectedPage ?? controllerPage);
+  const writePage = authoringPage ?? page;
   if (!page) return null;
+  const pageEnvironment = resolveEnvironmentForPage(
+    state.environment,
+    state.pages,
+    page,
+  );
 
   const visible = editingEnvironment
     ? new Set(state.environment.defaultVisibleLayers)
-    : effectiveVisibility(state.environment, page);
+    : effectiveVisibility(pageEnvironment, page);
   if (!visible.has(MT_THRESHOLD_SURFACES_LAYER_ID)) return null;
 
   const style = editingEnvironment
     ? state.environment.layerStyles[MT_THRESHOLD_SURFACES_LAYER_ID] ?? {}
-    : effectiveStyle(state.environment, page, MT_THRESHOLD_SURFACES_LAYER_ID);
+    : effectiveStyle(pageEnvironment, page, MT_THRESHOLD_SURFACES_LAYER_ID);
   if (style.mtSurfaceBoundaryLegendVisible === false) return null;
 
   const layer = state.manifest.layers.find(
@@ -105,6 +122,11 @@ export function MtSurfaceBoundaryLegend({
     style.mtSurfaceBoundariesById !== null
       ? style.mtSurfaceBoundariesById
       : {};
+  const legacyVisibility =
+    typeof style.mtThresholdSurfaceVisibility === "object" &&
+    style.mtThresholdSurfaceVisibility !== null
+      ? (style.mtThresholdSurfaceVisibility as Record<string, boolean>)
+      : {};
   const definitionsById = new Map(definitions.map((definition) => [definition.id, definition]));
   const setBoundaryVisibility = (boundaryId: string, nextVisible: boolean) => {
     const definition = definitionsById.get(boundaryId);
@@ -115,6 +137,10 @@ export function MtSurfaceBoundaryLegend({
       mtSurfaceBoundaryOrder: order.includes(boundaryId)
         ? order
         : [...order, boundaryId],
+      mtThresholdSurfaceVisibility: {
+        ...legacyVisibility,
+        [boundaryId]: nextVisible,
+      },
       mtSurfaceBoundariesById: {
         ...boundaryStyles,
         [boundaryId]: {
@@ -123,14 +149,16 @@ export function MtSurfaceBoundaryLegend({
         },
       },
     };
-    sceneHandle.manager.applyStyle(MT_THRESHOLD_SURFACES_LAYER_ID, {
-      ...style,
-      ...patch,
-    });
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyStyle(MT_THRESHOLD_SURFACES_LAYER_ID, {
+        ...style,
+        ...patch,
+      });
+    }
     if (editingEnvironment) {
       setEnvLayerStyle(MT_THRESHOLD_SURFACES_LAYER_ID, patch);
-    } else {
-      setPageLayerOverride(page.id, MT_THRESHOLD_SURFACES_LAYER_ID, patch);
+    } else if (writePage) {
+      setPageLayerOverride(writePage.id, MT_THRESHOLD_SURFACES_LAYER_ID, patch);
     }
   };
 

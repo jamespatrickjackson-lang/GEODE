@@ -216,6 +216,11 @@ export function PagePanel({ sceneHandle }: Props) {
     selectedActionPage && selectedActionPageIndex >= 0
       ? pageAccentForPage(selectedActionPage, selectedActionPageIndex)
       : null;
+  const pageStructureLocked = isTransitioning || targetIndex !== null;
+  const pageStructureLockedTitle =
+    "Page structure is locked while the camera is transitioning";
+  const pageStructureActionTitle = (title: string) =>
+    pageStructureLocked ? pageStructureLockedTitle : title;
   const globalSettingsSelected = visualSelectedPageId === ENVIRONMENT_SENTINEL;
   const renderPresetOptions = renderPresetOptionsForEnvironment(
     state.environment,
@@ -287,6 +292,7 @@ export function PagePanel({ sceneHandle }: Props) {
   };
 
   const onAdd = () => {
+    if (pageStructureLocked) return;
     const pose = capturePose(sceneHandle.camera, sceneHandle.controls);
     const id = addPage(pose);
     const idx = state.pages.length;
@@ -295,16 +301,19 @@ export function PagePanel({ sceneHandle }: Props) {
   };
 
   const onAddSubMaster = () => {
+    if (pageStructureLocked) return;
     const pose = capturePose(sceneHandle.camera, sceneHandle.controls);
     addSubMaster(pose);
   };
 
   const onAddSubMasterChild = (parentMasterId: string) => {
+    if (pageStructureLocked) return;
     const pose = capturePose(sceneHandle.camera, sceneHandle.controls);
     addSubMasterChild(parentMasterId, pose);
   };
 
   const onReSnapshotClick = (pageId: string) => {
+    if (pageStructureLocked) return;
     if (reSnapshotConfirmId === pageId) {
       reSnapshotSubMaster(pageId);
       setReSnapshotConfirmId(null);
@@ -314,6 +323,7 @@ export function PagePanel({ sceneHandle }: Props) {
   };
 
   const onDuplicateSelected = () => {
+    if (pageStructureLocked) return;
     if (!selectedActionPage) return;
     const sourceIndex = state.pages.findIndex(
       (page) => page.id === selectedActionPage.id,
@@ -327,6 +337,7 @@ export function PagePanel({ sceneHandle }: Props) {
   };
 
   const onDeleteSelected = () => {
+    if (pageStructureLocked) return;
     if (!selectedActionPage || state.pages.length <= 1) return;
     // Sub Master deletion cascades to every child (DEC-079). Surface the
     // child count so the author cannot delete a populated group by accident.
@@ -420,12 +431,16 @@ export function PagePanel({ sceneHandle }: Props) {
               className="editor-action-button"
               style={pageManagerIconButtonStyle({
                 surface: globalSettingsSelected ? "tinted" : "dark",
+                disabled: pageStructureLocked,
               })}
+              disabled={pageStructureLocked}
               onClick={(e) => {
                 e.stopPropagation();
                 onAddSubMaster();
               }}
-              title="Add Sub Master (snapshot global environment for a group)"
+              title={pageStructureActionTitle(
+                "Add Sub Master (snapshot global environment for a group)",
+              )}
               aria-label="Add Sub Master"
             >
               <AddIcon />
@@ -490,6 +505,8 @@ export function PagePanel({ sceneHandle }: Props) {
           const canMoveDown = isMasterChildRow
             ? (meta.childRank ?? 1) < (meta.siblingCount ?? 1)
             : i < state.pages.length - 1;
+          const moveUpDisabled = pageStructureLocked || !canMoveUp;
+          const moveDownDisabled = pageStructureLocked || !canMoveDown;
           const reSnapshotPending = reSnapshotConfirmId === p.id;
           return (
             <div
@@ -576,6 +593,7 @@ export function PagePanel({ sceneHandle }: Props) {
                   onCommit={(next) => setPageField(p.id, { title: next })}
                   title={p.title}
                   truncate
+                  editTrigger="doubleClick"
                   textStyle={{
                     fontWeight: pageHasLanded ? 600 : 400,
                     color: pageHidden
@@ -593,12 +611,16 @@ export function PagePanel({ sceneHandle }: Props) {
                       className="editor-action-button"
                       style={pageManagerIconButtonStyle({
                         surface: actionSurface,
+                        disabled: pageStructureLocked,
                       })}
+                      disabled={pageStructureLocked}
                       onClick={(e) => {
                         e.stopPropagation();
                         onAddSubMasterChild(p.id);
                       }}
-                      title="Add child page inheriting this Sub Master"
+                      title={pageStructureActionTitle(
+                        "Add child page inheriting this Sub Master",
+                      )}
                       aria-label="Add Sub Master child"
                     >
                       <AddIcon />
@@ -607,13 +629,17 @@ export function PagePanel({ sceneHandle }: Props) {
                       className="editor-action-button"
                       style={pageManagerIconButtonStyle({
                         surface: reSnapshotPending ? "tinted" : actionSurface,
+                        disabled: pageStructureLocked,
                       })}
+                      disabled={pageStructureLocked}
                       onClick={(e) => {
                         e.stopPropagation();
                         onReSnapshotClick(p.id);
                       }}
                       title={
-                        reSnapshotPending
+                        pageStructureLocked
+                          ? pageStructureLockedTitle
+                          : reSnapshotPending
                           ? "Click again to confirm — replace this Sub Master's frozen snapshot with the current global environment"
                           : "Re-snapshot from Global"
                       }
@@ -656,14 +682,15 @@ export function PagePanel({ sceneHandle }: Props) {
                   data-dev-note="panelStyles.iconButton controls these reorder and visibility button circles."
                   style={pageManagerIconButtonStyle({
                     surface: actionSurface,
-                    disabled: !canMoveUp,
+                    disabled: moveUpDisabled,
                   })}
-                  disabled={!canMoveUp}
+                  disabled={moveUpDisabled}
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (moveUpDisabled) return;
                     reorderPage(p.id, "up");
                   }}
-                  title="Move up"
+                  title={pageStructureActionTitle("Move up")}
                   aria-label="Move page up"
                 >
                   <span style={upTriangleIconStyle} aria-hidden="true" />
@@ -674,14 +701,15 @@ export function PagePanel({ sceneHandle }: Props) {
                   data-dev-note="panelStyles.iconButton controls these reorder and visibility button circles."
                   style={pageManagerIconButtonStyle({
                     surface: actionSurface,
-                    disabled: !canMoveDown,
+                    disabled: moveDownDisabled,
                   })}
-                  disabled={!canMoveDown}
+                  disabled={moveDownDisabled}
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (moveDownDisabled) return;
                     reorderPage(p.id, "down");
                   }}
-                  title="Move down"
+                  title={pageStructureActionTitle("Move down")}
                   aria-label="Move page down"
                 >
                   <span style={downTriangleIconStyle} aria-hidden="true" />
@@ -690,12 +718,23 @@ export function PagePanel({ sceneHandle }: Props) {
                   className="editor-action-button"
                   data-dev-source="src/editor/styles.ts:148"
                   data-dev-note="panelStyles.iconButton controls these reorder and visibility button circles."
-                  style={pageManagerIconButtonStyle({ surface: actionSurface })}
+                  style={pageManagerIconButtonStyle({
+                    surface: actionSurface,
+                    disabled: pageStructureLocked,
+                  })}
+                  disabled={pageStructureLocked}
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (pageStructureLocked) return;
                     setPageField(p.id, { hidden: !pageHidden });
                   }}
-                  title={pageHidden ? "Show page" : "Hide page"}
+                  title={
+                    pageStructureLocked
+                      ? pageStructureLockedTitle
+                      : pageHidden
+                        ? "Show page"
+                        : "Hide page"
+                  }
                   aria-label={pageHidden ? "Show page" : "Hide page"}
                 >
                   {pageHidden ? <EyeOffIcon /> : <EyeIcon />}
@@ -714,20 +753,25 @@ export function PagePanel({ sceneHandle }: Props) {
         <span style={pageFooterActionsStyle}>
           <button
             className="editor-action-button"
-            style={pageFooterActionButtonStyle()}
+            style={pageFooterActionButtonStyle(pageStructureLocked)}
+            disabled={pageStructureLocked}
             onClick={onAdd}
-            title="Add page"
+            title={pageStructureActionTitle("Add page")}
             aria-label="Add page"
           >
             <AddIcon />
           </button>
           <button
             className="editor-action-button"
-            style={pageFooterActionButtonStyle(!selectedActionPage)}
-            disabled={!selectedActionPage}
+            style={pageFooterActionButtonStyle(
+              pageStructureLocked || !selectedActionPage,
+            )}
+            disabled={pageStructureLocked || !selectedActionPage}
             onClick={onDuplicateSelected}
             title={
-              selectedActionPage
+              pageStructureLocked
+                ? pageStructureLockedTitle
+                : selectedActionPage
                 ? `Duplicate ${selectedActionPage.title}`
                 : "Select a page first"
             }
@@ -737,9 +781,12 @@ export function PagePanel({ sceneHandle }: Props) {
           </button>
           <button
             className="editor-action-button"
-            style={pageFooterActionButtonStyle(!selectedActionPage)}
-            disabled={!selectedActionPage}
+            style={pageFooterActionButtonStyle(
+              pageStructureLocked || !selectedActionPage,
+            )}
+            disabled={pageStructureLocked || !selectedActionPage}
             onClick={() => {
+              if (pageStructureLocked) return;
               if (!selectedActionPage) return;
               if (
                 confirm(
@@ -749,7 +796,11 @@ export function PagePanel({ sceneHandle }: Props) {
                 resetPageOverrides(selectedActionPage.id);
               }
             }}
-            title="Strip layer, visibility, exposure, and bloom overrides from the selected page only."
+            title={
+              pageStructureLocked
+                ? pageStructureLockedTitle
+                : "Strip layer, visibility, exposure, and bloom overrides from the selected page only."
+            }
             aria-label="Reset selected page overrides"
           >
             <ResetIcon />
@@ -757,12 +808,16 @@ export function PagePanel({ sceneHandle }: Props) {
           <button
             className="editor-action-button"
             style={pageFooterActionButtonStyle(
-              !selectedActionPage || state.pages.length <= 1,
+              pageStructureLocked || !selectedActionPage || state.pages.length <= 1,
             )}
-            disabled={!selectedActionPage || state.pages.length <= 1}
+            disabled={
+              pageStructureLocked || !selectedActionPage || state.pages.length <= 1
+            }
             onClick={onDeleteSelected}
             title={
-              selectedActionPage
+              pageStructureLocked
+                ? pageStructureLockedTitle
+                : selectedActionPage
                 ? `Delete ${selectedActionPage.title}`
                 : "Select a page first"
             }

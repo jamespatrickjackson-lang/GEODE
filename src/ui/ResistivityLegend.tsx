@@ -17,9 +17,14 @@ import {
   resolveLegendTextColors,
   transparentLegendPanelStyle,
 } from "./legendStyles";
-import { effectiveStyle, effectiveVisibility } from "../pages/effective";
+import {
+  effectiveStyle,
+  effectiveVisibility,
+  resolveEnvironmentForPage,
+} from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
+import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const MT_RESISTIVITY_FULL_DENSITY_LAYER_ID =
@@ -517,8 +522,13 @@ export function ResistivityLegend({
   pageOverride?: PresentationPage | null;
   testIdsEnabled?: boolean;
 }) {
-  const { state, sceneHandle, setEnvLayerStyle, setPageLayerOverride } =
-    useEditor();
+  const {
+    state,
+    sceneHandle,
+    setEnvLayerStyle,
+    setPageLayerOverride,
+    canApplyLiveSceneEdits,
+  } = useEditor();
   const { pages, currentIndex, transitionFrame } = usePageController();
   const rootRef = useRef<HTMLElement | null>(null);
   const rampRef = useRef<HTMLDivElement | null>(null);
@@ -560,6 +570,7 @@ export function ResistivityLegend({
     pages[sourceIndex] ??
     pages[currentIndex];
   const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
+  const authoringPage = selectedLegendAuthoringPage(state);
   const selectedPage =
     !pageOverride &&
     !editingEnvironment &&
@@ -572,11 +583,17 @@ export function ResistivityLegend({
     (transitionActive && targetIndex !== null
       ? controllerPage
       : selectedPage ?? controllerPage);
+  const writePage = authoringPage ?? page;
   if (!page) return null;
+  const pageEnvironment = resolveEnvironmentForPage(
+    state.environment,
+    state.pages,
+    page,
+  );
 
   const visible = editingEnvironment
     ? new Set(state.environment.defaultVisibleLayers)
-    : effectiveVisibility(state.environment, page);
+    : effectiveVisibility(pageEnvironment, page);
   const visibleScalarLayers = activeScalarLayers(visible);
   const activeLayer =
     selectedLayer && visibleScalarLayers.includes(selectedLayer)
@@ -596,12 +613,17 @@ export function ResistivityLegend({
       : MT_RESISTIVITY_PREVIEW_LAYER_ID;
   const targetStyle = editingEnvironment
     ? state.environment.layerStyles[layerId] ?? {}
-    : effectiveStyle(state.environment, page, layerId);
+    : effectiveStyle(pageEnvironment, page, layerId);
   const currentPage =
     pageOverride ?? pages[sourceIndex] ?? pages[currentIndex] ?? page;
+  const currentPageEnvironment = resolveEnvironmentForPage(
+    state.environment,
+    state.pages,
+    currentPage,
+  );
   const currentStyle = editingEnvironment
     ? targetStyle
-    : effectiveStyle(state.environment, currentPage, layerId);
+    : effectiveStyle(currentPageEnvironment, currentPage, layerId);
   const style =
     !pageOverride && !editingEnvironment && transitionActive && targetIndex !== null
       ? interpolatedScalarLegendStyle(
@@ -741,19 +763,23 @@ export function ResistivityLegend({
       patch.scalarVolumeThresholdMin = nextTrimMin;
       patch.scalarVolumeThresholdMax = nextTrimMax;
     }
-    sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
+    }
     if (editingEnvironment) {
       setEnvLayerStyle(layerId, patch);
-    } else {
-      setPageLayerOverride(page.id, layerId, patch);
+    } else if (writePage) {
+      setPageLayerOverride(writePage.id, layerId, patch);
     }
   };
   const setScalarRenderPatch = (patch: Partial<EditableStyle>) => {
-    sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
+    }
     if (editingEnvironment) {
       setEnvLayerStyle(layerId, patch);
-    } else {
-      setPageLayerOverride(page.id, layerId, patch);
+    } else if (writePage) {
+      setPageLayerOverride(writePage.id, layerId, patch);
     }
   };
   const setEdgeValue = (handle: EdgeHandle, value: number) => {
@@ -761,11 +787,13 @@ export function ResistivityLegend({
       handle === "edgeLower"
         ? { scalarEdgeLowerValue: clamp(value, trimMin, Math.max(trimMin, blendMin)) }
         : { scalarEdgeUpperValue: clamp(value, Math.min(blendMax, trimMax), trimMax) };
-    sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
+    }
     if (editingEnvironment) {
       setEnvLayerStyle(layerId, patch);
-    } else {
-      setPageLayerOverride(page.id, layerId, patch);
+    } else if (writePage) {
+      setPageLayerOverride(writePage.id, layerId, patch);
     }
   };
   const nearestHandleForValue = (value: number): SpectralHandle => {

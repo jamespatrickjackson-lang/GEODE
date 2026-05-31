@@ -3,7 +3,10 @@ import type { CSSProperties } from "react";
 import * as THREE from "three";
 import { useEditor } from "../editor/EditorContext";
 import { DEFAULT_ASSAY_COLOR_STOPS } from "../loaders/assayPalette";
-import { effectiveVisibility } from "../pages/effective";
+import {
+  effectiveVisibility,
+  resolveEnvironmentForPage,
+} from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { DrillFocus, SceneHandle } from "../scene";
 import {
@@ -96,6 +99,9 @@ export function AssayLegend({ sceneHandle }: { sceneHandle: SceneHandle }) {
     targetIndex !== null && transitionFrame.progress >= 0.92
       ? pages[targetIndex] ?? pages[sourceIndex]
       : pages[sourceIndex];
+  const pageEnvironment = page
+    ? resolveEnvironmentForPage(state.environment, state.pages, page)
+    : state.environment;
   const assays = state.environment.scene?.drilling?.assays ?? {};
   const traceMode = assays.traceMode ?? "assay";
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -108,7 +114,7 @@ export function AssayLegend({ sceneHandle }: { sceneHandle: SceneHandle }) {
   const legendVisible =
     !!page &&
     (traceMode === "assay" || traceMode === "both") &&
-    effectiveVisibility(state.environment, page).has(ASSAY_LAYER_ID);
+    effectiveVisibility(pageEnvironment, page).has(ASSAY_LAYER_ID);
   visibleRef.current = legendVisible;
 
   const overrides = new Map(
@@ -131,62 +137,65 @@ export function AssayLegend({ sceneHandle }: { sceneHandle: SceneHandle }) {
 
   useEffect(() => {
     const projected = new THREE.Vector3();
-    const off = sceneHandle.onTick(() => {
-      const svg = svgRef.current;
-      if (!svg) return;
-      const focus = focusRef.current;
-      if (!visibleRef.current || !focus) {
-        svg.style.opacity = "0";
-        for (const path of lineRefs.current.values()) setPathHidden(path);
-        if (targetRef.current) targetRef.current.style.opacity = "0";
-        return;
-      }
-
-      const viewportW = window.innerWidth;
-      const viewportH = window.innerHeight;
-      svg.setAttribute("viewBox", `0 0 ${viewportW} ${viewportH}`);
-
-      projected.copy(focus.point).project(sceneHandle.camera);
-      if (
-        projected.z < -1 ||
-        projected.z > 1 ||
-        projected.x < -1.15 ||
-        projected.x > 1.15 ||
-        projected.y < -1.15 ||
-        projected.y > 1.15
-      ) {
-        svg.style.opacity = "0";
-        for (const path of lineRefs.current.values()) setPathHidden(path);
-        if (targetRef.current) targetRef.current.style.opacity = "0";
-        return;
-      }
-
-      const tx = (projected.x * 0.5 + 0.5) * viewportW;
-      const ty = (1 - (projected.y * 0.5 + 0.5)) * viewportH;
-      svg.style.opacity = "1";
-
-      if (targetRef.current) {
-        targetRef.current.setAttribute("cx", tx.toFixed(1));
-        targetRef.current.setAttribute("cy", ty.toFixed(1));
-        targetRef.current.style.opacity = "0.9";
-      }
-
-      for (const stop of stops) {
-        const chip = chipRefs.current.get(stop.id);
-        const path = lineRefs.current.get(stop.id);
-        if (!chip || !path) {
-          setPathHidden(path);
-          continue;
+    const off = sceneHandle.onTick(
+      () => {
+        const svg = svgRef.current;
+        if (!svg) return;
+        const focus = focusRef.current;
+        if (!visibleRef.current || !focus) {
+          svg.style.opacity = "0";
+          for (const path of lineRefs.current.values()) setPathHidden(path);
+          if (targetRef.current) targetRef.current.style.opacity = "0";
+          return;
         }
-        const rect = chip.getBoundingClientRect();
-        const chipMidX = rect.left + rect.width / 2;
-        const sx = tx >= chipMidX ? rect.right - 2 : rect.left + 2;
-        const sy = rect.top + rect.height / 2;
-        path.setAttribute("d", leaderPath(sx, sy, tx, ty));
-        path.setAttribute("stroke", stop.color);
-        path.style.opacity = "0.78";
-      }
-    });
+
+        const viewportW = window.innerWidth;
+        const viewportH = window.innerHeight;
+        svg.setAttribute("viewBox", `0 0 ${viewportW} ${viewportH}`);
+
+        projected.copy(focus.point).project(sceneHandle.camera);
+        if (
+          projected.z < -1 ||
+          projected.z > 1 ||
+          projected.x < -1.15 ||
+          projected.x > 1.15 ||
+          projected.y < -1.15 ||
+          projected.y > 1.15
+        ) {
+          svg.style.opacity = "0";
+          for (const path of lineRefs.current.values()) setPathHidden(path);
+          if (targetRef.current) targetRef.current.style.opacity = "0";
+          return;
+        }
+
+        const tx = (projected.x * 0.5 + 0.5) * viewportW;
+        const ty = (1 - (projected.y * 0.5 + 0.5)) * viewportH;
+        svg.style.opacity = "1";
+
+        if (targetRef.current) {
+          targetRef.current.setAttribute("cx", tx.toFixed(1));
+          targetRef.current.setAttribute("cy", ty.toFixed(1));
+          targetRef.current.style.opacity = "0.9";
+        }
+
+        for (const stop of stops) {
+          const chip = chipRefs.current.get(stop.id);
+          const path = lineRefs.current.get(stop.id);
+          if (!chip || !path) {
+            setPathHidden(path);
+            continue;
+          }
+          const rect = chip.getBoundingClientRect();
+          const chipMidX = rect.left + rect.width / 2;
+          const sx = tx >= chipMidX ? rect.right - 2 : rect.left + 2;
+          const sy = rect.top + rect.height / 2;
+          path.setAttribute("d", leaderPath(sx, sy, tx, ty));
+          path.setAttribute("stroke", stop.color);
+          path.style.opacity = "0.78";
+        }
+      },
+      "AssayLegend.leaders",
+    );
     return off;
   }, [sceneHandle, stopsKey, stops]);
 

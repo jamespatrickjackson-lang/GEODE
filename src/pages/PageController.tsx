@@ -54,6 +54,7 @@ interface PageControllerValue {
   resetToPose: () => void;
   /** Force-tween the camera to an arbitrary pose (used by pose history). */
   tweenToPose: (pose: PresentationPage["camera"]) => void;
+  reapplyCurrentPageState: () => void;
 }
 
 const PageControllerContext = createContext<PageControllerValue | null>(null);
@@ -167,9 +168,161 @@ interface TransitionSmoothnessTraceOptions {
   maxDurationMs?: number;
 }
 
+interface TransitionSmoothnessTraceSceneDebug {
+  active: boolean;
+  sourcePageId: string | null;
+  targetPageId: string | null;
+  activeDataTransitionCount: number;
+  snapshotCount: number;
+  scalarTweenCount: number;
+  layerTweenCount: number;
+  workingAreaFocusTweenActive: boolean;
+  sceneSectionStyleTweenActive: boolean;
+  sceneSectionHelperTransitionSnapshotActive: boolean;
+  sceneSectionHelpers:
+    | NonNullable<SceneTransitionDebugState>["sceneSectionHelpers"]
+    | null;
+  renderLoop: ReturnType<SceneHandle["getFrameLoopDebugState"]> | null;
+  productFamilyCounts: Record<string, number>;
+  sceneSectionHelperTransitionOpacity: number | null;
+  layerTweenTick: NonNullable<SceneTransitionDebugState>["layerTweenTick"];
+  frameUpdate: NonNullable<SceneTransitionDebugState>["frameUpdate"];
+  lateReapplyTotalCount: number;
+  lateReapplyDuringTransitionCount: number;
+  latestLateReapplyAction: string | null;
+  latestLateReapplyReason: string | null;
+  latestLateReapplyProgress: number | null;
+}
+
+interface TransitionSmoothnessTraceCameraDebug {
+  sourcePageId: string | null;
+  targetPageId: string | null;
+  durationMs: number;
+  elapsedMs: number;
+  rawProgress: number;
+  easedProgress: number;
+  sourcePosition: { x: number; y: number; z: number };
+  targetPosition: { x: number; y: number; z: number };
+  sourceTarget: { x: number; y: number; z: number };
+  targetTarget: { x: number; y: number; z: number };
+  sourceFov: number;
+  targetFov: number;
+  pathDistance: number;
+  positionDistanceFromSource: number;
+  positionDistanceToTarget: number;
+  targetDistanceFromSource: number;
+  targetDistanceToTarget: number;
+  fovDistanceFromSource: number;
+  fovDistanceToTarget: number;
+}
+
+interface TransitionSmoothnessTraceTimerDebug {
+  intervalMs: number;
+  tickIndex: number;
+  deltaMs: number | null;
+  maxDeltaMs: number;
+  ageMs: number | null;
+  ticksSinceLastSample: number;
+}
+
+interface TransitionSmoothnessTraceTimerState {
+  intervalId: number | null;
+  intervalMs: number;
+  tickIndex: number;
+  lastTickAtMs: number | null;
+  lastDeltaMs: number | null;
+  maxDeltaMs: number;
+  lastSampleTickIndex: number;
+}
+
+interface TransitionSmoothnessTraceLongTaskDebug {
+  supported: boolean;
+  totalCount: number;
+  totalDurationMs: number;
+  maxDurationMs: number;
+  lastStartMs: number | null;
+  lastDurationMs: number | null;
+  ageMs: number | null;
+  countSinceLastSample: number;
+  durationSinceLastSampleMs: number;
+  maxDurationSinceLastSampleMs: number;
+}
+
+interface TransitionSmoothnessTraceLongTaskState {
+  observer: PerformanceObserver | null;
+  supported: boolean;
+  totalCount: number;
+  totalDurationMs: number;
+  maxDurationMs: number;
+  lastStartMs: number | null;
+  lastDurationMs: number | null;
+  countSinceLastSample: number;
+  durationSinceLastSampleMs: number;
+  maxDurationSinceLastSampleMs: number;
+}
+
+interface TransitionSmoothnessTraceAnimationFrameScriptDebug {
+  sourceUrl: string | null;
+  functionName: string | null;
+  invoker: string | null;
+  invokerType: string | null;
+  windowAttribution: string | null;
+  durationMs: number;
+  executionStartMs: number | null;
+  forcedStyleAndLayoutDurationMs: number;
+  pauseDurationMs: number;
+}
+
+interface TransitionSmoothnessTraceAnimationFrameDebug {
+  supported: boolean;
+  totalCount: number;
+  totalDurationMs: number;
+  maxDurationMs: number;
+  totalBlockingDurationMs: number;
+  maxBlockingDurationMs: number;
+  countSinceLastSample: number;
+  durationSinceLastSampleMs: number;
+  blockingDurationSinceLastSampleMs: number;
+  maxBlockingDurationSinceLastSampleMs: number;
+  scriptsSinceLastSample: TransitionSmoothnessTraceAnimationFrameScriptDebug[];
+}
+
+interface TransitionSmoothnessTraceAnimationFrameState {
+  observer: PerformanceObserver | null;
+  supported: boolean;
+  totalCount: number;
+  totalDurationMs: number;
+  maxDurationMs: number;
+  totalBlockingDurationMs: number;
+  maxBlockingDurationMs: number;
+  countSinceLastSample: number;
+  durationSinceLastSampleMs: number;
+  blockingDurationSinceLastSampleMs: number;
+  maxBlockingDurationSinceLastSampleMs: number;
+  scriptsSinceLastSample: TransitionSmoothnessTraceAnimationFrameScriptDebug[];
+}
+
+interface TransitionSmoothnessTraceControllerTickDebug {
+  totalMs: number;
+  tweenerMs: number;
+  pageTransitionProgressMs: number;
+  transitionDynamicCameraMs: number;
+  dynamicCameraMs: number;
+  lockedCameraFocusMs: number;
+  smoothnessSampleMs: number;
+  progressStateUpdated: boolean;
+}
+
+interface TransitionSmoothnessTraceControllerDebug {
+  traceSampleMs: number;
+  transitionTick: TransitionSmoothnessTraceControllerTickDebug | null;
+}
+
 interface TransitionSmoothnessTraceSample {
   elapsedMs: number;
   timestampMs: number;
+  dtMs: number | null;
+  longGap: boolean;
   currentIndex: number;
   currentPageId: string | null;
   targetIndex: number | null;
@@ -189,13 +342,19 @@ interface TransitionSmoothnessTraceSample {
   cameraPosition: { x: number; y: number; z: number };
   cameraTarget: { x: number; y: number; z: number };
   cameraFov: number;
+  cameraTransition: TransitionSmoothnessTraceCameraDebug | null;
+  sceneDebug: TransitionSmoothnessTraceSceneDebug;
+  timerDebug: TransitionSmoothnessTraceTimerDebug | null;
+  longTaskDebug: TransitionSmoothnessTraceLongTaskDebug | null;
+  animationFrameDebug: TransitionSmoothnessTraceAnimationFrameDebug | null;
+  controllerDebug: TransitionSmoothnessTraceControllerDebug;
   consumerDebug: TransitionConsumerDebugState;
 }
 
 interface TransitionSmoothnessTrace {
   traceId: string;
   metadata: Record<string, unknown>;
-  sampling: "app-tick";
+  sampling: "app-tick" | "app-raf";
   startedAt: string;
   startedAtMs: number;
   endedAt: string | null;
@@ -240,6 +399,8 @@ const PAGE_BOUND_UI_SWITCH_THRESHOLD = 0.92;
 const UTAH_FORGE_LEGEND_EXIT_END = 0.34;
 const UTAH_FORGE_LEGEND_LAYOUT_END = 0.68;
 const DEFAULT_SMOOTHNESS_TRACE_MAX_MS = 6000;
+const SMOOTHNESS_TRACE_LONG_GAP_MS = 150;
+const SMOOTHNESS_TRACE_TIMER_INTERVAL_MS = 50;
 
 function traceNumber(value: number | null | undefined, digits = 3): number {
   return typeof value === "number" && Number.isFinite(value)
@@ -256,11 +417,141 @@ function traceOptionalNumber(
     : null;
 }
 
+function traceOptionalString(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
 function traceVector3(value: THREE.Vector3): { x: number; y: number; z: number } {
   return {
     x: traceNumber(value.x),
     y: traceNumber(value.y),
     z: traceNumber(value.z),
+  };
+}
+
+function posePoint(value: Pose["position"]): { x: number; y: number; z: number } {
+  return {
+    x: traceNumber(value[0]),
+    y: traceNumber(value[1]),
+    z: traceNumber(value[2]),
+  };
+}
+
+function productFamilyCounts(
+  rows: readonly TransitionProductDebugRow[] | null | undefined,
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const row of rows ?? []) {
+    counts[row.family] = (counts[row.family] ?? 0) + 1;
+  }
+  return counts;
+}
+
+function sceneTraceDebug(
+  sceneTransition: SceneTransitionDebugState,
+  renderLoop: ReturnType<SceneHandle["getFrameLoopDebugState"]> | null,
+): TransitionSmoothnessTraceSceneDebug {
+  const latestEvents = sceneTransition?.lateReapply?.events ?? [];
+  const latestEvent =
+    latestEvents.length > 0 ? latestEvents[latestEvents.length - 1] : null;
+  return {
+    active: sceneTransition?.active === true,
+    sourcePageId: sceneTransition?.sourcePageId ?? null,
+    targetPageId: sceneTransition?.targetPageId ?? null,
+    activeDataTransitionCount: sceneTransition?.activeDataTransitionCount ?? 0,
+    snapshotCount: sceneTransition?.snapshotCount ?? 0,
+    scalarTweenCount: sceneTransition?.scalarTweenCount ?? 0,
+    layerTweenCount: sceneTransition?.layerTweenCount ?? 0,
+    workingAreaFocusTweenActive:
+      sceneTransition?.workingAreaFocusTweenActive === true,
+    sceneSectionStyleTweenActive:
+      sceneTransition?.sceneSectionStyleTweenActive === true,
+    sceneSectionHelperTransitionSnapshotActive:
+      sceneTransition?.sceneSectionHelperTransitionSnapshotActive === true,
+    sceneSectionHelpers: sceneTransition?.sceneSectionHelpers ?? null,
+    renderLoop,
+    productFamilyCounts: productFamilyCounts(sceneTransition?.productFamilies),
+    sceneSectionHelperTransitionOpacity: traceOptionalNumber(
+      sceneTransition?.sceneSectionHelperTransitionOpacity,
+    ),
+    layerTweenTick: sceneTransition?.layerTweenTick ?? null,
+    frameUpdate: sceneTransition?.frameUpdate ?? null,
+    lateReapplyTotalCount: sceneTransition?.lateReapply?.totalCount ?? 0,
+    lateReapplyDuringTransitionCount:
+      sceneTransition?.lateReapply?.duringTransitionCount ?? 0,
+    latestLateReapplyAction: latestEvent?.action ?? null,
+    latestLateReapplyReason: latestEvent?.reason ?? null,
+    latestLateReapplyProgress: traceOptionalNumber(
+      latestEvent?.transitionProgress,
+    ),
+  };
+}
+
+function cameraTraceDebug(
+  transition: SceneTransitionContext | null,
+  camera: THREE.Camera,
+  controls: { target: THREE.Vector3 },
+  timeMs: number,
+  easedProgress: number,
+): TransitionSmoothnessTraceCameraDebug | null {
+  if (!transition) return null;
+  const cameraFov =
+    camera instanceof THREE.PerspectiveCamera
+      ? camera.fov
+      : transition.sourcePose.fov;
+  const currentPosition: Pose["position"] = [
+    camera.position.x,
+    camera.position.y,
+    camera.position.z,
+  ];
+  const currentTarget: Pose["position"] = [
+    controls.target.x,
+    controls.target.y,
+    controls.target.z,
+  ];
+  const rawProgress =
+    transition.durationMs <= 0
+      ? 1
+      : clamp01((timeMs - transition.startMs) / transition.durationMs);
+  return {
+    sourcePageId: transition.sourcePageId,
+    targetPageId: transition.targetPageId,
+    durationMs: traceNumber(transition.durationMs, 2),
+    elapsedMs: traceNumber(Math.max(0, timeMs - transition.startMs), 2),
+    rawProgress: traceNumber(rawProgress),
+    easedProgress: traceNumber(easedProgress),
+    sourcePosition: posePoint(transition.sourcePose.position),
+    targetPosition: posePoint(transition.targetPose.position),
+    sourceTarget: posePoint(transition.sourcePose.target),
+    targetTarget: posePoint(transition.targetPose.target),
+    sourceFov: traceNumber(transition.sourcePose.fov),
+    targetFov: traceNumber(transition.targetPose.fov),
+    pathDistance: traceNumber(
+      posePathDistance(transition.sourcePose, transition.targetPose),
+      2,
+    ),
+    positionDistanceFromSource: traceNumber(
+      vec3Distance(transition.sourcePose.position, currentPosition),
+      2,
+    ),
+    positionDistanceToTarget: traceNumber(
+      vec3Distance(currentPosition, transition.targetPose.position),
+      2,
+    ),
+    targetDistanceFromSource: traceNumber(
+      vec3Distance(transition.sourcePose.target, currentTarget),
+      2,
+    ),
+    targetDistanceToTarget: traceNumber(
+      vec3Distance(currentTarget, transition.targetPose.target),
+      2,
+    ),
+    fovDistanceFromSource: traceNumber(
+      Math.abs(cameraFov - transition.sourcePose.fov),
+    ),
+    fovDistanceToTarget: traceNumber(
+      Math.abs(cameraFov - transition.targetPose.fov),
+    ),
   };
 }
 
@@ -794,6 +1085,13 @@ export function PageControllerProvider({
   const lastTransitionRunRef = useRef<TransitionRunDebugState | null>(null);
   const smoothnessTraceSerialRef = useRef(0);
   const smoothnessTraceRef = useRef<TransitionSmoothnessTrace | null>(null);
+  const smoothnessTraceFrameRef = useRef<number | null>(null);
+  const smoothnessTraceTimerRef =
+    useRef<TransitionSmoothnessTraceTimerState | null>(null);
+  const smoothnessTraceLongTaskRef =
+    useRef<TransitionSmoothnessTraceLongTaskState | null>(null);
+  const smoothnessTraceAnimationFrameRef =
+    useRef<TransitionSmoothnessTraceAnimationFrameState | null>(null);
   const transitionProgressRef = useRef(1);
   const currentCameraKeyRef = useRef<string | null>(null);
   const isTransitioningRef = useRef(false);
@@ -1068,23 +1366,321 @@ export function PageControllerProvider({
     [sceneTransitionDebugState, transitionConsumerDebugState],
   );
 
-  const recordSmoothnessTraceSample = useCallback(
-    (timeMs: number = performance.now()) => {
-      const trace = smoothnessTraceRef.current;
-      if (!trace || trace.completed) return;
-      const elapsedMs = Math.max(0, timeMs - trace.startedAtMs);
-      if (
-        trace.samples.length > 0 &&
-        trace.sampleIntervalMs > 0 &&
-        elapsedMs -
-          trace.samples[trace.samples.length - 1].elapsedMs <
-          trace.sampleIntervalMs
-      ) {
-        return;
+  const stopSmoothnessTraceTimer = useCallback(() => {
+    const state = smoothnessTraceTimerRef.current;
+    if (state?.intervalId !== null && state?.intervalId !== undefined) {
+      window.clearInterval(state.intervalId);
+    }
+    smoothnessTraceTimerRef.current = null;
+  }, []);
+
+  const startSmoothnessTraceTimer = useCallback((startedAtMs: number) => {
+    const state: TransitionSmoothnessTraceTimerState = {
+      intervalId: null,
+      intervalMs: SMOOTHNESS_TRACE_TIMER_INTERVAL_MS,
+      tickIndex: 0,
+      lastTickAtMs: startedAtMs,
+      lastDeltaMs: null,
+      maxDeltaMs: 0,
+      lastSampleTickIndex: 0,
+    };
+    state.intervalId = window.setInterval(() => {
+      const now = performance.now();
+      const deltaMs =
+        state.lastTickAtMs === null
+          ? null
+          : Math.max(0, now - state.lastTickAtMs);
+      state.tickIndex += 1;
+      state.lastDeltaMs = deltaMs;
+      if (typeof deltaMs === "number" && Number.isFinite(deltaMs)) {
+        state.maxDeltaMs = Math.max(state.maxDeltaMs, deltaMs);
       }
+      state.lastTickAtMs = now;
+    }, state.intervalMs);
+    smoothnessTraceTimerRef.current = state;
+  }, []);
+
+  const readSmoothnessTraceTimerDebug = useCallback(
+    (timeMs: number): TransitionSmoothnessTraceTimerDebug | null => {
+      const state = smoothnessTraceTimerRef.current;
+      if (!state) return null;
+      const ticksSinceLastSample = Math.max(
+        0,
+        state.tickIndex - state.lastSampleTickIndex,
+      );
+      state.lastSampleTickIndex = state.tickIndex;
+      return {
+        intervalMs: state.intervalMs,
+        tickIndex: state.tickIndex,
+        deltaMs: traceOptionalNumber(state.lastDeltaMs, 2),
+        maxDeltaMs: traceNumber(state.maxDeltaMs, 2),
+        ageMs:
+          state.lastTickAtMs === null
+            ? null
+            : traceNumber(Math.max(0, timeMs - state.lastTickAtMs), 2),
+        ticksSinceLastSample,
+      };
+    },
+    [],
+  );
+
+  const stopSmoothnessTraceLongTasks = useCallback(() => {
+    smoothnessTraceLongTaskRef.current?.observer?.disconnect();
+    smoothnessTraceLongTaskRef.current = null;
+  }, []);
+
+  const startSmoothnessTraceLongTasks = useCallback(() => {
+    const state: TransitionSmoothnessTraceLongTaskState = {
+      observer: null,
+      supported: false,
+      totalCount: 0,
+      totalDurationMs: 0,
+      maxDurationMs: 0,
+      lastStartMs: null,
+      lastDurationMs: null,
+      countSinceLastSample: 0,
+      durationSinceLastSampleMs: 0,
+      maxDurationSinceLastSampleMs: 0,
+    };
+    smoothnessTraceLongTaskRef.current = state;
+    if (typeof PerformanceObserver === "undefined") return;
+    const supportedTypes = PerformanceObserver.supportedEntryTypes ?? [];
+    if (!supportedTypes.includes("longtask")) return;
+    try {
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          const durationMs = Math.max(0, entry.duration);
+          state.supported = true;
+          state.totalCount += 1;
+          state.totalDurationMs += durationMs;
+          state.maxDurationMs = Math.max(state.maxDurationMs, durationMs);
+          state.lastStartMs = entry.startTime;
+          state.lastDurationMs = durationMs;
+          state.countSinceLastSample += 1;
+          state.durationSinceLastSampleMs += durationMs;
+          state.maxDurationSinceLastSampleMs = Math.max(
+            state.maxDurationSinceLastSampleMs,
+            durationMs,
+          );
+        }
+      });
+      observer.observe({ type: "longtask", buffered: false });
+      state.observer = observer;
+      state.supported = true;
+    } catch {
+      state.observer?.disconnect();
+      state.observer = null;
+      state.supported = false;
+    }
+  }, []);
+
+  const readSmoothnessTraceLongTaskDebug = useCallback(
+    (timeMs: number): TransitionSmoothnessTraceLongTaskDebug | null => {
+      const state = smoothnessTraceLongTaskRef.current;
+      if (!state) return null;
+      const lastEndMs =
+        state.lastStartMs !== null && state.lastDurationMs !== null
+          ? state.lastStartMs + state.lastDurationMs
+          : null;
+      const debug: TransitionSmoothnessTraceLongTaskDebug = {
+        supported: state.supported,
+        totalCount: state.totalCount,
+        totalDurationMs: traceNumber(state.totalDurationMs, 2),
+        maxDurationMs: traceNumber(state.maxDurationMs, 2),
+        lastStartMs: traceOptionalNumber(state.lastStartMs, 2),
+        lastDurationMs: traceOptionalNumber(state.lastDurationMs, 2),
+        ageMs:
+          lastEndMs === null
+            ? null
+            : traceNumber(Math.max(0, timeMs - lastEndMs), 2),
+        countSinceLastSample: state.countSinceLastSample,
+        durationSinceLastSampleMs: traceNumber(
+          state.durationSinceLastSampleMs,
+          2,
+        ),
+        maxDurationSinceLastSampleMs: traceNumber(
+          state.maxDurationSinceLastSampleMs,
+          2,
+        ),
+      };
+      state.countSinceLastSample = 0;
+      state.durationSinceLastSampleMs = 0;
+      state.maxDurationSinceLastSampleMs = 0;
+      return debug;
+    },
+    [],
+  );
+
+  const stopSmoothnessTraceAnimationFrames = useCallback(() => {
+    smoothnessTraceAnimationFrameRef.current?.observer?.disconnect();
+    smoothnessTraceAnimationFrameRef.current = null;
+  }, []);
+
+  const startSmoothnessTraceAnimationFrames = useCallback(() => {
+    const state: TransitionSmoothnessTraceAnimationFrameState = {
+      observer: null,
+      supported: false,
+      totalCount: 0,
+      totalDurationMs: 0,
+      maxDurationMs: 0,
+      totalBlockingDurationMs: 0,
+      maxBlockingDurationMs: 0,
+      countSinceLastSample: 0,
+      durationSinceLastSampleMs: 0,
+      blockingDurationSinceLastSampleMs: 0,
+      maxBlockingDurationSinceLastSampleMs: 0,
+      scriptsSinceLastSample: [],
+    };
+    smoothnessTraceAnimationFrameRef.current = state;
+    if (typeof PerformanceObserver === "undefined") return;
+    const supportedTypes = PerformanceObserver.supportedEntryTypes ?? [];
+    if (!supportedTypes.includes("long-animation-frame")) return;
+    try {
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          const frameEntry = entry as PerformanceEntry & {
+            blockingDuration?: number;
+            scripts?: Array<Record<string, unknown>>;
+          };
+          const durationMs = Math.max(0, frameEntry.duration);
+          const blockingDurationMs = Math.max(
+            0,
+            typeof frameEntry.blockingDuration === "number"
+              ? frameEntry.blockingDuration
+              : 0,
+          );
+          state.supported = true;
+          state.totalCount += 1;
+          state.totalDurationMs += durationMs;
+          state.maxDurationMs = Math.max(state.maxDurationMs, durationMs);
+          state.totalBlockingDurationMs += blockingDurationMs;
+          state.maxBlockingDurationMs = Math.max(
+            state.maxBlockingDurationMs,
+            blockingDurationMs,
+          );
+          state.countSinceLastSample += 1;
+          state.durationSinceLastSampleMs += durationMs;
+          state.blockingDurationSinceLastSampleMs += blockingDurationMs;
+          state.maxBlockingDurationSinceLastSampleMs = Math.max(
+            state.maxBlockingDurationSinceLastSampleMs,
+            blockingDurationMs,
+          );
+          const scripts = Array.isArray(frameEntry.scripts)
+            ? frameEntry.scripts
+            : [];
+          for (const script of scripts) {
+            state.scriptsSinceLastSample.push({
+              sourceUrl: traceOptionalString(
+                script.sourceURL ?? script.sourceUrl,
+              ),
+              functionName: traceOptionalString(
+                script.sourceFunctionName ?? script.functionName,
+              ),
+              invoker: traceOptionalString(script.invoker),
+              invokerType: traceOptionalString(script.invokerType),
+              windowAttribution: traceOptionalString(
+                script.windowAttribution,
+              ),
+              durationMs: traceNumber(script.duration as number | undefined, 2),
+              executionStartMs: traceOptionalNumber(
+                script.executionStart as number | undefined,
+                2,
+              ),
+              forcedStyleAndLayoutDurationMs: traceNumber(
+                script.forcedStyleAndLayoutDuration as number | undefined,
+                2,
+              ),
+              pauseDurationMs: traceNumber(
+                script.pauseDuration as number | undefined,
+                2,
+              ),
+            });
+          }
+        }
+      });
+      observer.observe({
+        type: "long-animation-frame",
+        buffered: false,
+      } as PerformanceObserverInit);
+      state.observer = observer;
+      state.supported = true;
+    } catch {
+      state.observer?.disconnect();
+      state.observer = null;
+      state.supported = false;
+    }
+  }, []);
+
+  const readSmoothnessTraceAnimationFrameDebug = useCallback(
+    (): TransitionSmoothnessTraceAnimationFrameDebug | null => {
+      const state = smoothnessTraceAnimationFrameRef.current;
+      if (!state) return null;
+      const scriptsSinceLastSample = state.scriptsSinceLastSample
+        .slice()
+        .sort((a, b) => b.durationMs - a.durationMs)
+        .slice(0, 8);
+      const debug: TransitionSmoothnessTraceAnimationFrameDebug = {
+        supported: state.supported,
+        totalCount: state.totalCount,
+        totalDurationMs: traceNumber(state.totalDurationMs, 2),
+        maxDurationMs: traceNumber(state.maxDurationMs, 2),
+        totalBlockingDurationMs: traceNumber(
+          state.totalBlockingDurationMs,
+          2,
+        ),
+        maxBlockingDurationMs: traceNumber(state.maxBlockingDurationMs, 2),
+        countSinceLastSample: state.countSinceLastSample,
+        durationSinceLastSampleMs: traceNumber(
+          state.durationSinceLastSampleMs,
+          2,
+        ),
+        blockingDurationSinceLastSampleMs: traceNumber(
+          state.blockingDurationSinceLastSampleMs,
+          2,
+        ),
+        maxBlockingDurationSinceLastSampleMs: traceNumber(
+          state.maxBlockingDurationSinceLastSampleMs,
+          2,
+        ),
+        scriptsSinceLastSample,
+      };
+      state.countSinceLastSample = 0;
+      state.durationSinceLastSampleMs = 0;
+      state.blockingDurationSinceLastSampleMs = 0;
+      state.maxBlockingDurationSinceLastSampleMs = 0;
+      state.scriptsSinceLastSample = [];
+      return debug;
+    },
+    [],
+  );
+
+  const recordSmoothnessTraceSample = useCallback(
+    (
+      timeMs: number = performance.now(),
+      transitionTickDebug: TransitionSmoothnessTraceControllerTickDebug | null = null,
+    ) => {
+      const sampleStartMs = performance.now();
+      const trace = smoothnessTraceRef.current;
+      if (!trace || trace.completed) return false;
+      const elapsedMs = Math.max(0, timeMs - trace.startedAtMs);
+      const previousSample =
+        trace.samples.length > 0
+          ? trace.samples[trace.samples.length - 1]
+          : null;
+      if (
+        previousSample &&
+        trace.sampleIntervalMs > 0 &&
+        elapsedMs - previousSample.elapsedMs < trace.sampleIntervalMs
+      ) {
+        return false;
+      }
+      const dtMs = previousSample
+        ? Math.max(0, elapsedMs - previousSample.elapsedMs)
+        : null;
 
       const activeRun = snapshotTransitionRun(transitionRunRef.current, timeMs);
       const run = activeRun ?? snapshotTransitionRun(lastTransitionRunRef.current);
+      const sceneTransition = activeRun?.sceneTransition ?? sceneTransitionDebugState();
       if (activeRun?.status === "active" || isTransitioningRef.current) {
         trace.seenActiveTransition = true;
       }
@@ -1097,9 +1693,13 @@ export function PageControllerProvider({
       }
 
       const transitionFrame = transitionFrameState(activeRun);
-      trace.samples.push({
+      const consumerDebug = transitionConsumerDebugState(activeRun);
+      const sample: TransitionSmoothnessTraceSample = {
         elapsedMs: traceNumber(elapsedMs, 2),
         timestampMs: traceNumber(timeMs, 2),
+        dtMs: traceOptionalNumber(dtMs, 2),
+        longGap:
+          typeof dtMs === "number" && dtMs > SMOOTHNESS_TRACE_LONG_GAP_MS,
         currentIndex: currentIndexRef.current,
         currentPageId: pagesRef.current[currentIndexRef.current]?.id ?? null,
         targetIndex: targetIndexRef.current,
@@ -1117,19 +1717,45 @@ export function PageControllerProvider({
         runTargetPageId: run?.targetPageId ?? null,
         runRawProgress: traceOptionalNumber(run?.rawProgress),
         runEasedProgress: traceOptionalNumber(run?.easedProgress),
-        sceneSourcePageId: run?.sceneTransition?.sourcePageId ?? null,
-        sceneTargetPageId: run?.sceneTransition?.targetPageId ?? null,
+        sceneSourcePageId: sceneTransition?.sourcePageId ?? null,
+        sceneTargetPageId: sceneTransition?.targetPageId ?? null,
         cameraPosition: traceVector3(sceneHandle.camera.position),
         cameraTarget: traceVector3(sceneHandle.controls.target),
         cameraFov: traceNumber(sceneHandle.camera.fov),
-        consumerDebug: transitionConsumerDebugState(activeRun),
-      });
+        cameraTransition: cameraTraceDebug(
+          activeSceneTransitionRef.current,
+          sceneHandle.camera,
+          sceneHandle.controls,
+          timeMs,
+          transitionFrame.progress,
+        ),
+        sceneDebug: sceneTraceDebug(
+          sceneTransition,
+          sceneHandle.getFrameLoopDebugState(),
+        ),
+        timerDebug: readSmoothnessTraceTimerDebug(timeMs),
+        longTaskDebug: readSmoothnessTraceLongTaskDebug(timeMs),
+        animationFrameDebug: readSmoothnessTraceAnimationFrameDebug(),
+        controllerDebug: {
+          traceSampleMs: 0,
+          transitionTick: transitionTickDebug,
+        },
+        consumerDebug,
+      };
+      trace.samples.push(sample);
+      sample.controllerDebug.traceSampleMs = traceNumber(
+        performance.now() - sampleStartMs,
+        2,
+      );
 
       if (elapsedMs >= trace.maxDurationMs) {
         trace.completed = true;
         trace.stoppedReason = "max-duration";
         trace.endedAtMs = timeMs;
         trace.endedAt = new Date().toISOString();
+        stopSmoothnessTraceTimer();
+        stopSmoothnessTraceLongTasks();
+        stopSmoothnessTraceAnimationFrames();
       } else if (
         trace.seenActiveTransition &&
         transitionRunRef.current === null &&
@@ -1139,16 +1765,46 @@ export function PageControllerProvider({
         trace.stoppedReason = "settled";
         trace.endedAtMs = timeMs;
         trace.endedAt = new Date().toISOString();
+        stopSmoothnessTraceTimer();
+        stopSmoothnessTraceLongTasks();
+        stopSmoothnessTraceAnimationFrames();
       }
+      return true;
     },
     [
+      readSmoothnessTraceAnimationFrameDebug,
+      readSmoothnessTraceLongTaskDebug,
+      readSmoothnessTraceTimerDebug,
       sceneHandle.camera,
       sceneHandle.controls,
+      sceneTransitionDebugState,
       snapshotTransitionRun,
+      stopSmoothnessTraceAnimationFrames,
+      stopSmoothnessTraceLongTasks,
+      stopSmoothnessTraceTimer,
       transitionConsumerDebugState,
       transitionFrameState,
     ],
   );
+
+  const stopSmoothnessTraceFrame = useCallback(() => {
+    if (smoothnessTraceFrameRef.current === null) return;
+    window.cancelAnimationFrame(smoothnessTraceFrameRef.current);
+    smoothnessTraceFrameRef.current = null;
+  }, []);
+
+  const scheduleSmoothnessTraceFrame = useCallback(() => {
+    if (smoothnessTraceFrameRef.current !== null) return;
+    const tick = (timeMs: number) => {
+      smoothnessTraceFrameRef.current = null;
+      recordSmoothnessTraceSample(timeMs);
+      const trace = smoothnessTraceRef.current;
+      if (trace && !trace.completed) {
+        scheduleSmoothnessTraceFrame();
+      }
+    };
+    smoothnessTraceFrameRef.current = window.requestAnimationFrame(tick);
+  }, [recordSmoothnessTraceSample]);
 
   const startSmoothnessTrace = useCallback(
     (
@@ -1159,7 +1815,7 @@ export function PageControllerProvider({
       const trace: TransitionSmoothnessTrace = {
         traceId: `smoothness-${++smoothnessTraceSerialRef.current}`,
         metadata,
-        sampling: "app-tick",
+        sampling: "app-raf",
         startedAt: new Date().toISOString(),
         startedAtMs,
         endedAt: null,
@@ -1175,11 +1831,29 @@ export function PageControllerProvider({
         completed: false,
         stoppedReason: null,
       };
+      stopSmoothnessTraceFrame();
+      stopSmoothnessTraceTimer();
+      stopSmoothnessTraceLongTasks();
+      stopSmoothnessTraceAnimationFrames();
       smoothnessTraceRef.current = trace;
+      startSmoothnessTraceTimer(startedAtMs);
+      startSmoothnessTraceLongTasks();
+      startSmoothnessTraceAnimationFrames();
       recordSmoothnessTraceSample(startedAtMs);
+      scheduleSmoothnessTraceFrame();
       return trace;
     },
-    [recordSmoothnessTraceSample],
+    [
+      recordSmoothnessTraceSample,
+      scheduleSmoothnessTraceFrame,
+      stopSmoothnessTraceFrame,
+      startSmoothnessTraceAnimationFrames,
+      startSmoothnessTraceLongTasks,
+      startSmoothnessTraceTimer,
+      stopSmoothnessTraceAnimationFrames,
+      stopSmoothnessTraceLongTasks,
+      stopSmoothnessTraceTimer,
+    ],
   );
 
   const stopSmoothnessTrace = useCallback(
@@ -1187,6 +1861,10 @@ export function PageControllerProvider({
       const trace = smoothnessTraceRef.current;
       if (!trace) return null;
       recordSmoothnessTraceSample(performance.now());
+      stopSmoothnessTraceFrame();
+      stopSmoothnessTraceTimer();
+      stopSmoothnessTraceLongTasks();
+      stopSmoothnessTraceAnimationFrames();
       if (!trace.completed) {
         trace.completed = true;
         trace.stoppedReason = reason;
@@ -1196,7 +1874,13 @@ export function PageControllerProvider({
       smoothnessTraceRef.current = null;
       return trace;
     },
-    [recordSmoothnessTraceSample],
+    [
+      recordSmoothnessTraceSample,
+      stopSmoothnessTraceAnimationFrames,
+      stopSmoothnessTraceFrame,
+      stopSmoothnessTraceLongTasks,
+      stopSmoothnessTraceTimer,
+    ],
   );
 
   const startTransitionRun = useCallback(
@@ -1428,7 +2112,7 @@ export function PageControllerProvider({
 
     const applyPageTransitionProgress = (timeMs: number) => {
       const transition = pageTransitionRef.current;
-      if (!transition) return;
+      if (!transition) return false;
       const raw =
         transition.durationMs <= 0
           ? 1
@@ -1448,8 +2132,11 @@ export function PageControllerProvider({
       ) {
         transitionProgressRef.current = nextProgress;
         setTransitionProgress(nextProgress);
+        if (done) pageTransitionRef.current = null;
+        return true;
       }
       if (done) pageTransitionRef.current = null;
+      return false;
     };
 
     const applyLockedCameraFocus = () => {
@@ -1472,13 +2159,51 @@ export function PageControllerProvider({
     };
 
     const offTick = onTick((t) => {
-      tweener.update(t);
-      applyPageTransitionProgress(t);
-      applyTransitionDynamicCamera(t);
-      applyDynamicCamera(t);
-      applyLockedCameraFocus();
-      recordSmoothnessTraceSample(t);
-    });
+      const tickStartMs = performance.now();
+      const tickDebug: TransitionSmoothnessTraceControllerTickDebug = {
+        totalMs: 0,
+        tweenerMs: 0,
+        pageTransitionProgressMs: 0,
+        transitionDynamicCameraMs: 0,
+        dynamicCameraMs: 0,
+        lockedCameraFocusMs: 0,
+        smoothnessSampleMs: 0,
+        progressStateUpdated: false,
+      };
+      const measureStep = <T,>(
+        key: keyof Pick<
+          TransitionSmoothnessTraceControllerTickDebug,
+          | "tweenerMs"
+          | "pageTransitionProgressMs"
+          | "transitionDynamicCameraMs"
+          | "dynamicCameraMs"
+          | "lockedCameraFocusMs"
+          | "smoothnessSampleMs"
+        >,
+        fn: () => T,
+      ): T => {
+        const startMs = performance.now();
+        try {
+          return fn();
+        } finally {
+          tickDebug[key] = traceNumber(performance.now() - startMs, 2);
+        }
+      };
+      measureStep("tweenerMs", () => tweener.update(t));
+      tickDebug.progressStateUpdated = measureStep(
+        "pageTransitionProgressMs",
+        () => applyPageTransitionProgress(t),
+      );
+      measureStep("transitionDynamicCameraMs", () =>
+        applyTransitionDynamicCamera(t),
+      );
+      measureStep("dynamicCameraMs", () => applyDynamicCamera(t));
+      measureStep("lockedCameraFocusMs", applyLockedCameraFocus);
+      measureStep("smoothnessSampleMs", () =>
+        recordSmoothnessTraceSample(t, tickDebug),
+      );
+      tickDebug.totalMs = traceNumber(performance.now() - tickStartMs, 2);
+    }, "PageController.transitionTick");
 
     const onChange = () => {
       if (isTransitioningRef.current || suppressControlsChangeRef.current) return;
@@ -1487,8 +2212,10 @@ export function PageControllerProvider({
     controls.addEventListener("change", onChange);
 
     return () => {
+      sceneHandle.setTransitionActive(false);
       offTick();
       controls.removeEventListener("change", onChange);
+      stopSmoothnessTraceFrame();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1628,13 +2355,14 @@ export function PageControllerProvider({
         : environment,
     [currentPageForReapply, environment, pages, resolvePresentationState],
   );
-  useEffect(() => {
-    const page = pages[currentIndex];
+
+  const reapplyCurrentPageState = useCallback(() => {
+    const page = pagesRef.current[currentIndexRef.current];
     if (!page) return;
     if (isTransitioningRef.current) {
       return;
     }
-    const resolved = resolvePresentationState(page, environment);
+    const resolved = resolvePresentationState(page, environmentRef.current);
     // applyEnvironment first so terrain shader uniforms / sun direction
     // are current before styles/visibility evaluate against them.
     sceneHandle.manager.applyEnvironment(resolved.environment);
@@ -1681,6 +2409,10 @@ export function PageControllerProvider({
         };
       }
     }
+  }, [resolvePresentationState, sceneHandle]);
+
+  useEffect(() => {
+    reapplyCurrentPageState();
   }, [
     resolvedEnvForReapply,
     pages,
@@ -1689,6 +2421,7 @@ export function PageControllerProvider({
     previewEnvironmentBase,
     presentationStateTransform,
     resolvePresentationState,
+    reapplyCurrentPageState,
   ]);
 
   const goto = useCallback(
@@ -1752,6 +2485,7 @@ export function PageControllerProvider({
         : [];
 
       isTransitioningRef.current = true;
+      sceneHandle.setTransitionActive(true);
       targetIndexRef.current = index;
       activeSceneTransitionRef.current = {
         sourcePageId: source?.id ?? null,
@@ -1956,6 +2690,7 @@ export function PageControllerProvider({
           currentIndexRef.current = index;
           targetIndexRef.current = null;
           isTransitioningRef.current = false;
+          sceneHandle.setTransitionActive(false);
           setCurrentIndex(index);
           setIsTransitioning(false);
           setTargetIndex(null);
@@ -2031,6 +2766,7 @@ export function PageControllerProvider({
           : [],
       });
       isTransitioningRef.current = true;
+      sceneHandle.setTransitionActive(true);
       targetIndexRef.current = null;
       activeSceneTransitionRef.current = null;
       freelookActiveRef.current = false;
@@ -2058,6 +2794,7 @@ export function PageControllerProvider({
           ? `${page.id}:${poseKey(page.camera)}`
           : null;
         isTransitioningRef.current = false;
+        sceneHandle.setTransitionActive(false);
         targetIndexRef.current = null;
         completeTransitionRun(transitionRun.runId, performance.now());
         setIsTransitioning(false);
@@ -2100,6 +2837,7 @@ export function PageControllerProvider({
         : [],
     });
     isTransitioningRef.current = true;
+    sceneHandle.setTransitionActive(true);
     targetIndexRef.current = null;
     activeSceneTransitionRef.current = null;
     freelookActiveRef.current = false;
@@ -2126,6 +2864,7 @@ export function PageControllerProvider({
         ? `${page.id}:${poseKey(page.camera)}`
         : null;
       isTransitioningRef.current = false;
+      sceneHandle.setTransitionActive(false);
       targetIndexRef.current = null;
       completeTransitionRun(transitionRun.runId, performance.now());
       setIsTransitioning(false);
@@ -2269,6 +3008,7 @@ export function PageControllerProvider({
       prev,
       resetToPose,
       tweenToPose,
+      reapplyCurrentPageState,
     }),
     [
       pages,
@@ -2284,6 +3024,7 @@ export function PageControllerProvider({
       prev,
       resetToPose,
       tweenToPose,
+      reapplyCurrentPageState,
     ],
   );
 

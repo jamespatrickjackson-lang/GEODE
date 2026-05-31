@@ -291,8 +291,8 @@ export function transitionEffectiveLayersForPage(
         });
       }
       if (transitionSnapshot) {
-        this.applyRenderOpacityToTree(transitionSnapshot, fromOpacity);
-        this.applyLayerRenderOpacity(id, 0);
+        this.applyRenderOpacityToTree(transitionSnapshot, fromOpacity, 1);
+        this.applyLayerTransitionRenderOpacity(id, 0, 0);
         this.layerTweens.set(id, {
           from: 0,
           to: toOpacity,
@@ -313,11 +313,19 @@ export function transitionEffectiveLayersForPage(
         terrainOverrides.set(id, 0);
         continue;
       }
-      this.applyLayerRenderOpacity(id, fromOpacity);
+      this.applyLayerTransitionRenderOpacity(
+        id,
+        fromOpacity,
+        fromOpacity > 0.001 ? 1 : 0,
+      );
       terrainOverrides.set(id, fromOpacity);
 
       if (duration <= 0 || Math.abs(fromOpacity - toOpacity) < 0.001) {
-        this.applyLayerRenderOpacity(id, toOpacity);
+        this.applyLayerTransitionRenderOpacity(
+          id,
+          toOpacity,
+          toOpacity > 0.001 ? 1 : 0,
+        );
         terrainOverrides.set(id, toOpacity);
         continue;
       }
@@ -365,6 +373,9 @@ export function transitionEffectiveLayersForPage(
     this.sceneSectionReapplySuspended = false;
   }
   this.reapplySceneSectionPlanes();
+  if (this.sceneSectionStyleTween?.discreteChanged) {
+    this.sceneSectionStyleTween.appliedDiscreteTarget = true;
+  }
 
   this.transitionWorkingAreaFocusForPage(
     fromEnvironment,

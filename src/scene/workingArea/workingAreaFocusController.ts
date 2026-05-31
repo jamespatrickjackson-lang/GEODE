@@ -321,6 +321,52 @@ export function interpolatedWorkingAreaFocusStyleImpl(this: any, fromStyle: Edit
     };
   }
 
+function closeNumber(a: number, b: number): boolean {
+    return Math.abs(a - b) <= 0.000001;
+  }
+
+function sameVector(a: THREE.Vector3, b: THREE.Vector3): boolean {
+    return closeNumber(a.x, b.x) && closeNumber(a.y, b.y) && closeNumber(a.z, b.z);
+  }
+
+function sameStringSet(a: Set<string>, b: Set<string>): boolean {
+    if (a.size !== b.size) return false;
+    for (const value of a) {
+      if (!b.has(value)) return false;
+    }
+    return true;
+  }
+
+function sameOpacityMap(
+  a: Map<string, number>,
+  b: Map<string, number>,
+): boolean {
+    if (a.size !== b.size) return false;
+    for (const [key, value] of a) {
+      const other = b.get(key);
+      if (typeof other !== "number" || !closeNumber(value, other)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+function sameWorkingAreaFocusState(
+  a: WorkingAreaFocusState,
+  b: WorkingAreaFocusState,
+): boolean {
+    return (
+      a.enabled === b.enabled &&
+      a.mode === b.mode &&
+      a.boundsLayerId === b.boundsLayerId &&
+      a.helperVisible === b.helperVisible &&
+      sameVector(a.boundsMin, b.boundsMin) &&
+      sameVector(a.boundsMax, b.boundsMax) &&
+      sameStringSet(a.targetLayerIds, b.targetLayerIds) &&
+      sameOpacityMap(a.outsideOpacityByLayerId, b.outsideOpacityByLayerId)
+    );
+  }
+
 export function transitionWorkingAreaFocusForPageImpl(this: any, fromEnvironment: EnvironmentSetup, toEnvironment: EnvironmentSetup, fromPage: PresentationPage, toPage: PresentationPage, durationMs: number, easing: EasingName): void {
     const fromStyle =
       Object.keys(this.currentWorkingAreaFocusStyle).length > 0
@@ -335,8 +381,10 @@ export function transitionWorkingAreaFocusForPageImpl(this: any, fromEnvironment
       toPage,
       UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
     );
+    const fromState = this.workingAreaFocusState(fromStyle);
+    const toState = this.workingAreaFocusState(toStyle);
     const duration = Math.max(0, durationMs);
-    if (duration <= 0) {
+    if (duration <= 0 || sameWorkingAreaFocusState(fromState, toState)) {
       this.workingAreaFocusTween = null;
       this.applyWorkingAreaFocusStyle(toStyle);
       return;

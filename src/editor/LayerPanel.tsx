@@ -106,11 +106,14 @@ import {
   effectiveStyle,
   isStyleFieldOverridden,
   isVisibilityOverridden,
+  resolveEnvironmentForPage,
 } from "../pages/effective";
+import { usePageController } from "../pages/PageController";
 import type {
   EditableStyle,
   ProjectLayerSpec,
 } from "../pages/types";
+import { pageSelectionHasLanded } from "./authoringTarget";
 import { SCENE_ORIGIN } from "../constants";
 import {
   UTAH_FORGE_MT_STATIONS_LAYER_ID,
@@ -172,7 +175,6 @@ function layerVisibilityButtonStyle(
     border: "1px solid transparent",
   };
 }
-
 function LayerEyeIcon() {
   return (
     <svg
@@ -192,7 +194,6 @@ function LayerEyeIcon() {
     </svg>
   );
 }
-
 function LayerEyeOffIcon() {
   return (
     <svg
@@ -245,7 +246,6 @@ export function LayerPanel({
     setPageLayerOverride,
     clearPageLayerOverride,
     setPageVisibilityOverride,
-    clearPageVisibilityOverride,
     setEnvScene,
   } = useEditor();
 
@@ -253,11 +253,26 @@ export function LayerPanel({
   const currentPage = isEnv
     ? null
     : (state.pages.find((p) => p.id === state.selectedPageId) ?? null);
+  const currentPageEnvironment = currentPage
+    ? resolveEnvironmentForPage(state.environment, state.pages, currentPage)
+    : state.environment;
+  const { currentIndex, isTransitioning, targetIndex } = usePageController();
+  const selectedPageIndex = currentPage
+    ? state.pages.findIndex((p) => p.id === currentPage.id)
+    : -1;
+  const selectedPageHasLanded = pageSelectionHasLanded({
+    selectedPageIndex,
+    currentIndex,
+    isTransitioning,
+    targetIndex,
+  });
+  const pageStyleControlsDisabled =
+    !isEnv && (!currentPage || !selectedPageHasLanded);
 
   const renderLayer = (layer: ProjectLayerSpec, index = 0) => {
     const meta = layer.metadata as Record<string, string | undefined>;
-    const envStyle = state.environment.layerStyles[layer.id] ?? {};
-    const envVisible = state.environment.defaultVisibleLayers.includes(
+    const envStyle = currentPageEnvironment.layerStyles[layer.id] ?? {};
+    const envVisible = currentPageEnvironment.defaultVisibleLayers.includes(
       layer.id,
     );
     const effectiveLayerVisible = currentPage
@@ -274,12 +289,9 @@ export function LayerPanel({
         return;
       }
       if (!currentPage) return;
+      if (pageStyleControlsDisabled) return;
       const nextVisible = !effectiveLayerVisible;
-      if (nextVisible === envVisible) {
-        clearPageVisibilityOverride(currentPage.id, layer.id);
-      } else {
-        setPageVisibilityOverride(currentPage.id, layer.id, nextVisible);
-      }
+      setPageVisibilityOverride(currentPage.id, layer.id, nextVisible);
     };
     const isGeology = layer.id === "bedrock-geology";
     const isTrees = layer.id === "trees-vri";
@@ -327,18 +339,18 @@ export function LayerPanel({
       : LINE_WIDTH_LAYER_DEFAULTS[layer.id];
     const supportsLineWidth = lineWidthDefault !== undefined;
     const globalFogDensity =
-      state.environment.scene?.fog?.density ?? DEFAULT_FOG_DENSITY;
+      currentPageEnvironment.scene?.fog?.density ?? DEFAULT_FOG_DENSITY;
     const envAffectedByFog = envStyle.affectedByFog !== false;
     const effectiveLayerStyle = currentPage
-      ? effectiveStyle(state.environment, currentPage, layer.id)
+      ? effectiveStyle(currentPageEnvironment, currentPage, layer.id)
       : envStyle;
     const effectiveSceneSectionStyle = currentPage
       ? effectiveStyle(
-          state.environment,
+          currentPageEnvironment,
           currentPage,
           UTAH_FORGE_SCENE_SECTION_LAYER_ID,
         )
-      : (state.environment.layerStyles[UTAH_FORGE_SCENE_SECTION_LAYER_ID] ??
+      : (currentPageEnvironment.layerStyles[UTAH_FORGE_SCENE_SECTION_LAYER_ID] ??
         {});
     const effectiveAffectedByFog = effectiveLayerStyle.affectedByFog !== false;
     const surfaceGradientOverridden =
@@ -421,10 +433,16 @@ export function LayerPanel({
           <button
             type="button"
             className="editor-action-button editor-icon-only-button"
-            style={layerVisibilityButtonStyle(
-              effectiveLayerVisible,
-              pageVisibilityOverridden,
-            )}
+            style={{
+              ...layerVisibilityButtonStyle(
+                effectiveLayerVisible,
+                pageVisibilityOverridden,
+              ),
+              ...(pageStyleControlsDisabled
+                ? { cursor: "not-allowed", opacity: 0.45 }
+                : {}),
+            }}
+            disabled={pageStyleControlsDisabled}
             onClick={(event) => {
               event.stopPropagation();
               toggleLayerVisibility();
@@ -467,7 +485,7 @@ export function LayerPanel({
                         inputType="color"
                         inheritedValue={
                           effectiveStyle(
-                            state.environment,
+                            currentPageEnvironment,
                             currentPage,
                             layer.id,
                           ).color as string | undefined
@@ -518,12 +536,12 @@ export function LayerPanel({
                         inputType="range"
                         inheritedValue={String(
                           (effectiveStyle(
-                            state.environment,
+                            currentPageEnvironment,
                             currentPage,
                             layer.id,
                           ).fillOpacity as number | undefined) ??
                             (effectiveStyle(
-                              state.environment,
+                              currentPageEnvironment,
                               currentPage,
                               layer.id,
                             ).opacity as number | undefined) ??
@@ -577,12 +595,12 @@ export function LayerPanel({
                         inputType="color"
                         inheritedValue={
                           (effectiveStyle(
-                            state.environment,
+                            currentPageEnvironment,
                             currentPage,
                             layer.id,
                           ).outlineColor as string | undefined) ??
                           (effectiveStyle(
-                            state.environment,
+                            currentPageEnvironment,
                             currentPage,
                             layer.id,
                           ).color as string | undefined)
@@ -632,7 +650,7 @@ export function LayerPanel({
                         inputType="range"
                         inheritedValue={String(
                           (effectiveStyle(
-                            state.environment,
+                            currentPageEnvironment,
                             currentPage,
                             layer.id,
                           ).opacity as number | undefined) ?? 1,
@@ -891,7 +909,7 @@ export function LayerPanel({
                         inputType="range"
                         inheritedValue={String(
                           (effectiveStyle(
-                            state.environment,
+                            currentPageEnvironment,
                             currentPage,
                             layer.id,
                           ).pointSizePx as number | undefined) ?? 4,
@@ -1109,7 +1127,7 @@ export function LayerPanel({
                         inputType="range"
                         inheritedValue={String(
                           ((effectiveStyle(
-                            state.environment,
+                            currentPageEnvironment,
                             currentPage,
                             layer.id,
                           ).fogDensity as number | undefined) ??
@@ -1173,7 +1191,7 @@ export function LayerPanel({
                         inputType="range"
                         inheritedValue={String(
                           (effectiveStyle(
-                            state.environment,
+                            currentPageEnvironment,
                             currentPage,
                             layer.id,
                           ).lineWidth as number | undefined) ??
@@ -1810,7 +1828,7 @@ export function LayerPanel({
                         inputType="range"
                         inheritedValue={String(
                           (effectiveStyle(
-                            state.environment,
+                            currentPageEnvironment,
                             currentPage,
                             layer.id,
                           ).terrainShadowInfluence as number | undefined) ??
@@ -2142,7 +2160,7 @@ export function LayerPanel({
                           inputType="color"
                           inheritedValue={labelTextControlValue(
                             effectiveStyle(
-                              state.environment,
+                              currentPageEnvironment,
                               currentPage,
                               layer.id,
                             ),
@@ -2174,7 +2192,7 @@ export function LayerPanel({
                           inputType="range"
                           inheritedValue={String(
                             (effectiveStyle(
-                              state.environment,
+                              currentPageEnvironment,
                               currentPage,
                               layer.id,
                             ).labelTextOpacity as number | undefined) ?? 1,
@@ -2211,7 +2229,7 @@ export function LayerPanel({
                           inputType="color"
                           inheritedValue={labelOutlineColorControlValue(
                             effectiveStyle(
-                              state.environment,
+                              currentPageEnvironment,
                               currentPage,
                               layer.id,
                             ),
@@ -2244,7 +2262,7 @@ export function LayerPanel({
                           inheritedValue={String(
                             labelOutlineOpacityControlValue(
                               effectiveStyle(
-                                state.environment,
+                                currentPageEnvironment,
                                 currentPage,
                                 layer.id,
                               ),
@@ -2266,7 +2284,7 @@ export function LayerPanel({
                           }
                           fallbackValue={
                             effectiveStyle(
-                              state.environment,
+                              currentPageEnvironment,
                               currentPage,
                               layer.id,
                             ).labelKind === "landTitle"
@@ -2291,7 +2309,7 @@ export function LayerPanel({
                           inputType="color"
                           inheritedValue={labelFillColorControlValue(
                             effectiveStyle(
-                              state.environment,
+                              currentPageEnvironment,
                               currentPage,
                               layer.id,
                             ),
@@ -2307,7 +2325,7 @@ export function LayerPanel({
                           }
                           fallbackValue={
                             effectiveStyle(
-                              state.environment,
+                              currentPageEnvironment,
                               currentPage,
                               layer.id,
                             ).labelKind === "landTitle"
@@ -2333,7 +2351,7 @@ export function LayerPanel({
                           inheritedValue={String(
                             labelFillOpacityControlValue(
                               effectiveStyle(
-                                state.environment,
+                                currentPageEnvironment,
                                 currentPage,
                                 layer.id,
                               ),
@@ -2355,7 +2373,7 @@ export function LayerPanel({
                           }
                           fallbackValue={
                             effectiveStyle(
-                              state.environment,
+                              currentPageEnvironment,
                               currentPage,
                               layer.id,
                             ).labelKind === "landTitle"
@@ -2443,14 +2461,14 @@ export function LayerPanel({
                         : currentPage &&
                           normalizeLabelKind(
                             effectiveStyle(
-                              state.environment,
+                              currentPageEnvironment,
                               currentPage,
                               layer.id,
                             ).labelKind,
                           ) === "landTitle" &&
                           labelPointerVisibleControlValue(
                             effectiveStyle(
-                              state.environment,
+                              currentPageEnvironment,
                               currentPage,
                               layer.id,
                             ),

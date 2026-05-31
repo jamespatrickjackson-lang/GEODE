@@ -234,6 +234,7 @@ function addPipeSegment(
   mesh.renderOrder = TUBE_RENDER_ORDER;
   mesh.userData = {
     displayName: root.userData.displayName,
+    sceneLabelEligible: false,
     demoBoreholePipeSegment: true,
     demoBoreholeWellId: root.userData.demoBoreholeWellId,
     demoBoreholeRole: root.userData.demoBoreholeRole,
@@ -271,6 +272,7 @@ function addLabelAnchor(
   anchor.position.z += liftM;
   anchor.userData = {
     labelAnchor: true,
+    sceneLabelEligible: true,
     displayName,
     labelKind: "siteElement",
     demoBoreholeLabelAnchor: true,
@@ -291,6 +293,7 @@ function addWell(group: THREE.Group, well: DemoBoreholeWell): void {
   wellGroup.name = well.label;
   wellGroup.userData = {
     displayName: well.label,
+    sceneLabelEligible: false,
     demoBoreholeWell: true,
     demoBoreholeWellId: well.id,
     demoBoreholeRole: well.role,
@@ -305,6 +308,7 @@ function addWell(group: THREE.Group, well: DemoBoreholeWell): void {
   pipeRoot.name = `${well.id} pipe`;
   pipeRoot.userData = {
     displayName: well.label,
+    sceneLabelEligible: false,
     demoBoreholePipeRoot: true,
     demoBoreholeWellId: well.id,
     demoBoreholeRole: well.role,
@@ -325,6 +329,7 @@ function addWell(group: THREE.Group, well: DemoBoreholeWell): void {
   line.name = `${well.id} centerline`;
   line.userData = {
     displayName: well.label,
+    sceneLabelEligible: false,
     demoBoreholeCenterline: true,
     demoBoreholeWellId: well.id,
     demoBoreholeRole: well.role,
@@ -340,6 +345,7 @@ function addWell(group: THREE.Group, well: DemoBoreholeWell): void {
   collar.renderOrder = COLLAR_RENDER_ORDER;
   collar.userData = {
     displayName: well.label,
+    sceneLabelEligible: false,
     demoBoreholeCollar: true,
     demoBoreholeWellId: well.id,
     demoBoreholeBaseCollarRadiusM: DEFAULT_COLLAR_RADIUS_M,
@@ -403,6 +409,7 @@ function addOrientationBlock(group: THREE.Group, block: DemoOrientationBlock): v
   mesh.renderOrder = BLOCK_RENDER_ORDER;
   mesh.userData = {
     displayName: block.label,
+    sceneLabelEligible: false,
     demoOrientationBlock: true,
     demoBoreholeBlockId: block.id,
     demoOrientationBlockBaseCenter: block.centerScene,
@@ -429,6 +436,7 @@ function addOrientationBlock(group: THREE.Group, block: DemoOrientationBlock): v
   edges.renderOrder = BLOCK_RENDER_ORDER + 0.05;
   edges.userData = {
     displayName: block.label,
+    sceneLabelEligible: false,
     demoOrientationBlockEdge: true,
     demoBoreholeBlockId: block.id,
     demoOrientationBlockBaseCenter: block.centerScene,
@@ -473,6 +481,7 @@ export async function loadUtahForgeDemoBoreholes(
   group.name = manifest.label || "Utah FORGE demo boreholes";
   group.userData = {
     displayName: manifest.label,
+    sceneLabelEligible: false,
     demoBoreholesLayer: true,
     classification: manifest.classification,
     notForEngineeringUse: manifest.notForEngineeringUse === true,

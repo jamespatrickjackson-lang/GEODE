@@ -114,6 +114,11 @@ export function MtThresholdSurfaceControls({
     style.mtSurfaceBoundariesById !== null
       ? style.mtSurfaceBoundariesById
       : {};
+  const legacyVisibility =
+    typeof style.mtThresholdSurfaceVisibility === "object" &&
+    style.mtThresholdSurfaceVisibility !== null
+      ? (style.mtThresholdSurfaceVisibility as Record<string, boolean>)
+      : {};
   const opacity = Math.max(0, Math.min(1, styleNumber(style, "opacity", 0.86)));
   const legendVisible = styleBoolean(style, "mtSurfaceBoundaryLegendVisible", true);
   const wireframe = styleBoolean(style, "mtThresholdSurfaceWireframe", false);
@@ -164,6 +169,15 @@ export function MtThresholdSurfaceControls({
     const current =
       boundaryStyles[id] ??
       (definition ? boundaryStyleFromDefinition(definition) : {});
+    const visibilityPatch =
+      typeof patch.visible === "boolean"
+        ? {
+            mtThresholdSurfaceVisibility: {
+              ...legacyVisibility,
+              [id]: patch.visible,
+            },
+          }
+        : {};
     commit({
       mtSurfaceBoundaryOrder: boundaryOrder.includes(id)
         ? boundaryOrder
@@ -175,14 +189,18 @@ export function MtThresholdSurfaceControls({
           ...patch,
         },
       },
+      ...visibilityPatch,
     });
   };
   const removeBoundary = (id: string) => {
     const nextById = { ...boundaryStyles };
     delete nextById[id];
+    const nextVisibility = { ...legacyVisibility };
+    delete nextVisibility[id];
     commit({
       mtSurfaceBoundaryOrder: boundaryOrder.filter((boundaryId) => boundaryId !== id),
       mtSurfaceBoundariesById: nextById,
+      mtThresholdSurfaceVisibility: nextVisibility,
     });
   };
   const availableBoundaries = definitions.filter(
@@ -194,6 +212,10 @@ export function MtThresholdSurfaceControls({
       const thresholdOhmM = 30;
       commit({
         mtSurfaceBoundaryOrder: [...boundaryOrder, id],
+        mtThresholdSurfaceVisibility: {
+          ...legacyVisibility,
+          [id]: true,
+        },
         mtSurfaceBoundariesById: {
           ...boundaryStyles,
           [id]: {
@@ -216,6 +238,10 @@ export function MtThresholdSurfaceControls({
     if (definition) {
       commit({
         mtSurfaceBoundaryOrder: [...boundaryOrder, definition.id],
+        mtThresholdSurfaceVisibility: {
+          ...legacyVisibility,
+          [definition.id]: true,
+        },
         mtSurfaceBoundariesById: {
           ...boundaryStyles,
           [definition.id]: boundaryStyleFromDefinition(definition, true),
@@ -636,5 +662,4 @@ export function MtThresholdSurfaceControls({
     </details>
   );
 }
-
 

@@ -8,6 +8,7 @@ import {
   effectiveStyle,
   effectiveVisibility,
   isVisibilityOverridden,
+  resolveEnvironmentForPage,
 } from "../pages/effective";
 import type { PresentationPage, ProjectLayerSpec } from "../pages/types";
 import { TopoMapPanel } from "./topoMap/TopoMapPanel";
@@ -46,6 +47,7 @@ import {
   UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
 import { isTopoMapGraticuleLayer, isTopoMapSurfaceLayer, resolveTopoMapSettings, topoMapLayerIds } from "../topoMap/settings";
+import { pageSelectionHasLanded } from "./authoringTarget";
 
 interface LayerPanelGroupsProps {
   section: LayerDataSection;
@@ -75,15 +77,22 @@ export function LayerPanelGroups({
   const currentPage = isEnv
     ? null
     : (state.pages.find((p) => p.id === state.selectedPageId) ?? null);
+  const currentPageEnvironment = currentPage
+    ? resolveEnvironmentForPage(state.environment, state.pages, currentPage)
+    : state.environment;
   const { currentIndex, isTransitioning, targetIndex } = usePageController();
   const selectedPageIndex = currentPage
     ? state.pages.findIndex((p) => p.id === currentPage.id)
     : -1;
   const selectedPageHasLanded =
-    selectedPageIndex >= 0 &&
-    selectedPageIndex === currentIndex &&
-    !isTransitioning &&
-    targetIndex === null;
+    pageSelectionHasLanded({
+      selectedPageIndex,
+      currentIndex,
+      isTransitioning,
+      targetIndex,
+    });
+  const pageStyleControlsDisabled =
+    !isEnv && (!currentPage || !selectedPageHasLanded);
   const selectedPageAccent =
     selectedPageIndex >= 0
       ? pageAccentForPage(
@@ -156,15 +165,15 @@ export function LayerPanelGroups({
           {})
         : currentPage
           ? effectiveStyle(
-              state.environment,
+              currentPageEnvironment,
               currentPage,
               UTAH_FORGE_SCENE_SECTION_LAYER_ID,
             )
-          : (state.environment.layerStyles[UTAH_FORGE_SCENE_SECTION_LAYER_ID] ??
+          : (currentPageEnvironment.layerStyles[UTAH_FORGE_SCENE_SECTION_LAYER_ID] ??
             {})
       : {};
   const sceneSectionDisabled =
-    state.projectSlug === "utah-forge" && !isEnv && currentPage === null;
+    state.projectSlug === "utah-forge" && pageStyleControlsDisabled;
   const workingAreaFocusStyle =
     state.projectSlug === "utah-forge"
       ? isEnv
@@ -173,7 +182,7 @@ export function LayerPanelGroups({
           ] ?? {})
         : currentPage
           ? effectiveStyle(
-              state.environment,
+              currentPageEnvironment,
               currentPage,
               UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
             )
@@ -182,24 +191,24 @@ export function LayerPanelGroups({
             ] ?? {})
       : {};
   const workingAreaFocusDisabled =
-    state.projectSlug === "utah-forge" && !isEnv && currentPage === null;
+    state.projectSlug === "utah-forge" && pageStyleControlsDisabled;
   const publicTopoSettings = resolveTopoMapSettings({
     manifest: state.manifest,
-    environment: state.environment,
+    environment: currentPageEnvironment,
     page: currentPage,
   });
   const publicTopoTerrainLayer = publicTopoSettings.surfaceLayer;
   const publicTopoTerrainLayerId = publicTopoSettings.surfaceLayerId;
   const publicTopoTerrainEnvVisible =
-    state.environment.defaultVisibleLayers.includes(publicTopoTerrainLayerId);
+    currentPageEnvironment.defaultVisibleLayers.includes(publicTopoTerrainLayerId);
   const publicTopoTerrainEffectiveVisible = currentPage
     ? isVisibilityOverridden(currentPage, publicTopoTerrainLayerId)
       ? currentPage.visibilityOverrides?.[publicTopoTerrainLayerId] === true
       : publicTopoTerrainEnvVisible
     : publicTopoTerrainEnvVisible;
   const effectiveVisibleLayerIds = currentPage
-    ? effectiveVisibility(state.environment, currentPage)
-    : new Set(state.environment.defaultVisibleLayers);
+    ? effectiveVisibility(currentPageEnvironment, currentPage)
+    : new Set(currentPageEnvironment.defaultVisibleLayers);
   const activeOpenSignalPrefix = isEnv
     ? ENVIRONMENT_SENTINEL
     : (currentPage?.id ?? "no-page");
@@ -213,8 +222,8 @@ export function LayerPanelGroups({
     const activeIds = layerIds.filter((layerId) => {
       if (!effectiveVisibleLayerIds.has(layerId)) return false;
       const style = currentPage
-        ? effectiveStyle(state.environment, currentPage, layerId)
-        : (state.environment.layerStyles[layerId] ?? {});
+        ? effectiveStyle(currentPageEnvironment, currentPage, layerId)
+        : (currentPageEnvironment.layerStyles[layerId] ?? {});
       return layerStyleOpacityForActiveState(layerId, style) > 0.001;
     });
     return activeIds.length > 0
@@ -321,10 +330,10 @@ export function LayerPanelGroups({
           ? isEnv
             ? (state.environment.layerStyles[seismicLayer.id] ?? {})
             : currentPage
-              ? effectiveStyle(state.environment, currentPage, seismicLayer.id)
-              : (state.environment.layerStyles[seismicLayer.id] ?? {})
+              ? effectiveStyle(currentPageEnvironment, currentPage, seismicLayer.id)
+              : (currentPageEnvironment.layerStyles[seismicLayer.id] ?? {})
           : {};
-        const seismicCapabilityDisabled = !isEnv && currentPage === null;
+        const seismicCapabilityDisabled = pageStyleControlsDisabled;
         const groupOpenSignal = activeLayerOpenSignal(
           layers.map((layer) => layer.id),
         );
@@ -357,11 +366,11 @@ export function LayerPanelGroups({
               ] ?? {})
             : currentPage
               ? effectiveStyle(
-                  state.environment,
+                  currentPageEnvironment,
                   currentPage,
                   UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
                 )
-              : (state.environment.layerStyles[
+              : (currentPageEnvironment.layerStyles[
                   UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID
                 ] ?? {});
           return (
@@ -382,6 +391,7 @@ export function LayerPanelGroups({
                 currentPage={currentPage}
                 setEnvLayerStyle={setEnvLayerStyle}
                 setPageLayerOverride={setPageLayerOverride}
+                disabled={pageStyleControlsDisabled}
                 activeSignalPrefix={activeOpenSignalPrefix}
                 boreholeLayerActive={
                   activeLayerOpenSignal([UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID]) !==
@@ -427,8 +437,8 @@ export function LayerPanelGroups({
         ) {
           const topoPanelProps = {
             settings: publicTopoSettings,
-            environment: state.environment,
-            scene: state.environment.scene ?? {},
+            environment: currentPageEnvironment,
+            scene: currentPageEnvironment.scene ?? {},
             isEnv,
             currentPage,
             setEnvLayerStyle,
@@ -525,9 +535,9 @@ export function LayerPanelGroups({
                 layerIds={layers.map((layer) => layer.id)}
                 isEnv={isEnv}
                 currentPage={currentPage}
-                environment={state.environment}
+                environment={currentPageEnvironment}
                 globalFogDensity={
-                  state.environment.scene?.fog?.density ?? DEFAULT_FOG_DENSITY
+                  currentPageEnvironment.scene?.fog?.density ?? DEFAULT_FOG_DENSITY
                 }
                 onSetEnv={(layerId, affectedByFog) =>
                   setEnvLayerStyle(layerId, { affectedByFog })
@@ -548,8 +558,8 @@ export function LayerPanelGroups({
             group.title === PUBLIC_TOPO_LAYER_GROUP_TITLE ? (
               <TopoMapPanel
                 settings={publicTopoSettings}
-                environment={state.environment}
-                scene={state.environment.scene ?? {}}
+                environment={currentPageEnvironment}
+                scene={currentPageEnvironment.scene ?? {}}
                 isEnv={isEnv}
                 currentPage={currentPage}
                 setEnvLayerStyle={setEnvLayerStyle}

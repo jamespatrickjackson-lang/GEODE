@@ -149,13 +149,32 @@ export interface SceneTargetResolution {
   worldBox: SceneTargetBox | null;
 }
 
+export interface SceneRenderLoopDebugState {
+  frameIndex: number;
+  timestampMs: number;
+  rafDeltaMs: number | null;
+  wallDeltaMs: number | null;
+  idleGapMs: number | null;
+  totalMs: number;
+  tickersMs: number;
+  controlsUpdateMs: number;
+  managerFrameUpdateMs: number;
+  renderMs: number;
+  tickerCount: number;
+  tickerDurations: Array<{
+    name: string;
+    durationMs: number;
+  }>;
+}
+
 export interface SceneHandle {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   controls: OrbitControls;
   renderer: THREE.WebGLRenderer;
   manager: SceneManager;
-  onTick(fn: (timeMs: number) => void): () => void;
+  onTick(fn: (timeMs: number) => void, debugName?: string): () => void;
+  getFrameLoopDebugState(): SceneRenderLoopDebugState | null;
   onDrillFocus(fn: (focus: DrillFocus | null) => void): () => void;
   /**
    * Gate the hover-raycast loop. PageController flips this to false at
@@ -163,6 +182,12 @@ export interface SceneHandle {
    * tooltip doesn't pop up as the camera flies past objects mid-tween.
    */
   setRaycastEnabled(enabled: boolean): void;
+  /**
+   * Synchronous transition flag for render-loop consumers that need to avoid
+   * expensive nonessential work before React context updates are flushed.
+   */
+  setTransitionActive(enabled: boolean): void;
+  isTransitionActive(): boolean;
   resolveSceneTarget(targetId: string): SceneTargetResolution | null;
   /**
    * Editor flag: when true, hovering a scene-overlay outline shows a
@@ -316,11 +341,21 @@ export function mountScene(
   });
   manager.setPostHandle(post);
 
-  const tickers = new Set<(t: number) => void>();
-  const onTick = (fn: (t: number) => void) => {
-    tickers.add(fn);
-    return () => tickers.delete(fn);
+  const tickers = new Set<{
+    fn: (t: number) => void;
+    debugName: string;
+  }>();
+  let lastFrameLoopDebug: SceneRenderLoopDebugState | null = null;
+  let frameLoopIndex = 0;
+  let lastRafTimeMs: number | null = null;
+  let lastFrameStartMs: number | null = null;
+  let lastFrameEndMs: number | null = null;
+  const onTick = (fn: (t: number) => void, debugName = "anonymous") => {
+    const entry = { fn, debugName };
+    tickers.add(entry);
+    return () => tickers.delete(entry);
   };
+  const getFrameLoopDebugState = () => lastFrameLoopDebug;
   const drillFocusListeners = new Set<(focus: DrillFocus | null) => void>();
   let currentDrillFocus: DrillFocus | null = null;
   const cloneDrillFocus = (focus: DrillFocus | null): DrillFocus | null =>
@@ -351,11 +386,54 @@ export function mountScene(
   let raf = 0;
   const tick = (timeMs: number) => {
     raf = requestAnimationFrame(tick);
-    for (const fn of tickers) fn(timeMs);
+    const frameStartMs = performance.now();
+    const frameIndex = ++frameLoopIndex;
+    const rafDeltaMs =
+      lastRafTimeMs === null ? null : Math.max(0, timeMs - lastRafTimeMs);
+    const wallDeltaMs =
+      lastFrameStartMs === null
+        ? null
+        : Math.max(0, frameStartMs - lastFrameStartMs);
+    const idleGapMs =
+      lastFrameEndMs === null ? null : Math.max(0, frameStartMs - lastFrameEndMs);
+    const tickersStartMs = performance.now();
+    const tickerDurations: SceneRenderLoopDebugState["tickerDurations"] = [];
+    for (const ticker of tickers) {
+      const tickerStartMs = performance.now();
+      ticker.fn(timeMs);
+      tickerDurations.push({
+        name: ticker.debugName,
+        durationMs: performance.now() - tickerStartMs,
+      });
+    }
+    const tickersEndMs = performance.now();
+    const controlsStartMs = performance.now();
     controls.update();
+    const controlsEndMs = performance.now();
     // Sky / light camera-follow mode (when "Lock to scene" is off in env).
+    const managerStartMs = performance.now();
     manager.frameUpdate(camera, timeMs);
+    const managerEndMs = performance.now();
+    const renderStartMs = performance.now();
     post.composer.render();
+    const frameEndMs = performance.now();
+    lastFrameLoopDebug = {
+      frameIndex,
+      timestampMs: timeMs,
+      rafDeltaMs,
+      wallDeltaMs,
+      idleGapMs,
+      totalMs: frameEndMs - frameStartMs,
+      tickersMs: tickersEndMs - tickersStartMs,
+      controlsUpdateMs: controlsEndMs - controlsStartMs,
+      managerFrameUpdateMs: managerEndMs - managerStartMs,
+      renderMs: frameEndMs - renderStartMs,
+      tickerCount: tickers.size,
+      tickerDurations,
+    };
+    lastRafTimeMs = timeMs;
+    lastFrameStartMs = frameStartMs;
+    lastFrameEndMs = frameEndMs;
   };
   raf = requestAnimationFrame(tick);
 
@@ -370,6 +448,7 @@ export function mountScene(
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
   let raycastEnabled = true;
+  let transitionActive = false;
   let lastRayMs = 0;
   let currentLabel: string | null = null;
   let shown = false;
@@ -1701,6 +1780,10 @@ export function mountScene(
       setHoverTooltip(null);
     }
   };
+  const setTransitionActive = (enabled: boolean) => {
+    transitionActive = enabled;
+  };
+  const isTransitionActive = () => transitionActive;
 
   const dispose = () => {
     cancelAnimationFrame(raf);
@@ -1744,8 +1827,11 @@ export function mountScene(
     renderer,
     manager,
     onTick,
+    getFrameLoopDebugState,
     onDrillFocus,
     setRaycastEnabled,
+    setTransitionActive,
+    isTransitionActive,
     resolveSceneTarget,
     setEditorMode,
     setOverlayBoundsCommitHandler,

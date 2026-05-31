@@ -6,6 +6,44 @@ import {
   scalarStyleNumber,
 } from "./transitionStyles";
 
+function transitionDebugMs(value: number): number {
+  return Number(Math.max(0, value).toFixed(3));
+}
+
+function transitionEnvelopeOpacity(
+  from: number,
+  to: number,
+  current: number,
+): number {
+  const sourceVisible = from > 0.001;
+  const targetVisible = to > 0.001;
+  if (sourceVisible && targetVisible) return 1;
+  if (sourceVisible) return clamp01(current / Math.max(0.001, from));
+  if (targetVisible) return clamp01(current / Math.max(0.001, to));
+  return 0;
+}
+
+function transitionEnvelopeForLayerFrame(
+  this: any,
+  id: string,
+  current: number,
+): number {
+  const transition = this.activeSceneTransitionContext;
+  if (!transition) return current > 0.001 ? 1 : 0;
+  const from = transition.sourceLayers.get(id)?.opacity ?? 0;
+  const to =
+    transition.targetVisibleLayerIds.has(id) &&
+    this.lastEffectiveEnv &&
+    this.lastEffectivePage
+      ? this.targetOpacityForLayer(
+          this.lastEffectiveEnv,
+          this.lastEffectivePage,
+          id,
+        )
+      : 0;
+  return transitionEnvelopeOpacity(from, to, current);
+}
+
 export function warnUnexpectedTransitionLayerImpl(this: any, id: string): void {
     const transition = this.activeSceneTransitionContext;
     if (!transition) return;
@@ -62,19 +100,29 @@ export function enforceTransitionVisibilityEnvelopeImpl(this: any): void {
           !this.layerTweens.has(id) &&
           !this.layerTransitionSnapshots.has(id)
         ) {
-          this.applyLayerRenderOpacity(
+          const opacity = this.transitionFrameOpacityForLayer(id);
+          this.applyLayerTransitionRenderOpacity(
             id,
-            this.transitionFrameOpacityForLayer(id),
+            opacity,
+            transitionEnvelopeForLayerFrame.call(this, id, opacity),
           );
         }
         continue;
       }
       if (group.visible) this.warnUnexpectedTransitionLayer(id);
-      this.applyLayerRenderOpacity(id, 0);
+      this.applyLayerTransitionRenderOpacity(id, 0, 0);
     }
   }
 
 export function tickLayerTweensImpl(this: any, nowMs: number): void {
+    const startedAt = performance.now();
+    const layerTweenIdsBefore = Array.from(this.layerTweens.keys());
+    const scalarTweenIdsBefore = Array.from(this.scalarStyleTweens.keys());
+    const snapshotIdsBefore = Array.from(this.layerTransitionSnapshots.keys());
+    const sceneSectionStyleTweenActiveBefore = !!this.sceneSectionStyleTween;
+    const helperSnapshotActiveBefore =
+      !!this.sceneSectionHelperTransitionSnapshot;
+    const workingAreaFocusTweenActiveBefore = !!this.workingAreaFocusTween;
     if (
       this.layerTweens.size === 0 &&
       this.scalarStyleTweens.size === 0 &&
@@ -84,8 +132,35 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
       !this.workingAreaFocusTween &&
       !this.activeSceneTransitionContext
     ) {
+      this.lastLayerTweenTickDebug = {
+        timestampMs: transitionDebugMs(nowMs),
+        totalMs: transitionDebugMs(performance.now() - startedAt),
+        sceneSectionMs: 0,
+        sceneSectionApply: null,
+        workingAreaMs: 0,
+        scalarMs: 0,
+        layerMs: 0,
+        snapshotMs: 0,
+        helperSnapshotMs: 0,
+        envelopeMs: 0,
+        activeSceneTransition: false,
+        sceneSectionApplyMode: "none",
+        layerTweenIds: [],
+        scalarTweenIds: [],
+        snapshotIds: [],
+        layerTweenCountBefore: 0,
+        scalarTweenCountBefore: 0,
+        snapshotCountBefore: 0,
+        sceneSectionStyleTweenActiveBefore: false,
+        helperSnapshotActiveBefore: false,
+        workingAreaFocusTweenActiveBefore: false,
+      };
       return;
     }
+    let stageStart = performance.now();
+    let sceneSectionApplyMode: "none" | "full" | "helper-opacity-only" =
+      "none";
+    let sceneSectionApplyDebug = null;
     if (this.sceneSectionStyleTween) {
       const tween = this.sceneSectionStyleTween;
       const t =
@@ -104,12 +179,29 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
       this.sceneSectionHelperTransitionOpacity = done
         ? 1
         : this.sceneSectionHelperOpacityForTween(tween, eased);
-      this.applySceneSectionPlanes(style);
+      if (
+        tween.discreteChanged &&
+        tween.appliedDiscreteTarget === true &&
+        !done
+      ) {
+        this.applySceneSectionHelperTransitionOpacity();
+        sceneSectionApplyMode = "helper-opacity-only";
+      } else {
+        this.applySceneSectionPlanes(style);
+        sceneSectionApplyDebug = this.lastSceneSectionApplyDebug ?? null;
+        sceneSectionApplyMode = "full";
+        if (tween.discreteChanged && !done) {
+          tween.appliedDiscreteTarget = true;
+        }
+      }
       if (done) {
         this.sceneSectionStyleTween = null;
         this.sceneSectionHelperTransitionOpacity = 1;
       }
     }
+    const sceneSectionMs = transitionDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
+
     if (this.workingAreaFocusTween) {
       const tween = this.workingAreaFocusTween;
       const t =
@@ -127,6 +219,9 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
       );
       if (done) this.workingAreaFocusTween = null;
     }
+    const workingAreaMs = transitionDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
+
     for (const [id, tween] of this.scalarStyleTweens) {
       const t =
         tween.durationMs <= 0 ? 1 : (nowMs - tween.startMs) / tween.durationMs;
@@ -138,15 +233,26 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
       this.applyStyle(id, style);
       if (done) this.scalarStyleTweens.delete(id);
     }
+    const scalarMs = transitionDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
+
     for (const [id, tween] of this.layerTweens) {
       const t =
         tween.durationMs <= 0 ? 1 : (nowMs - tween.startMs) / tween.durationMs;
       const done = t >= 1;
       const eased = done ? 1 : easeProgress(t, tween.easing);
       const opacity = tween.from + (tween.to - tween.from) * eased;
-      this.applyLayerRenderOpacity(id, done ? tween.to : opacity);
+      const nextOpacity = done ? tween.to : opacity;
+      this.applyLayerTransitionRenderOpacity(
+        id,
+        nextOpacity,
+        transitionEnvelopeOpacity(tween.from, tween.to, nextOpacity),
+      );
       if (done) this.layerTweens.delete(id);
     }
+    const layerMs = transitionDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
+
     for (const [id, snapshot] of this.layerTransitionSnapshots) {
       const t =
         snapshot.durationMs <= 0
@@ -158,9 +264,17 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
       this.applyRenderOpacityToTree(
         snapshot.group,
         done ? snapshot.to : opacity,
+        transitionEnvelopeOpacity(
+          snapshot.from,
+          snapshot.to,
+          done ? snapshot.to : opacity,
+        ),
       );
       if (done) this.removeLayerTransitionSnapshot(id);
     }
+    const snapshotMs = transitionDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
+
     if (this.sceneSectionHelperTransitionSnapshot) {
       const snapshot = this.sceneSectionHelperTransitionSnapshot;
       const t =
@@ -176,7 +290,36 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
       );
       if (done) this.removeSceneSectionHelperTransitionSnapshot();
     }
+    const helperSnapshotMs = transitionDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
+
     this.enforceTransitionVisibilityEnvelope();
+    const envelopeMs = transitionDebugMs(performance.now() - stageStart);
+
+    this.lastLayerTweenTickDebug = {
+      timestampMs: transitionDebugMs(nowMs),
+      totalMs: transitionDebugMs(performance.now() - startedAt),
+      sceneSectionMs,
+      sceneSectionApply: sceneSectionApplyDebug,
+      workingAreaMs,
+      scalarMs,
+      layerMs,
+      snapshotMs,
+      helperSnapshotMs,
+      envelopeMs,
+      activeSceneTransition: this.activeSceneTransitionContext !== null,
+      sceneSectionApplyMode,
+      layerTweenIds: layerTweenIdsBefore.slice(0, 16),
+      scalarTweenIds: scalarTweenIdsBefore.slice(0, 16),
+      snapshotIds: snapshotIdsBefore.slice(0, 16),
+      layerTweenCountBefore: layerTweenIdsBefore.length,
+      scalarTweenCountBefore: scalarTweenIdsBefore.length,
+      snapshotCountBefore: snapshotIdsBefore.length,
+      sceneSectionStyleTweenActiveBefore,
+      helperSnapshotActiveBefore,
+      workingAreaFocusTweenActiveBefore,
+    };
+
     if (
       this.layerTweens.size === 0 &&
       this.scalarStyleTweens.size === 0 &&

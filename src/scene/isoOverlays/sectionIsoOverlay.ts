@@ -26,6 +26,55 @@ function clampRange(v: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, v));
 }
 
+function sectionIsoDebugMs(value: number): number {
+  return Number(Math.max(0, value).toFixed(3));
+}
+
+export interface ScalarSectionIsoLineGeometryDebugState {
+  timingMode: "coarse-pass";
+  totalMs: number;
+  setupMs: number;
+  contourPassMs: number;
+  triangleScanMs: number;
+  triangleIntersectionMs: number;
+  segmentRecordMs: number;
+  segmentStitchMs: number;
+  stitchNodeBuildMs: number;
+  stitchTraversalMs: number;
+  stitchPointAssemblyMs: number;
+  stitchLengthFilterMs: number;
+  stitchNormalMs: number;
+  polylineSimplifyMs: number;
+  ribbonExtrudeMs: number;
+  geometryCreateMs: number;
+  triangleCount: number;
+  maskedTriangleCount: number;
+  invalidTriangleCount: number;
+  degenerateTriangleCount: number;
+  levelCandidateCount: number;
+  intersectionAttemptCount: number;
+}
+
+export interface ScalarSectionIsoOverlayUpdateDebugState {
+  totalMs: number;
+  disposeMs: number;
+  rootCreateMs: number;
+  bandMeshMs: number;
+  lineGeometryMs: number;
+  lineMaterialMs: number;
+  attachMs: number;
+  lineGeometryDebug: ScalarSectionIsoLineGeometryDebugState;
+  bandMeshCount: number;
+  lineMeshCount: number;
+  lineSourceSegmentCount: number;
+  lineTinySegmentCount: number;
+  linePolylineCount: number;
+  lineSimplifiedPointCount: number;
+  lineRibbonSegmentCount: number;
+  lineSnapToleranceM: number;
+  skippedReason: string | null;
+}
+
 export interface ScalarSectionIsoOptions {
   layerId: string;
   enabled: boolean;
@@ -56,6 +105,7 @@ export interface ScalarSectionIsoOptions {
   lowColor: THREE.Color;
   midColor: THREE.Color;
   highColor: THREE.Color;
+  debug?: ScalarSectionIsoOverlayUpdateDebugState;
 }
 
 export function scalarSectionMeshId(obj: THREE.Object3D): string | null {
@@ -439,7 +489,10 @@ type SectionIsoContourSegment = {
 };
 
 type SectionIsoContourNode = {
-  key: string;
+  id: number;
+  qx: number;
+  qy: number;
+  qz: number;
   point: THREE.Vector3;
   count: number;
   segmentIds: number[];
@@ -465,12 +518,12 @@ function sectionIsoSnapTolerance(
   return clampRange(diagonal * 0.00001, 1, 90);
 }
 
-function sectionIsoPointKey(point: THREE.Vector3, toleranceM: number): string {
-  return [
-    Math.round(point.x / toleranceM),
-    Math.round(point.y / toleranceM),
-    Math.round(point.z / toleranceM),
-  ].join(":");
+function sectionIsoPointHash(qx: number, qy: number, qz: number): number {
+  return (
+    Math.imul(qx, 73_856_093) ^
+    Math.imul(qy, 19_349_663) ^
+    Math.imul(qz, 83_492_791)
+  ) >>> 0;
 }
 
 function sectionIsoPolylineLength(points: THREE.Vector3[]): number {
@@ -529,46 +582,72 @@ function stitchSectionIsoSegments(
   segments: SectionIsoContourSegment[],
   toleranceM: number,
   minPolylineLengthM: number,
+  debug?: ScalarSectionIsoLineGeometryDebugState,
 ): SectionIsoPolyline[] {
-  type SegmentRecord = SectionIsoContourSegment & {
-    aKey: string;
-    bKey: string;
+  type SegmentRecord = {
+    aNodeId: number;
+    bNodeId: number;
+    normal: THREE.Vector3;
+    level: number;
   };
-  const nodes = new Map<string, SectionIsoContourNode>();
+  let stageStart = debug ? performance.now() : 0;
+  const nodeBuckets = new Map<number, SectionIsoContourNode[]>();
+  const nodes: SectionIsoContourNode[] = [];
   const nodeFor = (point: THREE.Vector3): SectionIsoContourNode => {
-    const key = sectionIsoPointKey(point, toleranceM);
-    let node = nodes.get(key);
-    if (!node) {
-      node = {
-        key,
-        point: point.clone(),
-        count: 1,
-        segmentIds: [],
-      };
-      nodes.set(key, node);
-      return node;
+    const qx = Math.round(point.x / toleranceM);
+    const qy = Math.round(point.y / toleranceM);
+    const qz = Math.round(point.z / toleranceM);
+    const hash = sectionIsoPointHash(qx, qy, qz);
+    let bucket = nodeBuckets.get(hash);
+    if (bucket) {
+      for (const node of bucket) {
+        if (node.qx !== qx || node.qy !== qy || node.qz !== qz) continue;
+        node.point
+          .multiplyScalar(node.count)
+          .add(point)
+          .multiplyScalar(1 / (node.count + 1));
+        node.count += 1;
+        return node;
+      }
+    } else {
+      bucket = [];
+      nodeBuckets.set(hash, bucket);
     }
-    node.point
-      .multiplyScalar(node.count)
-      .add(point)
-      .multiplyScalar(1 / (node.count + 1));
-    node.count += 1;
+    const node = {
+      id: nodes.length,
+      qx,
+      qy,
+      qz,
+      point: point.clone(),
+      count: 1,
+      segmentIds: [],
+    };
+    nodes.push(node);
+    bucket.push(node);
     return node;
   };
-  const records: SegmentRecord[] = segments.map((segment, segmentId) => {
+  const records = new Array<SegmentRecord>(segments.length);
+  for (let segmentId = 0; segmentId < segments.length; segmentId += 1) {
+    const segment = segments[segmentId];
     const aNode = nodeFor(segment.a);
     const bNode = nodeFor(segment.b);
     aNode.segmentIds.push(segmentId);
     bNode.segmentIds.push(segmentId);
-    return {
-      ...segment,
-      aKey: aNode.key,
-      bKey: bNode.key,
+    records[segmentId] = {
+      aNodeId: aNode.id,
+      bNodeId: bNode.id,
+      normal: segment.normal,
+      level: segment.level,
     };
-  });
+  }
+  if (debug) {
+    debug.stitchNodeBuildMs += sectionIsoDebugMs(
+      performance.now() - stageStart,
+    );
+  }
   const visited = new Uint8Array(records.length);
-  const nextUnvisitedSegment = (nodeKey: string): number => {
-    const node = nodes.get(nodeKey);
+  const nextUnvisitedSegment = (nodeId: number): number => {
+    const node = nodes[nodeId];
     if (!node) return -1;
     for (const segmentId of node.segmentIds) {
       if (visited[segmentId] === 0) return segmentId;
@@ -578,22 +657,21 @@ function stitchSectionIsoSegments(
   const extendPolyline = (
     points: THREE.Vector3[],
     usedSegmentIds: number[],
-    startKey: string,
-    append: boolean,
+    startNodeId: number,
   ): void => {
-    let currentKey = startKey;
+    let currentNodeId = startNodeId;
     while (true) {
-      const nextId = nextUnvisitedSegment(currentKey);
+      const nextId = nextUnvisitedSegment(currentNodeId);
       if (nextId < 0) return;
       visited[nextId] = 1;
       usedSegmentIds.push(nextId);
       const record = records[nextId];
-      const nextKey = record.aKey === currentKey ? record.bKey : record.aKey;
-      const nextNode = nodes.get(nextKey);
+      const nextNodeId =
+        record.aNodeId === currentNodeId ? record.bNodeId : record.aNodeId;
+      const nextNode = nodes[nextNodeId];
       if (!nextNode) return;
-      if (append) points.push(nextNode.point.clone());
-      else points.unshift(nextNode.point.clone());
-      currentKey = nextKey;
+      points.push(nextNode.point.clone());
+      currentNodeId = nextNodeId;
       if (points.length > records.length + 2) return;
     }
   };
@@ -602,21 +680,54 @@ function stitchSectionIsoSegments(
   for (let segmentId = 0; segmentId < records.length; segmentId += 1) {
     if (visited[segmentId] !== 0) continue;
     const record = records[segmentId];
-    const aNode = nodes.get(record.aKey);
-    const bNode = nodes.get(record.bKey);
+    const aNode = nodes[record.aNodeId];
+    const bNode = nodes[record.bNodeId];
     if (!aNode || !bNode) continue;
     visited[segmentId] = 1;
-    const points = [aNode.point.clone(), bNode.point.clone()];
     const usedSegmentIds = [segmentId];
-    extendPolyline(points, usedSegmentIds, record.bKey, true);
-    extendPolyline(points, usedSegmentIds, record.aKey, false);
-    if (points.length < 2 || sectionIsoPolylineLength(points) < minPolylineLengthM) {
+    const appendPoints: THREE.Vector3[] = [];
+    const prependPoints: THREE.Vector3[] = [];
+    stageStart = debug ? performance.now() : 0;
+    extendPolyline(appendPoints, usedSegmentIds, record.bNodeId);
+    extendPolyline(prependPoints, usedSegmentIds, record.aNodeId);
+    if (debug) {
+      debug.stitchTraversalMs += sectionIsoDebugMs(
+        performance.now() - stageStart,
+      );
+    }
+    stageStart = debug ? performance.now() : 0;
+    const points: THREE.Vector3[] = [];
+    for (let i = prependPoints.length - 1; i >= 0; i -= 1) {
+      points.push(prependPoints[i]);
+    }
+    points.push(aNode.point.clone(), bNode.point.clone());
+    for (const point of appendPoints) points.push(point);
+    if (debug) {
+      debug.stitchPointAssemblyMs += sectionIsoDebugMs(
+        performance.now() - stageStart,
+      );
+    }
+    stageStart = debug ? performance.now() : 0;
+    const polylineLength =
+      points.length < 2 ? 0 : sectionIsoPolylineLength(points);
+    if (debug) {
+      debug.stitchLengthFilterMs += sectionIsoDebugMs(
+        performance.now() - stageStart,
+      );
+    }
+    if (points.length < 2 || polylineLength < minPolylineLengthM) {
       continue;
     }
+    stageStart = debug ? performance.now() : 0;
     const normal = new THREE.Vector3();
     for (const usedId of usedSegmentIds) normal.add(records[usedId].normal);
     normal.normalize();
     if (normal.lengthSq() < 0.000001) normal.copy(record.normal);
+    if (debug) {
+      debug.stitchNormalMs += sectionIsoDebugMs(
+        performance.now() - stageStart,
+      );
+    }
     polylines.push({
       points,
       normal,
@@ -739,14 +850,47 @@ function buildSectionIsoLineGeometry(
   values: Float32Array | number[],
   options: ScalarSectionIsoOptions,
 ): THREE.BufferGeometry | null {
+  const debug = options.debug?.lineGeometryDebug;
+  const startedAt = debug ? performance.now() : 0;
+  let setupMs = 0;
+  let contourPassMs = 0;
+  let triangleScanMs = 0;
+  let triangleIntersectionMs = 0;
+  let segmentRecordMs = 0;
+  let segmentStitchMs = 0;
+  let polylineSimplifyMs = 0;
+  let ribbonExtrudeMs = 0;
+  let geometryCreateMs = 0;
+  const finish = <T extends THREE.BufferGeometry | null>(result: T): T => {
+    if (debug) {
+      debug.timingMode = "coarse-pass";
+      debug.totalMs += sectionIsoDebugMs(performance.now() - startedAt);
+      debug.setupMs += sectionIsoDebugMs(setupMs);
+      debug.contourPassMs += sectionIsoDebugMs(contourPassMs);
+      debug.triangleScanMs += sectionIsoDebugMs(triangleScanMs);
+      debug.triangleIntersectionMs += sectionIsoDebugMs(
+        triangleIntersectionMs,
+      );
+      debug.segmentRecordMs += sectionIsoDebugMs(segmentRecordMs);
+      debug.segmentStitchMs += sectionIsoDebugMs(segmentStitchMs);
+      debug.polylineSimplifyMs += sectionIsoDebugMs(polylineSimplifyMs);
+      debug.ribbonExtrudeMs += sectionIsoDebugMs(ribbonExtrudeMs);
+      debug.geometryCreateMs += sectionIsoDebugMs(geometryCreateMs);
+    }
+    return result;
+  };
+  let stageStart = startedAt;
   const position = obj.geometry.getAttribute("position");
-  if (!(position instanceof THREE.BufferAttribute)) return null;
+  if (!(position instanceof THREE.BufferAttribute)) return finish(null);
   const index = obj.geometry.getIndex();
   const sourceIndex = index
     ? Array.from({ length: index.count }, (_, i) => index.getX(i))
     : Array.from({ length: position.count }, (_, i) => i);
   const triangleLimit = sourceIndex.length - (sourceIndex.length % 3);
-  if (triangleLimit <= 0) return null;
+  if (debug) {
+    debug.triangleCount += triangleLimit / 3;
+  }
+  if (triangleLimit <= 0) return finish(null);
   const levels = sectionIsoLevels(
     options.isoMin,
     options.isoMax,
@@ -773,16 +917,28 @@ function buildSectionIsoLineGeometry(
   const simplifyToleranceM = Math.max(snapToleranceM * 0.65, halfWidthM * 0.12);
   let sourceSegmentCount = 0;
   let tinySegmentCount = 0;
+  if (debug) {
+    setupMs += performance.now() - stageStart;
+    stageStart = performance.now();
+  }
 
   for (let i = 0; i < triangleLimit; i += 3) {
     const ia = sourceIndex[i];
     const ib = sourceIndex[i + 1];
     const ic = sourceIndex[i + 2];
-    if (sectionIsoTriangleMasked(options.hardMaskValues, ia, ib, ic)) continue;
+    if (sectionIsoTriangleMasked(options.hardMaskValues, ia, ib, ic)) {
+      if (debug) {
+        debug.maskedTriangleCount += 1;
+      }
+      continue;
+    }
     const va = values[ia];
     const vb = values[ib];
     const vc = values[ic];
     if (!Number.isFinite(va) || !Number.isFinite(vb) || !Number.isFinite(vc)) {
+      if (debug) {
+        debug.invalidTriangleCount += 1;
+      }
       continue;
     }
     const minValue = Math.min(va, vb, vc);
@@ -795,10 +951,19 @@ function buildSectionIsoLineGeometry(
       .sub(triangleA)
       .cross(triangleC.clone().sub(triangleA))
       .normalize();
-    if (normal.lengthSq() < 0.000001) continue;
+    if (normal.lengthSq() < 0.000001) {
+      if (debug) {
+        debug.degenerateTriangleCount += 1;
+      }
+      continue;
+    }
 
     for (const level of levels) {
       if (level < minValue || level > maxValue) continue;
+      if (debug) {
+        debug.levelCandidateCount += 1;
+        debug.intersectionAttemptCount += 1;
+      }
       sectionIsoTriangleIntersections(
         position,
         values,
@@ -809,7 +974,9 @@ function buildSectionIsoLineGeometry(
         intersections,
       );
       const pair = farthestIsoPair(intersections);
-      if (!pair) continue;
+      if (!pair) {
+        continue;
+      }
       const segmentLength = pair[0].distanceTo(pair[1]);
       if (segmentLength < minSegmentLengthM) {
         tinySegmentCount += 1;
@@ -829,29 +996,43 @@ function buildSectionIsoLineGeometry(
       });
     }
   }
+  if (debug) {
+    contourPassMs += performance.now() - stageStart;
+  }
 
   let polylineCount = 0;
   let simplifiedPointCount = 0;
   polylineLoop: for (const [level, segments] of segmentsByLevel) {
+    stageStart = debug ? performance.now() : 0;
     const polylines = stitchSectionIsoSegments(
       segments,
       snapToleranceM,
       minPolylineLengthM,
+      debug,
     );
+    if (debug) {
+      segmentStitchMs += performance.now() - stageStart;
+    }
     for (const polyline of polylines) {
+      stageStart = debug ? performance.now() : 0;
       const simplified = simplifySectionIsoPolyline(
         polyline.points,
         simplifyToleranceM,
       );
+      const simplifiedLength = sectionIsoPolylineLength(simplified);
+      if (debug) {
+        polylineSimplifyMs += performance.now() - stageStart;
+      }
       if (
         simplified.length < 2 ||
-        sectionIsoPolylineLength(simplified) < minPolylineLengthM
+        simplifiedLength < minPolylineLengthM
       ) {
         continue;
       }
       sectionIsoColorAt(level, options, color);
       polylineCount += 1;
       simplifiedPointCount += simplified.length;
+      stageStart = debug ? performance.now() : 0;
       appendSectionIsoPolylineRibbon(
         positions,
         colors,
@@ -862,13 +1043,17 @@ function buildSectionIsoLineGeometry(
         halfWidthM,
         dashed,
       );
+      if (debug) {
+        ribbonExtrudeMs += performance.now() - stageStart;
+      }
       if (positions.length / 12 >= SECTION_ISO_MAX_RIBBON_SEGMENTS) {
         break polylineLoop;
       }
     }
   }
 
-  if (positions.length === 0) return null;
+  if (positions.length === 0) return finish(null);
+  stageStart = debug ? performance.now() : 0;
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute(
     "position",
@@ -884,7 +1069,10 @@ function buildSectionIsoLineGeometry(
   geometry.userData.sectionIsoRibbonSegmentCount = positions.length / 12;
   geometry.userData.sectionIsoSnapToleranceM = snapToleranceM;
   geometry.computeBoundingSphere();
-  return geometry;
+  if (debug) {
+    geometryCreateMs += performance.now() - stageStart;
+  }
+  return finish(geometry);
 }
 
 function makeSectionIsoBandMaterial(
@@ -1097,6 +1285,13 @@ export function updateScalarSectionIsoOverlay(
   values: Float32Array | number[],
   options: ScalarSectionIsoOptions,
 ): void {
+  const startedAt = performance.now();
+  const debug = options.debug;
+  const finishDebug = (skippedReason: string | null = null): void => {
+    if (!debug) return;
+    debug.skippedReason = skippedReason;
+    debug.totalMs = sectionIsoDebugMs(performance.now() - startedAt);
+  };
   const targetKey =
     options.targetKey ?? scalarSectionTargetKey(options.layerId, obj);
   const targetSelected = options.selectedTargetIds[targetKey] !== false;
@@ -1106,11 +1301,23 @@ export function updateScalarSectionIsoOverlay(
     options.isoMax > options.isoMin &&
     (options.linesVisible || options.bandsVisible);
   if (!enabled) {
+    const disposeStartedAt = performance.now();
     disposeScalarSectionIsoOverlay(obj);
+    if (debug) {
+      debug.disposeMs += sectionIsoDebugMs(
+        performance.now() - disposeStartedAt,
+      );
+    }
+    finishDebug("disabled");
     return;
   }
 
+  let stageStart = performance.now();
   disposeScalarSectionIsoOverlay(obj);
+  if (debug) {
+    debug.disposeMs += sectionIsoDebugMs(performance.now() - stageStart);
+  }
+  stageStart = performance.now();
   const root = new THREE.Group();
   root.name = "scalar-section-iso-overlay";
   root.userData.ignoreLayerStyle = true;
@@ -1120,15 +1327,50 @@ export function updateScalarSectionIsoOverlay(
     root.userData.sceneSectionHelper = true;
   }
   root.renderOrder = SECTION_ISO_RENDER_ORDER;
+  if (debug) {
+    debug.rootCreateMs += sectionIsoDebugMs(performance.now() - stageStart);
+  }
 
   if (options.bandsVisible && options.bandOpacity > 0.001) {
+    stageStart = performance.now();
     const band = buildSectionIsoBandMesh(obj, values, options);
-    if (band) root.add(band);
+    if (debug) {
+      debug.bandMeshMs += sectionIsoDebugMs(performance.now() - stageStart);
+    }
+    if (band) {
+      stageStart = performance.now();
+      root.add(band);
+      if (debug) {
+        debug.bandMeshCount += 1;
+        debug.attachMs += sectionIsoDebugMs(performance.now() - stageStart);
+      }
+    }
   }
 
   if (options.linesVisible && options.lineWidth > 0.01) {
+    stageStart = performance.now();
     const lineGeometry = buildSectionIsoLineGeometry(obj, values, options);
+    if (debug) {
+      debug.lineGeometryMs += sectionIsoDebugMs(
+        performance.now() - stageStart,
+      );
+      if (lineGeometry) {
+        debug.lineSourceSegmentCount +=
+          lineGeometry.userData.sectionIsoSourceSegmentCount ?? 0;
+        debug.lineTinySegmentCount +=
+          lineGeometry.userData.sectionIsoTinySegmentCount ?? 0;
+        debug.linePolylineCount +=
+          lineGeometry.userData.sectionIsoPolylineCount ?? 0;
+        debug.lineSimplifiedPointCount +=
+          lineGeometry.userData.sectionIsoSimplifiedPointCount ?? 0;
+        debug.lineRibbonSegmentCount +=
+          lineGeometry.userData.sectionIsoRibbonSegmentCount ?? 0;
+        debug.lineSnapToleranceM =
+          lineGeometry.userData.sectionIsoSnapToleranceM ?? 0;
+      }
+    }
     if (lineGeometry) {
+      stageStart = performance.now();
       const lineMaterial = new THREE.MeshBasicMaterial({
         transparent: true,
         opacity: 0.96,
@@ -1155,16 +1397,36 @@ export function updateScalarSectionIsoOverlay(
         line.userData.sceneSectionHelper = true;
         lineMaterial.userData.sceneSectionHelper = true;
       }
+      if (debug) {
+        debug.lineMaterialMs += sectionIsoDebugMs(
+          performance.now() - stageStart,
+        );
+      }
+      stageStart = performance.now();
       root.add(line);
+      if (debug) {
+        debug.lineMeshCount += 1;
+        debug.attachMs += sectionIsoDebugMs(performance.now() - stageStart);
+      }
     }
   }
 
   if (root.children.length === 0) {
+    stageStart = performance.now();
     disposeObjectTree(root);
+    if (debug) {
+      debug.disposeMs += sectionIsoDebugMs(performance.now() - stageStart);
+    }
+    finishDebug("empty-overlay-root");
     return;
   }
+  stageStart = performance.now();
   obj.userData.scalarSectionIsoOverlayRoot = root;
   obj.add(root);
+  if (debug) {
+    debug.attachMs += sectionIsoDebugMs(performance.now() - stageStart);
+  }
+  finishDebug();
 }
 
 export function applyScalarFocusIndex(

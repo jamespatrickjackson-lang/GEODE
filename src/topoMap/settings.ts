@@ -140,6 +140,18 @@ export const TOPO_MAP_GRATICULE_EDGE_STYLE_FIELDS = [
   "graticuleEdgeLabelGapM",
 ] as const satisfies readonly (keyof EditableStyle)[];
 
+export const TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS = [
+  "publicSurfaceClipEnabled",
+  "publicSurfaceClipCenterX",
+  "publicSurfaceClipCenterY",
+  "publicSurfaceClipCenterZ",
+  "publicSurfaceClipSizeX",
+  "publicSurfaceClipSizeY",
+  "publicSurfaceClipSizeZ",
+  "publicSurfaceClipRotationZDeg",
+  "publicSurfaceClipShape",
+] as const satisfies readonly (keyof EditableStyle)[];
+
 export function topoMapToolMetadata(
   layer: ProjectLayerSpec | undefined,
 ): TopoMapToolMetadata | null {

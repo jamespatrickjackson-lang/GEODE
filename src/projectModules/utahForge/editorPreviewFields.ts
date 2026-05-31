@@ -11,6 +11,12 @@
 
 import type { PreviewLayerOverrideFields } from "../../pages/PageController";
 import {
+  TOPO_MAP_DEFAULT_REFERENCE_LAYER_IDS,
+  TOPO_MAP_DEFAULT_SURFACE_LAYER_ID,
+  TOPO_MAP_LEGACY_GRATICULE_LAYER_ID,
+  TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+} from "../../topoMap/settings";
+import {
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
@@ -146,6 +152,19 @@ const SCENE_SECTION_PREVIEW_FIELDS = [
   "sceneSectionTargetScope",
   "sceneSectionActiveAxis",
   "sceneSectionPlanes",
+  "sceneSectionWindowEnabled",
+  "sceneSectionWindowActiveAxis",
+  "sceneSectionWindowByAxis",
+  "sceneSectionFrameEnabled",
+  "sceneSectionActiveFrameId",
+  "sceneSectionFrames",
+  "sceneSectionFrameByAxis",
+  "sceneSectionObjectVisibilityByAxis",
+  "sceneSectionObjectVisibilityByFrameId",
+  "sceneSectionGroundTraceVisible",
+  "sceneSectionAxesVisible",
+  "sceneSectionAxisIntervalM",
+  "sceneSectionAxisTextScale",
   "sceneSectionTargetLayerIds",
   "sceneSectionTargetProductIds",
   "sceneSectionHelperVisible",
@@ -162,6 +181,11 @@ const WORKING_AREA_FOCUS_PREVIEW_FIELDS = [
 ] as const;
 
 export const UTAH_FORGE_PREVIEW_LAYER_OVERRIDE_FIELDS: PreviewLayerOverrideFields = {
+  [TOPO_MAP_DEFAULT_SURFACE_LAYER_ID]: TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+  [TOPO_MAP_LEGACY_GRATICULE_LAYER_ID]: TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+  [TOPO_MAP_DEFAULT_REFERENCE_LAYER_IDS[0]]: TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+  [TOPO_MAP_DEFAULT_REFERENCE_LAYER_IDS[1]]: TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+  [TOPO_MAP_DEFAULT_REFERENCE_LAYER_IDS[2]]: TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
   [UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID]:
     MT_FULL_DENSITY_PREVIEW_FIELDS,
   [UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID]: MT_SCALAR_WINDOW_FIELDS,

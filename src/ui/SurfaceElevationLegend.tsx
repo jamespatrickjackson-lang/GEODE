@@ -8,7 +8,10 @@ import {
   transparentLegendPanelStyle,
 } from "./legendStyles";
 import { usePageController } from "../pages/PageController";
-import { effectiveVisibility } from "../pages/effective";
+import {
+  effectiveVisibility,
+  resolveEnvironmentForPage,
+} from "../pages/effective";
 import { resolveTopoMapSettings } from "../topoMap/settings";
 import type { PresentationPage } from "../pages/types";
 
@@ -151,15 +154,18 @@ export function SurfaceElevationLegend({
     (transitionFrame.active && targetIndex !== null
       ? controllerPage
       : selectedPage ?? controllerPage);
+  const pageEnvironment = page
+    ? resolveEnvironmentForPage(state.environment, state.pages, page)
+    : state.environment;
   const settings = resolveTopoMapSettings({
     manifest: state.manifest,
-    environment: state.environment,
+    environment: editingEnvironment ? state.environment : pageEnvironment,
     page: editingEnvironment ? null : page,
   });
   const terrain = settings.terrain;
   const visibleLayerIds =
     !editingEnvironment && page
-      ? effectiveVisibility(state.environment, page)
+      ? effectiveVisibility(pageEnvironment, page)
       : new Set(state.environment.defaultVisibleLayers);
   if (settings.surfaceLayerId && !visibleLayerIds.has(settings.surfaceLayerId)) {
     return null;

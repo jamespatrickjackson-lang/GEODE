@@ -36,6 +36,7 @@ import {
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 } from "../../../projectModules/utahForge/layerIds";
+import { useEditor } from "../../EditorContext";
 import { seismicDefaultProductId, seismicProductOptions } from "./seismicModel";
 
 const sceneSectionAxisColors = {
@@ -439,6 +440,7 @@ export function SceneSectionPlanesContainer({
   setPageLayerOverride: PageStyleSetter;
   sceneHandle: SceneHandle;
 }) {
+  const { canApplyLiveSceneEdits } = useEditor();
   const products = seismicLayer ? seismicProductOptions(seismicLayer) : [];
   const defaultProductId = seismicLayer
     ? seismicDefaultProductId(seismicLayer)
@@ -564,7 +566,9 @@ export function SceneSectionPlanesContainer({
     if (disabled) return;
     const merged = { ...liveStyleRef.current, ...patch };
     liveStyleRef.current = merged;
-    sceneHandle.manager.applyStyle(UTAH_FORGE_SCENE_SECTION_LAYER_ID, merged);
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyStyle(UTAH_FORGE_SCENE_SECTION_LAYER_ID, merged);
+    }
     if (isEnv) {
       setEnvLayerStyle(UTAH_FORGE_SCENE_SECTION_LAYER_ID, patch);
     } else if (currentPage) {
@@ -620,6 +624,8 @@ export function SceneSectionPlanesContainer({
           }
         : entry,
     );
+    const hasPlanePatch = Boolean(patch.plane);
+    const hasFramePatch = Boolean(patch.frame);
     const isBuiltIn = currentEntry.builtIn && id === builtInFrameId(nextAxis);
     const legacyPatch: Partial<EditableStyle> = isBuiltIn
       ? {
@@ -636,7 +642,6 @@ export function SceneSectionPlanesContainer({
       : {
           sceneSectionActiveAxis: nextAxis,
         };
-    const hasFramePatch = Boolean(patch.frame);
     const xOrYLegacyWindow =
       isBuiltIn &&
       (nextAxis === "x" || nextAxis === "y") &&
@@ -665,9 +670,29 @@ export function SceneSectionPlanesContainer({
             },
           }
         : {};
+    const nextAnyPlaneEnabled = nextEntries.some(
+      (entry) => entry.plane.enabled === true,
+    );
+    const nextAnyExplicitFrameEnabled = nextEntries.some(
+      (entry) => entry.frame.enabled === true,
+    );
+    const nextSectionEnabled =
+      hasPlanePatch || hasFramePatch
+        ? hasFramePatch && patch.frame?.enabled !== false && !hasPlanePatch
+          ? true
+          : nextAnyPlaneEnabled || nextAnyExplicitFrameEnabled
+        : null;
+    const sectionActivationPatch: Partial<EditableStyle> =
+      typeof nextSectionEnabled === "boolean"
+        ? {
+            sceneSectionEnabled: nextSectionEnabled,
+            sceneSectionMode: "cutaway",
+          }
+        : {};
     commitFrameEntries(nextEntries, {
       sceneSectionActiveFrameId: id,
       sceneSectionFrameEnabled: true,
+      ...sectionActivationPatch,
       ...legacyPatch,
       ...xOrYLegacyWindow,
     });

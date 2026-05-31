@@ -18,7 +18,10 @@ import { UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS } from "../../projectModules/ut
 import {
   TOPO_MAP_GRATICULE_EDGE_STYLE_FIELDS,
   TOPO_MAP_LEGACY_GRATICULE_LAYER_ID,
+  TOPO_MAP_LEGACY_PUBLIC_SURFACE_LAYER_IDS,
+  TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
   isTopoMapGraticuleLayer,
+  isTopoMapLayer,
 } from "../../topoMap/settings";
 
 const MT_SURFACE_MASK_DEFAULT_DEPTH_M = 25;
@@ -178,6 +181,7 @@ export interface SceneSectionStyleTween {
   durationMs: number;
   easing: EasingName;
   discreteChanged: boolean;
+  appliedDiscreteTarget?: boolean;
 }
 
 export const SCALAR_TRANSITION_STYLE_FIELDS: readonly (keyof EditableStyle)[] = [
@@ -542,6 +546,21 @@ export function forgeDiscreteDataStyleChanged(
   toStyle: EditableStyle,
   layerSpec?: ProjectLayerSpec,
 ): boolean {
+  const topoLayer =
+    (layerSpec && isTopoMapLayer(layerSpec)) ||
+    (TOPO_MAP_LEGACY_PUBLIC_SURFACE_LAYER_IDS as readonly string[]).includes(
+      layerId,
+    );
+  if (
+    topoLayer &&
+    styleFieldsChanged(
+      fromStyle,
+      toStyle,
+      TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+    )
+  ) {
+    return true;
+  }
   if (layerSpec && isTopoMapGraticuleLayer(layerSpec)) {
     return styleFieldsChanged(
       fromStyle,

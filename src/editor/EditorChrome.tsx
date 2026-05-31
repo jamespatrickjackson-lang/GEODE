@@ -225,9 +225,10 @@ export function EditorChrome({
         state.selectedPageId !== ENVIRONMENT_SENTINEL && !state.presenterMode
       }
     >
+      <EditorLiveApplyTransitionBridge />
       <SelectedPageMirror />
       <NavControls />
-      <ScaleBar sceneHandle={sceneHandle} />
+      <ScaleBarWithTransitionState sceneHandle={sceneHandle} />
       <EditorRoot
         sceneHandle={sceneHandle}
         activeAudienceLens={activeAudienceLens}
@@ -258,6 +259,45 @@ export function EditorChrome({
   );
 }
 
+function EditorLiveApplyTransitionBridge() {
+  const {
+    isTransitioning,
+    targetIndex,
+    reapplyCurrentPageState,
+  } = usePageController();
+  const { setLiveApplyTransitionActive, flushDeferredLiveSceneEdits } =
+    useEditor();
+  const active = isTransitioning && targetIndex !== null;
+  useEffect(() => {
+    setLiveApplyTransitionActive(active);
+    if (!active && flushDeferredLiveSceneEdits()) {
+      reapplyCurrentPageState();
+    }
+    return () => setLiveApplyTransitionActive(false);
+  }, [
+    active,
+    flushDeferredLiveSceneEdits,
+    reapplyCurrentPageState,
+    setLiveApplyTransitionActive,
+  ]);
+  return null;
+}
+
+function ScaleBarWithTransitionState({
+  sceneHandle,
+}: {
+  sceneHandle: SceneHandle;
+}) {
+  const { isTransitioning, transitionFrame } = usePageController();
+  const transitionActive = isTransitioning && transitionFrame.active;
+  return (
+    <ScaleBar
+      sceneHandle={sceneHandle}
+      transitionActive={transitionActive}
+    />
+  );
+}
+
 function UtahForgeLegendStack({
   sceneHandle,
 }: {
@@ -267,18 +307,22 @@ function UtahForgeLegendStack({
   const {
     pages,
     currentIndex,
-    targetIndex,
-    isTransitioning,
-    transitionProgress,
+    transitionFrame,
   } = usePageController();
-  const sourcePage = pages[currentIndex] ?? null;
-  const targetPage =
-    typeof targetIndex === "number" ? pages[targetIndex] ?? null : null;
+  const frameSourcePage = pages[transitionFrame.sourceIndex] ?? null;
+  const frameTargetPage =
+    typeof transitionFrame.targetIndex === "number"
+      ? pages[transitionFrame.targetIndex] ?? null
+      : null;
   const transitionActive =
-    isTransitioning &&
-    !!sourcePage &&
-    !!targetPage &&
-    sourcePage.id !== targetPage.id;
+    transitionFrame.active &&
+    !!frameSourcePage &&
+    !!frameTargetPage &&
+    frameSourcePage.id !== frameTargetPage.id;
+  const sourcePage = transitionActive
+    ? frameSourcePage
+    : pages[currentIndex] ?? null;
+  const targetPage = transitionActive ? frameTargetPage : null;
   const sectionIsoTargetsVisible = sceneHandle.manager
     .listSectionIsoTargets()
     .some((target) => target.visible);
@@ -304,7 +348,7 @@ function UtahForgeLegendStack({
     );
   }
 
-  const t = clamp01(transitionProgress);
+  const t = clamp01(transitionFrame.progress);
   const exitT = clamp01(t / UTAH_FORGE_LEGEND_EXIT_END);
   const layoutT = clamp01(
     (t - UTAH_FORGE_LEGEND_EXIT_END) /
@@ -335,7 +379,7 @@ function UtahForgeLegendStack({
           pageOverride: id === "mt-resistivity" ? null : targetPage,
           layoutWeight: 1,
           offsetX: 0,
-          interactive: true,
+          interactive: t > 0.92,
         },
       ];
     }

@@ -2,6 +2,9 @@ import * as THREE from "three";
 
 const POINT_DISTANCE_LIGHT_NEAR_M = 0;
 const POINT_DISTANCE_LIGHT_FAR_M = 180_000;
+const POINT_DISTANCE_LIGHT_EXPONENT = 0.72;
+const POINT_DISTANCE_LIGHT_NEAR_MULTIPLIER = 0.74;
+const POINT_DISTANCE_LIGHT_FAR_MULTIPLIER = 1.0;
 
 interface PointDistanceLightShader {
   uniforms: Record<string, { value: number }>;
@@ -21,6 +24,11 @@ export function applyPointDistanceLightMaterial(
   material.userData.pointDistanceLightStrength = clampedStrength;
   material.userData.pointDistanceLightNearM = POINT_DISTANCE_LIGHT_NEAR_M;
   material.userData.pointDistanceLightFarM = POINT_DISTANCE_LIGHT_FAR_M;
+  material.userData.pointDistanceLightExponent = POINT_DISTANCE_LIGHT_EXPONENT;
+  material.userData.pointDistanceLightNearMultiplier =
+    POINT_DISTANCE_LIGHT_NEAR_MULTIPLIER;
+  material.userData.pointDistanceLightFarMultiplier =
+    POINT_DISTANCE_LIGHT_FAR_MULTIPLIER;
 
   if (material.userData.pointDistanceLightPatched !== true) {
     const previousOnBeforeCompile = material.onBeforeCompile.bind(material);
@@ -66,14 +74,14 @@ export function applyPointDistanceLightMaterial(
           "#include <color_fragment>",
           [
             "#include <color_fragment>",
-            "float pointDistanceLight = pow(vPointDistanceLight, 0.72);",
-            "float pointDistanceMultiplier = mix(0.68, 1.42, pointDistanceLight);",
+            `float pointDistanceLight = pow(vPointDistanceLight, ${POINT_DISTANCE_LIGHT_EXPONENT.toFixed(2)});`,
+            `float pointDistanceMultiplier = mix(${POINT_DISTANCE_LIGHT_NEAR_MULTIPLIER.toFixed(2)}, ${POINT_DISTANCE_LIGHT_FAR_MULTIPLIER.toFixed(2)}, pointDistanceLight);`,
             "diffuseColor.rgb *= mix(1.0, pointDistanceMultiplier, uPointDistanceLightStrength);",
           ].join("\n"),
         );
       material.userData.pointDistanceLightShader = patchedShader;
     };
-    material.customProgramCacheKey = () => "geosee-point-distance-light-v2";
+    material.customProgramCacheKey = () => "geosee-point-distance-light-v3";
     material.userData.pointDistanceLightPatched = true;
     material.needsUpdate = true;
   }

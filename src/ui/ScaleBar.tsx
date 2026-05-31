@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useEditor } from "../editor/EditorContext";
 import { vibrancyLabel } from "../editor/styles";
@@ -123,19 +123,26 @@ function surfacePointAtScreen(
   sceneHandle: SceneHandle,
   clientX: number,
   clientY: number,
+  options?: {
+    rect?: DOMRect;
+    surfaces?: THREE.Mesh[];
+    raycaster?: THREE.Raycaster;
+    ndc?: THREE.Vector2;
+  },
 ): THREE.Vector3 | null {
-  const rect = sceneHandle.renderer.domElement.getBoundingClientRect();
+  const rect =
+    options?.rect ?? sceneHandle.renderer.domElement.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return null;
-  const ndc = new THREE.Vector2(
+  const ndc = options?.ndc ?? new THREE.Vector2();
+  ndc.set(
     ((clientX - rect.left) / rect.width) * 2 - 1,
     -(((clientY - rect.top) / rect.height) * 2 - 1),
   );
-  const raycaster = new THREE.Raycaster();
+  const raycaster = options?.raycaster ?? new THREE.Raycaster();
   raycaster.setFromCamera(ndc, sceneHandle.camera);
-  const hits = raycaster.intersectObjects(
-    scaleSurfaceMeshes(sceneHandle.scene),
-    false,
-  );
+  const surfaces = options?.surfaces ?? scaleSurfaceMeshes(sceneHandle.scene);
+  const hits =
+    surfaces.length > 0 ? raycaster.intersectObjects(surfaces, false) : [];
   return hits[0]?.point ?? null;
 }
 
@@ -178,6 +185,9 @@ function surfaceReferencePoint(
   insetPx: number,
 ): THREE.Vector3 | null {
   const rect = sceneHandle.renderer.domElement.getBoundingClientRect();
+  const surfaces = scaleSurfaceMeshes(sceneHandle.scene);
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
   const x0 = rect.left + insetPx;
   const y0 = rect.bottom - insetPx;
   const candidates: Array<[number, number]> = [
@@ -189,7 +199,12 @@ function surfaceReferencePoint(
     [rect.left + rect.width * 0.5, rect.top + rect.height * 0.7],
   ];
   for (const [x, y] of candidates) {
-    const point = surfacePointAtScreen(sceneHandle, x, y);
+    const point = surfacePointAtScreen(sceneHandle, x, y, {
+      rect,
+      surfaces,
+      raycaster,
+      ndc,
+    });
     if (point) return point;
   }
   for (const [x, y] of candidates) {
@@ -255,7 +270,10 @@ function pickDisplayDistance(
   }, pool[0] ?? niceDistance(targetMeters));
 }
 
-function measureScale(sceneHandle: SceneHandle, insetPx: number): ScaleState | null {
+function measureScale(
+  sceneHandle: SceneHandle,
+  insetPx: number,
+): ScaleState | null {
   const rect = sceneHandle.renderer.domElement.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return null;
 
@@ -281,9 +299,17 @@ function measureScale(sceneHandle: SceneHandle, insetPx: number): ScaleState | n
   };
 }
 
-export function ScaleBar({ sceneHandle }: { sceneHandle: SceneHandle }) {
+export function ScaleBar({
+  sceneHandle,
+  transitionActive = false,
+}: {
+  sceneHandle: SceneHandle;
+  transitionActive?: boolean;
+}) {
   const { state } = useEditor();
   const [scale, setScale] = useState<ScaleState | null>(null);
+  const transitionActiveRef = useRef(transitionActive);
+  const updateRef = useRef<((force?: boolean) => void) | null>(null);
   const gui = state.environment.scene?.gui ?? {};
   const guiOverlay = gui.overlay ?? {};
   const guiNavigator = gui.navigator ?? {};
@@ -297,8 +323,19 @@ export function ScaleBar({ sceneHandle }: { sceneHandle: SceneHandle }) {
     : guiOverlay.borderColor ?? "#ffffff";
 
   useEffect(() => {
+    transitionActiveRef.current = transitionActive;
+    if (!transitionActive) updateRef.current?.(true);
+  }, [transitionActive]);
+
+  useEffect(() => {
     let previous = "";
-    const update = () => {
+    const update = (force = false) => {
+      if (
+        !force &&
+        (transitionActiveRef.current || sceneHandle.isTransitionActive())
+      ) {
+        return;
+      }
       const next = measureScale(sceneHandle, inset);
       const signature = next ? `${next.label}:${next.widthPx.toFixed(2)}` : "";
       if (signature !== previous) {
@@ -306,12 +343,15 @@ export function ScaleBar({ sceneHandle }: { sceneHandle: SceneHandle }) {
         setScale(next);
       }
     };
-    update();
-    const offTick = sceneHandle.onTick(update);
-    window.addEventListener("resize", update);
+    updateRef.current = update;
+    update(true);
+    const offTick = sceneHandle.onTick(() => update(false), "ScaleBar.measure");
+    const handleResize = () => update(true);
+    window.addEventListener("resize", handleResize);
     return () => {
+      updateRef.current = null;
       offTick();
-      window.removeEventListener("resize", update);
+      window.removeEventListener("resize", handleResize);
     };
   }, [sceneHandle, inset]);
 
@@ -324,7 +364,7 @@ export function ScaleBar({ sceneHandle }: { sceneHandle: SceneHandle }) {
     bottom: inset,
     color: textColor,
   };
-const rowStyle: React.CSSProperties = {
+  const rowStyle: React.CSSProperties = {
     display: "flex",
     alignItems: "center",
     gap: 8,

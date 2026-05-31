@@ -15,6 +15,7 @@ import {
 } from "../../styleControls";
 import type { EditableStyle, PresentationPage, ProjectLayerSpec } from "../../../pages/types";
 import type { SceneHandle } from "../../../scene";
+import { useEditor } from "../../EditorContext";
 import { UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID } from "../../../projectModules/utahForge/layerIds";
 import { SeismicAudienceAndDataConfidenceControls } from "./SeismicAudienceAndDataConfidenceControls";
 import { SeismicCapabilityLayerItem } from "./SeismicCapabilityLayerItem";
@@ -52,6 +53,7 @@ export function SeismicCapabilityLayerContainers({
   setPageLayerOverride: PageStyleSetter;
   sceneHandle: SceneHandle;
 }) {
+  const { canApplyLiveSceneEdits } = useEditor();
   const products = seismicProductOptions(layer);
   const capabilityPresets = seismicCapabilityPresets(layer);
   const defaultProductId = seismicDefaultProductId(layer);
@@ -156,7 +158,9 @@ export function SeismicCapabilityLayerContainers({
     if (targetLayerId === layerId) {
       const merged = { ...liveSeismicStyleRef.current, ...patch };
       liveSeismicStyleRef.current = merged;
-      sceneHandle.manager.applyStyle(targetLayerId, merged);
+      if (canApplyLiveSceneEdits()) {
+        sceneHandle.manager.applyStyle(targetLayerId, merged);
+      }
     }
     if (isEnv) {
       setEnvLayerStyle(targetLayerId, patch);

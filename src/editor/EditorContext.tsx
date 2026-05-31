@@ -41,7 +41,12 @@ import {
   copyFile,
   deleteFile,
 } from "./save";
-import { effectiveStyle, effectiveVisibility } from "../pages/effective";
+import {
+  effectiveStyle,
+  effectiveVisibility,
+  resolveEnvironmentForPage,
+} from "../pages/effective";
+import { selectedPageWriteBlocked } from "./authoringTarget";
 import {
   createUserRenderPresetFromEnvironment,
   updateUserRenderPresetFromEnvironment,
@@ -162,6 +167,9 @@ interface EditorContextValue {
   addOverlayImage: (pageId: string, fileName: string, caption?: string) => void;
   removeOverlayImage: (pageId: string, fileName: string) => void;
   togglePresenterMode: () => void;
+  setLiveApplyTransitionActive: (active: boolean) => void;
+  canApplyLiveSceneEdits: () => boolean;
+  flushDeferredLiveSceneEdits: () => boolean;
   // Manual save -- writes every dirty entity. Returns when done.
   commitPending: () => Promise<void>;
   // Per-page rolling capture history (in-memory only, capped at 5).
@@ -398,6 +406,128 @@ function nextSubMasterOrdinal(pages: PresentationPage[]): number {
   return max + 1;
 }
 
+function withoutLayerOverrideFields(
+  page: PresentationPage,
+  layerId: string,
+  fields?: readonly (keyof EditableStyle)[],
+): PresentationPage {
+  const overrides = { ...(page.layerOverrides ?? {}) };
+  if (fields === undefined) {
+    delete overrides[layerId];
+  } else {
+    const layerOverride = { ...(overrides[layerId] ?? {}) };
+    for (const field of fields) delete layerOverride[field];
+    if (Object.keys(layerOverride).length === 0) {
+      delete overrides[layerId];
+    } else {
+      overrides[layerId] = layerOverride;
+    }
+  }
+  const next: PresentationPage = { ...page, layerOverrides: overrides };
+  if (Object.keys(overrides).length === 0) delete next.layerOverrides;
+  return next;
+}
+
+function withoutVisibilityOverride(
+  page: PresentationPage,
+  layerId: string,
+): PresentationPage {
+  const visibilityOverrides = { ...(page.visibilityOverrides ?? {}) };
+  delete visibilityOverrides[layerId];
+  const next: PresentationPage = { ...page, visibilityOverrides };
+  if (Object.keys(visibilityOverrides).length === 0) {
+    delete next.visibilityOverrides;
+  }
+  return next;
+}
+
+function setSubMasterSnapshotLayerStyle(
+  page: PresentationPage,
+  layerId: string,
+  patch: Partial<EditableStyle>,
+): PresentationPage {
+  if (!isSubMasterPage(page) || !page.envSnapshot) return page;
+  const envSnapshot = clone(page.envSnapshot);
+  envSnapshot.layerStyles[layerId] = {
+    ...(envSnapshot.layerStyles[layerId] ?? {}),
+    ...patch,
+  };
+  const cleared = withoutLayerOverrideFields(
+    page,
+    layerId,
+    Object.keys(patch) as (keyof EditableStyle)[],
+  );
+  return { ...cleared, envSnapshot };
+}
+
+function clearSubMasterSnapshotLayerStyle(
+  page: PresentationPage,
+  layerId: string,
+  field?: keyof EditableStyle,
+): PresentationPage {
+  if (!isSubMasterPage(page) || !page.envSnapshot) return page;
+  const envSnapshot = clone(page.envSnapshot);
+  if (field === undefined) {
+    delete envSnapshot.layerStyles[layerId];
+  } else {
+    const style = { ...(envSnapshot.layerStyles[layerId] ?? {}) };
+    delete style[field];
+    if (Object.keys(style).length === 0) {
+      delete envSnapshot.layerStyles[layerId];
+    } else {
+      envSnapshot.layerStyles[layerId] = style;
+    }
+  }
+  const cleared = withoutLayerOverrideFields(
+    page,
+    layerId,
+    field === undefined ? undefined : [field],
+  );
+  return { ...cleared, envSnapshot };
+}
+
+function setSubMasterSnapshotVisible(
+  page: PresentationPage,
+  layerId: string,
+  visible: boolean,
+): PresentationPage {
+  if (!isSubMasterPage(page) || !page.envSnapshot) return page;
+  const envSnapshot = clone(page.envSnapshot);
+  const visibleLayers = new Set(envSnapshot.defaultVisibleLayers);
+  if (visible) visibleLayers.add(layerId);
+  else visibleLayers.delete(layerId);
+  envSnapshot.defaultVisibleLayers = Array.from(visibleLayers);
+  return { ...withoutVisibilityOverride(page, layerId), envSnapshot };
+}
+
+function normalizeSubMasterAuthoringPage(page: PresentationPage): PresentationPage {
+  if (!isSubMasterPage(page) || !page.envSnapshot) return page;
+  let next: PresentationPage = page;
+  const envSnapshot = clone(page.envSnapshot);
+  for (const [layerId, patch] of Object.entries(page.layerOverrides ?? {})) {
+    envSnapshot.layerStyles[layerId] = {
+      ...(envSnapshot.layerStyles[layerId] ?? {}),
+      ...patch,
+    };
+  }
+  for (const [layerId, visible] of Object.entries(page.visibilityOverrides ?? {})) {
+    const visibleLayers = new Set(envSnapshot.defaultVisibleLayers);
+    if (visible) visibleLayers.add(layerId);
+    else visibleLayers.delete(layerId);
+    envSnapshot.defaultVisibleLayers = Array.from(visibleLayers);
+  }
+  next = { ...next, envSnapshot };
+  delete next.layerOverrides;
+  delete next.visibilityOverrides;
+  return next;
+}
+
+function normalizeSubMasterAuthoringPages(
+  pages: readonly PresentationPage[],
+): PresentationPage[] {
+  return pages.map(normalizeSubMasterAuthoringPage);
+}
+
 function reducer(state: EditorState, action: EditorAction): EditorState {
   switch (action.type) {
     // ---- environment ------------------------------------------------------
@@ -599,6 +729,13 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
     case "SET_PAGE_LAYER_OVERRIDE": {
       const pages = state.pages.map((p) => {
         if (p.id !== action.pageId) return p;
+        if (isSubMasterPage(p)) {
+          return setSubMasterSnapshotLayerStyle(
+            p,
+            action.layerId,
+            action.patch,
+          );
+        }
         const overrides = { ...(p.layerOverrides ?? {}) };
         overrides[action.layerId] = {
           ...(overrides[action.layerId] ?? {}),
@@ -615,6 +752,13 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
     case "CLEAR_PAGE_LAYER_OVERRIDE": {
       const pages = state.pages.map((p) => {
         if (p.id !== action.pageId) return p;
+        if (isSubMasterPage(p)) {
+          return clearSubMasterSnapshotLayerStyle(
+            p,
+            action.layerId,
+            action.field,
+          );
+        }
         const overrides = { ...(p.layerOverrides ?? {}) };
         if (action.field === undefined) {
           delete overrides[action.layerId];
@@ -640,6 +784,9 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
     case "SET_PAGE_VISIBILITY_OVERRIDE": {
       const pages = state.pages.map((p) => {
         if (p.id !== action.pageId) return p;
+        if (isSubMasterPage(p)) {
+          return setSubMasterSnapshotVisible(p, action.layerId, action.visible);
+        }
         const overrides = { ...(p.visibilityOverrides ?? {}) };
         overrides[action.layerId] = action.visible;
         return { ...p, visibilityOverrides: overrides };
@@ -653,6 +800,9 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
     case "CLEAR_PAGE_VISIBILITY_OVERRIDE": {
       const pages = state.pages.map((p) => {
         if (p.id !== action.pageId) return p;
+        if (isSubMasterPage(p)) {
+          return withoutVisibilityOverride(p, action.layerId);
+        }
         const overrides = { ...(p.visibilityOverrides ?? {}) };
         delete overrides[action.layerId];
         const next: PresentationPage = { ...p, visibilityOverrides: overrides };
@@ -1266,7 +1416,7 @@ export function EditorProvider({
     projectRoot,
     manifest: initialManifest,
     environment: initialEnvironment,
-    pages: initialPages,
+    pages: normalizeSubMasterAuthoringPages(initialPages),
     overlays: {},
     poseHistory: {},
     // Open the editor on the editor-only Global Settings pseudo-page so
@@ -1280,7 +1430,28 @@ export function EditorProvider({
   }));
 
   const stateRef = useRef(state);
+  const liveApplyTransitionActiveRef = useRef(false);
+  const deferredLiveSceneApplyRef = useRef(false);
   stateRef.current = state;
+
+  const setLiveApplyTransitionActive = useCallback((active: boolean) => {
+    liveApplyTransitionActiveRef.current = active;
+  }, []);
+
+  const canApplyLiveSceneEdits = useCallback(() => {
+    if (liveApplyTransitionActiveRef.current) {
+      deferredLiveSceneApplyRef.current = true;
+      return false;
+    }
+    return true;
+  }, []);
+
+  const flushDeferredLiveSceneEdits = useCallback(() => {
+    if (liveApplyTransitionActiveRef.current) return false;
+    if (!deferredLiveSceneApplyRef.current) return false;
+    deferredLiveSceneApplyRef.current = false;
+    return true;
+  }, []);
 
   // Hydrate overlay markdown for the selected presentation page (env has no
   // overlay).
@@ -1369,9 +1540,10 @@ export function EditorProvider({
           const id = key.slice(5);
           const page = stateRef.current.pages.find((p) => p.id === id);
           if (!page) continue;
+          const pageForWrite = normalizeSubMasterAuthoringPage(page);
           batchWrites.push({
             path: pageJsonPath(id, cur.projectRoot),
-            content: JSON.stringify(page, null, 2) + "\n",
+            content: JSON.stringify(pageForWrite, null, 2) + "\n",
           });
         } else if (key.startsWith("overlay:")) {
           const id = key.slice(8);
@@ -1428,7 +1600,7 @@ export function EditorProvider({
       const pageIdx = cur.pages.findIndex((p) => p.id === cur.selectedPageId);
       const displayPage =
         pageIdx >= 0 ? cur.pages[pageIdx] : cur.pages[0];
-      if (displayPage) {
+      if (displayPage && canApplyLiveSceneEdits()) {
         const previewEnvironmentBase =
           cur.selectedPageId === ENVIRONMENT_SENTINEL;
         const nextEnvironment = syncActiveUserRenderPresetLayerStyle(
@@ -1451,14 +1623,17 @@ export function EditorProvider({
               layerOverrides: undefined,
             }
           : displayPage;
+        const previewEnvironment = previewEnvironmentBase
+          ? nextEnvironment
+          : resolveEnvironmentForPage(nextEnvironment, cur.pages, displayPage);
         sceneHandle.manager.applyStyle(
           layerId,
-          effectiveStyle(nextEnvironment, previewPage, layerId),
+          effectiveStyle(previewEnvironment, previewPage, layerId),
         );
       }
       dispatch({ type: "SET_ENV_LAYER_STYLE", layerId, style });
     },
-    [sceneHandle],
+    [canApplyLiveSceneEdits, sceneHandle],
   );
 
   const toggleEnvDefaultVisible = useCallback<
@@ -1472,23 +1647,27 @@ export function EditorProvider({
       else set.add(layerId);
       const displayPage = cur.pages.find((p) => p.id === cur.selectedPageId)
         ?? cur.pages[0];
-      if (displayPage) {
+      if (displayPage && canApplyLiveSceneEdits()) {
         const nextDefaultVisibleLayers = Array.from(set);
         const visEnv =
           cur.selectedPageId === ENVIRONMENT_SENTINEL
             ? new Set(nextDefaultVisibleLayers)
             : effectiveVisibility(
-                {
-                  ...cur.environment,
-                  defaultVisibleLayers: nextDefaultVisibleLayers,
-                },
+                resolveEnvironmentForPage(
+                  {
+                    ...cur.environment,
+                    defaultVisibleLayers: nextDefaultVisibleLayers,
+                  },
+                  cur.pages,
+                  displayPage,
+                ),
                 displayPage,
               );
         sceneHandle.manager.setVisible(visEnv);
       }
       dispatch({ type: "TOGGLE_ENV_DEFAULT_VISIBLE", layerId });
     },
-    [sceneHandle],
+    [canApplyLiveSceneEdits, sceneHandle],
   );
 
   const setEnvScene = useCallback<EditorContextValue["setEnvScene"]>(
@@ -1501,10 +1680,12 @@ export function EditorProvider({
         },
         patch,
       );
-      sceneHandle.manager.applyEnvironment(nextEnv);
+      if (canApplyLiveSceneEdits()) {
+        sceneHandle.manager.applyEnvironment(nextEnv);
+      }
       dispatch({ type: "SET_ENV_SCENE", patch });
     },
-    [sceneHandle],
+    [canApplyLiveSceneEdits, sceneHandle],
   );
 
   const setEnvRenderPreset = useCallback<
@@ -1521,10 +1702,12 @@ export function EditorProvider({
       } else {
         delete nextEnv.renderPreset;
       }
-      sceneHandle.manager.applyEnvironment(nextEnv);
+      if (canApplyLiveSceneEdits()) {
+        sceneHandle.manager.applyEnvironment(nextEnv);
+      }
       dispatch({ type: "SET_ENV_RENDER_PRESET", renderPreset });
     },
-    [sceneHandle],
+    [canApplyLiveSceneEdits, sceneHandle],
   );
 
   const saveEnvCustomRenderPreset = useCallback<
@@ -1539,10 +1722,12 @@ export function EditorProvider({
         preset,
       ],
     };
-    sceneHandle.manager.applyEnvironment(nextEnv);
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyEnvironment(nextEnv);
+    }
     dispatch({ type: "ADD_ENV_CUSTOM_RENDER_PRESET", preset });
     return preset.id;
-  }, [sceneHandle]);
+  }, [canApplyLiveSceneEdits, sceneHandle]);
 
   const updateSelectedEnvCustomRenderPreset = useCallback<
     EditorContextValue["updateSelectedEnvCustomRenderPreset"]
@@ -1561,10 +1746,12 @@ export function EditorProvider({
         (existing) => (existing.id === preset.id ? preset : existing),
       ),
     };
-    sceneHandle.manager.applyEnvironment(nextEnv);
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyEnvironment(nextEnv);
+    }
     dispatch({ type: "UPDATE_ENV_CUSTOM_RENDER_PRESET", preset });
     return true;
-  }, [sceneHandle]);
+  }, [canApplyLiveSceneEdits, sceneHandle]);
 
   // ---- scene overlay dispatchers ---------------------------------------
   // Each dispatcher computes the post-mutation env / page locally and
@@ -1574,6 +1761,7 @@ export function EditorProvider({
 
   const applyOverlaysAfter = useCallback(
     (env: EnvironmentSetup, pages: PresentationPage[]) => {
+      if (!canApplyLiveSceneEdits()) return;
       const sel = stateRef.current.selectedPageId;
       const page =
         (sel && sel !== ENVIRONMENT_SENTINEL
@@ -1581,7 +1769,7 @@ export function EditorProvider({
           : null) ?? pages[0];
       if (page) sceneHandle.manager.applySceneOverlaysForPage(env, page);
     },
-    [sceneHandle],
+    [canApplyLiveSceneEdits, sceneHandle],
   );
 
   const setEnvSceneOverlayField = useCallback<
@@ -1743,14 +1931,16 @@ export function EditorProvider({
         ...cur.environment,
         scene: { ...scene, areaOutlines: nextOutlines },
       };
-      sceneHandle.manager.applyEnvironment(nextEnv);
+      if (canApplyLiveSceneEdits()) {
+        sceneHandle.manager.applyEnvironment(nextEnv);
+      }
       dispatch({
         type: "SET_ENV_SCENE",
         patch: { areaOutlines: nextOutlines },
       });
     });
     return () => sceneHandle.setAreaOutlineCommitHandler(null);
-  }, [sceneHandle]);
+  }, [canApplyLiveSceneEdits, sceneHandle]);
 
   useEffect(() => {
     sceneHandle.setSceneSectionPlaneCommitHandler((axis, positionM, frameId) => {
@@ -1761,9 +1951,12 @@ export function EditorProvider({
           ? cur.pages.find((candidate) => candidate.id === selectedPageId)
           : null;
       const layerId = "utah-forge-scene-section-planes";
+      const pageEnvironment = page
+        ? resolveEnvironmentForPage(cur.environment, cur.pages, page)
+        : cur.environment;
       const currentStyle = page
-        ? effectiveStyle(cur.environment, page, layerId)
-        : (cur.environment.layerStyles[layerId] ?? {});
+        ? effectiveStyle(pageEnvironment, page, layerId)
+        : (pageEnvironment.layerStyles[layerId] ?? {});
       const currentPlanes = currentStyle.sceneSectionPlanes ?? {};
       const targetFrameId = frameId ?? `axis:${axis}`;
       const isBuiltIn = targetFrameId === `axis:${axis}`;
@@ -1805,7 +1998,20 @@ export function EditorProvider({
             }
           : currentPlanes,
       };
-      sceneHandle.manager.applyStyle(layerId, { ...currentStyle, ...patch });
+      if (
+        page &&
+        selectedPageWriteBlocked(
+          cur,
+          page.id,
+          liveApplyTransitionActiveRef.current,
+        )
+      ) {
+        deferredLiveSceneApplyRef.current = true;
+        return;
+      }
+      if (canApplyLiveSceneEdits()) {
+        sceneHandle.manager.applyStyle(layerId, { ...currentStyle, ...patch });
+      }
       if (page) {
         dispatch({
           type: "SET_PAGE_LAYER_OVERRIDE",
@@ -1818,7 +2024,7 @@ export function EditorProvider({
       }
     });
     return () => sceneHandle.setSceneSectionPlaneCommitHandler(null);
-  }, [sceneHandle]);
+  }, [canApplyLiveSceneEdits, sceneHandle]);
 
   useEffect(() => {
     sceneHandle.setSceneSectionWindowCommitHandler((axis, kind, valueM, frameId) => {
@@ -1829,9 +2035,12 @@ export function EditorProvider({
           ? cur.pages.find((candidate) => candidate.id === selectedPageId)
           : null;
       const layerId = "utah-forge-scene-section-planes";
+      const pageEnvironment = page
+        ? resolveEnvironmentForPage(cur.environment, cur.pages, page)
+        : cur.environment;
       const currentStyle = page
-        ? effectiveStyle(cur.environment, page, layerId)
-        : (cur.environment.layerStyles[layerId] ?? {});
+        ? effectiveStyle(pageEnvironment, page, layerId)
+        : (pageEnvironment.layerStyles[layerId] ?? {});
       const currentByAxis = currentStyle.sceneSectionWindowByAxis ?? {};
       const currentFrameByAxis = currentStyle.sceneSectionFrameByAxis ?? {};
       const targetFrameId = frameId ?? `axis:${axis}`;
@@ -1911,7 +2120,20 @@ export function EditorProvider({
           : currentFrameByAxis,
         ...legacyPatch,
       };
-      sceneHandle.manager.applyStyle(layerId, { ...currentStyle, ...patch });
+      if (
+        page &&
+        selectedPageWriteBlocked(
+          cur,
+          page.id,
+          liveApplyTransitionActiveRef.current,
+        )
+      ) {
+        deferredLiveSceneApplyRef.current = true;
+        return;
+      }
+      if (canApplyLiveSceneEdits()) {
+        sceneHandle.manager.applyStyle(layerId, { ...currentStyle, ...patch });
+      }
       if (page) {
         dispatch({
           type: "SET_PAGE_LAYER_OVERRIDE",
@@ -1924,7 +2146,7 @@ export function EditorProvider({
       }
     });
     return () => sceneHandle.setSceneSectionWindowCommitHandler(null);
-  }, [sceneHandle]);
+  }, [canApplyLiveSceneEdits, sceneHandle]);
 
   // Editor mode flag drives the manager's overlay drag UX (cursor +
   // outline brightening). Presenter mode keeps overlays read-only.
@@ -1946,11 +2168,26 @@ export function EditorProvider({
     (pageId, layerId, patch) => {
       // Live scene update for the currently displayed page only.
       const cur = stateRef.current;
-      if (cur.selectedPageId === pageId) {
+      if (
+        selectedPageWriteBlocked(
+          cur,
+          pageId,
+          liveApplyTransitionActiveRef.current,
+        )
+      ) {
+        deferredLiveSceneApplyRef.current = true;
+        return;
+      }
+      if (cur.selectedPageId === pageId && canApplyLiveSceneEdits()) {
         const page = cur.pages.find((p) => p.id === pageId);
         if (page) {
-          const merged = effectiveStyle(
+          const pageEnvironment = resolveEnvironmentForPage(
             cur.environment,
+            cur.pages,
+            page,
+          );
+          const merged = effectiveStyle(
+            pageEnvironment,
             { ...page, layerOverrides: { ...(page.layerOverrides ?? {}), [layerId]: { ...(page.layerOverrides?.[layerId] ?? {}), ...patch } } },
             layerId,
           );
@@ -1959,7 +2196,7 @@ export function EditorProvider({
       }
       dispatch({ type: "SET_PAGE_LAYER_OVERRIDE", pageId, layerId, patch });
     },
-    [sceneHandle],
+    [canApplyLiveSceneEdits, sceneHandle],
   );
 
   const clearPageLayerOverride = useCallback<
@@ -1967,9 +2204,24 @@ export function EditorProvider({
   >(
     (pageId, layerId, field) => {
       const cur = stateRef.current;
-      if (cur.selectedPageId === pageId) {
+      if (
+        selectedPageWriteBlocked(
+          cur,
+          pageId,
+          liveApplyTransitionActiveRef.current,
+        )
+      ) {
+        deferredLiveSceneApplyRef.current = true;
+        return;
+      }
+      if (cur.selectedPageId === pageId && canApplyLiveSceneEdits()) {
         const page = cur.pages.find((candidate) => candidate.id === pageId);
         if (page) {
+          const pageEnvironment = resolveEnvironmentForPage(
+            cur.environment,
+            cur.pages,
+            page,
+          );
           const overrides = { ...(page.layerOverrides ?? {}) };
           if (field === undefined) {
             delete overrides[layerId];
@@ -1991,13 +2243,13 @@ export function EditorProvider({
           }
           sceneHandle.manager.applyStyle(
             layerId,
-            effectiveStyle(cur.environment, nextPage, layerId),
+            effectiveStyle(pageEnvironment, nextPage, layerId),
           );
         }
       }
       dispatch({ type: "CLEAR_PAGE_LAYER_OVERRIDE", pageId, layerId, field });
     },
-    [sceneHandle],
+    [canApplyLiveSceneEdits, sceneHandle],
   );
 
   const setPageVisibilityOverride = useCallback<
@@ -2005,10 +2257,25 @@ export function EditorProvider({
   >(
     (pageId, layerId, visible) => {
       const cur = stateRef.current;
-      if (cur.selectedPageId === pageId) {
+      if (
+        selectedPageWriteBlocked(
+          cur,
+          pageId,
+          liveApplyTransitionActiveRef.current,
+        )
+      ) {
+        deferredLiveSceneApplyRef.current = true;
+        return;
+      }
+      if (cur.selectedPageId === pageId && canApplyLiveSceneEdits()) {
         const page = cur.pages.find((p) => p.id === pageId);
         if (page) {
-          const merged = effectiveVisibility(cur.environment, {
+          const pageEnvironment = resolveEnvironmentForPage(
+            cur.environment,
+            cur.pages,
+            page,
+          );
+          const merged = effectiveVisibility(pageEnvironment, {
             ...page,
             visibilityOverrides: {
               ...(page.visibilityOverrides ?? {}),
@@ -2025,7 +2292,7 @@ export function EditorProvider({
         visible,
       });
     },
-    [sceneHandle],
+    [canApplyLiveSceneEdits, sceneHandle],
   );
 
   const clearPageVisibilityOverride = useCallback<
@@ -2033,12 +2300,27 @@ export function EditorProvider({
   >(
     (pageId, layerId) => {
       const cur = stateRef.current;
-      if (cur.selectedPageId === pageId) {
+      if (
+        selectedPageWriteBlocked(
+          cur,
+          pageId,
+          liveApplyTransitionActiveRef.current,
+        )
+      ) {
+        deferredLiveSceneApplyRef.current = true;
+        return;
+      }
+      if (cur.selectedPageId === pageId && canApplyLiveSceneEdits()) {
         const page = cur.pages.find((p) => p.id === pageId);
         if (page) {
+          const pageEnvironment = resolveEnvironmentForPage(
+            cur.environment,
+            cur.pages,
+            page,
+          );
           const overrides = { ...(page.visibilityOverrides ?? {}) };
           delete overrides[layerId];
-          const merged = effectiveVisibility(cur.environment, {
+          const merged = effectiveVisibility(pageEnvironment, {
             ...page,
             visibilityOverrides: overrides,
           });
@@ -2047,7 +2329,7 @@ export function EditorProvider({
       }
       dispatch({ type: "CLEAR_PAGE_VISIBILITY_OVERRIDE", pageId, layerId });
     },
-    [sceneHandle],
+    [canApplyLiveSceneEdits, sceneHandle],
   );
 
   // ---- page metadata dispatchers ----------------------------------------
@@ -2309,6 +2591,9 @@ export function EditorProvider({
       addOverlayImage,
       removeOverlayImage,
       togglePresenterMode,
+      setLiveApplyTransitionActive,
+      canApplyLiveSceneEdits,
+      flushDeferredLiveSceneEdits,
       commitPending,
       getPoseHistory,
       restorePoseFromHistory,
@@ -2353,6 +2638,9 @@ export function EditorProvider({
       addOverlayImage,
       removeOverlayImage,
       togglePresenterMode,
+      setLiveApplyTransitionActive,
+      canApplyLiveSceneEdits,
+      flushDeferredLiveSceneEdits,
       commitPending,
       getPoseHistory,
       restorePoseFromHistory,

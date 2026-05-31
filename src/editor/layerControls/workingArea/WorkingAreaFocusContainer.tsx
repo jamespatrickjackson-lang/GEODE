@@ -13,6 +13,7 @@ import {
 import { compactCheckboxRowStyle } from "../layout/layoutStyles";
 import { editorLayerLabel } from "../layerLabels";
 import { SeismicCapabilityLayerItem } from "../seismic/SeismicCapabilityLayerItem";
+import { useEditor } from "../../EditorContext";
 import type { EditableStyle, PresentationPage, ProjectLayerSpec } from "../../../pages/types";
 import type { SceneHandle } from "../../../scene";
 import {
@@ -162,6 +163,35 @@ function completeWorkingAreaFocusOpacityMap(
   );
 }
 
+function workingAreaFocusPatchFromStyle(
+  style: EditableStyle,
+  options: WorkingAreaFocusLayerOption[],
+): Partial<EditableStyle> {
+  const targetLayerIds = workingAreaFocusTargetSet(style, options);
+  return {
+    workingAreaFocusEnabled: styleBoolean(
+      style,
+      "workingAreaFocusEnabled",
+      false,
+    ),
+    workingAreaFocusMode:
+      style.workingAreaFocusMode === "inside-only"
+        ? "inside-only"
+        : "outside-context",
+    workingAreaFocusBoundsLayerId:
+      style.workingAreaFocusBoundsLayerId ??
+      UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+    workingAreaFocusTargetLayerIds: Array.from(targetLayerIds),
+    workingAreaFocusOutsideOpacityByLayerId:
+      completeWorkingAreaFocusOpacityMap(style, options),
+    workingAreaFocusHelperVisible: styleBoolean(
+      style,
+      "workingAreaFocusHelperVisible",
+      true,
+    ),
+  };
+}
+
 export function WorkingAreaFocusContainer({
   allLayers,
   style,
@@ -181,6 +211,7 @@ export function WorkingAreaFocusContainer({
   setPageLayerOverride: PageStyleSetter;
   sceneHandle: SceneHandle;
 }) {
+  const { canApplyLiveSceneEdits } = useEditor();
   const layerOptions = workingAreaFocusLayerOptions(allLayers);
   const targetLayerIds = workingAreaFocusTargetSet(style, layerOptions);
   const enabled = styleBoolean(style, "workingAreaFocusEnabled", false);
@@ -211,17 +242,20 @@ export function WorkingAreaFocusContainer({
       ...patch,
     };
     liveStyleRef.current = merged;
-    sceneHandle.manager.applyStyle(
-      UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
-      merged,
-    );
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyStyle(
+        UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
+        merged,
+      );
+    }
+    const persistedPatch = workingAreaFocusPatchFromStyle(merged, layerOptions);
     if (isEnv) {
-      setEnvLayerStyle(UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID, patch);
+      setEnvLayerStyle(UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID, persistedPatch);
     } else if (currentPage) {
       setPageLayerOverride(
         currentPage.id,
         UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
-        patch,
+        persistedPatch,
       );
     }
   };

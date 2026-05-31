@@ -9,9 +9,13 @@ import {
   transparentLegendPanelStyle,
 } from "./legendStyles";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
-import { effectiveStyle } from "../pages/effective";
+import {
+  effectiveStyle,
+  resolveEnvironmentForPage,
+} from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
+import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const SCENE_SECTION_LAYER_ID = "utah-forge-scene-section-planes";
@@ -20,6 +24,8 @@ const AXIS_COLORS = {
   y: "#35c7e8",
   z: "#f6d76b",
 } as const;
+const SCENE_SECTION_AXES = ["x", "y", "z"] as const;
+type SceneSectionLegendAxis = (typeof SCENE_SECTION_AXES)[number];
 
 const rootStyle: CSSProperties = {
   ...transparentLegendPanelStyle,
@@ -66,7 +72,13 @@ export function SceneSectionLegend({
   stacked?: boolean;
   pageOverride?: PresentationPage | null;
 }) {
-  const { state, sceneHandle, setEnvLayerStyle, setPageLayerOverride } = useEditor();
+  const {
+    state,
+    sceneHandle,
+    setEnvLayerStyle,
+    setPageLayerOverride,
+    canApplyLiveSceneEdits,
+  } = useEditor();
   const { pages, currentIndex, transitionFrame } = usePageController();
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
   const legendTextColors = resolveLegendTextColors(
@@ -80,6 +92,7 @@ export function SceneSectionLegend({
     pages[transitionFrame.sourceIndex] ??
     pages[currentIndex];
   const editingEnvironment = state.selectedPageId === ENVIRONMENT_SENTINEL;
+  const authoringPage = selectedLegendAuthoringPage(state);
   const selectedPage =
     !pageOverride &&
     !editingEnvironment &&
@@ -92,11 +105,15 @@ export function SceneSectionLegend({
     (transitionFrame.active && targetIndex !== null
       ? controllerPage
       : selectedPage ?? controllerPage);
+  const writePage = authoringPage ?? page;
+  const pageEnvironment = page
+    ? resolveEnvironmentForPage(state.environment, state.pages, page)
+    : state.environment;
   const style = editingEnvironment
     ? state.environment.layerStyles[SCENE_SECTION_LAYER_ID] ?? {}
     : page
-      ? effectiveStyle(state.environment, page, SCENE_SECTION_LAYER_ID)
-      : state.environment.layerStyles[SCENE_SECTION_LAYER_ID] ?? {};
+      ? effectiveStyle(pageEnvironment, page, SCENE_SECTION_LAYER_ID)
+      : pageEnvironment.layerStyles[SCENE_SECTION_LAYER_ID] ?? {};
   if (style.sceneSectionEnabled !== true) return null;
   if (!styleBoolean(style, "sceneSectionLegendVisible", true)) return null;
 
@@ -106,16 +123,16 @@ export function SceneSectionLegend({
       .filter((entry) => typeof entry?.id === "string" && entry.id.trim())
       .map((entry) => [entry.id, entry] as const),
   );
-  const axisFrameEntry = (axis: "x" | "y" | "z") =>
+  const axisFrameEntry = (axis: SceneSectionLegendAxis) =>
     explicitFrameById.get(`axis:${axis}`);
-  const axisLabel = (axis: "x" | "y" | "z") => {
+  const axisLabel = (axis: SceneSectionLegendAxis) => {
     const entry = axisFrameEntry(axis);
     const label = typeof entry?.label === "string" && entry.label.trim()
       ? entry.label
       : `${axis.toUpperCase()} Section`;
     return label;
   };
-  const axisInLegend = (axis: "x" | "y" | "z") =>
+  const axisInLegend = (axis: SceneSectionLegendAxis) =>
     axisFrameEntry(axis)?.legendVisible !== false;
   const bodyRowStyle: CSSProperties = {
     ...rowStyle,
@@ -135,23 +152,69 @@ export function SceneSectionLegend({
       : !state.presenterMode;
   const commit = (patch: Partial<EditableStyle>) => {
     const merged = { ...style, ...patch };
-    sceneHandle.manager.applyStyle(SCENE_SECTION_LAYER_ID, merged);
-    if (editingEnvironment || !page) {
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyStyle(SCENE_SECTION_LAYER_ID, merged);
+    }
+    if (editingEnvironment) {
       setEnvLayerStyle(SCENE_SECTION_LAYER_ID, patch);
+    } else if (writePage) {
+      setPageLayerOverride(writePage.id, SCENE_SECTION_LAYER_ID, patch);
     } else {
-      setPageLayerOverride(page.id, SCENE_SECTION_LAYER_ID, patch);
+      setEnvLayerStyle(SCENE_SECTION_LAYER_ID, patch);
     }
   };
-  const setAxisEnabled = (axis: "x" | "y" | "z", enabled: boolean) => {
+  const setAxisEnabled = (axis: SceneSectionLegendAxis, enabled: boolean) => {
+    const nextAxisPlane = {
+      ...(planes[axis] ?? {}),
+      enabled,
+    };
+    const nextPlanes = {
+      ...planes,
+      [axis]: nextAxisPlane,
+    };
+    const frameEntries = Array.isArray(style.sceneSectionFrames)
+      ? style.sceneSectionFrames
+      : null;
+    let matchedFrameEntry = false;
+    const nextFrameEntries = frameEntries
+      ? frameEntries.map((entry) => {
+          if (entry?.id !== `axis:${axis}`) return entry;
+          matchedFrameEntry = true;
+          return {
+            ...entry,
+            axis,
+            plane: {
+              ...(entry.plane ?? {}),
+              ...nextAxisPlane,
+            },
+          };
+        })
+      : null;
+    const frameEntryForAxis = (entryAxis: SceneSectionLegendAxis) =>
+      nextFrameEntries?.find((entry) => entry?.id === `axis:${entryAxis}`);
+    const anyBuiltInPlaneEnabled = SCENE_SECTION_AXES.some((entryAxis) => {
+      const frameEntry = frameEntryForAxis(entryAxis);
+      const resolvedPlane = {
+        ...(nextPlanes[entryAxis] ?? {}),
+        ...(frameEntry?.plane ?? {}),
+      };
+      return resolvedPlane.enabled === true;
+    });
+    const anyCustomPlaneEnabled =
+      nextFrameEntries?.some(
+        (entry) =>
+          typeof entry?.id === "string" &&
+          !entry.id.startsWith("axis:") &&
+          entry.plane?.enabled === true,
+      ) === true;
     commit({
+      sceneSectionEnabled: anyBuiltInPlaneEnabled || anyCustomPlaneEnabled,
+      sceneSectionMode: "cutaway",
       sceneSectionActiveAxis: axis,
-      sceneSectionPlanes: {
-        ...planes,
-        [axis]: {
-          ...(planes[axis] ?? {}),
-          enabled,
-        },
-      },
+      sceneSectionPlanes: nextPlanes,
+      ...(matchedFrameEntry && nextFrameEntries
+        ? { sceneSectionFrames: nextFrameEntries }
+        : {}),
     });
   };
 
@@ -166,7 +229,7 @@ export function SceneSectionLegend({
       <h2 style={{ ...titleStyle, color: legendTextColors.heading }}>
         Section Planes
       </h2>
-      {(["x", "y", "z"] as const)
+      {SCENE_SECTION_AXES
         .filter((axis) => axisInLegend(axis))
         .map((axis, index) => {
           const plane = planes[axis] ?? {};

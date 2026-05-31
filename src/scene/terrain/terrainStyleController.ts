@@ -13,6 +13,12 @@ import type { TerrainMaterialHandle } from "../terrainMaterial";
 import { disposeObjectTree } from "../disposeObjectTree";
 import { clamp01, styleNumber } from "../styles/styleUtils";
 
+const SITE_GUIDE_RESAMPLE_STEP_M = 90;
+const SITE_GUIDE_FILL_LIFT_M = 1.4;
+const SITE_GUIDE_OUTLINE_LIFT_M = 3;
+const SITE_BOUNDARY_RIBBON_WIDTH_SCALE = 16;
+const SITE_BOUNDARY_MIN_RIBBON_WIDTH_M = 60;
+
 function styleAffectedByFog(style: EditableStyle): boolean {
   return style.affectedByFog !== false;
 }
@@ -279,67 +285,67 @@ export function siteGuideRingImpl(this: any, lines: Vec3[][]): Vec3[] | null {
   }
 
 export function buildSiteGuideFillGeometryImpl(this: any, ring: Vec3[], sampleHeight: (easting: number, northing: number) => number, origin: { easting: number; northing: number; elevation: number }): THREE.BufferGeometry {
-    const xs = ring.map((point) => point[0]);
-    const ys = ring.map((point) => point[1]);
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-    const minY = Math.min(...ys);
-    const maxY = Math.max(...ys);
-    const targetStepM = 140;
-    const cols = Math.max(1, Math.ceil((maxX - minX) / targetStepM));
-    const rows = Math.max(1, Math.ceil((maxY - minY) / targetStepM));
-    const stepX = (maxX - minX) / cols;
-    const stepY = (maxY - minY) / rows;
-    const positions: number[] = [];
-    const push = (x: number, y: number) => {
-      positions.push(
-        x,
-        y,
-        this.siteGuideSurfaceZ(x, y, sampleHeight, origin, 1.4),
-      );
-    };
+    const first = ring[0];
+    const last = ring[ring.length - 1];
+    const openRing =
+      first && last && Math.hypot(last[0] - first[0], last[1] - first[1]) <= 0.001
+        ? ring.slice(0, -1)
+        : ring.slice();
+    if (openRing.length < 3) return new THREE.BufferGeometry();
 
-    for (let col = 0; col < cols; col += 1) {
-      const x0 = minX + col * stepX;
-      const x1 = minX + (col + 1) * stepX;
-      for (let row = 0; row < rows; row += 1) {
-        const y0 = minY + row * stepY;
-        const y1 = minY + (row + 1) * stepY;
-        const cx = (x0 + x1) * 0.5;
-        const cy = (y0 + y1) * 0.5;
-        if (!this.pointInSiteGuideRing(cx, cy, ring)) continue;
-        push(x0, y0);
-        push(x1, y0);
-        push(x1, y1);
-        push(x0, y0);
-        push(x1, y1);
-        push(x0, y1);
-      }
+    const shape = new THREE.Shape();
+    shape.moveTo(openRing[0][0], openRing[0][1]);
+    for (let index = 1; index < openRing.length; index += 1) {
+      shape.lineTo(openRing[index][0], openRing[index][1]);
     }
+    shape.closePath();
 
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(positions, 3),
-    );
+    const geometry = new THREE.ShapeGeometry(shape);
+    const position = geometry.getAttribute("position") as
+      | THREE.BufferAttribute
+      | undefined;
+    if (position) {
+      for (let index = 0; index < position.count; index += 1) {
+        position.setZ(
+          index,
+          this.siteGuideSurfaceZ(
+            position.getX(index),
+            position.getY(index),
+            sampleHeight,
+            origin,
+            SITE_GUIDE_FILL_LIFT_M,
+          ),
+        );
+      }
+      position.needsUpdate = true;
+    }
     geometry.computeBoundingBox();
     geometry.computeBoundingSphere();
+    geometry.computeVertexNormals();
     return geometry;
   }
 
 export function updateSiteSurfaceGuideImpl(this: any, id: string, group: THREE.Object3D, style: EditableStyle, sampleHeight: (easting: number, northing: number) => number): void {
-    const sourceLines = this.sourceSiteGuideLines(group);
+    const sourceLines = this.sourceSiteGuideLines(group) as Vec3[][];
     if (sourceLines.length === 0) return;
     const origin = this.siteSurfaceGuideOrigin(group);
+    const resampledLines = sourceLines.map((sourceLine) =>
+      this.resampleSiteGuideLine(sourceLine, SITE_GUIDE_RESAMPLE_STEP_M),
+    );
     const linePositions: number[] = [];
-    for (const sourceLine of sourceLines) {
-      const line = this.resampleSiteGuideLine(sourceLine, 90);
+    for (const line of resampledLines) {
       for (let index = 1; index < line.length; index += 1) {
         for (const point of [line[index - 1], line[index]]) {
           linePositions.push(
             point[0],
             point[1],
-            this.siteGuideSurfaceZ(point[0], point[1], sampleHeight, origin, 3),
+            this.siteGuideSurfaceZ(
+              point[0],
+              point[1],
+              sampleHeight,
+              origin,
+              SITE_GUIDE_OUTLINE_LIFT_M,
+            ),
           );
         }
       }
@@ -359,6 +365,17 @@ export function updateSiteSurfaceGuideImpl(this: any, id: string, group: THREE.O
       typeof style.opacity === "number" ? clamp01(style.opacity) : 1;
     const renderOrder =
       id === UTAH_FORGE_SITE_BOUNDARY_LAYER_ID ? 4590 : 4580;
+    const renderSiteBoundaryRibbon = id === UTAH_FORGE_SITE_BOUNDARY_LAYER_ID;
+    const authoredLineWidth =
+      typeof style.lineWidth === "number" && Number.isFinite(style.lineWidth)
+        ? style.lineWidth
+        : renderSiteBoundaryRibbon
+          ? 6
+          : 2.4;
+    const siteBoundaryRibbonWidthM = Math.max(
+      SITE_BOUNDARY_MIN_RIBBON_WIDTH_M,
+      authoredLineWidth * SITE_BOUNDARY_RIBBON_WIDTH_SCALE,
+    );
 
     group.traverse((obj) => {
       if (obj.userData?.terrainDrapedSiteGuideLine !== true) return;
@@ -374,6 +391,11 @@ export function updateSiteSurfaceGuideImpl(this: any, id: string, group: THREE.O
       if (material instanceof LineMaterial) {
         material.color.set(outlineColor);
         material.opacity = outlineOpacity;
+        material.dashed = false;
+        material.worldUnits = renderSiteBoundaryRibbon;
+        if (renderSiteBoundaryRibbon) {
+          material.linewidth = siteBoundaryRibbonWidthM;
+        }
         material.transparent = true;
         material.depthTest = true;
         material.depthWrite = false;
@@ -383,7 +405,7 @@ export function updateSiteSurfaceGuideImpl(this: any, id: string, group: THREE.O
       }
     });
 
-    const ring = this.siteGuideRing(sourceLines);
+    const ring = this.siteGuideRing(resampledLines);
     let fill = group.children.find(
       (child) => child.userData?.terrainDrapedSiteGuideFill === true,
     ) as THREE.Mesh | undefined;

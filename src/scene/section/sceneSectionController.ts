@@ -133,6 +133,10 @@ const SCENE_SECTION_BUILT_IN_FRAME_IDS = {
   z: "axis:z",
 } as const;
 
+function transitionDebugMs(value: number): number {
+  return Number(Math.max(0, value).toFixed(3));
+}
+
 function hardenStudioHelperMaterial(material: THREE.Material): void {
   material.depthTest = false;
   material.depthWrite = false;
@@ -3045,7 +3049,9 @@ export function rebuildSceneSectionHelpers(this: any,
         this.layers.get(this.topoSurfaceLayerId()),
       );
       void getHeightSampler().then((sampleHeight) => {
-        if (!traceGroup.parent) return;
+        const snapshotTargetActive =
+          this.sceneSectionHelperTransitionSnapshot !== null;
+        if (!traceGroup.parent && !snapshotTargetActive) return;
         const points: THREE.Vector3[] = [];
         for (let i = 0; i < SCENE_SECTION_GROUND_TRACE_SAMPLES; i += 1) {
           const t = i / (SCENE_SECTION_GROUND_TRACE_SAMPLES - 1);
@@ -3078,19 +3084,31 @@ export function rebuildSceneSectionHelpers(this: any,
         mesh.userData.sceneSectionGroundTrace = true;
         mesh.userData.sceneSectionGroundTraceWidthM = frame.groundTraceWidthM;
         mesh.renderOrder = SCENE_SECTION_RENDER_ORDER + 2;
-        traceGroup.add(mesh);
+        const addToLiveTrace = !!traceGroup.parent;
+        if (addToLiveTrace) {
+          traceGroup.add(mesh);
+        }
+        const addedToSnapshot =
+          this.addSceneSectionHelperObjectToTransitionSnapshot?.(mesh) === true;
+        if (!addToLiveTrace && !addedToSnapshot) {
+          disposeObjectTree(mesh);
+        }
       });
     }
   }
 }
 
 export function applySceneSectionPlanes(this: any, style: EditableStyle): void {
+  const startedAt = performance.now();
+  let stageStart = startedAt;
   this.lastSceneSectionStyle = style;
   const planes = this.sceneSectionActivePlanes(style);
   const clippingPlanes = this.sceneSectionClippingPlanes(planes);
   const layerTargets = this.sceneSectionLayerIds(style);
   const productTargets = this.sceneSectionProductIds(style);
   const bounds = this.sceneSectionBounds(style, layerTargets, productTargets);
+  const boundsMs = transitionDebugMs(performance.now() - stageStart);
+  stageStart = performance.now();
   const activePlaneFrameIds = new Set(
     planes.map((plane: ResolvedSceneSectionPlane) => plane.frameId),
   );
@@ -3102,14 +3120,19 @@ export function applySceneSectionPlanes(this: any, style: EditableStyle): void {
   this.sceneSectionClippingActive =
     planes.length > 0 || sectionFrames.length > 0;
   this.updateRendererLocalClipping();
+  const frameResolveMs = transitionDebugMs(performance.now() - stageStart);
+  stageStart = performance.now();
 
   const labelAnchorPoint = new THREE.Vector3();
   const allFrameClippingPlanes = sectionFrames.flatMap(
     (frame: ResolvedSceneSectionFrame) =>
       this.sceneSectionFrameClippingPlanes(frame),
   );
+  let traversedObjectCount = 0;
+  let materialApplyCount = 0;
   for (const [layerId, group] of this.layers) {
     group.traverse((obj: THREE.Object3D) => {
+      traversedObjectCount += 1;
       const visibility = this.sceneSectionObjectVisibilityForObject(
         layerId,
         obj,
@@ -3150,6 +3173,7 @@ export function applySceneSectionPlanes(this: any, style: EditableStyle): void {
       if (!material) return;
       const materials = Array.isArray(material) ? material : [material];
       for (const m of materials) {
+        materialApplyCount += 1;
         this.applySceneSectionMaterial(
           m,
           planes,
@@ -3161,19 +3185,47 @@ export function applySceneSectionPlanes(this: any, style: EditableStyle): void {
       }
     });
   }
+  const materialApplyMs = transitionDebugMs(performance.now() - stageStart);
+  stageStart = performance.now();
   this.rebuildSceneSectionHelpers(
     style,
     planes,
     layerTargets,
     productTargets,
   );
+  const helperRebuildMs = transitionDebugMs(performance.now() - stageStart);
+  stageStart = performance.now();
   this.applySceneSectionHelperTransitionOpacity();
+  const helperOpacityMs = transitionDebugMs(performance.now() - stageStart);
+  stageStart = performance.now();
   this.updateMtVolumeCutIsoOverlays(
     this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID),
   );
+  const mtCutIsoUpdate = this.lastMtVolumeCutIsoUpdateDebug ?? null;
+  const mtCutIsoMs = transitionDebugMs(performance.now() - stageStart);
+  stageStart = performance.now();
   this.updateSeismicVolumeCutIsoOverlays(
     this.styleForLayer(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID),
   );
+  const seismicCutIsoMs = transitionDebugMs(performance.now() - stageStart);
+  let helperObjectCount = 0;
+  this.sceneSectionRuntime?.group.traverse(() => {
+    helperObjectCount += 1;
+  });
+  this.lastSceneSectionApplyDebug = {
+    totalMs: transitionDebugMs(performance.now() - startedAt),
+    boundsMs,
+    frameResolveMs,
+    materialApplyMs,
+    helperRebuildMs,
+    helperOpacityMs,
+    mtCutIsoMs,
+    mtCutIsoUpdate,
+    seismicCutIsoMs,
+    traversedObjectCount,
+    materialApplyCount,
+    helperObjectCount,
+  };
 }
 
 export function reapplySceneSectionPlanes(this: any): void {

@@ -169,7 +169,7 @@ export function LightModeToggle({
       }
     };
     update();
-    const offTick = sceneHandle.onTick(update);
+    const offTick = sceneHandle.onTick(update, "LightModeToggle.northAngle");
     window.addEventListener("resize", update);
     return () => {
       offTick();
