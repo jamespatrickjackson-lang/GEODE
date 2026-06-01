@@ -53,17 +53,34 @@ export function TopBar() {
         type="button"
         style={topBarButtonStyle}
         disabled={!state.pkg}
-        onClick={() =>
-          dispatch({
-            type: "TOAST_PUSHED",
-            toast: {
-              id: `t-${Date.now()}`,
-              severity: "info",
-              message: "Export will be wired in Phase 12.",
-              createdAt: Date.now(),
-            },
-          })
-        }
+        onClick={async () => {
+          if (!state.pkg) return;
+          try {
+            const { exportPackage } = await import("../../core/export/exportPackage");
+            const res = await exportPackage(state.pkg);
+            dispatch({
+              type: "TOAST_PUSHED",
+              toast: {
+                id: `t-${Date.now()}`,
+                severity: res.ok ? "info" : "error",
+                message: res.ok
+                  ? `Exported ${res.written.length} files.`
+                  : `Export failed: ${res.reason ?? "unknown"}`,
+                createdAt: Date.now(),
+              },
+            });
+          } catch (err) {
+            dispatch({
+              type: "TOAST_PUSHED",
+              toast: {
+                id: `t-${Date.now()}`,
+                severity: "error",
+                message: `Export failed: ${(err as Error).message}`,
+                createdAt: Date.now(),
+              },
+            });
+          }
+        }}
       >
         Export
       </button>
