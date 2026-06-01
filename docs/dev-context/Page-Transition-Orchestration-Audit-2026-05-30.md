@@ -13,7 +13,7 @@ Pre-fix prep log:
 
 ## Scope
 
-This audit covers page-to-page transitions across:
+This audit covers global transition behavior exposed by page navigation across:
 
 - camera movement and dynamic camera pages
 - page overlay slide/fade transitions
@@ -27,6 +27,12 @@ This audit covers page-to-page transitions across:
 - interruption behavior, async layer load behavior, and debug visibility
 
 No runtime changes were made while producing this audit.
+
+Scope rule added after follow-up review: pages are disposable reproduction
+fixtures. Page IDs, page numbers, page titles, and matrix case IDs in this
+audit are evidence handles only. Repair work must target global transition
+state ownership, classification, opacity composition, camera policy,
+editor/save gating, and validation rules, not fixture-specific source/target paths.
 
 ## Executive Finding
 
@@ -43,13 +49,13 @@ mostly-correct local systems running on separate clocks:
 
 During simple forward navigation these systems often appear aligned. They can
 diverge during interruptions, async loads, camera-only moves, section-frame
-changes, page-scene mood changes, and page pairs with mixed scalar, volume,
+changes, page-scene mood changes, and transitions with mixed scalar, volume,
 surface, point-cloud, overlay, and label behavior.
 
 The repair foundation should be a single transition run model with one run id,
-one start time, one duration/easing resolver, explicit source/target page ids,
-and registered consumers for camera, scene data, overlays, labels, legends,
-editor controls, and debug.
+one start time, one duration/easing resolver, explicit source/target resolved
+state, and registered consumers for camera, scene data, overlays, labels,
+legends, editor controls, and debug.
 
 ## Clock And State Source Map
 
@@ -112,7 +118,7 @@ Recommendation:
 When navigation is interrupted, PageController derives the new scene transition
 source from the active target page, while React `currentIndex` can still point
 to the original source page until the camera callback finishes. SceneManager may
-therefore transition from page B to page C while `OverlayDisplay` and other UI
+therefore transition from source resolved state B to target resolved state C while `OverlayDisplay` and other UI
 surfaces still treat page A as the source.
 
 Recommendation:
@@ -455,7 +461,7 @@ Recommendation:
 
 `TextOverlayTiming` includes `fadeMs`, `gapMs`, `leadMs`, `slidePx`,
 `slideEnabled`, and easing-related fields. The presenter overlay runtime uses
-some of these values, but active page-to-page overlay movement is primarily
+some of these values, but active navigation overlay movement is primarily
 driven by `transitionProgress`. Fields such as `gapMs` and `leadMs` are exposed
 in editor/schema surfaces but are not clearly represented in the active
 transition orchestration.

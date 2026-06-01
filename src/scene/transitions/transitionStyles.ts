@@ -23,6 +23,8 @@ import {
   isTopoMapGraticuleLayer,
   isTopoMapLayer,
 } from "../../topoMap/settings";
+import type { TransitionCommitGateState } from "./transitionCommitGate";
+import type { TransitionAssignmentTrace } from "./transitionRenderGraphAdapter";
 
 const MT_SURFACE_MASK_DEFAULT_DEPTH_M = 25;
 const MT_SURFACE_MASK_DEFAULT_FEATHER_M = 175;
@@ -171,7 +173,11 @@ export interface SceneTransitionContext {
   sourceLayers: Map<string, ResolvedLayerRenderState>;
   sourceVisibleLayerIds: Set<string>;
   targetVisibleLayerIds: Set<string>;
+  targetNotReadyLayerIds: Set<string>;
+  sectionIsoStableLayerIds: Set<string>;
   warnedUnexpectedVisibleLayerIds: Set<string>;
+  assignmentTraces: TransitionAssignmentTrace[];
+  commitState: TransitionCommitGateState;
 }
 
 export interface SceneSectionStyleTween {
@@ -411,7 +417,7 @@ function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
   for (const axis of ["x", "y", "z"] as const) {
     const id = `axis:${axis}`;
     const explicitEntry = explicitById.get(id);
-    const plane = { ...(planes[axis] ?? {}), ...(explicitEntry?.plane ?? {}) };
+    const plane = { ...(explicitEntry?.plane ?? {}), ...(planes[axis] ?? {}) };
     const frame = { ...(frames[axis] ?? {}), ...(explicitEntry?.frame ?? {}) };
     const axisDatum = sceneSectionFrameDatumSignature(frame);
     signatures.push({

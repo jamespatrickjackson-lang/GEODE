@@ -2,7 +2,14 @@
 
 ## Scope
 
-Audit target: conflicts between editor controls, legend controls, page-to-page transitions, section views, Master/Sub Master inheritance, and individual page overrides.
+Audit target: conflicts between editor controls, legend controls, the global
+page-transition runtime, section views, Master/Sub Master inheritance, and
+individual page overrides.
+
+Scope rule: pages are disposable reproduction fixtures. Fixes from this audit
+must target reusable editor, save, validation, and transition ownership rules.
+Do not add fixture-id, fixture-index, fixture-title, or source/target
+fixture-path conditionals.
 
 No automated tests are part of this pass. Visual review is the acceptance path.
 
@@ -71,7 +78,10 @@ Primary evidence:
 
 ### Phase 1 - Transition-safe live apply gate
 
-Add an editor-level live-apply gate backed by a ref in `EditorContext`. A bridge inside `PageControllerProvider` will set the gate active while page-to-page transitions are active. Editor state dispatches still persist normally, but direct scene mutation is skipped while the gate is active.
+Add an editor-level live-apply gate backed by a ref in `EditorContext`. A
+bridge inside `PageControllerProvider` will set the gate active while global
+page transitions are active. Editor state dispatches still persist normally,
+but direct scene mutation is skipped while the gate is active.
 
 Files:
 
@@ -138,7 +148,7 @@ After visual review of the root fix, address lower-risk cleanup:
 Implemented in this pass:
 
 - Added an `EditorContext` live-apply gate controlled by `PageControllerProvider` page-transition state.
-- Kept editor state dispatches active while suppressing direct scene mutation during page-to-page transitions.
+- Kept editor state dispatches active while suppressing direct scene mutation during global page transitions.
 - Added deferred live-scene replay through `PageController` so any suppressed direct apply is reapplied to the landed page after the transition releases without bypassing presentation transforms.
 - Locked Page Manager structural actions during active transitions while leaving selection and navigation available.
 - Guarded direct section, working-area, seismic, MT boundary, resistivity, and legend style applies with the live-apply gate.
@@ -152,7 +162,7 @@ Additional user-reported save risks were audited after the first visibility-cont
 
 - MT threshold boundary edits can store visibility in both the current boundary-by-id model and the older legacy visibility map. The controls now normalize writes into both shapes so existing reads, previews, transitions, and persisted project JSON stay aligned.
 - Working-area focus clipping edits were previously persisted as sparse style fragments. The focus controls now write the full canonical focus/clip style patch, including enabled state, mode, bounds, opacity, and label fields.
-- Public topo surface clip fields and scene-section fields were added to preview/transition preservation lists so page-to-page preview state does not drop authored clip or section state.
+- Public topo surface clip fields and scene-section fields were added to preview/transition preservation lists so transition preview state does not drop authored clip or section state.
 - Floating legends now author against the selected page or environment target instead of only the transition/controller page being rendered. This lets legend controls create the same page overrides as editor controls.
 - Section plane legend axis toggles now update the parent `sceneSectionEnabled` state, `sceneSectionMode`, legacy `sceneSectionPlanes`, and matching `sceneSectionFrames` entries. The viewer, editor panel, and page override state now share the same section on/off contract.
 - Editor section plane/frame child controls now update the parent section enabled state when child state implies an active section, and disable the parent only when no remaining plane/frame state should keep it active.

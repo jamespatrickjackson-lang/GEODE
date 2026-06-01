@@ -1316,9 +1316,9 @@ export interface TextOverlayTiming {
   gapMs?: number;
   /** Legacy: how long before camera arrival the target text starts fading in. */
   leadMs?: number;
-  /** Screen-space slide distance used during page-to-page overlay transitions. */
+  /** Screen-space slide distance used during page overlay transitions. */
   slidePx?: number;
-  /** Set false for fade-only overlay transitions on a specific page. */
+  /** Set false for fade-only overlay transitions in an authored page. */
   slideEnabled?: boolean;
   /** CSS easing for the text overlay opacity transition. */
   easing?: EasingName;

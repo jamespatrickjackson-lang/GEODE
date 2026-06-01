@@ -30,9 +30,11 @@ function transitionEnvelopeForLayerFrame(
 ): number {
   const transition = this.activeSceneTransitionContext;
   if (!transition) return current > 0.001 ? 1 : 0;
+  if (transition.sectionIsoStableLayerIds?.has(id)) return 1;
   const from = transition.sourceLayers.get(id)?.opacity ?? 0;
   const to =
     transition.targetVisibleLayerIds.has(id) &&
+    !transition.targetNotReadyLayerIds?.has(id) &&
     this.lastEffectiveEnv &&
     this.lastEffectivePage
       ? this.targetOpacityForLayer(
@@ -64,7 +66,8 @@ export function transitionEnvelopeAllowsLayerImpl(this: any, id: string): boolea
     if (!transition) return true;
     return (
       transition.sourceVisibleLayerIds.has(id) ||
-      transition.targetVisibleLayerIds.has(id) ||
+      (transition.targetVisibleLayerIds.has(id) &&
+        !transition.targetNotReadyLayerIds?.has(id)) ||
       this.layerTransitionSnapshots.has(id)
     );
   }
@@ -80,6 +83,7 @@ export function transitionFrameOpacityForLayerImpl(this: any, id: string): numbe
     const from = transition.sourceLayers.get(id)?.opacity ?? 0;
     const to =
       transition.targetVisibleLayerIds.has(id) &&
+      !transition.targetNotReadyLayerIds?.has(id) &&
       this.lastEffectiveEnv &&
       this.lastEffectivePage
         ? this.targetOpacityForLayer(
@@ -246,7 +250,7 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
       this.applyLayerTransitionRenderOpacity(
         id,
         nextOpacity,
-        transitionEnvelopeOpacity(tween.from, tween.to, nextOpacity),
+        transitionEnvelopeForLayerFrame.call(this, id, nextOpacity),
       );
       if (done) this.layerTweens.delete(id);
     }
@@ -334,7 +338,13 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
         transition.durationMs <= 0 ||
         performance.now() - transition.startMs >= transition.durationMs;
       if (transitionDone) {
-        this.activeSceneTransitionContext = null;
+        this.recordTransitionCommitAttempt?.({
+          phase: "tween-completion",
+          attemptedBy: "layerTweenRuntime.tickLayerTweens",
+        });
+        if (!transition || transition.commitState?.hasFinalized) {
+          this.activeSceneTransitionContext = null;
+        }
       }
     }
   }

@@ -2362,6 +2362,14 @@ export function PageControllerProvider({
     if (isTransitioningRef.current) {
       return;
     }
+    if (
+      sceneHandle.manager.suppressPostCommitTargetAssertion(
+        page.id,
+        "PageController.reapplyCurrentPageState",
+      )
+    ) {
+      return;
+    }
     const resolved = resolvePresentationState(page, environmentRef.current);
     // applyEnvironment first so terrain shader uniforms / sun direction
     // are current before styles/visibility evaluate against them.
@@ -2529,6 +2537,7 @@ export function PageControllerProvider({
         transitionDuration,
         target.transition.easing,
         transitionReason,
+        transitionRun.runId,
       );
       // Per-page mood (cinematicExposure / bloomBoost) flips at start too.
       sceneHandle.manager.applyPageScene(targetResolved.page);
@@ -2695,7 +2704,7 @@ export function PageControllerProvider({
           setIsTransitioning(false);
           setTargetIndex(null);
           sceneHandle.setRaycastEnabled(true);
-          sceneHandle.manager.applySceneOverlaysAtTransitionEnd(
+          sceneHandle.manager.finalizePageTransitionCommit(
             targetResolved.environment,
             targetResolved.page,
           );

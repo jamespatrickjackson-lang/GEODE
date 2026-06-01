@@ -45,7 +45,8 @@ contract and points to the owning source files. Durable rationale belongs in
 - Same-target double-click re-anchors to the newly picked point and uses the
   authored same-target zoom factor.
 - `Camera Studio` owns the focus tuning controls under `Focus transition`.
-  These controls affect double-click focus only, not page-to-page transitions.
+  These controls affect double-click focus only, not the page-transition
+  runtime.
 - `Cinematic Render Preset` belongs at the top of `Camera Studio`, above
   `Perspective`.
 - Pages may persist `cameraObjectFocus`. A page with saved focus re-engages the

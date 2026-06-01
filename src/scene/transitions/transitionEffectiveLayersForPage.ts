@@ -10,7 +10,14 @@ import {
   sceneSectionHelperDecision,
 } from "./productFamilyRegistry";
 import {
+  buildTransitionRenderGraphTrace,
+  type TransitionRenderGraphDerivedEntityState,
+  type TransitionRenderGraphLayerState,
+} from "./transitionRenderGraphAdapter";
+import { createTransitionCommitGate } from "./transitionCommitGate";
+import {
   SCENE_SECTION_AFFECTED_LAYER_IDS,
+  SCALAR_TRANSITION_STYLE_FIELDS,
   forgeDiscreteDataStyleChanged,
   scalarTransitionStyleChanged,
   sceneSectionDiscreteStyleChanged,
@@ -20,6 +27,237 @@ import {
 } from "./transitionStyles";
 
 const DEFAULT_LAYER_FADE_MS = 800;
+type EffectiveLayerStyle = ReturnType<typeof effectiveStyle>;
+type StyleField = keyof EffectiveLayerStyle;
+
+const COLOR_STYLE_FIELDS: readonly StyleField[] = [
+  "color",
+  "fillColor",
+  "outlineColor",
+  "centerlineColor",
+  "contourPresetColor",
+  "surfaceGradientLowColor",
+  "surfaceGradientMidColor",
+  "surfaceGradientHighColor",
+  "scalarColorLow",
+  "scalarColorMid",
+  "scalarColorHigh",
+  "scalarEdgeColor",
+  "mtThresholdSurfaceWireframeColor",
+  "geochemPaletteLow",
+  "geochemPaletteMid",
+  "geochemPaletteHigh",
+  "labelColor",
+  "labelTextColor",
+  "labelOutlineColor",
+  "labelFillColor",
+];
+
+const CATEGORICAL_STYLE_FIELDS: readonly StyleField[] = [
+  "scalarInclusionMode",
+  "scalarEdgeLineStyle",
+  "scalarLegendVisible",
+  "sectionIsoEnabled",
+  "sectionIsoLinesVisible",
+  "sectionIsoBandsVisible",
+  "sectionIsoTargetIds",
+  "sectionIsoLineStyle",
+  "scalarVolumeProductId",
+  "scalarVolumeRenderMode",
+  "scalarVolumeTransferMode",
+  "scalarVolumeMaskVisible",
+  "mtIsosurfaceProductId",
+  "mtSurfaceBoundaryMode",
+  "mtSurfaceBoundaryOrder",
+  "mtSurfaceBoundariesById",
+  "mtSurfaceBoundaryLegendVisible",
+  "mtThresholdSurfaceVisibility",
+  "seismicProductId",
+  "seismicProductVisibility",
+  "seismicRenderMode",
+  "seismicColormap",
+  "seismicAudiencePresetId",
+  "seismicCapabilityPresetId",
+  "seismicDisplayRecipeId",
+  "seismicLegendVisible",
+  "sceneSectionEnabled",
+  "sceneSectionMode",
+  "sceneSectionTargetScope",
+  "sceneSectionActiveAxis",
+  "sceneSectionWindowEnabled",
+  "sceneSectionWindowActiveAxis",
+  "sceneSectionFrameEnabled",
+  "sceneSectionActiveFrameId",
+  "sceneSectionGroundTraceVisible",
+  "sceneSectionAxesVisible",
+];
+
+const SPATIAL_STYLE_FIELDS: readonly StyleField[] = [
+  "sceneSectionPlanes",
+  "sceneSectionWindowByAxis",
+  "sceneSectionFrames",
+  "sceneSectionFrameByAxis",
+  "sceneSectionObjectVisibilityByAxis",
+  "sceneSectionObjectVisibilityByFrameId",
+  "workingAreaFocusOutsideOpacityByLayerId",
+];
+
+function sectionIsoOverlayVisible(style: ReturnType<typeof effectiveStyle>): boolean {
+  if (style.sectionIsoEnabled !== true) return false;
+  if (
+    style.sectionIsoLinesVisible === false &&
+    style.sectionIsoBandsVisible === false
+  ) {
+    return false;
+  }
+  const targetIds = style.sectionIsoTargetIds;
+  if (
+    targetIds &&
+    typeof targetIds === "object" &&
+    !Array.isArray(targetIds)
+  ) {
+    const values = Object.values(targetIds);
+    if (values.length > 0 && values.every((value) => value === false)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function layerRepresentationKey(layerSpec: { type?: string } | undefined): string {
+  return `layer:${layerSpec?.type ?? "unknown"}`;
+}
+
+function channelRecordFromStyle(
+  style: EffectiveLayerStyle,
+  fields: readonly StyleField[],
+  prefix: string,
+): Record<string, unknown> {
+  const record: Record<string, unknown> = {};
+  for (const field of fields) {
+    const value = style[field];
+    if (value !== undefined) record[`${prefix}:${String(field)}`] = value;
+  }
+  return record;
+}
+
+function graphPresenceState(input: {
+  opacity: number;
+  loaded: boolean;
+  authoredVisible: boolean;
+}): TransitionRenderGraphLayerState["presenceState"] {
+  if (input.opacity > 0.001) return "visible";
+  if (input.loaded) return "hidden";
+  return input.authoredVisible ? "loading" : "absent";
+}
+
+function graphReadinessState(input: {
+  loaded: boolean;
+  authoredVisible: boolean;
+}): TransitionRenderGraphLayerState["readinessState"] {
+  if (input.loaded) return "ready";
+  return input.authoredVisible ? "loading" : "unavailable";
+}
+
+function derivedPresence(visible: boolean): TransitionRenderGraphLayerState["presenceState"] {
+  return visible ? "visible" : "hidden";
+}
+
+function sceneSectionDerivedEntities(input: {
+  layerId: string;
+  style: EffectiveLayerStyle;
+  ownerKey: string;
+  ownerPriority: number;
+  readinessState: TransitionRenderGraphLayerState["readinessState"];
+  sourceStateOrigin: TransitionRenderGraphLayerState["sourceStateOrigin"];
+}): TransitionRenderGraphDerivedEntityState[] {
+  if (input.layerId !== UTAH_FORGE_SCENE_SECTION_LAYER_ID) return [];
+  const sectionEnabled = input.style.sceneSectionEnabled === true;
+  const frameEnabled = input.style.sceneSectionFrameEnabled === true;
+  const groundTraceVisible =
+    sectionEnabled && input.style.sceneSectionGroundTraceVisible !== false;
+  const axesVisible = sectionEnabled && input.style.sceneSectionAxesVisible !== false;
+  const sectionIsoEnabled = sectionIsoOverlayVisible(input.style);
+  const lineIsoVisible =
+    input.style.sectionIsoEnabled === true &&
+    input.style.sectionIsoLinesVisible !== false;
+  const bandIsoVisible =
+    input.style.sectionIsoEnabled === true &&
+    input.style.sectionIsoBandsVisible !== false;
+  const spatialChannels = channelRecordFromStyle(
+    input.style,
+    SPATIAL_STYLE_FIELDS,
+    "style",
+  );
+  const categoricalChannels = channelRecordFromStyle(
+    input.style,
+    CATEGORICAL_STYLE_FIELDS,
+    "style",
+  );
+  const scalarChannels = channelRecordFromStyle(
+    input.style,
+    SCALAR_TRANSITION_STYLE_FIELDS,
+    "style",
+  );
+  const base = {
+    readinessState: input.readinessState,
+    sourceStateOrigin: input.sourceStateOrigin,
+    channelOwnerKey: input.ownerKey,
+    channelOwnerPriority: input.ownerPriority,
+  };
+  return [
+    {
+      ...base,
+      entityKey: `layer:${input.layerId}:derived:scene-section-helpers`,
+      representationKey: "derived:scene-section-helper",
+      presenceState: derivedPresence(sectionEnabled),
+      categoricalChannels,
+      spatialChannels,
+    },
+    {
+      ...base,
+      entityKey: `layer:${input.layerId}:derived:scene-section-frames`,
+      representationKey: "derived:scene-section-frame",
+      presenceState: derivedPresence(frameEnabled),
+      categoricalChannels,
+      spatialChannels,
+    },
+    {
+      ...base,
+      entityKey: `layer:${input.layerId}:derived:scene-section-ground-traces`,
+      representationKey: "derived:ground-trace",
+      presenceState: derivedPresence(groundTraceVisible),
+      categoricalChannels,
+      spatialChannels,
+    },
+    {
+      ...base,
+      entityKey: `layer:${input.layerId}:derived:scene-section-axes`,
+      representationKey: "derived:axis-lines",
+      presenceState: derivedPresence(axesVisible),
+      categoricalChannels,
+      spatialChannels,
+    },
+    {
+      ...base,
+      entityKey: `layer:${input.layerId}:derived:section-iso-lines`,
+      representationKey: "derived:section-iso-line",
+      presenceState: derivedPresence(sectionIsoEnabled && lineIsoVisible),
+      categoricalChannels,
+      scalarChannels,
+      spatialChannels,
+    },
+    {
+      ...base,
+      entityKey: `layer:${input.layerId}:derived:section-iso-bands`,
+      representationKey: "derived:section-iso-band",
+      presenceState: derivedPresence(sectionIsoEnabled && bandIsoVisible),
+      categoricalChannels,
+      scalarChannels,
+      spatialChannels,
+    },
+  ];
+}
 
 export function transitionEffectiveLayersForPage(
   this: any,
@@ -32,6 +270,7 @@ export function transitionEffectiveLayersForPage(
   scalarStyleDurationMs: number = durationMs,
   scalarStyleEasing: EasingName = easing,
   reason: NavigationReason = "programmatic",
+  transitionId: string = `transition-${Date.now()}`,
 ): void {
   const layerIds = new Set<string>([
     ...this.layers.keys(),
@@ -81,6 +320,138 @@ export function transitionEffectiveLayersForPage(
   const duration = Math.max(0, durationMs);
   const terrainOverrides = new Map<string, number>();
   const layerKinds: Record<string, LayerTransitionKind> = {};
+  const targetNotReadyLayerIds = new Set<string>();
+  const sourceGraphLayers: TransitionRenderGraphLayerState[] = [];
+  const targetGraphLayers: TransitionRenderGraphLayerState[] = [];
+  for (const id of productFamilyLayerIds) {
+    const layerSpec = this.layerSpecFor(id);
+    const representationKey = layerRepresentationKey(layerSpec);
+    const sourceState = sourceLayers.get(id);
+    const sourceLoaded = !!sourceState;
+    const targetLoaded = this.layers.has(id);
+    const sourceOpacity = sourceState?.opacity ?? 0;
+    const targetAuthoredVisible = toVisible.has(id);
+    const targetOpacity = targetAuthoredVisible
+      ? this.targetOpacityForLayer(toEnvironment, toPage, id)
+      : 0;
+    const fromStyle =
+      sourceState?.style ?? effectiveStyle(fromEnvironment, fromPage, id);
+    const targetStyle = effectiveStyle(toEnvironment, toPage, id);
+    const sourceOwnerKey = sourceLoaded ? "live-runtime" : "persisted-effective";
+    const sourceOwnerPriority = sourceLoaded ? 100 : 10;
+    const targetOwnerKey = "target-effective";
+    const targetOwnerPriority = 80;
+    const sourceReadiness = graphReadinessState({
+      loaded: sourceLoaded,
+      authoredVisible: fromVisible.has(id),
+    });
+    const targetReadiness = graphReadinessState({
+      loaded: targetLoaded,
+      authoredVisible: targetAuthoredVisible,
+    });
+    if (targetAuthoredVisible && targetReadiness !== "ready") {
+      targetNotReadyLayerIds.add(id);
+    }
+    sourceGraphLayers.push({
+      layerId: id,
+      representationKey,
+      presenceState: graphPresenceState({
+        opacity: sourceOpacity,
+        loaded: sourceLoaded,
+        authoredVisible: fromVisible.has(id),
+      }),
+      readinessState: sourceReadiness,
+      opacity: sourceOpacity,
+      opacityOwnerKey: sourceOwnerKey,
+      opacityOwnerPriority: sourceOwnerPriority,
+      sourceStateOrigin: sourceOwnerKey,
+      channelOwnerKey: sourceOwnerKey,
+      channelOwnerPriority: sourceOwnerPriority,
+      scalarChannels: channelRecordFromStyle(
+        fromStyle,
+        SCALAR_TRANSITION_STYLE_FIELDS,
+        "style",
+      ),
+      colorChannels: channelRecordFromStyle(fromStyle, COLOR_STYLE_FIELDS, "style"),
+      spatialChannels: channelRecordFromStyle(
+        fromStyle,
+        SPATIAL_STYLE_FIELDS,
+        "style",
+      ),
+      categoricalChannels: channelRecordFromStyle(
+        fromStyle,
+        CATEGORICAL_STYLE_FIELDS,
+        "style",
+      ),
+      derivedEntities: sceneSectionDerivedEntities({
+        layerId: id,
+        style: fromStyle,
+        ownerKey: sourceOwnerKey,
+        ownerPriority: sourceOwnerPriority,
+        readinessState: sourceReadiness,
+        sourceStateOrigin: sourceOwnerKey,
+      }),
+      metadata: {
+        layerType: layerSpec?.type ?? null,
+      },
+    });
+    targetGraphLayers.push({
+      layerId: id,
+      representationKey,
+      presenceState: graphPresenceState({
+        opacity: targetOpacity,
+        loaded: targetLoaded,
+        authoredVisible: targetAuthoredVisible,
+      }),
+      readinessState: targetReadiness,
+      opacity: targetOpacity,
+      opacityOwnerKey: targetOwnerKey,
+      opacityOwnerPriority: targetOwnerPriority,
+      sourceStateOrigin: "persisted-effective",
+      channelOwnerKey: targetOwnerKey,
+      channelOwnerPriority: targetOwnerPriority,
+      scalarChannels: channelRecordFromStyle(
+        targetStyle,
+        SCALAR_TRANSITION_STYLE_FIELDS,
+        "style",
+      ),
+      colorChannels: channelRecordFromStyle(
+        targetStyle,
+        COLOR_STYLE_FIELDS,
+        "style",
+      ),
+      spatialChannels: channelRecordFromStyle(
+        targetStyle,
+        SPATIAL_STYLE_FIELDS,
+        "style",
+      ),
+      categoricalChannels: channelRecordFromStyle(
+        targetStyle,
+        CATEGORICAL_STYLE_FIELDS,
+        "style",
+      ),
+      derivedEntities: sceneSectionDerivedEntities({
+        layerId: id,
+        style: targetStyle,
+        ownerKey: targetOwnerKey,
+        ownerPriority: targetOwnerPriority,
+        readinessState: targetReadiness,
+        sourceStateOrigin: "persisted-effective",
+      }),
+      metadata: {
+        layerType: layerSpec?.type ?? null,
+      },
+    });
+  }
+  const assignmentTraces = buildTransitionRenderGraphTrace({
+    sourceLayers: sourceGraphLayers,
+    targetLayers: targetGraphLayers,
+    evidence: {
+      sourcePageId: fromPage.id,
+      targetPageId: toPage.id,
+      observedCaseFamily: "layer-visibility-opacity",
+    },
+  }).assignmentTraces;
   this.activeSceneTransitionContext = {
     sourcePageId: fromPage.id,
     targetPageId: toPage.id,
@@ -93,7 +464,16 @@ export function transitionEffectiveLayersForPage(
     sourceLayers,
     sourceVisibleLayerIds,
     targetVisibleLayerIds: new Set(toVisible),
+    targetNotReadyLayerIds,
+    sectionIsoStableLayerIds: new Set<string>(),
     warnedUnexpectedVisibleLayerIds: new Set(),
+    assignmentTraces,
+    commitState: createTransitionCommitGate({
+      transitionId,
+      sourcePageId: fromPage.id,
+      targetPageId: toPage.id,
+      commitOwner: "SceneManager",
+    }).state,
   };
   const recordedProductLayerIds = new Set<string>();
   const recordProductFamily = (
@@ -213,6 +593,14 @@ export function transitionEffectiveLayersForPage(
       const fromStyle =
         sourceState?.style ?? effectiveStyle(fromEnvironment, fromPage, id);
       const targetStyle = effectiveStyle(toEnvironment, toPage, id);
+      const sectionIsoStable =
+        fromVisible.has(id) &&
+        toVisible.has(id) &&
+        sectionIsoOverlayVisible(fromStyle) &&
+        sectionIsoOverlayVisible(targetStyle);
+      if (sectionIsoStable) {
+        this.activeSceneTransitionContext.sectionIsoStableLayerIds.add(id);
+      }
       const group = this.layers.get(id);
       if (group) group.visible = fromOpacity > 0.001 || toOpacity > 0.001;
       const shouldCrossfadeDiscreteData =
@@ -292,7 +680,7 @@ export function transitionEffectiveLayersForPage(
       }
       if (transitionSnapshot) {
         this.applyRenderOpacityToTree(transitionSnapshot, fromOpacity, 1);
-        this.applyLayerTransitionRenderOpacity(id, 0, 0);
+        this.applyLayerTransitionRenderOpacity(id, 0, sectionIsoStable ? 1 : 0);
         this.layerTweens.set(id, {
           from: 0,
           to: toOpacity,
@@ -316,7 +704,7 @@ export function transitionEffectiveLayersForPage(
       this.applyLayerTransitionRenderOpacity(
         id,
         fromOpacity,
-        fromOpacity > 0.001 ? 1 : 0,
+        sectionIsoStable ? 1 : fromOpacity > 0.001 ? 1 : 0,
       );
       terrainOverrides.set(id, fromOpacity);
 

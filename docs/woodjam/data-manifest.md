@@ -260,7 +260,7 @@ The data exists and is clean:
 
 But cylinder rendering with per-interval color requires a more complex
 loader than the trace-line render. Reasonable to defer to v1 unless a
-specific page in chapter 2 calls for it. For alpha, the trace-line
+authored chapter-2 presentation state calls for it. For alpha, the trace-line
 render colored by zone is sufficient.
 
 If implemented, expose as a separate layer (`drillholes-lithology`)

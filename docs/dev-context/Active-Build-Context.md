@@ -58,19 +58,30 @@ Current MT resistivity work follows the same rule: all slices, sections,
 volumes, and threshold surfaces must trace back to the full authoritative MT
 cell-center model unless they are explicitly labeled presentation crops.
 
-Current transition work is product-aware. Page navigation should treat visible
-render entities as `layer id + product/object id + section state`, not just
-layer ids. Product-owned shader opacity such as MT scalar-volume source opacity,
-seismic section/volume source opacity, and Section ISO overlay opacity must be
-composed with layer/page fade opacity, not overwritten by it. This prevents
-hidden section sources from appearing during camera/page transitions and keeps
-ISO overlays from changing color or brightness mid-transition.
+Current transition work is product-aware and page-agnostic. Page navigation
+should treat visible render entities as `layer id + product/object id + section
+state`, not just layer ids. Product-owned shader opacity such as MT
+scalar-volume source opacity, seismic section/volume source opacity, and
+Section ISO overlay opacity must be composed with layer/page fade opacity, not
+overwritten by it. This prevents hidden section sources from appearing during
+camera/page transitions and keeps ISO overlays from changing color or
+brightness mid-transition.
 
-Before touching page-to-page transition runtime or section-frame helper
-visuals, read `docs/dev-context/Page-Transitions-And-Section-Frames.md`. It is
-the canonical directives doc for transition kinds, ISO opacity composition,
-and the helper-stability contract (no mid-tween rebuild, material instances
-stable across the tween).
+Pages are disposable fixtures for testing the global transition runtime. Do not
+repair transition behavior with fixture-id, fixture-index, fixture-title,
+source/target fixture path, or Utah-FORGE-only conditionals. Before touching
+transition runtime, editor/save transition gating, show/hide, legends, matrix
+tooling, or section-frame helper visuals, read:
+
+- `docs/dev-context/Transition-Constitution.md`
+- `docs/dev-context/Transition-Continuity-Contract.md`
+- `docs/dev-context/Transition-Guardrails.md`
+- `docs/dev-context/Transition-Decision-Log.md`
+- `docs/dev-context/Transition-Page-Fixture-Evidence-Register-2026-05-31.md`
+- `docs/dev-context/Page-Transitions-And-Section-Frames.md`
+
+The constitution and decision log are the source of truth for transition
+intent. Historical logs and matrix artifacts are evidence only.
 
 Current MT threshold-surface rendering separates overlay stability from surface
 opacity semantics. Section ISO lines are late readability overlays, while MT
@@ -144,5 +155,7 @@ Receipt and audit subdirs (`Archive/`, `Change-Receipts/`,
 - For transition changes, include at least one focused browser check around the
   affected source/target pages; product-level pop-in bugs can pass layer-level
   tests.
+- For transition changes, first run the page-agnostic source guard:
+  `node -e "await import('./tests/tools/transition-page-agnostic-source.test.mjs')"`.
 - For visual composition work, get a focused visual state in front of the human before broad automation.
 - Do not run `Launch GeoSee.bat`; use a scoped dev server on a free port if an agent needs one.

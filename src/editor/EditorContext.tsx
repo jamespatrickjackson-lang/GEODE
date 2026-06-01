@@ -448,10 +448,10 @@ function setSubMasterSnapshotLayerStyle(
 ): PresentationPage {
   if (!isSubMasterPage(page) || !page.envSnapshot) return page;
   const envSnapshot = clone(page.envSnapshot);
-  envSnapshot.layerStyles[layerId] = {
+  envSnapshot.layerStyles[layerId] = normalizeMtBoundaryVisibilityStyle({
     ...(envSnapshot.layerStyles[layerId] ?? {}),
     ...patch,
-  };
+  });
   const cleared = withoutLayerOverrideFields(
     page,
     layerId,
@@ -500,6 +500,70 @@ function setSubMasterSnapshotVisible(
   return { ...withoutVisibilityOverride(page, layerId), envSnapshot };
 }
 
+function normalizeMtBoundaryVisibilityStyle(style: EditableStyle): EditableStyle {
+  const boundaries = style.mtSurfaceBoundariesById;
+  if (!boundaries) return style;
+
+  let changed = false;
+  const visibility = { ...(style.mtThresholdSurfaceVisibility ?? {}) };
+  for (const [id, boundary] of Object.entries(boundaries)) {
+    if (typeof boundary?.visible !== "boolean") continue;
+    if (visibility[id] === boundary.visible) continue;
+    visibility[id] = boundary.visible;
+    changed = true;
+  }
+
+  return changed ? { ...style, mtThresholdSurfaceVisibility: visibility } : style;
+}
+
+function normalizeMtBoundaryVisibilityLayerStyles(
+  layerStyles: Record<string, EditableStyle>,
+): Record<string, EditableStyle> {
+  let changed = false;
+  const next = { ...layerStyles };
+  for (const [layerId, style] of Object.entries(layerStyles)) {
+    const normalized = normalizeMtBoundaryVisibilityStyle(style);
+    if (normalized === style) continue;
+    next[layerId] = normalized;
+    changed = true;
+  }
+  return changed ? next : layerStyles;
+}
+
+function normalizeMtBoundaryVisibilityEnvironment(
+  environment: EnvironmentSetup,
+): EnvironmentSetup {
+  const layerStyles = normalizeMtBoundaryVisibilityLayerStyles(
+    environment.layerStyles,
+  );
+  return layerStyles === environment.layerStyles
+    ? environment
+    : { ...environment, layerStyles };
+}
+
+function normalizeMtBoundaryVisibilityPage(
+  page: PresentationPage,
+): PresentationPage {
+  let next = page;
+  if (page.layerOverrides) {
+    const layerOverrides = normalizeMtBoundaryVisibilityLayerStyles(
+      page.layerOverrides,
+    );
+    if (layerOverrides !== page.layerOverrides) {
+      next = { ...next, layerOverrides };
+    }
+  }
+  if (page.envSnapshot) {
+    const envSnapshot = normalizeMtBoundaryVisibilityEnvironment(
+      page.envSnapshot,
+    );
+    if (envSnapshot !== page.envSnapshot) {
+      next = { ...next, envSnapshot };
+    }
+  }
+  return next;
+}
+
 function normalizeSubMasterAuthoringPage(page: PresentationPage): PresentationPage {
   if (!isSubMasterPage(page) || !page.envSnapshot) return page;
   let next: PresentationPage = page;
@@ -516,16 +580,21 @@ function normalizeSubMasterAuthoringPage(page: PresentationPage): PresentationPa
     else visibleLayers.delete(layerId);
     envSnapshot.defaultVisibleLayers = Array.from(visibleLayers);
   }
+  envSnapshot.layerStyles = normalizeMtBoundaryVisibilityLayerStyles(
+    envSnapshot.layerStyles,
+  );
   next = { ...next, envSnapshot };
   delete next.layerOverrides;
   delete next.visibilityOverrides;
-  return next;
+  return normalizeMtBoundaryVisibilityPage(next);
 }
 
 function normalizeSubMasterAuthoringPages(
   pages: readonly PresentationPage[],
 ): PresentationPage[] {
-  return pages.map(normalizeSubMasterAuthoringPage);
+  return pages.map((page) =>
+    normalizeMtBoundaryVisibilityPage(normalizeSubMasterAuthoringPage(page)),
+  );
 }
 
 function reducer(state: EditorState, action: EditorAction): EditorState {
@@ -533,14 +602,14 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
     // ---- environment ------------------------------------------------------
     case "SET_ENV_LAYER_STYLE": {
       let environment = clone(state.environment);
-      environment.layerStyles[action.layerId] = {
+      environment.layerStyles[action.layerId] = normalizeMtBoundaryVisibilityStyle({
         ...(environment.layerStyles[action.layerId] ?? {}),
         ...action.style,
-      };
+      });
       environment = syncActiveUserRenderPresetLayerStyle(
         environment,
         action.layerId,
-        action.style,
+        normalizeMtBoundaryVisibilityStyle(action.style),
       );
       return {
         ...state,
@@ -737,10 +806,10 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
           );
         }
         const overrides = { ...(p.layerOverrides ?? {}) };
-        overrides[action.layerId] = {
+        overrides[action.layerId] = normalizeMtBoundaryVisibilityStyle({
           ...(overrides[action.layerId] ?? {}),
           ...action.patch,
-        };
+        });
         return { ...p, layerOverrides: overrides };
       });
       return {
@@ -1415,7 +1484,7 @@ export function EditorProvider({
     projectSlug,
     projectRoot,
     manifest: initialManifest,
-    environment: initialEnvironment,
+    environment: normalizeMtBoundaryVisibilityEnvironment(initialEnvironment),
     pages: normalizeSubMasterAuthoringPages(initialPages),
     overlays: {},
     poseHistory: {},
@@ -1532,15 +1601,20 @@ export function EditorProvider({
             }
           }
         } else if (key === "environment") {
+          const environmentForWrite = normalizeMtBoundaryVisibilityEnvironment(
+            stateRef.current.environment,
+          );
           batchWrites.push({
             path: environmentJsonPath(cur.projectRoot),
-            content: JSON.stringify(stateRef.current.environment, null, 2) + "\n",
+            content: JSON.stringify(environmentForWrite, null, 2) + "\n",
           });
         } else if (key.startsWith("page:")) {
           const id = key.slice(5);
           const page = stateRef.current.pages.find((p) => p.id === id);
           if (!page) continue;
-          const pageForWrite = normalizeSubMasterAuthoringPage(page);
+          const pageForWrite = normalizeMtBoundaryVisibilityPage(
+            normalizeSubMasterAuthoringPage(page),
+          );
           batchWrites.push({
             path: pageJsonPath(id, cur.projectRoot),
             content: JSON.stringify(pageForWrite, null, 2) + "\n",
@@ -2007,7 +2081,6 @@ export function EditorProvider({
         )
       ) {
         deferredLiveSceneApplyRef.current = true;
-        return;
       }
       if (canApplyLiveSceneEdits()) {
         sceneHandle.manager.applyStyle(layerId, { ...currentStyle, ...patch });
@@ -2129,7 +2202,6 @@ export function EditorProvider({
         )
       ) {
         deferredLiveSceneApplyRef.current = true;
-        return;
       }
       if (canApplyLiveSceneEdits()) {
         sceneHandle.manager.applyStyle(layerId, { ...currentStyle, ...patch });
@@ -2176,7 +2248,6 @@ export function EditorProvider({
         )
       ) {
         deferredLiveSceneApplyRef.current = true;
-        return;
       }
       if (cur.selectedPageId === pageId && canApplyLiveSceneEdits()) {
         const page = cur.pages.find((p) => p.id === pageId);
@@ -2186,9 +2257,19 @@ export function EditorProvider({
             cur.pages,
             page,
           );
+          const nextLayerOverride = normalizeMtBoundaryVisibilityStyle({
+            ...(page.layerOverrides?.[layerId] ?? {}),
+            ...patch,
+          });
           const merged = effectiveStyle(
             pageEnvironment,
-            { ...page, layerOverrides: { ...(page.layerOverrides ?? {}), [layerId]: { ...(page.layerOverrides?.[layerId] ?? {}), ...patch } } },
+            {
+              ...page,
+              layerOverrides: {
+                ...(page.layerOverrides ?? {}),
+                [layerId]: nextLayerOverride,
+              },
+            },
             layerId,
           );
           sceneHandle.manager.applyStyle(layerId, merged);
@@ -2212,7 +2293,6 @@ export function EditorProvider({
         )
       ) {
         deferredLiveSceneApplyRef.current = true;
-        return;
       }
       if (cur.selectedPageId === pageId && canApplyLiveSceneEdits()) {
         const page = cur.pages.find((candidate) => candidate.id === pageId);
@@ -2265,7 +2345,6 @@ export function EditorProvider({
         )
       ) {
         deferredLiveSceneApplyRef.current = true;
-        return;
       }
       if (cur.selectedPageId === pageId && canApplyLiveSceneEdits()) {
         const page = cur.pages.find((p) => p.id === pageId);
@@ -2308,7 +2387,6 @@ export function EditorProvider({
         )
       ) {
         deferredLiveSceneApplyRef.current = true;
-        return;
       }
       if (cur.selectedPageId === pageId && canApplyLiveSceneEdits()) {
         const page = cur.pages.find((p) => p.id === pageId);

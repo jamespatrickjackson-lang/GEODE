@@ -88,6 +88,13 @@ import {
   type WorkingAreaFocusStyleTween,
   easeProgress,
 } from "./transitions/transitionStyles";
+import type { TransitionAssignmentTrace } from "./transitions/transitionRenderGraphAdapter";
+import {
+  recordTransitionCommitAttempt as recordTransitionCommitAttemptImpl,
+  transitionCommitGraphFromAssignmentTraces,
+  type TransitionCommitGraph,
+  type TransitionCommitTrace,
+} from "./transitions/transitionCommitGate";
 import {
   AreaOutlineController,
   type AreaOutlinePreview,
@@ -681,6 +688,9 @@ export class SceneManager {
   sceneSectionStyleTween: SceneSectionStyleTween | null = null;
   sceneSectionHelperTransitionOpacity = 1;
   private activeSceneTransitionContext: SceneTransitionContext | null = null;
+  private lastTransitionCommitState: SceneTransitionContext["commitState"] | null =
+    null;
+  private lastPostCommitTargetAssertionSuppressed = false;
   sceneSectionReapplySuspended = false;
   private materialBaseOpacity = new WeakMap<THREE.Material, number>();
   private currentVisibleLayerIds: ReadonlySet<string> | null = null;
@@ -1294,7 +1304,7 @@ export class SceneManager {
       Number.isFinite(sectionIsoTransitionOpacity)
         ? clamp01(sectionIsoTransitionOpacity)
         : null;
-    root.visible = next > 0.001;
+    root.visible = next > 0.001 || (sectionIsoEnvelope ?? 0) > 0.001;
     root.traverse((obj) => {
       const mat = (obj as THREE.Mesh | THREE.Line).material as
         | THREE.Material
@@ -2289,10 +2299,21 @@ export class SceneManager {
     sectionIsoOverlays: SectionIsoOverlayDebugState;
     sceneSectionHelpers: SceneSectionHelperDebugState;
     productFamilies: ProductTransitionDecision[];
+    assignmentTraces: TransitionAssignmentTrace[];
     sceneOverlays: SceneOverlayDebugState;
     lateReapply: LateReapplyDebugState;
+    transitionCommit: {
+      transitionId: string;
+      commitOwner: string;
+      commitPhase: string | null;
+      hasFinalized: boolean;
+      finalizedAt: number | null;
+      suppressedDuplicateAssertions: number;
+    } | null;
+    commitTraces: TransitionCommitTrace[];
   } {
     const transition = this.activeSceneTransitionContext;
+    const commitState = transition?.commitState ?? this.lastTransitionCommitState;
     return {
       active: !!transition,
       sourcePageId: transition?.sourcePageId ?? null,
@@ -2315,8 +2336,21 @@ export class SceneManager {
       sectionIsoOverlays: this.getSectionIsoOverlayDebugState(),
       sceneSectionHelpers: this.getSceneSectionHelperDebugState(),
       productFamilies: transition?.productFamilies.slice() ?? [],
+      assignmentTraces: transition?.assignmentTraces.slice() ?? [],
       sceneOverlays: this.getSceneOverlayDebugState(),
       lateReapply: this.getLateReapplyDebugState(),
+      transitionCommit: commitState
+        ? {
+            transitionId: commitState.transitionId,
+            commitOwner: commitState.commitOwner,
+            commitPhase: commitState.commitPhase,
+            hasFinalized: commitState.hasFinalized,
+            finalizedAt: commitState.finalizedAt,
+            suppressedDuplicateAssertions:
+              commitState.suppressedDuplicateAssertions,
+          }
+        : null,
+      commitTraces: commitState?.commitTraces.slice() ?? [],
     };
   }
 
@@ -2367,6 +2401,155 @@ export class SceneManager {
         ? 1
         : (nowMs - transition.startMs) / transition.durationMs;
     return clamp01(easeProgress(raw, transition.easing));
+  }
+
+  private transitionCommitTargetGraph(): TransitionCommitGraph {
+    const transition = this.activeSceneTransitionContext;
+    if (!transition) return { entities: [] };
+    return transitionCommitGraphFromAssignmentTraces(
+      transition.assignmentTraces,
+      "target",
+    );
+  }
+
+  private transitionCommitUnknownTerminalGraph(): TransitionCommitGraph {
+    const targetGraph = this.transitionCommitTargetGraph();
+    return {
+      entities: targetGraph.entities.map((entity) => ({
+        ...entity,
+        channels: Object.fromEntries(
+          Object.entries(entity.channels ?? {}).map(([key, value]) => [
+            key,
+            {
+              ...(value && typeof value === "object" && !Array.isArray(value)
+                ? (value as Record<string, unknown>)
+                : { value }),
+              coverage: "unknown",
+            },
+          ]),
+        ),
+      })),
+    };
+  }
+
+  recordTransitionCommitAttempt(input: {
+    phase:
+      | "terminal-before-commit"
+      | "final-commit"
+      | "duplicate-target-assertion"
+      | "overlay-end-application"
+      | "editor-deferred-reapply"
+      | "tween-completion"
+      | "post-commit-graph-check";
+    attemptedBy: string;
+    terminalTransitionGraph?: TransitionCommitGraph | null;
+    resolvedTargetGraph?: TransitionCommitGraph | null;
+    committedGraph?: TransitionCommitGraph | null;
+    reason?: string;
+  }): TransitionCommitTrace | null {
+    const activeState = this.activeSceneTransitionContext?.commitState ?? null;
+    const commitState = activeState ?? this.lastTransitionCommitState;
+    if (!commitState) return null;
+    const trace = recordTransitionCommitAttemptImpl(commitState, {
+      ...input,
+      resolvedTargetGraph:
+        input.resolvedTargetGraph ??
+        (this.activeSceneTransitionContext
+          ? this.transitionCommitTargetGraph()
+          : { entities: [] }),
+    });
+    if (commitState.hasFinalized) {
+      this.lastTransitionCommitState = commitState;
+    }
+    return trace;
+  }
+
+  suppressPostCommitTargetAssertion(
+    pageId: string | null,
+    attemptedBy: string,
+  ): boolean {
+    const state = this.lastTransitionCommitState;
+    if (
+      !state?.hasFinalized ||
+      !pageId ||
+      state.targetPageId !== pageId ||
+      this.lastPostCommitTargetAssertionSuppressed
+    ) {
+      return false;
+    }
+    const trace = this.recordTransitionCommitAttempt({
+      phase: "duplicate-target-assertion",
+      attemptedBy,
+      reason: "post-transition target assertion suppressed after final commit",
+    });
+    if (trace?.suppressed) {
+      this.lastPostCommitTargetAssertionSuppressed = true;
+      return true;
+    }
+    return false;
+  }
+
+  private suppressDuplicatePostCommitReapply(page: PresentationPage | null): boolean {
+    const state = this.lastTransitionCommitState;
+    if (!state?.hasFinalized || !page || state.targetPageId !== page.id) {
+      return false;
+    }
+    const trace = this.recordTransitionCommitAttempt({
+      phase: "editor-deferred-reapply",
+      attemptedBy: "SceneManager.reapplyCurrentPageState",
+      reason: "post-transition target reapply suppressed after final commit",
+    });
+    if (trace?.suppressed) {
+      this.lastPostCommitTargetAssertionSuppressed = true;
+      return true;
+    }
+    return false;
+  }
+
+  finalizePageTransitionCommit(
+    environment: EnvironmentSetup,
+    nextPage: PresentationPage,
+  ): TransitionCommitTrace | null {
+    if (!this.activeSceneTransitionContext) {
+      this.sceneOverlayController.applySceneOverlaysAtTransitionEnd(
+        environment,
+        nextPage,
+      );
+      return null;
+    }
+    const terminalTransitionGraph = this.transitionCommitUnknownTerminalGraph();
+    const resolvedTargetGraph = this.transitionCommitTargetGraph();
+    this.lastPostCommitTargetAssertionSuppressed = false;
+    this.recordTransitionCommitAttempt({
+      phase: "terminal-before-commit",
+      attemptedBy: "SceneManager.finalizePageTransitionCommit",
+      terminalTransitionGraph,
+      resolvedTargetGraph,
+      reason: "terminal graph captured before final commit owner runs",
+    });
+    const finalTrace = this.recordTransitionCommitAttempt({
+      phase: "final-commit",
+      attemptedBy: "SceneManager.finalizePageTransitionCommit",
+      terminalTransitionGraph,
+      resolvedTargetGraph,
+      committedGraph: terminalTransitionGraph,
+      reason: "SceneManager owns page-transition final commit",
+    });
+    if (finalTrace?.allowed) {
+      this.sceneOverlayController.applySceneOverlaysAtTransitionEnd(
+        environment,
+        nextPage,
+      );
+    }
+    this.recordTransitionCommitAttempt({
+      phase: "post-commit-graph-check",
+      attemptedBy: "SceneManager.finalizePageTransitionCommit",
+      terminalTransitionGraph,
+      resolvedTargetGraph,
+      committedGraph: terminalTransitionGraph,
+      reason: "post-commit graph comparison is observational only",
+    });
+    return finalTrace;
   }
 
   private transitionTweenEasedProgress(
@@ -3280,8 +3463,9 @@ export class SceneManager {
     scalarStyleDurationMs: number = durationMs,
     scalarStyleEasing: EasingName = easing,
     reason: NavigationReason = "programmatic",
+    transitionId?: string,
   ): void {
-    return transitionEffectiveLayersForPageImpl.call(this, fromEnvironment, toEnvironment, fromPage, toPage, durationMs, easing, scalarStyleDurationMs, scalarStyleEasing, reason);
+    return transitionEffectiveLayersForPageImpl.call(this, fromEnvironment, toEnvironment, fromPage, toPage, durationMs, easing, scalarStyleDurationMs, scalarStyleEasing, reason, transitionId);
   }
 
   /**
@@ -3386,6 +3570,25 @@ export class SceneManager {
   reapplyCurrentPageState(): void {
     const env = this.lastEnv ?? this.lastEffectiveEnv;
     const page = this.lastEffectivePage;
+    if (this.activeSceneTransitionContext?.commitState.hasFinalized) {
+      this.recordLateReapplyDebugEvent(
+        "async-layer-resolve",
+        "transition-envelope",
+      );
+      this.recordTransitionCommitAttempt({
+        phase: "editor-deferred-reapply",
+        attemptedBy: "SceneManager.reapplyCurrentPageState",
+        reason: "active transition reapply suppressed after final commit",
+      });
+      return;
+    }
+    if (!this.activeSceneTransitionContext && this.suppressDuplicatePostCommitReapply(page)) {
+      this.recordLateReapplyDebugEvent(
+        "async-layer-resolve",
+        "transition-envelope",
+      );
+      return;
+    }
     if (this.activeSceneTransitionContext && env && page) {
       this.recordLateReapplyDebugEvent(
         "async-layer-resolve",
@@ -3869,6 +4072,11 @@ export class SceneManager {
     environment: EnvironmentSetup,
     nextPage: PresentationPage,
   ): void {
+    const trace = this.recordTransitionCommitAttempt({
+      phase: "overlay-end-application",
+      attemptedBy: "SceneManager.applySceneOverlaysAtTransitionEnd",
+    });
+    if (trace?.suppressed) return;
     this.sceneOverlayController.applySceneOverlaysAtTransitionEnd(
       environment,
       nextPage,

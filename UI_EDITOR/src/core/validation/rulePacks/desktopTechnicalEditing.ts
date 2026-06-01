@@ -370,6 +370,76 @@ const effectsOpacityOutOfRange: ValidationRule = {
   },
 };
 
+const frameBackgroundContrast: ValidationRule = {
+  id: "frame.background.contrast-text-min",
+  severity: "warning",
+  description: "Frame text contrast over active background",
+  appliesTo: "frame",
+  run: (ctx) => {
+    const out: ValidationFinding[] = [];
+    if (!ctx.activeBackgroundId) return out;
+    const bgRgb = backgroundRgbFor(ctx.activeBackgroundId);
+    if (!bgRgb) return out;
+    const bgLum = relativeLuminance(bgRgb);
+    let worst = Infinity;
+    for (const c of ctx.components) {
+      if (!["text", "inline-editable-text", "numeric-label", "letter-glyph"].includes(c.archetype)) continue;
+      const colour = (c.props as { colour?: { hex?: string; alpha?: number } }).colour;
+      const rgb = colour ? rgbFromHex(colour.hex, colour.alpha) : { r: 244, g: 240, b: 232, a: 1 };
+      const ratio = contrastRatio(rgb, bgLum);
+      if (ratio < worst) worst = ratio;
+    }
+    if (worst < 4.5 && Number.isFinite(worst)) {
+      out.push({
+        ruleId: "frame.background.contrast-text-min",
+        severity: "warning",
+        message: `Worst-case text contrast on Frame ${ctx.frame.id} is ${worst.toFixed(2)}; WCAG AA requires 4.5:1.`,
+        profileId: PROFILE_ID,
+        location: { packageId: ctx.pkg.manifest.id, frameId: ctx.frame.id },
+        currentValue: worst,
+        suggestedValue: 4.5,
+      });
+    }
+    return out;
+  },
+};
+
+function backgroundRgbFor(id: string): { r: number; g: number; b: number } | null {
+  switch (id) {
+    case "plain_dark": return { r: 13, g: 14, b: 18 };
+    case "plain_light": return { r: 244, g: 240, b: 232 };
+    case "noise_low_contrast": return { r: 136, g: 136, b: 136 };
+    case "terrain_capture": return { r: 110, g: 100, b: 75 };
+    default: return null;
+  }
+}
+
+function rgbFromHex(hex: string | undefined, alpha: number | undefined): { r: number; g: number; b: number; a: number } {
+  if (!hex) return { r: 244, g: 240, b: 232, a: alpha ?? 1 };
+  const clean = hex.replace("#", "");
+  if (clean.length !== 6) return { r: 244, g: 240, b: 232, a: alpha ?? 1 };
+  return {
+    r: parseInt(clean.slice(0, 2), 16),
+    g: parseInt(clean.slice(2, 4), 16),
+    b: parseInt(clean.slice(4, 6), 16),
+    a: alpha ?? 1,
+  };
+}
+
+function relativeLuminance(c: { r: number; g: number; b: number }): number {
+  const f = (v: number) => {
+    const x = v / 255;
+    return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+}
+
+function contrastRatio(fg: { r: number; g: number; b: number; a: number }, bgLum: number): number {
+  const fgLum = relativeLuminance(fg);
+  const [a, b] = fgLum > bgLum ? [fgLum, bgLum] : [bgLum, fgLum];
+  return (a + 0.05) / (b + 0.05);
+}
+
 export const DESKTOP_TECHNICAL_EDITING: ValidationRulePack = {
   id: "desktop-technical-editing",
   version: 1,
@@ -394,6 +464,7 @@ export const DESKTOP_TECHNICAL_EDITING: ValidationRulePack = {
     intentMissing,
     intentDependsOnSelf,
     effectsOpacityOutOfRange,
+    frameBackgroundContrast,
   ],
 };
 

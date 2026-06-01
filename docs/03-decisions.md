@@ -580,7 +580,7 @@ Each decision records:
 
 **Chose:** Utah FORGE viewport legends transition per container through sequenced straight-line phases. Exiting containers slide horizontally left while keeping full row height, then their rows collapse so remaining rows close the gap. Entering containers reserve/open their target row space first, then slide horizontally in from the left. Stable containers remain horizontally fixed, and MT resistivity remains the final bottom legend row.
 
-**Why:** Whole-stack crossfades produce overlapping, drifting legend panels and allow MT resistivity to appear in the middle of the stack. Per-container transition state matches page-to-page legend membership changes while preserving a stable bottom anchor for the primary MT resistivity legend.
+**Why:** Whole-stack crossfades produce overlapping, drifting legend panels and allow MT resistivity to appear in the middle of the stack. Per-container transition state matches page-transition legend membership changes while preserving a stable bottom anchor for the primary MT resistivity legend.
 
 **Trade-off accepted:** Presence checks are centralized in `EditorChrome` for the Utah FORGE stack, while each legend component still owns its detailed rendering and null-render guards.
 

@@ -9,9 +9,10 @@ DEC-076).
 
 ## Read this before
 
-This file is the contract for page-to-page transitions and the section-frame
-helper visuals (ISO bands, ISO lines, ground trace, dashed intersection traces,
-push/pull cone handles, scale axes and their labels, frame outline / crop box).
+This file is the contract for the global page-transition runtime and the
+section-frame helper visuals (ISO bands, ISO lines, ground trace, dashed
+intersection traces, push/pull cone handles, scale axes and their labels, frame
+outline / crop box).
 
 Open this file before touching any of:
 
@@ -28,6 +29,26 @@ Skipping this routing has produced the regressions enumerated in **Known
 regressions** below. The runtime fixes are sequenced; the rules here are
 durable.
 
+## Page-agnostic scope rule
+
+Pages are disposable content fixtures. Page numbers, page IDs, titles, matrix
+case IDs, and visible navigation paths are reproduction evidence only. Transition
+runtime fixes must target reusable state ownership, layer classification,
+opacity composition, helper stability, camera policy, editor/save gating, or
+validation rules.
+
+Do not implement fixture-id, fixture-index, fixture-title, or source/target
+fixture-path conditionals in
+transition code. If a reproduction path fails, file the issue against the
+global transition family that failed:
+
+- already-visible product ownership;
+- Section ISO bands and isolines;
+- scene-section helpers and reference layers;
+- MT volume / threshold boundary handoffs;
+- surfaces, seismic products, point clouds, overlays, legends, labels, assays;
+- camera path and end-of-transition commit timing.
+
 ## Transition kind registry
 
 `LayerTransitionKind` is a closed union declared at
@@ -36,7 +57,7 @@ durable.
 | Kind | Meaning |
 | --- | --- |
 | `continuous` | Source and target layers share enough state that scalar / numeric fields can be interpolated frame-by-frame. Default for compatible scalar-style tweens. |
-| `discrete-crossfade` | Source and target represent discrete states that cannot be numerically interpolated. The outgoing helper snapshot and incoming helper fade are crossfaded by opacity. Section-frame style changes between page pairs route here when frame identity / orientation / enable state differ. |
+| `discrete-crossfade` | Source and target represent discrete states that cannot be numerically interpolated. The outgoing helper snapshot and incoming helper fade are crossfaded by opacity. Section-frame style changes route here when frame identity / orientation / enable state differ. |
 | `full-density-scalar` | Full-density scalar layer tween that runs the scalar-source opacity pipeline, not the layer-opacity pipeline. |
 | `none` | No transition. The target state is applied at the navigation moment. |
 
@@ -45,7 +66,7 @@ an opacity tween realised through a `LayerTransitionSnapshot`
 ([transitionStyles.ts:77-81](../../src/scene/transitions/transitionStyles.ts#L77-L81)).
 Adding a `slide` kind requires a new decision-log entry, not an ad-hoc string.
 
-Layer classification per page pair happens in
+Layer classification compares resolved source and target presentation state in
 [transitionEffectiveLayersForPage.ts:160-166](../../src/scene/transitions/transitionEffectiveLayersForPage.ts#L160-L166)
 and is gated by `transitionEnvelopeAllowsLayer()` at
 [layerTweenRuntime.ts:24-32](../../src/scene/transitions/layerTweenRuntime.ts#L24-L32).
@@ -165,16 +186,17 @@ a per-frame rebuild. The same stability contract applies on both branches.
 
 Before claiming a transition fix:
 
-1. **Visual**: Walk a Utah FORGE page pair that exercises section frames. Look
-   for: no ISO band flicker, no cone flattening, no ground-trace pulse, no
-   dashed intersection-trace stutter, no abrupt brightness change at tween end.
+1. **Visual**: Use one or more reproduction fixtures that exercise the affected
+   global transition family. Look for: no ISO band flicker, no cone flattening,
+   no ground-trace pulse, no dashed intersection-trace stutter, no abrupt
+   brightness change at tween end. Do not treat the fixture as the fix target.
 2. **Runtime diagnostic**: `SceneManager.getTransitionDebugState()` reports
    tween counts and snapshot counts. ISO line / band materials expose authored
    base opacity, transition opacity, threshold-surface attenuation, composed
    opacity, and threshold occlusion count via `userData`. See
    [Runtime-Diagnostics.md](Runtime-Diagnostics.md).
-3. **Smoke test**: a page pair with `transition.kind = none` should produce
-   zero helper rebuilds during the (instant) transition.
+3. **Smoke test**: a transition with `transition.kind = none` should produce
+   zero helper rebuilds during the instant transition.
 4. **Type / workspace**: `npx tsc --noEmit` and `npm run check:workspace`
    clean before commit.
 
@@ -188,7 +210,7 @@ Before claiming a transition fix:
 | Dashed frame-intersection trace flickers / dashes drift | [sceneSectionController.ts:2768-2857](../../src/scene/section/sceneSectionController.ts#L2768-L2857) | Same rebuild cause; dash phase reset per rebuild. |
 | Ground trace width pulses across a page transition | rebuild path | Authored width re-applied through the interpolated style each frame; ribbon mesh re-instantiated. |
 | Authored "slide" between two pages does nothing | [transitionEffectiveLayersForPage.ts:160-166](../../src/scene/transitions/transitionEffectiveLayersForPage.ts#L160-L166), [layerTweenRuntime.ts:24-32](../../src/scene/transitions/layerTweenRuntime.ts#L24-L32) | No formal `slide` kind exists. Diagnose: classification, envelope membership, snapshot pair. Do not add a new kind without a decision entry. |
-| ISO overlay swaps abruptly between pages | composition path | DEC-071 composition violated; an overlay write went through `material.opacity` directly instead of the `authored × transition × attenuation` path. |
+| ISO overlay swaps abruptly between source and target resolved states | composition path | DEC-071 composition violated; an overlay write went through `material.opacity` directly instead of the `authored × transition × attenuation` path. |
 
 ## Cross-reference index
 
@@ -220,7 +242,7 @@ Before claiming a transition fix:
   axis labels, axis headings, frame outline / crop box.
 - **Helper rebuild**: `rebuildSceneSectionHelpers()`. Disposes existing helper
   meshes and rebuilds them from the current style.
-- **Tween tick**: a single frame of an active page-to-page transition,
+- **Tween tick**: a single frame of an active page-transition runtime,
   executed inside `tickLayerTweens()` in `layerTweenRuntime.ts`.
 - **Compatible frame transition**: source and target frame style permit
   numeric interpolation by stable frame id.

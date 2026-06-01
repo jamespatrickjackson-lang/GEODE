@@ -4,6 +4,11 @@ Status: pre-fix preparation log plus instrumentation checkpoint. This file
 records the concrete matrix, validation results, baseline captures, and
 recommended product policies to use before modifying transition visuals.
 
+Fixture boundary: historical page ids, page numbers, matrix case ids, and
+source/target fixture paths in this file are evidence only. They are not
+implementation instructions. Current and future remediation must target
+global transition/editor/save rules that apply to any page state.
+
 Companion audit:
 `docs/dev-context/Page-Transition-Orchestration-Audit-2026-05-30.md`.
 
@@ -20,7 +25,8 @@ Companion audit:
    exposes a `transitionRun` debug record for page, interruption, camera-focus,
    camera-pose, and camera-reset movement.
 7. Added and ran a no-visual-change transition matrix probe that captures
-   screenshots plus full transition debug JSON for the high-risk page pairs.
+   screenshots plus full transition debug JSON for high-risk reproduction
+   transitions.
 
 No smoothing, timing, or visual policy changes have been made yet.
 
@@ -158,27 +164,31 @@ Recommendations from this checkpoint:
 
 ## Captured Baseline Matrix
 
-| ID | Page pair | Indices | Primary surfaces covered | Captures |
-| --- | --- | ---: | --- | --- |
-| 01 | `12_mt_volume_overview` -> `06_mt_low_resistivity_seismic` | 0 -> 1 | Full-density point cloud, MT volume, threshold surfaces, seismic context, dynamic camera, opacity envelope | editor + presenter source/mid/end |
-| 02 | `42_resistivity_volume_overview` -> `43_resistivity_depth_elevation_slices` | 7 -> 8 | Scalar volume to 2D resistivity slices, scalar legend, transparency, page overlay | editor + presenter source/mid/end |
-| 03 | `43_resistivity_depth_elevation_slices` -> `44_resistivity_cross_sections` | 8 -> 9 | Slice-to-section transition, section/crop/window translation risk, ISO line/band state | editor + presenter source/mid/end |
-| 04 | `44_resistivity_cross_sections` -> `45_resistivity_isosurfaces` | 9 -> 10 | Section panels to MT isosurfaces, opacity handoff, legend/source mismatch risk | editor + presenter source/mid/end |
-| 05 | `102_page` -> `103_page` | 22 -> 24 | Section-frame overlay pages, duplicate/unresolved pages, overlay source/target behavior | editor + presenter source/mid/end |
-| 06 | `12_mt_volume_overview` -> `06_mt_low_resistivity_seismic` -> `04_mt_high_resistivity_seismic` | 0 -> 1 -> 2 | Rapid interruption, promoted source page risk, skipped old camera completion cleanup | editor + presenter source/mid/end |
+The original matrix used disposable page fixtures. The fixture names and
+historical positions are evidence only and are logged in the evidence register;
+future fixes must target the reproduction family below.
+
+| ID | Reproduction family | Primary surfaces covered | Captures |
+| --- | --- | --- | --- |
+| 01 | MT volume to seismic/threshold-surface handoff | Full-density point cloud, MT volume, threshold surfaces, seismic context, dynamic camera, opacity envelope | editor + presenter source/mid/end |
+| 02 | Scalar volume to 2D resistivity slice handoff | Scalar volume to 2D resistivity slices, scalar legend, transparency, page overlay | editor + presenter source/mid/end |
+| 03 | Slice to section/crop/window handoff | Slice-to-section transition, section/crop/window translation risk, ISO line/band state | editor + presenter source/mid/end |
+| 04 | Section panels to isosurface handoff | Section panels to MT isosurfaces, opacity handoff, legend/source mismatch risk | editor + presenter source/mid/end |
+| 05 | Section-frame overlay source/target behavior | Section-frame overlay fixtures, duplicate/unresolved fixture content, overlay source/target behavior | editor + presenter source/mid/end |
+| 06 | Rapid interruption handoff | Rapid interruption, promoted source fixture risk, skipped old camera completion cleanup | editor + presenter source/mid/end |
 
 ## Additional Matrix Rows To Exercise During Fix Verification
 
 These were not screenshot-captured in this prep pass but should be part of the
 post-fix verification matrix.
 
-| Page pair | Why it matters |
+| Reproduction family | Why it matters |
 | --- | --- |
-| `40_geophysics_product_overview` -> `41_mt_station_network_footprint` | Point-cloud visibility and MT station marker/lift changes. |
-| `45_resistivity_isosurfaces` -> `51_mt_marching_cubes_focused` | Threshold surface product focus and boundary legend behavior. |
-| `51_mt_marching_cubes_focused` -> `52_mt_marching_cubes_full_extent` | Focused-to-full-extent isosurface product switch and camera scale change. |
-| `47_seismic_footprint_velocity_support` -> `49_seismic_fence_panels` | Seismic render mode/product behavior and section/fence panel handoff. |
-| `99_unresolved_missing_tools` -> `101_page` -> `100_page` | Overlay-heavy duplicate pages and UI/page-source behavior. |
+| Point-cloud / station-marker handoff | Point-cloud visibility and MT station marker/lift changes. |
+| Threshold-surface focus handoff | Threshold surface product focus and boundary legend behavior. |
+| Focused-to-full-extent isosurface handoff | Product switch and camera scale change. |
+| Seismic render-mode handoff | Seismic render mode/product behavior and section/fence panel handoff. |
+| Overlay-heavy duplicate-fixture handoff | Overlay-heavy duplicate fixture content and UI/source behavior. |
 | Camera focus/reset without page change | Confirms camera-only tweens no longer look like page transitions. |
 | Late-heavy-data navigation before all assets settle | Confirms async transition-aware reapply behavior. |
 
@@ -1149,7 +1159,7 @@ Preflight:
 - Real repo path used for audit: `C:\GeoSee\GeoSee_Dev`.
 - Existing latest artifact remains
   `test-results/transition-matrix-debug-2026-05-31T01-27-06-311Z/`.
-- That artifact does not include the reported page 25 -> page 26 handoff.
+- That artifact does not include the reported fixture handoff.
 - Audit-only matrix coverage was added in `tools/capture-transition-matrix.mjs`:
   case `07-reported-page-25-to-new-page-snap`, `fromIndex: 24`,
   `toIndex: 25`.
@@ -1192,7 +1202,7 @@ Transition-orchestration findings:
   completion to reset OrbitControls basis. For a huge static-camera path, any
   frame cadence stall or final basis correction can read as a stall/jump.
 - Dynamic camera only contributes when the source or target dynamic camera is
-  enabled. For page 25 -> page 26 it is not, so there is no path-aware lead,
+  enabled. For that fixture handoff it is not, so there is no path-aware lead,
   exit, or orbit blend to soften the 1.79M-unit move.
 
 Ground-line findings:
@@ -1283,7 +1293,7 @@ Case 07 evidence:
   `discrete-crossfade`, reason `discrete data/style changed, using snapshot
   crossfade`.
 - Visual screenshot review:
-  - `source.png` shows the low section/ISO feature from page 25.
+  - `source.png` shows the low section/ISO feature from the source fixture.
   - `mid.png` and `end.png` are already on the far `New page` view with the
     section/ISO feature gone.
 - Analyzer count delta against
@@ -1302,7 +1312,7 @@ Remaining audit gaps before runtime fixes:
    mismatches: actual rendered source opacity from section ISO overlays versus
    target layer-style opacity for scalar volume and section ISO products.
 2. Add a camera-path risk row to the report for adjacent transitions whose
-   camera distance is large relative to duration, with page 25 -> page 26 as
+   camera distance is large relative to duration, with that fixture transition as
    the current top risk.
 3. Add a scene-section ground-trace risk row when a source page has
    `sceneSectionEnabled:true` plus ground trace enabled and the target falls
@@ -1320,7 +1330,7 @@ Recommended fix order after case 07 evidence exists:
    either present in the fading snapshot or are held/faded by a stable helper
    channel.
 4. Then handle camera smoothing for large static-camera jumps. Options include
-   authoring page 26 from page 25 state, adding adaptive duration/waypoint
+   authoring the target fixture from source fixture state, adding adaptive duration/waypoint
    behavior for extreme path distance, or enabling a path-aware dynamic-camera
    handoff. This should be evaluated after the visual layer discontinuities are
    isolated, because the current camera path is also crossing a large visual
@@ -1400,16 +1410,16 @@ Recommendation:
 
 ## Deeper Missed-Risk Audit - 2026-05-31
 
-Why the page 25 issue was missed:
+Why the reported fixture issue was missed:
 
-- The matrix had a nearby section-frame case (`102_page -> 103_page`) but did
-  not directly exercise the reported adjacent handoff (`103_page -> 105_page`)
-  until case 07 was added.
+- The matrix had a nearby section-frame fixture (`102_page -> 103_page`) but
+  did not directly exercise the reported adjacent fixture transition
+  (`103_page -> 105_page`) until case 07 was added.
 - The analyzer classified visible opacity changes as policy-covered at the
   layer level. That hid the real visual issue: section ISO overlay material
   opacity was being represented as scalar-volume layer opacity.
 - The report had no "all adjacent page transitions are represented" check, so
-  untested adjacent page pairs could sit outside the evidence loop.
+  untested adjacent fixture transitions could sit outside the evidence loop.
 - Page 26 is an authored-state reset (`New page` with no overrides). The audit
   treated inherited defaults as legitimate target state but did not flag that
   the previous page had heavy authored state and the next page had none.
@@ -1418,23 +1428,24 @@ Additional blind spots found:
 
 1. Matrix coverage is still incomplete.
    The latest analyzer now reports `adjacentTransitionCoverageGaps: 20`. The
-   highest-risk adjacent pairs still missing from normal matrix coverage are:
-   - page 19 -> 20: `50_integrated_seismic_resistivity_context` ->
+   highest-risk adjacent fixture transitions still missing from normal matrix
+   coverage are:
+   - fixture transition: `50_integrated_seismic_resistivity_context` to
      `99_unresolved_missing_tools`, camera distance about `439,511`, target
      distance about `21,494`, dynamic camera turns on.
-   - page 13 -> 14: `52_mt_marching_cubes_full_extent` ->
+   - fixture transition: `52_mt_marching_cubes_full_extent` to
      `53_mt_product_stack_demo`, camera distance about `367,449`, target
      distance about `45,678`, dynamic camera turns off.
-   - page 7 -> 8: `41_mt_station_network_footprint` ->
+   - fixture transition: `41_mt_station_network_footprint` to
      `42_resistivity_volume_overview`, camera distance about `150,809`, target
      distance about `45,678`, dynamic camera turns on.
-   - page 12 -> 13: `51_mt_marching_cubes_focused` ->
+   - fixture transition: `51_mt_marching_cubes_focused` to
      `52_mt_marching_cubes_full_extent`, camera distance about `195,242`,
      target distance about `45,678`.
-   - page 5 -> 6: `08_mt_threshold_surfaces` ->
+   - fixture transition: `08_mt_threshold_surfaces` to
      `40_geophysics_product_overview`, camera distance about `122,765`,
      dynamic camera turns off.
-   - page 20 -> 21: `99_unresolved_missing_tools` -> `101_page`, camera
+   - fixture transition: `99_unresolved_missing_tools` to `101_page`, camera
      distance about `643,819`.
 
 2. MT volume ISO overlays are still under-modeled in the product registry.
@@ -1501,8 +1512,8 @@ Additional blind spots found:
 Analyzer changes from this deeper audit:
 
 - Added `adjacentTransitionCoverageGaps` to the report. Latest count: `20`.
-- Added coverage-gap recommendations so missing adjacent page pairs are visible
-  before visual fixes.
+- Added coverage-gap recommendations so missing adjacent fixture transitions
+  are visible before visual fixes.
 - Existing new buckets remain:
   `sectionIsoRenderOpacityMismatch`, `sceneSectionGroundTraceRisk`, and
   `cameraPathRisk`.
@@ -1518,7 +1529,7 @@ Verification:
 Recommendations before runtime fixes:
 
 1. Add normal matrix cases for the highest-risk uncovered adjacent transitions:
-   pages 19 -> 20, 13 -> 14, 7 -> 8, 12 -> 13, 5 -> 6, and 20 -> 21.
+   the listed adjacent fixture transitions.
 2. Add MT volume section ISO overlays to the product registry as
    `section-iso-overlays`, not just as inferred scalar-volume opacity risk.
 3. Add a UI-hidden or presentation-mode matrix capture for case 07 and the next
@@ -1532,13 +1543,13 @@ Recommendations before runtime fixes:
 
 User correction accepted: pages are disposable examples. The transition audit
 must therefore target base transition rules and systemic state orchestration,
-not hard-code repairs between specific page numbers. The matrix generator now
+not hard-code repairs between fixture numbers. The matrix generator now
 derives normal cases from `projects/utah-forge/project.json:pageOrder`:
 
-- `A01` through `A25`: every adjacent `pageOrder[n] -> pageOrder[n + 1]`
+- `A01` through `A25`: every adjacent source/target fixture in `pageOrder`
   handoff.
-- `S01`: supplemental non-adjacent section-frame stress path, page index
-  `22 -> 24`.
+- `S01`: supplemental non-adjacent section-frame stress path recorded by the
+  matrix manifest.
 - `06`: rapid interruption stress path, retained separately.
 
 Tooling changes:
@@ -1641,7 +1652,7 @@ Important interpretation:
 
 Current recommendations before runtime fixes:
 
-1. First runtime fix should still be systemic, not page-specific: split
+1. First runtime fix should still be systemic, not fixture-specific: split
    section ISO overlay render opacity from parent scalar-volume layer opacity
    and expose the resulting overlay policy in the matrix/debug artifacts.
 2. Then fix scene-section helper/ground-trace handoff so helper fade/translation
@@ -1902,7 +1913,7 @@ Decision:
 
 - Do not start section/ISO or camera runtime smoothing yet.
 - The user-reported camera stall/jump and ISO opacity snap are now best treated
-  as base orchestration/root-rule issues, not page-specific fixtures.
+  as base orchestration/root-rule issues, not fixture-specific patches.
 - Next safest pass is deeper root-cause instrumentation around long active RAF
   gaps:
   - record per-sample `dtMs` and long-gap buckets in smoothness traces;
@@ -2076,7 +2087,7 @@ Recommendations:
    - avoid reapplying unchanged scene-section planes every transition frame;
    - split helper translation/fade from ground-trace visibility so the ground
      trace cannot snap out before the target/source policy says it should;
-   - keep this as a base rule, not a page-specific patch.
+   - keep this as a base rule, not a fixture-specific patch.
 3. Keep section ISO opacity separate from MT volume layer opacity. Current
    evidence still shows section ISO render-opacity mismatch risk in A20/A25.
 4. Treat A25 camera movement separately from visual layer handoff. It has a
@@ -2241,7 +2252,7 @@ Scope:
 
 - Continued from accepted baseline:
   `docs/dev-context/artifacts/transition-matrix/transition-matrix-debug-2026-05-31T06-23-28-187Z`.
-- Kept the pass to base transition rules, not page-specific fixes.
+- Kept the pass to base transition rules, not fixture-specific fixes.
 - Targeted the first narrow visual family: section ISO opacity ownership and
   scene-section helper/plane update cost.
 
@@ -2392,7 +2403,7 @@ Next recommendation:
 Purpose:
 
 - Address the remaining scene-section helper/ground-trace ownership issue as a
-  base transition rule, not as a page-specific A25 fix.
+  base transition rule, not as a fixture-specific matrix-case fix.
 - Preserve the existing section ISO split and avoid starting camera-only
   smoothing until helper ownership is cleanly exposed in debug/matrix output.
 
@@ -3425,7 +3436,7 @@ Next recommendation:
 
 1. Do not begin runtime visual smoothing yet.
 2. Fix or classify `ScaleBar.measure` first. It is a base render-loop cost, not
-   a page-specific transition policy issue.
+   a visual-policy issue tied to a fixture.
 3. Safest candidate fix: cache scale surface meshes for the measure pass,
    avoid repeated full-scene traversal per candidate point, and/or defer scale
    recomputation while transition progress is active.
@@ -3724,7 +3735,7 @@ Work-source findings:
   misread as real section ISO work.
 - Interpretation: the next optimization target is inside
   `updateScalarSectionIsoOverlay` / contour overlay generation for MT volume
-  cuts, not full-group clear/dispose and not page-specific transition logic.
+  cuts, not full-group clear/dispose and not fixture-specific transition logic.
 
 Verification in this pass:
 
@@ -4601,7 +4612,7 @@ Goal for this pass:
 - Reduce persistent MT cut-ISO overlay line-generation cost without changing
   contour density, line simplification, cut-ISO cadence, LOD, opacity, camera
   behavior, or visual policy.
-- Keep the change in base geometry stitching logic rather than page-specific
+- Keep the change in base geometry stitching logic rather than fixture-specific
   transition behavior.
 
 Implementation:
@@ -4795,7 +4806,7 @@ Next recommendation:
 1. Keep visual smoothing paused until the video is reviewed.
 2. If the video visibly confirms the isoband transparency/snap complaint, fix
    base transition ownership/policy for already-visible products rather than
-   changing page pairs.
+   changing fixture paths.
 3. If the video mainly confirms A20 camera stall/jump, move next to camera-path
    classification and path-aware duration/handoff.
 4. If the video is inconclusive because headless cadence dominates, run a true
@@ -4864,7 +4875,7 @@ Goal for this pass:
 
 - Pause the unattended automation at the user's request.
 - Fix the base logic that made some transition elements fade at different
-  rates or snap in/out, without patching specific page pairs.
+  rates or snap in/out, without patching fixture paths.
 
 Root cause:
 
@@ -4904,8 +4915,92 @@ Verification:
 
 Next recommendation:
 
-1. Run a selected matrix/video pass for `A20,A21,S01` to confirm the section ISO
-   snap is cleared in the captured artifacts.
-2. Keep the automation paused until the user confirms whether to resume.
+1. Do not run a selected matrix/video pass unless the user explicitly requests
+   it. User visual review is the acceptance path for fade quality, camera
+   smoothness, ground-line continuity, and isoband appearance.
+2. Treat any page IDs, screen numbers, matrix cases, or page paths as
+   disposable reproduction fixtures only.
 3. Continue camera-path classification only after the fade-uniformity fix is
    visually checked.
+
+## 2026-05-31 12:35 - Page-Agnostic Transition Scope Reset
+
+User correction accepted: this work is a global transition/editor/save logic
+fix. Page-to-page navigation is only the way current fixtures expose failures.
+The pages used in the audit may be deleted or replaced, so future work must not
+depend on their IDs, indexes, titles, or adjacency.
+
+Durable rule for all remaining transition refinements:
+
+- Do not implement fixture-id, fixture-index, fixture-title, source/target fixture-path, or
+  Utah-FORGE-only runtime conditionals.
+- Historical page paths, screen numbers, and matrix IDs stay in this log only
+  as evidence and reproduction handles.
+- Every new fix must name the global transition family or ownership rule it
+  changes, such as already-visible product ownership, Section ISO transition
+  envelope, scene-section helper/reference-layer continuity, MT
+  volume/threshold handoffs, editor live-apply gating, save normalization, or
+  camera path/commit policy.
+- Human visual feedback should identify the affected family and may include a
+  reproduction path, but the implementation target remains the shared runtime
+  rule.
+- Validation should enforce canonical state contracts rather than current page
+  content. Current examples include MT boundary visibility normalization and
+  scene-section frame/plane consistency.
+
+Docs/worktree updates from this reset:
+
+- `docs/dev-context/Transition-Human-Review-Checklist-2026-05-31.md` now opens
+  with the page-agnostic scope rule and classifies review by global transition
+  family instead of review paths.
+- `docs/dev-context/Page-Transitions-And-Section-Frames.md` now makes the
+  page-agnostic contract explicit before the transition-kind registry.
+- `docs/dev-context/Active-Build-Context.md` now routes future transition work
+  through the same page-agnostic rule.
+- `docs/dev-context/Visibility-Control-Conflict-Audit-2026-05-31.md` now
+  frames show/hide, legend, editor, and save fixes as reusable ownership rules
+  rather than fixture-path fixes.
+
+## 2026-05-31 12:55 - Removed Page-Level Fixture Repairs
+
+User correction accepted: page JSON edits are not allowed as transition fixes.
+The Utah FORGE pages are disposable test fixtures and may be randomly changed
+or deleted. Any page content mismatch must feed a global runtime/editor/save
+rule, not a content patch.
+
+Action taken:
+
+- Logged the removed page/environment content edits in
+  `docs/dev-context/Transition-Page-Fixture-Evidence-Register-2026-05-31.md`.
+- Removed the page-level fixture repairs from the worktree by restoring the
+  affected Utah FORGE environment/page JSON files to repository baseline.
+
+Files restored as fixture cleanup:
+
+- `projects/utah-forge/environment.json`
+- `projects/utah-forge/pages/04_mt_high_resistivity_seismic.json`
+- `projects/utah-forge/pages/05_mt_threshold_focus.json`
+- `projects/utah-forge/pages/06_mt_low_resistivity_seismic.json`
+- `projects/utah-forge/pages/08_mt_threshold_surfaces.json`
+- `projects/utah-forge/pages/45_resistivity_isosurfaces.json`
+- `projects/utah-forge/pages/51_mt_marching_cubes_focused.json`
+- `projects/utah-forge/pages/52_mt_marching_cubes_full_extent.json`
+- `projects/utah-forge/pages/99_unresolved_missing_tools.json`
+- `projects/utah-forge/pages/100_page.json`
+- `projects/utah-forge/pages/101_page.json`
+- `projects/utah-forge/pages/102_page.json`
+- `projects/utah-forge/pages/103_page.json`
+- `projects/utah-forge/pages/104_page.json`
+
+Important boundary:
+
+- Keep the global code fixes and tests for transition-gated editor writes,
+  canonical MT boundary visibility normalization, effective scene-section frame
+  normalization, validation, section ISO transition envelope, and scene-section
+  helper/reference-layer continuity.
+- Do not reapply the removed page JSON values as a fix. Use the evidence
+  register when planning stronger generic validation or normalization.
+- Validation boundary updated: raw page/environment duplicate-state mismatches
+  are evidence, while normalized effective state is the failing contract. This
+  keeps `check:pages` from forcing content patches when global normalization can
+  resolve throwaway fixture state.

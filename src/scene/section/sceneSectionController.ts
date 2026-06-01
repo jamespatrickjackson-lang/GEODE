@@ -4,7 +4,11 @@ import type {
   SceneSectionAxisAlignment,
   SceneSectionAxisDatum,
 } from "../../pages/types";
-import { getHeightSampler } from "../heightSampler";
+import {
+  getHeightSampler,
+  peekHeightSampler,
+  type HeightSampler,
+} from "../heightSampler";
 import { disposeObjectTree } from "../disposeObjectTree";
 import {
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
@@ -162,6 +166,17 @@ function makeSceneSectionIntersectionDashMaterial(): THREE.LineDashedMaterial {
   hardenStudioHelperMaterial(material);
   material.userData.sceneSectionHelper = true;
   return material;
+}
+
+function withSceneSectionHeightSampler(
+  callback: (sampleHeight: HeightSampler) => void,
+): void {
+  const cached = peekHeightSampler();
+  if (cached) {
+    callback(cached);
+    return;
+  }
+  void getHeightSampler().then(callback);
 }
 
 function makeSceneSectionTraceRibbonMaterial(): THREE.MeshBasicMaterial {
@@ -935,8 +950,8 @@ function sceneSectionResolvedFrameEntries(
       legendVisible: explicit?.legendVisible !== false,
       axis,
       plane: {
-        ...(planes[axis] ?? {}),
         ...(explicit?.plane ?? {}),
+        ...(planes[axis] ?? {}),
       },
       frame: {
         ...(frames[axis] ?? {}),
@@ -2202,23 +2217,36 @@ export function currentSceneSectionStyle(this: any, nowMs = performance.now()): 
   );
 }
 
+function sceneSectionReferenceHelperVisible(
+  style: EditableStyle,
+  editorMode: boolean,
+): boolean {
+  const helperVisible =
+    typeof style.sceneSectionHelperVisible === "boolean"
+      ? style.sceneSectionHelperVisible
+      : editorMode;
+  return (
+    helperVisible ||
+    style.sceneSectionGroundTraceVisible === true ||
+    style.sceneSectionAxesVisible === true ||
+    style.sceneSectionFrameEnabled === true ||
+    style.sceneSectionWindowEnabled === true ||
+    style.sectionIsoEnabled === true
+  );
+}
+
 export function sceneSectionHelperOpacityForTween(this: any, 
   tween: SceneSectionStyleTween,
   eased: number,
 ): number {
-  const helperVisible = (style: EditableStyle): boolean =>
-    typeof style.sceneSectionHelperVisible === "boolean"
-      ? style.sceneSectionHelperVisible
-      : this.editorMode;
   const fromActive =
     tween.fromStyle.sceneSectionEnabled === true &&
-    helperVisible(tween.fromStyle);
+    sceneSectionReferenceHelperVisible(tween.fromStyle, this.editorMode);
   const toActive =
     tween.toStyle.sceneSectionEnabled === true &&
-    helperVisible(tween.toStyle);
+    sceneSectionReferenceHelperVisible(tween.toStyle, this.editorMode);
   if (!fromActive && toActive) return clamp01(eased);
   if (fromActive && !toActive) return 1 - clamp01(eased);
-  if (fromActive && toActive && tween.discreteChanged) return clamp01(eased);
   return 1;
 }
 
@@ -2556,7 +2584,7 @@ export function rebuildSceneSectionHelpers(this: any,
     };
     for (const trace of frameIntersectionTraces) {
       if (trace.trimToGround) {
-        void getHeightSampler().then((sampleHeight) => {
+        withSceneSectionHeightSampler((sampleHeight) => {
           if (!traceGroup.parent) return;
           const origin = this.siteSurfaceGuideOrigin(
             this.layers.get(this.topoSurfaceLayerId()),
@@ -2644,7 +2672,12 @@ export function rebuildSceneSectionHelpers(this: any,
     );
 
     const frameHelperVisible = frame?.legendVisible !== false;
-    if (helperVisible && frameHelperVisible) {
+    const frameOutlineVisible =
+      frame !== null &&
+      frameHelperVisible &&
+      style.sceneSectionFrameEnabled === true;
+    const controlHandlesVisible = helperVisible && frameHelperVisible;
+    if (frameOutlineVisible || controlHandlesVisible) {
       const controlGroup = new THREE.Group();
       controlGroup.name = `${plane.label} push/pull controls`;
       controlGroup.position.copy(planeCenter);
@@ -2671,198 +2704,207 @@ export function rebuildSceneSectionHelpers(this: any,
         color,
         outlineOpacity,
       );
-      const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
-      outline.name = frame
-        ? plane.label
-        : `${plane.label} outline`;
-      outline.castShadow = false;
-      outline.receiveShadow = false;
-      outline.userData.sceneSectionHelper = true;
-      outline.userData.sceneSectionOutline = true;
-      outline.userData.sceneSectionFrameOutline = frame !== null;
-      outline.userData.sceneSectionAxis = plane.axis;
-      outline.userData.sceneSectionFrameId = plane.frameId;
-      outline.userData.sceneSectionPlaneCoordinateIndex = spec.positionIndex;
-      outline.userData.sceneSectionPlanePositionM = plane.positionM;
-      outline.userData.sceneSectionPlaneSignedDistanceM = plane.signedDistanceM;
-      outline.userData.sceneSectionFrameColor = color;
-      outline.userData.sceneSectionFrameLineWidthM = outlineWidthM;
-      outline.userData.sceneSectionFrameBounds = frame
-        ? {
-            minAM: frame.minAM,
-            maxAM: frame.maxAM,
-            minBM: frame.minBM,
-            maxBM: frame.maxBM,
-            axisAIndex: frame.axisAIndex,
-            axisBIndex: frame.axisBIndex,
-            axisAVector: frame.axisAVector.toArray(),
-            axisBVector: frame.axisBVector.toArray(),
-          }
-        : null;
-      outline.renderOrder = SCENE_SECTION_RENDER_ORDER;
-      controlGroup.add(outline);
-
-      const handleSpan = clampRange(
-        Math.min(paddedWidth, paddedHeight) * 0.16,
-        SCENE_SECTION_HANDLE_MIN_SPAN_M,
-        SCENE_SECTION_HANDLE_MAX_SPAN_M,
-      );
-      const coneLength =
-        clampRange(handleSpan * 1.12, 520, 1120) *
-        SCENE_SECTION_CONE_VISUAL_SCALE;
-      const coneRadius = coneLength * 0.28;
-      const arrowSpan = coneLength * 1.28;
-      const preservedPickRadius =
-        coneRadius *
-        (SCENE_SECTION_HANDLE_VISUAL_SCALE / SCENE_SECTION_CONE_VISUAL_SCALE) *
-        1.8;
-      const pickSize = Math.max(
-        SCENE_SECTION_WINDOW_HANDLE_RADIUS_M * SCENE_SECTION_HANDLE_VISUAL_SCALE,
-        preservedPickRadius,
-      ) * 3;
-      const makeDoubleArrowHandle = (
-        kind: "push-pull" | SceneSectionWindowHandleKind,
-        name: string,
-        position: THREE.Vector3,
-        localDirection: THREE.Vector3,
-        direction?: 1 | -1,
-      ): THREE.Group => {
-        const group = new THREE.Group();
-        group.name = `${name} visual`;
-        group.position.copy(position);
-        group.quaternion.setFromUnitVectors(
-          new THREE.Vector3(0, 1, 0),
-          localDirection.clone().normalize(),
-        );
-        group.userData.sceneSectionHelper = true;
-        group.userData.sceneSectionPlaneHandle = true;
-        group.userData.sceneSectionAxis = plane.axis;
-        group.userData.sceneSectionFrameId = plane.frameId;
-        group.userData.sceneSectionPlaneHandleKind = kind;
-        group.userData.sceneSectionHandleVisual = "double-arrow";
-        group.userData.sceneSectionHandleScale = SCENE_SECTION_HANDLE_VISUAL_SCALE;
-        group.renderOrder = SCENE_SECTION_RENDER_ORDER + 3;
-
-        const material = makeSceneSectionConeMaterial(color, outlineOpacity);
-
-        const coneGeometry = new THREE.ConeGeometry(
-          coneRadius,
-          coneLength,
-          18,
-          1,
-          true,
-        );
-        coneGeometry.computeVertexNormals();
-        const topCone = new THREE.Mesh(coneGeometry, material);
-        topCone.position.y = arrowSpan * 0.5;
-        topCone.castShadow = false;
-        topCone.receiveShadow = false;
-        topCone.userData.sceneSectionHelper = true;
-        const bottomCone = new THREE.Mesh(coneGeometry.clone(), material);
-        bottomCone.position.y = -arrowSpan * 0.5;
-        bottomCone.rotation.z = Math.PI;
-        bottomCone.castShadow = false;
-        bottomCone.receiveShadow = false;
-        bottomCone.userData.sceneSectionHelper = true;
-        group.add(topCone, bottomCone);
-
-        const pickMaterial = new THREE.MeshBasicMaterial({
-          color,
-          transparent: true,
-          opacity: 0,
-          depthTest: false,
-          depthWrite: false,
-          toneMapped: false,
-          fog: false,
-        });
-        pickMaterial.userData.sceneSectionHelper = true;
-        const pickProxy = new THREE.Mesh(
-          new THREE.BoxGeometry(pickSize, pickSize, pickSize),
-          pickMaterial,
-        );
-        pickProxy.name = name;
-        pickProxy.userData.sceneSectionHelper = true;
-        pickProxy.userData.sceneSectionPlaneHandle = true;
-        pickProxy.userData.sceneSectionAxis = plane.axis;
-        pickProxy.userData.sceneSectionFrameId = plane.frameId;
-        pickProxy.userData.sceneSectionPlaneHandleKind = kind;
-        pickProxy.userData.sceneSectionHandleVisual = "double-arrow";
-        pickProxy.userData.sceneSectionHandleScale =
-          SCENE_SECTION_HANDLE_VISUAL_SCALE;
-        pickProxy.userData.sceneSectionPickProxy = true;
-        pickProxy.userData.sceneSectionPickRadius = pickSize * 0.5;
-        if (direction) {
-          pickProxy.userData.sceneSectionPlaneHandleDirection = direction;
-        }
-        pickProxy.renderOrder = SCENE_SECTION_RENDER_ORDER + 4;
-        group.add(pickProxy);
-        runtime.pickables.push(pickProxy);
-        return group;
-      };
-
-      controlGroup.add(
-        makeDoubleArrowHandle(
-          "push-pull",
-          `${plane.axis.toUpperCase()} Section push/pull handle`,
-          new THREE.Vector3(frameCenterLocal.x, frameCenterLocal.y, 0),
-          new THREE.Vector3(0, 0, 1),
-        ),
-      );
-
-      if (frame) {
-        const midA = (minLocalA + maxLocalA) * 0.5;
-        const midB = (minLocalB + maxLocalB) * 0.5;
-        controlGroup.add(
-          makeDoubleArrowHandle(
-            "frame-min-a",
-            `${plane.axis.toUpperCase()} Section frame-min-a handle`,
-            new THREE.Vector3(minLocalA, midB, 0),
-            new THREE.Vector3(1, 0, 0),
-          ),
-          makeDoubleArrowHandle(
-            "frame-max-a",
-            `${plane.axis.toUpperCase()} Section frame-max-a handle`,
-            new THREE.Vector3(maxLocalA, midB, 0),
-            new THREE.Vector3(1, 0, 0),
-          ),
-          makeDoubleArrowHandle(
-            "frame-min-b",
-            `${plane.axis.toUpperCase()} Section frame-min-b handle`,
-            new THREE.Vector3(midA, minLocalB, 0),
-            new THREE.Vector3(0, 1, 0),
-          ),
-          makeDoubleArrowHandle(
-            "frame-max-b",
-            `${plane.axis.toUpperCase()} Section frame-max-b handle`,
-            new THREE.Vector3(midA, maxLocalB, 0),
-            new THREE.Vector3(0, 1, 0),
-          ),
-        );
+      if (frameOutlineVisible) {
+        const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
+        outline.name = frame
+          ? plane.label
+          : `${plane.label} outline`;
+        outline.castShadow = false;
+        outline.receiveShadow = false;
+        outline.userData.sceneSectionHelper = true;
+        outline.userData.sceneSectionOutline = true;
+        outline.userData.sceneSectionFrameOutline = frame !== null;
+        outline.userData.sceneSectionAxis = plane.axis;
+        outline.userData.sceneSectionFrameId = plane.frameId;
+        outline.userData.sceneSectionPlaneCoordinateIndex = spec.positionIndex;
+        outline.userData.sceneSectionPlanePositionM = plane.positionM;
+        outline.userData.sceneSectionPlaneSignedDistanceM = plane.signedDistanceM;
+        outline.userData.sceneSectionFrameColor = color;
+        outline.userData.sceneSectionFrameLineWidthM = outlineWidthM;
+        outline.userData.sceneSectionFrameBounds = frame
+          ? {
+              minAM: frame.minAM,
+              maxAM: frame.maxAM,
+              minBM: frame.minBM,
+              maxBM: frame.maxBM,
+              axisAIndex: frame.axisAIndex,
+              axisBIndex: frame.axisBIndex,
+              axisAVector: frame.axisAVector.toArray(),
+              axisBVector: frame.axisBVector.toArray(),
+            }
+          : null;
+        outline.renderOrder = SCENE_SECTION_RENDER_ORDER;
+        controlGroup.add(outline);
       }
 
-      runtime.group.add(controlGroup);
-      runtime.planes.set(plane.frameId, controlGroup);
-
-      const label = this.createSceneSectionLabel(
-        plane.label.replace(/\s*frame$/i, ""),
-        color,
-      );
-      label.position
-        .copy(planeCenter)
-        .addScaledVector(
-          tangentA,
-          halfWidth -
-            SCENE_SECTION_LABEL_INSET_M -
-            SCENE_SECTION_LABEL_WIDTH_M * 0.5,
-        )
-        .addScaledVector(
-          tangentB,
-          halfHeight -
-            SCENE_SECTION_LABEL_INSET_M -
-            SCENE_SECTION_LABEL_HEIGHT_M * 0.5,
+      if (controlHandlesVisible) {
+        const handleSpan = clampRange(
+          Math.min(paddedWidth, paddedHeight) * 0.16,
+          SCENE_SECTION_HANDLE_MIN_SPAN_M,
+          SCENE_SECTION_HANDLE_MAX_SPAN_M,
         );
-      label.quaternion.copy(planeQuaternion);
-      runtime.group.add(label);
+        const coneLength =
+          clampRange(handleSpan * 1.12, 520, 1120) *
+          SCENE_SECTION_CONE_VISUAL_SCALE;
+        const coneRadius = coneLength * 0.28;
+        const arrowSpan = coneLength * 1.28;
+        const preservedPickRadius =
+          coneRadius *
+          (SCENE_SECTION_HANDLE_VISUAL_SCALE / SCENE_SECTION_CONE_VISUAL_SCALE) *
+          1.8;
+        const pickSize = Math.max(
+          SCENE_SECTION_WINDOW_HANDLE_RADIUS_M * SCENE_SECTION_HANDLE_VISUAL_SCALE,
+          preservedPickRadius,
+        ) * 3;
+        const makeDoubleArrowHandle = (
+          kind: "push-pull" | SceneSectionWindowHandleKind,
+          name: string,
+          position: THREE.Vector3,
+          localDirection: THREE.Vector3,
+          direction?: 1 | -1,
+        ): THREE.Group => {
+          const group = new THREE.Group();
+          group.name = `${name} visual`;
+          group.position.copy(position);
+          group.quaternion.setFromUnitVectors(
+            new THREE.Vector3(0, 1, 0),
+            localDirection.clone().normalize(),
+          );
+          group.userData.sceneSectionHelper = true;
+          group.userData.sceneSectionPlaneHandle = true;
+          group.userData.sceneSectionAxis = plane.axis;
+          group.userData.sceneSectionFrameId = plane.frameId;
+          group.userData.sceneSectionPlaneHandleKind = kind;
+          group.userData.sceneSectionHandleVisual = "double-arrow";
+          group.userData.sceneSectionHandleScale =
+            SCENE_SECTION_HANDLE_VISUAL_SCALE;
+          group.renderOrder = SCENE_SECTION_RENDER_ORDER + 3;
+
+          const material = makeSceneSectionConeMaterial(color, outlineOpacity);
+
+          const coneGeometry = new THREE.ConeGeometry(
+            coneRadius,
+            coneLength,
+            18,
+            1,
+            true,
+          );
+          coneGeometry.computeVertexNormals();
+          const topCone = new THREE.Mesh(coneGeometry, material);
+          topCone.position.y = arrowSpan * 0.5;
+          topCone.castShadow = false;
+          topCone.receiveShadow = false;
+          topCone.userData.sceneSectionHelper = true;
+          const bottomCone = new THREE.Mesh(coneGeometry.clone(), material);
+          bottomCone.position.y = -arrowSpan * 0.5;
+          bottomCone.rotation.z = Math.PI;
+          bottomCone.castShadow = false;
+          bottomCone.receiveShadow = false;
+          bottomCone.userData.sceneSectionHelper = true;
+          group.add(topCone, bottomCone);
+
+          const pickMaterial = new THREE.MeshBasicMaterial({
+            color,
+            transparent: true,
+            opacity: 0,
+            depthTest: false,
+            depthWrite: false,
+            toneMapped: false,
+            fog: false,
+          });
+          pickMaterial.userData.sceneSectionHelper = true;
+          const pickProxy = new THREE.Mesh(
+            new THREE.BoxGeometry(pickSize, pickSize, pickSize),
+            pickMaterial,
+          );
+          pickProxy.name = name;
+          pickProxy.userData.sceneSectionHelper = true;
+          pickProxy.userData.sceneSectionPlaneHandle = true;
+          pickProxy.userData.sceneSectionAxis = plane.axis;
+          pickProxy.userData.sceneSectionFrameId = plane.frameId;
+          pickProxy.userData.sceneSectionPlaneHandleKind = kind;
+          pickProxy.userData.sceneSectionHandleVisual = "double-arrow";
+          pickProxy.userData.sceneSectionHandleScale =
+            SCENE_SECTION_HANDLE_VISUAL_SCALE;
+          pickProxy.userData.sceneSectionPickProxy = true;
+          pickProxy.userData.sceneSectionPickRadius = pickSize * 0.5;
+          if (direction) {
+            pickProxy.userData.sceneSectionPlaneHandleDirection = direction;
+          }
+          pickProxy.renderOrder = SCENE_SECTION_RENDER_ORDER + 4;
+          group.add(pickProxy);
+          runtime.pickables.push(pickProxy);
+          return group;
+        };
+
+        controlGroup.add(
+          makeDoubleArrowHandle(
+            "push-pull",
+            `${plane.axis.toUpperCase()} Section push/pull handle`,
+            new THREE.Vector3(frameCenterLocal.x, frameCenterLocal.y, 0),
+            new THREE.Vector3(0, 0, 1),
+          ),
+        );
+
+        if (frame) {
+          const midA = (minLocalA + maxLocalA) * 0.5;
+          const midB = (minLocalB + maxLocalB) * 0.5;
+          controlGroup.add(
+            makeDoubleArrowHandle(
+              "frame-min-a",
+              `${plane.axis.toUpperCase()} Section frame-min-a handle`,
+              new THREE.Vector3(minLocalA, midB, 0),
+              new THREE.Vector3(1, 0, 0),
+            ),
+            makeDoubleArrowHandle(
+              "frame-max-a",
+              `${plane.axis.toUpperCase()} Section frame-max-a handle`,
+              new THREE.Vector3(maxLocalA, midB, 0),
+              new THREE.Vector3(1, 0, 0),
+            ),
+            makeDoubleArrowHandle(
+              "frame-min-b",
+              `${plane.axis.toUpperCase()} Section frame-min-b handle`,
+              new THREE.Vector3(midA, minLocalB, 0),
+              new THREE.Vector3(0, 1, 0),
+            ),
+            makeDoubleArrowHandle(
+              "frame-max-b",
+              `${plane.axis.toUpperCase()} Section frame-max-b handle`,
+              new THREE.Vector3(midA, maxLocalB, 0),
+              new THREE.Vector3(0, 1, 0),
+            ),
+          );
+        }
+      }
+
+      if (controlGroup.children.length > 0) {
+        runtime.group.add(controlGroup);
+        runtime.planes.set(plane.frameId, controlGroup);
+      }
+
+      if (controlHandlesVisible) {
+        const label = this.createSceneSectionLabel(
+          plane.label.replace(/\s*frame$/i, ""),
+          color,
+        );
+        label.position
+          .copy(planeCenter)
+          .addScaledVector(
+            tangentA,
+            halfWidth -
+              SCENE_SECTION_LABEL_INSET_M -
+              SCENE_SECTION_LABEL_WIDTH_M * 0.5,
+          )
+          .addScaledVector(
+            tangentB,
+            halfHeight -
+              SCENE_SECTION_LABEL_INSET_M -
+              SCENE_SECTION_LABEL_HEIGHT_M * 0.5,
+          );
+        label.quaternion.copy(planeQuaternion);
+        runtime.group.add(label);
+      }
     }
 
     if (frame && frame.axesVisible) {
@@ -3048,7 +3090,7 @@ export function rebuildSceneSectionHelpers(this: any,
       const origin = this.siteSurfaceGuideOrigin(
         this.layers.get(this.topoSurfaceLayerId()),
       );
-      void getHeightSampler().then((sampleHeight) => {
+      withSceneSectionHeightSampler((sampleHeight) => {
         const snapshotTargetActive =
           this.sceneSectionHelperTransitionSnapshot !== null;
         if (!traceGroup.parent && !snapshotTargetActive) return;

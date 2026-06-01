@@ -35,57 +35,229 @@ const PROJECT_MANIFEST = JSON.parse(
   readFileSync(path.join("projects", "utah-forge", "project.json"), "utf8"),
 );
 const PAGE_IDS = PROJECT_MANIFEST.pageOrder ?? [];
+const PROJECT_ENVIRONMENT = JSON.parse(
+  readFileSync(path.join("projects", "utah-forge", "environment.json"), "utf8"),
+);
 
-const ADJACENT_SURFACE_NOTES = new Map([
-  [
-    0,
-    "full-density point cloud, MT volume, threshold surfaces, seismic context, dynamic camera",
-  ],
-  [
-    7,
-    "scalar volume to 2D resistivity slices, scalar legend, transparency, page overlay",
-  ],
-  [
-    8,
-    "slice-to-section transition, section/crop/window translation risk, ISO line/band state",
-  ],
-  [
-    9,
-    "section panels to MT isosurfaces, opacity handoff, legend/source mismatch risk",
-  ],
-  [
-    24,
-    "reported camera stall/jump, scene-section ground trace snap, MT section ISO overlay opacity snap",
-  ],
-]);
+const LAYERS = {
+  mtVolume: "utah-forge-mt-resistivity-volume",
+  mtBoundaries: "utah-forge-mt-resistivity-threshold-surfaces",
+  mtFullDensity: "utah-forge-mt-resistivity-full-density",
+  mtSlices: "utah-forge-mt-resistivity-slices",
+  sceneSection: "utah-forge-scene-section-planes",
+};
+
+function readPageSpec(pageId) {
+  return JSON.parse(
+    readFileSync(path.join("projects", "utah-forge", "pages", `${pageId}.json`), "utf8"),
+  );
+}
+
+const PAGE_SPECS = new Map(PAGE_IDS.map((pageId) => [pageId, readPageSpec(pageId)]));
+
+function pageLayerStyle(pageId, layerId) {
+  return PAGE_SPECS.get(pageId)?.layerOverrides?.[layerId] ?? {};
+}
+
+function pageLayerVisible(pageId, layerId) {
+  const override = PAGE_SPECS.get(pageId)?.visibilityOverrides?.[layerId];
+  if (typeof override === "boolean") return override;
+  return PROJECT_ENVIRONMENT.defaultVisibleLayers?.includes(layerId) ?? false;
+}
+
+function hasAnyTrueRecordValue(record) {
+  return Object.values(record ?? {}).some((value) => {
+    if (typeof value === "boolean") return value;
+    if (value && typeof value === "object" && "visible" in value) {
+      return value.visible === true;
+    }
+    return false;
+  });
+}
+
+function pageFeatureSummary(pageId) {
+  const page = PAGE_SPECS.get(pageId) ?? {};
+  const sceneStyle = pageLayerStyle(pageId, LAYERS.sceneSection);
+  const mtBoundaryStyle = pageLayerStyle(pageId, LAYERS.mtBoundaries);
+  const mtVolumeStyle = pageLayerStyle(pageId, LAYERS.mtVolume);
+  const hasSceneSection =
+    sceneStyle.sceneSectionEnabled === true ||
+    sceneStyle.sceneSectionFrameEnabled === true ||
+    sceneStyle.sceneSectionFrameByAxis !== undefined ||
+    sceneStyle.sceneSectionPlanes !== undefined ||
+    sceneStyle.sceneSectionHelperVisible !== undefined ||
+    sceneStyle.sceneSectionGroundTraceVisible !== undefined ||
+    sceneStyle.sceneSectionAxesVisible !== undefined;
+  const hasSceneFrame =
+    sceneStyle.sceneSectionFrameEnabled === true ||
+    sceneStyle.sceneSectionFrameByAxis !== undefined ||
+    sceneStyle.sceneSectionWindowByAxis !== undefined;
+  const hasMtBoundaries =
+    hasAnyTrueRecordValue(mtBoundaryStyle.mtSurfaceBoundariesById) ||
+    hasAnyTrueRecordValue(mtBoundaryStyle.mtThresholdSurfaceVisibility) ||
+    pageLayerVisible(pageId, LAYERS.mtBoundaries);
+  const hasMtVolume =
+    pageLayerVisible(pageId, LAYERS.mtVolume) ||
+    mtVolumeStyle.scalarVolumeProductId !== undefined ||
+    mtVolumeStyle.scalarVolumeRenderMode !== undefined;
+  const hasSectionIso =
+    hasSceneSection &&
+    (hasMtVolume ||
+      sceneStyle.sceneSectionTargetLayerIds?.includes?.(LAYERS.mtVolume) ||
+      sceneStyle.sceneSectionTargetLayerIds?.includes?.(LAYERS.mtSlices));
+  const hasPointCloud =
+    pageLayerVisible(pageId, LAYERS.mtFullDensity) ||
+    page.layerOverrides?.[LAYERS.mtFullDensity] !== undefined;
+  const hasSeismic = Object.keys({
+    ...(page.layerOverrides ?? {}),
+    ...(page.visibilityOverrides ?? {}),
+  }).some((layerId) => layerId.includes("seismic"));
+  const hasOverlays =
+    Array.isArray(page.overlays) ||
+    page.overlayFile !== undefined ||
+    page.presenterOverlay !== undefined;
+
+  return {
+    pageId,
+    sceneAxis: sceneStyle.sceneSectionActiveAxis ?? null,
+    sceneWindowAxis: sceneStyle.sceneSectionWindowActiveAxis ?? null,
+    sceneHelperVisible: sceneStyle.sceneSectionHelperVisible ?? null,
+    sceneGroundTraceVisible: sceneStyle.sceneSectionGroundTraceVisible ?? null,
+    hasSceneSection,
+    hasSceneFrame,
+    hasMtBoundaries,
+    hasMtVolume,
+    hasSectionIso,
+    hasPointCloud,
+    hasSeismic,
+    hasOverlays,
+  };
+}
+
+const PAGE_FEATURES = new Map(
+  PAGE_IDS.map((pageId) => [pageId, pageFeatureSummary(pageId)]),
+);
+
+function featuresFor(pageId) {
+  return PAGE_FEATURES.get(pageId) ?? pageFeatureSummary(pageId);
+}
+
+function transitionFamilyFor(sourcePageId, targetPageId) {
+  const source = featuresFor(sourcePageId);
+  const target = featuresFor(targetPageId);
+  if (source.hasSceneSection || target.hasSceneSection) {
+    return source.hasSectionIso || target.hasSectionIso
+      ? "scene-section-section-iso"
+      : "scene-section-frame";
+  }
+  if (source.hasMtVolume || target.hasMtVolume) {
+    return source.hasMtBoundaries || target.hasMtBoundaries
+      ? "mt-volume-boundary"
+      : "mt-volume";
+  }
+  if (source.hasMtBoundaries || target.hasMtBoundaries) return "mt-boundary";
+  if (source.hasPointCloud || target.hasPointCloud) return "point-cloud";
+  if (source.hasSeismic || target.hasSeismic) return "seismic-products";
+  if (source.hasOverlays || target.hasOverlays) return "overlays";
+  return "generic-page-state";
+}
+
+function transitionSurfaceSummary(sourcePageId, targetPageId) {
+  const source = featuresFor(sourcePageId);
+  const target = featuresFor(targetPageId);
+  const families = [
+    ["MT volume", source.hasMtVolume || target.hasMtVolume],
+    ["MT boundaries", source.hasMtBoundaries || target.hasMtBoundaries],
+    ["scene sections", source.hasSceneSection || target.hasSceneSection],
+    ["scene-section frames", source.hasSceneFrame || target.hasSceneFrame],
+    ["section ISO overlays", source.hasSectionIso || target.hasSectionIso],
+    ["point clouds", source.hasPointCloud || target.hasPointCloud],
+    ["seismic products", source.hasSeismic || target.hasSeismic],
+    ["overlays", source.hasOverlays || target.hasOverlays],
+  ]
+    .filter(([, active]) => active)
+    .map(([label]) => label);
+  return `feature-family coverage: ${
+    families.length > 0 ? families.join(", ") : "generic page state"
+  }. Page ids are disposable fixture evidence; remediation must target the shared transition rule.`;
+}
 
 const ALL_ADJACENT_MATRIX = PAGE_IDS.slice(0, -1).map((sourcePageId, index) => {
   const targetPageId = PAGE_IDS[index + 1];
+  const family = transitionFamilyFor(sourcePageId, targetPageId);
   return {
-    id: `A${String(index + 1).padStart(2, "0")}`,
-    name: `adjacent-${sourcePageId}-to-${targetPageId}`,
+    id: `adjacent-${family}-${String(index + 1).padStart(2, "0")}`,
+    name: `adjacent-${family}`,
     fromIndex: index,
     toIndex: index + 1,
     caseGroup: "all-adjacent",
+    transitionFamily: family,
     generated: true,
     probeLateReapply: index === 0,
-    surfaces:
-      ADJACENT_SURFACE_NOTES.get(index) ??
-      "generated all-adjacent page transition coverage: camera, data layers, overlays, legends, labels, assays, scene sections, ISO overlays",
+    surfaces: transitionSurfaceSummary(sourcePageId, targetPageId),
   };
 });
 
-const SUPPLEMENTAL_MATRIX = [
-  {
-    id: "S01",
-    name: "section-frame-overlay-pages-non-adjacent",
-    fromIndex: 22,
-    toIndex: 24,
-    caseGroup: "supplemental-stress",
-    surfaces:
-      "section-frame overlay pages, duplicate/unresolved pages, overlay source/target behavior",
-  },
-];
+function findBestPair(predicate, score) {
+  const candidates = [];
+  for (let fromIndex = 0; fromIndex < PAGE_IDS.length; fromIndex += 1) {
+    for (let toIndex = 0; toIndex < PAGE_IDS.length; toIndex += 1) {
+      if (fromIndex === toIndex || Math.abs(fromIndex - toIndex) <= 1) continue;
+      const sourcePageId = PAGE_IDS[fromIndex];
+      const targetPageId = PAGE_IDS[toIndex];
+      const source = featuresFor(sourcePageId);
+      const target = featuresFor(targetPageId);
+      if (!predicate(source, target)) continue;
+      candidates.push({
+        fromIndex,
+        toIndex,
+        sourcePageId,
+        targetPageId,
+        score: score(source, target),
+      });
+    }
+  }
+  return candidates.sort((left, right) => right.score - left.score)[0] ?? null;
+}
+
+function selectSupplementalCases() {
+  const sceneFramePair = findBestPair(
+    (source, target) =>
+      source.hasSceneSection &&
+      target.hasSceneSection &&
+      source.hasSceneFrame &&
+      target.hasSceneFrame &&
+      (source.sceneAxis !== target.sceneAxis ||
+        source.sceneHelperVisible !== target.sceneHelperVisible ||
+        source.sceneGroundTraceVisible !== target.sceneGroundTraceVisible),
+    (source, target) =>
+      Number(source.hasSectionIso) +
+      Number(target.hasSectionIso) +
+      Number(source.hasMtVolume) +
+      Number(target.hasMtVolume) +
+      Number(source.sceneAxis !== target.sceneAxis) +
+      Number(source.sceneHelperVisible !== target.sceneHelperVisible) +
+      Number(source.sceneGroundTraceVisible !== target.sceneGroundTraceVisible),
+  );
+  if (!sceneFramePair) return [];
+  return [
+    {
+      id: "scene-section-frame-change",
+      name: "feature-scene-section-frame-change",
+      fromIndex: sceneFramePair.fromIndex,
+      toIndex: sceneFramePair.toIndex,
+      caseGroup: "supplemental-feature-stress",
+      transitionFamily: "scene-section-frame",
+      generated: true,
+      surfaces: transitionSurfaceSummary(
+        sceneFramePair.sourcePageId,
+        sceneFramePair.targetPageId,
+      ),
+    },
+  ];
+}
+
+const SUPPLEMENTAL_MATRIX = selectSupplementalCases();
 
 const TRANSITION_MATRIX = [...ALL_ADJACENT_MATRIX, ...SUPPLEMENTAL_MATRIX];
 const ACTIVE_TRANSITION_MATRIX =
@@ -95,20 +267,43 @@ const ACTIVE_TRANSITION_MATRIX =
       )
     : TRANSITION_MATRIX;
 
-const INTERRUPTION_CASE = {
-  id: "06",
-  name: "rapid-interruption-mt-volume-low-high",
-  fromIndex: 0,
-  firstTargetIndex: 1,
-  finalTargetIndex: 2,
-  caseGroup: "interruption",
-  surfaces:
-    "rapid interruption, promoted source page risk, skipped old camera completion cleanup",
-};
+function selectInterruptionCase() {
+  for (let fromIndex = 0; fromIndex < PAGE_IDS.length - 2; fromIndex += 1) {
+    const firstTargetIndex = fromIndex + 1;
+    const finalTargetIndex = fromIndex + 2;
+    const source = featuresFor(PAGE_IDS[fromIndex]);
+    const first = featuresFor(PAGE_IDS[firstTargetIndex]);
+    const final = featuresFor(PAGE_IDS[finalTargetIndex]);
+    const exercisesMtHandoff =
+      source.hasMtVolume ||
+      first.hasMtVolume ||
+      final.hasMtVolume ||
+      source.hasMtBoundaries ||
+      first.hasMtBoundaries ||
+      final.hasMtBoundaries;
+    if (!exercisesMtHandoff) continue;
+    return {
+      id: "rapid-interruption-feature-handoff",
+      name: "feature-rapid-interruption-handoff",
+      fromIndex,
+      firstTargetIndex,
+      finalTargetIndex,
+      caseGroup: "interruption",
+      transitionFamily: "interruption-feature-handoff",
+      generated: true,
+      surfaces:
+        "feature-family rapid interruption coverage: promoted source page risk and skipped old camera completion cleanup. Page ids are disposable fixture evidence; remediation must target the shared transition rule.",
+    };
+  }
+  return null;
+}
+
+const INTERRUPTION_CASE = selectInterruptionCase();
 const ACTIVE_INTERRUPTION_CASE =
-  SELECTED_CASE_IDS.size === 0 ||
-  SELECTED_CASE_IDS.has(INTERRUPTION_CASE.id) ||
-  SELECTED_CASE_IDS.has(INTERRUPTION_CASE.name)
+  INTERRUPTION_CASE &&
+  (SELECTED_CASE_IDS.size === 0 ||
+    SELECTED_CASE_IDS.has(INTERRUPTION_CASE.id) ||
+    SELECTED_CASE_IDS.has(INTERRUPTION_CASE.name))
     ? INTERRUPTION_CASE
     : null;
 
@@ -1103,7 +1298,7 @@ async function main() {
           pageOrderSource: "projects/utah-forge/project.json:pageOrder",
           generatedAdjacentCaseCount: ALL_ADJACENT_MATRIX.length,
           supplementalCaseCount: SUPPLEMENTAL_MATRIX.length,
-          interruptionCaseCount: 1,
+          interruptionCaseCount: INTERRUPTION_CASE ? 1 : 0,
           selectedCaseIds:
             SELECTED_CASE_IDS.size > 0 ? [...SELECTED_CASE_IDS].sort() : [],
           activeCaseCount:

@@ -3,6 +3,11 @@ import { mtVolumeSceneState, pageControllerState, sectionIsoSceneState } from ".
 
 test.setTimeout(180_000);
 
+// Fixture boundary: literal Utah FORGE page ids in this file are disposable
+// regression fixtures only. They must not be used as transition acceptance
+// criteria unless the same behavior is also expressed as a global feature-family
+// rule in runtime/tooling tests.
+
 const MT_VOLUME_LAYER_ID = "utah-forge-mt-resistivity-volume";
 
 type ActiveRunProbe = {

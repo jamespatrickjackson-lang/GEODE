@@ -94,7 +94,7 @@ These classes are proposed only and require human review before implementation.
 | --- | --- | --- |
 | startup critical | Needed immediately for app/project shell, first meaningful render, or safe scene setup. | Core terrain/context only if accepted as first-page context; not every default-visible layer automatically qualifies. |
 | first-page required | Needed for the first visible page to render correctly. | Layers visible on page 1 after `defaultVisibleLayers` plus page overrides. |
-| page-required | Needed to render a specific page correctly. | Utah MT slices on slice pages, threshold surfaces on threshold pages, Shahbazi photo overlay on photo pages. |
+| page-required | Needed to render an authored presentation state correctly. | Utah MT slices on slice pages, threshold surfaces on threshold pages, Shahbazi photo overlay on photo pages. |
 | page-preload | Likely needed soon after current page; prefetch while preserving first-frame quality. | Next-page heavy layers after first-page render is stable. |
 | toggle-on-demand | Not required by page story but useful through explicit controls. | Optional advanced volumes, QA previews, support layers. |
 | high-fidelity client-facing | Rich/heavy data used for beauty, credibility, or client understanding. | Utah MT full-density, scalar volumes, seismic raymarch-capable products, Shahbazi TLS/photo/surface products. |

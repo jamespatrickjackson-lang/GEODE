@@ -1,0 +1,214 @@
+{
+  "id": "106_page",
+  "title": "MT High-Resistivity Context duplicate",
+  "camera": {
+    "position": [
+      -18028.131308139156,
+      -55682.862293616214,
+      18055.209446347722
+    ],
+    "target": [
+      -5433.720469929011,
+      -10905.252563488804,
+      -300.6733251711303
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "scalarFocusMin": 3.706814235494493,
+      "scalarFocusMax": 4.5,
+      "scalarBlendMin": 3.706814235494493,
+      "scalarBlendMax": 4.5,
+      "scalarInclusionMode": "thresholded",
+      "scalarEdgeLineWidth": 1.3,
+      "scalarEdgeAverage": 0.59,
+      "scalarEdgeLowerValue": 1.8114104195761795,
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-top-surface": {
+      "opacity": 0
+    },
+    "utah-forge-phase3-seismic-browser": {
+      "opacity": 0,
+      "seismicProductId": "gdr-1015-forge3d-velo5d-float-01312018",
+      "seismicProductVisibility": {
+        "gdr-1015-forge3d-velo5d-float-01312018": true
+      },
+      "seismicRenderMode": "raymarch",
+      "seismicSliceAxis": "inline",
+      "seismicSliceFraction": 0.5,
+      "seismicAmplitudeMin": 0.08,
+      "seismicAmplitudeMax": 1,
+      "seismicColormap": "velocity",
+      "seismicTimeScale": 2,
+      "seismicSliceThroughVolume": false,
+      "seismicNavigationVisible": true,
+      "seismicNavigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "seismicRemoveBackground": true,
+      "seismicCapabilityPresetId": "gdr-1015-forge3d-velo5d-float-01312018-raymarch",
+      "sectionIsoEnabled": false,
+      "seismicLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": false,
+        "conductive-le-30-ohm-m": false,
+        "resistive-ge-1000-ohm-m": true
+      },
+      "mtThresholdSurfaceWireframe": false,
+      "opacity": 0.82,
+      "affectedByFog": false,
+      "showLabels": false,
+      "mtThresholdSurfaceRoughness": 0.64,
+      "mtThresholdSurfaceMetalness": 0,
+      "mtThresholdSurfaceSide": "double",
+      "mtThresholdSurfaceSmoothNormals": true,
+      "mtThresholdSurfaceEmissiveBoost": 0.08,
+      "mtThresholdSurfaceWireframeColor": "#f8f4e8",
+      "mtThresholdSurfaceWireframeOpacity": 0.42,
+      "mtSurfaceBoundaryOrder": [
+        "conductive-le-10-ohm-m",
+        "conductive-le-30-ohm-m",
+        "resistive-ge-1000-ohm-m"
+      ],
+      "mtSurfaceBoundariesById": {
+        "conductive-le-10-ohm-m": {
+          "visible": false,
+          "label": "<=10 Ohm-m",
+          "color": "#2cc9ff",
+          "comparison": "<=",
+          "thresholdOhmM": 10,
+          "thresholdLog10": 1,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "conductive-le-30-ohm-m": {
+          "visible": false,
+          "label": "<=30 Ohm-m",
+          "color": "#38f0b3",
+          "comparison": "<=",
+          "thresholdOhmM": 30,
+          "thresholdLog10": 1.477121,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "resistive-ge-1000-ohm-m": {
+          "visible": true,
+          "label": ">=1000 Ohm-m",
+          "color": "#ff637a",
+          "comparison": ">=",
+          "thresholdOhmM": 1000,
+          "thresholdLog10": 3,
+          "opacity": 1,
+          "source": "precomputed"
+        }
+      }
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.84,
+      "showLabels": true
+    },
+    "utah-forge-mt-stations": {
+      "opacity": 0.35,
+      "showLabels": false,
+      "mtStationQcSelectedStationId": "FRG19082",
+      "mtStationQcPanelOpen": true
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-slices": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-working-area-focus": {
+      "workingAreaFocusEnabled": true,
+      "workingAreaFocusMode": "outside-context",
+      "workingAreaFocusBoundsLayerId": "utah-forge-phase3-working-area",
+      "workingAreaFocusTargetLayerIds": [
+        "utah-forge-mt-resistivity-preview",
+        "utah-forge-mt-resistivity-volume",
+        "utah-forge-phase3-seismic-browser",
+        "utah-forge-mt-resistivity-threshold-surfaces"
+      ],
+      "workingAreaFocusOutsideOpacityByLayerId": {
+        "utah-forge-mt-resistivity-full-density": 0.15,
+        "utah-forge-mt-resistivity-preview": 0.15,
+        "utah-forge-mt-resistivity-volume": 0.15,
+        "utah-forge-phase3-seismic-browser": 0.15,
+        "utah-forge-mt-resistivity-slices": 0.15,
+        "utah-forge-mt-resistivity-threshold-surfaces": 0,
+        "utah-forge-mt-top-surface": 0.15,
+        "utah-forge-mt-stations": 0.15,
+        "utah-forge-reference-stage": 0.15,
+        "terrain": 0.15,
+        "transport-roads": 0.15,
+        "hydrography-streams": 0.15,
+        "hydrography-lakes": 0.15
+      },
+      "workingAreaFocusHelperVisible": false
+    }
+  },
+  "accentColor": "#f27826",
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 127832,
+    "orbitHeight": 49112,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  },
+  "subtitle": "Resistive MT shells with site orientation context",
+  "visibilityOverrides": {
+    "utah-forge-phase3-working-area": false,
+    "utah-forge-phase3-demo-boreholes": true,
+    "utah-forge-phase3-seismic-browser": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-mt-top-surface": false,
+    "terrain": false,
+    "utah-forge-mt-stations": false
+  },
+  "cameraObjectFocus": {
+    "targetId": "product:utah-forge-mt-resistivity-threshold-surfaces:resistive-ge-1000-ohm-m",
+    "worldPoint": [
+      -5433.720469929012,
+      -10905.252563488808,
+      -300.6733251711303
+    ]
+  },
+  "hidden": true
+}

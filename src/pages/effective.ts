@@ -11,6 +11,109 @@ import {
   publicContextStylePatchForLayer,
 } from "./renderPresets";
 
+type SceneSectionAxis = "x" | "y" | "z";
+
+const SCENE_SECTION_AXES: readonly SceneSectionAxis[] = ["x", "y", "z"];
+
+export function normalizeMtBoundaryVisibilityStyle(
+  style: EditableStyle,
+): EditableStyle {
+  const boundaries = style.mtSurfaceBoundariesById;
+  if (!boundaries) return style;
+
+  let changed = false;
+  const visibility = { ...(style.mtThresholdSurfaceVisibility ?? {}) };
+  for (const [id, boundary] of Object.entries(boundaries)) {
+    if (typeof boundary?.visible !== "boolean") continue;
+    if (visibility[id] === boundary.visible) continue;
+    visibility[id] = boundary.visible;
+    changed = true;
+  }
+
+  return changed ? { ...style, mtThresholdSurfaceVisibility: visibility } : style;
+}
+
+function sceneSectionAxisFromBuiltInFrameId(
+  id: unknown,
+): SceneSectionAxis | null {
+  if (id === "axis:x") return "x";
+  if (id === "axis:y") return "y";
+  if (id === "axis:z") return "z";
+  return null;
+}
+
+function validSceneSectionAxis(axis: unknown): axis is SceneSectionAxis {
+  return axis === "x" || axis === "y" || axis === "z";
+}
+
+export function normalizeEffectiveSceneSectionStyle(
+  style: EditableStyle,
+): EditableStyle {
+  const hasSceneSectionState =
+    style.sceneSectionActiveAxis !== undefined ||
+    style.sceneSectionActiveFrameId !== undefined ||
+    style.sceneSectionPlanes !== undefined ||
+    style.sceneSectionFrames !== undefined ||
+    style.sceneSectionFrameByAxis !== undefined;
+  if (!hasSceneSectionState) return style;
+
+  let next: EditableStyle | null = null;
+  const mutable = (): EditableStyle => {
+    if (!next) next = { ...style };
+    return next;
+  };
+
+  const activeAxis = validSceneSectionAxis(style.sceneSectionActiveAxis)
+    ? style.sceneSectionActiveAxis
+    : null;
+  const activeFrameAxis = sceneSectionAxisFromBuiltInFrameId(
+    style.sceneSectionActiveFrameId,
+  );
+  if (activeAxis && activeFrameAxis && activeAxis !== activeFrameAxis) {
+    mutable().sceneSectionActiveFrameId = `axis:${activeAxis}`;
+  }
+
+  const planes = style.sceneSectionPlanes ?? {};
+  const frames = Array.isArray(style.sceneSectionFrames)
+    ? style.sceneSectionFrames
+    : null;
+  if (frames) {
+    let changed = false;
+    const normalizedFrames = frames.map((entry) => {
+      const frameAxis = sceneSectionAxisFromBuiltInFrameId(entry?.id);
+      if (!entry || !frameAxis || !SCENE_SECTION_AXES.includes(frameAxis)) {
+        return entry;
+      }
+      const plane = planes[frameAxis];
+      const normalizedAxis =
+        entry.axis === frameAxis ? entry.axis : frameAxis;
+      const normalizedPlane = plane
+        ? {
+            ...(entry.plane ?? {}),
+            ...plane,
+          }
+        : entry.plane;
+      if (
+        normalizedAxis === entry.axis &&
+        normalizedPlane === entry.plane
+      ) {
+        return entry;
+      }
+      changed = true;
+      return {
+        ...entry,
+        axis: normalizedAxis,
+        plane: normalizedPlane,
+      };
+    });
+    if (changed) {
+      mutable().sceneSectionFrames = normalizedFrames;
+    }
+  }
+
+  return next ?? style;
+}
+
 // Pure helpers that compose environment base + presentation-page deltas
 // into the effective state the renderer should show.
 //
@@ -40,7 +143,7 @@ export function effectiveStyle(
       projectRenderPresets(environment),
     ) ?? {};
   const override = page.layerOverrides?.[layerId] ?? {};
-  const merged = { ...base, ...presetPatch, ...contourPatch, ...override };
+  let merged = { ...base, ...presetPatch, ...contourPatch, ...override };
   // Page layer overrides should still win over preset-derived contour mode
   // values. These contourPreset* fields are internal line-material patches, so
   // clear them when an explicit page color/opacity/width override is present.
@@ -53,7 +156,8 @@ export function effectiveStyle(
   if (Object.prototype.hasOwnProperty.call(override, "lineWidth")) {
     delete merged.contourPresetLineWidth;
   }
-  return merged;
+  merged = normalizeMtBoundaryVisibilityStyle(merged);
+  return normalizeEffectiveSceneSectionStyle(merged);
 }
 
 export function effectiveVisibility(

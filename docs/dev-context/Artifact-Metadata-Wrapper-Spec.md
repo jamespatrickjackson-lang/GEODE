@@ -111,7 +111,7 @@ The template includes these fields so future wrappers can preserve both determin
 | --- | --- |
 | `startup_critical` | Required immediately for app/project shell or first meaningful scene setup. |
 | `first_page_required` | Required for the first page to render correctly. |
-| `page_required` | Required for one or more specific pages. |
+| `page_required` | Required for one or more authored presentation states. |
 | `preload_near_page` | Useful to preload near a page transition. |
 | `toggle_on_demand` | Should load only when intentionally toggled or requested. |
 | `high_fidelity_client_facing` | Rich artifact that may be heavy but valuable for client-facing quality. |

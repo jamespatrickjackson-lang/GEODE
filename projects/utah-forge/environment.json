@@ -41,10 +41,10 @@
           "collarDiameterM": 32,
           "pathTreatment": "survey",
           "smoothingStrength": 0.35,
-          "collarLabelVisible": true,
+          "collarLabelVisible": false,
           "collarLabelText": "16A injection",
           "collarLabelLiftM": 95,
-          "toeLabelVisible": true,
+          "toeLabelVisible": false,
           "toeLabelText": "Injection toe",
           "toeLabelLiftM": 40
         },
@@ -103,12 +103,17 @@
       "labelFadeFarM": 120000
     },
     "utah-forge-site-boundary": {
-      "color": "#ffd84a",
+      "color": "#4dfcff",
       "fillOpacity": 0.08,
       "opacity": 1,
       "lineWidth": 3.2,
       "affectedByFog": false,
-      "showLabels": false
+      "showLabels": false,
+      "outlineColor": "#a6bebf",
+      "labelOutlineColor": "#ebefef",
+      "labelTextColor": "#09e2f1",
+      "labelFillOpacity": 0.8,
+      "labelOutlineOpacity": 0.9
     },
     "utah-forge-working-area-focus": {
       "workingAreaFocusEnabled": false,
@@ -133,7 +138,7 @@
     "terrain": {
       "renderMode": "elevation-mesh",
       "opacity": 1,
-      "meshSurfaceLiftM": 0,
+      "meshSurfaceLiftM": -5000,
       "publicSurfaceClipEnabled": false,
       "publicSurfaceClipCenterX": -1750,
       "publicSurfaceClipCenterY": 0,
@@ -203,7 +208,7 @@
       "color": "#6f6767",
       "opacity": 1,
       "pointMarkerRadiusM": 350,
-      "pointMarkerLiftM": 750,
+      "pointMarkerLiftM": 50,
       "pointMarkerLabelLiftM": 0,
       "affectedByFog": false,
       "showLabels": false,
@@ -601,8 +606,7 @@
     "utah-forge-phase3-demo-boreholes",
     "utah-forge-mt-resistivity-volume",
     "utah-forge-mt-resistivity-full-density",
-    "utah-forge-mt-stations",
-    "terrain"
+    "utah-forge-mt-stations"
   ],
   "scene": {
     "background": "#383838",
@@ -2028,7 +2032,8 @@
           "showLabels": false
         },
         "terrain": {
-          "opacity": 1
+          "opacity": 1,
+          "meshSurfaceLiftM": -5000
         },
         "utah-forge-mt-resistivity-slices": {
           "sectionIsoEnabled": true,
@@ -2234,10 +2239,10 @@
               "collarDiameterM": 32,
               "pathTreatment": "survey",
               "smoothingStrength": 0.35,
-              "collarLabelVisible": true,
+              "collarLabelVisible": false,
               "collarLabelText": "16A injection",
               "collarLabelLiftM": 95,
-              "toeLabelVisible": true,
+              "toeLabelVisible": false,
               "toeLabelText": "Injection toe",
               "toeLabelLiftM": 40
             },
@@ -2264,7 +2269,8 @@
               "toeLabelText": "Production toe",
               "toeLabelLiftM": 40
             }
-          }
+          },
+          "showLabels": true
         },
         "utah-forge-mt-stations": {
           "opacity": 1,
@@ -2272,7 +2278,16 @@
           "pointMarkerLabelLiftM": 0,
           "pointMarkerRadiusM": 350,
           "mtStationQcSelectedStationId": "FRG19100",
-          "mtStationQcPanelOpen": true
+          "mtStationQcPanelOpen": true,
+          "pointMarkerLiftM": 50
+        },
+        "utah-forge-site-boundary": {
+          "color": "#4dfcff",
+          "outlineColor": "#a6bebf",
+          "labelOutlineColor": "#ebefef",
+          "labelTextColor": "#09e2f1",
+          "labelFillOpacity": 0.8,
+          "labelOutlineOpacity": 0.9
         }
       }
     }

@@ -62,28 +62,28 @@
       "sceneSectionEnabled": true,
       "sceneSectionActiveAxis": "x",
       "sceneSectionWindowEnabled": true,
-      "sceneSectionWindowActiveAxis": "y",
+      "sceneSectionWindowActiveAxis": "x",
       "sceneSectionWindowByAxis": {
         "x": {
           "minAlongM": -52100,
-          "maxAlongM": 22900,
+          "maxAlongM": -16769.651356376115,
           "bottomElevationM": -14609.101887030438
         },
         "y": {
           "minAlongM": -56400,
-          "maxAlongM": 61100,
+          "maxAlongM": -2501.8587587286165,
           "bottomElevationM": -15000
         }
       },
       "sceneSectionPlanes": {
         "x": {
           "enabled": true,
-          "positionM": 29760.837114861275,
+          "positionM": -1885.3448121827969,
           "invert": false
         },
         "y": {
           "enabled": true,
-          "positionM": -14276.695748094688,
+          "positionM": -16958.278788194064,
           "invert": false
         },
         "z": {
@@ -95,13 +95,74 @@
       "sceneSectionMode": "cutaway",
       "sceneSectionTargetScope": "all-visible",
       "sceneSectionGroundTraceVisible": true,
-      "sceneSectionAxesVisible": true
+      "sceneSectionAxesVisible": true,
+      "sceneSectionActiveFrameId": "axis:x",
+      "sceneSectionFrames": [
+        {
+          "id": "axis:x",
+          "label": "X Section frame",
+          "legendVisible": true,
+          "axis": "x",
+          "plane": {
+            "enabled": true,
+            "positionM": -1885.3448121827969,
+            "invert": false
+          },
+          "frame": {
+            "axisAlignment": "cardinal",
+            "axisAHeading": "Latitude (°)",
+            "axisBHeading": "Elevation (km)",
+            "axisDatum": "latlon",
+            "maxAM": -16769.651356376115
+          }
+        },
+        {
+          "id": "axis:y",
+          "label": "Y Section frame",
+          "legendVisible": true,
+          "axis": "y",
+          "plane": {
+            "enabled": true,
+            "positionM": -16958.278788194064,
+            "invert": false
+          },
+          "frame": {
+            "maxAM": -2501.8587587286165
+          }
+        },
+        {
+          "id": "axis:z",
+          "label": "Z Section frame",
+          "legendVisible": true,
+          "axis": "z",
+          "plane": {
+            "enabled": false,
+            "positionM": -2200,
+            "invert": false
+          },
+          "frame": {}
+        }
+      ],
+      "sceneSectionFrameEnabled": true,
+      "sceneSectionFrameByAxis": {
+        "x": {
+          "axisAlignment": "cardinal",
+          "axisAHeading": "Latitude (°)",
+          "axisBHeading": "Elevation (km)",
+          "axisDatum": "latlon",
+          "maxAM": -16769.651356376115
+        },
+        "y": {
+          "maxAM": -2501.8587587286165
+        }
+      }
     },
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "mtThresholdSurfaceVisibility": {
         "conductive-le-10-ohm-m": false,
-        "conductive-le-30-ohm-m": false,
-        "resistive-ge-1000-ohm-m": true
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": true,
+        "bank-ge-5461-ohm-m": true
       },
       "mtIsosurfaceProductId": "mt-isosurface-full-extent",
       "mtSurfaceBoundaryOrder": [

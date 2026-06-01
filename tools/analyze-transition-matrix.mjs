@@ -1672,6 +1672,7 @@ function formatAnalysisMarkdown(analysis, previousAnalysis = null) {
     previousAnalysis
       ? `- Compared against: \`${previousAnalysis.outputRoot ?? "unknown"}\``
       : "- Compared against: no previous matrix manifest available on disk",
+    "- Fixture boundary: source/target page ids and case positions are evidence only; remediation must target global transition families.",
     "",
     "### Counts",
     "",

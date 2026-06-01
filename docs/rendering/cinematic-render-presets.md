@@ -82,7 +82,7 @@ Rules:
 - No selected preset means no behavior change.
 - Missing preset fields are no-ops.
 - Page-local explicit overrides win over preset values.
-- Layer-specific page overrides win over public-context style presets.
+- Layer-scoped page overrides win over public-context style presets.
 - Preset resolution should be inspectable for diagnostics and future focused verification evidence.
 
 ## Recommended First Presets

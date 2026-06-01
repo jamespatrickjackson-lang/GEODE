@@ -123,7 +123,7 @@ Kept:
 Still unresolved:
 
 - no persistent multi-audience authoring model
-- no saved lens-specific page variants
+- no saved lens variants scoped to authored pages
 
 ### Architecture cleanup
 
