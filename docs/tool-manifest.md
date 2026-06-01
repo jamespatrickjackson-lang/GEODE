@@ -112,7 +112,7 @@ Tools for magnetotelluric resistivity data. Utah FORGE only. These are the secon
 | **MT Top Surface** | Observed top-envelope mesh derived from the top-most full-density cell-center point per XY column. Surface lift, wireframe, roughness, metalness. |
 | **MT Top Contact Surface** | Full-extent top-contact support-grid surface retained as a technical provenance endpoint. Same controls as MT Top Surface. |
 | **MT Authored Slices** | Horizontal and vertical resistivity slice planes derived from the full uncropped model. Slice ID selector, orientation, position slider, and scalar ramp. |
-| **MT Point Preview** | Low-resolution 90,000-point preview for QA context only. Scalar ramp controls. Not a computational substitute for full-density data. |
+| **MT QA Point Subset** | 90,000-point QA/support subset for context checks only. Scalar ramp controls. Not a computational substitute for full-density data. |
 
 ---
 

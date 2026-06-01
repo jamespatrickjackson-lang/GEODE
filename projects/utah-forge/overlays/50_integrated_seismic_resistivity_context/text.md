@@ -1,12 +1,11 @@
-# Site Details Orientation
+**Integrated Seismic + Resistivity**
 
-Status: demo-orientation / needs_review
+This view places two independent geophysical datasets in the same 3D scene.
 
-This page isolates site-orientation geometry from the geophysical products.
+**MT resistivity** — source-derived from the Phase 3 MT inversion model. Coloured by log₁₀ resistivity in Ohm·m. Conductive (≤30 Ohm·m) and resistive (≥1000 Ohm·m) isosurfaces mark key domain boundaries.
 
-- The Phase 3 working area is an orientation outline.
-- Demo boreholes and the surface facility block are presentation geometry.
-- Site context is shown without co-rendering seismic or MT products.
-- Use this page to orient the viewer before product-specific pages.
+**Seismic velocity** — a registered 3D seismic velocity model product, rendered as a semi-transparent time-domain volume. It provides an app-native seismic velocity context for comparison with the MT resistivity products.
 
-Missing / unresolved: exact engineered building footprint and survey-grade Phase 3 wellbore geometry remain outside this demo layer.
+Both datasets are co-registered in the same coordinate system. Resistivity and velocity respond to different physical properties of rock — placing them together allows corroboration, anomaly comparison, and structural context that neither method provides alone.
+
+*Sources ↓*

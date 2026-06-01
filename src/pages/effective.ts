@@ -2,6 +2,7 @@ import type {
   EditableStyle,
   EnvironmentSetup,
   PresentationPage,
+  SceneProperties,
   SceneOverlayDef,
 } from "./types";
 import {
@@ -173,6 +174,80 @@ export function effectiveVisibility(
   return set;
 }
 
+export function mergeSceneProperties(
+  base: Partial<SceneProperties> | undefined,
+  patch: Partial<SceneProperties> | undefined,
+): SceneProperties {
+  const next: SceneProperties = { ...(base ?? {}), ...(patch ?? {}) };
+  if (!patch) return next;
+  if (patch.fog) next.fog = { ...(base?.fog ?? {}), ...patch.fog };
+  if (patch.bloom) next.bloom = { ...(base?.bloom ?? {}), ...patch.bloom };
+  if (patch.camera) next.camera = { ...(base?.camera ?? {}), ...patch.camera };
+  if (patch.terrain) {
+    next.terrain = { ...(base?.terrain ?? {}), ...patch.terrain };
+  }
+  if (patch.ambientOcclusion) {
+    next.ambientOcclusion = {
+      ...(base?.ambientOcclusion ?? {}),
+      ...patch.ambientOcclusion,
+    };
+  }
+  if (patch.colorGrade) {
+    next.colorGrade = { ...(base?.colorGrade ?? {}), ...patch.colorGrade };
+  }
+  if (patch.vignette) {
+    next.vignette = { ...(base?.vignette ?? {}), ...patch.vignette };
+  }
+  if (patch.sun) next.sun = { ...(base?.sun ?? {}), ...patch.sun };
+  if (patch.topoDetails) {
+    next.topoDetails = { ...(base?.topoDetails ?? {}), ...patch.topoDetails };
+  }
+  if (patch.gui) {
+    next.gui = {
+      ...(base?.gui ?? {}),
+      ...patch.gui,
+      labels: {
+        ...(base?.gui?.labels ?? {}),
+        ...(patch.gui.labels ?? {}),
+      },
+    };
+  }
+  if (patch.lighting) {
+    next.lighting = {
+      ...(base?.lighting ?? {}),
+      ...patch.lighting,
+      hemisphere: {
+        ...(base?.lighting?.hemisphere ?? {}),
+        ...(patch.lighting.hemisphere ?? {}),
+      },
+      directional: {
+        ...(base?.lighting?.directional ?? {}),
+        ...(patch.lighting.directional ?? {}),
+      },
+      fill: {
+        ...(base?.lighting?.fill ?? {}),
+        ...(patch.lighting.fill ?? {}),
+      },
+      rim: {
+        ...(base?.lighting?.rim ?? {}),
+        ...(patch.lighting.rim ?? {}),
+      },
+    };
+  }
+  return next;
+}
+
+function applyPageSceneOverrides(
+  environment: EnvironmentSetup,
+  page: PresentationPage,
+): EnvironmentSetup {
+  if (!page.sceneOverrides) return environment;
+  return {
+    ...environment,
+    scene: mergeSceneProperties(environment.scene, page.sceneOverrides),
+  };
+}
+
 export function resolveEnvironmentForPage(
   environment: EnvironmentSetup,
   pages: readonly PresentationPage[],
@@ -181,14 +256,16 @@ export function resolveEnvironmentForPage(
   const isSubMaster =
     page.envSnapshot != null &&
     (!page.parentMasterId || page.parentMasterId === "global");
-  if (isSubMaster) return page.envSnapshot!;
+  if (isSubMaster) return applyPageSceneOverrides(page.envSnapshot!, page);
 
   if (page.parentMasterId && page.parentMasterId !== "global") {
     const parent = pages.find((candidate) => candidate.id === page.parentMasterId);
-    if (parent?.envSnapshot) return parent.envSnapshot;
+    if (parent?.envSnapshot) {
+      return applyPageSceneOverrides(parent.envSnapshot, page);
+    }
   }
 
-  return environment;
+  return applyPageSceneOverrides(environment, page);
 }
 
 export function effectiveStyleForPage(

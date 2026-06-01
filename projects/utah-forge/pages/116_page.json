@@ -1,0 +1,27 @@
+{
+  "id": "116_page",
+  "title": "New page",
+  "camera": {
+    "position": [
+      -10114.929894796383,
+      10892.738174712104,
+      4110.999999999996
+    ],
+    "target": [
+      -9107,
+      -3916.000000000001,
+      1833
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000
+}

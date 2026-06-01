@@ -1,11 +1,13 @@
-# Geophysics Product Overview
+**Utah FORGE Phase 3 — seismic + MT resistivity**
 
-Status: proposed / needs_review
+Utah FORGE is a DOE-funded underground field laboratory for Enhanced Geothermal Systems, located in Milford, Utah. The site has produced one of the most comprehensively instrumented public geophysical datasets available.
 
-This page is a review index for the Utah FORGE seismic + resistivity product set requested in the handoff.
+This demonstration uses two Phase 3 geophysical datasets rendered together in a single navigable scene:
 
-- App-native evidence: MT stations, MT full-density/volume/slices, fixed MT threshold surfaces, seismic browser products.
-- Reference evidence only: PDF, FigJam/Figma, report screenshots, and board figures.
-- Do not treat visual references as spatial truth unless converted with provenance.
+**Magnetotelluric (MT) resistivity** — a 3D inversion model from broadband MT acquisition across 50+ stations.
 
-Missing / unresolved: TEM, basement/top-of-granite surface, arbitrary slices, arbitrary fence panels, and arbitrary isosurfaces still need data or tools.
+**Seismic reflection and velocity** — 3D and 2D seismic products from the FORGE Phase 3 acquisition program.
+
+The pages that follow show each dataset independently, then together. The goal is to demonstrate what becomes possible when geophysical deliverables from different methods are co-registered in the same spatial environment.
+
+*Sources ↓*

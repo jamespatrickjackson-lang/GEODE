@@ -1,7 +1,7 @@
 {
   "id": "45_resistivity_isosurfaces",
   "title": "Resistivity Isosurfaces",
-  "subtitle": "Mask-aware Marching Cubes threshold shells from full-source-derived volumes",
+  "subtitle": "Fixed MT threshold surfaces with faint point-cloud context",
   "camera": {
     "position": [
       -59727.5089767489,
@@ -25,36 +25,59 @@
     "easing": "easeInOutCubic"
   },
   "holdDuration": 4000,
+  "overlayLayout": {
+    "x": 0.0130859375,
+    "y": 0.0618569636,
+    "width": 0.2108723958
+  },
+  "overlay": {
+    "position": "left",
+    "contentFile": "overlays/45_resistivity_isosurfaces/text.md",
+    "timing": {
+      "fadeMs": 900,
+      "gapMs": 80,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
   "accentColor": "#ff637a",
   "visibilityOverrides": {
     "utah-forge-phase3-working-area": true,
-    "terrain": false,
+    "utah-forge-site-boundary": false,
+    "terrain": true,
+    "transport-roads": false,
+    "hydrography-streams": false,
+    "hydrography-lakes": false,
     "utah-forge-phase3-seismic-browser": false,
     "utah-forge-mt-stations": false,
     "utah-forge-mt-resistivity-preview": false,
-    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-mt-resistivity-full-density": true,
     "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-mt-top-surface": false,
     "utah-forge-mt-resistivity-slices": false,
-    "utah-forge-phase3-demo-boreholes": true,
+    "utah-forge-phase3-demo-boreholes": false,
     "utah-forge-mt-top-contact-surface": false
   },
   "layerOverrides": {
+    "terrain": {
+      "opacity": 0.26
+    },
     "utah-forge-mt-resistivity-full-density": {
-      "opacity": 0.24,
+      "scalarLegendVisible": false,
+      "opacity": 0.15,
       "pointSizePx": 1,
       "scalarInclusionMode": "all-valid"
     },
     "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
       "mtThresholdSurfaceVisibility": {
-        "conductive-le-10-ohm-m": true,
+        "conductive-le-10-ohm-m": false,
         "conductive-le-30-ohm-m": true,
         "resistive-ge-1000-ohm-m": true
       },
       "mtThresholdSurfaceWireframe": false,
       "opacity": 0.86,
-      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
       "affectedByFog": false,
       "showLabels": false,
       "mtThresholdSurfaceRoughness": 0.64,
@@ -75,9 +98,9 @@
     "utah-forge-mt-resistivity-slices": {
       "scalarLegendVisible": false
     },
-    "utah-forge-phase3-demo-boreholes": {
-      "opacity": 0.86,
-      "showLabels": true
+    "utah-forge-mt-stations": {
+      "opacity": 0.4,
+      "showLabels": false
     }
   }
 }

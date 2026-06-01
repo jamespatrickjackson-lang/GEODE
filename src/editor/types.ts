@@ -165,6 +165,8 @@ export type EditorAction =
           | "sunLockToCamera"
           | "renderPreset"
           | "renderPresetId"
+          | "envSnapshot"
+          | "sceneOverrides"
           | "cameraObjectFocus"
         >
       >;
@@ -190,6 +192,11 @@ export type EditorAction =
       type: "SET_PAGE_OVERLAY_TIMING";
       pageId: string;
       timing: TextOverlayTiming;
+    }
+  | {
+      type: "SET_PAGE_OVERLAY_HIDDEN";
+      pageId: string;
+      hidden: boolean;
     }
   | {
       type: "ADD_PAGE";

@@ -106,12 +106,14 @@ import {
   effectiveStyle,
   isStyleFieldOverridden,
   isVisibilityOverridden,
+  mergeSceneProperties,
   resolveEnvironmentForPage,
 } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type {
   EditableStyle,
   ProjectLayerSpec,
+  SceneProperties,
 } from "../pages/types";
 import { pageSelectionHasLanded } from "./authoringTarget";
 import { SCENE_ORIGIN } from "../constants";
@@ -246,6 +248,7 @@ export function LayerPanel({
     setPageLayerOverride,
     clearPageLayerOverride,
     setPageVisibilityOverride,
+    setPageField,
     setEnvScene,
   } = useEditor();
 
@@ -268,6 +271,15 @@ export function LayerPanel({
   });
   const pageStyleControlsDisabled =
     !isEnv && (!currentPage || !selectedPageHasLanded);
+  const setSelectedPageSceneOverride = (patch: Partial<SceneProperties>) => {
+    if (!currentPage) {
+      setEnvScene(patch);
+      return;
+    }
+    setPageField(currentPage.id, {
+      sceneOverrides: mergeSceneProperties(currentPage.sceneOverrides, patch),
+    });
+  };
 
   const renderLayer = (layer: ProjectLayerSpec, index = 0) => {
     const meta = layer.metadata as Record<string, string | undefined>;
@@ -321,9 +333,7 @@ export function LayerPanel({
     const isUtahForgeSeismicBrowser =
       layer.id === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID;
     const hasSpecializedOpacityOwner =
-      isUtahForgeSeismicBrowser ||
-      isUtahForgeMtVolume ||
-      isUtahForgeMtThresholdSurfaces;
+      isUtahForgeMtVolume || isUtahForgeMtThresholdSurfaces;
     const isTopoMapGraticule = isTopoMapGraticuleLayer(layer);
     const isPublicTerrainSurface = isTopoMapSurfaceLayer(layer);
     const isPublicSurfaceContextLayer = isTopoMapLayer(layer);
@@ -1782,9 +1792,9 @@ export function LayerPanel({
                       />
                     ) : null}
 
-                    {isAreaOutlines && isEnv ? (
+                    {isAreaOutlines ? (
                       <AreaOutlinesControls
-                        outlines={state.environment.scene?.areaOutlines ?? []}
+                        outlines={currentPageEnvironment.scene?.areaOutlines ?? []}
                         viewCenter={[
                           Math.round(
                             sceneHandle.controls.target.x +
@@ -1796,7 +1806,7 @@ export function LayerPanel({
                           ),
                         ]}
                         onChange={(outlines) =>
-                          setEnvScene({
+                          setSelectedPageSceneOverride({
                             areaOutlines: outlines,
                           })
                         }
@@ -1871,9 +1881,9 @@ export function LayerPanel({
                 </details>
               ) : (
                 <div style={detailsContentStyle}>
-                  {isEnv ? (
+                  {isEnv || currentPage ? (
                     <AreaOutlinesControls
-                      outlines={state.environment.scene?.areaOutlines ?? []}
+                      outlines={currentPageEnvironment.scene?.areaOutlines ?? []}
                       viewCenter={[
                         Math.round(
                           sceneHandle.controls.target.x + SCENE_ORIGIN.easting,
@@ -1883,7 +1893,7 @@ export function LayerPanel({
                         ),
                       ]}
                       onChange={(outlines) =>
-                        setEnvScene({
+                        setSelectedPageSceneOverride({
                           areaOutlines: outlines,
                         })
                       }

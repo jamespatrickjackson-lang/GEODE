@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import readline from "node:readline";
@@ -10,14 +11,16 @@ import {
 } from "./utah_forge_config.mjs";
 import { extractMaskAwareMarchingCubes } from "./lib/marchingCubes.mjs";
 
-const DEFAULT_INPUT_ZIP = path.join(
+const REPO_RELATIVE_INPUT_ZIP_REF =
+  "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip";
+const ARCHIVE_ROOT = process.env.GEOSEE_ARCHIVE_ROOT || "C:/GeoSee/GeoSee_Archive";
+const REPO_INPUT_ZIP = path.join(
   UTAH_FORGE_PHASE3_MT_CLIENT_ROOT,
   "mt_model_cell_center_updated",
   "FORGE_MT_mdl17_cellcenter.zip",
 );
-const CANONICAL_INPUT_ZIP_REF = path
-  .relative(process.cwd(), DEFAULT_INPUT_ZIP)
-  .replaceAll("\\", "/");
+const ARCHIVE_INPUT_ZIP = path.join(ARCHIVE_ROOT, REPO_RELATIVE_INPUT_ZIP_REF);
+const DEFAULT_INPUT_ZIP = existsSync(REPO_INPUT_ZIP) ? REPO_INPUT_ZIP : ARCHIVE_INPUT_ZIP;
 const DEFAULT_ZIP_ENTRY = "FRG200614_mdl17_cellcenter.dat";
 const DEFAULT_TRANSFORM_PATH = path.join(
   UTAH_FORGE_PHASE3_MT_PROCESSED_ROOT,
@@ -46,7 +49,6 @@ const PRODUCTS = [
     label: "MT resistivity full-extent volume",
     description:
       "Uncropped source-derived scalar volume resampled from every positive MT cell-center inversion row.",
-    dimensions: [80, 64, 56],
     crop: "full-extent",
     outputDir: "full_extent",
   },
@@ -55,7 +57,6 @@ const PRODUCTS = [
     label: "MT resistivity FORGE-focused volume",
     description:
       "Meeting-focused scalar volume cropped around the MT station footprint and upper 30 km of the model.",
-    dimensions: [96, 80, 64],
     crop: "station-footprint-upper-model",
     outputDir: "forge_focused",
   },
@@ -220,9 +221,10 @@ function parseArgs(argv) {
 
 function sourceArchiveReference(inputZip) {
   const input = path.resolve(inputZip);
-  const canonical = path.resolve(DEFAULT_INPUT_ZIP);
-  if (path.basename(input) === path.basename(canonical)) {
-    return CANONICAL_INPUT_ZIP_REF;
+  for (const candidate of [REPO_INPUT_ZIP, ARCHIVE_INPUT_ZIP]) {
+    if (path.basename(input) === path.basename(candidate)) {
+      return REPO_RELATIVE_INPUT_ZIP_REF;
+    }
   }
   return path.relative(process.cwd(), input).replaceAll("\\", "/");
 }
@@ -329,6 +331,53 @@ function productBounds(product, modelBounds, stationBounds) {
     },
     modelBounds,
   );
+}
+
+function containsPoint(bounds, x, y, z) {
+  return (
+    x >= bounds.minX &&
+    x <= bounds.maxX &&
+    y >= bounds.minY &&
+    y <= bounds.maxY &&
+    z >= bounds.minZ &&
+    z <= bounds.maxZ
+  );
+}
+
+function makeAxisStats(product) {
+  return {
+    productId: product.id,
+    positiveRowsInBounds: 0,
+  };
+}
+
+async function collectSourceAxisStats(options, origin, products) {
+  const byProduct = new Map(products.map((product) => [product.id, makeAxisStats(product)]));
+  await streamModelRows(options.inputZip, options.zipEntry, async (row) => {
+    if (!(row.resistivity > 0)) return;
+    const x = row.easting - origin.easting_m;
+    const y = row.northing - origin.northing_m;
+    const z = row.elevation - origin.elevation_m;
+    for (const product of products) {
+      if (!containsPoint(product.bounds, x, y, z)) continue;
+      const axisStats = byProduct.get(product.id);
+      axisStats.positiveRowsInBounds += 1;
+    }
+  });
+  return byProduct;
+}
+
+function deriveSourceFidelityVolumeDimensions(product, bounds, axisStats) {
+  const rowCount = Math.max(8, axisStats?.positiveRowsInBounds ?? 0);
+  const extentX = Math.max(1, bounds.maxX - bounds.minX);
+  const extentY = Math.max(1, bounds.maxY - bounds.minY);
+  const extentZ = Math.max(1, bounds.maxZ - bounds.minZ);
+  const sourceEquivalentSpacingM = Math.cbrt((extentX * extentY * extentZ) / rowCount);
+  return [
+    Math.max(2, Math.ceil(extentX / sourceEquivalentSpacingM)),
+    Math.max(2, Math.ceil(extentY / sourceEquivalentSpacingM)),
+    Math.max(2, Math.ceil(extentZ / sourceEquivalentSpacingM)),
+  ];
 }
 
 function makeAccumulator(product, bounds, scalarRange) {
@@ -788,9 +837,19 @@ async function main() {
     displayMin: stats.log10Resistivity?.displayMin ?? stats.log10Resistivity?.p02 ?? 0.14,
     displayMax: stats.log10Resistivity?.displayMax ?? stats.log10Resistivity?.p98 ?? 3.94,
   };
-  const accumulators = PRODUCTS.map((product) =>
-    makeAccumulator(product, productBounds(product, modelBounds, stationBounds), scalarRange),
-  );
+  const productPlans = PRODUCTS.map((product) => ({
+    ...product,
+    bounds: productBounds(product, modelBounds, stationBounds),
+  }));
+  const sourceAxisStats = await collectSourceAxisStats(options, origin, productPlans);
+  const accumulators = productPlans.map((product) => {
+    const dimensions = deriveSourceFidelityVolumeDimensions(
+      product,
+      product.bounds,
+      sourceAxisStats.get(product.id),
+    );
+    return makeAccumulator({ ...product, dimensions }, product.bounds, scalarRange);
+  });
 
   let rowCount = 0;
   let positiveRows = 0;
@@ -825,6 +884,10 @@ async function main() {
       domain: "log10 resistivity",
       unit: "log10 Ohm-m",
       sourceRowsInBounds: accumulator.positiveRowsInBounds,
+      sourceDensityEstimate: {
+        method: "equivalent isotropic spacing from product bounds and positive source rows",
+        positiveRowsInBounds: sourceAxisStats.get(accumulator.id)?.positiveRowsInBounds ?? 0,
+      },
       dimensions: accumulator.dimensions,
       voxelOrder: "x-fastest, then y, then z",
       sceneBounds: sceneBoundsTuple(accumulator.bounds),

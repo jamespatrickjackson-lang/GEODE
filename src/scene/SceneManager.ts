@@ -439,6 +439,10 @@ interface LateReapplyDebugState {
   events: LateReapplyDebugEvent[];
 }
 
+type ReapplyCurrentPageStateReason =
+  | "state-reapply"
+  | "async-layer-resolve";
+
 interface SceneSectionApplyDebugState {
   totalMs: number;
   boundsMs: number;
@@ -713,6 +717,8 @@ export class SceneManager {
   lastSceneSectionApplyDebug: SceneSectionApplyDebugState | null = null;
   lastMtVolumeCutIsoUpdateDebug: MtVolumeCutIsoUpdateDebugState | null = null;
   private lastFrameUpdateDebug: FrameUpdateDebugState | null = null;
+  private seismicCameraLodPosition: THREE.Vector3 | null = null;
+  private seismicCameraMovingUntilMs = 0;
 
   constructor(
     private scene: THREE.Scene,
@@ -2536,6 +2542,8 @@ export class SceneManager {
       reason: "SceneManager owns page-transition final commit",
     });
     if (finalTrace?.allowed) {
+      this.applyEnvironment(environment);
+      this.applyPageScene(nextPage);
       this.sceneOverlayController.applySceneOverlaysAtTransitionEnd(
         environment,
         nextPage,
@@ -3283,6 +3291,77 @@ export class SceneManager {
     return index;
   }
 
+  private updateSeismicTransientLodState(
+    camera: THREE.Camera,
+    nowMs: number,
+  ): void {
+    const cameraMoved =
+      this.seismicCameraLodPosition !== null &&
+      this.seismicCameraLodPosition.distanceTo(camera.position) > 10;
+    if (cameraMoved) {
+      this.seismicCameraMovingUntilMs = nowMs + 750;
+    }
+    if (this.seismicCameraLodPosition) {
+      this.seismicCameraLodPosition.copy(camera.position);
+    } else {
+      this.seismicCameraLodPosition = camera.position.clone();
+    }
+
+    const seismicTransitionActive = this.activeSceneTransitionContext !== null;
+    const seismicCameraMoving = nowMs < this.seismicCameraMovingUntilMs;
+    const requestedTier = seismicTransitionActive || seismicCameraMoving
+      ? "coarse"
+      : "standard";
+    const seismicTransientLodReason = seismicTransitionActive
+      ? "page-transition"
+      : seismicCameraMoving
+        ? "camera-moving"
+        : "settled";
+
+    for (const group of this.layers.values()) {
+      const root = this.seismicBrowserRoot(group);
+      if (!root) continue;
+      root.userData.seismicTransitionActive = seismicTransitionActive;
+      root.userData.seismicCameraMoving = seismicCameraMoving;
+      root.userData.seismicCameraMovingUntilMs = this.seismicCameraMovingUntilMs;
+      root.userData.seismicTransientLodReason = seismicTransientLodReason;
+
+      const visibleProductIds = Array.isArray(root.userData.seismicVisibleProductIds)
+        ? (root.userData.seismicVisibleProductIds as unknown[]).filter(
+            (value): value is string => typeof value === "string" && value.length > 0,
+          )
+        : [];
+      const selectedProductId =
+        typeof root.userData.seismicSelectedProductId === "string"
+          ? root.userData.seismicSelectedProductId
+          : typeof root.userData.seismicDefaultProductId === "string"
+            ? root.userData.seismicDefaultProductId
+            : "";
+      const productIds =
+        visibleProductIds.length > 0
+          ? visibleProductIds
+          : selectedProductId
+            ? [selectedProductId]
+            : [];
+      if (productIds.length === 0) continue;
+      const productKey = productIds.slice().sort().join("\0");
+      if (
+        root.userData.seismicFrameRequestedLodTier === requestedTier &&
+        root.userData.seismicFrameRequestedProductKey === productKey
+      ) {
+        continue;
+      }
+      root.userData.seismicFrameRequestedLodTier = requestedTier;
+      root.userData.seismicFrameRequestedProductKey = productKey;
+      const ensureProductsLoaded = root.userData.seismicEnsureProductsLoaded as
+        | ((productIds: string[], tier: "coarse" | "standard" | "source") => Promise<void>)
+        | undefined;
+      ensureProductsLoaded?.(productIds, requestedTier).catch((error: unknown) => {
+        console.warn("[seismic] transient LOD request failed", error);
+      });
+    }
+  }
+
   applySeismicBrowserStyle(id: string, style: EditableStyle): void {
     applySeismicBrowserStyleToLayer.call(this, id, style);
   }
@@ -3567,10 +3646,15 @@ export class SceneManager {
    * PageController may have applied styles before the mesh existed; this closes
    * that startup race so first open matches the saved presentation immediately.
    */
-  reapplyCurrentPageState(): void {
+  reapplyCurrentPageState(
+    reason: ReapplyCurrentPageStateReason = "state-reapply",
+  ): void {
     const env = this.lastEnv ?? this.lastEffectiveEnv;
     const page = this.lastEffectivePage;
-    if (this.activeSceneTransitionContext?.commitState.hasFinalized) {
+    const isAsyncLayerResolve = reason === "async-layer-resolve";
+    const activeTransitionHasFinalized =
+      this.activeSceneTransitionContext?.commitState.hasFinalized === true;
+    if (activeTransitionHasFinalized && !isAsyncLayerResolve) {
       this.recordLateReapplyDebugEvent(
         "async-layer-resolve",
         "transition-envelope",
@@ -3582,14 +3666,23 @@ export class SceneManager {
       });
       return;
     }
-    if (!this.activeSceneTransitionContext && this.suppressDuplicatePostCommitReapply(page)) {
+    if (
+      !isAsyncLayerResolve &&
+      !this.activeSceneTransitionContext &&
+      this.suppressDuplicatePostCommitReapply(page)
+    ) {
       this.recordLateReapplyDebugEvent(
         "async-layer-resolve",
         "transition-envelope",
       );
       return;
     }
-    if (this.activeSceneTransitionContext && env && page) {
+    if (
+      this.activeSceneTransitionContext &&
+      !activeTransitionHasFinalized &&
+      env &&
+      page
+    ) {
       this.recordLateReapplyDebugEvent(
         "async-layer-resolve",
         "transition-aware-current-page-state",
@@ -3597,7 +3690,7 @@ export class SceneManager {
       this.reapplyActiveTransitionPageState(env, page);
       return;
     }
-    if (this.activeSceneTransitionContext) {
+    if (this.activeSceneTransitionContext && !activeTransitionHasFinalized) {
       this.recordLateReapplyDebugEvent(
         "async-layer-resolve",
         "transition-envelope",
@@ -3973,6 +4066,8 @@ export class SceneManager {
       performance.now() - stageStart,
     );
     stageStart = performance.now();
+
+    this.updateSeismicTransientLodState(camera, nowMs);
 
     this.sceneOverlayController.tick(nowMs);
     const sceneOverlayTickMs = transitionDebugMs(

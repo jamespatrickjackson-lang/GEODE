@@ -1333,6 +1333,11 @@ export interface TextOverlayContainer {
     position?: string;
   }>;
   timing?: TextOverlayTiming;
+  // When true, the overlay box is suppressed at render time even if its
+  // text/images are populated. Lets the author keep content in place but
+  // hide it on this page. Missing/false = current behaviour (show iff
+  // content non-empty).
+  hidden?: boolean;
   [k: string]: unknown;
 }
 
@@ -1382,6 +1387,11 @@ export interface PresentationPage {
   // Delta against environment.defaultVisibleLayers. Missing -> inherit.
   // true -> force show; false -> force hide.
   visibilityOverrides?: Record<string, boolean>;
+  // Delta against the resolved environment.scene. Used for page-local scene
+  // variables such as topo material/terrain controls and authored scene shapes.
+  // This is deliberately separate from envSnapshot, which remains Sub Master
+  // inheritance state.
+  sceneOverrides?: Partial<SceneProperties>;
   // Per-page mood knob (Week 4). Multiplies environment exposure and bloom
   // strength on transition. Missing = inherit env defaults.
   cinematicExposure?: number;

@@ -18,6 +18,10 @@ interface TerrainGridHandle {
   updateCameraVisibility(camera: THREE.Camera): void;
 }
 
+interface TerrainLodHandle {
+  updateCameraLod(camera: THREE.Camera): void;
+}
+
 export interface TerrainEdgeFadeState {
   boundsMin: THREE.Vector2;
   boundsMax: THREE.Vector2;
@@ -183,6 +187,10 @@ export class TopoSurfaceRuntime {
     camera: THREE.Camera,
   ): void {
     terrainGroup?.traverse((obj) => {
+      const lodHandle = (obj as THREE.Object3D).userData?.terrainLodHandle as
+        | TerrainLodHandle
+        | undefined;
+      lodHandle?.updateCameraLod(camera);
       const handle = (obj as THREE.Mesh).userData?.terrainHandle as
         | TerrainMaterialHandle
         | undefined;

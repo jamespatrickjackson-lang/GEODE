@@ -45,14 +45,14 @@ Files under `geosee_processed/` in the active repo, generated from the archived 
 
 | Artifact | File / path | Status | Notes |
 | --- | --- | --- | --- |
-| Point preview | `resistivity_model/resistivity_point_preview.json` | QA/validation; not default-visible. | 90,000 emitted points, log10(ohm-m). Not a substitute for full-density data. |
+| Point QA subset | `resistivity_model/resistivity_point_preview.json` | QA/validation; not default-visible. | 90,000 emitted points, log10(ohm-m). Not a substitute for full-density data. |
 | Full-density tiled points | `resistivity_model/full_density/` | Default-visible; high-fidelity client layer. | 1,094,624 points; 11 tiles; Float32 XYZ + scalar buffers. |
 | Scalar volume | `resistivity_model/volume/mt_volume_manifest.json` | Wired; not default-visible. | 2 products; dimensions, scalar, mask, and stats recorded in manifest. |
 | Threshold surfaces | `resistivity_model/volume/threshold_surfaces/mt_threshold_surfaces_mesh_preview.json` | Wired; page 08 makes it visible. | Marching Cubes isosurfaces from scalar volume, mask-aware. |
 | Authored slices | `resistivity_model/slices/resistivity_slices_mesh_preview.json` | Wired; page 11 makes it visible. | 6 horizontal slices + 2 vertical sections; legend at `slices/legend.json`. |
 | Observed top-envelope surface | `resistivity_model/top_envelope_surface/mt_top_envelope_surface_mesh_preview.json` | Wired; not default-visible. | 23,811 vertices; top-most observed full-density cell-center points per XY column; bridge triangles above 10,000 m dropped. UI-facing MT Top Surface control routes here. |
 | Top-contact support surface | `resistivity_model/top_contact_surface/mt_top_contact_surface_mesh_preview.json` | Retained; not default-visible. | 10,509 vertices; full-extent support grid; retained as technical endpoint / provenance history. |
-| Preview-derived ground cap | `resistivity_model/top_surface/mt_top_surface_mesh_preview.json` | Retained history/support; not UI-facing. | 1,135 vertices from 90,000-point preview. Not promoted to UI top-surface control. |
+| QA-subset-derived ground cap | `resistivity_model/top_surface/mt_top_surface_mesh_preview.json` | Retained history/support; not UI-facing. | 1,135 vertices from 90,000-point QA subset. Not promoted to UI top-surface control. |
 
 ### Phase 3 Seismic Browser Products
 
@@ -69,7 +69,7 @@ Files under `geosee_processed/` in the active repo, generated from the archived 
 
 | Artifact | File | Status |
 | --- | --- | --- |
-| Terrain | `public_context/terrain_public_context_1000m.tif` | Default-visible. Public source. 200 m version also exists. |
+| Terrain | `public_context/terrain_public_context_200m.tif` | Default-visible. Public source. 1000 m version retained as support/history data. |
 | Roads | `public_context/roads.geojson` | Default-visible. Public source. |
 | Streams | `public_context/hydrography_streams.geojson` | Default-visible. Public source. |
 | Lakes | `public_context/hydrography_lakes.geojson` | Default-visible. Public source. |
@@ -81,7 +81,7 @@ Files under `geosee_processed/` in the active repo, generated from the archived 
 
 | Artifact | Layer ID | Role |
 | --- | --- | --- |
-| MT preview points | `utah-forge-mt-resistivity-preview` | QA/support only. 90,000-point preview is not computational input for slices, sections, or volumes. |
+| MT QA subset points | `utah-forge-mt-resistivity-preview` | QA/support only. The 90,000-point subset is not computational input for slices, sections, or volumes. |
 | MT stations | `utah-forge-mt-stations` | Measured location anchors. Show on technical review pages. |
 | Seismic source inventory | n/a | Source-to-product trace. Not wired as a runtime layer. |
 | Seismic navigation | n/a | Line/segment placement record. Needs CRS/datum review. |

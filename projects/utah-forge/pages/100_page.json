@@ -1,24 +1,24 @@
 {
   "id": "100_page",
-  "title": "Unresolved / Missing Tools duplicate",
+  "title": "3d",
   "subtitle": "Proposed / needs_review implementation checkpoint",
   "camera": {
     "position": [
-      -156995.53133410236,
-      -289869.3467479204,
-      -49238.73125794818
+      100171.96204829332,
+      41329.779495242816,
+      83631.2663641175
     ],
     "target": [
-      1439,
-      -3466.0000000000005,
-      2008.0000000000002
+      10870,
+      -20015,
+      3785
     ],
     "up": [
       0,
       0,
       1
     ],
-    "fov": 52
+    "fov": 35.46873423612619
   },
   "transition": {
     "duration": 3000,
@@ -31,13 +31,13 @@
     "mode": "orbit",
     "orbitEnabled": false,
     "poi": [
-      18771,
-      54698,
-      1403
+      10870,
+      -20015,
+      3785
     ],
     "orbitSpeedDegPerSec": 5.8,
-    "orbitRadius": 386808,
-    "orbitHeight": -50642,
+    "orbitRadius": 108342,
+    "orbitHeight": 79846,
     "orbitDirection": -1,
     "zoomFov": 52,
     "zoomEnabled": true,
@@ -60,7 +60,7 @@
   "layerOverrides": {
     "utah-forge-scene-section-planes": {
       "sceneSectionEnabled": true,
-      "sceneSectionActiveAxis": "y",
+      "sceneSectionActiveAxis": "x",
       "sceneSectionWindowEnabled": true,
       "sceneSectionWindowActiveAxis": "x",
       "sceneSectionWindowByAxis": {
@@ -78,12 +78,12 @@
       "sceneSectionPlanes": {
         "x": {
           "enabled": true,
-          "positionM": 17235.51727953286,
+          "positionM": 23880.391884593162,
           "invert": false
         },
         "y": {
           "enabled": true,
-          "positionM": -18069.565357632455,
+          "positionM": -24660.63670874729,
           "invert": false
         },
         "z": {
@@ -107,7 +107,7 @@
         }
       },
       "sceneSectionLegendVisible": false,
-      "sceneSectionActiveFrameId": "axis:y",
+      "sceneSectionActiveFrameId": "axis:x",
       "sceneSectionFrames": [
         {
           "id": "axis:x",
@@ -116,7 +116,7 @@
           "axis": "x",
           "plane": {
             "enabled": true,
-            "positionM": 17235.51727953286,
+            "positionM": 23880.391884593162,
             "invert": false
           },
           "frame": {
@@ -135,7 +135,7 @@
           "axis": "y",
           "plane": {
             "enabled": true,
-            "positionM": -18069.565357632455,
+            "positionM": -24660.63670874729,
             "invert": false
           },
           "frame": {
@@ -159,7 +159,7 @@
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "mtThresholdSurfaceVisibility": {
         "conductive-le-10-ohm-m": false,
-        "conductive-le-30-ohm-m": false,
+        "conductive-le-30-ohm-m": true,
         "resistive-ge-1000-ohm-m": true,
         "bank-ge-5461-ohm-m": false
       },
@@ -182,7 +182,7 @@
           "source": "precomputed"
         },
         "conductive-le-30-ohm-m": {
-          "visible": false,
+          "visible": true,
           "label": "<=30 Ohm-m",
           "color": "#b6cda7",
           "comparison": "<=",
@@ -228,6 +228,7 @@
   "visibilityOverrides": {
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-phase3-seismic-browser": true,
-    "utah-forge-mt-resistivity-full-density": false
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-topo-graticule": false
   }
 }

@@ -2,8 +2,18 @@ import * as THREE from "three";
 import { appAssetUrl } from "../projects/projectPathsRuntime";
 
 const SCENE_SECTION_SHADER_SLOT_COUNT = 8;
+const SOURCE_FIDELITY_MAX_SAMPLE_STEPS = 384;
 
 type Vec3 = [number, number, number];
+type SeismicLodTierName = "coarse" | "standard" | "source";
+
+const SEISMIC_DEFAULT_LOD_TIER: SeismicLodTierName = "standard";
+const SEISMIC_COARSE_LOD_TIER: SeismicLodTierName = "coarse";
+const SEISMIC_LOD_RANK: Record<SeismicLodTierName, number> = {
+  coarse: 0,
+  standard: 1,
+  source: 2,
+};
 
 interface SeismicBounds {
   min: Vec3;
@@ -26,6 +36,12 @@ interface SeismicValueStats {
   mean?: number;
 }
 
+interface SeismicSectionLodSpec {
+  width: number;
+  height: number;
+  amplitudeFile: string;
+}
+
 interface SeismicSectionSpec {
   id: string;
   label: string;
@@ -38,6 +54,12 @@ interface SeismicSectionSpec {
   datumM: number;
   sceneBounds?: SeismicBounds;
   path?: Vec3[];
+  lods?: Partial<Record<SeismicLodTierName, SeismicSectionLodSpec>>;
+}
+
+interface SeismicVolumeLodSpec {
+  file: string;
+  dimensions: Vec3;
 }
 
 interface SeismicVolumeSpec {
@@ -46,6 +68,7 @@ interface SeismicVolumeSpec {
   sceneBounds: SeismicBounds;
   sampleDomain: SeismicSampleDomain;
   amplitudeStats?: SeismicValueStats;
+  lods?: Partial<Record<SeismicLodTierName, SeismicVolumeLodSpec>>;
 }
 
 interface SeismicProductSpec {
@@ -97,6 +120,66 @@ const SECTION_RENDER_ORDER = 13.45;
 const NAVIGATION_RENDER_ORDER = 13.7;
 const VOLUME_RENDER_ORDER = 13.35;
 
+function seismicLodOrFallback<T>(
+  lods: Partial<Record<SeismicLodTierName, T>> | undefined,
+  tier: SeismicLodTierName,
+): T | undefined {
+  return (
+    lods?.[tier] ??
+    lods?.standard ??
+    lods?.source ??
+    lods?.coarse
+  );
+}
+
+function sectionForLod(
+  section: SeismicSectionSpec,
+  tier: SeismicLodTierName,
+): SeismicSectionSpec {
+  const lod = seismicLodOrFallback(section.lods, tier);
+  if (!lod) return section;
+  return {
+    ...section,
+    width: lod.width,
+    height: lod.height,
+    amplitudeFile: lod.amplitudeFile,
+  };
+}
+
+function volumeForLod(
+  volume: SeismicVolumeSpec,
+  tier: SeismicLodTierName,
+): SeismicVolumeSpec {
+  const lod = seismicLodOrFallback(volume.lods, tier);
+  if (!lod) return volume;
+  return {
+    ...volume,
+    file: lod.file,
+    dimensions: lod.dimensions,
+  };
+}
+
+function estimateProductBytes(
+  product: SeismicProductSpec,
+  tier: SeismicLodTierName,
+): number {
+  let total = 0;
+  for (const section of product.sections) {
+    const resolved = sectionForLod(section, tier);
+    const samples = resolved.width * resolved.height;
+    total += samples; // amplitude texture bytes
+    total += 4 * 3 * 4; // section plane corner positions
+    total += 4 * 2 * 4; // section plane UVs
+    total += 6 * 4; // section plane indices
+  }
+  if (product.raymarchVolume) {
+    const volume = volumeForLod(product.raymarchVolume, tier);
+    const [nx, ny, nz] = volume.dimensions;
+    total += nx * ny * nz;
+  }
+  return total;
+}
+
 async function fetchJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
   if (!response.ok) {
@@ -136,47 +219,6 @@ function normalizeCoordinate(raw: [number, number, number?]): Vec3 | null {
   return [x, y, z];
 }
 
-function seismicColor(t: number, colormap = "blue-white-red"): THREE.Color {
-  const clamped = THREE.MathUtils.clamp(t, 0, 1);
-  const color = new THREE.Color();
-  if (colormap === "grayscale") {
-    return color.setRGB(clamped, clamped, clamped);
-  }
-  if (colormap === "velocity") {
-    if (clamped < 0.33) {
-      return color.lerpColors(
-        new THREE.Color("#173b9a"),
-        new THREE.Color("#33b6d7"),
-        clamped / 0.33,
-      );
-    }
-    if (clamped < 0.66) {
-      return color.lerpColors(
-        new THREE.Color("#33b6d7"),
-        new THREE.Color("#f4df63"),
-        (clamped - 0.33) / 0.33,
-      );
-    }
-    return color.lerpColors(
-      new THREE.Color("#f4df63"),
-      new THREE.Color("#d34b2d"),
-      (clamped - 0.66) / 0.34,
-    );
-  }
-  if (clamped < 0.5) {
-    return color.lerpColors(
-      new THREE.Color("#2456c9"),
-      new THREE.Color("#f4f7ff"),
-      clamped / 0.5,
-    );
-  }
-  return color.lerpColors(
-    new THREE.Color("#f4f7ff"),
-    new THREE.Color("#d9362f"),
-    (clamped - 0.5) / 0.5,
-  );
-}
-
 function sceneSectionVectorSlots(): THREE.Vector3[] {
   return Array.from(
     { length: SCENE_SECTION_SHADER_SLOT_COUNT },
@@ -197,14 +239,11 @@ function sceneSectionNumberSlots(value: number): number[] {
 
 function sectionVertexShader(): string {
   return `
-attribute float seismicAlpha;
-varying vec3 vColor;
-varying float vAlpha;
+varying vec2 vUv;
 varying vec3 vWorldPosition;
 
 void main() {
-  vColor = color;
-  vAlpha = seismicAlpha;
+  vUv = uv;
   vec4 worldPosition = modelMatrix * vec4(position, 1.0);
   vWorldPosition = worldPosition.xyz;
   gl_Position = projectionMatrix * viewMatrix * worldPosition;
@@ -216,7 +255,14 @@ function sectionFragmentShader(): string {
   return `
 precision highp float;
 
+uniform sampler2D uAmplitudeMap;
 uniform float uOpacity;
+uniform float uAmplitudeMin;
+uniform float uAmplitudeMax;
+uniform float uAmplitudeGamma;
+uniform int uColormap;
+uniform int uRemoveBackground;
+uniform float uBackgroundCutoff;
 uniform int uSceneSectionEnabled;
 uniform int uSceneSectionMode;
 uniform int uSceneSectionPlaneCount;
@@ -234,9 +280,38 @@ uniform int uWorkingAreaFocusEnabled;
 uniform vec3 uWorkingAreaFocusBoundsMin;
 uniform vec3 uWorkingAreaFocusBoundsMax;
 uniform float uWorkingAreaFocusOutsideOpacity;
-varying vec3 vColor;
-varying float vAlpha;
+varying vec2 vUv;
 varying vec3 vWorldPosition;
+
+vec3 colorRamp(float t) {
+  float c = clamp(t, 0.0, 1.0);
+  if (uColormap == 1) {
+    return vec3(c);
+  }
+  if (uColormap == 2) {
+    if (c < 0.33) {
+      return mix(vec3(0.090, 0.231, 0.604), vec3(0.200, 0.714, 0.843), c / 0.33);
+    }
+    if (c < 0.66) {
+      return mix(vec3(0.200, 0.714, 0.843), vec3(0.957, 0.875, 0.388), (c - 0.33) / 0.33);
+    }
+    return mix(vec3(0.957, 0.875, 0.388), vec3(0.827, 0.294, 0.176), (c - 0.66) / 0.34);
+  }
+  if (c < 0.5) {
+    return mix(vec3(0.141, 0.337, 0.788), vec3(0.957, 0.969, 1.0), c / 0.5);
+  }
+  return mix(vec3(0.957, 0.969, 1.0), vec3(0.851, 0.212, 0.184), (c - 0.5) / 0.5);
+}
+
+float shapedAmplitude(float t) {
+  float c = clamp(t, 0.0, 1.0);
+  float gamma = clamp(uAmplitudeGamma, 0.35, 2.5);
+  float signedT = (c - 0.5) * 2.0;
+  if (abs(signedT) <= 0.0001) {
+    return 0.5;
+  }
+  return clamp(0.5 + sign(signedT) * pow(abs(signedT), gamma) * 0.5, 0.0, 1.0);
+}
 
 float sceneSectionAlpha(vec3 position) {
   if (uSceneSectionEnabled == 0) return 1.0;
@@ -276,9 +351,18 @@ float workingAreaFocusAlpha(vec3 position) {
 void main() {
   float sectionAlpha = sceneSectionAlpha(vWorldPosition);
   if (sectionAlpha <= 0.0001) discard;
-  float alpha = clamp(vAlpha * uOpacity, 0.0, 1.0) * workingAreaFocusAlpha(vWorldPosition) * sectionAlpha;
+  float windowMax = max(uAmplitudeMax, uAmplitudeMin + 0.0001);
+  float amplitude = texture2D(uAmplitudeMap, clamp(vUv, vec2(0.0), vec2(1.0))).r;
+  float rampT = clamp((amplitude - uAmplitudeMin) / (windowMax - uAmplitudeMin), 0.0, 1.0);
+  float displayT = shapedAmplitude(rampT);
+  float contrast = abs(displayT - 0.5) * 2.0;
+  float alpha = uOpacity * workingAreaFocusAlpha(vWorldPosition) * sectionAlpha;
+  if (uRemoveBackground == 1) {
+    float muteHigh = min(0.96, max(0.62, uBackgroundCutoff + 0.22));
+    alpha *= smoothstep(uBackgroundCutoff, muteHigh, contrast);
+  }
   if (alpha <= 0.01) discard;
-  gl_FragColor = vec4(vColor, alpha);
+  gl_FragColor = vec4(colorRamp(displayT), alpha);
 }
 `;
 }
@@ -340,30 +424,77 @@ function sectionSampleValue(section: SeismicSectionSpec, yIndex: number): number
   return section.sampleDomain.min + (section.sampleDomain.max - section.sampleDomain.min) * heightT;
 }
 
-function buildGridIndices(width: number, height: number): Uint32Array {
-  const indices = new Uint32Array(Math.max(0, width - 1) * Math.max(0, height - 1) * 6);
-  let offset = 0;
-  for (let y = 0; y < height - 1; y += 1) {
-    for (let x = 0; x < width - 1; x += 1) {
-      const a = y * width + x;
-      const b = a + 1;
-      const c = a + width;
-      const d = c + 1;
-      indices[offset++] = a;
-      indices[offset++] = c;
-      indices[offset++] = b;
-      indices[offset++] = b;
-      indices[offset++] = c;
-      indices[offset++] = d;
-    }
+function buildSectionPlaneGeometry(section: SeismicSectionSpec): THREE.BufferGeometry {
+  const right = Math.max(0, section.width - 1);
+  const bottom = Math.max(0, section.height - 1);
+  const corners: Array<[number, number, number, number]> = [
+    [0, 0, 0, 0],
+    [right, 0, 1, 0],
+    [0, bottom, 0, 1],
+    [right, bottom, 1, 1],
+  ];
+  const positions = new Float32Array(4 * 3);
+  const uvs = new Float32Array(4 * 2);
+  const sampleValues = new Float32Array(4);
+
+  for (let i = 0; i < corners.length; i += 1) {
+    const [xIndex, yIndex, u, v] = corners[i];
+    const point = sectionVertexPosition(section, xIndex, yIndex);
+    positions[i * 3] = point[0];
+    positions[i * 3 + 1] = point[1];
+    positions[i * 3 + 2] = point[2];
+    uvs[i * 2] = u;
+    uvs[i * 2 + 1] = v;
+    sampleValues[i] = sectionSampleValue(section, yIndex);
   }
-  return indices;
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+  geometry.setIndex(
+    new THREE.BufferAttribute(new Uint16Array([0, 2, 1, 1, 2, 3]), 1),
+  );
+  geometry.userData.seismicSampleValues = sampleValues;
+  geometry.userData.seismicSection = section;
+  geometry.userData.seismicTexturePlane = true;
+  geometry.userData.seismicSectionTextureSize = [section.width, section.height];
+  geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
+function buildSectionAmplitudeTexture(
+  amplitude: Uint8Array,
+  width: number,
+  height: number,
+): THREE.DataTexture {
+  const expected = width * height;
+  const textureData = new Uint8Array(expected);
+  textureData.set(amplitude.subarray(0, expected));
+  const texture = new THREE.DataTexture(
+    textureData,
+    width,
+    height,
+    THREE.RedFormat,
+    THREE.UnsignedByteType,
+  );
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.generateMipmaps = false;
+  texture.flipY = false;
+  texture.unpackAlignment = 1;
+  texture.needsUpdate = true;
+  return texture;
 }
 
 async function buildSectionMesh(
   product: SeismicProductSpec,
   section: SeismicSectionSpec,
   resolveAsset: (path: string) => string,
+  tier: SeismicLodTierName,
 ): Promise<THREE.Mesh> {
   const amplitude = await fetchBytes(resolveAsset(section.amplitudeFile));
   const expected = section.width * section.height;
@@ -373,48 +504,25 @@ async function buildSectionMesh(
     );
   }
 
-  const vertices = new Float32Array(expected * 3);
-  const colors = new Float32Array(expected * 3);
-  const alphas = new Float32Array(expected);
-  const values = new Float32Array(expected);
-  const sampleValues = new Float32Array(expected);
-  const scratch = new THREE.Color();
-  alphas.fill(1);
-
-  for (let y = 0; y < section.height; y += 1) {
-    for (let x = 0; x < section.width; x += 1) {
-      const i = y * section.width + x;
-      const point = sectionVertexPosition(section, x, y);
-      vertices[i * 3] = point[0];
-      vertices[i * 3 + 1] = point[1];
-      vertices[i * 3 + 2] = point[2];
-      sampleValues[i] = sectionSampleValue(section, y);
-      const value = amplitude[i] / 255;
-      values[i] = value;
-      scratch.copy(seismicColor(value));
-      colors[i * 3] = scratch.r;
-      colors[i * 3 + 1] = scratch.g;
-      colors[i * 3 + 2] = scratch.b;
-    }
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
-  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-  geometry.setAttribute("seismicAlpha", new THREE.BufferAttribute(alphas, 1));
-  geometry.setIndex(new THREE.BufferAttribute(buildGridIndices(section.width, section.height), 1));
-  geometry.userData.seismicAmplitudeValues = values;
-  geometry.userData.seismicSampleValues = sampleValues;
-  geometry.userData.seismicSection = section;
-  geometry.computeVertexNormals();
-  geometry.computeBoundingBox();
-  geometry.computeBoundingSphere();
+  const amplitudeMap = buildSectionAmplitudeTexture(
+    amplitude,
+    section.width,
+    section.height,
+  );
+  const geometry = buildSectionPlaneGeometry(section);
 
   const material = new THREE.ShaderMaterial({
     vertexShader: sectionVertexShader(),
     fragmentShader: sectionFragmentShader(),
     uniforms: {
+      uAmplitudeMap: { value: amplitudeMap },
       uOpacity: { value: DEFAULT_SECTION_OPACITY },
+      uAmplitudeMin: { value: 0.08 },
+      uAmplitudeMax: { value: 0.92 },
+      uAmplitudeGamma: { value: 1 },
+      uColormap: { value: 0 },
+      uRemoveBackground: { value: 0 },
+      uBackgroundCutoff: { value: 0.16 },
       uSceneSectionEnabled: { value: 0 },
       uSceneSectionMode: { value: 0 },
       uSceneSectionPlaneCount: { value: 0 },
@@ -433,7 +541,6 @@ async function buildSectionMesh(
       uWorkingAreaFocusBoundsMax: { value: new THREE.Vector3() },
       uWorkingAreaFocusOutsideOpacity: { value: 1 },
     },
-    vertexColors: true,
     transparent: true,
     side: THREE.DoubleSide,
     depthWrite: false,
@@ -444,6 +551,7 @@ async function buildSectionMesh(
   material.userData.preserveMaterialColor = true;
   material.userData.preserveMaterialOpacity = true;
   material.userData.seismicSectionMaterial = true;
+  material.userData.seismicTexturePlane = true;
 
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = `${product.label} - ${section.label}`;
@@ -452,6 +560,9 @@ async function buildSectionMesh(
   mesh.userData = {
     displayName: mesh.name,
     seismicSection: true,
+    seismicTexturePlane: true,
+    seismicSectionTextureSize: [section.width, section.height],
+    seismicSectionIsoDisabledReason: "texture-plane-v1",
     seismicProductId: product.id,
     seismicProductLabel: product.label,
     seismicProductSurveyKind: product.surveyKind,
@@ -461,6 +572,7 @@ async function buildSectionMesh(
     seismicSectionId: section.id,
     seismicSectionAxis: section.axis,
     seismicSectionFraction: section.fraction,
+    seismicLodTier: tier,
     seismicSampleDomainUnit: section.sampleDomain.unit,
     seismicDatumM: section.datumM,
   };
@@ -599,12 +711,12 @@ void main() {
 
   float t = max(hit.x, 0.0);
   float tEnd = hit.y;
-  float sampleSteps = clamp(uSampleSteps, 24.0, 160.0);
+  float sampleSteps = clamp(uSampleSteps, 24.0, ${SOURCE_FIDELITY_MAX_SAMPLE_STEPS.toFixed(1)});
   float stepSize = max((tEnd - t) / sampleSteps, 1.0);
   float windowMax = max(uAmplitudeMax, uAmplitudeMin + 0.0001);
   vec4 accum = vec4(0.0);
 
-  for (int i = 0; i < 176; i += 1) {
+  for (int i = 0; i < ${SOURCE_FIDELITY_MAX_SAMPLE_STEPS + 16}; i += 1) {
     if (float(i) >= sampleSteps) break;
     if (t > tEnd || accum.a > 0.96) break;
     vec3 position = cameraPosition + rayDirection * t;
@@ -644,6 +756,7 @@ async function buildRaymarchMesh(
   product: SeismicProductSpec,
   volume: SeismicVolumeSpec,
   resolveAsset: (path: string) => string,
+  tier: SeismicLodTierName,
 ): Promise<THREE.Mesh> {
   const bytes = await fetchBytes(resolveAsset(volume.file));
   const [nx, ny, nz] = volume.dimensions;
@@ -733,6 +846,7 @@ async function buildRaymarchMesh(
     seismicProductSurveyKind: product.surveyKind,
     seismicProductKind: product.productKind,
     seismicProductDomainKind: product.domainKind,
+    seismicLodTier: tier,
     seismicProductValueStats: product.amplitudeStats,
     seismicVolumeValueStats: volume.amplitudeStats ?? product.amplitudeStats,
     seismicVolumeData: volumeData,
@@ -869,6 +983,68 @@ function productSummary(product: SeismicProductSpec) {
   };
 }
 
+async function buildSeismicProductGroup(
+  product: SeismicProductSpec,
+  resolveAsset: (path: string) => string,
+  tier: SeismicLodTierName,
+): Promise<THREE.Group> {
+  const productGroup = new THREE.Group();
+  productGroup.name = product.label;
+  productGroup.userData.seismicProductId = product.id;
+  productGroup.userData.seismicProductLabel = product.label;
+  productGroup.userData.seismicProductSurveyKind = product.surveyKind;
+  productGroup.userData.seismicProductLodTier = tier;
+
+  const sectionMeshes = await Promise.all(
+    product.sections.map((section) =>
+      buildSectionMesh(product, sectionForLod(section, tier), resolveAsset, tier),
+    ),
+  );
+  productGroup.add(...sectionMeshes);
+
+  if (product.raymarchVolume) {
+    productGroup.add(
+      await buildRaymarchMesh(
+        product,
+        volumeForLod(product.raymarchVolume, tier),
+        resolveAsset,
+        tier,
+      ),
+    );
+  }
+  return productGroup;
+}
+
+function disposeMaterial(material: THREE.Material): void {
+  const uniforms = (
+    material as THREE.Material & {
+      uniforms?: Record<string, { value?: unknown }>;
+    }
+  ).uniforms;
+  if (uniforms) {
+    for (const uniform of Object.values(uniforms)) {
+      if (uniform?.value instanceof THREE.Texture) {
+        uniform.value.dispose();
+      }
+    }
+  }
+  material.dispose();
+}
+
+function disposeSeismicProductObject(object: THREE.Object3D): void {
+  object.traverse((child) => {
+    if (child instanceof THREE.Mesh || child instanceof THREE.Points || child instanceof THREE.Line) {
+      child.geometry?.dispose();
+      const material = child.material;
+      if (Array.isArray(material)) {
+        for (const item of material) disposeMaterial(item);
+      } else if (material) {
+        disposeMaterial(material);
+      }
+    }
+  });
+}
+
 export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Object3D> {
   const resolvedManifestUrl = new URL(manifestUrl, window.location.href).toString();
   const manifest = await fetchJson<SeismicManifest>(resolvedManifestUrl);
@@ -878,11 +1054,180 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
   const resolveAsset = assetResolver(resolvedManifestUrl);
   const group = new THREE.Group();
   group.name = manifest.label;
+  const productsById = new Map(
+    manifest.products.map((product) => [product.id, product] as const),
+  );
+  const loadedProducts = new Map<
+    string,
+    { group: THREE.Group; tier: SeismicLodTierName; approxBytes: number }
+  >();
+  const pendingProducts = new Map<
+    string,
+    { promise: Promise<void>; tier: SeismicLodTierName }
+  >();
+  const loadSequences = new Map<string, number>();
+  const retainedProductIds = new Set<string>([manifest.defaultProductId]);
+  const disposedProductIds: string[] = [];
+
+  const publishRuntimeState = () => {
+    const activeLodByProduct: Record<string, SeismicLodTierName> = {};
+    const approxBytesByProduct: Record<string, number> = {};
+    for (const [productId, record] of loadedProducts) {
+      activeLodByProduct[productId] = record.tier;
+      approxBytesByProduct[productId] = record.approxBytes;
+    }
+    group.userData.seismicLoadedProductIds = Array.from(loadedProducts.keys());
+    group.userData.seismicPendingProductIds = Array.from(pendingProducts.keys());
+    group.userData.seismicPendingLodByProduct = Object.fromEntries(
+      Array.from(pendingProducts, ([productId, record]) => [productId, record.tier]),
+    );
+    group.userData.seismicActiveLodByProduct = activeLodByProduct;
+    group.userData.seismicDisposedProductIds = disposedProductIds.slice(-20);
+    group.userData.seismicApproxBytesByProduct = approxBytesByProduct;
+    group.userData.seismicApproxTotalBytes = Object.values(
+      approxBytesByProduct,
+    ).reduce((sum, value) => sum + value, 0);
+  };
+
+  const invalidateRuntimeIndex = () => {
+    delete group.userData.seismicRuntimeIndex;
+    if (group.parent) delete group.parent.userData.seismicRuntimeIndex;
+  };
+
+  const notifyProductsChanged = () => {
+    invalidateRuntimeIndex();
+    const callback = group.userData.seismicOnProductsLoaded;
+    if (typeof callback === "function") callback();
+  };
+
+  const installProductGroup = (
+    productId: string,
+    productGroup: THREE.Group,
+    tier: SeismicLodTierName,
+  ) => {
+    const existing = loadedProducts.get(productId);
+    if (existing) {
+      group.remove(existing.group);
+      disposeSeismicProductObject(existing.group);
+    }
+    loadedProducts.set(productId, {
+      group: productGroup,
+      tier,
+      approxBytes: estimateProductBytes(productsById.get(productId)!, tier),
+    });
+    group.add(productGroup);
+    publishRuntimeState();
+    notifyProductsChanged();
+  };
+
+  const disposeProduct = (productId: string) => {
+    const record = loadedProducts.get(productId);
+    if (!record) return;
+    group.remove(record.group);
+    disposeSeismicProductObject(record.group);
+    loadedProducts.delete(productId);
+    disposedProductIds.push(productId);
+    publishRuntimeState();
+    notifyProductsChanged();
+  };
+
+  const ensureOneProductLoaded = async (
+    productId: string,
+    requestedTier: SeismicLodTierName,
+  ): Promise<void> => {
+    const product = productsById.get(productId);
+    if (!product) return;
+    const loaded = loadedProducts.get(productId);
+    const exactTierRequired = requestedTier === SEISMIC_COARSE_LOD_TIER;
+    const keepLoaded =
+      loaded &&
+      (loaded.tier === requestedTier ||
+        (!exactTierRequired &&
+          SEISMIC_LOD_RANK[loaded.tier] >= SEISMIC_LOD_RANK[requestedTier]));
+    if (keepLoaded) {
+      return;
+    }
+    const pending = pendingProducts.get(productId);
+    if (pending?.tier === requestedTier) {
+      await pending.promise;
+      return;
+    }
+    const nextSeq = (loadSequences.get(productId) ?? 0) + 1;
+    loadSequences.set(productId, nextSeq);
+    const task = (async () => {
+      const loadTier = async (tier: SeismicLodTierName) => {
+        const current = loadedProducts.get(productId);
+        const exactLoadTierRequired = tier === SEISMIC_COARSE_LOD_TIER;
+        const keepCurrent =
+          current &&
+          (current.tier === tier ||
+            (!exactLoadTierRequired &&
+              SEISMIC_LOD_RANK[current.tier] >= SEISMIC_LOD_RANK[tier]));
+        if (keepCurrent) {
+          return;
+        }
+        const productGroup = await buildSeismicProductGroup(product, resolveAsset, tier);
+        if (
+          loadSequences.get(productId) !== nextSeq ||
+          (retainedProductIds.size > 0 && !retainedProductIds.has(productId))
+        ) {
+          disposeSeismicProductObject(productGroup);
+          return;
+        }
+        installProductGroup(productId, productGroup, tier);
+      };
+      if (!loadedProducts.has(productId) && requestedTier !== SEISMIC_COARSE_LOD_TIER) {
+        await loadTier(SEISMIC_COARSE_LOD_TIER);
+      }
+      await loadTier(requestedTier);
+    })().finally(() => {
+      const currentPending = pendingProducts.get(productId);
+      if (currentPending?.promise === task) {
+        pendingProducts.delete(productId);
+      }
+      publishRuntimeState();
+    });
+    pendingProducts.set(productId, { promise: task, tier: requestedTier });
+    publishRuntimeState();
+    await task;
+  };
+
   group.userData = {
     displayName: manifest.label,
     seismicBrowser: true,
     seismicDefaultProductId: manifest.defaultProductId,
     seismicProducts: manifest.products.map(productSummary),
+    seismicLoadedProductIds: [],
+    seismicPendingProductIds: [],
+    seismicPendingLodByProduct: {},
+    seismicActiveLodByProduct: {},
+    seismicDisposedProductIds: [],
+    seismicApproxBytesByProduct: {},
+    seismicApproxTotalBytes: 0,
+    seismicEnsureProductsLoaded(productIds: string[], tier?: SeismicLodTierName) {
+      const requestedTier =
+        tier === "coarse" || tier === "source" || tier === "standard"
+          ? tier
+          : SEISMIC_DEFAULT_LOD_TIER;
+      const uniqueProductIds = Array.from(
+        new Set(productIds.filter((productId) => productsById.has(productId))),
+      );
+      return Promise.all(
+        uniqueProductIds.map((productId) =>
+          ensureOneProductLoaded(productId, requestedTier),
+        ),
+      ).then(() => undefined);
+    },
+    seismicRetainProducts(productIds: string[]) {
+      retainedProductIds.clear();
+      for (const productId of productIds) {
+        if (productsById.has(productId)) retainedProductIds.add(productId);
+      }
+      for (const productId of Array.from(loadedProducts.keys())) {
+        if (!retainedProductIds.has(productId)) disposeProduct(productId);
+      }
+      publishRuntimeState();
+    },
   };
 
   if (manifest.navigation?.geojson) {
@@ -892,29 +1237,10 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
     group.add(buildNavigationObjects(navigation));
   }
 
-  const productObjects = await Promise.all(
-    manifest.products.map(async (product) => {
-      const productGroup = new THREE.Group();
-      productGroup.name = product.label;
-      productGroup.userData.seismicProductId = product.id;
-      productGroup.userData.seismicProductLabel = product.label;
-      productGroup.userData.seismicProductSurveyKind = product.surveyKind;
-
-      const sectionMeshes = await Promise.all(
-        product.sections.map((section) =>
-          buildSectionMesh(product, section, resolveAsset),
-        ),
-      );
-      productGroup.add(...sectionMeshes);
-
-      if (product.raymarchVolume) {
-        productGroup.add(
-          await buildRaymarchMesh(product, product.raymarchVolume, resolveAsset),
-        );
-      }
-      return productGroup;
-    }),
+  publishRuntimeState();
+  await group.userData.seismicEnsureProductsLoaded(
+    [manifest.defaultProductId],
+    SEISMIC_DEFAULT_LOD_TIER,
   );
-  group.add(...productObjects);
   return group;
 }

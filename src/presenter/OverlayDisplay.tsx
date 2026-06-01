@@ -482,8 +482,16 @@ export function OverlayDisplay() {
     .map((instance) => {
       const renderPage = latestPageById(instance.page);
       if (!renderPage) return null;
+      if (renderPage.overlay?.hidden === true) return null;
       const renderHtml = pageHtml(renderPage);
-      if (renderHtml === "") return null;
+      const renderTitleTrimmed = (renderPage.title ?? "").trim();
+      const renderSubtitleTrimmed = (renderPage.subtitle ?? "").trim();
+      const explicitShow = renderPage.overlay?.hidden === false;
+      const hasAnyContent =
+        renderHtml !== "" ||
+        renderTitleTrimmed !== "" ||
+        renderSubtitleTrimmed !== "";
+      if (!explicitShow && !hasAnyContent) return null;
       const savedLayout = renderPage.overlayLayout ?? DEFAULT_LAYOUT;
       const layout = instance.canEdit && liveLayout ? liveLayout : savedLayout;
       const heightStyle: React.CSSProperties =

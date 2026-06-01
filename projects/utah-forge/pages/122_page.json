@@ -1,0 +1,234 @@
+{
+  "id": "122_page",
+  "title": "3d duplicate duplicate",
+  "subtitle": "Proposed / needs_review implementation checkpoint",
+  "camera": {
+    "position": [
+      -64634.36492193697,
+      61127.20616213142,
+      40294.236193120974
+    ],
+    "target": [
+      -14365,
+      -6240,
+      1743
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#ff637a",
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": false,
+    "poi": [
+      -14365,
+      -6240,
+      1743
+    ],
+    "orbitSpeedDegPerSec": 5.8,
+    "orbitRadius": 84056,
+    "orbitHeight": 38551,
+    "orbitDirection": -1,
+    "zoomFov": 52,
+    "zoomEnabled": true,
+    "zoomDeltaFov": -21,
+    "zoomStartMs": 250,
+    "zoomEndMs": 8000,
+    "zoomCurve": "cinematic",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": true
+  },
+  "overlayLayout": {
+    "x": 0.007028045341341882,
+    "y": 0.023374271247273266,
+    "width": 0.15,
+    "height": 0.462439114429907
+  },
+  "layerOverrides": {
+    "utah-forge-scene-section-planes": {
+      "sceneSectionEnabled": true,
+      "sceneSectionActiveAxis": "y",
+      "sceneSectionWindowEnabled": true,
+      "sceneSectionWindowActiveAxis": "x",
+      "sceneSectionWindowByAxis": {
+        "x": {
+          "minAlongM": -44293.7774015172,
+          "maxAlongM": 17869.36362149368,
+          "bottomElevationM": -12142.201438124524
+        },
+        "y": {
+          "minAlongM": -53489.89739256331,
+          "maxAlongM": 29938.19885060934,
+          "bottomElevationM": -12230.111040055865
+        }
+      },
+      "sceneSectionPlanes": {
+        "x": {
+          "enabled": true,
+          "positionM": 17235.51727953286,
+          "invert": false
+        },
+        "y": {
+          "enabled": true,
+          "positionM": -7879.77060984839,
+          "invert": false
+        },
+        "z": {
+          "enabled": false,
+          "positionM": -2200,
+          "invert": false
+        }
+      },
+      "sceneSectionFrameEnabled": true,
+      "sceneSectionFrameByAxis": {
+        "y": {
+          "maxAM": 29938.19885060934
+        },
+        "x": {
+          "axisAlignment": "cardinal",
+          "axisAHeading": "Latitude (°)",
+          "axisBHeading": "Elevation (km)",
+          "axisDatum": "latlon",
+          "maxAM": 17869.36362149368,
+          "maxBM": 5259.487289179248
+        }
+      },
+      "sceneSectionLegendVisible": false,
+      "sceneSectionActiveFrameId": "axis:y",
+      "sceneSectionFrames": [
+        {
+          "id": "axis:x",
+          "label": "X Section frame",
+          "legendVisible": true,
+          "axis": "x",
+          "plane": {
+            "enabled": true,
+            "positionM": 17235.51727953286,
+            "invert": false
+          },
+          "frame": {
+            "axisAlignment": "cardinal",
+            "axisAHeading": "Latitude (°)",
+            "axisBHeading": "Elevation (km)",
+            "axisDatum": "latlon",
+            "maxAM": 17869.36362149368,
+            "maxBM": 5259.487289179248
+          }
+        },
+        {
+          "id": "axis:y",
+          "label": "Y Section frame",
+          "legendVisible": true,
+          "axis": "y",
+          "plane": {
+            "enabled": true,
+            "positionM": -7879.77060984839,
+            "invert": false
+          },
+          "frame": {
+            "maxAM": 29938.19885060934
+          }
+        },
+        {
+          "id": "axis:z",
+          "label": "Z Section frame",
+          "legendVisible": true,
+          "axis": "z",
+          "plane": {
+            "enabled": false,
+            "positionM": -2200,
+            "invert": false
+          },
+          "frame": {}
+        }
+      ]
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": false,
+        "conductive-le-30-ohm-m": false,
+        "resistive-ge-1000-ohm-m": true,
+        "bank-ge-5461-ohm-m": false
+      },
+      "mtIsosurfaceProductId": "mt-isosurface-full-extent",
+      "mtSurfaceBoundaryOrder": [
+        "conductive-le-10-ohm-m",
+        "conductive-le-30-ohm-m",
+        "resistive-ge-1000-ohm-m",
+        "bank-ge-5461-ohm-m"
+      ],
+      "mtSurfaceBoundariesById": {
+        "conductive-le-10-ohm-m": {
+          "visible": false,
+          "label": "<=10 Ohm-m",
+          "color": "#2cc9ff",
+          "comparison": "<=",
+          "thresholdOhmM": 10,
+          "thresholdLog10": 1,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "conductive-le-30-ohm-m": {
+          "visible": false,
+          "label": "<=30 Ohm-m",
+          "color": "#b6cda7",
+          "comparison": "<=",
+          "thresholdOhmM": 30,
+          "thresholdLog10": 1.477121,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "resistive-ge-1000-ohm-m": {
+          "visible": true,
+          "label": ">=1000 Ohm-m",
+          "color": "#d8967f",
+          "comparison": ">=",
+          "thresholdOhmM": 1000,
+          "thresholdLog10": 3,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "bank-ge-5461-ohm-m": {
+          "visible": false,
+          "label": ">=5,461 Ohm-m boundary",
+          "color": "#fe7079",
+          "comparison": ">=",
+          "thresholdOhmM": 5460.936232077636,
+          "thresholdLog10": 3.737267,
+          "opacity": 1,
+          "source": "precomputed"
+        }
+      },
+      "mtThresholdSurfaceMetalness": 0.31
+    },
+    "utah-forge-site-boundary": {
+      "color": "#47c299"
+    },
+    "utah-forge-mt-resistivity-full-density": {
+      "opacity": 0.05,
+      "scalarLegendVisible": true
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "sectionIsoSourceOpacity": 1
+    }
+  },
+  "visibilityOverrides": {
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
+    "utah-forge-phase3-seismic-browser": true,
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-topo-graticule": false
+  }
+}

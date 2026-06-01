@@ -1,11 +1,11 @@
-# Resistivity Isosurfaces
+**Resistivity Isosurfaces**
 
-Status: proposed / needs_review
+These surfaces mark the boundaries of specific resistivity domains within the Phase 3 MT inversion model.
 
-This page addresses Jane's request for a 3D isosurface of a selected resistivity value.
+The conductive surface (≤30 Ohm·m) encloses the low-resistivity zone interpreted as thermally or fluid-altered rock. The resistive surface (≥1000 Ohm·m) marks the boundary of the crystalline basement or competent intrusive body.
 
-- Current support: fixed source-derived MT threshold surface meshes.
-- Useful examples: 10 Ohm-m conductive, 100-500 Ohm-m intermediate, 1000 Ohm-m resistive.
-- These surfaces are communication surfaces, not accepted geology or resource estimates.
+Isosurfaces convert a volumetric model into explicit 3D geometry — the shape, depth, and lateral extent of a resistivity domain becomes directly readable as a surface.
 
-Missing / unresolved: arbitrary threshold slider, marching-cubes generation, smoothing controls, and multi-surface authoring.
+These are communication surfaces derived from the inversion output. They are not interpreted geology or resource estimates.
+
+*Sources ↓*

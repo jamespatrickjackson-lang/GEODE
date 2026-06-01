@@ -1,21 +1,10 @@
 import * as THREE from "three";
 import type { EditableStyle } from "../../pages/types";
 import { UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID } from "../../projectModules/utahForge/layerIds";
-import {
-  DEFAULT_SEISMIC_HIGH_COLOR,
-  DEFAULT_SEISMIC_LOW_COLOR,
-  DEFAULT_SEISMIC_MID_COLOR,
-  seismicBackgroundAlphaAt,
-  seismicColorAt,
-} from "./colorScales";
-import { clampRange, styleNumber } from "./styleUtils";
-import {
-  disposeScalarSectionIsoOverlay,
-  isSeismicSectionMesh,
-  sectionIsoAttributeValues,
-  seismicSectionTargetKey,
-  updateScalarSectionIsoOverlay,
-} from "../isoOverlays/sectionIsoOverlay";
+import { styleNumber } from "./styleUtils";
+import { disposeScalarSectionIsoOverlay } from "../isoOverlays/sectionIsoOverlay";
+
+type SeismicLodTierName = "coarse" | "standard" | "source";
 
 type SeismicBrowserRuntimeIndex = {
   root: THREE.Object3D;
@@ -39,6 +28,56 @@ type SeismicBrowserStyleHost = {
   setProductOpacityBaseForMaterial(material: THREE.Material, opacity: number): void;
   updateSeismicVolumeCutIsoOverlays(style: EditableStyle): void;
 };
+
+function seismicLodTierFromRecord(
+  value: unknown,
+  productId: string,
+): SeismicLodTierName | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const tier = (value as Record<string, unknown>)[productId];
+  return tier === "coarse" || tier === "standard" || tier === "source"
+    ? tier
+    : null;
+}
+
+function seismicResolveTargetLodTier(
+  root: THREE.Object3D,
+  productId: string,
+  previousProductId: string,
+): { tier: SeismicLodTierName; reason: string } {
+  const pendingTier = seismicLodTierFromRecord(
+    root.userData.seismicPendingLodByProduct,
+    productId,
+  );
+  const activeTier = seismicLodTierFromRecord(
+    root.userData.seismicActiveLodByProduct,
+    productId,
+  );
+  const nowMs =
+    typeof performance !== "undefined" && typeof performance.now === "function"
+      ? performance.now()
+      : Date.now();
+  const seismicTransitionActive =
+    root.userData.seismicTransitionActive === true;
+  const seismicCameraMoving =
+    root.userData.seismicCameraMoving === true ||
+    (typeof root.userData.seismicCameraMovingUntilMs === "number" &&
+      root.userData.seismicCameraMovingUntilMs > nowMs);
+  let reason = "settled";
+  if (seismicTransitionActive) {
+    reason = "page-transition";
+  } else if (seismicCameraMoving) {
+    reason = "camera-moving";
+  } else if (previousProductId && previousProductId !== productId) {
+    reason = "product-switch";
+  } else if (pendingTier === "coarse" || (pendingTier && !activeTier)) {
+    reason = "product-pending";
+  }
+  const tier: SeismicLodTierName = reason === "settled" ? "standard" : "coarse";
+  root.userData.seismicTargetLodTier = tier;
+  root.userData.seismicTargetLodReason = reason;
+  return { tier, reason };
+}
 
 export function applySeismicBrowserStyle(this: unknown, id: string, style: EditableStyle): void {
   if (id !== UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) return;
@@ -128,70 +167,12 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
   const volumeSampleSteps = Math.round(
     styleNumber(style, "seismicVolumeSampleSteps", 96, 24, 160),
   );
-  const sectionIsoSelectedTargets =
-    typeof style.sectionIsoTargetIds === "object" &&
-    style.sectionIsoTargetIds !== null
-      ? (style.sectionIsoTargetIds as Record<string, boolean>)
-      : {};
   const sectionIsoEnabled = style.sectionIsoEnabled === true;
-  const sectionIsoLinesVisible = style.sectionIsoLinesVisible !== false;
-  const sectionIsoBandsVisible = style.sectionIsoBandsVisible !== false;
-  const sectionIsoLevelCount = Math.round(
-    styleNumber(style, "sectionIsoLevelCount", 5, 2, 32),
-  );
   const sectionIsoSourceOpacity = sectionIsoEnabled
     ? styleNumber(style, "sectionIsoSourceOpacity", 0, 0, 1)
     : 1;
-  const sourceOpacity = opacity * sectionIsoSourceOpacity;
-  const sectionIsoLineWidth = styleNumber(
-    style,
-    "sectionIsoLineWidth",
-    2.6,
-    0,
-    12,
-  );
-  const sectionIsoLineStyle =
-    style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid";
-  const sectionIsoBandOpacity = styleNumber(
-    style,
-    "sectionIsoBandOpacity",
-    0.32,
-    0,
-    0.85,
-  );
-  const sectionIsoFillOffset = styleNumber(
-    style,
-    "sectionIsoFillOffset",
-    0,
-    -1,
-    1,
-  );
-  const rawSectionIsoMin = styleNumber(
-    style,
-    "sectionIsoMin",
-    amplitudeMin,
-    0,
-    1,
-  );
-  const sectionIsoMin = clampRange(rawSectionIsoMin, 0, 1);
-  const rawSectionIsoMax = styleNumber(
-    style,
-    "sectionIsoMax",
-    amplitudeMax,
-    0,
-    1,
-  );
-  const sectionIsoMax = clampRange(
-    Math.max(rawSectionIsoMax, sectionIsoMin + 0.000001),
-    sectionIsoMin + 0.000001,
-    1,
-  );
-  const sectionIsoColorMode =
-    colormap === "grayscale"
-      ? "seismic-grayscale"
-      : colormap === "velocity"
-        ? "seismic-velocity"
-        : "seismic-blue-white-red";
+  const sectionSourceOpacity = opacity;
+  const volumeSourceOpacity = opacity * sectionIsoSourceOpacity;
   const comparisonMode =
     style.seismicComparisonMode === "side-by-side"
       ? "side-by-side"
@@ -222,6 +203,37 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
     navigationRoleVisible("receivers") ||
     navigationRoleVisible("lines");
   const sliceThroughVolume = style.seismicSliceThroughVolume === true;
+  const previousProductId =
+    typeof index.root.userData.seismicSelectedProductId === "string"
+      ? index.root.userData.seismicSelectedProductId
+      : "";
+  const requestedLoadProductIds = new Set(enabledProductIds);
+  requestedLoadProductIds.add(productId);
+  if (comparisonProductId && productIds.has(comparisonProductId)) {
+    requestedLoadProductIds.add(comparisonProductId);
+  }
+  const retainedProductIds = new Set(requestedLoadProductIds);
+  if (previousProductId && previousProductId !== productId) {
+    retainedProductIds.add(previousProductId);
+    index.root.userData.seismicPreviousProductId = previousProductId;
+  }
+  const retainProducts = index.root.userData.seismicRetainProducts;
+  if (typeof retainProducts === "function") {
+    retainProducts(Array.from(retainedProductIds));
+  }
+  const ensureProductsLoaded = index.root.userData.seismicEnsureProductsLoaded;
+  if (typeof ensureProductsLoaded === "function") {
+    const targetTier = seismicResolveTargetLodTier(
+      index.root,
+      productId,
+      previousProductId,
+    ).tier;
+    ensureProductsLoaded(Array.from(requestedLoadProductIds), targetTier).catch(
+      (error: unknown) => {
+        console.warn("[seismic] product load failed", error);
+      },
+    );
+  }
   const selectedSections = new Set<THREE.Object3D>();
 
   if (renderMode === "slice" || sliceThroughVolume) {
@@ -272,6 +284,9 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
     activeSummary?.amplitudeStats ?? null;
   group.userData.seismicAppliedRenderMode = renderMode;
   group.userData.seismicVisibleProductIds = Array.from(enabledProductIds);
+  group.userData.seismicTargetLodTier = index.root.userData.seismicTargetLodTier;
+  group.userData.seismicTargetLodReason =
+    index.root.userData.seismicTargetLodReason;
   group.userData.seismicCapabilityPresetId =
     typeof style.seismicCapabilityPresetId === "string"
       ? style.seismicCapabilityPresetId
@@ -325,7 +340,6 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
               : navigationVisible;
   }
 
-  const scratch = new THREE.Color();
   for (const [candidateProductId, volumes] of index.volumesByProduct) {
     for (const obj of volumes) {
       const visible =
@@ -384,8 +398,8 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
         obj.updateMatrixWorld();
       }
       const uniforms = obj.material.uniforms;
-      if (uniforms.uOpacity) uniforms.uOpacity.value = sourceOpacity;
-      host.setProductOpacityBaseForMaterial(obj.material, sourceOpacity);
+      if (uniforms.uOpacity) uniforms.uOpacity.value = volumeSourceOpacity;
+      host.setProductOpacityBaseForMaterial(obj.material, volumeSourceOpacity);
       if (uniforms.uAmplitudeMin) uniforms.uAmplitudeMin.value = amplitudeMin;
       if (uniforms.uAmplitudeMax) uniforms.uAmplitudeMax.value = amplitudeMax;
       if (uniforms.uAmplitudeGamma) {
@@ -492,98 +506,44 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
         geometry.computeBoundingSphere();
       }
 
-      const values = geometry.userData.seismicAmplitudeValues as
-        | Float32Array
-        | number[]
-        | undefined;
-      const color = geometry.getAttribute("color");
-      const alpha = geometry.getAttribute("seismicAlpha");
-      if (values && color instanceof THREE.BufferAttribute) {
-        for (let i = 0; i < Math.min(color.count, values.length); i += 1) {
-          seismicColorAt(
-            values[i],
-            amplitudeMin,
-            amplitudeMax,
-            colormap,
-            amplitudeGamma,
-            scratch,
-          );
-          color.setXYZ(i, scratch.r, scratch.g, scratch.b);
-        }
-        color.needsUpdate = true;
-      }
-      if (values && alpha instanceof THREE.BufferAttribute) {
-        for (let i = 0; i < Math.min(alpha.count, values.length); i += 1) {
-          alpha.setX(
-            i,
-            seismicBackgroundAlphaAt(
-              values[i],
-              amplitudeMin,
-              amplitudeMax,
-              removeBackground,
-              amplitudeGamma,
-              backgroundCutoff,
-            ),
-          );
-        }
-        alpha.needsUpdate = true;
-      }
-
       const materials = Array.isArray(obj.material)
         ? obj.material
         : [obj.material];
       for (const material of materials) {
         if (material instanceof THREE.ShaderMaterial) {
           if (material.uniforms.uOpacity) {
-            material.uniforms.uOpacity.value = sourceOpacity;
+            material.uniforms.uOpacity.value = sectionSourceOpacity;
           }
-          host.setProductOpacityBaseForMaterial(material, sourceOpacity);
+          if (material.uniforms.uAmplitudeMin) {
+            material.uniforms.uAmplitudeMin.value = amplitudeMin;
+          }
+          if (material.uniforms.uAmplitudeMax) {
+            material.uniforms.uAmplitudeMax.value = amplitudeMax;
+          }
+          if (material.uniforms.uAmplitudeGamma) {
+            material.uniforms.uAmplitudeGamma.value = amplitudeGamma;
+          }
+          if (material.uniforms.uColormap) {
+            material.uniforms.uColormap.value =
+              colormap === "grayscale" ? 1 : colormap === "velocity" ? 2 : 0;
+          }
+          if (material.uniforms.uRemoveBackground) {
+            material.uniforms.uRemoveBackground.value = removeBackground ? 1 : 0;
+          }
+          if (material.uniforms.uBackgroundCutoff) {
+            material.uniforms.uBackgroundCutoff.value = backgroundCutoff;
+          }
+          host.setProductOpacityBaseForMaterial(material, sectionSourceOpacity);
         } else if ("opacity" in material) {
-          material.opacity = sourceOpacity;
+          material.opacity = sectionSourceOpacity;
           material.transparent = true;
-          host.setProductOpacityBaseForMaterial(material, sourceOpacity);
+          host.setProductOpacityBaseForMaterial(material, sectionSourceOpacity);
         }
         material.needsUpdate = true;
       }
 
-      if (obj.visible && values && isSeismicSectionMesh(obj)) {
-        const alphaValues =
-          alpha instanceof THREE.BufferAttribute
-            ? sectionIsoAttributeValues(
-                alpha,
-                position instanceof THREE.BufferAttribute
-                  ? position.count
-                  : values.length,
-              )
-            : undefined;
-        updateScalarSectionIsoOverlay(obj, values, {
-          layerId: id,
-          enabled: sectionIsoEnabled,
-          linesVisible: sectionIsoLinesVisible,
-          bandsVisible: sectionIsoBandsVisible,
-          selectedTargetIds: sectionIsoSelectedTargets,
-          targetKey: seismicSectionTargetKey(id, obj),
-          alphaValues,
-          colorMode: sectionIsoColorMode,
-          amplitudeGamma,
-          isoMin: sectionIsoMin,
-          isoMax: sectionIsoMax,
-          levelCount: sectionIsoLevelCount,
-          lineWidth: sectionIsoLineWidth,
-          lineStyle: sectionIsoLineStyle,
-          bandOpacity: sectionIsoBandOpacity,
-          fillOffset: sectionIsoFillOffset,
-          colorMin: amplitudeMin,
-          colorMax: amplitudeMax,
-          midpoint: 0.5,
-          contrast: 1,
-          lowColor: new THREE.Color(DEFAULT_SEISMIC_LOW_COLOR),
-          midColor: new THREE.Color(DEFAULT_SEISMIC_MID_COLOR),
-          highColor: new THREE.Color(DEFAULT_SEISMIC_HIGH_COLOR),
-        });
-      } else {
-        disposeScalarSectionIsoOverlay(obj);
-      }
+      obj.userData.seismicSectionIsoDisabledReason = "texture-plane-v1";
+      disposeScalarSectionIsoOverlay(obj);
     }
   }
   host.updateSeismicVolumeCutIsoOverlays(style);

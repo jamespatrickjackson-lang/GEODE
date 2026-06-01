@@ -1,0 +1,155 @@
+{
+  "id": "21_geophysics_product_overview",
+  "title": "21. Geophysics Product Overview",
+  "subtitle": "Utah FORGE Phase 3 - seismic + MT resistivity",
+  "camera": {
+    "position": [
+      -12416.103002512811,
+      -9661.886176283206,
+      8439.847646424365
+    ],
+    "target": [
+      -6848,
+      -9921,
+      1673
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      -6848,
+      -9921,
+      1673
+    ],
+    "orbitSpeedDegPerSec": 5.1,
+    "orbitRadius": 5574,
+    "orbitHeight": 6767,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 1350,
+    "zoomEndMs": 2000,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "cinematic",
+    "pathAwareBlend": false
+  },
+  "visibilityOverrides": {
+    "terrain": true,
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-mt-stations": false
+  },
+  "layerOverrides": {
+    "terrain": {
+      "opacity": 0.78,
+      "meshSurfaceLiftM": -3725
+    },
+    "utah-forge-site-boundary": {
+      "color": "#4dfcff",
+      "fillOpacity": 0.08,
+      "outlineColor": "#a6bebf",
+      "opacity": 1,
+      "lineWidth": 3.2
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "demoBoreholeWells": {
+        "16A(78)-32": {
+          "visible": true,
+          "pipeDiameterM": 18,
+          "color": "#35d7ff",
+          "opacity": 0.75,
+          "lineStyle": "solid",
+          "dashLengthM": 260,
+          "dashGapM": 150,
+          "centerlineVisible": true,
+          "centerlineWidth": 2.2,
+          "centerlineOpacity": 0.82,
+          "centerlineColor": "#35d7ff",
+          "collarVisible": true,
+          "collarDiameterM": 32,
+          "pathTreatment": "survey",
+          "smoothingStrength": 0.35,
+          "collarLabelVisible": false,
+          "collarLabelText": "16A injection",
+          "collarLabelLiftM": 95,
+          "toeLabelVisible": false,
+          "toeLabelText": "Injection toe",
+          "toeLabelLiftM": 40
+        },
+        "16B(78)-32": {
+          "visible": true,
+          "pipeDiameterM": 16,
+          "color": "#ff7440",
+          "opacity": 0.92,
+          "lineStyle": "solid",
+          "dashLengthM": 260,
+          "dashGapM": 150,
+          "centerlineVisible": true,
+          "centerlineWidth": 2,
+          "centerlineOpacity": 0.82,
+          "centerlineColor": "#ff7440",
+          "collarVisible": true,
+          "collarDiameterM": 30,
+          "pathTreatment": "survey",
+          "smoothingStrength": 0.35,
+          "collarLabelVisible": false,
+          "collarLabelText": "16B production",
+          "collarLabelLiftM": 95,
+          "toeLabelVisible": false,
+          "toeLabelText": "Production toe",
+          "toeLabelLiftM": 40
+        }
+      },
+      "showLabels": true,
+      "demoBoreholeBlock": {
+        "visible": true,
+        "widthM": 118,
+        "depthM": 68,
+        "heightM": 34,
+        "liftM": 0,
+        "rotationDeg": -24.985,
+        "fillColor": "#f79c9c",
+        "opacity": 0.82,
+        "outlineVisible": true,
+        "outlineColor": "#ffffff",
+        "outlineThickness": 1.5,
+        "outlineOpacity": 0.92,
+        "labelVisible": true,
+        "labelText": "FORGE surface facility / orientation block",
+        "labelLiftM": 25.5
+      }
+    },
+    "utah-forge-topo-graticule": {
+      "opacity": 0.78
+    },
+    "transport-roads": {
+      "opacity": 0.78
+    },
+    "hydrography-streams": {
+      "opacity": 0.78
+    },
+    "hydrography-lakes": {
+      "opacity": 0.78
+    },
+    "utah-forge-mt-stations": {
+      "mtStationQcSelectedStationId": "FRG19043",
+      "mtStationQcPanelOpen": true
+    }
+  }
+}

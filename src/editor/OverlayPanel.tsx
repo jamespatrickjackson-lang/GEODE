@@ -33,6 +33,7 @@ export function OverlayPanel() {
     removeOverlayImage,
     setPageField,
     setPageOverlayTiming,
+    setPageOverlayHidden,
   } = useEditor();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -56,6 +57,7 @@ export function OverlayPanel() {
   const fadeMs = timing.fadeMs ?? 2000;
   const gapMs = timing.gapMs ?? 50;
   const easing = timing.easing ?? "linear";
+  const overlayHidden = overlay.hidden === true;
 
   // Splice a markdown image reference at the textarea's current cursor
   // position. If the textarea isn't focused (no cursor available), fall
@@ -122,6 +124,26 @@ export function OverlayPanel() {
       <div style={{ marginBottom: 16 }}>
         <div style={overlaySubheadingStyle}>
           <span style={overlaySubheadingTitleStyle}>Page Text</span>
+          <button
+            type="button"
+            onClick={() => setPageOverlayHidden(pageId, !overlayHidden)}
+            title={
+              overlayHidden
+                ? "Overlay box is hidden on this page — click to show"
+                : "Overlay box is visible on this page — click to hide"
+            }
+            style={{
+              ...panelStyles.iconButton,
+              width: "auto",
+              padding: "0 10px",
+              fontSize: 11,
+              color: overlayHidden ? vibrancySecondaryLabel : vibrancyLabel,
+              opacity: overlayHidden ? 0.7 : 1,
+            }}
+            aria-pressed={overlayHidden ? "false" : "true"}
+          >
+            {overlayHidden ? "Hidden" : "Visible"}
+          </button>
         </div>
         <div style={overlayBodyStyle}>
           <div style={panelStyles.row}>

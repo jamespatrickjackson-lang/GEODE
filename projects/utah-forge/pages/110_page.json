@@ -1,0 +1,79 @@
+{
+  "id": "110_page",
+  "title": "Geophysics Product Overview",
+  "camera": {
+    "position": [
+      -4970.478363327786,
+      -10180.427624339094,
+      11204.999999999993
+    ],
+    "target": [
+      -6459,
+      -9179,
+      2284
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "visibilityOverrides": {
+    "terrain": true,
+    "utah-forge-mt-stations": false
+  },
+  "layerOverrides": {
+    "terrain": {
+      "opacity": 0.95
+    },
+    "utah-forge-mt-stations": {
+      "mtStationQcSelectedStationId": "FRG19075",
+      "mtStationQcPanelOpen": true
+    },
+    "utah-forge-site-boundary": {
+      "fillOpacity": 0.08
+    }
+  },
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      -6459,
+      -9179,
+      2284
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 2620,
+    "orbitHeight": 2920,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  },
+  "overlay": {
+    "position": "right",
+    "contentFile": "overlays/110_page/text.md",
+    "images": [],
+    "hidden": false
+  },
+  "overlayLayout": {
+    "x": 0.04770436730123173,
+    "y": 0.018670012547051442,
+    "width": 0.27
+  }
+}

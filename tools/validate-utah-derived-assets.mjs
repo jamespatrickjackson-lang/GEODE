@@ -82,7 +82,7 @@ function validateProjectLayerWiring(project) {
   assert.equal(publicTerrainLayer.type, "geotiff");
   assert.equal(
     publicTerrainLayer.files?.raster,
-    `${PUBLIC_CONTEXT_DIR}/terrain_public_context_1000m.tif`,
+    `${PUBLIC_CONTEXT_DIR}/terrain_public_context_200m.tif`,
   );
   assert.equal(publicRoadsLayer.type, "line");
   assert.equal(
@@ -173,7 +173,7 @@ function validateProjectLayerWiring(project) {
 
 function validatePublicContext() {
   for (const path of [
-    `${PUBLIC_CONTEXT_DIR}/terrain_public_context_1000m.tif`,
+    `${PUBLIC_CONTEXT_DIR}/terrain_public_context_200m.tif`,
     `${PUBLIC_CONTEXT_DIR}/roads.geojson`,
     `${PUBLIC_CONTEXT_DIR}/hydrography_streams.geojson`,
     `${PUBLIC_CONTEXT_DIR}/hydrography_lakes.geojson`,
@@ -187,7 +187,8 @@ function validatePublicContext() {
   assert.equal(manifest.targetCrs, "EPSG:26912");
   assert.deepEqual(manifest.sourceBounds.easting_m, [-356385.9, 1039320.6]);
   assert.deepEqual(manifest.sourceBounds.northing_m, [3703652, 4843097]);
-  assert.equal(manifest.terrain.resolutionM, 1000);
+  assert.equal(manifest.terrain.file, "terrain_public_context_200m.tif");
+  assert.equal(manifest.terrain.resolutionM, 200);
   assertGreaterThan(manifest.terrain.width, 1000, "public terrain width");
   assertGreaterThan(manifest.terrain.height, 900, "public terrain height");
   assertGreaterThan(manifest.vectors.roads.renderFeatureCount, 0, "roads features");
@@ -492,7 +493,12 @@ function validateSeismicProducts(seismicLayer) {
     (product) => product.id === "gdr-1015-forge3d-velo5d-float-01312018",
   );
   assert.equal(velocityProduct?.productKind, "velocity");
-  assert.deepEqual(velocityProduct?.raymarchVolume?.dimensions, [19, 19, 64]);
+  assert.deepEqual(velocityProduct?.raymarchVolume?.dimensions?.slice(0, 2), [19, 19]);
+  assert.equal(
+    velocityProduct?.raymarchVolume?.dimensions?.[2],
+    velocityProduct?.sampleCount,
+    "velocity raymarch sample axis should preserve source sample count",
+  );
   assertGreaterThan(velocityProduct?.amplitudeStats?.p98, 5_000, "velocity p98");
   const velocityPreset = manifest.capabilityPresets?.find(
     (preset) => preset.id === "3d-velocity-volume",
@@ -653,14 +659,27 @@ function validateSeismicProducts(seismicLayer) {
     5_000,
     "project velocity p98",
   );
-  assert.deepEqual(projectVelocityProduct?.raymarchVolume?.dimensions, [19, 19, 64]);
+  assert.deepEqual(projectVelocityProduct?.raymarchVolume?.dimensions?.slice(0, 2), [19, 19]);
+  assert.equal(
+    projectVelocityProduct?.raymarchVolume?.dimensions?.[2],
+    velocityProduct?.sampleCount,
+    "project velocity raymarch sample axis should preserve source sample count",
+  );
 
   const inventory = readJson(SEISMIC_INVENTORY_PATH);
-  assertGreaterThan(
-    inventory.normalization.skippedRawGatherFileCount,
-    0,
-    "skipped raw gather count",
-  );
+  if (inventory.normalization.sourceRootRole === "archive-normalized-source-fallback") {
+    assertGreaterThan(
+      inventory.normalization.normalizedFiles?.length,
+      0,
+      "archived normalized seismic source file count",
+    );
+  } else {
+    assertGreaterThan(
+      inventory.normalization.skippedRawGatherFileCount,
+      0,
+      "skipped raw gather count",
+    );
+  }
 }
 
 runValidation("Utah FORGE derived assets", () => {

@@ -1062,6 +1062,142 @@ export async function seismicSceneState(page: Page): Promise<SeismicSceneState> 
       };
     }
 
+    const clamp01 = (value: number): number =>
+      Math.min(1, Math.max(0, value));
+    const smoothstep = (edge0: number, edge1: number, value: number): number => {
+      const t = clamp01((value - edge0) / Math.max(0.000001, edge1 - edge0));
+      return t * t * (3 - 2 * t);
+    };
+    const uniformNumber = (
+      uniforms: Record<string, { value: unknown }>,
+      key: string,
+      fallback: number,
+    ): number =>
+      typeof uniforms[key]?.value === "number"
+        ? (uniforms[key].value as number)
+        : fallback;
+    const shapedAmplitude = (
+      amplitude: number,
+      amplitudeMin: number,
+      amplitudeMax: number,
+      gammaValue: number,
+    ): number => {
+      const rampT = clamp01(
+        (amplitude - amplitudeMin) /
+          Math.max(0.000001, amplitudeMax - amplitudeMin),
+      );
+      const gamma = Math.min(2.5, Math.max(0.35, gammaValue));
+      const signed = (rampT - 0.5) * 2;
+      return Math.abs(signed) <= 0.0001
+        ? 0.5
+        : clamp01(0.5 + Math.sign(signed) * Math.abs(signed) ** gamma * 0.5);
+    };
+    const textureSectionColor = (
+      displayT: number,
+      colormap: number,
+    ): number[] => {
+      const c = clamp01(displayT);
+      if (colormap === 1) return [c, c, c];
+      if (colormap === 2) {
+        if (c < 0.33) {
+          const t = c / 0.33;
+          return [
+            0.09 + (0.2 - 0.09) * t,
+            0.231 + (0.714 - 0.231) * t,
+            0.604 + (0.843 - 0.604) * t,
+          ];
+        }
+        if (c < 0.66) {
+          const t = (c - 0.33) / 0.33;
+          return [
+            0.2 + (0.957 - 0.2) * t,
+            0.714 + (0.875 - 0.714) * t,
+            0.843 + (0.388 - 0.843) * t,
+          ];
+        }
+        const t = (c - 0.66) / 0.34;
+        return [
+          0.957 + (0.827 - 0.957) * t,
+          0.875 + (0.294 - 0.875) * t,
+          0.388 + (0.176 - 0.388) * t,
+        ];
+      }
+      if (c < 0.5) {
+        const t = c / 0.5;
+        return [
+          0.141 + (0.957 - 0.141) * t,
+          0.337 + (0.969 - 0.337) * t,
+          0.788 + (1 - 0.788) * t,
+        ];
+      }
+      const t = (c - 0.5) / 0.5;
+      return [
+        0.957 + (0.851 - 0.957) * t,
+        0.969 + (0.212 - 0.969) * t,
+        1 + (0.184 - 1) * t,
+      ];
+    };
+    const textureSectionDiagnostics = (obj: {
+      material?:
+        | { uniforms?: Record<string, { value: unknown }> }
+        | Array<{ uniforms?: Record<string, { value: unknown }> }>;
+    }):
+      | { color: number[]; alpha: number | null; minAlpha: number | null }
+      | null => {
+      const material = Array.isArray(obj.material)
+        ? obj.material[0]
+        : obj.material;
+      const uniforms = material?.uniforms;
+      if (!uniforms) return null;
+      const texture = uniforms.uAmplitudeMap?.value as
+        | { image?: { data?: ArrayLike<number> } }
+        | undefined;
+      const dataArray = texture?.image?.data;
+      if (!dataArray?.length) return null;
+      const amplitudeMin = uniformNumber(uniforms, "uAmplitudeMin", 0.08);
+      const amplitudeMax = Math.max(
+        amplitudeMin + 0.001,
+        uniformNumber(uniforms, "uAmplitudeMax", 0.92),
+      );
+      const amplitudeGamma = uniformNumber(uniforms, "uAmplitudeGamma", 1);
+      const opacity = uniformNumber(uniforms, "uOpacity", 1);
+      const colormap = Math.round(uniformNumber(uniforms, "uColormap", 0));
+      const removeBackground = uniformNumber(uniforms, "uRemoveBackground", 0) >= 1;
+      const backgroundCutoff = uniformNumber(uniforms, "uBackgroundCutoff", 0.16);
+      const alphaForByte = (byteValue: number): number => {
+        const displayT = shapedAmplitude(
+          byteValue / 255,
+          amplitudeMin,
+          amplitudeMax,
+          amplitudeGamma,
+        );
+        if (!removeBackground) return opacity;
+        const contrast = Math.abs(displayT - 0.5) * 2;
+        const muteHigh = Math.min(
+          0.96,
+          Math.max(0.62, backgroundCutoff + 0.22),
+        );
+        return opacity * smoothstep(backgroundCutoff, muteHigh, contrast);
+      };
+      const firstByte = Number(dataArray[0] ?? 0);
+      const firstDisplayT = shapedAmplitude(
+        firstByte / 255,
+        amplitudeMin,
+        amplitudeMax,
+        amplitudeGamma,
+      );
+      let minAlpha = Number.POSITIVE_INFINITY;
+      const stride = Math.max(1, Math.floor(dataArray.length / 2048));
+      for (let i = 0; i < dataArray.length; i += stride) {
+        minAlpha = Math.min(minAlpha, alphaForByte(Number(dataArray[i] ?? 0)));
+      }
+      return {
+        color: textureSectionColor(firstDisplayT, colormap),
+        alpha: alphaForByte(firstByte),
+        minAlpha: Number.isFinite(minAlpha) ? minAlpha : null,
+      };
+    };
+
     const sectionProductIds = new Set<string>();
     const sectionAxes = new Set<string>();
     const sectionObjectXByProduct: Record<string, number[]> = {};
@@ -1106,6 +1242,7 @@ export async function seismicSceneState(page: Page): Promise<SeismicSceneState> 
           const position = obj.geometry?.getAttribute?.("position");
           const color = obj.geometry?.getAttribute?.("color");
           const alpha = obj.geometry?.getAttribute?.("seismicAlpha");
+          const textureDiagnostics = textureSectionDiagnostics(obj);
           firstVisibleSectionZ =
             position?.getZ?.(Math.max(0, position.count - 1)) ?? null;
           if (color?.getX && color.getY && color.getZ) {
@@ -1114,8 +1251,11 @@ export async function seismicSceneState(page: Page): Promise<SeismicSceneState> 
               color.getY(0),
               color.getZ(0),
             ];
+          } else if (textureDiagnostics) {
+            firstVisibleSectionColor = textureDiagnostics.color;
           }
-          firstVisibleSectionAlpha = alpha?.getX?.(0) ?? null;
+          firstVisibleSectionAlpha =
+            alpha?.getX?.(0) ?? textureDiagnostics?.alpha ?? null;
           if (alpha?.getX) {
             let minAlpha = Number.POSITIVE_INFINITY;
             for (let i = 0; i < alpha.count; i += 1) {
@@ -1124,6 +1264,8 @@ export async function seismicSceneState(page: Page): Promise<SeismicSceneState> 
             firstVisibleSectionMinAlpha = Number.isFinite(minAlpha)
               ? minAlpha
               : null;
+          } else if (textureDiagnostics) {
+            firstVisibleSectionMinAlpha = textureDiagnostics.minAlpha;
           }
         }
       }

@@ -63,10 +63,10 @@
       ],
       "sampleInterval": 2000,
       "amplitudeStats": {
-        "min": -14.518112,
-        "max": 8.791553,
-        "p02": -1.364791,
-        "p98": 1.332351
+        "min": -14.78013,
+        "max": 11.098321,
+        "p02": -1.378151,
+        "p98": 1.372675
       },
       "sections": [
         {
@@ -74,16 +74,33 @@
           "label": "Inline 25%",
           "axis": "inline",
           "fraction": 0.25,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 798,
           "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/inline_25.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 299,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/inline_25__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 798,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/inline_25.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 798,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/inline_25.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -7.797426,
-            "max": 6.641095,
-            "p02": -1.296034,
-            "p98": 1.311481,
-            "mean": -0.002251
+            "min": -12.010749,
+            "max": 9.116628,
+            "p02": -1.281387,
+            "p98": 1.2866,
+            "mean": 0.0001
           },
           "sampleDomain": {
             "kind": "time",
@@ -111,16 +128,33 @@
           "label": "Inline 50%",
           "axis": "inline",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 798,
           "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/inline_50.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 299,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/inline_50__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 798,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/inline_50.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 798,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/inline_50.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -8.464157,
-            "max": 5.995131,
-            "p02": -1.331349,
-            "p98": 1.332351,
-            "mean": -0.002162
+            "min": -12.047816,
+            "max": 8.548183,
+            "p02": -1.360356,
+            "p98": 1.372675,
+            "mean": 0.000028
           },
           "sampleDomain": {
             "kind": "time",
@@ -148,16 +182,33 @@
           "label": "Inline 75%",
           "axis": "inline",
           "fraction": 0.75,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 798,
           "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/inline_75.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 299,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/inline_75__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 798,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/inline_75.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 798,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/inline_75.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -6.246089,
-            "max": 6.744049,
-            "p02": -1.277448,
-            "p98": 1.287168,
-            "mean": -0.000278
+            "min": -11.577429,
+            "max": 8.005383,
+            "p02": -1.270695,
+            "p98": 1.275259,
+            "mean": 0.000053
           },
           "sampleDomain": {
             "kind": "time",
@@ -185,16 +236,33 @@
           "label": "Crossline 25%",
           "axis": "crossline",
           "fraction": 0.25,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 798,
           "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/crossline_25.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 299,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/crossline_25__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 798,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/crossline_25.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 798,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/crossline_25.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -7.797426,
-            "max": 6.641095,
-            "p02": -1.296034,
-            "p98": 1.311481,
-            "mean": -0.002251
+            "min": -12.010749,
+            "max": 9.116628,
+            "p02": -1.281387,
+            "p98": 1.2866,
+            "mean": 0.0001
           },
           "sampleDomain": {
             "kind": "time",
@@ -222,16 +290,33 @@
           "label": "Crossline 50%",
           "axis": "crossline",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 798,
           "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/crossline_50.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 299,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/crossline_50__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 798,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/crossline_50.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 798,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/crossline_50.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -8.464157,
-            "max": 5.995131,
-            "p02": -1.331349,
-            "p98": 1.332351,
-            "mean": -0.002162
+            "min": -12.047816,
+            "max": 8.548183,
+            "p02": -1.360356,
+            "p98": 1.372675,
+            "mean": 0.000028
           },
           "sampleDomain": {
             "kind": "time",
@@ -259,16 +344,33 @@
           "label": "Crossline 75%",
           "axis": "crossline",
           "fraction": 0.75,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 798,
           "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/crossline_75.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 299,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/crossline_75__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 798,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/crossline_75.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 798,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/crossline_75.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -6.246089,
-            "max": 6.744049,
-            "p02": -1.277448,
-            "p98": 1.287168,
-            "mean": -0.000278
+            "min": -11.577429,
+            "max": 8.005383,
+            "p02": -1.270695,
+            "p98": 1.275259,
+            "mean": 0.000053
           },
           "sampleDomain": {
             "kind": "time",
@@ -296,16 +398,33 @@
           "label": "Sample 25%",
           "axis": "sample",
           "fraction": 0.25,
-          "width": 128,
-          "height": 128,
+          "width": 168,
+          "height": 169,
           "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/sample_25.u8",
+          "lods": {
+            "coarse": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/sample_25.u8"
+            },
+            "standard": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/sample_25.u8"
+            },
+            "source": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/sample_25.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
             "min": -7.736143,
-            "max": 6.882247,
-            "p02": -1.364791,
-            "p98": 1.328442,
-            "mean": 0.003751
+            "max": 7.061486,
+            "p02": -1.378151,
+            "p98": 1.332953,
+            "mean": 0.005933
           },
           "sampleDomain": {
             "kind": "time",
@@ -333,16 +452,33 @@
           "label": "Sample 50%",
           "axis": "sample",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 168,
+          "height": 169,
           "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/sample_50.u8",
+          "lods": {
+            "coarse": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/sample_50.u8"
+            },
+            "standard": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/sample_50.u8"
+            },
+            "source": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/sample_50.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -2.356002,
+            "min": -2.358492,
             "max": 2.171501,
-            "p02": -1.211717,
-            "p98": 1.155658,
-            "mean": -0.016792
+            "p02": -1.208558,
+            "p98": 1.153069,
+            "mean": -0.018476
           },
           "sampleDomain": {
             "kind": "time",
@@ -370,16 +506,33 @@
           "label": "Sample 75%",
           "axis": "sample",
           "fraction": 0.75,
-          "width": 128,
-          "height": 128,
+          "width": 168,
+          "height": 169,
           "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/sample_75.u8",
+          "lods": {
+            "coarse": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/sample_75.u8"
+            },
+            "standard": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/sample_75.u8"
+            },
+            "source": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/sample_75.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
             "min": -2.742393,
-            "max": 2.850783,
-            "p02": -1.154906,
-            "p98": 1.244537,
-            "mean": 0.020745
+            "max": 2.942065,
+            "p02": -1.164771,
+            "p98": 1.251862,
+            "mean": 0.020393
           },
           "sampleDomain": {
             "kind": "time",
@@ -407,10 +560,36 @@
         "file": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/volume.u8",
         "encoding": "uint8-normalized-p02-p98",
         "dimensions": [
-          64,
-          64,
-          64
+          88,
+          89,
+          1057
         ],
+        "lods": {
+          "coarse": {
+            "file": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/volume__coarse.u8",
+            "dimensions": [
+              55,
+              56,
+              668
+            ]
+          },
+          "standard": {
+            "file": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/volume.u8",
+            "dimensions": [
+              88,
+              89,
+              1057
+            ]
+          },
+          "source": {
+            "file": "products/gdr-1141-forge3d-poststack-time-migration-fxydecon-stack/volume.u8",
+            "dimensions": [
+              88,
+              89,
+              1057
+            ]
+          }
+        },
         "sceneBounds": {
           "min": [
             -12187.449999999953,
@@ -431,11 +610,11 @@
           "verticalScaleMPerUnit": 2
         },
         "amplitudeStats": {
-          "min": -14.518112,
-          "max": 8.791553,
-          "p02": -1.2632,
-          "p98": 1.267888,
-          "mean": -0.001542
+          "min": -14.78013,
+          "max": 11.098321,
+          "p02": -1.270269,
+          "p98": 1.276805,
+          "mean": 0.00011
         }
       },
       "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE Forge3d POSTSTACK Migration AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4000 ms C 5 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 25m x 25m C13 PRODUCT: POSTMigration Stack C14 IL 1, XL 1, (332800.5, 4260778.0 ) C15 IL 170, XL 1, (322874.25, 4265002.25) C16 IL 170, XL 213,(338173.44, 4264910.0 ) C17 C18 C19 C20 C21 PROCESSING FLOW: C22 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C23 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C24 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C25 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C26 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C27 POST DECON NOISE ATTENUAT"
@@ -464,10 +643,10 @@
       ],
       "sampleInterval": 5000,
       "amplitudeStats": {
-        "min": -5.086039,
-        "max": 4.157359,
-        "p02": -0.73126,
-        "p98": 0.711978
+        "min": -6.4774,
+        "max": 4.63094,
+        "p02": -0.733928,
+        "p98": 0.703527
       },
       "sections": [
         {
@@ -475,16 +654,33 @@
           "label": "Inline 25%",
           "axis": "inline",
           "fraction": 0.25,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 314,
           "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/inline_25.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 118,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/inline_25__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 314,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/inline_25.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 314,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/inline_25.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -4.845731,
-            "max": 4.157359,
-            "p02": -0.694734,
-            "p98": 0.711978,
-            "mean": 0.001899
+            "min": -5.894334,
+            "max": 4.299897,
+            "p02": -0.695639,
+            "p98": 0.698626,
+            "mean": 0.000102
           },
           "sampleDomain": {
             "kind": "depth",
@@ -512,16 +708,33 @@
           "label": "Inline 50%",
           "axis": "inline",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 314,
           "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/inline_50.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 118,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/inline_50__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 314,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/inline_50.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 314,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/inline_50.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -5.086039,
-            "max": 2.694221,
-            "p02": -0.6834,
-            "p98": 0.693625,
-            "mean": 0.00019
+            "min": -6.406585,
+            "max": 4.391607,
+            "p02": -0.677137,
+            "p98": 0.679342,
+            "mean": 0.000048
           },
           "sampleDomain": {
             "kind": "depth",
@@ -549,16 +762,33 @@
           "label": "Inline 75%",
           "axis": "inline",
           "fraction": 0.75,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 314,
           "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/inline_75.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 118,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/inline_75__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 314,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/inline_75.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 314,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/inline_75.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -3.798174,
-            "max": 3.110059,
-            "p02": -0.697824,
-            "p98": 0.682575,
-            "mean": -0.000146
+            "min": -4.784723,
+            "max": 4.281002,
+            "p02": -0.689863,
+            "p98": 0.690218,
+            "mean": -0.00029
           },
           "sampleDomain": {
             "kind": "depth",
@@ -586,16 +816,33 @@
           "label": "Crossline 25%",
           "axis": "crossline",
           "fraction": 0.25,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 314,
           "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/crossline_25.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 118,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/crossline_25__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 314,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/crossline_25.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 314,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/crossline_25.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -4.845731,
-            "max": 4.157359,
-            "p02": -0.694734,
-            "p98": 0.711978,
-            "mean": 0.001899
+            "min": -5.894334,
+            "max": 4.299897,
+            "p02": -0.695639,
+            "p98": 0.698626,
+            "mean": 0.000102
           },
           "sampleDomain": {
             "kind": "depth",
@@ -623,16 +870,33 @@
           "label": "Crossline 50%",
           "axis": "crossline",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 314,
           "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/crossline_50.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 118,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/crossline_50__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 314,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/crossline_50.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 314,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/crossline_50.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -5.086039,
-            "max": 2.694221,
-            "p02": -0.6834,
-            "p98": 0.693625,
-            "mean": 0.00019
+            "min": -6.406585,
+            "max": 4.391607,
+            "p02": -0.677137,
+            "p98": 0.679342,
+            "mean": 0.000048
           },
           "sampleDomain": {
             "kind": "depth",
@@ -660,16 +924,33 @@
           "label": "Crossline 75%",
           "axis": "crossline",
           "fraction": 0.75,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 314,
           "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/crossline_75.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 118,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/crossline_75__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 314,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/crossline_75.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 314,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/crossline_75.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -3.798174,
-            "max": 3.110059,
-            "p02": -0.697824,
-            "p98": 0.682575,
-            "mean": -0.000146
+            "min": -4.784723,
+            "max": 4.281002,
+            "p02": -0.689863,
+            "p98": 0.690218,
+            "mean": -0.00029
           },
           "sampleDomain": {
             "kind": "depth",
@@ -697,16 +978,33 @@
           "label": "Sample 25%",
           "axis": "sample",
           "fraction": 0.25,
-          "width": 128,
-          "height": 128,
+          "width": 190,
+          "height": 190,
           "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/sample_25.u8",
+          "lods": {
+            "coarse": {
+              "width": 190,
+              "height": 190,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/sample_25.u8"
+            },
+            "standard": {
+              "width": 190,
+              "height": 190,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/sample_25.u8"
+            },
+            "source": {
+              "width": 190,
+              "height": 190,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/sample_25.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -1.60253,
+            "min": -1.625093,
             "max": 1.629251,
-            "p02": -0.701404,
-            "p98": 0.688276,
-            "mean": -0.003715
+            "p02": -0.704375,
+            "p98": 0.689814,
+            "mean": -0.004046
           },
           "sampleDomain": {
             "kind": "depth",
@@ -734,16 +1032,33 @@
           "label": "Sample 50%",
           "axis": "sample",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 190,
+          "height": 190,
           "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/sample_50.u8",
+          "lods": {
+            "coarse": {
+              "width": 190,
+              "height": 190,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/sample_50.u8"
+            },
+            "standard": {
+              "width": 190,
+              "height": 190,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/sample_50.u8"
+            },
+            "source": {
+              "width": 190,
+              "height": 190,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/sample_50.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -1.224408,
-            "max": 1.200366,
-            "p02": -0.54285,
-            "p98": 0.532571,
-            "mean": -0.004335
+            "min": -1.386845,
+            "max": 1.354919,
+            "p02": -0.540186,
+            "p98": 0.534743,
+            "mean": -0.004432
           },
           "sampleDomain": {
             "kind": "depth",
@@ -771,16 +1086,33 @@
           "label": "Sample 75%",
           "axis": "sample",
           "fraction": 0.75,
-          "width": 128,
-          "height": 128,
+          "width": 190,
+          "height": 190,
           "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/sample_75.u8",
+          "lods": {
+            "coarse": {
+              "width": 190,
+              "height": 190,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/sample_75.u8"
+            },
+            "standard": {
+              "width": 190,
+              "height": 190,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/sample_75.u8"
+            },
+            "source": {
+              "width": 190,
+              "height": 190,
+              "amplitudeFile": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/sample_75.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -1.883237,
+            "min": -1.902078,
             "max": 1.287016,
-            "p02": -0.73126,
-            "p98": 0.70174,
-            "mean": -0.009308
+            "p02": -0.733928,
+            "p98": 0.697466,
+            "mean": -0.009531
           },
           "sampleDomain": {
             "kind": "depth",
@@ -808,10 +1140,36 @@
         "file": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/volume.u8",
         "encoding": "uint8-normalized-p02-p98",
         "dimensions": [
-          64,
-          64,
-          64
+          116,
+          116,
+          615
         ],
+        "lods": {
+          "coarse": {
+            "file": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/volume__coarse.u8",
+            "dimensions": [
+              73,
+              73,
+              389
+            ]
+          },
+          "standard": {
+            "file": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/volume.u8",
+            "dimensions": [
+              116,
+              116,
+              615
+            ]
+          },
+          "source": {
+            "file": "products/gdr-1141-forge3d-ani-psdm-stack-unenh/volume.u8",
+            "dimensions": [
+              116,
+              116,
+              615
+            ]
+          }
+        },
         "sceneBounds": {
           "min": [
             -12187.449999999953,
@@ -832,11 +1190,11 @@
           "verticalScaleMPerUnit": 1
         },
         "amplitudeStats": {
-          "min": -4.978597,
-          "max": 3.369965,
-          "p02": -0.706665,
-          "p98": 0.70295,
-          "mean": 0.000275
+          "min": -6.4774,
+          "max": 4.63094,
+          "p02": -0.702802,
+          "p98": 0.703527,
+          "mean": 0.000045
         }
       },
       "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE Forge3d AniPSDM Stack UnEnhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 5000 m C 5 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:4/12/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 25m x 25m C13 PRODUCT: Aniso PSDM UnEnhanced Stack C14 IL 1, XL 1, (332800.5, 4260778.0 ) C15 IL 170, XL 1, (322874.25, 4265002.25) C16 IL 170, XL 213,(338173.44, 4264910.0 ) C17 C18 C19 C20 C21 PROCESSING FLOW: C22 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C23 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C24 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C25 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C26 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C27 POST DECON NOI"
@@ -865,10 +1223,10 @@
       ],
       "sampleInterval": 4000,
       "amplitudeStats": {
-        "min": -82.433212,
-        "max": 94.843155,
-        "p02": -31.850203,
-        "p98": 43.859882
+        "min": -107.647232,
+        "max": 126.652008,
+        "p02": -31.832069,
+        "p98": 43.74081
       },
       "sections": [
         {
@@ -876,16 +1234,33 @@
           "label": "Inline 25%",
           "axis": "inline",
           "fraction": 0.25,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 399,
           "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/inline_25.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 150,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/inline_25__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 399,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/inline_25.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 399,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/inline_25.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -64.409714,
-            "max": 79.163574,
-            "p02": -26.966951,
-            "p98": 26.901957,
-            "mean": -0.079788
+            "min": -83.861404,
+            "max": 112.046295,
+            "p02": -27.298176,
+            "p98": 27.333525,
+            "mean": -0.002589
           },
           "sampleDomain": {
             "kind": "time",
@@ -913,16 +1288,33 @@
           "label": "Inline 50%",
           "axis": "inline",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 399,
           "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/inline_50.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 150,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/inline_50__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 399,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/inline_50.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 399,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/inline_50.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -73.755707,
-            "max": 75.023453,
-            "p02": -31.077162,
-            "p98": 30.851223,
-            "mean": -0.075052
+            "min": -96.585587,
+            "max": 91.006058,
+            "p02": -30.816204,
+            "p98": 31.121948,
+            "mean": -0.006887
           },
           "sampleDomain": {
             "kind": "time",
@@ -950,16 +1342,33 @@
           "label": "Inline 75%",
           "axis": "inline",
           "fraction": 0.75,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 399,
           "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/inline_75.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 150,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/inline_75__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 399,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/inline_75.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 399,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/inline_75.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -73.31958,
-            "max": 89.139923,
-            "p02": -27.656923,
-            "p98": 27.643559,
-            "mean": -0.03451
+            "min": -89.965927,
+            "max": 96.618881,
+            "p02": -27.58465,
+            "p98": 27.727369,
+            "mean": 0.004813
           },
           "sampleDomain": {
             "kind": "time",
@@ -987,16 +1396,33 @@
           "label": "Crossline 25%",
           "axis": "crossline",
           "fraction": 0.25,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 399,
           "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/crossline_25.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 150,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/crossline_25__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 399,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/crossline_25.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 399,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/crossline_25.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -64.409714,
-            "max": 79.163574,
-            "p02": -26.966951,
-            "p98": 26.901957,
-            "mean": -0.079788
+            "min": -83.861404,
+            "max": 112.046295,
+            "p02": -27.298176,
+            "p98": 27.333525,
+            "mean": -0.002589
           },
           "sampleDomain": {
             "kind": "time",
@@ -1024,16 +1450,33 @@
           "label": "Crossline 50%",
           "axis": "crossline",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 399,
           "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/crossline_50.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 150,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/crossline_50__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 399,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/crossline_50.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 399,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/crossline_50.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -73.755707,
-            "max": 75.023453,
-            "p02": -31.077162,
-            "p98": 30.851223,
-            "mean": -0.075052
+            "min": -96.585587,
+            "max": 91.006058,
+            "p02": -30.816204,
+            "p98": 31.121948,
+            "mean": -0.006887
           },
           "sampleDomain": {
             "kind": "time",
@@ -1061,16 +1504,33 @@
           "label": "Crossline 75%",
           "axis": "crossline",
           "fraction": 0.75,
-          "width": 128,
-          "height": 128,
+          "width": 2048,
+          "height": 399,
           "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/crossline_75.u8",
+          "lods": {
+            "coarse": {
+              "width": 768,
+              "height": 150,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/crossline_75__coarse.u8"
+            },
+            "standard": {
+              "width": 2048,
+              "height": 399,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/crossline_75.u8"
+            },
+            "source": {
+              "width": 2048,
+              "height": 399,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/crossline_75.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -73.31958,
-            "max": 89.139923,
-            "p02": -27.656923,
-            "p98": 27.643559,
-            "mean": -0.03451
+            "min": -89.965927,
+            "max": 96.618881,
+            "p02": -27.58465,
+            "p98": 27.727369,
+            "mean": 0.004813
           },
           "sampleDomain": {
             "kind": "time",
@@ -1098,16 +1558,33 @@
           "label": "Sample 25%",
           "axis": "sample",
           "fraction": 0.25,
-          "width": 128,
-          "height": 128,
+          "width": 168,
+          "height": 169,
           "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/sample_25.u8",
+          "lods": {
+            "coarse": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/sample_25.u8"
+            },
+            "standard": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/sample_25.u8"
+            },
+            "source": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/sample_25.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
             "min": -80.066101,
             "max": 89.832657,
-            "p02": -25.913975,
-            "p98": 23.455984,
-            "mean": -0.399448
+            "p02": -25.808729,
+            "p98": 23.374168,
+            "mean": -0.391005
           },
           "sampleDomain": {
             "kind": "time",
@@ -1135,16 +1612,33 @@
           "label": "Sample 50%",
           "axis": "sample",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 168,
+          "height": 169,
           "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/sample_50.u8",
+          "lods": {
+            "coarse": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/sample_50.u8"
+            },
+            "standard": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/sample_50.u8"
+            },
+            "source": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/sample_50.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -63.637115,
+            "min": -64.641327,
             "max": 72.05484,
-            "p02": -31.850203,
-            "p98": 33.809368,
-            "mean": 0.119977
+            "p02": -31.832069,
+            "p98": 33.867981,
+            "mean": 0.127671
           },
           "sampleDomain": {
             "kind": "time",
@@ -1172,16 +1666,33 @@
           "label": "Sample 75%",
           "axis": "sample",
           "fraction": 0.75,
-          "width": 128,
-          "height": 128,
+          "width": 168,
+          "height": 169,
           "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/sample_75.u8",
+          "lods": {
+            "coarse": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/sample_75.u8"
+            },
+            "standard": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/sample_75.u8"
+            },
+            "source": {
+              "width": 168,
+              "height": 169,
+              "amplitudeFile": "products/gdr-1141-forge3d-pstm-stack-enh/sample_75.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -53.744888,
-            "max": 94.843155,
-            "p02": -28.826927,
-            "p98": 43.859882,
-            "mean": 1.860647
+            "min": -54.264175,
+            "max": 96.001511,
+            "p02": -28.778231,
+            "p98": 43.74081,
+            "mean": 1.863203
           },
           "sampleDomain": {
             "kind": "time",
@@ -1209,10 +1720,36 @@
         "file": "products/gdr-1141-forge3d-pstm-stack-enh/volume.u8",
         "encoding": "uint8-normalized-p02-p98",
         "dimensions": [
-          64,
-          64,
-          64
+          111,
+          112,
+          666
         ],
+        "lods": {
+          "coarse": {
+            "file": "products/gdr-1141-forge3d-pstm-stack-enh/volume__coarse.u8",
+            "dimensions": [
+              70,
+              70,
+              421
+            ]
+          },
+          "standard": {
+            "file": "products/gdr-1141-forge3d-pstm-stack-enh/volume.u8",
+            "dimensions": [
+              111,
+              112,
+              666
+            ]
+          },
+          "source": {
+            "file": "products/gdr-1141-forge3d-pstm-stack-enh/volume.u8",
+            "dimensions": [
+              111,
+              112,
+              666
+            ]
+          }
+        },
         "sceneBounds": {
           "min": [
             -12187.449999999953,
@@ -1233,11 +1770,11 @@
           "verticalScaleMPerUnit": 2
         },
         "amplitudeStats": {
-          "min": -82.433212,
-          "max": 81.001083,
-          "p02": -27.063122,
-          "p98": 26.66184,
-          "mean": -0.084541
+          "min": -107.647232,
+          "max": 126.652008,
+          "p02": -26.906143,
+          "p98": 27.035778,
+          "mean": 0.002427
         }
       },
       "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE Forge3d PSTM Stack Enhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ms TRACE LENGTH: 4000 ms C 5 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 25m x 25m C13 PRODUCT: PSTM Stack in time C14 IL 1, XL 1, (332800.5, 4260778.0 ) C15 IL 170, XL 1, (322874.25, 4265002.25) C16 IL 170, XL 213,(338173.44, 4264910.0 ) C17 C18 C19 C20 C21 PROCESSING FLOW: C22 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C23 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C24 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C25 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C26 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C27 POST DECON NOISE ATTENUATI"
@@ -1268,8 +1805,8 @@
       "amplitudeStats": {
         "min": 1594.0625,
         "max": 5285.773438,
-        "p02": 1626.575439,
-        "p98": 5229.5
+        "p02": 1626.34375,
+        "p98": 5225.057617
       },
       "sections": [
         {
@@ -1277,16 +1814,33 @@
           "label": "Inline 25%",
           "axis": "inline",
           "fraction": 0.25,
-          "width": 128,
-          "height": 128,
+          "width": 67,
+          "height": 201,
           "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/inline_25.u8",
+          "lods": {
+            "coarse": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/inline_25.u8"
+            },
+            "standard": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/inline_25.u8"
+            },
+            "source": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/inline_25.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": 1601.976074,
-            "max": 5259.785156,
-            "p02": 1640.348633,
-            "p98": 5216.538086,
-            "mean": 4098.775879
+            "min": 1604.359375,
+            "max": 5256.625,
+            "p02": 1640.569092,
+            "p98": 5215.11084,
+            "mean": 4095.064941
           },
           "sampleDomain": {
             "kind": "velocity-time",
@@ -1314,16 +1868,33 @@
           "label": "Inline 50%",
           "axis": "inline",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 67,
+          "height": 201,
           "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/inline_50.u8",
+          "lods": {
+            "coarse": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/inline_50.u8"
+            },
+            "standard": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/inline_50.u8"
+            },
+            "source": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/inline_50.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
             "min": 1598.941406,
-            "max": 5258.65625,
-            "p02": 1634.525269,
-            "p98": 5221.621582,
-            "mean": 4079.170898
+            "max": 5256.082031,
+            "p02": 1635.361694,
+            "p98": 5221.123535,
+            "mean": 4073.087891
           },
           "sampleDomain": {
             "kind": "velocity-time",
@@ -1351,16 +1922,33 @@
           "label": "Inline 75%",
           "axis": "inline",
           "fraction": 0.75,
-          "width": 128,
-          "height": 128,
+          "width": 67,
+          "height": 201,
           "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/inline_75.u8",
+          "lods": {
+            "coarse": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/inline_75.u8"
+            },
+            "standard": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/inline_75.u8"
+            },
+            "source": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/inline_75.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
             "min": 1594.0625,
-            "max": 5285.773438,
-            "p02": 1626.575439,
-            "p98": 5227.973145,
-            "mean": 4104.866211
+            "max": 5270.984375,
+            "p02": 1626.34375,
+            "p98": 5225.057617,
+            "mean": 4112.599121
           },
           "sampleDomain": {
             "kind": "velocity-time",
@@ -1388,16 +1976,33 @@
           "label": "Crossline 25%",
           "axis": "crossline",
           "fraction": 0.25,
-          "width": 128,
-          "height": 128,
+          "width": 67,
+          "height": 201,
           "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/crossline_25.u8",
+          "lods": {
+            "coarse": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/crossline_25.u8"
+            },
+            "standard": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/crossline_25.u8"
+            },
+            "source": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/crossline_25.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": 1601.976074,
-            "max": 5259.785156,
-            "p02": 1640.348633,
-            "p98": 5216.538086,
-            "mean": 4098.775879
+            "min": 1604.359375,
+            "max": 5256.625,
+            "p02": 1640.569092,
+            "p98": 5215.11084,
+            "mean": 4095.064941
           },
           "sampleDomain": {
             "kind": "velocity-time",
@@ -1425,16 +2030,33 @@
           "label": "Crossline 50%",
           "axis": "crossline",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 67,
+          "height": 201,
           "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/crossline_50.u8",
+          "lods": {
+            "coarse": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/crossline_50.u8"
+            },
+            "standard": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/crossline_50.u8"
+            },
+            "source": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/crossline_50.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
             "min": 1598.941406,
-            "max": 5258.65625,
-            "p02": 1634.525269,
-            "p98": 5221.621582,
-            "mean": 4079.170898
+            "max": 5256.082031,
+            "p02": 1635.361694,
+            "p98": 5221.123535,
+            "mean": 4073.087891
           },
           "sampleDomain": {
             "kind": "velocity-time",
@@ -1462,16 +2084,33 @@
           "label": "Crossline 75%",
           "axis": "crossline",
           "fraction": 0.75,
-          "width": 128,
-          "height": 128,
+          "width": 67,
+          "height": 201,
           "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/crossline_75.u8",
+          "lods": {
+            "coarse": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/crossline_75.u8"
+            },
+            "standard": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/crossline_75.u8"
+            },
+            "source": {
+              "width": 67,
+              "height": 201,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/crossline_75.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
             "min": 1594.0625,
-            "max": 5285.773438,
-            "p02": 1626.575439,
-            "p98": 5227.973145,
-            "mean": 4104.866211
+            "max": 5270.984375,
+            "p02": 1626.34375,
+            "p98": 5225.057617,
+            "mean": 4112.599121
           },
           "sampleDomain": {
             "kind": "velocity-time",
@@ -1502,6 +2141,23 @@
           "width": 19,
           "height": 19,
           "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/sample_25.u8",
+          "lods": {
+            "coarse": {
+              "width": 19,
+              "height": 19,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/sample_25.u8"
+            },
+            "standard": {
+              "width": 19,
+              "height": 19,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/sample_25.u8"
+            },
+            "source": {
+              "width": 19,
+              "height": 19,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/sample_25.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
             "min": 3231.132568,
@@ -1539,6 +2195,23 @@
           "width": 19,
           "height": 19,
           "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/sample_50.u8",
+          "lods": {
+            "coarse": {
+              "width": 19,
+              "height": 19,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/sample_50.u8"
+            },
+            "standard": {
+              "width": 19,
+              "height": 19,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/sample_50.u8"
+            },
+            "source": {
+              "width": 19,
+              "height": 19,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/sample_50.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
             "min": 4327.507812,
@@ -1576,6 +2249,23 @@
           "width": 19,
           "height": 19,
           "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/sample_75.u8",
+          "lods": {
+            "coarse": {
+              "width": 19,
+              "height": 19,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/sample_75.u8"
+            },
+            "standard": {
+              "width": 19,
+              "height": 19,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/sample_75.u8"
+            },
+            "source": {
+              "width": 19,
+              "height": 19,
+              "amplitudeFile": "products/gdr-1015-forge3d-velo5d-float-01312018/sample_75.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
             "min": 4839.5625,
@@ -1612,8 +2302,34 @@
         "dimensions": [
           19,
           19,
-          64
+          201
         ],
+        "lods": {
+          "coarse": {
+            "file": "products/gdr-1015-forge3d-velo5d-float-01312018/volume.u8",
+            "dimensions": [
+              19,
+              19,
+              201
+            ]
+          },
+          "standard": {
+            "file": "products/gdr-1015-forge3d-velo5d-float-01312018/volume.u8",
+            "dimensions": [
+              19,
+              19,
+              201
+            ]
+          },
+          "source": {
+            "file": "products/gdr-1015-forge3d-velo5d-float-01312018/volume.u8",
+            "dimensions": [
+              19,
+              19,
+              201
+            ]
+          }
+        },
         "sceneBounds": {
           "min": [
             -12187.449999999953,
@@ -1636,9 +2352,9 @@
         "amplitudeStats": {
           "min": 1594.0625,
           "max": 5285.773438,
-          "p02": 1628.478027,
-          "p98": 5229.5,
-          "mean": 4093.349121
+          "p02": 1634.6875,
+          "p98": 5223.022461,
+          "mean": 4100.498047
         }
       },
       "textHeaderExcerpt": "C01 Client: University of Utah Dataset: Forge3D_velo5D_float_01312018.sgy C02 Project: Forge 3D velocity volume at floating datum C03 Area: Beaver Co., UT C04 Date of file: January 31, 2018 C05 Media ID: 01312018-4 Media Format: SEG-Y, IBM 32-bit float, 4sec, 1ms C06 Recorded By: Paragon Geophysical (2017) C07 Source Type: Vib, 4 swps, Linear sweep 4-84hz, 12s sweep C08 C09 Source Interval: 50 meters Source Line Interval: 375.55 m C10 Receiver Interval: 50 meters Receiver Line Interval: 200 m C11 Sample Interval: 1ms Record Length: 4s Data Samples/Trace: 4000 C12 Datum: 1800 m ASL Replacement Vel: 2500 m/s C13 C14 Key Header Word Byte Locations: C15 Description Byte Loc. Format C16 Inline 9-12 4i C17 Xline 13-16 4i C18 CDP-X 81-84 4i C19 CDP-Y 85-89 4i C20 CDP_elev 41-44 4i C21 FNL_stat 103-106 4i C22 C23 Processing: geometry extract, gain recovery, trace C24 equalization, min phase filt"
@@ -1667,10 +2383,10 @@
       ],
       "sampleInterval": 1000,
       "amplitudeStats": {
-        "min": -2.069506,
-        "max": 2.185434,
-        "p02": -0.601806,
-        "p98": 0.593807
+        "min": -3.50237,
+        "max": 4.870348,
+        "p02": -0.599518,
+        "p98": 0.603053
       },
       "sections": [
         {
@@ -1678,16 +2394,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 321,
+          "height": 6001,
           "amplitudeFile": "products/gdr-1141-line-301-pdm-enh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 41,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-301-pdm-enh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 321,
+              "height": 6001,
+              "amplitudeFile": "products/gdr-1141-line-301-pdm-enh/section.u8"
+            },
+            "source": {
+              "width": 321,
+              "height": 6001,
+              "amplitudeFile": "products/gdr-1141-line-301-pdm-enh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -2.069506,
-            "max": 2.185434,
-            "p02": -0.601806,
-            "p98": 0.593807,
-            "mean": -0.003715
+            "min": -3.50237,
+            "max": 4.870348,
+            "p02": -0.599518,
+            "p98": 0.603053,
+            "mean": 0.000105
           },
           "sampleDomain": {
             "kind": "depth",
@@ -1738,10 +2471,10 @@
       ],
       "sampleInterval": 1000,
       "amplitudeStats": {
-        "min": -2.47121,
-        "max": 2.460963,
-        "p02": -0.699252,
-        "p98": 0.683169
+        "min": -3.931309,
+        "max": 5.336415,
+        "p02": -0.684747,
+        "p98": 0.689735
       },
       "sections": [
         {
@@ -1749,16 +2482,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 321,
+          "height": 6001,
           "amplitudeFile": "products/gdr-1141-line-301-psdm-unenh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 41,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-301-psdm-unenh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 321,
+              "height": 6001,
+              "amplitudeFile": "products/gdr-1141-line-301-psdm-unenh/section.u8"
+            },
+            "source": {
+              "width": 321,
+              "height": 6001,
+              "amplitudeFile": "products/gdr-1141-line-301-psdm-unenh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -2.47121,
-            "max": 2.460963,
-            "p02": -0.699252,
-            "p98": 0.683169,
-            "mean": -0.0042
+            "min": -3.931309,
+            "max": 5.336415,
+            "p02": -0.684747,
+            "p98": 0.689735,
+            "mean": 0.000145
           },
           "sampleDomain": {
             "kind": "depth",
@@ -1809,10 +2559,10 @@
       ],
       "sampleInterval": 4235,
       "amplitudeStats": {
-        "min": -3.560097,
-        "max": 3.489523,
-        "p02": -0.907628,
-        "p98": 0.887408
+        "min": -5.997807,
+        "max": 5.363006,
+        "p02": -0.918003,
+        "p98": 0.923799
       },
       "sections": [
         {
@@ -1820,16 +2570,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 321,
+          "height": 1929,
           "amplitudeFile": "products/gdr-1015-forge2d-301-migr-depth/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 128,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1015-forge2d-301-migr-depth/section__coarse.u8"
+            },
+            "standard": {
+              "width": 321,
+              "height": 1929,
+              "amplitudeFile": "products/gdr-1015-forge2d-301-migr-depth/section.u8"
+            },
+            "source": {
+              "width": 321,
+              "height": 1929,
+              "amplitudeFile": "products/gdr-1015-forge2d-301-migr-depth/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -3.560097,
-            "max": 3.489523,
-            "p02": -0.907628,
-            "p98": 0.887408,
-            "mean": -0.008989
+            "min": -5.997807,
+            "max": 5.363006,
+            "p02": -0.918003,
+            "p98": 0.923799,
+            "mean": 0.000239
           },
           "sampleDomain": {
             "kind": "depth",
@@ -1880,10 +2647,10 @@
       ],
       "sampleInterval": 1000,
       "amplitudeStats": {
-        "min": -3.576588,
-        "max": 3.621507,
-        "p02": -0.656189,
-        "p98": 0.687923
+        "min": -5.843673,
+        "max": 3.85969,
+        "p02": -0.681635,
+        "p98": 0.68556
       },
       "sections": [
         {
@@ -1891,16 +2658,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 307,
+          "height": 6001,
           "amplitudeFile": "products/gdr-1141-line-302-psdm-enh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 39,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-302-psdm-enh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 307,
+              "height": 6001,
+              "amplitudeFile": "products/gdr-1141-line-302-psdm-enh/section.u8"
+            },
+            "source": {
+              "width": 307,
+              "height": 6001,
+              "amplitudeFile": "products/gdr-1141-line-302-psdm-enh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -3.576588,
-            "max": 3.621507,
-            "p02": -0.656189,
-            "p98": 0.687923,
-            "mean": 0.002412
+            "min": -5.843673,
+            "max": 3.85969,
+            "p02": -0.681635,
+            "p98": 0.68556,
+            "mean": -0.000068
           },
           "sampleDomain": {
             "kind": "depth",
@@ -1951,10 +2735,10 @@
       ],
       "sampleInterval": 1000,
       "amplitudeStats": {
-        "min": -4.95767,
-        "max": 4.298369,
-        "p02": -0.704188,
-        "p98": 0.727095
+        "min": -7.153614,
+        "max": 5.379967,
+        "p02": -0.725565,
+        "p98": 0.729432
       },
       "sections": [
         {
@@ -1962,16 +2746,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 307,
+          "height": 6001,
           "amplitudeFile": "products/gdr-1141-line-302-psdm-unenh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 39,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-302-psdm-unenh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 307,
+              "height": 6001,
+              "amplitudeFile": "products/gdr-1141-line-302-psdm-unenh/section.u8"
+            },
+            "source": {
+              "width": 307,
+              "height": 6001,
+              "amplitudeFile": "products/gdr-1141-line-302-psdm-unenh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -4.95767,
-            "max": 4.298369,
-            "p02": -0.704188,
-            "p98": 0.727095,
-            "mean": 0.002132
+            "min": -7.153614,
+            "max": 5.379967,
+            "p02": -0.725565,
+            "p98": 0.729432,
+            "mean": -0.000068
           },
           "sampleDomain": {
             "kind": "depth",
@@ -2022,10 +2823,10 @@
       ],
       "sampleInterval": 2000,
       "amplitudeStats": {
-        "min": -1.766114,
-        "max": 2.336257,
-        "p02": -0.644733,
-        "p98": 0.638503
+        "min": -2.356447,
+        "max": 2.221602,
+        "p02": -0.632881,
+        "p98": 0.636494
       },
       "sections": [
         {
@@ -2033,16 +2834,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 534,
+          "height": 7848,
           "amplitudeFile": "products/gdr-1141-line-l11-psdm-enh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 52,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l11-psdm-enh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 534,
+              "height": 7848,
+              "amplitudeFile": "products/gdr-1141-line-l11-psdm-enh/section.u8"
+            },
+            "source": {
+              "width": 534,
+              "height": 7848,
+              "amplitudeFile": "products/gdr-1141-line-l11-psdm-enh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -1.766114,
-            "max": 2.336257,
-            "p02": -0.644733,
-            "p98": 0.638503,
-            "mean": 0.00003
+            "min": -2.356447,
+            "max": 2.221602,
+            "p02": -0.632881,
+            "p98": 0.636494,
+            "mean": -0.000093
           },
           "sampleDomain": {
             "kind": "depth",
@@ -2093,10 +2911,10 @@
       ],
       "sampleInterval": 1000,
       "amplitudeStats": {
-        "min": -3.316059,
-        "max": 3.649615,
-        "p02": -1.062479,
-        "p98": 1.107105
+        "min": -4.691314,
+        "max": 4.439824,
+        "p02": -1.094941,
+        "p98": 1.098709
       },
       "sections": [
         {
@@ -2104,16 +2922,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 534,
+          "height": 7848,
           "amplitudeFile": "products/gdr-1141-line-l11-psdm-enh-meters/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 52,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l11-psdm-enh-meters/section__coarse.u8"
+            },
+            "standard": {
+              "width": 534,
+              "height": 7848,
+              "amplitudeFile": "products/gdr-1141-line-l11-psdm-enh-meters/section.u8"
+            },
+            "source": {
+              "width": 534,
+              "height": 7848,
+              "amplitudeFile": "products/gdr-1141-line-l11-psdm-enh-meters/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -3.316059,
-            "max": 3.649615,
-            "p02": -1.062479,
-            "p98": 1.107105,
-            "mean": 0.002233
+            "min": -4.691314,
+            "max": 4.439824,
+            "p02": -1.094941,
+            "p98": 1.098709,
+            "mean": -0.000125
           },
           "sampleDomain": {
             "kind": "depth",
@@ -2164,10 +2999,10 @@
       ],
       "sampleInterval": 2000,
       "amplitudeStats": {
-        "min": -1.881605,
-        "max": 3.76176,
-        "p02": -0.838173,
-        "p98": 0.862271
+        "min": -4.127192,
+        "max": 4.21244,
+        "p02": -0.842419,
+        "p98": 0.840752
       },
       "sections": [
         {
@@ -2175,16 +3010,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 534,
+          "height": 7848,
           "amplitudeFile": "products/gdr-1141-line-l11-psdm-unenh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 52,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l11-psdm-unenh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 534,
+              "height": 7848,
+              "amplitudeFile": "products/gdr-1141-line-l11-psdm-unenh/section.u8"
+            },
+            "source": {
+              "width": 534,
+              "height": 7848,
+              "amplitudeFile": "products/gdr-1141-line-l11-psdm-unenh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -1.881605,
-            "max": 3.76176,
-            "p02": -0.838173,
-            "p98": 0.862271,
-            "mean": 0.001156
+            "min": -4.127192,
+            "max": 4.21244,
+            "p02": -0.842419,
+            "p98": 0.840752,
+            "mean": -0.000304
           },
           "sampleDomain": {
             "kind": "depth",
@@ -2235,10 +3087,10 @@
       ],
       "sampleInterval": 10000,
       "amplitudeStats": {
-        "min": -1.590545,
-        "max": 1.725957,
-        "p02": -0.442558,
-        "p98": 0.443282
+        "min": -2.197502,
+        "max": 1.945883,
+        "p02": -0.4445,
+        "p98": 0.447511
       },
       "sections": [
         {
@@ -2246,16 +3098,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 439,
+          "height": 2001,
           "amplitudeFile": "products/gdr-1141-line-l5-psdm-enh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 168,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-enh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 439,
+              "height": 2001,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-enh/section.u8"
+            },
+            "source": {
+              "width": 439,
+              "height": 2001,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-enh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -1.590545,
-            "max": 1.725957,
-            "p02": -0.442558,
-            "p98": 0.443282,
-            "mean": -0.000104
+            "min": -2.197502,
+            "max": 1.945883,
+            "p02": -0.4445,
+            "p98": 0.447511,
+            "mean": -0.000057
           },
           "sampleDomain": {
             "kind": "depth",
@@ -2306,10 +3175,10 @@
       ],
       "sampleInterval": 5000,
       "amplitudeStats": {
-        "min": -4.164349,
-        "max": 2.512978,
-        "p02": -0.899081,
-        "p98": 0.911141
+        "min": -4.272712,
+        "max": 3.853531,
+        "p02": -0.896896,
+        "p98": 0.903544
       },
       "sections": [
         {
@@ -2317,16 +3186,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 439,
+          "height": 1161,
           "amplitudeFile": "products/gdr-1141-line-l5-psdm-enh-meters/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 290,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-enh-meters/section__coarse.u8"
+            },
+            "standard": {
+              "width": 439,
+              "height": 1161,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-enh-meters/section.u8"
+            },
+            "source": {
+              "width": 439,
+              "height": 1161,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-enh-meters/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -4.164349,
-            "max": 2.512978,
-            "p02": -0.899081,
-            "p98": 0.911141,
-            "mean": -0.00089
+            "min": -4.272712,
+            "max": 3.853531,
+            "p02": -0.896896,
+            "p98": 0.903544,
+            "mean": -0.000113
           },
           "sampleDomain": {
             "kind": "depth",
@@ -2377,10 +3263,10 @@
       ],
       "sampleInterval": 10000,
       "amplitudeStats": {
-        "min": -3.216277,
-        "max": 2.967563,
-        "p02": -0.578481,
-        "p98": 0.582544
+        "min": -3.39759,
+        "max": 3.154346,
+        "p02": -0.58084,
+        "p98": 0.583217
       },
       "sections": [
         {
@@ -2388,16 +3274,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 439,
+          "height": 2001,
           "amplitudeFile": "products/gdr-1141-line-l5-psdm-unenh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 168,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-unenh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 439,
+              "height": 2001,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-unenh/section.u8"
+            },
+            "source": {
+              "width": 439,
+              "height": 2001,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-unenh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -3.216277,
-            "max": 2.967563,
-            "p02": -0.578481,
-            "p98": 0.582544,
-            "mean": -0.000119
+            "min": -3.39759,
+            "max": 3.154346,
+            "p02": -0.58084,
+            "p98": 0.583217,
+            "mean": 0.00004
           },
           "sampleDomain": {
             "kind": "depth",
@@ -2448,10 +3351,10 @@
       ],
       "sampleInterval": 5000,
       "amplitudeStats": {
-        "min": -5.358349,
-        "max": 5.806688,
-        "p02": -1.208692,
-        "p98": 1.187713
+        "min": -6.396832,
+        "max": 6.009273,
+        "p02": -1.17361,
+        "p98": 1.179392
       },
       "sections": [
         {
@@ -2459,16 +3362,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 439,
+          "height": 1161,
           "amplitudeFile": "products/gdr-1141-line-l5-psdm-unenh-meters/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 290,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-unenh-meters/section__coarse.u8"
+            },
+            "standard": {
+              "width": 439,
+              "height": 1161,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-unenh-meters/section.u8"
+            },
+            "source": {
+              "width": 439,
+              "height": 1161,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-unenh-meters/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -5.358349,
-            "max": 5.806688,
-            "p02": -1.208692,
-            "p98": 1.187713,
-            "mean": -0.002445
+            "min": -6.396832,
+            "max": 6.009273,
+            "p02": -1.17361,
+            "p98": 1.179392,
+            "mean": 0.000106
           },
           "sampleDomain": {
             "kind": "depth",
@@ -2519,10 +3439,10 @@
       ],
       "sampleInterval": 1000,
       "amplitudeStats": {
-        "min": -11.372896,
-        "max": 8.613849,
-        "p02": -1.821284,
-        "p98": 1.922681
+        "min": -13.865402,
+        "max": 13.669052,
+        "p02": -1.915446,
+        "p98": 1.902364
       },
       "sections": [
         {
@@ -2530,16 +3450,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 321,
+          "height": 4001,
           "amplitudeFile": "products/gdr-1141-line-301-pstm-stack-enh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 62,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-301-pstm-stack-enh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 321,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1141-line-301-pstm-stack-enh/section.u8"
+            },
+            "source": {
+              "width": 321,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1141-line-301-pstm-stack-enh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -11.372896,
-            "max": 8.613849,
-            "p02": -1.821284,
-            "p98": 1.922681,
-            "mean": 0.006698
+            "min": -13.865402,
+            "max": 13.669052,
+            "p02": -1.915446,
+            "p98": 1.902364,
+            "mean": 0.000028
           },
           "sampleDomain": {
             "kind": "time",
@@ -2590,10 +3527,10 @@
       ],
       "sampleInterval": 1000,
       "amplitudeStats": {
-        "min": -12.302876,
-        "max": 13.685453,
-        "p02": -2.835003,
-        "p98": 2.956939
+        "min": -19.764511,
+        "max": 20.624832,
+        "p02": -2.928988,
+        "p98": 2.925812
       },
       "sections": [
         {
@@ -2601,16 +3538,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 321,
+          "height": 4001,
           "amplitudeFile": "products/gdr-1141-line-301-pstm-stack-unenh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 62,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-301-pstm-stack-unenh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 321,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1141-line-301-pstm-stack-unenh/section.u8"
+            },
+            "source": {
+              "width": 321,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1141-line-301-pstm-stack-unenh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -12.302876,
-            "max": 13.685453,
-            "p02": -2.835003,
-            "p98": 2.956939,
-            "mean": 0.0072
+            "min": -19.764511,
+            "max": 20.624832,
+            "p02": -2.928988,
+            "p98": 2.925812,
+            "mean": 0.00037
           },
           "sampleDomain": {
             "kind": "time",
@@ -2661,10 +3615,10 @@
       ],
       "sampleInterval": 1000,
       "amplitudeStats": {
-        "min": -11.923859,
-        "max": 9.367264,
-        "p02": -2.437007,
-        "p98": 2.474391
+        "min": -12.068985,
+        "max": 12.940557,
+        "p02": -2.444283,
+        "p98": 2.433861
       },
       "sections": [
         {
@@ -2672,16 +3626,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 321,
+          "height": 4001,
           "amplitudeFile": "products/gdr-1141-line-301-unmigrated-stack/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 62,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-301-unmigrated-stack/section__coarse.u8"
+            },
+            "standard": {
+              "width": 321,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1141-line-301-unmigrated-stack/section.u8"
+            },
+            "source": {
+              "width": 321,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1141-line-301-unmigrated-stack/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -11.923859,
-            "max": 9.367264,
-            "p02": -2.437007,
-            "p98": 2.474391,
-            "mean": 0.006811
+            "min": -12.068985,
+            "max": 12.940557,
+            "p02": -2.444283,
+            "p98": 2.433861,
+            "mean": 0.000001
           },
           "sampleDomain": {
             "kind": "time",
@@ -2732,10 +3703,10 @@
       ],
       "sampleInterval": 1000,
       "amplitudeStats": {
-        "min": -11.327103,
-        "max": 9.501466,
-        "p02": -2.305079,
-        "p98": 2.361603
+        "min": -13.959867,
+        "max": 12.632565,
+        "p02": -2.304996,
+        "p98": 2.367665
       },
       "sections": [
         {
@@ -2743,16 +3714,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 307,
+          "height": 4001,
           "amplitudeFile": "products/gdr-1141-line-302-pstm-stack-enh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 59,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-302-pstm-stack-enh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 307,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1141-line-302-pstm-stack-enh/section.u8"
+            },
+            "source": {
+              "width": 307,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1141-line-302-pstm-stack-enh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -11.327103,
-            "max": 9.501466,
-            "p02": -2.305079,
-            "p98": 2.361603,
-            "mean": 0.006393
+            "min": -13.959867,
+            "max": 12.632565,
+            "p02": -2.304996,
+            "p98": 2.367665,
+            "mean": 0.000161
           },
           "sampleDomain": {
             "kind": "time",
@@ -2803,10 +3791,10 @@
       ],
       "sampleInterval": 1000,
       "amplitudeStats": {
-        "min": -18.970093,
-        "max": 19.569702,
-        "p02": -3.227523,
-        "p98": 3.348767
+        "min": -22.978897,
+        "max": 24.842239,
+        "p02": -3.255801,
+        "p98": 3.291733
       },
       "sections": [
         {
@@ -2814,16 +3802,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 307,
+          "height": 4001,
           "amplitudeFile": "products/gdr-1141-line-302-pstm-stack-unenh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 59,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-302-pstm-stack-unenh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 307,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1141-line-302-pstm-stack-unenh/section.u8"
+            },
+            "source": {
+              "width": 307,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1141-line-302-pstm-stack-unenh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -18.970093,
-            "max": 19.569702,
-            "p02": -3.227523,
-            "p98": 3.348767,
-            "mean": 0.010415
+            "min": -22.978897,
+            "max": 24.842239,
+            "p02": -3.255801,
+            "p98": 3.291733,
+            "mean": 0.000213
           },
           "sampleDomain": {
             "kind": "time",
@@ -2874,10 +3879,10 @@
       ],
       "sampleInterval": 1000,
       "amplitudeStats": {
-        "min": -8.112523,
-        "max": 7.891978,
-        "p02": -3.11514,
-        "p98": 3.094029
+        "min": -15.356203,
+        "max": 14.27107,
+        "p02": -3.087955,
+        "p98": 3.0851
       },
       "sections": [
         {
@@ -2885,16 +3890,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 307,
+          "height": 4001,
           "amplitudeFile": "products/gdr-1141-line-302-unmigrated-stack/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 59,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-302-unmigrated-stack/section__coarse.u8"
+            },
+            "standard": {
+              "width": 307,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1141-line-302-unmigrated-stack/section.u8"
+            },
+            "source": {
+              "width": 307,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1141-line-302-unmigrated-stack/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -8.112523,
-            "max": 7.891978,
-            "p02": -3.11514,
-            "p98": 3.094029,
-            "mean": -0.000922
+            "min": -15.356203,
+            "max": 14.27107,
+            "p02": -3.087955,
+            "p98": 3.0851,
+            "mean": 0.000119
           },
           "sampleDomain": {
             "kind": "time",
@@ -2945,10 +3967,10 @@
       ],
       "sampleInterval": 2000,
       "amplitudeStats": {
-        "min": -9.132649,
-        "max": 12.041058,
-        "p02": -2.114614,
-        "p98": 2.068316
+        "min": -11.433752,
+        "max": 12.694193,
+        "p02": -2.119457,
+        "p98": 2.120479
       },
       "sections": [
         {
@@ -2956,16 +3978,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 681,
+          "height": 2192,
           "amplitudeFile": "products/gdr-1141-line-l11-pstm-enh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 239,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l11-pstm-enh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 681,
+              "height": 2192,
+              "amplitudeFile": "products/gdr-1141-line-l11-pstm-enh/section.u8"
+            },
+            "source": {
+              "width": 681,
+              "height": 2192,
+              "amplitudeFile": "products/gdr-1141-line-l11-pstm-enh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -9.132649,
-            "max": 12.041058,
-            "p02": -2.114614,
-            "p98": 2.068316,
-            "mean": -0.020812
+            "min": -11.433752,
+            "max": 12.694193,
+            "p02": -2.119457,
+            "p98": 2.120479,
+            "mean": 0.000285
           },
           "sampleDomain": {
             "kind": "time",
@@ -3016,10 +4055,10 @@
       ],
       "sampleInterval": 2000,
       "amplitudeStats": {
-        "min": -10.017319,
-        "max": 12.583209,
-        "p02": -2.39027,
-        "p98": 2.357194
+        "min": -13.130173,
+        "max": 13.521005,
+        "p02": -2.423753,
+        "p98": 2.429426
       },
       "sections": [
         {
@@ -3027,16 +4066,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 681,
+          "height": 2192,
           "amplitudeFile": "products/gdr-1141-line-l11-pstm-unenh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 239,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l11-pstm-unenh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 681,
+              "height": 2192,
+              "amplitudeFile": "products/gdr-1141-line-l11-pstm-unenh/section.u8"
+            },
+            "source": {
+              "width": 681,
+              "height": 2192,
+              "amplitudeFile": "products/gdr-1141-line-l11-pstm-unenh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -10.017319,
-            "max": 12.583209,
-            "p02": -2.39027,
-            "p98": 2.357194,
-            "mean": -0.025795
+            "min": -13.130173,
+            "max": 13.521005,
+            "p02": -2.423753,
+            "p98": 2.429426,
+            "mean": 0.000231
           },
           "sampleDomain": {
             "kind": "time",
@@ -3087,10 +4143,10 @@
       ],
       "sampleInterval": 2000,
       "amplitudeStats": {
-        "min": -8.713607,
-        "max": 9.39006,
-        "p02": -2.351139,
-        "p98": 2.364474
+        "min": -12.596266,
+        "max": 12.12034,
+        "p02": -2.374664,
+        "p98": 2.386151
       },
       "sections": [
         {
@@ -3098,16 +4154,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 681,
+          "height": 2192,
           "amplitudeFile": "products/gdr-1141-line-l11-unmigrated-time-stack/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 239,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l11-unmigrated-time-stack/section__coarse.u8"
+            },
+            "standard": {
+              "width": 681,
+              "height": 2192,
+              "amplitudeFile": "products/gdr-1141-line-l11-unmigrated-time-stack/section.u8"
+            },
+            "source": {
+              "width": 681,
+              "height": 2192,
+              "amplitudeFile": "products/gdr-1141-line-l11-unmigrated-time-stack/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -8.713607,
-            "max": 9.39006,
-            "p02": -2.351139,
-            "p98": 2.364474,
-            "mean": -0.01194
+            "min": -12.596266,
+            "max": 12.12034,
+            "p02": -2.374664,
+            "p98": 2.386151,
+            "mean": -0.000061
           },
           "sampleDomain": {
             "kind": "time",
@@ -3158,10 +4231,10 @@
       ],
       "sampleInterval": 2000,
       "amplitudeStats": {
-        "min": -4.346985,
-        "max": 5.602103,
-        "p02": -1.456238,
-        "p98": 1.483246
+        "min": -6.288277,
+        "max": 6.726847,
+        "p02": -1.469998,
+        "p98": 1.469834
       },
       "sections": [
         {
@@ -3169,16 +4242,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 439,
+          "height": 2192,
           "amplitudeFile": "products/gdr-1141-line-l5-pstm-enh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 154,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l5-pstm-enh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 439,
+              "height": 2192,
+              "amplitudeFile": "products/gdr-1141-line-l5-pstm-enh/section.u8"
+            },
+            "source": {
+              "width": 439,
+              "height": 2192,
+              "amplitudeFile": "products/gdr-1141-line-l5-pstm-enh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -4.346985,
-            "max": 5.602103,
-            "p02": -1.456238,
-            "p98": 1.483246,
-            "mean": 0.012772
+            "min": -6.288277,
+            "max": 6.726847,
+            "p02": -1.469998,
+            "p98": 1.469834,
+            "mean": -0.000079
           },
           "sampleDomain": {
             "kind": "time",
@@ -3229,10 +4319,10 @@
       ],
       "sampleInterval": 2000,
       "amplitudeStats": {
-        "min": -11.585196,
-        "max": 10.690771,
-        "p02": -2.241184,
-        "p98": 2.356736
+        "min": -15.296298,
+        "max": 14.454698,
+        "p02": -2.2958,
+        "p98": 2.299137
       },
       "sections": [
         {
@@ -3240,16 +4330,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 439,
+          "height": 2192,
           "amplitudeFile": "products/gdr-1141-line-l5-pstm-unenh/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 154,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l5-pstm-unenh/section__coarse.u8"
+            },
+            "standard": {
+              "width": 439,
+              "height": 2192,
+              "amplitudeFile": "products/gdr-1141-line-l5-pstm-unenh/section.u8"
+            },
+            "source": {
+              "width": 439,
+              "height": 2192,
+              "amplitudeFile": "products/gdr-1141-line-l5-pstm-unenh/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -11.585196,
-            "max": 10.690771,
-            "p02": -2.241184,
-            "p98": 2.356736,
-            "mean": 0.018137
+            "min": -15.296298,
+            "max": 14.454698,
+            "p02": -2.2958,
+            "p98": 2.299137,
+            "mean": -0.0007
           },
           "sampleDomain": {
             "kind": "time",
@@ -3300,10 +4407,10 @@
       ],
       "sampleInterval": 2000,
       "amplitudeStats": {
-        "min": -3.575264,
-        "max": 3.978133,
-        "p02": -1.962702,
-        "p98": 1.98545
+        "min": -4.665257,
+        "max": 4.514983,
+        "p02": -2.001059,
+        "p98": 2.007533
       },
       "sections": [
         {
@@ -3311,16 +4418,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 439,
+          "height": 2151,
           "amplitudeFile": "products/gdr-1141-line-l5-unmigrated-time-stack/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 157,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l5-unmigrated-time-stack/section__coarse.u8"
+            },
+            "standard": {
+              "width": 439,
+              "height": 2151,
+              "amplitudeFile": "products/gdr-1141-line-l5-unmigrated-time-stack/section.u8"
+            },
+            "source": {
+              "width": 439,
+              "height": 2151,
+              "amplitudeFile": "products/gdr-1141-line-l5-unmigrated-time-stack/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -3.575264,
-            "max": 3.978133,
-            "p02": -1.962702,
-            "p98": 1.98545,
-            "mean": -0.001172
+            "min": -4.665257,
+            "max": 4.514983,
+            "p02": -2.001059,
+            "p98": 2.007533,
+            "mean": -0.00028
           },
           "sampleDomain": {
             "kind": "time",
@@ -3371,10 +4495,10 @@
       ],
       "sampleInterval": 1000,
       "amplitudeStats": {
-        "min": -5.911188,
-        "max": 4.94632,
-        "p02": -2.092115,
-        "p98": 2.030893
+        "min": -6.635401,
+        "max": 6.642397,
+        "p02": -2.065623,
+        "p98": 2.067637
       },
       "sections": [
         {
@@ -3382,16 +4506,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 321,
+          "height": 4001,
           "amplitudeFile": "products/gdr-1015-forge2d-301-stack-01312018/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 62,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1015-forge2d-301-stack-01312018/section__coarse.u8"
+            },
+            "standard": {
+              "width": 321,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1015-forge2d-301-stack-01312018/section.u8"
+            },
+            "source": {
+              "width": 321,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1015-forge2d-301-stack-01312018/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -5.911188,
-            "max": 4.94632,
-            "p02": -2.092115,
-            "p98": 2.030893,
-            "mean": 0.000634
+            "min": -6.635401,
+            "max": 6.642397,
+            "p02": -2.065623,
+            "p98": 2.067637,
+            "mean": -0.000677
           },
           "sampleDomain": {
             "kind": "time",
@@ -3442,10 +4583,10 @@
       ],
       "sampleInterval": 1000,
       "amplitudeStats": {
-        "min": -5.997778,
+        "min": -8.723717,
         "max": 7.680196,
-        "p02": -1.999769,
-        "p98": 2.051595
+        "p02": -2.029477,
+        "p98": 2.035839
       },
       "sections": [
         {
@@ -3453,16 +4594,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 321,
+          "height": 4001,
           "amplitudeFile": "products/gdr-1015-forge2d-302-stack/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 62,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1015-forge2d-302-stack/section__coarse.u8"
+            },
+            "standard": {
+              "width": 321,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1015-forge2d-302-stack/section.u8"
+            },
+            "source": {
+              "width": 321,
+              "height": 4001,
+              "amplitudeFile": "products/gdr-1015-forge2d-302-stack/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": -5.997778,
+            "min": -8.723717,
             "max": 7.680196,
-            "p02": -1.999769,
-            "p98": 2.051595,
-            "mean": -0.005422
+            "p02": -2.029477,
+            "p98": 2.035839,
+            "mean": -0.000016
           },
           "sampleDomain": {
             "kind": "time",
@@ -3515,8 +4673,8 @@
       "amplitudeStats": {
         "min": 1080.004395,
         "max": 6200.015625,
-        "p02": 1784.855469,
-        "p98": 6157.743164
+        "p02": 1781.572998,
+        "p98": 6148.310059
       },
       "sections": [
         {
@@ -3525,15 +4683,32 @@
           "axis": "line",
           "fraction": 0.5,
           "width": 81,
-          "height": 128,
+          "height": 1251,
           "amplitudeFile": "products/gdr-1141-line-301-psdm-interval-velocity/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 50,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-301-psdm-interval-velocity/section__coarse.u8"
+            },
+            "standard": {
+              "width": 81,
+              "height": 1251,
+              "amplitudeFile": "products/gdr-1141-line-301-psdm-interval-velocity/section.u8"
+            },
+            "source": {
+              "width": 81,
+              "height": 1251,
+              "amplitudeFile": "products/gdr-1141-line-301-psdm-interval-velocity/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
             "min": 1080.004395,
             "max": 6200.015625,
-            "p02": 1784.855469,
-            "p98": 6157.743164,
-            "mean": 4666.652832
+            "p02": 1781.572998,
+            "p98": 6148.310059,
+            "mean": 4669.058594
           },
           "sampleDomain": {
             "kind": "velocity-time",
@@ -3584,10 +4759,10 @@
       ],
       "sampleInterval": 8000,
       "amplitudeStats": {
-        "min": 1840.796143,
+        "min": 1826.396973,
         "max": 6137.054688,
-        "p02": 2195.639404,
-        "p98": 5920.818359
+        "p02": 2191.460938,
+        "p98": 5909.637695
       },
       "sections": [
         {
@@ -3596,15 +4771,32 @@
           "axis": "line",
           "fraction": 0.5,
           "width": 103,
-          "height": 128,
+          "height": 800,
           "amplitudeFile": "products/gdr-1141-line-302-psdm-interval-velocity/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 99,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-302-psdm-interval-velocity/section__coarse.u8"
+            },
+            "standard": {
+              "width": 103,
+              "height": 800,
+              "amplitudeFile": "products/gdr-1141-line-302-psdm-interval-velocity/section.u8"
+            },
+            "source": {
+              "width": 103,
+              "height": 800,
+              "amplitudeFile": "products/gdr-1141-line-302-psdm-interval-velocity/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": 1840.796143,
+            "min": 1826.396973,
             "max": 6137.054688,
-            "p02": 2195.639404,
-            "p98": 5920.818359,
-            "mean": 4123.088379
+            "p02": 2191.460938,
+            "p98": 5909.637695,
+            "mean": 4122.40332
           },
           "sampleDomain": {
             "kind": "velocity-time",
@@ -3655,10 +4847,10 @@
       ],
       "sampleInterval": 8000,
       "amplitudeStats": {
-        "min": 2530.214844,
-        "max": 22246.046875,
-        "p02": 3589.64624,
-        "p98": 19867.560547
+        "min": 2436.294189,
+        "max": 22250.246094,
+        "p02": 3571.322266,
+        "p98": 19846.712891
       },
       "sections": [
         {
@@ -3666,16 +4858,33 @@
           "label": "Section curtain",
           "axis": "line",
           "fraction": 0.5,
-          "width": 128,
-          "height": 128,
+          "width": 137,
+          "height": 2501,
           "amplitudeFile": "products/gdr-1141-line-l11-psdm-interval-velocity/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 42,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l11-psdm-interval-velocity/section__coarse.u8"
+            },
+            "standard": {
+              "width": 137,
+              "height": 2501,
+              "amplitudeFile": "products/gdr-1141-line-l11-psdm-interval-velocity/section.u8"
+            },
+            "source": {
+              "width": 137,
+              "height": 2501,
+              "amplitudeFile": "products/gdr-1141-line-l11-psdm-interval-velocity/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": 2530.214844,
-            "max": 22246.046875,
-            "p02": 3589.64624,
-            "p98": 19867.560547,
-            "mean": 13141.072266
+            "min": 2436.294189,
+            "max": 22250.246094,
+            "p02": 3571.322266,
+            "p98": 19846.712891,
+            "mean": 13137.786133
           },
           "sampleDomain": {
             "kind": "velocity-time",
@@ -3726,9 +4935,9 @@
       ],
       "sampleInterval": 10000,
       "amplitudeStats": {
-        "min": 4964.089844,
+        "min": 4952.574219,
         "max": 18000,
-        "p02": 6813.5625,
+        "p02": 6775.480957,
         "p98": 18000
       },
       "sections": [
@@ -3738,15 +4947,32 @@
           "axis": "line",
           "fraction": 0.5,
           "width": 89,
-          "height": 128,
+          "height": 2001,
           "amplitudeFile": "products/gdr-1141-line-l5-psdm-interval-velocity/section.u8",
+          "lods": {
+            "coarse": {
+              "width": 34,
+              "height": 768,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-interval-velocity/section__coarse.u8"
+            },
+            "standard": {
+              "width": 89,
+              "height": 2001,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-interval-velocity/section.u8"
+            },
+            "source": {
+              "width": 89,
+              "height": 2001,
+              "amplitudeFile": "products/gdr-1141-line-l5-psdm-interval-velocity/section.u8"
+            }
+          },
           "amplitudeEncoding": "uint8-normalized-p02-p98",
           "amplitudeStats": {
-            "min": 4964.089844,
+            "min": 4952.574219,
             "max": 18000,
-            "p02": 6813.5625,
+            "p02": 6775.480957,
             "p98": 18000,
-            "mean": 15900.285156
+            "mean": 15914.404297
           },
           "sampleDomain": {
             "kind": "velocity-time",
@@ -3775,13 +5001,23 @@
     }
   ],
   "sourceFiles": [
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing.zip",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/readme_metadata_seismic (1).txt",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/Reprocessing of FORGE 2D and 3D Reflection Seismic Surveys.pdf",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/5_03_19_Final_Processing_Report_Forge.pdf",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Forge 2D Receiver Survey NAD83 UTM 12.sp1",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Forge 2D Source Survey NAD83 UTM 12.sp1",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Migr-Depth.sgy",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Stack_01312018.sgy",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-302_Stack.sgy",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/UofUtah-Forge2D-301-loading-sheet-01312018.pdf",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D-and-3D-Files-List.xls",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Navigation/Forge-3D-Receiver-Survey-NAD83-UTM12.sp1",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Navigation/Forge-3D-Source-Survey-NAD83-UTM12.sp1",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Navigation.zip",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Velocity/Velocity/Forge3D_velo5D_float_01312018.sgy",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Velocity/Velocity/Forge3D_velo5D_float_01312018.txt",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Velocity.zip",
     "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy",
     "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_Poststack_Time_Migration_FXYDecon_Stack.segy",
     "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_PSTM_Stack_Enh.segy",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/5_03_19_Final_Processing_Report_Forge.pdf",
     "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11 _PSTM_UnEnh.segy",
     "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_ PSTM_Enh.segy",
     "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Enh.segy",
@@ -3809,31 +5045,17 @@
     "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_Enh.segy",
     "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_UnEnh.segy",
     "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_Unmigrated_Stack.segy",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D-and-3D-Files-List.xls",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Migr-Depth.sgy",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Stack_01312018.sgy",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-302_Stack.sgy",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/UofUtah-Forge2D-301-loading-sheet-01312018.pdf",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Navigation.zip",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Velocity.zip",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Forge 2D Receiver Survey NAD83 UTM 12.sp1",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Forge 2D Source Survey NAD83 UTM 12.sp1",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/UofUtah-Forge2D-301-loading-sheet-01312018.pdf",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Navigation/Forge-3D-Receiver-Survey-NAD83-UTM12.sp1",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Navigation/Forge-3D-Source-Survey-NAD83-UTM12.sp1",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Velocity/Velocity/Forge3D_velo5D_float_01312018.sgy",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Velocity/Velocity/Forge3D_velo5D_float_01312018.txt",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Migr-Depth.sgy",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Stack_01312018.sgy",
-    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-302_Stack.sgy"
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing.zip",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/readme_metadata_seismic (1).txt",
+    "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/Reprocessing of FORGE 2D and 3D Reflection Seismic Surveys.pdf"
   ],
   "provenance": {
-    "classification": "source-derived seismic browser preview",
+    "classification": "source-derived seismic browser visual representation",
     "sourceOrigin": "Utah FORGE GDR submissions 1015 and 1141",
     "script": "prep/build_utah_forge_seismic_browser.py",
     "notes": [
-      "Browser artifacts are downsampled visual products derived from SEG-Y source files.",
-      "Raymarch volumes are compact downsampled amplitude textures, not engineering-grade seismic interpretation volumes.",
+      "Browser artifacts are source-derived visual representations generated from SEG-Y trace and sample grids.",
+      "Raymarch volumes are browser-ready source-fidelity amplitude textures for visual communication; they are not certified for engineering design or interpretation decisions.",
       "Legacy L5/L11 sections are included as section curtains; where no delivered navigation line exists, placement is approximate and documented in the source inventory."
     ]
   },

@@ -1,0 +1,37 @@
+{
+  "id": "22_mt_station_network_footprint",
+  "title": "22. MT Station Network Footprint",
+  "subtitle": "MT station acquisition support",
+  "camera": {
+    "position": [
+      25717.838323311036,
+      150685.35006564358,
+      45790.487581879715
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "layerOverrides": {
+    "terrain": {
+      "opacity": 0.9
+    }
+  },
+  "visibilityOverrides": {
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-full-density": false
+  }
+}

@@ -1,12 +1,9 @@
-# MT Station Network / Survey Footprint
+**MT Station Network**
 
-Status: proposed / needs_review
+These markers represent the measured magnetotelluric acquisition stations from the Utah FORGE Phase 3 MT survey. Positions are parsed directly from the source EDI file headers — one marker per physical station.
 
-This page shows measured MT acquisition support for the resistivity model.
+The station network defines where the inversion model has measured data support. The spatial distribution of stations controls the resolution and reliability of the resistivity model.
 
-- Measured: MT station locations parsed from Phase 3 EDI headers.
-- One marker should represent each physical station.
-- Local and remote-reference EDI variants should be station properties, not duplicate markers.
-- The station network shows where the inversion has measured support.
+Stations cover the FORGE working area and extend into the surrounding region to support the longer-wavelength components of the MT inversion.
 
-Missing / unresolved: station labels, EDI variant UI, and MT survey footprint polygon are not yet confirmed as app tools.
+*Sources ↓*

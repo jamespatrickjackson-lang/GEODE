@@ -1,0 +1,61 @@
+{
+  "id": "130_page",
+  "title": "New page duplicate",
+  "camera": {
+    "position": [
+      -78741.74542112701,
+      -176445.8571023264,
+      152126.800544325
+    ],
+    "target": [
+      -27730.067303567223,
+      -20985.263358730845,
+      -30683.398587986096
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": false,
+    "poi": [
+      -7109,
+      -10303,
+      2255
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 21670,
+    "orbitHeight": 13780,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  },
+  "visibilityOverrides": {
+    "utah-forge-topo-graticule": false
+  },
+  "layerOverrides": {
+    "utah-forge-mt-stations": {
+      "mtStationQcSelectedStationId": "FRG19065",
+      "mtStationQcPanelOpen": true
+    }
+  }
+}

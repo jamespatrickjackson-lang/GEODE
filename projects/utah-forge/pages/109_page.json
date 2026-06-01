@@ -1,0 +1,203 @@
+{
+  "id": "109_page",
+  "title": "21. Geophysics Product Overview duplicate",
+  "subtitle": "Utah FORGE Phase 3 - seismic + MT resistivity",
+  "camera": {
+    "position": [
+      -561.0922621684158,
+      -6610.002561161361,
+      6808.5478827465795
+    ],
+    "target": [
+      -6378,
+      -9559,
+      1715
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      -6378,
+      -9559,
+      1715
+    ],
+    "orbitSpeedDegPerSec": 5.1,
+    "orbitRadius": 6522,
+    "orbitHeight": 5094,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 1350,
+    "zoomEndMs": 2000,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "cinematic",
+    "pathAwareBlend": false
+  },
+  "visibilityOverrides": {
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-mt-stations": true,
+    "terrain": true
+  },
+  "layerOverrides": {
+    "terrain": {
+      "opacity": 0.78,
+      "meshSurfaceLiftM": -3725
+    },
+    "utah-forge-site-boundary": {
+      "color": "#4dfcff",
+      "fillOpacity": 0.08,
+      "outlineColor": "#a6bebf",
+      "opacity": 1,
+      "lineWidth": 3.2
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "demoBoreholeWells": {
+        "16A(78)-32": {
+          "visible": true,
+          "pipeDiameterM": 18,
+          "color": "#35d7ff",
+          "opacity": 0.87,
+          "lineStyle": "solid",
+          "dashLengthM": 260,
+          "dashGapM": 150,
+          "centerlineVisible": true,
+          "centerlineWidth": 2.2,
+          "centerlineOpacity": 0.82,
+          "centerlineColor": "#35d7ff",
+          "collarVisible": true,
+          "collarDiameterM": 32,
+          "pathTreatment": "survey",
+          "smoothingStrength": 0.35,
+          "collarLabelVisible": false,
+          "collarLabelText": "16A injection",
+          "collarLabelLiftM": 95,
+          "toeLabelVisible": false,
+          "toeLabelText": "Injection toe",
+          "toeLabelLiftM": 40
+        },
+        "16B(78)-32": {
+          "visible": true,
+          "pipeDiameterM": 16,
+          "color": "#ff7440",
+          "opacity": 0.92,
+          "lineStyle": "solid",
+          "dashLengthM": 260,
+          "dashGapM": 150,
+          "centerlineVisible": true,
+          "centerlineWidth": 2,
+          "centerlineOpacity": 0.82,
+          "centerlineColor": "#ff7440",
+          "collarVisible": true,
+          "collarDiameterM": 30,
+          "pathTreatment": "survey",
+          "smoothingStrength": 0.35,
+          "collarLabelVisible": false,
+          "collarLabelText": "16B production",
+          "collarLabelLiftM": 95,
+          "toeLabelVisible": false,
+          "toeLabelText": "Production toe",
+          "toeLabelLiftM": 40
+        }
+      },
+      "showLabels": true,
+      "demoBoreholeBlock": {
+        "visible": true,
+        "widthM": 118,
+        "depthM": 68,
+        "heightM": 34,
+        "liftM": 0,
+        "rotationDeg": -24.985,
+        "fillColor": "#f79c9c",
+        "opacity": 0.82,
+        "outlineVisible": true,
+        "outlineColor": "#ffffff",
+        "outlineThickness": 1.5,
+        "outlineOpacity": 0.92,
+        "labelVisible": true,
+        "labelText": "FORGE surface facility / orientation block",
+        "labelLiftM": 25.5
+      }
+    },
+    "utah-forge-topo-graticule": {
+      "opacity": 0.78
+    },
+    "transport-roads": {
+      "opacity": 0.78
+    },
+    "hydrography-streams": {
+      "opacity": 0.78
+    },
+    "hydrography-lakes": {
+      "opacity": 0.78
+    },
+    "utah-forge-mt-stations": {
+      "mtStationQcSelectedStationId": "FRG19043",
+      "mtStationQcPanelOpen": true,
+      "color": "#6f6767",
+      "opacity": 1,
+      "pointMarkerRadiusM": 150,
+      "pointMarkerLiftM": 50,
+      "pointMarkerLabelLiftM": 0
+    }
+  },
+  "sceneOverrides": {
+    "terrain": {
+      "materialPreset": "utah",
+      "rampLow": "#5f594c",
+      "rampMid": "#8ea083",
+      "rampHigh": "#e9e4d8",
+      "elevLowM": 0,
+      "elevHighM": 220,
+      "hillshadeIntensity": 0.94,
+      "shadowSharpness": 0.32,
+      "facetStrength": 0.05,
+      "rockHueVariance": 0.035,
+      "shadowTint": "#35413c",
+      "surfaceElevationEnabled": true,
+      "surfaceElevationLegendVisible": true,
+      "surfaceElevationMinM": 1500,
+      "surfaceElevationMaxM": 3500,
+      "surfaceElevationColors": [
+        "#8b806c",
+        "#b5aa8d",
+        "#8ea083",
+        "#53675c",
+        "#f1eee4"
+      ],
+      "surfaceElevationColorPositions": [
+        0,
+        0.34,
+        0.58,
+        0.82,
+        1
+      ],
+      "surfaceElevationMidpoints": [
+        0.58,
+        0.44,
+        0.52,
+        0.46
+      ],
+      "surfaceElevationTransitionSoftness": 1,
+      "surfaceElevationColorBlend": 0.92,
+      "surfaceElevationReverse": false,
+      "orthoPhotoOpacity": 0
+    }
+  }
+}

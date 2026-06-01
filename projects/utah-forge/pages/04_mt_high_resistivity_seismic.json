@@ -3,14 +3,14 @@
   "title": "MT High-Resistivity Context",
   "camera": {
     "position": [
-      -88734.90318739192,
-      -88943.7167018159,
-      30138.474109371047
+      -17170.844852021917,
+      -54635.86330793158,
+      8885.597256096986
     ],
     "target": [
-      6096,
-      -3222,
-      -18974
+      -9552,
+      -25415,
+      2446
     ],
     "up": [
       0,
@@ -126,29 +126,34 @@
     },
     "utah-forge-mt-stations": {
       "opacity": 0.35,
-      "showLabels": false
+      "showLabels": false,
+      "mtStationQcSelectedStationId": "FRG19060",
+      "mtStationQcPanelOpen": true
     },
     "utah-forge-mt-resistivity-volume": {
       "scalarLegendVisible": false
     },
     "utah-forge-mt-resistivity-slices": {
       "scalarLegendVisible": false
+    },
+    "utah-forge-topo-graticule": {
+      "graticuleLiftM": 0
     }
   },
   "accentColor": "#f27826",
   "dynamicCamera": {
-    "enabled": true,
+    "enabled": false,
     "mode": "orbit",
     "orbitEnabled": true,
     "poi": [
-      6096,
-      -3222,
-      -18974
+      -9552,
+      -25415,
+      2446
     ],
     "orbitSpeedDegPerSec": 4,
-    "orbitRadius": 127832,
-    "orbitHeight": 49112,
-    "orbitDirection": 1,
+    "orbitRadius": 30198,
+    "orbitHeight": 6440,
+    "orbitDirection": -1,
     "zoomFov": 52,
     "zoomEnabled": false,
     "zoomDeltaFov": 0,
@@ -163,13 +168,14 @@
   },
   "subtitle": "Resistive MT shells with site orientation context",
   "visibilityOverrides": {
-    "utah-forge-phase3-working-area": true,
+    "utah-forge-phase3-working-area": false,
     "utah-forge-phase3-demo-boreholes": true,
     "utah-forge-phase3-seismic-browser": false,
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-slices": false,
     "utah-forge-mt-top-surface": false,
-    "terrain": false
+    "utah-forge-mt-stations": false,
+    "utah-forge-topo-graticule": false
   }
 }

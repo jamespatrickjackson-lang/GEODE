@@ -19,12 +19,12 @@
     "script": "prep/build_utah_forge_mt_volume_products.mjs",
     "generatedDate": "2026-05-12",
     "dimensions": [
-      80,
-      64,
-      56
+      144,
+      118,
+      65
     ],
     "sourceRowsInBounds": 1094579,
-    "occupiedVoxelCount": 25469
+    "occupiedVoxelCount": 57575
   },
   "caveats": [
     "Source-derived visualization volume resampled from the inversion model.",

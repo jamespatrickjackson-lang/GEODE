@@ -927,13 +927,16 @@ export function loadLayerInto(
     resolveDataPath,
     onLoaded: (obj) => {
       if (obj.userData?.seismicBrowser === true) {
+        obj.userData.seismicOnProductsLoaded = () => {
+          manager.reapplyCurrentPageState("async-layer-resolve");
+        };
         Object.assign(group.userData, obj.userData);
       }
       if (obj.userData?.scalarVolumeLayer === true) {
         Object.assign(group.userData, obj.userData);
       }
       group.add(obj);
-      manager.reapplyCurrentPageState();
+      manager.reapplyCurrentPageState("async-layer-resolve");
     },
   };
 

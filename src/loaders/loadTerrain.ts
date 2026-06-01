@@ -28,13 +28,40 @@ const TARGET_SLOTS: TargetSlotId[] = [
 ];
 const GRID_UNDERSIDE_OFFSET_M = 8;
 const GRID_SAMPLE_STEP_M = 250;
-const DEFAULT_TERRAIN_MAX_VERTICES = Number.POSITIVE_INFINITY;
+const DEFAULT_TERRAIN_MAX_VERTICES = 900_000;
+const TERRAIN_TILE_COLUMNS = 8;
+const TERRAIN_TILE_ROWS = 8;
+const TERRAIN_LOD_CAMERA_EPSILON_M = 5_000;
 
 interface TerrainGridHandle {
   material: LineMaterial;
   line: LineSegments2;
   update(params?: TerrainMaterialParams): void;
   updateCameraVisibility(camera: THREE.Camera): void;
+}
+
+type TerrainLodTierName = "coarse" | "standard" | "source";
+
+interface TerrainLodDebugState {
+  activeTileCount: number;
+  activeVertexEstimate: number;
+  lodTierCounts: Record<TerrainLodTierName, number>;
+  lastUpdateReason: string;
+}
+
+interface TerrainLodHandle {
+  updateCameraLod(camera: THREE.Camera): void;
+  debugState: TerrainLodDebugState;
+}
+
+interface TerrainTileRecord {
+  mesh: THREE.Mesh;
+  sourceX0: number;
+  sourceX1: number;
+  sourceY0: number;
+  sourceY1: number;
+  center: THREE.Vector3;
+  tier: TerrainLodTierName;
 }
 
 function clampRange(value: number, min: number, max: number): number {
@@ -200,6 +227,112 @@ function buildTerrainGridHandle(
   return { material, line, update, updateCameraVisibility };
 }
 
+function terrainLodSteps(
+  width: number,
+  height: number,
+  maxVertices: number,
+): Record<TerrainLodTierName, number> {
+  const sourceStep = Math.max(
+    1,
+    Math.ceil(Math.sqrt((width * height) / Math.max(4, maxVertices))),
+  );
+  return {
+    source: sourceStep,
+    standard: Math.max(sourceStep * 2, 2),
+    coarse: Math.max(sourceStep * 4, 4),
+  };
+}
+
+function terrainIndexRange(maxIndex: number, start: number, end: number, step: number): number[] {
+  const values: number[] = [];
+  const safeStart = clampRange(Math.round(start), 0, maxIndex);
+  const safeEnd = clampRange(Math.round(end), safeStart, maxIndex);
+  for (let value = safeStart; value < safeEnd; value += step) {
+    values.push(value);
+  }
+  if (values.length === 0 || values[values.length - 1] !== safeEnd) {
+    values.push(safeEnd);
+  }
+  return values;
+}
+
+function terrainTileVertexEstimate(tile: TerrainTileRecord, step: number): number {
+  const xCount = terrainIndexRange(tile.sourceX1, tile.sourceX0, tile.sourceX1, step).length;
+  const yCount = terrainIndexRange(tile.sourceY1, tile.sourceY0, tile.sourceY1, step).length;
+  return xCount * yCount;
+}
+
+function buildTerrainTileGeometry(params: {
+  tile: TerrainTileRecord;
+  step: number;
+  width: number;
+  height: number;
+  bbox: number[];
+  elev: Float32Array | Int16Array | Uint16Array;
+  nodata: number | null;
+  transform: GeoSceneTransform;
+  fallbackElevation: number;
+  terrainOffset: THREE.Vector3;
+}): THREE.BufferGeometry {
+  const {
+    tile,
+    step,
+    width,
+    height,
+    bbox,
+    elev,
+    nodata,
+    transform,
+    fallbackElevation,
+    terrainOffset,
+  } = params;
+  const xRange = bbox[2] - bbox[0];
+  const yRange = bbox[3] - bbox[1];
+  const xs = terrainIndexRange(width - 1, tile.sourceX0, tile.sourceX1, step);
+  const ys = terrainIndexRange(height - 1, tile.sourceY0, tile.sourceY1, step);
+  const positions = new Float32Array(xs.length * ys.length * 3);
+  let offset = 0;
+  for (const sourceY of ys) {
+    for (const sourceX of xs) {
+      const utmX = bbox[0] + (sourceX / Math.max(1, width - 1)) * xRange;
+      const utmY = bbox[3] - (sourceY / Math.max(1, height - 1)) * yRange;
+      const raw = elev[sourceY * width + sourceX];
+      const z = nodata !== null && raw === nodata ? fallbackElevation : raw;
+      const [sx, sy, sz] = utmToSceneWithTransform(transform, utmX, utmY, z);
+      positions[offset++] = sx - terrainOffset.x;
+      positions[offset++] = sy - terrainOffset.y;
+      positions[offset++] = sz - terrainOffset.z;
+    }
+  }
+
+  const indices = new Uint32Array(
+    Math.max(0, xs.length - 1) * Math.max(0, ys.length - 1) * 6,
+  );
+  let indexOffset = 0;
+  for (let y = 0; y < ys.length - 1; y += 1) {
+    for (let x = 0; x < xs.length - 1; x += 1) {
+      const a = y * xs.length + x;
+      const b = a + 1;
+      const c = a + xs.length;
+      const d = c + 1;
+      indices[indexOffset++] = a;
+      indices[indexOffset++] = c;
+      indices[indexOffset++] = b;
+      indices[indexOffset++] = b;
+      indices[indexOffset++] = c;
+      indices[indexOffset++] = d;
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+  geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
 // Loads terrain_woodjam.tif (clipped, reprojected to EPSG:26910 by the
 // prep/fetch_terrain.py script) and builds a displaced PlaneGeometry mesh.
 //
@@ -211,7 +344,7 @@ function buildTerrainGridHandle(
 export async function loadTerrain(
   url: string,
   options?: GeoSceneTransformOptions,
-): Promise<THREE.Mesh> {
+): Promise<THREE.Group> {
   const transform = resolveGeoSceneTransform(options);
   const response = await fetch(url);
   if (!response.ok) {
@@ -234,57 +367,22 @@ export async function loadTerrain(
     options.terrainMaxVertices > 4
       ? options.terrainMaxVertices
       : DEFAULT_TERRAIN_MAX_VERTICES;
-  const renderStep = Math.max(
-    1,
-    Math.ceil(Math.sqrt((width * height) / maxVertices)),
-  );
-  const renderWidth = Math.max(2, Math.ceil((width - 1) / renderStep) + 1);
-  const renderHeight = Math.max(2, Math.ceil((height - 1) / renderStep) + 1);
 
-  // Plane in the XY plane (Z-up scene). One vertex per raster pixel center.
-  // PlaneGeometry has (widthSegments+1) * (heightSegments+1) vertices, so
-  // segments = pixels - 1 to match counts.
   const planeWidth = bbox[2] - bbox[0];
   const planeHeight = bbox[3] - bbox[1];
-  const geom = new THREE.PlaneGeometry(
-    planeWidth,
-    planeHeight,
-    renderWidth - 1,
-    renderHeight - 1,
-  );
-
-  // Apply elevation per vertex. PlaneGeometry vertex order: row 0 is the
-  // top (+Y, i.e. max northing). Same as raster row 0.
-  const positions = geom.attributes.position;
   let minSeen = Infinity;
   let maxSeen = -Infinity;
-  for (let i = 0; i < positions.count; i++) {
-    const renderX = i % renderWidth;
-    const renderY = Math.floor(i / renderWidth);
-    const sourceX = Math.min(
-      width - 1,
-      Math.round((renderX / (renderWidth - 1)) * (width - 1)),
-    );
-    const sourceY = Math.min(
-      height - 1,
-      Math.round((renderY / (renderHeight - 1)) * (height - 1)),
-    );
-    const raw = elev[sourceY * width + sourceX];
-    const isNoData = nodata !== null && raw === nodata;
-    const z = isNoData ? 0 : raw;
-    if (!isNoData) {
-      if (z < minSeen) minSeen = z;
-      if (z > maxSeen) maxSeen = z;
-    }
-    // Subtract origin elevation to keep mesh local; PlaneGeometry XY is
-    // already centered on (0,0) in plane-local space, so we'll translate
-    // the whole mesh below.
-    positions.setZ(i, z - transform.origin.elevation);
+  for (let i = 0; i < elev.length; i += 1) {
+    const raw = elev[i];
+    if (nodata !== null && raw === nodata) continue;
+    if (raw < minSeen) minSeen = raw;
+    if (raw > maxSeen) maxSeen = raw;
   }
-  geom.computeVertexNormals();
+  if (!Number.isFinite(minSeen)) {
+    minSeen = transform.origin.elevation;
+    maxSeen = transform.origin.elevation;
+  }
 
-  // Translate the plane so its center sits at the bbox center in scene coords.
-  // bbox center in UTM:
   const cxUtm = (bbox[0] + bbox[2]) / 2;
   const cyUtm = (bbox[1] + bbox[3]) / 2;
   const [cxScene, cyScene] = utmToSceneWithTransform(
@@ -293,12 +391,8 @@ export async function loadTerrain(
     cyUtm,
     transform.origin.elevation,
   );
+  const terrainOffset = new THREE.Vector3(cxScene, cyScene, 0);
 
-  // Stylized custom shader: elevation-band ramp + lambertian hillshade +
-  // distance haze. Sun direction is updated by SceneManager.applyEnvironment
-  // to match the Sky shader's sun position so highlights agree across the
-  // scene. The handle is parked on mesh.userData so SceneManager can find
-  // it without piercing the mesh's material type.
   const terrainHandle = buildTerrainMaterial({
     elevationOffsetM: transform.origin.elevation,
   });
@@ -318,20 +412,154 @@ export async function loadTerrain(
     [Math.min(minSceneX, maxSceneX), Math.min(minSceneY, maxSceneY)],
     [Math.max(minSceneX, maxSceneX), Math.max(minSceneY, maxSceneY)],
   );
-  const mesh = new THREE.Mesh(geom, terrainHandle.material);
-  mesh.name = "terrain";
-  mesh.position.set(cxScene, cyScene, 0);
-  // Terrain participates in NO shadow-map work -- neither casts nor
-  // receives. The hillshade in the terrain shader (lambertian against
-  // the sun direction, with the per-pixel facet normals + ambient floor
-  // from the previous fix) handles all terrain depth and form. Shadow
-  // maps at 40km scale produce aliasing as chunky tessellated blocks
-  // regardless of resolution, and added no value over the hillshade.
-  mesh.castShadow = false;
-  mesh.receiveShadow = false;
-  mesh.userData.terrainHandle = terrainHandle;
-  mesh.userData.terrainUtmBounds = bbox;
-  mesh.userData.terrainBaseZ = mesh.position.z;
+
+  const root = new THREE.Group();
+  root.name = "terrain";
+  root.position.set(cxScene, cyScene, 0);
+  root.userData.terrainHandle = terrainHandle;
+  root.userData.terrainUtmBounds = bbox;
+  root.userData.terrainBaseZ = root.position.z;
+  root.userData.publicSurfaceBaseZ = root.position.z;
+
+  const lodSteps = terrainLodSteps(width, height, maxVertices);
+  const tiles: TerrainTileRecord[] = [];
+  const rebuildTile = (tile: TerrainTileRecord, tier: TerrainLodTierName) => {
+    const nextGeometry = buildTerrainTileGeometry({
+      tile,
+      step: lodSteps[tier],
+      width,
+      height,
+      bbox,
+      elev,
+      nodata,
+      transform,
+      fallbackElevation: transform.origin.elevation,
+      terrainOffset,
+    });
+    tile.mesh.geometry.dispose();
+    tile.mesh.geometry = nextGeometry;
+    tile.tier = tier;
+    tile.mesh.userData.terrainLodTier = tier;
+    tile.mesh.userData.terrainVertexEstimate =
+      nextGeometry.getAttribute("position").count;
+  };
+
+  for (let row = 0; row < TERRAIN_TILE_ROWS; row += 1) {
+    for (let column = 0; column < TERRAIN_TILE_COLUMNS; column += 1) {
+      const sourceX0 = Math.floor((column * (width - 1)) / TERRAIN_TILE_COLUMNS);
+      const sourceX1 = Math.floor(
+        ((column + 1) * (width - 1)) / TERRAIN_TILE_COLUMNS,
+      );
+      const sourceY0 = Math.floor((row * (height - 1)) / TERRAIN_TILE_ROWS);
+      const sourceY1 = Math.floor(((row + 1) * (height - 1)) / TERRAIN_TILE_ROWS);
+      const centerUtmX =
+        bbox[0] +
+        (((sourceX0 + sourceX1) * 0.5) / Math.max(1, width - 1)) * planeWidth;
+      const centerUtmY =
+        bbox[3] -
+        (((sourceY0 + sourceY1) * 0.5) / Math.max(1, height - 1)) * planeHeight;
+      const [centerSceneX, centerSceneY] = utmToSceneWithTransform(
+        transform,
+        centerUtmX,
+        centerUtmY,
+        transform.origin.elevation,
+      );
+      const mesh = new THREE.Mesh(new THREE.BufferGeometry(), terrainHandle.material);
+      mesh.name = `terrain-tile-${column}-${row}`;
+      mesh.castShadow = false;
+      mesh.receiveShadow = false;
+      mesh.userData.terrainHandle = terrainHandle;
+      mesh.userData.terrainUtmBounds = bbox;
+      mesh.userData.terrainBaseZ = mesh.position.z;
+      mesh.userData.terrainTile = true;
+      const tile: TerrainTileRecord = {
+        mesh,
+        sourceX0,
+        sourceX1,
+        sourceY0,
+        sourceY1,
+        center: new THREE.Vector3(centerSceneX, centerSceneY, 0),
+        tier: "coarse",
+      };
+      rebuildTile(tile, "coarse");
+      tiles.push(tile);
+      root.add(mesh);
+    }
+  }
+
+  const terrainLodDebugState: TerrainLodDebugState = {
+    activeTileCount: tiles.length,
+    activeVertexEstimate: tiles.reduce(
+      (sum, tile) => sum + (tile.mesh.geometry.getAttribute("position")?.count ?? 0),
+      0,
+    ),
+    lodTierCounts: { coarse: tiles.length, standard: 0, source: 0 },
+    lastUpdateReason: "initial-coarse",
+  };
+  const updateDebugState = (reason: string) => {
+    terrainLodDebugState.activeTileCount = tiles.length;
+    terrainLodDebugState.activeVertexEstimate = 0;
+    terrainLodDebugState.lodTierCounts = { coarse: 0, standard: 0, source: 0 };
+    for (const tile of tiles) {
+      terrainLodDebugState.lodTierCounts[tile.tier] += 1;
+      terrainLodDebugState.activeVertexEstimate +=
+        tile.mesh.geometry.getAttribute("position")?.count ?? 0;
+    }
+    terrainLodDebugState.lastUpdateReason = reason;
+    root.userData.terrainLodDebugState = { ...terrainLodDebugState };
+  };
+  let lastCameraPosition: THREE.Vector3 | null = null;
+  const terrainLodHandle: TerrainLodHandle = {
+    debugState: terrainLodDebugState,
+    updateCameraLod(camera: THREE.Camera) {
+      if (
+        lastCameraPosition &&
+        lastCameraPosition.distanceTo(camera.position) < TERRAIN_LOD_CAMERA_EPSILON_M
+      ) {
+        return;
+      }
+      lastCameraPosition = camera.position.clone();
+      const desired = new Map<TerrainTileRecord, TerrainLodTierName>();
+      for (const tile of tiles) {
+        const distance = tile.center.distanceTo(camera.position);
+        desired.set(
+          tile,
+          distance < 65_000 ? "source" : distance < 150_000 ? "standard" : "coarse",
+        );
+      }
+      let vertexEstimate = 0;
+      for (const [tile, tier] of desired) {
+        vertexEstimate += terrainTileVertexEstimate(tile, lodSteps[tier]);
+      }
+      if (vertexEstimate > maxVertices) {
+        const orderedTiles = [...tiles].sort(
+          (a, b) => b.center.distanceTo(camera.position) - a.center.distanceTo(camera.position),
+        );
+        for (const tile of orderedTiles) {
+          if (vertexEstimate <= maxVertices) break;
+          const tier = desired.get(tile);
+          if (tier === "source") {
+            vertexEstimate -= terrainTileVertexEstimate(tile, lodSteps.source);
+            vertexEstimate += terrainTileVertexEstimate(tile, lodSteps.standard);
+            desired.set(tile, "standard");
+          } else if (tier === "standard") {
+            vertexEstimate -= terrainTileVertexEstimate(tile, lodSteps.standard);
+            vertexEstimate += terrainTileVertexEstimate(tile, lodSteps.coarse);
+            desired.set(tile, "coarse");
+          }
+        }
+      }
+      let changed = false;
+      for (const [tile, tier] of desired) {
+        if (tile.tier === tier) continue;
+        rebuildTile(tile, tier);
+        changed = true;
+      }
+      updateDebugState(changed ? "camera-lod-change" : "camera-lod-stable");
+    },
+  };
+  root.userData.terrainLodHandle = terrainLodHandle;
+  root.userData.terrainLodDebugState = { ...terrainLodDebugState };
 
   // Sanity check: warn if the GeoTIFF bbox does not match the project bounds.
   const expectedWidth =
@@ -348,7 +576,8 @@ export async function loadTerrain(
   }
   debugLog(
     `[loadTerrain] ${width}x${height} px, bbox UTM [${bbox.join(", ")}], ` +
-      `render ${renderWidth}x${renderHeight}, ` +
+      `tiles ${TERRAIN_TILE_COLUMNS}x${TERRAIN_TILE_ROWS}, ` +
+      `lod steps coarse=${lodSteps.coarse} standard=${lodSteps.standard} source=${lodSteps.source}, ` +
       `elev ${minSeen.toFixed(1)}-${maxSeen.toFixed(1)} m ` +
       `(project bounds ${transform.bounds.min.elevation}-${transform.bounds.max.elevation})`,
   );
@@ -394,8 +623,8 @@ export async function loadTerrain(
       new THREE.Vector3(cxScene, cyScene, 0),
       transform,
     );
-    mesh.add(gridHandle.line);
-    mesh.userData.terrainGridHandle = gridHandle;
+    root.add(gridHandle.line);
+    root.userData.terrainGridHandle = gridHandle;
   }
 
   // If lake / target masks were already published before terrain
@@ -466,5 +695,5 @@ export async function loadTerrain(
     }
   });
 
-  return mesh;
+  return root;
 }

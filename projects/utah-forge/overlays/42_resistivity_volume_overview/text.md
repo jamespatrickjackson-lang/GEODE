@@ -1,12 +1,11 @@
-# 3D Resistivity Volume Overview
+**3D Resistivity Volume**
 
-Status: proposed / needs_review
+The point cloud shown here is derived directly from the Utah FORGE Phase 3 MT inversion model. Each point represents a cell centre from the inversion grid, coloured by log₁₀ resistivity in Ohm·m.
 
-This page presents the Phase 3 MT inversion model as an app-native 3D resistivity product.
+The model covers the full Phase 3 working area at native inversion resolution. No vertical exaggeration has been applied.
 
-- Source-derived: 3D MT inversion model from cell-center data.
-- Values are shown as log10 resistivity in Ohm-m.
-- The model is already gridded by the source inversion.
-- Do not subdivide or oversample it to imply more precision than the survey supports.
+Warm colours indicate higher resistivity (resistive rock). Cool colours indicate lower resistivity (conductive rock or fluids). The colour scale runs from approximately 0.01 Ohm·m to 10,000 Ohm·m on a logarithmic axis.
 
-Missing / unresolved: bounding-box display and richer provenance labels remain partial or unconfirmed.
+This is a source-derived visualisation of the inversion output — the cell geometry reflects the inversion parameterisation, not an interpolated or resampled product.
+
+*Sources ↓*

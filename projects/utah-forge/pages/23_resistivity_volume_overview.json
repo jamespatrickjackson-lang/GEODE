@@ -1,0 +1,28 @@
+{
+  "id": "23_resistivity_volume_overview",
+  "title": "23. Resistivity Volume Overview",
+  "subtitle": "3D MT resistivity volume",
+  "camera": {
+    "position": [
+      -25758.118599762638,
+      267159.49967552704,
+      -35000.79617668223
+    ],
+    "target": [
+      10844.11738335307,
+      -5098.606116313531,
+      -64366.201871915524
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutSine"
+  },
+  "holdDuration": 4000
+}

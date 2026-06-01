@@ -1,0 +1,109 @@
+{
+  "id": "111_page",
+  "title": "MT Station Network*",
+  "camera": {
+    "position": [
+      -20498.571276742485,
+      -14634.91666225929,
+      16034.686118695885
+    ],
+    "target": [
+      -7109,
+      -10303,
+      2255
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      -7109,
+      -10303,
+      2255
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 21670,
+    "orbitHeight": 13780,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  },
+  "visibilityOverrides": {
+    "utah-forge-topo-graticule": false,
+    "terrain": true
+  },
+  "sceneOverrides": {
+    "terrain": {
+      "materialPreset": "utah",
+      "rampLow": "#5f594c",
+      "rampMid": "#8ea083",
+      "rampHigh": "#e9e4d8",
+      "elevLowM": 0,
+      "elevHighM": 220,
+      "hillshadeIntensity": 0.94,
+      "shadowSharpness": 0.32,
+      "facetStrength": 0.05,
+      "rockHueVariance": 0.035,
+      "shadowTint": "#35413c",
+      "surfaceElevationEnabled": true,
+      "surfaceElevationLegendVisible": true,
+      "surfaceElevationMinM": 1500,
+      "surfaceElevationMaxM": 3500,
+      "surfaceElevationColors": [
+        "#8b806c",
+        "#b5aa8d",
+        "#8ea083",
+        "#53675c",
+        "#f1eee4"
+      ],
+      "surfaceElevationColorPositions": [
+        0,
+        0.34,
+        0.58,
+        0.82,
+        1
+      ],
+      "surfaceElevationMidpoints": [
+        0.58,
+        0.44,
+        0.52,
+        0.46
+      ],
+      "surfaceElevationTransitionSoftness": 1,
+      "surfaceElevationColorBlend": 0.92,
+      "surfaceElevationReverse": false,
+      "orthoPhotoOpacity": 0
+    }
+  },
+  "layerOverrides": {
+    "terrain": {
+      "opacity": 0.85
+    },
+    "utah-forge-mt-stations": {
+      "mtStationQcSelectedStationId": "FRG19054",
+      "mtStationQcPanelOpen": true,
+      "pointMarkerRadiusM": 300
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "25_resistivity_cross_sections",
+  "title": "25. Resistivity Cross-Sections",
+  "subtitle": "Vertical MT resistivity sections",
+  "camera": {
+    "position": [
+      -59727.5089767489,
+      77515.83916639606,
+      -3368.4321245397587
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 5000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000
+}

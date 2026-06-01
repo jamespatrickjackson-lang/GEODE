@@ -128,6 +128,8 @@ interface EditorContextValue {
         | "sunLockToCamera"
         | "renderPreset"
         | "renderPresetId"
+        | "envSnapshot"
+        | "sceneOverrides"
         | "cameraObjectFocus"
       >
     >,
@@ -146,6 +148,7 @@ interface EditorContextValue {
     layout: NonNullable<PresentationPage["overlayLayout"]>,
   ) => void;
   setPageOverlayTiming: (pageId: string, timing: TextOverlayTiming) => void;
+  setPageOverlayHidden: (pageId: string, hidden: boolean) => void;
   addPage: (basePose: Pose) => string;
   duplicatePageById: (pageId: string) => string | null;
   deletePageById: (pageId: string) => void;
@@ -957,6 +960,25 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
             ...overlay,
             timing: { ...(overlay.timing ?? {}), ...action.timing },
           },
+        };
+      });
+      return {
+        ...state,
+        pages,
+        dirty: withDirty(state.dirty, `page:${action.pageId}`),
+      };
+    }
+    case "SET_PAGE_OVERLAY_HIDDEN": {
+      const pages = state.pages.map((p) => {
+        if (p.id !== action.pageId) return p;
+        const overlay = p.overlay ?? {
+          position: "right",
+          contentFile: `overlays/${p.id}/text.md`,
+          images: [],
+        };
+        return {
+          ...p,
+          overlay: { ...overlay, hidden: action.hidden },
         };
       });
       return {
@@ -1987,12 +2009,19 @@ export function EditorProvider({
   }, [sceneHandle]);
 
   // Area outlines are authored directly in the scene with move/scale handles.
-  // Commit the previewed shape back into env.json so each outline keeps its own
-  // saved center and radii.
+  // Commit the previewed shape back into the active authoring scope so each
+  // outline keeps its own saved center and radii.
   useEffect(() => {
     sceneHandle.setAreaOutlineCommitHandler((id, patch) => {
       const cur = stateRef.current;
-      const scene = cur.environment.scene ?? {};
+      const page =
+        cur.selectedPageId && cur.selectedPageId !== ENVIRONMENT_SENTINEL
+          ? cur.pages.find((candidate) => candidate.id === cur.selectedPageId)
+          : null;
+      const pageEnvironment = page
+        ? resolveEnvironmentForPage(cur.environment, cur.pages, page)
+        : cur.environment;
+      const scene = pageEnvironment.scene ?? {};
       const outlines = scene.areaOutlines ?? [];
       let changed = false;
       const nextOutlines = outlines.map((outline) => {
@@ -2002,16 +2031,28 @@ export function EditorProvider({
       });
       if (!changed) return;
       const nextEnv: EnvironmentSetup = {
-        ...cur.environment,
+        ...pageEnvironment,
         scene: { ...scene, areaOutlines: nextOutlines },
       };
       if (canApplyLiveSceneEdits()) {
         sceneHandle.manager.applyEnvironment(nextEnv);
       }
-      dispatch({
-        type: "SET_ENV_SCENE",
-        patch: { areaOutlines: nextOutlines },
-      });
+      if (page) {
+        dispatch({
+          type: "SET_PAGE_FIELD",
+          pageId: page.id,
+          patch: {
+            sceneOverrides: mergeSceneEdit(page.sceneOverrides, {
+              areaOutlines: nextOutlines,
+            }),
+          },
+        });
+      } else {
+        dispatch({
+          type: "SET_ENV_SCENE",
+          patch: { areaOutlines: nextOutlines },
+        });
+      }
     });
     return () => sceneHandle.setAreaOutlineCommitHandler(null);
   }, [canApplyLiveSceneEdits, sceneHandle]);
@@ -2434,6 +2475,14 @@ export function EditorProvider({
     [],
   );
 
+  const setPageOverlayHidden = useCallback<
+    EditorContextValue["setPageOverlayHidden"]
+  >(
+    (pageId, hidden) =>
+      dispatch({ type: "SET_PAGE_OVERLAY_HIDDEN", pageId, hidden }),
+    [],
+  );
+
   const setPageOverlayTiming = useCallback<
     EditorContextValue["setPageOverlayTiming"]
   >(
@@ -2654,6 +2703,7 @@ export function EditorProvider({
       capturePoseForPage,
       setPageOverlayLayout,
       setPageOverlayTiming,
+      setPageOverlayHidden,
       addPage,
       duplicatePageById,
       deletePageById,
@@ -2701,6 +2751,7 @@ export function EditorProvider({
       capturePoseForPage,
       setPageOverlayLayout,
       setPageOverlayTiming,
+      setPageOverlayHidden,
       addPage,
       duplicatePageById,
       deletePageById,

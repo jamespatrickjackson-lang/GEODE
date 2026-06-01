@@ -8,9 +8,14 @@ import {
   effectiveStyle,
   effectiveVisibility,
   isVisibilityOverridden,
+  mergeSceneProperties,
   resolveEnvironmentForPage,
 } from "../pages/effective";
-import type { PresentationPage, ProjectLayerSpec } from "../pages/types";
+import type {
+  PresentationPage,
+  ProjectLayerSpec,
+  SceneProperties,
+} from "../pages/types";
 import { TopoMapPanel } from "./topoMap/TopoMapPanel";
 import { SiteDetailsPanel } from "./SiteDetailsPanel";
 import {
@@ -80,6 +85,16 @@ export function LayerPanelGroups({
   const currentPageEnvironment = currentPage
     ? resolveEnvironmentForPage(state.environment, state.pages, currentPage)
     : state.environment;
+  const topoAuthoringEnvironment = currentPageEnvironment;
+  const setTopoAuthoringScene = (patch: Partial<SceneProperties>) => {
+    if (!currentPage) {
+      setEnvScene(patch);
+      return;
+    }
+    setPageField(currentPage.id, {
+      sceneOverrides: mergeSceneProperties(currentPage.sceneOverrides, patch),
+    });
+  };
   const { currentIndex, isTransitioning, targetIndex } = usePageController();
   const selectedPageIndex = currentPage
     ? state.pages.findIndex((p) => p.id === currentPage.id)
@@ -194,13 +209,15 @@ export function LayerPanelGroups({
     state.projectSlug === "utah-forge" && pageStyleControlsDisabled;
   const publicTopoSettings = resolveTopoMapSettings({
     manifest: state.manifest,
-    environment: currentPageEnvironment,
+    environment: topoAuthoringEnvironment,
     page: currentPage,
   });
   const publicTopoTerrainLayer = publicTopoSettings.surfaceLayer;
   const publicTopoTerrainLayerId = publicTopoSettings.surfaceLayerId;
   const publicTopoTerrainEnvVisible =
-    currentPageEnvironment.defaultVisibleLayers.includes(publicTopoTerrainLayerId);
+    topoAuthoringEnvironment.defaultVisibleLayers.includes(
+      publicTopoTerrainLayerId,
+    );
   const publicTopoTerrainEffectiveVisible = currentPage
     ? isVisibilityOverridden(currentPage, publicTopoTerrainLayerId)
       ? currentPage.visibilityOverrides?.[publicTopoTerrainLayerId] === true
@@ -437,14 +454,14 @@ export function LayerPanelGroups({
         ) {
           const topoPanelProps = {
             settings: publicTopoSettings,
-            environment: currentPageEnvironment,
-            scene: currentPageEnvironment.scene ?? {},
+            environment: topoAuthoringEnvironment,
+            scene: topoAuthoringEnvironment.scene ?? {},
             isEnv,
             currentPage,
             setEnvLayerStyle,
             setPageLayerOverride,
             clearPageLayerOverride,
-            setEnvScene,
+            setEnvScene: setTopoAuthoringScene,
             projectRoot: state.projectRoot,
             terrainEnvVisible: publicTopoTerrainEnvVisible,
             terrainEffectiveVisible: publicTopoTerrainEffectiveVisible,
@@ -558,14 +575,14 @@ export function LayerPanelGroups({
             group.title === PUBLIC_TOPO_LAYER_GROUP_TITLE ? (
               <TopoMapPanel
                 settings={publicTopoSettings}
-                environment={currentPageEnvironment}
-                scene={currentPageEnvironment.scene ?? {}}
+                environment={topoAuthoringEnvironment}
+                scene={topoAuthoringEnvironment.scene ?? {}}
                 isEnv={isEnv}
                 currentPage={currentPage}
                 setEnvLayerStyle={setEnvLayerStyle}
                 setPageLayerOverride={setPageLayerOverride}
                 clearPageLayerOverride={clearPageLayerOverride}
-                setEnvScene={setEnvScene}
+                setEnvScene={setTopoAuthoringScene}
                 projectRoot={state.projectRoot}
                 terrainEnvVisible={publicTopoTerrainEnvVisible}
                 terrainEffectiveVisible={publicTopoTerrainEffectiveVisible}

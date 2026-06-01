@@ -1,11 +1,11 @@
-# Seismic Fence Panels
+**Seismic Section**
 
-Status: proposed / needs_review
+This panel is a depth-migrated seismic reflection section from the Utah FORGE Phase 3 seismic products. The section shown is 2D Line 301, rendered as a fence panel positioned in 3D space.
 
-This page presents existing rendered seismic section products as fence-panel context.
+The seismic acquisition footprint is shown as navigation geometry — source and receiver lines in plan view provide spatial context for where the reflection data was recorded.
 
-- Seismic panels show reflection evidence, not resistivity structure.
-- Do not geolocate panels from screenshots alone.
-- Use rendered seismic dataset metadata and well 58-32 alignment when available.
+Coherent reflectors in the section correspond to impedance contrasts in the subsurface — the alluvium-granite contact, sedimentary layering, and structural features within the FORGE working volume.
 
-Missing / unresolved: confirmed E-W/N-S panel mapping, well 58-32 alignment metadata, interpreted basement contact overlay, and depth-label tooling.
+This is a reflection product, not a resistivity product. The next page places seismic and MT data in the same scene for direct comparison.
+
+*Sources ↓*

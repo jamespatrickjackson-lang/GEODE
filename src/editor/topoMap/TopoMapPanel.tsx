@@ -168,8 +168,7 @@ export function TopoMapPanel({
   );
   const [brandingUploading, setBrandingUploading] = useState(false);
   const setTerrain = (patch: TerrainSettings) => {
-    if (!isEnv) return;
-    setEnvScene({ terrain: { ...rawTerrain, ...patch } });
+    setEnvScene({ terrain: patch });
   };
   const layerControlProps = {
     style,
@@ -362,7 +361,6 @@ export function TopoMapPanel({
     },
   };
   const setSceneFog = (patch: NonNullable<SceneProperties["fog"]>) => {
-    if (!isEnv) return;
     setEnvScene({ fog: { ...sceneFog, ...patch } });
   };
   const setTopoMaterialPreset = (value: PublicTopoMaterialPresetId) => {
@@ -549,21 +547,16 @@ export function TopoMapPanel({
             ) : null}
           </div>
         </details>
-        {!isEnv ? (
-          <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
-            Topo surface variables are edited in Global Settings.
-          </div>
-        ) : (
-          <>
-                <EnvSelectRow<PublicTopoMaterialPresetId>
-                  label="Material"
-                  value={selectedPreset}
-                  options={settings.materialOptions}
-                  testId="topo-material-preset"
-                  onChange={setTopoMaterialPreset}
-                />
-                {selectedPresetIsImageBacked ? (
-                  <>
+        <>
+          <EnvSelectRow<PublicTopoMaterialPresetId>
+            label="Material"
+            value={selectedPreset}
+            options={settings.materialOptions}
+            testId="topo-material-preset"
+            onChange={setTopoMaterialPreset}
+          />
+          {selectedPresetIsImageBacked ? (
+            <>
                     <EnvSelectRow<OrthoPhotoTextureBudgetId>
                       label="Texture budget"
                       value={selectedOrthoPhotoBudget}
@@ -1133,7 +1126,6 @@ export function TopoMapPanel({
                   onChange={(v) => setTerrain({ shadowTint: v })}
                 />
           </>
-        )}
         {terrainLayer ? (
           <details style={drillingAssayDetailsStyle}>
             <summary style={drillingAssaySummaryStyle}>Provenance</summary>

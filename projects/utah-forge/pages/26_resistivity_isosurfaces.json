@@ -1,0 +1,28 @@
+{
+  "id": "26_resistivity_isosurfaces",
+  "title": "26. Resistivity Isosurfaces",
+  "subtitle": "MT resistivity domain boundaries",
+  "camera": {
+    "position": [
+      -59727.5089767489,
+      77515.83916639606,
+      -3368.4321245397587
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 5000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000
+}

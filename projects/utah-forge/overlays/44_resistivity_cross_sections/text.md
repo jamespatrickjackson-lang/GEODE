@@ -1,12 +1,11 @@
-# Resistivity Cross-Sections / Fence Panels
+**Resistivity Cross-Sections**
 
-Status: proposed / needs_review
+These vertical panels are E–W and N–S sections through the Phase 3 MT inversion model, intersecting near the centroid of the MT station network.
 
-This page shows vertical resistivity sections using the existing authored MT slice meshes.
+Vertical sections allow depth-structure interpretation that horizontal slices cannot show: the shape and vertical extent of conductive and resistive bodies, and how they vary along strike versus down-dip.
 
-- Source-derived: vertical sections through the MT inversion model.
-- Target product: E-W and N-S fence panels through well 58-32.
-- These are resistivity property sections, not seismic reflection panels.
-- They should eventually align with terrain, well trajectory, and section-location markers.
+The colour scale is logarithmic and consistent with the volume and depth-slice views.
 
-Missing / unresolved: arbitrary section generation, well 58-32 tie, terrain intersection labels, and contour-filled fence-panel controls.
+These sections are the same data as the volume — cross-cutting it at different orientations to expose internal structure.
+
+*Sources ↓*

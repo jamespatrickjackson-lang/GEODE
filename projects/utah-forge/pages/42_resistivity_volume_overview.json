@@ -1,7 +1,7 @@
 {
   "id": "42_resistivity_volume_overview",
-  "title": "3D Resistivity Volume Overview",
-  "subtitle": "Full-source-derived MT scalar volume with focused threshold shells",
+  "title": "3D Resistivity Volume",
+  "subtitle": "Full-density MT cell-center point cloud",
   "camera": {
     "position": [
       -25758.118599762638,
@@ -25,6 +25,21 @@
     "easing": "easeInOutSine"
   },
   "holdDuration": 4000,
+  "overlayLayout": {
+    "x": 0.0130859375,
+    "y": 0.0618569636,
+    "width": 0.2108723958
+  },
+  "overlay": {
+    "position": "left",
+    "contentFile": "overlays/42_resistivity_volume_overview/text.md",
+    "timing": {
+      "fadeMs": 900,
+      "gapMs": 80,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
   "accentColor": "#42f236",
   "dynamicCamera": {
     "enabled": true,
@@ -53,45 +68,43 @@
   },
   "visibilityOverrides": {
     "utah-forge-phase3-working-area": true,
-    "terrain": false,
+    "utah-forge-site-boundary": false,
+    "terrain": true,
+    "transport-roads": false,
+    "hydrography-streams": false,
+    "hydrography-lakes": false,
     "utah-forge-phase3-seismic-browser": false,
     "utah-forge-mt-stations": false,
     "utah-forge-mt-resistivity-preview": false,
-    "utah-forge-mt-resistivity-full-density": false,
-    "utah-forge-mt-resistivity-volume": true,
+    "utah-forge-mt-resistivity-full-density": true,
+    "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-threshold-surfaces": false,
     "utah-forge-mt-top-surface": false,
     "utah-forge-mt-resistivity-slices": false,
-    "utah-forge-phase3-demo-boreholes": true,
+    "utah-forge-phase3-demo-boreholes": false,
     "utah-forge-mt-top-contact-surface": false
   },
   "layerOverrides": {
+    "terrain": {
+      "opacity": 0.32
+    },
     "utah-forge-mt-resistivity-full-density": {
-      "opacity": 0.48,
-      "pointSizePx": 1.25,
+      "scalarLegendVisible": true,
+      "opacity": 0.86,
+      "pointSizePx": 1.18,
       "scalarInclusionMode": "all-valid"
     },
     "utah-forge-mt-resistivity-volume": {
-      "opacity": 0.28,
-      "scalarVolumeOpacity": 0.28,
-      "scalarVolumeDensity": 0.42,
-      "scalarVolumeSampleSteps": 96,
-      "scalarVolumeThresholdMin": -2,
-      "scalarVolumeThresholdMax": 4.5,
-      "scalarVolumeProductId": "mt-resistivity-forge-focused-volume",
-      "scalarLegendVisible": true,
-      "scalarFocusMin": -2,
-      "scalarFocusMax": 4.5,
-      "scalarBlendMin": 0.139879,
-      "scalarBlendMax": 3.937122
-    },
-    "utah-forge-mt-stations": {
-      "opacity": 0.5,
-      "showLabels": false
+      "scalarLegendVisible": false,
+      "scalarVolumeProductId": "mt-resistivity-forge-focused-volume"
     },
     "utah-forge-phase3-seismic-browser": {
       "opacity": 0,
       "seismicLegendVisible": false
+    },
+    "utah-forge-mt-stations": {
+      "opacity": 0.58,
+      "showLabels": false
     },
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
@@ -101,7 +114,7 @@
         "resistive-ge-1000-ohm-m": true
       },
       "mtThresholdSurfaceWireframe": false,
-      "opacity": 0.82,
+      "opacity": 0.86,
       "affectedByFog": false,
       "showLabels": false,
       "mtThresholdSurfaceRoughness": 0.64,
@@ -111,10 +124,6 @@
       "mtThresholdSurfaceEmissiveBoost": 0.08,
       "mtThresholdSurfaceWireframeColor": "#f8f4e8",
       "mtThresholdSurfaceWireframeOpacity": 0.42
-    },
-    "utah-forge-phase3-demo-boreholes": {
-      "opacity": 0.72,
-      "showLabels": false
     }
   }
 }

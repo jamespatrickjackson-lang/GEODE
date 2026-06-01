@@ -52,10 +52,14 @@
       "domain": "log10 resistivity",
       "unit": "log10 Ohm-m",
       "sourceRowsInBounds": 1094579,
+      "sourceDensityEstimate": {
+        "method": "equivalent isotropic spacing from product bounds and positive source rows",
+        "positiveRowsInBounds": 1094579
+      },
       "dimensions": [
-        80,
-        64,
-        56
+        144,
+        118,
+        65
       ],
       "voxelOrder": "x-fastest, then y, then z",
       "sceneBounds": {
@@ -107,10 +111,14 @@
       "domain": "log10 resistivity",
       "unit": "log10 Ohm-m",
       "sourceRowsInBounds": 771889,
+      "sourceDensityEstimate": {
+        "method": "equivalent isotropic spacing from product bounds and positive source rows",
+        "positiveRowsInBounds": 771889
+      },
       "dimensions": [
-        96,
-        80,
-        64
+        122,
+        140,
+        46
       ],
       "voxelOrder": "x-fastest, then y, then z",
       "sceneBounds": {
@@ -167,9 +175,9 @@
         "classification": "source-derived full-source iso-resistivity surfaces",
         "sourceProductId": "mt-resistivity-full-extent-volume",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "sceneBounds": {
           "min": [
@@ -184,9 +192,9 @@
           ]
         },
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         }
       },
       {
@@ -196,9 +204,9 @@
         "classification": "source-derived presentation-crop iso-resistivity surfaces",
         "sourceProductId": "mt-resistivity-forge-focused-volume",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "sceneBounds": {
           "min": [
@@ -213,9 +221,9 @@
           ]
         },
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         }
       }
     ],
@@ -242,39 +250,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 50,
-          "smoothedVertexCount": 41
+          "boundaryVertexCount": 115,
+          "smoothedVertexCount": 35
         },
         "vertexWelding": {
-          "inputVertexCount": 342,
-          "weldedVertexCount": 91,
-          "inputTriangleCount": 114,
-          "weldedTriangleCount": 114,
+          "inputVertexCount": 447,
+          "weldedVertexCount": 150,
+          "inputTriangleCount": 149,
+          "weldedTriangleCount": 149,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 66,
-          "triangleCount": 114,
-          "vertexCount": 91,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 98,
+          "triangleCount": 149,
+          "vertexCount": 150,
           "welding": {
-            "inputVertexCount": 342,
-            "weldedVertexCount": 91,
-            "inputTriangleCount": 114,
-            "weldedTriangleCount": 114,
+            "inputVertexCount": 447,
+            "weldedVertexCount": 150,
+            "inputTriangleCount": 149,
+            "weldedTriangleCount": 149,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -282,17 +290,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 50,
-            "smoothedVertexCount": 41
+            "boundaryVertexCount": 115,
+            "smoothedVertexCount": 35
           }
         },
-        "matchingVoxelCount": 46,
-        "meanLog10Resistivity": 0.019217,
+        "matchingVoxelCount": 99,
+        "meanLog10Resistivity": 0.023146,
         "meshRange": {
           "vertexStart": 0,
-          "vertexCount": 91,
+          "vertexCount": 150,
           "indexStart": 0,
-          "indexCount": 342
+          "indexCount": 447
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -320,39 +328,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 86,
-          "smoothedVertexCount": 86
+          "boundaryVertexCount": 194,
+          "smoothedVertexCount": 95
         },
         "vertexWelding": {
-          "inputVertexCount": 726,
-          "weldedVertexCount": 172,
-          "inputTriangleCount": 242,
-          "weldedTriangleCount": 242,
+          "inputVertexCount": 1056,
+          "weldedVertexCount": 289,
+          "inputTriangleCount": 352,
+          "weldedTriangleCount": 352,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 127,
-          "triangleCount": 242,
-          "vertexCount": 172,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 195,
+          "triangleCount": 352,
+          "vertexCount": 289,
           "welding": {
-            "inputVertexCount": 726,
-            "weldedVertexCount": 172,
-            "inputTriangleCount": 242,
-            "weldedTriangleCount": 242,
+            "inputVertexCount": 1056,
+            "weldedVertexCount": 289,
+            "inputTriangleCount": 352,
+            "weldedTriangleCount": 352,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -360,17 +368,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 86,
-            "smoothedVertexCount": 86
+            "boundaryVertexCount": 194,
+            "smoothedVertexCount": 95
           }
         },
-        "matchingVoxelCount": 120,
-        "meanLog10Resistivity": 0.158714,
+        "matchingVoxelCount": 248,
+        "meanLog10Resistivity": 0.158153,
         "meshRange": {
-          "vertexStart": 91,
-          "vertexCount": 172,
-          "indexStart": 342,
-          "indexCount": 726
+          "vertexStart": 150,
+          "vertexCount": 289,
+          "indexStart": 447,
+          "indexCount": 1056
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -398,39 +406,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 110,
-          "smoothedVertexCount": 104
+          "boundaryVertexCount": 217,
+          "smoothedVertexCount": 198
         },
         "vertexWelding": {
-          "inputVertexCount": 912,
-          "weldedVertexCount": 214,
-          "inputTriangleCount": 304,
-          "weldedTriangleCount": 304,
+          "inputVertexCount": 1743,
+          "weldedVertexCount": 415,
+          "inputTriangleCount": 581,
+          "weldedTriangleCount": 581,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 158,
-          "triangleCount": 304,
-          "vertexCount": 214,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 310,
+          "triangleCount": 581,
+          "vertexCount": 415,
           "welding": {
-            "inputVertexCount": 912,
-            "weldedVertexCount": 214,
-            "inputTriangleCount": 304,
-            "weldedTriangleCount": 304,
+            "inputVertexCount": 1743,
+            "weldedVertexCount": 415,
+            "inputTriangleCount": 581,
+            "weldedTriangleCount": 581,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -438,17 +446,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 110,
-            "smoothedVertexCount": 104
+            "boundaryVertexCount": 217,
+            "smoothedVertexCount": 198
           }
         },
-        "matchingVoxelCount": 205,
-        "meanLog10Resistivity": 0.276663,
+        "matchingVoxelCount": 440,
+        "meanLog10Resistivity": 0.284248,
         "meshRange": {
-          "vertexStart": 263,
-          "vertexCount": 214,
-          "indexStart": 1068,
-          "indexCount": 912
+          "vertexStart": 439,
+          "vertexCount": 415,
+          "indexStart": 1503,
+          "indexCount": 1743
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -476,39 +484,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 153,
-          "smoothedVertexCount": 153
+          "boundaryVertexCount": 307,
+          "smoothedVertexCount": 347
         },
         "vertexWelding": {
-          "inputVertexCount": 1305,
-          "weldedVertexCount": 306,
-          "inputTriangleCount": 435,
-          "weldedTriangleCount": 435,
+          "inputVertexCount": 2865,
+          "weldedVertexCount": 654,
+          "inputTriangleCount": 955,
+          "weldedTriangleCount": 955,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 235,
-          "triangleCount": 435,
-          "vertexCount": 306,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 501,
+          "triangleCount": 955,
+          "vertexCount": 654,
           "welding": {
-            "inputVertexCount": 1305,
-            "weldedVertexCount": 306,
-            "inputTriangleCount": 435,
-            "weldedTriangleCount": 435,
+            "inputVertexCount": 2865,
+            "weldedVertexCount": 654,
+            "inputTriangleCount": 955,
+            "weldedTriangleCount": 955,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -516,17 +524,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 153,
-            "smoothedVertexCount": 153
+            "boundaryVertexCount": 307,
+            "smoothedVertexCount": 347
           }
         },
-        "matchingVoxelCount": 360,
-        "meanLog10Resistivity": 0.442431,
+        "matchingVoxelCount": 842,
+        "meanLog10Resistivity": 0.464789,
         "meshRange": {
-          "vertexStart": 477,
-          "vertexCount": 306,
-          "indexStart": 1980,
-          "indexCount": 1305
+          "vertexStart": 854,
+          "vertexCount": 654,
+          "indexStart": 3246,
+          "indexCount": 2865
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -554,39 +562,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 225,
-          "smoothedVertexCount": 239
+          "boundaryVertexCount": 423,
+          "smoothedVertexCount": 484
         },
         "vertexWelding": {
-          "inputVertexCount": 2025,
-          "weldedVertexCount": 464,
-          "inputTriangleCount": 675,
-          "weldedTriangleCount": 675,
+          "inputVertexCount": 4029,
+          "weldedVertexCount": 907,
+          "inputTriangleCount": 1343,
+          "weldedTriangleCount": 1343,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 349,
-          "triangleCount": 675,
-          "vertexCount": 464,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 692,
+          "triangleCount": 1343,
+          "vertexCount": 907,
           "welding": {
-            "inputVertexCount": 2025,
-            "weldedVertexCount": 464,
-            "inputTriangleCount": 675,
-            "weldedTriangleCount": 675,
+            "inputVertexCount": 4029,
+            "weldedVertexCount": 907,
+            "inputTriangleCount": 1343,
+            "weldedTriangleCount": 1343,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -594,17 +602,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 225,
-            "smoothedVertexCount": 239
+            "boundaryVertexCount": 423,
+            "smoothedVertexCount": 484
           }
         },
-        "matchingVoxelCount": 769,
-        "meanLog10Resistivity": 0.659551,
+        "matchingVoxelCount": 1936,
+        "meanLog10Resistivity": 0.682646,
         "meshRange": {
-          "vertexStart": 783,
-          "vertexCount": 464,
-          "indexStart": 3285,
-          "indexCount": 2025
+          "vertexStart": 1508,
+          "vertexCount": 907,
+          "indexStart": 6111,
+          "indexCount": 4029
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -632,39 +640,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 283,
-          "smoothedVertexCount": 335
+          "boundaryVertexCount": 549,
+          "smoothedVertexCount": 680
         },
         "vertexWelding": {
-          "inputVertexCount": 2769,
-          "weldedVertexCount": 618,
-          "inputTriangleCount": 923,
-          "weldedTriangleCount": 923,
+          "inputVertexCount": 5571,
+          "weldedVertexCount": 1229,
+          "inputTriangleCount": 1857,
+          "weldedTriangleCount": 1857,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 467,
-          "triangleCount": 923,
-          "vertexCount": 618,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 943,
+          "triangleCount": 1857,
+          "vertexCount": 1229,
           "welding": {
-            "inputVertexCount": 2769,
-            "weldedVertexCount": 618,
-            "inputTriangleCount": 923,
-            "weldedTriangleCount": 923,
+            "inputVertexCount": 5571,
+            "weldedVertexCount": 1229,
+            "inputTriangleCount": 1857,
+            "weldedTriangleCount": 1857,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -672,17 +680,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 283,
-            "smoothedVertexCount": 335
+            "boundaryVertexCount": 549,
+            "smoothedVertexCount": 680
           }
         },
-        "matchingVoxelCount": 1529,
-        "meanLog10Resistivity": 0.851683,
+        "matchingVoxelCount": 3712,
+        "meanLog10Resistivity": 0.856722,
         "meshRange": {
-          "vertexStart": 1247,
-          "vertexCount": 618,
-          "indexStart": 5310,
-          "indexCount": 2769
+          "vertexStart": 2415,
+          "vertexCount": 1229,
+          "indexStart": 10140,
+          "indexCount": 5571
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -710,39 +718,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 370,
-          "smoothedVertexCount": 455
+          "boundaryVertexCount": 649,
+          "smoothedVertexCount": 1015
         },
         "vertexWelding": {
-          "inputVertexCount": 3711,
-          "weldedVertexCount": 825,
-          "inputTriangleCount": 1237,
-          "weldedTriangleCount": 1237,
+          "inputVertexCount": 7833,
+          "weldedVertexCount": 1664,
+          "inputTriangleCount": 2611,
+          "weldedTriangleCount": 2611,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 631,
-          "triangleCount": 1237,
-          "vertexCount": 825,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 1313,
+          "triangleCount": 2611,
+          "vertexCount": 1664,
           "welding": {
-            "inputVertexCount": 3711,
-            "weldedVertexCount": 825,
-            "inputTriangleCount": 1237,
-            "weldedTriangleCount": 1237,
+            "inputVertexCount": 7833,
+            "weldedVertexCount": 1664,
+            "inputTriangleCount": 2611,
+            "weldedTriangleCount": 2611,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -750,17 +758,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 370,
-            "smoothedVertexCount": 455
+            "boundaryVertexCount": 649,
+            "smoothedVertexCount": 1015
           }
         },
-        "matchingVoxelCount": 2638,
-        "meanLog10Resistivity": 1.01748,
+        "matchingVoxelCount": 6295,
+        "meanLog10Resistivity": 1.016407,
         "meshRange": {
-          "vertexStart": 1865,
-          "vertexCount": 825,
-          "indexStart": 8079,
-          "indexCount": 3711
+          "vertexStart": 3644,
+          "vertexCount": 1664,
+          "indexStart": 15711,
+          "indexCount": 7833
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -788,39 +796,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 455,
-          "smoothedVertexCount": 615
+          "boundaryVertexCount": 679,
+          "smoothedVertexCount": 1353
         },
         "vertexWelding": {
-          "inputVertexCount": 4989,
-          "weldedVertexCount": 1070,
-          "inputTriangleCount": 1663,
-          "weldedTriangleCount": 1663,
+          "inputVertexCount": 10068,
+          "weldedVertexCount": 2032,
+          "inputTriangleCount": 3356,
+          "weldedTriangleCount": 3356,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 832,
-          "triangleCount": 1663,
-          "vertexCount": 1070,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 1656,
+          "triangleCount": 3356,
+          "vertexCount": 2032,
           "welding": {
-            "inputVertexCount": 4989,
-            "weldedVertexCount": 1070,
-            "inputTriangleCount": 1663,
-            "weldedTriangleCount": 1663,
+            "inputVertexCount": 10068,
+            "weldedVertexCount": 2032,
+            "inputTriangleCount": 3356,
+            "weldedTriangleCount": 3356,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -828,17 +836,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 455,
-            "smoothedVertexCount": 615
+            "boundaryVertexCount": 679,
+            "smoothedVertexCount": 1353
           }
         },
-        "matchingVoxelCount": 20790,
-        "meanLog10Resistivity": 2.2407,
+        "matchingVoxelCount": 46773,
+        "meanLog10Resistivity": 2.322032,
         "meshRange": {
-          "vertexStart": 2690,
-          "vertexCount": 1070,
-          "indexStart": 11790,
-          "indexCount": 4989
+          "vertexStart": 5308,
+          "vertexCount": 2032,
+          "indexStart": 23544,
+          "indexCount": 10068
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -866,39 +874,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 528,
-          "smoothedVertexCount": 822
+          "boundaryVertexCount": 782,
+          "smoothedVertexCount": 1703
         },
         "vertexWelding": {
-          "inputVertexCount": 6444,
-          "weldedVertexCount": 1350,
-          "inputTriangleCount": 2148,
-          "weldedTriangleCount": 2148,
+          "inputVertexCount": 12459,
+          "weldedVertexCount": 2485,
+          "inputTriangleCount": 4153,
+          "weldedTriangleCount": 4153,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 1064,
-          "triangleCount": 2148,
-          "vertexCount": 1350,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 2069,
+          "triangleCount": 4153,
+          "vertexCount": 2485,
           "welding": {
-            "inputVertexCount": 6444,
-            "weldedVertexCount": 1350,
-            "inputTriangleCount": 2148,
-            "weldedTriangleCount": 2148,
+            "inputVertexCount": 12459,
+            "weldedVertexCount": 2485,
+            "inputTriangleCount": 4153,
+            "weldedTriangleCount": 4153,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -906,17 +914,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 528,
-            "smoothedVertexCount": 822
+            "boundaryVertexCount": 782,
+            "smoothedVertexCount": 1703
           }
         },
-        "matchingVoxelCount": 16610,
-        "meanLog10Resistivity": 2.394288,
+        "matchingVoxelCount": 38122,
+        "meanLog10Resistivity": 2.479391,
         "meshRange": {
-          "vertexStart": 3760,
-          "vertexCount": 1350,
-          "indexStart": 16779,
-          "indexCount": 6444
+          "vertexStart": 7340,
+          "vertexCount": 2485,
+          "indexStart": 33612,
+          "indexCount": 12459
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -944,39 +952,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 613,
-          "smoothedVertexCount": 1021
+          "boundaryVertexCount": 847,
+          "smoothedVertexCount": 2120
         },
         "vertexWelding": {
-          "inputVertexCount": 7965,
-          "weldedVertexCount": 1634,
-          "inputTriangleCount": 2655,
-          "weldedTriangleCount": 2655,
+          "inputVertexCount": 15162,
+          "weldedVertexCount": 2967,
+          "inputTriangleCount": 5054,
+          "weldedTriangleCount": 5054,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 1308,
-          "triangleCount": 2655,
-          "vertexCount": 1634,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 2514,
+          "triangleCount": 5054,
+          "vertexCount": 2967,
           "welding": {
-            "inputVertexCount": 7965,
-            "weldedVertexCount": 1634,
-            "inputTriangleCount": 2655,
-            "weldedTriangleCount": 2655,
+            "inputVertexCount": 15162,
+            "weldedVertexCount": 2967,
+            "inputTriangleCount": 5054,
+            "weldedTriangleCount": 5054,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -984,17 +992,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 613,
-            "smoothedVertexCount": 1021
+            "boundaryVertexCount": 847,
+            "smoothedVertexCount": 2120
           }
         },
-        "matchingVoxelCount": 13015,
-        "meanLog10Resistivity": 2.54856,
+        "matchingVoxelCount": 31092,
+        "meanLog10Resistivity": 2.624474,
         "meshRange": {
-          "vertexStart": 5110,
-          "vertexCount": 1634,
-          "indexStart": 23223,
-          "indexCount": 7965
+          "vertexStart": 9825,
+          "vertexCount": 2967,
+          "indexStart": 46071,
+          "indexCount": 15162
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1022,39 +1030,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 653,
-          "smoothedVertexCount": 1233
+          "boundaryVertexCount": 893,
+          "smoothedVertexCount": 2497
         },
         "vertexWelding": {
-          "inputVertexCount": 9348,
-          "weldedVertexCount": 1886,
-          "inputTriangleCount": 3116,
-          "weldedTriangleCount": 3116,
+          "inputVertexCount": 17736,
+          "weldedVertexCount": 3390,
+          "inputTriangleCount": 5912,
+          "weldedTriangleCount": 5912,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 1537,
-          "triangleCount": 3116,
-          "vertexCount": 1886,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 2879,
+          "triangleCount": 5912,
+          "vertexCount": 3390,
           "welding": {
-            "inputVertexCount": 9348,
-            "weldedVertexCount": 1886,
-            "inputTriangleCount": 3116,
-            "weldedTriangleCount": 3116,
+            "inputVertexCount": 17736,
+            "weldedVertexCount": 3390,
+            "inputTriangleCount": 5912,
+            "weldedTriangleCount": 5912,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -1062,17 +1070,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 653,
-            "smoothedVertexCount": 1233
+            "boundaryVertexCount": 893,
+            "smoothedVertexCount": 2497
           }
         },
-        "matchingVoxelCount": 9761,
-        "meanLog10Resistivity": 2.719296,
+        "matchingVoxelCount": 24303,
+        "meanLog10Resistivity": 2.788294,
         "meshRange": {
-          "vertexStart": 6744,
-          "vertexCount": 1886,
-          "indexStart": 31188,
-          "indexCount": 9348
+          "vertexStart": 12792,
+          "vertexCount": 3390,
+          "indexStart": 61233,
+          "indexCount": 17736
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1100,39 +1108,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 658,
-          "smoothedVertexCount": 1441
+          "boundaryVertexCount": 865,
+          "smoothedVertexCount": 2799
         },
         "vertexWelding": {
-          "inputVertexCount": 10680,
-          "weldedVertexCount": 2099,
-          "inputTriangleCount": 3560,
-          "weldedTriangleCount": 3560,
+          "inputVertexCount": 19476,
+          "weldedVertexCount": 3664,
+          "inputTriangleCount": 6492,
+          "weldedTriangleCount": 6492,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 1721,
-          "triangleCount": 3560,
-          "vertexCount": 2099,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 3169,
+          "triangleCount": 6492,
+          "vertexCount": 3664,
           "welding": {
-            "inputVertexCount": 10680,
-            "weldedVertexCount": 2099,
-            "inputTriangleCount": 3560,
-            "weldedTriangleCount": 3560,
+            "inputVertexCount": 19476,
+            "weldedVertexCount": 3664,
+            "inputTriangleCount": 6492,
+            "weldedTriangleCount": 6492,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -1140,17 +1148,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 658,
-            "smoothedVertexCount": 1441
+            "boundaryVertexCount": 865,
+            "smoothedVertexCount": 2799
           }
         },
-        "matchingVoxelCount": 7531,
-        "meanLog10Resistivity": 2.864496,
+        "matchingVoxelCount": 19533,
+        "meanLog10Resistivity": 2.925158,
         "meshRange": {
-          "vertexStart": 8630,
-          "vertexCount": 2099,
-          "indexStart": 40536,
-          "indexCount": 10680
+          "vertexStart": 16182,
+          "vertexCount": 3664,
+          "indexStart": 78969,
+          "indexCount": 19476
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1178,39 +1186,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 635,
-          "smoothedVertexCount": 1542
+          "boundaryVertexCount": 861,
+          "smoothedVertexCount": 3041
         },
         "vertexWelding": {
-          "inputVertexCount": 11241,
-          "weldedVertexCount": 2177,
-          "inputTriangleCount": 3747,
-          "weldedTriangleCount": 3747,
+          "inputVertexCount": 20940,
+          "weldedVertexCount": 3902,
+          "inputTriangleCount": 6980,
+          "weldedTriangleCount": 6980,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 1807,
-          "triangleCount": 3747,
-          "vertexCount": 2177,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 3389,
+          "triangleCount": 6980,
+          "vertexCount": 3902,
           "welding": {
-            "inputVertexCount": 11241,
-            "weldedVertexCount": 2177,
-            "inputTriangleCount": 3747,
-            "weldedTriangleCount": 3747,
+            "inputVertexCount": 20940,
+            "weldedVertexCount": 3902,
+            "inputTriangleCount": 6980,
+            "weldedTriangleCount": 6980,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -1218,17 +1226,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 635,
-            "smoothedVertexCount": 1542
+            "boundaryVertexCount": 861,
+            "smoothedVertexCount": 3041
           }
         },
-        "matchingVoxelCount": 5763,
-        "meanLog10Resistivity": 2.995781,
+        "matchingVoxelCount": 15542,
+        "meanLog10Resistivity": 3.050522,
         "meshRange": {
-          "vertexStart": 10729,
-          "vertexCount": 2177,
-          "indexStart": 51216,
-          "indexCount": 11241
+          "vertexStart": 19846,
+          "vertexCount": 3902,
+          "indexStart": 98445,
+          "indexCount": 20940
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1256,39 +1264,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 586,
-          "smoothedVertexCount": 1559
+          "boundaryVertexCount": 889,
+          "smoothedVertexCount": 2999
         },
         "vertexWelding": {
-          "inputVertexCount": 11064,
-          "weldedVertexCount": 2145,
-          "inputTriangleCount": 3688,
-          "weldedTriangleCount": 3688,
+          "inputVertexCount": 20673,
+          "weldedVertexCount": 3888,
+          "inputTriangleCount": 6891,
+          "weldedTriangleCount": 6891,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 1805,
-          "triangleCount": 3688,
-          "vertexCount": 2145,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 3374,
+          "triangleCount": 6891,
+          "vertexCount": 3888,
           "welding": {
-            "inputVertexCount": 11064,
-            "weldedVertexCount": 2145,
-            "inputTriangleCount": 3688,
-            "weldedTriangleCount": 3688,
+            "inputVertexCount": 20673,
+            "weldedVertexCount": 3888,
+            "inputTriangleCount": 6891,
+            "weldedTriangleCount": 6891,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -1296,17 +1304,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 586,
-            "smoothedVertexCount": 1559
+            "boundaryVertexCount": 889,
+            "smoothedVertexCount": 2999
           }
         },
-        "matchingVoxelCount": 4114,
-        "meanLog10Resistivity": 3.138567,
+        "matchingVoxelCount": 11759,
+        "meanLog10Resistivity": 3.182717,
         "meshRange": {
-          "vertexStart": 12906,
-          "vertexCount": 2145,
-          "indexStart": 62457,
-          "indexCount": 11064
+          "vertexStart": 23748,
+          "vertexCount": 3888,
+          "indexStart": 119385,
+          "indexCount": 20673
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1334,39 +1342,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 455,
-          "smoothedVertexCount": 1348
+          "boundaryVertexCount": 832,
+          "smoothedVertexCount": 2759
         },
         "vertexWelding": {
-          "inputVertexCount": 9447,
-          "weldedVertexCount": 1803,
-          "inputTriangleCount": 3149,
-          "weldedTriangleCount": 3149,
+          "inputVertexCount": 19005,
+          "weldedVertexCount": 3591,
+          "inputTriangleCount": 6335,
+          "weldedTriangleCount": 6335,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 1552,
-          "triangleCount": 3149,
-          "vertexCount": 1803,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 3120,
+          "triangleCount": 6335,
+          "vertexCount": 3591,
           "welding": {
-            "inputVertexCount": 9447,
-            "weldedVertexCount": 1803,
-            "inputTriangleCount": 3149,
-            "weldedTriangleCount": 3149,
+            "inputVertexCount": 19005,
+            "weldedVertexCount": 3591,
+            "inputTriangleCount": 6335,
+            "weldedTriangleCount": 6335,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -1374,17 +1382,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 455,
-            "smoothedVertexCount": 1348
+            "boundaryVertexCount": 832,
+            "smoothedVertexCount": 2759
           }
         },
-        "matchingVoxelCount": 2601,
-        "meanLog10Resistivity": 3.319572,
+        "matchingVoxelCount": 8034,
+        "meanLog10Resistivity": 3.345739,
         "meshRange": {
-          "vertexStart": 15051,
-          "vertexCount": 1803,
-          "indexStart": 73521,
-          "indexCount": 9447
+          "vertexStart": 27636,
+          "vertexCount": 3591,
+          "indexStart": 140058,
+          "indexCount": 19005
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1412,39 +1420,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 318,
-          "smoothedVertexCount": 1114
+          "boundaryVertexCount": 607,
+          "smoothedVertexCount": 2238
         },
         "vertexWelding": {
-          "inputVertexCount": 7602,
-          "weldedVertexCount": 1432,
-          "inputTriangleCount": 2534,
-          "weldedTriangleCount": 2534,
+          "inputVertexCount": 15102,
+          "weldedVertexCount": 2845,
+          "inputTriangleCount": 5034,
+          "weldedTriangleCount": 5034,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 1264,
-          "triangleCount": 2534,
-          "vertexCount": 1432,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 2529,
+          "triangleCount": 5034,
+          "vertexCount": 2845,
           "welding": {
-            "inputVertexCount": 7602,
-            "weldedVertexCount": 1432,
-            "inputTriangleCount": 2534,
-            "weldedTriangleCount": 2534,
+            "inputVertexCount": 15102,
+            "weldedVertexCount": 2845,
+            "inputTriangleCount": 5034,
+            "weldedTriangleCount": 5034,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -1452,17 +1460,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 318,
-            "smoothedVertexCount": 1114
+            "boundaryVertexCount": 607,
+            "smoothedVertexCount": 2238
           }
         },
-        "matchingVoxelCount": 1666,
-        "meanLog10Resistivity": 3.480592,
+        "matchingVoxelCount": 5381,
+        "meanLog10Resistivity": 3.500541,
         "meshRange": {
-          "vertexStart": 16854,
-          "vertexCount": 1432,
-          "indexStart": 82968,
-          "indexCount": 7602
+          "vertexStart": 31227,
+          "vertexCount": 2845,
+          "indexStart": 159063,
+          "indexCount": 15102
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1490,39 +1498,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 197,
-          "smoothedVertexCount": 850
+          "boundaryVertexCount": 350,
+          "smoothedVertexCount": 1830
         },
         "vertexWelding": {
-          "inputVertexCount": 5631,
-          "weldedVertexCount": 1047,
-          "inputTriangleCount": 1877,
-          "weldedTriangleCount": 1877,
+          "inputVertexCount": 11958,
+          "weldedVertexCount": 2180,
+          "inputTriangleCount": 3986,
+          "weldedTriangleCount": 3986,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 947,
-          "triangleCount": 1877,
-          "vertexCount": 1047,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 2007,
+          "triangleCount": 3986,
+          "vertexCount": 2180,
           "welding": {
-            "inputVertexCount": 5631,
-            "weldedVertexCount": 1047,
-            "inputTriangleCount": 1877,
-            "weldedTriangleCount": 1877,
+            "inputVertexCount": 11958,
+            "weldedVertexCount": 2180,
+            "inputTriangleCount": 3986,
+            "weldedTriangleCount": 3986,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -1530,17 +1538,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 197,
-            "smoothedVertexCount": 850
+            "boundaryVertexCount": 350,
+            "smoothedVertexCount": 1830
           }
         },
-        "matchingVoxelCount": 1048,
-        "meanLog10Resistivity": 3.628915,
+        "matchingVoxelCount": 3475,
+        "meanLog10Resistivity": 3.648827,
         "meshRange": {
-          "vertexStart": 18286,
-          "vertexCount": 1047,
-          "indexStart": 90570,
-          "indexCount": 5631
+          "vertexStart": 34072,
+          "vertexCount": 2180,
+          "indexStart": 174165,
+          "indexCount": 11958
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1568,39 +1576,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 147,
-          "smoothedVertexCount": 608
+          "boundaryVertexCount": 259,
+          "smoothedVertexCount": 1396
         },
         "vertexWelding": {
-          "inputVertexCount": 4071,
-          "weldedVertexCount": 755,
-          "inputTriangleCount": 1357,
-          "weldedTriangleCount": 1357,
+          "inputVertexCount": 9141,
+          "weldedVertexCount": 1655,
+          "inputTriangleCount": 3047,
+          "weldedTriangleCount": 3047,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 683,
-          "triangleCount": 1357,
-          "vertexCount": 755,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 1528,
+          "triangleCount": 3047,
+          "vertexCount": 1655,
           "welding": {
-            "inputVertexCount": 4071,
-            "weldedVertexCount": 755,
-            "inputTriangleCount": 1357,
-            "weldedTriangleCount": 1357,
+            "inputVertexCount": 9141,
+            "weldedVertexCount": 1655,
+            "inputTriangleCount": 3047,
+            "weldedTriangleCount": 3047,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -1608,17 +1616,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 147,
-            "smoothedVertexCount": 608
+            "boundaryVertexCount": 259,
+            "smoothedVertexCount": 1396
           }
         },
-        "matchingVoxelCount": 616,
-        "meanLog10Resistivity": 3.763701,
+        "matchingVoxelCount": 2161,
+        "meanLog10Resistivity": 3.779609,
         "meshRange": {
-          "vertexStart": 19333,
-          "vertexCount": 755,
-          "indexStart": 96201,
-          "indexCount": 4071
+          "vertexStart": 36252,
+          "vertexCount": 1655,
+          "indexStart": 186123,
+          "indexCount": 9141
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1646,39 +1654,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 63,
-          "smoothedVertexCount": 369
+          "boundaryVertexCount": 159,
+          "smoothedVertexCount": 996
         },
         "vertexWelding": {
-          "inputVertexCount": 2415,
-          "weldedVertexCount": 432,
-          "inputTriangleCount": 805,
-          "weldedTriangleCount": 805,
+          "inputVertexCount": 6423,
+          "weldedVertexCount": 1155,
+          "inputTriangleCount": 2141,
+          "weldedTriangleCount": 2141,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 396,
-          "triangleCount": 805,
-          "vertexCount": 432,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 1079,
+          "triangleCount": 2141,
+          "vertexCount": 1155,
           "welding": {
-            "inputVertexCount": 2415,
-            "weldedVertexCount": 432,
-            "inputTriangleCount": 805,
-            "weldedTriangleCount": 805,
+            "inputVertexCount": 6423,
+            "weldedVertexCount": 1155,
+            "inputTriangleCount": 2141,
+            "weldedTriangleCount": 2141,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -1686,17 +1694,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 63,
-            "smoothedVertexCount": 369
+            "boundaryVertexCount": 159,
+            "smoothedVertexCount": 996
           }
         },
-        "matchingVoxelCount": 273,
-        "meanLog10Resistivity": 3.930871,
+        "matchingVoxelCount": 1031,
+        "meanLog10Resistivity": 3.942559,
         "meshRange": {
-          "vertexStart": 20088,
-          "vertexCount": 432,
-          "indexStart": 100272,
-          "indexCount": 2415
+          "vertexStart": 37907,
+          "vertexCount": 1155,
+          "indexStart": 195264,
+          "indexCount": 6423
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1724,39 +1732,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 0,
-          "smoothedVertexCount": 256
+          "boundaryVertexCount": 50,
+          "smoothedVertexCount": 614
         },
         "vertexWelding": {
-          "inputVertexCount": 1536,
-          "weldedVertexCount": 256,
-          "inputTriangleCount": 512,
-          "weldedTriangleCount": 512,
+          "inputVertexCount": 3804,
+          "weldedVertexCount": 664,
+          "inputTriangleCount": 1268,
+          "weldedTriangleCount": 1268,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 250,
-          "triangleCount": 512,
-          "vertexCount": 256,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 635,
+          "triangleCount": 1268,
+          "vertexCount": 664,
           "welding": {
-            "inputVertexCount": 1536,
-            "weldedVertexCount": 256,
-            "inputTriangleCount": 512,
-            "weldedTriangleCount": 512,
+            "inputVertexCount": 3804,
+            "weldedVertexCount": 664,
+            "inputTriangleCount": 1268,
+            "weldedTriangleCount": 1268,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -1764,17 +1772,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 0,
-            "smoothedVertexCount": 256
+            "boundaryVertexCount": 50,
+            "smoothedVertexCount": 614
           }
         },
-        "matchingVoxelCount": 111,
-        "meanLog10Resistivity": 4.091576,
+        "matchingVoxelCount": 425,
+        "meanLog10Resistivity": 4.112813,
         "meshRange": {
-          "vertexStart": 20520,
-          "vertexCount": 256,
-          "indexStart": 102687,
-          "indexCount": 1536
+          "vertexStart": 39062,
+          "vertexCount": 664,
+          "indexStart": 201687,
+          "indexCount": 3804
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1802,39 +1810,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 239,
-          "smoothedVertexCount": 290
+          "boundaryVertexCount": 468,
+          "smoothedVertexCount": 526
         },
         "vertexWelding": {
-          "inputVertexCount": 2373,
-          "weldedVertexCount": 529,
-          "inputTriangleCount": 791,
-          "weldedTriangleCount": 791,
+          "inputVertexCount": 4416,
+          "weldedVertexCount": 994,
+          "inputTriangleCount": 1472,
+          "weldedTriangleCount": 1472,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 402,
-          "triangleCount": 791,
-          "vertexCount": 529,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 749,
+          "triangleCount": 1472,
+          "vertexCount": 994,
           "welding": {
-            "inputVertexCount": 2373,
-            "weldedVertexCount": 529,
-            "inputTriangleCount": 791,
-            "weldedTriangleCount": 791,
+            "inputVertexCount": 4416,
+            "weldedVertexCount": 994,
+            "inputTriangleCount": 1472,
+            "weldedTriangleCount": 1472,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -1842,17 +1850,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 239,
-            "smoothedVertexCount": 290
+            "boundaryVertexCount": 468,
+            "smoothedVertexCount": 526
           }
         },
-        "matchingVoxelCount": 967,
-        "meanLog10Resistivity": 0.722919,
+        "matchingVoxelCount": 2387,
+        "meanLog10Resistivity": 0.73717,
         "meshRange": {
-          "vertexStart": 20776,
-          "vertexCount": 529,
-          "indexStart": 104223,
-          "indexCount": 2373
+          "vertexStart": 39726,
+          "vertexCount": 994,
+          "indexStart": 205491,
+          "indexCount": 4416
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1880,39 +1888,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 425,
-          "smoothedVertexCount": 554
+          "boundaryVertexCount": 682,
+          "smoothedVertexCount": 1237
         },
         "vertexWelding": {
-          "inputVertexCount": 4497,
-          "weldedVertexCount": 979,
-          "inputTriangleCount": 1499,
-          "weldedTriangleCount": 1499,
+          "inputVertexCount": 9327,
+          "weldedVertexCount": 1919,
+          "inputTriangleCount": 3109,
+          "weldedTriangleCount": 3109,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 754,
-          "triangleCount": 1499,
-          "vertexCount": 979,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 1542,
+          "triangleCount": 3109,
+          "vertexCount": 1919,
           "welding": {
-            "inputVertexCount": 4497,
-            "weldedVertexCount": 979,
-            "inputTriangleCount": 1499,
-            "weldedTriangleCount": 1499,
+            "inputVertexCount": 9327,
+            "weldedVertexCount": 1919,
+            "inputTriangleCount": 3109,
+            "weldedTriangleCount": 3109,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -1920,17 +1928,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 425,
-            "smoothedVertexCount": 554
+            "boundaryVertexCount": 682,
+            "smoothedVertexCount": 1237
           }
         },
-        "matchingVoxelCount": 3961,
-        "meanLog10Resistivity": 1.149358,
+        "matchingVoxelCount": 9273,
+        "meanLog10Resistivity": 1.14348,
         "meshRange": {
-          "vertexStart": 21305,
-          "vertexCount": 979,
-          "indexStart": 106596,
-          "indexCount": 4497
+          "vertexStart": 40720,
+          "vertexCount": 1919,
+          "indexStart": 209907,
+          "indexCount": 9327
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1958,39 +1966,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 408,
-          "smoothedVertexCount": 1312
+          "boundaryVertexCount": 774,
+          "smoothedVertexCount": 2587
         },
         "vertexWelding": {
-          "inputVertexCount": 9078,
-          "weldedVertexCount": 1720,
-          "inputTriangleCount": 3026,
-          "weldedTriangleCount": 3026,
+          "inputVertexCount": 17814,
+          "weldedVertexCount": 3361,
+          "inputTriangleCount": 5938,
+          "weldedTriangleCount": 5938,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          80,
-          64,
-          56
+          144,
+          118,
+          65
         ],
         "voxelSpacingM": {
-          "x_m": 3489.266,
-          "y_m": 3560.766,
-          "z_m": 2242.199
+          "x_m": 1938.481,
+          "y_m": 1931.263,
+          "z_m": 1931.74
         },
         "marchingCubes": {
-          "visitedCubeCount": 273735,
-          "skippedMaskedCubeCount": 268652,
-          "activeCubeCount": 1489,
-          "triangleCount": 3026,
-          "vertexCount": 1720,
+          "visitedCubeCount": 1070784,
+          "skippedMaskedCubeCount": 1059237,
+          "activeCubeCount": 2933,
+          "triangleCount": 5938,
+          "vertexCount": 3361,
           "welding": {
-            "inputVertexCount": 9078,
-            "weldedVertexCount": 1720,
-            "inputTriangleCount": 3026,
-            "weldedTriangleCount": 3026,
+            "inputVertexCount": 17814,
+            "weldedVertexCount": 3361,
+            "inputTriangleCount": 5938,
+            "weldedTriangleCount": 5938,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -1998,17 +2006,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 408,
-            "smoothedVertexCount": 1312
+            "boundaryVertexCount": 774,
+            "smoothedVertexCount": 2587
           }
         },
-        "matchingVoxelCount": 2274,
-        "meanLog10Resistivity": 3.370173,
+        "matchingVoxelCount": 7122,
+        "meanLog10Resistivity": 3.394091,
         "meshRange": {
-          "vertexStart": 22284,
-          "vertexCount": 1720,
-          "indexStart": 111093,
-          "indexCount": 9078
+          "vertexStart": 42639,
+          "vertexCount": 3361,
+          "indexStart": 219234,
+          "indexCount": 17814
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -2036,39 +2044,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 367,
-          "smoothedVertexCount": 1125
+          "boundaryVertexCount": 595,
+          "smoothedVertexCount": 1389
         },
         "vertexWelding": {
-          "inputVertexCount": 7605,
-          "weldedVertexCount": 1492,
-          "inputTriangleCount": 2535,
-          "weldedTriangleCount": 2535,
+          "inputVertexCount": 9822,
+          "weldedVertexCount": 1984,
+          "inputTriangleCount": 3274,
+          "weldedTriangleCount": 3274,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 1249,
-          "triangleCount": 2535,
-          "vertexCount": 1492,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 1600,
+          "triangleCount": 3274,
+          "vertexCount": 1984,
           "welding": {
-            "inputVertexCount": 7605,
-            "weldedVertexCount": 1492,
-            "inputTriangleCount": 2535,
-            "weldedTriangleCount": 2535,
+            "inputVertexCount": 9822,
+            "weldedVertexCount": 1984,
+            "inputTriangleCount": 3274,
+            "weldedTriangleCount": 3274,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -2076,17 +2084,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 367,
-            "smoothedVertexCount": 1125
+            "boundaryVertexCount": 595,
+            "smoothedVertexCount": 1389
           }
         },
-        "matchingVoxelCount": 720,
-        "meanLog10Resistivity": -0.107317,
+        "matchingVoxelCount": 1060,
+        "meanLog10Resistivity": -0.124428,
         "meshRange": {
-          "vertexStart": 24004,
-          "vertexCount": 1492,
-          "indexStart": 120171,
-          "indexCount": 7605
+          "vertexStart": 46000,
+          "vertexCount": 1984,
+          "indexStart": 237048,
+          "indexCount": 9822
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -2114,39 +2122,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 549,
-          "smoothedVertexCount": 1530
+          "boundaryVertexCount": 882,
+          "smoothedVertexCount": 1859
         },
         "vertexWelding": {
-          "inputVertexCount": 10785,
-          "weldedVertexCount": 2079,
-          "inputTriangleCount": 3595,
-          "weldedTriangleCount": 3595,
+          "inputVertexCount": 13614,
+          "weldedVertexCount": 2741,
+          "inputTriangleCount": 4538,
+          "weldedTriangleCount": 4538,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 1696,
-          "triangleCount": 3595,
-          "vertexCount": 2079,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 2195,
+          "triangleCount": 4538,
+          "vertexCount": 2741,
           "welding": {
-            "inputVertexCount": 10785,
-            "weldedVertexCount": 2079,
-            "inputTriangleCount": 3595,
-            "weldedTriangleCount": 3595,
+            "inputVertexCount": 13614,
+            "weldedVertexCount": 2741,
+            "inputTriangleCount": 4538,
+            "weldedTriangleCount": 4538,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -2154,17 +2162,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 549,
-            "smoothedVertexCount": 1530
+            "boundaryVertexCount": 882,
+            "smoothedVertexCount": 1859
           }
         },
-        "matchingVoxelCount": 1306,
-        "meanLog10Resistivity": 0.052031,
+        "matchingVoxelCount": 1872,
+        "meanLog10Resistivity": 0.036595,
         "meshRange": {
-          "vertexStart": 25496,
-          "vertexCount": 2079,
-          "indexStart": 127776,
-          "indexCount": 10785
+          "vertexStart": 47984,
+          "vertexCount": 2741,
+          "indexStart": 246870,
+          "indexCount": 13614
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -2192,39 +2200,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 767,
-          "smoothedVertexCount": 1897
+          "boundaryVertexCount": 1089,
+          "smoothedVertexCount": 2168
         },
         "vertexWelding": {
-          "inputVertexCount": 13548,
-          "weldedVertexCount": 2664,
-          "inputTriangleCount": 4516,
-          "weldedTriangleCount": 4516,
+          "inputVertexCount": 16017,
+          "weldedVertexCount": 3257,
+          "inputTriangleCount": 5339,
+          "weldedTriangleCount": 5339,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 2179,
-          "triangleCount": 4516,
-          "vertexCount": 2664,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 2609,
+          "triangleCount": 5339,
+          "vertexCount": 3257,
           "welding": {
-            "inputVertexCount": 13548,
-            "weldedVertexCount": 2664,
-            "inputTriangleCount": 4516,
-            "weldedTriangleCount": 4516,
+            "inputVertexCount": 16017,
+            "weldedVertexCount": 3257,
+            "inputTriangleCount": 5339,
+            "weldedTriangleCount": 5339,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -2232,17 +2240,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 767,
-            "smoothedVertexCount": 1897
+            "boundaryVertexCount": 1089,
+            "smoothedVertexCount": 2168
           }
         },
-        "matchingVoxelCount": 2125,
-        "meanLog10Resistivity": 0.202973,
+        "matchingVoxelCount": 2910,
+        "meanLog10Resistivity": 0.181453,
         "meshRange": {
-          "vertexStart": 27575,
-          "vertexCount": 2664,
-          "indexStart": 138561,
-          "indexCount": 13548
+          "vertexStart": 50725,
+          "vertexCount": 3257,
+          "indexStart": 260484,
+          "indexCount": 16017
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -2270,39 +2278,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 985,
-          "smoothedVertexCount": 2281
+          "boundaryVertexCount": 1363,
+          "smoothedVertexCount": 2655
         },
         "vertexWelding": {
-          "inputVertexCount": 16260,
-          "weldedVertexCount": 3266,
-          "inputTriangleCount": 5420,
-          "weldedTriangleCount": 5420,
+          "inputVertexCount": 19599,
+          "weldedVertexCount": 4018,
+          "inputTriangleCount": 6533,
+          "weldedTriangleCount": 6533,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 2704,
-          "triangleCount": 5420,
-          "vertexCount": 3266,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 3262,
+          "triangleCount": 6533,
+          "vertexCount": 4018,
           "welding": {
-            "inputVertexCount": 16260,
-            "weldedVertexCount": 3266,
-            "inputTriangleCount": 5420,
-            "weldedTriangleCount": 5420,
+            "inputVertexCount": 19599,
+            "weldedVertexCount": 4018,
+            "inputTriangleCount": 6533,
+            "weldedTriangleCount": 6533,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -2310,17 +2318,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 985,
-            "smoothedVertexCount": 2281
+            "boundaryVertexCount": 1363,
+            "smoothedVertexCount": 2655
           }
         },
-        "matchingVoxelCount": 3129,
-        "meanLog10Resistivity": 0.343691,
+        "matchingVoxelCount": 4319,
+        "meanLog10Resistivity": 0.332539,
         "meshRange": {
-          "vertexStart": 30239,
-          "vertexCount": 3266,
-          "indexStart": 152109,
-          "indexCount": 16260
+          "vertexStart": 53982,
+          "vertexCount": 4018,
+          "indexStart": 276501,
+          "indexCount": 19599
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -2348,39 +2356,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 1287,
-          "smoothedVertexCount": 2665
+          "boundaryVertexCount": 1658,
+          "smoothedVertexCount": 2967
         },
         "vertexWelding": {
-          "inputVertexCount": 19233,
-          "weldedVertexCount": 3952,
-          "inputTriangleCount": 6411,
-          "weldedTriangleCount": 6411,
+          "inputVertexCount": 22104,
+          "weldedVertexCount": 4625,
+          "inputTriangleCount": 7368,
+          "weldedTriangleCount": 7368,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 3250,
-          "triangleCount": 6411,
-          "vertexCount": 3952,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 3718,
+          "triangleCount": 7368,
+          "vertexCount": 4625,
           "welding": {
-            "inputVertexCount": 19233,
-            "weldedVertexCount": 3952,
-            "inputTriangleCount": 6411,
-            "weldedTriangleCount": 6411,
+            "inputVertexCount": 22104,
+            "weldedVertexCount": 4625,
+            "inputTriangleCount": 7368,
+            "weldedTriangleCount": 7368,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -2388,17 +2396,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 1287,
-            "smoothedVertexCount": 2665
+            "boundaryVertexCount": 1658,
+            "smoothedVertexCount": 2967
           }
         },
-        "matchingVoxelCount": 4739,
-        "meanLog10Resistivity": 0.513973,
+        "matchingVoxelCount": 6609,
+        "meanLog10Resistivity": 0.509733,
         "meshRange": {
-          "vertexStart": 33505,
-          "vertexCount": 3952,
-          "indexStart": 168369,
-          "indexCount": 19233
+          "vertexStart": 58000,
+          "vertexCount": 4625,
+          "indexStart": 296100,
+          "indexCount": 22104
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -2426,39 +2434,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 1553,
-          "smoothedVertexCount": 3158
+          "boundaryVertexCount": 1980,
+          "smoothedVertexCount": 3448
         },
         "vertexWelding": {
-          "inputVertexCount": 23136,
-          "weldedVertexCount": 4711,
-          "inputTriangleCount": 7712,
-          "weldedTriangleCount": 7712,
+          "inputVertexCount": 25977,
+          "weldedVertexCount": 5428,
+          "inputTriangleCount": 8659,
+          "weldedTriangleCount": 8659,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 3827,
-          "triangleCount": 7712,
-          "vertexCount": 4711,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 4312,
+          "triangleCount": 8659,
+          "vertexCount": 5428,
           "welding": {
-            "inputVertexCount": 23136,
-            "weldedVertexCount": 4711,
-            "inputTriangleCount": 7712,
-            "weldedTriangleCount": 7712,
+            "inputVertexCount": 25977,
+            "weldedVertexCount": 5428,
+            "inputTriangleCount": 8659,
+            "weldedTriangleCount": 8659,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -2466,17 +2474,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 1553,
-            "smoothedVertexCount": 3158
+            "boundaryVertexCount": 1980,
+            "smoothedVertexCount": 3448
           }
         },
-        "matchingVoxelCount": 6630,
-        "meanLog10Resistivity": 0.665024,
+        "matchingVoxelCount": 9269,
+        "meanLog10Resistivity": 0.662548,
         "meshRange": {
-          "vertexStart": 37457,
-          "vertexCount": 4711,
-          "indexStart": 187602,
-          "indexCount": 23136
+          "vertexStart": 62625,
+          "vertexCount": 5428,
+          "indexStart": 318204,
+          "indexCount": 25977
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -2504,39 +2512,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 1828,
-          "smoothedVertexCount": 3928
+          "boundaryVertexCount": 2390,
+          "smoothedVertexCount": 4053
         },
         "vertexWelding": {
-          "inputVertexCount": 28770,
-          "weldedVertexCount": 5756,
-          "inputTriangleCount": 9590,
-          "weldedTriangleCount": 9590,
+          "inputVertexCount": 31158,
+          "weldedVertexCount": 6443,
+          "inputTriangleCount": 10386,
+          "weldedTriangleCount": 10386,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 4686,
-          "triangleCount": 9590,
-          "vertexCount": 5756,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 5059,
+          "triangleCount": 10386,
+          "vertexCount": 6443,
           "welding": {
-            "inputVertexCount": 28770,
-            "weldedVertexCount": 5756,
-            "inputTriangleCount": 9590,
-            "weldedTriangleCount": 9590,
+            "inputVertexCount": 31158,
+            "weldedVertexCount": 6443,
+            "inputTriangleCount": 10386,
+            "weldedTriangleCount": 10386,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -2544,17 +2552,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 1828,
-            "smoothedVertexCount": 3928
+            "boundaryVertexCount": 2390,
+            "smoothedVertexCount": 4053
           }
         },
-        "matchingVoxelCount": 9313,
-        "meanLog10Resistivity": 0.832114,
+        "matchingVoxelCount": 13072,
+        "meanLog10Resistivity": 0.831785,
         "meshRange": {
-          "vertexStart": 42168,
-          "vertexCount": 5756,
-          "indexStart": 210738,
-          "indexCount": 28770
+          "vertexStart": 68053,
+          "vertexCount": 6443,
+          "indexStart": 344181,
+          "indexCount": 31158
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -2582,39 +2590,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 2074,
-          "smoothedVertexCount": 4293
+          "boundaryVertexCount": 2432,
+          "smoothedVertexCount": 4460
         },
         "vertexWelding": {
-          "inputVertexCount": 31857,
-          "weldedVertexCount": 6367,
-          "inputTriangleCount": 10619,
-          "weldedTriangleCount": 10619,
+          "inputVertexCount": 33702,
+          "weldedVertexCount": 6892,
+          "inputTriangleCount": 11234,
+          "weldedTriangleCount": 11234,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 5164,
-          "triangleCount": 10619,
-          "vertexCount": 6367,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 5502,
+          "triangleCount": 11234,
+          "vertexCount": 6892,
           "welding": {
-            "inputVertexCount": 31857,
-            "weldedVertexCount": 6367,
-            "inputTriangleCount": 10619,
-            "weldedTriangleCount": 10619,
+            "inputVertexCount": 33702,
+            "weldedVertexCount": 6892,
+            "inputTriangleCount": 11234,
+            "weldedTriangleCount": 11234,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -2622,17 +2630,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 2074,
-            "smoothedVertexCount": 4293
+            "boundaryVertexCount": 2432,
+            "smoothedVertexCount": 4460
           }
         },
-        "matchingVoxelCount": 70052,
-        "meanLog10Resistivity": 2.641171,
+        "matchingVoxelCount": 107499,
+        "meanLog10Resistivity": 2.687054,
         "meshRange": {
-          "vertexStart": 47924,
-          "vertexCount": 6367,
-          "indexStart": 239508,
-          "indexCount": 31857
+          "vertexStart": 74496,
+          "vertexCount": 6892,
+          "indexStart": 375339,
+          "indexCount": 33702
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -2660,39 +2668,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 2251,
-          "smoothedVertexCount": 4448
+          "boundaryVertexCount": 2513,
+          "smoothedVertexCount": 5077
         },
         "vertexWelding": {
-          "inputVertexCount": 33021,
-          "weldedVertexCount": 6699,
-          "inputTriangleCount": 11007,
-          "weldedTriangleCount": 11007,
+          "inputVertexCount": 37527,
+          "weldedVertexCount": 7590,
+          "inputTriangleCount": 12509,
+          "weldedTriangleCount": 12509,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 5428,
-          "triangleCount": 11007,
-          "vertexCount": 6699,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 6154,
+          "triangleCount": 12509,
+          "vertexCount": 7590,
           "welding": {
-            "inputVertexCount": 33021,
-            "weldedVertexCount": 6699,
-            "inputTriangleCount": 11007,
-            "weldedTriangleCount": 11007,
+            "inputVertexCount": 37527,
+            "weldedVertexCount": 7590,
+            "inputTriangleCount": 12509,
+            "weldedTriangleCount": 12509,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -2700,17 +2708,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 2251,
-            "smoothedVertexCount": 4448
+            "boundaryVertexCount": 2513,
+            "smoothedVertexCount": 5077
           }
         },
-        "matchingVoxelCount": 65551,
-        "meanLog10Resistivity": 2.709742,
+        "matchingVoxelCount": 101191,
+        "meanLog10Resistivity": 2.752077,
         "meshRange": {
-          "vertexStart": 54291,
-          "vertexCount": 6699,
-          "indexStart": 271365,
-          "indexCount": 33021
+          "vertexStart": 81388,
+          "vertexCount": 7590,
+          "indexStart": 409041,
+          "indexCount": 37527
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -2738,39 +2746,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 2410,
-          "smoothedVertexCount": 4683
+          "boundaryVertexCount": 2668,
+          "smoothedVertexCount": 5558
         },
         "vertexWelding": {
-          "inputVertexCount": 35019,
-          "weldedVertexCount": 7093,
-          "inputTriangleCount": 11673,
-          "weldedTriangleCount": 11673,
+          "inputVertexCount": 40875,
+          "weldedVertexCount": 8226,
+          "inputTriangleCount": 13625,
+          "weldedTriangleCount": 13625,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 5748,
-          "triangleCount": 11673,
-          "vertexCount": 7093,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 6728,
+          "triangleCount": 13625,
+          "vertexCount": 8226,
           "welding": {
-            "inputVertexCount": 35019,
-            "weldedVertexCount": 7093,
-            "inputTriangleCount": 11673,
-            "weldedTriangleCount": 11673,
+            "inputVertexCount": 40875,
+            "weldedVertexCount": 8226,
+            "inputTriangleCount": 13625,
+            "weldedTriangleCount": 13625,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -2778,17 +2786,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 2410,
-            "smoothedVertexCount": 4683
+            "boundaryVertexCount": 2668,
+            "smoothedVertexCount": 5558
           }
         },
-        "matchingVoxelCount": 59763,
-        "meanLog10Resistivity": 2.794035,
+        "matchingVoxelCount": 93034,
+        "meanLog10Resistivity": 2.831945,
         "meshRange": {
-          "vertexStart": 60990,
-          "vertexCount": 7093,
-          "indexStart": 304386,
-          "indexCount": 35019
+          "vertexStart": 88978,
+          "vertexCount": 8226,
+          "indexStart": 446568,
+          "indexCount": 40875
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -2816,39 +2824,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 2548,
-          "smoothedVertexCount": 4817
+          "boundaryVertexCount": 2673,
+          "smoothedVertexCount": 6138
         },
         "vertexWelding": {
-          "inputVertexCount": 36210,
-          "weldedVertexCount": 7365,
-          "inputTriangleCount": 12070,
-          "weldedTriangleCount": 12070,
+          "inputVertexCount": 44499,
+          "weldedVertexCount": 8811,
+          "inputTriangleCount": 14833,
+          "weldedTriangleCount": 14833,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 5905,
-          "triangleCount": 12070,
-          "vertexCount": 7365,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 7280,
+          "triangleCount": 14833,
+          "vertexCount": 8811,
           "welding": {
-            "inputVertexCount": 36210,
-            "weldedVertexCount": 7365,
-            "inputTriangleCount": 12070,
-            "weldedTriangleCount": 12070,
+            "inputVertexCount": 44499,
+            "weldedVertexCount": 8811,
+            "inputTriangleCount": 14833,
+            "weldedTriangleCount": 14833,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -2856,17 +2864,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 2548,
-            "smoothedVertexCount": 4817
+            "boundaryVertexCount": 2673,
+            "smoothedVertexCount": 6138
           }
         },
-        "matchingVoxelCount": 53211,
-        "meanLog10Resistivity": 2.886602,
+        "matchingVoxelCount": 83550,
+        "meanLog10Resistivity": 2.921644,
         "meshRange": {
-          "vertexStart": 68083,
-          "vertexCount": 7365,
-          "indexStart": 339405,
-          "indexCount": 36210
+          "vertexStart": 97204,
+          "vertexCount": 8811,
+          "indexStart": 487443,
+          "indexCount": 44499
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -2894,39 +2902,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 2517,
-          "smoothedVertexCount": 4515
+          "boundaryVertexCount": 2565,
+          "smoothedVertexCount": 6193
         },
         "vertexWelding": {
-          "inputVertexCount": 34287,
-          "weldedVertexCount": 7032,
-          "inputTriangleCount": 11429,
-          "weldedTriangleCount": 11429,
+          "inputVertexCount": 44592,
+          "weldedVertexCount": 8758,
+          "inputTriangleCount": 14864,
+          "weldedTriangleCount": 14864,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 5549,
-          "triangleCount": 11429,
-          "vertexCount": 7032,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 7266,
+          "triangleCount": 14864,
+          "vertexCount": 8758,
           "welding": {
-            "inputVertexCount": 34287,
-            "weldedVertexCount": 7032,
-            "inputTriangleCount": 11429,
-            "weldedTriangleCount": 11429,
+            "inputVertexCount": 44592,
+            "weldedVertexCount": 8758,
+            "inputTriangleCount": 14864,
+            "weldedTriangleCount": 14864,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -2934,17 +2942,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 2517,
-            "smoothedVertexCount": 4515
+            "boundaryVertexCount": 2565,
+            "smoothedVertexCount": 6193
           }
         },
-        "matchingVoxelCount": 45518,
-        "meanLog10Resistivity": 2.995996,
+        "matchingVoxelCount": 72235,
+        "meanLog10Resistivity": 3.02857,
         "meshRange": {
-          "vertexStart": 75448,
-          "vertexCount": 7032,
-          "indexStart": 375615,
-          "indexCount": 34287
+          "vertexStart": 106015,
+          "vertexCount": 8758,
+          "indexStart": 531942,
+          "indexCount": 44592
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -2972,39 +2980,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 2262,
-          "smoothedVertexCount": 3953
+          "boundaryVertexCount": 2348,
+          "smoothedVertexCount": 5638
         },
         "vertexWelding": {
-          "inputVertexCount": 30090,
-          "weldedVertexCount": 6215,
-          "inputTriangleCount": 10030,
-          "weldedTriangleCount": 10030,
+          "inputVertexCount": 40548,
+          "weldedVertexCount": 7986,
+          "inputTriangleCount": 13516,
+          "weldedTriangleCount": 13516,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 4936,
-          "triangleCount": 10030,
-          "vertexCount": 6215,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 6650,
+          "triangleCount": 13516,
+          "vertexCount": 7986,
           "welding": {
-            "inputVertexCount": 30090,
-            "weldedVertexCount": 6215,
-            "inputTriangleCount": 10030,
-            "weldedTriangleCount": 10030,
+            "inputVertexCount": 40548,
+            "weldedVertexCount": 7986,
+            "inputTriangleCount": 13516,
+            "weldedTriangleCount": 13516,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -3012,17 +3020,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 2262,
-            "smoothedVertexCount": 3953
+            "boundaryVertexCount": 2348,
+            "smoothedVertexCount": 5638
           }
         },
-        "matchingVoxelCount": 37961,
-        "meanLog10Resistivity": 3.107003,
+        "matchingVoxelCount": 60842,
+        "meanLog10Resistivity": 3.13914,
         "meshRange": {
-          "vertexStart": 82480,
-          "vertexCount": 6215,
-          "indexStart": 409902,
-          "indexCount": 30090
+          "vertexStart": 114773,
+          "vertexCount": 7986,
+          "indexStart": 576534,
+          "indexCount": 40548
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -3050,39 +3058,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 2006,
-          "smoothedVertexCount": 3414
+          "boundaryVertexCount": 2122,
+          "smoothedVertexCount": 5060
         },
         "vertexWelding": {
-          "inputVertexCount": 26256,
-          "weldedVertexCount": 5420,
-          "inputTriangleCount": 8752,
-          "weldedTriangleCount": 8752,
+          "inputVertexCount": 36429,
+          "weldedVertexCount": 7182,
+          "inputTriangleCount": 12143,
+          "weldedTriangleCount": 12143,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 4260,
-          "triangleCount": 8752,
-          "vertexCount": 5420,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 5967,
+          "triangleCount": 12143,
+          "vertexCount": 7182,
           "welding": {
-            "inputVertexCount": 26256,
-            "weldedVertexCount": 5420,
-            "inputTriangleCount": 8752,
-            "weldedTriangleCount": 8752,
+            "inputVertexCount": 36429,
+            "weldedVertexCount": 7182,
+            "inputTriangleCount": 12143,
+            "weldedTriangleCount": 12143,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -3090,17 +3098,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 2006,
-            "smoothedVertexCount": 3414
+            "boundaryVertexCount": 2122,
+            "smoothedVertexCount": 5060
           }
         },
-        "matchingVoxelCount": 29605,
-        "meanLog10Resistivity": 3.239299,
+        "matchingVoxelCount": 48253,
+        "meanLog10Resistivity": 3.269594,
         "meshRange": {
-          "vertexStart": 88695,
-          "vertexCount": 5420,
-          "indexStart": 439992,
-          "indexCount": 26256
+          "vertexStart": 122759,
+          "vertexCount": 7182,
+          "indexStart": 617082,
+          "indexCount": 36429
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -3128,39 +3136,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 1567,
-          "smoothedVertexCount": 2700
+          "boundaryVertexCount": 1801,
+          "smoothedVertexCount": 4286
         },
         "vertexWelding": {
-          "inputVertexCount": 20607,
-          "weldedVertexCount": 4267,
-          "inputTriangleCount": 6869,
-          "weldedTriangleCount": 6869,
+          "inputVertexCount": 30942,
+          "weldedVertexCount": 6087,
+          "inputTriangleCount": 10314,
+          "weldedTriangleCount": 10314,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 3388,
-          "triangleCount": 6869,
-          "vertexCount": 4267,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 5069,
+          "triangleCount": 10314,
+          "vertexCount": 6087,
           "welding": {
-            "inputVertexCount": 20607,
-            "weldedVertexCount": 4267,
-            "inputTriangleCount": 6869,
-            "weldedTriangleCount": 6869,
+            "inputVertexCount": 30942,
+            "weldedVertexCount": 6087,
+            "inputTriangleCount": 10314,
+            "weldedTriangleCount": 10314,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -3168,17 +3176,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 1567,
-            "smoothedVertexCount": 2700
+            "boundaryVertexCount": 1801,
+            "smoothedVertexCount": 4286
           }
         },
-        "matchingVoxelCount": 21261,
-        "meanLog10Resistivity": 3.398789,
+        "matchingVoxelCount": 35507,
+        "meanLog10Resistivity": 3.426223,
         "meshRange": {
-          "vertexStart": 94115,
-          "vertexCount": 4267,
-          "indexStart": 466248,
-          "indexCount": 20607
+          "vertexStart": 129941,
+          "vertexCount": 6087,
+          "indexStart": 653511,
+          "indexCount": 30942
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -3206,39 +3214,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 1113,
-          "smoothedVertexCount": 1977
+          "boundaryVertexCount": 1489,
+          "smoothedVertexCount": 3452
         },
         "vertexWelding": {
-          "inputVertexCount": 14952,
-          "weldedVertexCount": 3090,
-          "inputTriangleCount": 4984,
-          "weldedTriangleCount": 4984,
+          "inputVertexCount": 24819,
+          "weldedVertexCount": 4941,
+          "inputTriangleCount": 8273,
+          "weldedTriangleCount": 8273,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 2475,
-          "triangleCount": 4984,
-          "vertexCount": 3090,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 4113,
+          "triangleCount": 8273,
+          "vertexCount": 4941,
           "welding": {
-            "inputVertexCount": 14952,
-            "weldedVertexCount": 3090,
-            "inputTriangleCount": 4984,
-            "weldedTriangleCount": 4984,
+            "inputVertexCount": 24819,
+            "weldedVertexCount": 4941,
+            "inputTriangleCount": 8273,
+            "weldedTriangleCount": 8273,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -3246,17 +3254,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 1113,
-            "smoothedVertexCount": 1977
+            "boundaryVertexCount": 1489,
+            "smoothedVertexCount": 3452
           }
         },
-        "matchingVoxelCount": 14816,
-        "meanLog10Resistivity": 3.557472,
+        "matchingVoxelCount": 25602,
+        "meanLog10Resistivity": 3.577984,
         "meshRange": {
-          "vertexStart": 98382,
-          "vertexCount": 3090,
-          "indexStart": 486855,
-          "indexCount": 14952
+          "vertexStart": 136028,
+          "vertexCount": 4941,
+          "indexStart": 684453,
+          "indexCount": 24819
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -3284,39 +3292,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 842,
-          "smoothedVertexCount": 1274
+          "boundaryVertexCount": 1273,
+          "smoothedVertexCount": 2540
         },
         "vertexWelding": {
-          "inputVertexCount": 10005,
-          "weldedVertexCount": 2116,
-          "inputTriangleCount": 3335,
-          "weldedTriangleCount": 3335,
+          "inputVertexCount": 18684,
+          "weldedVertexCount": 3813,
+          "inputTriangleCount": 6228,
+          "weldedTriangleCount": 6228,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 1653,
-          "triangleCount": 3335,
-          "vertexCount": 2116,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 3140,
+          "triangleCount": 6228,
+          "vertexCount": 3813,
           "welding": {
-            "inputVertexCount": 10005,
-            "weldedVertexCount": 2116,
-            "inputTriangleCount": 3335,
-            "weldedTriangleCount": 3335,
+            "inputVertexCount": 18684,
+            "weldedVertexCount": 3813,
+            "inputTriangleCount": 6228,
+            "weldedTriangleCount": 6228,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -3324,17 +3332,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 842,
-            "smoothedVertexCount": 1274
+            "boundaryVertexCount": 1273,
+            "smoothedVertexCount": 2540
           }
         },
-        "matchingVoxelCount": 10195,
-        "meanLog10Resistivity": 3.705726,
+        "matchingVoxelCount": 18126,
+        "meanLog10Resistivity": 3.721,
         "meshRange": {
-          "vertexStart": 101472,
-          "vertexCount": 2116,
-          "indexStart": 501807,
-          "indexCount": 10005
+          "vertexStart": 140969,
+          "vertexCount": 3813,
+          "indexStart": 709272,
+          "indexCount": 18684
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -3362,39 +3370,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 574,
-          "smoothedVertexCount": 759
+          "boundaryVertexCount": 932,
+          "smoothedVertexCount": 1674
         },
         "vertexWelding": {
-          "inputVertexCount": 6114,
-          "weldedVertexCount": 1333,
-          "inputTriangleCount": 2038,
-          "weldedTriangleCount": 2038,
+          "inputVertexCount": 12687,
+          "weldedVertexCount": 2606,
+          "inputTriangleCount": 4229,
+          "weldedTriangleCount": 4229,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 1033,
-          "triangleCount": 2038,
-          "vertexCount": 1333,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 2124,
+          "triangleCount": 4229,
+          "vertexCount": 2606,
           "welding": {
-            "inputVertexCount": 6114,
-            "weldedVertexCount": 1333,
-            "inputTriangleCount": 2038,
-            "weldedTriangleCount": 2038,
+            "inputVertexCount": 12687,
+            "weldedVertexCount": 2606,
+            "inputTriangleCount": 4229,
+            "weldedTriangleCount": 4229,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -3402,17 +3410,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 574,
-            "smoothedVertexCount": 759
+            "boundaryVertexCount": 932,
+            "smoothedVertexCount": 1674
           }
         },
-        "matchingVoxelCount": 6871,
-        "meanLog10Resistivity": 3.836564,
+        "matchingVoxelCount": 12379,
+        "meanLog10Resistivity": 3.85361,
         "meshRange": {
-          "vertexStart": 103588,
-          "vertexCount": 1333,
-          "indexStart": 511812,
-          "indexCount": 6114
+          "vertexStart": 144782,
+          "vertexCount": 2606,
+          "indexStart": 727956,
+          "indexCount": 12687
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -3440,39 +3448,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 371,
-          "smoothedVertexCount": 390
+          "boundaryVertexCount": 625,
+          "smoothedVertexCount": 1027
         },
         "vertexWelding": {
-          "inputVertexCount": 3336,
-          "weldedVertexCount": 761,
-          "inputTriangleCount": 1112,
-          "weldedTriangleCount": 1112,
+          "inputVertexCount": 7917,
+          "weldedVertexCount": 1652,
+          "inputTriangleCount": 2639,
+          "weldedTriangleCount": 2639,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 573,
-          "triangleCount": 1112,
-          "vertexCount": 761,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 1339,
+          "triangleCount": 2639,
+          "vertexCount": 1652,
           "welding": {
-            "inputVertexCount": 3336,
-            "weldedVertexCount": 761,
-            "inputTriangleCount": 1112,
-            "weldedTriangleCount": 1112,
+            "inputVertexCount": 7917,
+            "weldedVertexCount": 1652,
+            "inputTriangleCount": 2639,
+            "weldedTriangleCount": 2639,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -3480,17 +3488,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 371,
-            "smoothedVertexCount": 390
+            "boundaryVertexCount": 625,
+            "smoothedVertexCount": 1027
           }
         },
-        "matchingVoxelCount": 3987,
-        "meanLog10Resistivity": 3.984347,
+        "matchingVoxelCount": 7543,
+        "meanLog10Resistivity": 3.994844,
         "meshRange": {
-          "vertexStart": 104921,
-          "vertexCount": 761,
-          "indexStart": 517926,
-          "indexCount": 3336
+          "vertexStart": 147388,
+          "vertexCount": 1652,
+          "indexStart": 740643,
+          "indexCount": 7917
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -3518,39 +3526,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 226,
-          "smoothedVertexCount": 243
+          "boundaryVertexCount": 465,
+          "smoothedVertexCount": 731
         },
         "vertexWelding": {
-          "inputVertexCount": 2124,
-          "weldedVertexCount": 469,
-          "inputTriangleCount": 708,
-          "weldedTriangleCount": 708,
+          "inputVertexCount": 5730,
+          "weldedVertexCount": 1196,
+          "inputTriangleCount": 1910,
+          "weldedTriangleCount": 1910,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 352,
-          "triangleCount": 708,
-          "vertexCount": 469,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 956,
+          "triangleCount": 1910,
+          "vertexCount": 1196,
           "welding": {
-            "inputVertexCount": 2124,
-            "weldedVertexCount": 469,
-            "inputTriangleCount": 708,
-            "weldedTriangleCount": 708,
+            "inputVertexCount": 5730,
+            "weldedVertexCount": 1196,
+            "inputTriangleCount": 1910,
+            "weldedTriangleCount": 1910,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -3558,17 +3566,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 226,
-            "smoothedVertexCount": 243
+            "boundaryVertexCount": 465,
+            "smoothedVertexCount": 731
           }
         },
-        "matchingVoxelCount": 1966,
-        "meanLog10Resistivity": 4.145241,
+        "matchingVoxelCount": 3932,
+        "meanLog10Resistivity": 4.145895,
         "meshRange": {
-          "vertexStart": 105682,
-          "vertexCount": 469,
-          "indexStart": 521262,
-          "indexCount": 2124
+          "vertexStart": 149040,
+          "vertexCount": 1196,
+          "indexStart": 748560,
+          "indexCount": 5730
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -3596,39 +3604,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 1360,
-          "smoothedVertexCount": 2792
+          "boundaryVertexCount": 1743,
+          "smoothedVertexCount": 3096
         },
         "vertexWelding": {
-          "inputVertexCount": 20217,
-          "weldedVertexCount": 4152,
-          "inputTriangleCount": 6739,
-          "weldedTriangleCount": 6739,
+          "inputVertexCount": 23100,
+          "weldedVertexCount": 4839,
+          "inputTriangleCount": 7700,
+          "weldedTriangleCount": 7700,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 3406,
-          "triangleCount": 6739,
-          "vertexCount": 4152,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 3880,
+          "triangleCount": 7700,
+          "vertexCount": 4839,
           "welding": {
-            "inputVertexCount": 20217,
-            "weldedVertexCount": 4152,
-            "inputTriangleCount": 6739,
-            "weldedTriangleCount": 6739,
+            "inputVertexCount": 23100,
+            "weldedVertexCount": 4839,
+            "inputTriangleCount": 7700,
+            "weldedTriangleCount": 7700,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -3636,17 +3644,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 1360,
-            "smoothedVertexCount": 2792
+            "boundaryVertexCount": 1743,
+            "smoothedVertexCount": 3096
           }
         },
-        "matchingVoxelCount": 5259,
-        "meanLog10Resistivity": 0.559173,
+        "matchingVoxelCount": 7361,
+        "meanLog10Resistivity": 0.556562,
         "meshRange": {
-          "vertexStart": 106151,
-          "vertexCount": 4152,
-          "indexStart": 523386,
-          "indexCount": 20217
+          "vertexStart": 150236,
+          "vertexCount": 4839,
+          "indexStart": 754290,
+          "indexCount": 23100
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -3674,39 +3682,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 1966,
-          "smoothedVertexCount": 4158
+          "boundaryVertexCount": 2419,
+          "smoothedVertexCount": 4316
         },
         "vertexWelding": {
-          "inputVertexCount": 30693,
-          "weldedVertexCount": 6124,
-          "inputTriangleCount": 10231,
-          "weldedTriangleCount": 10231,
+          "inputVertexCount": 32745,
+          "weldedVertexCount": 6735,
+          "inputTriangleCount": 10915,
+          "weldedTriangleCount": 10915,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 4980,
-          "triangleCount": 10231,
-          "vertexCount": 6124,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 5357,
+          "triangleCount": 10915,
+          "vertexCount": 6735,
           "welding": {
-            "inputVertexCount": 30693,
-            "weldedVertexCount": 6124,
-            "inputTriangleCount": 10231,
-            "weldedTriangleCount": 10231,
+            "inputVertexCount": 32745,
+            "weldedVertexCount": 6735,
+            "inputTriangleCount": 10915,
+            "weldedTriangleCount": 10915,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -3714,17 +3722,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 1966,
-            "smoothedVertexCount": 4158
+            "boundaryVertexCount": 2419,
+            "smoothedVertexCount": 4316
           }
         },
-        "matchingVoxelCount": 11619,
-        "meanLog10Resistivity": 0.946858,
+        "matchingVoxelCount": 16373,
+        "meanLog10Resistivity": 0.9482,
         "meshRange": {
-          "vertexStart": 110303,
-          "vertexCount": 6124,
-          "indexStart": 543603,
-          "indexCount": 30693
+          "vertexStart": 155075,
+          "vertexCount": 6735,
+          "indexStart": 777390,
+          "indexCount": 32745
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -3752,39 +3760,39 @@
           "iterations": 2,
           "lambda": 0.15,
           "mu": -0.16,
-          "boundaryVertexCount": 1444,
-          "smoothedVertexCount": 2526
+          "boundaryVertexCount": 1709,
+          "smoothedVertexCount": 4053
         },
         "vertexWelding": {
-          "inputVertexCount": 19164,
-          "weldedVertexCount": 3970,
-          "inputTriangleCount": 6388,
-          "weldedTriangleCount": 6388,
+          "inputVertexCount": 29211,
+          "weldedVertexCount": 5762,
+          "inputTriangleCount": 9737,
+          "weldedTriangleCount": 9737,
           "removedDegenerateTriangleCount": 0
         },
         "normalPolicy": "runtime-computed-smooth-vertex-normals",
         "decimation": "none",
         "dimensions": [
-          96,
-          80,
-          64
+          122,
+          140,
+          46
         ],
         "voxelSpacingM": {
-          "x_m": 927.609,
-          "y_m": 1277.815,
-          "z_m": 522.643
+          "x_m": 729.922,
+          "y_m": 730.18,
+          "z_m": 727.155
         },
         "marchingCubes": {
-          "visitedCubeCount": 472815,
-          "skippedMaskedCubeCount": 451629,
-          "activeCubeCount": 3154,
-          "triangleCount": 6388,
-          "vertexCount": 3970,
+          "visitedCubeCount": 756855,
+          "skippedMaskedCubeCount": 727083,
+          "activeCubeCount": 4804,
+          "triangleCount": 9737,
+          "vertexCount": 5762,
           "welding": {
-            "inputVertexCount": 19164,
-            "weldedVertexCount": 3970,
-            "inputTriangleCount": 6388,
-            "weldedTriangleCount": 6388,
+            "inputVertexCount": 29211,
+            "weldedVertexCount": 5762,
+            "inputTriangleCount": 9737,
+            "weldedTriangleCount": 9737,
             "removedDegenerateTriangleCount": 0
           },
           "smoothing": {
@@ -3792,17 +3800,17 @@
             "iterations": 2,
             "lambda": 0.15,
             "mu": -0.16,
-            "boundaryVertexCount": 1444,
-            "smoothedVertexCount": 2526
+            "boundaryVertexCount": 1709,
+            "smoothedVertexCount": 4053
           }
         },
-        "matchingVoxelCount": 19087,
-        "meanLog10Resistivity": 3.447784,
+        "matchingVoxelCount": 32150,
+        "meanLog10Resistivity": 3.47397,
         "meshRange": {
-          "vertexStart": 116427,
-          "vertexCount": 3970,
-          "indexStart": 574296,
-          "indexCount": 19164
+          "vertexStart": 161810,
+          "vertexCount": 5762,
+          "indexStart": 810135,
+          "indexCount": 29211
         },
         "classification": "source-derived iso-resistivity communication surface",
         "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",

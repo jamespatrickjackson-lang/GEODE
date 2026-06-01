@@ -1,0 +1,28 @@
+{
+  "id": "27_seismic_fence_panels",
+  "title": "27. Seismic Fence Panels",
+  "subtitle": "Phase 3 seismic reflection section",
+  "camera": {
+    "position": [
+      -72734.67301267442,
+      -10579.26309022274,
+      -6006.157920848738
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000
+}

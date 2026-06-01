@@ -357,3 +357,45 @@ test("runtime source routes final target assertions through the commit gate", ()
   assert.match(sceneManagerSource, /phase:\s*"editor-deferred-reapply"/);
   assert.match(sceneManagerSource, /suppressPostCommitTargetAssertion/);
 });
+
+test("post-commit async layer reapply is distinct from duplicate target assertions", () => {
+  const sceneManagerSource = readFileSync(
+    join(process.cwd(), "src", "scene", "SceneManager.ts"),
+    "utf8",
+  );
+  const layerLoadersSource = readFileSync(
+    join(process.cwd(), "src", "scene", "layerLoaders.ts"),
+    "utf8",
+  );
+  const editorChromeSource = readFileSync(
+    join(process.cwd(), "src", "editor", "EditorChrome.tsx"),
+    "utf8",
+  );
+  const pageControllerSource = readFileSync(
+    join(process.cwd(), "src", "pages", "PageController.tsx"),
+    "utf8",
+  );
+
+  assert.match(sceneManagerSource, /type ReapplyCurrentPageStateReason/);
+  assert.match(
+    sceneManagerSource,
+    /reapplyCurrentPageState\(\s*reason:\s*ReapplyCurrentPageStateReason\s*=\s*"state-reapply"\s*,?\s*\)/,
+  );
+  assert.match(sceneManagerSource, /reason === "async-layer-resolve"/);
+  assert.match(
+    sceneManagerSource,
+    /!isAsyncLayerResolve[\s\S]*suppressDuplicatePostCommitReapply\(page\)/,
+  );
+  assert.match(
+    layerLoadersSource,
+    /reapplyCurrentPageState\("async-layer-resolve"\)/,
+  );
+  assert.doesNotMatch(
+    editorChromeSource,
+    /reapplyCurrentPageState\("async-layer-resolve"\)/,
+  );
+  assert.doesNotMatch(
+    pageControllerSource,
+    /reapplyCurrentPageState\("async-layer-resolve"\)/,
+  );
+});

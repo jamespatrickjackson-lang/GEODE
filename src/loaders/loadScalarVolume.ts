@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { appAssetUrl } from "../projects/projectPathsRuntime";
 
 const SCENE_SECTION_SHADER_SLOT_COUNT = 8;
+const SOURCE_FIDELITY_MAX_SAMPLE_STEPS = 384;
 
 type Vec3 = [number, number, number];
 
@@ -238,11 +239,11 @@ void main() {
 
   float t = max(hit.x, 0.0);
   float tEnd = hit.y;
-  float sampleSteps = clamp(uSampleSteps, 24.0, 192.0);
+  float sampleSteps = clamp(uSampleSteps, 24.0, ${SOURCE_FIDELITY_MAX_SAMPLE_STEPS.toFixed(1)});
   float stepSize = max((tEnd - t) / sampleSteps, 1.0);
   vec4 accum = vec4(0.0);
 
-  for (int i = 0; i < 208; i += 1) {
+  for (int i = 0; i < ${SOURCE_FIDELITY_MAX_SAMPLE_STEPS + 16}; i += 1) {
     if (float(i) >= sampleSteps) break;
     if (t > tEnd || accum.a > 0.96) break;
     vec3 position = cameraPosition + rayDirection * t;

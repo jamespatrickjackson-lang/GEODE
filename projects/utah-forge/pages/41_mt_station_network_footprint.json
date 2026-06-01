@@ -1,7 +1,7 @@
 {
   "id": "41_mt_station_network_footprint",
-  "title": "MT Station Network / Survey Footprint",
-  "subtitle": "MT station footprint with Site Details orientation",
+  "title": "MT Station Network",
+  "subtitle": "Measured MT station markers over terrain",
   "camera": {
     "position": [
       25717.838323311036,
@@ -25,9 +25,26 @@
     "easing": "easeInOutCubic"
   },
   "holdDuration": 4000,
+  "overlayLayout": {
+    "x": 0.0130859375,
+    "y": 0.0618569636,
+    "width": 0.2108723958
+  },
+  "overlay": {
+    "position": "left",
+    "contentFile": "overlays/41_mt_station_network_footprint/text.md",
+    "timing": {
+      "fadeMs": 900,
+      "gapMs": 80,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
   "accentColor": "#ffcd42",
   "visibilityOverrides": {
     "utah-forge-phase3-working-area": true,
+    "utah-forge-site-boundary": true,
+    "terrain": true,
     "transport-roads": true,
     "hydrography-streams": true,
     "hydrography-lakes": true,
@@ -43,13 +60,12 @@
     "utah-forge-mt-top-contact-surface": false
   },
   "layerOverrides": {
-    "utah-forge-mt-stations": {
-      "opacity": 0.85,
-      "pointMarkerRadiusM": 520,
-      "showLabels": false
-    },
     "terrain": {
-      "opacity": 0.48
+      "opacity": 1
+    },
+    "utah-forge-mt-stations": {
+      "opacity": 0.82,
+      "showLabels": false
     },
     "utah-forge-phase3-seismic-browser": {
       "opacity": 0,
@@ -63,10 +79,6 @@
     },
     "utah-forge-mt-resistivity-slices": {
       "scalarLegendVisible": false
-    },
-    "utah-forge-phase3-demo-boreholes": {
-      "opacity": 0.7,
-      "showLabels": false
     }
   }
 }

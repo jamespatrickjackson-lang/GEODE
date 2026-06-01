@@ -1,0 +1,28 @@
+{
+  "id": "24_resistivity_depth_elevation_slices",
+  "title": "24. Resistivity Depth/Elevation Slices",
+  "subtitle": "Horizontal MT resistivity slices",
+  "camera": {
+    "position": [
+      -88734.90318739192,
+      -88943.7167018159,
+      30138.474109371047
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000
+}

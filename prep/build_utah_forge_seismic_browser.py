@@ -17,11 +17,21 @@ from pyproj import Transformer
 
 
 REPO_ROOT = Path.cwd()
+ARCHIVE_ROOT = Path(os.environ.get("GEOSEE_ARCHIVE_ROOT", "C:/GeoSee/GeoSee_Archive"))
 PROJECT_ROOT = REPO_ROOT / "projects" / "utah-forge"
 CLIENT_ROOT = PROJECT_ROOT / "data" / "client_preprocessed"
 PROCESSED_ROOT = PROJECT_ROOT / "data" / "geosee_processed"
 PHASE3_SOURCE_ROOT = (
     CLIENT_ROOT / "utah_forge_phase_3" / "seismic_analysis"
+)
+ARCHIVED_PHASE3_SOURCE_ROOT = (
+    ARCHIVE_ROOT
+    / "projects"
+    / "utah-forge"
+    / "data"
+    / "client_preprocessed"
+    / "utah_forge_phase_3"
+    / "seismic_analysis"
 )
 PHASE3_PROCESSED_ROOT = (
     PROCESSED_ROOT / "utah_forge_phase_3" / "seismic_analysis"
@@ -34,9 +44,24 @@ SCENE_ORIGIN_E = 341_467.35
 SCENE_ORIGIN_N = 4_273_374.5
 SCENE_ORIGIN_Z = 0.0
 TIME_SCALE_M_PER_MS = 2.0
-SECTION_WIDTH = 128
-SECTION_HEIGHT = 128
-VOLUME_DIM = 64
+SOURCE_FIDELITY_SECTION_MAX_PIXELS = int(
+    os.environ.get("GEOSEE_SEISMIC_SECTION_MAX_PIXELS", "4194304")
+)
+SOURCE_FIDELITY_VOLUME_MAX_VOXELS = int(
+    os.environ.get("GEOSEE_SEISMIC_VOLUME_MAX_VOXELS", "33554432")
+)
+BROWSER_3D_SECTION_MAX_LONG_EDGE = int(
+    os.environ.get("GEOSEE_SEISMIC_3D_SECTION_MAX_LONG_EDGE", "2048")
+)
+BROWSER_3D_VOLUME_MAX_VOXELS = int(
+    os.environ.get("GEOSEE_SEISMIC_3D_VOLUME_MAX_VOXELS", "8388608")
+)
+BROWSER_COARSE_SECTION_MAX_LONG_EDGE = int(
+    os.environ.get("GEOSEE_SEISMIC_COARSE_SECTION_MAX_LONG_EDGE", "768")
+)
+BROWSER_COARSE_VOLUME_MAX_VOXELS = int(
+    os.environ.get("GEOSEE_SEISMIC_COARSE_VOLUME_MAX_VOXELS", "2097152")
+)
 
 RAW_DIR_MARKERS = (
     "Correlated_Shot_Gathers",
@@ -70,7 +95,13 @@ class Product:
 
 
 def rel(path: Path) -> str:
-    return path.resolve().relative_to(REPO_ROOT).as_posix()
+    resolved = path.resolve()
+    for root in (REPO_ROOT.resolve(), ARCHIVE_ROOT.resolve()):
+        try:
+            return resolved.relative_to(root).as_posix()
+        except ValueError:
+            continue
+    return resolved.as_posix()
 
 
 def ensure_dir(path: Path) -> None:
@@ -104,6 +135,14 @@ def find_submission(root: Path, submission: str) -> Path:
     raise FileNotFoundError(f"Could not find GDR submission {submission} below {root}")
 
 
+def active_phase3_source_root() -> Path:
+    if (PHASE3_SOURCE_ROOT / "source").exists():
+        return PHASE3_SOURCE_ROOT
+    if (ARCHIVED_PHASE3_SOURCE_ROOT / "source").exists():
+        return ARCHIVED_PHASE3_SOURCE_ROOT
+    return PHASE3_SOURCE_ROOT
+
+
 def source_roots() -> tuple[Path, Path]:
     base = STAGING_ROOT if STAGING_ROOT.exists() else UNSORTED_ROOT
     return find_submission(base, "1015"), find_submission(base, "1141")
@@ -114,6 +153,26 @@ def is_raw_path(path: Path) -> bool:
 
 
 def normalize_sources() -> dict[str, Any]:
+    existing_root = active_phase3_source_root()
+    if existing_root != PHASE3_SOURCE_ROOT and (existing_root / "source").exists():
+        normalized_files = [
+            {
+                "source": rel(path),
+                "normalizedPath": rel(path),
+                "role": "archived-normalized-source",
+                "bytes": path.stat().st_size,
+                "sha256": sha256_file(path),
+            }
+            for path in sorted((existing_root / "source").rglob("*"))
+            if path.is_file() and not is_raw_path(path)
+        ]
+        return {
+            "normalizedFiles": normalized_files,
+            "skippedRawFiles": 0,
+            "sourceRoot": rel(existing_root),
+            "sourceRootRole": "archive-normalized-source-fallback",
+        }
+
     src1015, src1141 = source_roots()
     normalized: list[dict[str, Any]] = []
     skipped_raw = 0
@@ -220,7 +279,7 @@ def parse_sp1(path: Path) -> list[dict[str, Any]]:
 
 
 def build_navigation_geojson() -> dict[str, Any]:
-    nav_root = PHASE3_SOURCE_ROOT / "source" / "from_submission_1015"
+    nav_root = active_phase3_source_root() / "source" / "from_submission_1015"
     sources = [
         ("3d-receiver", "receiver", nav_root / "Navigation" / "Forge-3D-Receiver-Survey-NAD83-UTM12.sp1"),
         ("3d-source", "source", nav_root / "Navigation" / "Forge-3D-Source-Survey-NAD83-UTM12.sp1"),
@@ -458,14 +517,88 @@ def selected_sample_indices(sample_count: int, height: int) -> np.ndarray:
     return np.linspace(0, sample_count - 1, height).round().astype(np.int64)
 
 
-def trace_grid_shape(trace_count: int, max_width: int, max_height: int) -> tuple[int, int]:
-    width = max(2, min(max_width, int(math.sqrt(max(1, trace_count)))))
-    height = max(2, min(max_height, trace_count // width))
+def bounded_pair(width: int, height: int, max_pixels: int) -> tuple[int, int]:
+    width = max(2, width)
+    height = max(2, height)
+    if width * height <= max_pixels:
+        return width, height
+    scale = math.sqrt(max_pixels / max(1, width * height))
+    return max(2, int(width * scale)), max(2, int(height * scale))
+
+
+def source_trace_grid_shape(trace_count: int) -> tuple[int, int]:
+    width = max(2, int(math.sqrt(max(1, trace_count))))
+    height = max(2, trace_count // width)
     while width * height > trace_count and height > 2:
         height -= 1
     while width * height > trace_count and width > 2:
         width -= 1
     return width, height
+
+
+def trace_grid_shape(trace_count: int, max_width: int | None = None, max_height: int | None = None) -> tuple[int, int]:
+    width, height = source_trace_grid_shape(trace_count)
+    if max_width is not None:
+        width = min(width, max_width)
+    if max_height is not None:
+        height = min(height, max_height)
+    while width * height > trace_count and height > 2:
+        height -= 1
+    while width * height > trace_count and width > 2:
+        width -= 1
+    return max(2, width), max(2, height)
+
+
+def source_aligned_section_shape(
+    trace_count: int,
+    sample_count: int,
+    fraction: float | None = None,
+) -> tuple[int, int]:
+    natural_width = trace_count if fraction is None else max(2, int(trace_count * 0.18))
+    return bounded_pair(natural_width, sample_count, SOURCE_FIDELITY_SECTION_MAX_PIXELS)
+
+
+def cap_long_edge(width: int, height: int, max_long_edge: int) -> tuple[int, int]:
+    long_edge = max(width, height)
+    if long_edge <= max_long_edge:
+        return width, height
+    scale = max_long_edge / long_edge
+    return max(2, int(round(width * scale))), max(2, int(round(height * scale)))
+
+
+def section_shape_for_product(
+    survey: str,
+    trace_count: int,
+    sample_count: int,
+    fraction: float | None = None,
+) -> tuple[int, int]:
+    width, height = source_aligned_section_shape(trace_count, sample_count, fraction)
+    if survey == "3d":
+        return cap_long_edge(width, height, BROWSER_3D_SECTION_MAX_LONG_EDGE)
+    return width, height
+
+
+def source_aligned_sample_plane_shape(trace_count: int) -> tuple[int, int]:
+    width, height = source_trace_grid_shape(trace_count)
+    return bounded_pair(width, height, SOURCE_FIDELITY_SECTION_MAX_PIXELS)
+
+
+def source_aligned_volume_shape(
+    trace_count: int,
+    sample_count: int,
+    max_voxels: int = SOURCE_FIDELITY_VOLUME_MAX_VOXELS,
+) -> tuple[int, int, int]:
+    nx, ny = source_trace_grid_shape(trace_count)
+    nz = max(2, sample_count)
+    if nx * ny * nz <= max_voxels:
+        return nx, ny, nz
+    scale = (max_voxels / max(1, nx * ny * nz)) ** (1 / 3)
+    nx = max(2, int(nx * scale))
+    ny = max(2, int(ny * scale))
+    nz = max(2, int(nz * scale))
+    while nx * ny * nz > max_voxels and nz > 2:
+        nz -= 1
+    return nx, ny, nz
 
 
 def sample_matrix(path: Path, trace_idx: np.ndarray, sample_idx: np.ndarray) -> np.ndarray:
@@ -499,6 +632,32 @@ def encode_u8(matrix: np.ndarray, stats: dict[str, float]) -> np.ndarray:
         lo, hi = -1.0, 1.0
     normalized = np.clip((matrix - lo) / (hi - lo), 0, 1)
     return np.round(normalized * 255).astype(np.uint8)
+
+
+def downsample_matrix_long_edge(matrix: np.ndarray, max_long_edge: int) -> np.ndarray:
+    height, width = matrix.shape
+    target_width, target_height = cap_long_edge(width, height, max_long_edge)
+    if target_width == width and target_height == height:
+        return matrix
+    x_idx = selected_trace_indices(width, target_width)
+    y_idx = selected_sample_indices(height, target_height)
+    return matrix[np.ix_(y_idx, x_idx)]
+
+
+def downsample_volume_budget(volume: np.ndarray, max_voxels: int) -> np.ndarray:
+    nz, ny, nx = volume.shape
+    if nx * ny * nz <= max_voxels:
+        return volume
+    scale = (max_voxels / max(1, nx * ny * nz)) ** (1 / 3)
+    target_nx = max(2, int(nx * scale))
+    target_ny = max(2, int(ny * scale))
+    target_nz = max(2, int(nz * scale))
+    while target_nx * target_ny * target_nz > max_voxels and target_nz > 2:
+        target_nz -= 1
+    x_idx = selected_trace_indices(nx, target_nx)
+    y_idx = selected_trace_indices(ny, target_ny)
+    z_idx = selected_sample_indices(nz, target_nz)
+    return volume[np.ix_(z_idx, y_idx, x_idx)]
 
 
 def navigation_paths(navigation: dict[str, Any]) -> dict[str, list[list[float]]]:
@@ -553,6 +712,15 @@ def make_section_spec(
     encoded = encode_u8(matrix, stats)
     file_name = f"{section_id}.u8"
     (product_dir / file_name).write_bytes(encoded.tobytes(order="C"))
+    coarse_matrix = downsample_matrix_long_edge(
+        matrix,
+        BROWSER_COARSE_SECTION_MAX_LONG_EDGE,
+    )
+    coarse_file_name = file_name
+    if coarse_matrix.shape != matrix.shape:
+        coarse_file_name = f"{section_id}__coarse.u8"
+        coarse_encoded = encode_u8(coarse_matrix, stats)
+        (product_dir / coarse_file_name).write_bytes(coarse_encoded.tobytes(order="C"))
     domain_kind_value, domain_unit = domain
     spec: dict[str, Any] = {
         "id": section_id,
@@ -562,6 +730,23 @@ def make_section_spec(
         "width": int(matrix.shape[1]),
         "height": int(matrix.shape[0]),
         "amplitudeFile": f"products/{product_id}/{file_name}",
+        "lods": {
+            "coarse": {
+                "width": int(coarse_matrix.shape[1]),
+                "height": int(coarse_matrix.shape[0]),
+                "amplitudeFile": f"products/{product_id}/{coarse_file_name}",
+            },
+            "standard": {
+                "width": int(matrix.shape[1]),
+                "height": int(matrix.shape[0]),
+                "amplitudeFile": f"products/{product_id}/{file_name}",
+            },
+            "source": {
+                "width": int(matrix.shape[1]),
+                "height": int(matrix.shape[0]),
+                "amplitudeFile": f"products/{product_id}/{file_name}",
+            },
+        },
         "amplitudeEncoding": "uint8-normalized-p02-p98",
         "amplitudeStats": {k: round(v, 6) for k, v in stats.items()},
         "sampleDomain": {
@@ -588,12 +773,12 @@ def build_volume(
     samples: np.ndarray,
     datum_m: float,
     bounds: dict[str, list[float]],
+    max_voxels: int = SOURCE_FIDELITY_VOLUME_MAX_VOXELS,
 ) -> tuple[dict[str, Any], dict[str, float]]:
     with segyio.open(str(path), "r", strict=False, ignore_geometry=True) as f:
         trace_count = f.tracecount
         sample_count = len(f.samples)
-    nx, ny = trace_grid_shape(trace_count, VOLUME_DIM, VOLUME_DIM)
-    nz = VOLUME_DIM
+    nx, ny, nz = source_aligned_volume_shape(trace_count, sample_count, max_voxels)
     trace_idx = selected_trace_indices(trace_count, nx * ny)
     sample_idx = selected_sample_indices(sample_count, nz)
     matrix = sample_matrix(path, trace_idx, sample_idx)
@@ -602,6 +787,12 @@ def build_volume(
     encoded = encode_u8(volume, stats)
     file_name = "volume.u8"
     (product_dir / file_name).write_bytes(encoded.tobytes(order="C"))
+    coarse_volume = downsample_volume_budget(volume, BROWSER_COARSE_VOLUME_MAX_VOXELS)
+    coarse_file_name = file_name
+    if coarse_volume.shape != volume.shape:
+        coarse_file_name = "volume__coarse.u8"
+        coarse_encoded = encode_u8(coarse_volume, stats)
+        (product_dir / coarse_file_name).write_bytes(coarse_encoded.tobytes(order="C"))
     domain_kind_value, domain_unit = domain
     domain_min = float(samples[int(sample_idx[0])])
     domain_max = float(samples[int(sample_idx[-1])])
@@ -615,6 +806,24 @@ def build_volume(
             "file": f"products/{product_id}/{file_name}",
             "encoding": "uint8-normalized-p02-p98",
             "dimensions": [nx, ny, nz],
+            "lods": {
+                "coarse": {
+                    "file": f"products/{product_id}/{coarse_file_name}",
+                    "dimensions": [
+                        int(coarse_volume.shape[2]),
+                        int(coarse_volume.shape[1]),
+                        int(coarse_volume.shape[0]),
+                    ],
+                },
+                "standard": {
+                    "file": f"products/{product_id}/{file_name}",
+                    "dimensions": [nx, ny, nz],
+                },
+                "source": {
+                    "file": f"products/{product_id}/{file_name}",
+                    "dimensions": [nx, ny, nz],
+                },
+            },
             "sceneBounds": volume_bounds,
             "sampleDomain": {
                 "kind": domain_kind_value,
@@ -630,7 +839,7 @@ def build_volume(
 
 
 def classify_products() -> list[Path]:
-    source_root = PHASE3_SOURCE_ROOT / "source"
+    source_root = active_phase3_source_root() / "source"
     candidates = sorted(
         list((source_root / "from_submission_1141").rglob("*.segy"))
         + list((source_root / "from_submission_1141").rglob("*.sgy"))
@@ -675,8 +884,14 @@ def build_product(
     if survey == "3d":
         for axis in ("inline", "crossline"):
             for fraction in (0.25, 0.5, 0.75):
-                trace_idx = selected_trace_indices(trace_count, SECTION_WIDTH, fraction)
-                sample_idx = selected_sample_indices(sample_count, SECTION_HEIGHT)
+                section_width, section_height = section_shape_for_product(
+                    survey,
+                    trace_count,
+                    sample_count,
+                    fraction,
+                )
+                trace_idx = selected_trace_indices(trace_count, section_width, fraction)
+                sample_idx = selected_sample_indices(sample_count, section_height)
                 matrix = sample_matrix(path, trace_idx, sample_idx)
                 spec, stats = make_section_spec(
                     product_dir,
@@ -696,7 +911,7 @@ def build_product(
                 sections.append(spec)
                 section_stats.append(stats)
         for fraction in (0.25, 0.5, 0.75):
-            plane_width, plane_height = trace_grid_shape(trace_count, SECTION_WIDTH, SECTION_HEIGHT)
+            plane_width, plane_height = source_aligned_sample_plane_shape(trace_count)
             trace_idx = selected_trace_indices(trace_count, plane_width * plane_height)
             sample_no = int(round(fraction * (sample_count - 1)))
             matrix = sample_matrix(path, trace_idx, np.array([sample_no], dtype=np.int64))
@@ -726,11 +941,13 @@ def build_product(
             samples,
             datum,
             nav_bounds,
+            BROWSER_3D_VOLUME_MAX_VOXELS,
         )
         section_stats.append(volume_stats)
     else:
-        trace_idx = selected_trace_indices(trace_count, min(SECTION_WIDTH, trace_count))
-        sample_idx = selected_sample_indices(sample_count, SECTION_HEIGHT)
+        section_width, section_height = section_shape_for_product(survey, trace_count, sample_count)
+        trace_idx = selected_trace_indices(trace_count, section_width)
+        sample_idx = selected_sample_indices(sample_count, section_height)
         matrix = sample_matrix(path, trace_idx, sample_idx)
         spec, stats = make_section_spec(
             product_dir,
@@ -898,12 +1115,12 @@ def main() -> None:
         "products": [product_to_manifest(product) for product in products],
         "sourceFiles": [entry["normalizedPath"] for entry in normalization["normalizedFiles"]],
         "provenance": {
-            "classification": "source-derived seismic browser preview",
+            "classification": "source-derived seismic browser visual representation",
             "sourceOrigin": "Utah FORGE GDR submissions 1015 and 1141",
             "script": "prep/build_utah_forge_seismic_browser.py",
             "notes": [
-                "Browser artifacts are downsampled visual products derived from SEG-Y source files.",
-                "Raymarch volumes are compact downsampled amplitude textures, not engineering-grade seismic interpretation volumes.",
+                "Browser artifacts are source-derived visual representations generated from SEG-Y trace and sample grids.",
+                "Raymarch volumes are browser-ready source-fidelity amplitude textures for visual communication; they are not certified for engineering design or interpretation decisions.",
                 "Legacy L5/L11 sections are included as section curtains; where no delivered navigation line exists, placement is approximate and documented in the source inventory.",
             ],
         },

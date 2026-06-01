@@ -28,6 +28,7 @@ import {
   poseForFocusZoom,
   vec3FromArray,
 } from "../scene/cameraFocus";
+import { mergeSceneProperties } from "./effective";
 
 // PageController owns:
 //   - which page is "captured" as current (currentIndex)
@@ -1142,6 +1143,12 @@ export function PageControllerProvider({
             `[GeoSee] Sub Master child '${page.id}' references missing or invalid parent '${page.parentMasterId}'; falling back to global environment.`,
           );
         }
+      }
+      if (page.sceneOverrides) {
+        resolvedBase = {
+          ...resolvedBase,
+          scene: mergeSceneProperties(resolvedBase.scene, page.sceneOverrides),
+        };
       }
       const layerPage = previewEnvironmentBase
         ? pageWithoutLayerDeltas(page, previewLayerOverrideFields)

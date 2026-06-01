@@ -1,0 +1,40 @@
+# Utah FORGE Showcase Product Match
+
+Status: candidate / review-required.
+
+Edited repo path: `C:\GeoSee\GeoSee_Dev` only. Backup/current-state path was not modified.
+
+This table maps storyboard-requested visuals to the best current GeoSee layer/tool. Rendered GeoSee data/artifacts are treated as spatial truth. PDF/FigJam/report figures remain source evidence and visual reference only.
+
+| Requested product | Storyboard page(s) | Best current GeoSee layer/tool | Layer/product/sub-entity | Support status | External claim status | Fallback used | Unresolved decision |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Terrain / site context | 40, 41, 42, 43, 44, 45, 49, 50 | Existing public topo terrain and public context layers | `terrain`; optional `transport-roads`, `hydrography-streams`, `hydrography-lakes` | supported | claim-safe as public context | Existing terrain/material only; no new terrain | Human review of terrain visibility and material appearance on candidate pages |
+| FORGE boundary / project footprint | 40 plus context pages | Existing site and working-area line layers | `utah-forge-site-boundary`; `utah-forge-phase3-working-area` | supported | claim-safe as orientation/project footprint | Existing registered line layers | Decide whether both boundary and working area should remain visible on all candidate pages |
+| MT stations | 40, 41, 43, 44 | Existing MT station point layer | `utah-forge-mt-stations`; 122 physical station markers per data status | partial | claim-safe for measured station markers; claim-needs-edit for labels/coverage polygon | Labels off; no coverage polygon claimed | Station labels, EDI variant UI, and station coverage polygon remain unresolved |
+| MT full-density resistivity point cloud | 40, 42, 45, 50 | Full-density MT point-cloud layer | `utah-forge-mt-resistivity-full-density`; source-derived full-density tiled points | supported | claim-safe as cell-center point cloud | Full-density layer used; preview not used | Human review for density/performance at authored opacities |
+| MT resistivity volume | Optional context only | Existing scalar volume layer | `utah-forge-mt-resistivity-volume`; `mt-resistivity-forge-focused-volume`, `mt-resistivity-full-extent-volume` | supported but not primary in candidate pages | claim-safe if called source-derived scalar volume; claim-needs-edit if treated as only proof | Point cloud used for page 42 because modal copy describes cell centers | Decide whether to create an additional expert page for raymarch volume |
+| Horizontal MT slices | 43 | Existing fixed authored slice layer | `utah-forge-mt-resistivity-slices`; `horizontal_elev_1500m`, `horizontal_elev_0m`, `horizontal_elev_minus2500m` | supported | claim-safe as fixed authored elevation slices | Exact requested elevations exist; no substitution | Do not claim arbitrary live slicing until tool support is accepted |
+| Vertical MT cross-sections | 44 | Existing fixed authored vertical section meshes | `utah-forge-mt-resistivity-slices`; `vertical_ew_station_centroid`, `vertical_ns_station_centroid` | supported/partial | claim-safe as fixed E-W/N-S station-centroid sections; claim-needs-edit for arbitrary azimuth/well-tied sections | Fixed authored sections used | Terrain intersection trace, arbitrary section generation, and well 58-32 tie remain unresolved |
+| MT threshold surfaces / isosurfaces | 45, 50 | Existing fixed threshold surface layer | `utah-forge-mt-resistivity-threshold-surfaces`; `mt-isosurface-forge-focused`; `conductive-le-30-ohm-m`, `resistive-ge-1000-ohm-m` | supported | claim-safe as source-derived threshold/communication surfaces; avoid arbitrary-threshold claims | Fixed threshold surfaces used | Human review whether language should say threshold surfaces instead of isosurfaces |
+| Seismic acquisition / navigation geometry | 40, 49 | Existing seismic browser navigation geometry | `utah-forge-phase3-seismic-browser`; navigation roles `sources`, `receivers`, `lines` | supported/partial | claim-safe as app-native navigation geometry; CRS/datum review still required for survey-grade accuracy | Page 40 uses nav-only state by disabling seismic products while keeping navigation visible | Confirm role styling and whether navigation should appear on page 50 |
+| Seismic fence panel / section | 49 | Existing seismic browser section/fence capability | `utah-forge-phase3-seismic-browser`; product `gdr-1141-line-301-pdm-enh`; section `section` | supported | claim-safe as 2D Line 301 seismic section; claim-needs-edit if called 3D seismic program | Copy changed from Phase 3 3D seismic program to Phase 3 seismic products | Human review of panel readability and whether PDM enhanced is the desired Line 301 product |
+| Seismic velocity volume | 50 | Existing seismic browser raymarch-capable velocity product | `utah-forge-phase3-seismic-browser`; product `gdr-1015-forge3d-velo5d-float-01312018`; render mode `raymarch` | supported/partial | claim-needs-edit until human visual review; safe as registered 3D seismic velocity model product | Used registered velocity volume; copy avoids unsupported Phase 2 5D wording | Decide whether velocity volume is acceptable for page 50 or whether Line 301 reflection fallback is preferred |
+| Interpreted basement / top-of-granite surface | Reference only | No registered app-native basement/top-of-granite surface identified in active layer registry | n/a | unsupported | do-not-claim as app-native 3D surface | Not shown in candidate pages | If needed, source/reference figure must remain evidence only until a real registered dataset exists |
+| TEM | Reference only | No active georeferenced TEM product/layer identified in active layer registry | n/a | unsupported | do-not-claim as app-native | Not shown in candidate pages | Keep as source context only unless a registered TEM product is supplied |
+
+## Candidate Page Layer Use
+
+| Page | Layers/products used |
+| --- | --- |
+| `40_geophysics_product_overview` | `terrain`, `utah-forge-site-boundary`, `utah-forge-phase3-working-area`, public roads/hydro layers, `utah-forge-mt-stations`, faint `utah-forge-mt-resistivity-full-density`, seismic navigation via `utah-forge-phase3-seismic-browser` with no selected seismic product visible |
+| `41_mt_station_network_footprint` | `terrain`, public context, `utah-forge-site-boundary`, `utah-forge-phase3-working-area`, `utah-forge-mt-stations` |
+| `42_resistivity_volume_overview` | `terrain` low opacity, `utah-forge-phase3-working-area`, `utah-forge-mt-resistivity-full-density` |
+| `43_resistivity_depth_elevation_slices` | `terrain`, `utah-forge-phase3-working-area`, `utah-forge-mt-stations`, `utah-forge-mt-resistivity-slices` horizontal slice IDs `horizontal_elev_1500m`, `horizontal_elev_0m`, `horizontal_elev_minus2500m` |
+| `44_resistivity_cross_sections` | `terrain`, `utah-forge-phase3-working-area`, `utah-forge-mt-stations`, `utah-forge-mt-resistivity-slices` vertical section IDs `vertical_ew_station_centroid`, `vertical_ns_station_centroid` |
+| `45_resistivity_isosurfaces` | `terrain`, `utah-forge-phase3-working-area`, faint `utah-forge-mt-resistivity-full-density`, `utah-forge-mt-resistivity-threshold-surfaces` with `mt-isosurface-forge-focused` and conductive/resistive semantic thresholds |
+| `49_seismic_fence_panels` | `terrain`, `utah-forge-phase3-working-area`, `utah-forge-phase3-seismic-browser` product `gdr-1141-line-301-pdm-enh`, seismic navigation roles on |
+| `50_integrated_seismic_resistivity_context` | `terrain`, `utah-forge-phase3-working-area`, `utah-forge-mt-resistivity-full-density`, `utah-forge-mt-resistivity-threshold-surfaces`, `utah-forge-phase3-seismic-browser` product `gdr-1015-forge3d-velo5d-float-01312018` in raymarch mode |
+
+## Route Limitation
+
+Current project order still includes pages outside the candidate sequence between `45_resistivity_isosurfaces` and `49_seismic_fence_panels`. No hidden accepted route was created. If one presenter action must jump from 45 to 49, existing navigation behavior needs a separate route/skip decision.

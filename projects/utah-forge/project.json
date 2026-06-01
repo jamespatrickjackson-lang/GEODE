@@ -218,7 +218,7 @@
       "label": "Topo Surface",
       "type": "geotiff",
       "files": {
-        "raster": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/terrain_public_context_1000m.tif"
+        "raster": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/terrain_public_context_200m.tif"
       },
       "metadata": {
         "sourceFile": "USGS 3DEP / The National Map elevation service clipped to a 500% XY public context extent around the 3D MT resistivity full-density model",
@@ -236,7 +236,7 @@
         },
         "geoTransform": {
           "sourceCrs": "EPSG:26912",
-          "terrainMaxVertices": 450000,
+          "terrainMaxVertices": 900000,
           "terrainGridEnabled": false,
           "sceneOriginUtm": {
             "easting_m": 341467.35,
@@ -256,7 +256,7 @@
             ]
           }
         },
-        "notes": "Regional public terrain context resampled to approximately 1000 m with 200% XY padding on each side of the full MT footprint, producing a 500% total source tile so public-surface clipping boxes can be pushed farther out without exposing missing tile edges."
+        "notes": "Regional public terrain context resampled to approximately 200 m with 200% XY padding on each side of the full MT footprint, producing a 500% total source tile so public-surface clipping boxes can be pushed farther out without exposing missing tile edges."
       }
     },
     {
@@ -483,16 +483,16 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -14.518112,
-              "max": 8.791553,
-              "p02": -1.364791,
-              "p98": 1.332351
+              "min": -14.78013,
+              "max": 11.098321,
+              "p02": -1.378151,
+              "p98": 1.372675
             },
             "raymarchVolume": {
               "dimensions": [
-                64,
-                64,
-                64
+                88,
+                89,
+                1057
               ],
               "sampleDomain": {
                 "kind": "time",
@@ -502,11 +502,11 @@
                 "verticalScaleMPerUnit": 2
               },
               "amplitudeStats": {
-                "min": -14.518112,
-                "max": 8.791553,
-                "p02": -1.2632,
-                "p98": 1.267888,
-                "mean": -0.001542
+                "min": -14.78013,
+                "max": 11.098321,
+                "p02": -1.270269,
+                "p98": 1.276805,
+                "mean": 0.00011
               }
             },
             "raymarchCapable": true
@@ -520,16 +520,16 @@
             "domainUnit": "m",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -5.086039,
-              "max": 4.157359,
-              "p02": -0.73126,
-              "p98": 0.711978
+              "min": -6.4774,
+              "max": 4.63094,
+              "p02": -0.733928,
+              "p98": 0.703527
             },
             "raymarchVolume": {
               "dimensions": [
-                64,
-                64,
-                64
+                116,
+                116,
+                615
               ],
               "sampleDomain": {
                 "kind": "depth",
@@ -539,11 +539,11 @@
                 "verticalScaleMPerUnit": 1
               },
               "amplitudeStats": {
-                "min": -4.978597,
-                "max": 3.369965,
-                "p02": -0.706665,
-                "p98": 0.70295,
-                "mean": 0.000275
+                "min": -6.4774,
+                "max": 4.63094,
+                "p02": -0.702802,
+                "p98": 0.703527,
+                "mean": 0.000045
               }
             },
             "raymarchCapable": true
@@ -557,16 +557,16 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -82.433212,
-              "max": 94.843155,
-              "p02": -31.850203,
-              "p98": 43.859882
+              "min": -107.647232,
+              "max": 126.652008,
+              "p02": -31.832069,
+              "p98": 43.74081
             },
             "raymarchVolume": {
               "dimensions": [
-                64,
-                64,
-                64
+                111,
+                112,
+                666
               ],
               "sampleDomain": {
                 "kind": "time",
@@ -576,11 +576,11 @@
                 "verticalScaleMPerUnit": 2
               },
               "amplitudeStats": {
-                "min": -82.433212,
-                "max": 81.001083,
-                "p02": -27.063122,
-                "p98": 26.66184,
-                "mean": -0.084541
+                "min": -107.647232,
+                "max": 126.652008,
+                "p02": -26.906143,
+                "p98": 27.035778,
+                "mean": 0.002427
               }
             },
             "raymarchCapable": true
@@ -596,14 +596,14 @@
             "amplitudeStats": {
               "min": 1594.0625,
               "max": 5285.773438,
-              "p02": 1626.575439,
-              "p98": 5229.5
+              "p02": 1626.34375,
+              "p98": 5225.057617
             },
             "raymarchVolume": {
               "dimensions": [
                 19,
                 19,
-                64
+                201
               ],
               "sampleDomain": {
                 "kind": "velocity-time",
@@ -615,9 +615,9 @@
               "amplitudeStats": {
                 "min": 1594.0625,
                 "max": 5285.773438,
-                "p02": 1628.478027,
-                "p98": 5229.5,
-                "mean": 4093.349121
+                "p02": 1634.6875,
+                "p98": 5223.022461,
+                "mean": 4100.498047
               }
             },
             "raymarchCapable": true
@@ -631,10 +631,10 @@
             "domainUnit": "m",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -2.069506,
-              "max": 2.185434,
-              "p02": -0.601806,
-              "p98": 0.593807
+              "min": -3.50237,
+              "max": 4.870348,
+              "p02": -0.599518,
+              "p98": 0.603053
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -648,10 +648,10 @@
             "domainUnit": "m",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -2.47121,
-              "max": 2.460963,
-              "p02": -0.699252,
-              "p98": 0.683169
+              "min": -3.931309,
+              "max": 5.336415,
+              "p02": -0.684747,
+              "p98": 0.689735
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -665,10 +665,10 @@
             "domainUnit": "m",
             "sourceSubmission": "GDR 1015",
             "amplitudeStats": {
-              "min": -3.560097,
-              "max": 3.489523,
-              "p02": -0.907628,
-              "p98": 0.887408
+              "min": -5.997807,
+              "max": 5.363006,
+              "p02": -0.918003,
+              "p98": 0.923799
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -682,10 +682,10 @@
             "domainUnit": "m",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -3.576588,
-              "max": 3.621507,
-              "p02": -0.656189,
-              "p98": 0.687923
+              "min": -5.843673,
+              "max": 3.85969,
+              "p02": -0.681635,
+              "p98": 0.68556
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -699,10 +699,10 @@
             "domainUnit": "m",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -4.95767,
-              "max": 4.298369,
-              "p02": -0.704188,
-              "p98": 0.727095
+              "min": -7.153614,
+              "max": 5.379967,
+              "p02": -0.725565,
+              "p98": 0.729432
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -716,10 +716,10 @@
             "domainUnit": "m",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -1.766114,
-              "max": 2.336257,
-              "p02": -0.644733,
-              "p98": 0.638503
+              "min": -2.356447,
+              "max": 2.221602,
+              "p02": -0.632881,
+              "p98": 0.636494
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -733,10 +733,10 @@
             "domainUnit": "m",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -3.316059,
-              "max": 3.649615,
-              "p02": -1.062479,
-              "p98": 1.107105
+              "min": -4.691314,
+              "max": 4.439824,
+              "p02": -1.094941,
+              "p98": 1.098709
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -750,10 +750,10 @@
             "domainUnit": "m",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -1.881605,
-              "max": 3.76176,
-              "p02": -0.838173,
-              "p98": 0.862271
+              "min": -4.127192,
+              "max": 4.21244,
+              "p02": -0.842419,
+              "p98": 0.840752
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -767,10 +767,10 @@
             "domainUnit": "m",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -1.590545,
-              "max": 1.725957,
-              "p02": -0.442558,
-              "p98": 0.443282
+              "min": -2.197502,
+              "max": 1.945883,
+              "p02": -0.4445,
+              "p98": 0.447511
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -784,10 +784,10 @@
             "domainUnit": "m",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -4.164349,
-              "max": 2.512978,
-              "p02": -0.899081,
-              "p98": 0.911141
+              "min": -4.272712,
+              "max": 3.853531,
+              "p02": -0.896896,
+              "p98": 0.903544
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -801,10 +801,10 @@
             "domainUnit": "m",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -3.216277,
-              "max": 2.967563,
-              "p02": -0.578481,
-              "p98": 0.582544
+              "min": -3.39759,
+              "max": 3.154346,
+              "p02": -0.58084,
+              "p98": 0.583217
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -818,10 +818,10 @@
             "domainUnit": "m",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -5.358349,
-              "max": 5.806688,
-              "p02": -1.208692,
-              "p98": 1.187713
+              "min": -6.396832,
+              "max": 6.009273,
+              "p02": -1.17361,
+              "p98": 1.179392
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -835,10 +835,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -11.372896,
-              "max": 8.613849,
-              "p02": -1.821284,
-              "p98": 1.922681
+              "min": -13.865402,
+              "max": 13.669052,
+              "p02": -1.915446,
+              "p98": 1.902364
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -852,10 +852,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -12.302876,
-              "max": 13.685453,
-              "p02": -2.835003,
-              "p98": 2.956939
+              "min": -19.764511,
+              "max": 20.624832,
+              "p02": -2.928988,
+              "p98": 2.925812
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -869,10 +869,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -11.923859,
-              "max": 9.367264,
-              "p02": -2.437007,
-              "p98": 2.474391
+              "min": -12.068985,
+              "max": 12.940557,
+              "p02": -2.444283,
+              "p98": 2.433861
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -886,10 +886,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -11.327103,
-              "max": 9.501466,
-              "p02": -2.305079,
-              "p98": 2.361603
+              "min": -13.959867,
+              "max": 12.632565,
+              "p02": -2.304996,
+              "p98": 2.367665
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -903,10 +903,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -18.970093,
-              "max": 19.569702,
-              "p02": -3.227523,
-              "p98": 3.348767
+              "min": -22.978897,
+              "max": 24.842239,
+              "p02": -3.255801,
+              "p98": 3.291733
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -920,10 +920,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -8.112523,
-              "max": 7.891978,
-              "p02": -3.11514,
-              "p98": 3.094029
+              "min": -15.356203,
+              "max": 14.27107,
+              "p02": -3.087955,
+              "p98": 3.0851
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -937,10 +937,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -9.132649,
-              "max": 12.041058,
-              "p02": -2.114614,
-              "p98": 2.068316
+              "min": -11.433752,
+              "max": 12.694193,
+              "p02": -2.119457,
+              "p98": 2.120479
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -954,10 +954,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -10.017319,
-              "max": 12.583209,
-              "p02": -2.39027,
-              "p98": 2.357194
+              "min": -13.130173,
+              "max": 13.521005,
+              "p02": -2.423753,
+              "p98": 2.429426
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -971,10 +971,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -8.713607,
-              "max": 9.39006,
-              "p02": -2.351139,
-              "p98": 2.364474
+              "min": -12.596266,
+              "max": 12.12034,
+              "p02": -2.374664,
+              "p98": 2.386151
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -988,10 +988,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -4.346985,
-              "max": 5.602103,
-              "p02": -1.456238,
-              "p98": 1.483246
+              "min": -6.288277,
+              "max": 6.726847,
+              "p02": -1.469998,
+              "p98": 1.469834
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -1005,10 +1005,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -11.585196,
-              "max": 10.690771,
-              "p02": -2.241184,
-              "p98": 2.356736
+              "min": -15.296298,
+              "max": 14.454698,
+              "p02": -2.2958,
+              "p98": 2.299137
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -1022,10 +1022,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -3.575264,
-              "max": 3.978133,
-              "p02": -1.962702,
-              "p98": 1.98545
+              "min": -4.665257,
+              "max": 4.514983,
+              "p02": -2.001059,
+              "p98": 2.007533
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -1039,10 +1039,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1015",
             "amplitudeStats": {
-              "min": -5.911188,
-              "max": 4.94632,
-              "p02": -2.092115,
-              "p98": 2.030893
+              "min": -6.635401,
+              "max": 6.642397,
+              "p02": -2.065623,
+              "p98": 2.067637
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -1056,10 +1056,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1015",
             "amplitudeStats": {
-              "min": -5.997778,
+              "min": -8.723717,
               "max": 7.680196,
-              "p02": -1.999769,
-              "p98": 2.051595
+              "p02": -2.029477,
+              "p98": 2.035839
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -1075,8 +1075,8 @@
             "amplitudeStats": {
               "min": 1080.004395,
               "max": 6200.015625,
-              "p02": 1784.855469,
-              "p98": 6157.743164
+              "p02": 1781.572998,
+              "p98": 6148.310059
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -1090,10 +1090,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": 1840.796143,
+              "min": 1826.396973,
               "max": 6137.054688,
-              "p02": 2195.639404,
-              "p98": 5920.818359
+              "p02": 2191.460938,
+              "p98": 5909.637695
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -1107,10 +1107,10 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": 2530.214844,
-              "max": 22246.046875,
-              "p02": 3589.64624,
-              "p98": 19867.560547
+              "min": 2436.294189,
+              "max": 22250.246094,
+              "p02": 3571.322266,
+              "p98": 19846.712891
             },
             "raymarchVolume": null,
             "raymarchCapable": false
@@ -1124,9 +1124,9 @@
             "domainUnit": "ms",
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": 4964.089844,
+              "min": 4952.574219,
               "max": 18000,
-              "p02": 6813.5625,
+              "p02": 6775.480957,
               "p98": 18000
             },
             "raymarchVolume": null,
@@ -2584,7 +2584,7 @@
     },
     {
       "id": "utah-forge-mt-resistivity-preview",
-      "label": "Utah FORGE Phase 3 MT resistivity model preview",
+      "label": "Utah FORGE Phase 3 MT resistivity QA subset",
       "type": "pointcloud",
       "files": {},
       "previewFiles": {
@@ -2599,7 +2599,7 @@
         "confidentiality": "client-preprocessed/public-source",
         "placeholder": false,
         "sourceDataIncluded": true,
-        "notes": "Low-resolution preview sampled from the full uncropped updated MT cell-center inversion model. Values are colored by log10 resistivity in Ohm-m. Non-positive resistivity rows are masked because log10 is undefined. This is a validation/presentation preview, not the final sliceable resistivity renderer."
+        "notes": "QA/support subset sampled from the full uncropped updated MT cell-center inversion model. Values are colored by log10 resistivity in Ohm-m. Non-positive resistivity rows are masked because log10 is undefined. This is not a substitute for the full-density visual model or derived slice/volume artifacts."
       }
     },
     {
@@ -3073,15 +3073,13 @@
         "confidentiality": "client-preprocessed/public-source",
         "placeholder": false,
         "sourceDataIncluded": true,
-        "notes": "Authored horizontal and vertical resistivity slice preview generated from the full uncropped updated MT cell-center inversion model. Values are colored by log10 resistivity in Ohm-m. Slice surfaces use source cell-center bin averaging with limited neighbor fill for display continuity. Vertical scale is true 1:1 meters."
+        "notes": "Authored horizontal and vertical resistivity slice artifact generated from the full uncropped updated MT cell-center inversion model. Values are colored by log10 resistivity in Ohm-m. Slice surfaces use source cell-center bin averaging with limited neighbor fill for display continuity. Vertical scale is true 1:1 meters."
       }
     }
   ],
   "pageOrder": [
     "12_mt_volume_overview",
     "06_mt_low_resistivity_seismic",
-    "04_mt_high_resistivity_seismic",
-    "107_page",
     "108_page",
     "106_page",
     "05_mt_threshold_focus",
@@ -3098,15 +3096,56 @@
     "46_tem_shallow_resistivity",
     "47_seismic_footprint_velocity_support",
     "48_basement_top_granite_surface",
+    "21_geophysics_product_overview",
+    "109_page",
+    "22_mt_station_network_footprint",
+    "23_resistivity_volume_overview",
+    "24_resistivity_depth_elevation_slices",
+    "25_resistivity_cross_sections",
+    "26_resistivity_isosurfaces",
+    "27_seismic_fence_panels",
+    "28_integrated_seismic_resistivity_context",
     "49_seismic_fence_panels",
     "50_integrated_seismic_resistivity_context",
     "99_unresolved_missing_tools",
     "101_page",
-    "100_page",
     "102_page",
     "104_page",
     "103_page",
-    "105_page"
+    "105_page",
+    "110_page",
+    "111_page",
+    "130_page",
+    "113_page",
+    "115_page",
+    "117_page",
+    "119_page",
+    "100_page",
+    "121_page",
+    "122_page",
+    "123_page",
+    "138_page",
+    "04_mt_high_resistivity_seismic",
+    "107_page",
+    "124_page",
+    "126_page",
+    "131_page",
+    "125_page",
+    "128_page",
+    "127_page",
+    "129_page",
+    "132_page",
+    "135_page",
+    "134_page",
+    "133_page",
+    "136_page",
+    "137_page",
+    "118_page",
+    "120_page",
+    "112_page",
+    "114_page",
+    "116_page",
+    "139_page"
   ],
   "presentationDefaults": {
     "transitionDuration": 1400,
@@ -3119,5 +3158,5 @@
     ]
   },
   "watermark": "GeoSee Utah FORGE - Phase 3 seismic + MT",
-  "modified": "2026-06-01T03:05:21.159Z"
+  "modified": "2026-06-01T20:01:25.654Z"
 }
