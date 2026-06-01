@@ -1,4 +1,56 @@
 {
-  "containers": {},
+  "containers": {
+    "c-page-manager-root": {
+      "archetype": "footer-action-row", "componentIds": ["cmp-pm-pseudo-numeric", "cmp-pm-pseudo-text", "cmp-pm-add"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": ["c-pm-pseudo-bar", "c-pm-page-row", "c-pm-sub-master", "c-pm-sub-master-child"], "fill": { "tokenRef": "swatch-editor-field-bg" }, "frameId": "frame-page-manager", "hidden": false, "id": "c-page-manager-root", "locked": false, "name": "Page Manager root", "parentId": null, "rect": { "h": 880, "w": 300, "x": 10, "y": 10 }
+    },
+    "c-pm-pseudo-bar": {
+      "archetype": "pseudo-page-bar", "componentIds": [], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-page-manager", "hidden": false, "id": "c-pm-pseudo-bar", "locked": true, "name": "Global Settings bar", "parentId": "c-page-manager-root", "rect": { "h": 32, "w": 280, "x": 10, "y": 10 }
+    },
+    "c-pm-page-row": {
+      "archetype": "page-list-row", "componentIds": ["cmp-pm-dirty-dot", "cmp-pm-page-num", "cmp-pm-page-title", "cmp-pm-swatch"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-page-manager", "hidden": false, "id": "c-pm-page-row", "locked": false, "name": "Page row", "parentId": "c-page-manager-root", "rect": { "h": 32, "w": 280, "x": 10, "y": 52 }
+    },
+    "c-pm-sub-master": {
+      "archetype": "page-list-row-sub-master", "componentIds": ["cmp-pm-sm-page-num", "cmp-pm-sm-title", "cmp-pm-sm-refresh"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-page-manager", "hidden": false, "id": "c-pm-sub-master", "locked": false, "name": "Sub Master row", "parentId": "c-page-manager-root", "rect": { "h": 32, "w": 280, "x": 10, "y": 94 }
+    },
+    "c-pm-sub-master-child": {
+      "archetype": "page-list-row-sub-master-child", "componentIds": ["cmp-pm-smc-page-num", "cmp-pm-smc-title"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-page-manager", "hidden": false, "id": "c-pm-sub-master-child", "locked": false, "name": "Sub Master child row", "parentId": "c-page-manager-root", "rect": { "h": 32, "w": 268, "x": 22, "y": 136 }
+    },
+    "c-env-root": {
+      "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-env-title"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": ["c-env-section-1"], "fill": { "tokenRef": "swatch-editor-field-bg" }, "frameId": "frame-environment-panel", "hidden": false, "id": "c-env-root", "locked": false, "name": "Environment root", "parentId": null, "rect": { "h": 880, "w": 300, "x": 10, "y": 10 }
+    },
+    "c-env-section-1": {
+      "archetype": "layer-subsection", "componentIds": ["cmp-env-slider-a", "cmp-env-slider-b", "cmp-env-numeric"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-environment-panel", "hidden": false, "id": "c-env-section-1", "locked": false, "name": "Section 1", "parentId": "c-env-root", "rect": { "h": 200, "w": 280, "x": 10, "y": 40 }
+    },
+    "c-lighting-root": {
+      "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-light-title", "cmp-light-disclosure"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": ["c-light-aria"], "frameId": "frame-lighting-studio", "hidden": false, "id": "c-lighting-root", "locked": false, "name": "Lighting root", "parentId": null, "rect": { "h": 880, "w": 300, "x": 10, "y": 10 }
+    },
+    "c-light-aria": {
+      "archetype": "layer-subsection", "componentIds": ["cmp-light-checkbox", "cmp-light-slider-intensity"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-lighting-studio", "hidden": false, "id": "c-light-aria", "locked": false, "name": "ARIA expanded subsection", "parentId": "c-lighting-root", "rect": { "h": 160, "w": 280, "x": 10, "y": 60 }
+    },
+    "c-camera-root": {
+      "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-cam-title"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": ["c-cam-focus", "c-cam-perspective", "c-cam-cinematic"], "frameId": "frame-camera-studio", "hidden": false, "id": "c-camera-root", "locked": false, "name": "Camera root", "parentId": null, "rect": { "h": 880, "w": 300, "x": 10, "y": 10 }
+    },
+    "c-cam-focus": {
+      "archetype": "camera-studio-subcontainer", "sectionKey": "focus-transition", "componentIds": ["cmp-cam-focus-letter", "cmp-cam-focus-slider"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-camera-studio", "hidden": false, "id": "c-cam-focus", "locked": false, "name": "Focus transition", "parentId": "c-camera-root", "rect": { "h": 120, "w": 280, "x": 10, "y": 40 }
+    },
+    "c-cam-perspective": {
+      "archetype": "camera-studio-subcontainer", "sectionKey": "perspective", "componentIds": ["cmp-cam-fov"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-camera-studio", "hidden": false, "id": "c-cam-perspective", "locked": false, "name": "Perspective", "parentId": "c-camera-root", "rect": { "h": 80, "w": 280, "x": 10, "y": 170 }
+    },
+    "c-cam-cinematic": {
+      "archetype": "cinematic-render-preset", "componentIds": ["cmp-cam-preset"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-camera-studio", "hidden": false, "id": "c-cam-cinematic", "locked": false, "name": "Cinematic preset", "parentId": "c-camera-root", "rect": { "h": 60, "w": 280, "x": 10, "y": 260 }
+    },
+    "c-layer-mt-root": { "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-mt-title", "cmp-mt-slider", "cmp-mt-numeric"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-layer-panel-archetype-mt", "hidden": false, "id": "c-layer-mt-root", "locked": false, "name": "MT layer root", "parentId": null, "rect": { "h": 880, "w": 300, "x": 10, "y": 10 } },
+    "c-layer-seismic-root": { "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-seis-title", "cmp-seis-select"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-layer-panel-archetype-seismic", "hidden": false, "id": "c-layer-seismic-root", "locked": false, "name": "Seismic layer root", "parentId": null, "rect": { "h": 880, "w": 300, "x": 10, "y": 10 } },
+    "c-layer-topo-root": { "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-topo-title", "cmp-topo-preset"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-layer-panel-archetype-topo", "hidden": false, "id": "c-layer-topo-root", "locked": false, "name": "Topo layer root", "parentId": null, "rect": { "h": 880, "w": 300, "x": 10, "y": 10 } },
+    "c-layer-drillhole-root": { "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-dh-title", "cmp-dh-checkbox"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-layer-panel-archetype-drillhole", "hidden": false, "id": "c-layer-drillhole-root", "locked": false, "name": "Drillhole layer root", "parentId": null, "rect": { "h": 880, "w": 300, "x": 10, "y": 10 } },
+    "c-layer-geology-root": { "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-geo-title"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-layer-panel-archetype-geology", "hidden": false, "id": "c-layer-geology-root", "locked": false, "name": "Geology layer root", "parentId": null, "rect": { "h": 880, "w": 300, "x": 10, "y": 10 } },
+    "c-layer-wa-root": { "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-wa-title"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-layer-panel-archetype-working-area", "hidden": false, "id": "c-layer-wa-root", "locked": false, "name": "Working area layer root", "parentId": null, "rect": { "h": 880, "w": 300, "x": 10, "y": 10 } },
+    "c-layer-layout-root": { "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-layout-title", "cmp-layout-details"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-layer-panel-archetype-layout", "hidden": false, "id": "c-layer-layout-root", "locked": false, "name": "Layout layer root", "parentId": null, "rect": { "h": 880, "w": 300, "x": 10, "y": 10 } },
+    "c-site-root": { "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-site-title", "cmp-site-edit"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-site-details", "hidden": false, "id": "c-site-root", "locked": false, "name": "Site Details root", "parentId": null, "rect": { "h": 580, "w": 300, "x": 10, "y": 10 } },
+    "c-section-root": { "archetype": "scene-section-frame-container", "axis": "z", "componentIds": ["cmp-section-numeric-low", "cmp-section-numeric-high"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-scene-section-frame-container", "hidden": false, "id": "c-section-root", "locked": false, "name": "Section frame root", "parentId": null, "rect": { "h": 380, "w": 300, "x": 10, "y": 10 } },
+    "c-topo-tool-root": { "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-tt-title", "cmp-tt-select"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-topo-map-tool-container", "hidden": false, "id": "c-topo-tool-root", "locked": false, "name": "Topo tool root", "parentId": null, "rect": { "h": 880, "w": 300, "x": 10, "y": 10 } },
+    "c-seismic-tool-root": { "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-st-title", "cmp-st-select"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-seismic-tool-container", "hidden": false, "id": "c-seismic-tool-root", "locked": false, "name": "Seismic tool root", "parentId": null, "rect": { "h": 880, "w": 300, "x": 10, "y": 10 } },
+    "c-wa-tool-root": { "archetype": "layer-card", "collapseInLayersPanel": false, "componentIds": ["cmp-wat-title", "cmp-wat-input"], "constraints": { "horizontal": "stretch", "vertical": "left" }, "containerIds": [], "frameId": "frame-working-area-tool-container", "hidden": false, "id": "c-wa-tool-root", "locked": false, "name": "Working area tool root", "parentId": null, "rect": { "h": 580, "w": 300, "x": 10, "y": 10 } }
+  },
   "schemaVersion": 1
 }

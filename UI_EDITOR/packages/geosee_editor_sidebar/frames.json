@@ -1,5 +1,22 @@
 {
-  "activeFrameId": null,
-  "frames": [],
+  "activeFrameId": "frame-page-manager",
+  "frames": [
+    { "id": "frame-page-manager", "name": "Page Manager", "positionOnCanvas": { "x": 0, "y": 0 }, "size": { "w": 320, "h": 900 }, "safeArea": null, "background": {}, "containerIds": ["c-page-manager-root"], "componentIds": [] },
+    { "id": "frame-environment-panel", "name": "Environment", "positionOnCanvas": { "x": 360, "y": 0 }, "size": { "w": 320, "h": 900 }, "safeArea": null, "background": {}, "containerIds": ["c-env-root"], "componentIds": [] },
+    { "id": "frame-lighting-studio", "name": "Lighting Studio", "positionOnCanvas": { "x": 720, "y": 0 }, "size": { "w": 320, "h": 900 }, "safeArea": null, "background": {}, "containerIds": ["c-lighting-root"], "componentIds": [] },
+    { "id": "frame-camera-studio", "name": "Camera Studio", "positionOnCanvas": { "x": 1080, "y": 0 }, "size": { "w": 320, "h": 900 }, "safeArea": null, "background": {}, "containerIds": ["c-camera-root"], "componentIds": [] },
+    { "id": "frame-layer-panel-archetype-mt", "name": "Layer: MT", "positionOnCanvas": { "x": 0, "y": 960 }, "size": { "w": 320, "h": 900 }, "safeArea": null, "background": {}, "containerIds": ["c-layer-mt-root"], "componentIds": [] },
+    { "id": "frame-layer-panel-archetype-seismic", "name": "Layer: Seismic", "positionOnCanvas": { "x": 360, "y": 960 }, "size": { "w": 320, "h": 900 }, "safeArea": null, "background": {}, "containerIds": ["c-layer-seismic-root"], "componentIds": [] },
+    { "id": "frame-layer-panel-archetype-topo", "name": "Layer: Topo", "positionOnCanvas": { "x": 720, "y": 960 }, "size": { "w": 320, "h": 900 }, "safeArea": null, "background": {}, "containerIds": ["c-layer-topo-root"], "componentIds": [] },
+    { "id": "frame-layer-panel-archetype-drillhole", "name": "Layer: Drillhole", "positionOnCanvas": { "x": 1080, "y": 960 }, "size": { "w": 320, "h": 900 }, "safeArea": null, "background": {}, "containerIds": ["c-layer-drillhole-root"], "componentIds": [] },
+    { "id": "frame-layer-panel-archetype-geology", "name": "Layer: Geology", "positionOnCanvas": { "x": 0, "y": 1920 }, "size": { "w": 320, "h": 900 }, "safeArea": null, "background": {}, "containerIds": ["c-layer-geology-root"], "componentIds": [] },
+    { "id": "frame-layer-panel-archetype-working-area", "name": "Layer: Working Area", "positionOnCanvas": { "x": 360, "y": 1920 }, "size": { "w": 320, "h": 900 }, "safeArea": null, "background": {}, "containerIds": ["c-layer-wa-root"], "componentIds": [] },
+    { "id": "frame-layer-panel-archetype-layout", "name": "Layer: Layout", "positionOnCanvas": { "x": 720, "y": 1920 }, "size": { "w": 320, "h": 900 }, "safeArea": null, "background": {}, "containerIds": ["c-layer-layout-root"], "componentIds": [] },
+    { "id": "frame-site-details", "name": "Site Details", "positionOnCanvas": { "x": 1080, "y": 1920 }, "size": { "w": 320, "h": 600 }, "safeArea": null, "background": {}, "containerIds": ["c-site-root"], "componentIds": [] },
+    { "id": "frame-scene-section-frame-container", "name": "Scene Section Frame", "positionOnCanvas": { "x": 0, "y": 2880 }, "size": { "w": 320, "h": 400 }, "safeArea": null, "background": {}, "containerIds": ["c-section-root"], "componentIds": [] },
+    { "id": "frame-topo-map-tool-container", "name": "Topo Map Tool", "positionOnCanvas": { "x": 360, "y": 2880 }, "size": { "w": 320, "h": 900 }, "safeArea": null, "background": {}, "containerIds": ["c-topo-tool-root"], "componentIds": [] },
+    { "id": "frame-seismic-tool-container", "name": "Seismic Tool", "positionOnCanvas": { "x": 720, "y": 2880 }, "size": { "w": 320, "h": 900 }, "safeArea": null, "background": {}, "containerIds": ["c-seismic-tool-root"], "componentIds": [] },
+    { "id": "frame-working-area-tool-container", "name": "Working Area Tool", "positionOnCanvas": { "x": 1080, "y": 2880 }, "size": { "w": 320, "h": 600 }, "safeArea": null, "background": {}, "containerIds": ["c-wa-tool-root"], "componentIds": [] }
+  ],
   "schemaVersion": 1
 }
