@@ -1,8 +1,12 @@
 # GUI Workbench — v1 Build Pack
 
-**Document status:** v1.0 build contract. Approved scope; v1.0 implementation landed and tagged.
-v1.1 direction is captured in [23_v1_1_direction.md](23_v1_1_direction.md) — read that first when working on v1.1.
+**Document status:** v1.0 build COMPLETE (phases 0–14 landed). v1.1 tier model landed.
+v1.1 direction is captured in [23_v1_1_direction.md](23_v1_1_direction.md) and the GeoSee
+editor inventory in [24_geosee_editor_inventory.md](24_geosee_editor_inventory.md) — read both
+first when working on v1.1.
 **Folder:** `C:\GeoSee\GeoSee_Dev\UI_EDITOR\docs_v1\`
+**Run it:** double-click `UI_EDITOR\Launch UI Editor.cmd` (or `..\Editor App.cmd`), or
+`cd UI_EDITOR && npm install && npm run dev` → `http://localhost:5174/`.
 **Frozen v1.0 snapshot:** `C:\GeoSee\GeoSee_Dev\UI_EDITOR_v1_0\` (entire workspace mirrored at the v1.0 line; do not edit).
 **Relation to `..\docs\` (v0.1):** v0.1 is the concept review pack. This v1 pack closes the load-bearing v0.1 open questions and commits to a buildable, agent-executable first version.
 

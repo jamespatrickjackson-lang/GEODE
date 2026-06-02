@@ -223,26 +223,41 @@ The author may opt in entry-by-entry: pick a library entry, set its
 
 ## 10. Doc edits implied by this addendum
 
-When v1.1 implementation begins, the following v1.0 docs must be patched
-to match:
+Status as of the v1.1 tier-model landing:
 
-- **00_README.md** — index entry for this doc; note that doc 06 is
-  superseded.
-- **05_libraries.md** — extend `ComponentLibraryEntry` with `tier` and
-  `aiNote`; describe per-tier tabs in the Library Panel.
-- **06_straw_subject.md** — superseded by this doc and §6 above.
-- **08_validation_rules.md** — append §7 rules above.
-- **10_build_phases.md** — Phase 7 (straw-subject) is replaced by
-  "Starter Pack build"; Phase 6 (Libraries) is extended with the
-  tier-tab + Save-to-library affordance; new Phase 15 (Authoring loop
-  smoke) drives the §5 acceptance manually.
-- **11_agent_automation_runbook.md** — Phase 15 added to §4.2 sequence.
-- **13_element_intent_annotations.md** — `IntentAnnotations` extended
-  to mention `aiNote` as the library-entry-level shape; per-instance
-  intent fields remain unchanged.
-- **22_mvp_coherence_audit.md** — re-audit against §5 acceptance after
-  v1.1 lands.
+**Done**
 
-These edits are deferred until the v1.1 implementation work begins.
+- **Schema** — `ComponentLibraryEntry` carries `tier`, `aiNote`, and a
+  machine-readable `composition: CompositionChild[]` in
+  `src/core/schema/library.ts`.
+- **Library Panel** — Components / Assemblies / Products tier tabs ship in
+  `src/shell/libraryPanel/`; entries filter by tier and show child-slot
+  counts.
+- **Validation** — the five §7 tier rules are in the Desktop Technical
+  Editing pack; the rule engine now runs library-scoped rules once per
+  package (not per frame).
+- **Bundled library** — `geosee_editor_sidebar` reclassifies bare
+  structural containers to `tier: "component"` and gives the genuine
+  GeoSee row assemblies real composition recipes plus labelled-control
+  assemblies (slider / numeric / select / colour / visibility). Products
+  (Page Manager, Environment / Camera / GUI studios, Layer Stack, Overlay
+  Box Manager, Site Details, Editor Chrome) are catalogued in
+  [24_geosee_editor_inventory.md](24_geosee_editor_inventory.md).
+- **00_README.md** — points at this doc + doc 24; notes doc 06 superseded.
+
+**Still pending (v1.1 implementation / v1.2)**
+
+- **Composition instantiation** — dropping an Assembly/Product currently
+  instantiates only the entry's top-level archetype; recursive
+  instantiation of `composition` children is a v1.2 shell task.
+- **"Save as Assembly / Product" affordance** in the Library Panel (§8
+  authoring loop) is not yet wired.
+- **Starter Pack** package (replacing the GeoSee-sidebar straw subject as
+  the default sample) is not yet built; doc 06 is superseded on paper but
+  `geosee_editor_sidebar` is still the shipped sample.
+- **05 / 08 / 10 / 11 / 13 / 22** prose has not been line-edited to fold
+  in the tier model; this doc + doc 24 are the authoritative v1.1 source
+  until that reconciliation pass runs.
+
 v1_0 docs (the original `docs_v1/00`–`22`) are frozen in
 `UI_EDITOR_v1_0/docs_v1/` as the historical record.

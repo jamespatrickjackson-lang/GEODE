@@ -13,6 +13,12 @@ An agent executing this list end-to-end produces a working v1. The orchestration
 
 ## 2. Phase summary
 
+**Build status:** all 15 phases (0–14) are implemented and committed. The
+workbench launches, loads the bundled package, edits/validates/exports, and the
+adapter stub throws at runtime as designed. v1.1 layered the three-tier model on
+top (see [23_v1_1_direction.md](23_v1_1_direction.md)). The "Approx. effort"
+column below is the original estimate, retained for reference.
+
 | Phase | Name | Deliverable | Approx. effort (rough) |
 | --- | --- | --- | --- |
 | **0** | Scaffolding | `UI_EDITOR/package.json`, `tsconfig.json`, `vite.config.ts`, `index.html`, `main.tsx`. Workbench launches and shows "Hello Workbench". | 1 commit |
