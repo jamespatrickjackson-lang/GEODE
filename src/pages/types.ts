@@ -85,6 +85,12 @@ export type DemoBoreholePathTreatment =
   | "survey"
   | "smoothed"
   | "presentation-normalized";
+export type DemoBoreholeSourceLocationMode =
+  | "rounded-trace"
+  | "line"
+  | "pin"
+  | "crosshair"
+  | "hidden";
 
 export interface DemoBoreholeWellStyle {
   visible?: boolean;
@@ -126,6 +132,28 @@ export interface DemoOrientationBlockStyle {
   labelVisible?: boolean;
   labelText?: string;
   labelLiftM?: number;
+}
+
+export interface DemoBoreholeSourceLocationStyle {
+  visible?: boolean;
+  mode?: DemoBoreholeSourceLocationMode;
+  color?: string;
+  opacity?: number;
+  diameterM?: number;
+  lengthM?: number;
+  lineWidth?: number;
+  topRingVisible?: boolean;
+  topRingRadiusM?: number;
+  topRingTubeM?: number;
+  topRingColor?: string;
+  topRingOpacity?: number;
+  labelVisible?: boolean;
+  labelLiftM?: number;
+  items?: Record<string, DemoBoreholeSourceLocationItemStyle>;
+}
+
+export interface DemoBoreholeSourceLocationItemStyle {
+  visible?: boolean;
 }
 
 export interface MtSurfaceBoundaryStyle {
@@ -319,6 +347,7 @@ export interface EditableStyle {
   // source-derived where available; these fields only tune presentation.
   demoBoreholeWells?: Record<string, DemoBoreholeWellStyle>;
   demoBoreholeBlock?: DemoOrientationBlockStyle;
+  demoBoreholeSourceLocations?: DemoBoreholeSourceLocationStyle;
   demoBoreholePipeRadiusM?: number;
   demoBoreholeBlockVisible?: boolean;
   // Utah FORGE authored resistivity slice controls. Vertical scale remains
@@ -756,6 +785,64 @@ export interface GuiLabelSettings {
   belowAnchorPenalty?: number;
 }
 
+export interface EditorChromeSettings {
+  uiScale?: number;
+  panelWidthPx?: number;
+  panelMarginPx?: number;
+  panelLeftPx?: number;
+  panelTopPx?: number;
+  panelBottomSafePx?: number;
+  panelCornerRadiusPx?: number;
+  headerLogoPath?: string;
+  headerLogoVisible?: boolean;
+  headerLogoSizePx?: number;
+  headerLogoGapPx?: number;
+  headerLogoPaddingTopPx?: number;
+  headerLogoPaddingRightPx?: number;
+  headerLogoPaddingBottomPx?: number;
+  headerLogoPaddingLeftPx?: number;
+  headerLogoOpacity?: number;
+  headerLogoBackgroundTransparent?: boolean;
+  headerLogoBackgroundCutoff?: number;
+  headerLogoEdgeSoftness?: number;
+  headerLogoForegroundWhite?: boolean;
+  headerLogoCropX?: number;
+  headerLogoCropY?: number;
+  headerLogoCropWidth?: number;
+  headerLogoCropHeight?: number;
+  headerTitleVisible?: boolean;
+  headerHeightPx?: number;
+  headerFontSizePx?: number;
+  headerGapPx?: number;
+  sectionMarginXPx?: number;
+  sectionGapYPx?: number;
+  topBarBottomGapPx?: number;
+  containerGapPx?: number;
+  containerAlignItems?:
+    | "flex-start"
+    | "center"
+    | "flex-end"
+    | "stretch"
+    | "baseline";
+  containerJustifyContent?:
+    | "flex-start"
+    | "center"
+    | "flex-end"
+    | "space-between"
+    | "space-around"
+    | "space-evenly";
+  containerBodyIndentPx?: number;
+  barRadiusPx?: number;
+  topBarHeightPx?: number;
+  nestedBarHeightPx?: number;
+  pillTextInsetPx?: number;
+  pageListIndentPx?: number;
+  scrollEndPaddingPx?: number;
+  saveFooterGapPx?: number;
+  sliderTrackHeightPx?: number;
+  sliderThumbSizePx?: number;
+}
+
 export interface BoxOverlayStylePreset {
   id: string;
   label: string;
@@ -996,6 +1083,7 @@ export interface SceneProperties {
       opacity?: number;
     };
     labels?: GuiLabelSettings;
+    editor?: EditorChromeSettings;
   };
 
   // Terrain shading (custom shader uniforms).
@@ -1051,6 +1139,7 @@ export interface SceneProperties {
     gridSpacingM?: number;
     gridLineWidthM?: number;
     undersideOpacity?: number;
+    fogGradientCurve?: number;
     topoMapBranding?: {
       visible?: boolean;
       logoPath?: string;

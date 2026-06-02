@@ -98,36 +98,36 @@
   "imageMaterials": {
     "naip-2024-aerial": {
       "label": "NAIP 2024 Aerial Image",
-      "source": "USDA NAIP 2024 Beaver County mosaic via UGRC Raster Data Discovery",
+      "source": "USDA NAIP 2024 Beaver, Iron, Millard, Sanpete, and Sevier County mosaics via UGRC Raster Data Discovery",
       "manifest": "naip_2024/manifest.json",
       "targetCrs": "EPSG:26912",
       "format": "webp",
       "hasAlpha": true,
       "sourceBounds": {
         "easting_m": [
-          231115.8,
-          385650
+          229069.2,
+          484164
         ],
         "northing_m": [
-          4220376,
-          4279999.8
+          4144854,
+          4414308
         ]
       },
       "variants": {
         "4096": {
-          "file": "naip_2024/naip_2024_beauty_4096.webp",
-          "width": 4096,
-          "height": 1580,
-          "resolutionMApprox": 37.73,
+          "file": "naip_2024/naip_2024_regional_4096.webp",
+          "width": 3878,
+          "height": 4096,
+          "resolutionMApprox": 65.78,
           "format": "webp",
           "hasAlpha": true,
           "quality": 94
         },
         "8192": {
-          "file": "naip_2024/naip_2024_beauty_8192.webp",
-          "width": 8192,
-          "height": 3161,
-          "resolutionMApprox": 18.86,
+          "file": "naip_2024/naip_2024_regional_8192.webp",
+          "width": 7755,
+          "height": 8192,
+          "resolutionMApprox": 32.89,
           "format": "webp",
           "hasAlpha": true,
           "quality": 94

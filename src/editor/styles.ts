@@ -16,7 +16,7 @@ export const editorFieldBorder = "1px solid transparent";
 export const EDITOR_FULL_RADIUS = 999;
 export const EDITOR_SECTION_MARGIN_X = 12;
 export const EDITOR_SECTION_GAP_Y = 10;
-export const EDITOR_SCROLL_END_PADDING_Y = 20;
+export const EDITOR_SCROLL_END_PADDING_Y = 4;
 export const EDITOR_PAGE_LIST_INDENT_X = 18;
 export const EDITOR_HEADING_BAR_BACKGROUND = "rgba(18, 21, 24, 0.528)";
 export const EDITOR_NESTED_BAR_BACKGROUND = "rgba(18, 21, 24, 0.442)";
@@ -185,7 +185,7 @@ export const subMasterChildIndentStyle: CSSProperties = {
 //
 // The current intent is dark overlay-box material:
 // - regularLightMaterial: heavier separation. Used for the sidebar itself and
-//   the main section bars: Page Manager, Public Data, Customer Data.
+//   the main section bars: Pages, Cinematics, Topo, Forge/Data, Cards.
 // - thinLightMaterial: lighter interactive material. Used for secondary bars,
 //   selected rows, small buttons, and text inputs.
 // - FROSTED_HAIRLINE: transparent internal layout border; the outer editor
@@ -207,15 +207,15 @@ export const frostedMenuBar = regularLightMaterial;
 export const frostedHeading: CSSProperties = {
   ...regularLightMaterial,
   border: "1px solid transparent",
-  borderRadius: EDITOR_FULL_RADIUS,
+  borderRadius: `var(--editor-bar-radius, ${EDITOR_FULL_RADIUS}px)`,
   boxSizing: "border-box",
   boxShadow: "none",
 };
 export const frostedSubheading: CSSProperties = {
-  ...thinLightMaterial,
-  background: EDITOR_NESTED_BAR_BACKGROUND,
+  ...regularLightMaterial,
+  background: EDITOR_HEADING_BAR_BACKGROUND,
   border: "1px solid transparent",
-  borderRadius: EDITOR_FULL_RADIUS,
+  borderRadius: `var(--editor-bar-radius, ${EDITOR_FULL_RADIUS}px)`,
   boxSizing: "border-box",
   boxShadow: "none",
 };
@@ -233,12 +233,12 @@ export const panelStyles: Record<string, CSSProperties> = {
   globalSettingsBar: {
     ...frostedSubheading,
     display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 14,
+    alignItems: "var(--editor-container-align, center)",
+    justifyContent: "var(--editor-container-justify, space-between)",
+    gap: "var(--editor-container-gap, 14px)",
     width: "100%",
-    minHeight: 42,
-    padding: `0 ${EDITOR_PILL_TEXT_INSET_PX}px`,
+    minHeight: "var(--editor-nested-bar-height, 42px)",
+    padding: `0 var(--editor-pill-text-inset, ${EDITOR_PILL_TEXT_INSET_PX}px)`,
     cursor: "pointer",
     userSelect: "none",
   },
@@ -246,7 +246,7 @@ export const panelStyles: Record<string, CSSProperties> = {
     display: "flex",
     flexDirection: "column",
     gap: 6,
-    padding: "8px 0 8px 28px",
+    padding: "8px 0 8px var(--editor-container-body-indent, 28px)",
   },
   section: {
     paddingBottom: 12,
@@ -388,18 +388,18 @@ export const panelStyles: Record<string, CSSProperties> = {
   // DEV NOTES: main heading bars
   // ----------------------------
   // This is the layout for the top-level sidebar bars:
-  // Global Settings, Layers, and Overlay Box Manager. The material/rounding comes from
+  // Pages, Cinematics, Sections, Topo, Forge/Data, and Cards. The material/rounding comes from
   // frostedHeading above. Change margin/padding/minHeight here when the bars
   // need to align differently with the sidebar edges.
   collapsibleHeader: {
     ...frostedHeading,
     display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 14,
-    minHeight: 44,
-    padding: `0 ${EDITOR_PILL_TEXT_INSET_PX}px`,
-    margin: `${EDITOR_SECTION_GAP_Y}px ${EDITOR_SECTION_MARGIN_X}px 6px`,
+    alignItems: "var(--editor-container-align, center)",
+    justifyContent: "var(--editor-container-justify, space-between)",
+    gap: "var(--editor-container-gap, 14px)",
+    minHeight: "var(--editor-top-bar-height, 44px)",
+    padding: `0 var(--editor-pill-text-inset, ${EDITOR_PILL_TEXT_INSET_PX}px)`,
+    margin: `var(--editor-section-gap-y, ${EDITOR_SECTION_GAP_Y}px) var(--editor-section-margin-x, ${EDITOR_SECTION_MARGIN_X}px) var(--editor-top-bar-bottom-gap, 6px)`,
     cursor: "pointer",
     userSelect: "none",
   },
@@ -425,6 +425,9 @@ export const panelStyles: Record<string, CSSProperties> = {
     transition: "transform 160ms ease",
   },
   collapsibleTitle: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 10,
     fontSize: 15,
     fontWeight: 600,
     color: vibrancyLabel,

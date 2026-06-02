@@ -17,7 +17,6 @@ import {
   frostedSubheading,
   globalSettingsAccent,
   globalSettingsHoverAccent,
-  pageAccentForPage,
   pageAccentForPageWithGroup,
   pageAccentHexForIndex,
   panelStyles,
@@ -209,22 +208,12 @@ export function PagePanel({ sceneHandle }: Props) {
     (state.selectedPageId && state.selectedPageId !== ENVIRONMENT_SENTINEL
       ? state.pages.find((p) => p.id === state.selectedPageId)
       : null);
-  const selectedActionPageIndex = selectedActionPage
-    ? state.pages.findIndex((page) => page.id === selectedActionPage.id)
-    : -1;
-  const selectedActionPageAccent =
-    selectedActionPage && selectedActionPageIndex >= 0
-      ? pageAccentForPage(selectedActionPage, selectedActionPageIndex)
-      : null;
   const pageStructureLocked = isTransitioning || targetIndex !== null;
   const pageStructureLockedTitle =
     "Page structure is locked while the camera is transitioning";
   const pageStructureActionTitle = (title: string) =>
     pageStructureLocked ? pageStructureLockedTitle : title;
   const globalSettingsSelected = visualSelectedPageId === ENVIRONMENT_SENTINEL;
-  const renderPresetOptions = renderPresetOptionsForEnvironment(
-    state.environment,
-  );
 
   useEffect(() => {
     setVisualSelectedPageId(state.selectedPageId);
@@ -405,7 +394,7 @@ export function PagePanel({ sceneHandle }: Props) {
               fontWeight: globalSettingsSelected ? 600 : 400,
               color: globalSettingsSelected
                 ? vibrancyLabel
-                : vibrancySecondaryLabel,
+                : vibrancyLabel,
               display: "flex",
               alignItems: "center",
               minWidth: 0,
@@ -828,32 +817,14 @@ export function PagePanel({ sceneHandle }: Props) {
         </span>
       </div>
 
-      {!globalSettingsSelected && selectedActionPage && (
-        <RenderPresetContainer
-          title="Page Render Preset Override"
-          label="Page preset"
-          value={
-            selectedActionPage.renderPreset ??
-            selectedActionPage.renderPresetId ??
-            ""
-          }
-          options={renderPresetOptions}
-          accentColor={selectedActionPageAccent}
-          emptyLabel="Inherit project preset"
-          onChange={(value) =>
-            setPageField(selectedActionPage.id, {
-              renderPreset: value ? (value as RenderPresetId) : undefined,
-              renderPresetId: undefined,
-            })
-          }
-        />
-      )}
     </div>
   );
 }
 
 interface GlobalToolPanelProps {
   accentColor?: string | null;
+  devModeEnabled?: boolean;
+  onDevModeChange?: (enabled: boolean) => void;
 }
 
 export function VisualStudioPanel({
@@ -929,6 +900,8 @@ export function VisualStudioPanel({
 
 export function UiSettingsPanel({
   accentColor = globalSettingsAccent,
+  devModeEnabled = false,
+  onDevModeChange,
 }: GlobalToolPanelProps) {
   const { selectPage } = useEditor();
   const activateGlobalSettings = useCallback(() => {
@@ -940,6 +913,14 @@ export function UiSettingsPanel({
       style={globalToolPanelBodyStyle}
       onPointerDownCapture={activateGlobalSettings}
     >
+      <GuiSetupPanel
+        title="Editor"
+        content="editor"
+        devModeEnabled={devModeEnabled}
+        onDevModeChange={onDevModeChange}
+        onActivate={activateGlobalSettings}
+        accentColor={accentColor}
+      />
       <GuiSetupPanel
         title="Client Logo"
         content="logo"
@@ -953,6 +934,36 @@ export function UiSettingsPanel({
         accentColor={accentColor}
       />
     </div>
+  );
+}
+
+export function PageRenderPresetPanel({
+  page,
+  accentColor,
+}: {
+  page: PresentationPage;
+  accentColor?: string | null;
+}) {
+  const { state, setPageField } = useEditor();
+  const renderPresetOptions = renderPresetOptionsForEnvironment(
+    state.environment,
+  );
+
+  return (
+    <RenderPresetContainer
+      title="Page Render Preset Override"
+      label="Page preset"
+      value={page.renderPreset ?? page.renderPresetId ?? ""}
+      options={renderPresetOptions}
+      accentColor={accentColor}
+      emptyLabel="Inherit project preset"
+      onChange={(value) =>
+        setPageField(page.id, {
+          renderPreset: value ? (value as RenderPresetId) : undefined,
+          renderPresetId: undefined,
+        })
+      }
+    />
   );
 }
 
@@ -988,7 +999,15 @@ function RenderPresetContainer({
   const [open, setOpen] = useState(false);
 
   return (
-    <section style={renderPresetGroupStyle} aria-label={title}>
+    <section
+      style={renderPresetGroupStyle}
+      aria-label={title}
+      data-dev-source="src/editor/PagePanel.tsx:996"
+      data-dev-container="true"
+      data-dev-container-type="render-preset-container"
+      data-dev-container-name={title}
+      data-dev-container-scope="RenderPresetContainer / renderPresetGroupStyle"
+    >
       <button
         type="button"
         style={renderPresetHeadingStyle(accentColor)}
@@ -1561,7 +1580,14 @@ function DynamicCameraGroup({
       ? dynamicCameraSectionsBodyStyle
       : dynamicCameraGroupBodyStyle;
   return (
-    <div style={dynamicCameraGroupStyle}>
+    <div
+      style={dynamicCameraGroupStyle}
+      data-dev-source="src/editor/PagePanel.tsx:1569"
+      data-dev-container="true"
+      data-dev-container-type="dynamic-camera-container"
+      data-dev-container-name={title}
+      data-dev-container-scope="DynamicCameraPanel / dynamicCameraGroupStyle"
+    >
       <div
         role="button"
         tabIndex={0}
@@ -2159,7 +2185,6 @@ const PAGE_MANAGER_ACTION_SIZE = 24;
 const PAGE_MANAGER_ACTION_GAP = 12;
 const PAGE_ROW_ACTION_EXTENT =
   PAGE_MANAGER_ACTION_SIZE * 4 + PAGE_MANAGER_ACTION_GAP * 3;
-const PAGE_ROW_ACTION_RIGHT_INSET = EDITOR_PAGE_LIST_INDENT_X + 8;
 const PAGE_MANAGER_DARK_SURFACE_FILL = "rgba(244, 240, 232, 0.066)";
 const PAGE_MANAGER_TINTED_SURFACE_FILL = "rgba(18, 21, 24, 0.192)";
 const PAGE_MANAGER_DISABLED_FILL = "rgba(244, 240, 232, 0.038)";
@@ -2390,7 +2415,7 @@ function TrashIcon() {
 const pageActionsStyle: React.CSSProperties = {
   marginTop: 16,
   marginBottom: 24,
-  paddingRight: PAGE_ROW_ACTION_RIGHT_INSET,
+  paddingRight: `calc(var(--editor-page-list-indent, ${EDITOR_PAGE_LIST_INDENT_X}px) + 8px)`,
   display: "flex",
   justifyContent: "flex-end",
 };
@@ -2425,7 +2450,7 @@ const globalToolPanelBodyStyle: React.CSSProperties = {
 
 const renderPresetGroupStyle: React.CSSProperties = {
   marginBottom: 16,
-  paddingLeft: 18,
+  paddingLeft: `var(--editor-page-list-indent, ${EDITOR_PAGE_LIST_INDENT_X}px)`,
 };
 
 const renderPresetHeadingTextStyle: React.CSSProperties = {
@@ -2580,7 +2605,7 @@ function dynamicCameraPanelStyle(_accentColor: string): React.CSSProperties {
 
 const dynamicCameraGroupStyle: React.CSSProperties = {
   marginBottom: 16,
-  paddingLeft: 18,
+  paddingLeft: `var(--editor-page-list-indent, ${EDITOR_PAGE_LIST_INDENT_X}px)`,
 };
 
 function dynamicCameraGroupSummaryStyle(
@@ -2591,12 +2616,12 @@ function dynamicCameraGroupSummaryStyle(
   return {
     ...frostedSubheading,
     display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 14,
+    alignItems: "var(--editor-container-align, center)",
+    justifyContent: "var(--editor-container-justify, space-between)",
+    gap: "var(--editor-container-gap, 14px)",
     width: "100%",
-    minHeight: 42,
-    padding: `0 ${EDITOR_PILL_TEXT_INSET_PX}px`,
+    minHeight: "var(--editor-nested-bar-height, 42px)",
+    padding: `0 var(--editor-pill-text-inset, ${EDITOR_PILL_TEXT_INSET_PX}px)`,
     cursor: "pointer",
     userSelect: "none",
     color: "inherit",
@@ -2610,7 +2635,7 @@ function dynamicCameraGroupSummaryStyle(
 }
 
 const dynamicCameraGroupTitleStyle: React.CSSProperties = {
-  color: vibrancySecondaryLabel,
+  color: vibrancyLabel,
   fontSize: 13,
   fontWeight: 700,
   lineHeight: 1.2,
@@ -2878,13 +2903,13 @@ const downTriangleIconStyle: React.CSSProperties = {
 
 // DEV NOTES: page list contents
 // -----------------------------
-// This is the plain list under the Page Manager top-level section. It should
+// This is the plain list under the Pages top-level section. It should
 // not carry a heavy material box; the visual weight belongs to selected rows.
 const globalSettingsSelectorStyle: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   marginTop: 6,
-  paddingLeft: EDITOR_PAGE_LIST_INDENT_X,
+  paddingLeft: `var(--editor-page-list-indent, ${EDITOR_PAGE_LIST_INDENT_X}px)`,
 };
 
 const pageListStyle: React.CSSProperties = {
@@ -2894,7 +2919,7 @@ const pageListStyle: React.CSSProperties = {
   marginTop: 6,
   // Row text aligns with Global Settings section labels like Atmosphere:
   // 38px list inset + 8px row padding = 46px visual text start.
-  paddingLeft: EDITOR_PAGE_LIST_INDENT_X,
+  paddingLeft: `var(--editor-page-list-indent, ${EDITOR_PAGE_LIST_INDENT_X}px)`,
   // Mirror the left inset so selected rows have balanced rounded ends.
-  paddingRight: EDITOR_PAGE_LIST_INDENT_X,
+  paddingRight: `var(--editor-page-list-indent, ${EDITOR_PAGE_LIST_INDENT_X}px)`,
 };

@@ -304,13 +304,13 @@ export function OverlayPanel() {
 const overlaySubheadingStyle: React.CSSProperties = {
   ...frostedSubheading,
   display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 14,
-  minHeight: 42,
-  padding: `0 ${EDITOR_PILL_TEXT_INSET_PX}px`,
+  alignItems: "var(--editor-container-align, center)",
+  justifyContent: "var(--editor-container-justify, space-between)",
+  gap: "var(--editor-container-gap, 14px)",
+  minHeight: "var(--editor-nested-bar-height, 42px)",
+  padding: `0 var(--editor-pill-text-inset, ${EDITOR_PILL_TEXT_INSET_PX}px)`,
   marginBottom: 4,
-  marginLeft: 18,
+  marginLeft: "var(--editor-page-list-indent, 18px)",
 };
 
 // DEV NOTES: overlay subheading bars
@@ -337,7 +337,7 @@ const overlaySubheadingDetailStyle: React.CSSProperties = {
 // here unless you want the text area/timing/image contents to become boxed.
 // Inputs and textareas already get their own thin material from panelStyles.
 const overlayBodyStyle: React.CSSProperties = {
-  paddingLeft: 46,
+  paddingLeft: "calc(var(--editor-container-body-indent, 28px) + 18px)",
 };
 
 const overlayTextInputStyle: React.CSSProperties = {

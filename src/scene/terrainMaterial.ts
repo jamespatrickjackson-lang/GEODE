@@ -91,6 +91,7 @@ export interface TerrainMaterialParams {
   fogNear?: number;
   fogFar?: number;
   fogDensity?: number;
+  fogGradientCurve?: number;
 }
 
 export interface TerrainMaterialHandle {
@@ -400,6 +401,9 @@ export function buildTerrainMaterial(
     uFogFar: {
       value: initial.fogFar ?? fogDensityToFar(initial.fogDensity ?? 0.00018),
     },
+    uFogGradientCurve: {
+      value: THREE.MathUtils.clamp(initial.fogGradientCurve ?? 1, 0.35, 4),
+    },
     uGridEnabled: { value: initial.gridEnabled === false ? 0 : 1 },
     uGridColor: { value: new THREE.Color(initial.gridColor ?? "#f1dec0") },
     uGridOpacity: { value: initial.gridOpacity ?? 0.18 },
@@ -548,6 +552,7 @@ export function buildTerrainMaterial(
       uniform vec3 uFogColor;
       uniform float uFogNear;
       uniform float uFogFar;
+      uniform float uFogGradientCurve;
       uniform float uGridEnabled;
       uniform vec3 uGridColor;
       uniform float uGridOpacity;
@@ -1049,6 +1054,8 @@ export function buildTerrainMaterial(
         float depth = length(vWorldPos.xy);
         float fogF = clamp((depth - uFogNear) / (uFogFar - uFogNear), 0.0, 1.0) *
                      clamp(uFogEnabled, 0.0, 1.0);
+        fogF = smoothstep(0.0, 1.0, fogF);
+        fogF = pow(fogF, uFogGradientCurve);
         surface = mix(surface, uFogColor, fogF);
 
         // Terrain-composited layers are painted after the terrain fog pass so
@@ -1363,6 +1370,12 @@ export function buildTerrainMaterial(
       if (typeof p.fogFar === "number") uniforms.uFogFar.value = p.fogFar;
       if (typeof p.fogDensity === "number")
         uniforms.uFogFar.value = fogDensityToFar(p.fogDensity);
+      if (typeof p.fogGradientCurve === "number")
+        uniforms.uFogGradientCurve.value = THREE.MathUtils.clamp(
+          p.fogGradientCurve,
+          0.35,
+          4,
+        );
     },
     setTerrainFogEnabled(enabled) {
       uniforms.uFogEnabled.value = enabled ? 1 : 0;

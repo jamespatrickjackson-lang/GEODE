@@ -183,6 +183,10 @@ export function TopoMapPanel({
   const sceneFogEnabled = sceneFog.enabled !== false;
   const sceneFogDensity = sceneFog.density ?? DEFAULT_FOG_DENSITY;
   const sceneFogReachKm = 3 / Math.max(sceneFogDensity, 0.000001) / 1000;
+  const sceneFogGradientCurve =
+    typeof rawTerrain.fogGradientCurve === "number"
+      ? rawTerrain.fogGradientCurve
+      : 1;
   const topoFogDensity =
     typeof style.fogDensity === "number" ? style.fogDensity : sceneFogDensity;
   const topoFogReachKm = 3 / Math.max(topoFogDensity, 0.000001) / 1000;
@@ -455,13 +459,9 @@ export function TopoMapPanel({
         </details>
         <TopoSurfaceClipControls {...publicSurfaceLayerControlProps} />
         <details style={drillingAssayDetailsStyle}>
-          <summary style={drillingAssaySummaryStyle}>Topo fog</summary>
+          <summary style={drillingAssaySummaryStyle}>Atmosphere</summary>
           <div style={detailsContentStyle}>
-            {!isEnv ? (
-              <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
-                Scene fog variables are edited in Global Settings.
-              </div>
-            ) : (
+            {isEnv || currentPage ? (
               <>
                 <EzGammaCheckboxRow
                   label="Scene fog"
@@ -502,10 +502,22 @@ export function TopoMapPanel({
                         })
                       }
                     />
+                    <EnvStyleRow
+                      label="Fog gradient"
+                      inputType="range"
+                      value={String(sceneFogGradientCurve)}
+                      min={0.35}
+                      max={4}
+                      step={0.05}
+                      decimals={2}
+                      onChange={(v) =>
+                        setTerrain({ fogGradientCurve: parseFloat(v) })
+                      }
+                    />
                   </>
                 ) : null}
               </>
-            )}
+            ) : null}
             <EzGammaCheckboxRow
               label="Topo fog"
               checked={topoFogIncluded}

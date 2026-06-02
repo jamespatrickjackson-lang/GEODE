@@ -4,6 +4,7 @@ import { LayerPanel } from "./LayerPanel";
 import {
   DynamicCameraPanel,
   PagePanel,
+  PageRenderPresetPanel,
   UiSettingsPanel,
   VisualStudioPanel,
 } from "./PagePanel";
@@ -19,8 +20,11 @@ import {
   audienceLensById,
 } from "../projectModules/caseStudyB/audienceLenses";
 import {
+  EDITOR_FULL_RADIUS,
+  EDITOR_PAGE_LIST_INDENT_X,
   EDITOR_PILL_TEXT_INSET_PX,
   EDITOR_SCROLL_END_PADDING_Y,
+  EDITOR_SECTION_GAP_Y,
   EDITOR_SECTION_MARGIN_X,
   FROSTED_HAIRLINE,
   FROSTED_PANEL_OUTLINE,
@@ -30,7 +34,11 @@ import {
   vibrancyLabel,
 } from "./styles";
 import type { SceneHandle } from "../scene";
-import type { EditableStyle, ProjectLayerSpec } from "../pages/types";
+import type {
+  EditableStyle,
+  EditorChromeSettings,
+  ProjectLayerSpec,
+} from "../pages/types";
 import {
   effectiveStyle,
   effectiveVisibility,
@@ -66,6 +74,7 @@ const DEFAULT_SCROLL_SETTLE_MS = 250;
 const DEFAULT_PULSE_PILL_MS = 600;
 const DEFAULT_PULSE_TEXT_MS = 480;
 const DEFAULT_PULSE_STATIC_MS = 1200;
+const EDITOR_DEFAULT_UI_SCALE = 0.75;
 
 const UTAH_FORGE_DATA_LAYER_IDS = [
   UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
@@ -91,6 +100,216 @@ function clampEditorNumber(
   return typeof value === "number" && Number.isFinite(value)
     ? Math.min(max, Math.max(min, value))
     : fallback;
+}
+
+function smoothStep(edge0: number, edge1: number, value: number): number {
+  if (edge0 === edge1) return value >= edge1 ? 1 : 0;
+  const t = Math.min(1, Math.max(0, (value - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+function EditorHeaderLogo({
+  src,
+  sizePx,
+  logoPaddingTopPx,
+  logoPaddingRightPx,
+  logoPaddingBottomPx,
+  logoPaddingLeftPx,
+  opacity,
+  backgroundTransparent,
+  backgroundCutoff,
+  edgeSoftness,
+  foregroundWhite,
+  cropX,
+  cropY,
+  cropWidth,
+  cropHeight,
+}: {
+  src: string;
+  sizePx: number;
+  logoPaddingTopPx: number;
+  logoPaddingRightPx: number;
+  logoPaddingBottomPx: number;
+  logoPaddingLeftPx: number;
+  opacity: number;
+  backgroundTransparent: boolean;
+  backgroundCutoff: number;
+  edgeSoftness: number;
+  foregroundWhite: boolean;
+  cropX: number;
+  cropY: number;
+  cropWidth: number;
+  cropHeight: number;
+}) {
+  const processedSrc = useProcessedHeaderLogoSrc(src, {
+    backgroundTransparent,
+    backgroundCutoff,
+    edgeSoftness,
+    foregroundWhite,
+    cropX,
+    cropY,
+    cropWidth,
+    cropHeight,
+  });
+  return (
+    <img
+      src={processedSrc ?? src}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      data-editor-header-logo="true"
+      data-logo-background-transparent={backgroundTransparent ? "true" : "false"}
+      data-logo-crop={`${cropX.toFixed(3)},${cropY.toFixed(3)},${cropWidth.toFixed(3)},${cropHeight.toFixed(3)}`}
+      style={{
+        display: "block",
+        width: sizePx,
+        height: "auto",
+        paddingTop: logoPaddingTopPx,
+        paddingRight: logoPaddingRightPx,
+        paddingBottom: logoPaddingBottomPx,
+        paddingLeft: logoPaddingLeftPx,
+        opacity,
+        flex: "0 0 auto",
+        pointerEvents: "none",
+      }}
+    />
+  );
+}
+
+function useProcessedHeaderLogoSrc(
+  src: string,
+  options: {
+    backgroundTransparent: boolean;
+    backgroundCutoff: number;
+    edgeSoftness: number;
+    foregroundWhite: boolean;
+    cropX: number;
+    cropY: number;
+    cropWidth: number;
+    cropHeight: number;
+  },
+): string | null {
+  const [processedSrc, setProcessedSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    const hasCrop =
+      options.cropX > 0 ||
+      options.cropY > 0 ||
+      options.cropWidth < 1 ||
+      options.cropHeight < 1;
+    if (!options.backgroundTransparent && !hasCrop) {
+      setProcessedSrc(null);
+      return;
+    }
+
+    let cancelled = false;
+    createTransparentHeaderLogo(src, options)
+      .then((nextSrc) => {
+        if (!cancelled) setProcessedSrc(nextSrc);
+      })
+      .catch(() => {
+        if (!cancelled) setProcessedSrc(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    src,
+    options.backgroundTransparent,
+    options.backgroundCutoff,
+    options.edgeSoftness,
+    options.foregroundWhite,
+    options.cropX,
+    options.cropY,
+    options.cropWidth,
+    options.cropHeight,
+  ]);
+
+  return processedSrc;
+}
+
+async function createTransparentHeaderLogo(
+  src: string,
+  options: {
+    backgroundTransparent: boolean;
+    backgroundCutoff: number;
+    edgeSoftness: number;
+    foregroundWhite: boolean;
+    cropX: number;
+    cropY: number;
+    cropWidth: number;
+    cropHeight: number;
+  },
+): Promise<string> {
+  const image = await loadHeaderLogoImage(src);
+  const naturalWidth = image.naturalWidth || image.width;
+  const naturalHeight = image.naturalHeight || image.height;
+  if (naturalWidth <= 0 || naturalHeight <= 0) return src;
+
+  const cropX = Math.min(0.95, Math.max(0, options.cropX));
+  const cropY = Math.min(0.95, Math.max(0, options.cropY));
+  const cropWidth = Math.min(1 - cropX, Math.max(0.05, options.cropWidth));
+  const cropHeight = Math.min(1 - cropY, Math.max(0.05, options.cropHeight));
+  const sourceX = Math.round(naturalWidth * cropX);
+  const sourceY = Math.round(naturalHeight * cropY);
+  const sourceWidth = Math.max(1, Math.round(naturalWidth * cropWidth));
+  const sourceHeight = Math.max(1, Math.round(naturalHeight * cropHeight));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = sourceWidth;
+  canvas.height = sourceHeight;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) return src;
+
+  context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const cutoff = Math.min(1, Math.max(0.75, options.backgroundCutoff));
+  const softness = Math.min(0.2, Math.max(0, options.edgeSoftness));
+  const edge0 = Math.max(0, cutoff - softness);
+
+  for (let index = 0; index < data.length; index += 4) {
+    const alpha = data[index + 3];
+    if (alpha === 0) continue;
+
+    let nextAlpha = alpha;
+    if (options.backgroundTransparent) {
+      const red = data[index];
+      const green = data[index + 1];
+      const blue = data[index + 2];
+      const minChannel = Math.min(red, green, blue) / 255;
+      const maxChannel = Math.max(red, green, blue) / 255;
+      const saturation = maxChannel - minChannel;
+      const backgroundSignal = Math.min(
+        1,
+        Math.max(0, minChannel - saturation * 0.25),
+      );
+      const backgroundAmount = smoothStep(edge0, cutoff, backgroundSignal);
+      nextAlpha = Math.round(alpha * (1 - backgroundAmount));
+      data[index + 3] = nextAlpha;
+    }
+
+    if (options.foregroundWhite && nextAlpha > 0) {
+      data[index] = 255;
+      data[index + 1] = 255;
+      data[index + 2] = 255;
+    }
+  }
+
+  context.putImageData(imageData, 0, 0);
+  return canvas.toDataURL("image/png");
+}
+
+function loadHeaderLogoImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => resolve(image);
+    image.onerror = () =>
+      reject(new Error(`Failed to load editor header logo: ${src}`));
+    image.src = src;
+  });
 }
 
 function sceneTargetLayerId(targetId: string): string | null {
@@ -210,6 +429,16 @@ const stackStyle: React.CSSProperties = {
   boxSizing: "border-box",
 };
 
+const saveFooterStyle: React.CSSProperties = {
+  flex: "none",
+  display: "flex",
+  justifyContent: "flex-end",
+  alignItems: "center",
+  padding: `8px ${EDITOR_SECTION_MARGIN_X + EDITOR_PILL_TEXT_INSET_PX}px 14px`,
+  boxSizing: "border-box",
+  background: "transparent",
+};
+
 const previewLensBackdropStyle: React.CSSProperties = {
   position: "absolute",
   inset: 0,
@@ -244,18 +473,18 @@ const previewLensButtonStyle: React.CSSProperties = {
 // This file decides which top-level bars exist and in what order.
 //
 // The current top-level sections are created near the bottom of EditorRoot:
-// - Page Manager   -> PagePanel
-// - Camera Dynamics -> DynamicCameraPanel
-// - Sections & Cropping -> LayerPanel(section="sectionsCropping")
-// - FORGE/Public Data -> LayerPanel(section="public")
-// - Customer Data  -> LayerPanel(section="customer")
-// - Page GUI       -> OverlayPanel
+// - Pages      -> PagePanel
+// - Cinematics -> global render/UI controls and page camera dynamics
+// - Sections   -> LayerPanel(section="sectionsCropping")
+// - Topo       -> LayerPanel(section="publicTopo")
+// - Forge/Data -> LayerPanel(section="public")
+// - Cards      -> OverlayPanel
 //
 // To rename the main bars, change the `title` prop on CollapsibleSection.
 // To change the visual style of those bars, go to styles.ts and edit
 // `frostedHeading` or `panelStyles.collapsibleHeader`.
 //
-// The top app strip with project name and Save is `headerStyle`.
+// The top app strip with the project name is `headerStyle`.
 // It is intentionally separate from the collapsible heading bars.
 interface Props {
   sceneHandle: SceneHandle;
@@ -272,7 +501,7 @@ export function EditorRoot({
     state,
     togglePresenterMode,
     commitPending,
-    selectPage,
+    setEnvScene,
     setPageField,
     capturePoseForPage,
     setEnvLayerStyle,
@@ -288,6 +517,7 @@ export function EditorRoot({
   const [publicDataOpenSignal, setPublicDataOpenSignal] = useState(0);
   const [publicTopoOpenSignal, setPublicTopoOpenSignal] = useState(0);
   const [sectionsRevealOpenSignal, setSectionsRevealOpenSignal] = useState(0);
+  const [devModeEnabled, setDevModeEnabled] = useState(false);
   const [sceneRevealTargetId, setSceneRevealTargetId] = useState<string | null>(
     null,
   );
@@ -319,8 +549,241 @@ export function EditorRoot({
   );
   const sceneRevealScrollBehavior =
     cameraFocusSettings.revealScrollBehavior === "auto" ? "auto" : "smooth";
+  const editorChromeSettings = state.environment.scene?.gui?.editor ?? {};
+  const editorUiScale = clampEditorNumber(
+    editorChromeSettings.uiScale,
+    EDITOR_DEFAULT_UI_SCALE,
+    0.6,
+    1.25,
+  );
+  const editorPanelWidth = clampEditorNumber(
+    editorChromeSettings.panelWidthPx,
+    SIDEBAR_WIDTH,
+    360,
+    760,
+  );
+  const editorPanelMargin = clampEditorNumber(
+    editorChromeSettings.panelMarginPx,
+    FLOATING_PANEL_MARGIN,
+    8,
+    120,
+  );
+  const editorPanelBottomSafe = clampEditorNumber(
+    editorChromeSettings.panelBottomSafePx,
+    BOTTOM_HUD_SAFE_ZONE,
+    40,
+    260,
+  );
+  const editorPanelCornerRadius =
+    editorChromeSettings.panelCornerRadiusPx === undefined
+      ? undefined
+      : clampEditorNumber(
+          editorChromeSettings.panelCornerRadiusPx,
+          EDITOR_DEFAULT_OUTER_RADIUS_PX,
+          6,
+          64,
+        );
+  const editorHeaderHeight = clampEditorNumber(
+    editorChromeSettings.headerHeightPx,
+    54,
+    36,
+    180,
+  );
+  const editorHeaderFontSize = clampEditorNumber(
+    editorChromeSettings.headerFontSizePx,
+    18,
+    12,
+    24,
+  );
+  const editorHeaderGap = clampEditorNumber(
+    editorChromeSettings.headerGapPx,
+    16,
+    0,
+    40,
+  );
+  const editorHeaderLogoPath = editorChromeSettings.headerLogoPath ?? "";
+  const editorHeaderLogoSrc = editorHeaderLogoPath
+    ? editorHeaderLogoPath.startsWith("/")
+      ? editorHeaderLogoPath
+      : `/${editorHeaderLogoPath}`
+    : null;
+  const editorHeaderLogoVisible =
+    Boolean(editorHeaderLogoSrc) && editorChromeSettings.headerLogoVisible !== false;
+  const editorHeaderLogoSize = clampEditorNumber(
+    editorChromeSettings.headerLogoSizePx,
+    24,
+    10,
+    160,
+  );
+  const editorHeaderLogoGap = clampEditorNumber(
+    editorChromeSettings.headerLogoGapPx,
+    10,
+    0,
+    28,
+  );
+  const editorHeaderLogoPaddingTop = clampEditorNumber(
+    editorChromeSettings.headerLogoPaddingTopPx,
+    0,
+    0,
+    80,
+  );
+  const editorHeaderLogoPaddingRight = clampEditorNumber(
+    editorChromeSettings.headerLogoPaddingRightPx,
+    0,
+    0,
+    80,
+  );
+  const editorHeaderLogoPaddingBottom = clampEditorNumber(
+    editorChromeSettings.headerLogoPaddingBottomPx,
+    0,
+    0,
+    80,
+  );
+  const editorHeaderLogoPaddingLeft = clampEditorNumber(
+    editorChromeSettings.headerLogoPaddingLeftPx,
+    0,
+    0,
+    80,
+  );
+  const editorHeaderLogoOpacity = clampEditorNumber(
+    editorChromeSettings.headerLogoOpacity,
+    0.92,
+    0,
+    1,
+  );
+  const editorHeaderLogoBackgroundTransparent =
+    editorChromeSettings.headerLogoBackgroundTransparent === true;
+  const editorHeaderLogoBackgroundCutoff = clampEditorNumber(
+    editorChromeSettings.headerLogoBackgroundCutoff,
+    0.93,
+    0.75,
+    1,
+  );
+  const editorHeaderLogoEdgeSoftness = clampEditorNumber(
+    editorChromeSettings.headerLogoEdgeSoftness,
+    0.06,
+    0,
+    0.2,
+  );
+  const editorHeaderLogoForegroundWhite =
+    editorChromeSettings.headerLogoForegroundWhite !== false;
+  const editorHeaderLogoCropX = clampEditorNumber(
+    editorChromeSettings.headerLogoCropX,
+    0,
+    0,
+    0.95,
+  );
+  const editorHeaderLogoCropY = clampEditorNumber(
+    editorChromeSettings.headerLogoCropY,
+    0,
+    0,
+    0.95,
+  );
+  const editorHeaderLogoCropWidth = clampEditorNumber(
+    editorChromeSettings.headerLogoCropWidth,
+    1,
+    0.05,
+    1,
+  );
+  const editorHeaderLogoCropHeight = clampEditorNumber(
+    editorChromeSettings.headerLogoCropHeight,
+    1,
+    0.05,
+    1,
+  );
+  const editorHeaderTitleVisible =
+    editorChromeSettings.headerTitleVisible !== false;
+  const editorSectionMarginX = clampEditorNumber(
+    editorChromeSettings.sectionMarginXPx,
+    EDITOR_SECTION_MARGIN_X,
+    0,
+    40,
+  );
+  const editorSectionGapY = clampEditorNumber(
+    editorChromeSettings.sectionGapYPx,
+    EDITOR_SECTION_GAP_Y,
+    0,
+    32,
+  );
+  const editorTopBarBottomGap = clampEditorNumber(
+    editorChromeSettings.topBarBottomGapPx,
+    6,
+    0,
+    24,
+  );
+  const editorContainerGap = clampEditorNumber(
+    editorChromeSettings.containerGapPx,
+    14,
+    0,
+    32,
+  );
+  const editorContainerBodyIndent = clampEditorNumber(
+    editorChromeSettings.containerBodyIndentPx,
+    28,
+    0,
+    72,
+  );
+  const editorContainerAlign =
+    editorChromeSettings.containerAlignItems ?? "center";
+  const editorContainerJustify =
+    editorChromeSettings.containerJustifyContent ?? "space-between";
+  const editorBarRadius = clampEditorNumber(
+    editorChromeSettings.barRadiusPx,
+    EDITOR_FULL_RADIUS,
+    0,
+    EDITOR_FULL_RADIUS,
+  );
+  const editorTopBarHeight = clampEditorNumber(
+    editorChromeSettings.topBarHeightPx,
+    44,
+    32,
+    72,
+  );
+  const editorNestedBarHeight = clampEditorNumber(
+    editorChromeSettings.nestedBarHeightPx,
+    42,
+    30,
+    68,
+  );
+  const editorPillTextInset = clampEditorNumber(
+    editorChromeSettings.pillTextInsetPx,
+    EDITOR_PILL_TEXT_INSET_PX,
+    8,
+    40,
+  );
+  const editorPageListIndent = clampEditorNumber(
+    editorChromeSettings.pageListIndentPx,
+    EDITOR_PAGE_LIST_INDENT_X,
+    0,
+    48,
+  );
+  const editorScrollEndPadding = clampEditorNumber(
+    editorChromeSettings.scrollEndPaddingPx,
+    EDITOR_SCROLL_END_PADDING_Y,
+    0,
+    96,
+  );
+  const editorSaveFooterGap = clampEditorNumber(
+    editorChromeSettings.saveFooterGapPx,
+    8,
+    0,
+    64,
+  );
+  const editorSliderTrackHeight = clampEditorNumber(
+    editorChromeSettings.sliderTrackHeightPx,
+    8,
+    3,
+    18,
+  );
+  const editorSliderThumbSize = clampEditorNumber(
+    editorChromeSettings.sliderThumbSizePx,
+    20,
+    8,
+    34,
+  );
   const editorScrollStyle = {
     ...stackStyle,
+    paddingBottom: editorScrollEndPadding,
     "--editor-pulse-pill-ms": `${clampEditorNumber(
       cameraFocusSettings.pulsePillMs,
       DEFAULT_PULSE_PILL_MS,
@@ -342,8 +805,7 @@ export function EditorRoot({
   } as React.CSSProperties;
   const globalSettingsSelected = state.selectedPageId === ENVIRONMENT_SENTINEL;
   const isCaseStudyB = state.projectSlug === "case-study-b";
-  const publicDataTitle =
-    state.projectSlug === "utah-forge" ? "FORGE Data" : "Public Data";
+  const publicDataTitle = state.projectSlug === "utah-forge" ? "Forge" : "Data";
   const hasPublicTopoMap = topoMapLayerIds(state.manifest.layers).length > 0;
   const hasSectionsCropping = state.projectSlug === "utah-forge";
   const selectedPageEnvironment = selectedPage
@@ -400,6 +862,60 @@ export function EditorRoot({
       : null;
   const editorShellStyle = editorShellStyleFromGui(
     state.environment.scene?.gui,
+  );
+  const editorChromeVars = {
+    "--editor-section-margin-x": `${editorSectionMarginX}px`,
+    "--editor-section-gap-y": `${editorSectionGapY}px`,
+    "--editor-top-bar-bottom-gap": `${editorTopBarBottomGap}px`,
+    "--editor-container-gap": `${editorContainerGap}px`,
+    "--editor-container-body-indent": `${editorContainerBodyIndent}px`,
+    "--editor-container-align": editorContainerAlign,
+    "--editor-container-justify": editorContainerJustify,
+    "--editor-bar-radius": `${editorBarRadius}px`,
+    "--editor-top-bar-height": `${editorTopBarHeight}px`,
+    "--editor-nested-bar-height": `${editorNestedBarHeight}px`,
+    "--editor-pill-text-inset": `${editorPillTextInset}px`,
+    "--editor-page-list-indent": `${editorPageListIndent}px`,
+    "--editor-slider-track-height": `${editorSliderTrackHeight}px`,
+    "--editor-slider-thumb-size": `${editorSliderThumbSize}px`,
+  } as React.CSSProperties;
+  const resolvedSidebarStyle = {
+    ...sidebarStyle,
+    ...editorShellStyle,
+    ...editorChromeVars,
+    width: editorPanelWidth,
+    maxHeight: `calc(100vh - ${editorPanelMargin + editorPanelBottomSafe}px)`,
+    transform: `scale(${editorUiScale})`,
+    transformOrigin: "top left",
+    ...(editorPanelCornerRadius !== undefined
+      ? { borderRadius: editorPanelCornerRadius }
+      : {}),
+  } as React.CSSProperties;
+  const resolvedHeaderStyle = {
+    ...headerStyle,
+    minHeight: editorHeaderHeight,
+    padding: `0 ${editorSectionMarginX + editorPillTextInset}px`,
+    fontSize: editorHeaderFontSize,
+    gap: editorHeaderGap,
+  } as React.CSSProperties;
+  const resolvedSaveFooterStyle = {
+    ...saveFooterStyle,
+    padding: `${editorSaveFooterGap}px ${editorSectionMarginX + editorPillTextInset}px 14px`,
+  } as React.CSSProperties;
+  const patchEditorChrome = useCallback(
+    (patch: EditorChromeSettings) => {
+      const gui = state.environment.scene?.gui ?? {};
+      setEnvScene({
+        gui: {
+          ...gui,
+          editor: {
+            ...(gui.editor ?? {}),
+            ...patch,
+          },
+        },
+      });
+    },
+    [setEnvScene, state.environment.scene?.gui],
   );
   const enterPreview = useCallback(() => {
     if (!state.presenterMode && isCaseStudyB) {
@@ -670,27 +1186,54 @@ export function EditorRoot({
 
   const clampPanelPosition = useCallback((position: PanelPosition) => {
     const panel = panelRef.current;
-    const panelWidth = panel?.offsetWidth ?? SIDEBAR_WIDTH;
+    const panelWidth = panel?.offsetWidth ?? editorPanelWidth;
     const panelHeight =
       panel?.offsetHeight ??
       Math.min(
         760,
-        window.innerHeight - FLOATING_PANEL_MARGIN - BOTTOM_HUD_SAFE_ZONE,
+        window.innerHeight - editorPanelMargin - editorPanelBottomSafe,
       );
     const maxX = Math.max(
-      FLOATING_PANEL_MARGIN,
-      window.innerWidth - panelWidth - FLOATING_PANEL_MARGIN,
+      editorPanelMargin,
+      window.innerWidth - panelWidth - editorPanelMargin,
     );
     const maxY = Math.max(
-      FLOATING_PANEL_MARGIN,
-      window.innerHeight - panelHeight - BOTTOM_HUD_SAFE_ZONE,
+      editorPanelMargin,
+      window.innerHeight - panelHeight - editorPanelBottomSafe,
     );
 
     return {
-      x: Math.min(Math.max(FLOATING_PANEL_MARGIN, position.x), maxX),
-      y: Math.min(Math.max(FLOATING_PANEL_MARGIN, position.y), maxY),
+      x: Math.min(Math.max(editorPanelMargin, position.x), maxX),
+      y: Math.min(Math.max(editorPanelMargin, position.y), maxY),
     };
-  }, []);
+  }, [editorPanelBottomSafe, editorPanelMargin, editorPanelWidth]);
+
+  useEffect(() => {
+    setPanelPosition((position) => clampPanelPosition(position));
+  }, [clampPanelPosition]);
+
+  useEffect(() => {
+    const hasAuthoredPosition =
+      typeof editorChromeSettings.panelLeftPx === "number" ||
+      typeof editorChromeSettings.panelTopPx === "number";
+    if (!hasAuthoredPosition) return;
+    setPanelPosition((position) =>
+      clampPanelPosition({
+        x:
+          typeof editorChromeSettings.panelLeftPx === "number"
+            ? editorChromeSettings.panelLeftPx
+            : position.x,
+        y:
+          typeof editorChromeSettings.panelTopPx === "number"
+            ? editorChromeSettings.panelTopPx
+            : position.y,
+      }),
+    );
+  }, [
+    clampPanelPosition,
+    editorChromeSettings.panelLeftPx,
+    editorChromeSettings.panelTopPx,
+  ]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -804,8 +1347,7 @@ export function EditorRoot({
       <div
         ref={panelRef}
         style={{
-          ...sidebarStyle,
-          ...editorShellStyle,
+          ...resolvedSidebarStyle,
           left: panelPosition.x,
           top: panelPosition.y,
         }}
@@ -814,31 +1356,62 @@ export function EditorRoot({
       >
         <div
           style={{
-            ...headerStyle,
-            cursor: dragging ? "grabbing" : headerStyle.cursor,
+            ...resolvedHeaderStyle,
+            cursor: dragging ? "grabbing" : resolvedHeaderStyle.cursor,
           }}
           onPointerDown={onDragStart}
           onPointerMove={onDragMove}
           onPointerUp={onDragEnd}
           onPointerCancel={onDragEnd}
           data-dev-source="src/editor/EditorRoot.tsx:38"
-          data-dev-note="headerStyle controls the draggable top strip with project name and Save."
+          data-dev-note="headerStyle controls the draggable top strip with project name."
         >
           <div
             style={{
               flex: 1,
               minWidth: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: editorHeaderLogoVisible ? editorHeaderLogoGap : 0,
               overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
               fontWeight: 500,
               color: vibrancyLabel,
             }}
             title={state.manifest.name}
           >
-            {state.manifest.name}
+            {editorHeaderLogoVisible && editorHeaderLogoSrc && (
+              <EditorHeaderLogo
+                src={editorHeaderLogoSrc}
+                sizePx={editorHeaderLogoSize}
+                logoPaddingTopPx={editorHeaderLogoPaddingTop}
+                logoPaddingRightPx={editorHeaderLogoPaddingRight}
+                logoPaddingBottomPx={editorHeaderLogoPaddingBottom}
+                logoPaddingLeftPx={editorHeaderLogoPaddingLeft}
+                opacity={editorHeaderLogoOpacity}
+                backgroundTransparent={editorHeaderLogoBackgroundTransparent}
+                backgroundCutoff={editorHeaderLogoBackgroundCutoff}
+                edgeSoftness={editorHeaderLogoEdgeSoftness}
+                foregroundWhite={editorHeaderLogoForegroundWhite}
+                cropX={editorHeaderLogoCropX}
+                cropY={editorHeaderLogoCropY}
+                cropWidth={editorHeaderLogoCropWidth}
+                cropHeight={editorHeaderLogoCropHeight}
+              />
+            )}
+            {editorHeaderTitleVisible && (
+              <span
+                data-editor-header-title="true"
+                style={{
+                  minWidth: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {state.manifest.name}
+              </span>
+            )}
           </div>
-          <SaveButton />
         </div>
 
         <AudienceLensControls
@@ -851,31 +1424,35 @@ export function EditorRoot({
           className="editor-sidebar-scroll"
           style={editorScrollStyle}
           data-dev-source="src/editor/EditorRoot.tsx:50"
+          data-dev-container="true"
+          data-dev-container-type="editor-section-stack"
+          data-dev-container-name="Section stack"
+          data-dev-container-scope="EditorRoot / stackStyle / scrollEndPaddingPx"
+          data-dev-padding-source="src/editor/EditorRoot.tsx:50"
           data-dev-note="stackStyle controls the scrollable sidebar content; global.css hides this scrollbar."
         >
-          <CollapsibleSection title="Page Manager">
+          <CollapsibleSection title="Pages">
             <PagePanel sceneHandle={sceneHandle} />
           </CollapsibleSection>
           <CollapsibleSection
-            title="Visual Studio"
-            accentColor={globalSettingsSelected ? globalSettingsAccent : null}
-            onActivate={() => selectPage(ENVIRONMENT_SENTINEL)}
+            title="Cinematics"
+            accentColor={
+              globalSettingsSelected ? globalSettingsAccent : selectedPageAccent
+            }
           >
             <VisualStudioPanel accentColor={globalSettingsAccent} />
-          </CollapsibleSection>
-          <CollapsibleSection
-            title="UI"
-            accentColor={globalSettingsSelected ? globalSettingsAccent : null}
-            onActivate={() => selectPage(ENVIRONMENT_SENTINEL)}
-          >
-            <UiSettingsPanel accentColor={globalSettingsAccent} />
-          </CollapsibleSection>
-          {selectedPage && (
-            <CollapsibleSection
-              title="Camera Dynamics"
-              accentColor={selectedPageAccent}
-              closeSignal={selectedPage.id}
-            >
+            <UiSettingsPanel
+              accentColor={globalSettingsAccent}
+              devModeEnabled={devModeEnabled}
+              onDevModeChange={setDevModeEnabled}
+            />
+            {selectedPage && (
+              <PageRenderPresetPanel
+                page={selectedPage}
+                accentColor={selectedPageAccent}
+              />
+            )}
+            {selectedPage && (
               <DynamicCameraPanel
                 page={selectedPage}
                 sceneHandle={sceneHandle}
@@ -889,11 +1466,11 @@ export function EditorRoot({
                   selectedPageHasLanded ? 0.368 : 0.192,
                 )}
               />
-            </CollapsibleSection>
-          )}
+            )}
+          </CollapsibleSection>
           {hasSectionsCropping && (
             <CollapsibleSection
-              title="Sections & Cropping"
+              title="Sections"
               openSignal={
                 sectionsCroppingActiveSignal && sectionsRevealOpenSignal > 0
                   ? `${sectionsCroppingActiveSignal}:${sectionsRevealOpenSignal}`
@@ -913,7 +1490,7 @@ export function EditorRoot({
           )}
           {hasPublicTopoMap && (
             <CollapsibleSection
-              title="Public Topo Map"
+              title="Topo"
               openSignal={
                 publicTopoOpenSignal > 0 ? publicTopoOpenSignal : undefined
               }
@@ -934,13 +1511,30 @@ export function EditorRoot({
             <LayerPanel section="public" revealTargetId={sceneRevealTargetId} />
           </CollapsibleSection>
           <CollapsibleSection
-            title="Overlay Box Manager"
+            title="Cards"
             accentColor={selectedPageAccent}
           >
             <OverlayPanel />
           </CollapsibleSection>
         </div>
-        <DevModeInspector />
+        <div
+          style={resolvedSaveFooterStyle}
+          data-dev-source="src/editor/EditorRoot.tsx:save-footer"
+          data-dev-container="true"
+          data-dev-container-type="editor-save-footer"
+          data-dev-container-name="Save footer"
+          data-dev-container-scope="EditorRoot / saveFooterStyle / saveFooterGapPx"
+          data-dev-padding-source="src/editor/EditorRoot.tsx:save-footer"
+          data-dev-note="saveFooterStyle docks the project Save control under the Cards section at the bottom of the editor panel."
+        >
+          <SaveButton />
+        </div>
+        <DevModeInspector
+          enabled={devModeEnabled}
+          onEnabledChange={setDevModeEnabled}
+          editorSettings={editorChromeSettings}
+          onEditorSettingsChange={patchEditorChrome}
+        />
       </div>
       <FloatingPreviewToggle
         presenterMode={state.presenterMode}

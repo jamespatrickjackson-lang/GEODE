@@ -100,7 +100,27 @@
       "labelFillOpacity": 0.74,
       "labelPointerVisible": true,
       "labelFadeNearM": 20000,
-      "labelFadeFarM": 120000
+      "labelFadeFarM": 120000,
+      "demoBoreholeSourceLocations": {
+        "items": {
+          "58-32-WELL": {
+            "visible": true
+          },
+          "BOR2": {
+            "visible": false
+          }
+        },
+        "mode": "line",
+        "opacity": 0.75,
+        "topRingVisible": true,
+        "color": "#ffffff",
+        "topRingTubeM": 27,
+        "topRingRadiusM": 195,
+        "lineWidth": 3,
+        "labelLiftM": 145,
+        "topRingOpacity": 0.63
+      },
+      "opacity": 1
     },
     "utah-forge-site-boundary": {
       "color": "#4dfcff",
@@ -154,7 +174,7 @@
     },
     "utah-forge-topo-graticule": {
       "color": "#5e5e5e",
-      "opacity": 0.85,
+      "opacity": 0.78,
       "lineWidth": 5.25,
       "graticuleLabelVisible": true,
       "graticuleLabelSizeM": 26000,
@@ -601,22 +621,19 @@
     }
   },
   "defaultVisibleLayers": [
-    "utah-forge-topo-graticule",
     "utah-forge-site-boundary",
+    "terrain",
     "utah-forge-phase3-demo-boreholes",
-    "utah-forge-mt-resistivity-volume",
-    "utah-forge-mt-resistivity-full-density",
-    "utah-forge-mt-stations",
-    "terrain"
+    "utah-forge-mt-resistivity-full-density"
   ],
   "scene": {
     "background": "#383838",
     "toneMapping": "aces",
-    "exposure": 1.08,
+    "exposure": 1.2,
     "shadows": false,
     "sun": {
       "azimuth": 284,
-      "elevation": 30,
+      "elevation": 29,
       "lockToCamera": false
     },
     "fog": {
@@ -631,7 +648,7 @@
       "farOpacity": 0.42
     },
     "camera": {
-      "fov": 52
+      "fov": 57
     },
     "lighting": {
       "enabled": true,
@@ -731,16 +748,16 @@
         {
           "id": "naip-2024-aerial",
           "label": "NAIP 2024 Aerial Image",
-          "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_4096.webp",
-          "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_8192.webp",
+          "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp",
+          "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp",
           "textureBudget": 4096,
           "format": "webp",
           "hasAlpha": true,
           "bounds": [
-            231115.8,
-            4220376,
-            385650,
-            4279999.8
+            229069.2,
+            4144854,
+            484164,
+            4414308
           ],
           "attribution": "USDA Farm Production and Conservation - Business Center, Geospatial Enterprise Operations; UGRC Raster Data Discovery",
           "provenancePath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/manifest.json",
@@ -772,21 +789,21 @@
           ]
         }
       ],
-      "orthoPhotoTextureBudget": 8192,
-      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_8192.webp",
-      "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_4096.webp",
-      "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_8192.webp",
+      "orthoPhotoTextureBudget": 4096,
+      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp",
+      "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp",
+      "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp",
       "orthoPhotoBounds": [
-        231115.8,
-        4220376,
-        385650,
-        4279999.8
+        229069.2,
+        4144854,
+        484164,
+        4414308
       ],
       "orthoPhotoOpacity": 1,
-      "orthoPhotoHillshadeBlend": 0,
-      "orthoPhotoBrightness": 0,
-      "orthoPhotoContrast": 1,
-      "orthoPhotoSaturation": 1.4,
+      "orthoPhotoHillshadeBlend": 0.12,
+      "orthoPhotoBrightness": 0.08,
+      "orthoPhotoContrast": 1.28,
+      "orthoPhotoSaturation": 1.18,
       "topoMapBranding": {
         "visible": true,
         "logoPath": "projects/utah-forge/branding/UtahFORGE-logo-updated2025-website-black-7015x1482-1-610x129.png",
@@ -834,7 +851,8 @@
       "surfaceElevationColorBlend": 0.92,
       "surfaceElevationReverse": false,
       "edgeTopShine": 0,
-      "verticalExaggeration": 3.25
+      "verticalExaggeration": 3.25,
+      "edgeOutlineEnabled": true
     },
     "gui": {
       "overlay": {
@@ -971,7 +989,34 @@
           }
         }
       ],
-      "activeOverlayStyleId": "overlay-style-1"
+      "activeOverlayStyleId": "overlay-style-1",
+      "editor": {
+        "headerLogoPath": "projects/utah-forge/brand/editor-FORGE_logo_color_RGB_resize_2500.jpg",
+        "headerLogoVisible": true,
+        "headerLogoSizePx": 114,
+        "headerLogoGapPx": 11,
+        "headerLogoOpacity": 0.9,
+        "headerLogoCropX": 0.15,
+        "headerLogoCropWidth": 0.7,
+        "headerLogoCropHeight": 0.48,
+        "headerLogoCropY": 0.15,
+        "headerLogoBackgroundTransparent": true,
+        "headerLogoForegroundWhite": false,
+        "headerLogoBackgroundCutoff": 0.75,
+        "headerTitleVisible": false,
+        "headerLogoPaddingTopPx": 12,
+        "headerLogoPaddingRightPx": 0,
+        "headerLogoPaddingBottomPx": 0,
+        "headerLogoPaddingLeftPx": 2,
+        "headerLogoEdgeSoftness": 0.16,
+        "uiScale": 0.95,
+        "pillTextInsetPx": 25,
+        "containerGapPx": 21,
+        "pageListIndentPx": 41,
+        "containerBodyIndentPx": 28,
+        "scrollEndPaddingPx": 6,
+        "saveFooterGapPx": 9
+      }
     },
     "vignette": {
       "strength": 0.95,
@@ -979,6 +1024,12 @@
     },
     "ambientOcclusion": {
       "enabled": true
+    },
+    "cameraFocus": {
+      "durationMs": 3300,
+      "sameTargetZoomFactor": 0.7,
+      "scrollSettleMs": 480,
+      "pulsePillMs": 720
     }
   },
   "customRenderPresets": [
@@ -1649,7 +1700,7 @@
         },
         "sun": {
           "azimuth": 284,
-          "elevation": 30,
+          "elevation": 29,
           "lockToCamera": false
         },
         "lighting": {
@@ -1788,16 +1839,16 @@
             {
               "id": "naip-2024-aerial",
               "label": "NAIP 2024 Aerial Image",
-              "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_4096.webp",
-              "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_8192.webp",
+              "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp",
+              "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp",
               "textureBudget": 4096,
               "format": "webp",
               "hasAlpha": true,
               "bounds": [
-                231115.8,
-                4220376,
-                385650,
-                4279999.8
+                229069.2,
+                4144854,
+                484164,
+                4414308
               ],
               "attribution": "USDA Farm Production and Conservation - Business Center, Geospatial Enterprise Operations; UGRC Raster Data Discovery",
               "provenancePath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/manifest.json",
@@ -1837,7 +1888,7 @@
           "farOpacity": 0.42
         },
         "toneMapping": "aces",
-        "exposure": 1.08,
+        "exposure": 1.2,
         "bloom": {
           "strength": 0,
           "radius": 0.55,
@@ -1985,7 +2036,34 @@
               }
             }
           ],
-          "activeOverlayStyleId": "overlay-style-1"
+          "activeOverlayStyleId": "overlay-style-1",
+          "editor": {
+            "headerLogoPath": "projects/utah-forge/brand/editor-FORGE_logo_color_RGB_resize_2500.jpg",
+            "headerLogoVisible": true,
+            "headerLogoSizePx": 114,
+            "headerLogoGapPx": 11,
+            "headerLogoOpacity": 0.9,
+            "headerLogoCropX": 0.15,
+            "headerLogoCropWidth": 0.7,
+            "headerLogoCropHeight": 0.48,
+            "headerLogoCropY": 0.15,
+            "headerLogoBackgroundTransparent": true,
+            "headerLogoForegroundWhite": false,
+            "headerLogoBackgroundCutoff": 0.75,
+            "headerTitleVisible": false,
+            "headerLogoPaddingTopPx": 12,
+            "headerLogoPaddingRightPx": 0,
+            "headerLogoPaddingBottomPx": 0,
+            "headerLogoPaddingLeftPx": 2,
+            "headerLogoEdgeSoftness": 0.16,
+            "uiScale": 0.95,
+            "pillTextInsetPx": 25,
+            "containerGapPx": 21,
+            "pageListIndentPx": 41,
+            "containerBodyIndentPx": 28,
+            "scrollEndPaddingPx": 6,
+            "saveFooterGapPx": 9
+          }
         }
       },
       "layerStylePatchesByLayerId": {
@@ -2189,7 +2267,7 @@
           "sceneSectionWindowActiveAxis": "x"
         },
         "utah-forge-topo-graticule": {
-          "opacity": 0.85,
+          "opacity": 0.78,
           "color": "#5e5e5e",
           "graticuleEdgeFadeAware": true,
           "graticuleLiftM": 228,
@@ -2271,7 +2349,28 @@
               "toeLabelLiftM": 40
             }
           },
-          "showLabels": true
+          "showLabels": true,
+          "demoBoreholeSourceLocations": {
+            "items": {
+              "58-32-WELL": {
+                "visible": true
+              },
+              "BOR2": {
+                "visible": false
+              }
+            },
+            "mode": "line",
+            "opacity": 0.75,
+            "topRingVisible": true,
+            "color": "#ffffff",
+            "topRingTubeM": 27,
+            "topRingRadiusM": 195,
+            "lineWidth": 3,
+            "labelLiftM": 145,
+            "topRingOpacity": 0.63
+          },
+          "opacity": 1,
+          "labelPointerVisible": true
         },
         "utah-forge-mt-stations": {
           "opacity": 1,

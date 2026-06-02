@@ -169,9 +169,9 @@ export function applyEnvironment(this: any, environment: EnvironmentSetup): void
   this.baseExposure = sp.exposure ?? 1.0;
   this.renderer.toneMappingExposure = this.baseExposure;
 
-  // ---- background -- the universal "fade to" color -------------------
-  // Renderer clear color and fog share this so terrain dissolves into
-  // the same value visible at every screen edge. lightMode overrides
+  // ---- background ------------------------------------------------------
+  // Renderer clear color remains independently authored from fog tint.
+  // lightMode overrides
   // the authored value with a neutral grey so the whole frame reads
   // as light/grey rather than warm/dark.
   const lightMode = sp.lightMode === true;
@@ -308,9 +308,8 @@ export function applyEnvironment(this: any, environment: EnvironmentSetup): void
     this.scene.fog = null;
     this.envFog = null;
   }
-  // Fog color matches background so terrain dissolves into the same
-  // tone as the surrounding frame. Density tuned so the far edge of
-  // the 27x20 km terrain is lost in fog (reachable visibility ~12 km).
+  // Density tuned so the far edge of the terrain can dissolve before the
+  // tile edge while fog tint stays independently authorable.
   const fogColor = lightMode
     ? bgColor // fog matches lightMode background, ignoring authored fog tint
     : sp.fog?.color
@@ -324,9 +323,6 @@ export function applyEnvironment(this: any, environment: EnvironmentSetup): void
     const fog = new THREE.FogExp2(fogColor, density);
     this.scene.fog = fog;
     this.envFog = fog;
-    // Keep the renderer clear color in sync with fog if both diverged.
-    this.renderer.setClearColor(fogColor);
-    this.scene.background = fogColor;
   } else {
     this.scene.fog = null;
     this.envFog = null;

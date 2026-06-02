@@ -210,6 +210,10 @@ export function mergeSceneProperties(
         ...(base?.gui?.labels ?? {}),
         ...(patch.gui.labels ?? {}),
       },
+      editor: {
+        ...(base?.gui?.editor ?? {}),
+        ...(patch.gui.editor ?? {}),
+      },
     };
   }
   if (patch.lighting) {

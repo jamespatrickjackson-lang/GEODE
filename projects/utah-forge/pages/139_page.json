@@ -757,16 +757,16 @@
           {
             "id": "naip-2024-aerial",
             "label": "NAIP 2024 Aerial Image",
-            "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_4096.webp",
-            "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_8192.webp",
+            "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp",
+            "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp",
             "textureBudget": 4096,
             "format": "webp",
             "hasAlpha": true,
             "bounds": [
-              231115.8,
-              4220376,
-              385650,
-              4279999.8
+              229069.2,
+              4144854,
+              484164,
+              4414308
             ],
             "attribution": "USDA Farm Production and Conservation - Business Center, Geospatial Enterprise Operations; UGRC Raster Data Discovery",
             "provenancePath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/manifest.json",
@@ -799,14 +799,14 @@
           }
         ],
         "orthoPhotoTextureBudget": 8192,
-        "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_8192.webp",
-        "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_4096.webp",
-        "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_8192.webp",
+        "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp",
+        "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp",
+        "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp",
         "orthoPhotoBounds": [
-          231115.8,
-          4220376,
-          385650,
-          4279999.8
+          229069.2,
+          4144854,
+          484164,
+          4414308
         ],
         "orthoPhotoOpacity": 1,
         "orthoPhotoHillshadeBlend": 0.12,
@@ -1814,16 +1814,16 @@
               {
                 "id": "naip-2024-aerial",
                 "label": "NAIP 2024 Aerial Image",
-                "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_4096.webp",
-                "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_beauty_8192.webp",
+                "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp",
+                "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp",
                 "textureBudget": 4096,
                 "format": "webp",
                 "hasAlpha": true,
                 "bounds": [
-                  231115.8,
-                  4220376,
-                  385650,
-                  4279999.8
+                  229069.2,
+                  4144854,
+                  484164,
+                  4414308
                 ],
                 "attribution": "USDA Farm Production and Conservation - Business Center, Geospatial Enterprise Operations; UGRC Raster Data Discovery",
                 "provenancePath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/manifest.json",

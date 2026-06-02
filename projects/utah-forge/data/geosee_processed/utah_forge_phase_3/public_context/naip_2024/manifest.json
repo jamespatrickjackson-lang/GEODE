@@ -3,10 +3,16 @@
   "id": "naip-2024-aerial",
   "label": "NAIP 2024 Aerial Image",
   "source": {
-    "name": "NAIP 2024 Beaver County MrSID mosaic",
+    "name": "NAIP 2024 Beaver, Iron, Millard, Sanpete, and Sevier County MrSID mosaics",
     "provider": "USDA Farm Production and Conservation - Business Center, Geospatial Enterprise Operations",
     "distribution": "UGRC Raster Data Discovery",
-    "archivePath": "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Beaver/NAIP2024_Beaver.sid",
+    "archivePaths": [
+      "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Beaver/NAIP2024_Beaver.sid",
+      "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Iron/NAIP2024_Iron.sid",
+      "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Millard/NAIP2024_Millard.sid",
+      "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Sanpete/NAIP2024_Sanpete.sid",
+      "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Sevier/NAIP2024_Sevier.sid"
+    ],
     "collectionDate": "2024 summer",
     "license": "Public domain U.S. government work"
   },
@@ -29,38 +35,38 @@
     "note": "RGB bands drive the topo material color. The source alpha band identifies coverage/no-data and is used during preprocessing to fill and soften presentation gaps. The extra undefined band is recorded for future image-index materials."
   },
   "sourceBounds": [
-    231115.8,
-    4220376,
-    385650,
-    4279999.8
+    229069.2,
+    4144854,
+    484164,
+    4414308
   ],
   "aoi": {
-    "anchor": "Full available NAIP 2024 Beaver County MrSID extent",
+    "anchor": "Combined available NAIP 2024 Beaver, Iron, Millard, Sanpete, and Sevier County MrSID extents",
     "bounds": [
-      231115.8,
-      4220376,
-      385650,
-      4279999.8
+      229069.2,
+      4144854,
+      484164,
+      4414308
     ],
-    "widthM": 154534.2,
-    "heightM": 59623.8
+    "widthM": 255094.8,
+    "heightM": 269454
   },
   "variants": {
     "4096": {
-      "file": "naip_2024_beauty_4096.webp",
-      "width": 4096,
-      "height": 1580,
-      "resolutionMApprox": 37.73,
+      "file": "naip_2024_regional_4096.webp",
+      "width": 3878,
+      "height": 4096,
+      "resolutionMApprox": 65.78,
       "format": "webp",
       "hasAlpha": true,
       "quality": 94,
       "visualTreatment": "alpha-aware coverage fill and feather"
     },
     "8192": {
-      "file": "naip_2024_beauty_8192.webp",
-      "width": 8192,
-      "height": 3161,
-      "resolutionMApprox": 18.86,
+      "file": "naip_2024_regional_8192.webp",
+      "width": 7755,
+      "height": 8192,
+      "resolutionMApprox": 32.89,
       "format": "webp",
       "hasAlpha": true,
       "quality": 94,
@@ -69,12 +75,13 @@
   },
   "processing": {
     "tooling": "QGIS 3.44.10 OSGeo4W GDAL with MrSID driver; Python Pillow/NumPy coverage fill; WebP output",
-    "generator": "tools/generate-naip-beauty-assets.py",
+    "generator": "tools/generate-naip-regional-overview-assets.py; tools/generate-naip-beauty-assets.py",
     "commands": [
+      "python tools/generate-naip-regional-overview-assets.py",
       "python tools/generate-naip-beauty-assets.py"
     ],
     "notes": [
-      "Overview assets keep the full available MrSID extent but use alpha-aware color dilation and feathering so tile-shaped gaps do not dominate the presentation.",
+      "Regional overview assets keep the combined five-county MrSID extent but use alpha-aware color dilation and feathering so tile-shaped gaps do not dominate the presentation.",
       "The FORGE detail overlay is a native-resolution 0.6 m/px crop centered near well 68-32 and is feathered in the terrain shader.",
       "No Ortho photo pixels are composited into NAIP assets."
     ]

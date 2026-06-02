@@ -17,6 +17,7 @@ type BoxOverlayStyle = NonNullable<GuiProperties["overlay"]>;
 type NavigatorOverlayStyle = NonNullable<GuiProperties["navigator"]>;
 type BoxOverlayStylePreset = NonNullable<GuiProperties["overlayStyles"]>[number];
 type GuiLabelSettings = NonNullable<GuiProperties["labels"]>;
+type EditorChromeSettings = NonNullable<GuiProperties["editor"]>;
 type GuiLabelVisualStyle = NonNullable<
   NonNullable<GuiLabelSettings["styles"]>[keyof NonNullable<
     GuiLabelSettings["styles"]
@@ -28,7 +29,7 @@ type GuiLabelStyleKind = keyof NonNullable<GuiLabelSettings["styles"]>;
 //   - Sun azimuth, sun elevation (drives key light + terrain hillshade)
 //   - Exposure (overall brightness)
 //   - Fog density (how aggressively the frame dissolves)
-//   - Fog color (the universal "fade to" tone -- also the background)
+//   - Fog color (the atmospheric fade tone)
 //
 // The studio lighting rig exposes ambient/key/fill/rim values plus optional
 // movable source lights for checking scene-object lighting direction.
@@ -661,7 +662,16 @@ interface EnvironmentScenePanelProps {
   title?: string;
   onActivate?: () => void;
   accentColor?: string | null;
-  content?: "environment" | "lighting" | "terrain" | "overlay" | "labels" | "logo";
+  devModeEnabled?: boolean;
+  onDevModeChange?: (enabled: boolean) => void;
+  content?:
+    | "environment"
+    | "lighting"
+    | "terrain"
+    | "overlay"
+    | "labels"
+    | "logo"
+    | "editor";
   topSlot?: React.ReactNode;
 }
 
@@ -1448,17 +1458,11 @@ export function EnvironmentScenePanel({
                     type="color"
                     value={scene.fog?.color ?? scene.background ?? "#23252a"}
                     onChange={(e) => {
-                      // Updating fog color also updates background -- they must
-                      // stay in lockstep so the frame dissolves to a single tone.
                       setEnvScene({
                         fog: { ...(scene.fog ?? {}), color: e.target.value },
-                        background: e.target.value,
                       });
                     }}
                   />
-                  <span style={environmentTrailingTextStyle}>
-                    (also background)
-                  </span>
                 </Row>
               </div>
             </>
@@ -1939,6 +1943,8 @@ export function GuiSetupPanel({
   title = "Box Overlay Styles",
   onActivate,
   accentColor,
+  devModeEnabled = false,
+  onDevModeChange,
   content = "overlay",
 }: EnvironmentScenePanelProps) {
   const { state, setEnvScene } = useEditor();
@@ -1948,6 +1954,7 @@ export function GuiSetupPanel({
   const navigator = gui.navigator ?? {};
   const logo = gui.logo ?? {};
   const labels = gui.labels ?? {};
+  const editor = gui.editor ?? {};
   const overlayStyles = gui.overlayStyles ?? [];
   const firstOverlayStyle: BoxOverlayStylePreset = {
     id: "overlay-style-1",
@@ -2025,6 +2032,7 @@ export function GuiSetupPanel({
   const [open, setOpen] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [editorLogoCropOpen, setEditorLogoCropOpen] = useState(false);
 
   const setGui = (patch: NonNullable<SceneProperties["gui"]>) =>
     setEnvScene({ gui: { ...gui, ...patch } });
@@ -2051,6 +2059,33 @@ export function GuiSetupPanel({
   const setLogo = (
     patch: NonNullable<NonNullable<SceneProperties["gui"]>["logo"]>,
   ) => setGui({ logo: { ...logo, ...patch } });
+  const setEditor = (patch: EditorChromeSettings) =>
+    setGui({ editor: { ...editor, ...patch } });
+  const editorHeaderLogoSrc = editor.headerLogoPath
+    ? editor.headerLogoPath.startsWith("/")
+      ? editor.headerLogoPath
+      : `/${editor.headerLogoPath}`
+    : "";
+  const editorLogoCropX = cameraFocusNumber(editor.headerLogoCropX, 0, 0, 0.95);
+  const editorLogoCropY = cameraFocusNumber(editor.headerLogoCropY, 0, 0, 0.95);
+  const editorLogoCropWidth = cameraFocusNumber(
+    editor.headerLogoCropWidth,
+    1,
+    0.05,
+    1,
+  );
+  const editorLogoCropHeight = cameraFocusNumber(
+    editor.headerLogoCropHeight,
+    1,
+    0.05,
+    1,
+  );
+  const editorLogoCropBox = {
+    left: `${editorLogoCropX * 100}%`,
+    top: `${editorLogoCropY * 100}%`,
+    width: `${Math.min(1 - editorLogoCropX, editorLogoCropWidth) * 100}%`,
+    height: `${Math.min(1 - editorLogoCropY, editorLogoCropHeight) * 100}%`,
+  };
   const setLabels = (
     patch: NonNullable<NonNullable<SceneProperties["gui"]>["labels"]>,
   ) => {
@@ -2103,6 +2138,44 @@ export function GuiSetupPanel({
         y: logo.y ?? 0.025,
         width: logo.width ?? 0.14,
         opacity: logo.opacity ?? 0.92,
+      });
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const onEditorLogoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${state.projectRoot}/brand/editor-${safeName}`;
+      const base64 = arrayBufferToBase64(await file.arrayBuffer());
+      await writeFile(path, base64, { encoding: "base64" });
+      setEditor({
+        headerLogoPath: path,
+        headerLogoVisible: true,
+        headerLogoSizePx: editor.headerLogoSizePx ?? 24,
+        headerLogoGapPx: editor.headerLogoGapPx ?? 10,
+        headerLogoPaddingTopPx: editor.headerLogoPaddingTopPx ?? 0,
+        headerLogoPaddingRightPx: editor.headerLogoPaddingRightPx ?? 0,
+        headerLogoPaddingBottomPx: editor.headerLogoPaddingBottomPx ?? 0,
+        headerLogoPaddingLeftPx: editor.headerLogoPaddingLeftPx ?? 0,
+        headerLogoOpacity: editor.headerLogoOpacity ?? 0.92,
+        headerLogoBackgroundTransparent:
+          editor.headerLogoBackgroundTransparent ?? false,
+        headerLogoBackgroundCutoff: editor.headerLogoBackgroundCutoff ?? 0.93,
+        headerLogoEdgeSoftness: editor.headerLogoEdgeSoftness ?? 0.06,
+        headerLogoForegroundWhite: editor.headerLogoForegroundWhite ?? true,
+        headerLogoCropX: editor.headerLogoCropX ?? 0,
+        headerLogoCropY: editor.headerLogoCropY ?? 0,
+        headerLogoCropWidth: editor.headerLogoCropWidth ?? 1,
+        headerLogoCropHeight: editor.headerLogoCropHeight ?? 1,
       });
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : String(err));
@@ -2216,6 +2289,10 @@ export function GuiSetupPanel({
       style={environmentGroupStyle}
       onPointerDownCapture={onActivate}
       data-dev-source="src/editor/EnvironmentScenePanel.tsx:424"
+      data-dev-container="true"
+      data-dev-container-type="editor-tool-container"
+      data-dev-container-name={title}
+      data-dev-container-scope="EnvironmentScenePanel/GuiSetupPanel container"
       data-dev-note="GuiSetupPanel controls presenter overlay card aesthetics and client logo placement."
     >
       <button
@@ -2225,6 +2302,10 @@ export function GuiSetupPanel({
           accentColor,
         )}
         data-dev-source="src/editor/EnvironmentScenePanel.tsx:430"
+        data-dev-container="true"
+        data-dev-container-type="nested-section-header"
+        data-dev-container-name={title}
+        data-dev-container-scope="environmentHeadingStyle"
         data-dev-padding-source="src/editor/EnvironmentScenePanel.tsx:438"
         data-dev-note="environmentHeadingStyle controls the GUI Setup heading pill."
         aria-expanded={open}
@@ -2255,6 +2336,622 @@ export function GuiSetupPanel({
           data-dev-source="src/editor/EnvironmentScenePanel.tsx:460"
           data-dev-note="environmentBodyStyle controls indentation below GUI Setup."
         >
+          {content === "editor" && (
+            <>
+              <Row label="Dev mode">
+                <label style={panelStyles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={devModeEnabled}
+                    onChange={(e) => onDevModeChange?.(e.target.checked)}
+                  />
+                </label>
+              </Row>
+              <div style={environmentHelpTextStyle}>
+                Shows reusable container outlines and click-to-edit shared
+                editor chrome variables. Shortcut: D.
+              </div>
+
+              <GuiDetail title="Header logo">
+                <Row label="Visible">
+                  <label style={panelStyles.checkboxRow}>
+                    <input
+                      type="checkbox"
+                      checked={
+                        editor.headerLogoVisible !== false &&
+                        !!editor.headerLogoPath
+                      }
+                      disabled={!editor.headerLogoPath}
+                      onChange={(e) =>
+                        setEditor({ headerLogoVisible: e.target.checked })
+                      }
+                    />
+                  </label>
+                </Row>
+                <Row label="Load logo">
+                  <input
+                    data-testid="editor-heading-logo-file"
+                    type="file"
+                    accept="image/*"
+                    disabled={uploading}
+                    onChange={onEditorLogoFile}
+                    style={{ fontSize: 11, minWidth: 0, flex: 1 }}
+                  />
+                </Row>
+                {editor.headerLogoPath && (
+                  <div style={{ ...panelStyles.muted, fontSize: 11 }}>
+                    {editor.headerLogoPath.split("/").at(-1)}
+                    <button
+                      type="button"
+                      style={{
+                        ...overlayStyleButtonStyle,
+                        marginLeft: 8,
+                        padding: "2px 6px",
+                      }}
+                      onClick={() =>
+                        setEditor({
+                          headerLogoPath: "",
+                          headerLogoVisible: false,
+                        })
+                      }
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+                {uploadError && (
+                  <div
+                    style={{
+                      color: "rgba(255, 111, 127, 0.9)",
+                      fontSize: 11,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {uploadError}
+                  </div>
+                )}
+                <Row label="Heading text">
+                  <label style={panelStyles.checkboxRow}>
+                    <input
+                      type="checkbox"
+                      checked={editor.headerTitleVisible !== false}
+                      onChange={(e) =>
+                        setEditor({ headerTitleVisible: e.target.checked })
+                      }
+                    />
+                  </label>
+                </Row>
+                <Row label="Crop">
+                  <button
+                    type="button"
+                    data-testid="editor-heading-logo-crop"
+                    style={{
+                      ...overlayStyleButtonStyle,
+                      flex: 1,
+                      justifyContent: "center",
+                    }}
+                    disabled={!editor.headerLogoPath}
+                    onClick={() => setEditorLogoCropOpen((value) => !value)}
+                  >
+                    {editorLogoCropOpen ? "Close crop" : "Crop"}
+                  </button>
+                </Row>
+                {editorLogoCropOpen && editorHeaderLogoSrc && (
+                  <div style={logoCropPanelStyle}>
+                    <div style={logoCropHeaderStyle}>
+                      <span>Logo crop preview</span>
+                      <button
+                        type="button"
+                        style={logoCropResetButtonStyle}
+                        onClick={() =>
+                          setEditor({
+                            headerLogoCropX: 0,
+                            headerLogoCropY: 0,
+                            headerLogoCropWidth: 1,
+                            headerLogoCropHeight: 1,
+                          })
+                        }
+                      >
+                        Reset
+                      </button>
+                    </div>
+                    <div style={logoCropImageFrameStyle}>
+                      <img
+                        src={editorHeaderLogoSrc}
+                        alt=""
+                        aria-hidden="true"
+                        draggable={false}
+                        style={logoCropPreviewImageStyle}
+                      />
+                      <div
+                        style={{
+                          ...logoCropBoxStyle,
+                          ...editorLogoCropBox,
+                        }}
+                      >
+                        <span style={cropMidlineHorizontalStyle} />
+                        <span style={cropMidlineVerticalStyle} />
+                      </div>
+                    </div>
+                    <Row label="Crop X">
+                      <Range
+                        value={editorLogoCropX}
+                        min={0}
+                        max={0.95}
+                        step={0.01}
+                        onChange={(v) =>
+                          setEditor({
+                            headerLogoCropX: v,
+                            headerLogoCropWidth: Math.min(
+                              editorLogoCropWidth,
+                              1 - v,
+                            ),
+                          })
+                        }
+                        format={(v) => `${Math.round(v * 100)}%`}
+                      />
+                    </Row>
+                    <Row label="Crop Y">
+                      <Range
+                        value={editorLogoCropY}
+                        min={0}
+                        max={0.95}
+                        step={0.01}
+                        onChange={(v) =>
+                          setEditor({
+                            headerLogoCropY: v,
+                            headerLogoCropHeight: Math.min(
+                              editorLogoCropHeight,
+                              1 - v,
+                            ),
+                          })
+                        }
+                        format={(v) => `${Math.round(v * 100)}%`}
+                      />
+                    </Row>
+                    <Row label="Crop W">
+                      <Range
+                        value={Math.min(1 - editorLogoCropX, editorLogoCropWidth)}
+                        min={0.05}
+                        max={Math.max(0.05, 1 - editorLogoCropX)}
+                        step={0.01}
+                        onChange={(v) => setEditor({ headerLogoCropWidth: v })}
+                        format={(v) => `${Math.round(v * 100)}%`}
+                      />
+                    </Row>
+                    <Row label="Crop H">
+                      <Range
+                        value={Math.min(1 - editorLogoCropY, editorLogoCropHeight)}
+                        min={0.05}
+                        max={Math.max(0.05, 1 - editorLogoCropY)}
+                        step={0.01}
+                        onChange={(v) => setEditor({ headerLogoCropHeight: v })}
+                        format={(v) => `${Math.round(v * 100)}%`}
+                      />
+                    </Row>
+                  </div>
+                )}
+                <Row label="Size">
+                  <Range
+                    value={editor.headerLogoSizePx ?? 24}
+                    min={10}
+                    max={160}
+                    step={1}
+                    onChange={(v) => setEditor({ headerLogoSizePx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Gap">
+                  <Range
+                    value={editor.headerLogoGapPx ?? 10}
+                    min={0}
+                    max={28}
+                    step={1}
+                    onChange={(v) => setEditor({ headerLogoGapPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Pad top">
+                  <Range
+                    value={editor.headerLogoPaddingTopPx ?? 0}
+                    min={0}
+                    max={80}
+                    step={1}
+                    onChange={(v) => setEditor({ headerLogoPaddingTopPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Pad right">
+                  <Range
+                    value={editor.headerLogoPaddingRightPx ?? 0}
+                    min={0}
+                    max={80}
+                    step={1}
+                    onChange={(v) => setEditor({ headerLogoPaddingRightPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Pad bottom">
+                  <Range
+                    value={editor.headerLogoPaddingBottomPx ?? 0}
+                    min={0}
+                    max={80}
+                    step={1}
+                    onChange={(v) => setEditor({ headerLogoPaddingBottomPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Pad left">
+                  <Range
+                    value={editor.headerLogoPaddingLeftPx ?? 0}
+                    min={0}
+                    max={80}
+                    step={1}
+                    onChange={(v) => setEditor({ headerLogoPaddingLeftPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Opacity">
+                  <Range
+                    value={editor.headerLogoOpacity ?? 0.92}
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    onChange={(v) => setEditor({ headerLogoOpacity: v })}
+                  />
+                </Row>
+                <Row label="Transparent bg">
+                  <label style={panelStyles.checkboxRow}>
+                    <input
+                      type="checkbox"
+                      checked={editor.headerLogoBackgroundTransparent === true}
+                      disabled={!editor.headerLogoPath}
+                      onChange={(e) =>
+                        setEditor({
+                          headerLogoBackgroundTransparent: e.target.checked,
+                        })
+                      }
+                    />
+                  </label>
+                </Row>
+                <Row label="Text to white">
+                  <label style={panelStyles.checkboxRow}>
+                    <input
+                      type="checkbox"
+                      checked={editor.headerLogoForegroundWhite !== false}
+                      disabled={!editor.headerLogoPath}
+                      onChange={(e) =>
+                        setEditor({ headerLogoForegroundWhite: e.target.checked })
+                      }
+                    />
+                  </label>
+                </Row>
+                <Row label="BG cutoff">
+                  <Range
+                    value={editor.headerLogoBackgroundCutoff ?? 0.93}
+                    min={0.75}
+                    max={1}
+                    step={0.01}
+                    onChange={(v) =>
+                      setEditor({ headerLogoBackgroundCutoff: v })
+                    }
+                    format={(v) => `${Math.round(v * 100)}%`}
+                  />
+                </Row>
+                <Row label="Edge softness">
+                  <Range
+                    value={editor.headerLogoEdgeSoftness ?? 0.06}
+                    min={0}
+                    max={0.2}
+                    step={0.01}
+                    onChange={(v) =>
+                      setEditor({ headerLogoEdgeSoftness: v })
+                    }
+                    format={(v) => `${Math.round(v * 100)}%`}
+                  />
+                </Row>
+              </GuiDetail>
+
+              <GuiDetail title="Panel">
+                <Row label="UI scale">
+                  <Range
+                    value={editor.uiScale ?? 0.75}
+                    min={0.6}
+                    max={1.25}
+                    step={0.05}
+                    onChange={(v) => setEditor({ uiScale: v })}
+                    format={(v) => `${Math.round(v * 100)}%`}
+                  />
+                </Row>
+                <Row label="Width">
+                  <Range
+                    value={editor.panelWidthPx ?? 512}
+                    min={360}
+                    max={760}
+                    step={8}
+                    onChange={(v) => setEditor({ panelWidthPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Margin">
+                  <Range
+                    value={editor.panelMarginPx ?? 44}
+                    min={8}
+                    max={120}
+                    step={1}
+                    onChange={(v) => setEditor({ panelMarginPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="X position">
+                  <Range
+                    value={editor.panelLeftPx ?? 44}
+                    min={0}
+                    max={1400}
+                    step={1}
+                    onChange={(v) => setEditor({ panelLeftPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Y position">
+                  <Range
+                    value={editor.panelTopPx ?? 44}
+                    min={0}
+                    max={900}
+                    step={1}
+                    onChange={(v) => setEditor({ panelTopPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Bottom safe">
+                  <Range
+                    value={editor.panelBottomSafePx ?? 112}
+                    min={40}
+                    max={260}
+                    step={2}
+                    onChange={(v) => setEditor({ panelBottomSafePx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Corners">
+                  <Range
+                    value={editor.panelCornerRadiusPx ?? 34}
+                    min={6}
+                    max={64}
+                    step={1}
+                    onChange={(v) => setEditor({ panelCornerRadiusPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+              </GuiDetail>
+
+              <GuiDetail title="Header">
+                <Row label="Height">
+                  <Range
+                    value={editor.headerHeightPx ?? 54}
+                    min={36}
+                    max={180}
+                    step={1}
+                    onChange={(v) => setEditor({ headerHeightPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Font size">
+                  <Range
+                    value={editor.headerFontSizePx ?? 18}
+                    min={12}
+                    max={24}
+                    step={1}
+                    onChange={(v) => setEditor({ headerFontSizePx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Gap">
+                  <Range
+                    value={editor.headerGapPx ?? 16}
+                    min={0}
+                    max={40}
+                    step={1}
+                    onChange={(v) => setEditor({ headerGapPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+              </GuiDetail>
+
+              <GuiDetail title="Bars and lists">
+                <Row label="Side inset">
+                  <Range
+                    value={editor.sectionMarginXPx ?? 12}
+                    min={0}
+                    max={40}
+                    step={1}
+                    onChange={(v) => setEditor({ sectionMarginXPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Row gap">
+                  <Range
+                    value={editor.sectionGapYPx ?? 10}
+                    min={0}
+                    max={32}
+                    step={1}
+                    onChange={(v) => setEditor({ sectionGapYPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Bottom gap">
+                  <Range
+                    value={editor.topBarBottomGapPx ?? 6}
+                    min={0}
+                    max={24}
+                    step={1}
+                    onChange={(v) => setEditor({ topBarBottomGapPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Inner gap">
+                  <Range
+                    value={editor.containerGapPx ?? 14}
+                    min={0}
+                    max={32}
+                    step={1}
+                    onChange={(v) => setEditor({ containerGapPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Body indent">
+                  <Range
+                    value={editor.containerBodyIndentPx ?? 28}
+                    min={0}
+                    max={72}
+                    step={1}
+                    onChange={(v) => setEditor({ containerBodyIndentPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Align">
+                  <select
+                    value={editor.containerAlignItems ?? "center"}
+                    onChange={(e) =>
+                      setEditor({
+                        containerAlignItems: e.target.value as
+                          | "flex-start"
+                          | "center"
+                          | "flex-end"
+                          | "stretch"
+                          | "baseline",
+                      })
+                    }
+                    style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
+                  >
+                    <option value="flex-start">Top</option>
+                    <option value="center">Center</option>
+                    <option value="flex-end">Bottom</option>
+                    <option value="stretch">Stretch</option>
+                    <option value="baseline">Baseline</option>
+                  </select>
+                </Row>
+                <Row label="Justify">
+                  <select
+                    value={editor.containerJustifyContent ?? "space-between"}
+                    onChange={(e) =>
+                      setEditor({
+                        containerJustifyContent: e.target.value as
+                          | "flex-start"
+                          | "center"
+                          | "flex-end"
+                          | "space-between"
+                          | "space-around"
+                          | "space-evenly",
+                      })
+                    }
+                    style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
+                  >
+                    <option value="flex-start">Start</option>
+                    <option value="center">Center</option>
+                    <option value="flex-end">End</option>
+                    <option value="space-between">Between</option>
+                    <option value="space-around">Around</option>
+                    <option value="space-evenly">Evenly</option>
+                  </select>
+                </Row>
+                <Row label="Bar radius">
+                  <Range
+                    value={editor.barRadiusPx ?? 999}
+                    min={0}
+                    max={999}
+                    step={1}
+                    onChange={(v) => setEditor({ barRadiusPx: v })}
+                    format={(v) => (v >= 999 ? "pill" : `${v.toFixed(0)} px`)}
+                  />
+                </Row>
+                <Row label="Top bar h.">
+                  <Range
+                    value={editor.topBarHeightPx ?? 44}
+                    min={32}
+                    max={72}
+                    step={1}
+                    onChange={(v) => setEditor({ topBarHeightPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Nested h.">
+                  <Range
+                    value={editor.nestedBarHeightPx ?? 42}
+                    min={30}
+                    max={68}
+                    step={1}
+                    onChange={(v) => setEditor({ nestedBarHeightPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Text inset">
+                  <Range
+                    value={editor.pillTextInsetPx ?? 24}
+                    min={8}
+                    max={40}
+                    step={1}
+                    onChange={(v) => setEditor({ pillTextInsetPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Page indent">
+                  <Range
+                    value={editor.pageListIndentPx ?? 18}
+                    min={0}
+                    max={48}
+                    step={1}
+                    onChange={(v) => setEditor({ pageListIndentPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Scroll end">
+                  <Range
+                    value={editor.scrollEndPaddingPx ?? 4}
+                    min={0}
+                    max={96}
+                    step={1}
+                    onChange={(v) => setEditor({ scrollEndPaddingPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Footer gap">
+                  <Range
+                    value={editor.saveFooterGapPx ?? 8}
+                    min={0}
+                    max={64}
+                    step={1}
+                    onChange={(v) => setEditor({ saveFooterGapPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+              </GuiDetail>
+
+              <GuiDetail title="Sliders">
+                <Row label="Track h.">
+                  <Range
+                    value={editor.sliderTrackHeightPx ?? 8}
+                    min={3}
+                    max={18}
+                    step={1}
+                    onChange={(v) => setEditor({ sliderTrackHeightPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Knob size">
+                  <Range
+                    value={editor.sliderThumbSizePx ?? 20}
+                    min={8}
+                    max={34}
+                    step={1}
+                    onChange={(v) => setEditor({ sliderThumbSizePx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+              </GuiDetail>
+            </>
+          )}
+
           {content === "overlay" && (
             <>
               <div style={overlayStyleActionsStyle}>
@@ -3835,18 +4532,18 @@ function accentedEnvironmentHeadingStyle(
 
 const environmentGroupStyle: React.CSSProperties = {
   marginBottom: 16,
-  paddingLeft: 18,
+  paddingLeft: "var(--editor-page-list-indent, 18px)",
 };
 
 const environmentHeadingStyle: React.CSSProperties = {
   ...frostedSubheading,
   display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 14,
+  alignItems: "var(--editor-container-align, center)",
+  justifyContent: "var(--editor-container-justify, space-between)",
+  gap: "var(--editor-container-gap, 14px)",
   width: "100%",
-  minHeight: 42,
-  padding: `0 ${EDITOR_PILL_TEXT_INSET_PX}px`,
+  minHeight: "var(--editor-nested-bar-height, 42px)",
+  padding: `0 var(--editor-pill-text-inset, ${EDITOR_PILL_TEXT_INSET_PX}px)`,
   cursor: "pointer",
   userSelect: "none",
   color: "inherit",
@@ -3859,7 +4556,7 @@ const environmentHeadingTextStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 700,
   lineHeight: 1.2,
-  color: vibrancySecondaryLabel,
+  color: vibrancyLabel,
   minWidth: 0,
 };
 
@@ -3884,7 +4581,7 @@ const environmentChevronStyle: React.CSSProperties = {
 const environmentBodyStyle: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  padding: "8px 0 8px 28px",
+  padding: "8px 0 8px var(--editor-container-body-indent, 28px)",
 };
 
 const overlayStyleActionsStyle: React.CSSProperties = {
@@ -3920,12 +4617,6 @@ const environmentNumberReadoutStyle: React.CSSProperties = {
   marginLeft: 0,
   marginRight: 0,
   textAlign: "left",
-};
-
-const environmentTrailingTextStyle: React.CSSProperties = {
-  fontSize: 11,
-  color: vibrancySecondaryLabel,
-  marginRight: 28,
 };
 
 const environmentHelpTextStyle: React.CSSProperties = {
@@ -3987,6 +4678,88 @@ const environmentRemoveButtonStyle: React.CSSProperties = {
   color: vibrancyTertiaryLabel,
 };
 
+const logoCropPanelStyle: React.CSSProperties = {
+  ...thinLightMaterial,
+  border: "1px solid rgba(255, 255, 255, 0.16)",
+  borderRadius: 14,
+  padding: 10,
+  margin: "8px 28px 10px 0",
+};
+
+const logoCropHeaderStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 10,
+  marginBottom: 10,
+  color: vibrancyLabel,
+  fontSize: 12,
+  fontWeight: 700,
+};
+
+const logoCropResetButtonStyle: React.CSSProperties = {
+  ...panelStyles.iconButton,
+  width: "auto",
+  minWidth: 0,
+  height: 22,
+  padding: "0 8px",
+  fontSize: 11,
+};
+
+const logoCropImageFrameStyle: React.CSSProperties = {
+  position: "relative",
+  width: "100%",
+  maxWidth: 500,
+  minHeight: 160,
+  marginBottom: 10,
+  overflow: "hidden",
+  borderRadius: 10,
+  border: "1px solid rgba(255, 255, 255, 0.16)",
+  background:
+    "linear-gradient(45deg, rgba(255,255,255,0.08) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.08) 75%), linear-gradient(45deg, rgba(255,255,255,0.08) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.08) 75%)",
+  backgroundColor: "rgba(0, 0, 0, 0.42)",
+  backgroundPosition: "0 0, 12px 12px",
+  backgroundSize: "24px 24px",
+};
+
+const logoCropPreviewImageStyle: React.CSSProperties = {
+  display: "block",
+  width: "100%",
+  height: "auto",
+  userSelect: "none",
+};
+
+const logoCropBoxStyle: React.CSSProperties = {
+  position: "absolute",
+  boxSizing: "border-box",
+  border: "2px solid rgba(255, 255, 255, 0.95)",
+  boxShadow:
+    "0 0 0 999px rgba(0, 0, 0, 0.44), 0 0 18px rgba(255, 255, 255, 0.32)",
+  pointerEvents: "none",
+};
+
+const cropMidlineHorizontalStyle: React.CSSProperties = {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  top: "50%",
+  height: 1,
+  background: "rgba(0, 229, 255, 0.95)",
+  boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.35)",
+  transform: "translateY(-50%)",
+};
+
+const cropMidlineVerticalStyle: React.CSSProperties = {
+  position: "absolute",
+  top: 0,
+  bottom: 0,
+  left: "50%",
+  width: 1,
+  background: "rgba(255, 80, 210, 0.95)",
+  boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.35)",
+  transform: "translateX(-50%)",
+};
+
 const sectionHeaderStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
@@ -4003,9 +4776,9 @@ const guiSubsectionStyle: React.CSSProperties = {
 const guiSubsectionButtonStyle: React.CSSProperties = {
   ...frostedSubheading,
   display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 12,
+  alignItems: "var(--editor-container-align, center)",
+  justifyContent: "var(--editor-container-justify, space-between)",
+  gap: "var(--editor-container-gap, 12px)",
   width: "100%",
   minHeight: 38,
   padding: "0 14px",
@@ -4019,14 +4792,14 @@ const guiSubsectionButtonStyle: React.CSSProperties = {
 const guiSubsectionTitleStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 700,
-  color: vibrancySecondaryLabel,
+  color: vibrancyLabel,
   lineHeight: 1.2,
 };
 
 const guiSubsectionBodyStyle: React.CSSProperties = {
   ...panelStyles.section,
   paddingTop: 10,
-  paddingLeft: 14,
+  paddingLeft: "calc(var(--editor-container-body-indent, 28px) / 2)",
   paddingRight: 2,
   marginBottom: 0,
 };
@@ -4039,7 +4812,7 @@ const guiDetailSummaryStyle: React.CSSProperties = {
   ...panelStyles.summary,
   fontWeight: 700,
   marginBottom: 6,
-  color: vibrancySecondaryLabel,
+  color: vibrancyLabel,
 };
 
 const guiDetailBodyStyle: React.CSSProperties = {

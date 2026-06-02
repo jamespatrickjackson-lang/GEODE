@@ -86,15 +86,6 @@ export function LayerPanelGroups({
     ? resolveEnvironmentForPage(state.environment, state.pages, currentPage)
     : state.environment;
   const topoAuthoringEnvironment = currentPageEnvironment;
-  const setTopoAuthoringScene = (patch: Partial<SceneProperties>) => {
-    if (!currentPage) {
-      setEnvScene(patch);
-      return;
-    }
-    setPageField(currentPage.id, {
-      sceneOverrides: mergeSceneProperties(currentPage.sceneOverrides, patch),
-    });
-  };
   const { currentIndex, isTransitioning, targetIndex } = usePageController();
   const selectedPageIndex = currentPage
     ? state.pages.findIndex((p) => p.id === currentPage.id)
@@ -106,6 +97,31 @@ export function LayerPanelGroups({
       isTransitioning,
       targetIndex,
     });
+  const setTopoAuthoringScene = (patch: Partial<SceneProperties>) => {
+    if (!currentPage) {
+      setEnvScene(patch);
+      return;
+    }
+    const sceneOverrides = mergeSceneProperties(
+      currentPage.sceneOverrides,
+      patch,
+    );
+    const nextPage = { ...currentPage, sceneOverrides };
+    const nextPages = state.pages.map((page) =>
+      page.id === nextPage.id ? nextPage : page,
+    );
+    const nextPageEnvironment = resolveEnvironmentForPage(
+      state.environment,
+      nextPages,
+      nextPage,
+    );
+    if (selectedPageHasLanded) {
+      sceneHandle.manager.applyEnvironment(nextPageEnvironment);
+    }
+    setPageField(currentPage.id, {
+      sceneOverrides: mergeSceneProperties(currentPage.sceneOverrides, patch),
+    });
+  };
   const pageStyleControlsDisabled =
     !isEnv && (!currentPage || !selectedPageHasLanded);
   const selectedPageAccent =
@@ -276,11 +292,11 @@ export function LayerPanelGroups({
     <div
       style={panelStyles.body}
       data-dev-source="src/editor/LayerPanel.tsx:398"
-      data-dev-note="LayerPanel renders Public Data, Sections & Cropping, Public Topo, or Customer Data controls, depending on its section prop."
+      data-dev-note="LayerPanel renders Data/Forge, Sections, Topo, or customer data controls, depending on its section prop."
     >
       {!isEnv && !currentPage && (
         <div style={panelStyles.muted}>
-          Select Global Settings or a page in the Page Manager.
+          Select global settings or a page in Pages.
         </div>
       )}
       {section === "customer" && currentPage && (
@@ -295,7 +311,7 @@ export function LayerPanelGroups({
         <LayerGroup
           title="Scene section planes"
           devSource="src/editor/LayerPanel.tsx:scene-section"
-          devNote="Scene section planes are a virtual Sections & Cropping tool; controls patch a virtual layer style and SceneManager applies it across targeted visible scene objects."
+          devNote="Scene section planes are a virtual Sections tool; controls patch a virtual layer style and SceneManager applies it across targeted visible scene objects."
           accentColor={selectedPageAccent}
           openSignal={
             sceneSectionOpenSignal &&
@@ -430,7 +446,7 @@ export function LayerPanelGroups({
               key={group.title}
               title="Working area"
               devSource="src/editor/LayerPanel.tsx:sections-cropping-working-area"
-              devNote="Working area groups the Phase 3 boundary controls and the Working Area Focus crop/focus tool under Sections & Cropping."
+              devNote="Working area groups the Phase 3 boundary controls and the Working Area Focus crop/focus tool under Sections."
               accentColor={selectedPageAccent}
               openSignal={sectionsCroppingOpenSignal}
             >

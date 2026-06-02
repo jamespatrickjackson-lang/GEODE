@@ -239,6 +239,10 @@ function mergeSceneEdit(
         ...(base?.gui?.labels ?? {}),
         ...(patch.gui.labels ?? {}),
       },
+      editor: {
+        ...(base?.gui?.editor ?? {}),
+        ...(patch.gui.editor ?? {}),
+      },
     };
   }
   if (patch.lighting) {
@@ -1512,7 +1516,7 @@ export function EditorProvider({
     poseHistory: {},
     // Open the editor on the editor-only Global Settings pseudo-page so
     // first-load shows the world declaration, not whatever page is index 0.
-    // The user can navigate into a presentation page from the Page Manager.
+    // The user can navigate into a presentation page from Pages.
     selectedPageId: ENVIRONMENT_SENTINEL,
     dirty: new Set<EntityKey>(),
     saveStatus: "idle" as const,
