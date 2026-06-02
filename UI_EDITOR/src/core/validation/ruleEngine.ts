@@ -20,15 +20,21 @@ export function runRuleEngine(opts: RunRuleEngineOptions): ValidationFinding[] {
   const targetFrames = opts.frameId
     ? opts.pkg.frames.filter((f) => f.id === opts.frameId)
     : opts.pkg.frames;
+  // Library-level rules are package-scoped, not frame-scoped. Run them once
+  // (keyed by rule id) so multi-frame packages don't get duplicate findings.
+  const libraryRulesRun = new Set<string>();
   for (const frame of targetFrames) {
     const components = Object.values(opts.pkg.components).filter((c) => c.frameId === frame.id);
     const containers = Object.values(opts.pkg.containers).filter((c) => c.frameId === frame.id);
     for (const rule of opts.rulePack.rules) {
       if (rule.appliesTo === "restricted") continue;
+      if (rule.appliesTo === "library") {
+        if (libraryRulesRun.has(rule.id)) continue;
+        libraryRulesRun.add(rule.id);
+      }
       findings.push(...invokeRule(rule, { frame, components, containers, pkg: opts.pkg, profile: opts.profile, activeBackgroundId: opts.activeBackgroundId ?? null }));
     }
   }
-  // Library-level rules invoked once (deduped per frame).
   return sortFindings(findings);
 }
 

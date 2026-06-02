@@ -440,6 +440,137 @@ function contrastRatio(fg: { r: number; g: number; b: number; a: number }, bgLum
   return (a + 0.05) / (b + 0.05);
 }
 
+// --- v1.1 tier rules (docs_v1/23_v1_1_direction.md §7) --------------------
+
+function entryTier(entry: { tier?: string }): "component" | "assembly" | "product" {
+  const t = entry.tier;
+  return t === "assembly" || t === "product" ? t : "component";
+}
+
+function libFinding(
+  pkg: { manifest: { id: string } },
+  ruleId: string,
+  severity: ValidationFinding["severity"],
+  entryId: string,
+  message: string,
+): ValidationFinding {
+  return {
+    ruleId,
+    severity,
+    message,
+    profileId: PROFILE_ID,
+    location: { packageId: pkg.manifest.id, libraryEntryId: entryId },
+  };
+}
+
+const assemblyWithoutAiNote: ValidationRule = {
+  id: "library.assembly-without-ainote.suggestion",
+  severity: "suggestion",
+  description: "Assembly library entry lacks aiNote.intent",
+  appliesTo: "library",
+  run: (ctx) => {
+    const out: ValidationFinding[] = [];
+    for (const e of ctx.pkg.libraries.components) {
+      if (entryTier(e) !== "assembly") continue;
+      if (!e.aiNote?.intent && !e.intent?.intent) {
+        out.push(libFinding(ctx.pkg, "library.assembly-without-ainote.suggestion", "suggestion", e.id,
+          `Assembly \`${e.id}\` has no AI Note intent. Downstream agents will not know what it is for.`));
+      }
+    }
+    return out;
+  },
+};
+
+const productWithoutAiNote: ValidationRule = {
+  id: "library.product-without-ainote.warning",
+  severity: "warning",
+  description: "Product library entry lacks aiNote.intent",
+  appliesTo: "library",
+  run: (ctx) => {
+    const out: ValidationFinding[] = [];
+    for (const e of ctx.pkg.libraries.components) {
+      if (entryTier(e) !== "product") continue;
+      if (!e.aiNote?.intent && !e.intent?.intent) {
+        out.push(libFinding(ctx.pkg, "library.product-without-ainote.warning", "warning", e.id,
+          `Product \`${e.id}\` has no AI Note intent.`));
+      }
+    }
+    return out;
+  },
+};
+
+const assemblyEmpty: ValidationRule = {
+  id: "library.assembly-empty.warning",
+  severity: "warning",
+  description: "Assembly resolves to zero children",
+  appliesTo: "library",
+  run: (ctx) => {
+    const out: ValidationFinding[] = [];
+    for (const e of ctx.pkg.libraries.components) {
+      if (entryTier(e) !== "assembly") continue;
+      const childCount = e.composition?.length ?? 0;
+      if (childCount === 0) {
+        out.push(libFinding(ctx.pkg, "library.assembly-empty.warning", "warning", e.id,
+          `Assembly \`${e.id}\` has no composition children; ungroup or add children.`));
+      }
+    }
+    return out;
+  },
+};
+
+const productNoFrame: ValidationRule = {
+  id: "library.product-no-frame.warning",
+  severity: "warning",
+  description: "Product does not define a containing Frame",
+  appliesTo: "library",
+  run: (ctx) => {
+    const out: ValidationFinding[] = [];
+    for (const e of ctx.pkg.libraries.components) {
+      if (entryTier(e) !== "product") continue;
+      // A product is expected to either carry a composition recipe or be
+      // demonstrated as a Frame in the package. Flag products with neither.
+      const hasComposition = (e.composition?.length ?? 0) > 0;
+      const demonstratedInFrame = ctx.pkg.frames.some((f) => f.name === e.name || f.id.includes(e.id));
+      if (!hasComposition && !demonstratedInFrame) {
+        out.push(libFinding(ctx.pkg, "library.product-no-frame.warning", "warning", e.id,
+          `Product \`${e.id}\` has no composition and is not demonstrated by any Frame.`));
+      }
+    }
+    return out;
+  },
+};
+
+const tierMismatch: ValidationRule = {
+  id: "library.tier-mismatch.warning",
+  severity: "warning",
+  description: "Library entry contents violate tier nesting rules",
+  appliesTo: "library",
+  run: (ctx) => {
+    const out: ValidationFinding[] = [];
+    const byId = new Map(ctx.pkg.libraries.components.map((e) => [e.id, e]));
+    for (const e of ctx.pkg.libraries.components) {
+      const tier = entryTier(e);
+      if (tier === "component" && (e.composition?.length ?? 0) > 0) {
+        out.push(libFinding(ctx.pkg, "library.tier-mismatch.warning", "warning", e.id,
+          `Component \`${e.id}\` has composition children; components are leaves (docs_v1/23 §2.2).`));
+        continue;
+      }
+      // Assemblies may not contain other assemblies in v1.1.
+      if (tier === "assembly") {
+        for (const child of e.composition ?? []) {
+          const childEntry = byId.get(child.entryId);
+          if (childEntry && entryTier(childEntry) === "assembly") {
+            out.push(libFinding(ctx.pkg, "library.tier-mismatch.warning", "warning", e.id,
+              `Assembly \`${e.id}\` nests another assembly \`${child.entryId}\`; nested assemblies are deferred to v1.2.`));
+            break;
+          }
+        }
+      }
+    }
+    return out;
+  },
+};
+
 export const DESKTOP_TECHNICAL_EDITING: ValidationRulePack = {
   id: "desktop-technical-editing",
   version: 1,
@@ -465,6 +596,11 @@ export const DESKTOP_TECHNICAL_EDITING: ValidationRulePack = {
     intentDependsOnSelf,
     effectsOpacityOutOfRange,
     frameBackgroundContrast,
+    assemblyWithoutAiNote,
+    productWithoutAiNote,
+    assemblyEmpty,
+    productNoFrame,
+    tierMismatch,
   ],
 };
 

@@ -7,10 +7,19 @@ import { IconLibraryView } from "./IconLibraryView";
 import { TokenLibraryView } from "./TokenLibraryView";
 import { StyleLibraryView } from "./StyleLibraryView";
 
-type LibraryTab = "components" | "colours" | "icons" | "tokens" | "styles";
+type LibraryTab =
+  | "components"
+  | "assemblies"
+  | "products"
+  | "colours"
+  | "icons"
+  | "tokens"
+  | "styles";
 
 const TABS: ReadonlyArray<{ id: LibraryTab; label: string }> = [
   { id: "components", label: "Components" },
+  { id: "assemblies", label: "Assemblies" },
+  { id: "products", label: "Products" },
   { id: "colours", label: "Colours" },
   { id: "icons", label: "Icons" },
   { id: "tokens", label: "Tokens" },
@@ -54,6 +63,7 @@ export function LibraryPanel() {
       <div
         style={{
           display: "flex",
+          flexWrap: "wrap",
           gap: 2,
           borderBottom: theme.border.hairline,
           padding: 4,
@@ -82,7 +92,27 @@ export function LibraryPanel() {
         })}
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: theme.spacing.sm }}>
-        {active === "components" && <ComponentLibraryView entries={libs.components} />}
+        {active === "components" && (
+          <ComponentLibraryView
+            entries={libs.components}
+            tier="component"
+            searchPlaceholder="Search components…"
+          />
+        )}
+        {active === "assemblies" && (
+          <ComponentLibraryView
+            entries={libs.components}
+            tier="assembly"
+            searchPlaceholder="Search assemblies…"
+          />
+        )}
+        {active === "products" && (
+          <ComponentLibraryView
+            entries={libs.components}
+            tier="product"
+            searchPlaceholder="Search products…"
+          />
+        )}
         {active === "colours" && <ColourLibraryView entries={libs.colours} />}
         {active === "icons" && <IconLibraryView entries={libs.icons} />}
         {active === "tokens" && <TokenLibraryView entries={libs.tokens} />}
