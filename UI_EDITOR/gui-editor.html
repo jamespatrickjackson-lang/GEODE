@@ -691,7 +691,7 @@
     child.el.style.left = (before.left - pr.left) + "px";
     child.el.style.top = (before.top - pr.top) + "px";
     s.x = 0; s.y = 0;
-    registerContainers(); applyAll(); save();
+    registerContainers(); applyAll(); renderTree(); save();
   }
 
   // ---- resize ----
@@ -734,7 +734,7 @@
   function snapshot() { return JSON.stringify({ layout, groups, guides }); }
   function pushHistory() { history.push(snapshot()); if (history.length>100) history.shift(); future = []; }
   function restore(json) { const o = JSON.parse(json); layout=o.layout; groups=o.groups; guides=o.guides;
-    registerContainers(); applyAll(); renderOverlay(); renderInspector(); save(); }
+    registerContainers(); applyAll(); renderOverlay(); renderInspector(); renderTree(); save(); }
   function undo() { if (!history.length) return; future.push(snapshot()); restore(history.pop()); }
   function redo() { if (!future.length) return; history.push(snapshot()); restore(future.pop()); }
 
@@ -777,14 +777,14 @@
       el.style.cssText = base + "width:200px;height:120px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.25);border-radius:8px;";
     }
     parent.appendChild(el);
-    pushHistory(); registerContainers(); applyAll(); select(id); save();
+    pushHistory(); registerContainers(); applyAll(); select(id); renderTree(); save();
   }
   function addContainer() { createEl("container"); }
   function groupSelection() {
     if (selected.length < 2) return;
     const gid = "group-" + (nextId++);
     groups[gid] = { label: "Group", children: selected.slice() };
-    pushHistory(); registerContainers(); select(gid); renderOverlay(); save();
+    pushHistory(); registerContainers(); select(gid); renderOverlay(); renderTree(); save();
   }
   function deleteSelection() {
     if (!selected.length) return;
@@ -795,7 +795,7 @@
              else if (c && c.el) c.el.style.visibility = "hidden"; }
       delete layout[id];
     }
-    selected = []; registerContainers(); applyAll(); renderOverlay(); renderInspector(); save();
+    selected = []; registerContainers(); applyAll(); renderOverlay(); renderInspector(); renderTree(); save();
   }
 
   // ---- inspector ----
@@ -916,6 +916,7 @@
   renderRulers();
   renderOverlay();
   renderInspector();
+  renderTree();
   window.addEventListener("resize", () => { renderRulers(); renderOverlay(); });
   stageWrap.addEventListener("scroll", renderOverlay);
 })();

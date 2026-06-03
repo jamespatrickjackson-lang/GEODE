@@ -90,6 +90,23 @@
   .guide.v { width: 1px; top: 0; bottom: 0; cursor: ew-resize; background: rgba(160,200,240,0.5); }
   .guide.h { height: 1px; left: 0; right: 0; cursor: ns-resize; background: rgba(160,200,240,0.5); }
   .marquee { position: absolute; border: 1px dashed var(--accent); background: rgba(120,180,220,0.08); z-index: 8; pointer-events: none; }
+  /* visible padding shading inside the selected container */
+  .pad-shade { position: absolute; background: rgba(120,200,140,0.22); z-index: 3; pointer-events: none; }
+
+  /* left panel: layers tree */
+  .layers { width: 220px; flex: none; background: var(--panel); border-right: var(--hair);
+    display: flex; flex-direction: column; min-height: 0; }
+  .layers-head { padding: 8px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--fg3); font-weight: 600; border-bottom: var(--hair); }
+  .tree { flex: 1; overflow-y: auto; padding: 4px 0; }
+  .tree-row { display: flex; align-items: center; gap: 4px; padding: 3px 8px; cursor: pointer;
+    color: var(--fg2); white-space: nowrap; font-size: 12px; }
+  .tree-row:hover { background: rgba(255,255,255,0.04); }
+  .tree-row.is-selected { background: rgba(120,180,220,0.18); color: var(--fg); }
+  .tree-row .caret { width: 12px; text-align: center; color: var(--fg3); cursor: pointer; }
+  .tree-row .kind { width: 16px; text-align: center; opacity: .8; }
+  .tree-row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .tree-row .lock { color: var(--fg3); font-size: 10px; }
 
   /* right panel */
   .inspector { width: 260px; flex: none; background: var(--panel); border-left: var(--hair);
@@ -156,6 +173,10 @@
   </div>
 
   <div class="main">
+    <div class="layers">
+      <div class="layers-head">Layers</div>
+      <div class="tree" id="tree"></div>
+    </div>
     <div class="stage-wrap" id="stageWrap">
       <div class="ruler-corner"></div>
       <div class="ruler-top" id="rulerTop"></div>
@@ -184,6 +205,27 @@
       <div class="insp-sec">
         <h4>Selection</h4>
         <div class="muted" id="selInfo">Nothing selected. Click an element in design mode.</div>
+      </div>
+      <div class="insp-sec" id="kindSec" style="display:none">
+        <h4>Kind</h4>
+        <div class="row"><label>This is a</label>
+          <select id="inKind" style="flex:1;background:var(--field);color:var(--fg);border:var(--hair);border-radius:4px;padding:3px 6px;font:inherit">
+            <option value="container">container</option>
+            <option value="group">group</option>
+            <option value="panel">panel</option>
+            <option value="section">section</option>
+            <option value="card">card</option>
+            <option value="row">row</option>
+            <option value="menu">menu</option>
+            <option value="menu-item">menu-item</option>
+            <option value="button">button</option>
+            <option value="slider-row">slider-row</option>
+            <option value="text">text</option>
+            <option value="shape">shape</option>
+            <option value="image">image</option>
+          </select>
+        </div>
+        <div class="muted">Drives the glyph in the tree and the default chrome. From the kind catalog (docs 14/20/21).</div>
       </div>
       <div class="insp-sec" id="geoSec" style="display:none">
         <h4>Geometry</h4>
@@ -214,6 +256,11 @@
         <div class="row"><label>Text</label><input type="text" id="inText" placeholder="(label text)"></div>
         <div class="row"><label>Lock</label><input type="checkbox" id="inLock"></div>
       </div>
+      <div class="insp-sec" id="aiSec" style="display:none">
+        <h4>AI note</h4>
+        <div class="row"><label>Name</label><input type="text" id="inAiName" placeholder="what is it"></div>
+        <div class="row" style="align-items:flex-start"><label>Intent</label><textarea id="inAiIntent" placeholder="what it is for / how it works" style="flex:1;min-height:48px;background:var(--field);color:var(--fg);border:var(--hair);border-radius:4px;padding:3px 6px;font:inherit;resize:vertical"></textarea></div>
+      </div>
       <div class="insp-sec">
         <h4>How it works</h4>
         <div class="muted">
@@ -236,7 +283,12 @@
   const rulerTop = document.getElementById("rulerTop");
   const rulerLeft = document.getElementById("rulerLeft");
   const saveState = document.getElementById("saveState");
-  const STORAGE_KEY = "gui-editor.layout.v1";
+  const treeEl = document.getElementById("tree");
+  const STORAGE_KEY = "gui-editor.layout.v2";
+
+  const KIND_GLYPH = { container:"▢", group:"⧉", panel:"▦", section:"▱", card:"▭", row:"≣",
+    menu:"☰", "menu-item":"·", button:"◖", "slider-row":"⊟", text:"T", shape:"◆", image:"▤" };
+  let collapsed = {}; // id -> true if its tree children are hidden
 
   // ---- state (persisted) ----
   //   layout[id] = { x, y, width|null, height|null, padding|null, locked, style:{bg,bgA,radius,border,text}, label }
@@ -290,7 +342,7 @@
   function blankState() {
     return { x: 0, y: 0, width: null, height: null,
              padT: null, padR: null, padB: null, padL: null, gap: null, dir: "",
-             locked: false, style: {} };
+             kind: "container", ai: {}, locked: false, style: {} };
   }
   function st(id) { if (!layout[id]) layout[id] = blankState(); return layout[id]; }
 
@@ -392,6 +444,24 @@
       }
       overlay.appendChild(o);
     }
+    // visible padding shading for the single selected container
+    if (selected.length === 1) {
+      const id = selected[0]; const c = containers[id];
+      if (c && c.el) {
+        const r = rectOf(id); const cs = getComputedStyle(c.el);
+        const pt = parseFloat(cs.paddingTop)||0, pr = parseFloat(cs.paddingRight)||0,
+              pb = parseFloat(cs.paddingBottom)||0, pl = parseFloat(cs.paddingLeft)||0;
+        const bw = parseFloat(cs.borderTopWidth)||0;
+        const mk = (x,y,w,h)=>{ if(w<=0||h<=0) return; const d=document.createElement("div");
+          d.className="pad-shade"; d.style.left=(r.left+x)+"px"; d.style.top=(r.top+y)+"px";
+          d.style.width=w+"px"; d.style.height=h+"px"; overlay.appendChild(d); };
+        const iw = r.width, ih = r.height;
+        mk(bw, bw, iw-2*bw, pt);                          // top
+        mk(bw, ih-bw-pb, iw-2*bw, pb);                    // bottom
+        mk(bw, bw+pt, pl, ih-2*bw-pt-pb);                 // left
+        mk(iw-bw-pr, bw+pt, pr, ih-2*bw-pt-pb);           // right
+      }
+    }
     if (marquee) {
       const d = document.createElement("div"); d.className = "marquee";
       d.style.left = marquee.x + "px"; d.style.top = marquee.y + "px";
@@ -400,12 +470,52 @@
     }
   }
 
+  // ---- layers tree (left) — mirrors real DOM nesting ----
+  function childContainerIds(parentEl) {
+    // direct descendant containers (skip intermediate non-container wrappers)
+    const out = [];
+    const walk = (node) => {
+      for (const ch of node.children) {
+        if (ch.dataset && ch.dataset.cid && containers[ch.dataset.cid]) out.push(ch.dataset.cid);
+        else walk(ch);
+      }
+    };
+    walk(parentEl);
+    return out;
+  }
+  function renderTree() {
+    treeEl.innerHTML = "";
+    const host = stage.querySelector(".host");
+    const roots = childContainerIds(host);
+    const addRow = (id, depth) => {
+      const c = containers[id]; if (!c) return;
+      const kids = c.el ? childContainerIds(c.el) : (groups[id] ? groups[id].children : []);
+      const row = document.createElement("div");
+      row.className = "tree-row" + (selected.includes(id) ? " is-selected" : "");
+      row.style.paddingLeft = (8 + depth*14) + "px";
+      const caret = document.createElement("span"); caret.className = "caret";
+      caret.textContent = kids.length ? (collapsed[id] ? "▸" : "▾") : "";
+      caret.addEventListener("click", (e)=>{ e.stopPropagation(); collapsed[id]=!collapsed[id]; renderTree(); });
+      const glyph = document.createElement("span"); glyph.className="kind";
+      glyph.textContent = KIND_GLYPH[st(id).kind] || "▢";
+      const name = document.createElement("span"); name.className="name"; name.textContent = c.label;
+      const lock = document.createElement("span"); lock.className="lock"; lock.textContent = st(id).locked ? "🔒" : "";
+      row.append(caret, glyph, name, lock);
+      row.addEventListener("click", ()=> select(id));
+      treeEl.appendChild(row);
+      if (!collapsed[id]) for (const k of kids) addRow(k, depth+1);
+    };
+    for (const r of roots) addRow(r, 0);
+  }
+
   // ---- selection ----
   function select(id, multi) {
     if (!id) { selected = []; }
     else if (multi) { selected.includes(id) ? selected = selected.filter(x=>x!==id) : selected.push(id); }
     else { selected = [id]; }
-    renderInspector(); renderOverlay();
+    renderInspector(); renderOverlay(); renderTree();
+    // scroll the selected tree row into view
+    const r = treeEl.querySelector(".tree-row.is-selected"); if (r) r.scrollIntoView({block:"nearest"});
   }
 
   // ---- drag (move) with snap ----
@@ -581,7 +691,7 @@
     child.el.style.left = (before.left - pr.left) + "px";
     child.el.style.top = (before.top - pr.top) + "px";
     s.x = 0; s.y = 0;
-    registerContainers(); applyAll(); save();
+    registerContainers(); applyAll(); renderTree(); save();
   }
 
   // ---- resize ----
@@ -624,7 +734,7 @@
   function snapshot() { return JSON.stringify({ layout, groups, guides }); }
   function pushHistory() { history.push(snapshot()); if (history.length>100) history.shift(); future = []; }
   function restore(json) { const o = JSON.parse(json); layout=o.layout; groups=o.groups; guides=o.guides;
-    registerContainers(); applyAll(); renderOverlay(); renderInspector(); save(); }
+    registerContainers(); applyAll(); renderOverlay(); renderInspector(); renderTree(); save(); }
   function undo() { if (!history.length) return; future.push(snapshot()); restore(history.pop()); }
   function redo() { if (!future.length) return; history.push(snapshot()); restore(future.pop()); }
 
@@ -667,14 +777,14 @@
       el.style.cssText = base + "width:200px;height:120px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.25);border-radius:8px;";
     }
     parent.appendChild(el);
-    pushHistory(); registerContainers(); applyAll(); select(id); save();
+    pushHistory(); registerContainers(); applyAll(); select(id); renderTree(); save();
   }
   function addContainer() { createEl("container"); }
   function groupSelection() {
     if (selected.length < 2) return;
     const gid = "group-" + (nextId++);
     groups[gid] = { label: "Group", children: selected.slice() };
-    pushHistory(); registerContainers(); select(gid); renderOverlay(); save();
+    pushHistory(); registerContainers(); select(gid); renderOverlay(); renderTree(); save();
   }
   function deleteSelection() {
     if (!selected.length) return;
@@ -685,21 +795,26 @@
              else if (c && c.el) c.el.style.visibility = "hidden"; }
       delete layout[id];
     }
-    selected = []; registerContainers(); applyAll(); renderOverlay(); renderInspector(); save();
+    selected = []; registerContainers(); applyAll(); renderOverlay(); renderInspector(); renderTree(); save();
   }
 
   // ---- inspector ----
   const $ = id => document.getElementById(id);
   function renderInspector() {
-    const geo = $("geoSec"), box = $("boxSec"), sty = $("styleSec"), info = $("selInfo");
+    const kindS = $("kindSec"), geo = $("geoSec"), box = $("boxSec"), sty = $("styleSec"), ai = $("aiSec"), info = $("selInfo");
     if (selected.length !== 1) {
-      geo.style.display = box.style.display = sty.style.display = "none";
+      kindS.style.display = geo.style.display = box.style.display = sty.style.display = ai.style.display = "none";
       info.textContent = selected.length>1 ? selected.length + " selected" : "Nothing selected. Click an element in design mode.";
       return;
     }
     const id = selected[0]; const c = containers[id]; const s = st(id); const r = rectOf(id) || {width:0,height:0};
     info.innerHTML = `<strong>${c.label}</strong> <span class="pill">${id}</span>`;
+    kindS.style.display = c.el ? "" : "none";
     geo.style.display = ""; box.style.display = c.el ? "" : "none"; sty.style.display = c.el ? "" : "none";
+    ai.style.display = "";
+    $("inKind").value = s.kind || "container";
+    $("inAiName").value = (s.ai && s.ai.name) || "";
+    $("inAiIntent").value = (s.ai && s.ai.intent) || "";
     $("inX").value = Math.round(s.x||0); $("inY").value = Math.round(s.y||0);
     $("inW").value = Math.round(s.width ?? r.width); $("inH").value = Math.round(s.height ?? r.height);
     $("inPadT").value = s.padT ?? ""; $("inPadR").value = s.padR ?? "";
@@ -727,6 +842,13 @@
     const c = containers[selected[0]];
     if (c && c.el && s.dir !== "column" && s.dir !== "row") { c.el.style.display=""; c.el.style.flexDirection=""; }
     applyAll(); renderOverlay(); renderInspector(); save(); });
+  $("inKind").addEventListener("change", () => { if(selected.length!==1) return;
+    pushHistory(); const id = selected[0]; const s = st(id); s.kind = $("inKind").value;
+    const c = containers[id]; if (c && c.el) c.el.dataset.kind = s.kind;
+    renderTree(); renderInspector(); save(); });
+  function bindAi(elId, key){ $(elId).addEventListener("input", ()=>{ if(selected.length!==1) return;
+    const s = st(selected[0]); s.ai = s.ai||{}; s.ai[key] = $(elId).value; save(); }); }
+  bindAi("inAiName","name"); bindAi("inAiIntent","intent");
   function bindStyle(elId, key, fn) { $(elId).addEventListener("input", () => { if(selected.length!==1) return;
     const s = st(selected[0]); s.style = s.style||{}; s.style[key] = fn ? fn($(elId).value) : $(elId).value;
     applyAll(); renderOverlay(); renderInspector(); save(); }); }
@@ -794,6 +916,7 @@
   renderRulers();
   renderOverlay();
   renderInspector();
+  renderTree();
   window.addEventListener("resize", () => { renderRulers(); renderOverlay(); });
   stageWrap.addEventListener("scroll", renderOverlay);
 })();
