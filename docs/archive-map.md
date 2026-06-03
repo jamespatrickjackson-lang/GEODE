@@ -45,6 +45,21 @@ Git.
 The same data is also listed in `docs/archive-manifest.json` for agents and
 scripts that need a structured lookup.
 
+## Housekeeping And Review Evidence
+
+The active repo should not keep large ignored browser evidence, build outputs,
+dependency folders, or historical repo snapshots. Preserve evidence or rollback
+payloads in the archive when they may still matter, and keep only small in-repo
+docs that point to the archived location.
+
+| Former path | Archive path | Use |
+| --- | --- | --- |
+| `docs/dev-context/artifacts/transition-matrix` | `C:\GeoSee\GeoSee_Archive\docs\dev-context\artifacts\transition-matrix\2026-06-02-cleanup` | Transition matrix browser/debug videos and screenshots from 2026-05-31 review work |
+| `C:\GeoSee\GeoSee_Dev_Past\Major Release` | `C:\GeoSee\GeoSee_Archive\repo-snapshots-quarantine\2026-06-02\Major Release` | Quarantined historical repo snapshots retained for rollback/audit only |
+
+Housekeeping execution record:
+`docs/dev-context/Housekeeping-Audit-2026-06-02.md`.
+
 ## Git History Rewrite Note
 
 The raw/source buckets above are intended to be purged from reachable Git

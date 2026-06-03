@@ -1,6 +1,6 @@
 {
   "schema": "geosee.archive-manifest.v1",
-  "lastUpdated": "2026-05-21",
+  "lastUpdated": "2026-06-02",
   "repoRoot": "C:/GeoSee/GeoSee_Dev",
   "archiveRoot": "C:/GeoSee/GeoSee_Archive",
   "notes": [
@@ -106,6 +106,23 @@
       "reason": "BC digital geology raw shapefile/tables used only for prep regeneration.",
       "usedBy": ["prep/fetch_geology.py", "data/bedrock_geology.geojson"],
       "status": "archived-outside-repo"
+    },
+    {
+      "repoPath": "docs/dev-context/artifacts/transition-matrix",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/docs/dev-context/artifacts/transition-matrix/2026-06-02-cleanup",
+      "reason": "Large ignored transition-matrix browser/debug evidence archived during housekeeping; not required by runtime or normal docs routing.",
+      "usedBy": [
+        "docs/dev-context/Housekeeping-Audit-2026-06-02.md",
+        "transition visual QA history"
+      ],
+      "status": "archived-review-evidence"
+    },
+    {
+      "repoPath": "external:C:/GeoSee/GeoSee_Dev_Past/Major Release",
+      "archivePath": "C:/GeoSee/GeoSee_Archive/repo-snapshots-quarantine/2026-06-02/Major Release",
+      "reason": "Historical expanded repo snapshots quarantined outside the active repo; retained for rollback/audit only and not for normal source routing.",
+      "usedBy": ["manual rollback/audit only"],
+      "status": "quarantined-repo-snapshot"
     }
   ]
 }
