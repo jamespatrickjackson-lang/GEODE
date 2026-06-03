@@ -1,110 +1,143 @@
-# Standalone Editor Stabilization Plan
+# Build Phases
 
-This is no longer an autonomous agent build runbook. It is the current work
-plan for making `gui-editor.html` solid.
+**Status:** active stabilization plan for `gui-editor.html`.
 
-## Phase 0 - Stop The Confusion
+This is not an autonomous AI runbook. It is a practical order for getting the
+standalone editor into a non-confusing, tested state.
 
-Goal: make every top-level entry point identify the standalone editor as the
-current target.
+## Phase 1 - Documentation And Entry Points
 
-Checklist:
+Goal: every entry point identifies the standalone editor as current.
 
-- `README.md` points to `gui-editor.html`.
-- `Launch UI Editor.cmd` opens `gui-editor.html`.
-- A separate paused launcher exists for the old React/Vite package workbench.
-- `00_README.md`, `01_scope.md`, and this file describe the current state.
-- `_superseded/` is clearly historical.
+Acceptance:
 
-Verification:
+- `UI_EDITOR/README.md` points to `gui-editor.html`.
+- `docs_v1/EDITOR-SPEC.md` is the source of truth.
+- Old package and AI docs are parked or archived.
+- Launchers separate current editor from paused package workbench.
 
-- Double-clicking `Launch UI Editor.cmd` opens the standalone editor.
-- `http://127.0.0.1:5174/` is described as the paused package workbench when
-  Vite is intentionally running.
-- `http://127.0.0.1:5174/gui-editor.html` serves the standalone editor when
-  Vite is intentionally running.
+## Phase 2 - Core Editor Shell
 
-## Phase 1 - Baseline Visual QA
+Goal: the first screen is a usable editor, not a marketing or package page.
 
-Goal: prove the current editor loads and identify visible usability defects.
+Acceptance:
 
-Checklist:
+- Grouped icon top bar renders.
+- Layers tree renders.
+- Floating Library renders with thumbnails.
+- Canvas renders the straw subject.
+- Inspector renders selected element properties.
+- Behavior Log is visible or reachable.
 
-- Open `gui-editor.html`.
-- Confirm the layers tree is populated.
-- Select `Pages` from the tree.
-- Confirm mode controls appear: Component, Assembly, Product.
-- Confirm the Library panel appears with Components, Assemblies, Products,
-  Colours, Icons, Tokens, and Styles.
-- Confirm inspector sections appear: Kind, Tier & Library, GeoSee Variables,
-  Geometry, Padding & Layout, Style, Notes.
-- Confirm console has no errors.
-- Capture one screenshot at the first viewport.
+## Phase 3 - Layers And Selection
 
-## Phase 2 - Tree And Nesting Quality
+Goal: visible hierarchy and selection are reliable.
 
-Goal: make structure editing trustworthy.
-
-Checklist:
+Acceptance:
 
 - Tree mirrors real DOM nesting.
-- Tree selection and canvas selection stay synchronized.
-- Drag-to-nest updates the DOM and tree immediately.
-- Group and ungroup keep tree rows coherent.
-- Delete removes rows and overlays without stale selection.
+- Text, icons, controls, and shapes appear under their actual parents.
+- Canvas selection highlights tree row.
+- Tree selection highlights canvas element.
+- Group/delete/create updates tree immediately.
 
-## Phase 3 - Inspector Quality
+## Phase 4 - Placement Engine
 
-Goal: make property editing clear and stable.
+Goal: movement behaves like a real visual editor.
 
-Checklist:
+Acceptance:
 
-- Kind picker is obvious and reversible.
-- Geometry fields update without layout drift.
-- Padding values visibly update selected padding regions.
-- Stack mode and gap are understandable.
-- Notes are plain human notes, not AI workflow controls.
-- Locked elements visibly refuse editing.
+- Canvas drag computes placement intent.
+- Auto-nesting works only on clear valid targets.
+- Invalid leaf drops reject without mutating structure.
+- Tree top/bottom zones reorder siblings.
+- Library drag/drop uses the same rules.
+- Behavior Log records accepted/rejected actions.
 
-## Phase 4 - Canvas Tool Quality
+## Phase 5 - Snap, Guides, And Padding
 
-Goal: make direct manipulation feel dependable.
+Goal: placement is predictable and visible.
 
-Checklist:
+Acceptance:
 
-- Drag, resize, grid, snap, guides, and alignment guides are visually legible.
-- Add Container/Text/Rect/Ellipse/Line/Icon/Divider/Swatch/Input/Row inserts
-  into the selected container when appropriate.
-- Component/Assembly/Product modes assign sensible default tiers.
-- Save as Component/Assembly/Product creates library entries.
-- Clicking a library entry instantiates an editable DOM copy.
-- GeoSee variable presets apply overlay-card, navigator, editor-chrome, and
-  label styling concepts.
-- Undo/redo covers creates, deletes, moves, resizes, grouping, and property
-  changes.
-- The overlay never blocks normal inspection of the edited panel.
+- Drag snaps to grid, guides, parent content edges/centres, and sibling
+  edges/centres.
+- Smart guides show the active snap line.
+- `Ctrl`/`Cmd` suppresses snap.
+- `Alt` suppresses auto-nesting.
+- Padding overlay is visible.
+- Padding defines drop zone, snap targets, default placement, and align target.
 
-## Phase 5 - Persistence And Reset
+## Phase 6 - Drawing And Shapes
 
-Goal: make saved browser state predictable.
+Goal: the editor can create the primitives needed to rebuild its own UI.
 
-Checklist:
+Acceptance:
 
-- Reload restores layout, nesting, kind, padding, style, notes, and guides.
-- Reset clearly states that it clears browser-local edits.
-- No regenerated asset or stale URL assumption is required.
+- Tools exist for container, text, rectangle, ellipse, line, icon, divider,
+  swatch, input, row, and group.
+- Created elements are editable DOM nodes.
+- Created elements land in the selected valid parent or sensible root context.
+- Shape-specific fields are editable in the inspector.
 
-## Phase 6 - Documentation Lock
+## Phase 7 - Library
 
-Goal: prevent future work from drifting back to the parked package/AI model by
-accident.
+Goal: reusable pieces are visible, searchable, and useful.
 
-Checklist:
+Acceptance:
 
-- Active docs contain a current-status banner where old terminology is still
-  useful only as reference.
-- `_superseded/README.md` lists the parked package/AI model.
-- Top-level README explains the difference between the current editor and the
-  paused workbench.
-- Any future task starts from `EDITOR-SPEC.md` unless explicitly resuming the
-  package workbench.
+- Library sections: Components, Assemblies, Products, Colours, Icons, Tokens,
+  Styles.
+- Every entry has a thumbnail or preview.
+- Preview scale works.
+- Save selection creates entries.
+- Click and drag instantiation work.
+- Saved entries preserve nested structure.
+- GeoSee and package-seed entries are present as DOM templates.
+
+## Phase 8 - Inspector And Variables
+
+Goal: the inspector exposes the variables needed to recreate GeoSee panels.
+
+Acceptance:
+
+- Geometry, padding, gap, stack, alignment, kind, tier, name, notes, lock, and
+  visibility are editable.
+- Fill, opacity, radius, border, text, typography, blur, saturation, shadow,
+  and line width are editable.
+- GeoSee overlay, navigator, editor chrome, label, page row, and layer row
+  presets apply compatible values.
+
+## Phase 9 - Persistence And Reset
+
+Goal: user edits survive reload and can be cleared deliberately.
+
+Acceptance:
+
+- Reload restores structure, parentage, order, geometry, styles, padding,
+  guides, zoom, background, and library entries.
+- Reset clears local editor state and reloads defaults.
+- Undo/redo restores structural and property edits.
+
+## Phase 10 - Verification
+
+Goal: regressions are caught before handoff.
+
+Acceptance:
+
+- `node UI_EDITOR/tests/verify-gui-editor.js --timeout-ms 30000` passes.
+- Tests cover rendering, nested tree, selection sync, snap, auto-nest, invalid
+  rejection, tree reorder, library drag/drop, padding, zoom/background, and
+  persistence.
+- Generated test artifacts are cleaned up after verification unless needed for
+  debugging.
+
+## Future Phases
+
+These are deliberately after the standalone editor is stable:
+
+- Package export.
+- Validation rule packs.
+- AI-agent handoff.
+- Host-app adapter.
+- React/Vite package workbench resumption.

@@ -10,6 +10,18 @@ This pass reorganized controls only where the backing field and authoring route
 were already present. Raster data, generated textures, terrain GeoTIFFs, page
 fixtures, and camera far-plane behavior were not changed.
 
+## Thread Update After Implementation
+
+The follow-up build added the missing cloud authoring path and visible sun
+image controls. `Topo > Environment > Clouds` can now add, duplicate, delete,
+select, show/hide, and page-override `atmosphere-volume` layers. The selected
+cloud uses `AtmosphereVolumeControls`, and its optional on-screen bounds helper
+uses the same bounds fields exposed in the panel.
+
+Utah FORGE now contains a deliberately visible one-puff `Topo test cloud`.
+Human review in this thread confirmed that the cloud was visible. Keep this
+fixture or an equivalent QA fixture available when making future cloud changes.
+
 ## Structure After Cleanup
 
 - Topo Settings
@@ -156,6 +168,14 @@ Source-owned satellite fields remain read-only through the material picker:
 - Cloud controls use `AtmosphereVolumeControls` and the existing atmosphere layer
   style override path for appearance, puffs, bounds, falloff, drift, and render
   controls.
+- Cloud authoring supports add, duplicate, delete, layer selection, default
+  visibility, page visibility override, page style override, and Sub Master
+  inheritance through the same environment/page style routes as other layer
+  controls.
+- Optional cloud on-screen handles write back to
+  `atmosphereBoundsCenterX/Y/Z` and `atmosphereBoundsSizeX/Y/Z`.
+- A single cloud puff is valid: `atmospherePuffCount: 1` renders one centered
+  sprite with density-based base opacity.
 - Graticule controls remain layer-style based: grid visibility, line color,
   opacity, width, spacing, axis labels, edge labels, leaders, and leader color
   blend.
@@ -191,6 +211,13 @@ Source-owned satellite fields remain read-only through the material picker:
 - Cinematic post fields have a transition channel through
   `beginCinematicSceneTransition`, `blendCinematicSceneForTransition`, and
   `updateCinematicPostFrame(nowMs)` before composer render.
+- Atmosphere volume style transitions include cloud bounds, density, softness,
+  puff count/scale, jitter, falloff, seed, drift, depth test, and render order
+  classification. Structural changes rebuild the cloud children; non-structural
+  color/opacity/depth/render/drift changes update existing materials and
+  metadata where possible.
+- Cloud materials set `preserveMaterialOpacity` so page/layer transition opacity
+  composes with per-puff base opacity instead of flattening puff falloff.
 
 ## Remaining Notes
 
@@ -201,3 +228,5 @@ Source-owned satellite fields remain read-only through the material picker:
   dedicated material-source editor is requested.
 - Projected map shadows remain opt-in because large regional terrain can alias
   shadow maps; analytical sun relief remains the stable default.
+- Current thread receipt and render-stack trace:
+  `docs/dev-context/Topo-Environment-Clouds-Cinematics-Thread-Update-2026-06-03.md`.

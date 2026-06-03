@@ -61,8 +61,8 @@ contract and points to the owning source files. Durable rationale belongs in
 - `Motion Trails`, `Presentation Frame`, `Composition Guides`, and DOF
   debug-style controls must remain toggleable and default off; do not leave
   guide overlays, matte bars, focus planes, or trail effects enabled as
-  diagnostics. Composition guide strokes default to `lineThickness: 0.25`,
-  which is half the previous presentation-frame guide width, and render through
+  diagnostics. Composition guide and presentation-frame strokes default to
+  `lineThickness: 0.25`, which is half the previous width, and render through
   the lens-grade shader with a `0.0003` minimum.
 - Lens presets write `scene.camera.lensPreset` and the matching FOV value, but
   page poses still own camera position, target, and up vector.
@@ -297,6 +297,28 @@ defaults, depth/compositing rules) that the contract enforces.
 - Section ISO and MT/seismic cut identities include section frame id so multiple
   same-orientation section frames do not overwrite one another during page
   transitions.
+
+## Topo Environment
+
+`Topo > Environment` is the visual authoring home for the public topo
+environment. Do not scatter these controls back into unrelated Topo surface,
+layer, or Cinematics containers.
+
+- Group order: Scene atmosphere, Clouds, Sun, Fog.
+- Use a cloud icon for the Environment section.
+- Clouds get their own container. It includes add, duplicate, delete, layer
+  selection, visibility, page override state, appearance, puffs, bounds, falloff,
+  drift, and render controls.
+- Cloud on-screen bounds helpers are optional, explicitly toggleable, and
+  default off. They may show an outline plus move/scale handles, but they must
+  not remain active as diagnostic clutter unless the author enabled them.
+- Single-puff clouds must remain visually valid. Avoid random placement or
+  jitter that can make a one-cloud review fixture disappear.
+- Sun controls must distinguish the light source from the visible sky image.
+  Authors can hide the orb/halo/marker while keeping terrain light, or show a
+  fake visual sun without using it as the terrain light source.
+- Fog controls include both scene fog and map/layer fog participation. Local
+  clouds do not mutate global `scene.fog`.
 
 ## Sliders
 

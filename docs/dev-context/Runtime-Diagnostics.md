@@ -59,6 +59,14 @@ materials report depth-test/depth-write settings, role, and opacity. Terrain
 underside grids report camera-side visibility, hidden reason, camera offset
 from sampled terrain, and hysteresis thresholds when the helper exists.
 
+For local atmosphere/cloud regressions, inspect the layer group's
+`userData.localAtmosphereDebug`. It should report `textureSource:
+generated-canvas`, cache key `local-atmosphere:<layerId>:<seed>:<softness>`,
+resolved bounds, puff count, `THREE.SpriteMaterial`, `THREE.Sprite` geometry,
+depth flags, render order, drift state, and whether a single-puff fixture is
+active. This is structural/render-stack evidence only; visual acceptance still
+requires a browser screenshot or human review.
+
 ## How To Call It
 
 In a Vite dev session, open the browser console and run:

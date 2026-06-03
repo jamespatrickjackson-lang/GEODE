@@ -27,11 +27,11 @@ Tools that control how the 3D scene looks globally.
 | --- | --- |
 | **Cinematics** | Top-level container for global rendering, UI, and page camera controls. Houses the sub-tools below. |
 | **Cinematic Render Preset** | Project-wide render quality selector. Save and update named presets. Drives antialiasing, shadow quality, AO, bloom, and related passes. |
-| **Environment** | Scene atmosphere: background color/sky, fog density, ambient occlusion, tone mapping, and exposure. |
-| **Local Atmosphere Volume** | Environmental `atmosphere-volume` layer controls for local mist/fog volumes. Project metadata owns immutable local bounds and rendering/computation role; mutable style belongs in `environment.layerStyles` and page-local `layerOverrides`. |
+| **Environment** | Cinematic scene atmosphere and world-building controls that are not owned by a more specific tool. Topo map atmosphere, clouds, sun, and map fog live under Topo Environment. |
+| **Local Atmosphere Volume** | Environmental `atmosphere-volume` layer model for local mist/fog/cloud volumes. In the editor, user-facing cloud authoring lives under `Topo > Environment > Clouds`. |
 | **Lighting Studio** | Sun azimuth and elevation, plus key/fill/rim light intensities. Supports movable source lights for accent and shadow control. |
-| **Camera Studio** | Global cinematic camera controls: render presets, lens type/FOV, and camera focus timing. |
-| **Post Processing** | Cinematic post stack controls: object/distance-aware DOF, tilt-shift, post-production grade, bloom, film/optics, motion trails, composition guides, presentation frame/matte, and contact depth. |
+| **Camera Studio** | Global cinematic camera controls: render presets, lens type/FOV, and double-click camera focus timing. |
+| **Post Processing** | Cinematic post stack controls: object/distance-aware depth of field, tilt-shift, post-production grade, image finish, glow, film/optics, motion trails, composition guides, presentation frame/matte, and contact depth. DOF is split into Focus Target, Blur Strength, and Focus Debug controls. |
 | **Terrain Grid** | Toggles hillshade and contour overlay on the terrain surface. Controls contour visibility and line styling. |
 
 ---
@@ -57,7 +57,7 @@ Tools that control how the camera behaves per page.
 | **Camera Dynamics** | Per-page camera pose, transition timing, shot templates, and timed dolly/truck/crane/handheld motion inside Cinematics. |
 | **Camera Pose** | Capture and store the current camera view as the page's recorded pose. Supports a numbered pose history. |
 | **Camera Transition** | Duration, easing curve, and hold time for the animated move into this page's pose from the previous one. |
-| **Cinematic Post Transition** | Runtime transition channel that blends page-local grade, DOF, tilt-shift, lens, motion-trail, and presentation-frame scene overrides using the page transition duration/easing. |
+| **Cinematic Post Transition** | Runtime transition channel that blends page-local grade, DOF, tilt-shift, lens, motion-trail, guide thickness, and presentation-frame scene overrides using the page transition duration/easing. |
 | **Dynamic Movement** | Master toggle for orbit and zoom motion that plays while a page is active. |
 | **Shot Templates** | Per-page starting points for push-in, pull-back, truck, and crane moves. |
 | **Camera Orbit** | Configures continuous orbit: speed, direction, distance, height, path-aware blend, and ramp-in/out timing. |
@@ -91,6 +91,10 @@ Tools for the public topographic map surface and associated cartographic layers.
 | --- | --- |
 | **Topo** | Global toolset container for the topographic surface, graticule, title block, and reference layers. Present when the project has topo-tagged layers. |
 | **Topo Settings** | Terrain material preset and elevation gradient controls, including the named Utah high-desert/topo preset, low/mid/high color stops, midpoint position, contrast, and blend mode. |
+| **Topo Environment** | Cloud-icon section under Topo for scene atmosphere, clouds, sun, and fog. |
+| **Clouds** | Add, duplicate, delete, select, show/hide, page-override, move, size, and style `atmosphere-volume` cloud banks. Controls subtype, color, opacity, density, softness, puff count/scale, bounds, falloff, seed, drift, depth test, render order, and optional on-screen bounds handles. |
+| **Sun** | Controls whether the sun is a light source, a visible sky image/orb, both, or neither. Exposes azimuth, elevation, camera lock, orb color/opacity/size/distance, edge blur, halo color/opacity/scale, source marker, light color/intensity, terrain relief, shadow edge/tint, projected shadows, shadow opacity/softness/bias. |
+| **Fog** | Scene fog and map/layer fog controls, including fog color, density/reach, terrain fog gradient, and layer fog participation. |
 | **Longitude / Latitude Grid** | Graticule appearance: line spacing, color, width, opacity, and label distance from the surface. |
 | **Title Block** | Upload and position a map title or branding image on the topo surface. Supports anchor and XY offset. |
 | **Reference Layers** | Fine cartographic detail layers (roads, streams, etc.). Controls distance fade near/far, far-plane scale, far opacity, and surface lift. |

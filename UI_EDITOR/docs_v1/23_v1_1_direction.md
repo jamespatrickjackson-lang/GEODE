@@ -1,72 +1,61 @@
-# v1.1 Direction - Component / Assembly / Product Hierarchy
+# Direction
 
 **Status:** active direction for the standalone editor in
 `UI_EDITOR/gui-editor.html`.
 
-This doc defines the authoring model now used by the standalone editor. It is
-not a package-export contract and it is not an AI-agent build prompt.
+This doc defines what should improve next after the current editor basics are
+in place. It is not a package-export contract and it is not an AI-agent build
+prompt.
 
-## 1. Why This Exists
+## Product Direction
 
-The old package workbench proved useful as a concept archive, but it was not a
-usable direct authoring surface. The current editor must let an author build
-GeoSee-style UI directly: create containers, place text/icons/shapes, align
-children, edit padding, save reusable pieces, and compose full products.
+The editor should become good enough to rebuild its own GeoSee-style panels
+from scratch:
 
-## 2. The Three Tiers
+- Pick the right mode: Component, Assembly, or Product.
+- Create primitive elements.
+- Nest children reliably.
+- Snap and align without guessing.
+- Save useful parts into the Library.
+- Rebuild larger surfaces from Library entries.
+- Inspect and tune GeoSee material variables.
+- Use the Behavior Log to see what the editor accepted or rejected.
 
-| Tier | What it is | Examples | Children |
-| --- | --- | --- | --- |
-| Component | Atomic interface element. | Text, icon, rectangle, ellipse, line, divider, swatch, input. | No children. |
-| Assembly | Small reusable composite. | Icon-label button, row, labelled slider, labelled numeric input. | Components and containers. |
-| Product | Full authoring surface. | Sidebar, page manager, layer stack, overlay card, navigator, tool palette. | Assemblies, Components, Products, and containers. |
+## Current Priority
 
-The tiers are authoring scopes in one app. They are not separate runtimes.
+1. Make placement behavior predictable.
+2. Keep the tree faithful to DOM structure.
+3. Make padding visible and meaningful.
+4. Make Library thumbnails and drag/drop reliable.
+5. Ensure every GeoSee panel piece has an editor primitive or Library entry.
+6. Keep docs free of package/AI instructions while standalone work is active.
 
-## 3. Current Standalone Behavior
+## Missing Or Improvement Candidates
 
-- Toolbar mode buttons switch Component / Assembly / Product mode.
-- New elements receive a default tier based on the current mode and element
-  kind.
-- Components are treated as leaves for nesting.
-- Assemblies and Products can hold nested editable children.
-- Save as Component / Assembly / Product stores a browser-local DOM template in
-  the matching library.
-- Clicking a library item instantiates a fresh editable DOM copy.
+These are candidates for follow-up implementation:
 
-## 4. Starter Pack
+- Richer drag-create gestures for all shape tools.
+- More complete multi-select editing.
+- Responsive/device preview.
+- Better ruler guide creation and management.
+- Component variant properties.
+- Hover/active/disabled state editing.
+- More complete icon categories.
+- Export of a simple human-readable editor snapshot after the editor UX is
+  stable.
+- Optional package export only after the standalone editor is reliable.
 
-The active starter pack is browser-local and appears in the Library panel:
+## Non-Goals For Now
 
-- Components: Text, Icon, Rectangle, Ellipse, Line, Divider, Swatch, Numeric
-  Input.
-- Assemblies: Icon label row, Pill button, Labelled slider.
-- Products: Starter sidebar, Overlay card, Navigator bar.
-- Assets: Colours, Icons, Tokens, Styles.
+- Autonomous AI build loops.
+- Generated AI-agent briefs.
+- Package validation reports.
+- Host-app writeback.
+- React/Vite workbench as the primary editor.
 
-This starter pack complements the GeoSee sidebar reference. It does not replace
-GeoSee as the conceptual source for product authoring.
+## Acceptance For Direction Changes
 
-## 5. GeoSee Concept Mapping
-
-Use `24_geosee_editor_inventory.md` to map real GeoSee editor concepts into
-Component / Assembly / Product libraries:
-
-- Page Manager, Cinematics, Sections, Topo, Forge/Data, Cards.
-- Editor chrome, save footer, section stack, nested headers.
-- Overlay card, navigator, labels, GUI style variables.
-- Layer card stack, visibility/opacity/fog/provenance rows.
-
-Do not flatten GeoSee page inheritance, render presets, or topo material
-authority into generic style values. Those are reference concepts only in the
-standalone editor.
-
-## 6. Acceptance
-
-1. The editor exposes all three modes.
-2. Components, Assemblies, and Products can be saved to separate libraries.
-3. Nested text/icons appear under their parent rows in the layers tree.
-4. Drawing tools create editable Component leaves.
-5. Product mode can compose full GeoSee-style surfaces from nested editable
-   DOM.
-6. Docs and UI wording use plain `notes` / `intent`, not AI handoff language.
+A proposed new feature belongs here when it helps the user author, inspect,
+nest, align, style, save, or reuse visual editor content. It does not belong
+here if it mainly helps package export, validation automation, or AI handoff
+before the editor itself is stable.

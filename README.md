@@ -17,7 +17,7 @@ for what this exists to test.
 
 - **Renderer:** Three.js
 - **App shell:** React (Vite, TypeScript)
-- **Data:** CSV, GeoJSON, glTF, GeoTIFF
+- **Data:** CSV, GeoJSON, glTF, GeoTIFF, generated browser-ready assets
 - **Hosting:** static builds, self-hosted, password-gated
 - **Video export:** headless Chromium recording → MP4
 
@@ -41,6 +41,7 @@ and should not be used for current work.
         woodjam/            # original reference project
         case-study-b/        # Shahbazi quarry case study
         utah-forge/          # geothermal/geophysics case study
+        base-gui/            # shared GUI/environment editing template
 
 ## Working with this repo
 
@@ -76,8 +77,9 @@ data, rendering, provenance, and workflow needs.
 
 Current architecture work is moving tool behavior into reusable GeoSee toolsets
 while keeping project folders as data/provenance/authored-diff instances. The
-public topo map is the first implemented pattern; other toolsets will align
-incrementally as they are touched.
+public topo map is the first implemented pattern. Its current Topo Environment
+surface includes clouds, visible/fake sun controls, and fog. Other toolsets
+will align incrementally as they are touched.
 
 ## Contact
 

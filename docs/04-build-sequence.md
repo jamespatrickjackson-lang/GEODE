@@ -6,7 +6,9 @@ This document is now a current-state build sequence, not the original week plan.
 
 Current phase:
 
-> Multi-project alpha with Woodjam preserved, Shahbazi Gravel Pit active as the high-fidelity case study, Utah FORGE added as a foundation project, and Base GUI Template added for shared GUI/environment editing.
+> Multi-project alpha with Woodjam preserved, Shahbazi Gravel Pit active as the
+> high-fidelity case study, Utah FORGE active as a geothermal/geophysics case
+> study, and Base GUI Template available for shared GUI/environment editing.
 
 ## Completed Foundations
 
@@ -17,7 +19,7 @@ Complete:
 - Project landing screen.
 - Woodjam reference project.
 - Case Study B / Shahbazi Gravel Pit project.
-- Utah FORGE foundation project.
+- Utah FORGE active geothermal/geophysics case-study project.
 - Base GUI Template project.
 - `project.json` + `environment.json` project model.
 - Page JSON loading.
@@ -46,6 +48,10 @@ Complete:
 - Development-only debug logging is routed through `src/utils/debugLog.ts`.
 - Base GUI reference stage loader exists in the layer loader registry.
 - Utah FORGE reference stage loader exists in the layer loader registry.
+- `atmosphere-volume` loader/style runtime exists for local environmental
+  cloud/mist volumes.
+- Topo Environment groups scene atmosphere, clouds, sun, and fog under the Topo
+  tool.
 
 ## Completed Woodjam Work
 
@@ -94,19 +100,27 @@ Important kept boundary:
 - The broad outer surface is not LiDAR.
 - The projected image preview is not an orthomosaic.
 
-## Completed Utah FORGE Foundation Work
+## Completed Utah FORGE Work
 
 Complete/kept:
 
 - Utah FORGE appears on the landing page.
-- `projects/utah-forge/` contains the starting project folder.
-- Foundation files exist for project metadata, environment, first page, overlay copy, data notes, data-reference notes, and intake staging records.
-- A procedural `utah-forge-reference-stage` layer lets the project open before real data is supplied.
+- `projects/utah-forge/` contains the current project folder.
+- Public topo/terrain, NAIP/topo material choices, graticule, map edge fade,
+  public surface clip, and edge outline controls are active.
+- Phase 3 MT products, scalar volume/slice/threshold/top-surface records, and
+  product-aware transition work are active.
+- Phase 3 seismic browser records and capability-product controls are active.
+- Section planes, working-area focus, site details, product pages, overlays, and
+  legends are active build surfaces.
+- Topo Environment controls exist for Scene atmosphere, Clouds, Sun, and Fog.
+- Utah FORGE includes a visible one-puff `Topo test cloud` QA fixture.
 
 Important kept boundary:
 
-- No real Utah FORGE technical data is ingested yet.
-- CRS, bounds, source package, production layer types, and page story are pending the briefing.
+- Visual alignment and presentation usefulness do not equal survey-grade
+  registration. Imported geospatial layers still require explicit CRS,
+  vertical datum, and registration-status evidence before precise claims.
 
 ## Completed UI / Interaction Work
 
@@ -127,23 +141,29 @@ Complete/kept:
 - Top-level section bars use flat dark button style.
 - Bottom HUD contains preview, compass, light/dark, home.
 - Preview/presentation lens chooser uses overlay-box styling.
+- Standalone GUI editor now includes richer Component/Assembly/Product library
+  seeds and GeoSee-derived product surfaces, including Topo material and local
+  atmosphere concepts.
 
 ## Current Open Work Queue
 
 Highest priority unresolved:
 
-1. Verify UI spacing after the latest editor margin/header changes in browser.
-2. Verify Home button unsaved prompt behavior:
+1. Keep the visible Utah FORGE cloud fixture or replace it with equivalent QA
+   coverage before making clouds subtle.
+2. Verify UI spacing after the latest editor margin/header changes in browser.
+3. Verify Home button unsaved prompt behavior:
    - clean project exits directly
    - dirty project prompts
    - Save & Exit saves then returns to landing
    - failed save does not exit
-3. Continue component extraction from large files:
+4. Continue component extraction from large files:
    - `LayerPanel.tsx`
    - `EnvironmentScenePanel.tsx`
+   - `TopoMapPanel.tsx`
    - `SceneManager.ts`
-4. Replace first-pass projected UAV images with a real orthomosaic or textured mesh when available.
-5. Build the export/publish path.
+5. Replace first-pass projected UAV images with a real orthomosaic or textured mesh when available.
+6. Build the export/publish path.
 
 ## Data/Processing Work Remaining
 

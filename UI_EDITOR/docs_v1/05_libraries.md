@@ -1,98 +1,138 @@
-# v1 Libraries
+# Libraries
 
 **Status:** active standalone editor spec.
 
-Libraries live in the standalone editor and persist in `localStorage` with the
-edited DOM. They are not package-export schemas in the current build.
+The Library is a floating searchable panel in the standalone editor. It stores
+and instantiates editable DOM templates, not package-export records.
 
-The editor also imports read-only seed catalogs from
-`packages/geosee_editor_sidebar/` when it is served over HTTP:
+## Library Sections
 
-- `libraries.json` for packaged Components, Assemblies, Products, Colours,
-  Icons, Tokens, and Styles.
-- `components.json` for concrete package component examples.
-- `containers.json` for package container examples.
-- `tokens.json` for token names and values.
+| Section | Contents |
+| --- | --- |
+| Components | Leaves and small controls: text, icon, button, divider, swatch, input, slider control. |
+| Assemblies | Reusable composites: icon-label row, labelled slider, section header, page row, layer row. |
+| Products | Larger surfaces: sidebar shell, page manager, layer stack, navigator bar, overlay card set. |
+| Colours | Swatches and material colors. |
+| Icons | Visible glyph thumbnails with scalable preview. |
+| Tokens | Spacing, sizing, alpha, radius, blur, saturation, typography, line width. |
+| Styles | Overlay card, navigator, editor chrome, label, row, panel, HUD styles. |
 
-Those files are used as library seeds only. They do not make the standalone
-editor a package workbench, and clicking library entries still creates editable
-DOM templates in `gui-editor.html`.
+## Required Panel Behavior
 
-## 1. Library Kinds
+- The Library is floating and can stay open while editing the canvas.
+- Entries are searchable.
+- Each entry shows a visible thumbnail or preview.
+- Preview scale can be changed by the user.
+- Empty sections show a concise empty state.
+- Saved entries appear immediately.
+- Reload restores saved entries and useful panel state.
 
-| Kind | What it contains | How the author uses it |
-| --- | --- | --- |
-| Components | Leaf controls such as text, icon, rectangle, ellipse, line, divider, swatch, input. | Click to instantiate; save selected leaf as a reusable Component. |
-| Assemblies | Small composites such as icon-label row, button, labelled slider. | Click to instantiate; save selected composite as an Assembly. |
-| Products | Full surfaces such as sidebar, overlay card, navigator bar, panel stack. | Click to instantiate; save selected surface as a Product. |
-| Colours | Named GeoSee swatches. | Apply to selected fill. |
-| Icons | Small glyph entries. | Instantiate or apply text/icon value. |
-| Tokens | Reusable sizes such as radius, blur, spacing, pill radius. | Apply to compatible selected fields. |
-| Styles | GeoSee material presets. | Apply overlay-card, navigator, editor-chrome, or label style. |
+## Starter Entries
 
-## 2. Starter Library
+The starter Library must include:
 
-The starter library must include:
+- GeoSee sidebar shell.
+- Editor header row.
+- Collapsible section.
+- Nested section header.
+- Page manager row.
+- Sub Master row.
+- Layer card header.
+- Layer subsection.
+- Overlay card.
+- Navigator group.
+- Save footer.
+- Control row.
+- Icon button.
+- Divider.
+- Text label.
+- Swatch.
+- Input.
+- Slider row.
+- Common GeoSee icons.
+- Overlay, navigator, label, and editor chrome style presets.
 
-- Components: Text, Icon, Rectangle, Ellipse, Line, Swatch, Divider, Numeric
-  Input.
-- Assemblies: Icon label row, Pill button, Labelled slider.
-- Products: Starter sidebar, Overlay card, Navigator bar.
-- Colours: Overlay background, warm text, page accent.
-- Tokens: panel radius, backdrop blur, pill radius.
-- Styles: overlay card glass, navigator glass, editor chrome.
+## Package Catalog Seeds
 
-## 3. GeoSee Seed Coverage
+Read-only entries from `packages/geosee_editor_sidebar` may seed the Library:
 
-The current built-in Library must also include representative entries pulled
-from the real GeoSee editor and Base GUI:
+- `libraries.json`
+- `components.json`
+- `containers.json`
+- `tokens.json`
 
-- Editor atoms: visibility eye button, disclosure chevron, slider track/thumb,
-  override checkbox, number readout, material line, label chip.
-- Editor assemblies: editor header row, top-level section header, nested
-  section header, layer visibility row, override style row, provenance field
-  row, slider control row, save footer.
-- Product surfaces: GeoSee editor sidebar, page manager sidebar, cards editor,
-  layer card stack, topo material panel, floating preview HUD.
-- Colours: overlay background, warm/secondary/body text, terrain ramp colours,
-  mist volume colour.
-- Tokens: editor panel width, UI scale, section gap, pill inset, slider track
-  and thumb sizes, overlay blur, mist opacity.
-- Styles: overlay card glass, navigator glass, editor chrome shell, heading
-  bars, scene label pill, terrain ramp, mist volume.
+These files are references only. They do not turn the editor back into the
+package workbench. Imported entries create editable DOM copies in
+`gui-editor.html`.
 
-## 4. Save And Instantiate
+## Save To Library
 
-- Saving a selection as Component / Assembly / Product stores a DOM template
-  with runtime ids stripped.
-- Clicking a saved library item instantiates a fresh editable DOM copy.
-- Instantiated children appear in the layers tree under their parent.
-- Components are leaves. Assemblies and Products may contain nested editable
-  children.
+Saving a selection creates:
 
-## 5. GeoSee Variable Presets
+- A stable display name.
+- A section: Component, Assembly, or Product.
+- A thumbnail/preview.
+- A DOM template with nested structure.
+- Style and token references where useful.
+- Notes describing intent.
 
-The Style library and inspector preset dropdown use conceptual values from
-Base GUI and the dev editor:
+Components are usually leaves. Assemblies and Products may contain nested
+editable children.
 
-- Overlay card: background, alpha, radius, padding, blur, border.
-- Navigator: pill radius, low alpha background, row layout, button gap.
-- Editor chrome: dark panel material, section spacing, panel padding.
-- Label: dark fill, warm text, compact padding.
+## Instantiate From Library
 
-These presets are design-authoring helpers. They do not mutate GeoSee project
-files.
+Click behavior:
 
-## 6. Acceptance
+- Insert inside the selected valid container when possible.
+- Respect parent padding.
+- Otherwise insert into the root product surface near the visible canvas.
 
-1. Library panel renders all seven tabs.
-2. Starter entries appear without package loading.
-3. GeoSee-derived editor atoms, assemblies, products, colours, tokens, and
-   styles appear in their tiers.
-4. Package-backed entries from `packages/geosee_editor_sidebar` appear after
-   the import completes.
-5. Saving a selected element creates a library item in the chosen tier.
-6. Clicking a library item creates a fresh editable DOM instance.
-7. Colour/icon/token/style items can apply compatible values to a selected
-   element.
-8. Reload restores saved library entries.
+Drag behavior:
+
+- Show a preview at the cursor.
+- Use the placement engine for snap, auto-nest, reorder, and reject.
+- Preserve nested structure.
+- Log accepted or rejected action in the Behavior Log.
+
+## Icons
+
+Icon entries must not be name-only. Each icon entry needs:
+
+- A visible glyph thumbnail.
+- Name.
+- Optional category.
+- Scalable preview.
+- Default size.
+- Ability to instantiate as an editable icon element.
+
+## Tokens And Styles
+
+Tokens and styles can apply compatible values to the selected element:
+
+- Width, height, and spacing.
+- Padding and gap.
+- Radius.
+- Border alpha and width.
+- Fill color and opacity.
+- Text color, font size, and weight.
+- Blur and saturation.
+- Shadow.
+- Line width.
+
+Applying a token or style should not change incompatible properties silently.
+If nothing compatible can be applied, the editor should reject and log it.
+
+## Acceptance
+
+The Library is working when:
+
+1. It floats above the editor without blocking required canvas use.
+2. Each section has visible thumbnails or previews.
+3. Search filters entries.
+4. Preview scale changes thumbnails.
+5. Saved Component / Assembly / Product entries persist.
+6. Click instantiation places a fresh editable copy.
+7. Drag instantiation uses snap, padding, auto-nest, and reject rules.
+8. Icon entries show actual glyphs.
+9. Style and token entries apply compatible values.
+10. Reload restores saved entries and panel state.

@@ -1,7 +1,8 @@
 # GUI Editor
 
-Current focus: get the standalone GUI editor working fully and clearly before
-returning to package export, AI handoff, or host-app integration work.
+Current focus: make the standalone GUI editor in `gui-editor.html` useful,
+predictable, and documented before returning to package export, AI handoff, or
+host-app integration.
 
 ## Current Editor
 
@@ -9,29 +10,36 @@ Use the self-contained editor:
 
 - Double-click `Launch UI Editor.cmd` or `Open GUI Editor.cmd`.
 - Direct file: `gui-editor.html`.
-- If the Vite dev server is already running, the same file is also available at
+- If a local server is already running for `UI_EDITOR`, open
   `http://127.0.0.1:5174/gui-editor.html`.
 
-This editor is vanilla HTML/CSS/JS. It edits real DOM nodes marked with
-`data-c`, shows a layers tree, supports direct canvas manipulation, and
-persists edits to `localStorage`. It does not need npm, a build step, package
-export, validation, or AI tooling.
+The editor is vanilla HTML/CSS/JS. It edits real DOM nodes marked with
+`data-c`, shows a nested layers tree, supports canvas manipulation, and
+persists edits to `localStorage`. It does not need npm, Vite, package export,
+validation reports, or AI tooling.
 
-Active standalone scope now includes:
+## Active Scope
 
-- Component / Assembly / Product authoring modes.
-- Nested layers down to text/icon/control leaves.
-- Drawing and creation tools for containers, text, shapes, lines, icons,
-  dividers, swatches, inputs, and rows.
-- A Library panel for Components, Assemblies, Products, Colours, Icons, Tokens,
-  and Styles.
-- GeoSee-derived library entries pulled from the real editor/Base GUI and the
-  read-only `packages/geosee_editor_sidebar` catalogs.
-- Save selection as Component / Assembly / Product.
-- GeoSee variable presets for overlay cards, navigator, editor chrome, and
-  labels.
-- Inspector controls for fill alpha, opacity, text color, border color/alpha,
-  radius, blur, saturation, shadow, typography, and line width.
+The standalone editor now includes:
+
+- Component, Assembly, and Product authoring modes in one editor.
+- A nested layers tree that mirrors real DOM parent/child structure.
+- Creation tools for containers, text, rectangles, ellipses, lines, icons,
+  dividers, swatches, inputs, rows, and groups.
+- Canvas drag, resize, snap, auto-nest, reorder, reject feedback, smart guides,
+  rulers, grid, wheel zoom, and background image loading.
+- A floating searchable Library with thumbnails, preview scaling, and
+  Component, Assembly, Product, Colour, Icon, Token, and Style sections.
+- Click and drag library instantiation using the same placement rules as canvas
+  moves.
+- Save selection as Component, Assembly, or Product.
+- Inspector controls for kind, tier, geometry, padding, gap, stack, alignment,
+  fill, opacity, radius, border, typography, blur, saturation, shadow, lock,
+  visibility, names, and notes.
+- GeoSee-derived presets and library entries for overlay cards, navigator
+  chrome, labels, page rows, layer rows, editor panels, Topo Environment,
+  local atmosphere/cloud controls, and control rows.
+- A concise Behavior Log for accepted and rejected placement actions.
 
 ## Paused Workbench
 
@@ -44,23 +52,23 @@ that older package/schema workbench at `http://127.0.0.1:5174/`.
 
 ## Docs
 
-- `docs_v1/EDITOR-SPEC.md` is the current editor specification.
-- `docs_v1/01_scope.md` is the current scope.
-- `docs_v1/05_libraries.md` is the current library behavior.
-- `docs_v1/23_v1_1_direction.md` is now active tier-mode direction, not a
-  parked package-workbench plan.
-- `docs_v1/24_geosee_editor_inventory.md` is the active GeoSee concept
-  inventory.
-- `docs_v1/10_build_phases.md` is a stabilization plan for the standalone
-  editor, not an autonomous AI build runbook.
+- `docs_v1/EDITOR-SPEC.md` is the current source of truth.
+- `docs_v1/00_README.md` maps the active docs.
+- `docs_v1/01_scope.md` defines active and parked scope.
+- `docs_v1/03_canvas_engine.md` defines placement, snapping, nesting, and
+  canvas behavior.
+- `docs_v1/05_libraries.md` defines floating Library behavior.
+- `docs_v1/24_geosee_editor_inventory.md` maps GeoSee editor concepts into
+  standalone library and inspector capabilities.
 - `docs_v1/_superseded/` contains historical package, validation, export,
-  change-state, security, and AI-agent automation docs. Do not build from those
-  docs unless the package workbench is explicitly resumed.
+  change-state, security, and AI-agent automation docs.
+- `docs/` contains archived v0.1 concept notes and now points back to the
+  current docs.
 
 ## Current Rule
 
 When instructions conflict, prefer the standalone editor and
 `docs_v1/EDITOR-SPEC.md`. Treat package catalogs under
 `packages/geosee_editor_sidebar` as read-only seeds for the Library panel.
-Treat package export, validation reports, generated briefs, and autonomous
-agent runbooks as paused historical material.
+Treat package export, validation reports, generated briefs, autonomous agent
+runbooks, and host-app adapter work as paused historical material.

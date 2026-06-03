@@ -77,9 +77,57 @@ Cinematic post effects participate in page transitions through a separate
 tilt-shift, lens effects, motion trails, and presentation frame values blend
 continuously with the page transition easing. DOF focus distance and focus
 offset blend continuously; focus mode and debug plane are discrete. Composition
-guides and lens preset labels are discrete authoring overlays. Dolly, truck,
-crane, handheld, and roll are timed-shot camera motion fields driven by
+guide toggles and aspect-mask choices are discrete authoring overlays, while
+`compositionGuides.lineThickness` is a continuous post scalar. Lens preset
+labels are discrete, but the resulting FOV value blends through the camera
+transition path. Dolly, truck, crane, handheld, and roll are timed-shot camera
+motion fields driven by
 `dynamicCamera` `shotStartMs`, `shotEndMs`, and `shotCurve`.
+
+## Reference Models
+
+The expanded Camera Studio/Post Processing toolset follows established
+cinematic authoring concepts from:
+
+- Three.js post-processing pass composition: <https://threejs.org/manual/en/post-processing.html>
+- Unreal cinematic cameras and cinematic depth of field: <https://dev.epicgames.com/documentation/en-us/unreal-engine/cinematic-cameras-in-unreal-engine> and <https://dev.epicgames.com/documentation/unreal-engine/cinematic-depth-of-field-in-unreal-engine?lang=en-US>
+- Blender camera DOF and Defocus node controls: <https://docs.blender.org/manual/en/4.1/render/cameras.html> and <https://docs.blender.org/manual/en/latest/compositing/types/filter/blur/defocus.html>
+- Unity HDRP post effects: <https://docs.unity.cn/Packages/com.unity.render-pipelines.high-definition%4012.0/manual/post-processing-effect-list.html>
+- DaVinci Resolve color-tool vocabulary: <https://www.blackmagicdesign.com/products/davinciresolve>
+
+These references inform presentation controls only. GeoSee still treats MT,
+scalar, seismic, CRS, loaders, generated artifacts, and geometry as technical
+systems outside the cinematic preset authority.
+
+## Current Utah FORGE Render-Stack Baseline
+
+As of the 2026-06-03 cinematic expansion, the active repo and effective Utah
+FORGE render baseline are:
+
+- Active repo: `C:\GeoSee\GeoSee_Dev`. Do not use stale `C:\GeoSee_Dev`.
+- Active render preset: `user-3`.
+- Runtime pass order: `RenderPass -> SSAOPass -> BokehPass -> UnrealBloomPass -> TiltShiftPass -> AfterimagePass -> LensGradePass -> SMAAPass -> OutputPass`.
+- Terrain authority winner: `image:naip-2024-aerial`.
+- Effective texture: `projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80`.
+- Texture cache key: `v=14db7e6b94489d80`.
+- Public raster bounds: `[229069.2, 4144854, 484164, 4414308]`.
+- Public clip: the render-stack trace for page `12_mt_volume_overview` reports
+  enabled clip bounds with center `[0, 0, 2000]` and size
+  `[1395706.5, 1139445, 12600]`. The same trace reports a
+  `layer.terrain.publicSurfaceClipEnabled` authority conflict where the
+  environment value is `true`, the active preset layer patch is `false`, and
+  the conflict winner is the active render preset layer patch.
+- Edge fade: `rounded-square`, distance `10000m`, inset `10000m`, corner
+  radius `75000m`.
+- Edge outline: enabled.
+- Material/shader: `terrainMaterial/topo-image`.
+- Terrain geometry/LOD: 8192-pixel public-context raster surface.
+
+Use `npm run inspect:effective -- --render-stack` before diagnosing a Utah
+FORGE visual issue. The trace should report the active preset, environment
+scene, Sub Master `envSnapshot`, preset `scenePatch`, page `sceneOverrides`,
+layer styles, topo authority winner, texture URL/cache key, bounds, public
+clip, edge fade, edge outline, material/shader, geometry/LOD, and pass order.
 
 ## Fields Explicitly Not Affected
 

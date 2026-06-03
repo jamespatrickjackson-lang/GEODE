@@ -144,6 +144,7 @@ Important loader cases:
 - camera flight path
 - point markers
 - lines and polygons
+- `atmosphere-volume` local cloud/mist sprite volumes
 - Woodjam terrain/data layers
 
 ## Surface Rendering Policy
@@ -180,6 +181,8 @@ The scene manager owns:
 - page state application
 - presenter/editor mode behavior
 - lighting handles
+- visible sun orb, halo, and source marker
+- local atmosphere/cloud volume groups, generated textures, bounds helpers, and drift ticks
 - scene overlays
 - page camera markers
 - dynamic camera helpers
@@ -217,8 +220,8 @@ Current editor section rule:
 
 - top-level bars represent peer workflows or toolsets;
 - `Pages` owns page selection/order/actions;
-- `Cinematics` owns global render, per-page render presets, environment, lighting, camera, terrain-grid, client UI, editor chrome variables, and per-page camera dynamics controls;
-- `Topo` owns the global topo map tool editor;
+- `Cinematics` owns global render, per-page render presets, camera, cinematic post, client UI, editor chrome variables, and per-page camera dynamics controls;
+- `Topo` owns the global topo map tool editor, including Topo Settings, Topo Environment, longitude/latitude grid, title block, and reference layers;
 - `Sections` owns section planes and crop/focus controls;
 - project data and card sections remain separate peer containers.
 
@@ -296,6 +299,56 @@ Presentation pages apply deltas through:
 
 A Sub Master is a renderable `PresentationPage` that carries a frozen `envSnapshot: EnvironmentSetup` captured from the live global environment at creation time. Pages with `parentMasterId` referencing a Sub Master inherit from that snapshot instead of from `environment.json`. The hierarchy is single-level (Global → Sub Master → child) and `pageOrder` keeps Sub Master blocks (master + children) contiguous. `PageController.resolvePresentationState` chooses the inheritance base per page; the env-change re-apply effect depends on the resolved environment, not the raw `environment`, so editing `environment.json` does not re-apply on Sub Master pages or their children. The author re-syncs explicitly via a `Re-snapshot from Global` affordance on the Sub Master row. Display numbering is `XX.M.NN` (slot, ordinal, child rank); `pageOrder` slug is unchanged.
 
+## Cinematic Camera And Post Stack
+
+The Cinematics editor is split into focused authoring surfaces:
+
+- `Environment` for background, fog, exposure, tone mapping, and ambient occlusion.
+- `Lighting Studio` for sun, key/fill/rim lights, and visible light-source polish.
+- `Camera Studio` for render preset, lens type/FOV, and double-click camera focus timing.
+- `Post Processing` for Depth of Field, Tilt-Shift, Post Production, Image finish, Glow, Film / Optics, Motion Trails, Composition Guides, Presentation Frame, and Contact Depth.
+- `Terrain Grid`, GUI/editor setup, and page-local Camera Dynamics remain separate controls inside the Cinematics workflow.
+
+Runtime post-processing is deterministic:
+
+```text
+RenderPass
+  -> SSAOPass
+  -> BokehPass
+  -> UnrealBloomPass
+  -> TiltShiftPass
+  -> AfterimagePass
+  -> LensGradePass
+  -> SMAAPass
+  -> OutputPass
+```
+
+Depth of field, tilt-shift, motion trails, composition guides, presentation
+frame mattes, focus debug planes, and other diagnostic visuals are default off.
+DOF focus can resolve from the page target, a saved camera-object focus point,
+a manual distance, or an authored picked point. The editor presents DOF in
+three subgroups: `Focus Target`, `Blur Strength`, and `Focus Debug`.
+
+Page-local cinematic post overrides blend through the
+`main-camera/cinematic-post` transition channel. Numeric fields such as grade,
+DOF distances/blur, tilt-shift values, lens effects, guide thickness, motion
+trails, and frame matte values blend with the page transition easing. Toggles,
+focus mode, debug helpers, and aspect-mask choices remain discrete. Dolly,
+truck, crane, handheld, and roll are page-local timed-shot camera fields on
+`dynamicCamera`.
+
+The diagnostic entry point is:
+
+```text
+npm run inspect:effective -- --render-stack
+```
+
+For Utah FORGE visual work, the trace must include active preset,
+`environment.scene`, Sub Master `envSnapshot`, preset `scenePatch`, page
+`sceneOverrides`, layer styles, topo material authority winner, effective
+texture URL/cache key, bounds, public clip, edge fade, edge outline,
+material/shader, terrain geometry/LOD, and post-processing pass order.
+
 ## Audience Lens
 
 Audience Lens is currently runtime-only and Shahbazi-only.
@@ -346,9 +399,12 @@ projects/base-gui/environment.json
 
 Base GUI is a placeholder/reference project for editing shared GUI/environment defaults.
 
-## Utah FORGE Foundation Architecture
+It now includes a generic local atmosphere sample layer so the Base GUI project
+can exercise the `atmosphere-volume` model without Utah FORGE-specific data.
 
-Utah FORGE currently exists as a folder-project scaffold:
+## Utah FORGE Case Study Architecture
+
+Utah FORGE is the current active geothermal/geophysics case-study project:
 
 ```text
 projects/utah-forge/
@@ -361,13 +417,49 @@ projects/utah-forge/
   intake_staging/
 ```
 
-Current active layer:
+Utah FORGE is no longer foundation-only. It is an active geothermal/geophysics
+case-study project with public topo context, Phase 3 MT products, seismic
+browser records, section/working-area tooling, and a current visible Topo test
+cloud. Older prose that describes it as procedural-only is historical unless
+confirmed against current project files.
+
+Runtime content is loaded from `project.json`, `environment.json`, pages,
+overlays, and source-derived browser-ready products under
+`projects/utah-forge/data/geosee_processed/utah_forge_phase_3/`.
+
+The public topo surface is currently authored through environment terrain
+material authority. The active material preset is:
 
 ```text
-utah-forge-reference-stage
+image:naip-2024-aerial
 ```
 
-The reference stage is procedural and loaded by `src/scene/layerLoaders.ts`. It is intentionally not real Utah FORGE data. The next briefing should define the real CRS, scene origin, bounds, source package, layer manifest, pages, and provenance rules before any technical layers are added.
+The effective public raster for the current Utah FORGE cinematic baseline is:
+
+```text
+projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80
+```
+
+Effective raster bounds:
+
+```text
+[229069.2, 4144854, 484164, 4414308]
+```
+
+The current terrain edge treatment uses a `rounded-square` edge fade with
+`10000m` distance, `10000m` inset, and `75000m` corner radius. Edge outline is
+enabled. The current render-stack trace for page `12_mt_volume_overview`
+reports public clip enabled with center `[0, 0, 2000]` and size
+`[1395706.5, 1139445, 12600]`, while also reporting a
+`layer.terrain.publicSurfaceClipEnabled` authority conflict between the
+environment value `true` and active preset layer patch value `false`.
+
+Geophysical layers include source-derived Phase 3 MT stations, full-density MT
+point/volume/slice/threshold/top-surface products, seismic browser products,
+well/site context, and public reference context. Precise registration language
+is blocked unless layer metadata records validated CRS/control-point evidence.
+Approximate/fallback seismic placement remains renderable visual context but
+must not be described as survey-accurate.
 
 ## Shahbazi Data Architecture
 
@@ -430,6 +522,7 @@ Current convention:
 - `LayerPanel.tsx`, `EnvironmentScenePanel.tsx`, and `SceneManager.ts` remain too large.
 - Save is not transactional.
 - Some project-specific loader branches remain in the loader registry.
+- `TopoMapPanel.tsx` is now also large after absorbing Topo Environment and is a future extraction target.
 - Surface/photo layering remains depth-sensitive.
 - Scale bar is local/raycast-based.
 - Projected UAV image preview is not a real orthomosaic.

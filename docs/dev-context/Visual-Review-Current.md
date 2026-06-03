@@ -18,8 +18,8 @@ narrow patch
 
 ## Current Visual Contract
 
-- Goal: make Utah FORGE visual/topo/editor changes converge by direct human review before slow smoke tests.
-- Current focus: editor sidebar structure, global settings/toolset containers, Page Manager spacing, lightweight viewport legends, and next-pass legend panel behavior.
+- Goal: make Utah FORGE visual/topo/editor/cinematic changes converge by direct human review before slow smoke tests.
+- Current focus: expanded Cinematics authoring, including Camera Studio, Post Processing, object/distance-aware DOF, composition guides, presentation-frame thickness, Topo Environment grouping, and cloud/sun/fog visual controls.
 - Accepted decisions:
   - Top-level editor containers are peers when they represent real workflows or tools.
   - Container shape, fill, spacing, and contrast should come from shared editor tokens.
@@ -30,20 +30,35 @@ narrow patch
   - Public topo surface colour defaults now use the named `Utah` material preset:
     khaki desert lows, muted sage/tree middle elevations, and warm snow/rock
     high peaks.
+  - Topo Environment is a Topo-owned container with Scene atmosphere, Clouds,
+    Sun, and Fog. Fog and map fog belong there with the cloud and sun controls.
+  - The current Utah FORGE one-puff `Topo test cloud` is visible and was
+    accepted by the human in this thread. Its runtime texture source is
+    `generated-canvas`, not an external asset.
+  - Sun visual authoring separates light-source effects from visible sky
+    imagery. The visible orb/halo/source marker can be hidden while terrain
+    light remains active.
   - Section ISO overlay opacity is composed from authored opacity, transition opacity, and threshold-surface attenuation.
   - Compatible section-frame page changes slide/interpolate; incompatible helper states crossfade by outgoing snapshot plus incoming fade.
+  - Camera Studio is split from Post Processing. Camera Studio owns render preset, lens types/FOV, and double-click focus timing.
+  - Post Processing owns Depth of Field, Tilt-Shift, Post Production, Image finish, Glow, Film / Optics, Motion Trails, Composition Guides, Presentation Frame, and Contact Depth.
+  - Depth of Field is split into `Focus Target`, `Blur Strength`, and `Focus Debug`; it supports page-target, camera-object, manual-distance, and picked-point focus modes.
+  - Page-local cinematic post values blend through `main-camera/cinematic-post`; toggles, focus mode, and debug helpers remain discrete.
+  - Composition guide and presentation-frame line thickness defaults to `lineThickness: 0.25`, half of the earlier guide/frame width.
   - Human visual judgment is the first acceptance filter for composition.
 - Still wrong / under review:
-  - Base GUI local atmosphere volume docs/project/test slice is ready for
-    visual check. Browser inspection has not completed, so do not treat the
-    mist volume composition as visually accepted yet.
+  - The expanded cinematic toolset is implemented and ready for ongoing human visual tuning. Do not mark a look final from static checks alone.
+  - If the running in-app browser still shows an old `Focus / DOF` heading or thick guide/frame lines, hard-refresh the current `5173` tab before diagnosing code. A stale Vite module graph can preserve old labels after source changes.
+  - Base GUI local atmosphere volume remains a generic sample. Utah FORGE's
+    visible test cloud was accepted in this thread, but any new Base GUI-specific
+    composition still needs its own visual check.
   - Final sidebar polish and toolset grouping remain iterative.
   - Legend panel behavior has a first implementation pass: sequenced per-container left slide, row gap closure after exit, row opening before entry, and MT resistivity fixed at the bottom. It remains under human visual review.
   - Zoom-out camera far-plane clipping is being handled before the oblique longitude/latitude grid line artifact. The grid line issue remains held until clipping is verified visually.
 - Do not revisit unless asked:
   - Intake directives or intake drops for normal software-build work.
   - Full broad Utah FORGE smoke runs during visual iteration.
-  - Killing or restarting the user's `5173` app session.
+  - Killing or restarting the user's `5173` app session unless a stale dev-server/module state blocks visual validation and the active process is confirmed to be running from `C:\GeoSee\GeoSee_Dev`.
 
 ## Screenshot Path
 
@@ -59,9 +74,9 @@ If multiple references are needed, use concise names in the same folder, for exa
 ## Agent Rules
 
 - Prefer the user's running app on `5173` for human review.
-- If an agent needs a dev server, use a separate free port such as `5174`.
+- If an agent needs a separate dev server, use a free port such as `5174`.
 - Do not run `Launch GeoSee.bat`.
-- Do not kill port `5173` unless the user explicitly asks.
+- Do not kill port `5173` for convenience. If stale module state blocks visual verification, first hard-refresh the browser; only restart after confirming the process belongs to the active repo.
 - Before running Playwright for a visual issue, capture or present a visual state for human review unless the issue is purely structural.
 - Keep Playwright to quick scene-state probes or targeted tests after the visual direction is approved.
 

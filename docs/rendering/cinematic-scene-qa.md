@@ -37,12 +37,39 @@ Use this checklist before treating a cinematic render preset or tuned page as de
 - Fog color matches the background and scene mood.
 - Dense technical layers remain visible enough for review.
 - Atmospheric styling does not hide provenance or caveat text.
+- Local cloud/mist volumes are identified as environmental presentation aids,
+  not measured atmospheric data.
+- Single-cloud fixtures remain visible when `atmospherePuffCount` is `1`.
+- Cloud bounds helpers, if used for review, are intentionally enabled and not
+  left on as accidental diagnostic clutter.
+
+## Sun
+- The authored sun mode is clear: light source, visible sky image, both, or fake
+  visual only.
+- Hiding the visible orb/halo/source marker does not unintentionally disable
+  terrain lighting when the page needs light-source effects.
+- Orb edge softness, halo opacity, and marker opacity support the shot without
+  reading as an accidental UI artifact.
 
 ## Camera Composition
 - Camera framing shows the page's main visual argument immediately.
 - The page leaves enough context to understand scale and location.
 - Motion/orbit pages avoid disorienting angles.
 - Important layers are not clipped by the viewport or hidden behind overlays.
+
+## Depth Of Field
+- DOF is off unless the page/preset intentionally enables it.
+- Focus mode is understandable for the page: page target, camera object, manual distance, or picked point.
+- Object-aware focus uses the saved camera-object world point when present; missing object focus falls back without snapping to an unrelated target.
+- Manual-distance focus is reviewed from the active camera distance and does not blur the primary evidence by accident.
+- Blur strength, aperture, and max blur support the presentation look without hiding technical meaning.
+- Focus debug plane is toggleable and off before a client/demo capture unless the capture is a DOF diagnostic.
+
+## Composition Guides And Presentation Frame
+- Guides, safe frame, aspect masks, matte bars, corner fade, and frame lines are off unless intentionally used for a composition review or final look.
+- Guide and presentation-frame strokes use the reviewed thin default: `compositionGuides.lineThickness: 0.25`.
+- Rule-of-thirds, center cross, safe frame, and aspect-mask lines do not cover key labels, legends, boreholes, MT products, seismic sections, or provenance text.
+- If guides or frame lines look too thick in the app, hard-refresh the running browser before diagnosing source code.
 
 ## Layer Hierarchy
 - The primary artifact is visually dominant.
@@ -63,3 +90,8 @@ Use this checklist before treating a cinematic render preset or tuned page as de
 - Visual evidence includes the project, page, visible layers, and any active preset when possible.
 - No transient editor clutter appears unless the screenshot is specifically an editor QA capture.
 - Screenshot filename and receipt path are recorded for later review.
+
+## Render-Stack Diagnostics
+- For Utah FORGE visual bugs, run `npm run inspect:effective -- --render-stack` before editing.
+- Record active preset, environment scene, Sub Master `envSnapshot`, preset `scenePatch`, page `sceneOverrides`, layer styles, topo material authority winner, texture URL/cache key, bounds, public clip, edge fade, edge outline, material/shader, terrain geometry/LOD, and post-processing pass order.
+- Current Utah FORGE cinematic baseline uses active preset `user-3`, topo authority `image:naip-2024-aerial`, and the NAIP raster cache key `v=14db7e6b94489d80`.

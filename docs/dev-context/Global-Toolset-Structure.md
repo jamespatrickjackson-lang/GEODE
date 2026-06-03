@@ -22,6 +22,12 @@ Current topo map structure:
 - `src/topoMap/`: global defaults, settings resolution, presets, edge fade,
   editor/runtime helpers, and compatibility fallback behavior.
 - `src/editor/topoMap/`: topo map editor UI for the global tool.
+- `src/editor/topoMap/TopoMapPanel.tsx`: Topo Settings, Topo Environment,
+  longitude/latitude grid, and title-block authoring.
+- `src/editor/layerControls/atmosphere/AtmosphereVolumeControls.tsx`: reusable
+  `atmosphere-volume` cloud/mist style controls used by Topo Environment.
+- `src/scene/atmosphere/`: local atmosphere runtime for generated-canvas sprite
+  puffs, bounds helpers, drift, and debug state.
 - `geoSeeTool` layer metadata: identifies topo surface, graticule, and reference
   layers without relying on Utah FORGE layer IDs.
 - `projects/utah-forge/*`: topo data inputs, provenance, visibility choices,
@@ -30,6 +36,23 @@ Current topo map structure:
 Legacy IDs such as `terrain` and `utah-forge-topo-graticule` remain readable for
 backward compatibility, but metadata-authored topo projects must not depend on
 those IDs.
+
+Topo Environment is part of the public topo tool. It groups:
+
+- Scene atmosphere: scene background/light-mode background and global fog color
+  defaults.
+- Clouds: `atmosphere-volume` environmental layers with add, duplicate,
+  delete, selection, default/page visibility, style overrides, optional
+  on-screen bounds handles, and generated-canvas sprite puffs.
+- Sun: source light toggle, visible sky image/orb toggle, source marker,
+  azimuth/elevation/camera lock, orb color/opacity/size/distance, edge softness,
+  halo, terrain relief, and projected-map shadow controls.
+- Fog: scene fog and map/layer fog participation controls.
+
+Clouds are project layers, not terrain shader fields. The project manifest owns
+stable identity, provenance, and immutable/default placement metadata. Mutable
+appearance, puffs, bounds, drift, depth, and render-order fields live in
+`environment.layerStyles` and page `layerOverrides`.
 
 ## Second Tool Alignment In Progress
 
@@ -100,7 +123,8 @@ Current top-level peer sections include:
   scene section planes, the Phase 3 working-area boundary, and working-area
   focus cropping.
 - `Topo`: the topo tool editor, including topo surface settings,
-  longitude/latitude grid, title block, and topo reference layers.
+  Topo Environment, longitude/latitude grid, title block, and topo reference
+  layers.
 - project data sections and card tools.
 
 Container styling should come from shared editor tokens in `src/editor/styles.ts`.

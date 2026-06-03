@@ -1,3 +1,9 @@
+# SUPERSEDED - NOT CURRENT EDITOR GUIDANCE
+
+This historical package-workbench document is preserved for reference only.
+Current work is governed by `../EDITOR-SPEC.md` and targets
+`UI_EDITOR/gui-editor.html`.
+
 # v1 Codex Cold-Start Prompt
 
 ## 1. Purpose

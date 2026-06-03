@@ -1,139 +1,91 @@
-# v1 Straw Subject — GeoSee Editor Sidebar
+# Straw Subject
 
-> Current status: inventory reference only. Use this to understand the GeoSee
-> sidebar being modeled. Ignore package schema, validation, export, and
-> autonomous-agent language in this file.
+**Status:** active standalone editor reference surface.
 
-## 1. Why a straw subject
+The straw subject is the default design shown in `gui-editor.html`. It exists
+to test whether the editor can author a real GeoSee-style panel, not just draw
+isolated boxes.
 
-A v1 workbench built against synthetic toy panels would silently absorb assumptions that break on the first real integration. The straw subject is a realistic reference target: GeoSee's editor sidebar as it exists at v1 start. The workbench reconstructs it as a sample GUI Package and uses it as the smoke-test target for every phase.
+## Purpose
 
-The straw subject is **structural**: the package captures panel hierarchy, container archetypes, component types, default layouts, default tokens. It is **not** behavioural: no React, no reducers, no event wiring.
+The default surface should expose editor gaps quickly:
 
-## 2. What is in the bundled package
+- Nested sections and rows.
+- Text and icons as real child layers.
+- Padded containers.
+- Overlay materials.
+- Control rows.
+- Page/layer/navigator patterns.
+- Library save and instantiate flows.
+- Snap, auto-nest, reorder, align, and resize behavior.
 
-Package location: `UI_EDITOR/packages/geosee_editor_sidebar/`.
+## Required Default Surface
 
-Frames (one per major panel):
+The canvas should include a GeoSee-style editor panel with:
 
-| Frame id | Source panel in GeoSee | Frame size (default) |
-| --- | --- | --- |
-| `frame-page-manager` | `src/editor/PagePanel.tsx` page list + footer actions + Global Settings row | 320×900 |
-| `frame-environment-panel` | `src/editor/EnvironmentScenePanel.tsx` "Environment" view | 320×900 |
-| `frame-lighting-studio` | `src/editor/EnvironmentScenePanel.tsx` "Lighting Studio" view | 320×900 |
-| `frame-camera-studio` | `src/editor/EnvironmentScenePanel.tsx` `CameraSetupPanel` (incl. DEC-080 Focus transition) | 320×900 |
-| `frame-layer-panel-archetype-mt` | `src/editor/LayerPanel.tsx` + MT layer subcontrols | 320×900 |
-| `frame-layer-panel-archetype-seismic` | `src/editor/LayerPanel.tsx` + seismic layer subcontrols | 320×900 |
-| `frame-layer-panel-archetype-topo` | `src/editor/LayerPanel.tsx` + topo layer subcontrols (incl. DEC-081 Utah preset) | 320×900 |
-| `frame-layer-panel-archetype-drillhole` | drillhole layer subcontrols | 320×900 |
-| `frame-layer-panel-archetype-geology` | geology layer subcontrols | 320×900 |
-| `frame-layer-panel-archetype-working-area` | working-area layer subcontrols | 320×900 |
-| `frame-layer-panel-archetype-layout` | layout layer subcontrols | 320×900 |
-| `frame-site-details` | `src/editor/SiteDetailsPanel.tsx` | 320×600 |
-| `frame-scene-section-frame-container` | scene-section frame container (per-axis) | 320×400 |
-| `frame-topo-map-tool-container` | `src/editor/topoMap/TopoMapPanel.tsx` (representative subset) | 320×900 |
-| `frame-seismic-tool-container` | seismic tool container | 320×900 |
-| `frame-working-area-tool-container` | working-area tool container | 320×600 |
+- Sidebar shell.
+- Header row.
+- Page manager area.
+- Section stack.
+- Nested section header.
+- Layer card or layer row stack.
+- Control rows with labels, icons, sliders, swatches, and inputs.
+- Save/footer row.
+- Overlay card or HUD sample.
+- Navigator-style group.
 
-All Frames share a Canvas-space layout that places them in a grid (4 wide × N tall) so the author can survey the full sidebar at a glance and zoom into any single Frame.
+Every visible object that should be editable must be a `data-c` node.
 
-## 3. What the package does **not** capture
+## Layer Expectations
 
-- Per-field detail on every layer (e.g. every individual slider on the MT panel). Capture the archetypes (slider, numeric input, select dropdown, etc.) and a representative subset of the fields. Exhaustive field-by-field reconstruction is a v2 task once the schema and validation are proven.
-- The 3D viewport, page-tween machinery, camera focus runtime (DEC-080 picking/focus camera), Sub Master reducer (DEC-079 ADD_SUB_MASTER / RE_SNAPSHOT / cascade delete), Utah topo material runtime (DEC-081 shader patches).
-- The frosted-glass material, drop shadows, exact pixel rendering. Tokens captured for spacing / radii / colours; pixel-perfect material fidelity not required.
-- Persistence behaviour (`commitPending`, dirty tracking).
-- Effective-style resolver (`effective.ts`) or any inheritance logic.
-- Editor reducer logic (`EditorContext.tsx`).
+The layers tree should show real nesting, for example:
 
-## 4. Component / Container archetypes the straw subject exercises
+```text
+Product Surface
+  Sidebar Shell
+    Header Row
+      Brand Text
+      Save Icon
+    Page Manager
+      Page Row
+        Page Icon
+        Page Name
+    Layer Stack
+      Layer Card Header
+        Visibility Icon
+        Layer Title
+      Layer Controls
+        Opacity Row
+          Label
+          Slider
+          Value Input
+```
 
-By reconstructing the sidebar, the workbench schema must express at least these archetypes. Each is encoded as a Library entry (see [05_libraries.md](05_libraries.md) §5).
+Text, icons, inputs, sliders, and swatches must not float as unrelated root
+siblings when they visually belong inside a row.
 
-### Component archetypes
+## Gap-Finding Rules
 
-| Archetype id | Description | Source pattern in GeoSee |
-| --- | --- | --- |
-| `pill-button` | Rounded full-radius button. | Page-row colour-picker chip. |
-| `icon-button` | Small square icon-only button. | Page-row triangles, eye, `+`, `↻`. |
-| `footer-action-button` | Larger icon button row. | Page list footer Add/Duplicate/Reset/Delete. |
-| `inline-editable-text` | Text that becomes an editable input on click. | Page title (`InlineEditableTitle`). |
-| `dirty-dot` | Small filled circle indicating unsaved state. | Page row dirty dot. |
-| `letter-glyph` | Single-character text indicator. | `F` cue for `cameraObjectFocus`. |
-| `numeric-label` | Padded numeric display with role-aware formatting. | Page-row "XX." / "XX.M.NN" labels. |
-| `colour-swatch` | A small colour circle that opens a native `<input type="color">`. | Page-row colour picker. |
-| `slider` | Range input with label and value readout. | Many layer subcontrols. |
-| `numeric-input` | Plain numeric input field. | Many layer subcontrols. |
-| `select-dropdown` | Native select. | Layer / mode / preset choosers. |
-| `checkbox` | Boolean toggle (native checkbox style). | Visibility / enabled flags. |
-| `native-details` | Uncontrolled HTML `<details>` disclosure. | `Appearance` / `Labels` / `Provenance` row inside LayerPanel. |
-| `aria-expanded-row` | Controlled disclosure via `aria-expanded`. | `GuiSubsection` pattern in EnvironmentScenePanel. |
+When the straw subject cannot be rebuilt inside the editor, add the missing
+capability to the editor rather than simplifying the subject.
 
-### Container archetypes
+Examples:
 
-| Archetype id | Description | Source pattern in GeoSee |
-| --- | --- | --- |
-| `page-list-row` | Standard page row chrome. | Global child page row. |
-| `page-list-row-sub-master` | Page row with 4 px left border in group hue. | Sub Master row (DEC-079). |
-| `page-list-row-sub-master-child` | Page row indented 12 px, shares group hue. | Sub Master child row (DEC-079). |
-| `pseudo-page-bar` | The Global Settings bar shape (dark glass). | Global Settings row. |
-| `layer-card` | The card around a layer's controls. | Each layer in LayerPanel. |
-| `layer-subsection` | Subgrouping inside a layer card. | Appearance / Labels / Provenance disclosure bodies. |
-| `scene-section-frame-container` | Per-axis section frame controls. | DEC-053 / DEC-070 / DEC-078 frame container. |
-| `camera-studio-subcontainer` | Subgrouping inside Camera Studio. | Focus transition, Perspective, Vignette, Image finish, Glow. |
-| `footer-action-row` | Bottom action row beneath a panel. | Page list footer. |
-| `cinematic-render-preset` | The Cinematic Render Preset container. | Moved into Camera Studio per DEC-080. |
+- If icons only show names, improve icon thumbnails.
+- If rows cannot hold child labels, fix nesting.
+- If padding is invisible or ignored, fix padding overlays and placement.
+- If library products cannot preserve nested children, fix Library templates.
+- If a slider row cannot be represented, add the primitive or assembly needed.
 
-## 5. Tokens captured
+## Acceptance
 
-See [05_libraries.md](05_libraries.md) §5.4 for the full list. Source values come from `src/editor/styles.ts` in GeoSee at v1 start. Captured by value (no live linkage).
+The straw subject is useful when:
 
-## 6. Restricted Surfaces (no-touch from v0.1 Boundary Charter)
-
-The straw-subject package marks the following Container / Component properties as `locked: true` so the workbench Resize / Move / Properties Inspector refuse to mutate them. v1 Validation flags any attempt with a Blocker finding.
-
-| Property | Why locked |
-| --- | --- |
-| Component `archetype` | Changing a component's archetype (e.g. button → slider) is a destructive structural change. |
-| Container `archetype` | Same reason. |
-| Schema-marked `permanent` fields (e.g. a delete button's existence) | Listed in the v0.1 Boundary Charter (renderer, data pipeline, permissions, destructive logic, state, auth). v1 cannot remove these. |
-| `id` of any element | Renaming is a Change Log event; v1 does not support it. |
-| `parentMasterId` semantics (DEC-079) | The workbench captures the *visual* Sub Master row chrome but does not model the reducer behaviour. |
-| `cameraObjectFocus` engagement (DEC-080) | The straw subject captures the `F` cue glyph but not the runtime. |
-
-## 7. How the package is created
-
-v1 does **not** auto-import GeoSee source. The straw-subject package is hand-assembled by an agent / author during build phase 7 of [10_build_phases.md](10_build_phases.md), following these steps:
-
-1. Open GeoSee (`cd .. && npm run dev`) and screenshot each panel listed in §2 above.
-2. For each panel:
-   1. Create a Frame in the workbench at the recommended size.
-   2. Use the Container Tool to draw the panel's outer container.
-   3. Use the Component Library to drag in archetype instances for each row / control.
-   4. Label and position each element to match GeoSee's layout.
-   5. Set Constraints to mirror GeoSee's responsive behaviour.
-   6. Save the Frame.
-3. Run validation; resolve or acknowledge findings.
-4. Export the package; verify round-trip.
-
-The first hand-assembly is a one-time bring-up cost. After v1 ships, the workbench is the source of truth for the package; if GeoSee's editor changes, the package is updated in the workbench (re-screenshot, re-edit), not re-imported.
-
-## 8. Forward-compatibility hooks for v2
-
-The straw subject is the v1 vehicle for proving the Host-App Adapter shape. v1 ensures the package shape carries enough information for v2 to build the GeoSee adapter:
-
-- Every Component / Container has a `hostRef?: string` field reserved for future use. v1 leaves it unset. v2's GeoSee adapter populates it (e.g. `hostRef: "PagePanel.PageRow"`).
-- Every Frame has a `hostSurface?: string` field reserved for future use. v1 leaves it unset. v2 populates it (e.g. `hostSurface: "src/editor/PagePanel.tsx"`).
-- The Restricted-Surface marker scheme is implemented in v1; v2's adapter consumes it as the embedded-mode lockout list.
-
-## 9. Current use
-
-Use this file as inventory for the GeoSee-style sidebar being modeled in the
-standalone editor. Current verification is visual and interaction-based:
-
-| # | Check | How to verify |
-| --- | --- | --- |
-| 1 | Sidebar surface exists | Open `gui-editor.html`; the sample sidebar renders on the canvas. |
-| 2 | Layers tree populated | The left tree lists Sidebar, Brand, Pages, Cinematics, Sections, Topo, Forge, Cards, and Save. |
-| 3 | Direct editing works | Select a row, edit geometry/padding/style/notes, and see the real DOM update. |
-| 4 | Persistence works | Reload and confirm the edited sidebar state returns from `localStorage`. |
+1. It renders on first open.
+2. Its layers tree mirrors visible hierarchy.
+3. Parent padding is visible and affects child placement.
+4. The panel can be saved as a Product.
+5. Child rows can be saved as Assemblies.
+6. Text, icons, swatches, inputs, and sliders can be edited or replaced.
+7. Library drag/drop can rebuild equivalent sections.
+8. Reload preserves the edited subject.

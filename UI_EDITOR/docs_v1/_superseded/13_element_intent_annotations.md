@@ -1,3 +1,9 @@
+# SUPERSEDED - NOT CURRENT EDITOR GUIDANCE
+
+This historical package-workbench document is preserved for reference only.
+Current work is governed by `../EDITOR-SPEC.md` and targets
+`UI_EDITOR/gui-editor.html`.
+
 # v1 Element Intent Annotations
 
 ## 1. Goal

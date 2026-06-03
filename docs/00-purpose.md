@@ -51,7 +51,7 @@ Current kept state:
   - dense matching and tie-point QA layers
   - six projected UAV image preview patches
 - A Base GUI Template project exists for editing the shared starting GUI/environment style.
-- Utah FORGE includes active Phase 3 MT records, public context, scalar/volume/threshold/top-surface records, and seismic browser records.
+- Utah FORGE includes active Phase 3 MT records, public context, scalar/volume/threshold/top-surface records, seismic browser records, and Topo Environment cloud/sun/fog controls.
 - The editor and landing page have been restyled toward the dark frosted overlay-box aesthetic used by the Shahbazi viewer.
 - The bottom HUD now includes preview, compass, light/dark, and home controls.
 - The home control returns to the landing page and prompts before leaving if edits are unsaved.
@@ -101,13 +101,16 @@ Complete or kept:
 - Loader registry in `src/scene/layerLoaders.ts`.
 - Named surface/photo render policies in `src/loaders/surfaceRenderPolicy.ts`.
 - Lazy loading of editor chrome from the landing route.
+- Topo Environment under the Topo tool, including local `atmosphere-volume`
+  clouds/mist, visible/fake sun controls, and fog grouping.
 
 ## What Is Still Unresolved
 
 Unresolved or not complete:
 
 - No final Shahbazi orthomosaic exists yet.
-- No real Utah FORGE data package, CRS, source manifest, or production layer set exists yet.
+- Utah FORGE registration and precision claims remain review-gated; visual
+  alignment is not survey-grade evidence.
 - No final textured mesh / GLB exists yet.
 - No final Potree/EPT full point-cloud stream exists yet.
 - The projected UAV image layer is a first-pass alignment preview only.

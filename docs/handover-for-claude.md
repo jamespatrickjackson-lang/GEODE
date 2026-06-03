@@ -66,27 +66,32 @@ Purpose:
 - empty/default project for editing shared GUI, overlay, navigator, label, lighting, and environment defaults
 - opened from landing via `EDIT BASE GUI`
 - not real data
+- includes a generic `atmosphere-volume` sample for local atmosphere/cloud
+  authoring checks
 
 ### Utah FORGE
 
-Status: foundation project.
+Status: active geothermal/geophysics case-study project.
 
 Purpose:
 
-- prepare a clean geothermal project slot for the upcoming Utah FORGE briefing
-- keep the landing/project flow ready before source data and layer requirements arrive
-- provide a safe reference-stage scene that makes no technical claim
+- exercise public topo context, Phase 3 MT, seismic browser, section/working-area
+  tooling, and presentation authoring
+- keep technical provenance and registration status explicit while improving
+  visual communication
+- provide current Topo Environment coverage for clouds, sun visuals, and fog
 
 Important:
 
 - Utah FORGE is selectable from the landing page.
-- Utah FORGE currently contains no real ingested Utah FORGE technical data.
-- CRS, bounds, source package, layer manifest, pages, and provenance rules are pending the briefing.
-- Current data intake expects four client-preprocessed dataset slots:
-  - Forge Southwestern electrical resistivity
-  - Forge Southwestern seismic analysis
-  - Utah FORGE Phase 3 electrical resistivity
-  - Utah FORGE Phase 3 seismic analysis
+- Utah FORGE now has public topo/terrain context, Phase 3 MT products, seismic
+  browser records, section tooling, site details, product pages, overlays, and
+  legends.
+- The current visible cloud QA fixture is `Topo test cloud`, an
+  `atmosphere-volume` environmental layer.
+- Visual alignment is not survey-grade registration. Imported geospatial layers
+  still need explicit CRS, vertical datum, and registration-status evidence
+  before precise claims.
 
 ## Current Major Files
 
@@ -154,7 +159,7 @@ Done:
 - project landing screen
 - Woodjam selectable
 - Shahbazi Gravel Pit selectable
-- Utah FORGE selectable as a foundation project
+- Utah FORGE selectable as an active geothermal/geophysics case study
 - Base GUI Template load path through `EDIT BASE GUI`
 - project-aware paths for pages, overlays, saves, and assets
 - project-aware runtime catalog
@@ -231,6 +236,8 @@ Done/current:
 - surface/photo render policy in `src/loaders/surfaceRenderPolicy.ts`
 - `previewFiles` / `futureTargets` split in layer specs
 - development debug logging helper
+- `atmosphere-volume` loader/runtime for local cloud/mist volumes
+- Topo Environment grouping for Scene atmosphere, Clouds, Sun, and Fog
 
 ## What Is Unresolved
 
@@ -263,6 +270,7 @@ Still needs cleanup:
 
 - `LayerPanel.tsx` remains large
 - `EnvironmentScenePanel.tsx` remains large
+- `TopoMapPanel.tsx` remains large after absorbing Topo Environment controls
 - `SceneManager.ts` remains large
 - layer registry still contains some project-specific branches
 - scale bar is local/raycast-based
@@ -283,11 +291,13 @@ Still needs cleanup:
 Near-term:
 
 1. Verify current UI spacing and editor shell in browser.
-2. Verify Home unsaved prompt behavior.
-3. Verify Woodjam still opens.
-4. Verify Shahbazi opens and layer toggles work.
-5. Verify projected image preview renders on the top/UAV-facing side.
-6. Run `npm run build`.
+2. Keep the Utah FORGE visible cloud QA fixture or replace it with equivalent
+   single-cloud coverage before making clouds subtle.
+3. Verify Home unsaved prompt behavior.
+4. Verify Woodjam still opens.
+5. Verify Shahbazi opens and layer toggles work.
+6. Verify projected image preview renders on the top/UAV-facing side.
+7. Run `npm run build`.
 
 Next architecture pass:
 

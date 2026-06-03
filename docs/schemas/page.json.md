@@ -152,21 +152,47 @@ Common cinematic keys include `camera.lensPreset`, `camera.fov`,
 `presentationFrame`, expanded `colorGrade`, `compositionGuides`, `bloom`,
 `ambientOcclusion`, `vignette`, `toneMapping`, and `exposure`.
 
-`depthOfField.focusMode` may be `"page-target"`, `"camera-object"`,
-`"manual-distance"`, or `"picked-point"`. `"camera-object"` resolves to the
-page's saved `cameraObjectFocus.worldPoint` when present, then falls back to an
-authored focus point or page target. `focusOffsetM` shifts the resolved focus
-distance forward or backward; `debugFocusPlane` is a default-off helper with
-optional `debugFocusPlaneOpacity` and `debugFocusPlaneScale` controls.
+Depth-of-field fields:
 
-`compositionGuides.lineThickness` defaults to `0.25` and drives the
-runtime guide stroke width in the lens-grade pass.
+| Field | Type | Description |
+|---|---|---|
+| `depthOfField.enabled` | boolean | Enables cinematic blur. Default off. |
+| `depthOfField.focusMode` | string | `"page-target"`, `"camera-object"`, `"manual-distance"`, or `"picked-point"`. |
+| `depthOfField.focusDistanceM` | number | Manual focus distance in metres when `focusMode` is `"manual-distance"`. |
+| `depthOfField.focusPoint` | [number, number, number] | Authored scene point for picked-point focus fallback. |
+| `depthOfField.focusOffsetM` | number | Distance offset applied after resolving page/object/manual/picked focus. |
+| `depthOfField.aperture` | number | Bokeh aperture/intensity control. |
+| `depthOfField.maxBlur` | number | Upper blur clamp for the DOF pass. |
+| `depthOfField.debugFocusPlane` | boolean | Shows the focus-plane helper. Default off. |
+| `depthOfField.debugFocusPlaneOpacity` | number | Visual opacity for the debug plane only. |
+| `depthOfField.debugFocusPlaneScale` | number | Visual size for the debug plane only. |
+
+`"camera-object"` resolves to the page's saved
+`cameraObjectFocus.worldPoint` when present, then falls back to an authored
+focus point or page target. `focusOffsetM` shifts the resolved focus distance
+forward or backward. Debug plane fields never change the rendered blur.
+
+Composition-guide fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `compositionGuides.enabled` | boolean | Master guide toggle. Default off. |
+| `compositionGuides.ruleOfThirds` | boolean | Shows thirds lines when guides are enabled. |
+| `compositionGuides.centerCross` | boolean | Shows the center-cross guide. |
+| `compositionGuides.safeFrame` | boolean | Shows safe-frame bounds. |
+| `compositionGuides.aspectMask` | string | `"none"`, `"16:9"`, `"1.85:1"`, or `"2.39:1"`. |
+| `compositionGuides.lineThickness` | number | Guide/frame stroke scalar. Defaults to `0.25`. |
+
+`compositionGuides.lineThickness` drives the runtime guide stroke width in the
+lens-grade pass and is treated as a continuous post scalar.
 
 During page navigation, numeric cinematic post fields blend through the
 `main-camera/cinematic-post` transition channel using the page's
-`transition.duration` and `transition.easing`. Composition guides and lens
-preset labels are discrete. Dolly, truck, crane, handheld, and roll are timed
-camera-motion fields controlled by `dynamicCamera.shotStartMs`,
+`transition.duration` and `transition.easing`. Composition guide toggles,
+aspect-mask choices, focus mode, debug helpers, and lens preset labels are
+discrete. Guide `lineThickness` and lens FOV are numeric values. Dolly, truck,
+crane, handheld, and roll are timed camera-motion fields controlled by
+`dynamicCamera.shotStartMs`,
 `dynamicCamera.shotEndMs`, and `dynamicCamera.shotCurve`.
 
 ### Transition
@@ -216,8 +242,9 @@ Override fields are the same as the per-type style fields documented in
 `project.json.md` and the mutable fields stored in `environment.layerStyles`.
 Most commonly overridden: `opacity`, `color`. For `atmosphere-volume`, page
 overrides can also tune environmental style such as density, softness, puff
-count, edge fade, drift, depth test, and render order while leaving immutable
-local bounds in `project.json` metadata.
+count, puff scale, bounds mode/center/size, edge fade, vertical falloff, seed,
+drift, depth test, render order, and optional bounds-helper visibility while
+leaving stable layer identity and provenance in `project.json` metadata.
 
 ### Overlay
 

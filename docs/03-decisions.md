@@ -875,3 +875,42 @@ Each decision records:
 **Why:** Legacy L5/L11 are useful reference lines, but approximate endpoints are not ground truth. Presenting them with the same language as delivered 301/302 navigation or 3D source geometry would imply scale and registration accuracy that the source set does not prove.
 
 **Trade-off accepted:** L5/L11 remain renderable as section curtains for visual context and processing comparison, but UI/status text, recipes, exports, and validation treat them as approximate. This does not move the lines or alter seismic rendering; it only prevents precision claims from being attached to fallback placement.
+
+## DEC-085 - Topo Environment owns clouds, sun visuals, and fog controls
+
+**Considered:** keep cloud, fog, and sun controls scattered between generic
+Cinematics, layer cards, and Topo surface settings, or group them under the
+Topo tool where the author is already shaping the public map context.
+
+**Chose:** create `Topo > Environment` with Scene atmosphere, Clouds, Sun, and
+Fog. Clouds are ordinary `atmosphere-volume` environmental layers. Sun authoring
+separates the terrain light source from the visible sky orb, halo, and source
+marker. Fog controls include scene fog and map/layer fog participation.
+
+**Why:** The user's authoring intent was topo-centric: place visible clouds,
+move/size them, tune fog, and decide whether the sun is a real light source, a
+visible sky image, both, or neither. Keeping those controls under Topo makes
+the workflow coherent and avoids hiding cloud/fog state inside unrelated layer
+or cinematic sections.
+
+**Trade-off accepted:** Local atmosphere remains a first-pass impostor model:
+deterministic generated-canvas `THREE.Sprite` puffs, not volumetric raymarching
+or meteorological simulation. `atmosphere-volume` layers are classified as
+`environmental`, not observation, interpretation, narrative, or planned work.
+Project metadata owns stable identity, provenance, and immutable/default
+placement; mutable style and page variants stay in `environment.layerStyles`
+and `layerOverrides`. On-screen bounds helpers are toggleable and default off.
+Single-puff clouds are explicitly supported for review fixtures and simple
+fake-cloud looks.
+
+## DEC-086 - Cinematic camera and post controls are presentation-only
+
+**Considered:** keep Cinematics limited to a small render-preset, FOV, and color-grade surface, or expose a full camera/post-production toolset for authored presentations.
+
+**Chose:** split Cinematics into `Camera Studio` and `Post Processing`. `Camera Studio` owns render preset selection, lens presets/FOV, and double-click camera focus timing. `Post Processing` owns default-off Depth of Field, Tilt-Shift, Post Production, Image finish, Glow, Film / Optics, Motion Trails, Composition Guides, Presentation Frame, and Contact Depth. DOF is split into `Focus Target`, `Blur Strength`, and `Focus Debug`, with page-target, camera-object, manual-distance, and picked-point focus modes. The runtime post stack is `RenderPass -> SSAOPass -> BokehPass -> UnrealBloomPass -> TiltShiftPass -> AfterimagePass -> LensGradePass -> SMAAPass -> OutputPass`.
+
+**Why:** GeoSee presentations need cinematic composition controls comparable to camera/lens/post workflows in Unreal, Blender, Unity HDRP, and color tools, but those controls must not change the meaning or inclusion of technical products.
+
+**Trade-off accepted:** These controls are aesthetic only. They must not alter MT/scalar/seismic products, CRS transforms, source paths, generated artifacts, loaders, or computed geometry. Page-local numeric cinematic post fields blend through `main-camera/cinematic-post`; toggles, focus mode, debug helpers, and aspect-mask choices remain discrete. Composition guide/presentation-frame `lineThickness` defaults to `0.25`, half of the prior guide/frame stroke weight. Visual looks remain ready for human visual check until the running browser or a human review confirms them.
+
+**Diagnostics:** `npm run inspect:effective -- --render-stack` is the required starting trace for Utah FORGE visual diagnosis. It reports active preset, environment/Sub Master/preset/page scene sources, layer styles, topo material authority, texture URL/cache key, bounds, public clip, edge fade, edge outline, material/shader, terrain geometry/LOD, and pass order.

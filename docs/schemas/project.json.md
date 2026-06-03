@@ -289,9 +289,12 @@ User-facing accuracy labels must show review required unless status is
 
 Mutable defaults for `atmosphere-volume` live in `environment.layerStyles`,
 including subtype, color, opacity, density, softness, puff count/scale, scale
-jitter, vertical falloff, edge fade, seed, drift, depth test, and render order.
-Page-local atmosphere changes use `layerOverrides`, the same as other layer
-styles.
+jitter, bounds center/size/mode, vertical falloff, edge fade, seed, drift, depth
+test, render order, and `atmosphereBoundsHelperVisible`. Page-local atmosphere
+changes use `layerOverrides`, the same as other layer styles. Topo cloud
+authoring can add, duplicate, delete, and select multiple `atmosphere-volume`
+layers; each new layer still follows this same split between manifest metadata
+and mutable style.
 
 ### Pages
 
@@ -315,8 +318,15 @@ page-local targets decide what remains sharp. `debugFocusPlaneOpacity` and
 `debugFocusPlaneScale` tune the default-off focus debug plane only; they do not
 change the rendered blur.
 
-`compositionGuides.lineThickness` defaults to `0.25` and is treated as a
-continuous cinematic post scalar during page transitions.
+Common DOF fields are `enabled`, `focusMode`, `focusDistanceM`, `focusPoint`,
+`focusOffsetM`, `aperture`, `maxBlur`, `debugFocusPlane`,
+`debugFocusPlaneOpacity`, and `debugFocusPlaneScale`. The editor presents these
+as `Focus Target`, `Blur Strength`, and `Focus Debug` groups.
+
+Composition guide fields include `enabled`, `ruleOfThirds`, `centerCross`,
+`safeFrame`, `aspectMask`, and `lineThickness`. `lineThickness` defaults to
+`0.25` and is treated as a continuous cinematic post scalar during page
+transitions. Guide toggles and aspect-mask choices remain discrete.
 
 Render preset patches and page `sceneOverrides` may override these fields, but
 runtime topo material authority still reapplies environment terrain material
@@ -325,9 +335,10 @@ MT/scalar/seismic products, source paths, CRS transforms, loaders, generated
 artifacts, or computed geometry.
 
 Page navigation blends numeric cinematic post values through the
-`main-camera/cinematic-post` transition channel. Discrete authoring overlays
-such as composition guides remain toggle-based, while dynamic camera dolly,
-truck, crane, handheld, and roll fields use timed-shot motion.
+`main-camera/cinematic-post` transition channel. Discrete authoring choices
+such as guide toggles, focus mode, debug helpers, and aspect-mask selection
+remain toggle-based, while dynamic camera dolly, truck, crane, handheld, and
+roll fields use timed-shot motion.
 
 ### Theme
 
@@ -367,4 +378,8 @@ Optional. Client logo path (relative to project root) and a project subtitle.
 - **Mutable style in layer metadata:** local atmosphere volume bounds and roles
   are project metadata; visual controls belong in `environment.layerStyles` and
   page-local `layerOverrides`.
+- **Confusing default bounds with edited bounds:** `metadata.localAtmosphereVolume`
+  records immutable/default placement. The current authored cloud position and
+  size are the resolved style fields from `environment.layerStyles`,
+  Sub Master `envSnapshot`, or page `layerOverrides`.
 - **pageOrder out of sync with files:** if `pageOrder` references a page that does not exist as `pages/<id>.json`, that page is skipped. If a `pages/<id>.json` exists but is not in `pageOrder`, it is invisible. Use the page-management UI to keep them aligned.

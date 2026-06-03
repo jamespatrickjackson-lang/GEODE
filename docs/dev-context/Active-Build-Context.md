@@ -35,7 +35,10 @@ Core runtime/project surfaces:
 - `src/editor/EditorRoot.tsx`: editor shell and top-level tool/workflow section tree
 - `src/editor/PagePanel.tsx`: Pages, page selection/actions, and exported Cinematics tool panels
 - `src/editor/LayerPanel.tsx`: project data layer controls that have not yet moved into tool modules
-- `src/editor/topoMap/TopoMapPanel.tsx`: public topo map tool editor
+- `src/editor/topoMap/TopoMapPanel.tsx`: public topo map and Topo Environment tool editor
+- `src/editor/layerControls/atmosphere/AtmosphereVolumeControls.tsx`: local cloud/mist volume controls
+- `src/scene/atmosphere/`: procedural local atmosphere volume runtime, generated texture, editor bounds helpers, and drift
+- `src/scene/environment/sunVisual.ts`: visible sun orb, halo, and source marker runtime
 - `src/mtResistivity/`: global MT resistivity tool contract and slice product metadata
 - `src/pages/PageController.tsx`: page navigation and camera/page transitions
 - `src/scene/SceneManager.ts`: also owns the current product-aware transition
@@ -107,6 +110,22 @@ preset: khaki desert lows, muted sage/tree middle elevations, and warm
 snow/rock high peaks. This is a reusable five-stop terrain shader preset, not a
 new raster or CRS transform.
 
+Topo Environment is now part of the Topo tool, not a loose Cinematics dumping
+ground. `Topo > Environment` owns scene atmosphere, Clouds, Sun, and Fog. Clouds
+are `atmosphere-volume` layers with style in `environment.layerStyles` and page
+`layerOverrides`; project metadata owns immutable/default placement and
+environmental provenance. Sun authoring separates the light source from the
+visible sky image/orb/marker, so an author can keep terrain lighting while
+hiding the sky image or create a fake visual sun without using it as the light
+source.
+
+Utah FORGE currently includes a visible one-puff `Topo test cloud` layer for
+review. Its runtime debug state should report `textureSource:
+generated-canvas`, cache key shape `local-atmosphere:<layerId>:<seed>:<softness>`,
+`THREE.SpriteMaterial`, and `THREE.Sprite` geometry. See
+`docs/dev-context/Topo-Environment-Clouds-Cinematics-Thread-Update-2026-06-03.md`
+for the current thread receipt and render-stack trace.
+
 Camera far-plane clipping is not a visual crop. Topo imagery, terrain context,
 and longitude/latitude graticules must remain inside the scene frustum during
 normal presentation overview zooms. Use authored public surface crop, scene
@@ -118,6 +137,8 @@ far plane to trim imagery.
 - Workspace state and verification tiers: `docs/dev-context/Verification-Routing.md`
 - Operating vocabulary: `docs/dev-context/GeoSee-Terms.md`
 - Global toolset structure and topo map precedent: `docs/dev-context/Global-Toolset-Structure.md`
+- Topo Environment/clouds/sun/cinematics thread receipt: `docs/dev-context/Topo-Environment-Clouds-Cinematics-Thread-Update-2026-06-03.md`
+- Topo editor panel field audit: `docs/dev-context/Topo-Editor-Panel-Audit-2026-06-03.md`
 - Current visual review loop: `docs/dev-context/Visual-Review-Current.md`
 - UI visual standards and shared legend/slider rules: `docs/dev-context/UI-Visual-Standards.md`
 - Large code surfaces and extraction guidance: `docs/dev-context/Architecture-Hotspots.md`
@@ -158,4 +179,9 @@ Receipt and audit subdirs (`Archive/`, `Change-Receipts/`,
 - For transition changes, first run the page-agnostic source guard:
   `node -e "await import('./tests/tools/transition-page-agnostic-source.test.mjs')"`.
 - For visual composition work, get a focused visual state in front of the human before broad automation.
+- For clouds, sun, topo material, fog, or other visual-runtime bugs, capture the
+  render-stack trace before editing: `environment.scene`, Sub Master
+  `envSnapshot`, render preset and `scenePatch`, page `sceneOverrides`, layer
+  style, terrain/topo material authority, active texture URL/cache key, public
+  clip, edge fade, edge outline, material/shader, and geometry.
 - Do not run `Launch GeoSee.bat`; use a scoped dev server on a free port if an agent needs one.

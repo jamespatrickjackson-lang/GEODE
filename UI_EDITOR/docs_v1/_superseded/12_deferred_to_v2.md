@@ -1,3 +1,9 @@
+# SUPERSEDED - NOT CURRENT EDITOR GUIDANCE
+
+This historical package-workbench document is preserved for reference only.
+Current work is governed by `../EDITOR-SPEC.md` and targets
+`UI_EDITOR/gui-editor.html`.
+
 # v1 Deferred to v2+
 
 Every item in this doc is **deliberately out of scope** for v1. Each carries the rationale and the v2 readiness state (what v1 leaves in place to make v2 cheap).

@@ -1,5 +1,11 @@
 # v1 Validation Rules — Desktop Technical Editing Rule Pack
 
+# SUPERSEDED - NOT CURRENT EDITOR GUIDANCE
+
+This historical package-workbench document is preserved for reference only.
+Current work is governed by `../EDITOR-SPEC.md` and targets
+`UI_EDITOR/gui-editor.html`.
+
 ## 1. Goal
 
 Provide a deterministic, predictable rule set that an agent can evaluate against any v1 GUI Package and obtain a stable list of `ValidationFinding` objects. The v1 pack covers the **Desktop Technical Editing** profile (mouse + keyboard, ≥1080p monitor). Additional packs (touch, tablet, projector, a11y-strict) are explicitly deferred to v2 — see [12_deferred_to_v2.md](12_deferred_to_v2.md).

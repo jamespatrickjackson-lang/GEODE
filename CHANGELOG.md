@@ -1,5 +1,28 @@
 # GeoSee Change Log
 
+## 2026-06-03 - Topo Environment Clouds, Sun, Cinematics, And GUI Editor
+
+- Added `Topo > Environment` as the Topo-owned home for Scene atmosphere,
+  Clouds, Sun, and Fog controls.
+- Added `atmosphere-volume` local environmental layers with generated-canvas
+  sprite puffs, style routing through `environment.layerStyles` and page
+  `layerOverrides`, optional on-screen bounds helpers, drift, single-puff
+  support, and transition opacity composition.
+- Added Topo cloud authoring controls for add, duplicate, delete, layer
+  selection, visibility, page overrides, bounds center/size, puff styling,
+  falloff, drift, depth test, and render order.
+- Added visible sun orb/halo/source-marker runtime controls that can be toggled
+  separately from terrain light-source effects.
+- Added cinematic scene/post and dynamic camera transition work, including
+  page-local shot motion and `main-camera/cinematic-post` blending.
+- Added a visible Utah FORGE one-puff `Topo test cloud` QA fixture and kept
+  page `12_mt_volume_overview` showing it.
+- Updated the standalone GUI editor, GUI editor docs, schema/tool docs, source
+  guard tests, Base GUI atmosphere sample, and Utah FORGE project defaults.
+- Verified targeted source guards, `npm run check:pages`, `npm run build`,
+  `npm run check:workspace`, and browser visual review for the Utah cloud before
+  the amended implementation commit `d6110dd`.
+
 ## 2026-05-27 - Documentation Housekeeping
 
 - Added a user-facing editor tool manifest at `docs/tool-manifest.md` and routed it from `docs/dev-context/Active-Build-Context.md`.

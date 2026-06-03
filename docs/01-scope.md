@@ -52,8 +52,10 @@ Current priority:
   - background
   - lighting
   - sun lock-to-camera
+  - visible/fake sun orb, halo, and source marker
   - camera-aware lighting behavior
   - fog
+  - Topo Environment clouds and local atmosphere volumes
   - terrain/grid
   - GUI/overlay style controls
 - Overlay text and image editing.
@@ -66,13 +68,23 @@ Current priority:
 In scope and currently kept:
 
 - Landing-page entry.
-- Folder-project scaffold under `projects/utah-forge/`.
-- Empty/foundation project manifest, environment, first overview page, overlay text, data README, data reference README, and intake staging sample records.
-- Procedural reference stage layer so the project opens before real data exists.
+- Folder-project under `projects/utah-forge/`.
+- Public topo/terrain context, including NAIP/topo material choices, graticule,
+  public surface clipping, edge fade, and edge outline controls.
+- Phase 3 MT products, scalar volume/threshold/slice/top-surface records, and
+  product-aware transition behavior.
+- Phase 3 seismic browser records and capability-product controls.
+- Section planes, working-area focus, site details, and current product pages.
+- Topo Environment controls for scene atmosphere, clouds, sun, and fog.
+- A current visible one-puff `Topo test cloud` used as the cloud visibility QA
+  fixture.
 
 Important scope note:
 
-Utah FORGE currently contains no real ingested Utah FORGE technical data. CRS, bounds, well paths, geophysical/geothermal layers, source references, and production targets are pending the briefing.
+Utah FORGE is an active case study, not a foundation-only placeholder. Its
+current project/source/generated files are authoritative over older prose. Do
+not infer survey-grade accuracy from visual alignment; imported geospatial
+layers still require explicit registration status and review evidence.
 
 ### Presenter / Preview
 
@@ -137,7 +149,7 @@ In scope and active:
 
 - Woodjam preserved as selectable reference project.
 - Shahbazi Gravel Pit selectable and loading.
-- Utah FORGE selectable and loading as a foundation project.
+- Utah FORGE selectable and loading as an active geothermal/geophysics case study.
 - Base GUI Template selectable via `EDIT BASE GUI`.
 - Project-aware page/overlay/save paths.
 - Loader registry created in `src/scene/layerLoaders.ts`.
@@ -148,12 +160,15 @@ In scope and active:
 - Runtime Audience Lens controls kept for Shahbazi only.
 - Landing page dark restyle and landing image editor kept.
 - Home button prompt for unsaved work kept.
+- Topo Environment clouds/sun/fog controls added under the Topo tool.
+- `atmosphere-volume` layer type added for local environmental cloud/mist
+  volumes.
+- Visible Utah FORGE single-cloud fixture kept for cloud visual QA.
 
 ## Unresolved / Pending
 
 - Final Shahbazi orthomosaic.
 - Final Shahbazi textured mesh / GLB.
-- Utah FORGE briefing, source manifest, CRS, bounds, and first real layer plan.
 - Full-resolution Potree/EPT point-cloud stream.
 - Full photogrammetry reconstruction workflow inside or alongside GeoSee.
 - Export/publish workflow.

@@ -37,13 +37,18 @@ All load classes below are proposed planning inputs only. Human review is requir
 
 ## Utah FORGE
 
-Observed layer count: 14.
+Observed layer count: 20.
 
 | project | layer_id | label/name if available | layer type/family | current default visible? | referenced by pages? | current role | proposed load class | artifact family | render-quality risk if deferred | technical-accuracy risk if deferred | seismic / MT / surface / other | human review required? | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Utah FORGE | `utah-forge-reference-stage` | Utah FORGE reference stage (placeholder) | `mesh` | no | no | future | future/placeholder | future/placeholder | Low | Low | other | Yes | Placeholder/reference stage only in current evidence. |
+| Utah FORGE | `utah-forge-reference-stage` | Utah FORGE reference stage (placeholder) | `mesh` | no | no | legacy/future | future/placeholder | future/placeholder | Low | Low | other | Yes | Legacy placeholder context only; no longer describes the whole active Utah FORGE project. |
 | Utah FORGE | `utah-forge-phase3-working-area` | Phase 3 required working area | `line` | yes | no | visible default | first-page required | presentation | High | Medium | other | Yes | Area/boundary context appears important for page framing. |
+| Utah FORGE | `utah-forge-phase3-demo-boreholes` | Phase 3 demo boreholes | `mesh` | yes | current pages | visible default; authored-state-scoped | first-page required | presentation; technical credibility | High | Medium | other | Yes | Demo borehole trajectories are presentation context and must not imply unreviewed survey precision. |
+| Utah FORGE | `utah-forge-site-boundary` | FORGE site boundary | `line` | yes | current pages | visible default; authored-state-scoped | first-page required | presentation | High | Medium | other | Yes | Site boundary context supports orientation and framing. |
 | Utah FORGE | `terrain` | Topo Surface | `geotiff` | yes | archived provenance ref deferred | visible default; authored-state-scoped | first-page required | render-ready | High | Medium | surface | Yes | Terrain is visual/spatial context and should not be deferred without authored-state review. |
+| Utah FORGE | `utah-forge-topo-graticule` | Longitude / latitude grid | `line` | yes | current pages | visible default; authored-state-scoped | first-page required | render-ready; presentation | High | Medium | surface/other | Yes | Public topo orientation grid with edge fade/clip/label behavior; do not treat as generic line clutter. |
+| Utah FORGE | `utah-forge-topo-clouds` | Topo test cloud | `atmosphere-volume` | yes | `12_mt_volume_overview` | visible QA fixture; authored-state-scoped | first-page required until replacement fixture exists | presentation; environmental | Medium | Low | other | Yes | Current one-puff cloud visibility fixture for Topo Environment; environmental only, not meteorology or technical evidence. |
+| Utah FORGE | `naip-2024-tile-diagnostics` | NAIP 2024 tile diagnostics | `line` | no | no | QA/diagnostic | QA-only toggle | QA/validation | Low | Medium | surface | Yes | Keep available for raster/tiling diagnosis; do not leave visible for normal presentation. |
 | Utah FORGE | `transport-roads` | Public roads | `line` | yes | archived provenance ref deferred | visible default; authored-state-scoped | first-page required | render-ready | Medium | Low | other | Yes | Public context layer. |
 | Utah FORGE | `hydrography-streams` | Public streams and rivers | `line` | yes | archived provenance ref deferred | visible default; authored-state-scoped | first-page required | render-ready | Medium | Low | other | Yes | Public context layer. |
 | Utah FORGE | `hydrography-lakes` | Public waterbodies | `polygon` | yes | archived provenance ref deferred | visible default; authored-state-scoped | first-page required | render-ready | Medium | Low | other | Yes | Public context layer. |
