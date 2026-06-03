@@ -1,5 +1,9 @@
 # v1 Canvas Engine
 
+> Current status: reference only. Use this for canvas, ruler, guide, snap, and
+> overlay behavior that agrees with `EDITOR-SPEC.md`. Ignore package schema,
+> validation, export, and autonomous-agent language in this file.
+
 ## 1. Goal
 
 Render Frames on an infinite 2D Canvas with pan, zoom, multi-select, drag transforms, rulers, snapping (pixel grid + anchors + guides + smart guides), constraints, and a safe-area overlay. All behaviour must be predictable, agent-testable, and pure where possible.
@@ -288,10 +292,12 @@ Constraints are applied inside `applyMove` / `applyResize` and inside the parent
 
 ## 14. Z-order and Layers
 
-- Frame element order in the schema (`frames.json` → `frame.containers[]` and `frame.components[]` arrays) IS the Z-order. Lower index = behind. Higher index = in front.
-- Reorder operations rewrite the arrays.
-- The Layers Panel displays the order inverted (top of panel = topmost Z) per convention.
-- A Container's children are always grouped with their parent in Z; you cannot interleave a child of Container A with a sibling Container B.
+- Current standalone editor: real DOM order is the structure source. The layers
+  tree mirrors DOM nesting and ordering.
+- Visual convention: top of the Layers panel should represent the visually
+  topmost editable item when ordering is exposed.
+- A container's children remain grouped with their parent. Do not present a
+  child as an unrelated top-level sibling.
 
 ## 15. Lock and Hide
 
@@ -302,12 +308,11 @@ Constraints are applied inside `applyMove` / `applyResize` and inside the parent
 
 ## 16. Background Stress Overlay
 
-- Renders a static image behind the active Frame's content layer.
-- Image swapped via `BackgroundStressBar` (a row beneath the Toolkit).
-- v1 ships four bundled backgrounds in `packages/<id>/assets/backgrounds/`. See §16.1 below for concrete generation specs.
-- The active background id is stored in `ShellState.activeBackgroundId` (not persisted; resets to `null` on load).
-- Contrast validation rule reads the active background when computing findings.
-- If a referenced background asset is missing on load, the workbench falls back to a 1920×1200 solid `#404040` placeholder and surfaces a Suggestion finding (`asset.background-missing.suggestion`).
+Background stress testing is parked for now. If it is resumed for the
+standalone editor, it should be a visual-only preview mode that swaps the
+canvas backdrop and helps judge readability. It should not depend on package
+export, generated validation findings, or background assets in a package
+folder.
 
 ### 16.1 Bundled asset specifications
 
@@ -320,16 +325,14 @@ All four files are 1920×1200 PNG, 8-bit RGB (no alpha). The agent generates the
 | `noise_low_contrast.png` | White noise (uniform random), each channel sampled independently, then normalised to luminance range `[128, 144]` (very subtle). Seeded with constant `0xC0FFEE` for reproducible round-trips. | Stresses readability against busy-but-flat backgrounds typical of low-contrast textures. |
 | `terrain_capture.png` | Procedural fake-terrain: vertical gradient from `#3a4a3a` (top) through `#7a6b4a` (mid) to `#4a3e2e` (bottom); overlay 1px-wide pseudo-contour lines at every 8th vertical pixel in `#2a2a2a` at 40% alpha; overlay diagonal noise at 8% opacity in luminance `[100, 140]`. Seeded with constant `0x12345`. | Stands in for a real GeoSee terrain screenshot until / unless one is checked in. Captures the visual character (warm earth tones + linework + texture) sufficient for stress-testing transparent panel readability. |
 
-Algorithm note: deterministic seeding matters because the round-trip acceptance test in [07_package_format.md](07_package_format.md) §15 compares package bytes after export-then-import. Non-deterministic asset generation would break that test.
-
-If a real GeoSee terrain screenshot becomes available later, drop it in at the same path with the same dimensions. The procedural fallback is generated only when the file is absent at Phase 10 build time.
+Historical note: deterministic procedural backgrounds were part of the old
+package workbench. The current editor does not require generated background
+assets.
 
 ## 17. Frame management
 
-- A package contains 1..N Frames. v1 supports multiple Frames per package (e.g. one per Panel).
-- Active Frame is selected by clicking it on the Canvas or in the Package Browser.
-- Add Frame: TopBar action ➜ inserts a new empty Frame at a non-overlapping Canvas position.
-- Delete Frame: TopBar action ➜ requires confirm; removes from `frames.json`; cascades to remove all Containers / Components owned by the Frame.
+Frame/package management is parked with the React package workbench. The
+current standalone editor edits the live host surface in `gui-editor.html`.
 - Resize Frame: drag the Frame's outer border with the Resize Tool active.
 
 ## 18. Acceptance criteria for the Canvas Engine phase

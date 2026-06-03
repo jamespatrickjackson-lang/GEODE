@@ -1,5 +1,9 @@
 # v1 Glossary
 
+> Current status: reference only. Current editor meanings are defined by
+> `EDITOR-SPEC.md`; old package/validation/AI terms are historical unless a
+> task explicitly resumes the package workbench.
+
 Canonical terms for v1. All other v1 docs use this vocabulary verbatim. Agents must not invent synonyms.
 
 This glossary inherits every term from v0.1's [glossary](../docs/gui_workbench_glossary_naming_v0_1.md) without modification. The list below restates the inherited terms briefly for agent convenience and adds the v1 Canvas-era terms.
@@ -36,12 +40,12 @@ This glossary inherits every term from v0.1's [glossary](../docs/gui_workbench_g
 | **Validation Rule Pack** | A set of rules tied to a Use-Case + Device + Input Profile. v1 ships one: "Desktop Technical Editing". |
 | **Validation Finding** | A single rule's output: `{ severity, ruleId, location, message, currentValue, suggestedValue?, profile }`. |
 | **Severity Level** | One of: **Info / Suggestion / Warning / Error / Blocker**. Strictly ordered. |
-| **AI-Assisted Review** | Optional advisory layer atop deterministic validation. **Deferred to v2 in v1**, but the finding shape carries an optional `advisory?` field for forward compat. |
+| **AI-Assisted Review** | Parked historical concept from the package workbench. Not active while the standalone editor is being stabilized. |
 | **Background Stress Test** | A preview mode that renders the active Frame over various backgrounds (plain, terrain, noise, etc.) to surface contrast / legibility issues. v1 ships with four bundled backgrounds. |
-| **Implementation Brief** | A human-readable export describing the GUI structure for developers. v1 names it `spec.md` inside the package. |
-| **AI-Agent Brief** | A constrained implementation brief for AI coding agents. v1 names it `ai_agent_brief.md` inside the package. |
-| **Change Record** | A single entry in the package's change history: who, when, what changed, validation status, rationale. |
-| **Change State** | One of: **Draft / Validated / Approved / Applied / Rejected / Archived**. v1 only uses Draft / Validated / Approved. Applied/Rejected/Archived deferred to v2 (need embedded mode). |
+| **Implementation Brief** | Parked package-workbench export concept. Not active current editor scope. |
+| **AI-Agent Brief** | Parked package-workbench export concept. Not active current editor scope. |
+| **Change Record** | Parked package-workbench history concept. Current editor uses browser-local state. |
+| **Change State** | Parked package-workbench workflow concept. Not active current editor scope. |
 
 ## 2. Severity ladder (strict)
 
@@ -91,7 +95,7 @@ These extend the v0.1 Visual Editing Bench concept. None are introduced casually
 | --- | --- |
 | **Package Folder** | The on-disk directory at `UI_EDITOR/packages/<package-id>/` containing one GUI Package. |
 | **Package Manifest** | The `manifest.json` file at the root of a Package Folder. Declares schema version, workbench version, target host app, package state, etc. See [07_package_format.md](07_package_format.md) §3. |
-| **Generated Docs** | The `docs/` subfolder inside a Package Folder. Holds `spec.md` and `ai_agent_brief.md`. Re-generated on every export. |
+| **Generated Docs** | Parked package-workbench export concept. Not active current editor scope. |
 | **Bundled Asset** | Any binary or text asset stored under the Package Folder's `assets/` (e.g. background stress test images, exported preview PNGs). |
 | **Schema Version** | The integer version of the GUI Package schema. v1 ships `schemaVersion: 1`. Future schema changes increment monotonically; readers reject unknown higher versions. |
 | **Workbench Version** | The version of the GUI Workbench code that wrote / read the package. v1 stamps `workbenchVersion: "1.0.0"`. |

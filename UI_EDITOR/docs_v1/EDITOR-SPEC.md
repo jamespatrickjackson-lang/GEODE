@@ -1,136 +1,119 @@
-# GUI Editor — the real spec (single source of truth)
+# GUI Editor - Current Spec
 
-This is the **north-star** doc. It describes the editor that actually exists and
-ships: `UI_EDITOR/gui-editor.html` (and the synced copy in `UI_EDITOR_v1_0/`).
-A single self-contained HTML file, vanilla JS, no build, no server, persists to
-`localStorage`. It edits **real DOM** with a design overlay — it is **not** a
-JSON-schema modeler.
+This is the source of truth for the editor work.
 
-If anything here conflicts with the older numbered docs, **this wins**. The
-docs that pushed the wrong (abstract JSON "Package") model have been moved to
-`docs_v1/_superseded/` — see the README note.
+The current editor is `UI_EDITOR/gui-editor.html`: a self-contained HTML/CSS/JS
+file that edits real DOM nodes with a design overlay. It opens directly in a
+browser, persists edits in `localStorage`, and does not require npm, Vite, a
+server, package export, validation reports, or AI handoff files.
 
----
+If another doc conflicts with this one, this one wins.
 
-## 1. The model (read this first)
+## 1. Current Model
 
-- The canvas holds **real HTML elements**. Anything marked `data-c` is an
-  editable **container** (the word covers everything: a sidebar, a row, a
-  button, a text node, a shape).
-- Containers **nest** by being real DOM children of other containers. Nesting is
-  parent→child in the actual tree, so a child moves with its parent and obeys
-  the parent's layout (padding, gap, stack direction).
-- Each container has **edit state** in `layout[id]` (offset, size, padding,
-  gap, stack, kind, lock, style) persisted to `localStorage`. State is applied
-  to the real element every change.
-- There is **no abstract package, no frames.json, no validation engine, no
-  change-state machine**. Those belong to the superseded model. Delete that
-  idea from your head.
+- The canvas contains real HTML elements.
+- Any element marked `data-c` is an editable container.
+- Containers nest as real DOM parent/child nodes.
+- Per-container edit state lives in `layout[id]`: offset, size, padding, gap,
+  stack direction, kind, lock state, and style.
+- Edits apply to the real element immediately and persist to `localStorage`.
+- The old abstract package model is parked. Do not build current editor work
+  around `frames.json`, `containers.json`, validation engines, change states, or
+  generated AI briefs.
 
-## 2. Layout (three panels)
+## 2. Required Editor Layout
 
 ```text
-┌───────────────────────────────────────────────────────────────────────┐
-│ Toolbar: Design | Grid | Snap | + Container/Text/Rect/Ellipse/Row |    │
-│          Group | Delete | Align ▾ | Undo | Redo | Reset                │
-├───────────┬───────────────────────────────────────────┬───────────────┤
-│ LAYERS    │  CANVAS (rulers + grid + design overlay)  │ INSPECTOR     │
-│ (tree)    │                                           │               │
-│           │   real UI with outline boxes on each      │ Kind picker   │
-│ Sidebar   │   container; drag/resize/snap/guides;     │ Geometry      │
-│  ├ Brand  │   VISIBLE padding shading inside a        │ Padding+layout│
-│  ├ Pages  │   selected container; alignment guides    │ Style         │
-│  ├ …      │   between siblings while dragging         │ AI note       │
-│  └ Footer │                                           │               │
-└───────────┴───────────────────────────────────────────┴───────────────┘
++--------------------------------------------------------------------------+
+| Toolbar: Design | Grid | Snap | Create tools | Group | Delete | Undo     |
++------------+---------------------------------------------+---------------+
+| Layers     | Canvas                                      | Inspector     |
+| tree       | real UI + rulers + grid + design overlay    | Selection     |
+|            | selectable boxes, handles, padding visuals  | Kind          |
+| Sidebar    | alignment guides, snap, nesting             | Geometry      |
+|   Brand    |                                             | Padding/Layout|
+|   Pages    |                                             | Style         |
+|   ...      |                                             | Notes         |
++------------+---------------------------------------------+---------------+
 ```
 
-### 2.1 Layers tree (left) — REQUIRED
+### 2.1 Layers Tree
 
-- A real tree mirroring the DOM nesting of every `data-c` container.
-- Indented by depth. Each row: a disclosure caret (if it has children), a kind
-  glyph, the container's label, and a lock/hide affordance.
-- Click a row → selects that container on the canvas (and vice-versa: selecting
-  on canvas highlights the tree row).
-- Drag a tree row onto another row → reparents (same as drag-to-nest on canvas).
-- The tree is the authoritative view of structure. If you can't see nesting in
-  the tree, nesting is broken.
+- Mirrors actual `data-c` DOM nesting.
+- Indents child containers under parent containers.
+- Click in tree selects the same container on canvas.
+- Selecting on canvas highlights the tree row.
+- Dragging/reparenting must update the tree.
+- If nesting is not visible in the tree, nesting is not working.
 
-### 2.2 Canvas (centre)
+### 2.2 Canvas
 
-- Rulers (top/left), optional grid, the real UI, and a **design overlay** of
-  outline boxes (one per container) that carry the drag/resize handles.
-- **Visible padding** — REQUIRED. When a container is selected (or hovered),
-  shade its padding region (the inset between its border box and content box)
-  so the author SEES the padding, not just a number. Each side uses its
-  resolved padding value.
-- **Alignment guides** — REQUIRED. While dragging, show thin lines when the
-  moving element's edge/centre aligns with a sibling's edge/centre (and snap to
-  it). This is how you align containers to each other.
-- Drag to move, corner handle to resize, drag-onto-a-container to nest, drag
-  from a ruler to drop a persistent guide.
+- Shows the real UI, not a schema preview.
+- Shows rulers, optional grid, selectable outlines, and resize handles.
+- Shows visible padding for the selected or hovered container.
+- Shows alignment guides while moving elements near sibling edges or centers.
+- Supports move, resize, drag-to-nest, guide creation, grid snap, and undoable
+  edits.
 
-### 2.3 Inspector (right)
+### 2.3 Inspector
 
-For the selected container, in order:
+For a single selected container, show these sections in order:
 
-1. **Kind** — a dropdown to set *what this container is*: `group`, `row`,
-   `button`, `text`, `menu`, `menu-item`, `slider-row`, `card`, `panel`,
-   `section`, `shape`, `image`. The kind drives default chrome + which inspector
-   fields show + the glyph in the tree. The kind list is sourced from the
-   archetype catalogs (docs 14 / 20 / 21) — those catalogs are the *menu of
-   kinds*, nothing more.
-2. **Geometry** — X, Y, Width, Height.
-3. **Padding & layout** — per-side padding (T/R/B/L), gap, stack
-   (free / column / row). Column/row makes the container lay its children in
-   flow with the gap; free leaves them absolutely placed. Padding is shown
-   visually on canvas (§2.2).
-4. **Style** — fill (+alpha), radius, border, text, lock.
-5. **AI note** — name + intent + behaviour. Free text. This is the payload a
-   downstream agent reads to know what the container is *for*. (Concept survives
-   from the old intent-annotations idea; the schema machinery does not.)
+1. **Kind**: dropdown for `container`, `row`, `button`, `text`, `menu`,
+   `menu-item`, `slider-row`, `card`, `panel`, `section`, `shape`, and `image`.
+2. **Geometry**: X, Y, width, height.
+3. **Padding and Layout**: top/right/bottom/left padding, gap, and stack mode.
+4. **Style**: fill, alpha, radius, border, text color, and lock state.
+5. **Notes**: human-readable name and intent.
 
-## 3. Tools (and how they work together)
+The kind catalogs in docs 05, 14, 20, and 21 are reference lists only. They are
+not instructions to rebuild the old package compiler.
 
-| Tool | What it does | Works with |
-| --- | --- | --- |
-| **Select** | Click / shift-click / marquee select | Inspector, tree, align |
-| **Move** (drag) | Translate; snaps to grid + sibling edges/centres + guides; shows alignment guides | Snap, guides, nesting |
-| **Resize** (corner handle) | Resize selected; snaps to grid | Snap |
-| **+ Container / Text / Rect / Ellipse / Row** | Create that element; **into the selected container if one is selected** (nesting), else into host root | Tree, nesting, kind |
-| **Drag-to-nest** | Drop an element over a container → it becomes that container's child (Alt to drop free) | Tree, padding/stack |
-| **Group** (Ctrl/Cmd+G) | Wrap selection in a group container; group moves children together | Tree |
-| **Align ▾** | Align selection left/centre/right/top/middle/bottom and distribute, to the selection's bounds (≥2) or the parent (1) | Selection, snap |
-| **Guides** | Drag from a ruler to drop a persistent snap line | Move/resize snap |
-| **Undo / Redo** | History of all structural + property edits | everything |
-| **Reset** | Clear saved edits | localStorage |
+## 3. Required Tools
 
-Everything mutates `layout[id]` + the real DOM and saves to `localStorage`.
-There is no "validate", "export package", or "change state" — those were the
-wrong model.
+| Tool | Requirement |
+| --- | --- |
+| Select | Click, shift-click, and tree selection work together. |
+| Move | Drag selected containers with grid/sibling/guide snap. |
+| Resize | Resize selected containers with handles. |
+| Create | Add container, text, rectangle, ellipse, and row elements. |
+| Nest | Drop an element into a container and update DOM plus tree. |
+| Group | Wrap selected elements in a group container. |
+| Align | Align or distribute selected elements. |
+| Guides | Drag from rulers to create persistent snap guides. |
+| Undo/Redo | Restore structural and property edits. |
+| Reset | Clear saved local edits and reload defaults. |
 
-## 4. Acceptance — the editor is right when ALL hold
+Everything must operate on `layout[id]` and the real DOM.
 
-1. The **left tree** shows the real nesting; expanding a node shows its
-   children; clicking a node selects it on canvas and vice-versa.
-2. Dragging container A onto container B nests A under B — and the **tree
-   updates to show A indented under B**.
-3. Selecting a container with padding **visibly shades** the padding region on
-   canvas; changing a per-side padding value changes that shading live.
-4. Dragging a container near a sibling shows an **alignment guide** and snaps
-   edge/centre to it.
-5. The inspector has a **Kind** dropdown; changing kind changes the container's
-   chrome/glyph and the available fields.
-6. Group, align/distribute, undo/redo, guides, grid, snap all work and persist.
-7. Reload → everything (structure, nesting, padding, kinds, styles) restores
-   from `localStorage`.
+## 4. Acceptance Checks
 
-## 5. What the catalogs are for now
+The editor is in good shape when all of these pass:
 
-`05_libraries.md`, `14_component_archetype_reference.md`,
-`20_materials_and_shapes.md`, `21_interactive_overlays_and_primitives.md` are
-**the menu of container kinds** for the §2.3 Kind picker — a list of names and
-default props, nothing more. `03_canvas_engine.md` is the reference for the
-snap/ruler/guide math. `04_toolkit.md` is the tool list (this doc's §3
-supersedes its framing). `23`/`24` carry the tier idea (Component → Assembly →
-Product) and the GeoSee inventory. Everything in `_superseded/` is dead.
+1. The left tree shows real nesting and stays synced with canvas selection.
+2. Dragging container A into container B nests A under B and indents A in the
+   tree.
+3. Selecting a padded container shows its padding visually on the canvas.
+4. Changing padding values updates the visible padding live.
+5. Dragging near siblings shows alignment guides and snaps to edges/centers.
+6. The Kind dropdown changes the selected container's kind, glyph/chrome, and
+   relevant inspector fields.
+7. Group, align/distribute, guide, grid, snap, undo, redo, and reset work.
+8. Reload restores structure, nesting, padding, kind, style, and notes from
+   `localStorage`.
+
+## 5. Parked Work
+
+These are not current editor requirements:
+
+- React/Vite package workbench as the primary editor.
+- Package folders and package export.
+- `frames.json`, `containers.json`, `components.json`, or schema manifests.
+- Validation rule packs and validation reports.
+- Change-state machine.
+- Write-server security model.
+- AI-agent briefs, autonomous runbooks, or implementation handoff files.
+- Host-app adapter work.
+
+Keep those files only as history or reference until the standalone editor is
+working well.

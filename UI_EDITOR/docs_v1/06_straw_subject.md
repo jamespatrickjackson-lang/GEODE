@@ -1,5 +1,9 @@
 # v1 Straw Subject — GeoSee Editor Sidebar
 
+> Current status: inventory reference only. Use this to understand the GeoSee
+> sidebar being modeled. Ignore package schema, validation, export, and
+> autonomous-agent language in this file.
+
 ## 1. Why a straw subject
 
 A v1 workbench built against synthetic toy panels would silently absorb assumptions that break on the first real integration. The straw subject is a realistic reference target: GeoSee's editor sidebar as it exists at v1 start. The workbench reconstructs it as a sample GUI Package and uses it as the smoke-test target for every phase.
@@ -122,15 +126,14 @@ The straw subject is the v1 vehicle for proving the Host-App Adapter shape. v1 e
 - Every Frame has a `hostSurface?: string` field reserved for future use. v1 leaves it unset. v2 populates it (e.g. `hostSurface: "src/editor/PagePanel.tsx"`).
 - The Restricted-Surface marker scheme is implemented in v1; v2's adapter consumes it as the embedded-mode lockout list.
 
-## 9. Acceptance criteria for the straw-subject package
+## 9. Current use
+
+Use this file as inventory for the GeoSee-style sidebar being modeled in the
+standalone editor. Current verification is visual and interaction-based:
 
 | # | Check | How to verify |
 | --- | --- | --- |
-| 1 | Package folder exists | `UI_EDITOR/packages/geosee_editor_sidebar/` present with all files from [07_package_format.md](07_package_format.md) §2. |
-| 2 | All Frames present | `frames.json` contains ≥16 Frames matching §2 above. |
-| 3 | Library archetypes present | Component Library contains ≥14 archetypes from §4. Container Library contains ≥10. |
-| 4 | Tokens present | Token Library matches [05_libraries.md](05_libraries.md) §5.4. |
-| 5 | Restricted Surfaces marked | At least one component in the package has `locked: true`; the workbench refuses to mutate it. |
-| 6 | Validation runs | Running validation on the loaded package produces 0 Blocker findings (Restricted Surfaces are locked, not violated). |
-| 7 | Export round-trips | Export the package; re-import; Frames render identically; `validation_report.json` is byte-identical. |
-| 8 | Spec readable | The generated `spec.md` lists every Frame, every archetype used, every Token used, and is intelligible to a developer who has never seen GeoSee. |
+| 1 | Sidebar surface exists | Open `gui-editor.html`; the sample sidebar renders on the canvas. |
+| 2 | Layers tree populated | The left tree lists Sidebar, Brand, Pages, Cinematics, Sections, Topo, Forge, Cards, and Save. |
+| 3 | Direct editing works | Select a row, edit geometry/padding/style/notes, and see the real DOM update. |
+| 4 | Persistence works | Reload and confirm the edited sidebar state returns from `localStorage`. |

@@ -1,5 +1,10 @@
 # v1 Materials, Grouping, Shapes, Effects
 
+> Current status: idea catalog only. Use this for standalone editor shape,
+> material, group, and effect ideas where they agree with `EDITOR-SPEC.md`.
+> Ignore package schema, validation, export, and autonomous-agent language in
+> this file.
+
 ## 1. Goal
 
 Promote v1 from "structured panel layout with snap" to a genuine Figma-lite editor by adding four orthogonal capabilities:
@@ -275,8 +280,10 @@ export interface ImagePlaceholderProps {
 
 - Default size 200×150.
 - Renders as a labelled box ("Image placeholder — alt: …") with optional checkerboard or stripe fill.
-- Author plans for a real image at implementation time; the placeholder carries enough metadata for downstream agents to know the intended shape and aspect ratio.
-- Default intent: "Image content placeholder. Final image is sourced by the implementing agent at build time, not by the workbench."
+- Author plans for a real image at implementation time; the placeholder carries
+  enough metadata to describe the intended shape and aspect ratio.
+- Default intent: "Image content placeholder. Final image is sourced during
+  implementation, not by the workbench."
 
 ### 4.5 Toolkit additions
 

@@ -1,5 +1,9 @@
 # v1 Toolkit
 
+> Current status: reference only. Use this for tool behavior that agrees with
+> `EDITOR-SPEC.md`. Ignore package schema, validation, export, and
+> autonomous-agent language in this file.
+
 ## 1. Goal
 
 Provide the 10 tools the author uses to interact with the Canvas. Each Tool is a modal interaction: only one is active at a time. The active Tool changes the cursor, the canvas pointer interpretation, and the available keyboard shortcuts.

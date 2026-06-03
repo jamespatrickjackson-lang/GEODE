@@ -1,50 +1,44 @@
-# GUI Workbench
+# GUI Editor
 
-A standalone Figma-lite visual editor for application GUI panels. Builds
-**Components → Assemblies → Products** (the three-tier authoring model),
-validates them against a deterministic rule pack, and exports a portable
-GUI Package plus a human spec and an AI-agent brief.
+Current focus: get the standalone GUI editor working fully and clearly before
+returning to package export, AI handoff, or host-app integration work.
 
-See `docs_v1/00_README.md` for the full v1 build context, and
-`docs_v1/23_v1_1_direction.md` for the v1.1 tier model.
+## Current Editor
 
-## Run it
+Use the self-contained editor:
 
-- **Windows:** double-click `Launch UI Editor.cmd` (in this folder). It
-  installs dependencies on first run, starts Vite, and opens the browser.
-- **Any OS / terminal:**
+- Double-click `Launch UI Editor.cmd` or `Open GUI Editor.cmd`.
+- Direct file: `gui-editor.html`.
+- If the Vite dev server is already running, the same file is also available at
+  `http://127.0.0.1:5174/gui-editor.html`.
 
-  ```bash
-  cd UI_EDITOR
-  npm install      # first run only
-  npm run dev      # http://localhost:5174/
-  ```
+This editor is vanilla HTML/CSS/JS. It edits real DOM nodes marked with
+`data-c`, shows a layers tree, supports direct canvas manipulation, and
+persists edits to `localStorage`. It does not need npm, a build step, package
+export, validation, or AI tooling.
 
-A second root-level launcher (`..\Editor App.cmd`) does the same thing from
-the repo root; either works.
+## Paused Workbench
 
-## Scripts
+The React/Vite package workbench still exists under `src/`, `packages/`, and
+`plugins/`. It is not the current product target. Its local dependencies may
+need to be reinstalled before it builds or runs.
 
-| Command | Effect |
-| --- | --- |
-| `npm run dev` | Vite dev server on `http://localhost:5174`. |
-| `npm run build` | Production build (sanity check only; v1 is dev-time tooling). |
-| `npm run check` | `tsc --noEmit`. |
-| `npm run test` | Vitest, scoped to `src/core/**` + `src/adapter/**`. |
+Use `Launch Package Workbench (paused).cmd` only when intentionally inspecting
+that older package/schema workbench at `http://127.0.0.1:5174/`.
 
-## Layout
+## Docs
 
-- `src/core/` — portable engine: schema, geometry, validation, editing,
-  package IO, export. Knows nothing about GeoSee.
-- `src/shell/` — the React UI (canvas, toolkit, library panel, inspector).
-- `src/adapter/` — Host-App Adapter **contract only** (v1). The GeoSee
-  adapter is implemented in v2; the stub throws at runtime.
-- `packages/` — GUI Package storage. Ships `geosee_editor_sidebar`.
-- `docs_v1/` — the build contract (do not edit during an agent build run).
+- `docs_v1/EDITOR-SPEC.md` is the current editor specification.
+- `docs_v1/01_scope.md` is the current scope.
+- `docs_v1/10_build_phases.md` is now a stabilization plan for the standalone
+  editor, not an autonomous AI build runbook.
+- `docs_v1/_superseded/` contains historical package, validation, export,
+  change-state, security, and AI-agent automation docs. Do not build from those
+  docs unless the package workbench is explicitly resumed.
 
-## Status
+## Current Rule
 
-v1.0 phases 0–14 are complete. v1.1 adds the three-tier model
-(Component / Assembly / Product), first-class AI Notes, machine-readable
-composition recipes, and tier validation rules. The frozen v1.0 snapshot
-lives at `..\UI_EDITOR_v1_0\`.
+When instructions conflict, prefer the standalone editor and
+`docs_v1/EDITOR-SPEC.md`. Treat references to package export, validation
+reports, `frames.json`, `ai_agent_brief.md`, and autonomous agent runbooks as
+paused historical material.

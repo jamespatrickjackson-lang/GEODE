@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GUI Editor — dev-mode design overlay</title>
+<title>GUI Editor</title>
 <style>
   :root {
     --bg: #121518;
@@ -26,19 +26,21 @@
   }
   /* ---- top bar ---- */
   .topbar {
-    height: 42px; flex: none; display: flex; align-items: center; gap: 6px;
-    padding: 0 12px; background: var(--panel); border-bottom: var(--hair);
+    height: 42px; flex: none; display: flex; align-items: center; gap: 4px;
+    padding: 0 8px; background: var(--panel); border-bottom: var(--hair);
+    overflow-x: auto; overflow-y: hidden;
   }
-  .topbar strong { font-weight: 600; margin-right: 4px; }
-  .topbar .sep { width: 1px; height: 22px; background: rgba(255,255,255,0.12); margin: 0 4px; }
+  .topbar strong { font-weight: 600; margin-right: 4px; white-space: nowrap; flex: none; }
+  .topbar .sep { width: 1px; height: 22px; background: rgba(255,255,255,0.12); margin: 0 2px; }
   button.tb {
     background: var(--panel-raised); color: var(--fg); border: 1px solid rgba(255,255,255,0.16);
-    border-radius: 6px; padding: 4px 10px; font: inherit; cursor: pointer;
+    border-radius: 6px; padding: 4px 7px; font: inherit; cursor: pointer;
+    flex: none; white-space: nowrap; min-height: 28px;
   }
   button.tb:hover { background: #30353a; }
   button.tb.on { background: var(--accent); color: #10141a; border-color: var(--accent); }
   button.tb:disabled { opacity: 0.4; cursor: default; }
-  .grow { flex: 1; }
+  .grow { flex: 0 0 4px; }
   /* ---- main ---- */
   .main { flex: 1; display: flex; min-height: 0; }
   .stage-wrap { flex: 1; position: relative; overflow: auto; }
@@ -103,6 +105,7 @@
     color: var(--fg2); white-space: nowrap; font-size: 12px; }
   .tree-row:hover { background: rgba(255,255,255,0.04); }
   .tree-row.is-selected { background: rgba(120,180,220,0.18); color: var(--fg); }
+  .tree-row.is-drop-target { outline: 1px solid var(--blue); background: rgba(120,180,220,0.12); }
   .tree-row .caret { width: 12px; text-align: center; color: var(--fg3); cursor: pointer; }
   .tree-row .kind { width: 16px; text-align: center; opacity: .8; }
   .tree-row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
@@ -122,10 +125,10 @@
   .row input[type=range] { flex: 1; }
   .row input[type=color] { width: 28px; height: 22px; background: var(--field); border: var(--hair); border-radius: 4px; }
   .muted { color: var(--fg3); font-size: 12px; }
-  .pill { display:inline-block; padding:1px 6px; border-radius:999px; background:rgba(255,255,255,0.06); font-size:10px; color:var(--fg3); }
+  .pill { display:inline-block; flex:none; white-space:nowrap; padding:1px 6px; border-radius:999px; background:rgba(255,255,255,0.06); font-size:10px; color:var(--fg3); }
 
   /* ===================================================================== */
-  /* SAMPLE HOST UI — the real, editable surface (a GeoSee-style sidebar).  */
+  /* SAMPLE HOST UI - the real, editable surface (a GeoSee-style sidebar).  */
   /* Every [data-c] element is auto-registered as an editable container.    */
   /* ===================================================================== */
   .host { position: absolute; left: 80px; top: 60px; }
@@ -150,20 +153,30 @@
 
   <div class="topbar">
     <strong>GUI Editor</strong>
-    <span class="pill">dev-mode design overlay · localStorage · no build</span>
+    <span class="pill">standalone</span>
     <span class="sep"></span>
-    <button class="tb on" id="btnDev" title="Toggle design overlay (D)">Design mode</button>
+    <button class="tb on" id="btnDev" title="Toggle design overlay (D)">Design</button>
     <button class="tb on" id="btnGrid" title="Toggle grid (G)">Grid</button>
     <button class="tb on" id="btnSnap" title="Toggle snapping (S)">Snap</button>
     <span class="sep"></span>
-    <button class="tb" id="btnAdd" title="Add a container (into selection if a container is selected)">+ Container</button>
+    <button class="tb" id="btnAdd" title="Add a container (into selection if a container is selected)">+ Box</button>
     <button class="tb" id="addText" title="Add text">+ Text</button>
     <button class="tb" id="addRect" title="Add rectangle">+ Rect</button>
-    <button class="tb" id="addEllipse" title="Add ellipse">+ Ellipse</button>
+    <button class="tb" id="addEllipse" title="Add ellipse">+ Oval</button>
     <button class="tb" id="addRow" title="Add a row (icon + label)">+ Row</button>
     <span class="sep"></span>
     <button class="tb" id="btnGroup" title="Group selection (Ctrl/Cmd+G)">Group</button>
+    <button class="tb" id="btnUngroup" title="Ungroup selected group (Ctrl/Cmd+Shift+G)">Ungroup</button>
     <button class="tb" id="btnDelete" title="Delete selection (Del)">Delete</button>
+    <span class="sep"></span>
+    <button class="tb" id="alignL" title="Align left">L</button>
+    <button class="tb" id="alignC" title="Align center">C</button>
+    <button class="tb" id="alignR" title="Align right">R</button>
+    <button class="tb" id="alignT" title="Align top">T</button>
+    <button class="tb" id="alignM" title="Align middle">M</button>
+    <button class="tb" id="alignB" title="Align bottom">B</button>
+    <button class="tb" id="distH" title="Distribute horizontally">H</button>
+    <button class="tb" id="distV" title="Distribute vertically">V</button>
     <span class="sep"></span>
     <button class="tb" id="btnUndo" title="Undo (Ctrl/Cmd+Z)">Undo</button>
     <button class="tb" id="btnRedo" title="Redo (Ctrl/Cmd+Shift+Z)">Redo</button>
@@ -186,13 +199,13 @@
         <div class="host" id="host">
           <div class="sidebar" data-c data-label="Sidebar">
             <div class="sb-brand" data-c data-label="Brand"><span class="dot"></span>FORGE</div>
-            <div class="sb-row" data-c data-label="Pages"><span class="ic">▤</span><span class="lbl">Pages</span><span class="chev">›</span></div>
-            <div class="sb-row" data-c data-label="Cinematics"><span class="ic">◉</span><span class="lbl">Cinematics</span><span class="chev">›</span></div>
-            <div class="sb-row" data-c data-label="Sections"><span class="ic">▱</span><span class="lbl">Sections</span><span class="chev">›</span></div>
-            <div class="sb-row" data-c data-label="Topo"><span class="ic">⛰</span><span class="lbl">Topo</span><span class="chev">›</span></div>
-            <div class="sb-row" data-c data-label="Forge"><span class="ic">▤</span><span class="lbl">Forge</span><span class="chev">›</span></div>
-            <div class="sb-row" data-c data-label="Cards"><span class="ic">▭</span><span class="lbl">Cards</span><span class="chev">›</span></div>
-            <div class="sb-footer" data-c data-label="Save">▣</div>
+            <div class="sb-row" data-c data-label="Pages"><span class="ic">[]</span><span class="lbl">Pages</span><span class="chev">&gt;</span></div>
+            <div class="sb-row" data-c data-label="Cinematics"><span class="ic">o</span><span class="lbl">Cinematics</span><span class="chev">&gt;</span></div>
+            <div class="sb-row" data-c data-label="Sections"><span class="ic">/</span><span class="lbl">Sections</span><span class="chev">&gt;</span></div>
+            <div class="sb-row" data-c data-label="Topo"><span class="ic">^</span><span class="lbl">Topo</span><span class="chev">&gt;</span></div>
+            <div class="sb-row" data-c data-label="Forge"><span class="ic">[]</span><span class="lbl">Forge</span><span class="chev">&gt;</span></div>
+            <div class="sb-row" data-c data-label="Cards"><span class="ic">-</span><span class="lbl">Cards</span><span class="chev">&gt;</span></div>
+            <div class="sb-footer" data-c data-label="Save">[ ]</div>
           </div>
         </div>
         <!-- overlay lives INSIDE the stage so its (0,0) == stage (0,0) and it
@@ -204,7 +217,7 @@
     <aside class="inspector" id="inspector">
       <div class="insp-sec">
         <h4>Selection</h4>
-        <div class="muted" id="selInfo">Nothing selected. Click an element in design mode.</div>
+        <div class="muted" id="selInfo">No selection.</div>
       </div>
       <div class="insp-sec" id="kindSec" style="display:none">
         <h4>Kind</h4>
@@ -256,19 +269,10 @@
         <div class="row"><label>Text</label><input type="text" id="inText" placeholder="(label text)"></div>
         <div class="row"><label>Lock</label><input type="checkbox" id="inLock"></div>
       </div>
-      <div class="insp-sec" id="aiSec" style="display:none">
-        <h4>AI note</h4>
-        <div class="row"><label>Name</label><input type="text" id="inAiName" placeholder="what is it"></div>
-        <div class="row" style="align-items:flex-start"><label>Intent</label><textarea id="inAiIntent" placeholder="what it is for / how it works" style="flex:1;min-height:48px;background:var(--field);color:var(--fg);border:var(--hair);border-radius:4px;padding:3px 6px;font:inherit;resize:vertical"></textarea></div>
-      </div>
-      <div class="insp-sec">
-        <h4>How it works</h4>
-        <div class="muted">
-          Every <span class="pill">data-c</span> element is editable. Drag to move,
-          corner handle to resize, fields to restyle. Shift-click = multi-select.
-          Ctrl while dragging disables snap. Drag from a ruler to drop a guide.
-          All edits persist to your browser (localStorage) — no server, no build.
-        </div>
+      <div class="insp-sec" id="notesSec" style="display:none">
+        <h4>Notes</h4>
+        <div class="row"><label>Name</label><input type="text" id="inNoteName" placeholder="what is it"></div>
+        <div class="row" style="align-items:flex-start"><label>Intent</label><textarea id="inNoteIntent" placeholder="purpose / behavior" style="flex:1;min-height:48px;background:var(--field);color:var(--fg);border:var(--hair);border-radius:4px;padding:3px 6px;font:inherit;resize:vertical"></textarea></div>
       </div>
     </aside>
   </div>
@@ -280,14 +284,15 @@
   const stage = document.getElementById("stage");
   const overlay = document.getElementById("overlay");
   const stageWrap = document.getElementById("stageWrap");
+  const host = document.getElementById("host");
   const rulerTop = document.getElementById("rulerTop");
   const rulerLeft = document.getElementById("rulerLeft");
   const saveState = document.getElementById("saveState");
   const treeEl = document.getElementById("tree");
   const STORAGE_KEY = "gui-editor.layout.v2";
 
-  const KIND_GLYPH = { container:"▢", group:"⧉", panel:"▦", section:"▱", card:"▭", row:"≣",
-    menu:"☰", "menu-item":"·", button:"◖", "slider-row":"⊟", text:"T", shape:"◆", image:"▤" };
+  const KIND_GLYPH = { container:"C", group:"G", panel:"P", section:"S", card:"K", row:"R",
+    menu:"M", "menu-item":">", button:"B", "slider-row":"=", text:"T", shape:"*", image:"I" };
   let collapsed = {}; // id -> true if its tree children are hidden
 
   // ---- state (persisted) ----
@@ -307,7 +312,7 @@
   // ---- persistence ----
   function save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ layout, groups, guides, nextId }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ layout, groups, guides, nextId, collapsed, selected, hostHTML: host.innerHTML }));
       saveState.textContent = "saved";
     } catch (e) { saveState.textContent = "save failed"; }
   }
@@ -315,15 +320,26 @@
     try {
       const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
       if (raw) {
+        if (typeof raw.hostHTML === "string") host.innerHTML = raw.hostHTML;
         layout = raw.layout || {};
         groups = raw.groups || {};
         guides = raw.guides || [];
+        collapsed = raw.collapsed || {};
+        selected = Array.isArray(raw.selected) ? raw.selected : [];
         nextId = raw.nextId || 1;
       }
     } catch (e) { /* ignore */ }
   }
 
   // ---- container registry: every [data-c] in the host becomes editable ----
+  function inferKind(el) {
+    if (el.dataset.kind) return el.dataset.kind;
+    if (el.classList.contains("sidebar")) return "panel";
+    if (el.classList.contains("sb-row")) return "row";
+    if (el.classList.contains("sb-brand")) return "text";
+    if (el.classList.contains("sb-footer")) return "button";
+    return "container";
+  }
   function registerContainers() {
     containers = {};
     const nodes = stage.querySelectorAll("[data-c]");
@@ -331,7 +347,10 @@
       let id = el.dataset.cid;
       if (!id) { id = "c" + (i + 1) + "-" + (el.dataset.label || el.className.split(" ")[0] || "el"); el.dataset.cid = id; }
       containers[id] = { id, el, label: el.dataset.label || id };
-      if (!layout[id]) layout[id] = blankState();
+      if (!layout[id]) {
+        layout[id] = blankState();
+        layout[id].kind = inferKind(el);
+      }
     });
     // virtual groups are containers too (no element; act on children)
     for (const gid of Object.keys(groups)) {
@@ -342,7 +361,7 @@
   function blankState() {
     return { x: 0, y: 0, width: null, height: null,
              padT: null, padR: null, padB: null, padL: null, gap: null, dir: "",
-             kind: "container", ai: {}, locked: false, style: {} };
+             kind: "container", notes: {}, locked: false, style: {} };
   }
   function st(id) { if (!layout[id]) layout[id] = blankState(); return layout[id]; }
 
@@ -354,17 +373,21 @@
       c.el.style.transform = `translate(${s.x || 0}px, ${s.y || 0}px)`;
       if (s.width != null) c.el.style.width = s.width + "px";
       if (s.height != null) c.el.style.height = s.height + "px";
-      // per-side padding (only write sides that are set)
-      if (s.padT != null) c.el.style.paddingTop = s.padT + "px";
-      if (s.padR != null) c.el.style.paddingRight = s.padR + "px";
-      if (s.padB != null) c.el.style.paddingBottom = s.padB + "px";
-      if (s.padL != null) c.el.style.paddingLeft = s.padL + "px";
+      // per-side padding
+      c.el.style.paddingTop = s.padT != null ? s.padT + "px" : "";
+      c.el.style.paddingRight = s.padR != null ? s.padR + "px" : "";
+      c.el.style.paddingBottom = s.padB != null ? s.padB + "px" : "";
+      c.el.style.paddingLeft = s.padL != null ? s.padL + "px" : "";
       // layout: when "stack" is set the container lays its children out in flow
       // (column/row) with the gap; "free" leaves children absolutely placed.
       if (s.dir === "column" || s.dir === "row") {
         c.el.style.display = "flex";
         c.el.style.flexDirection = s.dir;
-        if (s.gap != null) c.el.style.gap = s.gap + "px";
+        c.el.style.gap = s.gap != null ? s.gap + "px" : "";
+      } else {
+        c.el.style.display = "";
+        c.el.style.flexDirection = "";
+        c.el.style.gap = "";
       }
       const stl = s.style || {};
       if (stl.bg) c.el.style.background = hexA(stl.bg, stl.bgA != null ? stl.bgA : 1);
@@ -434,7 +457,7 @@
       o.dataset.target = id;
       o.addEventListener("pointerdown", startDrag);
       const lab = document.createElement("div");
-      lab.className = "dev-label"; lab.textContent = containers[id].label + (groups[id] ? " ⧉" : "");
+      lab.className = "dev-label"; lab.textContent = containers[id].label + (groups[id] ? " G" : "");
       o.appendChild(lab);
       if (selected.includes(id) && !s.locked) {
         const h = document.createElement("div");
@@ -470,7 +493,7 @@
     }
   }
 
-  // ---- layers tree (left) — mirrors real DOM nesting ----
+  // ---- layers tree (left) - mirrors real DOM nesting ----
   function childContainerIds(parentEl) {
     // direct descendant containers (skip intermediate non-container wrappers)
     const out = [];
@@ -492,20 +515,58 @@
       const kids = c.el ? childContainerIds(c.el) : (groups[id] ? groups[id].children : []);
       const row = document.createElement("div");
       row.className = "tree-row" + (selected.includes(id) ? " is-selected" : "");
+      row.dataset.id = id;
+      row.draggable = !!c.el;
       row.style.paddingLeft = (8 + depth*14) + "px";
       const caret = document.createElement("span"); caret.className = "caret";
-      caret.textContent = kids.length ? (collapsed[id] ? "▸" : "▾") : "";
+      caret.textContent = kids.length ? (collapsed[id] ? "+" : "-") : "";
       caret.addEventListener("click", (e)=>{ e.stopPropagation(); collapsed[id]=!collapsed[id]; renderTree(); });
       const glyph = document.createElement("span"); glyph.className="kind";
-      glyph.textContent = KIND_GLYPH[st(id).kind] || "▢";
+      glyph.textContent = KIND_GLYPH[st(id).kind] || "?";
       const name = document.createElement("span"); name.className="name"; name.textContent = c.label;
-      const lock = document.createElement("span"); lock.className="lock"; lock.textContent = st(id).locked ? "🔒" : "";
+      const lock = document.createElement("span"); lock.className="lock"; lock.textContent = st(id).locked ? "L" : "";
       row.append(caret, glyph, name, lock);
       row.addEventListener("click", ()=> select(id));
+      row.addEventListener("dragstart", startTreeDrag);
+      row.addEventListener("dragover", treeDragOver);
+      row.addEventListener("dragleave", treeDragLeave);
+      row.addEventListener("drop", treeDrop);
+      row.addEventListener("dragend", clearTreeDropTargets);
       treeEl.appendChild(row);
       if (!collapsed[id]) for (const k of kids) addRow(k, depth+1);
     };
     for (const r of roots) addRow(r, 0);
+  }
+  let treeDragId = null;
+  function clearTreeDropTargets() {
+    treeEl.querySelectorAll(".is-drop-target").forEach(row => row.classList.remove("is-drop-target"));
+  }
+  function startTreeDrag(e) {
+    if (e.target.classList.contains("caret")) return;
+    treeDragId = e.currentTarget.dataset.id;
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", treeDragId);
+    }
+  }
+  function treeDragOver(e) {
+    const targetId = e.currentTarget.dataset.id;
+    if (!treeDragId || !targetId || treeDragId === targetId || !canReparent(treeDragId, targetId)) return;
+    e.preventDefault();
+    e.currentTarget.classList.add("is-drop-target");
+  }
+  function treeDragLeave(e) {
+    e.currentTarget.classList.remove("is-drop-target");
+  }
+  function treeDrop(e) {
+    e.preventDefault();
+    const targetId = e.currentTarget.dataset.id;
+    clearTreeDropTargets();
+    if (treeDragId && targetId && treeDragId !== targetId && canReparent(treeDragId, targetId)) {
+      pushHistory();
+      reparent(treeDragId, targetId);
+    }
+    treeDragId = null;
   }
 
   // ---- selection ----
@@ -649,11 +710,49 @@
   }
 
   // ---- nesting (reparent) ----
+  function editableRoot() { return host; }
   function currentParentId(id) {
     const c = containers[id]; if (!c || !c.el) return null;
     let p = c.el.parentElement;
     while (p && p !== stage) { if (p.dataset && p.dataset.cid) return p.dataset.cid; p = p.parentElement; }
     return null;
+  }
+  function canAcceptChildren(id) {
+    const kind = st(id).kind || "container";
+    return !["text", "shape", "image", "button"].includes(kind);
+  }
+  function canReparent(id, newParentId) {
+    const child = containers[id], parent = containers[newParentId];
+    if (!child || !parent || !child.el || !parent.el) return false;
+    if (id === newParentId) return false;
+    if (!canAcceptChildren(newParentId)) return false;
+    return !child.el.contains(parent.el);
+  }
+  function parentElementFor(id) {
+    const pid = currentParentId(id);
+    return pid && containers[pid] ? containers[pid].el : editableRoot();
+  }
+  function moveElementKeepingRect(id, newParentEl, beforeEl, rect) {
+    const c = containers[id]; if (!c || !c.el || !newParentEl) return false;
+    const el = c.el;
+    const before = rect || el.getBoundingClientRect();
+    const s = st(id);
+    if (getComputedStyle(newParentEl).position === "static") newParentEl.style.position = "relative";
+    s.x = 0; s.y = 0;
+    el.style.position = "absolute";
+    el.style.margin = "0";
+    el.style.left = "0px";
+    el.style.top = "0px";
+    el.style.transform = "translate(0px, 0px)";
+    newParentEl.insertBefore(el, beforeEl || null);
+    const zero = el.getBoundingClientRect();
+    s.x = Math.round(before.left - zero.left);
+    s.y = Math.round(before.top - zero.top);
+    return true;
+  }
+  function revealInTree(id) {
+    let pid = currentParentId(id);
+    while (pid) { collapsed[pid] = false; pid = currentParentId(pid); }
   }
   function containerUnderPoint(clientX, clientY, excludeId) {
     // topmost editable container under the pointer that is NOT the dragged
@@ -663,8 +762,8 @@
     for (const id of Object.keys(containers)) {
       if (id === excludeId) continue;
       const c = containers[id]; if (!c.el) continue;
+      if (!canAcceptChildren(id)) continue;
       if (movedEl && movedEl.contains(c.el)) continue;     // don't nest into own child
-      if (c.el.contains(movedEl)) { /* current/ancestor — still a valid target */ }
       const r = c.el.getBoundingClientRect();
       if (clientX>=r.left && clientX<=r.right && clientY>=r.top && clientY<=r.bottom) {
         const area = r.width * r.height;
@@ -673,25 +772,13 @@
     }
     return best;
   }
-  function reparent(id, newParentId) {
-    const child = containers[id], parent = containers[newParentId];
-    if (!child || !parent || !child.el || !parent.el) return;
-    if (child.el.contains(parent.el)) return;
-    // capture on-screen position, move in DOM, then restore position so it
-    // doesn't visually jump.
-    const before = child.el.getBoundingClientRect();
-    const s = st(id); s.x = 0; s.y = 0;                       // reset offset; we recompute below
-    if (getComputedStyle(parent.el).position === "static") parent.el.style.position = "relative";
-    child.el.style.position = "absolute";
-    parent.el.appendChild(child.el);
-    child.el.style.transform = "translate(0px,0px)";
-    const pr = parent.el.getBoundingClientRect();
-    const after = child.el.getBoundingClientRect();
-    // place child so its top-left matches where it was dropped (relative to parent)
-    child.el.style.left = (before.left - pr.left) + "px";
-    child.el.style.top = (before.top - pr.top) + "px";
-    s.x = 0; s.y = 0;
-    registerContainers(); applyAll(); renderTree(); save();
+  function reparent(id, newParentId, beforeId) {
+    if (!canReparent(id, newParentId)) return false;
+    const beforeEl = beforeId ? containers[beforeId]?.el : null;
+    const beforeRect = containers[id].el.getBoundingClientRect();
+    if (!moveElementKeepingRect(id, containers[newParentId].el, beforeEl, beforeRect)) return false;
+    registerContainers(); applyAll(); revealInTree(id); select(id); save();
+    return true;
   }
 
   // ---- resize ----
@@ -708,11 +795,13 @@
   // ---- guides ----
   let guideDrag = null;
   function startGuideDrag(e) { e.preventDefault(); e.stopPropagation();
+    pushHistory();
     const id = e.currentTarget.dataset.guide; const g = guides.find(x=>x.id===id);
     guideDrag = { id, axis: g.axis }; }
   function addGuideFromRuler(axis, clientPos) {
     const s = stageRect();
     const pos = axis==="v" ? (clientPos - s.left) : (clientPos - s.top);
+    pushHistory();
     guides.push({ id: "g"+(nextId++), axis, pos: Math.round(pos) });
     save(); renderOverlay();
   }
@@ -731,9 +820,11 @@
   window.addEventListener("pointerup", onUp);
 
   // ---- history (undo/redo) ----
-  function snapshot() { return JSON.stringify({ layout, groups, guides }); }
+  function snapshot() { return JSON.stringify({ layout, groups, guides, nextId, collapsed, selected, hostHTML: host.innerHTML }); }
   function pushHistory() { history.push(snapshot()); if (history.length>100) history.shift(); future = []; }
-  function restore(json) { const o = JSON.parse(json); layout=o.layout; groups=o.groups; guides=o.guides;
+  function restore(json) { const o = JSON.parse(json); if (typeof o.hostHTML === "string") host.innerHTML = o.hostHTML;
+    layout=o.layout || {}; groups=o.groups || {}; guides=o.guides || []; nextId=o.nextId || nextId;
+    collapsed=o.collapsed || {}; selected=Array.isArray(o.selected) ? o.selected : [];
     registerContainers(); applyAll(); renderOverlay(); renderInspector(); renderTree(); save(); }
   function undo() { if (!history.length) return; future.push(snapshot()); restore(history.pop()); }
   function redo() { if (!future.length) return; history.push(snapshot()); restore(future.pop()); }
@@ -771,28 +862,156 @@
     } else if (kind === "row") {
       el.dataset.label = "Row";
       el.className = "sb-row"; el.style.cssText = base + "width:280px;";
-      el.innerHTML = '<span class="ic">▤</span><span class="lbl">Row</span><span class="chev">›</span>';
+      el.innerHTML = '<span class="ic">[]</span><span class="lbl">Row</span><span class="chev">&gt;</span>';
     } else { // container
       el.dataset.label = "Container";
       el.style.cssText = base + "width:200px;height:120px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.25);border-radius:8px;";
     }
-    parent.appendChild(el);
-    pushHistory(); registerContainers(); applyAll(); select(id); renderTree(); save();
+    pushHistory(); parent.appendChild(el);
+    registerContainers(); st(id).kind = kind === "rect" || kind === "ellipse" ? "shape" : kind;
+    applyAll(); select(id); renderTree(); save();
   }
   function addContainer() { createEl("container"); }
+  function unionRects(rects) {
+    const valid = rects.filter(Boolean);
+    if (!valid.length) return null;
+    const left = Math.min(...valid.map(r => r.left));
+    const top = Math.min(...valid.map(r => r.top));
+    const right = Math.max(...valid.map(r => r.right));
+    const bottom = Math.max(...valid.map(r => r.bottom));
+    return { left, top, right, bottom, width: right - left, height: bottom - top };
+  }
+  function clientRectFromStageRect(r) {
+    const sr = stageRect();
+    return { left: sr.left + r.left, top: sr.top + r.top, right: sr.left + r.right, bottom: sr.top + r.bottom, width: r.width, height: r.height };
+  }
+  function selectedElementIds() {
+    return selected.filter(id => containers[id] && containers[id].el && !st(id).locked);
+  }
+  function isDescendantOfAny(id, ids) {
+    const el = containers[id]?.el;
+    if (!el) return false;
+    return ids.some(other => other !== id && containers[other]?.el && containers[other].el.contains(el));
+  }
+  function topLevelSelectedIds() {
+    const ids = selectedElementIds();
+    return ids.filter(id => !isDescendantOfAny(id, ids));
+  }
+  function commonEditableParent(ids) {
+    if (!ids.length) return editableRoot();
+    const first = parentElementFor(ids[0]);
+    return ids.every(id => parentElementFor(id) === first) ? first : editableRoot();
+  }
   function groupSelection() {
-    if (selected.length < 2) return;
+    const ids = topLevelSelectedIds();
+    if (ids.length < 2) return;
+    const bounds = unionRects(ids.map(rectOf));
+    if (!bounds) return;
+    const childRects = new Map(ids.map(id => [id, containers[id].el.getBoundingClientRect()]));
+    const parentEl = commonEditableParent(ids);
+    pushHistory();
     const gid = "group-" + (nextId++);
-    groups[gid] = { label: "Group", children: selected.slice() };
-    pushHistory(); registerContainers(); select(gid); renderOverlay(); renderTree(); save();
+    const group = document.createElement("div");
+    group.dataset.c = "";
+    group.dataset.cid = gid;
+    group.dataset.label = "Group";
+    group.dataset.kind = "group";
+    group.style.cssText = "position:absolute;left:0;top:0;box-sizing:border-box;border:1px dashed rgba(120,180,220,0.5);border-radius:6px;";
+    parentEl.appendChild(group);
+    registerContainers();
+    const gs = st(gid);
+    gs.kind = "group";
+    gs.width = Math.round(bounds.width);
+    gs.height = Math.round(bounds.height);
+    moveElementKeepingRect(gid, parentEl, null, clientRectFromStageRect(bounds));
+    applyAll();
+    for (const id of ids) moveElementKeepingRect(id, group, null, childRects.get(id));
+    registerContainers(); applyAll(); select(gid); renderTree(); save();
+  }
+  function ungroupSelection() {
+    const groupsToLift = selected.filter(id => containers[id]?.el && (st(id).kind === "group" || containers[id].el.dataset.kind === "group"));
+    if (!groupsToLift.length) return;
+    pushHistory();
+    const lifted = [];
+    for (const gid of groupsToLift) {
+      const groupEl = containers[gid]?.el;
+      if (!groupEl) continue;
+      const parentEl = groupEl.parentElement || editableRoot();
+      const childIds = childContainerIds(groupEl);
+      const rects = new Map(childIds.map(id => [id, containers[id].el.getBoundingClientRect()]));
+      for (const id of childIds) {
+        moveElementKeepingRect(id, parentEl, groupEl, rects.get(id));
+        lifted.push(id);
+      }
+      groupEl.remove();
+      delete layout[gid];
+    }
+    selected = lifted;
+    registerContainers(); applyAll(); renderOverlay(); renderInspector(); renderTree(); save();
+  }
+  function parentScopeRect(id) {
+    const parent = parentElementFor(id);
+    if (parent === editableRoot()) {
+      return { left: 0, top: 0, right: stage.clientWidth, bottom: stage.clientHeight, width: stage.clientWidth, height: stage.clientHeight };
+    }
+    const pr = parent.getBoundingClientRect();
+    const sr = stageRect();
+    return { left: pr.left - sr.left, top: pr.top - sr.top, right: pr.right - sr.left, bottom: pr.bottom - sr.top, width: pr.width, height: pr.height };
+  }
+  function moveByStageDelta(id, dx, dy) {
+    const s = st(id);
+    s.x = (s.x || 0) + Math.round(dx);
+    s.y = (s.y || 0) + Math.round(dy);
+  }
+  function alignSelected(axis, edge) {
+    const ids = selectedElementIds();
+    if (!ids.length) return;
+    const scope = ids.length === 1 ? parentScopeRect(ids[0]) : unionRects(ids.map(rectOf));
+    if (!scope) return;
+    pushHistory();
+    for (const id of ids) {
+      const r = rectOf(id);
+      let delta = 0;
+      if (axis === "x") {
+        const target = edge === "start" ? scope.left : edge === "center" ? scope.left + scope.width / 2 - r.width / 2 : scope.right - r.width;
+        delta = target - r.left;
+        moveByStageDelta(id, delta, 0);
+      } else {
+        const target = edge === "start" ? scope.top : edge === "center" ? scope.top + scope.height / 2 - r.height / 2 : scope.bottom - r.height;
+        delta = target - r.top;
+        moveByStageDelta(id, 0, delta);
+      }
+    }
+    applyAll(); renderOverlay(); renderInspector(); save();
+  }
+  function distributeSelected(axis) {
+    const ids = selectedElementIds();
+    if (ids.length < 3) return;
+    const rows = ids.map(id => ({ id, r: rectOf(id) })).filter(x => x.r).sort((a,b) => axis === "x" ? a.r.left - b.r.left : a.r.top - b.r.top);
+    const first = rows[0], last = rows[rows.length - 1];
+    const span = axis === "x" ? last.r.right - first.r.left : last.r.bottom - first.r.top;
+    const totalSize = rows.reduce((sum, x) => sum + (axis === "x" ? x.r.width : x.r.height), 0);
+    const gap = (span - totalSize) / (rows.length - 1);
+    let cursor = axis === "x" ? first.r.right + gap : first.r.bottom + gap;
+    pushHistory();
+    for (let i = 1; i < rows.length - 1; i++) {
+      const { id, r } = rows[i];
+      if (axis === "x") {
+        moveByStageDelta(id, cursor - r.left, 0);
+        cursor += r.width + gap;
+      } else {
+        moveByStageDelta(id, 0, cursor - r.top);
+        cursor += r.height + gap;
+      }
+    }
+    applyAll(); renderOverlay(); renderInspector(); save();
   }
   function deleteSelection() {
     if (!selected.length) return;
     pushHistory();
     for (const id of selected) {
       if (groups[id]) { delete groups[id]; }
-      else { const c = containers[id]; if (c && c.el && c.el.dataset.cid.startsWith("c-new-")) c.el.remove();
-             else if (c && c.el) c.el.style.visibility = "hidden"; }
+      else { const c = containers[id]; if (c && c.el) c.el.remove(); }
       delete layout[id];
     }
     selected = []; registerContainers(); applyAll(); renderOverlay(); renderInspector(); renderTree(); save();
@@ -801,20 +1020,21 @@
   // ---- inspector ----
   const $ = id => document.getElementById(id);
   function renderInspector() {
-    const kindS = $("kindSec"), geo = $("geoSec"), box = $("boxSec"), sty = $("styleSec"), ai = $("aiSec"), info = $("selInfo");
+    const kindS = $("kindSec"), geo = $("geoSec"), box = $("boxSec"), sty = $("styleSec"), notes = $("notesSec"), info = $("selInfo");
     if (selected.length !== 1) {
-      kindS.style.display = geo.style.display = box.style.display = sty.style.display = ai.style.display = "none";
-      info.textContent = selected.length>1 ? selected.length + " selected" : "Nothing selected. Click an element in design mode.";
+      kindS.style.display = geo.style.display = box.style.display = sty.style.display = notes.style.display = "none";
+      info.textContent = selected.length>1 ? selected.length + " selected" : "No selection.";
       return;
     }
     const id = selected[0]; const c = containers[id]; const s = st(id); const r = rectOf(id) || {width:0,height:0};
     info.innerHTML = `<strong>${c.label}</strong> <span class="pill">${id}</span>`;
     kindS.style.display = c.el ? "" : "none";
     geo.style.display = ""; box.style.display = c.el ? "" : "none"; sty.style.display = c.el ? "" : "none";
-    ai.style.display = "";
+    notes.style.display = "";
     $("inKind").value = s.kind || "container";
-    $("inAiName").value = (s.ai && s.ai.name) || "";
-    $("inAiIntent").value = (s.ai && s.ai.intent) || "";
+    const noteState = s.notes || s["ai"] || {};
+    $("inNoteName").value = noteState.name || "";
+    $("inNoteIntent").value = noteState.intent || "";
     $("inX").value = Math.round(s.x||0); $("inY").value = Math.round(s.y||0);
     $("inW").value = Math.round(s.width ?? r.width); $("inH").value = Math.round(s.height ?? r.height);
     $("inPadT").value = s.padT ?? ""; $("inPadR").value = s.padR ?? "";
@@ -846,9 +1066,9 @@
     pushHistory(); const id = selected[0]; const s = st(id); s.kind = $("inKind").value;
     const c = containers[id]; if (c && c.el) c.el.dataset.kind = s.kind;
     renderTree(); renderInspector(); save(); });
-  function bindAi(elId, key){ $(elId).addEventListener("input", ()=>{ if(selected.length!==1) return;
-    const s = st(selected[0]); s.ai = s.ai||{}; s.ai[key] = $(elId).value; save(); }); }
-  bindAi("inAiName","name"); bindAi("inAiIntent","intent");
+  function bindNote(elId, key){ $(elId).addEventListener("input", ()=>{ if(selected.length!==1) return;
+    const s = st(selected[0]); s.notes = s.notes||{}; s.notes[key] = $(elId).value; save(); }); }
+  bindNote("inNoteName","name"); bindNote("inNoteIntent","intent");
   function bindStyle(elId, key, fn) { $(elId).addEventListener("input", () => { if(selected.length!==1) return;
     const s = st(selected[0]); s.style = s.style||{}; s.style[key] = fn ? fn($(elId).value) : $(elId).value;
     applyAll(); renderOverlay(); renderInspector(); save(); }); }
@@ -859,8 +1079,8 @@
     st(selected[0]).locked = $("inLock").checked; renderOverlay(); save(); });
 
   // ---- toolbar ----
-  function setDirtyUI(){ saveState.textContent = "•"; }
-  function markDirty(){ saveState.textContent = "editing…"; }
+  function setDirtyUI(){ saveState.textContent = "*"; }
+  function markDirty(){ saveState.textContent = "editing..."; }
   $("btnDev").addEventListener("click", () => { document.body.classList.toggle("dev");
     $("btnDev").classList.toggle("on", document.body.classList.contains("dev")); });
   $("btnGrid").addEventListener("click", () => { document.body.classList.toggle("show-grid");
@@ -872,7 +1092,16 @@
   $("addEllipse").addEventListener("click", ()=>createEl("ellipse"));
   $("addRow").addEventListener("click", ()=>createEl("row"));
   $("btnGroup").addEventListener("click", groupSelection);
+  $("btnUngroup").addEventListener("click", ungroupSelection);
   $("btnDelete").addEventListener("click", deleteSelection);
+  $("alignL").addEventListener("click", ()=>alignSelected("x", "start"));
+  $("alignC").addEventListener("click", ()=>alignSelected("x", "center"));
+  $("alignR").addEventListener("click", ()=>alignSelected("x", "end"));
+  $("alignT").addEventListener("click", ()=>alignSelected("y", "start"));
+  $("alignM").addEventListener("click", ()=>alignSelected("y", "center"));
+  $("alignB").addEventListener("click", ()=>alignSelected("y", "end"));
+  $("distH").addEventListener("click", ()=>distributeSelected("x"));
+  $("distV").addEventListener("click", ()=>distributeSelected("y"));
   $("btnUndo").addEventListener("click", undo);
   $("btnRedo").addEventListener("click", redo);
   $("btnReset").addEventListener("click", () => { if (confirm("Clear all saved edits and reload defaults?")) {
@@ -883,6 +1112,7 @@
     const t = e.target; if (t && (t.tagName==="INPUT"||t.tagName==="TEXTAREA")) return;
     const cmd = e.ctrlKey || e.metaKey;
     if (cmd && e.key.toLowerCase()==="z") { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+    else if (cmd && e.shiftKey && e.key.toLowerCase()==="g") { e.preventDefault(); ungroupSelection(); }
     else if (cmd && e.key.toLowerCase()==="g") { e.preventDefault(); groupSelection(); }
     else if (e.key==="Delete" || e.key==="Backspace") { deleteSelection(); }
     else if (e.key.toLowerCase()==="d") { $("btnDev").click(); }

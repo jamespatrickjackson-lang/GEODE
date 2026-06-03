@@ -1,7 +1,9 @@
 # v1.1 GeoSee Editor Inventory — Component / Assembly / Product mapping
 
-**Status:** v1.1 source-of-truth for what the GeoSee main-app editor
-already exposes, mapped into the three-tier authoring model from
+**Status:** inventory reference. Use this to understand GeoSee sidebar content;
+it is not an AI-agent build prompt or package export contract.
+
+This was originally mapped into the three-tier authoring model from
 [23_v1_1_direction.md](23_v1_1_direction.md). The UI Editor's bundled
 library is populated from this catalogue.
 

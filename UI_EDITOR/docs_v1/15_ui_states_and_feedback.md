@@ -1,8 +1,14 @@
 # v1 UI States and Feedback
 
+> Current status: UI reference only. Use this for local editor feedback patterns
+> where they agree with `EDITOR-SPEC.md`. Ignore package validation and
+> autonomous-agent workflow language in this file.
+
 ## 1. Goal
 
-Define every non-default UI state the workbench can be in and the feedback the author receives at each state transition. Without this doc, Codex will invent loading / empty / error patterns inconsistently. With it, every state is reachable and observable, and the agent automation runbook can verify each.
+Define useful local editor states and feedback patterns. Treat package loading,
+validation, export, and autonomous runbook states as historical unless the
+package workbench is explicitly resumed.
 
 ## 2. State catalogue
 

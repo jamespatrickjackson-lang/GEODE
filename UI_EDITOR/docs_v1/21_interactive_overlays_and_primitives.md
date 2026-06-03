@@ -1,5 +1,9 @@
 # v1 Interactive Overlays and Primitives
 
+> Current status: idea catalog only. Use this for standalone editor overlay and
+> primitive ideas where they agree with `EDITOR-SPEC.md`. Ignore package schema,
+> validation, export, and autonomous-agent language in this file.
+
 ## 1. Goal
 
 Close the remaining "this is supposed to be Figma-lite but" gaps by adding the interactive overlay components and refined button states that real app surfaces require. Specifically:
@@ -122,7 +126,7 @@ export interface ModalOverlayExtras {
 ```ts
 export interface ModalContentExtras {
   archetype: "modal-content";
-  // Optional dialog metadata for downstream AI-agent briefs:
+  // Optional dialog metadata retained from the parked package-workbench model:
   modalKind?: "alert" | "confirm" | "form" | "info" | "destructive";
   trapFocus?: boolean;                  // default true
   closeAffordance?: "x-button" | "esc-only" | "neither";
@@ -132,7 +136,8 @@ export interface ModalContentExtras {
 - **Default size:** 480×320 px, centred in the overlay.
 - **Children:** any.
 - **Rendering:** raised panel with border + shadow.
-- **Default intent:** "Modal dialog content. modalKind hints the implementing agent on confirm patterns."
+- **Default intent:** "Modal dialog content. modalKind describes the expected
+  confirm pattern."
 
 ### 4.3 Validation rules
 
@@ -215,7 +220,8 @@ export interface DropdownMenuExtras {
 
 - **Default size when open:** 200×240 px popover; when closed, the trigger-sized chip.
 - **Children:** `menu-item` Components and `menu-divider` Components.
-- **Default intent:** "Action menu / command list. The implementing agent wires open/close behaviour."
+- **Default intent:** "Action menu / command list. Open/close behaviour is
+  defined during implementation."
 
 ### 6.2 `menu-item` Component
 

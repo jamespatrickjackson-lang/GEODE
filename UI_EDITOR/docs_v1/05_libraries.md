@@ -1,5 +1,9 @@
 # v1 Libraries
 
+> Current status: catalog reference only. Use this for reusable kind/style/token
+> vocabulary when it helps the standalone editor. Ignore package schema,
+> validation, export, and autonomous-agent language in this file.
+
 ## 1. Goal
 
 Provide four kinds of reusable content the author draws from while editing a Frame: Components, Colours, Icons, Tokens. Each is presented in the Library Panel; each has a schema in the GUI Package; each supports drag / click instantiation onto the active Frame or Selection.

@@ -1,8 +1,7 @@
 # v1.1 Direction — Component / Assembly / Product Hierarchy
 
-**Status:** v1.1 scope addendum. Reframes v1.0 in light of usage feedback.
-v1.0 docs (00–22) describe the canvas / toolkit / package format primitives
-and remain authoritative for the schema, validation engine, and persistence.
+**Status:** historical direction only. The tier model is parked while the
+standalone editor is stabilized.
 This doc supersedes the "GeoSee editor sidebar straw subject" framing
 (doc 06) and the flat Component/Container split as the primary authoring
 model.
@@ -85,36 +84,27 @@ future "update library entry from this instance" flows can attribute back.
 (Reverse propagation — edit the library entry and have all instances
 update — is deferred to v1.2.)
 
-## 3. AI Note (intent) on every tier
+## 3. Notes (intent) on every tier
 
-Every saved Component / Assembly / Product carries an **AI Note**: a
-short description of what the thing is for, written for downstream AI
-implementing agents. v1.0's `IntentAnnotations` shape already covers
-this; v1.1 makes it a first-class promoted field on library entries:
+Historical tier-model note: every saved Component / Assembly / Product carried
+a short description of what the thing is for. While the tier model is parked,
+this survives only as the standalone editor's plain Notes concept.
 
 ```ts
 export interface ComponentLibraryEntry {
   // ...existing fields...
   tier?: "component" | "assembly" | "product";
-  aiNote?: {
+  note?: {
     name?: string;           // human label distinct from `id`
     intent: string;          // required — WHY this thing exists
     behaviour?: string;      // HOW it should behave when used
     dataBinding?: string;    // what state it reads / writes
-    notes?: string;          // free-form author notes (not exported to
-                             // downstream-agent briefs by default)
+    notes?: string;          // free-form author notes
   };
 }
 ```
 
-On instantiation, `aiNote` is copied into the instance's
-`intent` field (doc 13) as the **default**, with a trailing
-placeholder the author refines per use.
-
-Spec.md and ai_agent_brief.md export the `aiNote` per library entry +
-the per-instance intent overrides, so a downstream agent can see both
-"what this archetype is for in general" and "what this specific use of
-it is for on this Frame".
+Package export of these notes is parked with the package workbench.
 
 ## 4. What v1.1 changes vs. v1.0
 
@@ -123,7 +113,7 @@ it is for on this Frame".
 | Authoring target | Reconstruct GeoSee editor sidebar | Author Components, Assemblies, and Products against a small "Starter Pack" subject (see §6) |
 | Library panel | Single flat list per kind | Tabs split by tier within Components: Components / Assemblies / Products |
 | Save flow | Edit-in-place only | "Save to library as Component / Assembly / Product" affordance |
-| AI Note | Per-instance only (`intent` field) | First-class on every library entry; copied to instances on drop |
+| Notes | Per-instance only (`intent` field) | First-class on every library entry; copied to instances on drop |
 | Canvas usability | Pan/zoom/select/move/resize work; drawing tools and alignment are observably weak | Drawing tools, alignment, distribute, snap, padding, drag-to-layer must all work fluently against the §5 acceptance |
 | Validation | Same rule pack | Same rule pack, plus per-tier rules in §7 |
 
@@ -151,13 +141,13 @@ opening the JSON files by hand:
    the Frame; it instantiates inside the parent container; its component
    children are visible and individually selectable.
 8. With the Assembly selected, "Save as Assembly" in the Library Panel
-   adds it back to `libraries.assemblies` with an editable AI Note
+   adds it back to `libraries.assemblies` with editable Notes
    field; re-dragging it instantiates a fresh copy.
 9. Nest a Product (e.g. "page-manager sidebar") on a Frame. Its assemblies
    and components instantiate. The page lists them under the product's
    group in the Layers Panel.
 10. Open the saved package's `spec.md`; every Frame, Container, Component,
-    Assembly, and Product is listed with its AI Note and intent.
+    Assembly, and Product is listed with its Notes and intent.
 
 Each of these is a manual smoke step against the bundled Starter Pack
 package (§6). They replace the GeoSee-sidebar acceptance in v1.0 doc

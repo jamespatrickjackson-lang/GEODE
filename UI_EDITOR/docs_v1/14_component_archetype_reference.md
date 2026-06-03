@@ -1,5 +1,9 @@
 # v1 Component & Container Archetype Reference
 
+> Current status: kind catalog reference only. Use this as a menu of possible
+> container/component kinds and default ideas. Ignore package schema,
+> validation, export, and autonomous-agent language in this file.
+
 ## 1. Goal
 
 Per-archetype specification: TypeScript props interface, default rendering, supported variants and states, default size, applicable validation rules, default intent annotation. Codex uses this doc to render every archetype consistently. An archetype not in this doc is not in v1.
@@ -407,7 +411,8 @@ export interface ImagePlaceholderProps {
 
 - **Default size:** 200×150 px.
 - **Rendering:** a labelled box with the chosen placeholder fill (checkerboard / diagonal stripes / plain box with alt-text label).
-- **Default intent:** "Image content placeholder. Final image sourced by the implementing agent at build time."
+- **Default intent:** "Image content placeholder. Final image source is chosen
+  during implementation."
 
 ### 3.22 `tooltip` (see [21_interactive_overlays_and_primitives.md](21_interactive_overlays_and_primitives.md) §3)
 
