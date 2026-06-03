@@ -111,6 +111,7 @@ export const DEFAULT_CINEMATIC_RENDER_PRESETS = [
 
 const CINEMATIC_SCENE_PATCH_KEYS = [
   "background",
+  "lightModeBackground",
   "fog",
   "sun",
   "lighting",

@@ -6,7 +6,6 @@ import {
   nestedControlRowStyle,
   nestedDetailsStyle,
   nestedFieldLabelStyle,
-  sliderNumberReadoutStyle,
   styleBoolean,
   styleNumber,
   styleString,
@@ -480,9 +479,6 @@ export function SeismicCapabilityLayerContainers({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>
-            {comparisonSpacingM.toFixed(0)} m
-          </span>
         </div>
         <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
           <label style={nestedFieldLabelStyle}>Pair</label>
@@ -550,9 +546,6 @@ export function SeismicCapabilityLayerContainers({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>
-            {seismicOpacity.toFixed(2)}
-          </span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Palette</label>
@@ -593,9 +586,6 @@ export function SeismicCapabilityLayerContainers({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>
-            {amplitudeGamma.toFixed(2)}
-          </span>
         </div>
         <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
           <span style={nestedFieldLabelStyle}>White bg</span>
@@ -641,9 +631,6 @@ export function SeismicCapabilityLayerContainers({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>
-            {backgroundCutoff.toFixed(2)}
-          </span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Ray steps</label>
@@ -668,7 +655,6 @@ export function SeismicCapabilityLayerContainers({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>{volumeSampleSteps}</span>
         </div>
       </SeismicCapabilityLayerItem>
 

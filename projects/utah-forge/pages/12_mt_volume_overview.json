@@ -101,7 +101,7 @@
   },
   "visibilityOverrides": {
     "utah-forge-phase3-working-area": true,
-    "terrain": false,
+    "terrain": true,
     "utah-forge-mt-stations": true,
     "utah-forge-mt-resistivity-preview": false,
     "utah-forge-mt-resistivity-full-density": true,
@@ -110,6 +110,13 @@
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-mt-top-surface": false,
     "utah-forge-phase3-seismic-browser": false,
+    "naip-2024-tile-diagnostics": false,
     "utah-forge-phase3-demo-boreholes": true
+  },
+  "overlayLayout": {
+    "x": 0,
+    "y": 0.07513174404015056,
+    "width": 0.18699218750000002,
+    "height": 0.10432873466233238
   }
 }

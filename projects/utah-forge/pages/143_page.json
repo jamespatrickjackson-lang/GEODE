@@ -1,0 +1,122 @@
+{
+  "id": "143_page",
+  "title": "New page duplicate duplicate",
+  "camera": {
+    "position": [
+      -24533.742278930924,
+      -47085.407326164524,
+      6359.858323479413
+    ],
+    "target": [
+      -5117,
+      -9001,
+      2443
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 15000,
+    "easing": "linear"
+  },
+  "holdDuration": 4000,
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": false,
+    "poi": [
+      -5117,
+      -9001,
+      2443
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 25407,
+    "orbitHeight": 18700,
+    "orbitDirection": -1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  },
+  "overlayLayout": {
+    "x": 0.032356770833333326,
+    "y": 0.0481555834378921,
+    "width": 0.27
+  },
+  "hidden": false,
+  "visibilityOverrides": {
+    "utah-forge-mt-stations": false,
+    "utah-forge-mt-resistivity-full-density": false
+  },
+  "sceneOverrides": {
+    "fog": {
+      "enabled": true,
+      "color": "#ffffff",
+      "density": 0.000001
+    },
+    "terrain": {
+      "fogGradientCurve": 0.6,
+      "materialPreset": "image:naip-2024-aerial",
+      "surfaceElevationEnabled": false,
+      "surfaceElevationLegendVisible": false,
+      "surfaceElevationMinM": 1500,
+      "surfaceElevationMaxM": 3500,
+      "surfaceElevationColors": [
+        "#8b806c",
+        "#b5aa8d",
+        "#8ea083",
+        "#53675c",
+        "#f1eee4"
+      ],
+      "surfaceElevationColorPositions": [
+        0,
+        0.34,
+        0.58,
+        0.82,
+        1
+      ],
+      "surfaceElevationMidpoints": [
+        0.58,
+        0.44,
+        0.52,
+        0.46
+      ],
+      "surfaceElevationTransitionSoftness": 1,
+      "surfaceElevationColorBlend": 0.92,
+      "surfaceElevationReverse": false
+    }
+  },
+  "layerOverrides": {
+    "terrain": {
+      "affectedByFog": true,
+      "fogDensity": 0.000020689655172413793
+    },
+    "utah-forge-topo-graticule": {
+      "affectedByFog": true,
+      "fogDensity": 0.000020689655172413793
+    },
+    "transport-roads": {
+      "affectedByFog": true,
+      "fogDensity": 0.000020689655172413793
+    },
+    "hydrography-streams": {
+      "affectedByFog": true,
+      "fogDensity": 0.000020689655172413793
+    },
+    "hydrography-lakes": {
+      "affectedByFog": true,
+      "fogDensity": 0.000020689655172413793
+    }
+  }
+}

@@ -3439,7 +3439,11 @@ export class SceneManager {
       const mats = Array.isArray(mat) ? mat : [mat];
       for (const m of mats) {
         if (!(m instanceof LineMaterial)) continue;
-        if (lineColor) m.color.set(lineColor);
+        const preserveLineColor =
+          m.userData?.preserveMaterialColor === true ||
+          obj.userData?.naipTileDiagnosticOutline === true ||
+          obj.userData?.naipTileDiagnosticLabel === true;
+        if (lineColor && !preserveLineColor) m.color.set(lineColor);
         if (lineOpacity !== null) {
           m.opacity = lineOpacity;
           m.transparent = lineOpacity < 1;

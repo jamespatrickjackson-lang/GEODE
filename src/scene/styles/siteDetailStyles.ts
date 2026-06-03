@@ -4,6 +4,8 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import type { EditableStyle } from "../../pages/types";
 import { UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID } from "../../projectModules/utahForge/layerIds";
 import {
+  resolveDemoBoreholeSourceLocationItemStyle,
+  resolveDemoBoreholeSourceLocationStyle,
   resolveDemoBoreholeWellStyle,
   resolveDemoOrientationBlockStyle,
 } from "../../projectModules/utahForge/siteDetails";
@@ -252,6 +254,65 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
   );
   const displayPointsByWellId = new Map<string, THREE.Vector3[]>();
   const blockStyle = resolveDemoOrientationBlockStyle(style);
+  const sourceLocationStyle = resolveDemoBoreholeSourceLocationStyle(style);
+  const sourceLocationsActive =
+    sourceLocationStyle.visible &&
+    sourceLocationStyle.mode !== "hidden" &&
+    layerOpacity > 0.001 &&
+    sourceLocationStyle.opacity > 0.001;
+  const authoredSourceColor =
+    typeof style.demoBoreholeSourceLocations?.color === "string" &&
+    style.demoBoreholeSourceLocations.color.trim()
+      ? style.demoBoreholeSourceLocations.color
+      : null;
+  const sourceColorForObject = (obj: THREE.Object3D) =>
+    authoredSourceColor ??
+    (typeof obj.userData?.demoBoreholeSourceBaseColor === "string"
+      ? obj.userData.demoBoreholeSourceBaseColor
+      : sourceLocationStyle.color);
+  const sourceLocationItemVisible = (obj: THREE.Object3D) => {
+    const sourceLocationId =
+      typeof obj.userData?.demoBoreholeSourceLocationId === "string"
+        ? obj.userData.demoBoreholeSourceLocationId
+        : null;
+    return sourceLocationId
+      ? resolveDemoBoreholeSourceLocationItemStyle(style, sourceLocationId)
+          .visible
+      : true;
+  };
+  const applyMeshSourceMaterial = (
+    obj: THREE.Object3D,
+    color: string,
+    opacity: number,
+  ) => {
+    const mesh = obj as THREE.Mesh;
+    const material = mesh.material as THREE.MeshStandardMaterial | undefined;
+    if (!material) return;
+    material.color.set(color);
+    material.emissive?.set(color);
+    material.opacity = clamp01(opacity);
+    material.transparent = true;
+    material.depthWrite = false;
+    material.depthTest = false;
+    material.needsUpdate = true;
+  };
+  const applyLineSourceMaterial = (
+    obj: THREE.Object3D,
+    color: string,
+    opacity: number,
+    linewidth: number,
+  ) => {
+    const line = obj as Line2;
+    const material = line.material;
+    if (!(material instanceof LineMaterial)) return;
+    material.color.set(color);
+    material.opacity = clamp01(opacity);
+    material.transparent = true;
+    material.depthWrite = false;
+    material.depthTest = false;
+    material.linewidth = linewidth;
+    material.needsUpdate = true;
+  };
   const tupleToVector = (value: unknown): THREE.Vector3 | null => {
     if (
       !Array.isArray(value) ||
@@ -360,6 +421,145 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
           obj.position.z += wellStyle.toeLabelLiftM;
         }
         obj.userData.displayName = wellStyle.toeLabelText;
+      }
+    }
+    if (obj.userData?.demoBoreholeSourceTraceRoot === true) {
+      obj.visible =
+        sourceLocationsActive &&
+        sourceLocationItemVisible(obj) &&
+        sourceLocationStyle.mode === "rounded-trace";
+    }
+    if (obj.userData?.demoBoreholeSourceTrace === true) {
+      obj.visible =
+        sourceLocationsActive &&
+        sourceLocationItemVisible(obj) &&
+        sourceLocationStyle.mode === "rounded-trace";
+      const baseDiameter =
+        typeof obj.userData.demoBoreholeBaseSourceTraceDiameterM === "number"
+          ? obj.userData.demoBoreholeBaseSourceTraceDiameterM
+          : 72;
+      const baseLength =
+        typeof obj.userData.demoBoreholeBaseSourceTraceLengthM === "number"
+          ? obj.userData.demoBoreholeBaseSourceTraceLengthM
+          : 900;
+      const diameterScale =
+        sourceLocationStyle.diameterM / Math.max(0.001, baseDiameter);
+      const lengthScale =
+        sourceLocationStyle.lengthM / Math.max(0.001, baseLength);
+      if (obj.userData.demoBoreholeSourceTracePart === "body") {
+        obj.position.z = -sourceLocationStyle.lengthM * 0.5;
+        obj.scale.set(diameterScale, lengthScale, diameterScale);
+      } else {
+        obj.position.z =
+          obj.userData.demoBoreholeSourceTracePart === "bottom-cap"
+            ? -sourceLocationStyle.lengthM
+            : 0;
+        obj.scale.setScalar(diameterScale);
+      }
+      applyMeshSourceMaterial(
+        obj,
+        sourceColorForObject(obj),
+        sourceLocationStyle.opacity * layerOpacity,
+      );
+    }
+    if (obj.userData?.demoBoreholeSourceLine === true) {
+      obj.visible =
+        sourceLocationsActive &&
+        sourceLocationItemVisible(obj) &&
+        (sourceLocationStyle.mode === "line" ||
+          sourceLocationStyle.mode === "pin");
+      const baseLength =
+        typeof obj.userData.demoBoreholeBaseSourceTraceLengthM === "number"
+          ? obj.userData.demoBoreholeBaseSourceTraceLengthM
+          : 900;
+      obj.scale.set(1, 1, sourceLocationStyle.lengthM / Math.max(0.001, baseLength));
+      applyLineSourceMaterial(
+        obj,
+        sourceColorForObject(obj),
+        sourceLocationStyle.opacity * layerOpacity,
+        sourceLocationStyle.lineWidth,
+      );
+    }
+    if (obj.userData?.demoBoreholeSourcePinHead === true) {
+      obj.visible =
+        sourceLocationsActive &&
+        sourceLocationItemVisible(obj) &&
+        sourceLocationStyle.mode === "pin";
+      const baseDiameter =
+        typeof obj.userData.demoBoreholeBaseSourceTraceDiameterM === "number"
+          ? obj.userData.demoBoreholeBaseSourceTraceDiameterM
+          : 72;
+      obj.scale.setScalar(
+        sourceLocationStyle.diameterM / Math.max(0.001, baseDiameter),
+      );
+      applyMeshSourceMaterial(
+        obj,
+        sourceColorForObject(obj),
+        sourceLocationStyle.opacity * layerOpacity,
+      );
+    }
+    if (obj.userData?.demoBoreholeSourceCrosshair === true) {
+      obj.visible =
+        sourceLocationsActive &&
+        sourceLocationItemVisible(obj) &&
+        sourceLocationStyle.mode === "crosshair";
+      const baseLength =
+        typeof obj.userData.demoBoreholeBaseSourceCrosshairLengthM === "number"
+          ? obj.userData.demoBoreholeBaseSourceCrosshairLengthM
+          : 320;
+      const scale =
+        (sourceLocationStyle.diameterM * 4.5) / Math.max(0.001, baseLength);
+      obj.scale.set(scale, scale, 1);
+      applyLineSourceMaterial(
+        obj,
+        sourceColorForObject(obj),
+        sourceLocationStyle.opacity * layerOpacity,
+        sourceLocationStyle.lineWidth,
+      );
+    }
+    if (obj.userData?.demoBoreholeSourceTopRing === true) {
+      obj.visible =
+        sourceLocationsActive &&
+        sourceLocationItemVisible(obj) &&
+        sourceLocationStyle.topRingVisible;
+      const mesh = obj as THREE.Mesh;
+      if (
+        mesh.geometry instanceof THREE.TorusGeometry &&
+        (mesh.userData.demoBoreholeAppliedRingRadiusM !==
+          sourceLocationStyle.topRingRadiusM ||
+          mesh.userData.demoBoreholeAppliedRingTubeM !==
+            sourceLocationStyle.topRingTubeM)
+      ) {
+        mesh.geometry.dispose();
+        mesh.geometry = new THREE.TorusGeometry(
+          sourceLocationStyle.topRingRadiusM,
+          sourceLocationStyle.topRingTubeM,
+          12,
+          72,
+        );
+        mesh.userData.demoBoreholeAppliedRingRadiusM =
+          sourceLocationStyle.topRingRadiusM;
+        mesh.userData.demoBoreholeAppliedRingTubeM =
+          sourceLocationStyle.topRingTubeM;
+      }
+      applyMeshSourceMaterial(
+        obj,
+        sourceLocationStyle.topRingColor,
+        sourceLocationStyle.topRingOpacity * layerOpacity,
+      );
+    }
+    if (
+      obj.userData?.demoBoreholeLabelAnchor === true &&
+      obj.userData?.demoBoreholeLabelRole === "source-location"
+    ) {
+      obj.visible =
+        sourceLocationsActive &&
+        sourceLocationItemVisible(obj) &&
+        sourceLocationStyle.labelVisible;
+      const basePosition = tupleToVector(obj.userData.demoBoreholeBaseLabelPosition);
+      if (basePosition) {
+        obj.position.copy(basePosition);
+        obj.position.z += sourceLocationStyle.labelLiftM;
       }
     }
     if (

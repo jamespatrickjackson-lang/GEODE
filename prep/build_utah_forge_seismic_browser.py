@@ -13,7 +13,12 @@ from typing import Any
 
 import numpy as np
 import segyio
-from pyproj import Transformer
+
+from geosee_registration import (
+    UTAH_FORGE_PROJECT_FRAME,
+    registration_metadata,
+    source_to_scene,
+)
 
 
 REPO_ROOT = Path.cwd()
@@ -40,9 +45,8 @@ STAGING_ROOT = CLIENT_ROOT / "forge_southwestern" / "Data_staging"
 UNSORTED_ROOT = CLIENT_ROOT / "Unsorted data"
 
 DERIVED_DATE = os.environ.get("GEOSEE_DERIVED_DATE", "2026-05-13")
-SCENE_ORIGIN_E = 341_467.35
-SCENE_ORIGIN_N = 4_273_374.5
-SCENE_ORIGIN_Z = 0.0
+UTAH_FORGE_HORIZONTAL_CRS = UTAH_FORGE_PROJECT_FRAME.horizontal_crs
+SEISMIC_REFERENCE_DATUM_M = 1800.0
 TIME_SCALE_M_PER_MS = 2.0
 SOURCE_FIDELITY_SECTION_MAX_PIXELS = int(
     os.environ.get("GEOSEE_SEISMIC_SECTION_MAX_PIXELS", "4194304")
@@ -62,6 +66,14 @@ BROWSER_COARSE_SECTION_MAX_LONG_EDGE = int(
 BROWSER_COARSE_VOLUME_MAX_VOXELS = int(
     os.environ.get("GEOSEE_SEISMIC_COARSE_VOLUME_MAX_VOXELS", "2097152")
 )
+VELOCITY_DISPLAY_RANGE_M_PER_S = [2000, 5000]
+TOP_OF_GRANITE_CALIBRATION = {
+    "source": "FORGE report calibration point near well 58-32",
+    "depthFt": 3200,
+    "depthM": 975,
+    "depthReference": "below surface / report calibration point",
+    "expectedDepthConversionErrorM": 20,
+}
 
 RAW_DIR_MARKERS = (
     "Correlated_Shot_Gathers",
@@ -91,6 +103,7 @@ class Product:
     stats: dict[str, Any]
     sections: list[dict[str, Any]]
     raymarch_volume: dict[str, Any] | None
+    navigation_placement: dict[str, Any]
     text_header_excerpt: str
 
 
@@ -251,7 +264,31 @@ def normalize_sources() -> dict[str, Any]:
     }
 
 
-def parse_sp1(path: Path) -> list[dict[str, Any]]:
+def project_origin_payload() -> dict[str, float]:
+    return {
+        "easting_m": UTAH_FORGE_PROJECT_FRAME.origin_easting_m,
+        "northing_m": UTAH_FORGE_PROJECT_FRAME.origin_northing_m,
+        "elevation_m": UTAH_FORGE_PROJECT_FRAME.origin_elevation_m,
+    }
+
+
+def seismic_navigation_registration(source_crs: str) -> dict[str, Any]:
+    return registration_metadata(
+        horizontal_crs=source_crs,
+        vertical_datum="source SP1 survey elevation in metres",
+        coordinate_basis="utm",
+        origin=project_origin_payload(),
+        rotation_deg=0.0,
+        registration_status="unverified",
+        notes=(
+            "SP1 source coordinates are transformed into the Utah FORGE project "
+            "horizontal frame before subtracting the GeoSee project origin. "
+            "Survey-grade acceptance remains pending control-point review."
+        ),
+    )
+
+
+def parse_sp1(path: Path, source_crs: str) -> list[dict[str, Any]]:
     points: list[dict[str, Any]] = []
     for line in path.read_text(errors="replace").splitlines()[15:]:
         m = re.search(r"(\d{6})\s+\d{8}N\d{9}W\s+(\d{7})(\d{8})(\d{5})", line)
@@ -261,18 +298,16 @@ def parse_sp1(path: Path) -> list[dict[str, Any]]:
         easting = int(m.group(2)) / 10.0
         northing = int(m.group(3)) / 10.0
         elevation = int(m.group(4)) / 10.0
+        scene = source_to_scene(easting, northing, elevation, source_crs)
         points.append(
             {
                 "station": station,
                 "line": station[:3],
+                "sourceCrs": source_crs,
                 "easting_m": easting,
                 "northing_m": northing,
                 "elevation_m": elevation,
-                "scene": [
-                    easting - SCENE_ORIGIN_E,
-                    northing - SCENE_ORIGIN_N,
-                    elevation - SCENE_ORIGIN_Z,
-                ],
+                "scene": scene,
             }
         )
     return points
@@ -281,19 +316,19 @@ def parse_sp1(path: Path) -> list[dict[str, Any]]:
 def build_navigation_geojson() -> dict[str, Any]:
     nav_root = active_phase3_source_root() / "source" / "from_submission_1015"
     sources = [
-        ("3d-receiver", "receiver", nav_root / "Navigation" / "Forge-3D-Receiver-Survey-NAD83-UTM12.sp1"),
-        ("3d-source", "source", nav_root / "Navigation" / "Forge-3D-Source-Survey-NAD83-UTM12.sp1"),
-        ("2d-receiver", "receiver", nav_root / "2D" / "Forge 2D Receiver Survey NAD83 UTM 12.sp1"),
-        ("2d-source", "source", nav_root / "2D" / "Forge 2D Source Survey NAD83 UTM 12.sp1"),
+        ("3d-receiver", "receiver", nav_root / "Navigation" / "Forge-3D-Receiver-Survey-NAD83-UTM12.sp1", UTAH_FORGE_HORIZONTAL_CRS),
+        ("3d-source", "source", nav_root / "Navigation" / "Forge-3D-Source-Survey-NAD83-UTM12.sp1", UTAH_FORGE_HORIZONTAL_CRS),
+        ("2d-receiver", "receiver", nav_root / "2D" / "Forge 2D Receiver Survey NAD83 UTM 12.sp1", UTAH_FORGE_HORIZONTAL_CRS),
+        ("2d-source", "source", nav_root / "2D" / "Forge 2D Source Survey NAD83 UTM 12.sp1", UTAH_FORGE_HORIZONTAL_CRS),
     ]
     features: list[dict[str, Any]] = []
     all_points: list[dict[str, Any]] = []
     line_paths: dict[str, list[dict[str, Any]]] = {}
 
-    for dataset_id, role, path in sources:
+    for dataset_id, role, path, source_crs in sources:
         if not path.exists():
             continue
-        points = parse_sp1(path)
+        points = parse_sp1(path, source_crs)
         all_points.extend(points)
         for point in points:
             key = f"{dataset_id}-{point['line']}"
@@ -308,7 +343,11 @@ def build_navigation_geojson() -> dict[str, Any]:
                         "survey": dataset_id,
                         "line": point["line"],
                         "station": point["station"],
-                        "sourceCrs": "EPSG:26912",
+                        "sourceCrs": point["sourceCrs"],
+                        "horizontalCrs": UTAH_FORGE_HORIZONTAL_CRS,
+                        "verticalDatum": "source SP1 survey elevation in metres",
+                        "coordinateBasis": "utm",
+                        "registrationStatus": "unverified",
                     },
                     "geometry": {"type": "Point", "coordinates": point["scene"]},
                 }
@@ -325,7 +364,11 @@ def build_navigation_geojson() -> dict[str, Any]:
                     "id": key,
                     "displayName": key.replace("-", " ").title(),
                     "role": "survey-line",
-                    "sourceCrs": "EPSG:26912",
+                    "sourceCrs": ordered[0]["sourceCrs"],
+                    "horizontalCrs": UTAH_FORGE_HORIZONTAL_CRS,
+                    "verticalDatum": "source SP1 survey elevation in metres",
+                    "coordinateBasis": "utm",
+                    "registrationStatus": "unverified",
                 },
                 "geometry": {
                     "type": "LineString",
@@ -346,13 +389,22 @@ def build_navigation_geojson() -> dict[str, Any]:
         "name": "Utah FORGE Phase 3 seismic navigation",
         "properties": {
             "schema": "geosee.seismic-navigation.geojson.v1",
-            "sourceCrs": "EPSG:26912",
+            "sourceCrs": UTAH_FORGE_HORIZONTAL_CRS,
+            "horizontalCrs": UTAH_FORGE_HORIZONTAL_CRS,
+            "verticalDatum": "source SP1 survey elevation in metres",
+            "units": "m",
+            "coordinateBasis": "utm",
+            "origin": project_origin_payload(),
+            "rotationDeg": UTAH_FORGE_PROJECT_FRAME.rotation_deg,
+            "registrationStatus": "unverified",
+            "registration": seismic_navigation_registration(UTAH_FORGE_HORIZONTAL_CRS),
             "axisConvention": "X east, Y north, Z up",
-            "sceneOriginUtm": {
-                "easting_m": SCENE_ORIGIN_E,
-                "northing_m": SCENE_ORIGIN_N,
-                "elevation_m": SCENE_ORIGIN_Z,
-            },
+            "sceneOriginUtm": project_origin_payload(),
+            "transformPipeline": [
+                "parse declared SP1 coordinates",
+                "transform source CRS into EPSG:26912 project frame with pyproj.Transformer",
+                "subtract GeoSee project origin",
+            ],
             "pointCount": len(all_points),
             "sceneBounds": bounds,
         },
@@ -401,11 +453,50 @@ def survey_kind(path: Path) -> str:
     return "2d"
 
 
-def datum_for(path: Path) -> float:
-    name = path.name.lower()
-    if "302" in name:
-        return 2100.0
-    return 1800.0
+def parsed_datum_m(text_header: str) -> float | None:
+    match = re.search(r"\bDATUM\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*m\b", text_header, re.IGNORECASE)
+    if not match:
+        return None
+    return float(match.group(1))
+
+
+def datum_for(text_header: str) -> float:
+    return parsed_datum_m(text_header) or SEISMIC_REFERENCE_DATUM_M
+
+
+def vertical_reference_for(domain: tuple[str, str], datum_m: float) -> dict[str, Any]:
+    domain_kind_value, domain_unit = domain
+    mode = (
+        "depth-below-datum-to-absolute-elevation"
+        if domain_unit == "m"
+        else "display-depth-below-datum-to-absolute-elevation"
+    )
+    return {
+        "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+        "sourceDatumM": datum_m,
+        "referenceDatumM": SEISMIC_REFERENCE_DATUM_M,
+        "depthElevationMode": mode,
+        "sourceSampleUnit": domain_unit,
+        "sceneZUnit": "m",
+        "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+        "domainKind": domain_kind_value,
+        "calibration": TOP_OF_GRANITE_CALIBRATION,
+    }
+
+
+def value_encoding_for(kind: str) -> dict[str, Any]:
+    if kind == "velocity":
+        return {
+            "storedTextureEncoding": "uint8-normalized-p02-p98",
+            "sourceValueMeaning": "interval velocity",
+            "displayUnit": "m/s",
+            "displayRangeMPerS": VELOCITY_DISPLAY_RANGE_M_PER_S,
+        }
+    return {
+        "storedTextureEncoding": "uint8-normalized-p02-p98",
+        "sourceValueMeaning": "processed seismic amplitude",
+        "displayUnit": "normalized amplitude",
+    }
 
 
 def trace_line_id(path: Path) -> str:
@@ -678,19 +769,117 @@ def navigation_paths(navigation: dict[str, Any]) -> dict[str, list[list[float]]]
     return paths
 
 
-def line_endpoints_for(product_path: Path, nav_paths: dict[str, list[list[float]]], bounds: dict[str, list[float]]) -> list[list[float]]:
+def seismic_placement_metadata(
+    *,
+    navigation_source: str,
+    placement_accuracy: str,
+    can_claim_precise_registration: bool,
+    line_id: str,
+    reason: str,
+) -> dict[str, Any]:
+    metadata: dict[str, Any] = {
+        "navigationSource": navigation_source,
+        "placementAccuracy": placement_accuracy,
+        "canClaimPreciseRegistration": can_claim_precise_registration,
+        "lineId": line_id,
+        "statusLabel": (
+            "Approximate legacy line placement; precise registration not validated."
+            if navigation_source == "fallback"
+            else "Delivered navigation present; precise registration requires validation evidence."
+        ),
+        "reason": reason,
+    }
+    if navigation_source == "fallback":
+        metadata["validationPath"] = [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance",
+        ]
+    return metadata
+
+
+def aggregate_navigation_placement(sections: list[dict[str, Any]]) -> dict[str, Any]:
+    placements = [
+        section.get("navigationPlacement")
+        for section in sections
+        if isinstance(section.get("navigationPlacement"), dict)
+    ]
+    if not placements:
+        return seismic_placement_metadata(
+            navigation_source="delivered",
+            placement_accuracy="unknown",
+            can_claim_precise_registration=False,
+            line_id="3d",
+            reason="3D product uses source geometry and navigation envelope; validation evidence is still required.",
+        )
+    if any(placement.get("navigationSource") == "fallback" for placement in placements):
+        return seismic_placement_metadata(
+            navigation_source="fallback",
+            placement_accuracy="approximate",
+            can_claim_precise_registration=False,
+            line_id="/".join(sorted({str(p.get("lineId", "line")) for p in placements})),
+            reason="At least one section uses explicit approximate fallback endpoints.",
+        )
+    return seismic_placement_metadata(
+        navigation_source="delivered",
+        placement_accuracy="unknown",
+        can_claim_precise_registration=False,
+        line_id="/".join(sorted({str(p.get("lineId", "line")) for p in placements})),
+        reason="Delivered navigation exists; precise registration remains review-gated until control-point validation.",
+    )
+
+
+def line_endpoints_for(
+    product_path: Path,
+    nav_paths: dict[str, list[list[float]]],
+    bounds: dict[str, list[float]],
+) -> tuple[list[list[float]], dict[str, Any]]:
     line_id = trace_line_id(product_path)
     if line_id in nav_paths and len(nav_paths[line_id]) >= 2:
         coords = nav_paths[line_id]
-        return [coords[0], coords[-1]]
+        return [coords[0], coords[-1]], seismic_placement_metadata(
+            navigation_source="delivered",
+            placement_accuracy="unknown",
+            can_claim_precise_registration=False,
+            line_id=line_id,
+            reason="Line endpoints are derived from delivered SEG-P1 navigation; control-point validation is still required before precision claims.",
+        )
     min_x, min_y, _ = bounds["min"]
     max_x, max_y, _ = bounds["max"]
     mid_z = 1800.0
     if line_id == "legacy-l5":
-        return [[min_x - 6000, min_y + 2500, mid_z], [max_x + 4500, max_y - 2200, mid_z]]
+        return [
+            [min_x - 6000, min_y + 2500, mid_z],
+            [max_x + 4500, max_y - 2200, mid_z],
+        ], seismic_placement_metadata(
+            navigation_source="fallback",
+            placement_accuracy="approximate",
+            can_claim_precise_registration=False,
+            line_id=line_id,
+            reason="No delivered navigation line is present for legacy Line L5 in the active source set.",
+        )
     if line_id == "legacy-l11":
-        return [[min_x - 5000, max_y + 2800, mid_z], [max_x + 5500, min_y - 3000, mid_z]]
-    return [[min_x, (min_y + max_y) / 2, mid_z], [max_x, (min_y + max_y) / 2, mid_z]]
+        return [
+            [min_x - 5000, max_y + 2800, mid_z],
+            [max_x + 5500, min_y - 3000, mid_z],
+        ], seismic_placement_metadata(
+            navigation_source="fallback",
+            placement_accuracy="approximate",
+            can_claim_precise_registration=False,
+            line_id=line_id,
+            reason="No delivered navigation line is present for legacy Line L11 in the active source set.",
+        )
+    return [
+        [min_x, (min_y + max_y) / 2, mid_z],
+        [max_x, (min_y + max_y) / 2, mid_z],
+    ], seismic_placement_metadata(
+        navigation_source="fallback",
+        placement_accuracy="unknown",
+        can_claim_precise_registration=False,
+        line_id=line_id,
+        reason="No delivered navigation line is present for this line product.",
+    )
 
 
 def make_section_spec(
@@ -757,11 +946,22 @@ def make_section_spec(
             "verticalScaleMPerUnit": TIME_SCALE_M_PER_MS if domain_unit == "ms" else 1.0,
         },
         "datumM": datum_m,
+        "verticalReference": vertical_reference_for(domain, datum_m),
+        "valueEncoding": value_encoding_for(product_kind(product_path)),
     }
     if axis == "line":
-        spec["path"] = line_endpoints_for(product_path, nav_paths, bounds)
+        path_points, placement = line_endpoints_for(product_path, nav_paths, bounds)
+        spec["path"] = path_points
+        spec["navigationPlacement"] = placement
     else:
         spec["sceneBounds"] = bounds
+        spec["navigationPlacement"] = seismic_placement_metadata(
+            navigation_source="delivered",
+            placement_accuracy="unknown",
+            can_claim_precise_registration=False,
+            line_id="3d",
+            reason="3D section placement uses source geometry and navigation envelope; control-point validation is still required.",
+        )
     return spec, stats
 
 
@@ -832,6 +1032,8 @@ def build_volume(
                 "max": round(domain_max, 6),
                 "verticalScaleMPerUnit": z_scale,
             },
+            "verticalReference": vertical_reference_for(domain, datum_m),
+            "valueEncoding": value_encoding_for(product_kind(path)),
             "amplitudeStats": {k: round(v, 6) for k, v in stats.items()},
         },
         stats,
@@ -863,7 +1065,6 @@ def build_product(
     kind = product_kind(path)
     domain = domain_kind(path, kind)
     survey = survey_kind(path)
-    datum = datum_for(path)
     source_submission = "GDR 1015" if "from_submission_1015" in path.parts else "GDR 1141"
     product_id = slugify(f"{source_submission}-{path.stem}")
     product_dir = PHASE3_PROCESSED_ROOT / "browser" / "products" / product_id
@@ -880,6 +1081,7 @@ def build_product(
         sample_count = len(samples)
         sample_interval = float(segyio.tools.dt(f) or 0)
         text_header = read_text_header(f)
+        datum = datum_for(text_header)
 
     if survey == "3d":
         for axis in ("inline", "crossline"):
@@ -998,6 +1200,7 @@ def build_product(
         stats=stats,
         sections=sections,
         raymarch_volume=raymarch_volume,
+        navigation_placement=aggregate_navigation_placement(sections),
         text_header_excerpt=text_header,
     )
 
@@ -1019,6 +1222,12 @@ def product_to_manifest(product: Product) -> dict[str, Any]:
         "domainKind": product.domain_kind,
         "domainUnit": product.domain_unit,
         "datumM": product.datum_m,
+        "navigationPlacement": product.navigation_placement,
+        "verticalReference": vertical_reference_for(
+            (product.domain_kind, product.domain_unit),
+            product.datum_m,
+        ),
+        "valueEncoding": value_encoding_for(product.product_kind),
         "traceCount": product.trace_count,
         "sampleCount": product.sample_count,
         "sampleRange": [round(product.sample_min, 6), round(product.sample_max, 6)],
@@ -1098,19 +1307,44 @@ def main() -> None:
             "primarySourceCrs": "EPSG:26912 NAD83 / UTM Zone 12N",
             "legacySourceCrs": "EPSG:32043 NAD27 / Utah Central, US survey foot",
             "axisConvention": "X east, Y north, Z up",
-            "sceneOriginUtm": {
-                "easting_m": SCENE_ORIGIN_E,
-                "northing_m": SCENE_ORIGIN_N,
-                "elevation_m": SCENE_ORIGIN_Z,
-            },
+            "sceneOriginUtm": project_origin_payload(),
+            "registrationStatus": "unverified",
+            "registration": seismic_navigation_registration(UTAH_FORGE_HORIZONTAL_CRS),
+            "transformPipeline": [
+                "source coordinates require declared source CRS",
+                "source coordinates are transformed into EPSG:26912 before scene-local conversion",
+                "GeoSee project origin is subtracted after CRS transformation",
+            ],
         },
         "sampleDomain": {
             "timeScaleMPerMs": TIME_SCALE_M_PER_MS,
             "depthScaleMPerM": 1.0,
+            "referenceDatumM": SEISMIC_REFERENCE_DATUM_M,
             "notes": [
-                "Time-domain products use a display scale in meters per millisecond for vertical placement.",
-                "Depth-domain products use depth below seismic datum where the source product is depth migrated.",
+                "All seismic render coordinates use absolute elevation metres in the same scene Z frame as terrain and wells.",
+                "Time-domain products use a display scale in meters per millisecond below their parsed source datum.",
+                "Depth-domain products use depth below their parsed seismic datum where the source product is depth migrated.",
             ],
+        },
+        "verticalReference": {
+            "coordinateSystem": "scene-local meters, X east, Y north, Z up",
+            "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+            "referenceDatumM": SEISMIC_REFERENCE_DATUM_M,
+            "sourceDatumStrategy": "parse SEG-Y text header DATUM field; fall back to 1800 m when absent",
+            "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+            "calibration": TOP_OF_GRANITE_CALIBRATION,
+            "notes": [
+                "Phase 2B structure contours are treated as depth below 1800 m ASL unless a source header explicitly states another datum.",
+                "The 58-32 top-of-granite calibration point is retained as metadata because the active demo-borehole layer does not yet include 58-32.",
+            ],
+        },
+        "valueEncoding": {
+            "amplitude": "processed seismic amplitudes are stored as uint8 normalized p02-p98 textures",
+            "velocity": {
+                "meaning": "interval velocity",
+                "unit": "m/s",
+                "displayRangeMPerS": VELOCITY_DISPLAY_RANGE_M_PER_S,
+            },
         },
         "products": [product_to_manifest(product) for product in products],
         "sourceFiles": [entry["normalizedPath"] for entry in normalization["normalizedFiles"]],
@@ -1121,7 +1355,7 @@ def main() -> None:
             "notes": [
                 "Browser artifacts are source-derived visual representations generated from SEG-Y trace and sample grids.",
                 "Raymarch volumes are browser-ready source-fidelity amplitude textures for visual communication; they are not certified for engineering design or interpretation decisions.",
-                "Legacy L5/L11 sections are included as section curtains; where no delivered navigation line exists, placement is approximate and documented in the source inventory.",
+                "Legacy L5/L11 sections are approximate reference curtains when no delivered navigation line exists; fallback endpoints are not ground truth and cannot support precise registration claims.",
             ],
         },
     }

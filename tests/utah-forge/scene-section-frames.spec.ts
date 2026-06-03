@@ -31,7 +31,7 @@ test("scene section frames stay independent across X Y and Z planes", async ({
 }) => {
   await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
   await hidePublicContextLayers(page);
-  await page.getByRole("button", { name: "Sections & Cropping" }).click();
+  await page.getByRole("button", { name: "Sections" }).click();
   await openForgeMtResistivityEditorContainers(page);
 
   await page.getByTestId("scene-section-enabled").setChecked(true);

@@ -10,6 +10,7 @@ import {
   vibrancyTertiaryLabel,
 } from "./styles";
 import { writeFile } from "./save";
+import { TransientSlider } from "./TransientSlider";
 import type { SceneProperties } from "../pages/types";
 
 type GuiProperties = NonNullable<SceneProperties["gui"]>;
@@ -569,30 +570,16 @@ function Range({
   disabled?: boolean;
 }) {
   return (
-    <>
-      <input
-        data-dev-source="src/editor/EnvironmentScenePanel.tsx:43"
-        data-dev-note="Range controls Global Settings sliders; global slider visuals live in global.css."
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        style={{
-          flex: 1,
-          "--editor-slider-fill": `${((value - min) / (max - min)) * 100}%`,
-        } as React.CSSProperties}
-      />
-      <span
-        style={environmentNumberReadoutStyle}
-        data-dev-source="src/editor/EnvironmentScenePanel.tsx:268"
-        data-dev-note="environmentNumberReadoutStyle pulls numeric values inward from the sidebar edge."
-      >
-        {format ? format(value) : value.toFixed(2)}
-      </span>
-    </>
+    <TransientSlider
+      value={value}
+      min={min}
+      max={max}
+      step={step}
+      disabled={disabled}
+      onChange={onChange}
+      format={format}
+      style={{ flex: 1 }}
+    />
   );
 }
 
@@ -658,21 +645,38 @@ function arrayBufferToBase64(buf: ArrayBuffer): string {
   return btoa(binary);
 }
 
+type EnvironmentScenePanelContent = "environment" | "lighting" | "terrain";
+type GuiSetupPanelContent =
+  | "overlay"
+  | "labels"
+  | "logo"
+  | "editor";
+
 interface EnvironmentScenePanelProps {
+  title?: string;
+  onActivate?: () => void;
+  accentColor?: string | null;
+  content?: EnvironmentScenePanelContent;
+  scene: SceneProperties;
+  setScene: (patch: Partial<SceneProperties>) => void;
+}
+
+interface CameraSetupPanelProps {
+  title?: string;
+  onActivate?: () => void;
+  accentColor?: string | null;
+  topSlot?: React.ReactNode;
+  scene: SceneProperties;
+  setScene: (patch: Partial<SceneProperties>) => void;
+}
+
+interface GuiSetupPanelProps {
   title?: string;
   onActivate?: () => void;
   accentColor?: string | null;
   devModeEnabled?: boolean;
   onDevModeChange?: (enabled: boolean) => void;
-  content?:
-    | "environment"
-    | "lighting"
-    | "terrain"
-    | "overlay"
-    | "labels"
-    | "logo"
-    | "editor";
-  topSlot?: React.ReactNode;
+  content?: GuiSetupPanelContent;
 }
 
 type PresentationLightSource = NonNullable<
@@ -776,13 +780,13 @@ export function EnvironmentScenePanel({
   onActivate,
   accentColor,
   content = "environment",
+  scene,
+  setScene,
 }: EnvironmentScenePanelProps) {
-  const { state, setEnvScene } = useEditor();
-  const scene: SceneProperties = state.environment.scene ?? {};
   const [open, setOpen] = useState(false);
   const lightSources = scene.lighting?.sources ?? [];
   const setLighting = (patch: NonNullable<SceneProperties["lighting"]>) =>
-    setEnvScene({ lighting: { ...(scene.lighting ?? {}), ...patch } });
+    setScene({ lighting: { ...(scene.lighting ?? {}), ...patch } });
   const setLightSources = (sources: PresentationLightSource[]) =>
     setLighting({ sources });
   const updateLightSource = (
@@ -819,11 +823,11 @@ export function EnvironmentScenePanel({
     setLightSources([...lightSources, lightSourceDefaults(type, nextIndex)]);
   };
   const setTerrain = (patch: NonNullable<SceneProperties["terrain"]>) =>
-    setEnvScene({ terrain: { ...(scene.terrain ?? {}), ...patch } });
+    setScene({ terrain: { ...(scene.terrain ?? {}), ...patch } });
   const fogDensity = scene.fog?.density ?? 0.00018;
   const fogReachKm = 3 / Math.max(fogDensity, 0.000001) / 1000;
   const setFogDensity = (density: number) =>
-    setEnvScene({ fog: { ...(scene.fog ?? {}), density } });
+    setScene({ fog: { ...(scene.fog ?? {}), density } });
 
   return (
     <div
@@ -885,7 +889,7 @@ export function EnvironmentScenePanel({
                     max={360}
                     step={1}
                     onChange={(v) =>
-                      setEnvScene({
+                      setScene({
                         sun: { ...(scene.sun ?? {}), azimuth: v },
                       })
                     }
@@ -899,7 +903,7 @@ export function EnvironmentScenePanel({
                     max={85}
                     step={1}
                     onChange={(v) =>
-                      setEnvScene({
+                      setScene({
                         sun: { ...(scene.sun ?? {}), elevation: v },
                       })
                     }
@@ -911,7 +915,7 @@ export function EnvironmentScenePanel({
                     type="checkbox"
                     checked={scene.sun?.lockToCamera === true}
                     onChange={(e) =>
-                      setEnvScene({
+                      setScene({
                         sun: {
                           ...(scene.sun ?? {}),
                           lockToCamera: e.target.checked,
@@ -1402,7 +1406,7 @@ export function EnvironmentScenePanel({
                     min={0.3}
                     max={2.5}
                     step={0.05}
-                    onChange={(v) => setEnvScene({ exposure: v })}
+                    onChange={(v) => setScene({ exposure: v })}
                   />
                 </Row>
               </div>
@@ -1414,12 +1418,66 @@ export function EnvironmentScenePanel({
                 Atmosphere
               </div>
               <div style={panelStyles.section}>
+                <Row label="Light mode">
+                  <input
+                    type="checkbox"
+                    checked={scene.lightMode === true}
+                    onChange={(e) => setScene({ lightMode: e.target.checked })}
+                  />
+                </Row>
+                <Row label="Dark background">
+                  <input
+                    data-dev-source="src/editor/EnvironmentScenePanel.tsx:192"
+                    data-dev-note="Dark mode background color input; input[type=color] shape is controlled in global.css."
+                    type="color"
+                    value={scene.background ?? "#23252a"}
+                    onChange={(e) => setScene({ background: e.target.value })}
+                  />
+                </Row>
+                <Row label="Dark fog">
+                  <input
+                    type="color"
+                    value={scene.fog?.color ?? scene.background ?? "#23252a"}
+                    onChange={(e) =>
+                      setScene({
+                        fog: { ...(scene.fog ?? {}), color: e.target.value },
+                      })
+                    }
+                  />
+                </Row>
+                <Row label="Light background">
+                  <input
+                    type="color"
+                    value={scene.lightModeBackground ?? "#a0a0a0"}
+                    onChange={(e) =>
+                      setScene({ lightModeBackground: e.target.value })
+                    }
+                  />
+                </Row>
+                <Row label="Light fog">
+                  <input
+                    type="color"
+                    value={
+                      scene.fog?.lightModeColor ??
+                      scene.lightModeBackground ??
+                      "#a0a0a0"
+                    }
+                    onChange={(e) =>
+                      setScene({
+                        fog: {
+                          ...(scene.fog ?? {}),
+                          lightModeColor: e.target.value,
+                        },
+                      })
+                    }
+                  />
+                </Row>
                 <Row label="Fog enabled">
                   <input
                     type="checkbox"
                     checked={scene.fog?.enabled !== false}
                     onChange={(e) =>
-                      setEnvScene({
+                      setScene({
                         fog: { ...(scene.fog ?? {}), enabled: e.target.checked },
                       })
                     }
@@ -1451,19 +1509,6 @@ export function EnvironmentScenePanel({
                     </Row>
                   </>
                 ) : null}
-                <Row label="Fog color">
-                  <input
-                    data-dev-source="src/editor/EnvironmentScenePanel.tsx:192"
-                    data-dev-note="Fog color input; input[type=color] shape is controlled in global.css."
-                    type="color"
-                    value={scene.fog?.color ?? scene.background ?? "#23252a"}
-                    onChange={(e) => {
-                      setEnvScene({
-                        fog: { ...(scene.fog ?? {}), color: e.target.value },
-                      });
-                    }}
-                  />
-                </Row>
               </div>
             </>
           )}
@@ -1541,22 +1586,22 @@ export function CameraSetupPanel({
   onActivate,
   accentColor,
   topSlot,
-}: EnvironmentScenePanelProps) {
-  const { state, setEnvScene } = useEditor();
-  const scene: SceneProperties = state.environment.scene ?? {};
+  scene,
+  setScene,
+}: CameraSetupPanelProps) {
   const [open, setOpen] = useState(false);
   const setCamera = (patch: NonNullable<SceneProperties["camera"]>) =>
-    setEnvScene({ camera: { ...(scene.camera ?? {}), ...patch } });
+    setScene({ camera: { ...(scene.camera ?? {}), ...patch } });
   const setVignette = (patch: NonNullable<SceneProperties["vignette"]>) =>
-    setEnvScene({ vignette: { ...(scene.vignette ?? {}), ...patch } });
+    setScene({ vignette: { ...(scene.vignette ?? {}), ...patch } });
   const setColorGrade = (patch: NonNullable<SceneProperties["colorGrade"]>) =>
-    setEnvScene({ colorGrade: { ...(scene.colorGrade ?? {}), ...patch } });
+    setScene({ colorGrade: { ...(scene.colorGrade ?? {}), ...patch } });
   const setBloom = (patch: NonNullable<SceneProperties["bloom"]>) =>
-    setEnvScene({ bloom: { ...(scene.bloom ?? {}), ...patch } });
+    setScene({ bloom: { ...(scene.bloom ?? {}), ...patch } });
   const setAmbientOcclusion = (
     patch: NonNullable<SceneProperties["ambientOcclusion"]>,
   ) =>
-    setEnvScene({
+    setScene({
       ambientOcclusion: {
         ...(scene.ambientOcclusion ?? {}),
         ...patch,
@@ -1565,7 +1610,7 @@ export function CameraSetupPanel({
   const setCameraFocus = (
     patch: NonNullable<SceneProperties["cameraFocus"]>,
   ) =>
-    setEnvScene({
+    setScene({
       cameraFocus: {
         ...(scene.cameraFocus ?? {}),
         ...patch,
@@ -1946,7 +1991,7 @@ export function GuiSetupPanel({
   devModeEnabled = false,
   onDevModeChange,
   content = "overlay",
-}: EnvironmentScenePanelProps) {
+}: GuiSetupPanelProps) {
   const { state, setEnvScene } = useEditor();
   const scene: SceneProperties = state.environment.scene ?? {};
   const gui = scene.gui ?? {};
@@ -2922,6 +2967,16 @@ export function GuiSetupPanel({
                     max={64}
                     step={1}
                     onChange={(v) => setEditor({ saveFooterGapPx: v })}
+                    format={(v) => `${v.toFixed(0)} px`}
+                  />
+                </Row>
+                <Row label="Save icon">
+                  <Range
+                    value={editor.saveIconSizePx ?? 13}
+                    min={8}
+                    max={24}
+                    step={1}
+                    onChange={(v) => setEditor({ saveIconSizePx: v })}
                     format={(v) => `${v.toFixed(0)} px`}
                   />
                 </Row>
@@ -4609,14 +4664,6 @@ const overlayStyleButtonActiveStyle: React.CSSProperties = {
 
 const environmentNestedBodyStyle: React.CSSProperties = {
   padding: "10px 0 0 18px",
-};
-
-const environmentNumberReadoutStyle: React.CSSProperties = {
-  ...panelStyles.numberReadout,
-  width: 58,
-  marginLeft: 0,
-  marginRight: 0,
-  textAlign: "left",
 };
 
 const environmentHelpTextStyle: React.CSSProperties = {

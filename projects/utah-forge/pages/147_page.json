@@ -1,0 +1,67 @@
+{
+  "id": "147_page",
+  "title": "New page duplicate duplicate duplicate duplicate",
+  "camera": {
+    "position": [
+      -1462.2506902319417,
+      -14970.700729615957,
+      -154567.99999999988
+    ],
+    "target": [
+      -3228,
+      -16283,
+      3136.000000000002
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      -3228,
+      -16283,
+      3136
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 2200,
+    "orbitHeight": -157704,
+    "orbitDirection": -1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "cinematic",
+    "pathAwareBlend": false
+  },
+  "overlayLayout": {
+    "x": 0.032356770833333326,
+    "y": 0.0481555834378921,
+    "width": 0.27
+  },
+  "visibilityOverrides": {
+    "utah-forge-mt-resistivity-full-density": true,
+    "terrain": true,
+    "utah-forge-topo-graticule": false
+  },
+  "layerOverrides": {
+    "terrain": {
+      "opacity": 0
+    }
+  }
+}

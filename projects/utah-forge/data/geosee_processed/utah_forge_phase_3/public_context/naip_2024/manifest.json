@@ -60,7 +60,10 @@
       "format": "webp",
       "hasAlpha": true,
       "quality": 94,
-      "visualTreatment": "alpha-aware coverage fill and feather"
+      "visualTreatment": "alpha-aware coverage fill and feather",
+      "sha256": "9cf80fbd86236267f441efde60c692849e4f1158d4d0ebcf8e6e0c14058dac3e",
+      "cacheVersion": "9cf80fbd86236267",
+      "versionedFile": "naip_2024_regional_4096.webp?v=9cf80fbd86236267"
     },
     "8192": {
       "file": "naip_2024_regional_8192.webp",
@@ -70,7 +73,10 @@
       "format": "webp",
       "hasAlpha": true,
       "quality": 94,
-      "visualTreatment": "alpha-aware coverage fill and feather"
+      "visualTreatment": "alpha-aware coverage fill and feather",
+      "sha256": "14db7e6b94489d8007d9f86a543ce1d67451695c18c82807785dae9f5d4a9d9e",
+      "cacheVersion": "14db7e6b94489d80",
+      "versionedFile": "naip_2024_regional_8192.webp?v=14db7e6b94489d80"
     }
   },
   "processing": {

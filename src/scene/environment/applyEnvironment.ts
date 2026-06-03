@@ -142,14 +142,16 @@ export function applyEnvironment(this: any, environment: EnvironmentSetup): void
     presetId,
     projectRenderPresets(environment),
   );
-  // Precedence: authored environment.scene is the base. Current / Custom
-  // leaves presetId empty, so no preset patch is applied. An explicit
-  // environment renderPreset patches cinematic/world-building fields, an
-  // optional page.renderPreset wins over the environment default, preview/
-  // editor patches still win, and existing page mood overrides are applied
-  // afterward in applyPageScene. Technical layer renderers are not touched.
+  // Precedence: authored base/sub-master scene -> render preset patch -> page
+  // sceneOverrides -> preview/editor patch. Page-local scene authoring must
+  // win over active presets, matching page layer override behavior.
+  const sceneWithPreset = mergeSceneProperties(environment.scene, presetPatch);
+  const sceneWithPageOverrides = mergeSceneProperties(
+    sceneWithPreset,
+    this.lastEffectivePage?.sceneOverrides ?? null,
+  );
   const sp = mergeSceneProperties(
-    mergeSceneProperties(environment.scene, presetPatch),
+    sceneWithPageOverrides,
     this.environmentScenePreviewPatch,
   );
   const authoritativeTerrain = applyTopoMaterialAuthority(
@@ -170,12 +172,12 @@ export function applyEnvironment(this: any, environment: EnvironmentSetup): void
   this.renderer.toneMappingExposure = this.baseExposure;
 
   // ---- background ------------------------------------------------------
-  // Renderer clear color remains independently authored from fog tint.
-  // lightMode overrides
-  // the authored value with a neutral grey so the whole frame reads
-  // as light/grey rather than warm/dark.
+  // Renderer clear color and fog tint are independently authored. Existing
+  // background/fog.color fields remain the dark/default mode values.
   const lightMode = sp.lightMode === true;
-  const bgHex = lightMode ? LIGHT_MODE_BG : (sp.background ?? "#23252a");
+  const darkBgHex = sp.background ?? "#23252a";
+  const lightBgHex = sp.lightModeBackground ?? LIGHT_MODE_BG;
+  const bgHex = lightMode ? lightBgHex : darkBgHex;
   const bgColor = new THREE.Color(bgHex);
   this.renderer.setClearColor(bgColor);
   this.scene.background = bgColor;
@@ -310,11 +312,10 @@ export function applyEnvironment(this: any, environment: EnvironmentSetup): void
   }
   // Density tuned so the far edge of the terrain can dissolve before the
   // tile edge while fog tint stays independently authorable.
-  const fogColor = lightMode
-    ? bgColor // fog matches lightMode background, ignoring authored fog tint
-    : sp.fog?.color
-      ? new THREE.Color(sp.fog.color)
-      : bgColor;
+  const fogHex = lightMode
+    ? (sp.fog?.lightModeColor ?? lightBgHex)
+    : (sp.fog?.color ?? darkBgHex);
+  const fogColor = new THREE.Color(fogHex);
   const density = sp.fog?.density ?? DEFAULT_SCENE_FOG_DENSITY;
   const fogEnabled = sp.fog?.enabled !== false;
   this.envFogEnabled = fogEnabled;

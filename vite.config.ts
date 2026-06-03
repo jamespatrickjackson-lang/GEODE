@@ -43,6 +43,22 @@ function copyRuntimeDataPlugin(): Plugin {
   };
 }
 
+function noStoreProjectAssetsPlugin(): Plugin {
+  return {
+    name: "geosee-project-assets-no-store",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const url = req.url ?? "";
+        if (url.startsWith("/projects/")) {
+          res.setHeader("Cache-Control", "no-store, max-age=0");
+        }
+        next();
+      });
+    },
+  };
+}
+
 function copyProjectsPlugin(): Plugin {
   let config: ResolvedConfig;
   return {
@@ -81,7 +97,13 @@ function copyProjectsPlugin(): Plugin {
 
 export default defineConfig(({ command }) => ({
   base: "./",
-  plugins: [react(), authorWritePlugin(), copyRuntimeDataPlugin(), copyProjectsPlugin()],
+  plugins: [
+    react(),
+    authorWritePlugin(),
+    noStoreProjectAssetsPlugin(),
+    copyRuntimeDataPlugin(),
+    copyProjectsPlugin(),
+  ],
   publicDir: command === "serve" ? "data" : false,
   build: {
     chunkSizeWarningLimit: 600,

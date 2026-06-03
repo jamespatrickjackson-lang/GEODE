@@ -8,9 +8,9 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
-test("editor exposes Public Topo Map from topo metadata, not the Utah FORGE slug", () => {
+test("editor exposes Topo from topo metadata, not the Utah FORGE slug", () => {
   const source = readRepoFile("src/editor/EditorRoot.tsx");
-  const sectionIndex = source.indexOf('title="Public Topo Map"');
+  const sectionIndex = source.indexOf('title="Topo"');
   expect(sectionIndex).toBeGreaterThan(-1);
   const sectionSource = source.slice(
     Math.max(0, sectionIndex - 320),

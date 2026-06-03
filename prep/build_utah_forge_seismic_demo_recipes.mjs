@@ -255,12 +255,19 @@ function simplifyProduct(product) {
     productKind: product.productKind,
     domainKind: product.domainKind,
     domainUnit: product.domainUnit,
+    datumM: product.datumM,
+    navigationPlacement: product.navigationPlacement,
+    verticalReference: product.verticalReference,
+    valueEncoding: product.valueEncoding,
     sourceSubmission: product.sourceSubmission,
     amplitudeStats: product.amplitudeStats,
     raymarchVolume: product.raymarchVolume
       ? {
           dimensions: product.raymarchVolume.dimensions,
+          sceneBounds: product.raymarchVolume.sceneBounds,
           sampleDomain: product.raymarchVolume.sampleDomain,
+          verticalReference: product.raymarchVolume.verticalReference,
+          valueEncoding: product.raymarchVolume.valueEncoding,
           amplitudeStats: product.raymarchVolume.amplitudeStats,
         }
       : null,
@@ -350,7 +357,7 @@ async function main() {
       rank: 3,
       audience: "technical / investor",
       purpose:
-        "Present one georeferenced section curtain at a time with comparison products and provenance.",
+        "Present one section curtain at a time with comparison products, navigation provenance, and placement-status disclosure.",
       productIds: lineTheatreIds,
       comparisonPairs,
       renderModes: ["slice"],
@@ -802,7 +809,7 @@ async function main() {
       label: "Legacy L5 / L11 theatre",
       audienceMode: "technical",
       rank: 11,
-      summary: "Legacy lines L5 and L11 as georeferenced section curtains.",
+      summary: "Legacy lines L5 and L11 as approximate reference section curtains.",
       displayRecipeId: "2d-line-theatre",
       capabilityGroup: "2d-legacy-section-theatre",
       productId: PRODUCT_IDS.lineL5Depth,
@@ -815,6 +822,9 @@ async function main() {
       mtCoRender: "seismic",
       mtStylePatch: { opacity: 0.05, scalarLegendVisible: false },
       cameraShot: "legacy-lines-theatre",
+      caveats: [
+        "Approximate legacy line placement; precise registration is not validated.",
+      ],
     }),
     makePreset({
       id: "enhanced-vs-unenhanced",
@@ -936,6 +946,8 @@ async function main() {
   layer.metadata = {
     ...(layer.metadata ?? {}),
     defaultSeismicProductId: manifest.defaultProductId,
+    seismicVerticalReference: manifest.verticalReference,
+    seismicValueEncoding: manifest.valueEncoding,
     seismicProducts: manifest.products.map(simplifyProduct),
     seismicDemoDisclosureLabels: DISCLOSURE_LABELS,
     seismicDisplayRecipes: displayRecipes,

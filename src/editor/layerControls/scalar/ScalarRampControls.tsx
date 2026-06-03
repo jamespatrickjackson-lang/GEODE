@@ -5,7 +5,6 @@ import {
   nestedFieldLabelStyle,
   overrideTagActiveStyle,
   overrideTagStyle,
-  sliderNumberReadoutStyle,
   styleNumber,
   styleString,
 } from "../../styleControls";
@@ -234,9 +233,6 @@ export function ScalarRampControls({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {Math.round(styleNumber(style, "scalarSurfaceMaskDepthM", 25))} m
-            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Mask feather</label>
@@ -268,10 +264,6 @@ export function ScalarRampControls({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {Math.round(styleNumber(style, "scalarSurfaceMaskFeatherM", 175))}{" "}
-              m
-            </span>
           </div>
         </>
       ) : null}
@@ -469,7 +461,6 @@ export function ScalarRampControls({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>{trimMin.toFixed(2)}</span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>
@@ -518,7 +509,6 @@ export function ScalarRampControls({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>{trimMax.toFixed(2)}</span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Feather min</label>
@@ -546,7 +536,6 @@ export function ScalarRampControls({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>{blendMin.toFixed(2)}</span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Feather max</label>
@@ -574,7 +563,6 @@ export function ScalarRampControls({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>{blendMax.toFixed(2)}</span>
           </div>
           {fullDensityMode ? (
             <div style={nestedControlRowStyle}>
@@ -600,12 +588,6 @@ export function ScalarRampControls({
                   } as React.CSSProperties
                 }
               />
-              <span style={sliderNumberReadoutStyle}>
-                {Math.round(
-                  styleNumber(style, "scalarNoiseThreshold", 0) * 100,
-                )}
-                %
-              </span>
             </div>
           ) : null}
         </>
@@ -646,7 +628,6 @@ export function ScalarRampControls({
             } as React.CSSProperties
           }
         />
-        <span style={sliderNumberReadoutStyle}>{midpoint.toFixed(2)}</span>
       </div>
       <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>Nuance</label>
@@ -668,7 +649,6 @@ export function ScalarRampControls({
             } as React.CSSProperties
           }
         />
-        <span style={sliderNumberReadoutStyle}>{contrast.toFixed(2)}</span>
       </div>
     </>
   );

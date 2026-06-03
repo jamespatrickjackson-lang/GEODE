@@ -28,7 +28,7 @@ test("Utah FORGE working area focus clips outside context with page-local contro
   await hidePublicContextLayers(page);
   await expect(page.locator("canvas")).toHaveCount(1);
   await selectForgePageRow(page, "01.");
-  await page.getByRole("button", { name: "Sections & Cropping" }).click();
+  await page.getByRole("button", { name: "Sections" }).click();
   await openForgeDataEditorContainers(page);
   await page.locator("details").evaluateAll((details) => {
     for (const detail of details) {

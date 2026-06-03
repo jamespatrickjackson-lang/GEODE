@@ -1994,7 +1994,15 @@ export function EditorProvider({
   useEffect(() => {
     sceneHandle.setLightingSourceCommitHandler((id, patch) => {
       const cur = stateRef.current;
-      const scene = cur.environment.scene ?? {};
+      const selectedPageId = cur.selectedPageId;
+      const page =
+        selectedPageId && selectedPageId !== ENVIRONMENT_SENTINEL
+          ? cur.pages.find((candidate) => candidate.id === selectedPageId)
+          : null;
+      const pageEnvironment = page
+        ? resolveEnvironmentForPage(cur.environment, cur.pages, page)
+        : cur.environment;
+      const scene = pageEnvironment.scene ?? {};
       const lighting = scene.lighting ?? {};
       const sources = lighting.sources ?? [];
       let changed = false;
@@ -2004,10 +2012,22 @@ export function EditorProvider({
         return { ...source, ...patch };
       });
       if (!changed) return;
-      dispatch({
-        type: "SET_ENV_SCENE",
-        patch: { lighting: { ...lighting, sources: nextSources } },
-      });
+      if (page) {
+        dispatch({
+          type: "SET_PAGE_FIELD",
+          pageId: page.id,
+          patch: {
+            sceneOverrides: mergeSceneEdit(page.sceneOverrides, {
+              lighting: { sources: nextSources },
+            }),
+          },
+        });
+      } else {
+        dispatch({
+          type: "SET_ENV_SCENE",
+          patch: { lighting: { ...lighting, sources: nextSources } },
+        });
+      }
     });
     return () => sceneHandle.setLightingSourceCommitHandler(null);
   }, [sceneHandle]);

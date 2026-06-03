@@ -855,3 +855,23 @@ Each decision records:
 **Why:** `displayName` is needed by hover, picking, and debug identity, but it is too broad for author-facing scene labels. Site Details, boreholes, block meshes, helper edges, camera frustums, point markers, and outline tools need explicit label anchors without allowing every helper object to become an unmanaged label. Sub Master rows represent inherited defaults for their child pages, so writing ordinary page-local overrides there creates conflicts with the inheritance model from DEC-079. Pending page transitions can otherwise send edits to the newly selected row while the live scene still shows the previous page.
 
 **Trade-off accepted:** Label authorship becomes metadata-driven for new structured loaders, so loader authors must mark unmanaged helper objects with `sceneLabelEligible: false` whenever the layer also contains structured anchors. Legacy layers without structured anchors remain compatibility-preserving. Sub Master normalization may rewrite old Sub Master page JSON to move existing overrides into `envSnapshot`, but regular pages and child-page overrides remain unchanged and child overrides still win over inherited defaults.
+
+## DEC-083 - Imported layer registration requires explicit CRS, datum, origin, rotation, and status
+
+**Considered:** keep accepting layer coordinates once they visually sit near the Utah FORGE scene frame, or require every imported layer to declare its horizontal CRS, vertical datum, unit basis, coordinate basis, origin, rotation, and registration status before any accuracy claim is allowed.
+
+**Chose:** imported geospatial layers declare `metadata.crsRegistration`, and projects can declare a top-level `registrationFrame`. The registration object records `horizontalCrs`, `verticalDatum`, `units`, `coordinateBasis`, `origin`, `rotationDeg`, and `registrationStatus`. Valid status values are `unverified` and `validated`. `validated` is reserved for layers with recorded control-point evidence. Source import code must transform source coordinates into the project horizontal CRS before subtracting the GeoSee project origin.
+
+**Why:** Utah FORGE combines UTM coordinates, local/model coordinates, rotated MT mesh assumptions, seismic source/navigation products, time-domain displays, depth-domain products, public terrain, and well references. A shared scene can look plausible while still mixing horizontal and vertical references. Treating scene-local subtraction as CRS conversion masks that risk. The explicit registration contract separates horizontal CRS from vertical datum and blocks `CRS verified` language until evidence exists.
+
+**Trade-off accepted:** Existing Utah FORGE layers currently remain `unverified`, including layers that are source-derived and visually useful. This is intentional: source-derived visual communication is allowed, but survey-grade or engineering-grade spatial accuracy claims require control-point validation. Runtime rendering does not change from this decision by itself; import paths, manifests, validation, and UI/status labels become stricter first.
+
+## DEC-084 - Fallback seismic line placement is approximate reference context
+
+**Considered:** allow seismic line curtains with approximate fallback endpoints to participate in the same CRS/scale language as delivered navigation lines, or mark fallback placement as approximate and block precise registration claims until delivered navigation or control-point validation exists.
+
+**Chose:** every seismic product/section records `navigationPlacement` with `navigationSource`, `placementAccuracy`, and `canClaimPreciseRegistration`. Fallback placement must set `navigationSource: "fallback"`, `placementAccuracy: "approximate"`, and `canClaimPreciseRegistration: false`. Utah FORGE legacy L5/L11 products currently use this fallback status. Their validation path requires delivered navigation or georeferenced control points with stored residual error before promotion.
+
+**Why:** Legacy L5/L11 are useful reference lines, but approximate endpoints are not ground truth. Presenting them with the same language as delivered 301/302 navigation or 3D source geometry would imply scale and registration accuracy that the source set does not prove.
+
+**Trade-off accepted:** L5/L11 remain renderable as section curtains for visual context and processing comparison, but UI/status text, recipes, exports, and validation treat them as approximate. This does not move the lines or alter seismic rendering; it only prevents precision claims from being attached to fallback placement.

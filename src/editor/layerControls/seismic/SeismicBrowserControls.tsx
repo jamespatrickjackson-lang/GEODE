@@ -7,7 +7,6 @@ import {
   nestedFieldLabelStyle,
   overrideTagActiveStyle,
   overrideTagStyle,
-  sliderNumberReadoutStyle,
   styleBoolean,
   styleNumber,
   styleString,
@@ -280,6 +279,30 @@ export function SeismicBrowserControls({
     },
     {},
   );
+  const layerMetadata = layer.metadata as Record<string, unknown> | undefined;
+  const crsRegistration =
+    layerMetadata?.crsRegistration &&
+    typeof layerMetadata.crsRegistration === "object"
+      ? (layerMetadata.crsRegistration as Record<string, unknown>)
+      : null;
+  const crsStatus =
+    crsRegistration?.registrationStatus === "validated"
+      ? "CRS verified"
+      : "CRS/datum review required";
+  const crsBasis =
+    typeof crsRegistration?.horizontalCrs === "string"
+      ? crsRegistration.horizontalCrs
+      : "unverified CRS";
+  const placement = selectedProduct?.navigationPlacement;
+  const placementStatus =
+    placement?.navigationSource === "fallback"
+      ? (placement.statusLabel ??
+        "Approximate legacy line placement; precise registration not validated.")
+      : placement?.canClaimPreciseRegistration === true
+        ? "Precise placement claim allowed"
+        : placement
+          ? "Placement review required before precision claims"
+          : null;
   return (
     <>
       <details style={nestedDetailsStyle}>
@@ -410,6 +433,31 @@ export function SeismicBrowserControls({
               <option value="integrated">Integrated</option>
             </select>
           </div>
+
+          <div
+            data-testid="seismic-crs-registration-status"
+            style={{
+              color: vibrancyTertiaryLabel,
+              fontSize: 11,
+              lineHeight: 1.35,
+              opacity: controlOpacity,
+            }}
+          >
+            {crsStatus} / {crsBasis}
+          </div>
+          {placementStatus ? (
+            <div
+              data-testid="seismic-placement-registration-status"
+              style={{
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                lineHeight: 1.35,
+                opacity: controlOpacity,
+              }}
+            >
+              {placementStatus}
+            </div>
+          ) : null}
 
           {audienceMode === "data-room" ? (
             <div
@@ -651,9 +699,6 @@ export function SeismicBrowserControls({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {sliceFraction.toFixed(2)}
-            </span>
           </div>
 
           <SeismicDisplayTuningControls

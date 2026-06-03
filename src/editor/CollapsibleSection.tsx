@@ -121,7 +121,22 @@ export function CollapsibleSection({
           />
         </span>
       </div>
-      {open && <div style={panelStyles.collapsibleBody}>{children}</div>}
+      {open && (
+        <div style={panelStyles.collapsibleBody}>
+          <div
+            style={panelStyles.collapsibleBodyFrame}
+            data-dev-source="src/editor/styles.ts:collapsible-body-frame"
+            data-dev-container="true"
+            data-dev-container-type="top-level-section-body"
+            data-dev-container-name={`${title} body`}
+            data-dev-container-scope="panelStyles.collapsibleBodyFrame / containerBodyIndentPx"
+            data-dev-padding-source="src/editor/styles.ts:collapsible-body-frame"
+            data-dev-note="panelStyles.collapsibleBodyFrame controls the indented body container below each top-level section heading."
+          >
+            {children}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

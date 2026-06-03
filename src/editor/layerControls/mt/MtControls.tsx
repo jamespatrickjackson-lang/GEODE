@@ -11,7 +11,6 @@ import {
   nestedFieldLabelStyle,
   overrideTagActiveStyle,
   overrideTagStyle,
-  sliderNumberReadoutStyle,
   styleBoolean,
   styleNumber,
   styleString,
@@ -22,6 +21,7 @@ import {
 import type { EditableStyle, PresentationPage, ProjectLayerSpec } from "../../../pages/types";
 import type { SceneHandle } from "../../../scene";
 import { appAssetUrl } from "../../../projects/projectPathsRuntime";
+import { TransientSlider } from "../../TransientSlider";
 import {
   DEFAULT_MT_RESISTIVITY_SLICE_ID,
   MT_RESISTIVITY_SLICE_PRODUCTS,
@@ -85,10 +85,6 @@ export function SurfaceGradientControls({
     Math.min(2.5, styleNumber(style, "surfaceGradientContrast", 1)),
   );
   const midpointFill = Math.max(0, Math.min(100, midpoint * 100));
-  const contrastFill = Math.max(
-    0,
-    Math.min(100, ((contrast - 0.35) / (2.5 - 0.35)) * 100),
-  );
   const controlOpacity = disabled ? 0.4 : 1;
   const gradientBackground = `linear-gradient(90deg, ${lowColor} 0%, ${midColor} ${midpointFill.toFixed(
     1,
@@ -157,51 +153,29 @@ export function SurfaceGradientControls({
       </div>
       <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>Midpoint</label>
-        <input
-          type="range"
+        <TransientSlider
           min={0.05}
           max={0.95}
           step={0.01}
           value={midpoint}
           disabled={disabled}
-          onChange={(e) =>
-            onChange({
-              surfaceGradientMidpoint: parseFloat(e.target.value),
-            })
-          }
-          style={
-            {
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${midpointFill}%`,
-            } as React.CSSProperties
-          }
+          onChange={(value) => onChange({ surfaceGradientMidpoint: value })}
+          format={(value) => value.toFixed(2)}
+          style={{ flex: 1, opacity: controlOpacity }}
         />
-        <span style={sliderNumberReadoutStyle}>{midpoint.toFixed(2)}</span>
       </div>
       <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>Nuance</label>
-        <input
-          type="range"
+        <TransientSlider
           min={0.35}
           max={2.5}
           step={0.05}
           value={contrast}
           disabled={disabled}
-          onChange={(e) =>
-            onChange({
-              surfaceGradientContrast: parseFloat(e.target.value),
-            })
-          }
-          style={
-            {
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${contrastFill}%`,
-            } as React.CSSProperties
-          }
+          onChange={(value) => onChange({ surfaceGradientContrast: value })}
+          format={(value) => value.toFixed(2)}
+          style={{ flex: 1, opacity: controlOpacity }}
         />
-        <span style={sliderNumberReadoutStyle}>{contrast.toFixed(2)}</span>
       </div>
     </>
   );
@@ -237,8 +211,6 @@ export function MtTopSurfaceControls({
     Math.min(1, styleNumber(style, "meshMetalness", 0.02)),
   );
   const controlOpacity = disabled ? 0.4 : 1;
-  const liftFill = ((lift + 3000) / 6000) * 100;
-
   return (
     <>
       <div style={nestedControlRowStyle}>
@@ -269,25 +241,16 @@ export function MtTopSurfaceControls({
       </div>
       <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>Surface lift</label>
-        <input
-          type="range"
+        <TransientSlider
           min={-3000}
           max={3000}
           step={25}
           value={lift}
           disabled={disabled}
-          onChange={(e) =>
-            onChange({ meshSurfaceLiftM: parseFloat(e.target.value) })
-          }
-          style={
-            {
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${liftFill}%`,
-            } as React.CSSProperties
-          }
+          onChange={(value) => onChange({ meshSurfaceLiftM: value })}
+          format={(value) => `${value.toFixed(0)} m`}
+          style={{ flex: 1, opacity: controlOpacity }}
         />
-        <span style={sliderNumberReadoutStyle}>{lift.toFixed(0)} m</span>
       </div>
       <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
         <span style={nestedFieldLabelStyle}>Wireframe</span>
@@ -302,47 +265,29 @@ export function MtTopSurfaceControls({
       </label>
       <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>Roughness</label>
-        <input
-          type="range"
+        <TransientSlider
           min={0}
           max={1}
           step={0.01}
           value={roughness}
           disabled={disabled}
-          onChange={(e) =>
-            onChange({ meshRoughness: parseFloat(e.target.value) })
-          }
-          style={
-            {
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${roughness * 100}%`,
-            } as React.CSSProperties
-          }
+          onChange={(value) => onChange({ meshRoughness: value })}
+          format={(value) => value.toFixed(2)}
+          style={{ flex: 1, opacity: controlOpacity }}
         />
-        <span style={sliderNumberReadoutStyle}>{roughness.toFixed(2)}</span>
       </div>
       <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>Metalness</label>
-        <input
-          type="range"
+        <TransientSlider
           min={0}
           max={1}
           step={0.01}
           value={metalness}
           disabled={disabled}
-          onChange={(e) =>
-            onChange({ meshMetalness: parseFloat(e.target.value) })
-          }
-          style={
-            {
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${metalness * 100}%`,
-            } as React.CSSProperties
-          }
+          onChange={(value) => onChange({ meshMetalness: value })}
+          format={(value) => value.toFixed(2)}
+          style={{ flex: 1, opacity: controlOpacity }}
         />
-        <span style={sliderNumberReadoutStyle}>{metalness.toFixed(2)}</span>
       </div>
     </>
   );
@@ -601,23 +546,27 @@ export function ResistivitySliceControls({
           />
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Depth slider</label>
-            <input
-              type="range"
+            <TransientSlider
               min={0}
               max={MT_RESISTIVITY_SLICE_PRODUCTS.length - 1}
               step={1}
               value={selectedSliceIndex}
-              data-testid="mt-slice-depth-slider"
-              onChange={(event) => {
+              testId="mt-slice-depth-slider"
+              onChange={(value) => {
                 const next =
                   MT_RESISTIVITY_SLICE_PRODUCTS[
-                    Number.parseInt(event.target.value, 10)
+                    Math.round(value)
                   ] ?? MT_RESISTIVITY_SLICE_PRODUCTS[0];
                 setSelectedSlice(next.id);
               }}
+              format={(value) =>
+                (
+                  MT_RESISTIVITY_SLICE_PRODUCTS[Math.round(value)] ??
+                  MT_RESISTIVITY_SLICE_PRODUCTS[0]
+                ).label
+              }
               style={{ flex: 1 }}
             />
-            <span style={sliderNumberReadoutStyle}>{selectedSlice.label}</span>
           </div>
           <LayerBooleanStyleControl
             label="Horiz. slices"

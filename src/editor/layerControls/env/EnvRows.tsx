@@ -1,12 +1,20 @@
 import type React from "react";
-import { panelStyles, thinLightMaterial, vibrancySecondaryLabel } from "../../styles";
 import {
+  panelStyles,
+  thinLightMaterial,
+  vibrancySecondaryLabel,
+} from "../../styles";
+import {
+  EditorEyeButton,
   nestedControlRowStyle,
   nestedFieldLabelStyle,
   overrideTagActiveStyle,
   overrideTagStyle,
 } from "../../styleControls";
-import { isStyleFieldOverridden, isVisibilityOverridden } from "../../../pages/effective";
+import {
+  isStyleFieldOverridden,
+  isVisibilityOverridden,
+} from "../../../pages/effective";
 import type { EditableStyle, PresentationPage } from "../../../pages/types";
 import { LABEL_KIND_OPTIONS } from "../labelKindOptions";
 
@@ -76,7 +84,13 @@ export function EnvTreeVisibilityToggle({
   return (
     <div style={panelStyles.row}>
       <label style={panelStyles.fieldLabel}>Visible (default)</label>
-      <ToggleButton active={visible} onClick={onToggle} />
+      <EditorEyeButton
+        visible={visible}
+        onClick={onToggle}
+        title={visible ? "Hide by default" : "Show by default"}
+        ariaLabel={visible ? "Hide by default" : "Show by default"}
+        style={{ marginLeft: "auto" }}
+      />
     </div>
   );
 }
@@ -101,27 +115,42 @@ export function PageTreeVisibilityToggle({
   return (
     <div style={panelStyles.row}>
       <label style={panelStyles.fieldLabel}>Visible</label>
-      <input
-        type="checkbox"
-        checked={overridden}
-        onChange={(e) => {
-          if (e.target.checked) onSet(effective);
-          else onClear();
-        }}
-        title="Override environment default for this page"
-      />
-      <ToggleButton
-        active={effective}
+      <EditorEyeButton
+        visible={effective}
+        overridden={overridden}
         onClick={() => onSet(!effective)}
         title={
           overridden
-            ? "Toggle forest cover for this page"
-            : "Toggle forest cover and create a page override"
+            ? effective
+              ? "Hide on this page"
+              : "Show on this page"
+            : effective
+              ? "Hide on this page and create override"
+              : "Show on this page and create override"
         }
+        ariaLabel={effective ? "Hide on this page" : "Show on this page"}
+        style={{ marginLeft: "auto" }}
       />
-      <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {overridden ? "overridden" : "inherited"}
-      </span>
+      <button
+        type="button"
+        onClick={overridden ? onClear : () => onSet(effective)}
+        title={
+          overridden
+            ? "Clear page visibility override"
+            : "Create page visibility override"
+        }
+        style={{
+          border: "none",
+          background: "transparent",
+          padding: "0 0 0 4px",
+          cursor: "pointer",
+          font: "inherit",
+        }}
+      >
+        <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
+          {overridden ? "overridden" : "inherited"}
+        </span>
+      </button>
     </div>
   );
 }

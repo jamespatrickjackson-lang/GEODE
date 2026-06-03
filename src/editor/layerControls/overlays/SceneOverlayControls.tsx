@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type React from "react";
 import { panelStyles, vibrancyLabel, vibrancySecondaryLabel } from "../../styles";
+import { TransientSlider } from "../../TransientSlider";
 import { useEditor } from "../../EditorContext";
 import { writeFile } from "../../save";
 import type { PresentationPage, SceneOverlayDef } from "../../../pages/types";
@@ -103,15 +104,14 @@ export function SceneOverlayRow({
       {/* Opacity row */}
       <div style={panelStyles.row}>
         <label style={panelStyles.fieldLabel}>Opacity</label>
-        <input
-          type="range"
+        <TransientSlider
           min={0}
           max={1}
           step={0.05}
           value={isEnv ? envDefault : effOpacity}
           disabled={isEnv ? !enabled : !onThisPage}
-          onChange={(e) => {
-            const v = parseFloat(e.target.value);
+          format={(value) => value.toFixed(2)}
+          onChange={(v) => {
             if (isEnv) {
               setEnvSceneOverlayField(id, { defaultOpacity: v });
             } else if (currentPage) {
@@ -120,9 +120,6 @@ export function SceneOverlayRow({
           }}
           style={{ flex: 1 }}
         />
-        <span style={panelStyles.numberReadout}>
-          {(isEnv ? envDefault : effOpacity).toFixed(2)}
-        </span>
       </div>
 
       {/* Page mode: env-default hint + revert affordance */}

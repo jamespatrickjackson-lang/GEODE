@@ -7,7 +7,6 @@ import {
   nestedControlRowStyle,
   nestedDetailsStyle,
   nestedFieldLabelStyle,
-  sliderNumberReadoutStyle,
   styleBoolean,
   styleNumber,
   styleString,
@@ -332,7 +331,6 @@ export function MtThresholdSurfaceControls({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>{opacity.toFixed(2)}</span>
         </div>
         <div style={{ display: "grid", gap: 10 }}>
           {boundaries.map((boundary) => (
@@ -455,9 +453,6 @@ export function MtThresholdSurfaceControls({
                     } as React.CSSProperties
                   }
                 />
-                <span style={sliderNumberReadoutStyle}>
-                  {boundary.opacity.toFixed(2)}
-                </span>
               </div>
               <div style={nestedControlRowStyle}>
                 <span style={nestedFieldLabelStyle}>Boundary</span>
@@ -567,7 +562,6 @@ export function MtThresholdSurfaceControls({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>{roughness.toFixed(2)}</span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Metalness</label>
@@ -591,7 +585,6 @@ export function MtThresholdSurfaceControls({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>{metalness.toFixed(2)}</span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Light boost</label>
@@ -615,9 +608,6 @@ export function MtThresholdSurfaceControls({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>
-            {emissiveBoost.toFixed(2)}
-          </span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Wire color</label>
@@ -654,9 +644,6 @@ export function MtThresholdSurfaceControls({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>
-            {wireframeOpacity.toFixed(2)}
-          </span>
         </div>
       </div>
     </details>

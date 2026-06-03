@@ -62,7 +62,7 @@ async function openSeismicWorkbench(
   });
   await hidePublicContextLayers(page);
   await expect(page.locator("canvas")).toHaveCount(1);
-  await page.getByRole("button", { name: "FORGE Data" }).click();
+  await page.getByRole("button", { name: "Forge" }).click();
   await openForgeDataEditorContainers(page);
   await expect
     .poll(() =>

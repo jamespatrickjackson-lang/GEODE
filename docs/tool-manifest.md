@@ -12,10 +12,10 @@ Tools that define and manage the presentation sequence.
 
 | Tool | Description |
 | --- | --- |
-| **Page Manager** | Create, select, reorder, show/hide, duplicate, and delete presentation pages. Each page carries its own camera pose, layer visibility, environment, and overlay copy. The pseudo-page "Global Settings" routes to scene-wide controls without entering a real page. |
+| **Pages** | Create, select, reorder, show/hide, duplicate, and delete presentation pages. Each page carries its own camera pose, layer visibility, environment, and overlay copy. |
 | **Page Color** | Per-page accent hue/saturation, used in the presenter UI chrome. |
-| **Page Render Override** | Per-page cinematic quality preset that overrides the project-wide default for that page only. |
-| **Overlay Box Manager** | Per-page text editor. Controls page title, subtitle, markdown body, inset images, and fade/gap/easing timing for the text animation. |
+| **Page Render Override** | Per-page cinematic quality preset inside Cinematics that overrides the project-wide default for that page only. |
+| **Cards** | Per-page text editor. Controls page title, subtitle, markdown body, inset images, and fade/gap/easing timing for the text animation. |
 
 ---
 
@@ -25,7 +25,7 @@ Tools that control how the 3D scene looks globally.
 
 | Tool | Description |
 | --- | --- |
-| **Visual Studio** | Top-level container for global rendering controls. Houses the sub-tools below. |
+| **Cinematics** | Top-level container for global rendering, UI, and page camera controls. Houses the sub-tools below. |
 | **Cinematic Render Preset** | Project-wide render quality selector. Save and update named presets. Drives antialiasing, shadow quality, AO, bloom, and related passes. |
 | **Environment** | Scene atmosphere: background color/sky, fog density, ambient occlusion, tone mapping, and exposure. |
 | **Lighting Studio** | Sun azimuth and elevation, plus key/fill/rim light intensities. Supports movable source lights for accent and shadow control. |
@@ -34,12 +34,13 @@ Tools that control how the 3D scene looks globally.
 
 ---
 
-## Client UI
+## UI
 
 Tools that configure the client-facing chrome and branding.
 
 | Tool | Description |
 | --- | --- |
+| **Editor** | Controls editor-sidebar chrome variables: panel size and margins, header sizing, section spacing, bar shape, page-list indent, scroll padding, and slider geometry. |
 | **Client Logo** | Upload a client logo image and set its screen position and anchor point. |
 | **GUI Styles** | Controls overlay panel appearance: background color and alpha, border, backdrop blur, shadow, and corner radius. |
 
@@ -51,7 +52,7 @@ Tools that control how the camera behaves per page.
 
 | Tool | Description |
 | --- | --- |
-| **Camera Dynamics** | Per-page container for camera pose and transition controls. Houses the sub-tools below. |
+| **Camera Dynamics** | Per-page camera pose and transition controls inside Cinematics. |
 | **Camera Pose** | Capture and store the current camera view as the page's recorded pose. Supports a numbered pose history. |
 | **Camera Transition** | Duration, easing curve, and hold time for the animated move into this page's pose from the previous one. |
 | **Dynamic Movement** | Master toggle for orbit and zoom motion that plays while a page is active. |
@@ -61,13 +62,13 @@ Tools that control how the camera behaves per page.
 
 ---
 
-## Sections & Cropping
+## Sections
 
 Tools that define authored spatial cuts and site-of-interest cropping. Currently Utah FORGE only.
 
 | Tool | Description | Scope |
 | --- | --- | --- |
-| **Sections & Cropping** | Top-level editor container for section planes, crop/focus controls, and the Phase 3 working-area boundary. | Utah FORGE |
+| **Sections** | Top-level editor container for section planes, crop/focus controls, and the Phase 3 working-area boundary. | Utah FORGE |
 | **Scene Section Planes** | Virtual cross-section tool. Selects the target geophysical product and controls plane position along each axis. | Utah FORGE |
 | **Phase 3 Working Area** | Visibility and style control for the required Phase 3 working-area boundary. | Utah FORGE |
 | **Working Area Focus** | Targets a layer as the focal zone; reduces outside-zone opacity and boosts inside-zone brightness for client presentations. | Utah FORGE |
@@ -80,7 +81,7 @@ Tools for the public topographic map surface and associated cartographic layers.
 
 | Tool | Description |
 | --- | --- |
-| **Public Topo Map** | Global toolset container for the topographic surface, graticule, title block, and reference layers. Present when the project has topo-tagged layers. |
+| **Topo** | Global toolset container for the topographic surface, graticule, title block, and reference layers. Present when the project has topo-tagged layers. |
 | **Topo Settings** | Terrain material preset and elevation gradient controls, including the named Utah high-desert/topo preset, low/mid/high color stops, midpoint position, contrast, and blend mode. |
 | **Longitude / Latitude Grid** | Graticule appearance: line spacing, color, width, opacity, and label distance from the surface. |
 | **Title Block** | Upload and position a map title or branding image on the topo surface. Supports anchor and XY offset. |
@@ -101,7 +102,7 @@ Tools for spatial framing and site-level orientation. Currently Utah FORGE only.
 
 ## MT Resistivity
 
-Tools for magnetotelluric resistivity data. Utah FORGE only. These are the second toolset being aligned to the global-tool pattern (after Public Topo Map).
+Tools for magnetotelluric resistivity data. Utah FORGE only. These are the second toolset being aligned to the global-tool pattern (after Topo).
 
 | Tool | Description |
 | --- | --- |

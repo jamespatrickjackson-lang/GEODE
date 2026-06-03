@@ -5,7 +5,6 @@ import {
   nestedControlRowStyle,
   nestedDetailsStyle,
   nestedFieldLabelStyle,
-  sliderNumberReadoutStyle,
   styleBoolean,
   styleNumber,
   type LayerStyleSetter,
@@ -278,9 +277,6 @@ export function IsobandControls({
                   } as React.CSSProperties
                 }
               />
-              <span style={sliderNumberReadoutStyle}>
-                {Math.round(planePosition)} m
-              </span>
             </div>
           </>
         ) : null}
@@ -308,9 +304,6 @@ export function IsobandControls({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>
-            {sourceOpacity.toFixed(2)}
-          </span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Bands</label>
@@ -337,7 +330,6 @@ export function IsobandControls({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>{bandCount}</span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Min</label>
@@ -364,9 +356,6 @@ export function IsobandControls({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>
-            {rangeKind === "seismic" ? isoMin.toFixed(2) : isoMin.toFixed(2)}
-          </span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Max</label>
@@ -393,7 +382,6 @@ export function IsobandControls({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>{isoMax.toFixed(2)}</span>
         </div>
         <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
           <span style={nestedFieldLabelStyle}>Fill</span>
@@ -430,9 +418,6 @@ export function IsobandControls({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>
-            {Math.round(bandOpacity * 100)}%
-          </span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Fill offset</label>
@@ -455,9 +440,6 @@ export function IsobandControls({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>
-            {Math.round(fillOffset * 100)}%
-          </span>
         </div>
         <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
           <span style={nestedFieldLabelStyle}>Lines</span>
@@ -516,7 +498,6 @@ export function IsobandControls({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>{lineWidth.toFixed(1)}</span>
         </div>
       </div>
     </details>

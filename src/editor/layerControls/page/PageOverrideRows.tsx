@@ -1,7 +1,7 @@
-import type React from "react";
 import { useEditor } from "../../EditorContext";
 import { panelStyles } from "../../styles";
-import { overrideTagActiveStyle, overrideTagStyle, sliderNumberReadoutStyle } from "../../styleControls";
+import { overrideTagActiveStyle, overrideTagStyle } from "../../styleControls";
+import { TransientSlider } from "../../TransientSlider";
 import { renderPresetOptionsForEnvironment } from "../../../pages/renderPresets";
 import type { RenderPresetId } from "../../../pages/types";
 
@@ -113,27 +113,19 @@ export function PageMoodOverrideRow({
         }}
         title="Override environment setup for this page"
       />
-      <input
-        type="range"
+      <TransientSlider
         min={min}
         max={max}
         step={step}
         value={value}
         disabled={!overridden}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        style={
-          {
-            flex: 1,
-            opacity: overridden ? 1 : 0.4,
-            "--editor-slider-fill": `${((value - min) / (max - min)) * 100}%`,
-          } as React.CSSProperties
-        }
+        onChange={onChange}
+        format={(nextValue) => nextValue.toFixed(2)}
+        style={{ flex: 1, opacity: overridden ? 1 : 0.4 }}
       />
-      <span style={sliderNumberReadoutStyle}>{value.toFixed(2)}</span>
       <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
         {overridden ? "overridden" : "inherited"}
       </span>
     </div>
   );
 }
-

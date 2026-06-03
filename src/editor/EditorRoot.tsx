@@ -11,6 +11,7 @@ import {
 import { OverlayPanel } from "./OverlayPanel";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { DevModeInspector } from "./DevModeInspector";
+import { RangeCursorValueOverlay } from "./RangeCursorValueOverlay";
 import { ENVIRONMENT_SENTINEL } from "./types";
 import { usePageController } from "../pages/PageController";
 import { AudienceLensControls } from "../audience/AudienceLensControls";
@@ -769,6 +770,12 @@ export function EditorRoot({
     0,
     64,
   );
+  const editorSaveIconSize = clampEditorNumber(
+    editorChromeSettings.saveIconSizePx,
+    13,
+    8,
+    24,
+  );
   const editorSliderTrackHeight = clampEditorNumber(
     editorChromeSettings.sliderTrackHeightPx,
     8,
@@ -876,6 +883,7 @@ export function EditorRoot({
     "--editor-nested-bar-height": `${editorNestedBarHeight}px`,
     "--editor-pill-text-inset": `${editorPillTextInset}px`,
     "--editor-page-list-indent": `${editorPageListIndent}px`,
+    "--editor-save-icon-size": `${editorSaveIconSize}px`,
     "--editor-slider-track-height": `${editorSliderTrackHeight}px`,
     "--editor-slider-thumb-size": `${editorSliderThumbSize}px`,
   } as React.CSSProperties;
@@ -1317,6 +1325,7 @@ export function EditorRoot({
 
   return (
     <>
+      <RangeCursorValueOverlay />
       <style>
         {`
           .editor-action-button {
@@ -1440,7 +1449,12 @@ export function EditorRoot({
               globalSettingsSelected ? globalSettingsAccent : selectedPageAccent
             }
           >
-            <VisualStudioPanel accentColor={globalSettingsAccent} />
+            <VisualStudioPanel
+              accentColor={
+                globalSettingsSelected ? globalSettingsAccent : selectedPageAccent
+              }
+              sceneHandle={sceneHandle}
+            />
             <UiSettingsPanel
               accentColor={globalSettingsAccent}
               devModeEnabled={devModeEnabled}
@@ -1527,7 +1541,7 @@ export function EditorRoot({
           data-dev-padding-source="src/editor/EditorRoot.tsx:save-footer"
           data-dev-note="saveFooterStyle docks the project Save control under the Cards section at the bottom of the editor panel."
         >
-          <SaveButton />
+          <SaveButton iconSizePx={editorSaveIconSize} />
         </div>
         <DevModeInspector
           enabled={devModeEnabled}
@@ -1551,7 +1565,7 @@ export function EditorRoot({
   );
 }
 
-function SaveButton() {
+function SaveButton({ iconSizePx }: { iconSizePx: number }) {
   const { state, commitPending } = useEditor();
   const dirtyCount = state.dirty.size;
   const isSaving = state.saveStatus === "saving";
@@ -1570,46 +1584,48 @@ function SaveButton() {
   return (
     <div
       style={{
-        height: 24,
+        height: 30,
         display: "inline-flex",
         alignItems: "center",
         gap: 8,
         flex: "none",
       }}
     >
-      <span
-        style={{
-          minWidth: 12,
-          height: 24,
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          textAlign: "right",
-          fontSize: 11,
-          fontWeight: 700,
-          lineHeight: 1,
-          color: hasUnsaved ? "#ff6f7f" : "rgba(255, 255, 255, 0.78)",
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {dirtyCount}
-      </span>
+      {dirtyCount > 0 && (
+        <span
+          data-dev-save-count="true"
+          style={{
+            minWidth: 12,
+            height: 30,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            textAlign: "right",
+            fontSize: 11,
+            fontWeight: 700,
+            lineHeight: 1,
+            color: "#ff6f7f",
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {dirtyCount}
+        </span>
+      )}
       <button
-        className="editor-action-button"
+        data-dev-save-button="true"
+        className="editor-action-button editor-icon-only-button"
         style={{
-          width: 24,
-          height: 24,
-          minWidth: 24,
+          width: 30,
+          height: 30,
+          minWidth: 30,
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
           padding: 0,
           borderRadius: 999,
           border: "1px solid transparent",
-          background: hasUnsaved
-            ? "rgba(255, 111, 127, 0.34)"
-            : "rgba(244, 240, 232, 0.066)",
-          color: hasUnsaved ? "#fff0f2" : vibrancyLabel,
+          background: "transparent",
+          color: hasUnsaved ? "#ff6f7f" : "rgba(244, 240, 232, 0.78)",
           opacity: isSaving ? 0.72 : 1,
           cursor: disabled ? "default" : "pointer",
           boxShadow: "none",
@@ -1636,7 +1652,7 @@ function SaveButton() {
               : `Save ${dirtyCount} pending edit${dirtyCount === 1 ? "" : "s"}`
         }
       >
-        <SaveDiskIcon />
+        <SaveDiskIcon sizePx={iconSizePx} />
       </button>
     </div>
   );
@@ -1754,11 +1770,12 @@ function PreviewLensPrompt({
   );
 }
 
-function SaveDiskIcon() {
+function SaveDiskIcon({ sizePx }: { sizePx: number }) {
   return (
     <svg
-      width="13"
-      height="13"
+      data-dev-save-icon="true"
+      width={sizePx}
+      height={sizePx}
       viewBox="0 0 24 24"
       aria-hidden="true"
       focusable="false"

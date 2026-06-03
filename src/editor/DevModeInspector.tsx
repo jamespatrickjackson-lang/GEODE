@@ -9,6 +9,7 @@ import {
   vibrancySecondaryLabel,
   vibrancyTertiaryLabel,
 } from "./styles";
+import { TransientSlider } from "./TransientSlider";
 import type { EditorChromeSettings } from "../pages/types";
 
 interface HoverInfo {
@@ -597,6 +598,14 @@ function DevContainerControlPanel({
           step={1}
           onChange={(value) => onPatch({ saveFooterGapPx: value })}
         />
+        <DevRange
+          label="Save icon"
+          value={editorSettings.saveIconSizePx ?? 13}
+          min={8}
+          max={24}
+          step={1}
+          onChange={(value) => onPatch({ saveIconSizePx: value })}
+        />
       </DevControlGroup>
 
       <DevControlGroup title="Alignment">
@@ -973,19 +982,15 @@ function DevRange({
   return (
     <label style={devControlRowStyle}>
       <span>{label}</span>
-      <input
-        type="range"
+      <TransientSlider
+        value={value}
         min={min}
         max={max}
         step={step}
-        value={value}
-        onChange={(event) => onChange(parseFloat(event.target.value))}
-        style={{
-          minWidth: 0,
-          "--editor-slider-fill": `${((value - min) / (max - min)) * 100}%`,
-        } as React.CSSProperties}
+        onChange={onChange}
+        format={format}
+        style={{ minWidth: 0, flex: 1 }}
       />
-      <span style={devControlValueStyle}>{format(value)}</span>
     </label>
   );
 }

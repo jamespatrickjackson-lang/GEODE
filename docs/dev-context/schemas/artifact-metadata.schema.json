@@ -294,6 +294,60 @@
             "null"
           ]
         },
+        "horizontalCrs": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verticalDatum": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "units": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "coordinateBasis": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "utm",
+            "latlon",
+            "local-mesh",
+            "model-origin",
+            null
+          ]
+        },
+        "origin": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "rotationDeg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "registrationStatus": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "unverified",
+            "validated",
+            null
+          ]
+        },
         "notes": {
           "type": "string"
         }

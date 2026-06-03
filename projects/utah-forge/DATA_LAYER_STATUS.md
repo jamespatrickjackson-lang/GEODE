@@ -58,12 +58,14 @@ Files under `geosee_processed/` in the active repo, generated from the archived 
 
 | Artifact | File / path | Status | Notes |
 | --- | --- | --- | --- |
-| Seismic browser manifest | `seismic_analysis/browser/seismic_manifest.json` | Active; wired in project files. | 34 products; 4 with raymarch volume; 30 section-only; 66 total sections. |
+| Seismic browser manifest | `seismic_analysis/browser/seismic_manifest.json` | Active; wired in project files. | 34 products; 4 with raymarch volume; 30 section-only; 66 total sections. Source SEG-Y vertical datum is parsed into product metadata; rendered Z uses `sceneZ_m = datumM - sample * verticalScaleMPerUnit`. |
 | Demo recipes | `seismic_analysis/browser/seismic_demo_recipes.json` | Wired; not accepted demo scope. | Needs human review before locking presentation behavior. |
 | Source inventory | `seismic_analysis/inventory/seismic_source_inventory.json` | Provenance/QA. | GDR 1015/GDR 1141 source records. |
-| Navigation GeoJSON | `seismic_analysis/navigation/seismic_navigation.geojson` | Provenance/QA. | CRS/datum review required before accuracy claims. |
+| Navigation GeoJSON | `seismic_analysis/navigation/seismic_navigation.geojson` | Provenance/QA. | CRS/navigation review still required before survey-grade accuracy claims; seismic product vertical datum metadata is recorded separately in the browser manifest. |
 | Raymarch volume products (x4) | `seismic_analysis/browser/products/*/volume.u8` | High-fidelity; load by page. | Amplitude encoding, bounds, sample units recorded in manifest. |
 | Section-only products (x30) | `seismic_analysis/browser/products/*/section.u8` | Technical credibility; load by page. | 66 total sections including sections from 3D products. |
+
+Legacy L5/L11 placement: current L5/L11 products use explicit approximate fallback endpoints because no delivered navigation line is present in the active source set. They are useful as visual/reference section curtains only. Their manifest `navigationPlacement` records `navigationSource: "fallback"`, `placementAccuracy: "approximate"`, and `canClaimPreciseRegistration: false`. Precise registration requires delivered navigation or georeferenced control-point validation with stored residual error.
 
 ### Public Context
 
@@ -84,7 +86,7 @@ Files under `geosee_processed/` in the active repo, generated from the archived 
 | MT QA subset points | `utah-forge-mt-resistivity-preview` | QA/support only. The 90,000-point subset is not computational input for slices, sections, or volumes. |
 | MT stations | `utah-forge-mt-stations` | Measured location anchors. Show on technical review pages. |
 | Seismic source inventory | n/a | Source-to-product trace. Not wired as a runtime layer. |
-| Seismic navigation | n/a | Line/segment placement record. Needs CRS/datum review. |
+| Seismic navigation | n/a | Line/segment placement record. Needs CRS/navigation review; source-header vertical datum parsing is handled in the seismic browser manifest. |
 | MT intake wrappers | n/a | CRS/transform contract files. |
 | MT model stats / provenance | n/a | Counts, masking, log transform, vertical exaggeration record. |
 
@@ -108,9 +110,23 @@ Files under `geosee_processed/` in the active repo, generated from the archived 
 CRS:                EPSG:26912 / NAD83 UTM Zone 12N
 Units:              meters
 GeoSee axes:        local X east, Y north, Z up
+Project origin:     E 341467.35 m, N 4273374.5 m, Z 0 m
+Registration gate:  unverified until horizontal CRS, vertical datum, origin, rotation, and control-point evidence pass
 Crop:               none
 Vertical exag.:     1.0
 ```
+
+Imported source coordinates must declare their source CRS before scene conversion. The import path transforms source coordinates into the Utah FORGE project horizontal frame, then subtracts the GeoSee project origin. Direct source-coordinate minus origin conversion is not accepted unless the source CRS is explicitly recorded as the project CRS and the layer registration metadata records that fact.
+
+Seismic vertical reference: browser-ready seismic panels and raymarch volumes render in absolute scene elevation metres. The source SEG-Y vertical datum is parsed per product when present, with 1800 m ASL as the fallback/reference datum. Phase 2B structure-contour depth references are treated as depth below 1800 m ASL unless a source product explicitly records another datum. Velocity products expose a 2000-5000 m/s display range in metadata. Visual calibration against well 58-32 remains pending because the active demo borehole layer does not include 58-32.
+
+Bore Holes registry: Utah FORGE `FORGE Data` now treats boreholes as their own `Bore Holes` container. The active rendered demo borehole geometry remains limited to `16A(78)-32` and `16B(78)-32`. Priority records for `58-32`, `78B-32`, `Acord-1`, `FDST / FORGE test drill site`, and the unnamed possible seismic monitoring well are registry entries only until trustworthy source geometry or verified coordinates are ingested. These missing records must not be used for geometry, registration, or calibration claims.
+
+Bore Holes source lookup: GDR 1358 provides source location rows for `58-32`, `16A-32`, `78B-32`, and seismic candidate rows `BOR1`, `BOR2`, and `BOR3`. The 16B entry is backed by the existing GDR 1516 trajectory source. No `Acord-1` or `FDST / FORGE test drill site` row was found in the active GDR 1358 well/seismic locations CSV or active borehole trajectory sources.
+
+Registration status: all active Utah FORGE runtime layers currently remain `unverified` for survey-grade accuracy claims. Metadata now records the required horizontal CRS, vertical datum, coordinate basis, origin, rotation, and registration status fields. `validated` must not be used until control-point checks are recorded for the relevant layer family.
+
+Fallback placement rule: any seismic product or section with `navigationSource: "fallback"` is excluded from precise scale/registration assertions. UI, recipes, exports, and QA summaries must show approximate-placement status and must not label the fallback product as CRS verified, survey accurate, or true scale.
 
 ---
 

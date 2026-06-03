@@ -170,14 +170,14 @@
       "publicSurfaceClipShape": "circle",
       "affectedByFog": false,
       "showLabels": false,
-      "fogDensity": 0.00002
+      "fogDensity": 0.000005042016806722689
     },
     "utah-forge-topo-graticule": {
       "color": "#5e5e5e",
       "opacity": 0.78,
       "lineWidth": 5.25,
       "graticuleLabelVisible": true,
-      "graticuleLabelSizeM": 26000,
+      "graticuleLabelSizeM": 17500,
       "graticuleLiftM": 228,
       "graticuleEdgeFadeAware": true,
       "graticuleEdgeFadeStrength": 1,
@@ -185,18 +185,19 @@
       "graticuleEdgeLineWidth": 9.35,
       "graticuleEdgeLabelColor": "#d6d6d6",
       "graticuleEdgeLabelVisible": true,
-      "graticuleEdgeLabelOffsetM": 31000,
+      "graticuleEdgeLabelOffsetM": 47000,
       "graticuleEdgeLabelGapM": -32000,
       "affectedByFog": false,
       "showLabels": false,
-      "fogDensity": 0.00002,
+      "fogDensity": 0.000005042016806722689,
       "graticulePerspectiveLineWidth": false,
       "graticuleRibbonMode": true,
       "graticuleRibbonWidthM": 400,
       "graticuleLeaderBlendEnabled": true,
       "topoSectionable": true,
       "graticuleMinorOpacity": 0.25,
-      "graticuleRibbonBrightness": 0.5
+      "graticuleRibbonBrightness": 0.5,
+      "publicSurfaceClipEnabled": false
     },
     "transport-roads": {
       "color": "#5a4f3d",
@@ -204,7 +205,8 @@
       "lineWidth": 2.1,
       "affectedByFog": false,
       "showLabels": false,
-      "fogDensity": 0.00002
+      "fogDensity": 0.000005042016806722689,
+      "publicSurfaceClipEnabled": false
     },
     "hydrography-streams": {
       "color": "#3d9db8",
@@ -212,7 +214,8 @@
       "lineWidth": 1.05,
       "affectedByFog": false,
       "showLabels": false,
-      "fogDensity": 0.00002
+      "fogDensity": 0.000005042016806722689,
+      "publicSurfaceClipEnabled": false
     },
     "hydrography-lakes": {
       "color": "#385a65",
@@ -222,7 +225,8 @@
       "lineWidth": 1.8,
       "affectedByFog": false,
       "showLabels": false,
-      "fogDensity": 0.00002
+      "fogDensity": 0.000005042016806722689,
+      "publicSurfaceClipEnabled": false
     },
     "utah-forge-mt-stations": {
       "color": "#6f6767",
@@ -561,7 +565,7 @@
           "legendVisible": true,
           "axis": "x",
           "plane": {
-            "enabled": true,
+            "enabled": false,
             "positionM": -5753.338077166321,
             "invert": false
           },
@@ -622,9 +626,10 @@
   },
   "defaultVisibleLayers": [
     "utah-forge-site-boundary",
-    "terrain",
     "utah-forge-phase3-demo-boreholes",
-    "utah-forge-mt-resistivity-full-density"
+    "utah-forge-mt-resistivity-full-density",
+    "utah-forge-topo-graticule",
+    "terrain"
   ],
   "scene": {
     "background": "#383838",
@@ -633,13 +638,14 @@
     "shadows": false,
     "sun": {
       "azimuth": 284,
-      "elevation": 29,
+      "elevation": 1,
       "lockToCamera": false
     },
     "fog": {
       "enabled": true,
-      "color": "#383838",
-      "density": 0.00008
+      "color": "#e82626",
+      "density": 0.000072,
+      "lightModeColor": "#b5b5b5"
     },
     "topoDetails": {
       "distanceFadeNear": 60000,
@@ -648,7 +654,7 @@
       "farOpacity": 0.42
     },
     "camera": {
-      "fov": 57
+      "fov": 70
     },
     "lighting": {
       "enabled": true,
@@ -708,9 +714,9 @@
         "#53675c",
         "#f1eee4"
       ],
-      "hillshadeIntensity": 0.86,
+      "hillshadeIntensity": 0.75,
       "rockHueVariance": 0,
-      "shadowSharpness": 0.34,
+      "shadowSharpness": 0.12,
       "facetStrength": 0.04,
       "edgeFadeDistanceM": 10000,
       "edgeFadeShape": "rounded-square",
@@ -748,8 +754,8 @@
         {
           "id": "naip-2024-aerial",
           "label": "NAIP 2024 Aerial Image",
-          "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp",
-          "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp",
+          "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=9cf80fbd86236267",
+          "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80",
           "textureBudget": 4096,
           "format": "webp",
           "hasAlpha": true,
@@ -789,10 +795,10 @@
           ]
         }
       ],
-      "orthoPhotoTextureBudget": 4096,
-      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp",
-      "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp",
-      "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp",
+      "orthoPhotoTextureBudget": 8192,
+      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80",
+      "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=9cf80fbd86236267",
+      "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80",
       "orthoPhotoBounds": [
         229069.2,
         4144854,
@@ -852,7 +858,8 @@
       "surfaceElevationReverse": false,
       "edgeTopShine": 0,
       "verticalExaggeration": 3.25,
-      "edgeOutlineEnabled": true
+      "edgeOutlineEnabled": true,
+      "fogGradientCurve": 0.75
     },
     "gui": {
       "overlay": {
@@ -1013,9 +1020,10 @@
         "pillTextInsetPx": 25,
         "containerGapPx": 21,
         "pageListIndentPx": 41,
-        "containerBodyIndentPx": 28,
+        "containerBodyIndentPx": 14,
         "scrollEndPaddingPx": 6,
-        "saveFooterGapPx": 9
+        "saveFooterGapPx": 9,
+        "nestedBarHeightPx": 45
       }
     },
     "vignette": {
@@ -1026,11 +1034,15 @@
       "enabled": true
     },
     "cameraFocus": {
-      "durationMs": 3300,
+      "durationMs": 5000,
       "sameTargetZoomFactor": 0.7,
       "scrollSettleMs": 480,
-      "pulsePillMs": 720
-    }
+      "pulsePillMs": 720,
+      "fitPaddingPx": 725,
+      "revealScrollBehavior": "auto"
+    },
+    "lightMode": false,
+    "lightModeBackground": "#d4d4d4"
   },
   "customRenderPresets": [
     {
@@ -1695,12 +1707,13 @@
         "background": "#383838",
         "fog": {
           "enabled": true,
-          "color": "#383838",
-          "density": 0.00008
+          "color": "#e82626",
+          "density": 0.000072,
+          "lightModeColor": "#b5b5b5"
         },
         "sun": {
           "azimuth": 284,
-          "elevation": 29,
+          "elevation": 1,
           "lockToCamera": false
         },
         "lighting": {
@@ -1756,9 +1769,9 @@
             "#93d66b",
             "#fff24d"
           ],
-          "hillshadeIntensity": 0.86,
+          "hillshadeIntensity": 0.75,
           "rockHueVariance": 0,
-          "shadowSharpness": 0.34,
+          "shadowSharpness": 0.12,
           "facetStrength": 0.04,
           "edgeFadeDistanceM": 15000,
           "edgeFadeShape": "rounded-square",
@@ -1839,8 +1852,8 @@
             {
               "id": "naip-2024-aerial",
               "label": "NAIP 2024 Aerial Image",
-              "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp",
-              "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp",
+              "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=9cf80fbd86236267",
+              "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80",
               "textureBudget": 4096,
               "format": "webp",
               "hasAlpha": true,
@@ -1879,7 +1892,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "fogGradientCurve": 0.75
         },
         "topoDetails": {
           "distanceFadeNear": 60000,
@@ -2060,11 +2074,13 @@
             "pillTextInsetPx": 25,
             "containerGapPx": 21,
             "pageListIndentPx": 41,
-            "containerBodyIndentPx": 28,
+            "containerBodyIndentPx": 14,
             "scrollEndPaddingPx": 6,
-            "saveFooterGapPx": 9
+            "saveFooterGapPx": 9,
+            "nestedBarHeightPx": 45
           }
-        }
+        },
+        "lightMode": false
       },
       "layerStylePatchesByLayerId": {
         "utah-forge-phase3-working-area": {
@@ -2089,16 +2105,18 @@
           "opacity": 0.78,
           "lineWidth": 2.1,
           "affectedByFog": false,
-          "fogDensity": 0.00002,
-          "showLabels": false
+          "fogDensity": 0.000005042016806722689,
+          "showLabels": false,
+          "publicSurfaceClipEnabled": false
         },
         "hydrography-streams": {
           "color": "#3d9db8",
           "opacity": 0.78,
           "lineWidth": 1.05,
           "affectedByFog": false,
-          "fogDensity": 0.00002,
-          "showLabels": false
+          "fogDensity": 0.000005042016806722689,
+          "showLabels": false,
+          "publicSurfaceClipEnabled": false
         },
         "hydrography-lakes": {
           "color": "#385a65",
@@ -2107,12 +2125,16 @@
           "opacity": 0.78,
           "lineWidth": 1.8,
           "affectedByFog": false,
-          "fogDensity": 0.00002,
-          "showLabels": false
+          "fogDensity": 0.000005042016806722689,
+          "showLabels": false,
+          "publicSurfaceClipEnabled": false
         },
         "terrain": {
           "opacity": 1,
-          "meshSurfaceLiftM": -3125
+          "meshSurfaceLiftM": -3125,
+          "affectedByFog": false,
+          "fogDensity": 0.000005042016806722689,
+          "publicSurfaceClipEnabled": false
         },
         "utah-forge-mt-resistivity-slices": {
           "sectionIsoEnabled": true,
@@ -2218,7 +2240,7 @@
               "legendVisible": true,
               "axis": "x",
               "plane": {
-                "enabled": true,
+                "enabled": false,
                 "positionM": -5753.338077166321,
                 "invert": false
               },
@@ -2281,7 +2303,11 @@
           "topoSectionable": true,
           "graticuleMinorOpacity": 0.25,
           "graticuleRibbonBrightness": 0.5,
-          "graticuleLabelSizeM": 26000
+          "graticuleLabelSizeM": 17500,
+          "affectedByFog": false,
+          "fogDensity": 0.000005042016806722689,
+          "graticuleEdgeLabelOffsetM": 47000,
+          "publicSurfaceClipEnabled": false
         },
         "utah-forge-phase3-demo-boreholes": {
           "demoBoreholeBlock": {

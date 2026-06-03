@@ -839,6 +839,7 @@ export interface EditorChromeSettings {
   pageListIndentPx?: number;
   scrollEndPaddingPx?: number;
   saveFooterGapPx?: number;
+  saveIconSizePx?: number;
   sliderTrackHeightPx?: number;
   sliderThumbSizePx?: number;
 }
@@ -905,10 +906,11 @@ export type RenderPresetId =
 // ignores the rest. Add new fields here as polish needs them without
 // touching the loader.
 export interface SceneProperties {
-  // Renderer clear color and the universal "fade to" color. Fog dissolves
-  // terrain into this same value, so the eye never lands on a hard edge
-  // (top, sides, distance, terrain-tile boundary all fade to one tone).
+  // Renderer clear color for the dark/default scene mode.
   background?: string;
+  // Renderer clear color for light scene mode. When absent, light mode uses
+  // its runtime neutral default.
+  lightModeBackground?: string;
 
   // Sun direction (still required -- drives the key light and terrain
   // hillshade). Sky-shader visuals are gone; this is purely geometric.
@@ -920,7 +922,12 @@ export interface SceneProperties {
 
   // Exponential fog (FogExp2) -- soft falloff. Density tuned so the
   // farthest visible terrain dissolves before the tile edge.
-  fog?: { enabled?: boolean; color?: string; density?: number };
+  fog?: {
+    enabled?: boolean;
+    color?: string;
+    lightModeColor?: string;
+    density?: number;
+  };
   shadows?: boolean;
 
   // Global camera treatment. Page poses still own position/target/up; this

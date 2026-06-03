@@ -5,7 +5,6 @@ import {
   nestedControlRowStyle,
   nestedDetailsStyle,
   nestedFieldLabelStyle,
-  sliderNumberReadoutStyle,
   styleBoolean,
   styleNumber,
   type LayerStyleSetter,
@@ -203,7 +202,6 @@ export function MtVolumeControls({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>{opacity.toFixed(2)}</span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Density</label>
@@ -226,7 +224,6 @@ export function MtVolumeControls({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>{density.toFixed(2)}</span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Samples</label>
@@ -249,9 +246,6 @@ export function MtVolumeControls({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {sampleSteps.toFixed(0)}
-            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Transfer</label>
@@ -320,9 +314,6 @@ export function MtVolumeControls({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {thresholdMin.toFixed(2)}
-            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Max log10</label>
@@ -349,9 +340,6 @@ export function MtVolumeControls({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {thresholdMax.toFixed(2)}
-            </span>
           </div>
         </div>
       </details>

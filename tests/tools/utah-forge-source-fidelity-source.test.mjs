@@ -102,6 +102,375 @@ test("seismic prep script derives product resolution instead of applying global 
   assert.match(source, /source_aligned_volume_shape|volume_shape_for_product/);
 });
 
+test("seismic prep script parses vertical datum from source headers", () => {
+  const source = readText("prep", "build_utah_forge_seismic_browser.py");
+
+  assert.match(source, /parsed_datum_m/);
+  assert.match(source, /DATUM\\s\*:/);
+  assert.doesNotMatch(
+    source,
+    /if\s+"302"\s+in\s+name:\s*\n\s*return\s+2100\.0/,
+    "seismic datum must not be inferred from Line 302 product naming",
+  );
+  assert.match(source, /SEISMIC_REFERENCE_DATUM_M\s*=\s*1800\.0/);
+});
+
+test("seismic navigation import uses declared CRS transform before scene-origin subtraction", () => {
+  const source = readText("prep", "build_utah_forge_seismic_browser.py");
+  const registrationHelper = readText("prep", "geosee_registration.py");
+
+  assert.match(source, /parse_sp1\(path:\s*Path,\s*source_crs:\s*str\)/);
+  assert.match(source, /source_to_scene\(easting,\s*northing,\s*elevation,\s*source_crs\)/);
+  assert.doesNotMatch(source, /from pyproj import Transformer/);
+  assert.doesNotMatch(source, /easting\s*-\s*SCENE_ORIGIN_E/);
+  assert.doesNotMatch(source, /northing\s*-\s*SCENE_ORIGIN_N/);
+  assert.match(registrationHelper, /Transformer\.from_crs/);
+  assert.match(registrationHelper, /require_source_crs/);
+  assert.match(registrationHelper, /project_easting_m - frame\.origin_easting_m/);
+});
+
+test("legacy seismic fallback lines cannot claim precise registration", () => {
+  const source = readText("prep", "build_utah_forge_seismic_browser.py");
+  const demoRecipeSource = readText("prep", "build_utah_forge_seismic_demo_recipes.mjs");
+  const manifest = readJson(
+    "projects",
+    "utah-forge",
+    "data",
+    "geosee_processed",
+    "utah_forge_phase_3",
+    "seismic_analysis",
+    "browser",
+    "seismic_manifest.json",
+  );
+
+  assert.match(source, /navigationSource/);
+  assert.match(source, /placementAccuracy/);
+  assert.match(source, /canClaimPreciseRegistration/);
+  assert.match(source, /Approximate legacy line placement/);
+  assert.match(demoRecipeSource, /approximate reference section curtains/);
+  assert.doesNotMatch(demoRecipeSource, /Legacy lines L5 and L11 as georeferenced/);
+
+  const legacyProducts = manifest.products.filter(
+    (product) =>
+      product.surveyKind === "legacy-2d" ||
+      /legacy-l(?:5|11)|line-l(?:5|11)/i.test(product.id),
+  );
+  assert.ok(legacyProducts.length > 0, "legacy L5/L11 products should exist");
+  for (const product of legacyProducts) {
+    assert.equal(product.navigationPlacement?.navigationSource, "fallback", product.id);
+    assert.equal(product.navigationPlacement?.placementAccuracy, "approximate", product.id);
+    assert.equal(product.navigationPlacement?.canClaimPreciseRegistration, false, product.id);
+    assert.match(product.navigationPlacement?.statusLabel ?? "", /Approximate legacy line placement/);
+    assert.ok(
+      Array.isArray(product.navigationPlacement?.validationPath) &&
+        product.navigationPlacement.validationPath.length > 0,
+      `${product.id} validation path`,
+    );
+    for (const section of product.sections ?? []) {
+      assert.equal(section.navigationPlacement?.navigationSource, "fallback", `${product.id}/${section.id}`);
+      assert.equal(section.navigationPlacement?.canClaimPreciseRegistration, false, `${product.id}/${section.id}`);
+    }
+  }
+
+  const deliveredProducts = manifest.products.filter(
+    (product) => product.navigationPlacement?.navigationSource === "delivered",
+  );
+  assert.ok(deliveredProducts.length > 0, "delivered-navigation products should exist");
+  for (const product of deliveredProducts) {
+    assert.notEqual(product.navigationPlacement?.placementAccuracy, "validated", product.id);
+    assert.equal(product.navigationPlacement?.canClaimPreciseRegistration, false, product.id);
+  }
+});
+
+test("Utah FORGE runtime layers declare CRS registration status", () => {
+  const project = readJson("projects", "utah-forge", "project.json");
+  assert.equal(project.registrationFrame?.horizontalCrs, "EPSG:26912");
+  assert.equal(project.registrationFrame?.registrationStatus, "unverified");
+
+  const requiredFields = [
+    "horizontalCrs",
+    "verticalDatum",
+    "units",
+    "coordinateBasis",
+    "origin",
+    "rotationDeg",
+    "registrationStatus",
+  ];
+  for (const layer of project.layers) {
+    const registration = layer.metadata?.crsRegistration;
+    assert.ok(registration, `${layer.id} registration metadata`);
+    for (const field of requiredFields) {
+      assert.ok(
+        Object.hasOwn(registration, field),
+        `${layer.id} registration should include ${field}`,
+      );
+    }
+    assert.match(registration.registrationStatus, /^(unverified|validated)$/);
+    if (registration.registrationStatus === "validated") {
+      assert.ok(
+        Array.isArray(registration.controlPoints) &&
+          registration.controlPoints.length > 0,
+        `${layer.id} validated registration requires control points`,
+      );
+    }
+  }
+});
+
+test("Utah FORGE Bore Holes container keeps priority records honest", () => {
+  const project = readJson("projects", "utah-forge", "project.json");
+  const manifest = readJson(
+    "projects",
+    "utah-forge",
+    "data",
+    "geosee_processed",
+    "utah_forge_phase_3",
+    "demo_boreholes",
+    "phase3_demo_boreholes.json",
+  );
+  const layerPanelConfig = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "layerPanelConfig.ts",
+  );
+  const layerPanel = readText("src", "editor", "LayerPanel.tsx");
+  const siteDetailsPanel = readText("src", "editor", "SiteDetailsPanel.tsx");
+  const boreholeGenerator = readText("tools", "generate-utah-forge-demo-boreholes.py");
+  const boreholeLoader = readText("src", "loaders", "loadUtahForgeDemoBoreholes.ts");
+  const siteDetailStyles = readText("src", "scene", "styles", "siteDetailStyles.ts");
+
+  const siteDetailsBlock = layerPanelConfig.match(
+    /title:\s*"Site Details",\s*ids:\s*\[([\s\S]*?)\],/,
+  );
+  assert.ok(siteDetailsBlock, "Site Details group should exist");
+  assert.doesNotMatch(
+    siteDetailsBlock[1],
+    /UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID/,
+    "demo boreholes should not remain mixed into Site Details",
+  );
+  assert.match(
+    layerPanelConfig,
+    /title:\s*"Bore Holes",\s*ids:\s*\[UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID\]/,
+    "Forge should expose a Bore Holes container",
+  );
+  assert.match(layerPanel, /boreholePriorityRegistry/);
+  assert.match(layerPanel, /Source rows:/);
+  assert.match(siteDetailsPanel, /Source Locations/);
+  assert.match(siteDetailsPanel, /SOURCE_LOCATION_MODE_OPTIONS/);
+  assert.match(siteDetailsPanel, /Source visibility/);
+  assert.match(siteDetailsPanel, /updateSourceLocationItem/);
+  assert.match(siteDetailsPanel, /Top toroid/);
+  assert.match(boreholeGenerator, /build_priority_registry/);
+  assert.match(boreholeGenerator, /58-32-WELL/);
+  assert.match(boreholeGenerator, /78B-32-WELL/);
+  assert.match(boreholeGenerator, /BOR1/);
+  assert.match(boreholeLoader, /addPrioritySourceMarkers/);
+  assert.match(boreholeLoader, /demoBoreholeSourceTraceRoot/);
+  assert.match(boreholeLoader, /demoBoreholeSourceTrace/);
+  assert.match(boreholeLoader, /demoBoreholeSourceLine/);
+  assert.match(boreholeLoader, /demoBoreholeSourceTopRing/);
+  assert.match(boreholeLoader, /CylinderGeometry/);
+  assert.match(boreholeLoader, /SphereGeometry/);
+  assert.match(boreholeLoader, /TorusGeometry/);
+  assert.match(boreholeLoader, /source-location-marker-not-trajectory/);
+  assert.match(siteDetailStyles, /resolveDemoBoreholeSourceLocationStyle/);
+  assert.match(siteDetailStyles, /resolveDemoBoreholeSourceLocationItemStyle/);
+  assert.match(siteDetailStyles, /demoBoreholeSourceTrace/);
+  assert.match(siteDetailStyles, /demoBoreholeSourceTopRing/);
+
+  const boreholeLayer = project.layers.find(
+    (layer) => layer.id === "utah-forge-phase3-demo-boreholes",
+  );
+  assert.ok(boreholeLayer, "demo borehole layer should exist");
+  const projectRegistry = boreholeLayer.metadata?.demoBoreholes?.priorityRegistry;
+  const manifestRegistry = manifest.priorityRegistry;
+  assert.deepEqual(projectRegistry, manifestRegistry, "project and manifest registries should match");
+
+  const expectedIds = [
+    "58-32",
+    "16A(78)-32",
+    "78B-32",
+    "16B",
+    "Acord-1",
+    "FDST",
+    "unnamed-possible-seismic-monitoring-well",
+  ];
+  assert.deepEqual(
+    manifestRegistry.map((entry) => entry.id),
+    expectedIds,
+    "priority registry should preserve the requested order",
+  );
+  assert.deepEqual(
+    manifestRegistry.map((entry) => entry.displayLabel),
+    [
+      "58-32: core characterization and seismic/geologic anchor",
+      "16A (78)-32: primary injection/source well for stimulation and EM monitoring.",
+      "78B-32: key observation well for borehole EM/VEMP measurements.",
+      "16B: production well, relevant to injection/production pair context.",
+      "Acord-1: supporting mapped reference well.",
+      "FDST/ FORGE test drill site: supporting mapped reference site.",
+      "Unnamed: possible seismic monitoring well, low priority unless ID is recovered.",
+    ],
+    "Bore Holes list labels should match the requested demo wording",
+  );
+
+  const renderedWellIds = new Set(manifest.wells.map((well) => well.id));
+  assert.deepEqual(
+    [...renderedWellIds].sort(),
+    ["16A(78)-32", "16B(78)-32"],
+    "only sourced 16A/16B trajectories should be rendered in this pass",
+  );
+
+  for (const entry of manifestRegistry) {
+    for (const field of [
+      "sourceStatus",
+      "renderStatus",
+      "registrationStatus",
+      "claimStatus",
+      "linkedLayerId",
+      "aliases",
+      "sourceRecordIds",
+      "notes",
+    ]) {
+      assert.ok(Object.hasOwn(entry, field), `${entry.id} should include ${field}`);
+    }
+
+    if (entry.renderStatus !== "trajectory-rendered") {
+      assert.equal(entry.renderStatus, "not-rendered", entry.id);
+      assert.equal(entry.linkedLayerId, null, entry.id);
+      assert.ok(
+        !renderedWellIds.has(entry.id) &&
+          !entry.aliases.some((alias) => renderedWellIds.has(alias)),
+        `${entry.id} should not silently map to fabricated geometry`,
+      );
+    } else {
+      assert.equal(
+        entry.linkedLayerId,
+        "utah-forge-phase3-demo-boreholes",
+        entry.id,
+      );
+    }
+  }
+
+  const entriesById = new Map(manifestRegistry.map((entry) => [entry.id, entry]));
+  assert.deepEqual(entriesById.get("58-32")?.sourceRecordIds, [
+    "58-32-WELL",
+    "58-32-NEC",
+    "58-32-NWC",
+    "58-32-SEC",
+    "58-32-SWC",
+  ]);
+  assert.equal(entriesById.get("58-32")?.sourceLocation?.featureCode, "WELL");
+  assert.equal(
+    entriesById.get("58-32")?.claimStatus,
+    "claim-safe-source-location-only",
+  );
+  assert.deepEqual(entriesById.get("78B-32")?.sourceRecordIds, [
+    "78B-32-WELL",
+    "78B-32-NEC",
+    "78B-32-NWC",
+    "78B-32-SEC",
+    "78B-32-SWC",
+  ]);
+  assert.equal(entriesById.get("78B-32")?.sourceLocation?.featureCode, "WELL");
+  assert.equal(
+    entriesById.get("78B-32")?.claimStatus,
+    "claim-safe-source-location-only",
+  );
+  assert.deepEqual(entriesById.get("16A(78)-32")?.sourceRecordIds, [
+    "16A-32-WELL",
+    "16A-32-NEC",
+    "16A-32-NWC",
+    "16A-32-SEC",
+    "16A-32-SWC",
+  ]);
+  assert.deepEqual(entriesById.get("16B")?.sourceRecordIds, [
+    "16B(78)-32 Final Survey Report.xlsx",
+  ]);
+  assert.deepEqual(entriesById.get("Acord-1")?.sourceRecordIds, []);
+  assert.equal(entriesById.get("Acord-1")?.sourceStatus, "not-found-in-active-source");
+  assert.deepEqual(entriesById.get("FDST")?.sourceRecordIds, []);
+  assert.equal(entriesById.get("FDST")?.sourceStatus, "not-found-in-active-source");
+  assert.deepEqual(
+    entriesById
+      .get("unnamed-possible-seismic-monitoring-well")
+      ?.sourceCandidates?.map((candidate) => candidate.id),
+    ["BOR1", "BOR2", "BOR3"],
+  );
+});
+
+test("seismic manifest records datum-aligned vertical metadata", () => {
+  const manifest = readJson(
+    "projects",
+    "utah-forge",
+    "data",
+    "geosee_processed",
+    "utah_forge_phase_3",
+    "seismic_analysis",
+    "browser",
+    "seismic_manifest.json",
+  );
+
+  assert.equal(manifest.verticalReference?.referenceDatumM, 1800);
+  assert.match(manifest.verticalReference?.transform ?? "", /datumM - sample/);
+  assert.equal(
+    manifest.verticalReference?.calibration?.expectedDepthConversionErrorM,
+    20,
+  );
+  const depthProducts = manifest.products.filter(
+    (product) => product.domainKind === "depth",
+  );
+  assert.ok(depthProducts.length > 0, "depth-domain seismic products should exist");
+  for (const product of depthProducts) {
+    assert.equal(product.datumM, 1800, `${product.id} depth datum`);
+    assert.equal(product.verticalReference?.sourceDatumM, product.datumM);
+    for (const section of product.sections ?? []) {
+      assert.equal(section.datumM, product.datumM, `${product.id}/${section.id} datum`);
+      assert.equal(
+        section.verticalReference?.sourceDatumM,
+        product.datumM,
+        `${product.id}/${section.id} vertical reference`,
+      );
+    }
+  }
+
+  const velocityProducts = manifest.products.filter(
+    (product) => product.productKind === "velocity",
+  );
+  assert.ok(velocityProducts.length > 0, "velocity seismic products should exist");
+  for (const product of velocityProducts) {
+    assert.deepEqual(
+      product.valueEncoding?.displayRangeMPerS,
+      [2000, 5000],
+      `${product.id} velocity display scale`,
+    );
+  }
+});
+
+test("working-area boundary uses the seismic reference datum top", () => {
+  for (const filePath of [
+    ["src", "projectModules", "utahForge", "workingAreaFocus.ts"],
+    ["src", "scene", "layerLoaders.ts"],
+    [
+      "projects",
+      "utah-forge",
+      "data",
+      "geosee_processed",
+      "utah_forge_phase_3",
+      "site_container",
+      "phase3_required_working_area_container.geojson",
+    ],
+    ["projects", "utah-forge", "project.json"],
+  ]) {
+    const source = readText(...filePath);
+    assert.doesNotMatch(
+      source,
+      /2045\.3/,
+      `${filePath.join("/")} must not use the old navigation-elevation top`,
+    );
+  }
+});
+
 test("3D seismic browser products are capped for interactive source-fidelity rendering", () => {
   const manifest = readJson(
     "projects",

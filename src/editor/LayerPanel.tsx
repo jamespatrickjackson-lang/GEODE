@@ -139,6 +139,81 @@ import {
   isTopoMapSurfaceLayer,
 } from "../topoMap/settings";
 
+interface BoreholePriorityEntry {
+  id?: unknown;
+  displayLabel?: unknown;
+  label?: unknown;
+  sourceStatus?: unknown;
+  renderStatus?: unknown;
+  claimStatus?: unknown;
+  sourceRecordIds?: unknown;
+  sourceLocation?: unknown;
+  sourceCandidates?: unknown;
+}
+
+function metadataString(
+  metadata: Record<string, unknown>,
+  key: string,
+  fallback = "",
+): string {
+  const value = metadata[key];
+  return typeof value === "string" ? value : fallback;
+}
+
+function boreholePriorityRegistry(
+  metadata: Record<string, unknown>,
+): BoreholePriorityEntry[] {
+  const demoBoreholes = metadata.demoBoreholes;
+  if (!demoBoreholes || typeof demoBoreholes !== "object") return [];
+  const registry = (demoBoreholes as { priorityRegistry?: unknown })
+    .priorityRegistry;
+  return Array.isArray(registry) ? registry : [];
+}
+
+function boreholeEntryLabel(entry: BoreholePriorityEntry): string {
+  if (typeof entry.displayLabel === "string" && entry.displayLabel.trim()) {
+    return entry.displayLabel;
+  }
+  if (typeof entry.label === "string" && entry.label.trim()) {
+    return entry.label;
+  }
+  return typeof entry.id === "string" ? entry.id : "Bore hole";
+}
+
+function boreholeEntryText(entry: BoreholePriorityEntry, key: string): string {
+  const value = entry[key as keyof BoreholePriorityEntry];
+  return typeof value === "string" ? value : "";
+}
+
+function boreholeSourceRecordLabel(entry: BoreholePriorityEntry): string {
+  if (Array.isArray(entry.sourceRecordIds) && entry.sourceRecordIds.length > 0) {
+    return entry.sourceRecordIds
+      .filter((value): value is string => typeof value === "string")
+      .join(", ");
+  }
+  const location = entry.sourceLocation;
+  if (
+    location &&
+    typeof location === "object" &&
+    typeof (location as { id?: unknown }).id === "string"
+  ) {
+    return (location as { id: string }).id;
+  }
+  if (Array.isArray(entry.sourceCandidates) && entry.sourceCandidates.length > 0) {
+    return entry.sourceCandidates
+      .map((candidate) =>
+        candidate &&
+        typeof candidate === "object" &&
+        typeof (candidate as { id?: unknown }).id === "string"
+          ? (candidate as { id: string }).id
+          : "",
+      )
+      .filter(Boolean)
+      .join(", ");
+  }
+  return "none";
+}
+
 const layerVisibilityButtonBaseStyle = {
   ...panelStyles.iconButton,
   width: 24,
@@ -282,7 +357,8 @@ export function LayerPanel({
   };
 
   const renderLayer = (layer: ProjectLayerSpec, index = 0) => {
-    const meta = layer.metadata as Record<string, string | undefined>;
+    const meta = layer.metadata as Record<string, unknown>;
+    const boreholeEntries = boreholePriorityRegistry(meta);
     const envStyle = currentPageEnvironment.layerStyles[layer.id] ?? {};
     const envVisible = currentPageEnvironment.defaultVisibleLayers.includes(
       layer.id,
@@ -2554,6 +2630,68 @@ export function LayerPanel({
                 </details>
               ) : null}
 
+              {boreholeEntries.length > 0 ? (
+                <details style={nestedDetailsStyle} open>
+                  <summary style={panelStyles.summary}>Bore Holes</summary>
+                  <div style={detailsContentStyle}>
+                    {boreholeEntries.map((entry, entryIndex) => {
+                      const key =
+                        typeof entry.id === "string"
+                          ? entry.id
+                          : `borehole-${entryIndex}`;
+                      return (
+                        <div
+                          key={key}
+                          style={{
+                            padding: "8px 0",
+                            borderTop:
+                              entryIndex === 0
+                                ? "none"
+                                : "1px solid rgba(255,255,255,0.08)",
+                          }}
+                        >
+                          <div
+                            style={{
+                              color: vibrancyLabel,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              lineHeight: 1.35,
+                            }}
+                          >
+                            {boreholeEntryLabel(entry)}
+                          </div>
+                          <div
+                            style={{
+                              color: vibrancySecondaryLabel,
+                              fontSize: 11,
+                              lineHeight: 1.35,
+                              marginTop: 4,
+                            }}
+                          >
+                            Source: {boreholeEntryText(entry, "sourceStatus") ||
+                              "unknown"}{" "}
+                            | Render: {boreholeEntryText(entry, "renderStatus") ||
+                              "unknown"}{" "}
+                            | Claim: {boreholeEntryText(entry, "claimStatus") ||
+                              "unknown"}
+                          </div>
+                          <div
+                            style={{
+                              color: vibrancyTertiaryLabel,
+                              fontSize: 11,
+                              lineHeight: 1.35,
+                              marginTop: 3,
+                            }}
+                          >
+                            Source rows: {boreholeSourceRecordLabel(entry)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </details>
+              ) : null}
+
               <details style={nestedDetailsStyle}>
                 <summary style={panelStyles.summary}>Provenance</summary>
                 <div style={detailsContentStyle}>
@@ -2561,7 +2699,7 @@ export function LayerPanel({
                     <label style={nestedFieldLabelStyle}>Source file</label>
                     <input
                       type="text"
-                      value={meta.sourceFile ?? ""}
+                      value={metadataString(meta, "sourceFile")}
                       onChange={(e) =>
                         setLayerProvenance(layer.id, {
                           sourceFile: e.target.value,
@@ -2574,7 +2712,7 @@ export function LayerPanel({
                     <label style={nestedFieldLabelStyle}>Source date</label>
                     <input
                       type="text"
-                      value={meta.sourceDate ?? ""}
+                      value={metadataString(meta, "sourceDate")}
                       placeholder="YYYY-MM-DD or source range"
                       onChange={(e) =>
                         setLayerProvenance(layer.id, {
@@ -2588,7 +2726,7 @@ export function LayerPanel({
                     <label style={nestedFieldLabelStyle}>Origin</label>
                     <input
                       type="text"
-                      value={meta.sourceOrigin ?? ""}
+                      value={metadataString(meta, "sourceOrigin")}
                       onChange={(e) =>
                         setLayerProvenance(layer.id, {
                           sourceOrigin: e.target.value,
@@ -2600,7 +2738,7 @@ export function LayerPanel({
                   <div style={nestedControlRowStyle}>
                     <label style={nestedFieldLabelStyle}>Classification</label>
                     <select
-                      value={meta.classification ?? "observation"}
+                      value={metadataString(meta, "classification", "observation")}
                       onChange={(e) =>
                         setLayerProvenance(layer.id, {
                           classification: e.target.value,
@@ -2617,7 +2755,7 @@ export function LayerPanel({
                   <div style={nestedControlRowStyle}>
                     <label style={nestedFieldLabelStyle}>Confidentiality</label>
                     <select
-                      value={meta.confidentiality ?? "public"}
+                      value={metadataString(meta, "confidentiality", "public")}
                       onChange={(e) =>
                         setLayerProvenance(layer.id, {
                           confidentiality: e.target.value,

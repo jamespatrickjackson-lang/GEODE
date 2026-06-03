@@ -6,7 +6,6 @@ import {
   nestedControlRowStyle,
   nestedDetailsStyle,
   nestedFieldLabelStyle,
-  sliderNumberReadoutStyle,
   styleBoolean,
   type LayerStyleSetter,
   type PageStyleSetter,
@@ -72,7 +71,6 @@ const frameNumberInputStyle: React.CSSProperties = {
 };
 
 const frameUnitStyle: React.CSSProperties = {
-  ...sliderNumberReadoutStyle,
   width: 24,
 };
 
@@ -1281,9 +1279,6 @@ export function SceneSectionPlanesContainer({
                           } as React.CSSProperties
                         }
                       />
-                      <span style={sliderNumberReadoutStyle}>
-                        {Math.round(position)} m
-                      </span>
                     </div>
                     <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
                       <span style={nestedFieldLabelStyle}>Frame crop</span>
@@ -1904,9 +1899,6 @@ export function SceneSectionPlanesContainer({
                                 }
                                 style={{ minWidth: 0 }}
                               />
-                              <span style={sliderNumberReadoutStyle}>
-                                {opacity.toFixed(2)}
-                              </span>
                             </div>
                           );
                         })}

@@ -530,9 +530,9 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   await expect(page.locator("body")).toContainText("Full-density model");
   await expect(page.locator("canvas")).toHaveCount(1);
 
-  await page.getByRole("button", { name: "FORGE Data" }).click();
+  await page.getByRole("button", { name: "Forge" }).click();
   await openForgeDataEditorContainers(page);
-  await expect(page.locator("body")).toContainText("Public Topo Map");
+  await expect(page.locator("body")).toContainText("Topo");
   await expect(forgeLayerItem(page, "Topo Surface")).toBeVisible();
   await expect(forgeLayerItem(page, "Public roads")).toBeVisible();
   await expect(forgeLayerItem(page, "Public streams and rivers")).toBeVisible();

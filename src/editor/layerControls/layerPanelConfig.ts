@@ -371,10 +371,11 @@ export const SEISMIC_BROWSER_FIELDS = [
 export const UTAH_FORGE_PUBLIC_LAYER_GROUPS = [
   {
     title: "Site Details",
-    ids: [
-      UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
-      UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
-    ],
+    ids: [UTAH_FORGE_SITE_BOUNDARY_LAYER_ID],
+  },
+  {
+    title: "Bore Holes",
+    ids: [UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID],
   },
   {
     title: "Seismic analysis",

@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import type React from "react";
 import {
+  patchDemoBoreholeSourceLocationItemStyle,
+  patchDemoBoreholeSourceLocationStyle,
   patchDemoBoreholeWellStyle,
   patchDemoOrientationBlockStyle,
+  resolveDemoBoreholeSourceLocationItemStyle,
+  resolveDemoBoreholeSourceLocationStyle,
   resolveDemoBoreholeWellStyle,
   resolveDemoOrientationBlockStyle,
   UTAH_FORGE_DEMO_BOREHOLE_WELL_IDS,
@@ -10,6 +14,9 @@ import {
 import type {
   DemoBoreholeLineStyle,
   DemoBoreholePathTreatment,
+  DemoBoreholeSourceLocationItemStyle,
+  DemoBoreholeSourceLocationMode,
+  DemoBoreholeSourceLocationStyle,
   DemoBoreholeWellStyle,
   DemoOrientationBlockStyle,
   EditableStyle,
@@ -46,6 +53,68 @@ const PATH_TREATMENT_OPTIONS = [
   value: DemoBoreholePathTreatment;
   label: string;
 }[];
+
+const SOURCE_LOCATION_MODE_OPTIONS = [
+  { value: "rounded-trace", label: "Rounded trace" },
+  { value: "line", label: "Line trace" },
+  { value: "pin", label: "Pin trace" },
+  { value: "crosshair", label: "Crosshair" },
+  { value: "hidden", label: "Hidden" },
+] as const satisfies readonly {
+  value: DemoBoreholeSourceLocationMode;
+  label: string;
+}[];
+
+interface BoreholePriorityRegistryEntry {
+  id?: unknown;
+  label?: unknown;
+  displayLabel?: unknown;
+  renderStatus?: unknown;
+  sourceLocation?: { id?: unknown } | null;
+  sourceCandidates?: { id?: unknown }[];
+}
+
+interface SourceLocationVisibilityRow {
+  id: string;
+  label: string;
+}
+
+function sourceLocationVisibilityRows(
+  layer?: ProjectLayerSpec,
+): SourceLocationVisibilityRow[] {
+  const registry = (
+    layer?.metadata as
+      | {
+          demoBoreholes?: {
+            priorityRegistry?: BoreholePriorityRegistryEntry[];
+          };
+        }
+      | undefined
+  )?.demoBoreholes?.priorityRegistry;
+  if (!Array.isArray(registry)) return [];
+  const rows: SourceLocationVisibilityRow[] = [];
+  for (const entry of registry) {
+    if (entry.renderStatus === "trajectory-rendered") continue;
+    const baseLabel =
+      typeof entry.label === "string" && entry.label.trim()
+        ? entry.label
+        : typeof entry.id === "string"
+          ? entry.id
+          : "Source";
+    const sourceLocationId = entry.sourceLocation?.id;
+    if (typeof sourceLocationId === "string" && sourceLocationId.trim()) {
+      rows.push({ id: sourceLocationId, label: baseLabel });
+    }
+    for (const candidate of entry.sourceCandidates ?? []) {
+      if (typeof candidate.id !== "string" || !candidate.id.trim()) continue;
+      rows.push({
+        id: candidate.id,
+        label: `${baseLabel} ${candidate.id}`,
+      });
+    }
+  }
+  return rows;
+}
 
 interface SiteDetailsPanelProps {
   boreholeLayer?: ProjectLayerSpec;
@@ -298,10 +367,27 @@ export function SiteDetailsPanel({
   const updateWell = (wellId: string, patch: DemoBoreholeWellStyle) => {
     applyPatch(patchDemoBoreholeWellStyle(style, wellId, patch));
   };
+  const updateSourceLocations = (patch: DemoBoreholeSourceLocationStyle) => {
+    applyPatch(patchDemoBoreholeSourceLocationStyle(style, patch));
+  };
+  const updateSourceLocationItem = (
+    sourceLocationId: string,
+    patch: DemoBoreholeSourceLocationItemStyle,
+  ) => {
+    applyPatch(
+      patchDemoBoreholeSourceLocationItemStyle(
+        style,
+        sourceLocationId,
+        patch,
+      ),
+    );
+  };
   const updateBlock = (patch: DemoOrientationBlockStyle) => {
     applyPatch(patchDemoOrientationBlockStyle(style, patch));
   };
   const block = resolveDemoOrientationBlockStyle(style);
+  const sourceLocations = resolveDemoBoreholeSourceLocationStyle(style);
+  const sourceLocationRows = sourceLocationVisibilityRows(boreholeLayer);
   const siteLabelRows = UTAH_FORGE_DEMO_BOREHOLE_WELL_IDS.flatMap((wellId) => {
     const well = resolveDemoBoreholeWellStyle(style, wellId);
     const keyBase = wellId.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -379,6 +465,173 @@ export function SiteDetailsPanel({
                   />
                 </div>
               ))}
+            </div>
+          </AutoOpenDetails>
+          <AutoOpenDetails
+            summary="Source Locations"
+            openSignal={
+              boreholeLayerActive && sourceLocations.visible
+                ? `${activeSignalPrefix ?? "site-details"}:source-locations`
+                : undefined
+            }
+            defaultOpen
+          >
+            <div style={detailsContentStyle}>
+              <SiteDetailsBooleanRow
+                label="Visible"
+                checked={sourceLocations.visible}
+                disabled={disabled}
+                onChange={(visible) => updateSourceLocations({ visible })}
+              />
+              <SiteDetailsSelectRow
+                label="Shape"
+                value={sourceLocations.mode}
+                options={SOURCE_LOCATION_MODE_OPTIONS}
+                disabled={disabled}
+                onChange={(mode) => updateSourceLocations({ mode })}
+              />
+              {sourceLocationRows.length > 0 ? (
+                <AutoOpenDetails summary="Source visibility" defaultOpen>
+                  <div style={detailsContentStyle}>
+                    {sourceLocationRows.map((row) => {
+                      const itemStyle =
+                        resolveDemoBoreholeSourceLocationItemStyle(
+                          style,
+                          row.id,
+                        );
+                      return (
+                        <SiteDetailsBooleanRow
+                          key={row.id}
+                          label={row.label}
+                          checked={itemStyle.visible}
+                          disabled={disabled}
+                          onChange={(visible) =>
+                            updateSourceLocationItem(row.id, { visible })
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                </AutoOpenDetails>
+              ) : null}
+              <SiteDetailsColorRow
+                label="Color"
+                value={sourceLocations.color}
+                disabled={disabled}
+                onChange={(color) => updateSourceLocations({ color })}
+              />
+              <SiteDetailsNumberRow
+                label="Opacity"
+                value={sourceLocations.opacity}
+                min={0}
+                max={1}
+                step={0.01}
+                decimals={2}
+                disabled={disabled}
+                onChange={(opacity) => updateSourceLocations({ opacity })}
+              />
+              <SiteDetailsNumberRow
+                label="Diameter"
+                value={sourceLocations.diameterM}
+                min={8}
+                max={400}
+                step={1}
+                decimals={0}
+                disabled={disabled}
+                onChange={(diameterM) => updateSourceLocations({ diameterM })}
+              />
+              <SiteDetailsNumberRow
+                label="Trace length"
+                value={sourceLocations.lengthM}
+                min={50}
+                max={4000}
+                step={25}
+                decimals={0}
+                disabled={disabled}
+                onChange={(lengthM) => updateSourceLocations({ lengthM })}
+              />
+              <SiteDetailsNumberRow
+                label="Line width"
+                value={sourceLocations.lineWidth}
+                min={1}
+                max={28}
+                step={1}
+                decimals={0}
+                disabled={disabled}
+                onChange={(lineWidth) => updateSourceLocations({ lineWidth })}
+              />
+              <SiteDetailsBooleanRow
+                label="Top toroid"
+                checked={sourceLocations.topRingVisible}
+                disabled={disabled}
+                onChange={(topRingVisible) =>
+                  updateSourceLocations({ topRingVisible })
+                }
+              />
+              <SiteDetailsNumberRow
+                label="Toroid radius"
+                value={sourceLocations.topRingRadiusM}
+                min={20}
+                max={1200}
+                step={5}
+                decimals={0}
+                disabled={disabled || !sourceLocations.topRingVisible}
+                onChange={(topRingRadiusM) =>
+                  updateSourceLocations({ topRingRadiusM })
+                }
+              />
+              <SiteDetailsNumberRow
+                label="Toroid tube"
+                value={sourceLocations.topRingTubeM}
+                min={2}
+                max={120}
+                step={1}
+                decimals={0}
+                disabled={disabled || !sourceLocations.topRingVisible}
+                onChange={(topRingTubeM) =>
+                  updateSourceLocations({ topRingTubeM })
+                }
+              />
+              <SiteDetailsColorRow
+                label="Toroid color"
+                value={sourceLocations.topRingColor}
+                disabled={disabled || !sourceLocations.topRingVisible}
+                onChange={(topRingColor) =>
+                  updateSourceLocations({ topRingColor })
+                }
+              />
+              <SiteDetailsNumberRow
+                label="Toroid opacity"
+                value={sourceLocations.topRingOpacity}
+                min={0}
+                max={1}
+                step={0.01}
+                decimals={2}
+                disabled={disabled || !sourceLocations.topRingVisible}
+                onChange={(topRingOpacity) =>
+                  updateSourceLocations({ topRingOpacity })
+                }
+              />
+              <SiteDetailsBooleanRow
+                label="Labels"
+                checked={sourceLocations.labelVisible}
+                disabled={disabled}
+                onChange={(labelVisible) =>
+                  updateSourceLocations({ labelVisible })
+                }
+              />
+              <SiteDetailsNumberRow
+                label="Label lift"
+                value={sourceLocations.labelLiftM}
+                min={-250}
+                max={1000}
+                step={5}
+                decimals={0}
+                disabled={disabled || !sourceLocations.labelVisible}
+                onChange={(labelLiftM) =>
+                  updateSourceLocations({ labelLiftM })
+                }
+              />
             </div>
           </AutoOpenDetails>
           {UTAH_FORGE_DEMO_BOREHOLE_WELL_IDS.map((wellId) => {

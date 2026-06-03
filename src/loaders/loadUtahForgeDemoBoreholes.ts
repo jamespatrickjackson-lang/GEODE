@@ -34,6 +34,28 @@ interface DemoBoreholeWell {
   trajectory: DemoBoreholePoint[];
 }
 
+interface DemoBoreholePriorityEntry {
+  id: string;
+  label?: string;
+  displayLabel?: string;
+  aliases?: string[];
+  priority: number;
+  sourceStatus: string;
+  renderStatus: string;
+  registrationStatus: string;
+  claimStatus: string;
+  linkedLayerId?: string | null;
+  sourceLocation?: DemoBoreholeSourceLocation | null;
+  sourceCandidates?: DemoBoreholeSourceLocation[];
+}
+
+interface DemoBoreholeSourceLocation {
+  id: string;
+  scene: [number, number, number];
+  featureCode?: string;
+  notes?: string;
+}
+
 interface DemoOrientationBlock {
   id: string;
   label: string;
@@ -49,16 +71,24 @@ interface DemoBoreholeManifest {
   classification: string;
   notForEngineeringUse: boolean;
   orientationBlock?: DemoOrientationBlock;
+  priorityRegistry?: DemoBoreholePriorityEntry[];
   wells: DemoBoreholeWell[];
   notes?: string[];
 }
 
+const BORE_HOLES_CATEGORY = "Bore Holes";
 const DEFAULT_PIPE_RADIUS_M = 12;
 const DEFAULT_COLLAR_RADIUS_M = 30;
+const DEFAULT_SOURCE_LOCATION_TRACE_DIAMETER_M = 72;
+const DEFAULT_SOURCE_LOCATION_TRACE_LENGTH_M = 900;
+const DEFAULT_SOURCE_LOCATION_RING_RADIUS_M = 135;
+const DEFAULT_SOURCE_LOCATION_RING_TUBE_M = 12;
+const DEFAULT_SOURCE_LOCATION_CROSSHAIR_LENGTH_M = 320;
 const DEFAULT_TUBE_SEGMENTS_PER_POINT = 1.5;
 const TUBE_RENDER_ORDER = 7.2;
 const LINE_RENDER_ORDER = 7.5;
 const COLLAR_RENDER_ORDER = 7.8;
+const SOURCE_LOCATION_TRACE_RENDER_ORDER = 7.9;
 const BLOCK_RENDER_ORDER = 6.4;
 
 function finiteNumber(value: unknown): value is number {
@@ -183,6 +213,25 @@ function makeTubeMaterial(
   return material;
 }
 
+function makeSourceTraceMaterial(color: string): THREE.MeshStandardMaterial {
+  const material = new THREE.MeshStandardMaterial({
+    color,
+    emissive: color,
+    emissiveIntensity: 0.2,
+    roughness: 0.3,
+    metalness: 0.12,
+    transparent: true,
+    opacity: 0.92,
+    depthWrite: false,
+    depthTest: false,
+    toneMapped: true,
+    fog: true,
+  });
+  material.userData.forceTransparent = true;
+  material.userData.preserveMaterialColor = true;
+  return material;
+}
+
 function makePathLine(points: THREE.Vector3[], color: string): Line2 {
   const geometry = new LineGeometry();
   geometry.setPositions(points.flatMap((point) => [point.x, point.y, point.z]));
@@ -201,6 +250,31 @@ function makePathLine(points: THREE.Vector3[], color: string): Line2 {
   material.userData.preserveMaterialColor = true;
   const line = new Line2(geometry, material);
   line.renderOrder = LINE_RENDER_ORDER;
+  return line;
+}
+
+function makeSourceLocationLine(
+  points: readonly THREE.Vector3[],
+  color: string,
+  linewidth: number,
+): Line2 {
+  const geometry = new LineGeometry();
+  geometry.setPositions(points.flatMap((point) => [point.x, point.y, point.z]));
+  const material = new LineMaterial({
+    color,
+    linewidth,
+    transparent: true,
+    opacity: 0.92,
+    depthWrite: false,
+    depthTest: false,
+    worldUnits: false,
+  });
+  material.resolution.set(window.innerWidth || 1920, window.innerHeight || 1080);
+  material.fog = true;
+  material.userData.forceTransparent = true;
+  material.userData.preserveMaterialColor = true;
+  const line = new Line2(geometry, material);
+  line.renderOrder = SOURCE_LOCATION_TRACE_RENDER_ORDER;
   return line;
 }
 
@@ -262,7 +336,7 @@ function addLabelAnchor(
   name: string,
   displayName: string,
   position: THREE.Vector3,
-  labelRole: "collar" | "toe" | "block",
+  labelRole: "collar" | "toe" | "block" | "source-location",
   ownerId: string,
   liftM = 0,
 ): void {
@@ -278,20 +352,256 @@ function addLabelAnchor(
     demoBoreholeLabelAnchor: true,
     demoBoreholeLabelRole: labelRole,
     demoBoreholeOwnerId: ownerId,
+    demoBoreholeBaseLabelPosition: position.toArray(),
+    demoBoreholeBaseLabelLiftM: liftM,
   };
   group.add(anchor);
 }
 
-function addWell(group: THREE.Group, well: DemoBoreholeWell): void {
+function priorityEntryForWell(
+  well: DemoBoreholeWell,
+  entries?: DemoBoreholePriorityEntry[],
+): DemoBoreholePriorityEntry | null {
+  return (
+    entries?.find(
+      (entry) =>
+        entry.id === well.id ||
+        (Array.isArray(entry.aliases) && entry.aliases.includes(well.id)),
+    ) ?? null
+  );
+}
+
+function boreholeCategoryUserData(entry: DemoBoreholePriorityEntry | null) {
+  return {
+    forgeDataCategory: BORE_HOLES_CATEGORY,
+    boreholePriority: entry?.priority,
+    boreholeClaimStatus: entry?.claimStatus,
+    boreholeRegistrationStatus: entry?.registrationStatus,
+    boreholeRegistryId: entry?.id,
+  };
+}
+
+function sourceLocationColor(entry: DemoBoreholePriorityEntry): string {
+  if (entry.id === "58-32") return "#f6d365";
+  if (entry.id === "78B-32") return "#84e1bc";
+  if (entry.id === "unnamed-possible-seismic-monitoring-well") return "#d5d8e8";
+  return "#f5f7ff";
+}
+
+function shortPriorityLabel(entry: DemoBoreholePriorityEntry): string {
+  if (entry.id === "unnamed-possible-seismic-monitoring-well") return "Unnamed";
+  return entry.label || entry.id;
+}
+
+function addSourceLocationMarker(
+  group: THREE.Group,
+  entry: DemoBoreholePriorityEntry,
+  location: DemoBoreholeSourceLocation,
+  label: string,
+  color: string,
+): void {
+  const position = sceneVector(location.scene);
+  if (!position) return;
+  const markerGroup = new THREE.Group();
+  markerGroup.name = `${label} source location trace`;
+  const categoryUserData = boreholeCategoryUserData(entry);
+  markerGroup.userData = {
+    ...categoryUserData,
+    displayName: label,
+    sceneLabelEligible: false,
+    demoBoreholeSourceLocation: true,
+    demoBoreholeSourceLocationId: location.id,
+    demoBoreholeRegistryId: entry.id,
+    demoBoreholeRenderStatus: entry.renderStatus,
+    demoBoreholeClaimStatus: entry.claimStatus,
+    demoBoreholeSourceBaseColor: color,
+    sourceFeatureCode: location.featureCode,
+    sourceNotes: location.notes,
+  };
+
+  const traceRoot = new THREE.Group();
+  traceRoot.name = `${label} rounded source trace`;
+  traceRoot.position.copy(position);
+  traceRoot.renderOrder = SOURCE_LOCATION_TRACE_RENDER_ORDER;
+  traceRoot.userData = {
+    ...markerGroup.userData,
+    demoBoreholeSourceTraceRoot: true,
+    demoBoreholeBaseSourceTraceDiameterM: DEFAULT_SOURCE_LOCATION_TRACE_DIAMETER_M,
+    demoBoreholeBaseSourceTraceLengthM: DEFAULT_SOURCE_LOCATION_TRACE_LENGTH_M,
+    sourceLocationTraceSemantic: "source-location-marker-not-trajectory",
+  };
+
+  const radius = DEFAULT_SOURCE_LOCATION_TRACE_DIAMETER_M * 0.5;
+  const length = DEFAULT_SOURCE_LOCATION_TRACE_LENGTH_M;
+  const material = makeSourceTraceMaterial(color);
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(radius, radius, length, 28, 1, false),
+    material,
+  );
+  body.name = `${label} source trace body`;
+  body.position.z = -length * 0.5;
+  body.rotation.x = Math.PI / 2;
+  body.renderOrder = SOURCE_LOCATION_TRACE_RENDER_ORDER;
+  body.userData = {
+    ...traceRoot.userData,
+    demoBoreholeSourceTrace: true,
+    demoBoreholeSourceTracePart: "body",
+  };
+  traceRoot.add(body);
+
+  for (const [part, z] of [
+    ["top", 0],
+    ["bottom", -length],
+  ] as const) {
+    const cap = new THREE.Mesh(
+      new THREE.SphereGeometry(radius, 28, 16),
+      material.clone(),
+    );
+    cap.name = `${label} source trace ${part} cap`;
+    cap.position.z = z;
+    cap.renderOrder = SOURCE_LOCATION_TRACE_RENDER_ORDER + 0.01;
+    cap.userData = {
+      ...traceRoot.userData,
+      demoBoreholeSourceTrace: true,
+      demoBoreholeSourceTracePart: `${part}-cap`,
+    };
+    traceRoot.add(cap);
+  }
+  markerGroup.add(traceRoot);
+
+  const line = makeSourceLocationLine(
+    [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -length)],
+    color,
+    8,
+  );
+  line.name = `${label} source line trace`;
+  line.position.copy(position);
+  line.userData = {
+    ...traceRoot.userData,
+    demoBoreholeSourceLine: true,
+  };
+  markerGroup.add(line);
+
+  const pinHead = new THREE.Mesh(
+    new THREE.SphereGeometry(radius * 1.25, 28, 16),
+    makeSourceTraceMaterial(color),
+  );
+  pinHead.name = `${label} source pin head`;
+  pinHead.position.copy(position);
+  pinHead.renderOrder = SOURCE_LOCATION_TRACE_RENDER_ORDER + 0.02;
+  pinHead.userData = {
+    ...traceRoot.userData,
+    demoBoreholeSourcePinHead: true,
+  };
+  markerGroup.add(pinHead);
+
+  for (const [axis, points] of [
+    [
+      "x",
+      [
+        new THREE.Vector3(-DEFAULT_SOURCE_LOCATION_CROSSHAIR_LENGTH_M * 0.5, 0, 0),
+        new THREE.Vector3(DEFAULT_SOURCE_LOCATION_CROSSHAIR_LENGTH_M * 0.5, 0, 0),
+      ],
+    ],
+    [
+      "y",
+      [
+        new THREE.Vector3(0, -DEFAULT_SOURCE_LOCATION_CROSSHAIR_LENGTH_M * 0.5, 0),
+        new THREE.Vector3(0, DEFAULT_SOURCE_LOCATION_CROSSHAIR_LENGTH_M * 0.5, 0),
+      ],
+    ],
+  ] as const) {
+    const crosshair = makeSourceLocationLine(points, color, 6);
+    crosshair.name = `${label} source crosshair ${axis}`;
+    crosshair.position.copy(position);
+    crosshair.renderOrder = SOURCE_LOCATION_TRACE_RENDER_ORDER + 0.03;
+    crosshair.userData = {
+      ...traceRoot.userData,
+      demoBoreholeSourceCrosshair: true,
+      demoBoreholeSourceCrosshairAxis: axis,
+      demoBoreholeBaseSourceCrosshairLengthM: DEFAULT_SOURCE_LOCATION_CROSSHAIR_LENGTH_M,
+    };
+    markerGroup.add(crosshair);
+  }
+
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(
+      DEFAULT_SOURCE_LOCATION_RING_RADIUS_M,
+      DEFAULT_SOURCE_LOCATION_RING_TUBE_M,
+      12,
+      72,
+    ),
+    makeSourceTraceMaterial("#ffffff"),
+  );
+  ring.name = `${label} source top toroid`;
+  ring.position.copy(position);
+  ring.renderOrder = SOURCE_LOCATION_TRACE_RENDER_ORDER + 0.04;
+  ring.userData = {
+    ...traceRoot.userData,
+    demoBoreholeSourceTopRing: true,
+    demoBoreholeBaseSourceRingRadiusM: DEFAULT_SOURCE_LOCATION_RING_RADIUS_M,
+    demoBoreholeBaseSourceRingTubeM: DEFAULT_SOURCE_LOCATION_RING_TUBE_M,
+  };
+  markerGroup.add(ring);
+
+  addLabelAnchor(
+    markerGroup,
+    `${location.id} source label`,
+    label,
+    position,
+    "source-location",
+    location.id,
+    95,
+  );
+  group.add(markerGroup);
+}
+
+function addPrioritySourceMarkers(
+  group: THREE.Group,
+  priorityRegistry?: DemoBoreholePriorityEntry[],
+): void {
+  for (const entry of priorityRegistry ?? []) {
+    if (entry.renderStatus === "trajectory-rendered") continue;
+    const color = sourceLocationColor(entry);
+    if (entry.sourceLocation) {
+      addSourceLocationMarker(
+        group,
+        entry,
+        entry.sourceLocation,
+        shortPriorityLabel(entry),
+        color,
+      );
+    }
+    for (const candidate of entry.sourceCandidates ?? []) {
+      addSourceLocationMarker(
+        group,
+        entry,
+        candidate,
+        `${shortPriorityLabel(entry)} ${candidate.id}`,
+        color,
+      );
+    }
+  }
+}
+
+function addWell(
+  group: THREE.Group,
+  well: DemoBoreholeWell,
+  priorityRegistry?: DemoBoreholePriorityEntry[],
+): void {
   const surveyPointTuples = well.trajectory
     .map((point) => sceneTuple(point.scene))
     .filter((point): point is ScenePointTuple => point !== null);
   const points = vectorsFromTuples(surveyPointTuples);
   if (points.length < 2) return;
 
+  const priorityEntry = priorityEntryForWell(well, priorityRegistry);
+  const categoryUserData = boreholeCategoryUserData(priorityEntry);
+
   const wellGroup = new THREE.Group();
   wellGroup.name = well.label;
   wellGroup.userData = {
+    ...categoryUserData,
     displayName: well.label,
     sceneLabelEligible: false,
     demoBoreholeWell: true,
@@ -307,6 +617,7 @@ function addWell(group: THREE.Group, well: DemoBoreholeWell): void {
   const pipeRoot = new THREE.Group();
   pipeRoot.name = `${well.id} pipe`;
   pipeRoot.userData = {
+    ...categoryUserData,
     displayName: well.label,
     sceneLabelEligible: false,
     demoBoreholePipeRoot: true,
@@ -328,6 +639,7 @@ function addWell(group: THREE.Group, well: DemoBoreholeWell): void {
   const line = makePathLine(points, well.color);
   line.name = `${well.id} centerline`;
   line.userData = {
+    ...categoryUserData,
     displayName: well.label,
     sceneLabelEligible: false,
     demoBoreholeCenterline: true,
@@ -344,6 +656,7 @@ function addWell(group: THREE.Group, well: DemoBoreholeWell): void {
   collar.position.copy(points[0]);
   collar.renderOrder = COLLAR_RENDER_ORDER;
   collar.userData = {
+    ...categoryUserData,
     displayName: well.label,
     sceneLabelEligible: false,
     demoBoreholeCollar: true,
@@ -480,15 +793,20 @@ export async function loadUtahForgeDemoBoreholes(
   const group = new THREE.Group();
   group.name = manifest.label || "Utah FORGE demo boreholes";
   group.userData = {
+    forgeDataCategory: BORE_HOLES_CATEGORY,
     displayName: manifest.label,
     sceneLabelEligible: false,
     demoBoreholesLayer: true,
     classification: manifest.classification,
     notForEngineeringUse: manifest.notForEngineeringUse === true,
+    priorityRegistry: manifest.priorityRegistry,
     notes: manifest.notes,
   };
 
-  for (const well of manifest.wells) addWell(group, well);
+  for (const well of manifest.wells) {
+    addWell(group, well, manifest.priorityRegistry);
+  }
+  addPrioritySourceMarkers(group, manifest.priorityRegistry);
   if (manifest.orientationBlock) addOrientationBlock(group, manifest.orientationBlock);
 
   debugLog(

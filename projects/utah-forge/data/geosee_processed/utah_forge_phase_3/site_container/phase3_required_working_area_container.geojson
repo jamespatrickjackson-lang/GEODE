@@ -12,7 +12,7 @@
     "footprintWidthM": 4200,
     "footprintHeightM": 4200,
     "footprintAreaKm2": 17.64,
-    "verticalReference": "Top follows the processed seismic navigation upper elevation.",
+    "verticalReference": "Top follows the shared 1800 m ASL seismic reference datum used by datum-aligned panel geometry.",
     "sourceLayerId": "utah-forge-phase3-working-area"
   },
   "features": [
@@ -30,27 +30,27 @@
           [
             -8041.4,
             -12617.6,
-            2045.3
+            1800
           ],
           [
             -3841.4,
             -12617.6,
-            2045.3
+            1800
           ],
           [
             -3841.4,
             -8417.6,
-            2045.3
+            1800
           ],
           [
             -8041.4,
             -8417.6,
-            2045.3
+            1800
           ],
           [
             -8041.4,
             -12617.6,
-            2045.3
+            1800
           ]
         ]
       }

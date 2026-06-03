@@ -50,7 +50,9 @@ export function applyStyle(this: any, id: string, style: EditableStyle): void {
         const preserveVertexColors =
           m.userData?.preserveVertexColors === true;
         const preserveMaterialColor =
-          m.userData?.preserveMaterialColor === true;
+          m.userData?.preserveMaterialColor === true ||
+          obj.userData?.naipTileDiagnosticOutline === true ||
+          obj.userData?.naipTileDiagnosticLabel === true;
         const preserveMaterialOpacity =
           m.userData?.preserveMaterialOpacity === true;
         const materialColor =

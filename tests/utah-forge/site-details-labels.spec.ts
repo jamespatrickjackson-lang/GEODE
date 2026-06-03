@@ -39,7 +39,7 @@ test("Site Details exposes every authorable scene label in one inventory", async
   await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
   await expect(page.locator("canvas")).toHaveCount(1);
 
-  const forgeData = page.getByRole("button", { name: "FORGE Data" }).first();
+  const forgeData = page.getByRole("button", { name: "Forge" }).first();
   await expect(forgeData).toBeVisible({ timeout: 30_000 });
   if ((await forgeData.getAttribute("aria-expanded")) !== "true") {
     await forgeData.click();

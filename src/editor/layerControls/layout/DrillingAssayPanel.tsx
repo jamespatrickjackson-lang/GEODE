@@ -11,7 +11,6 @@ import {
   drillingAssaySummaryStyle,
   nestedControlRowStyle,
   nestedFieldLabelStyle,
-  sliderNumberReadoutStyle,
 } from "../../styleControls";
 import {
   assayOutlineColorInputStyle,
@@ -49,8 +48,6 @@ export function DrillingAssayPanel({
   const boreTubeRenderOrder = assays.boreTubeRenderOrder ?? 5.4;
   const assayMultiplier = assays.assayWidthMultiplier ?? 2.6;
   const lithologyMultiplier = assays.lithologyWidthMultiplier ?? 2.45;
-  const assayWidth = boreWidth * assayMultiplier;
-  const lithologyWidth = boreWidth * lithologyMultiplier;
   const lithologyOpacity = assays.lithologyOpacity ?? 0.56;
   const showAssaySides = assays.showAssaySides ?? true;
   const showAssayCaps = assays.showAssayCaps ?? true;
@@ -233,7 +230,6 @@ export function DrillingAssayPanel({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>{boreWidth.toFixed(1)}</span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Assay width</label>
@@ -253,7 +249,6 @@ export function DrillingAssayPanel({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>{assayWidth.toFixed(1)}</span>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Lith width</label>
@@ -275,9 +270,6 @@ export function DrillingAssayPanel({
               } as React.CSSProperties
             }
           />
-          <span style={sliderNumberReadoutStyle}>
-            {lithologyWidth.toFixed(1)}
-          </span>
         </div>
         <TopoDistanceSlider
           label="Lith opacity"
@@ -318,9 +310,6 @@ export function DrillingAssayPanel({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {capThicknessM.toFixed(1)}m
-            </span>
           </div>
           <TopoDistanceSlider
             label="Side alpha"
@@ -358,9 +347,6 @@ export function DrillingAssayPanel({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {sideRoughness.toFixed(2)}
-            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Cap rough</label>
@@ -380,9 +366,6 @@ export function DrillingAssayPanel({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {capRoughness.toFixed(2)}
-            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Metal</label>
@@ -402,7 +385,6 @@ export function DrillingAssayPanel({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>{metalness.toFixed(2)}</span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Side lift</label>
@@ -422,9 +404,6 @@ export function DrillingAssayPanel({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {sideEmissive.toFixed(3)}
-            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Cap lift</label>
@@ -444,9 +423,6 @@ export function DrillingAssayPanel({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {capEmissive.toFixed(3)}
-            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Side order</label>
@@ -466,9 +442,6 @@ export function DrillingAssayPanel({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {sideRenderOrder.toFixed(1)}
-            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Cap order</label>
@@ -488,9 +461,6 @@ export function DrillingAssayPanel({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {capRenderOrder.toFixed(1)}
-            </span>
           </div>
         </div>
         <div style={drillingAssayPaletteStyle}>

@@ -55,7 +55,6 @@ interface TerrainLodHandle {
 }
 
 interface TerrainTileRecord {
-  mesh: THREE.Mesh;
   sourceX0: number;
   sourceX1: number;
   sourceY0: number;
@@ -256,10 +255,117 @@ function terrainIndexRange(maxIndex: number, start: number, end: number, step: n
   return values;
 }
 
+function isTerrainNoData(raw: number, nodata: number | null): boolean {
+  return !Number.isFinite(raw) || (nodata !== null && raw === nodata);
+}
+
+function fillTerrainNoData(
+  elev: Float32Array | Int16Array | Uint16Array,
+  width: number,
+  height: number,
+  nodata: number | null,
+  fallbackElevation: number,
+): Float32Array {
+  const filled = new Float32Array(elev.length);
+  for (let i = 0; i < elev.length; i += 1) {
+    const raw = elev[i];
+    filled[i] = isTerrainNoData(raw, nodata) ? NaN : raw;
+  }
+
+  for (let y = 0; y < height; y += 1) {
+    const rowOffset = y * width;
+    let last = NaN;
+    for (let x = 0; x < width; x += 1) {
+      const index = rowOffset + x;
+      const value = filled[index];
+      if (Number.isFinite(value)) {
+        last = value;
+      } else if (Number.isFinite(last)) {
+        filled[index] = last;
+      }
+    }
+    last = NaN;
+    for (let x = width - 1; x >= 0; x -= 1) {
+      const index = rowOffset + x;
+      const value = filled[index];
+      if (Number.isFinite(value)) {
+        last = value;
+      } else if (Number.isFinite(last)) {
+        filled[index] = last;
+      }
+    }
+  }
+
+  for (let x = 0; x < width; x += 1) {
+    let last = NaN;
+    for (let y = 0; y < height; y += 1) {
+      const index = y * width + x;
+      const value = filled[index];
+      if (Number.isFinite(value)) {
+        last = value;
+      } else if (Number.isFinite(last)) {
+        filled[index] = last;
+      }
+    }
+    last = NaN;
+    for (let y = height - 1; y >= 0; y -= 1) {
+      const index = y * width + x;
+      const value = filled[index];
+      if (Number.isFinite(value)) {
+        last = value;
+      } else if (Number.isFinite(last)) {
+        filled[index] = last;
+      }
+    }
+  }
+
+  for (let i = 0; i < filled.length; i += 1) {
+    if (!Number.isFinite(filled[i])) filled[i] = fallbackElevation;
+  }
+
+  return filled;
+}
+
 function terrainTileVertexEstimate(tile: TerrainTileRecord, step: number): number {
   const xCount = terrainIndexRange(tile.sourceX1, tile.sourceX0, tile.sourceX1, step).length;
   const yCount = terrainIndexRange(tile.sourceY1, tile.sourceY0, tile.sourceY1, step).length;
   return xCount * yCount;
+}
+
+function terrainLodTierVertexEstimate(
+  tiles: TerrainTileRecord[],
+  step: number,
+): number {
+  return tiles.reduce(
+    (sum, tile) => sum + terrainTileVertexEstimate(tile, step),
+    0,
+  );
+}
+
+function selectUniformTerrainLodTier({
+  terrainCentroid,
+  cameraPosition,
+  tiles,
+  lodSteps,
+  maxVertices,
+}: {
+  terrainCentroid: THREE.Vector3;
+  cameraPosition: THREE.Vector3;
+  tiles: TerrainTileRecord[];
+  lodSteps: Record<TerrainLodTierName, number>;
+  maxVertices: number;
+}): TerrainLodTierName {
+  const distance = terrainCentroid.distanceTo(cameraPosition);
+  const tiers: TerrainLodTierName[] = ["source", "standard", "coarse"];
+  let tierIndex = distance < 65_000 ? 0 : distance < 150_000 ? 1 : 2;
+  while (
+    tierIndex < tiers.length - 1 &&
+    terrainLodTierVertexEstimate(tiles, lodSteps[tiers[tierIndex]]) >
+      maxVertices
+  ) {
+    tierIndex += 1;
+  }
+  return tiers[tierIndex];
 }
 
 function buildTerrainTileGeometry(params: {
@@ -268,10 +374,8 @@ function buildTerrainTileGeometry(params: {
   width: number;
   height: number;
   bbox: number[];
-  elev: Float32Array | Int16Array | Uint16Array;
-  nodata: number | null;
+  elev: Float32Array;
   transform: GeoSceneTransform;
-  fallbackElevation: number;
   terrainOffset: THREE.Vector3;
 }): THREE.BufferGeometry {
   const {
@@ -281,9 +385,7 @@ function buildTerrainTileGeometry(params: {
     height,
     bbox,
     elev,
-    nodata,
     transform,
-    fallbackElevation,
     terrainOffset,
   } = params;
   const xRange = bbox[2] - bbox[0];
@@ -296,8 +398,7 @@ function buildTerrainTileGeometry(params: {
     for (const sourceX of xs) {
       const utmX = bbox[0] + (sourceX / Math.max(1, width - 1)) * xRange;
       const utmY = bbox[3] - (sourceY / Math.max(1, height - 1)) * yRange;
-      const raw = elev[sourceY * width + sourceX];
-      const z = nodata !== null && raw === nodata ? fallbackElevation : raw;
+      const z = elev[sourceY * width + sourceX];
       const [sx, sy, sz] = utmToSceneWithTransform(transform, utmX, utmY, z);
       positions[offset++] = sx - terrainOffset.x;
       positions[offset++] = sy - terrainOffset.y;
@@ -360,7 +461,7 @@ export async function loadTerrain(
   const nodata = image.getGDALNoData();
 
   const rasters = await image.readRasters();
-  const elev = rasters[0] as Float32Array | Int16Array | Uint16Array;
+  const sourceElev = rasters[0] as Float32Array | Int16Array | Uint16Array;
   const maxVertices =
     typeof options?.terrainMaxVertices === "number" &&
     Number.isFinite(options.terrainMaxVertices) &&
@@ -372,9 +473,9 @@ export async function loadTerrain(
   const planeHeight = bbox[3] - bbox[1];
   let minSeen = Infinity;
   let maxSeen = -Infinity;
-  for (let i = 0; i < elev.length; i += 1) {
-    const raw = elev[i];
-    if (nodata !== null && raw === nodata) continue;
+  for (let i = 0; i < sourceElev.length; i += 1) {
+    const raw = sourceElev[i];
+    if (isTerrainNoData(raw, nodata)) continue;
     if (raw < minSeen) minSeen = raw;
     if (raw > maxSeen) maxSeen = raw;
   }
@@ -382,6 +483,13 @@ export async function loadTerrain(
     minSeen = transform.origin.elevation;
     maxSeen = transform.origin.elevation;
   }
+  const elev = fillTerrainNoData(
+    sourceElev,
+    width,
+    height,
+    nodata,
+    transform.origin.elevation,
+  );
 
   const cxUtm = (bbox[0] + bbox[2]) / 2;
   const cyUtm = (bbox[1] + bbox[3]) / 2;
@@ -422,25 +530,44 @@ export async function loadTerrain(
   root.userData.publicSurfaceBaseZ = root.position.z;
 
   const lodSteps = terrainLodSteps(width, height, maxVertices);
+  const terrainCentroid = new THREE.Vector3(cxScene, cyScene, 0);
+  const terrainMesh = new THREE.Mesh(new THREE.BufferGeometry(), terrainHandle.material);
+  terrainMesh.name = "terrain-surface";
+  terrainMesh.castShadow = false;
+  terrainMesh.receiveShadow = false;
+  terrainMesh.userData.terrainHandle = terrainHandle;
+  terrainMesh.userData.terrainUtmBounds = bbox;
+  terrainMesh.userData.terrainBaseZ = terrainMesh.position.z;
+  root.add(terrainMesh);
+
+  const fullTerrainTile: TerrainTileRecord = {
+    sourceX0: 0,
+    sourceX1: width - 1,
+    sourceY0: 0,
+    sourceY1: height - 1,
+    center: terrainCentroid,
+    tier: "coarse",
+  };
   const tiles: TerrainTileRecord[] = [];
-  const rebuildTile = (tile: TerrainTileRecord, tier: TerrainLodTierName) => {
+  const rebuildTerrain = (tier: TerrainLodTierName) => {
     const nextGeometry = buildTerrainTileGeometry({
-      tile,
+      tile: fullTerrainTile,
       step: lodSteps[tier],
       width,
       height,
       bbox,
       elev,
-      nodata,
       transform,
-      fallbackElevation: transform.origin.elevation,
       terrainOffset,
     });
-    tile.mesh.geometry.dispose();
-    tile.mesh.geometry = nextGeometry;
-    tile.tier = tier;
-    tile.mesh.userData.terrainLodTier = tier;
-    tile.mesh.userData.terrainVertexEstimate =
+    terrainMesh.geometry.dispose();
+    terrainMesh.geometry = nextGeometry;
+    fullTerrainTile.tier = tier;
+    for (const tile of tiles) {
+      tile.tier = tier;
+    }
+    terrainMesh.userData.terrainLodTier = tier;
+    terrainMesh.userData.terrainVertexEstimate =
       nextGeometry.getAttribute("position").count;
   };
 
@@ -464,16 +591,7 @@ export async function loadTerrain(
         centerUtmY,
         transform.origin.elevation,
       );
-      const mesh = new THREE.Mesh(new THREE.BufferGeometry(), terrainHandle.material);
-      mesh.name = `terrain-tile-${column}-${row}`;
-      mesh.castShadow = false;
-      mesh.receiveShadow = false;
-      mesh.userData.terrainHandle = terrainHandle;
-      mesh.userData.terrainUtmBounds = bbox;
-      mesh.userData.terrainBaseZ = mesh.position.z;
-      mesh.userData.terrainTile = true;
       const tile: TerrainTileRecord = {
-        mesh,
         sourceX0,
         sourceX1,
         sourceY0,
@@ -481,18 +599,15 @@ export async function loadTerrain(
         center: new THREE.Vector3(centerSceneX, centerSceneY, 0),
         tier: "coarse",
       };
-      rebuildTile(tile, "coarse");
       tiles.push(tile);
-      root.add(mesh);
     }
   }
+  rebuildTerrain("coarse");
 
   const terrainLodDebugState: TerrainLodDebugState = {
     activeTileCount: tiles.length,
-    activeVertexEstimate: tiles.reduce(
-      (sum, tile) => sum + (tile.mesh.geometry.getAttribute("position")?.count ?? 0),
-      0,
-    ),
+    activeVertexEstimate:
+      terrainMesh.geometry.getAttribute("position")?.count ?? 0,
     lodTierCounts: { coarse: tiles.length, standard: 0, source: 0 },
     lastUpdateReason: "initial-coarse",
   };
@@ -502,9 +617,9 @@ export async function loadTerrain(
     terrainLodDebugState.lodTierCounts = { coarse: 0, standard: 0, source: 0 };
     for (const tile of tiles) {
       terrainLodDebugState.lodTierCounts[tile.tier] += 1;
-      terrainLodDebugState.activeVertexEstimate +=
-        tile.mesh.geometry.getAttribute("position")?.count ?? 0;
     }
+    terrainLodDebugState.activeVertexEstimate =
+      terrainMesh.geometry.getAttribute("position")?.count ?? 0;
     terrainLodDebugState.lastUpdateReason = reason;
     root.userData.terrainLodDebugState = { ...terrainLodDebugState };
   };
@@ -519,41 +634,16 @@ export async function loadTerrain(
         return;
       }
       lastCameraPosition = camera.position.clone();
-      const desired = new Map<TerrainTileRecord, TerrainLodTierName>();
-      for (const tile of tiles) {
-        const distance = tile.center.distanceTo(camera.position);
-        desired.set(
-          tile,
-          distance < 65_000 ? "source" : distance < 150_000 ? "standard" : "coarse",
-        );
-      }
-      let vertexEstimate = 0;
-      for (const [tile, tier] of desired) {
-        vertexEstimate += terrainTileVertexEstimate(tile, lodSteps[tier]);
-      }
-      if (vertexEstimate > maxVertices) {
-        const orderedTiles = [...tiles].sort(
-          (a, b) => b.center.distanceTo(camera.position) - a.center.distanceTo(camera.position),
-        );
-        for (const tile of orderedTiles) {
-          if (vertexEstimate <= maxVertices) break;
-          const tier = desired.get(tile);
-          if (tier === "source") {
-            vertexEstimate -= terrainTileVertexEstimate(tile, lodSteps.source);
-            vertexEstimate += terrainTileVertexEstimate(tile, lodSteps.standard);
-            desired.set(tile, "standard");
-          } else if (tier === "standard") {
-            vertexEstimate -= terrainTileVertexEstimate(tile, lodSteps.standard);
-            vertexEstimate += terrainTileVertexEstimate(tile, lodSteps.coarse);
-            desired.set(tile, "coarse");
-          }
-        }
-      }
-      let changed = false;
-      for (const [tile, tier] of desired) {
-        if (tile.tier === tier) continue;
-        rebuildTile(tile, tier);
-        changed = true;
+      const tier = selectUniformTerrainLodTier({
+        terrainCentroid,
+        cameraPosition: camera.position,
+        tiles,
+        lodSteps,
+        maxVertices,
+      });
+      const changed = fullTerrainTile.tier !== tier;
+      if (changed) {
+        rebuildTerrain(tier);
       }
       updateDebugState(changed ? "camera-lod-change" : "camera-lod-stable");
     },
@@ -601,12 +691,10 @@ export async function loadTerrain(
     const y1 = Math.max(0, Math.min(height - 1, y0 + 1));
     const tx = fx - x0;
     const ty = fy - y0;
-    const safe = (v: number) =>
-      nodata !== null && v === nodata ? fallback : v;
-    const v00 = safe(elev[y0 * width + x0]);
-    const v10 = safe(elev[y0 * width + x1]);
-    const v01 = safe(elev[y1 * width + x0]);
-    const v11 = safe(elev[y1 * width + x1]);
+    const v00 = elev[y0 * width + x0];
+    const v10 = elev[y0 * width + x1];
+    const v01 = elev[y1 * width + x0];
+    const v11 = elev[y1 * width + x1];
     return (
       v00 * (1 - tx) * (1 - ty) +
       v10 * tx * (1 - ty) +

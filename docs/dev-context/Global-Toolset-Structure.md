@@ -91,17 +91,17 @@ workarounds or nested historical containers.
 
 Current top-level peer sections include:
 
-- `Page Manager`: page selection, ordering, page-level actions, and global/page
+- `Pages`: page selection, ordering, page-level actions, and global/page
   selection state.
-- `Visual Studio`: global render preset, environment, lighting, camera, and
-  terrain-grid controls.
-- `UI`: global client-facing chrome controls such as logo and GUI style.
-- `Sections & Cropping`: Utah FORGE spatial-section workflow container for
+- `Cinematics`: global render preset, per-page render presets, environment,
+  lighting, camera, terrain-grid, client UI, editor chrome variables, and page
+  camera dynamics controls.
+- `Sections`: Utah FORGE spatial-section workflow container for
   scene section planes, the Phase 3 working-area boundary, and working-area
   focus cropping.
-- `Public Topo Map`: the topo tool editor, including topo surface settings,
+- `Topo`: the topo tool editor, including topo surface settings,
   longitude/latitude grid, title block, and topo reference layers.
-- project data sections and overlay tools.
+- project data sections and card tools.
 
 Container styling should come from shared editor tokens in `src/editor/styles.ts`.
 Do not reintroduce local light-gray global-settings containers, nested fake

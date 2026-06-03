@@ -7,16 +7,11 @@ import type { EditableStyle, PresentationPage } from "../pages/types";
 import {
   FROSTED_HAIRLINE,
   panelStyles,
+  vibrancyLabel,
   vibrancySecondaryLabel,
   vibrancyTertiaryLabel,
 } from "./styles";
-
-export const sliderNumberReadoutStyle: React.CSSProperties = {
-  ...panelStyles.numberReadout,
-  width: 44,
-  marginLeft: 0,
-  textAlign: "left",
-};
+import { TransientSlider } from "./TransientSlider";
 
 export const nestedDetailsStyle: React.CSSProperties = {
   marginTop: 7,
@@ -86,6 +81,122 @@ export const overrideTagActiveStyle: React.CSSProperties = {
   color: vibrancySecondaryLabel,
 };
 
+const editorEyeSvgStyle: React.CSSProperties = {
+  width: 13,
+  height: 13,
+  display: "block",
+  flex: "none",
+};
+
+export function EditorEyeIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      style={editorEyeSvgStyle}
+    >
+      <path
+        d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function EditorEyeOffIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      style={editorEyeSvgStyle}
+    >
+      <path
+        d="M3 3l18 18"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M2.5 12s3.5-6 9.5-6c1.3 0 2.5.28 3.55.73M21.5 12s-3.5 6-9.5 6c-1.31 0-2.51-.28-3.58-.74"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function editorEyeButtonStyle(
+  visible: boolean,
+  overridden = false,
+): React.CSSProperties {
+  return {
+    ...panelStyles.iconButton,
+    width: 24,
+    height: 24,
+    flex: "0 0 24px",
+    padding: 0,
+    border: "1px solid transparent",
+    background: "transparent",
+    boxShadow: "none",
+    color: overridden
+      ? "rgba(143, 215, 255, 0.92)"
+      : visible
+        ? vibrancyLabel
+        : vibrancyTertiaryLabel,
+    opacity: visible ? 1 : 0.72,
+  };
+}
+
+export function EditorEyeButton({
+  visible,
+  onClick,
+  title,
+  ariaLabel,
+  overridden = false,
+  disabled = false,
+  testId,
+  style,
+}: {
+  visible: boolean;
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  title?: string;
+  ariaLabel?: string;
+  overridden?: boolean;
+  disabled?: boolean;
+  testId?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <button
+      type="button"
+      className="editor-action-button editor-icon-only-button"
+      data-testid={testId}
+      style={{
+        ...editorEyeButtonStyle(visible, overridden),
+        ...(disabled ? { cursor: "not-allowed", opacity: 0.45 } : {}),
+        ...style,
+      }}
+      disabled={disabled}
+      onClick={onClick}
+      title={title ?? (visible ? "Hide" : "Show")}
+      aria-label={ariaLabel ?? (visible ? "Hide" : "Show")}
+      aria-pressed={visible}
+    >
+      {visible ? <EditorEyeIcon /> : <EditorEyeOffIcon />}
+    </button>
+  );
+}
+
 export type LayerStyleSetter = (
   layerId: string,
   patch: Partial<EditableStyle>,
@@ -111,7 +222,13 @@ export function EnvVisibilityRow({
   return (
     <div style={panelStyles.row}>
       <label style={panelStyles.fieldLabel}>Visible (default)</label>
-      <input type="checkbox" checked={visible} onChange={onToggle} />
+      <EditorEyeButton
+        visible={visible}
+        onClick={onToggle}
+        title={visible ? "Hide by default" : "Show by default"}
+        ariaLabel={visible ? "Hide by default" : "Show by default"}
+        style={{ marginLeft: "auto" }}
+      />
     </div>
   );
 }
@@ -136,27 +253,42 @@ export function PageVisibilityRow({
   return (
     <div style={panelStyles.row}>
       <label style={panelStyles.fieldLabel}>Visible</label>
-      <input
-        type="checkbox"
-        checked={overridden}
-        onChange={(e) => {
-          if (e.target.checked) {
-            onSet(envVisible);
-          } else {
-            onClear();
-          }
+      <EditorEyeButton
+        visible={effective}
+        overridden={overridden}
+        onClick={() => onSet(!effective)}
+        title={
+          overridden
+            ? effective
+              ? "Hide on this page"
+              : "Show on this page"
+            : effective
+              ? "Hide on this page and create override"
+              : "Show on this page and create override"
+        }
+        ariaLabel={effective ? "Hide on this page" : "Show on this page"}
+        style={{ marginLeft: "auto" }}
+      />
+      <button
+        type="button"
+        onClick={overridden ? onClear : () => onSet(effective)}
+        title={
+          overridden
+            ? "Clear page visibility override"
+            : "Create page visibility override"
+        }
+        style={{
+          border: "none",
+          background: "transparent",
+          padding: "0 0 0 4px",
+          cursor: "pointer",
+          font: "inherit",
         }}
-        title="Override environment default for this page"
-      />
-      <input
-        type="checkbox"
-        checked={effective}
-        disabled={!overridden}
-        onChange={(e) => onSet(e.target.checked)}
-      />
-      <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {overridden ? "overridden" : "inherited"}
-      </span>
+      >
+        <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
+          {overridden ? "overridden" : "inherited"}
+        </span>
+      </button>
     </div>
   );
 }
@@ -184,34 +316,20 @@ export function EnvStyleRow({
 }) {
   const rangeValue = parseFloat(value);
   const safeValue = Number.isFinite(rangeValue) ? rangeValue : min;
-  const fill = Math.max(
-    0,
-    Math.min(100, ((safeValue - min) / (max - min)) * 100),
-  );
   return (
     <div style={nestedControlRowStyle}>
       <label style={nestedFieldLabelStyle}>{label}</label>
       {inputType === "range" ? (
-        <>
-          <input
-            type="range"
-            min={min}
-            max={max}
-            step={step}
-            value={value}
-            data-testid={testId}
-            onChange={(e) => onChange(e.target.value)}
-            style={
-              {
-                flex: 1,
-                "--editor-slider-fill": `${fill}%`,
-              } as React.CSSProperties
-            }
-          />
-          <span style={sliderNumberReadoutStyle}>
-            {safeValue.toFixed(decimals)}
-          </span>
-        </>
+        <TransientSlider
+          value={safeValue}
+          min={min}
+          max={max}
+          step={step}
+          testId={testId}
+          onChange={(next) => onChange(String(next))}
+          format={(next) => next.toFixed(decimals)}
+          style={{ flex: 1 }}
+        />
       ) : (
         <input
           type={inputType}
@@ -259,10 +377,6 @@ export function PageStyleRow({
     : (inheritedValue ?? fallback);
   const rangeValue = parseFloat(value);
   const safeValue = Number.isFinite(rangeValue) ? rangeValue : min;
-  const fill = Math.max(
-    0,
-    Math.min(100, ((safeValue - min) / (max - min)) * 100),
-  );
 
   return (
     <div style={nestedControlRowStyle}>
@@ -280,27 +394,16 @@ export function PageStyleRow({
         title="Override environment value for this page"
       />
       {inputType === "range" ? (
-        <>
-          <input
-            type="range"
-            min={min}
-            max={max}
-            step={step}
-            value={value}
-            disabled={!isOverridden}
-            onChange={(e) => onOverride(e.target.value)}
-            style={
-              {
-                flex: 1,
-                opacity: isOverridden ? 1 : 0.4,
-                "--editor-slider-fill": `${fill}%`,
-              } as React.CSSProperties
-            }
-          />
-          <span style={sliderNumberReadoutStyle}>
-            {safeValue.toFixed(decimals)}
-          </span>
-        </>
+        <TransientSlider
+          value={safeValue}
+          min={min}
+          max={max}
+          step={step}
+          disabled={!isOverridden}
+          onChange={(next) => onOverride(String(next))}
+          format={(next) => next.toFixed(decimals)}
+          style={{ flex: 1, opacity: isOverridden ? 1 : 0.4 }}
+        />
       ) : (
         <input
           type="color"

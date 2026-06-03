@@ -18,6 +18,7 @@ import { loadImageryLidarAoi } from "../loaders/loadImageryLidarAoi";
 import { loadIpSurveyLines } from "../loaders/loadIpSurveyLines";
 import { loadLineStrings } from "../loaders/loadLineStrings";
 import { loadMeshPreview } from "../loaders/loadMeshPreview";
+import { loadNaipTileDiagnostics } from "../loaders/loadNaipTileDiagnostics";
 import { loadPhotoOverlayPreview } from "../loaders/loadPhotoOverlayPreview";
 import { loadPointCloudPreview } from "../loaders/loadPointCloudPreview";
 import { loadPointMarkers } from "../loaders/loadPointMarkers";
@@ -154,7 +155,7 @@ function workingAreaSceneBounds(spec: ProjectLayerSpec): {
   if (min && max) return { min, max };
   return {
     min: [-8041.4, -12617.6, -6200],
-    max: [-3841.4, -8417.6, 2045.3],
+    max: [-3841.4, -8417.6, 1800],
   };
 }
 
@@ -384,6 +385,16 @@ const layerLoaders: LayerLoaderHandler[] = [
           context.spec.metadata,
           layerGeoTransform(context.spec),
         ),
+      ),
+  },
+  {
+    id: "naip-tile-diagnostics",
+    matches: (spec) => spec.id === "naip-2024-tile-diagnostics",
+    load: (context) =>
+      loadObject(
+        context,
+        "loadNaipTileDiagnostics",
+        loadNaipTileDiagnostics(context.spec, layerGeoTransform(context.spec)),
       ),
   },
   ...registerBaseGuiLoaders(loadReferenceStage),

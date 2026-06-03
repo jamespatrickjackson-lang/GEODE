@@ -33,7 +33,7 @@ Core runtime/project surfaces:
 - `projects/*/overlays/<page_id>/text.md`: overlay copy
 - `src/scene/SceneManager.ts`: scene, layer, style, material, transition, runtime visual state
 - `src/editor/EditorRoot.tsx`: editor shell and top-level tool/workflow section tree
-- `src/editor/PagePanel.tsx`: Page Manager, page selection/actions, and exported global tool panels
+- `src/editor/PagePanel.tsx`: Pages, page selection/actions, and exported Cinematics tool panels
 - `src/editor/LayerPanel.tsx`: project data layer controls that have not yet moved into tool modules
 - `src/editor/topoMap/TopoMapPanel.tsx`: public topo map tool editor
 - `src/mtResistivity/`: global MT resistivity tool contract and slice product metadata

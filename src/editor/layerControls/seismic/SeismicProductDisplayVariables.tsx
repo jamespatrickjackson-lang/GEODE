@@ -5,13 +5,11 @@ import {
   nestedControlRowStyle,
   nestedDetailsStyle,
   nestedFieldLabelStyle,
-  sliderNumberReadoutStyle,
 } from "../../styleControls";
 import type { EditableStyle } from "../../../pages/types";
 import {
   isVelocityProduct,
   seismicColormapFromValue,
-  seismicWindowValueLabel,
   type SeismicProductOption,
 } from "./seismicModel";
 
@@ -102,9 +100,6 @@ export function SeismicProductDisplayVariables({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {sliceFraction.toFixed(2)}
-            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Opacity</label>
@@ -127,9 +122,6 @@ export function SeismicProductDisplayVariables({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {seismicOpacity.toFixed(2)}
-            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>{windowMinLabel}</label>
@@ -154,9 +146,6 @@ export function SeismicProductDisplayVariables({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {seismicWindowValueLabel(product, amplitudeMin)}
-            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>{windowMaxLabel}</label>
@@ -181,9 +170,6 @@ export function SeismicProductDisplayVariables({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {seismicWindowValueLabel(product, amplitudeMax)}
-            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Gain curve</label>
@@ -215,9 +201,6 @@ export function SeismicProductDisplayVariables({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {amplitudeGamma.toFixed(2)}
-            </span>
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Palette</label>
@@ -286,9 +269,6 @@ export function SeismicProductDisplayVariables({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>
-              {backgroundCutoff.toFixed(2)}
-            </span>
           </div>
           {product.raymarchCapable ? (
             <div style={nestedControlRowStyle}>
@@ -323,7 +303,6 @@ export function SeismicProductDisplayVariables({
                   } as React.CSSProperties
                 }
               />
-              <span style={sliderNumberReadoutStyle}>{volumeSampleSteps}</span>
             </div>
           ) : null}
           <div style={nestedControlRowStyle}>
@@ -349,7 +328,6 @@ export function SeismicProductDisplayVariables({
                 } as React.CSSProperties
               }
             />
-            <span style={sliderNumberReadoutStyle}>{timeScale.toFixed(2)}</span>
           </div>
         </div>
       </details>

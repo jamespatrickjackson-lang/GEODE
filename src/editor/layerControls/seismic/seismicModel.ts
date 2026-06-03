@@ -9,6 +9,15 @@ export interface SeismicProductOption {
   domainKind?: string;
   domainUnit?: string;
   sourceSubmission?: string;
+  navigationPlacement?: {
+    navigationSource?: string;
+    placementAccuracy?: string;
+    canClaimPreciseRegistration?: boolean;
+    lineId?: string;
+    statusLabel?: string;
+    reason?: string;
+    validationPath?: string[];
+  };
   amplitudeStats?: {
     min?: number;
     max?: number;
@@ -154,6 +163,12 @@ export function seismicProductOptions(
         sourceSubmission:
           typeof product.sourceSubmission === "string"
             ? product.sourceSubmission
+            : undefined,
+        navigationPlacement:
+          product.navigationPlacement &&
+          typeof product.navigationPlacement === "object" &&
+          !Array.isArray(product.navigationPlacement)
+            ? (product.navigationPlacement as SeismicProductOption["navigationPlacement"])
             : undefined,
         amplitudeStats:
           product.amplitudeStats &&

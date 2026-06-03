@@ -38,6 +38,7 @@ export const TOPO_MATERIAL_AUTHORITY_TERRAIN_FIELDS = [
   "edgeTopShine",
   "edgeCornerShine",
   "edgeBottomShine",
+  "topoMapBranding",
 ] as const satisfies readonly (keyof TerrainSettings)[];
 
 export function topoMaterialAuthorityPatch(

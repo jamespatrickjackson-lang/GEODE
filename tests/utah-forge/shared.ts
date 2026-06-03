@@ -353,7 +353,7 @@ async function openAllDetails(page: Page): Promise<void> {
 }
 
 export async function openForgeDataEditorContainers(page: Page): Promise<void> {
-  await openEditorSection(page, "Public Topo Map", 30_000, "Topo Settings");
+  await openEditorSection(page, "Topo", 30_000, "Topo Settings");
   await openEditorSection(page, "Topo Settings", 30_000, "Topo Surface");
   await openEditorSection(
     page,
@@ -365,14 +365,14 @@ export async function openForgeDataEditorContainers(page: Page): Promise<void> {
   await openEditorSection(page, "Reference layers", 30_000, "Public roads");
   await openEditorSection(
     page,
-    "Sections & Cropping",
+    "Sections",
     30_000,
     "Scene section planes",
   );
   await openEditorSection(page, "Working area focus", 3000, "Working area");
   await openEditorSection(page, "Working area", 3000, "Phase 3 working area");
   await openEditorSection(page, "Scene section planes", 10_000, "section plane");
-  await openEditorSection(page, "FORGE Data", 30_000, "Seismic analysis");
+  await openEditorSection(page, "Forge", 30_000, "Seismic analysis");
   await openEditorSection(page, "Seismic analysis", 10_000, "Seismic browser");
   await openEditorSection(page, "MT resistivity", 30_000, "3D MT top surface");
   await openEditorSection(page, "Other", 5_000, "Foundation");
@@ -384,18 +384,18 @@ export async function openForgeMtResistivityEditorContainers(
 ): Promise<void> {
   await openEditorSection(
     page,
-    "Sections & Cropping",
+    "Sections",
     30_000,
     "Scene section planes",
   );
   await openEditorSection(page, "Scene section planes", 10_000, "section plane");
-  await openEditorSection(page, "FORGE Data", 30_000, "MT resistivity");
+  await openEditorSection(page, "Forge", 30_000, "MT resistivity");
   await openEditorSection(page, "MT resistivity", 30_000, "3D MT top surface");
   await openAllDetails(page);
 }
 
 export async function openForgeTopoEditorContainers(page: Page): Promise<void> {
-  await openEditorSection(page, "Public Topo Map", 30_000, "Topo Settings");
+  await openEditorSection(page, "Topo", 30_000, "Topo Settings");
   await openEditorSection(page, "Topo Settings", 30_000, "Topo Surface");
   await openEditorSection(
     page,

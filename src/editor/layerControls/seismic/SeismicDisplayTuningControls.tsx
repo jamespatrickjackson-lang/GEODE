@@ -1,12 +1,11 @@
-import type React from "react";
 import { vibrancyTertiaryLabel } from "../../styles";
 import {
   nestedControlRowStyle,
   nestedFieldLabelStyle,
-  sliderNumberReadoutStyle,
   type LayerStyleSetter,
   type PageStyleSetter,
 } from "../../styleControls";
+import { TransientSlider } from "../../TransientSlider";
 import type { EditableStyle, PresentationPage } from "../../../pages/types";
 import type { SceneHandle } from "../../../scene";
 import { IsobandControls } from "../mt/IsobandControls";
@@ -88,82 +87,49 @@ export function SeismicDisplayTuningControls({
         <label style={nestedFieldLabelStyle}>
           {isVelocityProduct(selectedProduct) ? "Vel min" : "Amp min"}
         </label>
-        <input
-          data-testid="seismic-amplitude-min"
-          type="range"
+        <TransientSlider
+          testId="seismic-amplitude-min"
           min={0}
           max={0.98}
           step={0.01}
           value={amplitudeMin}
           disabled={disabled}
-          onChange={(e) =>
-            commit({ seismicAmplitudeMin: parseFloat(e.target.value) })
-          }
-          style={
-            {
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${amplitudeMin * 100}%`,
-            } as React.CSSProperties
-          }
+          onChange={(value) => commit({ seismicAmplitudeMin: value })}
+          format={(value) => seismicWindowValueLabel(selectedProduct, value)}
+          style={{ flex: 1, opacity: controlOpacity }}
         />
-        <span style={sliderNumberReadoutStyle}>
-          {seismicWindowValueLabel(selectedProduct, amplitudeMin)}
-        </span>
       </div>
 
       <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>
           {isVelocityProduct(selectedProduct) ? "Vel max" : "Amp max"}
         </label>
-        <input
-          data-testid="seismic-amplitude-max"
-          type="range"
+        <TransientSlider
+          testId="seismic-amplitude-max"
           min={0.02}
           max={1}
           step={0.01}
           value={amplitudeMax}
           disabled={disabled}
-          onChange={(e) =>
-            commit({ seismicAmplitudeMax: parseFloat(e.target.value) })
-          }
-          style={
-            {
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${amplitudeMax * 100}%`,
-            } as React.CSSProperties
-          }
+          onChange={(value) => commit({ seismicAmplitudeMax: value })}
+          format={(value) => seismicWindowValueLabel(selectedProduct, value)}
+          style={{ flex: 1, opacity: controlOpacity }}
         />
-        <span style={sliderNumberReadoutStyle}>
-          {seismicWindowValueLabel(selectedProduct, amplitudeMax)}
-        </span>
       </div>
 
       <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>Gain curve</label>
-        <input
-          data-testid="seismic-amplitude-gamma"
-          type="range"
+        <TransientSlider
+          testId="seismic-amplitude-gamma"
           min={0.35}
           max={2.5}
           step={0.05}
           value={amplitudeGamma}
           disabled={disabled}
-          onChange={(e) =>
-            commit({ seismicAmplitudeGamma: parseFloat(e.target.value) })
-          }
-          style={
-            {
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${
-                ((amplitudeGamma - 0.35) / 2.15) * 100
-              }%`,
-            } as React.CSSProperties
-          }
+          onChange={(value) => commit({ seismicAmplitudeGamma: value })}
+          format={(value) => value.toFixed(2)}
+          style={{ flex: 1, opacity: controlOpacity }}
         />
-        <span style={sliderNumberReadoutStyle}>{amplitudeGamma.toFixed(2)}</span>
       </div>
 
       <div style={nestedControlRowStyle}>
@@ -231,80 +197,49 @@ export function SeismicDisplayTuningControls({
 
       <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>Zero mute</label>
-        <input
-          data-testid="seismic-background-cutoff"
-          type="range"
+        <TransientSlider
+          testId="seismic-background-cutoff"
           min={0}
           max={0.45}
           step={0.01}
           value={backgroundCutoff}
           disabled={disabled || !removeBackground}
-          onChange={(e) =>
-            commit({ seismicBackgroundCutoff: parseFloat(e.target.value) })
-          }
-          style={
-            {
-              flex: 1,
-              opacity: removeBackground ? controlOpacity : 0.35,
-              "--editor-slider-fill": `${(backgroundCutoff / 0.45) * 100}%`,
-            } as React.CSSProperties
-          }
+          onChange={(value) => commit({ seismicBackgroundCutoff: value })}
+          format={(value) => value.toFixed(2)}
+          style={{ flex: 1, opacity: removeBackground ? controlOpacity : 0.35 }}
         />
-        <span style={sliderNumberReadoutStyle}>
-          {backgroundCutoff.toFixed(2)}
-        </span>
       </div>
 
       {selectedProduct?.raymarchCapable ? (
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Ray steps</label>
-          <input
-            data-testid="seismic-volume-sample-steps"
-            type="range"
+          <TransientSlider
+            testId="seismic-volume-sample-steps"
             min={24}
             max={160}
             step={8}
             value={volumeSampleSteps}
             disabled={disabled}
-            onChange={(e) =>
-              commit({
-                seismicVolumeSampleSteps: parseFloat(e.target.value),
-              })
-            }
-            style={
-              {
-                flex: 1,
-                opacity: controlOpacity,
-                "--editor-slider-fill": `${
-                  ((volumeSampleSteps - 24) / 136) * 100
-                }%`,
-              } as React.CSSProperties
-            }
+            onChange={(value) => commit({ seismicVolumeSampleSteps: value })}
+            format={(value) => value.toFixed(0)}
+            style={{ flex: 1, opacity: controlOpacity }}
           />
-          <span style={sliderNumberReadoutStyle}>{volumeSampleSteps}</span>
         </div>
       ) : null}
 
       <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>Time scale</label>
-        <input
-          data-testid="seismic-time-scale"
-          type="range"
+        <TransientSlider
+          testId="seismic-time-scale"
           min={0.25}
           max={8}
           step={0.25}
           value={timeScale}
           disabled={disabled}
-          onChange={(e) => commit({ seismicTimeScale: parseFloat(e.target.value) })}
-          style={
-            {
-              flex: 1,
-              opacity: controlOpacity,
-              "--editor-slider-fill": `${((timeScale - 0.25) / 7.75) * 100}%`,
-            } as React.CSSProperties
-          }
+          onChange={(value) => commit({ seismicTimeScale: value })}
+          format={(value) => value.toFixed(2)}
+          style={{ flex: 1, opacity: controlOpacity }}
         />
-        <span style={sliderNumberReadoutStyle}>{timeScale.toFixed(2)}</span>
       </div>
 
       <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>

@@ -70,13 +70,13 @@ test("authoring target helper separates Global, Sub Master, and pending page sta
   ).toBe(false);
 });
 
-test("Page Manager single-click selects title and double-click edits it", async ({
+test("Pages single-click selects title and double-click edits it", async ({
   page,
 }) => {
   await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
   await expect(page.locator("canvas")).toHaveCount(1);
 
-  const pageManager = page.getByRole("button", { name: "Page Manager" });
+  const pageManager = page.getByRole("button", { name: "Pages" });
   await expect(pageManager).toBeVisible({ timeout: 30_000 });
   if ((await pageManager.getAttribute("aria-expanded")) !== "true") {
     await pageManager.click();

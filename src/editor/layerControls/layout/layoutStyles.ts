@@ -4,13 +4,14 @@ import {
   FROSTED_HAIRLINE,
   frostedSubheading,
   panelStyles,
+  vibrancyLabel,
   vibrancySecondaryLabel,
   vibrancyTertiaryLabel,
 } from "../../styles";
 
 export const layerGroupStyle: React.CSSProperties = {
   marginBottom: 16,
-  paddingLeft: 12,
+  paddingLeft: "var(--editor-section-margin-x, 12px)",
 };
 
 // DEV NOTES: layer subheading bars
@@ -30,12 +31,12 @@ export const layerGroupStyle: React.CSSProperties = {
 export const layerGroupSummaryStyle: React.CSSProperties = {
   ...frostedSubheading,
   display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 14,
+  alignItems: "var(--editor-container-align, center)",
+  justifyContent: "var(--editor-container-justify, space-between)",
+  gap: "var(--editor-container-gap, 14px)",
   width: "100%",
-  minHeight: 42,
-  padding: `0 ${EDITOR_PILL_TEXT_INSET_PX}px`,
+  minHeight: "var(--editor-nested-bar-height, 42px)",
+  padding: `0 var(--editor-pill-text-inset, ${EDITOR_PILL_TEXT_INSET_PX}px)`,
   cursor: "pointer",
   userSelect: "none",
   color: "inherit",
@@ -48,11 +49,21 @@ export const layerGroupSummaryStyle: React.CSSProperties = {
 // was intentionally removed, so group titles should stay short: Topo map tile,
 // Drilling, Targets & Tenure, Water.
 export const layerGroupTitleStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
   fontSize: 13,
   fontWeight: 700,
   lineHeight: 1.2,
-  color: vibrancySecondaryLabel,
+  color: vibrancyLabel,
   minWidth: 0,
+};
+
+export const layerGroupIconStyle: React.CSSProperties = {
+  width: 16,
+  height: 16,
+  flex: "none",
+  color: vibrancyLabel,
 };
 
 export const layerGroupDisclosureStyle: React.CSSProperties = {
@@ -79,7 +90,7 @@ export const layerGroupChevronStyle: React.CSSProperties = {
 // not material. Keep it lighter than the subheading bar unless you explicitly
 // want the content rows boxed.
 export const layerGroupBodyStyle: React.CSSProperties = {
-  padding: "8px 0 8px 28px",
+  padding: "8px 0 8px var(--editor-container-body-indent, 28px)",
 };
 
 export const layerGroupFogControlStyle: React.CSSProperties = {

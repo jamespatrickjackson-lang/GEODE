@@ -1,0 +1,67 @@
+{
+  "id": "151_page",
+  "title": "site markers",
+  "camera": {
+    "position": [
+      991.9468377229841,
+      840.5910019886542,
+      14949.517562874784
+    ],
+    "target": [
+      -5259,
+      -9186,
+      2434
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 57
+  },
+  "transition": {
+    "duration": 15000,
+    "easing": "linear"
+  },
+  "holdDuration": 4000,
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      -5259,
+      -9186,
+      2434
+    ],
+    "orbitSpeedDegPerSec": 4.9,
+    "orbitRadius": 11816,
+    "orbitHeight": 12516,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": true,
+    "zoomDeltaFov": 1,
+    "zoomStartMs": 0,
+    "zoomEndMs": 12000,
+    "zoomCurve": "cinematic",
+    "easeInMs": 5000,
+    "transitionLeadMs": 0,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "cinematic",
+    "pathAwareBlend": true
+  },
+  "overlayLayout": {
+    "x": 0.032356770833333326,
+    "y": 0.0481555834378921,
+    "width": 0.27
+  },
+  "visibilityOverrides": {
+    "utah-forge-mt-stations": true,
+    "terrain": true,
+    "utah-forge-mt-resistivity-full-density": false
+  },
+  "layerOverrides": {
+    "terrain": {
+      "opacity": 0.95
+    }
+  }
+}

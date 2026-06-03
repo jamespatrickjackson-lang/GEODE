@@ -1,5 +1,8 @@
 import type {
   DemoBoreholePathTreatment,
+  DemoBoreholeSourceLocationItemStyle,
+  DemoBoreholeSourceLocationMode,
+  DemoBoreholeSourceLocationStyle,
   DemoBoreholeWellStyle,
   DemoOrientationBlockStyle,
   EditableStyle,
@@ -54,6 +57,27 @@ export interface ResolvedDemoOrientationBlockStyle {
   labelVisible: boolean;
   labelText: string;
   labelLiftM: number;
+}
+
+export interface ResolvedDemoBoreholeSourceLocationStyle {
+  visible: boolean;
+  mode: DemoBoreholeSourceLocationMode;
+  color: string;
+  opacity: number;
+  diameterM: number;
+  lengthM: number;
+  lineWidth: number;
+  topRingVisible: boolean;
+  topRingRadiusM: number;
+  topRingTubeM: number;
+  topRingColor: string;
+  topRingOpacity: number;
+  labelVisible: boolean;
+  labelLiftM: number;
+}
+
+export interface ResolvedDemoBoreholeSourceLocationItemStyle {
+  visible: boolean;
 }
 
 export type ScenePointTuple = [number, number, number];
@@ -117,6 +141,24 @@ export const UTAH_FORGE_DEMO_ORIENTATION_BLOCK_DEFAULT: ResolvedDemoOrientationB
     labelLiftM: 25.5,
   };
 
+export const UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT: ResolvedDemoBoreholeSourceLocationStyle =
+  {
+    visible: true,
+    mode: "rounded-trace",
+    color: "#f6d365",
+    opacity: 0.92,
+    diameterM: 72,
+    lengthM: 900,
+    lineWidth: 8,
+    topRingVisible: false,
+    topRingRadiusM: 135,
+    topRingTubeM: 12,
+    topRingColor: "#ffffff",
+    topRingOpacity: 0.88,
+    labelVisible: true,
+    labelLiftM: 130,
+  };
+
 function finiteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
@@ -153,6 +195,19 @@ function pathTreatment(
   return value === "survey" ||
     value === "smoothed" ||
     value === "presentation-normalized"
+    ? value
+    : fallback;
+}
+
+function sourceLocationMode(
+  value: unknown,
+  fallback: DemoBoreholeSourceLocationMode,
+): DemoBoreholeSourceLocationMode {
+  return value === "rounded-trace" ||
+    value === "line" ||
+    value === "pin" ||
+    value === "crosshair" ||
+    value === "hidden"
     ? value
     : fallback;
 }
@@ -343,6 +398,97 @@ export function resolveDemoOrientationBlockStyle(
   };
 }
 
+export function resolveDemoBoreholeSourceLocationStyle(
+  style: EditableStyle,
+): ResolvedDemoBoreholeSourceLocationStyle {
+  const authored = style.demoBoreholeSourceLocations ?? {};
+  return {
+    visible: booleanValue(
+      authored.visible,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.visible,
+    ),
+    mode: sourceLocationMode(
+      authored.mode,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.mode,
+    ),
+    color: stringValue(
+      authored.color,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.color,
+    ),
+    opacity: numberValue(
+      authored.opacity,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.opacity,
+      0,
+      1,
+    ),
+    diameterM: numberValue(
+      authored.diameterM,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.diameterM,
+      8,
+      400,
+    ),
+    lengthM: numberValue(
+      authored.lengthM,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.lengthM,
+      50,
+      4000,
+    ),
+    lineWidth: numberValue(
+      authored.lineWidth,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.lineWidth,
+      1,
+      28,
+    ),
+    topRingVisible: booleanValue(
+      authored.topRingVisible,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.topRingVisible,
+    ),
+    topRingRadiusM: numberValue(
+      authored.topRingRadiusM,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.topRingRadiusM,
+      20,
+      1200,
+    ),
+    topRingTubeM: numberValue(
+      authored.topRingTubeM,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.topRingTubeM,
+      2,
+      120,
+    ),
+    topRingColor: stringValue(
+      authored.topRingColor,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.topRingColor,
+    ),
+    topRingOpacity: numberValue(
+      authored.topRingOpacity,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.topRingOpacity,
+      0,
+      1,
+    ),
+    labelVisible: booleanValue(
+      authored.labelVisible,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.labelVisible,
+    ),
+    labelLiftM: numberValue(
+      authored.labelLiftM,
+      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.labelLiftM,
+      -250,
+      1000,
+    ),
+  };
+}
+
+export function resolveDemoBoreholeSourceLocationItemStyle(
+  style: EditableStyle,
+  sourceLocationId: string,
+): ResolvedDemoBoreholeSourceLocationItemStyle {
+  const authored =
+    style.demoBoreholeSourceLocations?.items?.[sourceLocationId] ?? {};
+  return {
+    visible: booleanValue(authored.visible, true),
+  };
+}
+
 export function cleanDemoBoreholePath(
   points: readonly ScenePointTuple[],
   mode: DemoBoreholePathTreatment,
@@ -412,6 +558,37 @@ export function patchDemoOrientationBlockStyle(
     demoBoreholeBlock: {
       ...(style.demoBoreholeBlock ?? {}),
       ...patch,
+    },
+  };
+}
+
+export function patchDemoBoreholeSourceLocationStyle(
+  style: EditableStyle,
+  patch: DemoBoreholeSourceLocationStyle,
+): Pick<EditableStyle, "demoBoreholeSourceLocations"> {
+  return {
+    demoBoreholeSourceLocations: {
+      ...(style.demoBoreholeSourceLocations ?? {}),
+      ...patch,
+    },
+  };
+}
+
+export function patchDemoBoreholeSourceLocationItemStyle(
+  style: EditableStyle,
+  sourceLocationId: string,
+  patch: DemoBoreholeSourceLocationItemStyle,
+): Pick<EditableStyle, "demoBoreholeSourceLocations"> {
+  return {
+    demoBoreholeSourceLocations: {
+      ...(style.demoBoreholeSourceLocations ?? {}),
+      items: {
+        ...(style.demoBoreholeSourceLocations?.items ?? {}),
+        [sourceLocationId]: {
+          ...(style.demoBoreholeSourceLocations?.items?.[sourceLocationId] ?? {}),
+          ...patch,
+        },
+      },
     },
   };
 }

@@ -62,12 +62,12 @@
       "sceneSectionEnabled": true,
       "sceneSectionActiveAxis": "x",
       "sceneSectionWindowEnabled": true,
-      "sceneSectionWindowActiveAxis": "y",
+      "sceneSectionWindowActiveAxis": "x",
       "sceneSectionWindowByAxis": {
         "x": {
           "minAlongM": -44293.7774015172,
-          "maxAlongM": 17869.36362149368,
-          "bottomElevationM": -12142.201438124524
+          "maxAlongM": 17889.148055192687,
+          "bottomElevationM": -12592.386890878908
         },
         "y": {
           "minAlongM": -53489.89739256331,
@@ -103,8 +103,9 @@
           "axisAHeading": "Latitude (°)",
           "axisBHeading": "Elevation (km)",
           "axisDatum": "latlon",
-          "maxAM": 17869.36362149368,
-          "maxBM": 5259.487289179248
+          "maxAM": 17889.148055192687,
+          "maxBM": 5259.487289179248,
+          "minBM": -12592.386890878908
         }
       },
       "sceneSectionLegendVisible": false,
@@ -125,8 +126,9 @@
             "axisAHeading": "Latitude (°)",
             "axisBHeading": "Elevation (km)",
             "axisDatum": "latlon",
-            "maxAM": 17869.36362149368,
-            "maxBM": 5259.487289179248
+            "maxAM": 17889.148055192687,
+            "maxBM": 5259.487289179248,
+            "minBM": -12592.386890878908
           }
         },
         {

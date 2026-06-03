@@ -53,7 +53,125 @@ function layerById(project, id) {
   return layer;
 }
 
+const REGISTRATION_FIELD_NAMES = [
+  "horizontalCrs",
+  "verticalDatum",
+  "units",
+  "coordinateBasis",
+  "origin",
+  "rotationDeg",
+  "registrationStatus",
+];
+
+const REGISTRATION_COORDINATE_BASES = new Set([
+  "utm",
+  "latlon",
+  "local-mesh",
+  "model-origin",
+]);
+
+const REGISTRATION_STATUSES = new Set(["unverified", "validated"]);
+const NAVIGATION_SOURCES = new Set(["delivered", "digitized", "fallback"]);
+const PLACEMENT_ACCURACY_VALUES = new Set(["validated", "approximate", "unknown"]);
+
+function validateRegistrationMetadata(context, registration) {
+  assert.ok(registration && typeof registration === "object", `${context} registration`);
+  for (const field of REGISTRATION_FIELD_NAMES) {
+    assert.ok(
+      Object.prototype.hasOwnProperty.call(registration, field),
+      `${context} registration missing ${field}`,
+    );
+  }
+  assert.equal(typeof registration.horizontalCrs, "string", `${context} horizontal CRS`);
+  assert.ok(registration.horizontalCrs.length > 0, `${context} horizontal CRS`);
+  assert.equal(typeof registration.verticalDatum, "string", `${context} vertical datum`);
+  assert.ok(registration.verticalDatum.length > 0, `${context} vertical datum`);
+  assert.equal(registration.units, "m", `${context} units`);
+  assert.equal(
+    REGISTRATION_COORDINATE_BASES.has(registration.coordinateBasis),
+    true,
+    `${context} coordinate basis`,
+  );
+  assert.ok(registration.origin && typeof registration.origin === "object", `${context} origin`);
+  assert.equal(typeof registration.rotationDeg, "number", `${context} rotationDeg`);
+  assert.equal(
+    REGISTRATION_STATUSES.has(registration.registrationStatus),
+    true,
+    `${context} registration status`,
+  );
+  if (registration.registrationStatus === "validated") {
+    assert.ok(
+      Array.isArray(registration.controlPoints) && registration.controlPoints.length > 0,
+      `${context} validated registration requires control points`,
+    );
+  }
+  if (
+    registration.coordinateBasis === "local-mesh" ||
+    registration.coordinateBasis === "model-origin"
+  ) {
+    assert.ok(registration.origin, `${context} local/model registration requires origin`);
+    assert.equal(typeof registration.rotationDeg, "number", `${context} local/model rotation`);
+  }
+}
+
+function validateProjectRegistration(project) {
+  validateRegistrationMetadata("project registrationFrame", project.registrationFrame);
+  for (const layer of project.layers) {
+    validateRegistrationMetadata(
+      `layer ${layer.id}`,
+      layer.metadata?.crsRegistration,
+    );
+  }
+}
+
+function validateSeismicNavigationPlacement(context, placement) {
+  assert.ok(placement && typeof placement === "object", `${context} navigation placement`);
+  assert.equal(
+    NAVIGATION_SOURCES.has(placement.navigationSource),
+    true,
+    `${context} navigation source`,
+  );
+  assert.equal(
+    PLACEMENT_ACCURACY_VALUES.has(placement.placementAccuracy),
+    true,
+    `${context} placement accuracy`,
+  );
+  assert.equal(
+    typeof placement.canClaimPreciseRegistration,
+    "boolean",
+    `${context} precise-registration flag`,
+  );
+  if (placement.navigationSource === "fallback") {
+    assert.equal(
+      placement.placementAccuracy,
+      "approximate",
+      `${context} fallback placement accuracy`,
+    );
+    assert.equal(
+      placement.canClaimPreciseRegistration,
+      false,
+      `${context} fallback cannot claim precise registration`,
+    );
+    assert.notEqual(
+      placement.placementAccuracy,
+      "validated",
+      `${context} fallback placement must not be validated`,
+    );
+    assert.match(
+      placement.statusLabel ?? "",
+      /Approximate legacy line placement/,
+      `${context} fallback status label`,
+    );
+    assert.ok(
+      Array.isArray(placement.validationPath) && placement.validationPath.length > 0,
+      `${context} fallback validation path`,
+    );
+  }
+}
+
 function validateProjectLayerWiring(project) {
+  validateProjectRegistration(project);
+
   const seismicLayer = layerById(project, "utah-forge-phase3-seismic-browser");
   const mtVolumeLayer = layerById(project, "utah-forge-mt-resistivity-volume");
   const mtFullDensityLayer = layerById(
@@ -132,7 +250,7 @@ function validateProjectLayerWiring(project) {
   assert.equal(workingArea?.footprintWidthM, 4200);
   assert.equal(workingArea?.footprintHeightM, 4200);
   assert.deepEqual(workingArea?.sceneBounds?.min, [-8041.4, -12617.6, -6200]);
-  assert.deepEqual(workingArea?.sceneBounds?.max, [-3841.4, -8417.6, 2045.3]);
+  assert.deepEqual(workingArea?.sceneBounds?.max, [-3841.4, -8417.6, 1800]);
   assert.equal(workingArea?.source3dNavigationEnvelope?.pointCount, 1386);
 
   assert.equal(mtVolumeLayer.type, "volume");
@@ -166,6 +284,10 @@ function validateProjectLayerWiring(project) {
 
   for (const product of seismicLayer.metadata?.seismicProducts ?? []) {
     assert.doesNotMatch(product.label ?? "", /Forge\s*3D|Forge3d/i);
+    validateSeismicNavigationPlacement(
+      `project seismic product ${product.id}`,
+      product.navigationPlacement,
+    );
   }
 
   return seismicLayer;
@@ -422,6 +544,29 @@ function validateSeismicProducts(seismicLayer) {
   assertGreaterThan(manifest.navigation.pointCount, 1_000, "seismic navigation point count");
   assert.match(manifest.crs.primarySourceCrs, /EPSG:26912/);
   assert.match(manifest.crs.legacySourceCrs, /EPSG:32043/);
+  assert.equal(manifest.crs.registrationStatus, "unverified");
+  validateRegistrationMetadata("seismic manifest crs", manifest.crs.registration);
+  validateRegistrationMetadata("seismic manifest navigation", manifest.navigation.registration);
+  assertArrayContainsAll(
+    manifest.crs.transformPipeline ?? [],
+    [
+      "source coordinates require declared source CRS",
+      "source coordinates are transformed into EPSG:26912 before scene-local conversion",
+      "GeoSee project origin is subtracted after CRS transformation",
+    ],
+    "seismic manifest CRS transform pipeline",
+  );
+  assert.equal(manifest.sampleDomain?.referenceDatumM, 1800);
+  assert.equal(manifest.verticalReference?.referenceDatumM, 1800);
+  assert.match(manifest.verticalReference?.transform ?? "", /datumM - sample/);
+  assert.equal(
+    manifest.verticalReference?.calibration?.expectedDepthConversionErrorM,
+    20,
+  );
+  assert.deepEqual(
+    manifest.valueEncoding?.velocity?.displayRangeMPerS,
+    [2000, 5000],
+  );
   assert.equal(manifest.products.some((product) => product.surveyKind === "3d"), true);
   assert.equal(
     manifest.products.some((product) => product.surveyKind === "legacy-2d"),
@@ -589,6 +734,27 @@ function validateSeismicProducts(seismicLayer) {
     assertNotContains(product.sourceFile.toLowerCase(), "raw_shot_gathers", product.id);
     assertNotContains(product.sourceFile.toLowerCase(), "uncorrelated", product.id);
     assertNotContains(product.sourceFile.toLowerCase(), "correlated", product.id);
+    assert.equal(product.verticalReference?.sourceDatumM, product.datumM, `${product.id} datum`);
+    validateSeismicNavigationPlacement(
+      `manifest seismic product ${product.id}`,
+      product.navigationPlacement,
+    );
+    assert.equal(product.verticalReference?.referenceDatumM, 1800, `${product.id} reference datum`);
+    assert.match(
+      product.verticalReference?.transform ?? "",
+      /datumM - sample/,
+      `${product.id} vertical transform`,
+    );
+    if (product.domainKind === "depth") {
+      assert.equal(product.datumM, 1800, `${product.id} depth datum`);
+    }
+    if (product.productKind === "velocity") {
+      assert.deepEqual(
+        product.valueEncoding?.displayRangeMPerS,
+        [2000, 5000],
+        `${product.id} velocity display range`,
+      );
+    }
 
     for (const section of product.sections) {
       assertGreaterThan(
@@ -602,15 +768,43 @@ function validateSeismicProducts(seismicLayer) {
         `${product.id} section amplitude p98`,
       );
       assertFileExists(`${SEISMIC_BROWSER_DIR}/${section.amplitudeFile}`);
+      assert.equal(section.datumM, product.datumM, `${product.id}/${section.id} datum`);
+      assert.equal(
+        section.verticalReference?.sourceDatumM,
+        product.datumM,
+        `${product.id}/${section.id} source datum`,
+      );
+      validateSeismicNavigationPlacement(
+        `manifest seismic section ${product.id}/${section.id}`,
+        section.navigationPlacement,
+      );
     }
 
     if (product.raymarchVolume) {
       assert.equal(product.raymarchVolume.dimensions.every((dim) => dim > 1), true);
       assertFileExists(`${SEISMIC_BROWSER_DIR}/${product.raymarchVolume.file}`);
+      assert.equal(
+        product.raymarchVolume.verticalReference?.sourceDatumM,
+        product.datumM,
+        `${product.id} raymarch source datum`,
+      );
     }
   }
 
   const navigation = readJson(SEISMIC_NAVIGATION_PATH);
+  validateRegistrationMetadata("seismic navigation GeoJSON", navigation.properties?.registration);
+  assert.equal(navigation.properties?.registrationStatus, "unverified");
+  assert.equal(navigation.properties?.horizontalCrs, "EPSG:26912");
+  assert.equal(navigation.properties?.coordinateBasis, "utm");
+  assertArrayContainsAll(
+    navigation.properties?.transformPipeline ?? [],
+    [
+      "parse declared SP1 coordinates",
+      "transform source CRS into EPSG:26912 project frame with pyproj.Transformer",
+      "subtract GeoSee project origin",
+    ],
+    "seismic navigation transform pipeline",
+  );
   assertGreaterThan(navigation.features.length, 1_000, "seismic navigation features");
   assertGreaterThan(
     navigation.features.filter((feature) => feature.properties?.role === "source").length,
@@ -651,8 +845,19 @@ function validateSeismicProducts(seismicLayer) {
     "project audience presets",
   );
   assert.equal(seismicLayer.metadata?.seismicCapabilityPresets?.length, 14);
+  assert.equal(seismicLayer.metadata?.seismicVerticalReference?.referenceDatumM, 1800);
+  assert.deepEqual(
+    seismicLayer.metadata?.seismicValueEncoding?.velocity?.displayRangeMPerS,
+    [2000, 5000],
+  );
   const projectVelocityProduct = seismicLayer.metadata?.seismicProducts?.find(
     (product) => product.id === "gdr-1015-forge3d-velo5d-float-01312018",
+  );
+  assert.equal(projectVelocityProduct?.datumM, 1800, "project velocity datum");
+  assert.deepEqual(
+    projectVelocityProduct?.valueEncoding?.displayRangeMPerS,
+    [2000, 5000],
+    "project velocity display range",
   );
   assertGreaterThan(
     projectVelocityProduct?.amplitudeStats?.p98,

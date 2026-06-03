@@ -1,0 +1,58 @@
+{
+  "id": "150_page",
+  "title": "START 2 duplicate",
+  "camera": {
+    "position": [
+      -3555.5929501551946,
+      73051.54715382497,
+      9487.013102901688
+    ],
+    "target": [
+      -5993,
+      -8675,
+      2290
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 57
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      -5993,
+      -8675,
+      2290
+    ],
+    "orbitSpeedDegPerSec": 1.3,
+    "orbitRadius": 81763,
+    "orbitHeight": 7197,
+    "orbitDirection": -1,
+    "zoomFov": 52,
+    "zoomEnabled": true,
+    "zoomDeltaFov": -40,
+    "zoomStartMs": 0,
+    "zoomEndMs": 12000,
+    "zoomCurve": "cinematic",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": true
+  },
+  "overlayLayout": {
+    "x": 0.032356770833333326,
+    "y": 0.0481555834378921,
+    "width": 0.27
+  },
+  "hidden": true
+}

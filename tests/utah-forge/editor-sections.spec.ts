@@ -10,7 +10,7 @@ async function ensureTopLevelOpen(page: Page, title: string): Promise<void> {
   await expect(button).toHaveAttribute("aria-expanded", "true");
 }
 
-test("Utah FORGE editor elevates Sections & Cropping before Public Topo Map", async ({
+test("Utah FORGE editor keeps Sections before Topo", async ({
   page,
 }) => {
   await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
@@ -20,27 +20,27 @@ test("Utah FORGE editor elevates Sections & Cropping before Public Topo Map", as
     '[data-dev-source="src/editor/styles.ts:180"][role="button"]',
   );
   await expect(
-    topLevelButtons.filter({ hasText: "Sections & Cropping" }),
+    topLevelButtons.filter({ hasText: "Sections" }),
   ).toHaveCount(1);
 
   const titles = await topLevelButtons.evaluateAll((buttons) =>
     buttons.map((button) => button.textContent?.replace(/\s+/g, " ").trim()),
   );
-  const cameraIndex = titles.findIndex((title) => title === "Camera Dynamics");
+  const cinematicsIndex = titles.findIndex((title) => title === "Cinematics");
   const sectionsIndex = titles.findIndex(
-    (title) => title === "Sections & Cropping",
+    (title) => title === "Sections",
   );
-  const topoIndex = titles.findIndex((title) => title === "Public Topo Map");
+  const topoIndex = titles.findIndex((title) => title === "Topo");
 
-  expect(cameraIndex).toBeGreaterThan(-1);
-  expect(sectionsIndex).toBeGreaterThan(cameraIndex);
+  expect(cinematicsIndex).toBeGreaterThan(-1);
+  expect(sectionsIndex).toBeGreaterThan(cinematicsIndex);
   expect(topoIndex).toBeGreaterThan(sectionsIndex);
 
-  await ensureTopLevelOpen(page, "Sections & Cropping");
+  await ensureTopLevelOpen(page, "Sections");
   const sectionsBlock = page
     .locator('[data-dev-source="src/editor/CollapsibleSection.tsx:35"]')
     .filter({
-      has: page.getByRole("button", { name: "Sections & Cropping" }),
+      has: page.getByRole("button", { name: "Sections" }),
     });
   await expect(sectionsBlock).toContainText("Scene section planes");
   await expect(sectionsBlock).toContainText("Phase 3 working area");
@@ -48,10 +48,10 @@ test("Utah FORGE editor elevates Sections & Cropping before Public Topo Map", as
   await expect(page.getByTestId("scene-section-planes-container")).toBeVisible();
   await expect(page.getByTestId("working-area-focus-container")).toBeVisible();
 
-  await ensureTopLevelOpen(page, "FORGE Data");
+  await ensureTopLevelOpen(page, "Forge");
   const forgeDataBlock = page
     .locator('[data-dev-source="src/editor/CollapsibleSection.tsx:35"]')
-    .filter({ has: page.getByRole("button", { name: "FORGE Data" }) });
+    .filter({ has: page.getByRole("button", { name: "Forge" }) });
   await expect(forgeDataBlock).not.toContainText("Scene section planes");
   await expect(forgeDataBlock).not.toContainText(
     "Phase 3 working area",

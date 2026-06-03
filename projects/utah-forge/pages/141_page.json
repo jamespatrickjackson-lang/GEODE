@@ -1,0 +1,57 @@
+{
+  "id": "141_page",
+  "title": "START 2",
+  "camera": {
+    "position": [
+      -6519.675585782421,
+      57914.83021744785,
+      17522.07176689423
+    ],
+    "target": [
+      -5845,
+      -6491,
+      2176
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 70
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeOutCubic"
+  },
+  "holdDuration": 4000,
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": false,
+    "poi": [
+      -5845,
+      -6491,
+      2176
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 64409,
+    "orbitHeight": 15346,
+    "orbitDirection": -1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  },
+  "overlayLayout": {
+    "x": 0.032356770833333326,
+    "y": 0.0481555834378921,
+    "width": 0.27
+  }
+}

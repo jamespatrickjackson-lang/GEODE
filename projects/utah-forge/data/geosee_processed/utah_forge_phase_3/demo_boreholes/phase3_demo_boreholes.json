@@ -40,6 +40,558 @@
     "The white surface facility block is schematic orientation geometry, not a measured building footprint.",
     "This layer is intended for presentation orientation only and must not be used for drilling, survey, or engineering decisions."
   ],
+  "priorityRegistry": [
+    {
+      "id": "58-32",
+      "label": "58-32",
+      "displayLabel": "58-32: core characterization and seismic/geologic anchor",
+      "aliases": [],
+      "priority": 1,
+      "role": "core characterization and seismic/geologic anchor",
+      "demoUse": "calibration and geologic reference",
+      "sourceStatus": "source-location-available",
+      "renderStatus": "not-rendered",
+      "registrationStatus": "unverified",
+      "claimStatus": "claim-safe-source-location-only",
+      "linkedLayerId": null,
+      "sourceRecordIds": [
+        "58-32-WELL",
+        "58-32-NEC",
+        "58-32-NWC",
+        "58-32-SEC",
+        "58-32-SWC"
+      ],
+      "sourceLocation": {
+        "id": "58-32-WELL",
+        "sourceSubmission": "GDR 1358",
+        "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+        "featureCode": "WELL",
+        "notes": "",
+        "utm": [
+          335450.9891,
+          4263037.906,
+          1684.7724
+        ],
+        "latLon": [
+          38.50051644,
+          -112.8870119
+        ],
+        "scene": [
+          -6016.361,
+          -10336.594,
+          1684.772
+        ]
+      },
+      "sourcePadRecords": [
+        {
+          "id": "58-32-NEC",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "WELL-PAD",
+          "notes": "Measured on pad",
+          "utm": [
+            335512.3976,
+            4263070.953,
+            1685.2112
+          ],
+          "latLon": [
+            38.50082545,
+            -112.8863158
+          ],
+          "scene": [
+            -5954.952,
+            -10303.547,
+            1685.211
+          ]
+        },
+        {
+          "id": "58-32-NWC",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "WELL-PAD",
+          "notes": "Measured on pad",
+          "utm": [
+            335366.1021,
+            4263068.517,
+            1684.8863
+          ],
+          "latLon": [
+            38.50077648,
+            -112.8879921
+          ],
+          "scene": [
+            -6101.248,
+            -10305.983,
+            1684.886
+          ]
+        },
+        {
+          "id": "58-32-SEC",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "WELL-PAD",
+          "notes": "Measured on pad",
+          "utm": [
+            335512.6768,
+            4262997.525,
+            1684.9264
+          ],
+          "latLon": [
+            38.50016412,
+            -112.8862953
+          ],
+          "scene": [
+            -5954.673,
+            -10376.975,
+            1684.926
+          ]
+        },
+        {
+          "id": "58-32-SWC",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "WELL-PAD",
+          "notes": "Measured on pad",
+          "utm": [
+            335361.5891,
+            4263002.983,
+            1684.6068
+          ],
+          "latLon": [
+            38.50018536,
+            -112.8880284
+          ],
+          "scene": [
+            -6105.761,
+            -10371.517,
+            1684.607
+          ]
+        }
+      ],
+      "notes": "GDR 1358 provides well and pad location rows. No active trajectory is present, so this remains a source-location record only."
+    },
+    {
+      "id": "16A(78)-32",
+      "label": "16A(78)-32",
+      "displayLabel": "16A (78)-32: primary injection/source well for stimulation and EM monitoring.",
+      "aliases": [
+        "16A",
+        "16A-32"
+      ],
+      "priority": 2,
+      "role": "primary injection/source well for stimulation and EM monitoring",
+      "demoUse": "injection/source well context",
+      "sourceStatus": "trajectory-and-source-location-available",
+      "renderStatus": "trajectory-rendered",
+      "registrationStatus": "unverified",
+      "claimStatus": "claim-safe-orientation",
+      "linkedLayerId": "utah-forge-phase3-demo-boreholes",
+      "sourceRecordIds": [
+        "16A-32-WELL",
+        "16A-32-NEC",
+        "16A-32-NWC",
+        "16A-32-SEC",
+        "16A-32-SWC"
+      ],
+      "sourceLocation": {
+        "id": "16A-32-WELL",
+        "sourceSubmission": "GDR 1358",
+        "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+        "featureCode": "WELL",
+        "notes": "",
+        "utm": [
+          334641.1891,
+          4263443.693,
+          1650.0249
+        ],
+        "latLon": [
+          38.50402147,
+          -112.8963897
+        ],
+        "scene": [
+          -6826.161,
+          -9930.807,
+          1650.025
+        ]
+      },
+      "sourcePadRecords": [
+        {
+          "id": "16A-32-NEC",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "WELL-PAD",
+          "notes": "Measured on pad",
+          "utm": [
+            334713.2277,
+            4263489.39,
+            1650.0901
+          ],
+          "latLon": [
+            38.50444645,
+            -112.8955747
+          ],
+          "scene": [
+            -6754.122,
+            -9885.11,
+            1650.09
+          ]
+        },
+        {
+          "id": "16A-32-NWC",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "WELL-PAD",
+          "notes": "Measured on pad",
+          "utm": [
+            334596.401,
+            4263569.024,
+            1648.8839
+          ],
+          "latLon": [
+            38.50514203,
+            -112.8969327
+          ],
+          "scene": [
+            -6870.949,
+            -9805.476,
+            1648.884
+          ]
+        },
+        {
+          "id": "16A-32-SEC",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "WELL-PAD",
+          "notes": "Measured on pad",
+          "utm": [
+            334687.5416,
+            4263380.664,
+            1649.8054
+          ],
+          "latLon": [
+            38.50346236,
+            -112.8958435
+          ],
+          "scene": [
+            -6779.808,
+            -9993.836,
+            1649.805
+          ]
+        },
+        {
+          "id": "16A-32-SWC",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "WELL-PAD",
+          "notes": "Measured on pad",
+          "utm": [
+            334556.6323,
+            4263416.471,
+            1649.1617
+          ],
+          "latLon": [
+            38.50376058,
+            -112.8973525
+          ],
+          "scene": [
+            -6910.718,
+            -9958.029,
+            1649.162
+          ]
+        }
+      ],
+      "notes": "Rendered from the existing public-source directional survey trajectory; GDR 1358 also provides well and pad location rows."
+    },
+    {
+      "id": "78B-32",
+      "label": "78B-32",
+      "displayLabel": "78B-32: key observation well for borehole EM/VEMP measurements.",
+      "aliases": [],
+      "priority": 3,
+      "role": "key observation well for borehole EM/VEMP measurements",
+      "demoUse": "observation well context",
+      "sourceStatus": "source-location-available",
+      "renderStatus": "not-rendered",
+      "registrationStatus": "unverified",
+      "claimStatus": "claim-safe-source-location-only",
+      "linkedLayerId": null,
+      "sourceRecordIds": [
+        "78B-32-WELL",
+        "78B-32-NEC",
+        "78B-32-NWC",
+        "78B-32-SEC",
+        "78B-32-SWC"
+      ],
+      "sourceLocation": {
+        "id": "78B-32-WELL",
+        "sourceSubmission": "GDR 1358",
+        "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+        "featureCode": "WELL",
+        "notes": "",
+        "utm": [
+          335865.45,
+          4262983.529,
+          1705.6162
+        ],
+        "latLon": [
+          38.50010313,
+          -112.8822486
+        ],
+        "scene": [
+          -5601.9,
+          -10390.971,
+          1705.616
+        ]
+      },
+      "sourcePadRecords": [
+        {
+          "id": "78B-32-NEC",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "WELL-PAD",
+          "notes": "Measured on pad",
+          "utm": [
+            335922.1025,
+            4263005.903,
+            1705.622
+          ],
+          "latLon": [
+            38.50031509,
+            -112.8816045
+          ],
+          "scene": [
+            -5545.247,
+            -10368.597,
+            1705.622
+          ]
+        },
+        {
+          "id": "78B-32-NWC",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "WELL-PAD",
+          "notes": "Measured on pad",
+          "utm": [
+            335822.3792,
+            4263006.944,
+            1705.4585
+          ],
+          "latLon": [
+            38.5003061,
+            -112.8827477
+          ],
+          "scene": [
+            -5644.971,
+            -10367.556,
+            1705.458
+          ]
+        },
+        {
+          "id": "78B-32-SEC",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "WELL-PAD",
+          "notes": "Measured on pad",
+          "utm": [
+            335910.3971,
+            4262955.008,
+            1705.6089
+          ],
+          "latLon": [
+            38.49985451,
+            -112.8817267
+          ],
+          "scene": [
+            -5556.953,
+            -10419.492,
+            1705.609
+          ]
+        },
+        {
+          "id": "78B-32-SWC",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "WELL-PAD",
+          "notes": "Measured on pad",
+          "utm": [
+            335811.7801,
+            4262961.918,
+            1705.4559
+          ],
+          "latLon": [
+            38.49989858,
+            -112.8828587
+          ],
+          "scene": [
+            -5655.57,
+            -10412.582,
+            1705.456
+          ]
+        }
+      ],
+      "notes": "GDR 1358 provides well and pad location rows. No active trajectory is present, so this remains a source-location record only."
+    },
+    {
+      "id": "16B",
+      "label": "16B",
+      "displayLabel": "16B: production well, relevant to injection/production pair context.",
+      "aliases": [
+        "16B(78)-32"
+      ],
+      "priority": 4,
+      "role": "production well, relevant to injection/production pair context",
+      "demoUse": "production well context",
+      "sourceStatus": "trajectory-source-available",
+      "renderStatus": "trajectory-rendered",
+      "registrationStatus": "unverified",
+      "claimStatus": "claim-safe-orientation",
+      "linkedLayerId": "utah-forge-phase3-demo-boreholes",
+      "sourceRecordIds": [
+        "16B(78)-32 Final Survey Report.xlsx"
+      ],
+      "sourceLocation": {
+        "id": "16B(78)-32-collar-from-survey",
+        "sourceSubmission": "GDR 1516",
+        "sourceFile": "16B(78)-32 final well survey archive",
+        "featureCode": "WELL",
+        "notes": "Collar from public directional survey trajectory source.",
+        "utm": [
+          334642.75,
+          4263479.592,
+          1650.693
+        ],
+        "latLon": null,
+        "scene": [
+          -6824.6,
+          -9894.908,
+          1650.693
+        ]
+      },
+      "notes": "Rendered through the existing 16B(78)-32 public-source directional survey trajectory. No matching GDR 1358 CSV row was found."
+    },
+    {
+      "id": "Acord-1",
+      "label": "Acord-1",
+      "displayLabel": "Acord-1: supporting mapped reference well.",
+      "aliases": [],
+      "priority": 5,
+      "role": "supporting mapped reference well",
+      "demoUse": "mapped reference context",
+      "sourceStatus": "not-found-in-active-source",
+      "renderStatus": "not-rendered",
+      "registrationStatus": "unverified",
+      "claimStatus": "do-not-claim-geometry",
+      "linkedLayerId": null,
+      "sourceRecordIds": [],
+      "sourceLocation": null,
+      "notes": "No Acord-1 row was found in the active GDR 1358 well and seismic locations CSV or active borehole trajectory sources."
+    },
+    {
+      "id": "FDST",
+      "label": "FDST / FORGE test drill site",
+      "displayLabel": "FDST/ FORGE test drill site: supporting mapped reference site.",
+      "aliases": [
+        "FORGE test drill site"
+      ],
+      "priority": 6,
+      "role": "supporting mapped reference site",
+      "demoUse": "mapped reference site context",
+      "sourceStatus": "not-found-in-active-source",
+      "renderStatus": "not-rendered",
+      "registrationStatus": "unverified",
+      "claimStatus": "do-not-claim-geometry",
+      "linkedLayerId": null,
+      "sourceRecordIds": [],
+      "sourceLocation": null,
+      "notes": "No FDST or FORGE test drill site row was found in the active GDR 1358 well and seismic locations CSV or active borehole trajectory sources."
+    },
+    {
+      "id": "unnamed-possible-seismic-monitoring-well",
+      "label": "Unnamed",
+      "displayLabel": "Unnamed: possible seismic monitoring well, low priority unless ID is recovered.",
+      "aliases": [],
+      "priority": 7,
+      "role": "possible seismic monitoring well",
+      "demoUse": "low-priority candidate pending recovered identifier",
+      "sourceStatus": "candidate-source-locations-available",
+      "renderStatus": "not-rendered",
+      "registrationStatus": "unverified",
+      "claimStatus": "do-not-claim-geometry",
+      "linkedLayerId": null,
+      "sourceRecordIds": [
+        "BOR1",
+        "BOR2",
+        "BOR3"
+      ],
+      "sourceLocation": null,
+      "sourceCandidates": [
+        {
+          "id": "BOR1",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "SEISMIC",
+          "notes": "",
+          "utm": [
+            335037.4976,
+            4261314.18,
+            1694.5918
+          ],
+          "latLon": [
+            38.48491398,
+            -112.8913452
+          ],
+          "scene": [
+            -6429.852,
+            -12060.32,
+            1694.592
+          ]
+        },
+        {
+          "id": "BOR2",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "SEISMIC",
+          "notes": "",
+          "utm": [
+            332907.3614,
+            4263849.099,
+            1584.624
+          ],
+          "latLon": [
+            38.50734939,
+            -112.9163603
+          ],
+          "scene": [
+            -8559.989,
+            -9525.401,
+            1584.624
+          ]
+        },
+        {
+          "id": "BOR3",
+          "sourceSubmission": "GDR 1358",
+          "sourceFile": "Utah FORGE Well and Seismic Locations.csv",
+          "featureCode": "SEISMIC",
+          "notes": "",
+          "utm": [
+            336033.8466,
+            4264451.599,
+            1697.4053
+          ],
+          "latLon": [
+            38.51335742,
+            -112.8806624
+          ],
+          "scene": [
+            -5433.503,
+            -8922.901,
+            1697.405
+          ]
+        }
+      ],
+      "notes": "GDR 1358 contains BOR1, BOR2, and BOR3 seismic feature rows, but no recovered well identifier is present. Keep as candidates only."
+    }
+  ],
   "styleDefaults": {
     "pipeRadiusM": 12,
     "opacity": 0.92,
@@ -88,10 +640,10 @@
       "sourceFile": "16A(78)-32 directional survey workbook",
       "trajectory": [
         {
-          "mdFt": 0.0,
-          "tvdFt": 0.0,
-          "inclinationDeg": 0.0,
-          "azimuthDeg": 0.0,
+          "mdFt": 0,
+          "tvdFt": 0,
+          "inclinationDeg": 0,
+          "azimuthDeg": 0,
           "utm": [
             334641.189,
             4263443.693,
@@ -104,8 +656,8 @@
           ]
         },
         {
-          "mdFt": 80.0,
-          "tvdFt": 80.0,
+          "mdFt": 80,
+          "tvdFt": 80,
           "inclinationDeg": 0.34,
           "azimuthDeg": 324.91,
           "utm": [
@@ -120,8 +672,8 @@
           ]
         },
         {
-          "mdFt": 175.0,
-          "tvdFt": 175.0,
+          "mdFt": 175,
+          "tvdFt": 175,
           "inclinationDeg": 0.33,
           "azimuthDeg": 322.79,
           "utm": [
@@ -136,8 +688,8 @@
           ]
         },
         {
-          "mdFt": 267.0,
-          "tvdFt": 267.0,
+          "mdFt": 267,
+          "tvdFt": 267,
           "inclinationDeg": 0.47,
           "azimuthDeg": 312.36,
           "utm": [
@@ -152,7 +704,7 @@
           ]
         },
         {
-          "mdFt": 359.0,
+          "mdFt": 359,
           "tvdFt": 358.99,
           "inclinationDeg": 0.36,
           "azimuthDeg": 310.55,
@@ -168,7 +720,7 @@
           ]
         },
         {
-          "mdFt": 453.0,
+          "mdFt": 453,
           "tvdFt": 452.99,
           "inclinationDeg": 0.03,
           "azimuthDeg": 309.87,
@@ -184,7 +736,7 @@
           ]
         },
         {
-          "mdFt": 548.0,
+          "mdFt": 548,
           "tvdFt": 547.99,
           "inclinationDeg": 0.56,
           "azimuthDeg": 157.85,
@@ -200,7 +752,7 @@
           ]
         },
         {
-          "mdFt": 643.0,
+          "mdFt": 643,
           "tvdFt": 642.99,
           "inclinationDeg": 0.59,
           "azimuthDeg": 172.48,
@@ -216,7 +768,7 @@
           ]
         },
         {
-          "mdFt": 739.0,
+          "mdFt": 739,
           "tvdFt": 738.98,
           "inclinationDeg": 0.51,
           "azimuthDeg": 198.76,
@@ -232,7 +784,7 @@
           ]
         },
         {
-          "mdFt": 833.0,
+          "mdFt": 833,
           "tvdFt": 832.98,
           "inclinationDeg": 0.84,
           "azimuthDeg": 191.72,
@@ -248,7 +800,7 @@
           ]
         },
         {
-          "mdFt": 928.0,
+          "mdFt": 928,
           "tvdFt": 927.96,
           "inclinationDeg": 1.24,
           "azimuthDeg": 186.85,
@@ -264,7 +816,7 @@
           ]
         },
         {
-          "mdFt": 1022.0,
+          "mdFt": 1022,
           "tvdFt": 1021.93,
           "inclinationDeg": 1.62,
           "azimuthDeg": 188.31,
@@ -280,7 +832,7 @@
           ]
         },
         {
-          "mdFt": 1117.0,
+          "mdFt": 1117,
           "tvdFt": 1116.88,
           "inclinationDeg": 1.93,
           "azimuthDeg": 182.52,
@@ -296,7 +848,7 @@
           ]
         },
         {
-          "mdFt": 1211.0,
+          "mdFt": 1211,
           "tvdFt": 1210.83,
           "inclinationDeg": 2.07,
           "azimuthDeg": 175.74,
@@ -312,7 +864,7 @@
           ]
         },
         {
-          "mdFt": 1306.0,
+          "mdFt": 1306,
           "tvdFt": 1305.78,
           "inclinationDeg": 1.68,
           "azimuthDeg": 171.17,
@@ -328,7 +880,7 @@
           ]
         },
         {
-          "mdFt": 1402.0,
+          "mdFt": 1402,
           "tvdFt": 1401.75,
           "inclinationDeg": 1.19,
           "azimuthDeg": 173.45,
@@ -344,7 +896,7 @@
           ]
         },
         {
-          "mdFt": 1497.0,
+          "mdFt": 1497,
           "tvdFt": 1496.73,
           "inclinationDeg": 0.7,
           "azimuthDeg": 142.32,
@@ -360,7 +912,7 @@
           ]
         },
         {
-          "mdFt": 1592.0,
+          "mdFt": 1592,
           "tvdFt": 1591.73,
           "inclinationDeg": 0.72,
           "azimuthDeg": 125.01,
@@ -376,7 +928,7 @@
           ]
         },
         {
-          "mdFt": 1687.0,
+          "mdFt": 1687,
           "tvdFt": 1686.72,
           "inclinationDeg": 0.82,
           "azimuthDeg": 118.93,
@@ -392,7 +944,7 @@
           ]
         },
         {
-          "mdFt": 1783.0,
+          "mdFt": 1783,
           "tvdFt": 1782.71,
           "inclinationDeg": 0.87,
           "azimuthDeg": 95.89,
@@ -408,9 +960,9 @@
           ]
         },
         {
-          "mdFt": 1878.0,
+          "mdFt": 1878,
           "tvdFt": 1877.7,
-          "inclinationDeg": 1.0,
+          "inclinationDeg": 1,
           "azimuthDeg": 65.55,
           "utm": [
             334642.25,
@@ -424,7 +976,7 @@
           ]
         },
         {
-          "mdFt": 1974.0,
+          "mdFt": 1974,
           "tvdFt": 1973.68,
           "inclinationDeg": 1.14,
           "azimuthDeg": 14.63,
@@ -440,7 +992,7 @@
           ]
         },
         {
-          "mdFt": 2069.0,
+          "mdFt": 2069,
           "tvdFt": 2068.66,
           "inclinationDeg": 1.16,
           "azimuthDeg": 321.31,
@@ -456,7 +1008,7 @@
           ]
         },
         {
-          "mdFt": 2164.0,
+          "mdFt": 2164,
           "tvdFt": 2163.65,
           "inclinationDeg": 1.04,
           "azimuthDeg": 278.62,
@@ -472,7 +1024,7 @@
           ]
         },
         {
-          "mdFt": 2258.0,
+          "mdFt": 2258,
           "tvdFt": 2257.64,
           "inclinationDeg": 0.87,
           "azimuthDeg": 236.76,
@@ -488,7 +1040,7 @@
           ]
         },
         {
-          "mdFt": 2352.0,
+          "mdFt": 2352,
           "tvdFt": 2351.63,
           "inclinationDeg": 0.71,
           "azimuthDeg": 163.66,
@@ -504,7 +1056,7 @@
           ]
         },
         {
-          "mdFt": 2446.0,
+          "mdFt": 2446,
           "tvdFt": 2445.62,
           "inclinationDeg": 0.74,
           "azimuthDeg": 107.66,
@@ -520,7 +1072,7 @@
           ]
         },
         {
-          "mdFt": 2540.0,
+          "mdFt": 2540,
           "tvdFt": 2539.62,
           "inclinationDeg": 0.76,
           "azimuthDeg": 48.82,
@@ -536,7 +1088,7 @@
           ]
         },
         {
-          "mdFt": 2634.0,
+          "mdFt": 2634,
           "tvdFt": 2633.6,
           "inclinationDeg": 1.13,
           "azimuthDeg": 359.64,
@@ -552,7 +1104,7 @@
           ]
         },
         {
-          "mdFt": 2729.0,
+          "mdFt": 2729,
           "tvdFt": 2728.59,
           "inclinationDeg": 1.21,
           "azimuthDeg": 312.16,
@@ -568,7 +1120,7 @@
           ]
         },
         {
-          "mdFt": 2823.0,
+          "mdFt": 2823,
           "tvdFt": 2822.57,
           "inclinationDeg": 1.01,
           "azimuthDeg": 262.95,
@@ -584,7 +1136,7 @@
           ]
         },
         {
-          "mdFt": 2918.0,
+          "mdFt": 2918,
           "tvdFt": 2917.56,
           "inclinationDeg": 0.63,
           "azimuthDeg": 188.09,
@@ -600,7 +1152,7 @@
           ]
         },
         {
-          "mdFt": 3013.0,
+          "mdFt": 3013,
           "tvdFt": 3012.56,
           "inclinationDeg": 1.04,
           "azimuthDeg": 123.23,
@@ -616,7 +1168,7 @@
           ]
         },
         {
-          "mdFt": 3107.0,
+          "mdFt": 3107,
           "tvdFt": 3106.54,
           "inclinationDeg": 1.38,
           "azimuthDeg": 79.63,
@@ -632,7 +1184,7 @@
           ]
         },
         {
-          "mdFt": 3201.0,
+          "mdFt": 3201,
           "tvdFt": 3200.51,
           "inclinationDeg": 1.54,
           "azimuthDeg": 28.28,
@@ -648,7 +1200,7 @@
           ]
         },
         {
-          "mdFt": 3295.0,
+          "mdFt": 3295,
           "tvdFt": 3294.48,
           "inclinationDeg": 1.3,
           "azimuthDeg": 349.04,
@@ -664,7 +1216,7 @@
           ]
         },
         {
-          "mdFt": 3390.0,
+          "mdFt": 3390,
           "tvdFt": 3389.47,
           "inclinationDeg": 0.99,
           "azimuthDeg": 291.49,
@@ -680,7 +1232,7 @@
           ]
         },
         {
-          "mdFt": 3484.0,
+          "mdFt": 3484,
           "tvdFt": 3483.46,
           "inclinationDeg": 0.81,
           "azimuthDeg": 250.73,
@@ -696,7 +1248,7 @@
           ]
         },
         {
-          "mdFt": 3578.0,
+          "mdFt": 3578,
           "tvdFt": 3577.45,
           "inclinationDeg": 0.48,
           "azimuthDeg": 184.81,
@@ -712,7 +1264,7 @@
           ]
         },
         {
-          "mdFt": 3673.0,
+          "mdFt": 3673,
           "tvdFt": 3672.45,
           "inclinationDeg": 0.75,
           "azimuthDeg": 95.07,
@@ -728,7 +1280,7 @@
           ]
         },
         {
-          "mdFt": 3766.0,
+          "mdFt": 3766,
           "tvdFt": 3765.43,
           "inclinationDeg": 1.46,
           "azimuthDeg": 59.45,
@@ -744,7 +1296,7 @@
           ]
         },
         {
-          "mdFt": 3862.0,
+          "mdFt": 3862,
           "tvdFt": 3861.39,
           "inclinationDeg": 1.71,
           "azimuthDeg": 33.75,
@@ -760,7 +1312,7 @@
           ]
         },
         {
-          "mdFt": 3956.0,
+          "mdFt": 3956,
           "tvdFt": 3955.36,
           "inclinationDeg": 1.66,
           "azimuthDeg": 3.11,
@@ -776,7 +1328,7 @@
           ]
         },
         {
-          "mdFt": 4051.0,
+          "mdFt": 4051,
           "tvdFt": 4050.32,
           "inclinationDeg": 1.35,
           "azimuthDeg": 327.79,
@@ -792,7 +1344,7 @@
           ]
         },
         {
-          "mdFt": 4146.0,
+          "mdFt": 4146,
           "tvdFt": 4145.3,
           "inclinationDeg": 1.12,
           "azimuthDeg": 281.82,
@@ -808,7 +1360,7 @@
           ]
         },
         {
-          "mdFt": 4241.0,
+          "mdFt": 4241,
           "tvdFt": 4240.29,
           "inclinationDeg": 0.84,
           "azimuthDeg": 230.53,
@@ -824,7 +1376,7 @@
           ]
         },
         {
-          "mdFt": 4335.0,
+          "mdFt": 4335,
           "tvdFt": 4334.28,
           "inclinationDeg": 1.07,
           "azimuthDeg": 183.14,
@@ -840,7 +1392,7 @@
           ]
         },
         {
-          "mdFt": 4430.0,
+          "mdFt": 4430,
           "tvdFt": 4429.27,
           "inclinationDeg": 1.11,
           "azimuthDeg": 116.98,
@@ -856,7 +1408,7 @@
           ]
         },
         {
-          "mdFt": 4524.0,
+          "mdFt": 4524,
           "tvdFt": 4523.25,
           "inclinationDeg": 1.45,
           "azimuthDeg": 32.77,
@@ -872,7 +1424,7 @@
           ]
         },
         {
-          "mdFt": 4618.0,
+          "mdFt": 4618,
           "tvdFt": 4617.22,
           "inclinationDeg": 1.64,
           "azimuthDeg": 341.93,
@@ -888,7 +1440,7 @@
           ]
         },
         {
-          "mdFt": 4713.0,
+          "mdFt": 4713,
           "tvdFt": 4712.19,
           "inclinationDeg": 1.45,
           "azimuthDeg": 284.79,
@@ -904,7 +1456,7 @@
           ]
         },
         {
-          "mdFt": 4807.0,
+          "mdFt": 4807,
           "tvdFt": 4806.17,
           "inclinationDeg": 1.13,
           "azimuthDeg": 233.6,
@@ -920,7 +1472,7 @@
           ]
         },
         {
-          "mdFt": 4902.0,
+          "mdFt": 4902,
           "tvdFt": 4901.15,
           "inclinationDeg": 1.21,
           "azimuthDeg": 185.35,
@@ -936,7 +1488,7 @@
           ]
         },
         {
-          "mdFt": 4997.0,
+          "mdFt": 4997,
           "tvdFt": 4996.13,
           "inclinationDeg": 1.6,
           "azimuthDeg": 134.6,
@@ -952,7 +1504,7 @@
           ]
         },
         {
-          "mdFt": 5007.0,
+          "mdFt": 5007,
           "tvdFt": 5006.12,
           "inclinationDeg": 1.57,
           "azimuthDeg": 131.93,
@@ -968,7 +1520,7 @@
           ]
         },
         {
-          "mdFt": 5017.0,
+          "mdFt": 5017,
           "tvdFt": 5016.12,
           "inclinationDeg": 1.54,
           "azimuthDeg": 129.15,
@@ -984,7 +1536,7 @@
           ]
         },
         {
-          "mdFt": 5027.0,
+          "mdFt": 5027,
           "tvdFt": 5026.12,
           "inclinationDeg": 1.51,
           "azimuthDeg": 126.28,
@@ -1000,7 +1552,7 @@
           ]
         },
         {
-          "mdFt": 5037.0,
+          "mdFt": 5037,
           "tvdFt": 5036.11,
           "inclinationDeg": 1.49,
           "azimuthDeg": 123.33,
@@ -1016,7 +1568,7 @@
           ]
         },
         {
-          "mdFt": 5047.0,
+          "mdFt": 5047,
           "tvdFt": 5046.11,
           "inclinationDeg": 1.48,
           "azimuthDeg": 120.3,
@@ -1032,7 +1584,7 @@
           ]
         },
         {
-          "mdFt": 5057.0,
+          "mdFt": 5057,
           "tvdFt": 5056.11,
           "inclinationDeg": 1.46,
           "azimuthDeg": 117.22,
@@ -1048,7 +1600,7 @@
           ]
         },
         {
-          "mdFt": 5067.0,
+          "mdFt": 5067,
           "tvdFt": 5066.1,
           "inclinationDeg": 1.46,
           "azimuthDeg": 114.09,
@@ -1064,7 +1616,7 @@
           ]
         },
         {
-          "mdFt": 5077.0,
+          "mdFt": 5077,
           "tvdFt": 5076.1,
           "inclinationDeg": 1.45,
           "azimuthDeg": 110.94,
@@ -1080,7 +1632,7 @@
           ]
         },
         {
-          "mdFt": 5087.0,
+          "mdFt": 5087,
           "tvdFt": 5086.1,
           "inclinationDeg": 1.46,
           "azimuthDeg": 107.78,
@@ -1096,7 +1648,7 @@
           ]
         },
         {
-          "mdFt": 5097.0,
+          "mdFt": 5097,
           "tvdFt": 5096.09,
           "inclinationDeg": 1.46,
           "azimuthDeg": 104.64,
@@ -1112,7 +1664,7 @@
           ]
         },
         {
-          "mdFt": 5107.0,
+          "mdFt": 5107,
           "tvdFt": 5106.09,
           "inclinationDeg": 1.47,
           "azimuthDeg": 101.54,
@@ -1128,7 +1680,7 @@
           ]
         },
         {
-          "mdFt": 5117.0,
+          "mdFt": 5117,
           "tvdFt": 5116.09,
           "inclinationDeg": 1.49,
           "azimuthDeg": 98.48,
@@ -1144,7 +1696,7 @@
           ]
         },
         {
-          "mdFt": 5127.0,
+          "mdFt": 5127,
           "tvdFt": 5126.08,
           "inclinationDeg": 1.5,
           "azimuthDeg": 95.49,
@@ -1160,7 +1712,7 @@
           ]
         },
         {
-          "mdFt": 5137.0,
+          "mdFt": 5137,
           "tvdFt": 5136.08,
           "inclinationDeg": 1.53,
           "azimuthDeg": 92.58,
@@ -1176,7 +1728,7 @@
           ]
         },
         {
-          "mdFt": 5147.0,
+          "mdFt": 5147,
           "tvdFt": 5146.08,
           "inclinationDeg": 1.55,
           "azimuthDeg": 89.76,
@@ -1192,7 +1744,7 @@
           ]
         },
         {
-          "mdFt": 5157.0,
+          "mdFt": 5157,
           "tvdFt": 5156.07,
           "inclinationDeg": 1.58,
           "azimuthDeg": 87.04,
@@ -1208,7 +1760,7 @@
           ]
         },
         {
-          "mdFt": 5167.0,
+          "mdFt": 5167,
           "tvdFt": 5166.07,
           "inclinationDeg": 1.58,
           "azimuthDeg": 85.49,
@@ -1224,7 +1776,7 @@
           ]
         },
         {
-          "mdFt": 5177.0,
+          "mdFt": 5177,
           "tvdFt": 5176.06,
           "inclinationDeg": 1.56,
           "azimuthDeg": 84.02,
@@ -1240,7 +1792,7 @@
           ]
         },
         {
-          "mdFt": 5187.0,
+          "mdFt": 5187,
           "tvdFt": 5186.06,
           "inclinationDeg": 1.55,
           "azimuthDeg": 82.52,
@@ -1256,7 +1808,7 @@
           ]
         },
         {
-          "mdFt": 5197.0,
+          "mdFt": 5197,
           "tvdFt": 5196.06,
           "inclinationDeg": 1.54,
           "azimuthDeg": 81.01,
@@ -1272,7 +1824,7 @@
           ]
         },
         {
-          "mdFt": 5207.0,
+          "mdFt": 5207,
           "tvdFt": 5206.05,
           "inclinationDeg": 1.53,
           "azimuthDeg": 79.47,
@@ -1288,7 +1840,7 @@
           ]
         },
         {
-          "mdFt": 5217.0,
+          "mdFt": 5217,
           "tvdFt": 5216.05,
           "inclinationDeg": 1.52,
           "azimuthDeg": 77.91,
@@ -1304,7 +1856,7 @@
           ]
         },
         {
-          "mdFt": 5227.0,
+          "mdFt": 5227,
           "tvdFt": 5226.05,
           "inclinationDeg": 1.51,
           "azimuthDeg": 76.33,
@@ -1320,7 +1872,7 @@
           ]
         },
         {
-          "mdFt": 5237.0,
+          "mdFt": 5237,
           "tvdFt": 5236.04,
           "inclinationDeg": 1.51,
           "azimuthDeg": 74.74,
@@ -1336,7 +1888,7 @@
           ]
         },
         {
-          "mdFt": 5247.0,
+          "mdFt": 5247,
           "tvdFt": 5246.04,
           "inclinationDeg": 1.5,
           "azimuthDeg": 73.14,
@@ -1352,7 +1904,7 @@
           ]
         },
         {
-          "mdFt": 5257.0,
+          "mdFt": 5257,
           "tvdFt": 5256.04,
           "inclinationDeg": 1.5,
           "azimuthDeg": 71.38,
@@ -1368,7 +1920,7 @@
           ]
         },
         {
-          "mdFt": 5267.0,
+          "mdFt": 5267,
           "tvdFt": 5266.03,
           "inclinationDeg": 1.49,
           "azimuthDeg": 68.16,
@@ -1384,7 +1936,7 @@
           ]
         },
         {
-          "mdFt": 5277.0,
+          "mdFt": 5277,
           "tvdFt": 5276.03,
           "inclinationDeg": 1.48,
           "azimuthDeg": 64.92,
@@ -1400,7 +1952,7 @@
           ]
         },
         {
-          "mdFt": 5287.0,
+          "mdFt": 5287,
           "tvdFt": 5286.03,
           "inclinationDeg": 1.48,
           "azimuthDeg": 61.67,
@@ -1416,7 +1968,7 @@
           ]
         },
         {
-          "mdFt": 5297.0,
+          "mdFt": 5297,
           "tvdFt": 5296.02,
           "inclinationDeg": 1.49,
           "azimuthDeg": 58.44,
@@ -1432,7 +1984,7 @@
           ]
         },
         {
-          "mdFt": 5307.0,
+          "mdFt": 5307,
           "tvdFt": 5306.02,
           "inclinationDeg": 1.5,
           "azimuthDeg": 55.24,
@@ -1448,7 +2000,7 @@
           ]
         },
         {
-          "mdFt": 5317.0,
+          "mdFt": 5317,
           "tvdFt": 5316.02,
           "inclinationDeg": 1.52,
           "azimuthDeg": 52.1,
@@ -1464,7 +2016,7 @@
           ]
         },
         {
-          "mdFt": 5327.0,
+          "mdFt": 5327,
           "tvdFt": 5326.01,
           "inclinationDeg": 1.54,
           "azimuthDeg": 49.03,
@@ -1480,7 +2032,7 @@
           ]
         },
         {
-          "mdFt": 5337.0,
+          "mdFt": 5337,
           "tvdFt": 5336.01,
           "inclinationDeg": 1.56,
           "azimuthDeg": 46.04,
@@ -1496,8 +2048,8 @@
           ]
         },
         {
-          "mdFt": 5347.0,
-          "tvdFt": 5346.0,
+          "mdFt": 5347,
+          "tvdFt": 5346,
           "inclinationDeg": 1.59,
           "azimuthDeg": 43.16,
           "utm": [
@@ -1512,8 +2064,8 @@
           ]
         },
         {
-          "mdFt": 5357.0,
-          "tvdFt": 5356.0,
+          "mdFt": 5357,
+          "tvdFt": 5356,
           "inclinationDeg": 1.53,
           "azimuthDeg": 40.89,
           "utm": [
@@ -1528,8 +2080,8 @@
           ]
         },
         {
-          "mdFt": 5367.0,
-          "tvdFt": 5366.0,
+          "mdFt": 5367,
+          "tvdFt": 5366,
           "inclinationDeg": 1.46,
           "azimuthDeg": 38.32,
           "utm": [
@@ -1544,7 +2096,7 @@
           ]
         },
         {
-          "mdFt": 5377.0,
+          "mdFt": 5377,
           "tvdFt": 5375.99,
           "inclinationDeg": 1.4,
           "azimuthDeg": 35.51,
@@ -1560,7 +2112,7 @@
           ]
         },
         {
-          "mdFt": 5387.0,
+          "mdFt": 5387,
           "tvdFt": 5385.99,
           "inclinationDeg": 1.33,
           "azimuthDeg": 32.44,
@@ -1576,7 +2128,7 @@
           ]
         },
         {
-          "mdFt": 5397.0,
+          "mdFt": 5397,
           "tvdFt": 5395.99,
           "inclinationDeg": 1.28,
           "azimuthDeg": 29.08,
@@ -1592,7 +2144,7 @@
           ]
         },
         {
-          "mdFt": 5407.0,
+          "mdFt": 5407,
           "tvdFt": 5405.99,
           "inclinationDeg": 1.23,
           "azimuthDeg": 25.43,
@@ -1608,7 +2160,7 @@
           ]
         },
         {
-          "mdFt": 5417.0,
+          "mdFt": 5417,
           "tvdFt": 5415.98,
           "inclinationDeg": 1.18,
           "azimuthDeg": 21.46,
@@ -1624,7 +2176,7 @@
           ]
         },
         {
-          "mdFt": 5427.0,
+          "mdFt": 5427,
           "tvdFt": 5425.98,
           "inclinationDeg": 1.14,
           "azimuthDeg": 17.2,
@@ -1640,7 +2192,7 @@
           ]
         },
         {
-          "mdFt": 5437.0,
+          "mdFt": 5437,
           "tvdFt": 5435.98,
           "inclinationDeg": 1.11,
           "azimuthDeg": 12.65,
@@ -1656,7 +2208,7 @@
           ]
         },
         {
-          "mdFt": 5447.0,
+          "mdFt": 5447,
           "tvdFt": 5445.98,
           "inclinationDeg": 1.03,
           "azimuthDeg": 9.93,
@@ -1672,7 +2224,7 @@
           ]
         },
         {
-          "mdFt": 5457.0,
+          "mdFt": 5457,
           "tvdFt": 5455.98,
           "inclinationDeg": 0.9,
           "azimuthDeg": 10.09,
@@ -1688,7 +2240,7 @@
           ]
         },
         {
-          "mdFt": 5467.0,
+          "mdFt": 5467,
           "tvdFt": 5465.98,
           "inclinationDeg": 0.76,
           "azimuthDeg": 10.32,
@@ -1704,7 +2256,7 @@
           ]
         },
         {
-          "mdFt": 5477.0,
+          "mdFt": 5477,
           "tvdFt": 5475.98,
           "inclinationDeg": 0.62,
           "azimuthDeg": 10.64,
@@ -1720,7 +2272,7 @@
           ]
         },
         {
-          "mdFt": 5487.0,
+          "mdFt": 5487,
           "tvdFt": 5485.97,
           "inclinationDeg": 0.49,
           "azimuthDeg": 11.14,
@@ -1736,7 +2288,7 @@
           ]
         },
         {
-          "mdFt": 5497.0,
+          "mdFt": 5497,
           "tvdFt": 5495.97,
           "inclinationDeg": 0.35,
           "azimuthDeg": 12.02,
@@ -1752,7 +2304,7 @@
           ]
         },
         {
-          "mdFt": 5507.0,
+          "mdFt": 5507,
           "tvdFt": 5505.97,
           "inclinationDeg": 0.21,
           "azimuthDeg": 14.04,
@@ -1768,7 +2320,7 @@
           ]
         },
         {
-          "mdFt": 5517.0,
+          "mdFt": 5517,
           "tvdFt": 5515.97,
           "inclinationDeg": 0.08,
           "azimuthDeg": 22.99,
@@ -1784,7 +2336,7 @@
           ]
         },
         {
-          "mdFt": 5527.0,
+          "mdFt": 5527,
           "tvdFt": 5525.97,
           "inclinationDeg": 0.06,
           "azimuthDeg": 170.93,
@@ -1800,7 +2352,7 @@
           ]
         },
         {
-          "mdFt": 5537.0,
+          "mdFt": 5537,
           "tvdFt": 5535.97,
           "inclinationDeg": 0.19,
           "azimuthDeg": 181.76,
@@ -1816,7 +2368,7 @@
           ]
         },
         {
-          "mdFt": 5547.0,
+          "mdFt": 5547,
           "tvdFt": 5545.97,
           "inclinationDeg": 0.27,
           "azimuthDeg": 157.9,
@@ -1832,7 +2384,7 @@
           ]
         },
         {
-          "mdFt": 5557.0,
+          "mdFt": 5557,
           "tvdFt": 5555.97,
           "inclinationDeg": 0.38,
           "azimuthDeg": 146.55,
@@ -1848,7 +2400,7 @@
           ]
         },
         {
-          "mdFt": 5567.0,
+          "mdFt": 5567,
           "tvdFt": 5565.97,
           "inclinationDeg": 0.5,
           "azimuthDeg": 140.39,
@@ -1864,7 +2416,7 @@
           ]
         },
         {
-          "mdFt": 5577.0,
+          "mdFt": 5577,
           "tvdFt": 5575.97,
           "inclinationDeg": 0.62,
           "azimuthDeg": 136.61,
@@ -1880,7 +2432,7 @@
           ]
         },
         {
-          "mdFt": 5587.0,
+          "mdFt": 5587,
           "tvdFt": 5585.97,
           "inclinationDeg": 0.75,
           "azimuthDeg": 134.07,
@@ -1896,7 +2448,7 @@
           ]
         },
         {
-          "mdFt": 5597.0,
+          "mdFt": 5597,
           "tvdFt": 5595.97,
           "inclinationDeg": 0.87,
           "azimuthDeg": 132.26,
@@ -1912,9 +2464,9 @@
           ]
         },
         {
-          "mdFt": 5607.0,
+          "mdFt": 5607,
           "tvdFt": 5605.97,
-          "inclinationDeg": 1.0,
+          "inclinationDeg": 1,
           "azimuthDeg": 130.9,
           "utm": [
             334644.633,
@@ -1928,7 +2480,7 @@
           ]
         },
         {
-          "mdFt": 5617.0,
+          "mdFt": 5617,
           "tvdFt": 5615.97,
           "inclinationDeg": 1.12,
           "azimuthDeg": 129.84,
@@ -1944,10 +2496,10 @@
           ]
         },
         {
-          "mdFt": 5627.0,
+          "mdFt": 5627,
           "tvdFt": 5625.97,
           "inclinationDeg": 1.25,
-          "azimuthDeg": 129.0,
+          "azimuthDeg": 129,
           "utm": [
             334644.725,
             4263442.367,
@@ -1960,7 +2512,7 @@
           ]
         },
         {
-          "mdFt": 5637.0,
+          "mdFt": 5637,
           "tvdFt": 5635.96,
           "inclinationDeg": 1.36,
           "azimuthDeg": 127.86,
@@ -1976,7 +2528,7 @@
           ]
         },
         {
-          "mdFt": 5647.0,
+          "mdFt": 5647,
           "tvdFt": 5645.96,
           "inclinationDeg": 1.44,
           "azimuthDeg": 125.27,
@@ -1992,7 +2544,7 @@
           ]
         },
         {
-          "mdFt": 5657.0,
+          "mdFt": 5657,
           "tvdFt": 5655.96,
           "inclinationDeg": 1.52,
           "azimuthDeg": 122.96,
@@ -2008,7 +2560,7 @@
           ]
         },
         {
-          "mdFt": 5667.0,
+          "mdFt": 5667,
           "tvdFt": 5665.95,
           "inclinationDeg": 1.61,
           "azimuthDeg": 120.88,
@@ -2024,7 +2576,7 @@
           ]
         },
         {
-          "mdFt": 5677.0,
+          "mdFt": 5677,
           "tvdFt": 5675.95,
           "inclinationDeg": 1.69,
           "azimuthDeg": 119.01,
@@ -2040,7 +2592,7 @@
           ]
         },
         {
-          "mdFt": 5687.0,
+          "mdFt": 5687,
           "tvdFt": 5685.95,
           "inclinationDeg": 1.78,
           "azimuthDeg": 117.32,
@@ -2056,7 +2608,7 @@
           ]
         },
         {
-          "mdFt": 5697.0,
+          "mdFt": 5697,
           "tvdFt": 5695.94,
           "inclinationDeg": 1.87,
           "azimuthDeg": 115.78,
@@ -2072,7 +2624,7 @@
           ]
         },
         {
-          "mdFt": 5707.0,
+          "mdFt": 5707,
           "tvdFt": 5705.93,
           "inclinationDeg": 1.95,
           "azimuthDeg": 114.39,
@@ -2088,7 +2640,7 @@
           ]
         },
         {
-          "mdFt": 5717.0,
+          "mdFt": 5717,
           "tvdFt": 5715.93,
           "inclinationDeg": 2.04,
           "azimuthDeg": 113.12,
@@ -2104,7 +2656,7 @@
           ]
         },
         {
-          "mdFt": 5727.0,
+          "mdFt": 5727,
           "tvdFt": 5725.92,
           "inclinationDeg": 2.11,
           "azimuthDeg": 112.36,
@@ -2120,7 +2672,7 @@
           ]
         },
         {
-          "mdFt": 5737.0,
+          "mdFt": 5737,
           "tvdFt": 5735.92,
           "inclinationDeg": 2.07,
           "azimuthDeg": 112.92,
@@ -2136,7 +2688,7 @@
           ]
         },
         {
-          "mdFt": 5747.0,
+          "mdFt": 5747,
           "tvdFt": 5745.91,
           "inclinationDeg": 2.04,
           "azimuthDeg": 113.5,
@@ -2152,9 +2704,9 @@
           ]
         },
         {
-          "mdFt": 5757.0,
+          "mdFt": 5757,
           "tvdFt": 5755.9,
-          "inclinationDeg": 2.0,
+          "inclinationDeg": 2,
           "azimuthDeg": 114.1,
           "utm": [
             334645.813,
@@ -2168,7 +2720,7 @@
           ]
         },
         {
-          "mdFt": 5767.0,
+          "mdFt": 5767,
           "tvdFt": 5765.9,
           "inclinationDeg": 1.96,
           "azimuthDeg": 114.72,
@@ -2184,7 +2736,7 @@
           ]
         },
         {
-          "mdFt": 5777.0,
+          "mdFt": 5777,
           "tvdFt": 5775.89,
           "inclinationDeg": 1.93,
           "azimuthDeg": 115.37,
@@ -2200,7 +2752,7 @@
           ]
         },
         {
-          "mdFt": 5787.0,
+          "mdFt": 5787,
           "tvdFt": 5785.89,
           "inclinationDeg": 1.9,
           "azimuthDeg": 116.03,
@@ -2216,7 +2768,7 @@
           ]
         },
         {
-          "mdFt": 5797.0,
+          "mdFt": 5797,
           "tvdFt": 5795.88,
           "inclinationDeg": 1.86,
           "azimuthDeg": 116.73,
@@ -2232,7 +2784,7 @@
           ]
         },
         {
-          "mdFt": 5807.0,
+          "mdFt": 5807,
           "tvdFt": 5805.87,
           "inclinationDeg": 1.83,
           "azimuthDeg": 117.45,
@@ -2248,7 +2800,7 @@
           ]
         },
         {
-          "mdFt": 5817.0,
+          "mdFt": 5817,
           "tvdFt": 5815.87,
           "inclinationDeg": 1.79,
           "azimuthDeg": 118.19,
@@ -2264,7 +2816,7 @@
           ]
         },
         {
-          "mdFt": 5827.0,
+          "mdFt": 5827,
           "tvdFt": 5825.86,
           "inclinationDeg": 1.86,
           "azimuthDeg": 116.32,
@@ -2280,7 +2832,7 @@
           ]
         },
         {
-          "mdFt": 5837.0,
+          "mdFt": 5837,
           "tvdFt": 5835.86,
           "inclinationDeg": 1.99,
           "azimuthDeg": 113.39,
@@ -2296,7 +2848,7 @@
           ]
         },
         {
-          "mdFt": 5847.0,
+          "mdFt": 5847,
           "tvdFt": 5845.85,
           "inclinationDeg": 2.12,
           "azimuthDeg": 110.82,
@@ -2312,7 +2864,7 @@
           ]
         },
         {
-          "mdFt": 5857.0,
+          "mdFt": 5857,
           "tvdFt": 5855.85,
           "inclinationDeg": 2.26,
           "azimuthDeg": 108.55,
@@ -2328,7 +2880,7 @@
           ]
         },
         {
-          "mdFt": 5867.0,
+          "mdFt": 5867,
           "tvdFt": 5865.84,
           "inclinationDeg": 2.4,
           "azimuthDeg": 106.55,
@@ -2344,7 +2896,7 @@
           ]
         },
         {
-          "mdFt": 5877.0,
+          "mdFt": 5877,
           "tvdFt": 5875.83,
           "inclinationDeg": 2.54,
           "azimuthDeg": 104.77,
@@ -2360,7 +2912,7 @@
           ]
         },
         {
-          "mdFt": 5887.0,
+          "mdFt": 5887,
           "tvdFt": 5885.82,
           "inclinationDeg": 2.68,
           "azimuthDeg": 103.18,
@@ -2376,7 +2928,7 @@
           ]
         },
         {
-          "mdFt": 5897.0,
+          "mdFt": 5897,
           "tvdFt": 5895.81,
           "inclinationDeg": 2.83,
           "azimuthDeg": 101.75,
@@ -2392,7 +2944,7 @@
           ]
         },
         {
-          "mdFt": 5907.0,
+          "mdFt": 5907,
           "tvdFt": 5905.79,
           "inclinationDeg": 2.98,
           "azimuthDeg": 100.47,
@@ -2408,7 +2960,7 @@
           ]
         },
         {
-          "mdFt": 5917.0,
+          "mdFt": 5917,
           "tvdFt": 5915.78,
           "inclinationDeg": 3.22,
           "azimuthDeg": 99.27,
@@ -2424,7 +2976,7 @@
           ]
         },
         {
-          "mdFt": 5927.0,
+          "mdFt": 5927,
           "tvdFt": 5925.76,
           "inclinationDeg": 3.83,
           "azimuthDeg": 97.79,
@@ -2440,7 +2992,7 @@
           ]
         },
         {
-          "mdFt": 5937.0,
+          "mdFt": 5937,
           "tvdFt": 5935.73,
           "inclinationDeg": 4.44,
           "azimuthDeg": 96.72,
@@ -2456,7 +3008,7 @@
           ]
         },
         {
-          "mdFt": 5947.0,
+          "mdFt": 5947,
           "tvdFt": 5945.7,
           "inclinationDeg": 5.05,
           "azimuthDeg": 95.91,
@@ -2472,7 +3024,7 @@
           ]
         },
         {
-          "mdFt": 5957.0,
+          "mdFt": 5957,
           "tvdFt": 5955.66,
           "inclinationDeg": 5.67,
           "azimuthDeg": 95.27,
@@ -2488,7 +3040,7 @@
           ]
         },
         {
-          "mdFt": 5967.0,
+          "mdFt": 5967,
           "tvdFt": 5965.6,
           "inclinationDeg": 6.29,
           "azimuthDeg": 94.76,
@@ -2504,7 +3056,7 @@
           ]
         },
         {
-          "mdFt": 5977.0,
+          "mdFt": 5977,
           "tvdFt": 5975.53,
           "inclinationDeg": 6.9,
           "azimuthDeg": 94.34,
@@ -2520,7 +3072,7 @@
           ]
         },
         {
-          "mdFt": 5987.0,
+          "mdFt": 5987,
           "tvdFt": 5985.46,
           "inclinationDeg": 7.52,
           "azimuthDeg": 93.99,
@@ -2536,7 +3088,7 @@
           ]
         },
         {
-          "mdFt": 5997.0,
+          "mdFt": 5997,
           "tvdFt": 5995.36,
           "inclinationDeg": 8.14,
           "azimuthDeg": 93.69,
@@ -2552,7 +3104,7 @@
           ]
         },
         {
-          "mdFt": 6007.0,
+          "mdFt": 6007,
           "tvdFt": 6005.25,
           "inclinationDeg": 8.75,
           "azimuthDeg": 93.43,
@@ -2568,7 +3120,7 @@
           ]
         },
         {
-          "mdFt": 6017.0,
+          "mdFt": 6017,
           "tvdFt": 6015.13,
           "inclinationDeg": 9.37,
           "azimuthDeg": 93.21,
@@ -2584,7 +3136,7 @@
           ]
         },
         {
-          "mdFt": 6027.0,
+          "mdFt": 6027,
           "tvdFt": 6024.99,
           "inclinationDeg": 9.99,
           "azimuthDeg": 93.01,
@@ -2600,7 +3152,7 @@
           ]
         },
         {
-          "mdFt": 6037.0,
+          "mdFt": 6037,
           "tvdFt": 6034.83,
           "inclinationDeg": 10.6,
           "azimuthDeg": 92.84,
@@ -2616,7 +3168,7 @@
           ]
         },
         {
-          "mdFt": 6047.0,
+          "mdFt": 6047,
           "tvdFt": 6044.64,
           "inclinationDeg": 11.22,
           "azimuthDeg": 92.68,
@@ -2632,7 +3184,7 @@
           ]
         },
         {
-          "mdFt": 6057.0,
+          "mdFt": 6057,
           "tvdFt": 6054.44,
           "inclinationDeg": 11.84,
           "azimuthDeg": 92.54,
@@ -2648,7 +3200,7 @@
           ]
         },
         {
-          "mdFt": 6067.0,
+          "mdFt": 6067,
           "tvdFt": 6064.22,
           "inclinationDeg": 12.46,
           "azimuthDeg": 92.42,
@@ -2664,7 +3216,7 @@
           ]
         },
         {
-          "mdFt": 6077.0,
+          "mdFt": 6077,
           "tvdFt": 6073.97,
           "inclinationDeg": 13.07,
           "azimuthDeg": 92.3,
@@ -2680,7 +3232,7 @@
           ]
         },
         {
-          "mdFt": 6087.0,
+          "mdFt": 6087,
           "tvdFt": 6083.7,
           "inclinationDeg": 13.69,
           "azimuthDeg": 92.2,
@@ -2696,7 +3248,7 @@
           ]
         },
         {
-          "mdFt": 6097.0,
+          "mdFt": 6097,
           "tvdFt": 6093.4,
           "inclinationDeg": 14.31,
           "azimuthDeg": 92.11,
@@ -2712,7 +3264,7 @@
           ]
         },
         {
-          "mdFt": 6107.0,
+          "mdFt": 6107,
           "tvdFt": 6103.08,
           "inclinationDeg": 14.85,
           "azimuthDeg": 92.48,
@@ -2728,7 +3280,7 @@
           ]
         },
         {
-          "mdFt": 6117.0,
+          "mdFt": 6117,
           "tvdFt": 6112.74,
           "inclinationDeg": 15.13,
           "azimuthDeg": 94.05,
@@ -2744,7 +3296,7 @@
           ]
         },
         {
-          "mdFt": 6127.0,
+          "mdFt": 6127,
           "tvdFt": 6122.39,
           "inclinationDeg": 15.43,
           "azimuthDeg": 95.56,
@@ -2760,7 +3312,7 @@
           ]
         },
         {
-          "mdFt": 6137.0,
+          "mdFt": 6137,
           "tvdFt": 6132.02,
           "inclinationDeg": 15.73,
           "azimuthDeg": 97.02,
@@ -2776,7 +3328,7 @@
           ]
         },
         {
-          "mdFt": 6147.0,
+          "mdFt": 6147,
           "tvdFt": 6141.64,
           "inclinationDeg": 16.04,
           "azimuthDeg": 98.42,
@@ -2792,7 +3344,7 @@
           ]
         },
         {
-          "mdFt": 6157.0,
+          "mdFt": 6157,
           "tvdFt": 6151.24,
           "inclinationDeg": 16.36,
           "azimuthDeg": 99.77,
@@ -2808,7 +3360,7 @@
           ]
         },
         {
-          "mdFt": 6167.0,
+          "mdFt": 6167,
           "tvdFt": 6160.83,
           "inclinationDeg": 16.69,
           "azimuthDeg": 101.07,
@@ -2824,7 +3376,7 @@
           ]
         },
         {
-          "mdFt": 6177.0,
+          "mdFt": 6177,
           "tvdFt": 6170.4,
           "inclinationDeg": 17.03,
           "azimuthDeg": 102.32,
@@ -2840,7 +3392,7 @@
           ]
         },
         {
-          "mdFt": 6187.0,
+          "mdFt": 6187,
           "tvdFt": 6179.95,
           "inclinationDeg": 17.37,
           "azimuthDeg": 103.52,
@@ -2856,7 +3408,7 @@
           ]
         },
         {
-          "mdFt": 6197.0,
+          "mdFt": 6197,
           "tvdFt": 6189.49,
           "inclinationDeg": 17.72,
           "azimuthDeg": 104.68,
@@ -2872,7 +3424,7 @@
           ]
         },
         {
-          "mdFt": 6207.0,
+          "mdFt": 6207,
           "tvdFt": 6199.01,
           "inclinationDeg": 17.86,
           "azimuthDeg": 104.94,
@@ -2888,7 +3440,7 @@
           ]
         },
         {
-          "mdFt": 6217.0,
+          "mdFt": 6217,
           "tvdFt": 6208.52,
           "inclinationDeg": 17.99,
           "azimuthDeg": 105.1,
@@ -2904,7 +3456,7 @@
           ]
         },
         {
-          "mdFt": 6227.0,
+          "mdFt": 6227,
           "tvdFt": 6218.03,
           "inclinationDeg": 18.13,
           "azimuthDeg": 105.27,
@@ -2920,7 +3472,7 @@
           ]
         },
         {
-          "mdFt": 6237.0,
+          "mdFt": 6237,
           "tvdFt": 6227.53,
           "inclinationDeg": 18.26,
           "azimuthDeg": 105.44,
@@ -2936,7 +3488,7 @@
           ]
         },
         {
-          "mdFt": 6247.0,
+          "mdFt": 6247,
           "tvdFt": 6237.02,
           "inclinationDeg": 18.38,
           "azimuthDeg": 105.62,
@@ -2952,7 +3504,7 @@
           ]
         },
         {
-          "mdFt": 6257.0,
+          "mdFt": 6257,
           "tvdFt": 6246.51,
           "inclinationDeg": 18.39,
           "azimuthDeg": 105.91,
@@ -2968,8 +3520,8 @@
           ]
         },
         {
-          "mdFt": 6267.0,
-          "tvdFt": 6256.0,
+          "mdFt": 6267,
+          "tvdFt": 6256,
           "inclinationDeg": 18.39,
           "azimuthDeg": 106.2,
           "utm": [
@@ -2984,7 +3536,7 @@
           ]
         },
         {
-          "mdFt": 6277.0,
+          "mdFt": 6277,
           "tvdFt": 6265.49,
           "inclinationDeg": 18.29,
           "azimuthDeg": 106.44,
@@ -3000,7 +3552,7 @@
           ]
         },
         {
-          "mdFt": 6287.0,
+          "mdFt": 6287,
           "tvdFt": 6274.99,
           "inclinationDeg": 18.21,
           "azimuthDeg": 106.73,
@@ -3016,7 +3568,7 @@
           ]
         },
         {
-          "mdFt": 6297.0,
+          "mdFt": 6297,
           "tvdFt": 6284.49,
           "inclinationDeg": 18.14,
           "azimuthDeg": 106.96,
@@ -3032,8 +3584,8 @@
           ]
         },
         {
-          "mdFt": 6307.0,
-          "tvdFt": 6294.0,
+          "mdFt": 6307,
+          "tvdFt": 6294,
           "inclinationDeg": 17.95,
           "azimuthDeg": 107.64,
           "utm": [
@@ -3048,7 +3600,7 @@
           ]
         },
         {
-          "mdFt": 6317.0,
+          "mdFt": 6317,
           "tvdFt": 6303.52,
           "inclinationDeg": 17.7,
           "azimuthDeg": 108.18,
@@ -3064,7 +3616,7 @@
           ]
         },
         {
-          "mdFt": 6327.0,
+          "mdFt": 6327,
           "tvdFt": 6313.05,
           "inclinationDeg": 17.59,
           "azimuthDeg": 108.98,
@@ -3080,7 +3632,7 @@
           ]
         },
         {
-          "mdFt": 6337.0,
+          "mdFt": 6337,
           "tvdFt": 6322.59,
           "inclinationDeg": 17.45,
           "azimuthDeg": 109.58,
@@ -3096,7 +3648,7 @@
           ]
         },
         {
-          "mdFt": 6347.0,
+          "mdFt": 6347,
           "tvdFt": 6332.13,
           "inclinationDeg": 17.39,
           "azimuthDeg": 110.07,
@@ -3112,7 +3664,7 @@
           ]
         },
         {
-          "mdFt": 6357.0,
+          "mdFt": 6357,
           "tvdFt": 6341.67,
           "inclinationDeg": 17.38,
           "azimuthDeg": 110.41,
@@ -3128,7 +3680,7 @@
           ]
         },
         {
-          "mdFt": 6367.0,
+          "mdFt": 6367,
           "tvdFt": 6351.21,
           "inclinationDeg": 17.32,
           "azimuthDeg": 110.72,
@@ -3144,10 +3696,10 @@
           ]
         },
         {
-          "mdFt": 6377.0,
+          "mdFt": 6377,
           "tvdFt": 6360.76,
           "inclinationDeg": 17.55,
-          "azimuthDeg": 111.0,
+          "azimuthDeg": 111,
           "utm": [
             334680.325,
             4263434.418,
@@ -3160,7 +3712,7 @@
           ]
         },
         {
-          "mdFt": 6387.0,
+          "mdFt": 6387,
           "tvdFt": 6370.28,
           "inclinationDeg": 17.87,
           "azimuthDeg": 111.26,
@@ -3176,7 +3728,7 @@
           ]
         },
         {
-          "mdFt": 6397.0,
+          "mdFt": 6397,
           "tvdFt": 6379.77,
           "inclinationDeg": 18.84,
           "azimuthDeg": 111.6,
@@ -3192,7 +3744,7 @@
           ]
         },
         {
-          "mdFt": 6407.0,
+          "mdFt": 6407,
           "tvdFt": 6389.21,
           "inclinationDeg": 19.62,
           "azimuthDeg": 111.9,
@@ -3208,7 +3760,7 @@
           ]
         },
         {
-          "mdFt": 6417.0,
+          "mdFt": 6417,
           "tvdFt": 6398.62,
           "inclinationDeg": 20.26,
           "azimuthDeg": 112.17,
@@ -3224,7 +3776,7 @@
           ]
         },
         {
-          "mdFt": 6427.0,
+          "mdFt": 6427,
           "tvdFt": 6407.98,
           "inclinationDeg": 20.69,
           "azimuthDeg": 112.57,
@@ -3240,7 +3792,7 @@
           ]
         },
         {
-          "mdFt": 6437.0,
+          "mdFt": 6437,
           "tvdFt": 6417.33,
           "inclinationDeg": 20.94,
           "azimuthDeg": 112.89,
@@ -3256,7 +3808,7 @@
           ]
         },
         {
-          "mdFt": 6447.0,
+          "mdFt": 6447,
           "tvdFt": 6426.67,
           "inclinationDeg": 21.1,
           "azimuthDeg": 113.11,
@@ -3272,7 +3824,7 @@
           ]
         },
         {
-          "mdFt": 6457.0,
+          "mdFt": 6457,
           "tvdFt": 6435.98,
           "inclinationDeg": 21.45,
           "azimuthDeg": 113.28,
@@ -3288,7 +3840,7 @@
           ]
         },
         {
-          "mdFt": 6467.0,
+          "mdFt": 6467,
           "tvdFt": 6445.28,
           "inclinationDeg": 21.94,
           "azimuthDeg": 113.43,
@@ -3304,7 +3856,7 @@
           ]
         },
         {
-          "mdFt": 6477.0,
+          "mdFt": 6477,
           "tvdFt": 6454.53,
           "inclinationDeg": 22.43,
           "azimuthDeg": 113.57,
@@ -3320,7 +3872,7 @@
           ]
         },
         {
-          "mdFt": 6487.0,
+          "mdFt": 6487,
           "tvdFt": 6463.77,
           "inclinationDeg": 22.82,
           "azimuthDeg": 113.85,
@@ -3336,7 +3888,7 @@
           ]
         },
         {
-          "mdFt": 6497.0,
+          "mdFt": 6497,
           "tvdFt": 6472.97,
           "inclinationDeg": 23.07,
           "azimuthDeg": 114.51,
@@ -3352,7 +3904,7 @@
           ]
         },
         {
-          "mdFt": 6507.0,
+          "mdFt": 6507,
           "tvdFt": 6482.17,
           "inclinationDeg": 23.29,
           "azimuthDeg": 115.06,
@@ -3368,7 +3920,7 @@
           ]
         },
         {
-          "mdFt": 6517.0,
+          "mdFt": 6517,
           "tvdFt": 6491.34,
           "inclinationDeg": 23.56,
           "azimuthDeg": 115.51,
@@ -3384,7 +3936,7 @@
           ]
         },
         {
-          "mdFt": 6527.0,
+          "mdFt": 6527,
           "tvdFt": 6500.49,
           "inclinationDeg": 24.08,
           "azimuthDeg": 115.61,
@@ -3400,7 +3952,7 @@
           ]
         },
         {
-          "mdFt": 6537.0,
+          "mdFt": 6537,
           "tvdFt": 6509.59,
           "inclinationDeg": 24.83,
           "azimuthDeg": 115.58,
@@ -3416,7 +3968,7 @@
           ]
         },
         {
-          "mdFt": 6547.0,
+          "mdFt": 6547,
           "tvdFt": 6518.64,
           "inclinationDeg": 25.53,
           "azimuthDeg": 115.62,
@@ -3432,7 +3984,7 @@
           ]
         },
         {
-          "mdFt": 6557.0,
+          "mdFt": 6557,
           "tvdFt": 6527.64,
           "inclinationDeg": 26.28,
           "azimuthDeg": 115.65,
@@ -3448,7 +4000,7 @@
           ]
         },
         {
-          "mdFt": 6567.0,
+          "mdFt": 6567,
           "tvdFt": 6536.57,
           "inclinationDeg": 27.19,
           "azimuthDeg": 115.58,
@@ -3464,7 +4016,7 @@
           ]
         },
         {
-          "mdFt": 6577.0,
+          "mdFt": 6577,
           "tvdFt": 6545.43,
           "inclinationDeg": 28.16,
           "azimuthDeg": 115.37,
@@ -3480,7 +4032,7 @@
           ]
         },
         {
-          "mdFt": 6587.0,
+          "mdFt": 6587,
           "tvdFt": 6554.22,
           "inclinationDeg": 28.6,
           "azimuthDeg": 115.2,
@@ -3496,8 +4048,8 @@
           ]
         },
         {
-          "mdFt": 6597.0,
-          "tvdFt": 6563.0,
+          "mdFt": 6597,
+          "tvdFt": 6563,
           "inclinationDeg": 28.74,
           "azimuthDeg": 115.11,
           "utm": [
@@ -3512,7 +4064,7 @@
           ]
         },
         {
-          "mdFt": 6607.0,
+          "mdFt": 6607,
           "tvdFt": 6571.76,
           "inclinationDeg": 28.98,
           "azimuthDeg": 114.98,
@@ -3528,7 +4080,7 @@
           ]
         },
         {
-          "mdFt": 6617.0,
+          "mdFt": 6617,
           "tvdFt": 6580.48,
           "inclinationDeg": 29.48,
           "azimuthDeg": 114.72,
@@ -3544,7 +4096,7 @@
           ]
         },
         {
-          "mdFt": 6627.0,
+          "mdFt": 6627,
           "tvdFt": 6589.16,
           "inclinationDeg": 30.08,
           "azimuthDeg": 114.42,
@@ -3560,7 +4112,7 @@
           ]
         },
         {
-          "mdFt": 6637.0,
+          "mdFt": 6637,
           "tvdFt": 6597.78,
           "inclinationDeg": 30.88,
           "azimuthDeg": 114.12,
@@ -3576,7 +4128,7 @@
           ]
         },
         {
-          "mdFt": 6647.0,
+          "mdFt": 6647,
           "tvdFt": 6606.33,
           "inclinationDeg": 31.63,
           "azimuthDeg": 113.78,
@@ -3592,7 +4144,7 @@
           ]
         },
         {
-          "mdFt": 6657.0,
+          "mdFt": 6657,
           "tvdFt": 6614.81,
           "inclinationDeg": 32.41,
           "azimuthDeg": 113.19,
@@ -3608,7 +4160,7 @@
           ]
         },
         {
-          "mdFt": 6667.0,
+          "mdFt": 6667,
           "tvdFt": 6623.21,
           "inclinationDeg": 33.19,
           "azimuthDeg": 112.51,
@@ -3624,7 +4176,7 @@
           ]
         },
         {
-          "mdFt": 6677.0,
+          "mdFt": 6677,
           "tvdFt": 6631.52,
           "inclinationDeg": 34.4,
           "azimuthDeg": 111.33,
@@ -3640,7 +4192,7 @@
           ]
         },
         {
-          "mdFt": 6687.0,
+          "mdFt": 6687,
           "tvdFt": 6639.74,
           "inclinationDeg": 35.07,
           "azimuthDeg": 110.58,
@@ -3656,7 +4208,7 @@
           ]
         },
         {
-          "mdFt": 6697.0,
+          "mdFt": 6697,
           "tvdFt": 6647.91,
           "inclinationDeg": 35.42,
           "azimuthDeg": 109.97,
@@ -3672,7 +4224,7 @@
           ]
         },
         {
-          "mdFt": 6707.0,
+          "mdFt": 6707,
           "tvdFt": 6656.04,
           "inclinationDeg": 35.81,
           "azimuthDeg": 109.5,
@@ -3688,7 +4240,7 @@
           ]
         },
         {
-          "mdFt": 6717.0,
+          "mdFt": 6717,
           "tvdFt": 6664.13,
           "inclinationDeg": 36.14,
           "azimuthDeg": 109.05,
@@ -3704,7 +4256,7 @@
           ]
         },
         {
-          "mdFt": 6727.0,
+          "mdFt": 6727,
           "tvdFt": 6672.18,
           "inclinationDeg": 36.58,
           "azimuthDeg": 108.38,
@@ -3720,7 +4272,7 @@
           ]
         },
         {
-          "mdFt": 6737.0,
+          "mdFt": 6737,
           "tvdFt": 6680.18,
           "inclinationDeg": 37.15,
           "azimuthDeg": 107.37,
@@ -3736,7 +4288,7 @@
           ]
         },
         {
-          "mdFt": 6747.0,
+          "mdFt": 6747,
           "tvdFt": 6688.12,
           "inclinationDeg": 37.72,
           "azimuthDeg": 106.36,
@@ -3752,7 +4304,7 @@
           ]
         },
         {
-          "mdFt": 6757.0,
+          "mdFt": 6757,
           "tvdFt": 6696.01,
           "inclinationDeg": 38.24,
           "azimuthDeg": 105.52,
@@ -3768,7 +4320,7 @@
           ]
         },
         {
-          "mdFt": 6767.0,
+          "mdFt": 6767,
           "tvdFt": 6703.81,
           "inclinationDeg": 39.14,
           "azimuthDeg": 104.36,
@@ -3784,7 +4336,7 @@
           ]
         },
         {
-          "mdFt": 6777.0,
+          "mdFt": 6777,
           "tvdFt": 6711.54,
           "inclinationDeg": 39.56,
           "azimuthDeg": 103.1,
@@ -3800,7 +4352,7 @@
           ]
         },
         {
-          "mdFt": 6787.0,
+          "mdFt": 6787,
           "tvdFt": 6719.24,
           "inclinationDeg": 39.85,
           "azimuthDeg": 102.29,
@@ -3816,7 +4368,7 @@
           ]
         },
         {
-          "mdFt": 6797.0,
+          "mdFt": 6797,
           "tvdFt": 6726.9,
           "inclinationDeg": 40.2,
           "azimuthDeg": 101.75,
@@ -3832,7 +4384,7 @@
           ]
         },
         {
-          "mdFt": 6807.0,
+          "mdFt": 6807,
           "tvdFt": 6734.53,
           "inclinationDeg": 40.35,
           "azimuthDeg": 101.44,
@@ -3848,7 +4400,7 @@
           ]
         },
         {
-          "mdFt": 6817.0,
+          "mdFt": 6817,
           "tvdFt": 6742.12,
           "inclinationDeg": 40.87,
           "azimuthDeg": 101.13,
@@ -3864,7 +4416,7 @@
           ]
         },
         {
-          "mdFt": 6827.0,
+          "mdFt": 6827,
           "tvdFt": 6749.64,
           "inclinationDeg": 41.59,
           "azimuthDeg": 100.87,
@@ -3880,7 +4432,7 @@
           ]
         },
         {
-          "mdFt": 6837.0,
+          "mdFt": 6837,
           "tvdFt": 6757.07,
           "inclinationDeg": 42.46,
           "azimuthDeg": 100.59,
@@ -3896,7 +4448,7 @@
           ]
         },
         {
-          "mdFt": 6847.0,
+          "mdFt": 6847,
           "tvdFt": 6764.4,
           "inclinationDeg": 43.24,
           "azimuthDeg": 100.39,
@@ -3912,7 +4464,7 @@
           ]
         },
         {
-          "mdFt": 6857.0,
+          "mdFt": 6857,
           "tvdFt": 6771.62,
           "inclinationDeg": 44.22,
           "azimuthDeg": 100.23,
@@ -3928,7 +4480,7 @@
           ]
         },
         {
-          "mdFt": 6867.0,
+          "mdFt": 6867,
           "tvdFt": 6778.74,
           "inclinationDeg": 45.11,
           "azimuthDeg": 100.02,
@@ -3944,7 +4496,7 @@
           ]
         },
         {
-          "mdFt": 6877.0,
+          "mdFt": 6877,
           "tvdFt": 6785.76,
           "inclinationDeg": 45.59,
           "azimuthDeg": 100.03,
@@ -3960,7 +4512,7 @@
           ]
         },
         {
-          "mdFt": 6887.0,
+          "mdFt": 6887,
           "tvdFt": 6792.74,
           "inclinationDeg": 45.94,
           "azimuthDeg": 100.12,
@@ -3976,7 +4528,7 @@
           ]
         },
         {
-          "mdFt": 6897.0,
+          "mdFt": 6897,
           "tvdFt": 6799.66,
           "inclinationDeg": 46.42,
           "azimuthDeg": 100.11,
@@ -3992,10 +4544,10 @@
           ]
         },
         {
-          "mdFt": 6907.0,
+          "mdFt": 6907,
           "tvdFt": 6806.52,
           "inclinationDeg": 46.97,
-          "azimuthDeg": 100.0,
+          "azimuthDeg": 100,
           "utm": [
             334759.583,
             4263408.062,
@@ -4008,7 +4560,7 @@
           ]
         },
         {
-          "mdFt": 6917.0,
+          "mdFt": 6917,
           "tvdFt": 6813.31,
           "inclinationDeg": 47.58,
           "azimuthDeg": 99.93,
@@ -4024,7 +4576,7 @@
           ]
         },
         {
-          "mdFt": 6927.0,
+          "mdFt": 6927,
           "tvdFt": 6820.02,
           "inclinationDeg": 48.11,
           "azimuthDeg": 99.88,
@@ -4040,7 +4592,7 @@
           ]
         },
         {
-          "mdFt": 6937.0,
+          "mdFt": 6937,
           "tvdFt": 6826.66,
           "inclinationDeg": 48.66,
           "azimuthDeg": 99.89,
@@ -4056,7 +4608,7 @@
           ]
         },
         {
-          "mdFt": 6947.0,
+          "mdFt": 6947,
           "tvdFt": 6833.23,
           "inclinationDeg": 49.11,
           "azimuthDeg": 99.97,
@@ -4072,7 +4624,7 @@
           ]
         },
         {
-          "mdFt": 6957.0,
+          "mdFt": 6957,
           "tvdFt": 6839.74,
           "inclinationDeg": 49.78,
           "azimuthDeg": 100.06,
@@ -4088,7 +4640,7 @@
           ]
         },
         {
-          "mdFt": 6967.0,
+          "mdFt": 6967,
           "tvdFt": 6846.14,
           "inclinationDeg": 50.57,
           "azimuthDeg": 100.25,
@@ -4104,7 +4656,7 @@
           ]
         },
         {
-          "mdFt": 6977.0,
+          "mdFt": 6977,
           "tvdFt": 6852.45,
           "inclinationDeg": 51.25,
           "azimuthDeg": 100.41,
@@ -4120,9 +4672,9 @@
           ]
         },
         {
-          "mdFt": 6987.0,
+          "mdFt": 6987,
           "tvdFt": 6858.65,
-          "inclinationDeg": 52.0,
+          "inclinationDeg": 52,
           "azimuthDeg": 100.57,
           "utm": [
             334777.782,
@@ -4136,7 +4688,7 @@
           ]
         },
         {
-          "mdFt": 6997.0,
+          "mdFt": 6997,
           "tvdFt": 6864.76,
           "inclinationDeg": 52.69,
           "azimuthDeg": 100.72,
@@ -4152,7 +4704,7 @@
           ]
         },
         {
-          "mdFt": 7007.0,
+          "mdFt": 7007,
           "tvdFt": 6870.79,
           "inclinationDeg": 53.14,
           "azimuthDeg": 100.86,
@@ -4168,7 +4720,7 @@
           ]
         },
         {
-          "mdFt": 7017.0,
+          "mdFt": 7017,
           "tvdFt": 6876.73,
           "inclinationDeg": 54.01,
           "azimuthDeg": 100.93,
@@ -4184,7 +4736,7 @@
           ]
         },
         {
-          "mdFt": 7027.0,
+          "mdFt": 7027,
           "tvdFt": 6882.56,
           "inclinationDeg": 54.65,
           "azimuthDeg": 101.02,
@@ -4200,7 +4752,7 @@
           ]
         },
         {
-          "mdFt": 7037.0,
+          "mdFt": 7037,
           "tvdFt": 6888.31,
           "inclinationDeg": 55.19,
           "azimuthDeg": 101.15,
@@ -4216,7 +4768,7 @@
           ]
         },
         {
-          "mdFt": 7047.0,
+          "mdFt": 7047,
           "tvdFt": 6893.96,
           "inclinationDeg": 55.93,
           "azimuthDeg": 101.38,
@@ -4232,7 +4784,7 @@
           ]
         },
         {
-          "mdFt": 7057.0,
+          "mdFt": 7057,
           "tvdFt": 6899.53,
           "inclinationDeg": 56.46,
           "azimuthDeg": 101.78,
@@ -4248,7 +4800,7 @@
           ]
         },
         {
-          "mdFt": 7067.0,
+          "mdFt": 7067,
           "tvdFt": 6905.02,
           "inclinationDeg": 56.92,
           "azimuthDeg": 102.04,
@@ -4264,7 +4816,7 @@
           ]
         },
         {
-          "mdFt": 7077.0,
+          "mdFt": 7077,
           "tvdFt": 6910.45,
           "inclinationDeg": 57.3,
           "azimuthDeg": 102.22,
@@ -4280,7 +4832,7 @@
           ]
         },
         {
-          "mdFt": 7087.0,
+          "mdFt": 7087,
           "tvdFt": 6915.79,
           "inclinationDeg": 58.09,
           "azimuthDeg": 102.39,
@@ -4296,7 +4848,7 @@
           ]
         },
         {
-          "mdFt": 7097.0,
+          "mdFt": 7097,
           "tvdFt": 6921.06,
           "inclinationDeg": 58.37,
           "azimuthDeg": 102.47,
@@ -4312,7 +4864,7 @@
           ]
         },
         {
-          "mdFt": 7107.0,
+          "mdFt": 7107,
           "tvdFt": 6926.29,
           "inclinationDeg": 58.62,
           "azimuthDeg": 102.55,
@@ -4328,7 +4880,7 @@
           ]
         },
         {
-          "mdFt": 7117.0,
+          "mdFt": 7117,
           "tvdFt": 6931.48,
           "inclinationDeg": 58.79,
           "azimuthDeg": 102.58,
@@ -4344,7 +4896,7 @@
           ]
         },
         {
-          "mdFt": 7127.0,
+          "mdFt": 7127,
           "tvdFt": 6936.66,
           "inclinationDeg": 58.85,
           "azimuthDeg": 102.58,
@@ -4360,7 +4912,7 @@
           ]
         },
         {
-          "mdFt": 7137.0,
+          "mdFt": 7137,
           "tvdFt": 6941.81,
           "inclinationDeg": 59.18,
           "azimuthDeg": 102.6,
@@ -4376,7 +4928,7 @@
           ]
         },
         {
-          "mdFt": 7147.0,
+          "mdFt": 7147,
           "tvdFt": 6946.88,
           "inclinationDeg": 59.83,
           "azimuthDeg": 102.58,
@@ -4392,7 +4944,7 @@
           ]
         },
         {
-          "mdFt": 7157.0,
+          "mdFt": 7157,
           "tvdFt": 6951.86,
           "inclinationDeg": 60.49,
           "azimuthDeg": 102.54,
@@ -4408,7 +4960,7 @@
           ]
         },
         {
-          "mdFt": 7167.0,
+          "mdFt": 7167,
           "tvdFt": 6956.73,
           "inclinationDeg": 61.16,
           "azimuthDeg": 102.49,
@@ -4424,7 +4976,7 @@
           ]
         },
         {
-          "mdFt": 7177.0,
+          "mdFt": 7177,
           "tvdFt": 6961.51,
           "inclinationDeg": 61.71,
           "azimuthDeg": 102.45,
@@ -4434,13 +4986,13 @@
             -471.848
           ],
           "scene": [
-            -6642.0,
+            -6642,
             -9979.731,
             -471.848
           ]
         },
         {
-          "mdFt": 7187.0,
+          "mdFt": 7187,
           "tvdFt": 6966.22,
           "inclinationDeg": 62.07,
           "azimuthDeg": 102.41,
@@ -4456,7 +5008,7 @@
           ]
         },
         {
-          "mdFt": 7197.0,
+          "mdFt": 7197,
           "tvdFt": 6970.91,
           "inclinationDeg": 62.08,
           "azimuthDeg": 102.25,
@@ -4472,7 +5024,7 @@
           ]
         },
         {
-          "mdFt": 7207.0,
+          "mdFt": 7207,
           "tvdFt": 6975.55,
           "inclinationDeg": 62.64,
           "azimuthDeg": 101.98,
@@ -4488,7 +5040,7 @@
           ]
         },
         {
-          "mdFt": 7217.0,
+          "mdFt": 7217,
           "tvdFt": 6980.08,
           "inclinationDeg": 63.42,
           "azimuthDeg": 101.76,
@@ -4504,7 +5056,7 @@
           ]
         },
         {
-          "mdFt": 7227.0,
+          "mdFt": 7227,
           "tvdFt": 6984.54,
           "inclinationDeg": 63.66,
           "azimuthDeg": 101.49,
@@ -4520,7 +5072,7 @@
           ]
         },
         {
-          "mdFt": 7237.0,
+          "mdFt": 7237,
           "tvdFt": 6988.93,
           "inclinationDeg": 64.27,
           "azimuthDeg": 101.43,
@@ -4536,7 +5088,7 @@
           ]
         },
         {
-          "mdFt": 7247.0,
+          "mdFt": 7247,
           "tvdFt": 6993.24,
           "inclinationDeg": 64.67,
           "azimuthDeg": 101.36,
@@ -4552,7 +5104,7 @@
           ]
         },
         {
-          "mdFt": 7257.0,
+          "mdFt": 7257,
           "tvdFt": 6997.49,
           "inclinationDeg": 64.94,
           "azimuthDeg": 101.41,
@@ -4568,7 +5120,7 @@
           ]
         },
         {
-          "mdFt": 7267.0,
+          "mdFt": 7267,
           "tvdFt": 7001.71,
           "inclinationDeg": 65.18,
           "azimuthDeg": 101.42,
@@ -4584,7 +5136,7 @@
           ]
         },
         {
-          "mdFt": 7277.0,
+          "mdFt": 7277,
           "tvdFt": 7005.91,
           "inclinationDeg": 65.19,
           "azimuthDeg": 101.43,
@@ -4600,7 +5152,7 @@
           ]
         },
         {
-          "mdFt": 7287.0,
+          "mdFt": 7287,
           "tvdFt": 7010.09,
           "inclinationDeg": 65.36,
           "azimuthDeg": 101.42,
@@ -4616,7 +5168,7 @@
           ]
         },
         {
-          "mdFt": 7297.0,
+          "mdFt": 7297,
           "tvdFt": 7014.22,
           "inclinationDeg": 65.84,
           "azimuthDeg": 101.36,
@@ -4632,7 +5184,7 @@
           ]
         },
         {
-          "mdFt": 7307.0,
+          "mdFt": 7307,
           "tvdFt": 7018.29,
           "inclinationDeg": 66.12,
           "azimuthDeg": 101.32,
@@ -4648,7 +5200,7 @@
           ]
         },
         {
-          "mdFt": 7317.0,
+          "mdFt": 7317,
           "tvdFt": 7022.33,
           "inclinationDeg": 66.28,
           "azimuthDeg": 101.3,
@@ -4664,7 +5216,7 @@
           ]
         },
         {
-          "mdFt": 7327.0,
+          "mdFt": 7327,
           "tvdFt": 7026.32,
           "inclinationDeg": 66.6,
           "azimuthDeg": 101.3,
@@ -4680,7 +5232,7 @@
           ]
         },
         {
-          "mdFt": 7337.0,
+          "mdFt": 7337,
           "tvdFt": 7030.28,
           "inclinationDeg": 66.77,
           "azimuthDeg": 101.29,
@@ -4696,7 +5248,7 @@
           ]
         },
         {
-          "mdFt": 7347.0,
+          "mdFt": 7347,
           "tvdFt": 7034.22,
           "inclinationDeg": 66.89,
           "azimuthDeg": 101.29,
@@ -4712,7 +5264,7 @@
           ]
         },
         {
-          "mdFt": 7357.0,
+          "mdFt": 7357,
           "tvdFt": 7038.13,
           "inclinationDeg": 67.06,
           "azimuthDeg": 101.32,
@@ -4728,7 +5280,7 @@
           ]
         },
         {
-          "mdFt": 7367.0,
+          "mdFt": 7367,
           "tvdFt": 7042.07,
           "inclinationDeg": 66.46,
           "azimuthDeg": 101.55,
@@ -4744,7 +5296,7 @@
           ]
         },
         {
-          "mdFt": 7377.0,
+          "mdFt": 7377,
           "tvdFt": 7045.98,
           "inclinationDeg": 67.49,
           "azimuthDeg": 101.64,
@@ -4760,7 +5312,7 @@
           ]
         },
         {
-          "mdFt": 7387.0,
+          "mdFt": 7387,
           "tvdFt": 7049.87,
           "inclinationDeg": 66.81,
           "azimuthDeg": 101.86,
@@ -4776,7 +5328,7 @@
           ]
         },
         {
-          "mdFt": 7397.0,
+          "mdFt": 7397,
           "tvdFt": 7053.86,
           "inclinationDeg": 66.16,
           "azimuthDeg": 102.17,
@@ -4792,7 +5344,7 @@
           ]
         },
         {
-          "mdFt": 7407.0,
+          "mdFt": 7407,
           "tvdFt": 7057.97,
           "inclinationDeg": 65.23,
           "azimuthDeg": 102.39,
@@ -4808,7 +5360,7 @@
           ]
         },
         {
-          "mdFt": 7417.0,
+          "mdFt": 7417,
           "tvdFt": 7062.2,
           "inclinationDeg": 64.75,
           "azimuthDeg": 102.57,
@@ -4824,7 +5376,7 @@
           ]
         },
         {
-          "mdFt": 7427.0,
+          "mdFt": 7427,
           "tvdFt": 7066.51,
           "inclinationDeg": 64.15,
           "azimuthDeg": 102.63,
@@ -4840,7 +5392,7 @@
           ]
         },
         {
-          "mdFt": 7437.0,
+          "mdFt": 7437,
           "tvdFt": 7070.85,
           "inclinationDeg": 64.43,
           "azimuthDeg": 102.69,
@@ -4856,7 +5408,7 @@
           ]
         },
         {
-          "mdFt": 7447.0,
+          "mdFt": 7447,
           "tvdFt": 7075.15,
           "inclinationDeg": 64.66,
           "azimuthDeg": 102.72,
@@ -4872,7 +5424,7 @@
           ]
         },
         {
-          "mdFt": 7457.0,
+          "mdFt": 7457,
           "tvdFt": 7079.39,
           "inclinationDeg": 65.22,
           "azimuthDeg": 102.75,
@@ -4888,7 +5440,7 @@
           ]
         },
         {
-          "mdFt": 7467.0,
+          "mdFt": 7467,
           "tvdFt": 7083.53,
           "inclinationDeg": 65.75,
           "azimuthDeg": 102.8,
@@ -4904,7 +5456,7 @@
           ]
         },
         {
-          "mdFt": 7477.0,
+          "mdFt": 7477,
           "tvdFt": 7087.61,
           "inclinationDeg": 66.18,
           "azimuthDeg": 102.85,
@@ -4920,7 +5472,7 @@
           ]
         },
         {
-          "mdFt": 7487.0,
+          "mdFt": 7487,
           "tvdFt": 7091.65,
           "inclinationDeg": 66.15,
           "azimuthDeg": 103.07,
@@ -4936,7 +5488,7 @@
           ]
         },
         {
-          "mdFt": 7497.0,
+          "mdFt": 7497,
           "tvdFt": 7095.74,
           "inclinationDeg": 65.6,
           "azimuthDeg": 103.43,
@@ -4952,7 +5504,7 @@
           ]
         },
         {
-          "mdFt": 7507.0,
+          "mdFt": 7507,
           "tvdFt": 7099.9,
           "inclinationDeg": 65.17,
           "azimuthDeg": 103.88,
@@ -4968,7 +5520,7 @@
           ]
         },
         {
-          "mdFt": 7517.0,
+          "mdFt": 7517,
           "tvdFt": 7104.06,
           "inclinationDeg": 65.72,
           "azimuthDeg": 104.35,
@@ -4984,7 +5536,7 @@
           ]
         },
         {
-          "mdFt": 7527.0,
+          "mdFt": 7527,
           "tvdFt": 7108.17,
           "inclinationDeg": 65.71,
           "azimuthDeg": 104.71,
@@ -5000,7 +5552,7 @@
           ]
         },
         {
-          "mdFt": 7537.0,
+          "mdFt": 7537,
           "tvdFt": 7112.38,
           "inclinationDeg": 64.48,
           "azimuthDeg": 105.01,
@@ -5016,7 +5568,7 @@
           ]
         },
         {
-          "mdFt": 7547.0,
+          "mdFt": 7547,
           "tvdFt": 7116.59,
           "inclinationDeg": 65.76,
           "azimuthDeg": 105.24,
@@ -5032,7 +5584,7 @@
           ]
         },
         {
-          "mdFt": 7557.0,
+          "mdFt": 7557,
           "tvdFt": 7120.7,
           "inclinationDeg": 65.63,
           "azimuthDeg": 105.45,
@@ -5048,7 +5600,7 @@
           ]
         },
         {
-          "mdFt": 7567.0,
+          "mdFt": 7567,
           "tvdFt": 7124.79,
           "inclinationDeg": 66.17,
           "azimuthDeg": 105.64,
@@ -5064,7 +5616,7 @@
           ]
         },
         {
-          "mdFt": 7577.0,
+          "mdFt": 7577,
           "tvdFt": 7128.77,
           "inclinationDeg": 66.87,
           "azimuthDeg": 105.77,
@@ -5080,7 +5632,7 @@
           ]
         },
         {
-          "mdFt": 7587.0,
+          "mdFt": 7587,
           "tvdFt": 7132.75,
           "inclinationDeg": 66.29,
           "azimuthDeg": 105.95,
@@ -5096,7 +5648,7 @@
           ]
         },
         {
-          "mdFt": 7597.0,
+          "mdFt": 7597,
           "tvdFt": 7136.87,
           "inclinationDeg": 65.05,
           "azimuthDeg": 106.17,
@@ -5112,7 +5664,7 @@
           ]
         },
         {
-          "mdFt": 7607.0,
+          "mdFt": 7607,
           "tvdFt": 7141.07,
           "inclinationDeg": 65.18,
           "azimuthDeg": 106.32,
@@ -5128,7 +5680,7 @@
           ]
         },
         {
-          "mdFt": 7617.0,
+          "mdFt": 7617,
           "tvdFt": 7145.25,
           "inclinationDeg": 65.42,
           "azimuthDeg": 106.55,
@@ -5144,7 +5696,7 @@
           ]
         },
         {
-          "mdFt": 7627.0,
+          "mdFt": 7627,
           "tvdFt": 7149.5,
           "inclinationDeg": 64.36,
           "azimuthDeg": 106.78,
@@ -5160,7 +5712,7 @@
           ]
         },
         {
-          "mdFt": 7637.0,
+          "mdFt": 7637,
           "tvdFt": 7153.82,
           "inclinationDeg": 64.46,
           "azimuthDeg": 106.88,
@@ -5176,7 +5728,7 @@
           ]
         },
         {
-          "mdFt": 7647.0,
+          "mdFt": 7647,
           "tvdFt": 7158.15,
           "inclinationDeg": 64.1,
           "azimuthDeg": 107.09,
@@ -5192,7 +5744,7 @@
           ]
         },
         {
-          "mdFt": 7657.0,
+          "mdFt": 7657,
           "tvdFt": 7162.6,
           "inclinationDeg": 63.14,
           "azimuthDeg": 107.76,
@@ -5208,7 +5760,7 @@
           ]
         },
         {
-          "mdFt": 7667.0,
+          "mdFt": 7667,
           "tvdFt": 7167.18,
           "inclinationDeg": 62.36,
           "azimuthDeg": 108.2,
@@ -5224,7 +5776,7 @@
           ]
         },
         {
-          "mdFt": 7677.0,
+          "mdFt": 7677,
           "tvdFt": 7171.91,
           "inclinationDeg": 61.19,
           "azimuthDeg": 108.52,
@@ -5240,7 +5792,7 @@
           ]
         },
         {
-          "mdFt": 7687.0,
+          "mdFt": 7687,
           "tvdFt": 7176.8,
           "inclinationDeg": 60.25,
           "azimuthDeg": 108.65,
@@ -5256,7 +5808,7 @@
           ]
         },
         {
-          "mdFt": 7697.0,
+          "mdFt": 7697,
           "tvdFt": 7181.77,
           "inclinationDeg": 60.16,
           "azimuthDeg": 108.88,
@@ -5272,7 +5824,7 @@
           ]
         },
         {
-          "mdFt": 7707.0,
+          "mdFt": 7707,
           "tvdFt": 7186.78,
           "inclinationDeg": 59.67,
           "azimuthDeg": 109.11,
@@ -5288,7 +5840,7 @@
           ]
         },
         {
-          "mdFt": 7717.0,
+          "mdFt": 7717,
           "tvdFt": 7191.93,
           "inclinationDeg": 58.31,
           "azimuthDeg": 109.2,
@@ -5304,7 +5856,7 @@
           ]
         },
         {
-          "mdFt": 7727.0,
+          "mdFt": 7727,
           "tvdFt": 7197.13,
           "inclinationDeg": 59.08,
           "azimuthDeg": 109.31,
@@ -5320,7 +5872,7 @@
           ]
         },
         {
-          "mdFt": 7737.0,
+          "mdFt": 7737,
           "tvdFt": 7202.36,
           "inclinationDeg": 57.74,
           "azimuthDeg": 109.39,
@@ -5336,7 +5888,7 @@
           ]
         },
         {
-          "mdFt": 7747.0,
+          "mdFt": 7747,
           "tvdFt": 7207.72,
           "inclinationDeg": 57.54,
           "azimuthDeg": 109.51,
@@ -5352,7 +5904,7 @@
           ]
         },
         {
-          "mdFt": 7757.0,
+          "mdFt": 7757,
           "tvdFt": 7213.13,
           "inclinationDeg": 56.93,
           "azimuthDeg": 109.63,
@@ -5368,7 +5920,7 @@
           ]
         },
         {
-          "mdFt": 7767.0,
+          "mdFt": 7767,
           "tvdFt": 7218.56,
           "inclinationDeg": 57.3,
           "azimuthDeg": 109.74,
@@ -5384,7 +5936,7 @@
           ]
         },
         {
-          "mdFt": 7777.0,
+          "mdFt": 7777,
           "tvdFt": 7224.01,
           "inclinationDeg": 56.69,
           "azimuthDeg": 109.9,
@@ -5400,7 +5952,7 @@
           ]
         },
         {
-          "mdFt": 7787.0,
+          "mdFt": 7787,
           "tvdFt": 7229.51,
           "inclinationDeg": 56.55,
           "azimuthDeg": 110.04,
@@ -5416,8 +5968,8 @@
           ]
         },
         {
-          "mdFt": 7797.0,
-          "tvdFt": 7235.0,
+          "mdFt": 7797,
+          "tvdFt": 7235,
           "inclinationDeg": 56.88,
           "azimuthDeg": 110.15,
           "utm": [
@@ -5432,7 +5984,7 @@
           ]
         },
         {
-          "mdFt": 7807.0,
+          "mdFt": 7807,
           "tvdFt": 7240.5,
           "inclinationDeg": 56.27,
           "azimuthDeg": 110.21,
@@ -5448,7 +6000,7 @@
           ]
         },
         {
-          "mdFt": 7817.0,
+          "mdFt": 7817,
           "tvdFt": 7246.02,
           "inclinationDeg": 56.84,
           "azimuthDeg": 110.22,
@@ -5464,7 +6016,7 @@
           ]
         },
         {
-          "mdFt": 7827.0,
+          "mdFt": 7827,
           "tvdFt": 7251.58,
           "inclinationDeg": 55.56,
           "azimuthDeg": 110.23,
@@ -5480,7 +6032,7 @@
           ]
         },
         {
-          "mdFt": 7837.0,
+          "mdFt": 7837,
           "tvdFt": 7257.2,
           "inclinationDeg": 56.05,
           "azimuthDeg": 110.26,
@@ -5496,7 +6048,7 @@
           ]
         },
         {
-          "mdFt": 7847.0,
+          "mdFt": 7847,
           "tvdFt": 7262.81,
           "inclinationDeg": 55.7,
           "azimuthDeg": 110.17,
@@ -5512,7 +6064,7 @@
           ]
         },
         {
-          "mdFt": 7857.0,
+          "mdFt": 7857,
           "tvdFt": 7268.46,
           "inclinationDeg": 55.44,
           "azimuthDeg": 110.13,
@@ -5528,7 +6080,7 @@
           ]
         },
         {
-          "mdFt": 7867.0,
+          "mdFt": 7867,
           "tvdFt": 7274.06,
           "inclinationDeg": 56.5,
           "azimuthDeg": 110.1,
@@ -5544,10 +6096,10 @@
           ]
         },
         {
-          "mdFt": 7877.0,
+          "mdFt": 7877,
           "tvdFt": 7279.56,
           "inclinationDeg": 56.72,
-          "azimuthDeg": 110.0,
+          "azimuthDeg": 110,
           "utm": [
             335008.044,
             4263345.477,
@@ -5560,7 +6112,7 @@
           ]
         },
         {
-          "mdFt": 7887.0,
+          "mdFt": 7887,
           "tvdFt": 7285.08,
           "inclinationDeg": 56.33,
           "azimuthDeg": 109.9,
@@ -5576,7 +6128,7 @@
           ]
         },
         {
-          "mdFt": 7897.0,
+          "mdFt": 7897,
           "tvdFt": 7290.55,
           "inclinationDeg": 57.31,
           "azimuthDeg": 109.81,
@@ -5592,7 +6144,7 @@
           ]
         },
         {
-          "mdFt": 7907.0,
+          "mdFt": 7907,
           "tvdFt": 7295.95,
           "inclinationDeg": 57.39,
           "azimuthDeg": 109.66,
@@ -5608,7 +6160,7 @@
           ]
         },
         {
-          "mdFt": 7917.0,
+          "mdFt": 7917,
           "tvdFt": 7301.31,
           "inclinationDeg": 57.7,
           "azimuthDeg": 109.57,
@@ -5624,7 +6176,7 @@
           ]
         },
         {
-          "mdFt": 7927.0,
+          "mdFt": 7927,
           "tvdFt": 7306.7,
           "inclinationDeg": 57.09,
           "azimuthDeg": 109.46,
@@ -5640,7 +6192,7 @@
           ]
         },
         {
-          "mdFt": 7937.0,
+          "mdFt": 7937,
           "tvdFt": 7312.08,
           "inclinationDeg": 57.82,
           "azimuthDeg": 109.45,
@@ -5656,7 +6208,7 @@
           ]
         },
         {
-          "mdFt": 7947.0,
+          "mdFt": 7947,
           "tvdFt": 7317.41,
           "inclinationDeg": 57.78,
           "azimuthDeg": 109.45,
@@ -5672,7 +6224,7 @@
           ]
         },
         {
-          "mdFt": 7957.0,
+          "mdFt": 7957,
           "tvdFt": 7322.67,
           "inclinationDeg": 58.69,
           "azimuthDeg": 109.48,
@@ -5688,7 +6240,7 @@
           ]
         },
         {
-          "mdFt": 7967.0,
+          "mdFt": 7967,
           "tvdFt": 7327.89,
           "inclinationDeg": 58.35,
           "azimuthDeg": 109.52,
@@ -5704,7 +6256,7 @@
           ]
         },
         {
-          "mdFt": 7977.0,
+          "mdFt": 7977,
           "tvdFt": 7333.16,
           "inclinationDeg": 58.05,
           "azimuthDeg": 109.53,
@@ -5720,7 +6272,7 @@
           ]
         },
         {
-          "mdFt": 7987.0,
+          "mdFt": 7987,
           "tvdFt": 7338.34,
           "inclinationDeg": 59.55,
           "azimuthDeg": 109.52,
@@ -5736,7 +6288,7 @@
           ]
         },
         {
-          "mdFt": 7997.0,
+          "mdFt": 7997,
           "tvdFt": 7343.41,
           "inclinationDeg": 59.63,
           "azimuthDeg": 109.46,
@@ -5752,7 +6304,7 @@
           ]
         },
         {
-          "mdFt": 8007.0,
+          "mdFt": 8007,
           "tvdFt": 7348.42,
           "inclinationDeg": 60.18,
           "azimuthDeg": 109.46,
@@ -5768,7 +6320,7 @@
           ]
         },
         {
-          "mdFt": 8017.0,
+          "mdFt": 8017,
           "tvdFt": 7353.44,
           "inclinationDeg": 59.61,
           "azimuthDeg": 109.42,
@@ -5784,7 +6336,7 @@
           ]
         },
         {
-          "mdFt": 8027.0,
+          "mdFt": 8027,
           "tvdFt": 7358.41,
           "inclinationDeg": 60.79,
           "azimuthDeg": 109.42,
@@ -5800,7 +6352,7 @@
           ]
         },
         {
-          "mdFt": 8037.0,
+          "mdFt": 8037,
           "tvdFt": 7363.21,
           "inclinationDeg": 61.73,
           "azimuthDeg": 109.39,
@@ -5816,7 +6368,7 @@
           ]
         },
         {
-          "mdFt": 8047.0,
+          "mdFt": 8047,
           "tvdFt": 7367.95,
           "inclinationDeg": 61.68,
           "azimuthDeg": 109.34,
@@ -5832,7 +6384,7 @@
           ]
         },
         {
-          "mdFt": 8057.0,
+          "mdFt": 8057,
           "tvdFt": 7372.61,
           "inclinationDeg": 62.77,
           "azimuthDeg": 109.37,
@@ -5848,7 +6400,7 @@
           ]
         },
         {
-          "mdFt": 8067.0,
+          "mdFt": 8067,
           "tvdFt": 7377.12,
           "inclinationDeg": 63.65,
           "azimuthDeg": 109.37,
@@ -5864,7 +6416,7 @@
           ]
         },
         {
-          "mdFt": 8077.0,
+          "mdFt": 8077,
           "tvdFt": 7381.57,
           "inclinationDeg": 63.47,
           "azimuthDeg": 109.39,
@@ -5880,7 +6432,7 @@
           ]
         },
         {
-          "mdFt": 8087.0,
+          "mdFt": 8087,
           "tvdFt": 7386.06,
           "inclinationDeg": 63.23,
           "azimuthDeg": 109.44,
@@ -5896,7 +6448,7 @@
           ]
         },
         {
-          "mdFt": 8097.0,
+          "mdFt": 8097,
           "tvdFt": 7390.48,
           "inclinationDeg": 64.29,
           "azimuthDeg": 109.57,
@@ -5912,7 +6464,7 @@
           ]
         },
         {
-          "mdFt": 8107.0,
+          "mdFt": 8107,
           "tvdFt": 7394.8,
           "inclinationDeg": 64.56,
           "azimuthDeg": 109.61,
@@ -5928,7 +6480,7 @@
           ]
         },
         {
-          "mdFt": 8117.0,
+          "mdFt": 8117,
           "tvdFt": 7399.06,
           "inclinationDeg": 64.96,
           "azimuthDeg": 109.64,
@@ -5944,7 +6496,7 @@
           ]
         },
         {
-          "mdFt": 8127.0,
+          "mdFt": 8127,
           "tvdFt": 7403.33,
           "inclinationDeg": 64.51,
           "azimuthDeg": 109.72,
@@ -5960,7 +6512,7 @@
           ]
         },
         {
-          "mdFt": 8137.0,
+          "mdFt": 8137,
           "tvdFt": 7407.56,
           "inclinationDeg": 65.4,
           "azimuthDeg": 109.88,
@@ -5976,7 +6528,7 @@
           ]
         },
         {
-          "mdFt": 8147.0,
+          "mdFt": 8147,
           "tvdFt": 7411.72,
           "inclinationDeg": 65.45,
           "azimuthDeg": 109.94,
@@ -5992,7 +6544,7 @@
           ]
         },
         {
-          "mdFt": 8157.0,
+          "mdFt": 8157,
           "tvdFt": 7415.88,
           "inclinationDeg": 65.39,
           "azimuthDeg": 110.02,
@@ -6008,7 +6560,7 @@
           ]
         },
         {
-          "mdFt": 8167.0,
+          "mdFt": 8167,
           "tvdFt": 7420.12,
           "inclinationDeg": 64.46,
           "azimuthDeg": 110.12,
@@ -6024,7 +6576,7 @@
           ]
         },
         {
-          "mdFt": 8177.0,
+          "mdFt": 8177,
           "tvdFt": 7424.43,
           "inclinationDeg": 64.5,
           "azimuthDeg": 110.2,
@@ -6040,7 +6592,7 @@
           ]
         },
         {
-          "mdFt": 8187.0,
+          "mdFt": 8187,
           "tvdFt": 7428.67,
           "inclinationDeg": 65.25,
           "azimuthDeg": 110.26,
@@ -6056,7 +6608,7 @@
           ]
         },
         {
-          "mdFt": 8197.0,
+          "mdFt": 8197,
           "tvdFt": 7432.91,
           "inclinationDeg": 64.59,
           "azimuthDeg": 110.36,
@@ -6072,7 +6624,7 @@
           ]
         },
         {
-          "mdFt": 8207.0,
+          "mdFt": 8207,
           "tvdFt": 7437.16,
           "inclinationDeg": 65.19,
           "azimuthDeg": 110.44,
@@ -6088,7 +6640,7 @@
           ]
         },
         {
-          "mdFt": 8217.0,
+          "mdFt": 8217,
           "tvdFt": 7441.43,
           "inclinationDeg": 64.26,
           "azimuthDeg": 110.51,
@@ -6104,7 +6656,7 @@
           ]
         },
         {
-          "mdFt": 8227.0,
+          "mdFt": 8227,
           "tvdFt": 7445.66,
           "inclinationDeg": 65.61,
           "azimuthDeg": 110.53,
@@ -6120,7 +6672,7 @@
           ]
         },
         {
-          "mdFt": 8237.0,
+          "mdFt": 8237,
           "tvdFt": 7449.82,
           "inclinationDeg": 65.27,
           "azimuthDeg": 110.45,
@@ -6136,8 +6688,8 @@
           ]
         },
         {
-          "mdFt": 8247.0,
-          "tvdFt": 7454.0,
+          "mdFt": 8247,
+          "tvdFt": 7454,
           "inclinationDeg": 65.35,
           "azimuthDeg": 110.31,
           "utm": [
@@ -6152,7 +6704,7 @@
           ]
         },
         {
-          "mdFt": 8257.0,
+          "mdFt": 8257,
           "tvdFt": 7458.12,
           "inclinationDeg": 65.99,
           "azimuthDeg": 109.92,
@@ -6168,7 +6720,7 @@
           ]
         },
         {
-          "mdFt": 8267.0,
+          "mdFt": 8267,
           "tvdFt": 7462.14,
           "inclinationDeg": 66.53,
           "azimuthDeg": 109.62,
@@ -6184,7 +6736,7 @@
           ]
         },
         {
-          "mdFt": 8277.0,
+          "mdFt": 8277,
           "tvdFt": 7466.14,
           "inclinationDeg": 66.37,
           "azimuthDeg": 109.34,
@@ -6200,7 +6752,7 @@
           ]
         },
         {
-          "mdFt": 8287.0,
+          "mdFt": 8287,
           "tvdFt": 7470.12,
           "inclinationDeg": 66.65,
           "azimuthDeg": 109.26,
@@ -6216,7 +6768,7 @@
           ]
         },
         {
-          "mdFt": 8297.0,
+          "mdFt": 8297,
           "tvdFt": 7474.13,
           "inclinationDeg": 66.08,
           "azimuthDeg": 109.26,
@@ -6232,7 +6784,7 @@
           ]
         },
         {
-          "mdFt": 8307.0,
+          "mdFt": 8307,
           "tvdFt": 7478.14,
           "inclinationDeg": 66.72,
           "azimuthDeg": 109.23,
@@ -6248,7 +6800,7 @@
           ]
         },
         {
-          "mdFt": 8317.0,
+          "mdFt": 8317,
           "tvdFt": 7482.13,
           "inclinationDeg": 66.25,
           "azimuthDeg": 109.27,
@@ -6264,7 +6816,7 @@
           ]
         },
         {
-          "mdFt": 8327.0,
+          "mdFt": 8327,
           "tvdFt": 7486.17,
           "inclinationDeg": 66.07,
           "azimuthDeg": 109.2,
@@ -6280,7 +6832,7 @@
           ]
         },
         {
-          "mdFt": 8337.0,
+          "mdFt": 8337,
           "tvdFt": 7490.2,
           "inclinationDeg": 66.3,
           "azimuthDeg": 109.09,
@@ -6296,7 +6848,7 @@
           ]
         },
         {
-          "mdFt": 8347.0,
+          "mdFt": 8347,
           "tvdFt": 7494.22,
           "inclinationDeg": 66.31,
           "azimuthDeg": 108.82,
@@ -6312,7 +6864,7 @@
           ]
         },
         {
-          "mdFt": 8357.0,
+          "mdFt": 8357,
           "tvdFt": 7498.26,
           "inclinationDeg": 66.11,
           "azimuthDeg": 108.5,
@@ -6328,7 +6880,7 @@
           ]
         },
         {
-          "mdFt": 8367.0,
+          "mdFt": 8367,
           "tvdFt": 7502.26,
           "inclinationDeg": 66.69,
           "azimuthDeg": 108.25,
@@ -6344,7 +6896,7 @@
           ]
         },
         {
-          "mdFt": 8377.0,
+          "mdFt": 8377,
           "tvdFt": 7506.32,
           "inclinationDeg": 65.39,
           "azimuthDeg": 108.05,
@@ -6360,7 +6912,7 @@
           ]
         },
         {
-          "mdFt": 8387.0,
+          "mdFt": 8387,
           "tvdFt": 7510.41,
           "inclinationDeg": 66.37,
           "azimuthDeg": 107.96,
@@ -6376,7 +6928,7 @@
           ]
         },
         {
-          "mdFt": 8397.0,
+          "mdFt": 8397,
           "tvdFt": 7514.38,
           "inclinationDeg": 66.78,
           "azimuthDeg": 107.99,
@@ -6408,7 +6960,7 @@
           ]
         },
         {
-          "mdFt": 8466.0,
+          "mdFt": 8466,
           "tvdFt": 7542.49,
           "inclinationDeg": 65.6,
           "azimuthDeg": 108.41,
@@ -6424,7 +6976,7 @@
           ]
         },
         {
-          "mdFt": 8573.0,
+          "mdFt": 8573,
           "tvdFt": 7586.44,
           "inclinationDeg": 65.9,
           "azimuthDeg": 106.23,
@@ -6440,7 +6992,7 @@
           ]
         },
         {
-          "mdFt": 8668.0,
+          "mdFt": 8668,
           "tvdFt": 7623.7,
           "inclinationDeg": 67.92,
           "azimuthDeg": 103.08,
@@ -6456,7 +7008,7 @@
           ]
         },
         {
-          "mdFt": 8763.0,
+          "mdFt": 8763,
           "tvdFt": 7659.11,
           "inclinationDeg": 68.32,
           "azimuthDeg": 100.55,
@@ -6472,7 +7024,7 @@
           ]
         },
         {
-          "mdFt": 8859.0,
+          "mdFt": 8859,
           "tvdFt": 7693.73,
           "inclinationDeg": 69.41,
           "azimuthDeg": 99.11,
@@ -6488,7 +7040,7 @@
           ]
         },
         {
-          "mdFt": 8953.0,
+          "mdFt": 8953,
           "tvdFt": 7729.95,
           "inclinationDeg": 65.25,
           "azimuthDeg": 98.06,
@@ -6504,10 +7056,10 @@
           ]
         },
         {
-          "mdFt": 9048.0,
+          "mdFt": 9048,
           "tvdFt": 7768.9,
           "inclinationDeg": 66.34,
-          "azimuthDeg": 98.0,
+          "azimuthDeg": 98,
           "utm": [
             335318.904,
             4263258.929,
@@ -6520,7 +7072,7 @@
           ]
         },
         {
-          "mdFt": 9144.0,
+          "mdFt": 9144,
           "tvdFt": 7807.59,
           "inclinationDeg": 66.13,
           "azimuthDeg": 99.91,
@@ -6536,7 +7088,7 @@
           ]
         },
         {
-          "mdFt": 9239.0,
+          "mdFt": 9239,
           "tvdFt": 7845.66,
           "inclinationDeg": 66.64,
           "azimuthDeg": 103.7,
@@ -6552,7 +7104,7 @@
           ]
         },
         {
-          "mdFt": 9333.0,
+          "mdFt": 9333,
           "tvdFt": 7884.43,
           "inclinationDeg": 64.64,
           "azimuthDeg": 103.67,
@@ -6568,7 +7120,7 @@
           ]
         },
         {
-          "mdFt": 9429.0,
+          "mdFt": 9429,
           "tvdFt": 7926.32,
           "inclinationDeg": 63.62,
           "azimuthDeg": 105.78,
@@ -6584,7 +7136,7 @@
           ]
         },
         {
-          "mdFt": 9524.0,
+          "mdFt": 9524,
           "tvdFt": 7969.19,
           "inclinationDeg": 62.73,
           "azimuthDeg": 106.61,
@@ -6600,7 +7152,7 @@
           ]
         },
         {
-          "mdFt": 9618.0,
+          "mdFt": 9618,
           "tvdFt": 8012.53,
           "inclinationDeg": 62.36,
           "azimuthDeg": 105.28,
@@ -6616,7 +7168,7 @@
           ]
         },
         {
-          "mdFt": 9741.0,
+          "mdFt": 9741,
           "tvdFt": 8069.09,
           "inclinationDeg": 62.89,
           "azimuthDeg": 106.07,
@@ -6632,7 +7184,7 @@
           ]
         },
         {
-          "mdFt": 9837.0,
+          "mdFt": 9837,
           "tvdFt": 8110.93,
           "inclinationDeg": 65.42,
           "azimuthDeg": 105.64,
@@ -6648,7 +7200,7 @@
           ]
         },
         {
-          "mdFt": 9933.0,
+          "mdFt": 9933,
           "tvdFt": 8149.23,
           "inclinationDeg": 67.55,
           "azimuthDeg": 105.62,
@@ -6664,7 +7216,7 @@
           ]
         },
         {
-          "mdFt": 10028.0,
+          "mdFt": 10028,
           "tvdFt": 8186.75,
           "inclinationDeg": 65.93,
           "azimuthDeg": 105.44,
@@ -6680,7 +7232,7 @@
           ]
         },
         {
-          "mdFt": 10124.0,
+          "mdFt": 10124,
           "tvdFt": 8226.48,
           "inclinationDeg": 65.17,
           "azimuthDeg": 106.84,
@@ -6696,7 +7248,7 @@
           ]
         },
         {
-          "mdFt": 10220.0,
+          "mdFt": 10220,
           "tvdFt": 8267.44,
           "inclinationDeg": 64.32,
           "azimuthDeg": 108.36,
@@ -6712,7 +7264,7 @@
           ]
         },
         {
-          "mdFt": 10316.0,
+          "mdFt": 10316,
           "tvdFt": 8309.8,
           "inclinationDeg": 63.32,
           "azimuthDeg": 108.3,
@@ -6728,7 +7280,7 @@
           ]
         },
         {
-          "mdFt": 10411.0,
+          "mdFt": 10411,
           "tvdFt": 8351.45,
           "inclinationDeg": 64.68,
           "azimuthDeg": 105.97,
@@ -6744,7 +7296,7 @@
           ]
         },
         {
-          "mdFt": 10505.0,
+          "mdFt": 10505,
           "tvdFt": 8391.51,
           "inclinationDeg": 64.86,
           "azimuthDeg": 105.02,
@@ -6760,7 +7312,7 @@
           ]
         },
         {
-          "mdFt": 10604.0,
+          "mdFt": 10604,
           "tvdFt": 8430.73,
           "inclinationDeg": 68.46,
           "azimuthDeg": 103.44,
@@ -6776,7 +7328,7 @@
           ]
         },
         {
-          "mdFt": 10694.0,
+          "mdFt": 10694,
           "tvdFt": 8463.19,
           "inclinationDeg": 69.27,
           "azimuthDeg": 101.13,
@@ -6792,9 +7344,9 @@
           ]
         },
         {
-          "mdFt": 10790.0,
+          "mdFt": 10790,
           "tvdFt": 8498.16,
-          "inclinationDeg": 68.0,
+          "inclinationDeg": 68,
           "azimuthDeg": 101.18,
           "utm": [
             335784.417,
@@ -6808,7 +7360,7 @@
           ]
         },
         {
-          "mdFt": 10886.0,
+          "mdFt": 10886,
           "tvdFt": 8533.66,
           "inclinationDeg": 68.6,
           "azimuthDeg": 101.44,
@@ -6824,7 +7376,7 @@
           ]
         },
         {
-          "mdFt": 10955.0,
+          "mdFt": 10955,
           "tvdFt": 8558.83,
           "inclinationDeg": 68.6,
           "azimuthDeg": 101.44,
@@ -6843,11 +7395,11 @@
       "summary": {
         "pointCount": 422,
         "mdFt": {
-          "min": 0.0,
-          "max": 10955.0
+          "min": 0,
+          "max": 10955
         },
         "tvdFt": {
-          "min": 0.0,
+          "min": 0,
           "max": 8558.83
         },
         "sceneBounds": {
@@ -6896,10 +7448,10 @@
       "sourceFile": "16B(78)-32 final well survey archive",
       "trajectory": [
         {
-          "mdFt": 0.0,
-          "tvdFt": 0.0,
-          "inclinationDeg": 0.0,
-          "azimuthDeg": 0.0,
+          "mdFt": 0,
+          "tvdFt": 0,
+          "inclinationDeg": 0,
+          "azimuthDeg": 0,
           "utm": [
             334642.75,
             4263479.592,
@@ -6912,8 +7464,8 @@
           ]
         },
         {
-          "mdFt": 25.0,
-          "tvdFt": 25.0,
+          "mdFt": 25,
+          "tvdFt": 25,
           "inclinationDeg": 0.22,
           "azimuthDeg": 52.11,
           "utm": [
@@ -6928,8 +7480,8 @@
           ]
         },
         {
-          "mdFt": 50.0,
-          "tvdFt": 50.0,
+          "mdFt": 50,
+          "tvdFt": 50,
           "inclinationDeg": 0.45,
           "azimuthDeg": 52.11,
           "utm": [
@@ -6944,8 +7496,8 @@
           ]
         },
         {
-          "mdFt": 75.0,
-          "tvdFt": 75.0,
+          "mdFt": 75,
+          "tvdFt": 75,
           "inclinationDeg": 0.36,
           "azimuthDeg": 38.82,
           "utm": [
@@ -6960,8 +7512,8 @@
           ]
         },
         {
-          "mdFt": 100.0,
-          "tvdFt": 100.0,
+          "mdFt": 100,
+          "tvdFt": 100,
           "inclinationDeg": 0.14,
           "azimuthDeg": 58.33,
           "utm": [
@@ -6976,8 +7528,8 @@
           ]
         },
         {
-          "mdFt": 125.0,
-          "tvdFt": 125.0,
+          "mdFt": 125,
+          "tvdFt": 125,
           "inclinationDeg": 0.54,
           "azimuthDeg": 131.51,
           "utm": [
@@ -6992,8 +7544,8 @@
           ]
         },
         {
-          "mdFt": 150.0,
-          "tvdFt": 150.0,
+          "mdFt": 150,
+          "tvdFt": 150,
           "inclinationDeg": 0.64,
           "azimuthDeg": 102.12,
           "utm": [
@@ -7008,8 +7560,8 @@
           ]
         },
         {
-          "mdFt": 175.0,
-          "tvdFt": 175.0,
+          "mdFt": 175,
+          "tvdFt": 175,
           "inclinationDeg": 0.65,
           "azimuthDeg": 75.44,
           "utm": [
@@ -7024,7 +7576,7 @@
           ]
         },
         {
-          "mdFt": 200.0,
+          "mdFt": 200,
           "tvdFt": 199.99,
           "inclinationDeg": 0.44,
           "azimuthDeg": 58.93,
@@ -7040,7 +7592,7 @@
           ]
         },
         {
-          "mdFt": 225.0,
+          "mdFt": 225,
           "tvdFt": 224.99,
           "inclinationDeg": 0.26,
           "azimuthDeg": 44.13,
@@ -7056,7 +7608,7 @@
           ]
         },
         {
-          "mdFt": 250.0,
+          "mdFt": 250,
           "tvdFt": 249.99,
           "inclinationDeg": 0.19,
           "azimuthDeg": 119.27,
@@ -7072,7 +7624,7 @@
           ]
         },
         {
-          "mdFt": 275.0,
+          "mdFt": 275,
           "tvdFt": 274.99,
           "inclinationDeg": 0.4,
           "azimuthDeg": 126.68,
@@ -7088,7 +7640,7 @@
           ]
         },
         {
-          "mdFt": 300.0,
+          "mdFt": 300,
           "tvdFt": 299.99,
           "inclinationDeg": 0.55,
           "azimuthDeg": 112.24,
@@ -7104,7 +7656,7 @@
           ]
         },
         {
-          "mdFt": 325.0,
+          "mdFt": 325,
           "tvdFt": 324.99,
           "inclinationDeg": 0.69,
           "azimuthDeg": 107.15,
@@ -7120,7 +7672,7 @@
           ]
         },
         {
-          "mdFt": 350.0,
+          "mdFt": 350,
           "tvdFt": 349.99,
           "inclinationDeg": 0.84,
           "azimuthDeg": 80.36,
@@ -7136,7 +7688,7 @@
           ]
         },
         {
-          "mdFt": 375.0,
+          "mdFt": 375,
           "tvdFt": 374.99,
           "inclinationDeg": 0.7,
           "azimuthDeg": 69.14,
@@ -7152,7 +7704,7 @@
           ]
         },
         {
-          "mdFt": 400.0,
+          "mdFt": 400,
           "tvdFt": 399.99,
           "inclinationDeg": 0.52,
           "azimuthDeg": 73.07,
@@ -7168,7 +7720,7 @@
           ]
         },
         {
-          "mdFt": 425.0,
+          "mdFt": 425,
           "tvdFt": 424.98,
           "inclinationDeg": 0.42,
           "azimuthDeg": 91.96,
@@ -7184,7 +7736,7 @@
           ]
         },
         {
-          "mdFt": 450.0,
+          "mdFt": 450,
           "tvdFt": 449.98,
           "inclinationDeg": 0.42,
           "azimuthDeg": 109.31,
@@ -7200,7 +7752,7 @@
           ]
         },
         {
-          "mdFt": 475.0,
+          "mdFt": 475,
           "tvdFt": 474.98,
           "inclinationDeg": 0.59,
           "azimuthDeg": 117.89,
@@ -7216,7 +7768,7 @@
           ]
         },
         {
-          "mdFt": 500.0,
+          "mdFt": 500,
           "tvdFt": 499.98,
           "inclinationDeg": 0.88,
           "azimuthDeg": 107.57,
@@ -7232,7 +7784,7 @@
           ]
         },
         {
-          "mdFt": 525.0,
+          "mdFt": 525,
           "tvdFt": 524.98,
           "inclinationDeg": 1.07,
           "azimuthDeg": 89.12,
@@ -7248,7 +7800,7 @@
           ]
         },
         {
-          "mdFt": 550.0,
+          "mdFt": 550,
           "tvdFt": 549.97,
           "inclinationDeg": 1.1,
           "azimuthDeg": 80.69,
@@ -7264,7 +7816,7 @@
           ]
         },
         {
-          "mdFt": 575.0,
+          "mdFt": 575,
           "tvdFt": 574.97,
           "inclinationDeg": 0.92,
           "azimuthDeg": 68.2,
@@ -7280,7 +7832,7 @@
           ]
         },
         {
-          "mdFt": 600.0,
+          "mdFt": 600,
           "tvdFt": 599.97,
           "inclinationDeg": 0.89,
           "azimuthDeg": 80.6,
@@ -7296,7 +7848,7 @@
           ]
         },
         {
-          "mdFt": 625.0,
+          "mdFt": 625,
           "tvdFt": 624.96,
           "inclinationDeg": 0.88,
           "azimuthDeg": 85.61,
@@ -7312,7 +7864,7 @@
           ]
         },
         {
-          "mdFt": 650.0,
+          "mdFt": 650,
           "tvdFt": 649.96,
           "inclinationDeg": 0.97,
           "azimuthDeg": 98.35,
@@ -7328,7 +7880,7 @@
           ]
         },
         {
-          "mdFt": 675.0,
+          "mdFt": 675,
           "tvdFt": 674.95,
           "inclinationDeg": 1.48,
           "azimuthDeg": 95.91,
@@ -7344,7 +7896,7 @@
           ]
         },
         {
-          "mdFt": 700.0,
+          "mdFt": 700,
           "tvdFt": 699.94,
           "inclinationDeg": 1.59,
           "azimuthDeg": 84.67,
@@ -7360,7 +7912,7 @@
           ]
         },
         {
-          "mdFt": 725.0,
+          "mdFt": 725,
           "tvdFt": 724.94,
           "inclinationDeg": 1.44,
           "azimuthDeg": 79.09,
@@ -7376,7 +7928,7 @@
           ]
         },
         {
-          "mdFt": 750.0,
+          "mdFt": 750,
           "tvdFt": 749.93,
           "inclinationDeg": 1.35,
           "azimuthDeg": 81.48,
@@ -7392,7 +7944,7 @@
           ]
         },
         {
-          "mdFt": 775.0,
+          "mdFt": 775,
           "tvdFt": 774.92,
           "inclinationDeg": 1.37,
           "azimuthDeg": 85.13,
@@ -7408,7 +7960,7 @@
           ]
         },
         {
-          "mdFt": 800.0,
+          "mdFt": 800,
           "tvdFt": 799.92,
           "inclinationDeg": 1.22,
           "azimuthDeg": 92.17,
@@ -7424,7 +7976,7 @@
           ]
         },
         {
-          "mdFt": 825.0,
+          "mdFt": 825,
           "tvdFt": 824.91,
           "inclinationDeg": 1.37,
           "azimuthDeg": 97.63,
@@ -7440,7 +7992,7 @@
           ]
         },
         {
-          "mdFt": 850.0,
+          "mdFt": 850,
           "tvdFt": 849.9,
           "inclinationDeg": 1.76,
           "azimuthDeg": 95.25,
@@ -7456,7 +8008,7 @@
           ]
         },
         {
-          "mdFt": 875.0,
+          "mdFt": 875,
           "tvdFt": 874.89,
           "inclinationDeg": 1.78,
           "azimuthDeg": 87.92,
@@ -7472,7 +8024,7 @@
           ]
         },
         {
-          "mdFt": 900.0,
+          "mdFt": 900,
           "tvdFt": 899.87,
           "inclinationDeg": 1.85,
           "azimuthDeg": 87.44,
@@ -7488,7 +8040,7 @@
           ]
         },
         {
-          "mdFt": 925.0,
+          "mdFt": 925,
           "tvdFt": 924.86,
           "inclinationDeg": 1.76,
           "azimuthDeg": 80.97,
@@ -7504,7 +8056,7 @@
           ]
         },
         {
-          "mdFt": 950.0,
+          "mdFt": 950,
           "tvdFt": 949.85,
           "inclinationDeg": 1.69,
           "azimuthDeg": 83.12,
@@ -7520,7 +8072,7 @@
           ]
         },
         {
-          "mdFt": 975.0,
+          "mdFt": 975,
           "tvdFt": 974.84,
           "inclinationDeg": 1.64,
           "azimuthDeg": 83.53,
@@ -7536,7 +8088,7 @@
           ]
         },
         {
-          "mdFt": 1000.0,
+          "mdFt": 1000,
           "tvdFt": 999.83,
           "inclinationDeg": 1.68,
           "azimuthDeg": 86.08,
@@ -7552,7 +8104,7 @@
           ]
         },
         {
-          "mdFt": 1025.0,
+          "mdFt": 1025,
           "tvdFt": 1024.82,
           "inclinationDeg": 1.67,
           "azimuthDeg": 88.73,
@@ -7568,7 +8120,7 @@
           ]
         },
         {
-          "mdFt": 1050.0,
+          "mdFt": 1050,
           "tvdFt": 1049.81,
           "inclinationDeg": 1.85,
           "azimuthDeg": 93.72,
@@ -7584,7 +8136,7 @@
           ]
         },
         {
-          "mdFt": 1075.0,
+          "mdFt": 1075,
           "tvdFt": 1074.79,
           "inclinationDeg": 2.24,
           "azimuthDeg": 91.88,
@@ -7600,7 +8152,7 @@
           ]
         },
         {
-          "mdFt": 1100.0,
+          "mdFt": 1100,
           "tvdFt": 1099.77,
           "inclinationDeg": 2.03,
           "azimuthDeg": 83.69,
@@ -7616,7 +8168,7 @@
           ]
         },
         {
-          "mdFt": 1125.0,
+          "mdFt": 1125,
           "tvdFt": 1124.76,
           "inclinationDeg": 1.79,
           "azimuthDeg": 83.37,
@@ -7632,7 +8184,7 @@
           ]
         },
         {
-          "mdFt": 1150.0,
+          "mdFt": 1150,
           "tvdFt": 1149.75,
           "inclinationDeg": 1.83,
           "azimuthDeg": 92.6,
@@ -7648,7 +8200,7 @@
           ]
         },
         {
-          "mdFt": 1175.0,
+          "mdFt": 1175,
           "tvdFt": 1174.73,
           "inclinationDeg": 2.07,
           "azimuthDeg": 95.76,
@@ -7664,7 +8216,7 @@
           ]
         },
         {
-          "mdFt": 1200.0,
+          "mdFt": 1200,
           "tvdFt": 1199.72,
           "inclinationDeg": 1.83,
           "azimuthDeg": 93.18,
@@ -7680,7 +8232,7 @@
           ]
         },
         {
-          "mdFt": 1225.0,
+          "mdFt": 1225,
           "tvdFt": 1224.71,
           "inclinationDeg": 1.22,
           "azimuthDeg": 85.74,
@@ -7696,7 +8248,7 @@
           ]
         },
         {
-          "mdFt": 1250.0,
+          "mdFt": 1250,
           "tvdFt": 1249.71,
           "inclinationDeg": 0.57,
           "azimuthDeg": 87.6,
@@ -7712,7 +8264,7 @@
           ]
         },
         {
-          "mdFt": 1275.0,
+          "mdFt": 1275,
           "tvdFt": 1274.71,
           "inclinationDeg": 0.39,
           "azimuthDeg": 95.12,
@@ -7728,7 +8280,7 @@
           ]
         },
         {
-          "mdFt": 1300.0,
+          "mdFt": 1300,
           "tvdFt": 1299.71,
           "inclinationDeg": 0.23,
           "azimuthDeg": 87.94,
@@ -7744,7 +8296,7 @@
           ]
         },
         {
-          "mdFt": 1325.0,
+          "mdFt": 1325,
           "tvdFt": 1324.71,
           "inclinationDeg": 0.14,
           "azimuthDeg": 152.75,
@@ -7760,7 +8312,7 @@
           ]
         },
         {
-          "mdFt": 1350.0,
+          "mdFt": 1350,
           "tvdFt": 1349.71,
           "inclinationDeg": 0.33,
           "azimuthDeg": 127.31,
@@ -7776,7 +8328,7 @@
           ]
         },
         {
-          "mdFt": 1375.0,
+          "mdFt": 1375,
           "tvdFt": 1374.7,
           "inclinationDeg": 0.46,
           "azimuthDeg": 106.77,
@@ -7792,7 +8344,7 @@
           ]
         },
         {
-          "mdFt": 1400.0,
+          "mdFt": 1400,
           "tvdFt": 1399.7,
           "inclinationDeg": 0.62,
           "azimuthDeg": 73.81,
@@ -7808,7 +8360,7 @@
           ]
         },
         {
-          "mdFt": 1425.0,
+          "mdFt": 1425,
           "tvdFt": 1424.7,
           "inclinationDeg": 0.52,
           "azimuthDeg": 59.26,
@@ -7824,7 +8376,7 @@
           ]
         },
         {
-          "mdFt": 1450.0,
+          "mdFt": 1450,
           "tvdFt": 1449.7,
           "inclinationDeg": 0.37,
           "azimuthDeg": 34.29,
@@ -7840,7 +8392,7 @@
           ]
         },
         {
-          "mdFt": 1475.0,
+          "mdFt": 1475,
           "tvdFt": 1474.7,
           "inclinationDeg": 0.15,
           "azimuthDeg": 331.37,
@@ -7856,7 +8408,7 @@
           ]
         },
         {
-          "mdFt": 1500.0,
+          "mdFt": 1500,
           "tvdFt": 1499.7,
           "inclinationDeg": 0.5,
           "azimuthDeg": 112.05,
@@ -7872,7 +8424,7 @@
           ]
         },
         {
-          "mdFt": 1525.0,
+          "mdFt": 1525,
           "tvdFt": 1524.7,
           "inclinationDeg": 0.54,
           "azimuthDeg": 64.38,
@@ -7888,7 +8440,7 @@
           ]
         },
         {
-          "mdFt": 1550.0,
+          "mdFt": 1550,
           "tvdFt": 1549.7,
           "inclinationDeg": 0.26,
           "azimuthDeg": 47.98,
@@ -7904,7 +8456,7 @@
           ]
         },
         {
-          "mdFt": 1575.0,
+          "mdFt": 1575,
           "tvdFt": 1574.7,
           "inclinationDeg": 0.26,
           "azimuthDeg": 124.6,
@@ -7920,7 +8472,7 @@
           ]
         },
         {
-          "mdFt": 1600.0,
+          "mdFt": 1600,
           "tvdFt": 1599.7,
           "inclinationDeg": 0.73,
           "azimuthDeg": 95.79,
@@ -7936,7 +8488,7 @@
           ]
         },
         {
-          "mdFt": 1625.0,
+          "mdFt": 1625,
           "tvdFt": 1624.7,
           "inclinationDeg": 0.6,
           "azimuthDeg": 74.68,
@@ -7952,7 +8504,7 @@
           ]
         },
         {
-          "mdFt": 1650.0,
+          "mdFt": 1650,
           "tvdFt": 1649.7,
           "inclinationDeg": 0.6,
           "azimuthDeg": 73.49,
@@ -7968,7 +8520,7 @@
           ]
         },
         {
-          "mdFt": 1675.0,
+          "mdFt": 1675,
           "tvdFt": 1674.69,
           "inclinationDeg": 0.44,
           "azimuthDeg": 80.68,
@@ -7984,7 +8536,7 @@
           ]
         },
         {
-          "mdFt": 1700.0,
+          "mdFt": 1700,
           "tvdFt": 1699.69,
           "inclinationDeg": 0.69,
           "azimuthDeg": 93.99,
@@ -8000,7 +8552,7 @@
           ]
         },
         {
-          "mdFt": 1725.0,
+          "mdFt": 1725,
           "tvdFt": 1724.69,
           "inclinationDeg": 0.64,
           "azimuthDeg": 108.67,
@@ -8016,7 +8568,7 @@
           ]
         },
         {
-          "mdFt": 1750.0,
+          "mdFt": 1750,
           "tvdFt": 1749.69,
           "inclinationDeg": 1.15,
           "azimuthDeg": 119.45,
@@ -8032,7 +8584,7 @@
           ]
         },
         {
-          "mdFt": 1775.0,
+          "mdFt": 1775,
           "tvdFt": 1774.68,
           "inclinationDeg": 1.09,
           "azimuthDeg": 96.52,
@@ -8048,7 +8600,7 @@
           ]
         },
         {
-          "mdFt": 1800.0,
+          "mdFt": 1800,
           "tvdFt": 1799.68,
           "inclinationDeg": 0.81,
           "azimuthDeg": 114.26,
@@ -8064,7 +8616,7 @@
           ]
         },
         {
-          "mdFt": 1825.0,
+          "mdFt": 1825,
           "tvdFt": 1824.68,
           "inclinationDeg": 1.24,
           "azimuthDeg": 109.58,
@@ -8080,7 +8632,7 @@
           ]
         },
         {
-          "mdFt": 1850.0,
+          "mdFt": 1850,
           "tvdFt": 1849.67,
           "inclinationDeg": 0.81,
           "azimuthDeg": 118.64,
@@ -8096,7 +8648,7 @@
           ]
         },
         {
-          "mdFt": 1875.0,
+          "mdFt": 1875,
           "tvdFt": 1874.67,
           "inclinationDeg": 1.2,
           "azimuthDeg": 124.87,
@@ -8112,7 +8664,7 @@
           ]
         },
         {
-          "mdFt": 1900.0,
+          "mdFt": 1900,
           "tvdFt": 1899.66,
           "inclinationDeg": 1.08,
           "azimuthDeg": 128.11,
@@ -8128,7 +8680,7 @@
           ]
         },
         {
-          "mdFt": 1925.0,
+          "mdFt": 1925,
           "tvdFt": 1924.66,
           "inclinationDeg": 0.97,
           "azimuthDeg": 142.35,
@@ -8144,7 +8696,7 @@
           ]
         },
         {
-          "mdFt": 1950.0,
+          "mdFt": 1950,
           "tvdFt": 1949.66,
           "inclinationDeg": 0.91,
           "azimuthDeg": 158.1,
@@ -8160,7 +8712,7 @@
           ]
         },
         {
-          "mdFt": 1975.0,
+          "mdFt": 1975,
           "tvdFt": 1974.65,
           "inclinationDeg": 0.81,
           "azimuthDeg": 187.42,
@@ -8176,7 +8728,7 @@
           ]
         },
         {
-          "mdFt": 2000.0,
+          "mdFt": 2000,
           "tvdFt": 1999.65,
           "inclinationDeg": 0.84,
           "azimuthDeg": 206.25,
@@ -8192,7 +8744,7 @@
           ]
         },
         {
-          "mdFt": 2025.0,
+          "mdFt": 2025,
           "tvdFt": 2024.65,
           "inclinationDeg": 0.88,
           "azimuthDeg": 192.96,
@@ -8208,7 +8760,7 @@
           ]
         },
         {
-          "mdFt": 2050.0,
+          "mdFt": 2050,
           "tvdFt": 2049.65,
           "inclinationDeg": 0.71,
           "azimuthDeg": 238.52,
@@ -8224,7 +8776,7 @@
           ]
         },
         {
-          "mdFt": 2075.0,
+          "mdFt": 2075,
           "tvdFt": 2074.64,
           "inclinationDeg": 1.2,
           "azimuthDeg": 230.46,
@@ -8240,7 +8792,7 @@
           ]
         },
         {
-          "mdFt": 2100.0,
+          "mdFt": 2100,
           "tvdFt": 2099.64,
           "inclinationDeg": 1.15,
           "azimuthDeg": 213.31,
@@ -8256,7 +8808,7 @@
           ]
         },
         {
-          "mdFt": 2125.0,
+          "mdFt": 2125,
           "tvdFt": 2124.63,
           "inclinationDeg": 0.96,
           "azimuthDeg": 209.74,
@@ -8272,7 +8824,7 @@
           ]
         },
         {
-          "mdFt": 2150.0,
+          "mdFt": 2150,
           "tvdFt": 2149.63,
           "inclinationDeg": 0.65,
           "azimuthDeg": 229.8,
@@ -8288,7 +8840,7 @@
           ]
         },
         {
-          "mdFt": 2175.0,
+          "mdFt": 2175,
           "tvdFt": 2174.63,
           "inclinationDeg": 0.97,
           "azimuthDeg": 219.1,
@@ -8304,7 +8856,7 @@
           ]
         },
         {
-          "mdFt": 2200.0,
+          "mdFt": 2200,
           "tvdFt": 2199.63,
           "inclinationDeg": 0.76,
           "azimuthDeg": 207.02,
@@ -8320,7 +8872,7 @@
           ]
         },
         {
-          "mdFt": 2225.0,
+          "mdFt": 2225,
           "tvdFt": 2224.62,
           "inclinationDeg": 0.71,
           "azimuthDeg": 199.97,
@@ -8336,7 +8888,7 @@
           ]
         },
         {
-          "mdFt": 2250.0,
+          "mdFt": 2250,
           "tvdFt": 2249.62,
           "inclinationDeg": 0.84,
           "azimuthDeg": 180.93,
@@ -8352,7 +8904,7 @@
           ]
         },
         {
-          "mdFt": 2275.0,
+          "mdFt": 2275,
           "tvdFt": 2274.62,
           "inclinationDeg": 0.87,
           "azimuthDeg": 204.99,
@@ -8368,7 +8920,7 @@
           ]
         },
         {
-          "mdFt": 2300.0,
+          "mdFt": 2300,
           "tvdFt": 2299.62,
           "inclinationDeg": 0.84,
           "azimuthDeg": 211.64,
@@ -8384,7 +8936,7 @@
           ]
         },
         {
-          "mdFt": 2325.0,
+          "mdFt": 2325,
           "tvdFt": 2324.61,
           "inclinationDeg": 1.11,
           "azimuthDeg": 207.93,
@@ -8400,7 +8952,7 @@
           ]
         },
         {
-          "mdFt": 2350.0,
+          "mdFt": 2350,
           "tvdFt": 2349.61,
           "inclinationDeg": 1.23,
           "azimuthDeg": 204.99,
@@ -8416,7 +8968,7 @@
           ]
         },
         {
-          "mdFt": 2375.0,
+          "mdFt": 2375,
           "tvdFt": 2374.6,
           "inclinationDeg": 0.84,
           "azimuthDeg": 187.87,
@@ -8432,7 +8984,7 @@
           ]
         },
         {
-          "mdFt": 2400.0,
+          "mdFt": 2400,
           "tvdFt": 2399.6,
           "inclinationDeg": 0.76,
           "azimuthDeg": 208.12,
@@ -8448,7 +9000,7 @@
           ]
         },
         {
-          "mdFt": 2425.0,
+          "mdFt": 2425,
           "tvdFt": 2424.6,
           "inclinationDeg": 1.04,
           "azimuthDeg": 219.68,
@@ -8464,7 +9016,7 @@
           ]
         },
         {
-          "mdFt": 2450.0,
+          "mdFt": 2450,
           "tvdFt": 2449.59,
           "inclinationDeg": 1.21,
           "azimuthDeg": 210.79,
@@ -8480,7 +9032,7 @@
           ]
         },
         {
-          "mdFt": 2475.0,
+          "mdFt": 2475,
           "tvdFt": 2474.59,
           "inclinationDeg": 1.04,
           "azimuthDeg": 192.72,
@@ -8496,9 +9048,9 @@
           ]
         },
         {
-          "mdFt": 2500.0,
+          "mdFt": 2500,
           "tvdFt": 2499.58,
-          "inclinationDeg": 1.0,
+          "inclinationDeg": 1,
           "azimuthDeg": 208.44,
           "utm": [
             334650.654,
@@ -8512,7 +9064,7 @@
           ]
         },
         {
-          "mdFt": 2525.0,
+          "mdFt": 2525,
           "tvdFt": 2524.58,
           "inclinationDeg": 1.09,
           "azimuthDeg": 187.83,
@@ -8528,7 +9080,7 @@
           ]
         },
         {
-          "mdFt": 2550.0,
+          "mdFt": 2550,
           "tvdFt": 2549.58,
           "inclinationDeg": 0.76,
           "azimuthDeg": 213.73,
@@ -8544,7 +9096,7 @@
           ]
         },
         {
-          "mdFt": 2575.0,
+          "mdFt": 2575,
           "tvdFt": 2574.57,
           "inclinationDeg": 0.96,
           "azimuthDeg": 210.63,
@@ -8560,7 +9112,7 @@
           ]
         },
         {
-          "mdFt": 2600.0,
+          "mdFt": 2600,
           "tvdFt": 2599.57,
           "inclinationDeg": 1.16,
           "azimuthDeg": 200.62,
@@ -8576,7 +9128,7 @@
           ]
         },
         {
-          "mdFt": 2625.0,
+          "mdFt": 2625,
           "tvdFt": 2624.56,
           "inclinationDeg": 1.04,
           "azimuthDeg": 210.58,
@@ -8592,7 +9144,7 @@
           ]
         },
         {
-          "mdFt": 2650.0,
+          "mdFt": 2650,
           "tvdFt": 2649.56,
           "inclinationDeg": 1.03,
           "azimuthDeg": 221.52,
@@ -8608,7 +9160,7 @@
           ]
         },
         {
-          "mdFt": 2675.0,
+          "mdFt": 2675,
           "tvdFt": 2674.56,
           "inclinationDeg": 1.25,
           "azimuthDeg": 256.28,
@@ -8624,7 +9176,7 @@
           ]
         },
         {
-          "mdFt": 2700.0,
+          "mdFt": 2700,
           "tvdFt": 2699.55,
           "inclinationDeg": 1.29,
           "azimuthDeg": 254.86,
@@ -8640,7 +9192,7 @@
           ]
         },
         {
-          "mdFt": 2725.0,
+          "mdFt": 2725,
           "tvdFt": 2724.54,
           "inclinationDeg": 1.46,
           "azimuthDeg": 259.88,
@@ -8656,7 +9208,7 @@
           ]
         },
         {
-          "mdFt": 2750.0,
+          "mdFt": 2750,
           "tvdFt": 2749.53,
           "inclinationDeg": 1.44,
           "azimuthDeg": 253.95,
@@ -8672,7 +9224,7 @@
           ]
         },
         {
-          "mdFt": 2775.0,
+          "mdFt": 2775,
           "tvdFt": 2774.53,
           "inclinationDeg": 1.2,
           "azimuthDeg": 250.69,
@@ -8688,7 +9240,7 @@
           ]
         },
         {
-          "mdFt": 2800.0,
+          "mdFt": 2800,
           "tvdFt": 2799.52,
           "inclinationDeg": 0.9,
           "azimuthDeg": 255.68,
@@ -8704,7 +9256,7 @@
           ]
         },
         {
-          "mdFt": 2825.0,
+          "mdFt": 2825,
           "tvdFt": 2824.52,
           "inclinationDeg": 1.01,
           "azimuthDeg": 280.25,
@@ -8720,7 +9272,7 @@
           ]
         },
         {
-          "mdFt": 2850.0,
+          "mdFt": 2850,
           "tvdFt": 2849.52,
           "inclinationDeg": 1.03,
           "azimuthDeg": 284.67,
@@ -8736,7 +9288,7 @@
           ]
         },
         {
-          "mdFt": 2875.0,
+          "mdFt": 2875,
           "tvdFt": 2874.51,
           "inclinationDeg": 1.17,
           "azimuthDeg": 282.11,
@@ -8752,7 +9304,7 @@
           ]
         },
         {
-          "mdFt": 2900.0,
+          "mdFt": 2900,
           "tvdFt": 2899.51,
           "inclinationDeg": 1.13,
           "azimuthDeg": 283.34,
@@ -8768,7 +9320,7 @@
           ]
         },
         {
-          "mdFt": 2925.0,
+          "mdFt": 2925,
           "tvdFt": 2924.5,
           "inclinationDeg": 1.01,
           "azimuthDeg": 271.93,
@@ -8784,7 +9336,7 @@
           ]
         },
         {
-          "mdFt": 2950.0,
+          "mdFt": 2950,
           "tvdFt": 2949.5,
           "inclinationDeg": 0.65,
           "azimuthDeg": 279.18,
@@ -8800,7 +9352,7 @@
           ]
         },
         {
-          "mdFt": 2975.0,
+          "mdFt": 2975,
           "tvdFt": 2974.5,
           "inclinationDeg": 0.87,
           "azimuthDeg": 303.93,
@@ -8816,7 +9368,7 @@
           ]
         },
         {
-          "mdFt": 3000.0,
+          "mdFt": 3000,
           "tvdFt": 2999.49,
           "inclinationDeg": 1.01,
           "azimuthDeg": 284.44,
@@ -8832,7 +9384,7 @@
           ]
         },
         {
-          "mdFt": 3025.0,
+          "mdFt": 3025,
           "tvdFt": 3024.49,
           "inclinationDeg": 0.61,
           "azimuthDeg": 286.05,
@@ -8848,7 +9400,7 @@
           ]
         },
         {
-          "mdFt": 3050.0,
+          "mdFt": 3050,
           "tvdFt": 3049.49,
           "inclinationDeg": 0.71,
           "azimuthDeg": 301.26,
@@ -8864,7 +9416,7 @@
           ]
         },
         {
-          "mdFt": 3075.0,
+          "mdFt": 3075,
           "tvdFt": 3074.49,
           "inclinationDeg": 0.84,
           "azimuthDeg": 275.53,
@@ -8880,7 +9432,7 @@
           ]
         },
         {
-          "mdFt": 3100.0,
+          "mdFt": 3100,
           "tvdFt": 3099.49,
           "inclinationDeg": 0.61,
           "azimuthDeg": 293.64,
@@ -8896,7 +9448,7 @@
           ]
         },
         {
-          "mdFt": 3125.0,
+          "mdFt": 3125,
           "tvdFt": 3124.48,
           "inclinationDeg": 0.78,
           "azimuthDeg": 311.23,
@@ -8912,7 +9464,7 @@
           ]
         },
         {
-          "mdFt": 3150.0,
+          "mdFt": 3150,
           "tvdFt": 3149.48,
           "inclinationDeg": 0.77,
           "azimuthDeg": 279.28,
@@ -8928,7 +9480,7 @@
           ]
         },
         {
-          "mdFt": 3175.0,
+          "mdFt": 3175,
           "tvdFt": 3174.48,
           "inclinationDeg": 0.71,
           "azimuthDeg": 320.79,
@@ -8944,7 +9496,7 @@
           ]
         },
         {
-          "mdFt": 3200.0,
+          "mdFt": 3200,
           "tvdFt": 3199.48,
           "inclinationDeg": 0.91,
           "azimuthDeg": 300.34,
@@ -8960,7 +9512,7 @@
           ]
         },
         {
-          "mdFt": 3225.0,
+          "mdFt": 3225,
           "tvdFt": 3224.48,
           "inclinationDeg": 0.52,
           "azimuthDeg": 282.31,
@@ -8976,7 +9528,7 @@
           ]
         },
         {
-          "mdFt": 3250.0,
+          "mdFt": 3250,
           "tvdFt": 3249.47,
           "inclinationDeg": 0.68,
           "azimuthDeg": 314.84,
@@ -8992,7 +9544,7 @@
           ]
         },
         {
-          "mdFt": 3275.0,
+          "mdFt": 3275,
           "tvdFt": 3274.47,
           "inclinationDeg": 0.45,
           "azimuthDeg": 329.64,
@@ -9008,10 +9560,10 @@
           ]
         },
         {
-          "mdFt": 3300.0,
+          "mdFt": 3300,
           "tvdFt": 3299.47,
           "inclinationDeg": 0.56,
-          "azimuthDeg": 330.0,
+          "azimuthDeg": 330,
           "utm": [
             334647.42,
             4263476.699,
@@ -9024,7 +9576,7 @@
           ]
         },
         {
-          "mdFt": 3325.0,
+          "mdFt": 3325,
           "tvdFt": 3324.47,
           "inclinationDeg": 0.47,
           "azimuthDeg": 322.18,
@@ -9040,7 +9592,7 @@
           ]
         },
         {
-          "mdFt": 3350.0,
+          "mdFt": 3350,
           "tvdFt": 3349.47,
           "inclinationDeg": 0.35,
           "azimuthDeg": 336.04,
@@ -9056,7 +9608,7 @@
           ]
         },
         {
-          "mdFt": 3375.0,
+          "mdFt": 3375,
           "tvdFt": 3374.47,
           "inclinationDeg": 0.24,
           "azimuthDeg": 4.68,
@@ -9072,7 +9624,7 @@
           ]
         },
         {
-          "mdFt": 3400.0,
+          "mdFt": 3400,
           "tvdFt": 3399.47,
           "inclinationDeg": 0.37,
           "azimuthDeg": 63.06,
@@ -9088,7 +9640,7 @@
           ]
         },
         {
-          "mdFt": 3425.0,
+          "mdFt": 3425,
           "tvdFt": 3424.47,
           "inclinationDeg": 0.46,
           "azimuthDeg": 101.84,
@@ -9104,7 +9656,7 @@
           ]
         },
         {
-          "mdFt": 3450.0,
+          "mdFt": 3450,
           "tvdFt": 3449.47,
           "inclinationDeg": 0.5,
           "azimuthDeg": 109.13,
@@ -9120,7 +9672,7 @@
           ]
         },
         {
-          "mdFt": 3475.0,
+          "mdFt": 3475,
           "tvdFt": 3474.47,
           "inclinationDeg": 0.82,
           "azimuthDeg": 99.96,
@@ -9136,7 +9688,7 @@
           ]
         },
         {
-          "mdFt": 3500.0,
+          "mdFt": 3500,
           "tvdFt": 3499.46,
           "inclinationDeg": 0.58,
           "azimuthDeg": 113.04,
@@ -9152,7 +9704,7 @@
           ]
         },
         {
-          "mdFt": 3525.0,
+          "mdFt": 3525,
           "tvdFt": 3524.46,
           "inclinationDeg": 0.97,
           "azimuthDeg": 104.22,
@@ -9168,7 +9720,7 @@
           ]
         },
         {
-          "mdFt": 3550.0,
+          "mdFt": 3550,
           "tvdFt": 3549.46,
           "inclinationDeg": 0.7,
           "azimuthDeg": 87.67,
@@ -9184,7 +9736,7 @@
           ]
         },
         {
-          "mdFt": 3575.0,
+          "mdFt": 3575,
           "tvdFt": 3574.46,
           "inclinationDeg": 0.86,
           "azimuthDeg": 82.09,
@@ -9200,7 +9752,7 @@
           ]
         },
         {
-          "mdFt": 3600.0,
+          "mdFt": 3600,
           "tvdFt": 3599.46,
           "inclinationDeg": 0.75,
           "azimuthDeg": 95.48,
@@ -9216,7 +9768,7 @@
           ]
         },
         {
-          "mdFt": 3625.0,
+          "mdFt": 3625,
           "tvdFt": 3624.45,
           "inclinationDeg": 0.5,
           "azimuthDeg": 124.27,
@@ -9232,7 +9784,7 @@
           ]
         },
         {
-          "mdFt": 3650.0,
+          "mdFt": 3650,
           "tvdFt": 3649.45,
           "inclinationDeg": 0.8,
           "azimuthDeg": 109.58,
@@ -9248,7 +9800,7 @@
           ]
         },
         {
-          "mdFt": 3675.0,
+          "mdFt": 3675,
           "tvdFt": 3674.45,
           "inclinationDeg": 0.67,
           "azimuthDeg": 114.35,
@@ -9264,7 +9816,7 @@
           ]
         },
         {
-          "mdFt": 3700.0,
+          "mdFt": 3700,
           "tvdFt": 3699.45,
           "inclinationDeg": 0.74,
           "azimuthDeg": 97.06,
@@ -9280,7 +9832,7 @@
           ]
         },
         {
-          "mdFt": 3725.0,
+          "mdFt": 3725,
           "tvdFt": 3724.45,
           "inclinationDeg": 0.74,
           "azimuthDeg": 101.53,
@@ -9296,7 +9848,7 @@
           ]
         },
         {
-          "mdFt": 3750.0,
+          "mdFt": 3750,
           "tvdFt": 3749.44,
           "inclinationDeg": 0.63,
           "azimuthDeg": 78.68,
@@ -9312,7 +9864,7 @@
           ]
         },
         {
-          "mdFt": 3775.0,
+          "mdFt": 3775,
           "tvdFt": 3774.44,
           "inclinationDeg": 0.55,
           "azimuthDeg": 107.07,
@@ -9328,7 +9880,7 @@
           ]
         },
         {
-          "mdFt": 3800.0,
+          "mdFt": 3800,
           "tvdFt": 3799.44,
           "inclinationDeg": 0.59,
           "azimuthDeg": 86.48,
@@ -9344,7 +9896,7 @@
           ]
         },
         {
-          "mdFt": 3825.0,
+          "mdFt": 3825,
           "tvdFt": 3824.44,
           "inclinationDeg": 0.84,
           "azimuthDeg": 100.27,
@@ -9360,7 +9912,7 @@
           ]
         },
         {
-          "mdFt": 3850.0,
+          "mdFt": 3850,
           "tvdFt": 3849.44,
           "inclinationDeg": 0.57,
           "azimuthDeg": 108.99,
@@ -9376,7 +9928,7 @@
           ]
         },
         {
-          "mdFt": 3875.0,
+          "mdFt": 3875,
           "tvdFt": 3874.44,
           "inclinationDeg": 0.77,
           "azimuthDeg": 92.88,
@@ -9392,7 +9944,7 @@
           ]
         },
         {
-          "mdFt": 3900.0,
+          "mdFt": 3900,
           "tvdFt": 3899.43,
           "inclinationDeg": 0.8,
           "azimuthDeg": 104.43,
@@ -9408,7 +9960,7 @@
           ]
         },
         {
-          "mdFt": 3925.0,
+          "mdFt": 3925,
           "tvdFt": 3924.43,
           "inclinationDeg": 1.07,
           "azimuthDeg": 95.63,
@@ -9424,7 +9976,7 @@
           ]
         },
         {
-          "mdFt": 3950.0,
+          "mdFt": 3950,
           "tvdFt": 3949.43,
           "inclinationDeg": 0.8,
           "azimuthDeg": 93.6,
@@ -9440,10 +9992,10 @@
           ]
         },
         {
-          "mdFt": 3975.0,
+          "mdFt": 3975,
           "tvdFt": 3974.42,
           "inclinationDeg": 0.79,
-          "azimuthDeg": 89.0,
+          "azimuthDeg": 89,
           "utm": [
             334649.468,
             4263476.534,
@@ -9456,7 +10008,7 @@
           ]
         },
         {
-          "mdFt": 4000.0,
+          "mdFt": 4000,
           "tvdFt": 3999.42,
           "inclinationDeg": 1.13,
           "azimuthDeg": 96.3,
@@ -9472,10 +10024,10 @@
           ]
         },
         {
-          "mdFt": 4025.0,
+          "mdFt": 4025,
           "tvdFt": 4024.42,
           "inclinationDeg": 0.68,
-          "azimuthDeg": 93.0,
+          "azimuthDeg": 93,
           "utm": [
             334649.715,
             4263476.516,
@@ -9488,7 +10040,7 @@
           ]
         },
         {
-          "mdFt": 4050.0,
+          "mdFt": 4050,
           "tvdFt": 4049.42,
           "inclinationDeg": 0.75,
           "azimuthDeg": 118.09,
@@ -9504,7 +10056,7 @@
           ]
         },
         {
-          "mdFt": 4075.0,
+          "mdFt": 4075,
           "tvdFt": 4074.41,
           "inclinationDeg": 0.89,
           "azimuthDeg": 111.94,
@@ -9520,7 +10072,7 @@
           ]
         },
         {
-          "mdFt": 4100.0,
+          "mdFt": 4100,
           "tvdFt": 4099.41,
           "inclinationDeg": 0.42,
           "azimuthDeg": 119.05,
@@ -9536,7 +10088,7 @@
           ]
         },
         {
-          "mdFt": 4125.0,
+          "mdFt": 4125,
           "tvdFt": 4124.41,
           "inclinationDeg": 0.46,
           "azimuthDeg": 106.27,
@@ -9552,7 +10104,7 @@
           ]
         },
         {
-          "mdFt": 4150.0,
+          "mdFt": 4150,
           "tvdFt": 4149.41,
           "inclinationDeg": 0.82,
           "azimuthDeg": 100.72,
@@ -9568,7 +10120,7 @@
           ]
         },
         {
-          "mdFt": 4175.0,
+          "mdFt": 4175,
           "tvdFt": 4174.41,
           "inclinationDeg": 0.43,
           "azimuthDeg": 81.17,
@@ -9584,7 +10136,7 @@
           ]
         },
         {
-          "mdFt": 4200.0,
+          "mdFt": 4200,
           "tvdFt": 4199.41,
           "inclinationDeg": 0.45,
           "azimuthDeg": 112.3,
@@ -9600,7 +10152,7 @@
           ]
         },
         {
-          "mdFt": 4225.0,
+          "mdFt": 4225,
           "tvdFt": 4224.41,
           "inclinationDeg": 0.43,
           "azimuthDeg": 110.11,
@@ -9616,7 +10168,7 @@
           ]
         },
         {
-          "mdFt": 4250.0,
+          "mdFt": 4250,
           "tvdFt": 4249.41,
           "inclinationDeg": 0.63,
           "azimuthDeg": 103.96,
@@ -9632,7 +10184,7 @@
           ]
         },
         {
-          "mdFt": 4275.0,
+          "mdFt": 4275,
           "tvdFt": 4274.4,
           "inclinationDeg": 0.8,
           "azimuthDeg": 127.54,
@@ -9648,7 +10200,7 @@
           ]
         },
         {
-          "mdFt": 4300.0,
+          "mdFt": 4300,
           "tvdFt": 4299.4,
           "inclinationDeg": 0.48,
           "azimuthDeg": 98.21,
@@ -9664,7 +10216,7 @@
           ]
         },
         {
-          "mdFt": 4325.0,
+          "mdFt": 4325,
           "tvdFt": 4324.4,
           "inclinationDeg": 0.61,
           "azimuthDeg": 124.9,
@@ -9680,7 +10232,7 @@
           ]
         },
         {
-          "mdFt": 4350.0,
+          "mdFt": 4350,
           "tvdFt": 4349.4,
           "inclinationDeg": 0.68,
           "azimuthDeg": 92.28,
@@ -9696,7 +10248,7 @@
           ]
         },
         {
-          "mdFt": 4375.0,
+          "mdFt": 4375,
           "tvdFt": 4374.4,
           "inclinationDeg": 0.69,
           "azimuthDeg": 119.99,
@@ -9712,7 +10264,7 @@
           ]
         },
         {
-          "mdFt": 4400.0,
+          "mdFt": 4400,
           "tvdFt": 4399.4,
           "inclinationDeg": 0.61,
           "azimuthDeg": 73.25,
@@ -9728,7 +10280,7 @@
           ]
         },
         {
-          "mdFt": 4425.0,
+          "mdFt": 4425,
           "tvdFt": 4424.4,
           "inclinationDeg": 0.56,
           "azimuthDeg": 93.68,
@@ -9744,7 +10296,7 @@
           ]
         },
         {
-          "mdFt": 4450.0,
+          "mdFt": 4450,
           "tvdFt": 4449.39,
           "inclinationDeg": 0.77,
           "azimuthDeg": 69.92,
@@ -9760,7 +10312,7 @@
           ]
         },
         {
-          "mdFt": 4475.0,
+          "mdFt": 4475,
           "tvdFt": 4474.39,
           "inclinationDeg": 1.11,
           "azimuthDeg": 81.57,
@@ -9776,7 +10328,7 @@
           ]
         },
         {
-          "mdFt": 4500.0,
+          "mdFt": 4500,
           "tvdFt": 4499.39,
           "inclinationDeg": 0.7,
           "azimuthDeg": 92.27,
@@ -9792,7 +10344,7 @@
           ]
         },
         {
-          "mdFt": 4525.0,
+          "mdFt": 4525,
           "tvdFt": 4524.38,
           "inclinationDeg": 0.95,
           "azimuthDeg": 69.37,
@@ -9808,7 +10360,7 @@
           ]
         },
         {
-          "mdFt": 4550.0,
+          "mdFt": 4550,
           "tvdFt": 4549.38,
           "inclinationDeg": 0.7,
           "azimuthDeg": 96.1,
@@ -9824,7 +10376,7 @@
           ]
         },
         {
-          "mdFt": 4575.0,
+          "mdFt": 4575,
           "tvdFt": 4574.38,
           "inclinationDeg": 1.07,
           "azimuthDeg": 104.17,
@@ -9840,7 +10392,7 @@
           ]
         },
         {
-          "mdFt": 4600.0,
+          "mdFt": 4600,
           "tvdFt": 4599.37,
           "inclinationDeg": 1.2,
           "azimuthDeg": 92.9,
@@ -9856,7 +10408,7 @@
           ]
         },
         {
-          "mdFt": 4625.0,
+          "mdFt": 4625,
           "tvdFt": 4624.37,
           "inclinationDeg": 0.98,
           "azimuthDeg": 88.69,
@@ -9872,7 +10424,7 @@
           ]
         },
         {
-          "mdFt": 4650.0,
+          "mdFt": 4650,
           "tvdFt": 4649.37,
           "inclinationDeg": 1.1,
           "azimuthDeg": 102.12,
@@ -9888,7 +10440,7 @@
           ]
         },
         {
-          "mdFt": 4675.0,
+          "mdFt": 4675,
           "tvdFt": 4674.36,
           "inclinationDeg": 1.22,
           "azimuthDeg": 115.26,
@@ -9904,7 +10456,7 @@
           ]
         },
         {
-          "mdFt": 4700.0,
+          "mdFt": 4700,
           "tvdFt": 4699.35,
           "inclinationDeg": 1.49,
           "azimuthDeg": 118.69,
@@ -9920,7 +10472,7 @@
           ]
         },
         {
-          "mdFt": 4725.0,
+          "mdFt": 4725,
           "tvdFt": 4724.34,
           "inclinationDeg": 1.85,
           "azimuthDeg": 122.18,
@@ -9936,7 +10488,7 @@
           ]
         },
         {
-          "mdFt": 4750.0,
+          "mdFt": 4750,
           "tvdFt": 4749.33,
           "inclinationDeg": 2.17,
           "azimuthDeg": 121.8,
@@ -9952,7 +10504,7 @@
           ]
         },
         {
-          "mdFt": 4775.0,
+          "mdFt": 4775,
           "tvdFt": 4774.31,
           "inclinationDeg": 2.44,
           "azimuthDeg": 123.54,
@@ -9968,7 +10520,7 @@
           ]
         },
         {
-          "mdFt": 4800.0,
+          "mdFt": 4800,
           "tvdFt": 4799.28,
           "inclinationDeg": 2.5,
           "azimuthDeg": 124.15,
@@ -9984,7 +10536,7 @@
           ]
         },
         {
-          "mdFt": 4825.0,
+          "mdFt": 4825,
           "tvdFt": 4824.26,
           "inclinationDeg": 2.62,
           "azimuthDeg": 125.62,
@@ -10000,7 +10552,7 @@
           ]
         },
         {
-          "mdFt": 4850.0,
+          "mdFt": 4850,
           "tvdFt": 4849.23,
           "inclinationDeg": 2.53,
           "azimuthDeg": 133.12,
@@ -10016,7 +10568,7 @@
           ]
         },
         {
-          "mdFt": 4875.0,
+          "mdFt": 4875,
           "tvdFt": 4874.21,
           "inclinationDeg": 2.88,
           "azimuthDeg": 126.33,
@@ -10032,7 +10584,7 @@
           ]
         },
         {
-          "mdFt": 4900.0,
+          "mdFt": 4900,
           "tvdFt": 4899.18,
           "inclinationDeg": 2.27,
           "azimuthDeg": 133.86,
@@ -10048,7 +10600,7 @@
           ]
         },
         {
-          "mdFt": 4925.0,
+          "mdFt": 4925,
           "tvdFt": 4924.16,
           "inclinationDeg": 1.87,
           "azimuthDeg": 158.06,
@@ -10064,7 +10616,7 @@
           ]
         },
         {
-          "mdFt": 4950.0,
+          "mdFt": 4950,
           "tvdFt": 4949.15,
           "inclinationDeg": 1.96,
           "azimuthDeg": 148.14,
@@ -10080,7 +10632,7 @@
           ]
         },
         {
-          "mdFt": 4975.0,
+          "mdFt": 4975,
           "tvdFt": 4974.14,
           "inclinationDeg": 1.61,
           "azimuthDeg": 152.88,
@@ -10096,7 +10648,7 @@
           ]
         },
         {
-          "mdFt": 5000.0,
+          "mdFt": 5000,
           "tvdFt": 4999.13,
           "inclinationDeg": 1.74,
           "azimuthDeg": 163.36,
@@ -10112,7 +10664,7 @@
           ]
         },
         {
-          "mdFt": 5025.0,
+          "mdFt": 5025,
           "tvdFt": 5024.12,
           "inclinationDeg": 0.86,
           "azimuthDeg": 165.6,
@@ -10128,7 +10680,7 @@
           ]
         },
         {
-          "mdFt": 5050.0,
+          "mdFt": 5050,
           "tvdFt": 5049.12,
           "inclinationDeg": 0.9,
           "azimuthDeg": 154.12,
@@ -10144,9 +10696,9 @@
           ]
         },
         {
-          "mdFt": 5075.0,
+          "mdFt": 5075,
           "tvdFt": 5074.11,
-          "inclinationDeg": 1.0,
+          "inclinationDeg": 1,
           "azimuthDeg": 174.59,
           "utm": [
             334654.93,
@@ -10160,7 +10712,7 @@
           ]
         },
         {
-          "mdFt": 5100.0,
+          "mdFt": 5100,
           "tvdFt": 5099.11,
           "inclinationDeg": 0.75,
           "azimuthDeg": 166.03,
@@ -10176,7 +10728,7 @@
           ]
         },
         {
-          "mdFt": 5125.0,
+          "mdFt": 5125,
           "tvdFt": 5124.11,
           "inclinationDeg": 0.71,
           "azimuthDeg": 143.03,
@@ -10192,7 +10744,7 @@
           ]
         },
         {
-          "mdFt": 5150.0,
+          "mdFt": 5150,
           "tvdFt": 5149.11,
           "inclinationDeg": 0.71,
           "azimuthDeg": 138.33,
@@ -10208,7 +10760,7 @@
           ]
         },
         {
-          "mdFt": 5175.0,
+          "mdFt": 5175,
           "tvdFt": 5174.1,
           "inclinationDeg": 1.17,
           "azimuthDeg": 131.7,
@@ -10224,7 +10776,7 @@
           ]
         },
         {
-          "mdFt": 5200.0,
+          "mdFt": 5200,
           "tvdFt": 5199.1,
           "inclinationDeg": 1.63,
           "azimuthDeg": 128.59,
@@ -10240,7 +10792,7 @@
           ]
         },
         {
-          "mdFt": 5225.0,
+          "mdFt": 5225,
           "tvdFt": 5224.09,
           "inclinationDeg": 1.63,
           "azimuthDeg": 130.3,
@@ -10256,7 +10808,7 @@
           ]
         },
         {
-          "mdFt": 5250.0,
+          "mdFt": 5250,
           "tvdFt": 5249.08,
           "inclinationDeg": 1.64,
           "azimuthDeg": 134.48,
@@ -10272,7 +10824,7 @@
           ]
         },
         {
-          "mdFt": 5275.0,
+          "mdFt": 5275,
           "tvdFt": 5274.06,
           "inclinationDeg": 2.18,
           "azimuthDeg": 141.42,
@@ -10288,7 +10840,7 @@
           ]
         },
         {
-          "mdFt": 5300.0,
+          "mdFt": 5300,
           "tvdFt": 5299.05,
           "inclinationDeg": 2.05,
           "azimuthDeg": 146.12,
@@ -10304,7 +10856,7 @@
           ]
         },
         {
-          "mdFt": 5325.0,
+          "mdFt": 5325,
           "tvdFt": 5324.03,
           "inclinationDeg": 1.61,
           "azimuthDeg": 158.24,
@@ -10320,7 +10872,7 @@
           ]
         },
         {
-          "mdFt": 5350.0,
+          "mdFt": 5350,
           "tvdFt": 5349.03,
           "inclinationDeg": 1.29,
           "azimuthDeg": 175.24,
@@ -10336,7 +10888,7 @@
           ]
         },
         {
-          "mdFt": 5375.0,
+          "mdFt": 5375,
           "tvdFt": 5374.02,
           "inclinationDeg": 0.96,
           "azimuthDeg": 199.55,
@@ -10352,7 +10904,7 @@
           ]
         },
         {
-          "mdFt": 5400.0,
+          "mdFt": 5400,
           "tvdFt": 5399.02,
           "inclinationDeg": 1.1,
           "azimuthDeg": 231.33,
@@ -10368,7 +10920,7 @@
           ]
         },
         {
-          "mdFt": 5425.0,
+          "mdFt": 5425,
           "tvdFt": 5424.01,
           "inclinationDeg": 1.39,
           "azimuthDeg": 228.65,
@@ -10384,8 +10936,8 @@
           ]
         },
         {
-          "mdFt": 5450.0,
-          "tvdFt": 5449.0,
+          "mdFt": 5450,
+          "tvdFt": 5449,
           "inclinationDeg": 1.21,
           "azimuthDeg": 228.97,
           "utm": [
@@ -10400,8 +10952,8 @@
           ]
         },
         {
-          "mdFt": 5475.0,
-          "tvdFt": 5474.0,
+          "mdFt": 5475,
+          "tvdFt": 5474,
           "inclinationDeg": 0.58,
           "azimuthDeg": 243.49,
           "utm": [
@@ -10416,8 +10968,8 @@
           ]
         },
         {
-          "mdFt": 5500.0,
-          "tvdFt": 5499.0,
+          "mdFt": 5500,
+          "tvdFt": 5499,
           "inclinationDeg": 0.43,
           "azimuthDeg": 165.75,
           "utm": [
@@ -10432,8 +10984,8 @@
           ]
         },
         {
-          "mdFt": 5525.0,
-          "tvdFt": 5524.0,
+          "mdFt": 5525,
+          "tvdFt": 5524,
           "inclinationDeg": 1.5,
           "azimuthDeg": 134.22,
           "utm": [
@@ -10448,7 +11000,7 @@
           ]
         },
         {
-          "mdFt": 5550.0,
+          "mdFt": 5550,
           "tvdFt": 5548.98,
           "inclinationDeg": 2.96,
           "azimuthDeg": 126.35,
@@ -10464,7 +11016,7 @@
           ]
         },
         {
-          "mdFt": 5575.0,
+          "mdFt": 5575,
           "tvdFt": 5573.92,
           "inclinationDeg": 4.84,
           "azimuthDeg": 121.77,
@@ -10480,7 +11032,7 @@
           ]
         },
         {
-          "mdFt": 5600.0,
+          "mdFt": 5600,
           "tvdFt": 5598.79,
           "inclinationDeg": 6.56,
           "azimuthDeg": 122.66,
@@ -10496,7 +11048,7 @@
           ]
         },
         {
-          "mdFt": 5625.0,
+          "mdFt": 5625,
           "tvdFt": 5623.6,
           "inclinationDeg": 7.83,
           "azimuthDeg": 125.08,
@@ -10512,7 +11064,7 @@
           ]
         },
         {
-          "mdFt": 5650.0,
+          "mdFt": 5650,
           "tvdFt": 5648.32,
           "inclinationDeg": 9.35,
           "azimuthDeg": 127.99,
@@ -10528,7 +11080,7 @@
           ]
         },
         {
-          "mdFt": 5675.0,
+          "mdFt": 5675,
           "tvdFt": 5672.92,
           "inclinationDeg": 11.11,
           "azimuthDeg": 130.02,
@@ -10544,7 +11096,7 @@
           ]
         },
         {
-          "mdFt": 5700.0,
+          "mdFt": 5700,
           "tvdFt": 5697.38,
           "inclinationDeg": 12.62,
           "azimuthDeg": 132.49,
@@ -10560,7 +11112,7 @@
           ]
         },
         {
-          "mdFt": 5725.0,
+          "mdFt": 5725,
           "tvdFt": 5721.76,
           "inclinationDeg": 13.02,
           "azimuthDeg": 132.67,
@@ -10576,7 +11128,7 @@
           ]
         },
         {
-          "mdFt": 5750.0,
+          "mdFt": 5750,
           "tvdFt": 5746.12,
           "inclinationDeg": 12.94,
           "azimuthDeg": 131.97,
@@ -10592,7 +11144,7 @@
           ]
         },
         {
-          "mdFt": 5775.0,
+          "mdFt": 5775,
           "tvdFt": 5770.47,
           "inclinationDeg": 13.32,
           "azimuthDeg": 131.34,
@@ -10608,7 +11160,7 @@
           ]
         },
         {
-          "mdFt": 5800.0,
+          "mdFt": 5800,
           "tvdFt": 5794.78,
           "inclinationDeg": 13.57,
           "azimuthDeg": 131.01,
@@ -10624,7 +11176,7 @@
           ]
         },
         {
-          "mdFt": 5825.0,
+          "mdFt": 5825,
           "tvdFt": 5819.05,
           "inclinationDeg": 14.14,
           "azimuthDeg": 130.26,
@@ -10640,7 +11192,7 @@
           ]
         },
         {
-          "mdFt": 5850.0,
+          "mdFt": 5850,
           "tvdFt": 5843.25,
           "inclinationDeg": 15.03,
           "azimuthDeg": 129.35,
@@ -10656,7 +11208,7 @@
           ]
         },
         {
-          "mdFt": 5875.0,
+          "mdFt": 5875,
           "tvdFt": 5867.31,
           "inclinationDeg": 16.43,
           "azimuthDeg": 127.94,
@@ -10672,7 +11224,7 @@
           ]
         },
         {
-          "mdFt": 5900.0,
+          "mdFt": 5900,
           "tvdFt": 5891.22,
           "inclinationDeg": 17.59,
           "azimuthDeg": 126.76,
@@ -10688,7 +11240,7 @@
           ]
         },
         {
-          "mdFt": 5925.0,
+          "mdFt": 5925,
           "tvdFt": 5914.92,
           "inclinationDeg": 19.51,
           "azimuthDeg": 125.12,
@@ -10704,7 +11256,7 @@
           ]
         },
         {
-          "mdFt": 5950.0,
+          "mdFt": 5950,
           "tvdFt": 5938.35,
           "inclinationDeg": 21.32,
           "azimuthDeg": 123.21,
@@ -10720,7 +11272,7 @@
           ]
         },
         {
-          "mdFt": 5975.0,
+          "mdFt": 5975,
           "tvdFt": 5961.56,
           "inclinationDeg": 22.24,
           "azimuthDeg": 121.77,
@@ -10736,7 +11288,7 @@
           ]
         },
         {
-          "mdFt": 6000.0,
+          "mdFt": 6000,
           "tvdFt": 5984.67,
           "inclinationDeg": 22.68,
           "azimuthDeg": 120.17,
@@ -10752,7 +11304,7 @@
           ]
         },
         {
-          "mdFt": 6025.0,
+          "mdFt": 6025,
           "tvdFt": 6007.66,
           "inclinationDeg": 23.51,
           "azimuthDeg": 117.92,
@@ -10768,7 +11320,7 @@
           ]
         },
         {
-          "mdFt": 6050.0,
+          "mdFt": 6050,
           "tvdFt": 6030.53,
           "inclinationDeg": 24.17,
           "azimuthDeg": 115.17,
@@ -10784,7 +11336,7 @@
           ]
         },
         {
-          "mdFt": 6075.0,
+          "mdFt": 6075,
           "tvdFt": 6053.28,
           "inclinationDeg": 24.86,
           "azimuthDeg": 114.22,
@@ -10800,7 +11352,7 @@
           ]
         },
         {
-          "mdFt": 6100.0,
+          "mdFt": 6100,
           "tvdFt": 6075.91,
           "inclinationDeg": 25.39,
           "azimuthDeg": 113.55,
@@ -10816,9 +11368,9 @@
           ]
         },
         {
-          "mdFt": 6125.0,
+          "mdFt": 6125,
           "tvdFt": 6098.44,
-          "inclinationDeg": 26.0,
+          "inclinationDeg": 26,
           "azimuthDeg": 112.81,
           "utm": [
             334695.606,
@@ -10832,7 +11384,7 @@
           ]
         },
         {
-          "mdFt": 6150.0,
+          "mdFt": 6150,
           "tvdFt": 6120.87,
           "inclinationDeg": 26.44,
           "azimuthDeg": 112.75,
@@ -10848,7 +11400,7 @@
           ]
         },
         {
-          "mdFt": 6175.0,
+          "mdFt": 6175,
           "tvdFt": 6143.21,
           "inclinationDeg": 26.83,
           "azimuthDeg": 112.51,
@@ -10864,7 +11416,7 @@
           ]
         },
         {
-          "mdFt": 6200.0,
+          "mdFt": 6200,
           "tvdFt": 6165.44,
           "inclinationDeg": 27.64,
           "azimuthDeg": 112.69,
@@ -10880,7 +11432,7 @@
           ]
         },
         {
-          "mdFt": 6225.0,
+          "mdFt": 6225,
           "tvdFt": 6187.51,
           "inclinationDeg": 28.43,
           "azimuthDeg": 112.24,
@@ -10896,7 +11448,7 @@
           ]
         },
         {
-          "mdFt": 6250.0,
+          "mdFt": 6250,
           "tvdFt": 6209.4,
           "inclinationDeg": 29.28,
           "azimuthDeg": 112.36,
@@ -10912,7 +11464,7 @@
           ]
         },
         {
-          "mdFt": 6275.0,
+          "mdFt": 6275,
           "tvdFt": 6231.08,
           "inclinationDeg": 30.5,
           "azimuthDeg": 112.61,
@@ -10928,7 +11480,7 @@
           ]
         },
         {
-          "mdFt": 6300.0,
+          "mdFt": 6300,
           "tvdFt": 6252.48,
           "inclinationDeg": 31.74,
           "azimuthDeg": 112.75,
@@ -10944,7 +11496,7 @@
           ]
         },
         {
-          "mdFt": 6325.0,
+          "mdFt": 6325,
           "tvdFt": 6273.56,
           "inclinationDeg": 33.33,
           "azimuthDeg": 112.67,
@@ -10960,7 +11512,7 @@
           ]
         },
         {
-          "mdFt": 6350.0,
+          "mdFt": 6350,
           "tvdFt": 6294.31,
           "inclinationDeg": 34.45,
           "azimuthDeg": 112.7,
@@ -10976,7 +11528,7 @@
           ]
         },
         {
-          "mdFt": 6375.0,
+          "mdFt": 6375,
           "tvdFt": 6314.74,
           "inclinationDeg": 35.95,
           "azimuthDeg": 112.89,
@@ -10992,7 +11544,7 @@
           ]
         },
         {
-          "mdFt": 6400.0,
+          "mdFt": 6400,
           "tvdFt": 6334.79,
           "inclinationDeg": 37.34,
           "azimuthDeg": 113.25,
@@ -11008,7 +11560,7 @@
           ]
         },
         {
-          "mdFt": 6425.0,
+          "mdFt": 6425,
           "tvdFt": 6354.54,
           "inclinationDeg": 38.33,
           "azimuthDeg": 113.65,
@@ -11024,7 +11576,7 @@
           ]
         },
         {
-          "mdFt": 6450.0,
+          "mdFt": 6450,
           "tvdFt": 6374.03,
           "inclinationDeg": 39.22,
           "azimuthDeg": 114.66,
@@ -11040,7 +11592,7 @@
           ]
         },
         {
-          "mdFt": 6475.0,
+          "mdFt": 6475,
           "tvdFt": 6393.28,
           "inclinationDeg": 40.08,
           "azimuthDeg": 115.86,
@@ -11056,7 +11608,7 @@
           ]
         },
         {
-          "mdFt": 6500.0,
+          "mdFt": 6500,
           "tvdFt": 6412.14,
           "inclinationDeg": 41.96,
           "azimuthDeg": 116.75,
@@ -11072,7 +11624,7 @@
           ]
         },
         {
-          "mdFt": 6525.0,
+          "mdFt": 6525,
           "tvdFt": 6430.47,
           "inclinationDeg": 43.71,
           "azimuthDeg": 117.49,
@@ -11088,7 +11640,7 @@
           ]
         },
         {
-          "mdFt": 6550.0,
+          "mdFt": 6550,
           "tvdFt": 6448.35,
           "inclinationDeg": 44.97,
           "azimuthDeg": 117.96,
@@ -11104,7 +11656,7 @@
           ]
         },
         {
-          "mdFt": 6575.0,
+          "mdFt": 6575,
           "tvdFt": 6465.88,
           "inclinationDeg": 45.99,
           "azimuthDeg": 117.69,
@@ -11120,7 +11672,7 @@
           ]
         },
         {
-          "mdFt": 6600.0,
+          "mdFt": 6600,
           "tvdFt": 6483.09,
           "inclinationDeg": 47.03,
           "azimuthDeg": 117.17,
@@ -11136,7 +11688,7 @@
           ]
         },
         {
-          "mdFt": 6625.0,
+          "mdFt": 6625,
           "tvdFt": 6500.1,
           "inclinationDeg": 47.18,
           "azimuthDeg": 116.36,
@@ -11152,7 +11704,7 @@
           ]
         },
         {
-          "mdFt": 6650.0,
+          "mdFt": 6650,
           "tvdFt": 6517.14,
           "inclinationDeg": 46.87,
           "azimuthDeg": 114.8,
@@ -11168,7 +11720,7 @@
           ]
         },
         {
-          "mdFt": 6675.0,
+          "mdFt": 6675,
           "tvdFt": 6534.26,
           "inclinationDeg": 46.72,
           "azimuthDeg": 113.29,
@@ -11184,7 +11736,7 @@
           ]
         },
         {
-          "mdFt": 6700.0,
+          "mdFt": 6700,
           "tvdFt": 6551.31,
           "inclinationDeg": 47.29,
           "azimuthDeg": 112.19,
@@ -11200,7 +11752,7 @@
           ]
         },
         {
-          "mdFt": 6725.0,
+          "mdFt": 6725,
           "tvdFt": 6568.09,
           "inclinationDeg": 48.37,
           "azimuthDeg": 111.94,
@@ -11216,10 +11768,10 @@
           ]
         },
         {
-          "mdFt": 6750.0,
+          "mdFt": 6750,
           "tvdFt": 6584.47,
           "inclinationDeg": 49.8,
-          "azimuthDeg": 112.0,
+          "azimuthDeg": 112,
           "utm": [
             334802.228,
             4263396.707,
@@ -11232,7 +11784,7 @@
           ]
         },
         {
-          "mdFt": 6775.0,
+          "mdFt": 6775,
           "tvdFt": 6600.22,
           "inclinationDeg": 52.04,
           "azimuthDeg": 111.64,
@@ -11248,7 +11800,7 @@
           ]
         },
         {
-          "mdFt": 6800.0,
+          "mdFt": 6800,
           "tvdFt": 6615.17,
           "inclinationDeg": 54.52,
           "azimuthDeg": 109.48,
@@ -11264,7 +11816,7 @@
           ]
         },
         {
-          "mdFt": 6825.0,
+          "mdFt": 6825,
           "tvdFt": 6629.31,
           "inclinationDeg": 56.63,
           "azimuthDeg": 107.12,
@@ -11296,7 +11848,7 @@
           ]
         },
         {
-          "mdFt": 6850.0,
+          "mdFt": 6850,
           "tvdFt": 6642.47,
           "inclinationDeg": 59.8,
           "azimuthDeg": 105.25,
@@ -11328,7 +11880,7 @@
           ]
         },
         {
-          "mdFt": 6875.0,
+          "mdFt": 6875,
           "tvdFt": 6654.69,
           "inclinationDeg": 61.7,
           "azimuthDeg": 103.64,
@@ -11344,7 +11896,7 @@
           ]
         },
         {
-          "mdFt": 6900.0,
+          "mdFt": 6900,
           "tvdFt": 6666.39,
           "inclinationDeg": 62.5,
           "azimuthDeg": 102.69,
@@ -11360,7 +11912,7 @@
           ]
         },
         {
-          "mdFt": 6925.0,
+          "mdFt": 6925,
           "tvdFt": 6677.69,
           "inclinationDeg": 63.76,
           "azimuthDeg": 102.36,
@@ -11376,7 +11928,7 @@
           ]
         },
         {
-          "mdFt": 6950.0,
+          "mdFt": 6950,
           "tvdFt": 6688.62,
           "inclinationDeg": 64.35,
           "azimuthDeg": 102.72,
@@ -11392,7 +11944,7 @@
           ]
         },
         {
-          "mdFt": 6975.0,
+          "mdFt": 6975,
           "tvdFt": 6698.92,
           "inclinationDeg": 66.98,
           "azimuthDeg": 102.8,
@@ -11408,7 +11960,7 @@
           ]
         },
         {
-          "mdFt": 7000.0,
+          "mdFt": 7000,
           "tvdFt": 6708.58,
           "inclinationDeg": 67.6,
           "azimuthDeg": 102.74,
@@ -11424,7 +11976,7 @@
           ]
         },
         {
-          "mdFt": 7025.0,
+          "mdFt": 7025,
           "tvdFt": 6718.01,
           "inclinationDeg": 68.06,
           "azimuthDeg": 102.68,
@@ -11440,7 +11992,7 @@
           ]
         },
         {
-          "mdFt": 7050.0,
+          "mdFt": 7050,
           "tvdFt": 6727.38,
           "inclinationDeg": 67.92,
           "azimuthDeg": 102.56,
@@ -11456,7 +12008,7 @@
           ]
         },
         {
-          "mdFt": 7075.0,
+          "mdFt": 7075,
           "tvdFt": 6736.78,
           "inclinationDeg": 67.88,
           "azimuthDeg": 102.68,
@@ -11472,7 +12024,7 @@
           ]
         },
         {
-          "mdFt": 7100.0,
+          "mdFt": 7100,
           "tvdFt": 6746.16,
           "inclinationDeg": 68.05,
           "azimuthDeg": 102.94,
@@ -11488,7 +12040,7 @@
           ]
         },
         {
-          "mdFt": 7125.0,
+          "mdFt": 7125,
           "tvdFt": 6755.56,
           "inclinationDeg": 67.8,
           "azimuthDeg": 102.88,
@@ -11504,7 +12056,7 @@
           ]
         },
         {
-          "mdFt": 7150.0,
+          "mdFt": 7150,
           "tvdFt": 6764.94,
           "inclinationDeg": 68.12,
           "azimuthDeg": 102.52,
@@ -11520,7 +12072,7 @@
           ]
         },
         {
-          "mdFt": 7175.0,
+          "mdFt": 7175,
           "tvdFt": 6774.31,
           "inclinationDeg": 67.88,
           "azimuthDeg": 102.55,
@@ -11536,7 +12088,7 @@
           ]
         },
         {
-          "mdFt": 7200.0,
+          "mdFt": 7200,
           "tvdFt": 6783.83,
           "inclinationDeg": 67.35,
           "azimuthDeg": 102.18,
@@ -11552,7 +12104,7 @@
           ]
         },
         {
-          "mdFt": 7225.0,
+          "mdFt": 7225,
           "tvdFt": 6793.63,
           "inclinationDeg": 66.47,
           "azimuthDeg": 102.16,
@@ -11568,7 +12120,7 @@
           ]
         },
         {
-          "mdFt": 7250.0,
+          "mdFt": 7250,
           "tvdFt": 6803.7,
           "inclinationDeg": 66.03,
           "azimuthDeg": 102.55,
@@ -11584,7 +12136,7 @@
           ]
         },
         {
-          "mdFt": 7275.0,
+          "mdFt": 7275,
           "tvdFt": 6813.93,
           "inclinationDeg": 65.66,
           "azimuthDeg": 102.97,
@@ -11600,7 +12152,7 @@
           ]
         },
         {
-          "mdFt": 7300.0,
+          "mdFt": 7300,
           "tvdFt": 6824.05,
           "inclinationDeg": 66.58,
           "azimuthDeg": 103.11,
@@ -11616,7 +12168,7 @@
           ]
         },
         {
-          "mdFt": 7325.0,
+          "mdFt": 7325,
           "tvdFt": 6833.93,
           "inclinationDeg": 66.87,
           "azimuthDeg": 102.76,
@@ -11632,7 +12184,7 @@
           ]
         },
         {
-          "mdFt": 7350.0,
+          "mdFt": 7350,
           "tvdFt": 6843.79,
           "inclinationDeg": 66.65,
           "azimuthDeg": 102.48,
@@ -11648,7 +12200,7 @@
           ]
         },
         {
-          "mdFt": 7375.0,
+          "mdFt": 7375,
           "tvdFt": 6853.72,
           "inclinationDeg": 66.57,
           "azimuthDeg": 102.48,
@@ -11664,7 +12216,7 @@
           ]
         },
         {
-          "mdFt": 7400.0,
+          "mdFt": 7400,
           "tvdFt": 6863.75,
           "inclinationDeg": 66.12,
           "azimuthDeg": 102.77,
@@ -11680,7 +12232,7 @@
           ]
         },
         {
-          "mdFt": 7425.0,
+          "mdFt": 7425,
           "tvdFt": 6873.88,
           "inclinationDeg": 66.07,
           "azimuthDeg": 103.34,
@@ -11696,7 +12248,7 @@
           ]
         },
         {
-          "mdFt": 7450.0,
+          "mdFt": 7450,
           "tvdFt": 6884.12,
           "inclinationDeg": 65.57,
           "azimuthDeg": 103.89,
@@ -11712,7 +12264,7 @@
           ]
         },
         {
-          "mdFt": 7475.0,
+          "mdFt": 7475,
           "tvdFt": 6894.5,
           "inclinationDeg": 65.39,
           "azimuthDeg": 104.2,
@@ -11728,7 +12280,7 @@
           ]
         },
         {
-          "mdFt": 7500.0,
+          "mdFt": 7500,
           "tvdFt": 6904.95,
           "inclinationDeg": 65.17,
           "azimuthDeg": 103.95,
@@ -11744,7 +12296,7 @@
           ]
         },
         {
-          "mdFt": 7525.0,
+          "mdFt": 7525,
           "tvdFt": 6915.38,
           "inclinationDeg": 65.49,
           "azimuthDeg": 103.5,
@@ -11760,7 +12312,7 @@
           ]
         },
         {
-          "mdFt": 7550.0,
+          "mdFt": 7550,
           "tvdFt": 6925.71,
           "inclinationDeg": 65.7,
           "azimuthDeg": 103.44,
@@ -11776,7 +12328,7 @@
           ]
         },
         {
-          "mdFt": 7575.0,
+          "mdFt": 7575,
           "tvdFt": 6936.03,
           "inclinationDeg": 65.58,
           "azimuthDeg": 103.96,
@@ -11792,7 +12344,7 @@
           ]
         },
         {
-          "mdFt": 7600.0,
+          "mdFt": 7600,
           "tvdFt": 6946.3,
           "inclinationDeg": 65.87,
           "azimuthDeg": 104.18,
@@ -11808,7 +12360,7 @@
           ]
         },
         {
-          "mdFt": 7625.0,
+          "mdFt": 7625,
           "tvdFt": 6956.38,
           "inclinationDeg": 66.57,
           "azimuthDeg": 104.35,
@@ -11824,7 +12376,7 @@
           ]
         },
         {
-          "mdFt": 7650.0,
+          "mdFt": 7650,
           "tvdFt": 6966.2,
           "inclinationDeg": 67.21,
           "azimuthDeg": 104.31,
@@ -11840,7 +12392,7 @@
           ]
         },
         {
-          "mdFt": 7675.0,
+          "mdFt": 7675,
           "tvdFt": 6975.81,
           "inclinationDeg": 67.56,
           "azimuthDeg": 104.3,
@@ -11856,7 +12408,7 @@
           ]
         },
         {
-          "mdFt": 7700.0,
+          "mdFt": 7700,
           "tvdFt": 6984.93,
           "inclinationDeg": 69.65,
           "azimuthDeg": 104.16,
@@ -11872,7 +12424,7 @@
           ]
         },
         {
-          "mdFt": 7725.0,
+          "mdFt": 7725,
           "tvdFt": 6993.6,
           "inclinationDeg": 69.76,
           "azimuthDeg": 103.84,
@@ -11888,7 +12440,7 @@
           ]
         },
         {
-          "mdFt": 7750.0,
+          "mdFt": 7750,
           "tvdFt": 7002.06,
           "inclinationDeg": 70.67,
           "azimuthDeg": 103.53,
@@ -11904,7 +12456,7 @@
           ]
         },
         {
-          "mdFt": 7775.0,
+          "mdFt": 7775,
           "tvdFt": 7010.26,
           "inclinationDeg": 71.05,
           "azimuthDeg": 103.28,
@@ -11920,7 +12472,7 @@
           ]
         },
         {
-          "mdFt": 7800.0,
+          "mdFt": 7800,
           "tvdFt": 7018.64,
           "inclinationDeg": 69.78,
           "azimuthDeg": 103.19,
@@ -11936,7 +12488,7 @@
           ]
         },
         {
-          "mdFt": 7825.0,
+          "mdFt": 7825,
           "tvdFt": 7027.47,
           "inclinationDeg": 68.87,
           "azimuthDeg": 103.32,
@@ -11952,7 +12504,7 @@
           ]
         },
         {
-          "mdFt": 7850.0,
+          "mdFt": 7850,
           "tvdFt": 7036.69,
           "inclinationDeg": 67.82,
           "azimuthDeg": 103.5,
@@ -11968,13 +12520,13 @@
           ]
         },
         {
-          "mdFt": 7875.0,
+          "mdFt": 7875,
           "tvdFt": 7046.21,
           "inclinationDeg": 67.4,
           "azimuthDeg": 103.52,
           "utm": [
             335104.956,
-            4263323.0,
+            4263323,
             -496.996
           ],
           "scene": [
@@ -11984,7 +12536,7 @@
           ]
         },
         {
-          "mdFt": 7900.0,
+          "mdFt": 7900,
           "tvdFt": 7056.01,
           "inclinationDeg": 66.47,
           "azimuthDeg": 103.33,
@@ -12000,7 +12552,7 @@
           ]
         },
         {
-          "mdFt": 7925.0,
+          "mdFt": 7925,
           "tvdFt": 7066.23,
           "inclinationDeg": 65.25,
           "azimuthDeg": 103.06,
@@ -12016,7 +12568,7 @@
           ]
         },
         {
-          "mdFt": 7950.0,
+          "mdFt": 7950,
           "tvdFt": 7076.77,
           "inclinationDeg": 64.87,
           "azimuthDeg": 102.95,
@@ -12032,7 +12584,7 @@
           ]
         },
         {
-          "mdFt": 7975.0,
+          "mdFt": 7975,
           "tvdFt": 7087.45,
           "inclinationDeg": 64.58,
           "azimuthDeg": 102.83,
@@ -12048,7 +12600,7 @@
           ]
         },
         {
-          "mdFt": 8000.0,
+          "mdFt": 8000,
           "tvdFt": 7098.31,
           "inclinationDeg": 63.91,
           "azimuthDeg": 102.62,
@@ -12064,7 +12616,7 @@
           ]
         },
         {
-          "mdFt": 8025.0,
+          "mdFt": 8025,
           "tvdFt": 7109.34,
           "inclinationDeg": 63.76,
           "azimuthDeg": 102.48,
@@ -12080,7 +12632,7 @@
           ]
         },
         {
-          "mdFt": 8050.0,
+          "mdFt": 8050,
           "tvdFt": 7120.46,
           "inclinationDeg": 63.38,
           "azimuthDeg": 102.43,
@@ -12096,7 +12648,7 @@
           ]
         },
         {
-          "mdFt": 8075.0,
+          "mdFt": 8075,
           "tvdFt": 7131.78,
           "inclinationDeg": 62.78,
           "azimuthDeg": 102.54,
@@ -12112,7 +12664,7 @@
           ]
         },
         {
-          "mdFt": 8100.0,
+          "mdFt": 8100,
           "tvdFt": 7143.3,
           "inclinationDeg": 62.36,
           "azimuthDeg": 102.54,
@@ -12128,7 +12680,7 @@
           ]
         },
         {
-          "mdFt": 8125.0,
+          "mdFt": 8125,
           "tvdFt": 7154.56,
           "inclinationDeg": 64.09,
           "azimuthDeg": 102.34,
@@ -12144,7 +12696,7 @@
           ]
         },
         {
-          "mdFt": 8150.0,
+          "mdFt": 8150,
           "tvdFt": 7165.38,
           "inclinationDeg": 64.6,
           "azimuthDeg": 102.2,
@@ -12160,7 +12712,7 @@
           ]
         },
         {
-          "mdFt": 8175.0,
+          "mdFt": 8175,
           "tvdFt": 7175.86,
           "inclinationDeg": 65.84,
           "azimuthDeg": 102.3,
@@ -12176,7 +12728,7 @@
           ]
         },
         {
-          "mdFt": 8200.0,
+          "mdFt": 8200,
           "tvdFt": 7186.21,
           "inclinationDeg": 65.28,
           "azimuthDeg": 102.56,
@@ -12192,7 +12744,7 @@
           ]
         },
         {
-          "mdFt": 8225.0,
+          "mdFt": 8225,
           "tvdFt": 7196.51,
           "inclinationDeg": 66.06,
           "azimuthDeg": 103.04,
@@ -12208,7 +12760,7 @@
           ]
         },
         {
-          "mdFt": 8250.0,
+          "mdFt": 8250,
           "tvdFt": 7206.65,
           "inclinationDeg": 66.08,
           "azimuthDeg": 103.49,
@@ -12224,7 +12776,7 @@
           ]
         },
         {
-          "mdFt": 8275.0,
+          "mdFt": 8275,
           "tvdFt": 7216.86,
           "inclinationDeg": 65.69,
           "azimuthDeg": 103.84,
@@ -12240,7 +12792,7 @@
           ]
         },
         {
-          "mdFt": 8300.0,
+          "mdFt": 8300,
           "tvdFt": 7227.45,
           "inclinationDeg": 64.17,
           "azimuthDeg": 104.3,
@@ -12256,7 +12808,7 @@
           ]
         },
         {
-          "mdFt": 8325.0,
+          "mdFt": 8325,
           "tvdFt": 7238.43,
           "inclinationDeg": 63.76,
           "azimuthDeg": 104.85,
@@ -12272,7 +12824,7 @@
           ]
         },
         {
-          "mdFt": 8350.0,
+          "mdFt": 8350,
           "tvdFt": 7249.59,
           "inclinationDeg": 63.18,
           "azimuthDeg": 105.1,
@@ -12288,8 +12840,8 @@
           ]
         },
         {
-          "mdFt": 8375.0,
-          "tvdFt": 7261.0,
+          "mdFt": 8375,
+          "tvdFt": 7261,
           "inclinationDeg": 62.53,
           "azimuthDeg": 105.27,
           "utm": [
@@ -12304,7 +12856,7 @@
           ]
         },
         {
-          "mdFt": 8400.0,
+          "mdFt": 8400,
           "tvdFt": 7272.69,
           "inclinationDeg": 61.7,
           "azimuthDeg": 105.28,
@@ -12320,7 +12872,7 @@
           ]
         },
         {
-          "mdFt": 8425.0,
+          "mdFt": 8425,
           "tvdFt": 7284.84,
           "inclinationDeg": 60.13,
           "azimuthDeg": 105.42,
@@ -12336,7 +12888,7 @@
           ]
         },
         {
-          "mdFt": 8450.0,
+          "mdFt": 8450,
           "tvdFt": 7297.3,
           "inclinationDeg": 60.12,
           "azimuthDeg": 105.26,
@@ -12352,7 +12904,7 @@
           ]
         },
         {
-          "mdFt": 8475.0,
+          "mdFt": 8475,
           "tvdFt": 7309.75,
           "inclinationDeg": 60.1,
           "azimuthDeg": 105.09,
@@ -12368,7 +12920,7 @@
           ]
         },
         {
-          "mdFt": 8500.0,
+          "mdFt": 8500,
           "tvdFt": 7322.23,
           "inclinationDeg": 60.03,
           "azimuthDeg": 104.89,
@@ -12384,7 +12936,7 @@
           ]
         },
         {
-          "mdFt": 8525.0,
+          "mdFt": 8525,
           "tvdFt": 7334.63,
           "inclinationDeg": 60.48,
           "azimuthDeg": 104.64,
@@ -12400,7 +12952,7 @@
           ]
         },
         {
-          "mdFt": 8550.0,
+          "mdFt": 8550,
           "tvdFt": 7346.93,
           "inclinationDeg": 60.6,
           "azimuthDeg": 104.54,
@@ -12416,7 +12968,7 @@
           ]
         },
         {
-          "mdFt": 8575.0,
+          "mdFt": 8575,
           "tvdFt": 7359.21,
           "inclinationDeg": 60.56,
           "azimuthDeg": 104.6,
@@ -12432,7 +12984,7 @@
           ]
         },
         {
-          "mdFt": 8600.0,
+          "mdFt": 8600,
           "tvdFt": 7371.4,
           "inclinationDeg": 61.05,
           "azimuthDeg": 104.59,
@@ -12448,7 +13000,7 @@
           ]
         },
         {
-          "mdFt": 8625.0,
+          "mdFt": 8625,
           "tvdFt": 7383.38,
           "inclinationDeg": 61.72,
           "azimuthDeg": 104.51,
@@ -12464,7 +13016,7 @@
           ]
         },
         {
-          "mdFt": 8650.0,
+          "mdFt": 8650,
           "tvdFt": 7395.1,
           "inclinationDeg": 62.37,
           "azimuthDeg": 104.34,
@@ -12480,7 +13032,7 @@
           ]
         },
         {
-          "mdFt": 8675.0,
+          "mdFt": 8675,
           "tvdFt": 7406.59,
           "inclinationDeg": 62.87,
           "azimuthDeg": 104.06,
@@ -12496,7 +13048,7 @@
           ]
         },
         {
-          "mdFt": 8700.0,
+          "mdFt": 8700,
           "tvdFt": 7417.86,
           "inclinationDeg": 63.56,
           "azimuthDeg": 103.92,
@@ -12512,7 +13064,7 @@
           ]
         },
         {
-          "mdFt": 8725.0,
+          "mdFt": 8725,
           "tvdFt": 7428.82,
           "inclinationDeg": 64.43,
           "azimuthDeg": 103.66,
@@ -12528,7 +13080,7 @@
           ]
         },
         {
-          "mdFt": 8750.0,
+          "mdFt": 8750,
           "tvdFt": 7439.58,
           "inclinationDeg": 64.59,
           "azimuthDeg": 103.34,
@@ -12544,7 +13096,7 @@
           ]
         },
         {
-          "mdFt": 8775.0,
+          "mdFt": 8775,
           "tvdFt": 7450.59,
           "inclinationDeg": 63.15,
           "azimuthDeg": 103.21,
@@ -12560,7 +13112,7 @@
           ]
         },
         {
-          "mdFt": 8800.0,
+          "mdFt": 8800,
           "tvdFt": 7461.78,
           "inclinationDeg": 63.67,
           "azimuthDeg": 102.97,
@@ -12576,7 +13128,7 @@
           ]
         },
         {
-          "mdFt": 8825.0,
+          "mdFt": 8825,
           "tvdFt": 7472.87,
           "inclinationDeg": 63.64,
           "azimuthDeg": 102.82,
@@ -12592,7 +13144,7 @@
           ]
         },
         {
-          "mdFt": 8850.0,
+          "mdFt": 8850,
           "tvdFt": 7484.01,
           "inclinationDeg": 63.45,
           "azimuthDeg": 102.6,
@@ -12608,7 +13160,7 @@
           ]
         },
         {
-          "mdFt": 8875.0,
+          "mdFt": 8875,
           "tvdFt": 7495.19,
           "inclinationDeg": 63.44,
           "azimuthDeg": 102.54,
@@ -12624,7 +13176,7 @@
           ]
         },
         {
-          "mdFt": 8900.0,
+          "mdFt": 8900,
           "tvdFt": 7506.53,
           "inclinationDeg": 62.61,
           "azimuthDeg": 102.56,
@@ -12640,7 +13192,7 @@
           ]
         },
         {
-          "mdFt": 8925.0,
+          "mdFt": 8925,
           "tvdFt": 7518.09,
           "inclinationDeg": 62.31,
           "azimuthDeg": 102.67,
@@ -12656,7 +13208,7 @@
           ]
         },
         {
-          "mdFt": 8950.0,
+          "mdFt": 8950,
           "tvdFt": 7529.79,
           "inclinationDeg": 61.88,
           "azimuthDeg": 102.73,
@@ -12672,7 +13224,7 @@
           ]
         },
         {
-          "mdFt": 8975.0,
+          "mdFt": 8975,
           "tvdFt": 7541.58,
           "inclinationDeg": 61.85,
           "azimuthDeg": 102.92,
@@ -12688,7 +13240,7 @@
           ]
         },
         {
-          "mdFt": 9000.0,
+          "mdFt": 9000,
           "tvdFt": 7553.36,
           "inclinationDeg": 61.88,
           "azimuthDeg": 102.95,
@@ -12704,7 +13256,7 @@
           ]
         },
         {
-          "mdFt": 9025.0,
+          "mdFt": 9025,
           "tvdFt": 7565.13,
           "inclinationDeg": 61.97,
           "azimuthDeg": 102.96,
@@ -12720,7 +13272,7 @@
           ]
         },
         {
-          "mdFt": 9050.0,
+          "mdFt": 9050,
           "tvdFt": 7576.9,
           "inclinationDeg": 61.87,
           "azimuthDeg": 102.88,
@@ -12736,7 +13288,7 @@
           ]
         },
         {
-          "mdFt": 9075.0,
+          "mdFt": 9075,
           "tvdFt": 7588.67,
           "inclinationDeg": 61.94,
           "azimuthDeg": 102.89,
@@ -12752,7 +13304,7 @@
           ]
         },
         {
-          "mdFt": 9100.0,
+          "mdFt": 9100,
           "tvdFt": 7600.5,
           "inclinationDeg": 61.59,
           "azimuthDeg": 102.95,
@@ -12768,7 +13320,7 @@
           ]
         },
         {
-          "mdFt": 9125.0,
+          "mdFt": 9125,
           "tvdFt": 7612.43,
           "inclinationDeg": 61.4,
           "azimuthDeg": 103.16,
@@ -12784,7 +13336,7 @@
           ]
         },
         {
-          "mdFt": 9150.0,
+          "mdFt": 9150,
           "tvdFt": 7624.47,
           "inclinationDeg": 61.01,
           "azimuthDeg": 103.43,
@@ -12800,7 +13352,7 @@
           ]
         },
         {
-          "mdFt": 9175.0,
+          "mdFt": 9175,
           "tvdFt": 7636.65,
           "inclinationDeg": 60.67,
           "azimuthDeg": 103.55,
@@ -12816,7 +13368,7 @@
           ]
         },
         {
-          "mdFt": 9200.0,
+          "mdFt": 9200,
           "tvdFt": 7648.88,
           "inclinationDeg": 60.77,
           "azimuthDeg": 103.54,
@@ -12832,7 +13384,7 @@
           ]
         },
         {
-          "mdFt": 9225.0,
+          "mdFt": 9225,
           "tvdFt": 7661.09,
           "inclinationDeg": 60.74,
           "azimuthDeg": 103.74,
@@ -12848,7 +13400,7 @@
           ]
         },
         {
-          "mdFt": 9250.0,
+          "mdFt": 9250,
           "tvdFt": 7673.42,
           "inclinationDeg": 60.16,
           "azimuthDeg": 104.04,
@@ -12864,7 +13416,7 @@
           ]
         },
         {
-          "mdFt": 9275.0,
+          "mdFt": 9275,
           "tvdFt": 7685.87,
           "inclinationDeg": 60.11,
           "azimuthDeg": 104.28,
@@ -12880,7 +13432,7 @@
           ]
         },
         {
-          "mdFt": 9300.0,
+          "mdFt": 9300,
           "tvdFt": 7698.18,
           "inclinationDeg": 60.92,
           "azimuthDeg": 104.21,
@@ -12896,7 +13448,7 @@
           ]
         },
         {
-          "mdFt": 9325.0,
+          "mdFt": 9325,
           "tvdFt": 7710.15,
           "inclinationDeg": 61.82,
           "azimuthDeg": 104.07,
@@ -12912,7 +13464,7 @@
           ]
         },
         {
-          "mdFt": 9350.0,
+          "mdFt": 9350,
           "tvdFt": 7721.85,
           "inclinationDeg": 62.4,
           "azimuthDeg": 103.82,
@@ -12928,7 +13480,7 @@
           ]
         },
         {
-          "mdFt": 9375.0,
+          "mdFt": 9375,
           "tvdFt": 7733.31,
           "inclinationDeg": 63.03,
           "azimuthDeg": 103.63,
@@ -12944,7 +13496,7 @@
           ]
         },
         {
-          "mdFt": 9400.0,
+          "mdFt": 9400,
           "tvdFt": 7744.55,
           "inclinationDeg": 63.55,
           "azimuthDeg": 103.44,
@@ -12960,7 +13512,7 @@
           ]
         },
         {
-          "mdFt": 9425.0,
+          "mdFt": 9425,
           "tvdFt": 7755.56,
           "inclinationDeg": 64.19,
           "azimuthDeg": 103.16,
@@ -12976,9 +13528,9 @@
           ]
         },
         {
-          "mdFt": 9450.0,
+          "mdFt": 9450,
           "tvdFt": 7766.28,
-          "inclinationDeg": 65.0,
+          "inclinationDeg": 65,
           "azimuthDeg": 102.72,
           "utm": [
             335519.756,
@@ -12992,7 +13544,7 @@
           ]
         },
         {
-          "mdFt": 9475.0,
+          "mdFt": 9475,
           "tvdFt": 7776.74,
           "inclinationDeg": 65.55,
           "azimuthDeg": 102.47,
@@ -13008,7 +13560,7 @@
           ]
         },
         {
-          "mdFt": 9500.0,
+          "mdFt": 9500,
           "tvdFt": 7786.97,
           "inclinationDeg": 66.15,
           "azimuthDeg": 102.35,
@@ -13024,7 +13576,7 @@
           ]
         },
         {
-          "mdFt": 9525.0,
+          "mdFt": 9525,
           "tvdFt": 7796.97,
           "inclinationDeg": 66.7,
           "azimuthDeg": 102.36,
@@ -13040,7 +13592,7 @@
           ]
         },
         {
-          "mdFt": 9550.0,
+          "mdFt": 9550,
           "tvdFt": 7806.78,
           "inclinationDeg": 67.05,
           "azimuthDeg": 103.05,
@@ -13056,7 +13608,7 @@
           ]
         },
         {
-          "mdFt": 9575.0,
+          "mdFt": 9575,
           "tvdFt": 7816.53,
           "inclinationDeg": 67.06,
           "azimuthDeg": 103.89,
@@ -13072,7 +13624,7 @@
           ]
         },
         {
-          "mdFt": 9600.0,
+          "mdFt": 9600,
           "tvdFt": 7826.3,
           "inclinationDeg": 66.91,
           "azimuthDeg": 104.58,
@@ -13088,7 +13640,7 @@
           ]
         },
         {
-          "mdFt": 9625.0,
+          "mdFt": 9625,
           "tvdFt": 7836.05,
           "inclinationDeg": 67.18,
           "azimuthDeg": 104.66,
@@ -13104,7 +13656,7 @@
           ]
         },
         {
-          "mdFt": 9650.0,
+          "mdFt": 9650,
           "tvdFt": 7845.92,
           "inclinationDeg": 66.34,
           "azimuthDeg": 104.5,
@@ -13120,7 +13672,7 @@
           ]
         },
         {
-          "mdFt": 9675.0,
+          "mdFt": 9675,
           "tvdFt": 7856.33,
           "inclinationDeg": 64.43,
           "azimuthDeg": 104.51,
@@ -13136,7 +13688,7 @@
           ]
         },
         {
-          "mdFt": 9700.0,
+          "mdFt": 9700,
           "tvdFt": 7867.14,
           "inclinationDeg": 64.34,
           "azimuthDeg": 104.42,
@@ -13152,7 +13704,7 @@
           ]
         },
         {
-          "mdFt": 9725.0,
+          "mdFt": 9725,
           "tvdFt": 7877.96,
           "inclinationDeg": 64.36,
           "azimuthDeg": 104.41,
@@ -13168,7 +13720,7 @@
           ]
         },
         {
-          "mdFt": 9750.0,
+          "mdFt": 9750,
           "tvdFt": 7888.74,
           "inclinationDeg": 64.57,
           "azimuthDeg": 104.24,
@@ -13184,7 +13736,7 @@
           ]
         },
         {
-          "mdFt": 9775.0,
+          "mdFt": 9775,
           "tvdFt": 7899.27,
           "inclinationDeg": 65.6,
           "azimuthDeg": 103.44,
@@ -13200,7 +13752,7 @@
           ]
         },
         {
-          "mdFt": 9800.0,
+          "mdFt": 9800,
           "tvdFt": 7909.47,
           "inclinationDeg": 66.22,
           "azimuthDeg": 102.9,
@@ -13216,7 +13768,7 @@
           ]
         },
         {
-          "mdFt": 9825.0,
+          "mdFt": 9825,
           "tvdFt": 7919.49,
           "inclinationDeg": 66.54,
           "azimuthDeg": 102.64,
@@ -13232,7 +13784,7 @@
           ]
         },
         {
-          "mdFt": 9850.0,
+          "mdFt": 9850,
           "tvdFt": 7929.5,
           "inclinationDeg": 66.27,
           "azimuthDeg": 102.53,
@@ -13248,7 +13800,7 @@
           ]
         },
         {
-          "mdFt": 9875.0,
+          "mdFt": 9875,
           "tvdFt": 7939.53,
           "inclinationDeg": 66.4,
           "azimuthDeg": 102.35,
@@ -13264,7 +13816,7 @@
           ]
         },
         {
-          "mdFt": 9900.0,
+          "mdFt": 9900,
           "tvdFt": 7949.5,
           "inclinationDeg": 66.63,
           "azimuthDeg": 102.61,
@@ -13280,7 +13832,7 @@
           ]
         },
         {
-          "mdFt": 9925.0,
+          "mdFt": 9925,
           "tvdFt": 7959.31,
           "inclinationDeg": 67.16,
           "azimuthDeg": 102.62,
@@ -13296,7 +13848,7 @@
           ]
         },
         {
-          "mdFt": 9950.0,
+          "mdFt": 9950,
           "tvdFt": 7969.04,
           "inclinationDeg": 67.03,
           "azimuthDeg": 102.45,
@@ -13312,7 +13864,7 @@
           ]
         },
         {
-          "mdFt": 9975.0,
+          "mdFt": 9975,
           "tvdFt": 7978.74,
           "inclinationDeg": 67.29,
           "azimuthDeg": 102.55,
@@ -13328,7 +13880,7 @@
           ]
         },
         {
-          "mdFt": 10000.0,
+          "mdFt": 10000,
           "tvdFt": 7988.42,
           "inclinationDeg": 67.15,
           "azimuthDeg": 102.71,
@@ -13344,7 +13896,7 @@
           ]
         },
         {
-          "mdFt": 10025.0,
+          "mdFt": 10025,
           "tvdFt": 7998.21,
           "inclinationDeg": 66.74,
           "azimuthDeg": 102.64,
@@ -13360,7 +13912,7 @@
           ]
         },
         {
-          "mdFt": 10050.0,
+          "mdFt": 10050,
           "tvdFt": 8008.18,
           "inclinationDeg": 66.27,
           "azimuthDeg": 102.67,
@@ -13376,7 +13928,7 @@
           ]
         },
         {
-          "mdFt": 10075.0,
+          "mdFt": 10075,
           "tvdFt": 8018.23,
           "inclinationDeg": 66.32,
           "azimuthDeg": 102.31,
@@ -13392,7 +13944,7 @@
           ]
         },
         {
-          "mdFt": 10100.0,
+          "mdFt": 10100,
           "tvdFt": 8028.29,
           "inclinationDeg": 66.19,
           "azimuthDeg": 101.72,
@@ -13408,7 +13960,7 @@
           ]
         },
         {
-          "mdFt": 10125.0,
+          "mdFt": 10125,
           "tvdFt": 8038.24,
           "inclinationDeg": 66.92,
           "azimuthDeg": 101.69,
@@ -13424,7 +13976,7 @@
           ]
         },
         {
-          "mdFt": 10150.0,
+          "mdFt": 10150,
           "tvdFt": 8048.03,
           "inclinationDeg": 66.97,
           "azimuthDeg": 101.68,
@@ -13440,7 +13992,7 @@
           ]
         },
         {
-          "mdFt": 10175.0,
+          "mdFt": 10175,
           "tvdFt": 8057.92,
           "inclinationDeg": 66.45,
           "azimuthDeg": 101.2,
@@ -13456,9 +14008,9 @@
           ]
         },
         {
-          "mdFt": 10200.0,
+          "mdFt": 10200,
           "tvdFt": 8067.99,
-          "inclinationDeg": 66.0,
+          "inclinationDeg": 66,
           "azimuthDeg": 101.05,
           "utm": [
             335723.677,
@@ -13472,7 +14024,7 @@
           ]
         },
         {
-          "mdFt": 10225.0,
+          "mdFt": 10225,
           "tvdFt": 8078.27,
           "inclinationDeg": 65.46,
           "azimuthDeg": 100.56,
@@ -13488,7 +14040,7 @@
           ]
         },
         {
-          "mdFt": 10250.0,
+          "mdFt": 10250,
           "tvdFt": 8088.79,
           "inclinationDeg": 64.76,
           "azimuthDeg": 100.36,
@@ -13504,7 +14056,7 @@
           ]
         },
         {
-          "mdFt": 10275.0,
+          "mdFt": 10275,
           "tvdFt": 8099.5,
           "inclinationDeg": 64.5,
           "azimuthDeg": 99.98,
@@ -13520,7 +14072,7 @@
           ]
         },
         {
-          "mdFt": 10300.0,
+          "mdFt": 10300,
           "tvdFt": 8110.34,
           "inclinationDeg": 64.14,
           "azimuthDeg": 100.05,
@@ -13536,7 +14088,7 @@
           ]
         },
         {
-          "mdFt": 10325.0,
+          "mdFt": 10325,
           "tvdFt": 8121.35,
           "inclinationDeg": 63.6,
           "azimuthDeg": 100.1,
@@ -13552,7 +14104,7 @@
           ]
         },
         {
-          "mdFt": 10350.0,
+          "mdFt": 10350,
           "tvdFt": 8132.31,
           "inclinationDeg": 64.38,
           "azimuthDeg": 100.13,
@@ -13568,7 +14120,7 @@
           ]
         },
         {
-          "mdFt": 10375.0,
+          "mdFt": 10375,
           "tvdFt": 8143.11,
           "inclinationDeg": 64.42,
           "azimuthDeg": 99.9,
@@ -13584,7 +14136,7 @@
           ]
         },
         {
-          "mdFt": 10400.0,
+          "mdFt": 10400,
           "tvdFt": 8153.82,
           "inclinationDeg": 64.85,
           "azimuthDeg": 99.61,
@@ -13600,7 +14152,7 @@
           ]
         },
         {
-          "mdFt": 10417.0,
+          "mdFt": 10417,
           "tvdFt": 8161.11,
           "inclinationDeg": 64.36,
           "azimuthDeg": 102.52,
@@ -13616,7 +14168,7 @@
           ]
         },
         {
-          "mdFt": 10512.0,
+          "mdFt": 10512,
           "tvdFt": 8202.89,
           "inclinationDeg": 63.47,
           "azimuthDeg": 102.65,
@@ -13632,7 +14184,7 @@
           ]
         },
         {
-          "mdFt": 10607.0,
+          "mdFt": 10607,
           "tvdFt": 8245.63,
           "inclinationDeg": 63.06,
           "azimuthDeg": 105.22,
@@ -13680,7 +14232,7 @@
           ]
         },
         {
-          "mdFt": 10703.0,
+          "mdFt": 10703,
           "tvdFt": 8287.88,
           "inclinationDeg": 64.72,
           "azimuthDeg": 103.54,
@@ -13696,7 +14248,7 @@
           ]
         },
         {
-          "mdFt": 10798.0,
+          "mdFt": 10798,
           "tvdFt": 8328.21,
           "inclinationDeg": 65.03,
           "azimuthDeg": 103.34,
@@ -13712,7 +14264,7 @@
           ]
         },
         {
-          "mdFt": 10862.0,
+          "mdFt": 10862,
           "tvdFt": 8355.3,
           "inclinationDeg": 64.9,
           "azimuthDeg": 102.17,
@@ -13728,7 +14280,7 @@
           ]
         },
         {
-          "mdFt": 10947.0,
+          "mdFt": 10947,
           "tvdFt": 8391.36,
           "inclinationDeg": 64.9,
           "azimuthDeg": 102.17,
@@ -13747,11 +14299,11 @@
       "summary": {
         "pointCount": 428,
         "mdFt": {
-          "min": 0.0,
-          "max": 10947.0
+          "min": 0,
+          "max": 10947
         },
         "tvdFt": {
-          "min": 0.0,
+          "min": 0,
           "max": 8391.36
         },
         "sceneBounds": {

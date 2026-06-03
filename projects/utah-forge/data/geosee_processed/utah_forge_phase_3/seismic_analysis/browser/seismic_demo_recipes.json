@@ -18,6 +18,37 @@
         "productKind": "poststack-time-migration",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "3d",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "3D placement uses source geometry and navigation envelope; control-point validation is still required."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -14.78013,
@@ -31,12 +62,46 @@
             89,
             1057
           ],
+          "sceneBounds": {
+            "min": [
+              -12187.449999999953,
+              -12692.299999999814,
+              -6200
+            ],
+            "max": [
+              54.65000000002328,
+              -8059.5,
+              1800
+            ]
+          },
           "sampleDomain": {
             "kind": "time",
             "unit": "ms",
             "min": 0,
             "max": 4000,
             "verticalScaleMPerUnit": 2
+          },
+          "verticalReference": {
+            "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+            "sourceDatumM": 1800,
+            "referenceDatumM": 1800,
+            "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+            "sourceSampleUnit": "ms",
+            "sceneZUnit": "m",
+            "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+            "domainKind": "time",
+            "calibration": {
+              "source": "FORGE report calibration point near well 58-32",
+              "depthFt": 3200,
+              "depthM": 975,
+              "depthReference": "below surface / report calibration point",
+              "expectedDepthConversionErrorM": 20
+            }
+          },
+          "valueEncoding": {
+            "storedTextureEncoding": "uint8-normalized-p02-p98",
+            "sourceValueMeaning": "processed seismic amplitude",
+            "displayUnit": "normalized amplitude"
           },
           "amplitudeStats": {
             "min": -14.78013,
@@ -55,6 +120,37 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "3d",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "3D placement uses source geometry and navigation envelope; control-point validation is still required."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -6.4774,
@@ -68,12 +164,46 @@
             116,
             615
           ],
+          "sceneBounds": {
+            "min": [
+              -12187.449999999953,
+              -12692.299999999814,
+              -3200
+            ],
+            "max": [
+              54.65000000002328,
+              -8059.5,
+              1800
+            ]
+          },
           "sampleDomain": {
             "kind": "depth",
             "unit": "m",
             "min": 0,
             "max": 5000,
             "verticalScaleMPerUnit": 1
+          },
+          "verticalReference": {
+            "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+            "sourceDatumM": 1800,
+            "referenceDatumM": 1800,
+            "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+            "sourceSampleUnit": "m",
+            "sceneZUnit": "m",
+            "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+            "domainKind": "depth",
+            "calibration": {
+              "source": "FORGE report calibration point near well 58-32",
+              "depthFt": 3200,
+              "depthM": 975,
+              "depthReference": "below surface / report calibration point",
+              "expectedDepthConversionErrorM": 20
+            }
+          },
+          "valueEncoding": {
+            "storedTextureEncoding": "uint8-normalized-p02-p98",
+            "sourceValueMeaning": "processed seismic amplitude",
+            "displayUnit": "normalized amplitude"
           },
           "amplitudeStats": {
             "min": -6.4774,
@@ -92,6 +222,37 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "3d",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "3D placement uses source geometry and navigation envelope; control-point validation is still required."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -107.647232,
@@ -105,12 +266,46 @@
             112,
             666
           ],
+          "sceneBounds": {
+            "min": [
+              -12187.449999999953,
+              -12692.299999999814,
+              -6200
+            ],
+            "max": [
+              54.65000000002328,
+              -8059.5,
+              1800
+            ]
+          },
           "sampleDomain": {
             "kind": "time",
             "unit": "ms",
             "min": 0,
             "max": 4000,
             "verticalScaleMPerUnit": 2
+          },
+          "verticalReference": {
+            "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+            "sourceDatumM": 1800,
+            "referenceDatumM": 1800,
+            "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+            "sourceSampleUnit": "ms",
+            "sceneZUnit": "m",
+            "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+            "domainKind": "time",
+            "calibration": {
+              "source": "FORGE report calibration point near well 58-32",
+              "depthFt": 3200,
+              "depthM": 975,
+              "depthReference": "below surface / report calibration point",
+              "expectedDepthConversionErrorM": 20
+            }
+          },
+          "valueEncoding": {
+            "storedTextureEncoding": "uint8-normalized-p02-p98",
+            "sourceValueMeaning": "processed seismic amplitude",
+            "displayUnit": "normalized amplitude"
           },
           "amplitudeStats": {
             "min": -107.647232,
@@ -129,6 +324,41 @@
         "productKind": "velocity",
         "domainKind": "velocity-time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "3d",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "3D placement uses source geometry and navigation envelope; control-point validation is still required."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "velocity-time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "interval velocity",
+          "displayUnit": "m/s",
+          "displayRangeMPerS": [
+            2000,
+            5000
+          ]
+        },
         "sourceSubmission": "GDR 1015",
         "amplitudeStats": {
           "min": 1594.0625,
@@ -142,12 +372,50 @@
             19,
             201
           ],
+          "sceneBounds": {
+            "min": [
+              -12187.449999999953,
+              -12692.299999999814,
+              -6200
+            ],
+            "max": [
+              54.65000000002328,
+              -8059.5,
+              1800
+            ]
+          },
           "sampleDomain": {
             "kind": "velocity-time",
             "unit": "ms",
             "min": 0,
             "max": 4000,
             "verticalScaleMPerUnit": 2
+          },
+          "verticalReference": {
+            "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+            "sourceDatumM": 1800,
+            "referenceDatumM": 1800,
+            "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+            "sourceSampleUnit": "ms",
+            "sceneZUnit": "m",
+            "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+            "domainKind": "velocity-time",
+            "calibration": {
+              "source": "FORGE report calibration point near well 58-32",
+              "depthFt": 3200,
+              "depthM": 975,
+              "depthReference": "below surface / report calibration point",
+              "expectedDepthConversionErrorM": 20
+            }
+          },
+          "valueEncoding": {
+            "storedTextureEncoding": "uint8-normalized-p02-p98",
+            "sourceValueMeaning": "interval velocity",
+            "displayUnit": "m/s",
+            "displayRangeMPerS": [
+              2000,
+              5000
+            ]
           },
           "amplitudeStats": {
             "min": 1594.0625,
@@ -168,6 +436,37 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "301",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -3.50237,
@@ -185,6 +484,37 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "302",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -5.843673,
@@ -202,6 +532,43 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l5",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -2.197502,
@@ -219,6 +586,43 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l11",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -2.356447,
@@ -238,6 +642,37 @@
         "productKind": "poststack-time-migration",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "3d",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "3D placement uses source geometry and navigation envelope; control-point validation is still required."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -14.78013,
@@ -251,12 +686,46 @@
             89,
             1057
           ],
+          "sceneBounds": {
+            "min": [
+              -12187.449999999953,
+              -12692.299999999814,
+              -6200
+            ],
+            "max": [
+              54.65000000002328,
+              -8059.5,
+              1800
+            ]
+          },
           "sampleDomain": {
             "kind": "time",
             "unit": "ms",
             "min": 0,
             "max": 4000,
             "verticalScaleMPerUnit": 2
+          },
+          "verticalReference": {
+            "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+            "sourceDatumM": 1800,
+            "referenceDatumM": 1800,
+            "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+            "sourceSampleUnit": "ms",
+            "sceneZUnit": "m",
+            "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+            "domainKind": "time",
+            "calibration": {
+              "source": "FORGE report calibration point near well 58-32",
+              "depthFt": 3200,
+              "depthM": 975,
+              "depthReference": "below surface / report calibration point",
+              "expectedDepthConversionErrorM": 20
+            }
+          },
+          "valueEncoding": {
+            "storedTextureEncoding": "uint8-normalized-p02-p98",
+            "sourceValueMeaning": "processed seismic amplitude",
+            "displayUnit": "normalized amplitude"
           },
           "amplitudeStats": {
             "min": -14.78013,
@@ -275,6 +744,37 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "3d",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "3D placement uses source geometry and navigation envelope; control-point validation is still required."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -6.4774,
@@ -288,12 +788,46 @@
             116,
             615
           ],
+          "sceneBounds": {
+            "min": [
+              -12187.449999999953,
+              -12692.299999999814,
+              -3200
+            ],
+            "max": [
+              54.65000000002328,
+              -8059.5,
+              1800
+            ]
+          },
           "sampleDomain": {
             "kind": "depth",
             "unit": "m",
             "min": 0,
             "max": 5000,
             "verticalScaleMPerUnit": 1
+          },
+          "verticalReference": {
+            "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+            "sourceDatumM": 1800,
+            "referenceDatumM": 1800,
+            "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+            "sourceSampleUnit": "m",
+            "sceneZUnit": "m",
+            "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+            "domainKind": "depth",
+            "calibration": {
+              "source": "FORGE report calibration point near well 58-32",
+              "depthFt": 3200,
+              "depthM": 975,
+              "depthReference": "below surface / report calibration point",
+              "expectedDepthConversionErrorM": 20
+            }
+          },
+          "valueEncoding": {
+            "storedTextureEncoding": "uint8-normalized-p02-p98",
+            "sourceValueMeaning": "processed seismic amplitude",
+            "displayUnit": "normalized amplitude"
           },
           "amplitudeStats": {
             "min": -6.4774,
@@ -312,6 +846,37 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "3d",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "3D placement uses source geometry and navigation envelope; control-point validation is still required."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -107.647232,
@@ -325,12 +890,46 @@
             112,
             666
           ],
+          "sceneBounds": {
+            "min": [
+              -12187.449999999953,
+              -12692.299999999814,
+              -6200
+            ],
+            "max": [
+              54.65000000002328,
+              -8059.5,
+              1800
+            ]
+          },
           "sampleDomain": {
             "kind": "time",
             "unit": "ms",
             "min": 0,
             "max": 4000,
             "verticalScaleMPerUnit": 2
+          },
+          "verticalReference": {
+            "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+            "sourceDatumM": 1800,
+            "referenceDatumM": 1800,
+            "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+            "sourceSampleUnit": "ms",
+            "sceneZUnit": "m",
+            "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+            "domainKind": "time",
+            "calibration": {
+              "source": "FORGE report calibration point near well 58-32",
+              "depthFt": 3200,
+              "depthM": 975,
+              "depthReference": "below surface / report calibration point",
+              "expectedDepthConversionErrorM": 20
+            }
+          },
+          "valueEncoding": {
+            "storedTextureEncoding": "uint8-normalized-p02-p98",
+            "sourceValueMeaning": "processed seismic amplitude",
+            "displayUnit": "normalized amplitude"
           },
           "amplitudeStats": {
             "min": -107.647232,
@@ -349,6 +948,41 @@
         "productKind": "velocity",
         "domainKind": "velocity-time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "3d",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "3D placement uses source geometry and navigation envelope; control-point validation is still required."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "velocity-time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "interval velocity",
+          "displayUnit": "m/s",
+          "displayRangeMPerS": [
+            2000,
+            5000
+          ]
+        },
         "sourceSubmission": "GDR 1015",
         "amplitudeStats": {
           "min": 1594.0625,
@@ -362,12 +996,50 @@
             19,
             201
           ],
+          "sceneBounds": {
+            "min": [
+              -12187.449999999953,
+              -12692.299999999814,
+              -6200
+            ],
+            "max": [
+              54.65000000002328,
+              -8059.5,
+              1800
+            ]
+          },
           "sampleDomain": {
             "kind": "velocity-time",
             "unit": "ms",
             "min": 0,
             "max": 4000,
             "verticalScaleMPerUnit": 2
+          },
+          "verticalReference": {
+            "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+            "sourceDatumM": 1800,
+            "referenceDatumM": 1800,
+            "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+            "sourceSampleUnit": "ms",
+            "sceneZUnit": "m",
+            "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+            "domainKind": "velocity-time",
+            "calibration": {
+              "source": "FORGE report calibration point near well 58-32",
+              "depthFt": 3200,
+              "depthM": 975,
+              "depthReference": "below surface / report calibration point",
+              "expectedDepthConversionErrorM": 20
+            }
+          },
+          "valueEncoding": {
+            "storedTextureEncoding": "uint8-normalized-p02-p98",
+            "sourceValueMeaning": "interval velocity",
+            "displayUnit": "m/s",
+            "displayRangeMPerS": [
+              2000,
+              5000
+            ]
           },
           "amplitudeStats": {
             "min": 1594.0625,
@@ -386,6 +1058,37 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "301",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -3.50237,
@@ -403,6 +1106,37 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "301",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -3.931309,
@@ -420,6 +1154,37 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "301",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1015",
         "amplitudeStats": {
           "min": -5.997807,
@@ -437,6 +1202,37 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "302",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -5.843673,
@@ -454,6 +1250,37 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "302",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -7.153614,
@@ -471,6 +1298,43 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l11",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -2.356447,
@@ -488,6 +1352,43 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l11",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -4.691314,
@@ -505,6 +1406,43 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l11",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -4.127192,
@@ -522,6 +1460,43 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l5",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -2.197502,
@@ -539,6 +1514,43 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l5",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -4.272712,
@@ -556,6 +1568,43 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l5",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -3.39759,
@@ -573,6 +1622,43 @@
         "productKind": "psdm",
         "domainKind": "depth",
         "domainUnit": "m",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l5",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "m",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "depth",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -6.396832,
@@ -590,6 +1676,37 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "301",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -13.865402,
@@ -607,6 +1724,37 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "301",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -19.764511,
@@ -624,6 +1772,37 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "301",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -12.068985,
@@ -641,6 +1820,37 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 2100,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "302",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 2100,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -13.959867,
@@ -658,6 +1868,37 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 2100,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "302",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 2100,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -22.978897,
@@ -675,6 +1916,37 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "302",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -15.356203,
@@ -692,6 +1964,43 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l11",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -11.433752,
@@ -709,6 +2018,43 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l11",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -13.130173,
@@ -726,6 +2072,43 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l11",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -12.596266,
@@ -743,6 +2126,43 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l5",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -6.288277,
@@ -760,6 +2180,43 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l5",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -15.296298,
@@ -777,6 +2234,43 @@
         "productKind": "pstm",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l5",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": -4.665257,
@@ -794,6 +2288,37 @@
         "productKind": "stack",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "301",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1015",
         "amplitudeStats": {
           "min": -6.635401,
@@ -811,6 +2336,37 @@
         "productKind": "stack",
         "domainKind": "time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "302",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "processed seismic amplitude",
+          "displayUnit": "normalized amplitude"
+        },
         "sourceSubmission": "GDR 1015",
         "amplitudeStats": {
           "min": -8.723717,
@@ -828,6 +2384,41 @@
         "productKind": "velocity",
         "domainKind": "velocity-time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "301",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "velocity-time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "interval velocity",
+          "displayUnit": "m/s",
+          "displayRangeMPerS": [
+            2000,
+            5000
+          ]
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": 1080.004395,
@@ -845,6 +2436,41 @@
         "productKind": "velocity",
         "domainKind": "velocity-time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "delivered",
+          "placementAccuracy": "unknown",
+          "canClaimPreciseRegistration": false,
+          "lineId": "302",
+          "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
+          "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "velocity-time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "interval velocity",
+          "displayUnit": "m/s",
+          "displayRangeMPerS": [
+            2000,
+            5000
+          ]
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": 1826.396973,
@@ -862,6 +2488,47 @@
         "productKind": "velocity",
         "domainKind": "velocity-time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l11",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "velocity-time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "interval velocity",
+          "displayUnit": "m/s",
+          "displayRangeMPerS": [
+            2000,
+            5000
+          ]
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": 2436.294189,
@@ -879,6 +2546,47 @@
         "productKind": "velocity",
         "domainKind": "velocity-time",
         "domainUnit": "ms",
+        "datumM": 1800,
+        "navigationPlacement": {
+          "navigationSource": "fallback",
+          "placementAccuracy": "approximate",
+          "canClaimPreciseRegistration": false,
+          "lineId": "legacy-l5",
+          "statusLabel": "Approximate legacy line placement; precise registration not validated.",
+          "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+          "validationPath": [
+            "ingest delivered navigation if available",
+            "otherwise georeference against report maps or control points",
+            "store residual error",
+            "promote to validated only when residual is within accepted tolerance"
+          ]
+        },
+        "verticalReference": {
+          "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
+          "sourceDatumM": 1800,
+          "referenceDatumM": 1800,
+          "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
+          "sourceSampleUnit": "ms",
+          "sceneZUnit": "m",
+          "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+          "domainKind": "velocity-time",
+          "calibration": {
+            "source": "FORGE report calibration point near well 58-32",
+            "depthFt": 3200,
+            "depthM": 975,
+            "depthReference": "below surface / report calibration point",
+            "expectedDepthConversionErrorM": 20
+          }
+        },
+        "valueEncoding": {
+          "storedTextureEncoding": "uint8-normalized-p02-p98",
+          "sourceValueMeaning": "interval velocity",
+          "displayUnit": "m/s",
+          "displayRangeMPerS": [
+            2000,
+            5000
+          ]
+        },
         "sourceSubmission": "GDR 1141",
         "amplitudeStats": {
           "min": 4952.574219,
@@ -968,7 +2676,7 @@
       "label": "2D Line Theatre",
       "rank": 3,
       "audience": "technical / investor",
-      "purpose": "Present one georeferenced section curtain at a time with comparison products and provenance.",
+      "purpose": "Present one section curtain at a time with comparison products, navigation provenance, and placement-status disclosure.",
       "productIds": [
         "gdr-1141-line-301-pdm-enh",
         "gdr-1141-line-302-psdm-enh",
@@ -2017,7 +3725,7 @@
       "label": "Legacy L5 / L11 theatre",
       "audienceMode": "technical",
       "rank": 11,
-      "summary": "Legacy lines L5 and L11 as georeferenced section curtains.",
+      "summary": "Legacy lines L5 and L11 as approximate reference section curtains.",
       "displayRecipeId": "2d-line-theatre",
       "productId": "gdr-1141-line-l5-psdm-enh",
       "visibleProductIds": [
@@ -2059,7 +3767,8 @@
       "caveats": [
         "public geothermal demo data",
         "processed seismic product",
-        "not a mineral resource estimate"
+        "not a mineral resource estimate",
+        "Approximate legacy line placement; precise registration is not validated."
       ]
     },
     {

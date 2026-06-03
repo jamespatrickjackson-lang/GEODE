@@ -125,6 +125,8 @@ def read_location_rows() -> dict[str, dict[str, Any]]:
             easting = finite_number(row.get("Easting (X)"))
             northing = finite_number(row.get("Northing (Y)"))
             elevation = finite_number(row.get("Elevation"))
+            latitude = finite_number(row.get("Latitude"))
+            longitude = finite_number(row.get("Longitude "))
             if easting is None or northing is None or elevation is None:
                 continue
             rows[point_id] = {
@@ -132,6 +134,8 @@ def read_location_rows() -> dict[str, dict[str, Any]]:
                 "easting_m": easting,
                 "northing_m": northing,
                 "elevation_m": elevation,
+                "latitude": latitude,
+                "longitude": longitude,
                 "featureCode": row.get("Feature Code", "").strip(),
                 "notes": row.get("Notes", "").strip(),
             }
@@ -144,6 +148,50 @@ def scene_point(easting_m: float, northing_m: float, elevation_m: float) -> list
         round(northing_m - SCENE_ORIGIN_UTM["northing_m"], 3),
         round(elevation_m - SCENE_ORIGIN_UTM["elevation_m"], 3),
     ]
+
+
+def source_location_record(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "sourceSubmission": SOURCES["locations"]["submission"],
+        "sourceFile": SOURCES["locations"]["label"],
+        "featureCode": row.get("featureCode", ""),
+        "notes": row.get("notes", ""),
+        "utm": [
+            round(row["easting_m"], 4),
+            round(row["northing_m"], 4),
+            round(row["elevation_m"], 4),
+        ],
+        "latLon": (
+            None
+            if row.get("latitude") is None or row.get("longitude") is None
+            else [round(row["latitude"], 8), round(row["longitude"], 8)]
+        ),
+        "scene": scene_point(row["easting_m"], row["northing_m"], row["elevation_m"]),
+    }
+
+
+def source_location_records(
+    locations: dict[str, dict[str, Any]], point_ids: list[str]
+) -> list[dict[str, Any]]:
+    return [
+        source_location_record(locations[point_id])
+        for point_id in point_ids
+        if point_id in locations
+    ]
+
+
+def trajectory_source_location(well: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": f"{well['id']}-collar-from-survey",
+        "sourceSubmission": well["source"],
+        "sourceFile": well["sourceFile"],
+        "featureCode": "WELL",
+        "notes": "Collar from public directional survey trajectory source.",
+        "utm": well["collarUtm"],
+        "latLon": None,
+        "scene": well["collarScene"],
+    }
 
 
 def trajectory_point(
@@ -286,6 +334,149 @@ def summarize(points: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def build_priority_registry(
+    locations: dict[str, dict[str, Any]], wells: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    wells_by_id = {well["id"]: well for well in wells}
+    rows_58 = source_location_records(
+        locations, ["58-32-WELL", "58-32-NEC", "58-32-NWC", "58-32-SEC", "58-32-SWC"]
+    )
+    rows_16a = source_location_records(
+        locations,
+        ["16A-32-WELL", "16A-32-NEC", "16A-32-NWC", "16A-32-SEC", "16A-32-SWC"],
+    )
+    rows_78b = source_location_records(
+        locations,
+        ["78B-32-WELL", "78B-32-NEC", "78B-32-NWC", "78B-32-SEC", "78B-32-SWC"],
+    )
+    bor_rows = source_location_records(locations, ["BOR1", "BOR2", "BOR3"])
+    return [
+        {
+            "id": "58-32",
+            "label": "58-32",
+            "displayLabel": "58-32: core characterization and seismic/geologic anchor",
+            "aliases": [],
+            "priority": 1,
+            "role": "core characterization and seismic/geologic anchor",
+            "demoUse": "calibration and geologic reference",
+            "sourceStatus": "source-location-available",
+            "renderStatus": "not-rendered",
+            "registrationStatus": "unverified",
+            "claimStatus": "claim-safe-source-location-only",
+            "linkedLayerId": None,
+            "sourceRecordIds": [row["id"] for row in rows_58],
+            "sourceLocation": rows_58[0] if rows_58 else None,
+            "sourcePadRecords": rows_58[1:],
+            "notes": "GDR 1358 provides well and pad location rows. No active trajectory is present, so this remains a source-location record only.",
+        },
+        {
+            "id": "16A(78)-32",
+            "label": "16A(78)-32",
+            "displayLabel": "16A (78)-32: primary injection/source well for stimulation and EM monitoring.",
+            "aliases": ["16A", "16A-32"],
+            "priority": 2,
+            "role": "primary injection/source well for stimulation and EM monitoring",
+            "demoUse": "injection/source well context",
+            "sourceStatus": "trajectory-and-source-location-available",
+            "renderStatus": "trajectory-rendered",
+            "registrationStatus": "unverified",
+            "claimStatus": "claim-safe-orientation",
+            "linkedLayerId": "utah-forge-phase3-demo-boreholes",
+            "sourceRecordIds": [row["id"] for row in rows_16a],
+            "sourceLocation": rows_16a[0] if rows_16a else None,
+            "sourcePadRecords": rows_16a[1:],
+            "notes": "Rendered from the existing public-source directional survey trajectory; GDR 1358 also provides well and pad location rows.",
+        },
+        {
+            "id": "78B-32",
+            "label": "78B-32",
+            "displayLabel": "78B-32: key observation well for borehole EM/VEMP measurements.",
+            "aliases": [],
+            "priority": 3,
+            "role": "key observation well for borehole EM/VEMP measurements",
+            "demoUse": "observation well context",
+            "sourceStatus": "source-location-available",
+            "renderStatus": "not-rendered",
+            "registrationStatus": "unverified",
+            "claimStatus": "claim-safe-source-location-only",
+            "linkedLayerId": None,
+            "sourceRecordIds": [row["id"] for row in rows_78b],
+            "sourceLocation": rows_78b[0] if rows_78b else None,
+            "sourcePadRecords": rows_78b[1:],
+            "notes": "GDR 1358 provides well and pad location rows. No active trajectory is present, so this remains a source-location record only.",
+        },
+        {
+            "id": "16B",
+            "label": "16B",
+            "displayLabel": "16B: production well, relevant to injection/production pair context.",
+            "aliases": ["16B(78)-32"],
+            "priority": 4,
+            "role": "production well, relevant to injection/production pair context",
+            "demoUse": "production well context",
+            "sourceStatus": "trajectory-source-available",
+            "renderStatus": "trajectory-rendered",
+            "registrationStatus": "unverified",
+            "claimStatus": "claim-safe-orientation",
+            "linkedLayerId": "utah-forge-phase3-demo-boreholes",
+            "sourceRecordIds": ["16B(78)-32 Final Survey Report.xlsx"],
+            "sourceLocation": trajectory_source_location(wells_by_id["16B(78)-32"]),
+            "notes": "Rendered through the existing 16B(78)-32 public-source directional survey trajectory. No matching GDR 1358 CSV row was found.",
+        },
+        {
+            "id": "Acord-1",
+            "label": "Acord-1",
+            "displayLabel": "Acord-1: supporting mapped reference well.",
+            "aliases": [],
+            "priority": 5,
+            "role": "supporting mapped reference well",
+            "demoUse": "mapped reference context",
+            "sourceStatus": "not-found-in-active-source",
+            "renderStatus": "not-rendered",
+            "registrationStatus": "unverified",
+            "claimStatus": "do-not-claim-geometry",
+            "linkedLayerId": None,
+            "sourceRecordIds": [],
+            "sourceLocation": None,
+            "notes": "No Acord-1 row was found in the active GDR 1358 well and seismic locations CSV or active borehole trajectory sources.",
+        },
+        {
+            "id": "FDST",
+            "label": "FDST / FORGE test drill site",
+            "displayLabel": "FDST/ FORGE test drill site: supporting mapped reference site.",
+            "aliases": ["FORGE test drill site"],
+            "priority": 6,
+            "role": "supporting mapped reference site",
+            "demoUse": "mapped reference site context",
+            "sourceStatus": "not-found-in-active-source",
+            "renderStatus": "not-rendered",
+            "registrationStatus": "unverified",
+            "claimStatus": "do-not-claim-geometry",
+            "linkedLayerId": None,
+            "sourceRecordIds": [],
+            "sourceLocation": None,
+            "notes": "No FDST or FORGE test drill site row was found in the active GDR 1358 well and seismic locations CSV or active borehole trajectory sources.",
+        },
+        {
+            "id": "unnamed-possible-seismic-monitoring-well",
+            "label": "Unnamed",
+            "displayLabel": "Unnamed: possible seismic monitoring well, low priority unless ID is recovered.",
+            "aliases": [],
+            "priority": 7,
+            "role": "possible seismic monitoring well",
+            "demoUse": "low-priority candidate pending recovered identifier",
+            "sourceStatus": "candidate-source-locations-available",
+            "renderStatus": "not-rendered",
+            "registrationStatus": "unverified",
+            "claimStatus": "do-not-claim-geometry",
+            "linkedLayerId": None,
+            "sourceRecordIds": [row["id"] for row in bor_rows],
+            "sourceLocation": None,
+            "sourceCandidates": bor_rows,
+            "notes": "GDR 1358 contains BOR1, BOR2, and BOR3 seismic feature rows, but no recovered well identifier is present. Keep as candidates only.",
+        },
+    ]
+
+
 def build_manifest() -> dict[str, Any]:
     report_16b = ensure_sources()
     locations = read_location_rows()
@@ -358,6 +549,7 @@ def build_manifest() -> dict[str, Any]:
             "orientationBlockVisible": True,
         },
         "orientationBlock": pad_block(locations),
+        "priorityRegistry": build_priority_registry(locations, wells),
         "wells": wells,
     }
 

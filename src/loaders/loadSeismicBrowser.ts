@@ -36,6 +36,16 @@ interface SeismicValueStats {
   mean?: number;
 }
 
+interface SeismicNavigationPlacement {
+  navigationSource: "delivered" | "digitized" | "fallback";
+  placementAccuracy: "validated" | "approximate" | "unknown";
+  canClaimPreciseRegistration: boolean;
+  lineId?: string;
+  statusLabel?: string;
+  reason?: string;
+  validationPath?: string[];
+}
+
 interface SeismicSectionLodSpec {
   width: number;
   height: number;
@@ -55,6 +65,9 @@ interface SeismicSectionSpec {
   sceneBounds?: SeismicBounds;
   path?: Vec3[];
   lods?: Partial<Record<SeismicLodTierName, SeismicSectionLodSpec>>;
+  verticalReference?: Record<string, unknown>;
+  valueEncoding?: Record<string, unknown>;
+  navigationPlacement?: SeismicNavigationPlacement;
 }
 
 interface SeismicVolumeLodSpec {
@@ -69,6 +82,8 @@ interface SeismicVolumeSpec {
   sampleDomain: SeismicSampleDomain;
   amplitudeStats?: SeismicValueStats;
   lods?: Partial<Record<SeismicLodTierName, SeismicVolumeLodSpec>>;
+  verticalReference?: Record<string, unknown>;
+  valueEncoding?: Record<string, unknown>;
 }
 
 interface SeismicProductSpec {
@@ -79,6 +94,10 @@ interface SeismicProductSpec {
   productKind: string;
   domainKind: string;
   domainUnit: string;
+  datumM?: number;
+  verticalReference?: Record<string, unknown>;
+  valueEncoding?: Record<string, unknown>;
+  navigationPlacement?: SeismicNavigationPlacement;
   amplitudeStats?: SeismicValueStats;
   sections: SeismicSectionSpec[];
   raymarchVolume?: SeismicVolumeSpec | null;
@@ -92,6 +111,8 @@ interface SeismicManifest {
     geojson?: string;
     sceneBounds?: SeismicBounds;
   };
+  verticalReference?: Record<string, unknown>;
+  valueEncoding?: Record<string, unknown>;
   products: SeismicProductSpec[];
 }
 
@@ -575,6 +596,10 @@ async function buildSectionMesh(
     seismicLodTier: tier,
     seismicSampleDomainUnit: section.sampleDomain.unit,
     seismicDatumM: section.datumM,
+    seismicVerticalReference: section.verticalReference,
+    seismicValueEncoding: section.valueEncoding ?? product.valueEncoding,
+    seismicNavigationPlacement:
+      section.navigationPlacement ?? product.navigationPlacement,
   };
   return mesh;
 }
@@ -855,6 +880,9 @@ async function buildRaymarchMesh(
     seismicVolumeBaseBounds: volume.sceneBounds,
     seismicVolumeCurrentBounds: volume.sceneBounds,
     seismicVolumeBaseSize: [size.x, size.y, size.z],
+    seismicVolumeVerticalReference:
+      volume.verticalReference ?? product.verticalReference,
+    seismicVolumeValueEncoding: volume.valueEncoding ?? product.valueEncoding,
     seismicVolumeDatumM:
       max[2] +
       volume.sampleDomain.min * volume.sampleDomain.verticalScaleMPerUnit,
@@ -976,6 +1004,10 @@ function productSummary(product: SeismicProductSpec) {
     productKind: product.productKind,
     domainKind: product.domainKind,
     domainUnit: product.domainUnit,
+    datumM: product.datumM,
+    navigationPlacement: product.navigationPlacement,
+    verticalReference: product.verticalReference,
+    valueEncoding: product.valueEncoding,
     amplitudeStats: product.amplitudeStats,
     raymarchVolumeStats: product.raymarchVolume?.amplitudeStats,
     raymarchCapable: !!product.raymarchVolume,
@@ -994,6 +1026,7 @@ async function buildSeismicProductGroup(
   productGroup.userData.seismicProductLabel = product.label;
   productGroup.userData.seismicProductSurveyKind = product.surveyKind;
   productGroup.userData.seismicProductLodTier = tier;
+  productGroup.userData.seismicNavigationPlacement = product.navigationPlacement;
 
   const sectionMeshes = await Promise.all(
     product.sections.map((section) =>
@@ -1054,6 +1087,8 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
   const resolveAsset = assetResolver(resolvedManifestUrl);
   const group = new THREE.Group();
   group.name = manifest.label;
+  group.userData.seismicVerticalReference = manifest.verticalReference;
+  group.userData.seismicValueEncoding = manifest.valueEncoding;
   const productsById = new Map(
     manifest.products.map((product) => [product.id, product] as const),
   );

@@ -64,23 +64,14 @@ export function topoImageUtmBoundsToSceneBounds({
   terrainSceneBounds: [number, number, number, number];
   imageUtmBounds: [number, number, number, number];
 }): [number, number, number, number] {
-  const [terrainMinX, terrainMinY, terrainMaxX, terrainMaxY] =
-    terrainUtmBounds;
-  const [sceneMinX, sceneMinY, sceneMaxX, sceneMaxY] = terrainSceneBounds;
+  const [terrainMinX, terrainMinY] = terrainUtmBounds;
+  const [sceneMinX, sceneMinY] = terrainSceneBounds;
   const [imageMinX, imageMinY, imageMaxX, imageMaxY] = imageUtmBounds;
-  const originX =
-    Math.abs(terrainMinX - sceneMinX) <= Math.abs(terrainMaxX - sceneMaxX)
-      ? terrainMinX - sceneMinX
-      : terrainMaxX - sceneMaxX;
-  const originY =
-    Math.abs(terrainMinY - sceneMinY) <= Math.abs(terrainMaxY - sceneMaxY)
-      ? terrainMinY - sceneMinY
-      : terrainMaxY - sceneMaxY;
   return [
-    imageMinX - originX,
-    imageMinY - originY,
-    imageMaxX - originX,
-    imageMaxY - originY,
+    imageMinX - (terrainMinX - sceneMinX),
+    imageMinY - (terrainMinY - sceneMinY),
+    imageMaxX - (terrainMinX - sceneMinX),
+    imageMaxY - (terrainMinY - sceneMinY),
   ];
 }
 
@@ -347,14 +338,9 @@ export class TopoSurfaceRuntime {
     });
   }
 
-  private sceneBoundsForImageUtmBounds(
-    terrainMesh: THREE.Mesh,
+  private terrainSceneBounds(
     handle: TerrainMaterialHandle,
-    imageUtmBounds: [number, number, number, number],
   ): [number, number, number, number] | null {
-    const terrainUtmBounds = terrainMesh.userData?.terrainUtmBounds as
-      | [number, number, number, number]
-      | undefined;
     const uniforms = handle.material.uniforms as
       | Record<string, { value: unknown }>
       | undefined;
@@ -364,10 +350,45 @@ export class TopoSurfaceRuntime {
     const sceneMax = uniforms?.uTerrainBoundsMax?.value as
       | THREE.Vector2
       | undefined;
-    if (!terrainUtmBounds || !sceneMin || !sceneMax) return null;
+    if (!sceneMin || !sceneMax) return null;
+    return [sceneMin.x, sceneMin.y, sceneMax.x, sceneMax.y];
+  }
+
+  private terrainMaterialContext(
+    terrainGroup: THREE.Group | undefined,
+  ): { terrainObject: THREE.Object3D; handle: TerrainMaterialHandle } | null {
+    const groupHandle = terrainGroup?.userData?.terrainHandle as
+      | TerrainMaterialHandle
+      | undefined;
+    if (terrainGroup && groupHandle) {
+      return { terrainObject: terrainGroup, handle: groupHandle };
+    }
+    let context:
+      | { terrainObject: THREE.Object3D; handle: TerrainMaterialHandle }
+      | null = null;
+    terrainGroup?.traverse((obj) => {
+      if (context) return;
+      const handle = (obj as THREE.Mesh).userData?.terrainHandle as
+        | TerrainMaterialHandle
+        | undefined;
+      if (handle) context = { terrainObject: obj, handle };
+    });
+    return context;
+  }
+
+  private sceneBoundsForImageUtmBounds(
+    terrainObject: THREE.Object3D,
+    handle: TerrainMaterialHandle,
+    imageUtmBounds: [number, number, number, number],
+  ): [number, number, number, number] | null {
+    const terrainUtmBounds = terrainObject.userData?.terrainUtmBounds as
+      | [number, number, number, number]
+      | undefined;
+    const terrainSceneBounds = this.terrainSceneBounds(handle);
+    if (!terrainUtmBounds || !terrainSceneBounds) return null;
     return topoImageUtmBoundsToSceneBounds({
       terrainUtmBounds,
-      terrainSceneBounds: [sceneMin.x, sceneMin.y, sceneMax.x, sceneMax.y],
+      terrainSceneBounds,
       imageUtmBounds,
     });
   }
@@ -420,24 +441,18 @@ export class TopoSurfaceRuntime {
     ) {
       return;
     }
-    terrainGroup?.traverse((obj) => {
-      const mesh = obj as THREE.Mesh;
-      const handle = mesh.userData?.terrainHandle as
-        | TerrainMaterialHandle
-        | undefined;
-      if (!handle) return;
-      const sceneBounds = this.sceneBoundsForImageUtmBounds(mesh, handle, [
-        imageMinX,
-        imageMinY,
-        imageMaxX,
-        imageMaxY,
-      ]);
-      if (!sceneBounds) return;
-      handle.setOrthoPhotoBounds(
-        [sceneBounds[0], sceneBounds[1]],
-        [sceneBounds[2], sceneBounds[3]],
-      );
-    });
+    const context = this.terrainMaterialContext(terrainGroup);
+    if (!context) return;
+    const sceneBounds = this.sceneBoundsForImageUtmBounds(
+      context.terrainObject,
+      context.handle,
+      [imageMinX, imageMinY, imageMaxX, imageMaxY],
+    );
+    if (!sceneBounds) return;
+    context.handle.setOrthoPhotoBounds(
+      [sceneBounds[0], sceneBounds[1]],
+      [sceneBounds[2], sceneBounds[3]],
+    );
   }
 
   private clearOrthoPhotoTexture(terrainGroup: THREE.Group | undefined): void {

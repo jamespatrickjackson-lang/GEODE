@@ -51,17 +51,33 @@
     "source": "SEG-P1/navigation-derived source basis, needs review",
     "scene": "GeoSee scene-local placement, needs review",
     "transformPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/navigation/seismic_navigation.geojson",
-    "notes": "Navigation and CRS fields are observed in the seismic manifest, but datum, fallback placement, and section/volume placement require human review before acceptance."
+    "notes": "Navigation and CRS fields are observed in the seismic manifest. Product vertical datum is parsed from SEG-Y text headers when present, with 1800 m ASL as the fallback/reference datum. Survey-grade navigation placement and 58-32 visual calibration still require review.",
+    "horizontalCrs": "EPSG:26912",
+    "verticalDatum": "product-specific SEG-Y datum; rendered as absolute scene elevation metres for depth products and display-derived vertical scale for time products",
+    "units": "m",
+    "coordinateBasis": "utm",
+    "origin": {
+      "easting_m": 341467.35,
+      "northing_m": 4273374.5,
+      "elevation_m": 0
+    },
+    "rotationDeg": 0,
+    "registrationStatus": "unverified"
   },
   "units": {
     "horizontal": null,
-    "vertical": null,
-    "scalar": "seismic amplitude or velocity depending on product, needs review",
-    "notes": "Products mix time, depth, velocity-time, and amplitude/velocity display domains. Product-specific units and disclosure require review."
+    "vertical": "absolute scene elevation metres; product sample values are converted with sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+    "scalar": "processed seismic amplitude or interval velocity depending on product",
+    "notes": "Products mix time, depth, velocity-time, and amplitude/velocity display domains. Product-specific datum, sample units, vertical transform, and value encoding are recorded in seismic_manifest.json."
   },
   "scalar": {
-    "transform": "amplitude/velocity display windowing, needs review",
-    "range": null,
+    "transform": "processed amplitudes and velocity products are stored as uint8 p02-p98 normalized textures; velocity legend display range is 2000-5000 m/s unless source metadata supersedes it",
+    "range": {
+      "velocityDisplayRangeMPerS": [
+        2000,
+        5000
+      ]
+    },
     "thresholds": null,
     "notes": "Environment and recipes include amplitude windows and colormaps, but this wrapper does not accept defaults."
   },
@@ -72,11 +88,21 @@
       "raymarchCapableProductCount": 4,
       "reportedSectionCount": 66,
       "observedDefaultProductIdInProjectMetadata": "gdr-1141-forge3d-ani-psdm-stack-unenh",
-      "observedEnvironmentProductId": "gdr-1015-forge3d-velo5d-float-01312018"
+      "observedEnvironmentProductId": "gdr-1015-forge3d-velo5d-float-01312018",
+      "verticalReference": {
+        "referenceDatumM": 1800,
+        "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
+        "calibration": {
+          "source": "FORGE report calibration point near well 58-32",
+          "depthFt": 3200,
+          "depthM": 975,
+          "expectedDepthConversionErrorM": 20
+        }
+      }
     },
     "downsampling": "Raymarch products include reduced volume dimensions; product-specific dimensions and encoding require review.",
     "masking": "Background removal/windowing varies by product or recipe and requires review.",
-    "notes": "Seismic is needed and underway, not parked. Default demo behavior and old-doc supersession remain unresolved."
+    "notes": "Seismic is needed and underway, not parked. Source-header datum parsing and value-encoding metadata are present; default demo behavior and 58-32 visual calibration remain unresolved."
   },
   "stats": {
     "counts": {
@@ -106,7 +132,7 @@
     "Older blocked/not-active seismic docs still need human supersession review.",
     "Engineering-grade interpretation requires qualified professional review; no seismic reflector is accepted here as a fault, target, mineralized structure, or resource estimate.",
     "Product filtering, raymarch/section selection, amplitude windows, colormaps, navigation display, and visual evidence remain incomplete.",
-    "No runtime, loader, page, visibility, rendering, prep, or data artifact behavior changed."
+    "58-32 visual calibration is pending because the active demo borehole layer does not include 58-32."
   ],
   "relatedLayers": [
     "utah-forge-phase3-seismic-browser"
@@ -121,11 +147,12 @@
       "How should current project metadata default product and environment product settings be reconciled?",
       "Which old seismic-blocking docs are superseded, historical, or still relevant?",
       "What visual evidence proves seismic raymarch/section display and MT co-rendering quality are acceptable?",
-      "What disclosure language is required for engineering-grade interpretation boundaries?"
+      "What disclosure language is required for engineering-grade interpretation boundaries?",
+      "What visual evidence confirms seismic panels, terrain, and boreholes line up in one elevation frame?"
     ],
     "acceptedBy": null,
     "acceptedAt": null,
     "receipt": null
   },
-  "notes": "Project-local wrapper only. It preserves seismic traceability and review questions without changing runtime behavior or accepting demo defaults."
+  "notes": "Project-local wrapper. It preserves seismic traceability, corrected vertical-reference metadata, and review questions without accepting demo defaults."
 }

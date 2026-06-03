@@ -28,6 +28,20 @@ Always at the project root. There is exactly one per project.
     "label": "NAD83 / UTM zone 10N"
   },
 
+  "registrationFrame": {
+    "horizontalCrs": "EPSG:26910",
+    "verticalDatum": "layer-specific",
+    "units": "m",
+    "coordinateBasis": "utm",
+    "origin": {
+      "easting_m": 602000,
+      "northing_m": 5820000,
+      "elevation_m": 1200
+    },
+    "rotationDeg": 0,
+    "registrationStatus": "unverified"
+  },
+
   "bounds": {
     "min": [592000, 5810000, 800],
     "max": [612000, 5830000, 1900]
@@ -160,14 +174,23 @@ Always at the project root. There is exactly one per project.
 |---|---|---|---|
 | `crs.code` | string | yes | EPSG code. Examples: `"EPSG:26910"` (UTM Zone 10N NAD83), `"EPSG:32612"` (UTM Zone 12N WGS84), `"EPSG:4326"` (WGS84 lat/lon). |
 | `crs.label` | string | no | Human-readable CRS name for display. |
+| `registrationFrame.horizontalCrs` | string | yes for imported geospatial projects | Canonical horizontal CRS for the GeoSee project frame. Source data must be transformed into this CRS before scene-origin subtraction. |
+| `registrationFrame.verticalDatum` | string | yes for imported geospatial projects | Project-level vertical reference summary. Layer-level vertical datums remain authoritative where products mix elevation, depth, model, or time domains. |
+| `registrationFrame.units` | string | yes for imported geospatial projects | Project-frame unit, normally `"m"`. |
+| `registrationFrame.coordinateBasis` | enum | yes for imported geospatial projects | One of `"utm"`, `"latlon"`, `"local-mesh"`, or `"model-origin"`. |
+| `registrationFrame.origin` | object | yes for imported geospatial projects | CRS coordinate that maps to scene origin, with `easting_m`, `northing_m`, and `elevation_m` keys when the project frame is metre-based. |
+| `registrationFrame.rotationDeg` | number | yes for imported geospatial projects | Rotation from source/model coordinates into the project frame. Use `0` only when no rotation is required or the source is already aligned. |
+| `registrationFrame.registrationStatus` | enum | yes for imported geospatial projects | `"unverified"` until control-point checks validate the horizontal and vertical registration; `"validated"` only after recorded evidence exists. |
 | `bounds.min` | [number, number, number] | yes | Minimum [easting, northing, elevation] of the project area in the project's CRS. |
 | `bounds.max` | [number, number, number] | yes | Maximum [easting, northing, elevation] of the project area in the project's CRS. |
 | `sceneOrigin` | [number, number, number] | yes | The CRS coordinate that maps to Three.js scene origin (0,0,0). Set once at project creation. Usually the centroid of `bounds`. |
 
-**Important:** all data in `data/` must already be in the project's CRS
-before ingestion. The tool does not reproject. If your data is in
-multiple CRSs, convert them to one (in QGIS or similar) before adding
-to the project.
+**Important:** imported source data must declare its source CRS before
+conversion. The import path must transform source coordinates into the project
+horizontal CRS, then subtract the scene origin. Direct source-coordinate minus
+scene-origin conversion is allowed only when the source CRS is explicitly the
+same as the project horizontal CRS and that fact is recorded in layer metadata.
+Horizontal registration and vertical datum status are tracked separately.
 
 ### Default camera
 
@@ -193,6 +216,20 @@ The `layers` array is the heart of the project. Each layer has:
 | `files` | object | yes | Map of role → file path (relative to project root). Role keys depend on `type`. |
 | `style` | object | yes | Per-type style configuration. See per-type style reference below. |
 | `metadata` | object | yes | Provenance fields. See `sources.json.md` for the canonical schema. |
+
+Each imported geospatial layer must include `metadata.crsRegistration` with:
+
+- `horizontalCrs`
+- `verticalDatum`
+- `units`
+- `coordinateBasis`
+- `origin`
+- `rotationDeg`
+- `registrationStatus`
+
+The only valid registration statuses are `"unverified"` and `"validated"`.
+User-facing accuracy labels must show review required unless status is
+`"validated"` and the layer has recorded control-point evidence.
 
 ### Per-type style reference
 

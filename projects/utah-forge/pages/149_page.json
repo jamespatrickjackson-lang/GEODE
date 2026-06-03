@@ -1,0 +1,94 @@
+{
+  "id": "149_page",
+  "title": "New page duplicate duplicate duplicate duplicate duplicate duplicate",
+  "camera": {
+    "position": [
+      406908.34654048545,
+      454912.04851642915,
+      124375.44832639728
+    ],
+    "target": [
+      22528,
+      32488,
+      1599
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 22.5
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      22528,
+      32488,
+      1599
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 144024210,
+    "orbitHeight": 122776,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": true,
+    "zoomDeltaFov": -29.5,
+    "zoomStartMs": 0,
+    "zoomEndMs": 7350,
+    "zoomCurve": "cinematic",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "cinematic",
+    "pathAwareBlend": false
+  },
+  "overlayLayout": {
+    "x": 0.032356770833333326,
+    "y": 0.0481555834378921,
+    "width": 0.27
+  },
+  "visibilityOverrides": {
+    "utah-forge-mt-resistivity-full-density": true,
+    "terrain": true,
+    "utah-forge-topo-graticule": false
+  },
+  "layerOverrides": {
+    "terrain": {
+      "opacity": 0
+    },
+    "utah-forge-mt-resistivity-full-density": {
+      "sectionIsoEnabled": false,
+      "sectionIsoLinesVisible": true,
+      "sectionIsoBandsVisible": true,
+      "sectionIsoTargetIds": {},
+      "sectionIsoMin": -2,
+      "sectionIsoMax": 4.5,
+      "sectionIsoLevelCount": 32,
+      "sectionIsoLineWidth": 2.6,
+      "sectionIsoLineStyle": "solid",
+      "sectionIsoBandOpacity": 0.32,
+      "sectionIsoFillOffset": 0,
+      "sectionIsoSourceOpacity": 0,
+      "scalarColorLow": "#2cc9ff",
+      "scalarColorMid": "#f8dd6d",
+      "scalarColorHigh": "#ff637a",
+      "scalarBlendMin": 0.98,
+      "scalarBlendMax": 0.99,
+      "scalarDisplayMin": 0.139879,
+      "scalarDisplayMax": 3.937122,
+      "scalarFocusMin": -2,
+      "scalarFocusMax": 1.79,
+      "scalarInclusionMode": "thresholded",
+      "scalarMidpoint": 0.5,
+      "scalarContrast": 1.05,
+      "scalarSurfaceMaskDepthM": 365
+    }
+  }
+}

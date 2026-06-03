@@ -188,6 +188,9 @@ interface SeismicLegendProductInfo {
   label: string;
   productKind?: string;
   domainKind?: string;
+  valueEncoding?: {
+    displayRangeMPerS?: [number, number];
+  };
   amplitudeStats?: {
     min?: number;
     max?: number;
@@ -210,6 +213,12 @@ function productInfo(
       (candidate as Record<string, unknown>).id === id,
   ) as Record<string, unknown> | undefined;
   const label = typeof product?.label === "string" ? product.label : id;
+  const valueEncoding =
+    product?.valueEncoding &&
+    typeof product.valueEncoding === "object" &&
+    !Array.isArray(product.valueEncoding)
+      ? (product.valueEncoding as SeismicLegendProductInfo["valueEncoding"])
+      : undefined;
   return {
     label: label
       .replace(/\bFORGE\s*3D\b/gi, "3D")
@@ -221,6 +230,7 @@ function productInfo(
       typeof product?.productKind === "string" ? product.productKind : undefined,
     domainKind:
       typeof product?.domainKind === "string" ? product.domainKind : undefined,
+    valueEncoding,
     amplitudeStats:
       product?.amplitudeStats &&
       typeof product.amplitudeStats === "object" &&
@@ -240,10 +250,22 @@ function seismicColormapFromStyle(
 
 function velocityValueLabel(
   stats: SeismicLegendProductInfo["amplitudeStats"],
+  valueEncoding: SeismicLegendProductInfo["valueEncoding"],
   normalized: number,
 ): string {
-  const min = typeof stats?.p02 === "number" ? stats.p02 : stats?.min;
-  const max = typeof stats?.p98 === "number" ? stats.p98 : stats?.max;
+  const displayRange = valueEncoding?.displayRangeMPerS;
+  const min =
+    Array.isArray(displayRange) && typeof displayRange[0] === "number"
+      ? displayRange[0]
+      : typeof stats?.p02 === "number"
+        ? stats.p02
+        : stats?.min;
+  const max =
+    Array.isArray(displayRange) && typeof displayRange[1] === "number"
+      ? displayRange[1]
+      : typeof stats?.p98 === "number"
+        ? stats.p98
+        : stats?.max;
   if (typeof min !== "number" || typeof max !== "number" || max <= min) {
     return normalized.toFixed(2);
   }
@@ -355,13 +377,25 @@ export function SeismicVolumeLegend({
   const maxPercent = ampMax * 100;
   const displayMode = style.seismicRenderMode === "raymarch" ? "Raymarch volume" : "Section slice";
   const lowTick = isVelocity
-    ? velocityValueLabel(selectedProductInfo.amplitudeStats, ampMin)
+    ? velocityValueLabel(
+        selectedProductInfo.amplitudeStats,
+        selectedProductInfo.valueEncoding,
+        ampMin,
+      )
     : ampMin.toFixed(2);
   const midTick = isVelocity
-    ? velocityValueLabel(selectedProductInfo.amplitudeStats, (ampMin + ampMax) / 2)
+    ? velocityValueLabel(
+        selectedProductInfo.amplitudeStats,
+        selectedProductInfo.valueEncoding,
+        (ampMin + ampMax) / 2,
+      )
     : ((ampMin + ampMax) / 2).toFixed(2);
   const highTick = isVelocity
-    ? velocityValueLabel(selectedProductInfo.amplitudeStats, ampMax)
+    ? velocityValueLabel(
+        selectedProductInfo.amplitudeStats,
+        selectedProductInfo.valueEncoding,
+        ampMax,
+      )
     : ampMax.toFixed(2);
 
   const patchStyle = (patch: Partial<EditableStyle>) => {

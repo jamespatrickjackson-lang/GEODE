@@ -8,6 +8,11 @@ import {
   renderPresetOptionsForEnvironment,
 } from "../pages/renderPresets";
 import {
+  mergeSceneProperties,
+  resolveEnvironmentForPage,
+} from "../pages/effective";
+import { pageSelectionHasLanded } from "./authoringTarget";
+import {
   EDITOR_PAGE_LIST_INDENT_X,
   EDITOR_PILL_TEXT_INSET_PX,
   FROSTED_HAIRLINE,
@@ -42,6 +47,7 @@ import type {
   Pose,
   PresentationPage,
   RenderPresetId,
+  SceneProperties,
   Vec3,
 } from "../pages/types";
 import type { SceneHandle } from "../scene";
@@ -827,16 +833,79 @@ interface GlobalToolPanelProps {
   onDevModeChange?: (enabled: boolean) => void;
 }
 
+interface VisualStudioPanelProps extends GlobalToolPanelProps {
+  sceneHandle: SceneHandle;
+}
+
 export function VisualStudioPanel({
   accentColor = globalSettingsAccent,
-}: GlobalToolPanelProps) {
+  sceneHandle,
+}: VisualStudioPanelProps) {
   const {
     state,
-    selectPage,
+    canApplyLiveSceneEdits,
+    setEnvScene,
+    setPageField,
     setEnvRenderPreset,
     saveEnvCustomRenderPreset,
     updateSelectedEnvCustomRenderPreset,
   } = useEditor();
+  const { currentIndex, isTransitioning, targetIndex } = usePageController();
+  const currentPage =
+    state.selectedPageId && state.selectedPageId !== ENVIRONMENT_SENTINEL
+      ? (state.pages.find((page) => page.id === state.selectedPageId) ?? null)
+      : null;
+  const selectedPageIndex = currentPage
+    ? state.pages.findIndex((page) => page.id === currentPage.id)
+    : -1;
+  const selectedPageHasLanded = pageSelectionHasLanded({
+    selectedPageIndex,
+    currentIndex,
+    isTransitioning,
+    targetIndex,
+  });
+  const currentPageEnvironment = currentPage
+    ? resolveEnvironmentForPage(state.environment, state.pages, currentPage)
+    : state.environment;
+  const cinematicsScene: SceneProperties = currentPageEnvironment.scene ?? {};
+  const setCinematicsScene = useCallback(
+    (patch: Partial<SceneProperties>) => {
+      if (!currentPage) {
+        setEnvScene(patch);
+        return;
+      }
+      const sceneOverrides = mergeSceneProperties(
+        currentPage.sceneOverrides,
+        patch,
+      );
+      const nextPage: PresentationPage = { ...currentPage, sceneOverrides };
+      const nextPages = state.pages.map((page) =>
+        page.id === nextPage.id ? nextPage : page,
+      );
+      const nextPageEnvironment = resolveEnvironmentForPage(
+        state.environment,
+        nextPages,
+        nextPage,
+      );
+      if (selectedPageHasLanded && canApplyLiveSceneEdits()) {
+        sceneHandle.manager.applyEnvironment(nextPageEnvironment);
+        sceneHandle.manager.applyPageScene(nextPage);
+      }
+      setPageField(currentPage.id, {
+        sceneOverrides: mergeSceneProperties(currentPage.sceneOverrides, patch),
+      });
+    },
+    [
+      canApplyLiveSceneEdits,
+      currentPage,
+      sceneHandle,
+      selectedPageHasLanded,
+      setEnvScene,
+      setPageField,
+      state.environment,
+      state.pages,
+    ],
+  );
   const renderPresetOptions = renderPresetOptionsForEnvironment(
     state.environment,
   );
@@ -844,55 +913,55 @@ export function VisualStudioPanel({
     state.environment,
     state.environment.renderPreset,
   );
-  const activateGlobalSettings = useCallback(() => {
-    selectPage(ENVIRONMENT_SENTINEL);
-  }, [selectPage]);
 
   return (
-    <div
-      style={globalToolPanelBodyStyle}
-      onPointerDownCapture={activateGlobalSettings}
-    >
+    <div style={globalToolPanelBodyStyle}>
       <EnvironmentScenePanel
         title="Environment"
-        onActivate={activateGlobalSettings}
         accentColor={accentColor}
+        scene={cinematicsScene}
+        setScene={setCinematicsScene}
       />
       <EnvironmentScenePanel
         title="Lighting Studio"
         content="lighting"
-        onActivate={activateGlobalSettings}
         accentColor={accentColor}
+        scene={cinematicsScene}
+        setScene={setCinematicsScene}
       />
       <CameraSetupPanel
         title="Camera Studio"
-        onActivate={activateGlobalSettings}
         accentColor={accentColor}
+        scene={cinematicsScene}
+        setScene={setCinematicsScene}
         topSlot={
-          <RenderPresetContainer
-            title="Cinematic Render Preset"
-            label="Project preset"
-            value={state.environment.renderPreset ?? ""}
-            options={renderPresetOptions}
-            accentColor={accentColor}
-            emptyLabel="Current / Custom"
-            revertLabel="Revert to Current / Custom"
-            saveCustomLabel="Save Custom Preset"
-            updateCustomLabel="Update Selected Custom Preset"
-            showUpdateCustom={selectedProjectPresetIsCustom}
-            onSaveCustom={saveEnvCustomRenderPreset}
-            onUpdateCustom={updateSelectedEnvCustomRenderPreset}
-            onChange={(value) =>
-              setEnvRenderPreset(value ? (value as RenderPresetId) : null)
-            }
-          />
+          currentPage ? null : (
+            <RenderPresetContainer
+              title="Cinematic Render Preset"
+              label="Project preset"
+              value={state.environment.renderPreset ?? ""}
+              options={renderPresetOptions}
+              accentColor={accentColor}
+              emptyLabel="Current / Custom"
+              revertLabel="Revert to Current / Custom"
+              saveCustomLabel="Save Custom Preset"
+              updateCustomLabel="Update Selected Custom Preset"
+              showUpdateCustom={selectedProjectPresetIsCustom}
+              onSaveCustom={saveEnvCustomRenderPreset}
+              onUpdateCustom={updateSelectedEnvCustomRenderPreset}
+              onChange={(value) =>
+                setEnvRenderPreset(value ? (value as RenderPresetId) : null)
+              }
+            />
+          )
         }
       />
       <EnvironmentScenePanel
         title="Terrain grid"
         content="terrain"
-        onActivate={activateGlobalSettings}
         accentColor={accentColor}
+        scene={cinematicsScene}
+        setScene={setCinematicsScene}
       />
     </div>
   );

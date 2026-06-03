@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { theme } from "../styles/theme";
 import { useShell } from "../state/ShellContext";
 import { FrameLayer } from "./FrameLayer";
+import { buildColourResolver } from "./elements/RenderDispatcher";
 import { RulerHorizontal } from "./RulerHorizontal";
 import { RulerVertical } from "./RulerVertical";
 import { snapPoint } from "../../core/geometry/snap";
@@ -36,6 +37,7 @@ export function CanvasRoot() {
   const [smartGuides, setSmartGuides] = useState<SmartGuide[]>([]);
   const [marqueeRect, setMarqueeRect] = useState<Rect | null>(null);
   const spaceHeldRef = useRef(false);
+  const fittedPkgRef = useRef<string | null>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -48,6 +50,70 @@ export function CanvasRoot() {
       window.removeEventListener("keyup", onKey);
     };
   }, []);
+
+  // Fit the viewport to a set of frames so loaded parts are immediately
+  // visible. mode "all" frames an overview of every panel; mode "active"
+  // fills the view with the active frame.
+  const fitTo = useCallback(
+    (mode: "all" | "active") => {
+      if (!state.pkg) return;
+      const el = containerRef.current;
+      if (!el) return;
+      const vw = el.clientWidth;
+      const vh = el.clientHeight;
+      if (vw <= 0 || vh <= 0) return;
+      const frames =
+        mode === "active"
+          ? state.pkg.frames.filter((f) => f.id === state.activeFrameId)
+          : state.pkg.frames;
+      if (frames.length === 0) return;
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      for (const f of frames) {
+        minX = Math.min(minX, f.positionOnCanvas.x);
+        minY = Math.min(minY, f.positionOnCanvas.y);
+        maxX = Math.max(maxX, f.positionOnCanvas.x + f.size.w);
+        maxY = Math.max(maxY, f.positionOnCanvas.y + f.size.h);
+      }
+      const extentW = Math.max(1, maxX - minX);
+      const extentH = Math.max(1, maxY - minY);
+      const zoom = clamp(Math.min(vw / extentW, vh / extentH) * 0.9, 0.1, 8);
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+      const panX = vw / (2 * zoom) - centerX;
+      const panY = vh / (2 * zoom) - centerY;
+      dispatch({ type: "VIEWPORT_SET", patch: { zoom, panX, panY } });
+    },
+    [state.pkg, state.activeFrameId, dispatch],
+  );
+
+  // Auto-fit once per loaded package so the parts show up without manual
+  // pan/zoom. requestAnimationFrame waits for the container to have a size.
+  useEffect(() => {
+    const id = state.pkg?.manifest.id ?? null;
+    if (!id || fittedPkgRef.current === id) return;
+    const raf = requestAnimationFrame(() => {
+      fitTo("all");
+      fittedPkgRef.current = id;
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [state.pkg?.manifest.id, fitTo]);
+
+  // Keyboard: "1" fit active frame, "2" fit all, "0" reset to 100%.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "1") fitTo("active");
+      else if (e.key === "2") fitTo("all");
+      else if (e.key === "0")
+        dispatch({ type: "VIEWPORT_SET", patch: { zoom: 1, panX: 0, panY: 0 } });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fitTo, dispatch]);
 
   const onWheel = useCallback(
     (e: React.WheelEvent) => {
@@ -297,6 +363,8 @@ export function CanvasRoot() {
     [state.pkg, state.selection],
   );
 
+  const resolveColour = useMemo(() => buildColourResolver(state.pkg), [state.pkg]);
+
   const selectedRectsByFrame = useMemo(() => {
     if (!state.pkg) return new Map<string, Rect[]>();
     const map = new Map<string, Rect[]>();
@@ -342,6 +410,34 @@ export function CanvasRoot() {
         position: "relative",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          top: 24,
+          right: 12,
+          zIndex: 30,
+          display: "flex",
+          gap: 6,
+        }}
+      >
+        <button type="button" style={fitButtonStyle} onClick={() => fitTo("active")} title="Fit active frame (1)">
+          Fit frame
+        </button>
+        <button type="button" style={fitButtonStyle} onClick={() => fitTo("all")} title="Fit all frames (2)">
+          Fit all
+        </button>
+        <button
+          type="button"
+          style={fitButtonStyle}
+          onClick={() => dispatch({ type: "VIEWPORT_SET", patch: { zoom: 1, panX: 0, panY: 0 } })}
+          title="Reset to 100% (0)"
+        >
+          100%
+        </button>
+        <span style={{ ...fitButtonStyle, cursor: "default", opacity: 0.7 }}>
+          {Math.round(state.viewport.zoom * 100)}%
+        </span>
+      </div>
       <RulerHorizontal
         width={containerRef.current?.clientWidth ?? 800}
         zoom={state.viewport.zoom}
@@ -385,6 +481,7 @@ export function CanvasRoot() {
                 zoom={state.viewport.zoom}
                 containers={state.pkg!.containers}
                 components={state.pkg!.components}
+                resolveColour={resolveColour}
                 guides={state.pkg!.guides}
                 smartGuides={frame.id === state.activeFrameId ? smartGuides : []}
                 selectedRects={selectedRectsByFrame.get(frame.id) ?? []}
@@ -427,3 +524,13 @@ export function CanvasRoot() {
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
+
+const fitButtonStyle: React.CSSProperties = {
+  background: theme.background.panelRaised,
+  color: theme.foreground.primary,
+  border: "1px solid rgba(255,255,255,0.16)",
+  borderRadius: theme.radius.control,
+  padding: "3px 9px",
+  font: `${theme.font.bodySize}px ${theme.font.ui}`,
+  cursor: "pointer",
+};

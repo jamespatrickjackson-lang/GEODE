@@ -4,7 +4,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import math
+import re
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
@@ -22,6 +25,20 @@ DEFAULT_OUTPUT_DIR = Path(
     "/public_context/naip_2024",
 )
 DEFAULT_QGIS_BAT = Path(r"C:\Program Files\QGIS 3.44.10\OSGeo4W.bat")
+DEFAULT_REGIONAL_COG_PATH = (
+    ARCHIVE_ROOT
+    / "NAIP2024_Regional"
+    / "naip_2024_regional_8192_epsg26912.cog.tif"
+)
+DEFAULT_REGIONAL_COG_LONG_EDGE = 8192
+EXPECTED_SOURCE_EPSG = 26912
+VRT_BOUNDS_TOLERANCE_M = 1.0
+NAIP_REFERENCE_FILES = (
+    Path("projects/utah-forge/environment.json"),
+    Path("projects/utah-forge/project.json"),
+)
+NAIP_REFERENCE_PAGE_DIR = Path("projects/utah-forge/pages")
+CACHE_QUERY_RE = r"\?v=[A-Za-z0-9._~-]+"
 
 # Intro alignment by tie points. Beaver is the fixed reference (no ties -> it
 # never moves). Each other set carries two tie pairs that join its shared edge
@@ -47,18 +64,12 @@ SOURCE_CATALOG = [
         "ties": [],
     },
     {
-        # West/south neighbour. Eyeball estimate: its Beaver-facing edge sits
-        # ~1.2 km off and ~0.6 deg CCW. Ties pull it onto Beaver's west edge
-        # (x=231115.8). Re-bake and nudge the source numbers if the seam moves
-        # the wrong way.
+        # Zero-rotation source. Keep identity ties; do not rotate during mosaic.
         "id": "iron",
         "label": "NAIP2024_Iron",
         "path": ARCHIVE_ROOT / "NAIP2024_Iron" / "NAIP2024_Iron.sid",
         "bounds": (229069.2, 4144854.0, 374310.0, 4231440.6),
-        "ties": [
-            {"beaver": (231115.8, 4221500.0), "source": (229950.0, 4221250.0)},
-            {"beaver": (231115.8, 4230500.0), "source": (230100.0, 4230150.0)},
-        ],
+        "ties": [],
     },
     {
         "id": "millard",
@@ -75,17 +86,12 @@ SOURCE_CATALOG = [
         "ties": [],
     },
     {
-        # East neighbour. Eyeball estimate: its Beaver-facing (west) edge sits
-        # ~1.2 km east and ~0.6 deg CCW. Ties pull it onto Beaver's east edge
-        # (x=385650.0). Re-bake and nudge the source numbers to taste.
+        # Zero-rotation source. Keep identity ties; do not rotate during mosaic.
         "id": "sevier",
         "label": "NAIP2024_Sevier",
         "path": ARCHIVE_ROOT / "NAIP2024_Sevier" / "NAIP2024_Sevier.sid",
         "bounds": (363546.0, 4261122.0, 478572.0, 4324452.0),
-        "ties": [
-            {"beaver": (385650.0, 4263000.0), "source": (386850.0, 4262750.0)},
-            {"beaver": (385650.0, 4278000.0), "source": (386700.0, 4277650.0)},
-        ],
+        "ties": [],
     },
 ]
 
@@ -151,6 +157,59 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Keep temporary raw alpha WebP extracts beside final outputs.",
     )
+    parser.add_argument(
+        "--source-mode",
+        choices=("auto", "county", "cog"),
+        default="county",
+        help=(
+            "Input source for WebP generation. county composites the county "
+            "sources directly; cog uses the pre-merged regional COG. auto uses "
+            "county unless --overlap-mode=vrt is passed and the regional COG exists."
+        ),
+    )
+    parser.add_argument(
+        "--overlap-mode",
+        choices=("best-interior", "vrt"),
+        default="best-interior",
+        help=(
+            "How county source overlaps are resolved for WebP output. "
+            "best-interior assigns each output pixel to the valid source farthest "
+            "from its source edge; vrt preserves the historical GDAL VRT stack."
+        ),
+    )
+    parser.add_argument(
+        "--regional-cog",
+        type=Path,
+        default=DEFAULT_REGIONAL_COG_PATH,
+        help="Canonical pre-merged regional COG path.",
+    )
+    parser.add_argument(
+        "--build-regional-cog",
+        action="store_true",
+        help="Build the canonical regional COG before generating WebP outputs.",
+    )
+    parser.add_argument(
+        "--cog-only",
+        action="store_true",
+        help="Build or validate the regional COG and skip WebP output generation.",
+    )
+    parser.add_argument(
+        "--overwrite-cog",
+        action="store_true",
+        help="Allow replacing the canonical regional COG.",
+    )
+    parser.add_argument(
+        "--cog-quality",
+        type=int,
+        default=92,
+        help="WebP compression quality for the canonical regional COG.",
+    )
+    parser.add_argument(
+        "--cog-long-edge",
+        type=int,
+        default=DEFAULT_REGIONAL_COG_LONG_EDGE,
+        help="Long-edge pixel size for the canonical regional COG.",
+    )
     return parser.parse_args()
 
 
@@ -177,6 +236,131 @@ def run_qgis(qgis_bat: Path, args: list[str]) -> None:
     command = ["cmd", "/c", "call", str(qgis_bat), *args]
     print(" ".join(command))
     subprocess.run(command, check=True)
+
+
+def run_qgis_capture(qgis_bat: Path, args: list[str]) -> str:
+    command = ["cmd", "/c", "call", str(qgis_bat), *args]
+    print(" ".join(command))
+    completed = subprocess.run(
+        command,
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if completed.stderr:
+        print(completed.stderr, end="")
+    return completed.stdout
+
+
+def gdalinfo_json(qgis_bat: Path, source: Path) -> dict:
+    output = run_qgis_capture(qgis_bat, ["gdalinfo", "-json", str(source)])
+    json_start = output.find("{")
+    json_end = output.rfind("}")
+    if json_start < 0 or json_end <= json_start:
+        raise ValueError(f"gdalinfo -json did not return JSON for {source}")
+    return json.loads(output[json_start : json_end + 1])
+
+
+def epsg_from_gdalinfo(info: dict) -> int | None:
+    stac_epsg = info.get("stac", {}).get("proj:epsg")
+    if isinstance(stac_epsg, int):
+        return stac_epsg
+    wkt = info.get("coordinateSystem", {}).get("wkt")
+    if not isinstance(wkt, str):
+        return None
+    matches = re.findall(r'(?:ID|AUTHORITY)\["EPSG",\s*"?(\d+)"?\]', wkt)
+    if not matches:
+        return None
+    return int(matches[-1])
+
+
+def assert_sources_epsg_26912(qgis_bat: Path, catalog: list[dict]) -> None:
+    for source in catalog:
+        info = gdalinfo_json(qgis_bat, source["path"])
+        epsg = epsg_from_gdalinfo(info)
+        if epsg != EXPECTED_SOURCE_EPSG:
+            raise ValueError(
+                f"{source['label']} must be EPSG:{EXPECTED_SOURCE_EPSG}; "
+                f"gdalinfo reported {epsg!r}.",
+            )
+
+
+def raster_bounds_from_gdalinfo(info: dict) -> tuple[float, float, float, float]:
+    corners = info.get("cornerCoordinates")
+    if not isinstance(corners, dict):
+        raise ValueError("gdalinfo JSON is missing cornerCoordinates.")
+    points = []
+    for key in ("upperLeft", "upperRight", "lowerLeft", "lowerRight"):
+        value = corners.get(key)
+        if not isinstance(value, list) or len(value) < 2:
+            raise ValueError(f"gdalinfo JSON is missing cornerCoordinates.{key}.")
+        points.append((float(value[0]), float(value[1])))
+    return (
+        min(x for x, _ in points),
+        min(y for _, y in points),
+        max(x for x, _ in points),
+        max(y for _, y in points),
+    )
+
+
+def assert_raster_bounds_match_region(
+    qgis_bat: Path,
+    raster_path: Path,
+    expected_bounds: tuple[float, float, float, float],
+) -> None:
+    info = gdalinfo_json(qgis_bat, raster_path)
+    epsg = epsg_from_gdalinfo(info)
+    if epsg != EXPECTED_SOURCE_EPSG:
+        raise ValueError(
+            f"{raster_path} must be EPSG:{EXPECTED_SOURCE_EPSG}; "
+            f"gdalinfo reported {epsg!r}.",
+        )
+    actual_bounds = raster_bounds_from_gdalinfo(info)
+    deltas = [abs(actual - expected) for actual, expected in zip(actual_bounds, expected_bounds)]
+    if any(delta > VRT_BOUNDS_TOLERANCE_M for delta in deltas):
+        raise ValueError(
+            f"{raster_path} bounds {actual_bounds} do not match regional bounds "
+            f"{expected_bounds} within {VRT_BOUNDS_TOLERANCE_M} m.",
+        )
+
+
+def vrt_dataset_bounds(vrt_path: Path) -> tuple[float, float, float, float]:
+    root = ET.parse(vrt_path).getroot()
+    width_text = root.get("rasterXSize") or root.findtext("RasterXSize")
+    height_text = root.get("rasterYSize") or root.findtext("RasterYSize")
+    gt_text = root.findtext("GeoTransform")
+    if width_text is None or height_text is None or gt_text is None:
+        raise ValueError(f"{vrt_path} is missing RasterXSize/RasterYSize/GeoTransform")
+    width = int(width_text)
+    height = int(height_text)
+    gt = [float(value) for value in gt_text.split(",")]
+    if len(gt) != 6:
+        raise ValueError(f"{vrt_path} GeoTransform must have 6 values")
+    corners = []
+    for column, row in ((0, 0), (width, 0), (0, height), (width, height)):
+        x = gt[0] + column * gt[1] + row * gt[2]
+        y = gt[3] + column * gt[4] + row * gt[5]
+        corners.append((x, y))
+    return (
+        min(x for x, _ in corners),
+        min(y for _, y in corners),
+        max(x for x, _ in corners),
+        max(y for _, y in corners),
+    )
+
+
+def assert_vrt_bounds_match_region(
+    vrt_path: Path,
+    expected_bounds: tuple[float, float, float, float],
+) -> None:
+    actual_bounds = vrt_dataset_bounds(vrt_path)
+    deltas = [abs(actual - expected) for actual, expected in zip(actual_bounds, expected_bounds)]
+    if any(delta > VRT_BOUNDS_TOLERANCE_M for delta in deltas):
+        raise ValueError(
+            f"{vrt_path} bounds {actual_bounds} do not match regional bounds "
+            f"{expected_bounds} within {VRT_BOUNDS_TOLERANCE_M} m.",
+        )
 
 
 def qgis_gdal_buildvrt(qgis_bat: Path, sources: list[Path], output: Path) -> None:
@@ -223,6 +407,60 @@ def qgis_gdalwarp(
             "GTiff",
             "-co",
             "TILED=YES",
+            str(source),
+            str(output),
+        ],
+    )
+
+
+def qgis_gdal_translate_cog(
+    qgis_bat: Path,
+    source: Path,
+    output: Path,
+    bounds: tuple[float, float, float, float],
+    size: tuple[int, int],
+    quality: int,
+) -> None:
+    min_x, min_y, max_x, max_y = bounds
+    width, height = size
+    run_qgis(
+        qgis_bat,
+        [
+            "gdal_translate",
+            "-of",
+            "COG",
+            "-b",
+            "1",
+            "-b",
+            "2",
+            "-b",
+            "3",
+            "-b",
+            "4",
+            "-projwin",
+            f"{min_x}",
+            f"{max_y}",
+            f"{max_x}",
+            f"{min_y}",
+            "-outsize",
+            f"{width}",
+            f"{height}",
+            "-r",
+            "bilinear",
+            "-co",
+            "COMPRESS=WEBP",
+            "-co",
+            f"QUALITY={quality}",
+            "-co",
+            "BLOCKSIZE=512",
+            "-co",
+            "OVERVIEWS=AUTO",
+            "-co",
+            "RESAMPLING=BILINEAR",
+            "-co",
+            "BIGTIFF=IF_SAFER",
+            "-co",
+            "NUM_THREADS=ALL_CPUS",
             str(source),
             str(output),
         ],
@@ -278,6 +516,105 @@ def aligned_source(
     return aligned_tif
 
 
+def assert_catalog_sources_exist(catalog: list[dict]) -> None:
+    for source in catalog:
+        path = source["path"].resolve()
+        if not path.exists():
+            raise FileNotFoundError(path)
+
+
+def aligned_catalog_sources(
+    qgis_bat: Path,
+    catalog: list[dict],
+    temp_dir: Path,
+) -> list[tuple[dict, Path]]:
+    assert_catalog_sources_exist(catalog)
+    assert_sources_epsg_26912(qgis_bat, catalog)
+    return [
+        (source, aligned_source(qgis_bat, source, temp_dir))
+        for source in catalog
+    ]
+
+
+def build_county_vrt(
+    qgis_bat: Path,
+    catalog: list[dict],
+    temp_dir: Path,
+    bounds: tuple[float, float, float, float],
+) -> Path:
+    aligned_sources = [
+        source_path
+        for _, source_path in aligned_catalog_sources(qgis_bat, catalog, temp_dir)
+    ]
+    vrt_path = temp_dir / "naip_2024_regional.vrt"
+    qgis_gdal_buildvrt(qgis_bat, aligned_sources, vrt_path)
+    assert_vrt_bounds_match_region(vrt_path, bounds)
+    return vrt_path
+
+
+def build_regional_cog(
+    qgis_bat: Path,
+    catalog: list[dict],
+    output_path: Path,
+    temp_dir: Path,
+    bounds: tuple[float, float, float, float],
+    quality: int,
+    long_edge_px: int,
+    overwrite: bool,
+) -> Path:
+    if output_path.exists() and not overwrite:
+        raise FileExistsError(
+            f"{output_path} exists; pass --overwrite-cog to replace it.",
+        )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    vrt_path = build_county_vrt(qgis_bat, catalog, temp_dir, bounds)
+    qgis_gdal_translate_cog(
+        qgis_bat,
+        vrt_path,
+        output_path,
+        bounds,
+        output_size(bounds, long_edge_px),
+        quality,
+    )
+    assert_raster_bounds_match_region(qgis_bat, output_path, bounds)
+    return output_path
+
+
+def resolve_webp_source(
+    args: argparse.Namespace,
+    qgis_bat: Path,
+    temp_dir: Path,
+    bounds: tuple[float, float, float, float],
+) -> Path:
+    regional_cog = args.regional_cog.resolve()
+    if args.build_regional_cog:
+        build_regional_cog(
+            qgis_bat,
+            SOURCE_CATALOG,
+            regional_cog,
+            temp_dir,
+            bounds,
+            args.cog_quality,
+            args.cog_long_edge,
+            args.overwrite_cog,
+        )
+    if args.source_mode == "cog":
+        if not regional_cog.exists():
+            raise FileNotFoundError(
+                f"{regional_cog} does not exist; pass --build-regional-cog first.",
+            )
+        assert_raster_bounds_match_region(qgis_bat, regional_cog, bounds)
+        return regional_cog
+    if (
+        args.source_mode == "auto"
+        and args.overlap_mode == "vrt"
+        and regional_cog.exists()
+    ):
+        assert_raster_bounds_match_region(qgis_bat, regional_cog, bounds)
+        return regional_cog
+    return build_county_vrt(qgis_bat, SOURCE_CATALOG, temp_dir, bounds)
+
+
 def qgis_gdal_translate(
     qgis_bat: Path,
     source: Path,
@@ -318,6 +655,72 @@ def qgis_gdal_translate(
             str(output),
         ],
     )
+
+
+def output_pixel_centers(
+    bounds: tuple[float, float, float, float],
+    size: tuple[int, int],
+) -> tuple[np.ndarray, np.ndarray]:
+    min_x, min_y, max_x, max_y = bounds
+    width, height = size
+    pixel_width = (max_x - min_x) / width
+    pixel_height = (max_y - min_y) / height
+    xs = min_x + (np.arange(width, dtype=np.float32) + 0.5) * pixel_width
+    ys = max_y - (np.arange(height, dtype=np.float32) + 0.5) * pixel_height
+    return xs, ys
+
+
+def interior_score_grid(
+    source_bounds: tuple[float, float, float, float],
+    output_xs: np.ndarray,
+    output_ys: np.ndarray,
+) -> np.ndarray:
+    min_x, min_y, max_x, max_y = source_bounds
+    x_score = np.minimum(output_xs - min_x, max_x - output_xs)
+    y_score = np.minimum(output_ys - min_y, max_y - output_ys)
+    return np.minimum(y_score[:, None], x_score[None, :])
+
+
+def build_best_interior_composite(
+    qgis_bat: Path,
+    aligned_sources: list[tuple[dict, Path]],
+    output_path: Path,
+    bounds: tuple[float, float, float, float],
+    size: tuple[int, int],
+    quality: int,
+    temp_dir: Path,
+    stem: str,
+    keep_raw: bool,
+) -> None:
+    width, height = size
+    output_xs, output_ys = output_pixel_centers(bounds, size)
+    best_score = np.full((height, width), -np.inf, dtype=np.float32)
+    best_pixels = np.zeros((height, width, 4), dtype=np.uint8)
+
+    for source, source_path in aligned_sources:
+        source_raw_path = temp_dir / f"{stem}_{source['id']}.raw.webp"
+        qgis_gdal_translate(
+            qgis_bat,
+            source_path,
+            source_raw_path,
+            bounds,
+            size,
+            quality,
+        )
+        pixels = np.asarray(Image.open(source_raw_path).convert("RGBA"))
+        valid = valid_pixel_mask(pixels)
+        score = interior_score_grid(source["bounds"], output_xs, output_ys)
+        update = valid & (score > best_score)
+        if update.any():
+            best_pixels[update] = pixels[update]
+            best_score[update] = score[update]
+        if not keep_raw:
+            source_raw_path.unlink(missing_ok=True)
+            source_raw_path.with_suffix(f"{source_raw_path.suffix}.aux.xml").unlink(
+                missing_ok=True,
+            )
+
+    Image.fromarray(best_pixels, mode="RGBA").save(output_path, "PNG")
 
 
 def shifted(array: np.ndarray, dy: int, dx: int) -> np.ndarray:
@@ -449,6 +852,102 @@ def fill_transparent_pixels(
     output.save(output_path, "WEBP", quality=quality, method=6)
 
 
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def versioned_project_path(path: Path) -> tuple[str, str]:
+    repo_root = Path.cwd().resolve()
+    try:
+        relative = path.resolve().relative_to(repo_root)
+    except ValueError:
+        return ("", "")
+    digest = file_sha256(path)
+    return (relative.as_posix(), digest)
+
+
+def update_naip_manifest_cache_versions(
+    output_dir: Path,
+    versions_by_file: dict[str, str],
+) -> None:
+    manifest_path = output_dir / "manifest.json"
+    if not manifest_path.exists():
+        return
+    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    variants = data.get("variants")
+    if isinstance(variants, dict):
+        for key, filename in (
+            ("4096", "naip_2024_regional_4096.webp"),
+            ("8192", "naip_2024_regional_8192.webp"),
+        ):
+            digest = versions_by_file.get(filename)
+            variant = variants.get(key)
+            if not digest or not isinstance(variant, dict):
+                continue
+            token = digest[:16]
+            variant["sha256"] = digest
+            variant["cacheVersion"] = token
+            variant["versionedFile"] = f"{filename}?v={token}"
+    manifest_path.write_text(
+        f"{json.dumps(data, indent=2)}\n",
+        encoding="utf-8",
+    )
+
+
+def update_text_naip_references(
+    target_path: Path,
+    replacements: dict[str, str],
+) -> bool:
+    if not target_path.exists():
+        return False
+    text = target_path.read_text(encoding="utf-8")
+    next_text = text
+    for unversioned_path, digest in replacements.items():
+        token = digest[:16]
+        pattern = re.compile(
+            rf"{re.escape(unversioned_path)}(?:{CACHE_QUERY_RE})?"
+        )
+        next_text = pattern.sub(f"{unversioned_path}?v={token}", next_text)
+    if next_text == text:
+        return False
+    target_path.write_text(next_text, encoding="utf-8")
+    return True
+
+
+def update_project_naip_cache_refs(
+    output_dir: Path,
+    versions_by_file: dict[str, str],
+) -> None:
+    repo_root = Path.cwd().resolve()
+    replacements: dict[str, str] = {}
+    for filename, digest in versions_by_file.items():
+        relative_path, _ = versioned_project_path(output_dir / filename)
+        if relative_path:
+            replacements[relative_path] = digest
+    if not replacements:
+        return
+
+    targets = [repo_root / path for path in NAIP_REFERENCE_FILES]
+    pages_dir = repo_root / NAIP_REFERENCE_PAGE_DIR
+    if pages_dir.exists():
+        targets.extend(sorted(pages_dir.glob("*.json")))
+
+    changed = [
+        path.relative_to(repo_root).as_posix()
+        for path in targets
+        if update_text_naip_references(path, replacements)
+    ]
+    if changed:
+        print(
+            "Updated NAIP cache-busted references: "
+            + ", ".join(changed),
+        )
+
+
 def main() -> None:
     args = parse_args()
     output_dir = args.output_dir.resolve()
@@ -457,12 +956,30 @@ def main() -> None:
     if not qgis_bat.exists():
         raise FileNotFoundError(qgis_bat)
 
-    sources = [source["path"].resolve() for source in SOURCE_CATALOG]
-    for source in sources:
-        if not source.exists():
-            raise FileNotFoundError(source)
-
     bounds = regional_bounds()
+    if args.cog_only:
+        with tempfile.TemporaryDirectory(prefix="geosee-naip-regional-") as temp:
+            temp_dir = Path(temp)
+            regional_cog = args.regional_cog.resolve()
+            if args.build_regional_cog:
+                build_regional_cog(
+                    qgis_bat,
+                    SOURCE_CATALOG,
+                    regional_cog,
+                    temp_dir,
+                    bounds,
+                    args.cog_quality,
+                    args.cog_long_edge,
+                    args.overwrite_cog,
+                )
+            else:
+                if not regional_cog.exists():
+                    raise FileNotFoundError(
+                        f"{regional_cog} does not exist; pass --build-regional-cog.",
+                    )
+                assert_raster_bounds_match_region(qgis_bat, regional_cog, bounds)
+        return
+
     jobs = [
         ("naip_2024_regional_4096", output_size(bounds, 4096), 128, 18),
         ("naip_2024_regional_8192", output_size(bounds, 8192), 256, 36),
@@ -476,27 +993,58 @@ def main() -> None:
 
     with tempfile.TemporaryDirectory(prefix="geosee-naip-regional-") as temp:
         temp_dir = Path(temp)
-        # Join each neighbour's edge to Beaver via its tie points (Beaver fixed).
-        aligned_sources = [
-            aligned_source(qgis_bat, source, temp_dir)
-            for source in SOURCE_CATALOG
-        ]
-        vrt_path = temp_dir / "naip_2024_regional.vrt"
-        qgis_gdal_buildvrt(qgis_bat, aligned_sources, vrt_path)
+        use_best_interior = (
+            args.overlap_mode == "best-interior" and args.source_mode != "cog"
+        )
+        aligned_sources = (
+            aligned_catalog_sources(qgis_bat, SOURCE_CATALOG, temp_dir)
+            if use_best_interior
+            else None
+        )
+        source_path = (
+            None
+            if use_best_interior
+            else resolve_webp_source(args, qgis_bat, temp_dir, bounds)
+        )
         for stem, size, fill_radius_px, feather_radius_px in jobs:
             raw_path = output_dir / f"{stem}.raw.webp"
             final_path = output_dir / f"{stem}.webp"
-            qgis_gdal_translate(
-                qgis_bat,
-                vrt_path,
-                raw_path,
-                bounds,
-                size,
-                args.quality,
-            )
+            fill_source_path: Path
+            if use_best_interior:
+                composite_path = (
+                    output_dir / f"{stem}.raw.png"
+                    if args.keep_raw
+                    else temp_dir / f"{stem}.raw.png"
+                )
+                if aligned_sources is None:
+                    raise RuntimeError("Expected aligned NAIP sources.")
+                build_best_interior_composite(
+                    qgis_bat,
+                    aligned_sources,
+                    composite_path,
+                    bounds,
+                    size,
+                    args.quality,
+                    temp_dir,
+                    stem,
+                    args.keep_raw,
+                )
+                fill_source_path = composite_path
+            else:
+                if source_path is None:
+                    raise RuntimeError("Expected a NAIP raster source.")
+                qgis_gdal_translate(
+                    qgis_bat,
+                    source_path,
+                    raw_path,
+                    bounds,
+                    size,
+                    args.quality,
+                )
+                fill_source_path = raw_path
             first_pass_path = temp_dir / f"{stem}.filled.webp"
             fill_transparent_pixels(
-                raw_path,
+                fill_source_path,
                 first_pass_path,
                 args.quality,
                 fill_radius_px,
@@ -509,11 +1057,22 @@ def main() -> None:
                 fill_radius_px,
                 feather_radius_px,
             )
-            if not args.keep_raw:
+            if not args.keep_raw and use_best_interior:
+                fill_source_path.unlink(missing_ok=True)
+            if not args.keep_raw and not use_best_interior:
                 raw_path.unlink(missing_ok=True)
                 raw_path.with_suffix(f"{raw_path.suffix}.aux.xml").unlink(
                     missing_ok=True,
                 )
+
+    versions_by_file: dict[str, str] = {}
+    for stem, _, _, _ in jobs:
+        final_path = output_dir / f"{stem}.webp"
+        _, digest = versioned_project_path(final_path)
+        if digest:
+            versions_by_file[final_path.name] = digest
+    update_naip_manifest_cache_versions(output_dir, versions_by_file)
+    update_project_naip_cache_refs(output_dir, versions_by_file)
 
 
 if __name__ == "__main__":

@@ -30,7 +30,7 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
   });
   await hidePublicContextLayers(page);
 
-  await page.getByRole("button", { name: "Sections & Cropping" }).click();
+  await page.getByRole("button", { name: "Sections" }).click();
   await openForgeMtResistivityEditorContainers(page);
   const slicesLayerItem = page
     .locator('[data-dev-note*="layerItemStyle"]')

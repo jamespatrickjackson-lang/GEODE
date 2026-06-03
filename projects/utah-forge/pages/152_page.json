@@ -1,0 +1,252 @@
+{
+  "id": "152_page",
+  "title": "New page",
+  "camera": {
+    "position": [
+      -14170.880354647365,
+      -98028.44830535201,
+      9739.276472430225
+    ],
+    "target": [
+      -9088,
+      -17143,
+      2224
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 74
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "sceneOverrides": {
+    "colorGrade": {
+      "vibrancy": 0.97,
+      "tint": "#b8b7b7"
+    },
+    "camera": {
+      "fov": 70
+    },
+    "lightMode": true,
+    "fog": {
+      "enabled": true,
+      "color": "#e5e1e1",
+      "density": 0.000042,
+      "lightModeColor": "#bfbfbf"
+    },
+    "lightModeBackground": "#ebebeb",
+    "ambientOcclusion": {
+      "enabled": true,
+      "radius": 7.5
+    },
+    "terrain": {
+      "materialPreset": "image:naip-2024-aerial",
+      "orthoPhotoTextureBudget": 8192,
+      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80",
+      "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=9cf80fbd86236267",
+      "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80",
+      "orthoPhotoBounds": [
+        229069.2,
+        4144854,
+        484164,
+        4414308
+      ],
+      "orthoPhotoOpacity": 1,
+      "orthoPhotoHillshadeBlend": 0.12,
+      "orthoPhotoBrightness": 0.08,
+      "orthoPhotoContrast": 1.28,
+      "orthoPhotoSaturation": 1.18,
+      "surfaceElevationEnabled": false,
+      "surfaceElevationLegendVisible": true
+    }
+  },
+  "layerOverrides": {
+    "utah-forge-phase3-demo-boreholes": {
+      "demoBoreholeWells": {
+        "16A(78)-32": {
+          "visible": true,
+          "pipeDiameterM": 18,
+          "color": "#35d7ff",
+          "opacity": 0.92,
+          "lineStyle": "solid",
+          "dashLengthM": 260,
+          "dashGapM": 150,
+          "centerlineVisible": true,
+          "centerlineWidth": 2.2,
+          "centerlineOpacity": 0.82,
+          "centerlineColor": "#35d7ff",
+          "collarVisible": true,
+          "collarDiameterM": 32,
+          "pathTreatment": "survey",
+          "smoothingStrength": 0.35,
+          "collarLabelVisible": false,
+          "collarLabelText": "16A injection",
+          "collarLabelLiftM": 95,
+          "toeLabelVisible": false,
+          "toeLabelText": "Injection toe",
+          "toeLabelLiftM": 40
+        },
+        "16B(78)-32": {
+          "visible": true,
+          "pipeDiameterM": 16,
+          "color": "#ff7440",
+          "opacity": 0.92,
+          "lineStyle": "solid",
+          "dashLengthM": 260,
+          "dashGapM": 150,
+          "centerlineVisible": true,
+          "centerlineWidth": 2,
+          "centerlineOpacity": 0.82,
+          "centerlineColor": "#ff7440",
+          "collarVisible": true,
+          "collarDiameterM": 30,
+          "pathTreatment": "survey",
+          "smoothingStrength": 0.35,
+          "collarLabelVisible": false,
+          "collarLabelText": "16B production",
+          "collarLabelLiftM": 95,
+          "toeLabelVisible": false,
+          "toeLabelText": "Production toe",
+          "toeLabelLiftM": 40
+        }
+      },
+      "demoBoreholeSourceLocations": {
+        "items": {
+          "58-32-WELL": {
+            "visible": true
+          },
+          "BOR2": {
+            "visible": true
+          }
+        },
+        "mode": "line",
+        "opacity": 0.75,
+        "topRingVisible": true,
+        "color": "#ffffff",
+        "topRingTubeM": 27,
+        "topRingRadiusM": 195,
+        "lineWidth": 3,
+        "labelLiftM": 145,
+        "topRingOpacity": 0.63,
+        "topRingColor": "#fb4b4b"
+      },
+      "demoBoreholeBlock": {
+        "visible": true,
+        "widthM": 118,
+        "depthM": 68,
+        "heightM": 34,
+        "liftM": 0,
+        "rotationDeg": -24.985,
+        "fillColor": "#f79c9c",
+        "opacity": 0.82,
+        "outlineVisible": true,
+        "outlineColor": "#ffffff",
+        "outlineThickness": 1.5,
+        "outlineOpacity": 0.92,
+        "labelVisible": true,
+        "labelText": "FORGE",
+        "labelLiftM": 25.5
+      },
+      "showLabels": true,
+      "color": "#cccccc",
+      "opacity": 1
+    },
+    "terrain": {
+      "publicSurfaceClipEnabled": false,
+      "publicSurfaceClipCenterX": -1750,
+      "publicSurfaceClipCenterY": 0,
+      "publicSurfaceClipCenterZ": 2000,
+      "publicSurfaceClipSizeX": 499600,
+      "publicSurfaceClipSizeY": 484100,
+      "publicSurfaceClipRotationZDeg": -20,
+      "publicSurfaceClipSizeZ": 12600,
+      "publicSurfaceClipShape": "circle",
+      "opacity": 1
+    },
+    "utah-forge-topo-graticule": {
+      "publicSurfaceClipEnabled": false,
+      "publicSurfaceClipCenterX": -1750,
+      "publicSurfaceClipCenterY": 0,
+      "publicSurfaceClipCenterZ": 2000,
+      "publicSurfaceClipSizeX": 499600,
+      "publicSurfaceClipSizeY": 484100,
+      "publicSurfaceClipRotationZDeg": -20,
+      "publicSurfaceClipSizeZ": 12600,
+      "publicSurfaceClipShape": "circle"
+    },
+    "transport-roads": {
+      "publicSurfaceClipEnabled": false,
+      "publicSurfaceClipCenterX": -1750,
+      "publicSurfaceClipCenterY": 0,
+      "publicSurfaceClipCenterZ": 2000,
+      "publicSurfaceClipSizeX": 499600,
+      "publicSurfaceClipSizeY": 484100,
+      "publicSurfaceClipRotationZDeg": -20,
+      "publicSurfaceClipSizeZ": 12600,
+      "publicSurfaceClipShape": "circle"
+    },
+    "hydrography-streams": {
+      "publicSurfaceClipEnabled": false,
+      "publicSurfaceClipCenterX": -1750,
+      "publicSurfaceClipCenterY": 0,
+      "publicSurfaceClipCenterZ": 2000,
+      "publicSurfaceClipSizeX": 499600,
+      "publicSurfaceClipSizeY": 484100,
+      "publicSurfaceClipRotationZDeg": -20,
+      "publicSurfaceClipSizeZ": 12600,
+      "publicSurfaceClipShape": "circle"
+    },
+    "hydrography-lakes": {
+      "publicSurfaceClipEnabled": false,
+      "publicSurfaceClipCenterX": -1750,
+      "publicSurfaceClipCenterY": 0,
+      "publicSurfaceClipCenterZ": 2000,
+      "publicSurfaceClipSizeX": 499600,
+      "publicSurfaceClipSizeY": 484100,
+      "publicSurfaceClipRotationZDeg": -20,
+      "publicSurfaceClipSizeZ": 12600,
+      "publicSurfaceClipShape": "circle"
+    }
+  },
+  "visibilityOverrides": {
+    "utah-forge-phase3-demo-boreholes": true,
+    "terrain": true,
+    "utah-forge-topo-graticule": false
+  },
+  "overlayLayout": {
+    "x": 0.027282885444543555,
+    "y": 0.013651191969887094,
+    "width": 0.18308593750000002,
+    "height": 0.1
+  },
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": false,
+    "poi": [
+      -9088,
+      -17143,
+      2224
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 81045,
+    "orbitHeight": 7515,
+    "orbitDirection": 1,
+    "zoomFov": 70,
+    "zoomEnabled": true,
+    "zoomDeltaFov": -40,
+    "zoomStartMs": 0,
+    "zoomEndMs": 12000,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false
+  }
+}

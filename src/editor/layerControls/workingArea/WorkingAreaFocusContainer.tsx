@@ -5,7 +5,6 @@ import {
   nestedControlRowStyle,
   nestedDetailsStyle,
   nestedFieldLabelStyle,
-  sliderNumberReadoutStyle,
   styleBoolean,
   type LayerStyleSetter,
   type PageStyleSetter,
@@ -417,9 +416,6 @@ export function WorkingAreaFocusContainer({
                           } as React.CSSProperties
                         }
                       />
-                      <span style={sliderNumberReadoutStyle}>
-                        {mode === "inside-only" ? "0.00" : opacity.toFixed(2)}
-                      </span>
                     </div>
                   ) : null}
                 </div>

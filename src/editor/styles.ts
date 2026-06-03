@@ -457,6 +457,11 @@ export const panelStyles: Record<string, CSSProperties> = {
   collapsibleBody: {
     padding: 0,
   },
+  collapsibleBodyFrame: {
+    boxSizing: "border-box",
+    padding:
+      "0 var(--editor-section-margin-x, 12px) 0 var(--editor-container-body-indent, 28px)",
+  },
   textarea: {
     ...thinLightMaterial,
     width: "100%",

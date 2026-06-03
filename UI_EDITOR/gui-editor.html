@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GUI Editor — dev-mode design overlay</title>
+<style>
+  :root {
+    --bg: #121518;
+    --panel: #1c2024;
+    --panel-raised: #262a2e;
+    --field: rgba(18,21,24,0.5);
+    --fg: #f4f0e8;
+    --fg2: rgba(244,240,232,0.72);
+    --fg3: rgba(244,240,232,0.46);
+    --accent: #78b4dc;
+    --hair: 1px solid rgba(255,255,255,0.10);
+    --grid-size: 8px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  /* ---- top bar ---- */
+  .topbar {
+    height: 42px; flex: none; display: flex; align-items: center; gap: 6px;
+    padding: 0 12px; background: var(--panel); border-bottom: var(--hair);
+  }
+  .topbar strong { font-weight: 600; margin-right: 4px; }
+  .topbar .sep { width: 1px; height: 22px; background: rgba(255,255,255,0.12); margin: 0 4px; }
+  button.tb {
+    background: var(--panel-raised); color: var(--fg); border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 6px; padding: 4px 10px; font: inherit; cursor: pointer;
+  }
+  button.tb:hover { background: #30353a; }
+  button.tb.on { background: var(--accent); color: #10141a; border-color: var(--accent); }
+  button.tb:disabled { opacity: 0.4; cursor: default; }
+  .grow { flex: 1; }
+  /* ---- main ---- */
+  .main { flex: 1; display: flex; min-height: 0; }
+  .stage-wrap { flex: 1; position: relative; overflow: auto; }
+  /* rulers */
+  .ruler-top, .ruler-left { position: absolute; background: var(--panel); color: var(--fg3);
+    font: 9px "SFMono-Regular", Consolas, monospace; z-index: 6; pointer-events: auto; user-select: none; }
+  .ruler-top { top: 0; left: 22px; right: 0; height: 22px; border-bottom: var(--hair); }
+  .ruler-left { left: 0; top: 22px; bottom: 0; width: 22px; border-right: var(--hair); }
+  .ruler-corner { position: absolute; top: 0; left: 0; width: 22px; height: 22px; background: var(--panel);
+    border-right: var(--hair); border-bottom: var(--hair); z-index: 7; }
+  .ruler-top .tick { position: absolute; top: 0; height: 100%; border-left: 1px solid rgba(255,255,255,0.14); padding-left: 2px; }
+  .ruler-left .tick { position: absolute; left: 0; width: 100%; border-top: 1px solid rgba(255,255,255,0.14); padding-left: 2px; font-size: 8px; }
+  .stage {
+    position: absolute; top: 22px; left: 22px; min-width: 2000px; min-height: 2000px;
+    background-image: var(--grid-image); background-size: var(--grid-size) var(--grid-size);
+  }
+  body.show-grid .stage { --grid-image: linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+                                       linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px); }
+  body:not(.show-grid) .stage { --grid-image: none; }
+
+  /* overlay + outlines (design mode) */
+  .overlay { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+  body.dev .overlay { pointer-events: none; }
+  .dev-outline {
+    position: absolute; border: 1px solid rgba(120,180,220,0.55); pointer-events: auto;
+    cursor: move; border-radius: 3px;
+  }
+  body:not(.dev) .dev-outline { display: none; }
+  .dev-outline:hover { border-color: rgba(120,180,220,0.95); background: rgba(120,180,220,0.05); }
+  .dev-outline.is-selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .dev-outline.is-locked { border-color: rgba(240,120,100,0.6); cursor: not-allowed; }
+  .dev-label {
+    position: absolute; top: -16px; left: -1px; font-size: 10px; color: var(--fg2);
+    background: rgba(18,21,24,0.9); padding: 0 4px; border-radius: 3px; white-space: nowrap;
+    pointer-events: none; display: none; z-index: 9;
+  }
+  /* declutter: only show a label on hover or when selected */
+  .dev-outline:hover .dev-label, .dev-outline.is-selected .dev-label { display: block; }
+  .dev-outline.is-selected .dev-label { color: var(--accent); }
+  .dev-resize-handle {
+    position: absolute; right: -5px; bottom: -5px; width: 10px; height: 10px;
+    background: var(--bg); border: 1px solid var(--accent); border-radius: 2px;
+    cursor: nwse-resize; pointer-events: auto;
+  }
+  .snap-line { position: absolute; background: rgba(240,200,100,0.9); z-index: 8; pointer-events: none; }
+  .snap-line.v { width: 1px; top: 0; bottom: 0; }
+  .snap-line.h { height: 1px; left: 0; right: 0; }
+  .guide { position: absolute; z-index: 4; pointer-events: auto; }
+  .guide.v { width: 1px; top: 0; bottom: 0; cursor: ew-resize; background: rgba(160,200,240,0.5); }
+  .guide.h { height: 1px; left: 0; right: 0; cursor: ns-resize; background: rgba(160,200,240,0.5); }
+  .marquee { position: absolute; border: 1px dashed var(--accent); background: rgba(120,180,220,0.08); z-index: 8; pointer-events: none; }
+  /* visible padding shading inside the selected container */
+  .pad-shade { position: absolute; background: rgba(120,200,140,0.22); z-index: 3; pointer-events: none; }
+
+  /* left panel: layers tree */
+  .layers { width: 220px; flex: none; background: var(--panel); border-right: var(--hair);
+    display: flex; flex-direction: column; min-height: 0; }
+  .layers-head { padding: 8px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--fg3); font-weight: 600; border-bottom: var(--hair); }
+  .tree { flex: 1; overflow-y: auto; padding: 4px 0; }
+  .tree-row { display: flex; align-items: center; gap: 4px; padding: 3px 8px; cursor: pointer;
+    color: var(--fg2); white-space: nowrap; font-size: 12px; }
+  .tree-row:hover { background: rgba(255,255,255,0.04); }
+  .tree-row.is-selected { background: rgba(120,180,220,0.18); color: var(--fg); }
+  .tree-row .caret { width: 12px; text-align: center; color: var(--fg3); cursor: pointer; }
+  .tree-row .kind { width: 16px; text-align: center; opacity: .8; }
+  .tree-row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .tree-row .lock { color: var(--fg3); font-size: 10px; }
+
+  /* right panel */
+  .inspector { width: 260px; flex: none; background: var(--panel); border-left: var(--hair);
+    display: flex; flex-direction: column; overflow-y: auto; }
+  .insp-sec { padding: 8px 10px; border-bottom: var(--hair); }
+  .insp-sec h4 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--fg3); font-weight: 600; }
+  .row { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+  .row label { width: 64px; color: var(--fg3); font-size: 11px; }
+  .row input[type=number], .row input[type=text] {
+    flex: 1; min-width: 0; background: var(--field); color: var(--fg); border: var(--hair);
+    border-radius: 4px; padding: 3px 6px; font: inherit;
+  }
+  .row input[type=range] { flex: 1; }
+  .row input[type=color] { width: 28px; height: 22px; background: var(--field); border: var(--hair); border-radius: 4px; }
+  .muted { color: var(--fg3); font-size: 12px; }
+  .pill { display:inline-block; padding:1px 6px; border-radius:999px; background:rgba(255,255,255,0.06); font-size:10px; color:var(--fg3); }
+
+  /* ===================================================================== */
+  /* SAMPLE HOST UI — the real, editable surface (a GeoSee-style sidebar).  */
+  /* Every [data-c] element is auto-registered as an editable container.    */
+  /* ===================================================================== */
+  .host { position: absolute; left: 80px; top: 60px; }
+  .sidebar {
+    width: 320px; background: rgba(20,23,27,0.92); border: var(--hair); border-radius: 14px;
+    padding: 14px; box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+    backdrop-filter: saturate(140%) blur(16px);
+  }
+  .sb-brand { display:flex; align-items:center; gap:8px; font-weight:700; letter-spacing:2px; color: var(--fg2); font-size:22px; padding: 4px 6px 12px; }
+  .sb-brand .dot { width:10px; height:10px; border-radius:50%; background: linear-gradient(#e0556a,#5b8bd6); }
+  .sb-row {
+    display:flex; align-items:center; gap:10px; padding: 12px 14px; margin: 6px 0;
+    background: rgba(255,255,255,0.04); border: var(--hair); border-radius: 10px; cursor: default;
+  }
+  .sb-row .ic { width:18px; height:18px; opacity:.8; display:flex; align-items:center; justify-content:center; }
+  .sb-row .lbl { flex:1; font-weight:600; }
+  .sb-row .chev { color: var(--fg3); }
+  .sb-footer { display:flex; justify-content:flex-end; padding: 8px 6px 2px; color: var(--fg3); }
+</style>
+</head>
+<body class="dev show-grid">
+
+  <div class="topbar">
+    <strong>GUI Editor</strong>
+    <span class="pill">dev-mode design overlay · localStorage · no build</span>
+    <span class="sep"></span>
+    <button class="tb on" id="btnDev" title="Toggle design overlay (D)">Design mode</button>
+    <button class="tb on" id="btnGrid" title="Toggle grid (G)">Grid</button>
+    <button class="tb on" id="btnSnap" title="Toggle snapping (S)">Snap</button>
+    <span class="sep"></span>
+    <button class="tb" id="btnAdd" title="Add a container (into selection if a container is selected)">+ Container</button>
+    <button class="tb" id="addText" title="Add text">+ Text</button>
+    <button class="tb" id="addRect" title="Add rectangle">+ Rect</button>
+    <button class="tb" id="addEllipse" title="Add ellipse">+ Ellipse</button>
+    <button class="tb" id="addRow" title="Add a row (icon + label)">+ Row</button>
+    <span class="sep"></span>
+    <button class="tb" id="btnGroup" title="Group selection (Ctrl/Cmd+G)">Group</button>
+    <button class="tb" id="btnDelete" title="Delete selection (Del)">Delete</button>
+    <span class="sep"></span>
+    <button class="tb" id="btnUndo" title="Undo (Ctrl/Cmd+Z)">Undo</button>
+    <button class="tb" id="btnRedo" title="Redo (Ctrl/Cmd+Shift+Z)">Redo</button>
+    <span class="grow"></span>
+    <button class="tb" id="btnReset" title="Clear all saved edits">Reset</button>
+    <span class="pill" id="saveState">saved</span>
+  </div>
+
+  <div class="main">
+    <div class="layers">
+      <div class="layers-head">Layers</div>
+      <div class="tree" id="tree"></div>
+    </div>
+    <div class="stage-wrap" id="stageWrap">
+      <div class="ruler-corner"></div>
+      <div class="ruler-top" id="rulerTop"></div>
+      <div class="ruler-left" id="rulerLeft"></div>
+      <div class="stage" id="stage">
+        <!-- HOST: the real editable UI. Edit/extend this freely. -->
+        <div class="host" id="host">
+          <div class="sidebar" data-c data-label="Sidebar">
+            <div class="sb-brand" data-c data-label="Brand"><span class="dot"></span>FORGE</div>
+            <div class="sb-row" data-c data-label="Pages"><span class="ic">▤</span><span class="lbl">Pages</span><span class="chev">›</span></div>
+            <div class="sb-row" data-c data-label="Cinematics"><span class="ic">◉</span><span class="lbl">Cinematics</span><span class="chev">›</span></div>
+            <div class="sb-row" data-c data-label="Sections"><span class="ic">▱</span><span class="lbl">Sections</span><span class="chev">›</span></div>
+            <div class="sb-row" data-c data-label="Topo"><span class="ic">⛰</span><span class="lbl">Topo</span><span class="chev">›</span></div>
+            <div class="sb-row" data-c data-label="Forge"><span class="ic">▤</span><span class="lbl">Forge</span><span class="chev">›</span></div>
+            <div class="sb-row" data-c data-label="Cards"><span class="ic">▭</span><span class="lbl">Cards</span><span class="chev">›</span></div>
+            <div class="sb-footer" data-c data-label="Save">▣</div>
+          </div>
+        </div>
+        <!-- overlay lives INSIDE the stage so its (0,0) == stage (0,0) and it
+             scrolls with the content; outlines then land exactly on elements. -->
+        <div class="overlay" id="overlay"></div>
+      </div>
+    </div>
+
+    <aside class="inspector" id="inspector">
+      <div class="insp-sec">
+        <h4>Selection</h4>
+        <div class="muted" id="selInfo">Nothing selected. Click an element in design mode.</div>
+      </div>
+      <div class="insp-sec" id="kindSec" style="display:none">
+        <h4>Kind</h4>
+        <div class="row"><label>This is a</label>
+          <select id="inKind" style="flex:1;background:var(--field);color:var(--fg);border:var(--hair);border-radius:4px;padding:3px 6px;font:inherit">
+            <option value="container">container</option>
+            <option value="group">group</option>
+            <option value="panel">panel</option>
+            <option value="section">section</option>
+            <option value="card">card</option>
+            <option value="row">row</option>
+            <option value="menu">menu</option>
+            <option value="menu-item">menu-item</option>
+            <option value="button">button</option>
+            <option value="slider-row">slider-row</option>
+            <option value="text">text</option>
+            <option value="shape">shape</option>
+            <option value="image">image</option>
+          </select>
+        </div>
+        <div class="muted">Drives the glyph in the tree and the default chrome. From the kind catalog (docs 14/20/21).</div>
+      </div>
+      <div class="insp-sec" id="geoSec" style="display:none">
+        <h4>Geometry</h4>
+        <div class="row"><label>X</label><input type="number" id="inX"></div>
+        <div class="row"><label>Y</label><input type="number" id="inY"></div>
+        <div class="row"><label>Width</label><input type="number" id="inW"></div>
+        <div class="row"><label>Height</label><input type="number" id="inH"></div>
+      </div>
+      <div class="insp-sec" id="boxSec" style="display:none">
+        <h4>Padding &amp; layout</h4>
+        <div class="row"><label>Pad top</label><input type="number" id="inPadT"></div>
+        <div class="row"><label>Pad right</label><input type="number" id="inPadR"></div>
+        <div class="row"><label>Pad bottom</label><input type="number" id="inPadB"></div>
+        <div class="row"><label>Pad left</label><input type="number" id="inPadL"></div>
+        <div class="row"><label>Gap</label><input type="number" id="inGap"></div>
+        <div class="row"><label>Stack</label>
+          <select id="inDir" style="flex:1;background:var(--field);color:var(--fg);border:var(--hair);border-radius:4px;padding:3px 6px;font:inherit">
+            <option value="">free</option><option value="column">column</option><option value="row">row</option>
+          </select>
+        </div>
+        <div class="muted" id="parentInfo" style="margin-top:6px"></div>
+      </div>
+      <div class="insp-sec" id="styleSec" style="display:none">
+        <h4>Style</h4>
+        <div class="row"><label>Fill</label><input type="color" id="inBg"><input type="range" id="inBgA" min="0" max="1" step="0.01"></div>
+        <div class="row"><label>Radius</label><input type="range" id="inRad" min="0" max="40" step="1"><span class="muted" id="radVal"></span></div>
+        <div class="row"><label>Border</label><input type="range" id="inBord" min="0" max="6" step="0.5"><span class="muted" id="bordVal"></span></div>
+        <div class="row"><label>Text</label><input type="text" id="inText" placeholder="(label text)"></div>
+        <div class="row"><label>Lock</label><input type="checkbox" id="inLock"></div>
+      </div>
+      <div class="insp-sec" id="aiSec" style="display:none">
+        <h4>AI note</h4>
+        <div class="row"><label>Name</label><input type="text" id="inAiName" placeholder="what is it"></div>
+        <div class="row" style="align-items:flex-start"><label>Intent</label><textarea id="inAiIntent" placeholder="what it is for / how it works" style="flex:1;min-height:48px;background:var(--field);color:var(--fg);border:var(--hair);border-radius:4px;padding:3px 6px;font:inherit;resize:vertical"></textarea></div>
+      </div>
+      <div class="insp-sec">
+        <h4>How it works</h4>
+        <div class="muted">
+          Every <span class="pill">data-c</span> element is editable. Drag to move,
+          corner handle to resize, fields to restyle. Shift-click = multi-select.
+          Ctrl while dragging disables snap. Drag from a ruler to drop a guide.
+          All edits persist to your browser (localStorage) — no server, no build.
+        </div>
+      </div>
+    </aside>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+  // ---- elements ----
+  const stage = document.getElementById("stage");
+  const overlay = document.getElementById("overlay");
+  const stageWrap = document.getElementById("stageWrap");
+  const rulerTop = document.getElementById("rulerTop");
+  const rulerLeft = document.getElementById("rulerLeft");
+  const saveState = document.getElementById("saveState");
+  const treeEl = document.getElementById("tree");
+  const STORAGE_KEY = "gui-editor.layout.v2";
+
+  const KIND_GLYPH = { container:"▢", group:"⧉", panel:"▦", section:"▱", card:"▭", row:"≣",
+    menu:"☰", "menu-item":"·", button:"◖", "slider-row":"⊟", text:"T", shape:"◆", image:"▤" };
+  let collapsed = {}; // id -> true if its tree children are hidden
+
+  // ---- state (persisted) ----
+  //   layout[id] = { x, y, width|null, height|null, padding|null, locked, style:{bg,bgA,radius,border,text}, label }
+  //   groups[id] = { label, children:[ids] }
+  //   guides = [ {id, axis:'v'|'h', pos} ]
+  let layout = {};
+  let groups = {};
+  let guides = [];
+  let containers = {}; // id -> { id, el, label }
+  let selected = [];   // ids
+  let history = [];
+  let future = [];
+  let snapEnabled = true;
+  let nextId = 1;
+
+  // ---- persistence ----
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ layout, groups, guides, nextId }));
+      saveState.textContent = "saved";
+    } catch (e) { saveState.textContent = "save failed"; }
+  }
+  function load() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (raw) {
+        layout = raw.layout || {};
+        groups = raw.groups || {};
+        guides = raw.guides || [];
+        nextId = raw.nextId || 1;
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  // ---- container registry: every [data-c] in the host becomes editable ----
+  function registerContainers() {
+    containers = {};
+    const nodes = stage.querySelectorAll("[data-c]");
+    nodes.forEach((el, i) => {
+      let id = el.dataset.cid;
+      if (!id) { id = "c" + (i + 1) + "-" + (el.dataset.label || el.className.split(" ")[0] || "el"); el.dataset.cid = id; }
+      containers[id] = { id, el, label: el.dataset.label || id };
+      if (!layout[id]) layout[id] = blankState();
+    });
+    // virtual groups are containers too (no element; act on children)
+    for (const gid of Object.keys(groups)) {
+      containers[gid] = { id: gid, el: null, label: groups[gid].label || "Group" };
+      if (!layout[gid]) layout[gid] = blankState();
+    }
+  }
+  function blankState() {
+    return { x: 0, y: 0, width: null, height: null,
+             padT: null, padR: null, padB: null, padL: null, gap: null, dir: "",
+             kind: "container", ai: {}, locked: false, style: {} };
+  }
+  function st(id) { if (!layout[id]) layout[id] = blankState(); return layout[id]; }
+
+  // ---- apply state to the real DOM (offsets, sizes, padding, layout, styles) ----
+  function applyAll() {
+    for (const id of Object.keys(containers)) {
+      const c = containers[id]; if (!c.el) continue;
+      const s = st(id);
+      c.el.style.transform = `translate(${s.x || 0}px, ${s.y || 0}px)`;
+      if (s.width != null) c.el.style.width = s.width + "px";
+      if (s.height != null) c.el.style.height = s.height + "px";
+      // per-side padding (only write sides that are set)
+      if (s.padT != null) c.el.style.paddingTop = s.padT + "px";
+      if (s.padR != null) c.el.style.paddingRight = s.padR + "px";
+      if (s.padB != null) c.el.style.paddingBottom = s.padB + "px";
+      if (s.padL != null) c.el.style.paddingLeft = s.padL + "px";
+      // layout: when "stack" is set the container lays its children out in flow
+      // (column/row) with the gap; "free" leaves children absolutely placed.
+      if (s.dir === "column" || s.dir === "row") {
+        c.el.style.display = "flex";
+        c.el.style.flexDirection = s.dir;
+        if (s.gap != null) c.el.style.gap = s.gap + "px";
+      }
+      const stl = s.style || {};
+      if (stl.bg) c.el.style.background = hexA(stl.bg, stl.bgA != null ? stl.bgA : 1);
+      if (stl.radius != null) c.el.style.borderRadius = stl.radius + "px";
+      if (stl.border != null) c.el.style.borderWidth = stl.border + "px";
+      if (stl.text != null) {
+        const lbl = c.el.querySelector(".lbl");
+        if (lbl) lbl.textContent = stl.text; else if (!c.el.children.length) c.el.textContent = stl.text;
+      }
+    }
+  }
+  function hexA(hex, a) {
+    const h = hex.replace("#", "");
+    if (h.length !== 6) return hex;
+    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  // ---- rect helpers (in stage coordinates) ----
+  function stageRect() { return stage.getBoundingClientRect(); }
+  function rectOf(id) {
+    const c = containers[id];
+    if (c && c.el) {
+      const r = c.el.getBoundingClientRect(); const s = stageRect();
+      return { left: r.left - s.left, top: r.top - s.top, width: r.width, height: r.height,
+               right: r.right - s.left, bottom: r.bottom - s.top };
+    }
+    // group: union of children
+    if (groups[id]) {
+      let L=Infinity,T=Infinity,R=-Infinity,B=-Infinity;
+      for (const ch of groups[id].children) { const cr = rectOf(ch); if(!cr) continue;
+        L=Math.min(L,cr.left);T=Math.min(T,cr.top);R=Math.max(R,cr.right);B=Math.max(B,cr.bottom); }
+      if (L===Infinity) return null;
+      return { left:L, top:T, width:R-L, height:B-T, right:R, bottom:B };
+    }
+    return null;
+  }
+
+  // ---- overlay render ----
+  let activeSnap = [];
+  function renderOverlay() {
+    overlay.innerHTML = "";
+    // guides
+    for (const g of guides) {
+      const d = document.createElement("div");
+      d.className = "guide " + g.axis;
+      if (g.axis === "v") d.style.left = g.pos + "px"; else d.style.top = g.pos + "px";
+      d.dataset.guide = g.id;
+      d.addEventListener("pointerdown", startGuideDrag);
+      overlay.appendChild(d);
+    }
+    // snap lines
+    for (const sl of activeSnap) {
+      const d = document.createElement("div");
+      d.className = "snap-line " + sl.axis;
+      if (sl.axis === "v") d.style.left = sl.pos + "px"; else d.style.top = sl.pos + "px";
+      overlay.appendChild(d);
+    }
+    // outlines
+    for (const id of Object.keys(containers)) {
+      const r = rectOf(id); if (!r) continue;
+      const s = st(id);
+      const o = document.createElement("div");
+      o.className = "dev-outline" + (selected.includes(id) ? " is-selected" : "") + (s.locked ? " is-locked" : "");
+      o.style.left = r.left + "px"; o.style.top = r.top + "px";
+      o.style.width = r.width + "px"; o.style.height = r.height + "px";
+      o.dataset.target = id;
+      o.addEventListener("pointerdown", startDrag);
+      const lab = document.createElement("div");
+      lab.className = "dev-label"; lab.textContent = containers[id].label + (groups[id] ? " ⧉" : "");
+      o.appendChild(lab);
+      if (selected.includes(id) && !s.locked) {
+        const h = document.createElement("div");
+        h.className = "dev-resize-handle"; h.dataset.resize = id;
+        h.addEventListener("pointerdown", startResize);
+        o.appendChild(h);
+      }
+      overlay.appendChild(o);
+    }
+    // visible padding shading for the single selected container
+    if (selected.length === 1) {
+      const id = selected[0]; const c = containers[id];
+      if (c && c.el) {
+        const r = rectOf(id); const cs = getComputedStyle(c.el);
+        const pt = parseFloat(cs.paddingTop)||0, pr = parseFloat(cs.paddingRight)||0,
+              pb = parseFloat(cs.paddingBottom)||0, pl = parseFloat(cs.paddingLeft)||0;
+        const bw = parseFloat(cs.borderTopWidth)||0;
+        const mk = (x,y,w,h)=>{ if(w<=0||h<=0) return; const d=document.createElement("div");
+          d.className="pad-shade"; d.style.left=(r.left+x)+"px"; d.style.top=(r.top+y)+"px";
+          d.style.width=w+"px"; d.style.height=h+"px"; overlay.appendChild(d); };
+        const iw = r.width, ih = r.height;
+        mk(bw, bw, iw-2*bw, pt);                          // top
+        mk(bw, ih-bw-pb, iw-2*bw, pb);                    // bottom
+        mk(bw, bw+pt, pl, ih-2*bw-pt-pb);                 // left
+        mk(iw-bw-pr, bw+pt, pr, ih-2*bw-pt-pb);           // right
+      }
+    }
+    if (marquee) {
+      const d = document.createElement("div"); d.className = "marquee";
+      d.style.left = marquee.x + "px"; d.style.top = marquee.y + "px";
+      d.style.width = marquee.w + "px"; d.style.height = marquee.h + "px";
+      overlay.appendChild(d);
+    }
+  }
+
+  // ---- layers tree (left) — mirrors real DOM nesting ----
+  function childContainerIds(parentEl) {
+    // direct descendant containers (skip intermediate non-container wrappers)
+    const out = [];
+    const walk = (node) => {
+      for (const ch of node.children) {
+        if (ch.dataset && ch.dataset.cid && containers[ch.dataset.cid]) out.push(ch.dataset.cid);
+        else walk(ch);
+      }
+    };
+    walk(parentEl);
+    return out;
+  }
+  function renderTree() {
+    treeEl.innerHTML = "";
+    const host = stage.querySelector(".host");
+    const roots = childContainerIds(host);
+    const addRow = (id, depth) => {
+      const c = containers[id]; if (!c) return;
+      const kids = c.el ? childContainerIds(c.el) : (groups[id] ? groups[id].children : []);
+      const row = document.createElement("div");
+      row.className = "tree-row" + (selected.includes(id) ? " is-selected" : "");
+      row.style.paddingLeft = (8 + depth*14) + "px";
+      const caret = document.createElement("span"); caret.className = "caret";
+      caret.textContent = kids.length ? (collapsed[id] ? "▸" : "▾") : "";
+      caret.addEventListener("click", (e)=>{ e.stopPropagation(); collapsed[id]=!collapsed[id]; renderTree(); });
+      const glyph = document.createElement("span"); glyph.className="kind";
+      glyph.textContent = KIND_GLYPH[st(id).kind] || "▢";
+      const name = document.createElement("span"); name.className="name"; name.textContent = c.label;
+      const lock = document.createElement("span"); lock.className="lock"; lock.textContent = st(id).locked ? "🔒" : "";
+      row.append(caret, glyph, name, lock);
+      row.addEventListener("click", ()=> select(id));
+      treeEl.appendChild(row);
+      if (!collapsed[id]) for (const k of kids) addRow(k, depth+1);
+    };
+    for (const r of roots) addRow(r, 0);
+  }
+
+  // ---- selection ----
+  function select(id, multi) {
+    if (!id) { selected = []; }
+    else if (multi) { selected.includes(id) ? selected = selected.filter(x=>x!==id) : selected.push(id); }
+    else { selected = [id]; }
+    renderInspector(); renderOverlay(); renderTree();
+    // scroll the selected tree row into view
+    const r = treeEl.querySelector(".tree-row.is-selected"); if (r) r.scrollIntoView({block:"nearest"});
+  }
+
+  // ---- drag (move) with snap ----
+  let drag = null, marquee = null;
+  function snapVal(v, candidates) {
+    if (!snapEnabled) return { v, line: null };
+    const grid = 8;
+    let best = Math.round(v / grid) * grid, bestD = Math.abs(best - v), line = null;
+    for (const c of candidates) { const d = Math.abs(c - v); if (d < bestD && d <= 6) { best = c; bestD = d; line = c; } }
+    return { v: best, line: bestD <= 6 ? best : null };
+  }
+  function expandMoveIds(ids) {
+    const out = [];
+    for (const id of ids) { if (groups[id]) out.push(...groups[id].children); else out.push(id); }
+    return [...new Set(out)];
+  }
+  function moveCandidates(excludeSet) {
+    const xs = [], ys = [];
+    for (const id of Object.keys(containers)) {
+      if (excludeSet.has(id) || groups[id]) continue;
+      const r = rectOf(id); if (!r) continue;
+      xs.push(r.left, r.right, r.left + r.width / 2);
+      ys.push(r.top, r.bottom, r.top + r.height / 2);
+    }
+    for (const g of guides) { if (g.axis === "v") xs.push(g.pos); else ys.push(g.pos); }
+    return { xs, ys };
+  }
+  function startDrag(e) {
+    const id = e.currentTarget.dataset.target;
+    select(id, e.shiftKey);
+    if (st(id).locked) return;
+    e.preventDefault(); e.stopPropagation();
+    const r0 = rectOf(id) || { left: 0, top: 0 };
+    const moveIds = expandMoveIds(selected.length > 1 ? selected.slice() : [id]);
+    const gstart = {};
+    for (const mid of moveIds) { const gs = st(mid); gstart[mid] = { x: gs.x || 0, y: gs.y || 0 }; }
+    drag = {
+      id, sx: e.clientX, sy: e.clientY,
+      startLeft: r0.left, startTop: r0.top,   // clicked target's on-screen rect at start
+      moveIds, gstart,
+    };
+    pushHistory();
+    // No setPointerCapture: the outline node is rebuilt on select(), so capturing
+    // a detached node throws. window-level pointermove/up below track the drag.
+  }
+  // Lightweight per-frame update: reposition existing outline divs + redraw snap
+  // lines, WITHOUT wiping and rebuilding the whole overlay (that caused flicker
+  // and laggy dragging). Full renderOverlay only runs on select / up / structural change.
+  function positionOutlines() {
+    for (const o of overlay.querySelectorAll(".dev-outline")) {
+      const r = rectOf(o.dataset.target); if (!r) continue;
+      o.style.left = r.left + "px"; o.style.top = r.top + "px";
+      o.style.width = r.width + "px"; o.style.height = r.height + "px";
+    }
+    overlay.querySelectorAll(".snap-line").forEach(n => n.remove());
+    for (const sl of activeSnap) {
+      const d = document.createElement("div");
+      d.className = "snap-line " + sl.axis;
+      if (sl.axis === "v") d.style.left = sl.pos + "px"; else d.style.top = sl.pos + "px";
+      overlay.appendChild(d);
+    }
+  }
+  function onMove(e) {
+    if (drag) {
+      const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+      activeSnap = [];
+      let targetLeft = drag.startLeft + dx;   // desired on-screen left of the clicked target
+      let targetTop = drag.startTop + dy;
+      if (!(e.ctrlKey || e.metaKey)) {
+        const cand = moveCandidates(new Set(drag.moveIds));
+        const snX = snapVal(targetLeft, cand.xs);
+        const snY = snapVal(targetTop, cand.ys);
+        if (snX.line != null) activeSnap.push({ axis: "v", pos: snX.line });
+        if (snY.line != null) activeSnap.push({ axis: "h", pos: snY.line });
+        targetLeft = snX.v; targetTop = snY.v;
+      }
+      const ddx = targetLeft - drag.startLeft;   // total snapped movement from start
+      const ddy = targetTop - drag.startTop;
+      for (const mid of drag.moveIds) {
+        const ss = st(mid);
+        ss.x = drag.gstart[mid].x + ddx;
+        ss.y = drag.gstart[mid].y + ddy;
+      }
+      applyAll(); positionOutlines(); markDirty();
+    } else if (marquee && marquee.active) {
+      const s = stageRect();
+      const cx = e.clientX - s.left, cy = e.clientY - s.top;
+      marquee.w = Math.abs(cx - marquee.ox); marquee.h = Math.abs(cy - marquee.oy);
+      marquee.x = Math.min(cx, marquee.ox); marquee.y = Math.min(cy, marquee.oy);
+      renderOverlay();
+    } else if (guideDrag) {
+      const s = stageRect();
+      const g = guides.find(x=>x.id===guideDrag.id); if (!g) return;
+      g.pos = guideDrag.axis==="v" ? (e.clientX - s.left) : (e.clientY - s.top);
+      const node = overlay.querySelector(`.guide[data-guide="${g.id}"]`);
+      if (node) { if (g.axis==="v") node.style.left = g.pos+"px"; else node.style.top = g.pos+"px"; }
+      markDirty();
+    } else if (resize) {
+      const ss = st(resize.id);
+      let w = resize.w + (e.clientX - resize.sx), h = resize.h + (e.clientY - resize.sy);
+      if (snapEnabled && !(e.ctrlKey||e.metaKey)) { w = Math.round(w/8)*8; h = Math.round(h/8)*8; }
+      ss.width = Math.max(8, Math.round(w)); ss.height = Math.max(8, Math.round(h));
+      applyAll(); positionOutlines(); renderInspector(); markDirty();
+    }
+  }
+  function onUp(e) {
+    if (drag) {
+      // Drag-to-nest: if the dragged element was dropped over a container,
+      // reparent it into that container (real DOM nesting), preserving its
+      // on-screen position. Hold Alt to drop without nesting.
+      if (!(e && e.altKey) && drag.moveIds.length === 1) {
+        const movedId = drag.moveIds[0];
+        const movedC = containers[movedId];
+        if (movedC && movedC.el) {
+          const target = containerUnderPoint(e ? e.clientX : 0, e ? e.clientY : 0, movedId);
+          if (target && target !== currentParentId(movedId)) reparent(movedId, target);
+        }
+      }
+      activeSnap = []; renderOverlay(); save();
+    }
+    if (marquee && marquee.active) {
+      const sel = [];
+      for (const id of Object.keys(containers)) { const r = rectOf(id); if(!r) continue;
+        if (r.left>=marquee.x && r.top>=marquee.y && r.right<=marquee.x+marquee.w && r.bottom<=marquee.y+marquee.h) sel.push(id); }
+      selected = sel; renderInspector();
+    }
+    if (resize) save();
+    if (guideDrag) save();
+    drag = null; marquee = null; guideDrag = null; resize = null;
+    renderOverlay();
+  }
+
+  // ---- nesting (reparent) ----
+  function currentParentId(id) {
+    const c = containers[id]; if (!c || !c.el) return null;
+    let p = c.el.parentElement;
+    while (p && p !== stage) { if (p.dataset && p.dataset.cid) return p.dataset.cid; p = p.parentElement; }
+    return null;
+  }
+  function containerUnderPoint(clientX, clientY, excludeId) {
+    // topmost editable container under the pointer that is NOT the dragged
+    // element or one of its descendants.
+    const movedEl = containers[excludeId]?.el;
+    let best = null, bestArea = Infinity;
+    for (const id of Object.keys(containers)) {
+      if (id === excludeId) continue;
+      const c = containers[id]; if (!c.el) continue;
+      if (movedEl && movedEl.contains(c.el)) continue;     // don't nest into own child
+      if (c.el.contains(movedEl)) { /* current/ancestor — still a valid target */ }
+      const r = c.el.getBoundingClientRect();
+      if (clientX>=r.left && clientX<=r.right && clientY>=r.top && clientY<=r.bottom) {
+        const area = r.width * r.height;
+        if (area < bestArea) { best = id; bestArea = area; }   // smallest = innermost
+      }
+    }
+    return best;
+  }
+  function reparent(id, newParentId) {
+    const child = containers[id], parent = containers[newParentId];
+    if (!child || !parent || !child.el || !parent.el) return;
+    if (child.el.contains(parent.el)) return;
+    // capture on-screen position, move in DOM, then restore position so it
+    // doesn't visually jump.
+    const before = child.el.getBoundingClientRect();
+    const s = st(id); s.x = 0; s.y = 0;                       // reset offset; we recompute below
+    if (getComputedStyle(parent.el).position === "static") parent.el.style.position = "relative";
+    child.el.style.position = "absolute";
+    parent.el.appendChild(child.el);
+    child.el.style.transform = "translate(0px,0px)";
+    const pr = parent.el.getBoundingClientRect();
+    const after = child.el.getBoundingClientRect();
+    // place child so its top-left matches where it was dropped (relative to parent)
+    child.el.style.left = (before.left - pr.left) + "px";
+    child.el.style.top = (before.top - pr.top) + "px";
+    s.x = 0; s.y = 0;
+    registerContainers(); applyAll(); save();
+  }
+
+  // ---- resize ----
+  let resize = null;
+  function startResize(e) {
+    const id = e.currentTarget.dataset.resize; if (st(id).locked) return;
+    e.preventDefault(); e.stopPropagation();
+    const r = rectOf(id); const s = st(id);
+    pushHistory();
+    resize = { id, sx: e.clientX, sy: e.clientY, w: s.width ?? r.width, h: s.height ?? r.height };
+    // window pointermove/up track the resize; no setPointerCapture (node is rebuilt).
+  }
+
+  // ---- guides ----
+  let guideDrag = null;
+  function startGuideDrag(e) { e.preventDefault(); e.stopPropagation();
+    const id = e.currentTarget.dataset.guide; const g = guides.find(x=>x.id===id);
+    guideDrag = { id, axis: g.axis }; }
+  function addGuideFromRuler(axis, clientPos) {
+    const s = stageRect();
+    const pos = axis==="v" ? (clientPos - s.left) : (clientPos - s.top);
+    guides.push({ id: "g"+(nextId++), axis, pos: Math.round(pos) });
+    save(); renderOverlay();
+  }
+  rulerTop.addEventListener("pointerdown", e => addGuideFromRuler("v", e.clientX));
+  rulerLeft.addEventListener("pointerdown", e => addGuideFromRuler("h", e.clientY));
+
+  // ---- marquee on empty stage ----
+  overlay.parentElement.addEventListener("pointerdown", e => {
+    if (e.target !== overlay && e.target !== stage && !e.target.classList?.contains("host")) return;
+    const s = stageRect();
+    select(null);
+    marquee = { active: true, ox: e.clientX - s.left, oy: e.clientY - s.top, x:0,y:0,w:0,h:0 };
+  });
+
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", onUp);
+
+  // ---- history (undo/redo) ----
+  function snapshot() { return JSON.stringify({ layout, groups, guides }); }
+  function pushHistory() { history.push(snapshot()); if (history.length>100) history.shift(); future = []; }
+  function restore(json) { const o = JSON.parse(json); layout=o.layout; groups=o.groups; guides=o.guides;
+    registerContainers(); applyAll(); renderOverlay(); renderInspector(); save(); }
+  function undo() { if (!history.length) return; future.push(snapshot()); restore(history.pop()); }
+  function redo() { if (!future.length) return; history.push(snapshot()); restore(future.pop()); }
+
+  // ---- add elements (base tools) ----
+  // If a container is selected, the new element is created INSIDE it (nested);
+  // otherwise it drops into the host root. New elements are absolutely placed so
+  // they can be freely dragged, and become real DOM children for nesting.
+  function selectedContainerEl() {
+    if (selected.length === 1) {
+      const c = containers[selected[0]];
+      if (c && c.el) return c.el;
+    }
+    return stage.querySelector(".host");
+  }
+  function createEl(kind) {
+    const parent = selectedContainerEl();
+    if (parent !== stage.querySelector(".host") && getComputedStyle(parent).position === "static") {
+      parent.style.position = "relative";
+    }
+    const id = "c-" + kind + "-" + (nextId++);
+    const el = document.createElement("div");
+    el.dataset.c = ""; el.dataset.cid = id;
+    const base = "position:absolute;left:20px;top:20px;box-sizing:border-box;";
+    if (kind === "text") {
+      el.dataset.label = "Text";
+      el.style.cssText = base + "min-width:60px;color:#f4f0e8;font:14px system-ui;padding:2px 4px;";
+      el.textContent = "Text";
+    } else if (kind === "rect") {
+      el.dataset.label = "Rect";
+      el.style.cssText = base + "width:160px;height:90px;background:rgba(120,180,220,0.18);border:1px solid rgba(255,255,255,0.25);border-radius:6px;";
+    } else if (kind === "ellipse") {
+      el.dataset.label = "Ellipse";
+      el.style.cssText = base + "width:90px;height:90px;background:rgba(200,140,180,0.22);border:1px solid rgba(255,255,255,0.25);border-radius:50%;";
+    } else if (kind === "row") {
+      el.dataset.label = "Row";
+      el.className = "sb-row"; el.style.cssText = base + "width:280px;";
+      el.innerHTML = '<span class="ic">▤</span><span class="lbl">Row</span><span class="chev">›</span>';
+    } else { // container
+      el.dataset.label = "Container";
+      el.style.cssText = base + "width:200px;height:120px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.25);border-radius:8px;";
+    }
+    parent.appendChild(el);
+    pushHistory(); registerContainers(); applyAll(); select(id); save();
+  }
+  function addContainer() { createEl("container"); }
+  function groupSelection() {
+    if (selected.length < 2) return;
+    const gid = "group-" + (nextId++);
+    groups[gid] = { label: "Group", children: selected.slice() };
+    pushHistory(); registerContainers(); select(gid); renderOverlay(); save();
+  }
+  function deleteSelection() {
+    if (!selected.length) return;
+    pushHistory();
+    for (const id of selected) {
+      if (groups[id]) { delete groups[id]; }
+      else { const c = containers[id]; if (c && c.el && c.el.dataset.cid.startsWith("c-new-")) c.el.remove();
+             else if (c && c.el) c.el.style.visibility = "hidden"; }
+      delete layout[id];
+    }
+    selected = []; registerContainers(); applyAll(); renderOverlay(); renderInspector(); save();
+  }
+
+  // ---- inspector ----
+  const $ = id => document.getElementById(id);
+  function renderInspector() {
+    const kindS = $("kindSec"), geo = $("geoSec"), box = $("boxSec"), sty = $("styleSec"), ai = $("aiSec"), info = $("selInfo");
+    if (selected.length !== 1) {
+      kindS.style.display = geo.style.display = box.style.display = sty.style.display = ai.style.display = "none";
+      info.textContent = selected.length>1 ? selected.length + " selected" : "Nothing selected. Click an element in design mode.";
+      return;
+    }
+    const id = selected[0]; const c = containers[id]; const s = st(id); const r = rectOf(id) || {width:0,height:0};
+    info.innerHTML = `<strong>${c.label}</strong> <span class="pill">${id}</span>`;
+    kindS.style.display = c.el ? "" : "none";
+    geo.style.display = ""; box.style.display = c.el ? "" : "none"; sty.style.display = c.el ? "" : "none";
+    ai.style.display = "";
+    $("inKind").value = s.kind || "container";
+    $("inAiName").value = (s.ai && s.ai.name) || "";
+    $("inAiIntent").value = (s.ai && s.ai.intent) || "";
+    $("inX").value = Math.round(s.x||0); $("inY").value = Math.round(s.y||0);
+    $("inW").value = Math.round(s.width ?? r.width); $("inH").value = Math.round(s.height ?? r.height);
+    $("inPadT").value = s.padT ?? ""; $("inPadR").value = s.padR ?? "";
+    $("inPadB").value = s.padB ?? ""; $("inPadL").value = s.padL ?? "";
+    $("inGap").value = s.gap ?? ""; $("inDir").value = s.dir ?? "";
+    const pid = c.el ? currentParentId(id) : null;
+    $("parentInfo").textContent = pid ? ("Nested in: " + (containers[pid]?.label || pid)) : "Top level (host root)";
+    const stl = s.style || {};
+    $("inBg").value = stl.bg || "#1c2024"; $("inBgA").value = stl.bgA != null ? stl.bgA : 1;
+    $("inRad").value = stl.radius ?? 8; $("radVal").textContent = ($("inRad").value)+"px";
+    $("inBord").value = stl.border ?? 1; $("bordVal").textContent = ($("inBord").value)+"px";
+    $("inText").value = stl.text ?? "";
+    $("inLock").checked = !!s.locked;
+  }
+  function bindNum(elId, fn) { $(elId).addEventListener("input", () => { if(selected.length!==1) return;
+    pushHistory(); fn(st(selected[0]), parseFloat($(elId).value)); applyAll(); renderOverlay(); save(); }); }
+  bindNum("inX", (s,v)=>s.x=v); bindNum("inY", (s,v)=>s.y=v);
+  bindNum("inW", (s,v)=>s.width=v); bindNum("inH", (s,v)=>s.height=v);
+  const num = v => isNaN(v) ? null : v;
+  bindNum("inPadT", (s,v)=>s.padT=num(v)); bindNum("inPadR", (s,v)=>s.padR=num(v));
+  bindNum("inPadB", (s,v)=>s.padB=num(v)); bindNum("inPadL", (s,v)=>s.padL=num(v));
+  bindNum("inGap", (s,v)=>s.gap=num(v));
+  $("inDir").addEventListener("change", () => { if(selected.length!==1) return;
+    pushHistory(); const s = st(selected[0]); s.dir = $("inDir").value;
+    const c = containers[selected[0]];
+    if (c && c.el && s.dir !== "column" && s.dir !== "row") { c.el.style.display=""; c.el.style.flexDirection=""; }
+    applyAll(); renderOverlay(); renderInspector(); save(); });
+  $("inKind").addEventListener("change", () => { if(selected.length!==1) return;
+    pushHistory(); const id = selected[0]; const s = st(id); s.kind = $("inKind").value;
+    const c = containers[id]; if (c && c.el) c.el.dataset.kind = s.kind;
+    renderTree(); renderInspector(); save(); });
+  function bindAi(elId, key){ $(elId).addEventListener("input", ()=>{ if(selected.length!==1) return;
+    const s = st(selected[0]); s.ai = s.ai||{}; s.ai[key] = $(elId).value; save(); }); }
+  bindAi("inAiName","name"); bindAi("inAiIntent","intent");
+  function bindStyle(elId, key, fn) { $(elId).addEventListener("input", () => { if(selected.length!==1) return;
+    const s = st(selected[0]); s.style = s.style||{}; s.style[key] = fn ? fn($(elId).value) : $(elId).value;
+    applyAll(); renderOverlay(); renderInspector(); save(); }); }
+  bindStyle("inBg","bg"); bindStyle("inBgA","bgA", parseFloat);
+  bindStyle("inRad","radius", parseFloat); bindStyle("inBord","border", parseFloat);
+  bindStyle("inText","text");
+  $("inLock").addEventListener("change", () => { if(selected.length!==1) return;
+    st(selected[0]).locked = $("inLock").checked; renderOverlay(); save(); });
+
+  // ---- toolbar ----
+  function setDirtyUI(){ saveState.textContent = "•"; }
+  function markDirty(){ saveState.textContent = "editing…"; }
+  $("btnDev").addEventListener("click", () => { document.body.classList.toggle("dev");
+    $("btnDev").classList.toggle("on", document.body.classList.contains("dev")); });
+  $("btnGrid").addEventListener("click", () => { document.body.classList.toggle("show-grid");
+    $("btnGrid").classList.toggle("on", document.body.classList.contains("show-grid")); });
+  $("btnSnap").addEventListener("click", () => { snapEnabled = !snapEnabled; $("btnSnap").classList.toggle("on", snapEnabled); });
+  $("btnAdd").addEventListener("click", addContainer);
+  $("addText").addEventListener("click", ()=>createEl("text"));
+  $("addRect").addEventListener("click", ()=>createEl("rect"));
+  $("addEllipse").addEventListener("click", ()=>createEl("ellipse"));
+  $("addRow").addEventListener("click", ()=>createEl("row"));
+  $("btnGroup").addEventListener("click", groupSelection);
+  $("btnDelete").addEventListener("click", deleteSelection);
+  $("btnUndo").addEventListener("click", undo);
+  $("btnRedo").addEventListener("click", redo);
+  $("btnReset").addEventListener("click", () => { if (confirm("Clear all saved edits and reload defaults?")) {
+    localStorage.removeItem(STORAGE_KEY); location.reload(); } });
+
+  // ---- keyboard ----
+  window.addEventListener("keydown", e => {
+    const t = e.target; if (t && (t.tagName==="INPUT"||t.tagName==="TEXTAREA")) return;
+    const cmd = e.ctrlKey || e.metaKey;
+    if (cmd && e.key.toLowerCase()==="z") { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+    else if (cmd && e.key.toLowerCase()==="g") { e.preventDefault(); groupSelection(); }
+    else if (e.key==="Delete" || e.key==="Backspace") { deleteSelection(); }
+    else if (e.key.toLowerCase()==="d") { $("btnDev").click(); }
+    else if (e.key.toLowerCase()==="g") { $("btnGrid").click(); }
+    else if (e.key.toLowerCase()==="s") { $("btnSnap").click(); }
+    else if (e.key==="Escape") { select(null); }
+    else if (e.key.startsWith("Arrow") && selected.length) {
+      e.preventDefault(); pushHistory(); const d = e.shiftKey?10:1;
+      const dx = e.key==="ArrowLeft"?-d:e.key==="ArrowRight"?d:0;
+      const dy = e.key==="ArrowUp"?-d:e.key==="ArrowDown"?d:0;
+      for (const id of selected) { const s=st(id); s.x=(s.x||0)+dx; s.y=(s.y||0)+dy; }
+      applyAll(); renderOverlay(); renderInspector(); save();
+    }
+  });
+
+  // ---- rulers ----
+  function renderRulers() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    let html = "";
+    for (let x=0; x<=w; x+=50) html += `<div class="tick" style="left:${x}px">${x}</div>`;
+    rulerTop.innerHTML = html;
+    html = "";
+    for (let y=0; y<=h; y+=50) html += `<div class="tick" style="top:${y}px">${y}</div>`;
+    rulerLeft.innerHTML = html;
+  }
+
+  // ---- boot ----
+  load();
+  registerContainers();
+  applyAll();
+  renderRulers();
+  renderOverlay();
+  renderInspector();
+  window.addEventListener("resize", () => { renderRulers(); renderOverlay(); });
+  stageWrap.addEventListener("scroll", renderOverlay);
+})();
+</script>
+</body>
+</html>
