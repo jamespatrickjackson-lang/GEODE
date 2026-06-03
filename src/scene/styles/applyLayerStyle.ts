@@ -5,6 +5,7 @@ import { UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID, UTAH_FORGE_SCENE_SECTI
 import { setTerrainShadowInfluence } from "../../loaders/topoLineMaterial";
 import { applyPointDistanceLightMaterial } from "../shaders/pointDistanceLightShader";
 import { setMaterialFog } from "../shaders/layerFogShader";
+import { applyLocalAtmosphereVolumeStyle } from "./atmosphereVolumeStyle";
 import { clamp01, clampRange, styleNumber } from "./styleUtils";
 
 function styleAffectedByFog(style: EditableStyle): boolean {
@@ -23,6 +24,7 @@ export function applyStyle(this: any, id: string, style: EditableStyle): void {
     this.applyWorkingAreaFocusStyle(style);
     return;
   }
+  if (applyLocalAtmosphereVolumeStyle(this, id, style)) return;
   const group = this.layers.get(id);
   const affectedByFog = styleAffectedByFog(style);
   const fogDensity = styleFogDensity(style, this.envFogDensity);
@@ -180,6 +182,7 @@ export function applyStyle(this: any, id: string, style: EditableStyle): void {
   this.applySeismicBrowserStyle(id, style);
   this.applyContourDisplayStyle(id, style);
   this.applySiteSurfaceGuideStyle(id, style);
+  applyLocalAtmosphereVolumeStyle(this, id, style);
   if (id === UTAH_FORGE_SCENE_SECTION_LAYER_ID) {
     this.sceneSectionStyleTween = null;
     this.sceneSectionHelperTransitionOpacity = 1;

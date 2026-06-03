@@ -33,8 +33,11 @@ Checklist:
 - Open `gui-editor.html`.
 - Confirm the layers tree is populated.
 - Select `Pages` from the tree.
-- Confirm inspector sections appear: Kind, Geometry, Padding & Layout, Style,
-  Notes.
+- Confirm mode controls appear: Component, Assembly, Product.
+- Confirm the Library panel appears with Components, Assemblies, Products,
+  Colours, Icons, Tokens, and Styles.
+- Confirm inspector sections appear: Kind, Tier & Library, GeoSee Variables,
+  Geometry, Padding & Layout, Style, Notes.
 - Confirm console has no errors.
 - Capture one screenshot at the first viewport.
 
@@ -70,8 +73,13 @@ Goal: make direct manipulation feel dependable.
 Checklist:
 
 - Drag, resize, grid, snap, guides, and alignment guides are visually legible.
-- Add Container/Text/Rect/Ellipse/Row inserts into the selected container when
-  appropriate.
+- Add Container/Text/Rect/Ellipse/Line/Icon/Divider/Swatch/Input/Row inserts
+  into the selected container when appropriate.
+- Component/Assembly/Product modes assign sensible default tiers.
+- Save as Component/Assembly/Product creates library entries.
+- Clicking a library entry instantiates an editable DOM copy.
+- GeoSee variable presets apply overlay-card, navigator, editor-chrome, and
+  label styling concepts.
 - Undo/redo covers creates, deletes, moves, resizes, grouping, and property
   changes.
 - The overlay never blocks normal inspection of the edited panel.

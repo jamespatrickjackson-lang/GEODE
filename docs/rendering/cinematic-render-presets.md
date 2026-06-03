@@ -44,12 +44,42 @@ Presets may patch only existing world-building and presentation fields where pos
 - `scene.ambientOcclusion`
 - `scene.vignette`
 - `scene.colorGrade`
+- `scene.depthOfField`
+- `scene.tiltShift`
+- `scene.lensEffects`
+- `scene.motionTrails`
+- `scene.presentationFrame`
+- `scene.compositionGuides`
 - `scene.gui.labels`
 - public-context layer style fields for roads, hydrography, boundaries, claims, site outlines, and similar reference layers
 - topo, contour, and isoline presentation style fields such as color, opacity, width, index emphasis, fog response, and distance fade
 - page-level cinematic presentation fields, including existing `cinematicExposure`, `bloomBoost`, and `sunLockToCamera`
 
 The preset system should prefer shallow patches onto existing config objects. It should not introduce duplicate scene concepts.
+
+The cinematic post-processing stack is runtime ordered as:
+
+`RenderPass -> SSAOPass -> BokehPass -> UnrealBloomPass -> TiltShiftPass -> AfterimagePass -> LensGradePass -> SMAAPass -> OutputPass`.
+
+Depth of field, tilt-shift, motion trails, composition guides, and presentation
+frame mattes are default-off. DOF is depth-buffer based and focus-distance
+aware; focus can come from the page target, the saved camera object focus
+point, a manual distance, or an authored picked point with an optional distance
+offset and default-off debug plane. Lens grade keeps the older contrast,
+saturation, vibrancy, tint, and vignette controls while adding temperature,
+black/white point, lift/gamma/gain, split tone, filter preset, grain, lens
+distortion, chromatic aberration, sharpen, diffusion, halation, anamorphic
+streaks, letterbox/matte framing, corner fade, gate weave, and optional
+composition guide uniforms.
+
+Cinematic post effects participate in page transitions through a separate
+`main-camera/cinematic-post` channel. Numeric post fields such as grade, DOF,
+tilt-shift, lens effects, motion trails, and presentation frame values blend
+continuously with the page transition easing. DOF focus distance and focus
+offset blend continuously; focus mode and debug plane are discrete. Composition
+guides and lens preset labels are discrete authoring overlays. Dolly, truck,
+crane, handheld, and roll are timed-shot camera motion fields driven by
+`dynamicCamera` `shotStartMs`, `shotEndMs`, and `shotCurve`.
 
 ## Fields Explicitly Not Affected
 
@@ -76,6 +106,7 @@ Proposed resolution order for future implementation:
 5. Existing explicit page scene controls, such as `cinematicExposure`, `bloomBoost`, and `sunLockToCamera`.
 6. Existing page `visibilityOverrides` and `layerOverrides`.
 7. Runtime/editor user adjustments, if present.
+8. Runtime topo material authority re-applies environment terrain material source fields after scene merging.
 
 Rules:
 
@@ -84,6 +115,7 @@ Rules:
 - Page-local explicit overrides win over preset values.
 - Layer-scoped page overrides win over public-context style presets.
 - Preset resolution should be inspectable for diagnostics and future focused verification evidence.
+- `npm run inspect:effective -- --render-stack` reports the active preset, scene patch, page overrides, terrain authority winner, active texture URL/cache key, bounds, public clip, edge fade, edge outline, material/shader, geometry/LOD, and post-processing pass order.
 
 ## Recommended First Presets
 
@@ -183,12 +215,29 @@ Captured fields are limited to cinematic/world-building fields:
 - `scene.ambientOcclusion`
 - `scene.vignette`
 - `scene.colorGrade`
+- `scene.depthOfField`
+- `scene.tiltShift`
+- `scene.lensEffects`
+- `scene.motionTrails`
+- `scene.presentationFrame`
+- `scene.compositionGuides`
 - `scene.gui`
 - safe public-context/contour layer style fields by layer ID, when represented globally in `environment.layerStyles`
 
 Custom presets intentionally do not capture MT model data, scalar ranges,
 seismic data, voxel/slice/heat-map state, source data paths, coordinates,
 loader behavior, generated artifacts, or project/page navigation state.
+
+Depth of field remains default off. When enabled, `focusMode` can resolve the
+page target, a saved camera-object focus point, a manual distance, or an
+authored picked point; `focusOffsetM` shifts that resolved distance. The
+debug focus plane is also default off and exposes `debugFocusPlaneOpacity` and
+`debugFocusPlaneScale` for visual tuning without changing the blur.
+
+Composition guides remain toggleable and default off. `lineThickness` defaults
+to `0.25`, is uploaded to the lens-grade shader as `guideLineThickness`, and
+uses a `0.0003` shader minimum so presentation frame/guide lines render at half
+the previous thickness.
 
 ### Custom Preset Manual QA
 

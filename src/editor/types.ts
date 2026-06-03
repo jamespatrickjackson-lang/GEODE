@@ -4,6 +4,7 @@ import type {
   PresentationPage,
   Pose,
   ProjectManifest,
+  ProjectLayerSpec,
   RenderPresetId,
   UserRenderPreset,
   EasingName,
@@ -63,6 +64,7 @@ export interface EditableProvenance {
   classification?:
     | "observation"
     | "interpretation"
+    | "environmental"
     | "narrative"
     | "planned";
   confidentiality?: "public" | "private";
@@ -120,6 +122,16 @@ export type EditorAction =
       type: "SET_LAYER_PROVENANCE";
       layerId: string;
       metadata: Partial<EditableProvenance>;
+    }
+  | {
+      type: "ADD_PROJECT_LAYER";
+      layer: ProjectLayerSpec;
+      style?: Partial<EditableStyle>;
+      visible?: boolean;
+    }
+  | {
+      type: "REMOVE_PROJECT_LAYER";
+      layerId: string;
     }
 
   // Presentation-page-mode edits: deltas against environment.

@@ -34,6 +34,9 @@ narrow patch
   - Compatible section-frame page changes slide/interpolate; incompatible helper states crossfade by outgoing snapshot plus incoming fade.
   - Human visual judgment is the first acceptance filter for composition.
 - Still wrong / under review:
+  - Base GUI local atmosphere volume docs/project/test slice is ready for
+    visual check. Browser inspection has not completed, so do not treat the
+    mist volume composition as visually accepted yet.
   - Final sidebar polish and toolset grouping remain iterative.
   - Legend panel behavior has a first implementation pass: sequenced per-container left slide, row gap closure after exit, row opening before entry, and MT resistivity fixed at the bottom. It remains under human visual review.
   - Zoom-out camera far-plane clipping is being handled before the oblique longitude/latitude grid line artifact. The grid line issue remains held until clipping is verified visually.

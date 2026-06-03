@@ -959,6 +959,49 @@
       }
     },
     {
+      "id": "utah-forge-topo-clouds",
+      "label": "Topo test cloud",
+      "type": "atmosphere-volume",
+      "files": {},
+      "metadata": {
+        "sourceFile": "Procedural GeoSee local atmosphere volume",
+        "sourceDate": "2026-06-03",
+        "derivedArtifactDate": "2026-06-03",
+        "sourceOrigin": "GeoSee editor Topo Environment cloud authoring",
+        "classification": "environmental",
+        "confidentiality": "public",
+        "placeholder": false,
+        "sourceDataIncluded": false,
+        "geoSeeTool": {
+          "id": "topo-map",
+          "role": "environment-clouds",
+          "surfaceLayerId": "terrain",
+          "settingsScope": "layer"
+        },
+        "localAtmosphereVolume": {
+          "subtype": "cloud-bank",
+          "bounds": {
+            "mode": "box",
+            "center": [
+              0,
+              0,
+              7200
+            ],
+            "size": [
+              7200,
+              7200,
+              2600
+            ]
+          },
+          "artifactFamily": "local-atmosphere",
+          "renderingRole": "topo-environment-cloud-impostor",
+          "computationRole": "visual-context",
+          "notes": "Default editable single cloud for Topo > Environment > Clouds visual QA."
+        },
+        "notes": "Default editable visual cloud bank for Topo Environment. It is a local atmosphere impostor, not measured weather, plume, or geoscience data."
+      }
+    },
+    {
       "id": "naip-2024-tile-diagnostics",
       "label": "NAIP 2024 tile diagnostics",
       "type": "line",

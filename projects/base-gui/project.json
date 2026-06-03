@@ -43,6 +43,40 @@
         "placeholder": true,
         "notes": "Non-data visual scaffold for editing base GUI/environment defaults. Not project data."
       }
+    },
+    {
+      "id": "base-gui-local-mist-volume",
+      "label": "Local mist volume",
+      "type": "atmosphere-volume",
+      "files": {},
+      "metadata": {
+        "sourceFile": "Procedural GeoSee base GUI local atmosphere volume",
+        "sourceDate": "2026-06-03",
+        "sourceOrigin": "GeoSee template",
+        "classification": "environmental",
+        "confidentiality": "public",
+        "localAtmosphereVolume": {
+          "subtype": "mist",
+          "bounds": {
+            "mode": "box",
+            "center": [
+              0,
+              0,
+              34
+            ],
+            "size": [
+              145,
+              145,
+              72
+            ]
+          },
+          "artifactFamily": "procedural-local-atmosphere",
+          "renderingRole": "scene-depth-and-scale-cue",
+          "computationRole": "none",
+          "notes": "Immutable placement metadata for the Base GUI local mist volume. Mutable style belongs in environment.layerStyles and page layerOverrides."
+        },
+        "notes": "Procedural environmental layer for Base GUI atmosphere controls. Not a data or scalar-volume artifact."
+      }
     }
   ],
   "pageOrder": [

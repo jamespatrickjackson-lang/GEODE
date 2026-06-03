@@ -6,6 +6,8 @@ import { SceneManager } from "./scene/SceneManager";
 import type {
   AreaOutlineHandleMode,
   AreaOutlinePreview,
+  LocalAtmosphereHandleMode,
+  LocalAtmospherePreview,
   OrbitCenterHandleMode,
   PageCameraMarkerSpec,
   SceneSectionAxis,
@@ -228,6 +230,9 @@ export interface SceneHandle {
   ): void;
   setAreaOutlineCommitHandler(
     fn: ((id: string, patch: AreaOutlinePreview) => void) | null,
+  ): void;
+  setLocalAtmosphereCommitHandler(
+    fn: ((layerId: string, patch: LocalAtmospherePreview) => void) | null,
   ): void;
   setSceneSectionPlaneCommitHandler(
     fn:
@@ -822,6 +827,15 @@ export function mountScene(
         grabOffset: THREE.Vector3;
       }
     | null = null;
+  let dragLocalAtmosphere:
+    | {
+        layerId: string;
+        mode: LocalAtmosphereHandleMode;
+        original: THREE.Vector3;
+        grabOffset: THREE.Vector3;
+        dragPlane: THREE.Plane | null;
+      }
+    | null = null;
   let dragSceneSectionPlane:
     | {
         axis: SceneSectionAxis;
@@ -844,6 +858,9 @@ export function mountScene(
   let orbitCenterCommit: ((point: Vec3) => void) | null = null;
   let areaOutlineCommit:
     | ((id: string, patch: AreaOutlinePreview) => void)
+    | null = null;
+  let localAtmosphereCommit:
+    | ((layerId: string, patch: LocalAtmospherePreview) => void)
     | null = null;
   let sceneSectionPlaneCommit:
     | ((axis: SceneSectionAxis, positionM: number, frameId?: string) => void)
@@ -913,6 +930,11 @@ export function mountScene(
   ) => {
     areaOutlineCommit = fn;
   };
+  const setLocalAtmosphereCommitHandler = (
+    fn: ((layerId: string, patch: LocalAtmospherePreview) => void) | null,
+  ) => {
+    localAtmosphereCommit = fn;
+  };
   const setSceneSectionPlaneCommitHandler = (
     fn:
       | ((axis: SceneSectionAxis, positionM: number, frameId?: string) => void)
@@ -939,6 +961,7 @@ export function mountScene(
       orbitCenterPick = null;
       dragOrbitCenter = null;
       dragAreaOutline = null;
+      dragLocalAtmosphere = null;
       dragSceneSectionPlane = null;
       manager.setHoveredSceneOverlay(null);
       renderer.domElement.style.cursor = "";
@@ -1100,6 +1123,42 @@ export function mountScene(
         return {
           id: data.areaOutlineId,
           mode: data.areaOutlineHandleMode,
+          world: hit.point.clone(),
+        };
+      }
+    }
+    return null;
+  };
+
+  const pickLocalAtmosphereHandle = (
+    clientX: number,
+    clientY: number,
+  ): {
+    layerId: string;
+    mode: LocalAtmosphereHandleMode;
+    world: THREE.Vector3;
+  } | null => {
+    const pickables = manager.listLocalAtmospherePickables();
+    if (pickables.length === 0) return null;
+    const rect = renderer.domElement.getBoundingClientRect();
+    ndc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    ndc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(ndc, camera);
+    const hits = raycaster.intersectObjects(pickables, false);
+    for (const hit of hits) {
+      const data = hit.object.userData as {
+        localAtmosphereEditorHandle?: boolean;
+        localAtmosphereLayerId?: string;
+        localAtmosphereHandleMode?: LocalAtmosphereHandleMode;
+      };
+      if (
+        data.localAtmosphereEditorHandle === true &&
+        data.localAtmosphereLayerId &&
+        data.localAtmosphereHandleMode
+      ) {
+        return {
+          layerId: data.localAtmosphereLayerId,
+          mode: data.localAtmosphereHandleMode,
           world: hit.point.clone(),
         };
       }
@@ -1285,6 +1344,48 @@ export function mountScene(
       return;
     }
 
+    if (dragLocalAtmosphere) {
+      const cur = new THREE.Vector3();
+      if (dragLocalAtmosphere.mode === "sizeZ" && dragLocalAtmosphere.dragPlane) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        ndc.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+        ndc.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(ndc, camera);
+        if (raycaster.ray.intersectPlane(dragLocalAtmosphere.dragPlane, cur)) {
+          manager.previewLocalAtmosphereSizeFromWorld(
+            dragLocalAtmosphere.layerId,
+            "sizeZ",
+            cur,
+          );
+        }
+      } else if (
+        projectCursorToPlane(
+          ev.clientX,
+          ev.clientY,
+          dragLocalAtmosphere.original.z,
+          cur,
+        )
+      ) {
+        if (dragLocalAtmosphere.mode === "move") {
+          manager.previewLocalAtmosphereMove(
+            dragLocalAtmosphere.layerId,
+            new THREE.Vector3(
+              cur.x - dragLocalAtmosphere.grabOffset.x,
+              cur.y - dragLocalAtmosphere.grabOffset.y,
+              dragLocalAtmosphere.original.z,
+            ),
+          );
+        } else {
+          manager.previewLocalAtmosphereSizeFromWorld(
+            dragLocalAtmosphere.layerId,
+            dragLocalAtmosphere.mode,
+            cur,
+          );
+        }
+      }
+      return;
+    }
+
     if (dragOrbitCenter) {
       const next = dragOrbitCenter.original.clone();
       if (dragOrbitCenter.mode === "z" && dragOrbitCenter.dragPlane) {
@@ -1390,6 +1491,20 @@ export function mountScene(
       if (areaHandle) {
         renderer.domElement.style.cursor =
           areaHandle.mode === "move" ? "move" : "ew-resize";
+        applyHover(null, ev.clientX, ev.clientY);
+        return;
+      }
+      const localAtmosphereHandle = pickLocalAtmosphereHandle(
+        ev.clientX,
+        ev.clientY,
+      );
+      if (localAtmosphereHandle) {
+        renderer.domElement.style.cursor =
+          localAtmosphereHandle.mode === "move"
+            ? "move"
+            : localAtmosphereHandle.mode === "sizeZ"
+              ? "ns-resize"
+              : "ew-resize";
         applyHover(null, ev.clientX, ev.clientY);
         return;
       }
@@ -1517,6 +1632,43 @@ export function mountScene(
       controls.enabled = false;
       renderer.domElement.style.cursor =
         areaHandle.mode === "move" ? "move" : "ew-resize";
+      ev.preventDefault();
+      return;
+    }
+    const localAtmosphereHandle = pickLocalAtmosphereHandle(
+      ev.clientX,
+      ev.clientY,
+    );
+    if (localAtmosphereHandle) {
+      suppressNextDrillFocusClick = true;
+      const original = manager.getLocalAtmosphereWorldCenter(
+        localAtmosphereHandle.layerId,
+      );
+      if (!original) return;
+      let dragPlane: THREE.Plane | null = null;
+      if (localAtmosphereHandle.mode === "sizeZ") {
+        const cameraRight = new THREE.Vector3()
+          .setFromMatrixColumn(camera.matrixWorld, 0)
+          .normalize();
+        dragPlane = new THREE.Plane().setFromNormalAndCoplanarPoint(
+          cameraRight,
+          localAtmosphereHandle.world,
+        );
+      }
+      dragLocalAtmosphere = {
+        layerId: localAtmosphereHandle.layerId,
+        mode: localAtmosphereHandle.mode,
+        original,
+        grabOffset: localAtmosphereHandle.world.clone().sub(original),
+        dragPlane,
+      };
+      controls.enabled = false;
+      renderer.domElement.style.cursor =
+        localAtmosphereHandle.mode === "move"
+          ? "move"
+          : localAtmosphereHandle.mode === "sizeZ"
+            ? "ns-resize"
+            : "ew-resize";
       ev.preventDefault();
       return;
     }
@@ -1693,6 +1845,18 @@ export function mountScene(
       controls.enabled = true;
       return;
     }
+    if (dragLocalAtmosphere) {
+      const preview = manager.getLocalAtmospherePreview(
+        dragLocalAtmosphere.layerId,
+      );
+      if (preview && localAtmosphereCommit) {
+        localAtmosphereCommit(dragLocalAtmosphere.layerId, preview);
+      }
+      dragLocalAtmosphere = null;
+      renderer.domElement.style.cursor = "";
+      controls.enabled = true;
+      return;
+    }
     if (dragOrbitCenter) {
       const position = manager.getDynamicCameraOrbitCenter();
       if (position && orbitCenterCommit) {
@@ -1841,6 +2005,7 @@ export function mountScene(
     cancelDynamicCameraOrbitCenterPick,
     setDynamicCameraOrbitCenterCommitHandler,
     setAreaOutlineCommitHandler,
+    setLocalAtmosphereCommitHandler,
     setSceneSectionPlaneCommitHandler,
     setSceneSectionWindowCommitHandler,
     setPageCameraMarker,

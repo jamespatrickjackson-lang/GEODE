@@ -44,11 +44,28 @@ contract and points to the owning source files. Durable rationale belongs in
   focus without snapping the camera back.
 - Same-target double-click re-anchors to the newly picked point and uses the
   authored same-target zoom factor.
-- `Camera Studio` owns the focus tuning controls under `Focus transition`.
-  These controls affect double-click focus only, not the page-transition
-  runtime.
-- `Cinematic Render Preset` belongs at the top of `Camera Studio`, above
-  `Perspective`.
+- `Camera Studio` section order is: `Render Preset`, `Lens Types`,
+  and `Camera Focus`.
+- `Post Processing` follows `Camera Studio` in Cinematics. Its section order is:
+  `Depth of Field`, `Tilt-Shift`, `Post Production`, `Image finish`, `Glow`,
+  `Film / Optics`, `Motion Trails`, `Composition Guides`,
+  `Presentation Frame`, and `Contact Depth`.
+- `Camera Focus` owns double-click focus timing only. `Depth of Field` owns
+  default-off cinematic blur, including page-target, camera-object,
+  manual-distance, and picked-point focus modes. The editor splits DOF into
+  `Focus Target`, `Blur Strength`, and `Focus Debug` so focus distance/object
+  targeting is not mixed with blur intensity or debug-plane styling.
+- Page-local cinematic post overrides use the `main-camera/cinematic-post`
+  transition channel; continuous post values blend with page transition easing
+  and must not snap at navigation start.
+- `Motion Trails`, `Presentation Frame`, `Composition Guides`, and DOF
+  debug-style controls must remain toggleable and default off; do not leave
+  guide overlays, matte bars, focus planes, or trail effects enabled as
+  diagnostics. Composition guide strokes default to `lineThickness: 0.25`,
+  which is half the previous presentation-frame guide width, and render through
+  the lens-grade shader with a `0.0003` minimum.
+- Lens presets write `scene.camera.lensPreset` and the matching FOV value, but
+  page poses still own camera position, target, and up vector.
 - Pages may persist `cameraObjectFocus`. A page with saved focus re-engages the
   lock after its normal camera transition. A page without saved focus releases
   any existing lock at navigation start.

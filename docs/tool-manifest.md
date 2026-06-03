@@ -28,8 +28,10 @@ Tools that control how the 3D scene looks globally.
 | **Cinematics** | Top-level container for global rendering, UI, and page camera controls. Houses the sub-tools below. |
 | **Cinematic Render Preset** | Project-wide render quality selector. Save and update named presets. Drives antialiasing, shadow quality, AO, bloom, and related passes. |
 | **Environment** | Scene atmosphere: background color/sky, fog density, ambient occlusion, tone mapping, and exposure. |
+| **Local Atmosphere Volume** | Environmental `atmosphere-volume` layer controls for local mist/fog volumes. Project metadata owns immutable local bounds and rendering/computation role; mutable style belongs in `environment.layerStyles` and page-local `layerOverrides`. |
 | **Lighting Studio** | Sun azimuth and elevation, plus key/fill/rim light intensities. Supports movable source lights for accent and shadow control. |
-| **Camera Studio** | Global camera field of view, near/far clipping planes, and orbit control settings. |
+| **Camera Studio** | Global cinematic camera controls: render presets, lens type/FOV, and camera focus timing. |
+| **Post Processing** | Cinematic post stack controls: object/distance-aware DOF, tilt-shift, post-production grade, bloom, film/optics, motion trails, composition guides, presentation frame/matte, and contact depth. |
 | **Terrain Grid** | Toggles hillshade and contour overlay on the terrain surface. Controls contour visibility and line styling. |
 
 ---
@@ -52,12 +54,18 @@ Tools that control how the camera behaves per page.
 
 | Tool | Description |
 | --- | --- |
-| **Camera Dynamics** | Per-page camera pose and transition controls inside Cinematics. |
+| **Camera Dynamics** | Per-page camera pose, transition timing, shot templates, and timed dolly/truck/crane/handheld motion inside Cinematics. |
 | **Camera Pose** | Capture and store the current camera view as the page's recorded pose. Supports a numbered pose history. |
 | **Camera Transition** | Duration, easing curve, and hold time for the animated move into this page's pose from the previous one. |
+| **Cinematic Post Transition** | Runtime transition channel that blends page-local grade, DOF, tilt-shift, lens, motion-trail, and presentation-frame scene overrides using the page transition duration/easing. |
 | **Dynamic Movement** | Master toggle for orbit and zoom motion that plays while a page is active. |
+| **Shot Templates** | Per-page starting points for push-in, pull-back, truck, and crane moves. |
 | **Camera Orbit** | Configures continuous orbit: speed, direction, distance, height, path-aware blend, and ramp-in/out timing. |
 | **Camera Zoom** | Configures a timed FOV push: delta degrees, start/end ms offsets, and zoom curve. |
+| **Camera Dolly** | Moves camera and target together along the camera-local forward axis with shared shot timing. |
+| **Camera Truck** | Moves camera and target together along the camera-local right axis. |
+| **Camera Crane** | Moves camera and target together along the page up axis. |
+| **Handheld Polish** | Adds subtle page-local handheld drift and camera roll for presentation shots. |
 | **Camera Target** | Screen-pick or manual XYZ entry for the orbit center point. |
 
 ---
@@ -143,6 +151,7 @@ Universal per-layer controls available on every data layer regardless of type.
 | **Opacity Slider** | 0-100% layer transparency. Supports global and per-page overrides. |
 | **Fog Inclusion** | Whether the layer participates in scene fog. Supports global and per-page overrides. |
 | **Page Environment Override** | Per-page overrides for fog density, exposure, and bloom that apply when this page is active. |
+| **Local Atmosphere Volume Style** | For `atmosphere-volume` environmental layers, controls subtype, color, opacity, density, softness, puff count/scale, scale jitter, vertical falloff, edge fade, seed, drift, depth test, and render order through `environment.layerStyles` or page-local `layerOverrides`; these controls do not mutate `project.json` layer metadata. |
 
 ---
 

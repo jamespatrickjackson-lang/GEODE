@@ -114,7 +114,8 @@ publish time and ships alongside the published artifact.
       "observation": 2,
       "interpretation": 2,
       "narrative": 0,
-      "planned": 0
+      "planned": 0,
+      "environmental": 0
     },
     "byConfidentiality": {
       "public": 4,
@@ -173,7 +174,7 @@ The `sources` array is the heart of the file. One entry per layer in `project.js
 | `sourceDate` | ISO 8601 date string | yes | When the source data was originally generated/collected. |
 | `sourceOrigin` | string | yes | Where the data came from (organization, repository, system). |
 | `sourceUrl` | string | no | URL if the source is publicly retrievable. |
-| `classification` | enum | yes | One of: `"observation"`, `"interpretation"`, `"narrative"`, `"planned"`. See classification reference below. |
+| `classification` | enum | yes | One of: `"observation"`, `"interpretation"`, `"narrative"`, `"planned"`, `"environmental"`. See classification reference below. |
 | `confidentiality` | enum | yes | One of: `"public"`, `"private"`, `"diligence-only"`. |
 | `approvalRequired` | boolean | yes | Whether this source requires technical approver signoff before release. |
 | `approvalReceived` | ISO 8601 string \| null | conditional | Required when `approvalRequired` is true and project status is `"released"`. |
@@ -188,11 +189,15 @@ What each classification value means and when to use it:
 - **`interpretation`** — someone's reading of observations. Geological interpretations, target outlines digitized from anomaly maps, fracture network models, resource shells, geophysical inversions. The data depends on assumptions and methodology.
 - **`narrative`** — explanatory content created for the presentation, not derived from technical data. Story labels, audience-facing simplifications, artistic illustrations. Should be clearly separated from technical content.
 - **`planned`** — proposed or intended future work. Drill targets not yet drilled, planned campaign areas, conceptual mine plans. Must be clearly labeled as forward-looking.
+- **`environmental`** — authored scene atmosphere or rendering context, such
+  as an `atmosphere-volume` mist layer. It is not a technical observation,
+  interpretation, narrative claim, or planned work item; use metadata notes to
+  state the rendering purpose and avoid implying data provenance.
 
 Approval is automatically required for `interpretation` and `narrative`
-classifications by default. `observation` and `planned` default to no
-approval required, but can be flipped to required if specific data is
-sensitive.
+classifications by default. `observation`, `planned`, and `environmental`
+default to no approval required, but can be flipped to required if specific
+data or presentation context is sensitive.
 
 ### Confidentiality reference
 

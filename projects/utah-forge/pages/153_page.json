@@ -157,60 +157,60 @@
       "opacity": 1
     },
     "terrain": {
-      "publicSurfaceClipEnabled": false,
-      "publicSurfaceClipCenterX": -1750,
+      "publicSurfaceClipEnabled": true,
+      "publicSurfaceClipCenterX": 0,
       "publicSurfaceClipCenterY": 0,
       "publicSurfaceClipCenterZ": 2000,
-      "publicSurfaceClipSizeX": 499600,
-      "publicSurfaceClipSizeY": 484100,
-      "publicSurfaceClipRotationZDeg": -20,
+      "publicSurfaceClipSizeX": 1395706.5,
+      "publicSurfaceClipSizeY": 1139445,
+      "publicSurfaceClipRotationZDeg": 0,
       "publicSurfaceClipSizeZ": 12600,
-      "publicSurfaceClipShape": "circle",
+      "publicSurfaceClipShape": "box",
       "opacity": 1
     },
     "utah-forge-topo-graticule": {
-      "publicSurfaceClipEnabled": false,
-      "publicSurfaceClipCenterX": -1750,
+      "publicSurfaceClipEnabled": true,
+      "publicSurfaceClipCenterX": 0,
       "publicSurfaceClipCenterY": 0,
       "publicSurfaceClipCenterZ": 2000,
-      "publicSurfaceClipSizeX": 499600,
-      "publicSurfaceClipSizeY": 484100,
-      "publicSurfaceClipRotationZDeg": -20,
+      "publicSurfaceClipSizeX": 1395706.5,
+      "publicSurfaceClipSizeY": 1139445,
+      "publicSurfaceClipRotationZDeg": 0,
       "publicSurfaceClipSizeZ": 12600,
-      "publicSurfaceClipShape": "circle"
+      "publicSurfaceClipShape": "box"
     },
     "transport-roads": {
-      "publicSurfaceClipEnabled": false,
-      "publicSurfaceClipCenterX": -1750,
+      "publicSurfaceClipEnabled": true,
+      "publicSurfaceClipCenterX": 0,
       "publicSurfaceClipCenterY": 0,
       "publicSurfaceClipCenterZ": 2000,
-      "publicSurfaceClipSizeX": 499600,
-      "publicSurfaceClipSizeY": 484100,
-      "publicSurfaceClipRotationZDeg": -20,
+      "publicSurfaceClipSizeX": 1395706.5,
+      "publicSurfaceClipSizeY": 1139445,
+      "publicSurfaceClipRotationZDeg": 0,
       "publicSurfaceClipSizeZ": 12600,
-      "publicSurfaceClipShape": "circle"
+      "publicSurfaceClipShape": "box"
     },
     "hydrography-streams": {
-      "publicSurfaceClipEnabled": false,
-      "publicSurfaceClipCenterX": -1750,
+      "publicSurfaceClipEnabled": true,
+      "publicSurfaceClipCenterX": 0,
       "publicSurfaceClipCenterY": 0,
       "publicSurfaceClipCenterZ": 2000,
-      "publicSurfaceClipSizeX": 499600,
-      "publicSurfaceClipSizeY": 484100,
-      "publicSurfaceClipRotationZDeg": -20,
+      "publicSurfaceClipSizeX": 1395706.5,
+      "publicSurfaceClipSizeY": 1139445,
+      "publicSurfaceClipRotationZDeg": 0,
       "publicSurfaceClipSizeZ": 12600,
-      "publicSurfaceClipShape": "circle"
+      "publicSurfaceClipShape": "box"
     },
     "hydrography-lakes": {
-      "publicSurfaceClipEnabled": false,
-      "publicSurfaceClipCenterX": -1750,
+      "publicSurfaceClipEnabled": true,
+      "publicSurfaceClipCenterX": 0,
       "publicSurfaceClipCenterY": 0,
       "publicSurfaceClipCenterZ": 2000,
-      "publicSurfaceClipSizeX": 499600,
-      "publicSurfaceClipSizeY": 484100,
-      "publicSurfaceClipRotationZDeg": -20,
+      "publicSurfaceClipSizeX": 1395706.5,
+      "publicSurfaceClipSizeY": 1139445,
+      "publicSurfaceClipRotationZDeg": 0,
       "publicSurfaceClipSizeZ": 12600,
-      "publicSurfaceClipShape": "circle"
+      "publicSurfaceClipShape": "box"
     }
   },
   "visibilityOverrides": {

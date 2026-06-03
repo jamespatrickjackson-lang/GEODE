@@ -8,10 +8,39 @@
       "opacity": 0.32,
       "affectedByFog": false,
       "showLabels": false
+    },
+    "base-gui-local-mist-volume": {
+      "atmosphereSubtype": "mist",
+      "atmosphereBoundsMode": "box",
+      "atmosphereBoundsCenterX": 0,
+      "atmosphereBoundsCenterY": 0,
+      "atmosphereBoundsCenterZ": 34,
+      "atmosphereBoundsSizeX": 145,
+      "atmosphereBoundsSizeY": 145,
+      "atmosphereBoundsSizeZ": 72,
+      "color": "#dfe4e8",
+      "opacity": 0.28,
+      "atmosphereDensity": 0.45,
+      "atmosphereSoftness": 0.75,
+      "atmospherePuffCount": 72,
+      "atmospherePuffScaleM": 24,
+      "atmosphereScaleJitter": 0.55,
+      "atmosphereVerticalFalloff": 0.7,
+      "atmosphereEdgeFade": 0.85,
+      "atmosphereSeed": 101,
+      "atmosphereDriftEnabled": false,
+      "atmosphereDriftSpeedMps": 5,
+      "atmosphereDriftDirectionX": 1,
+      "atmosphereDriftDirectionY": 0,
+      "atmosphereDriftDirectionZ": 0,
+      "atmosphereDepthTest": true,
+      "atmosphereRenderOrder": 20,
+      "affectedByFog": true
     }
   },
   "defaultVisibleLayers": [
-    "base-gui-reference-stage"
+    "base-gui-reference-stage",
+    "base-gui-local-mist-volume"
   ],
   "scene": {
     "background": "#151819",

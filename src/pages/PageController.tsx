@@ -29,6 +29,7 @@ import {
   vec3FromArray,
 } from "../scene/cameraFocus";
 import { mergeSceneProperties } from "./effective";
+import { computeDynamicPose } from "./dynamicCameraPose";
 
 // PageController owns:
 //   - which page is "captured" as current (currentIndex)
@@ -743,11 +744,6 @@ function clampTimingMs(
   return Math.max(lower, Math.min(upper, value));
 }
 
-function positiveNumber(value: unknown, fallback: number): number {
-  const n = finiteNumber(value, fallback);
-  return n > 0 ? n : fallback;
-}
-
 function poseKey(pose: Pose): string {
   return [
     ...pose.position,
@@ -901,80 +897,6 @@ function dynamicZoomEnabled(
     Number.isFinite(dynamic.zoomFov) &&
     Math.abs(dynamic.zoomFov - basePose.fov) > 0.01
   );
-}
-
-function computeDynamicPose(
-  page: PresentationPage,
-  basePose: Pose,
-  timeMs: number,
-  startMs: number,
-  runtime?: { orbitBlendMs?: number },
-): Pose {
-  const dynamic = page.dynamicCamera;
-  if (dynamic?.enabled !== true) return basePose;
-  const elapsedMs = Math.max(0, timeMs - startMs);
-  const poi = dynamic.poi ?? basePose.target;
-  let position = basePose.position;
-  let target = basePose.target;
-
-  if (dynamicOrbitEnabled(dynamic)) {
-    const easeMs = Math.max(
-      0,
-      finiteNumber(runtime?.orbitBlendMs, finiteNumber(dynamic.easeInMs, 1600)),
-    );
-    const blend = easeMs <= 0 ? 1 : easeOutCubic(elapsedMs / easeMs);
-    const baseDx = basePose.position[0] - poi[0];
-    const baseDy = basePose.position[1] - poi[1];
-    const baseRadius = Math.max(1, Math.hypot(baseDx, baseDy));
-    const radius = positiveNumber(dynamic.orbitRadius, baseRadius);
-    const height = finiteNumber(
-      dynamic.orbitHeight,
-      basePose.position[2] - poi[2],
-    );
-    const speedDeg = finiteNumber(dynamic.orbitSpeedDegPerSec, 4);
-    const direction = dynamic.orbitDirection === -1 ? -1 : 1;
-    const baseAngle = Math.atan2(baseDy, baseDx);
-    const angle =
-      baseAngle +
-      direction * THREE.MathUtils.degToRad(speedDeg) * (elapsedMs / 1000);
-    const orbitX = poi[0] + Math.cos(angle) * radius;
-    const orbitY = poi[1] + Math.sin(angle) * radius;
-    const orbitZ = poi[2] + height;
-    position = [
-      lerp(basePose.position[0], orbitX, blend),
-      lerp(basePose.position[1], orbitY, blend),
-      lerp(basePose.position[2], orbitZ, blend),
-    ];
-    target = [
-      lerp(basePose.target[0], poi[0], blend),
-      lerp(basePose.target[1], poi[1], blend),
-      lerp(basePose.target[2], poi[2], blend),
-    ];
-  }
-
-  let fov = basePose.fov;
-  if (dynamicZoomEnabled(dynamic, basePose)) {
-    const start = Math.max(0, finiteNumber(dynamic.zoomStartMs, 0));
-    const end = Math.max(start + 1, finiteNumber(dynamic.zoomEndMs, 2500));
-    const amount = curveEnvelope(
-      (elapsedMs - start) / Math.max(1, end - start),
-      dynamic.zoomCurve ?? "smooth",
-    );
-    const legacyDelta =
-      typeof dynamic.zoomFov === "number" && Number.isFinite(dynamic.zoomFov)
-        ? dynamic.zoomFov - basePose.fov
-        : 0;
-    const delta = finiteNumber(dynamic.zoomDeltaFov, legacyDelta);
-    const targetFov = Math.max(15, Math.min(90, basePose.fov + delta));
-    fov = lerp(basePose.fov, targetFov, amount);
-  }
-
-  return {
-    position,
-    target,
-    up: basePose.up,
-    fov,
-  };
 }
 
 function blendPose(from: Pose, to: Pose, amount: number): Pose {
@@ -2546,8 +2468,15 @@ export function PageControllerProvider({
         transitionReason,
         transitionRun.runId,
       );
-      // Per-page mood (cinematicExposure / bloomBoost) flips at start too.
-      sceneHandle.manager.applyPageScene(targetResolved.page);
+      sceneHandle.manager.beginCinematicSceneTransition(
+        sourceResolved.environment,
+        targetResolved.environment,
+        sourceResolved.page,
+        targetResolved.page,
+        transitionDuration,
+        target.transition.easing,
+        transitionStartMs,
+      );
       // Scene overlays: fade leaving overlays out NOW (so they're not
       // visible mid-tween over the wrong terrain) but defer fade-ins to
       // the camera-arrival callback below.

@@ -1,7 +1,8 @@
 # v1.1 GeoSee Editor Inventory — Component / Assembly / Product mapping
 
-**Status:** inventory reference. Use this to understand GeoSee sidebar content;
-it is not an AI-agent build prompt or package export contract.
+**Status:** active inventory reference. Use this to understand GeoSee editor
+content and populate standalone Component / Assembly / Product libraries.
+It is not an AI-agent build prompt or package export contract.
 
 This was originally mapped into the three-tier authoring model from
 [23_v1_1_direction.md](23_v1_1_direction.md). The UI Editor's bundled
@@ -99,30 +100,53 @@ unit is named separately and given its own row in §2–§4.
 
 ## 5. Where each item lives in the bundled library
 
-The UI Editor's bundled `geosee_editor_sidebar` package (still the
-v1.1 starter sample until the `starter_pack` lands) ships every entry
-above as a `ComponentLibraryEntry` with a `tier` discriminator and an
-`aiNote`. The library entries are intentionally non-runtime — they are
-shape + intent records the Library Panel can list, drag, and apply.
+The standalone editor's browser-local library should expose these entries as
+Components, Assemblies, and Products with plain notes/intent metadata. Saved
+library entries are DOM templates, not package-export records.
 
-The composition of each Assembly and Product is documented in this
-file's tables, not (yet) re-expressed as machine-readable composition
-recipes. v1.1 implementation may add a `composition` field on library
-entries; until then, the workbench author drops an Assembly onto a
-Frame and the workbench currently instantiates only the entry's
-top-level archetype. Full composition instantiation is a v1.2 task —
-see §7 of [23_v1_1_direction.md](23_v1_1_direction.md).
+The composition of each Assembly and Product is documented in this file's
+tables. Current standalone behavior may instantiate starter entries as compact
+DOM templates; fuller composition recipes can be added incrementally without
+reviving the paused package workbench.
 
-## 6. Forward-compat hooks for v2
+Current implementation sources:
 
-Each entry in §2–§4 has a known GeoSee source file. Once the Host-App
-Adapter lands (v2 per `02_architecture.md` §3.3), the adapter for
-GeoSee can populate `hostRef` on every instance with the matching
-source file:line. The mapping table here is the source of truth for
-that population. Do not change ids in §2–§4 without updating the
-GeoSee adapter mapping in tandem.
+- Hand-authored GeoSee entries in `gui-editor.html` cover real editor atoms,
+  rows, product surfaces, Base GUI colours, editor chrome tokens, overlay
+  materials, navigator materials, label pills, terrain ramp, and mist volume.
+- Read-only package imports from `packages/geosee_editor_sidebar/libraries.json`
+  add packaged Components, Assemblies, Products, Colours, Icons, Tokens, and
+  Styles.
+- Read-only package imports from `components.json`, `containers.json`, and
+  `tokens.json` add concrete example controls, root containers, nested
+  containers, and token names/values.
 
-## 7. Acceptance criteria for this inventory
+These imports are library seeds only. The standalone editor still edits real
+DOM and persists `localStorage`; it does not export package schemas.
+
+## 6. Current gap list
+
+The first rebuild pass intentionally exposes these remaining gaps:
+
+1. Package entries instantiate as compact DOM templates, not full reducer-backed
+   GeoSee behavior.
+2. Deep typed editors are still needed for ramps, vector XYZ values, topo
+   bounds, texture paths, dynamic lists, shadow stacks, enum records, and
+   inheritance diffs.
+3. Inheritance/source views are still shallow. A future inspector should show
+   environment defaults, Sub Master snapshots, page overrides, render preset
+   patches, layer style patches, topo material authority, active asset URL/cache
+   key, and resolved effective values side by side.
+4. Visual debugging should expose the required render-stack trace without
+   leaving diagnostic overlays enabled by default.
+
+## 7. Forward-compat hooks for v2
+
+Each entry in §2–§4 has a known GeoSee source file. Keep these source
+references so future host-app integration can map authored UI back to real
+GeoSee concepts. Host-app adapter work remains parked.
+
+## 8. Acceptance criteria for this inventory
 
 1. Every distinct UI atom in `src/editor/` appears in §2, §3, or §4
    exactly once. Walk the source files in §1 and verify nothing is
@@ -133,13 +157,13 @@ GeoSee adapter mapping in tandem.
 3. Every Product in §4 has a Composition column listing only Assembly
    ids from §3, Component ids from §2, or other Products from §4
    higher in the list.
-4. The bundled `geosee_editor_sidebar` `libraries.json` carries an
-   entry for every row in §2 and §3. (Products in §4 are documented
-   here only — they are demonstrated in the package's Frames, not as
-   stand-alone library entries, until composition recipes land.)
-5. Each library entry has a non-empty `aiNote.intent` aligned with the
+4. The standalone Library panel exposes representative entries from §2, §3,
+   and §4.
+5. The standalone Library panel exposes package-backed seed entries from
+   `packages/geosee_editor_sidebar`.
+6. Each library entry has a non-empty source or intent aligned with the
    description columns above.
 
-This inventory is the single source of truth for the v1.1 library
-data. When GeoSee adds a new editor surface, append it here first,
+This inventory is the single source of truth for GeoSee concepts used by the
+standalone editor. When GeoSee adds a new editor surface, append it here first,
 then update the library.

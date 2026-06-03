@@ -117,6 +117,18 @@ import {
 } from "./styles/mtResistivityStyles";
 import { applySeismicBrowserStyle as applySeismicBrowserStyleToLayer } from "./styles/seismicBrowserStyle";
 import {
+  findLocalAtmosphereVolumeRoot,
+  getLocalAtmospherePreview,
+  getLocalAtmosphereWorldCenter,
+  listLocalAtmospherePickables,
+  previewLocalAtmosphereMove,
+  previewLocalAtmosphereSizeFromWorld,
+  tickLocalAtmosphereVolumeLayers,
+  type LocalAtmosphereHandleMode,
+  type LocalAtmospherePreview,
+} from "./atmosphere/localAtmosphereVolume";
+export type { LocalAtmosphereHandleMode, LocalAtmospherePreview };
+import {
   applyDemoBoreholeStyle as applyDemoBoreholeStyleToLayer,
   applyEzGammaStyle as applyEzGammaStyleToLayer,
   applyGeochemStyle as applyGeochemStyleToLayer,
@@ -197,7 +209,14 @@ import {
   createTopoMapRuntime,
   type TopoMapRuntime,
 } from "../topoMap/runtime";
-import { applyEnvironment as applyEnvironmentImpl } from "./environment/applyEnvironment";
+import {
+  applyCinematicPostProcessing,
+  applyEnvironment as applyEnvironmentImpl,
+} from "./environment/applyEnvironment";
+import {
+  type EnvironmentSunVisualRuntime,
+  updateEnvironmentSunVisualDirection,
+} from "./environment/sunVisual";
 import { applyLakesToTerrain as applyLakesToTerrainImpl } from "./terrain/applyLakesToTerrain";
 import {
   applySiteSurfaceGuideStyleImpl,
@@ -217,6 +236,14 @@ import {
   updateSiteSurfaceGuideImpl,
 } from "./terrain/terrainStyleController";
 import { transitionEffectiveLayersForPage as transitionEffectiveLayersForPageImpl } from "./transitions/transitionEffectiveLayersForPage";
+import {
+  blendCinematicSceneForTransition,
+  cinematicSceneTransitionDebugState,
+  createCinematicSceneTransition,
+  inactiveCinematicSceneTransitionDebugState,
+  type CinematicSceneTransitionDebugState,
+  type CinematicSceneTransitionRuntime,
+} from "./transitions/cinematicSceneTransitions";
 import {
   enforceTransitionVisibilityEnvelopeImpl,
   interpolatedScalarStyleImpl,
@@ -560,6 +587,7 @@ interface FrameUpdateDebugState {
   totalMs: number;
   cameraLockedSunMs: number;
   layerTweensMs: number;
+  cinematicPostMs: number;
   boreLensMs: number;
   lightingStudioScaleMs: number;
   dynamicCameraOrbitCenterScaleMs: number;
@@ -568,6 +596,7 @@ interface FrameUpdateDebugState {
   sceneSectionTextFacingMs: number;
   sectionIsoThresholdOcclusionMs: number;
   topoGridCameraVisibilityMs: number;
+  localAtmosphereMs: number;
   sceneOverlayTickMs: number;
   activeSceneTransition: boolean;
 }
@@ -607,6 +636,7 @@ export class SceneManager {
   envCustomLights: THREE.Light[] = [];
   envCustomLightTargets: THREE.Object3D[] = [];
   envLightHelperGroup: THREE.Group | null = null;
+  envSunVisual: EnvironmentSunVisualRuntime | null = null;
   envLightRuntimes = new Map<string, LightingStudioRuntime>();
   envLightHandles = new Map<string, LightingHandleRuntime>();
   envLightHandlePickables: THREE.Object3D[] = [];
@@ -628,6 +658,7 @@ export class SceneManager {
   envFogEnabled = true;
   envFogDensity = DEFAULT_SCENE_FOG_DENSITY;
   private postHandle: PostHandle | null = null;
+  activeCamera: THREE.Camera | null = null;
   private baseExposure = 1.0;
   private currentSunDir = new THREE.Vector3(0.6, -0.4, 0.7).normalize();
   private authoredWorldSunDir = new THREE.Vector3(0.6, -0.4, 0.7).normalize();
@@ -692,6 +723,9 @@ export class SceneManager {
   sceneSectionStyleTween: SceneSectionStyleTween | null = null;
   sceneSectionHelperTransitionOpacity = 1;
   private activeSceneTransitionContext: SceneTransitionContext | null = null;
+  private cinematicSceneTransition: CinematicSceneTransitionRuntime | null = null;
+  private lastCinematicSceneTransitionDebug: CinematicSceneTransitionDebugState =
+    inactiveCinematicSceneTransitionDebugState();
   private lastTransitionCommitState: SceneTransitionContext["commitState"] | null =
     null;
   private lastPostCommitTargetAssertionSuppressed = false;
@@ -827,6 +861,9 @@ export class SceneManager {
     }
 
     this.topoRuntime.applySunDirection(this.currentSunDir);
+    if (this.envSunVisual) {
+      updateEnvironmentSunVisualDirection(this.envSunVisual, this.currentSunDir);
+    }
   }
 
   private requestCameraSunCapture(worldDir: THREE.Vector3): void {
@@ -1075,6 +1112,21 @@ export class SceneManager {
     return group;
   }
 
+  removeLayer(id: string): void {
+    const group = this.layers.get(id);
+    if (!group) return;
+    this.scene.remove(group);
+    disposeObjectTree(group);
+    this.layers.delete(id);
+    this.layerSpecs.delete(id);
+    this.appliedLayerStyles.delete(id);
+    if (this.currentVisibleLayerIds) {
+      this.currentVisibleLayerIds = new Set(
+        [...this.currentVisibleLayerIds].filter((layerId) => layerId !== id),
+      );
+    }
+  }
+
   setVisible(nextVisible: ReadonlySet<string>): void {
     this.currentVisibleLayerIds = nextVisible;
     for (const [id, group] of this.layers) {
@@ -1183,10 +1235,19 @@ export class SceneManager {
           continue;
         }
         const shaderOpacity = this.shaderOpacityForMaterial(material);
-        const next =
+        const rawOpacity =
           typeof shaderOpacity === "number" && Number.isFinite(shaderOpacity)
             ? shaderOpacity
             : material.opacity;
+        const preserveProductOpacity =
+          material.userData?.preserveMaterialOpacity === true;
+        const productBase = preserveProductOpacity
+          ? this.productOpacityBaseForMaterial(material)
+          : 1;
+        const next =
+          preserveProductOpacity && productBase > 0
+            ? rawOpacity / productBase
+            : rawOpacity;
         if (typeof next !== "number" || !Number.isFinite(next)) continue;
         opacity = Math.max(opacity ?? 0, next);
       }
@@ -2169,6 +2230,42 @@ export class SceneManager {
     this.areaOutlineController.rebuild(outlines);
   }
 
+  listLocalAtmospherePickables(): THREE.Object3D[] {
+    return listLocalAtmospherePickables(this.layers.values(), this.editorMode);
+  }
+
+  private localAtmosphereRoot(layerId: string): THREE.Group | null {
+    const layer = this.layers.get(layerId);
+    return layer ? findLocalAtmosphereVolumeRoot(layer) : null;
+  }
+
+  getLocalAtmosphereWorldCenter(layerId: string): THREE.Vector3 | null {
+    const root = this.localAtmosphereRoot(layerId);
+    return root ? getLocalAtmosphereWorldCenter(root) : null;
+  }
+
+  previewLocalAtmosphereMove(
+    layerId: string,
+    sceneCenter: THREE.Vector3,
+  ): void {
+    const root = this.localAtmosphereRoot(layerId);
+    if (root) previewLocalAtmosphereMove(root, sceneCenter);
+  }
+
+  previewLocalAtmosphereSizeFromWorld(
+    layerId: string,
+    mode: Exclude<LocalAtmosphereHandleMode, "move">,
+    worldPoint: THREE.Vector3,
+  ): void {
+    const root = this.localAtmosphereRoot(layerId);
+    if (root) previewLocalAtmosphereSizeFromWorld(root, mode, worldPoint);
+  }
+
+  getLocalAtmospherePreview(layerId: string): LocalAtmospherePreview | null {
+    const root = this.localAtmosphereRoot(layerId);
+    return root ? getLocalAtmospherePreview(root) : null;
+  }
+
   applyDrillingAssayDisplay(sp: SceneProperties): void {
     applyDrillingAssayDisplayToLayers(this.layers, sp);
   }
@@ -2307,6 +2404,7 @@ export class SceneManager {
     productFamilies: ProductTransitionDecision[];
     assignmentTraces: TransitionAssignmentTrace[];
     sceneOverlays: SceneOverlayDebugState;
+    cinematicPost: CinematicSceneTransitionDebugState;
     lateReapply: LateReapplyDebugState;
     transitionCommit: {
       transitionId: string;
@@ -2344,6 +2442,7 @@ export class SceneManager {
       productFamilies: transition?.productFamilies.slice() ?? [],
       assignmentTraces: transition?.assignmentTraces.slice() ?? [],
       sceneOverlays: this.getSceneOverlayDebugState(),
+      cinematicPost: this.lastCinematicSceneTransitionDebug,
       lateReapply: this.getLateReapplyDebugState(),
       transitionCommit: commitState
         ? {
@@ -2542,6 +2641,9 @@ export class SceneManager {
       reason: "SceneManager owns page-transition final commit",
     });
     if (finalTrace?.allowed) {
+      this.cinematicSceneTransition = null;
+      this.lastCinematicSceneTransitionDebug =
+        inactiveCinematicSceneTransitionDebugState();
       this.applyEnvironment(environment);
       this.applyPageScene(nextPage);
       this.sceneOverlayController.applySceneOverlaysAtTransitionEnd(
@@ -3621,6 +3723,53 @@ export class SceneManager {
     );
   }
 
+  beginCinematicSceneTransition(
+    fromEnvironment: EnvironmentSetup,
+    toEnvironment: EnvironmentSetup,
+    fromPage: PresentationPage,
+    toPage: PresentationPage,
+    durationMs: number,
+    easing: EasingName,
+    startMs: number = performance.now(),
+  ): void {
+    this.cinematicSceneTransition = createCinematicSceneTransition(
+      fromEnvironment,
+      toEnvironment,
+      fromPage,
+      toPage,
+      durationMs,
+      easing,
+      startMs,
+    );
+    this.updateCinematicPostFrame(startMs);
+  }
+
+  private updateCinematicPostFrame(nowMs: number): void {
+    const transition = this.cinematicSceneTransition;
+    if (!transition) {
+      if (this.postHandle?.gradePass?.uniforms?.time) {
+        this.postHandle.gradePass.uniforms.time.value = nowMs / 1000;
+      }
+      this.lastCinematicSceneTransitionDebug =
+        inactiveCinematicSceneTransitionDebugState();
+      return;
+    }
+
+    const frame = blendCinematicSceneForTransition(transition, nowMs);
+    applyCinematicPostProcessing.call(this, frame.scene, {
+      page: frame.page,
+      nowMs,
+      applyPageMood: true,
+    });
+    this.lastCinematicSceneTransitionDebug = cinematicSceneTransitionDebugState(
+      transition,
+      frame.progress,
+    );
+    if (frame.done) {
+      this.cinematicSceneTransition = null;
+    }
+  }
+
   setEnvironmentScenePreviewPatch(
     patch: Partial<SceneProperties> | null | undefined,
   ): void {
@@ -4016,6 +4165,7 @@ export class SceneManager {
   frameUpdate(camera: THREE.Camera, nowMs: number = performance.now()): void {
     const startedAt = performance.now();
     let stageStart = startedAt;
+    this.activeCamera = camera;
 
     this.updateCameraLockedSun(camera);
     const cameraLockedSunMs = transitionDebugMs(performance.now() - stageStart);
@@ -4023,6 +4173,10 @@ export class SceneManager {
 
     this.tickLayerTweens(nowMs);
     const layerTweensMs = transitionDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
+
+    this.updateCinematicPostFrame(nowMs);
+    const cinematicPostMs = transitionDebugMs(performance.now() - stageStart);
     stageStart = performance.now();
 
     this.updateBoreLensVisibility(camera);
@@ -4071,6 +4225,10 @@ export class SceneManager {
     );
     stageStart = performance.now();
 
+    tickLocalAtmosphereVolumeLayers(this.layers.values(), nowMs);
+    const localAtmosphereMs = transitionDebugMs(performance.now() - stageStart);
+    stageStart = performance.now();
+
     this.updateSeismicTransientLodState(camera, nowMs);
 
     this.sceneOverlayController.tick(nowMs);
@@ -4083,6 +4241,7 @@ export class SceneManager {
       totalMs: transitionDebugMs(performance.now() - startedAt),
       cameraLockedSunMs,
       layerTweensMs,
+      cinematicPostMs,
       boreLensMs,
       lightingStudioScaleMs,
       dynamicCameraOrbitCenterScaleMs,
@@ -4091,6 +4250,7 @@ export class SceneManager {
       sceneSectionTextFacingMs,
       sectionIsoThresholdOcclusionMs,
       topoGridCameraVisibilityMs,
+      localAtmosphereMs,
       sceneOverlayTickMs,
       activeSceneTransition: this.activeSceneTransitionContext !== null,
     };

@@ -90,6 +90,11 @@ const CATEGORICAL_STYLE_FIELDS: readonly StyleField[] = [
   "sceneSectionActiveFrameId",
   "sceneSectionGroundTraceVisible",
   "sceneSectionAxesVisible",
+  "atmosphereSubtype",
+  "atmosphereBoundsMode",
+  "atmosphereDriftEnabled",
+  "atmosphereDepthTest",
+  "atmosphereBoundsHelperVisible",
 ];
 
 const SPATIAL_STYLE_FIELDS: readonly StyleField[] = [
@@ -100,6 +105,12 @@ const SPATIAL_STYLE_FIELDS: readonly StyleField[] = [
   "sceneSectionObjectVisibilityByAxis",
   "sceneSectionObjectVisibilityByFrameId",
   "workingAreaFocusOutsideOpacityByLayerId",
+  "atmosphereBoundsCenterX",
+  "atmosphereBoundsCenterY",
+  "atmosphereBoundsCenterZ",
+  "atmosphereBoundsSizeX",
+  "atmosphereBoundsSizeY",
+  "atmosphereBoundsSizeZ",
 ];
 
 function sectionIsoOverlayVisible(style: ReturnType<typeof effectiveStyle>): boolean {

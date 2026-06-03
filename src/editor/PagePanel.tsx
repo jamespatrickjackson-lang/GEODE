@@ -40,6 +40,7 @@ import {
   CameraSetupPanel,
   EnvironmentScenePanel,
   GuiSetupPanel,
+  PostProcessingPanel,
 } from "./EnvironmentScenePanel";
 import type {
   DynamicCamera,
@@ -956,6 +957,12 @@ export function VisualStudioPanel({
           )
         }
       />
+      <PostProcessingPanel
+        title="Post Processing"
+        accentColor={accentColor}
+        scene={cinematicsScene}
+        setScene={setCinematicsScene}
+      />
       <EnvironmentScenePanel
         title="Terrain grid"
         content="terrain"
@@ -1201,9 +1208,17 @@ export function DynamicCameraPanel({
   const dynamicMovementEnabled = cfg.enabled === true;
   const orbitEnabled = cfg.orbitEnabled !== false;
   const zoomEnabled = cfg.zoomEnabled === true;
+  const dollyEnabled = cfg.dollyEnabled === true;
+  const truckEnabled = cfg.truckEnabled === true;
+  const craneEnabled = cfg.craneEnabled === true;
+  const handheldEnabled = cfg.handheldEnabled === true;
   const movementControlsDisabled = disabled || !dynamicMovementEnabled;
   const orbitControlsDisabled = movementControlsDisabled || !orbitEnabled;
   const zoomControlsDisabled = movementControlsDisabled || !zoomEnabled;
+  const dollyControlsDisabled = movementControlsDisabled || !dollyEnabled;
+  const truckControlsDisabled = movementControlsDisabled || !truckEnabled;
+  const craneControlsDisabled = movementControlsDisabled || !craneEnabled;
+  const handheldControlsDisabled = movementControlsDisabled || !handheldEnabled;
 
   const writeDynamic = useCallback((patch: Partial<DynamicCamera>) => {
     const next: DynamicCamera = {
@@ -1414,6 +1429,19 @@ export function DynamicCameraPanel({
                   transitionExitMs: 900,
                   transitionBlendCurve: "smooth",
                   pathAwareBlend: false,
+                  dollyEnabled: false,
+                  dollyDistanceM: 0,
+                  truckEnabled: false,
+                  truckDistanceM: 0,
+                  craneEnabled: false,
+                  craneHeightM: 0,
+                  shotStartMs: 0,
+                  shotEndMs: 2500,
+                  shotCurve: "smooth",
+                  handheldEnabled: false,
+                  handheldAmplitudeM: 0,
+                  handheldFrequencyHz: 0.35,
+                  rollDeg: 0,
                 });
                 sceneHandle.setDynamicCameraOrbitCenter(poi, 1);
               }}
@@ -1426,6 +1454,273 @@ export function DynamicCameraPanel({
             value={cfg.poi ?? page.camera.target}
             disabled={movementControlsDisabled}
             onChange={updateOrbitPointFromFields}
+          />
+        </DynamicCameraSubsection>
+
+        <DynamicCameraSubsection
+          title="Shot Templates"
+          muted={!dynamicMovementEnabled}
+        >
+          <div style={dynamicCameraButtonRowStyle}>
+            <button
+              className="editor-action-button"
+              style={{
+                ...dynamicCameraMiniButtonStyle,
+                opacity: movementControlsDisabled ? 0.55 : 1,
+              }}
+              disabled={movementControlsDisabled}
+              onClick={() =>
+                writeDynamic({
+                  enabled: true,
+                  dollyEnabled: true,
+                  dollyDistanceM: 1200,
+                  truckEnabled: false,
+                  truckDistanceM: 0,
+                  craneEnabled: false,
+                  craneHeightM: 0,
+                  shotStartMs: 0,
+                  shotEndMs: 2600,
+                  shotCurve: "cinematic",
+                  handheldEnabled: true,
+                  handheldAmplitudeM: 40,
+                  handheldFrequencyHz: 0.25,
+                  rollDeg: 0,
+                })
+              }
+            >
+              Push in
+            </button>
+            <button
+              className="editor-action-button"
+              style={{
+                ...dynamicCameraMiniButtonStyle,
+                opacity: movementControlsDisabled ? 0.55 : 1,
+              }}
+              disabled={movementControlsDisabled}
+              onClick={() =>
+                writeDynamic({
+                  enabled: true,
+                  dollyEnabled: true,
+                  dollyDistanceM: -1200,
+                  truckEnabled: false,
+                  truckDistanceM: 0,
+                  craneEnabled: false,
+                  craneHeightM: 0,
+                  shotStartMs: 0,
+                  shotEndMs: 2600,
+                  shotCurve: "cinematic",
+                  handheldEnabled: true,
+                  handheldAmplitudeM: 36,
+                  handheldFrequencyHz: 0.22,
+                  rollDeg: 0,
+                })
+              }
+            >
+              Pull back
+            </button>
+            <button
+              className="editor-action-button"
+              style={{
+                ...dynamicCameraMiniButtonStyle,
+                opacity: movementControlsDisabled ? 0.55 : 1,
+              }}
+              disabled={movementControlsDisabled}
+              onClick={() =>
+                writeDynamic({
+                  enabled: true,
+                  dollyEnabled: false,
+                  dollyDistanceM: 0,
+                  truckEnabled: true,
+                  truckDistanceM: 900,
+                  craneEnabled: false,
+                  craneHeightM: 0,
+                  shotStartMs: 0,
+                  shotEndMs: 2800,
+                  shotCurve: "smooth",
+                  handheldEnabled: true,
+                  handheldAmplitudeM: 32,
+                  handheldFrequencyHz: 0.24,
+                  rollDeg: -0.5,
+                })
+              }
+            >
+              Truck right
+            </button>
+            <button
+              className="editor-action-button"
+              style={{
+                ...dynamicCameraMiniButtonStyle,
+                opacity: movementControlsDisabled ? 0.55 : 1,
+              }}
+              disabled={movementControlsDisabled}
+              onClick={() =>
+                writeDynamic({
+                  enabled: true,
+                  dollyEnabled: false,
+                  dollyDistanceM: 0,
+                  truckEnabled: false,
+                  truckDistanceM: 0,
+                  craneEnabled: true,
+                  craneHeightM: 900,
+                  shotStartMs: 0,
+                  shotEndMs: 3000,
+                  shotCurve: "cinematic",
+                  handheldEnabled: true,
+                  handheldAmplitudeM: 28,
+                  handheldFrequencyHz: 0.2,
+                  rollDeg: 0.5,
+                })
+              }
+            >
+              Crane up
+            </button>
+          </div>
+        </DynamicCameraSubsection>
+
+        <DynamicCameraSubsection
+          title="Camera Dolly"
+          muted={!dynamicMovementEnabled || !dollyEnabled}
+          action={
+            <DynamicCheckToggle
+              value={dollyEnabled}
+              disabled={disabled || !dynamicMovementEnabled}
+              onChange={(dollyEnabled) => writeDynamic({ dollyEnabled })}
+            />
+          }
+        >
+          <DynamicRangeRow
+            label="Distance"
+            value={cfg.dollyDistanceM ?? 0}
+            min={-5000}
+            max={5000}
+            step={25}
+            suffix="m"
+            disabled={dollyControlsDisabled}
+            onChange={(dollyDistanceM) => writeDynamic({ dollyDistanceM })}
+          />
+          <DynamicRangeRow
+            label="Start"
+            value={cfg.shotStartMs ?? 0}
+            min={0}
+            max={12000}
+            step={50}
+            suffix="ms"
+            disabled={dollyControlsDisabled}
+            onChange={(shotStartMs) => writeDynamic({ shotStartMs })}
+          />
+          <DynamicRangeRow
+            label="End"
+            value={cfg.shotEndMs ?? 2500}
+            min={0}
+            max={12000}
+            step={50}
+            suffix="ms"
+            disabled={dollyControlsDisabled}
+            onChange={(shotEndMs) => writeDynamic({ shotEndMs })}
+          />
+          <DynamicSelectRow
+            label="Curve"
+            value={cfg.shotCurve ?? "smooth"}
+            disabled={dollyControlsDisabled}
+            options={[
+              ["linear", "Linear"],
+              ["smooth", "Smooth"],
+              ["cinematic", "Cinematic"],
+            ]}
+            onChange={(shotCurve) => writeDynamic({ shotCurve })}
+          />
+        </DynamicCameraSubsection>
+
+        <DynamicCameraSubsection
+          title="Camera Truck"
+          muted={!dynamicMovementEnabled || !truckEnabled}
+          action={
+            <DynamicCheckToggle
+              value={truckEnabled}
+              disabled={disabled || !dynamicMovementEnabled}
+              onChange={(truckEnabled) => writeDynamic({ truckEnabled })}
+            />
+          }
+        >
+          <DynamicRangeRow
+            label="Distance"
+            value={cfg.truckDistanceM ?? 0}
+            min={-5000}
+            max={5000}
+            step={25}
+            suffix="m"
+            disabled={truckControlsDisabled}
+            onChange={(truckDistanceM) => writeDynamic({ truckDistanceM })}
+          />
+        </DynamicCameraSubsection>
+
+        <DynamicCameraSubsection
+          title="Camera Crane"
+          muted={!dynamicMovementEnabled || !craneEnabled}
+          action={
+            <DynamicCheckToggle
+              value={craneEnabled}
+              disabled={disabled || !dynamicMovementEnabled}
+              onChange={(craneEnabled) => writeDynamic({ craneEnabled })}
+            />
+          }
+        >
+          <DynamicRangeRow
+            label="Height"
+            value={cfg.craneHeightM ?? 0}
+            min={-5000}
+            max={5000}
+            step={25}
+            suffix="m"
+            disabled={craneControlsDisabled}
+            onChange={(craneHeightM) => writeDynamic({ craneHeightM })}
+          />
+        </DynamicCameraSubsection>
+
+        <DynamicCameraSubsection
+          title="Handheld Polish"
+          muted={!dynamicMovementEnabled || !handheldEnabled}
+          action={
+            <DynamicCheckToggle
+              value={handheldEnabled}
+              disabled={disabled || !dynamicMovementEnabled}
+              onChange={(handheldEnabled) => writeDynamic({ handheldEnabled })}
+            />
+          }
+        >
+          <DynamicRangeRow
+            label="Drift"
+            value={cfg.handheldAmplitudeM ?? 0}
+            min={0}
+            max={250}
+            step={1}
+            suffix="m"
+            disabled={handheldControlsDisabled}
+            onChange={(handheldAmplitudeM) =>
+              writeDynamic({ handheldAmplitudeM })
+            }
+          />
+          <DynamicRangeRow
+            label="Freq."
+            value={cfg.handheldFrequencyHz ?? 0.35}
+            min={0.05}
+            max={2}
+            step={0.05}
+            suffix="Hz"
+            disabled={handheldControlsDisabled}
+            onChange={(handheldFrequencyHz) =>
+              writeDynamic({ handheldFrequencyHz })
+            }
+          />
+          <DynamicRangeRow
+            label="Roll"
+            value={cfg.rollDeg ?? 0}
+            min={-12}
+            max={12}
+            step={0.1}
+            suffix="deg"
+            disabled={movementControlsDisabled}
+            onChange={(rollDeg) => writeDynamic({ rollDeg })}
           />
         </DynamicCameraSubsection>
 
@@ -1989,6 +2284,19 @@ function dynamicCameraForPage(page: PresentationPage): DynamicCamera {
     transitionExitMs: page.dynamicCamera?.transitionExitMs ?? 900,
     transitionBlendCurve: page.dynamicCamera?.transitionBlendCurve ?? "smooth",
     pathAwareBlend: page.dynamicCamera?.pathAwareBlend ?? false,
+    dollyEnabled: page.dynamicCamera?.dollyEnabled ?? false,
+    dollyDistanceM: page.dynamicCamera?.dollyDistanceM ?? 0,
+    truckEnabled: page.dynamicCamera?.truckEnabled ?? false,
+    truckDistanceM: page.dynamicCamera?.truckDistanceM ?? 0,
+    craneEnabled: page.dynamicCamera?.craneEnabled ?? false,
+    craneHeightM: page.dynamicCamera?.craneHeightM ?? 0,
+    shotStartMs: page.dynamicCamera?.shotStartMs ?? 0,
+    shotEndMs: page.dynamicCamera?.shotEndMs ?? 2500,
+    shotCurve: page.dynamicCamera?.shotCurve ?? "smooth",
+    handheldEnabled: page.dynamicCamera?.handheldEnabled ?? false,
+    handheldAmplitudeM: page.dynamicCamera?.handheldAmplitudeM ?? 0,
+    handheldFrequencyHz: page.dynamicCamera?.handheldFrequencyHz ?? 0.35,
+    rollDeg: page.dynamicCamera?.rollDeg ?? 0,
   };
 }
 

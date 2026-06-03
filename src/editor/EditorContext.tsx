@@ -13,6 +13,7 @@ import type {
   EnvironmentSetup,
   PresentationPage,
   Pose,
+  ProjectLayerSpec,
   ProjectManifest,
   RenderPresetId,
   SceneProperties,
@@ -92,6 +93,12 @@ interface EditorContextValue {
 
   // Provenance (project-keyed)
   setLayerProvenance: (layerId: string, metadata: Record<string, unknown>) => void;
+  addProjectLayer: (
+    layer: ProjectLayerSpec,
+    style?: Partial<EditableStyle>,
+    visible?: boolean,
+  ) => void;
+  removeProjectLayer: (layerId: string) => void;
 
   // Presentation-page delta dispatchers
   setPageLayerOverride: (
@@ -227,6 +234,39 @@ function mergeSceneEdit(
   if (patch.vignette) {
     next.vignette = { ...(base?.vignette ?? {}), ...patch.vignette };
   }
+  if (patch.depthOfField) {
+    next.depthOfField = {
+      ...(base?.depthOfField ?? {}),
+      ...patch.depthOfField,
+    };
+  }
+  if (patch.tiltShift) {
+    next.tiltShift = { ...(base?.tiltShift ?? {}), ...patch.tiltShift };
+  }
+  if (patch.lensEffects) {
+    next.lensEffects = {
+      ...(base?.lensEffects ?? {}),
+      ...patch.lensEffects,
+    };
+  }
+  if (patch.motionTrails) {
+    next.motionTrails = {
+      ...(base?.motionTrails ?? {}),
+      ...patch.motionTrails,
+    };
+  }
+  if (patch.presentationFrame) {
+    next.presentationFrame = {
+      ...(base?.presentationFrame ?? {}),
+      ...patch.presentationFrame,
+    };
+  }
+  if (patch.compositionGuides) {
+    next.compositionGuides = {
+      ...(base?.compositionGuides ?? {}),
+      ...patch.compositionGuides,
+    };
+  }
   if (patch.sun) next.sun = { ...(base?.sun ?? {}), ...patch.sun };
   if (patch.topoDetails) {
     next.topoDetails = { ...(base?.topoDetails ?? {}), ...patch.topoDetails };
@@ -275,6 +315,9 @@ function cinematicScenePatchForEdit(
 ): Partial<SceneProperties> {
   const next: Partial<SceneProperties> = {};
   if (patch.background !== undefined) next.background = patch.background;
+  if (patch.lightModeBackground !== undefined) {
+    next.lightModeBackground = patch.lightModeBackground;
+  }
   if (patch.fog !== undefined) next.fog = patch.fog;
   if (patch.sun !== undefined) next.sun = patch.sun;
   if (patch.lighting !== undefined) next.lighting = patch.lighting;
@@ -292,6 +335,16 @@ function cinematicScenePatchForEdit(
   }
   if (patch.vignette !== undefined) next.vignette = patch.vignette;
   if (patch.colorGrade !== undefined) next.colorGrade = patch.colorGrade;
+  if (patch.depthOfField !== undefined) next.depthOfField = patch.depthOfField;
+  if (patch.tiltShift !== undefined) next.tiltShift = patch.tiltShift;
+  if (patch.lensEffects !== undefined) next.lensEffects = patch.lensEffects;
+  if (patch.motionTrails !== undefined) next.motionTrails = patch.motionTrails;
+  if (patch.presentationFrame !== undefined) {
+    next.presentationFrame = patch.presentationFrame;
+  }
+  if (patch.compositionGuides !== undefined) {
+    next.compositionGuides = patch.compositionGuides;
+  }
   if (patch.gui !== undefined) next.gui = patch.gui;
   return next;
 }
@@ -798,6 +851,95 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         ...state,
         manifest,
         dirty: withDirty(state.dirty, "project"),
+      };
+    }
+    case "ADD_PROJECT_LAYER": {
+      if (state.manifest.layers.some((layer) => layer.id === action.layer.id)) {
+        return state;
+      }
+      const manifest = clone(state.manifest);
+      manifest.layers = [...manifest.layers, action.layer];
+      const environment = clone(state.environment);
+      environment.layerStyles[action.layer.id] = {
+        ...(environment.layerStyles[action.layer.id] ?? {}),
+        ...(action.style ?? {}),
+      };
+      if (action.visible !== false) {
+        environment.defaultVisibleLayers = Array.from(
+          new Set([...environment.defaultVisibleLayers, action.layer.id]),
+        );
+      }
+      return {
+        ...state,
+        manifest,
+        environment,
+        dirty: withDirty(state.dirty, ["project", "environment"]),
+      };
+    }
+    case "REMOVE_PROJECT_LAYER": {
+      if (!state.manifest.layers.some((layer) => layer.id === action.layerId)) {
+        return state;
+      }
+      const manifest = clone(state.manifest);
+      manifest.layers = manifest.layers.filter(
+        (layer) => layer.id !== action.layerId,
+      );
+      const environment = clone(state.environment);
+      delete environment.layerStyles[action.layerId];
+      environment.defaultVisibleLayers = environment.defaultVisibleLayers.filter(
+        (layerId) => layerId !== action.layerId,
+      );
+      const dirty = withDirty(state.dirty, ["project", "environment"]);
+      const pages = state.pages.map((page) => {
+        let changed = false;
+        const next: PresentationPage = { ...page };
+        if (next.layerOverrides?.[action.layerId]) {
+          const layerOverrides = { ...next.layerOverrides };
+          delete layerOverrides[action.layerId];
+          if (Object.keys(layerOverrides).length > 0) {
+            next.layerOverrides = layerOverrides;
+          } else {
+            delete next.layerOverrides;
+          }
+          changed = true;
+        }
+        if (next.visibilityOverrides?.[action.layerId] !== undefined) {
+          const visibilityOverrides = { ...next.visibilityOverrides };
+          delete visibilityOverrides[action.layerId];
+          if (Object.keys(visibilityOverrides).length > 0) {
+            next.visibilityOverrides = visibilityOverrides;
+          } else {
+            delete next.visibilityOverrides;
+          }
+          changed = true;
+        }
+        if (next.envSnapshot) {
+          const envSnapshot = clone(next.envSnapshot);
+          const hadStyle = envSnapshot.layerStyles[action.layerId] !== undefined;
+          delete envSnapshot.layerStyles[action.layerId];
+          const nextDefaultVisibleLayers =
+            envSnapshot.defaultVisibleLayers.filter(
+              (layerId) => layerId !== action.layerId,
+            );
+          if (
+            hadStyle ||
+            nextDefaultVisibleLayers.length !==
+              envSnapshot.defaultVisibleLayers.length
+          ) {
+            envSnapshot.defaultVisibleLayers = nextDefaultVisibleLayers;
+            next.envSnapshot = envSnapshot;
+            changed = true;
+          }
+        }
+        if (changed) dirty.add(`page:${page.id}`);
+        return changed ? next : page;
+      });
+      return {
+        ...state,
+        manifest,
+        environment,
+        pages,
+        dirty,
       };
     }
 
@@ -2081,6 +2223,42 @@ export function EditorProvider({
     return () => sceneHandle.setAreaOutlineCommitHandler(null);
   }, [canApplyLiveSceneEdits, sceneHandle]);
 
+  // Local atmosphere cloud handles preview in the scene, then commit their
+  // resolved bounds back through the active authoring scope.
+  useEffect(() => {
+    sceneHandle.setLocalAtmosphereCommitHandler((layerId, patch) => {
+      const stylePatch = patch as Partial<EditableStyle>;
+      const cur = stateRef.current;
+      const page =
+        cur.selectedPageId && cur.selectedPageId !== ENVIRONMENT_SENTINEL
+          ? cur.pages.find((candidate) => candidate.id === cur.selectedPageId)
+          : null;
+      const pageEnvironment = page
+        ? resolveEnvironmentForPage(cur.environment, cur.pages, page)
+        : cur.environment;
+      const currentStyle = page
+        ? effectiveStyle(pageEnvironment, page, layerId)
+        : (pageEnvironment.layerStyles[layerId] ?? {});
+      if (canApplyLiveSceneEdits()) {
+        sceneHandle.manager.applyStyle(layerId, {
+          ...currentStyle,
+          ...stylePatch,
+        });
+      }
+      if (page) {
+        dispatch({
+          type: "SET_PAGE_LAYER_OVERRIDE",
+          pageId: page.id,
+          layerId,
+          patch: stylePatch,
+        });
+      } else {
+        dispatch({ type: "SET_ENV_LAYER_STYLE", layerId, style: stylePatch });
+      }
+    });
+    return () => sceneHandle.setLocalAtmosphereCommitHandler(null);
+  }, [canApplyLiveSceneEdits, sceneHandle]);
+
   useEffect(() => {
     sceneHandle.setSceneSectionPlaneCommitHandler((axis, positionM, frameId) => {
       const cur = stateRef.current;
@@ -2295,6 +2473,66 @@ export function EditorProvider({
     (layerId, metadata) =>
       dispatch({ type: "SET_LAYER_PROVENANCE", layerId, metadata }),
     [],
+  );
+
+  const addProjectLayer = useCallback<EditorContextValue["addProjectLayer"]>(
+    (layer, style = {}, visible = true) => {
+      const cur = stateRef.current;
+      sceneHandle.manager.registerLayer(layer);
+      if (canApplyLiveSceneEdits()) {
+        sceneHandle.manager.applyStyle(layer.id, style);
+        const nextEnvironment: EnvironmentSetup = {
+          ...cur.environment,
+          layerStyles: {
+            ...cur.environment.layerStyles,
+            [layer.id]: {
+              ...(cur.environment.layerStyles[layer.id] ?? {}),
+              ...style,
+            },
+          },
+          defaultVisibleLayers:
+            visible === false
+              ? cur.environment.defaultVisibleLayers.filter(
+                  (layerId) => layerId !== layer.id,
+                )
+              : Array.from(
+                  new Set([...cur.environment.defaultVisibleLayers, layer.id]),
+                ),
+        };
+        const displayPage =
+          cur.pages.find((page) => page.id === cur.selectedPageId) ??
+          cur.pages[0];
+        if (displayPage) {
+          const pageEnvironment =
+            cur.selectedPageId === ENVIRONMENT_SENTINEL
+              ? nextEnvironment
+              : resolveEnvironmentForPage(
+                  nextEnvironment,
+                  cur.pages,
+                  displayPage,
+                );
+          sceneHandle.manager.applyStyle(
+            layer.id,
+            effectiveStyle(pageEnvironment, displayPage, layer.id),
+          );
+          sceneHandle.manager.setVisible(
+            effectiveVisibility(pageEnvironment, displayPage),
+          );
+        }
+      }
+      dispatch({ type: "ADD_PROJECT_LAYER", layer, style, visible });
+    },
+    [canApplyLiveSceneEdits, sceneHandle],
+  );
+
+  const removeProjectLayer = useCallback<
+    EditorContextValue["removeProjectLayer"]
+  >(
+    (layerId) => {
+      sceneHandle.manager.removeLayer(layerId);
+      dispatch({ type: "REMOVE_PROJECT_LAYER", layerId });
+    },
+    [sceneHandle],
   );
 
   // ---- presentation-page delta dispatchers ------------------------------
@@ -2718,6 +2956,8 @@ export function EditorProvider({
       setPageSceneOverlay,
       removePageSceneOverlay,
       setLayerProvenance,
+      addProjectLayer,
+      removeProjectLayer,
       setPageLayerOverride,
       clearPageLayerOverride,
       setPageVisibilityOverride,
@@ -2766,6 +3006,8 @@ export function EditorProvider({
       setPageSceneOverlay,
       removePageSceneOverlay,
       setLayerProvenance,
+      addProjectLayer,
+      removeProjectLayer,
       setPageLayerOverride,
       clearPageLayerOverride,
       setPageVisibilityOverride,

@@ -58,8 +58,8 @@ export type DynamicCameraCurve = "linear" | "smooth" | "cinematic";
 
 export interface DynamicCamera {
   enabled?: boolean;
-  // First pass is intentionally focused on orbiting because it gives the
-  // cleanest presentation motion without making the page camera unpredictable.
+  // Dynamic movement is additive over the authored page pose. Orbit and zoom
+  // keep their legacy behavior; dolly/truck/crane are camera-local shot axes.
   mode?: "orbit";
   orbitEnabled?: boolean;
   poi?: Vec3;
@@ -78,6 +78,19 @@ export interface DynamicCamera {
   transitionExitMs?: number;
   transitionBlendCurve?: DynamicCameraCurve;
   pathAwareBlend?: boolean;
+  dollyEnabled?: boolean;
+  dollyDistanceM?: number;
+  truckEnabled?: boolean;
+  truckDistanceM?: number;
+  craneEnabled?: boolean;
+  craneHeightM?: number;
+  shotStartMs?: number;
+  shotEndMs?: number;
+  shotCurve?: DynamicCameraCurve;
+  handheldEnabled?: boolean;
+  handheldAmplitudeM?: number;
+  handheldFrequencyHz?: number;
+  rollDeg?: number;
 }
 
 export type DemoBoreholeLineStyle = "solid" | "dashed";
@@ -182,6 +195,33 @@ export interface EditableStyle {
   // separately from the outline/whole-layer opacity.
   fillOpacity?: number;
   opacity?: number;
+  // Generated local atmosphere impostor controls. Immutable/default placement
+  // can live in ProjectLayerSpec.metadata.localAtmosphereVolume; these mutable
+  // values are authored through environment.layerStyles and page layerOverrides.
+  atmosphereSubtype?: "mist" | "ground-fog" | "cloud-bank" | "steam-plume";
+  atmosphereBoundsMode?: "box" | "ellipsoid";
+  atmosphereBoundsCenterX?: number;
+  atmosphereBoundsCenterY?: number;
+  atmosphereBoundsCenterZ?: number;
+  atmosphereBoundsSizeX?: number;
+  atmosphereBoundsSizeY?: number;
+  atmosphereBoundsSizeZ?: number;
+  atmosphereDensity?: number;
+  atmosphereSoftness?: number;
+  atmospherePuffCount?: number;
+  atmospherePuffScaleM?: number;
+  atmosphereScaleJitter?: number;
+  atmosphereVerticalFalloff?: number;
+  atmosphereEdgeFade?: number;
+  atmosphereSeed?: number;
+  atmosphereDriftEnabled?: boolean;
+  atmosphereDriftSpeedMps?: number;
+  atmosphereDriftDirectionX?: number;
+  atmosphereDriftDirectionY?: number;
+  atmosphereDriftDirectionZ?: number;
+  atmosphereDepthTest?: boolean;
+  atmosphereRenderOrder?: number;
+  atmosphereBoundsHelperVisible?: boolean;
   // Screen-space line width for Line2/LineSegments2 layers and polygon
   // outline layers.
   lineWidth?: number;
@@ -902,6 +942,30 @@ export type RenderPresetId =
   | UserRenderPresetId
   | (string & {});
 
+export type LensPreset =
+  | "ultra-wide"
+  | "wide"
+  | "documentary"
+  | "standard"
+  | "portrait"
+  | "tele";
+
+export type DepthOfFieldFocusMode =
+  | "page-target"
+  | "camera-object"
+  | "manual-distance"
+  | "picked-point";
+
+export type ColorFilterPreset =
+  | "none"
+  | "warm"
+  | "cool"
+  | "bleach"
+  | "noir"
+  | "teal-orange"
+  | "sepia"
+  | "infrared";
+
 // Open bag of scene-level concerns. The loader honours fields it knows and
 // ignores the rest. Add new fields here as polish needs them without
 // touching the loader.
@@ -918,6 +982,22 @@ export interface SceneProperties {
     elevation?: number; // degrees above horizon
     azimuth?: number; // degrees clockwise from north
     lockToCamera?: boolean;
+    // Sun light and sky-image controls are intentionally separate: authors
+    // can use the orb as a fake visual, keep lighting with no visible sun,
+    // or use both together.
+    lightEnabled?: boolean;
+    orbVisible?: boolean;
+    orbColor?: string;
+    orbOpacity?: number;
+    orbSizeM?: number;
+    orbDistanceM?: number;
+    orbEdgeSoftness?: number;
+    orbHaloColor?: string;
+    orbHaloOpacity?: number;
+    orbHaloScale?: number;
+    orbRenderOrder?: number;
+    sourceMarkerVisible?: boolean;
+    sourceMarkerOpacity?: number;
   };
 
   // Exponential fog (FogExp2) -- soft falloff. Density tuned so the
@@ -933,7 +1013,7 @@ export interface SceneProperties {
   // Global camera treatment. Page poses still own position/target/up; this
   // optional lens value overrides page FOV so the whole presentation can be
   // made wider or flatter without re-capturing every page.
-  camera?: { fov?: number };
+  camera?: { fov?: number; lensPreset?: LensPreset };
   cameraFocus?: SceneCameraFocusSettings;
 
   // Lighting rig. Tuned in code defaults; not user-touched in the
@@ -1066,6 +1146,70 @@ export interface SceneProperties {
     vibrancy?: number;
     tint?: string;
     tintStrength?: number;
+    temperature?: number;
+    blackPoint?: number;
+    whitePoint?: number;
+    lift?: number;
+    gamma?: number;
+    gain?: number;
+    splitShadowColor?: string;
+    splitHighlightColor?: string;
+    splitToneAmount?: number;
+    filterPreset?: ColorFilterPreset;
+    filterIntensity?: number;
+  };
+  depthOfField?: {
+    enabled?: boolean;
+    focusMode?: DepthOfFieldFocusMode;
+    focusDistanceM?: number;
+    focusPoint?: Vec3;
+    focusOffsetM?: number;
+    aperture?: number;
+    maxBlur?: number;
+    debugFocusPlane?: boolean;
+    debugFocusPlaneOpacity?: number;
+    debugFocusPlaneScale?: number;
+  };
+  tiltShift?: {
+    enabled?: boolean;
+    centerX?: number;
+    centerY?: number;
+    angleDeg?: number;
+    bandSize?: number;
+    feather?: number;
+    blur?: number;
+  };
+  lensEffects?: {
+    grain?: number;
+    grainSize?: number;
+    distortion?: number;
+    chromaticAberration?: number;
+    sharpen?: number;
+    diffusion?: number;
+    halation?: number;
+    anamorphicStreak?: number;
+    anamorphicStreakLength?: number;
+    anamorphicStreakThreshold?: number;
+  };
+  motionTrails?: {
+    enabled?: boolean;
+    amount?: number;
+  };
+  presentationFrame?: {
+    letterbox?: boolean;
+    aspectRatio?: "none" | "16:9" | "1.85:1" | "2.39:1" | "4:3";
+    matteOpacity?: number;
+    matteColor?: string;
+    cornerFade?: number;
+    gateWeave?: number;
+  };
+  compositionGuides?: {
+    enabled?: boolean;
+    ruleOfThirds?: boolean;
+    centerCross?: boolean;
+    safeFrame?: boolean;
+    aspectMask?: "none" | "16:9" | "1.85:1" | "2.39:1";
+    lineThickness?: number;
   };
 
   // Optional cinematic preset references. These are config-only until a
@@ -1139,6 +1283,16 @@ export interface SceneProperties {
     orthoPhotoBrightness?: number;
     orthoPhotoContrast?: number;
     orthoPhotoSaturation?: number;
+    orthoPhotoOutsideFillEnabled?: boolean;
+    orthoPhotoOutsideColor?: string;
+    orthoPhotoOutsideOpacity?: number;
+    orthoPhotoShadowStrength?: number;
+    orthoPhotoShadowFloor?: number;
+    orthoPhotoShadowTint?: string;
+    projectedMapShadowsEnabled?: boolean;
+    projectedMapShadowOpacity?: number;
+    projectedMapShadowSoftness?: number;
+    projectedMapShadowBias?: number;
     shadowTint?: string;
     gridEnabled?: boolean;
     gridColor?: string;
@@ -1243,6 +1397,12 @@ export type CinematicScenePatch = Partial<
     | "ambientOcclusion"
     | "vignette"
     | "colorGrade"
+    | "depthOfField"
+    | "tiltShift"
+    | "lensEffects"
+    | "motionTrails"
+    | "presentationFrame"
+    | "compositionGuides"
     | "gui"
   >
 >;
@@ -1362,6 +1522,7 @@ export interface AreaOutlineDef {
 // terrain). The schema accommodates a future cross-section variant
 // (figure 4) but rendering for that case is deferred.
 export type SceneOverlayClassification =
+  | "environmental"
   | "observation"
   | "interpretation"
   | "narrative"
@@ -1528,6 +1689,7 @@ export interface ProjectLayerSpec {
   id: string;
   label: string;
   type:
+    | "atmosphere-volume"
     | "drillhole"
     | "geojson"
     | "gltf"

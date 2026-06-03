@@ -50,6 +50,11 @@ import {
   type LayerLoadContext,
   type LayerLoaderHandler,
 } from "./layerLoaderRegistry";
+import {
+  createLocalAtmosphereVolume,
+  findLocalAtmosphereVolumeRoot,
+  isLocalAtmosphereLayerSpec,
+} from "./atmosphere/localAtmosphereVolume";
 
 export function resolveDataPath(path: string): string {
   const clean = path.replace(/^\/+/, "");
@@ -436,6 +441,14 @@ const layerLoaders: LayerLoaderHandler[] = [
           layerDataPath(context, context.files.scalarVolumeManifest),
         ),
       ),
+  },
+  {
+    id: "local-atmosphere-volume",
+    matches: (spec) => isLocalAtmosphereLayerSpec(spec),
+    load: (context) => {
+      if (findLocalAtmosphereVolumeRoot(context.group)) return;
+      context.onLoaded(createLocalAtmosphereVolume(context.spec));
+    },
   },
   {
     id: "case-study-b-demo-shell",
@@ -945,6 +958,12 @@ export function loadLayerInto(
       }
       if (obj.userData?.scalarVolumeLayer === true) {
         Object.assign(group.userData, obj.userData);
+      }
+      if (obj.userData?.localAtmosphereVolumeLayer === true) {
+        group.userData.localAtmosphereDebug = obj.userData.localAtmosphereDebug;
+        group.userData.localAtmosphereStyleState =
+          obj.userData.localAtmosphereStyleState ??
+          obj.userData.localAtmosphereResolvedStyle;
       }
       group.add(obj);
       manager.reapplyCurrentPageState("async-layer-resolve");

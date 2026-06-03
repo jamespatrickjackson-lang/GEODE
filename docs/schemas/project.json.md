@@ -212,10 +212,17 @@ The `layers` array is the heart of the project. Each layer has:
 |---|---|---|---|
 | `id` | string | yes | Unique layer identifier within the project. Used in `pages/*.json`. |
 | `label` | string | yes | Human-readable name shown in the layer panel. |
-| `type` | enum | yes | One of: `"drillhole"`, `"geojson"`, `"gltf"`, `"geotiff"`, `"pointcloud"`. |
+| `type` | enum | yes | One of: `"drillhole"`, `"geojson"`, `"gltf"`, `"geotiff"`, `"pointcloud"`, `"atmosphere-volume"`. |
 | `files` | object | yes | Map of role → file path (relative to project root). Role keys depend on `type`. |
-| `style` | object | yes | Per-type style configuration. See per-type style reference below. |
+| `style` | object | no | Legacy/project-authored default style. New mutable layer style belongs in `environment.layerStyles`; per-page deltas belong in page-local `layerOverrides`. |
 | `metadata` | object | yes | Provenance fields. See `sources.json.md` for the canonical schema. |
+
+`project.json` owns stable layer identity, files, provenance, and immutable
+placement metadata. For `atmosphere-volume`, do not put mutable visual fields
+such as opacity, density, softness, puff count, edge fade, drift, depth test, or
+render order on the layer itself. Put project defaults in
+`environment.layerStyles[<layerId>]` and page-specific changes in
+`pages/<id>.json` `layerOverrides[<layerId>]`.
 
 Each imported geospatial layer must include `metadata.crsRegistration` with:
 
@@ -264,11 +271,63 @@ User-facing accuracy labels must show review required unless status is
 
 **pointcloud:** (deferred from alpha unless Woodjam data requires it)
 
+**atmosphere-volume:**
+- `files`: normally `{}` for procedural local mist/fog volumes.
+- `metadata.classification`: `"environmental"` for scene atmosphere aids that
+  are not technical observations, interpretations, narrative labels, or planned
+  work.
+- `metadata.localAtmosphereVolume.subtype`: currently `"mist"`.
+- `metadata.localAtmosphereVolume.bounds`: immutable placement declaration.
+  Use `{ "mode": "local", "center": [x, y, z], "size": [x, y, z] }` for
+  Base GUI local-coordinate volumes.
+- `metadata.localAtmosphereVolume.artifactFamily`: family string such as
+  `"procedural-local-atmosphere"`.
+- `metadata.localAtmosphereVolume.renderingRole`: why the volume exists in the
+  render, for example `"scene-depth-and-scale-cue"`.
+- `metadata.localAtmosphereVolume.computationRole`: normally `"none"`.
+- `metadata.localAtmosphereVolume.notes`: placement and authorship caveats.
+
+Mutable defaults for `atmosphere-volume` live in `environment.layerStyles`,
+including subtype, color, opacity, density, softness, puff count/scale, scale
+jitter, vertical falloff, edge fade, seed, drift, depth test, and render order.
+Page-local atmosphere changes use `layerOverrides`, the same as other layer
+styles.
+
 ### Pages
 
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `pageOrder` | string[] | yes | Ordered list of page IDs. Each ID corresponds to a file at `pages/<id>.json`. |
+
+### Environment cinematic scene
+
+Project-level cinematic defaults live in `projects/<project>/environment.json`,
+not in `project.json` layer metadata. `environment.scene` may define global
+camera and post-processing presentation fields such as `camera.lensPreset`,
+`camera.fov`, `depthOfField`, `tiltShift`, `lensEffects`, `motionTrails`,
+`presentationFrame`, expanded `colorGrade`, `compositionGuides`, `bloom`,
+`ambientOcclusion`, `vignette`, `toneMapping`, and `exposure`.
+
+`depthOfField` supports page-target, camera-object, manual-distance, and
+picked-point focus modes. Camera-object focus resolves through a page's saved
+object focus point when one exists, so project presets can stay aesthetic while
+page-local targets decide what remains sharp. `debugFocusPlaneOpacity` and
+`debugFocusPlaneScale` tune the default-off focus debug plane only; they do not
+change the rendered blur.
+
+`compositionGuides.lineThickness` defaults to `0.25` and is treated as a
+continuous cinematic post scalar during page transitions.
+
+Render preset patches and page `sceneOverrides` may override these fields, but
+runtime topo material authority still reapplies environment terrain material
+source fields after preset/page merging. Cinematic scene fields must not alter
+MT/scalar/seismic products, source paths, CRS transforms, loaders, generated
+artifacts, or computed geometry.
+
+Page navigation blends numeric cinematic post values through the
+`main-camera/cinematic-post` transition channel. Discrete authoring overlays
+such as composition guides remain toggle-based, while dynamic camera dolly,
+truck, crane, handheld, and roll fields use timed-shot motion.
 
 ### Theme
 
@@ -305,4 +364,7 @@ Optional. Client logo path (relative to project root) and a project subtitle.
 - **CRS mismatch:** if any file in `data/` is in a different CRS from `crs.code`, layers will render in the wrong place. The tool does not detect this. Always verify CRS in QGIS before adding files.
 - **sceneOrigin too far from bounds centroid:** Three.js loses precision for very large coordinate values. If `sceneOrigin` is far from the actual data, expect visual jitter. Set `sceneOrigin` to the bounds centroid.
 - **Layer IDs not unique:** the loader will silently overwrite duplicates. Use the layer-add UI rather than hand-editing to avoid this.
+- **Mutable style in layer metadata:** local atmosphere volume bounds and roles
+  are project metadata; visual controls belong in `environment.layerStyles` and
+  page-local `layerOverrides`.
 - **pageOrder out of sync with files:** if `pageOrder` references a page that does not exist as `pages/<id>.json`, that page is skipped. If a `pages/<id>.json` exists but is not in `pageOrder`, it is invisible. Use the page-management UI to keep them aligned.

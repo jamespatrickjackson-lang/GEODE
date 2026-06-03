@@ -26,23 +26,56 @@
   }
   /* ---- top bar ---- */
   .topbar {
-    height: 42px; flex: none; display: flex; align-items: center; gap: 4px;
-    padding: 0 8px; background: var(--panel); border-bottom: var(--hair);
+    min-height: 64px; height: auto; flex: none; display: flex; align-items: stretch; gap: 6px;
+    padding: 5px 8px; background: var(--panel); border-bottom: var(--hair);
     overflow-x: auto; overflow-y: hidden;
+  }
+  .toolbar-brand {
+    flex: none; display: flex; align-items: center; gap: 6px; padding: 4px 8px 4px 0;
+    border-right: 1px solid rgba(255,255,255,0.10);
   }
   .topbar strong { font-weight: 600; margin-right: 4px; white-space: nowrap; flex: none; }
   .topbar .sep { width: 1px; height: 22px; background: rgba(255,255,255,0.12); margin: 0 2px; }
+  .toolbar-section {
+    flex: none; display: flex; flex-direction: column; gap: 4px; justify-content: center;
+    min-width: max-content; padding: 4px 6px 5px;
+    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 7px;
+  }
+  .toolbar-section-label {
+    color: var(--fg3); font-size: 9px; line-height: 1; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .6px;
+  }
+  .toolbar-actions { display: flex; align-items: center; gap: 4px; min-height: 29px; }
   button.tb {
     background: var(--panel-raised); color: var(--fg); border: 1px solid rgba(255,255,255,0.16);
     border-radius: 6px; padding: 4px 7px; font: inherit; cursor: pointer;
     flex: none; white-space: nowrap; min-height: 28px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
   }
   button.tb:hover { background: #30353a; }
   button.tb.on { background: var(--accent); color: #10141a; border-color: var(--accent); }
   button.tb:disabled { opacity: 0.4; cursor: default; }
+  button.tb.mode { min-width: 82px; }
+  button.tb.icon-only { width: 30px; padding: 4px; }
+  button.tb.icon-only .tb-label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  .tb-icon { width: 16px; height: 16px; flex: none; display: inline-flex; align-items: center; justify-content: center; color: currentColor; }
+  .tb-icon svg {
+    width: 16px; height: 16px; display: block; fill: none; stroke: currentColor;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .tb-label { white-space: nowrap; }
+  .top-input {
+    width: 145px; min-width: 105px; height: 28px; flex: none;
+    background: var(--field); color: var(--fg); border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 6px; padding: 4px 7px; font: inherit;
+  }
   .grow { flex: 0 0 4px; }
   /* ---- main ---- */
-  .main { flex: 1; display: flex; min-height: 0; }
+  .main { flex: 1; display: flex; min-height: 0; position: relative; }
   .stage-wrap { flex: 1; position: relative; overflow: auto; }
   /* rulers */
   .ruler-top, .ruler-left { position: absolute; background: var(--panel); color: var(--fg3);
@@ -54,12 +87,24 @@
   .ruler-top .tick { position: absolute; top: 0; height: 100%; border-left: 1px solid rgba(255,255,255,0.14); padding-left: 2px; }
   .ruler-left .tick { position: absolute; left: 0; width: 100%; border-top: 1px solid rgba(255,255,255,0.14); padding-left: 2px; font-size: 8px; }
   .stage {
-    position: absolute; top: 22px; left: 22px; min-width: 2000px; min-height: 2000px;
-    background-image: var(--grid-image); background-size: var(--grid-size) var(--grid-size);
+    position: absolute; top: 22px; left: 22px; width: 2000px; height: 2000px;
+    --stage-zoom: 1;
+    --stage-bg-image: none;
+    --stage-bg-size: contain;
+    --stage-bg-position: center center;
+    background-color: #101317;
+    background-image: var(--stage-bg-image), var(--grid-image);
+    background-size: var(--stage-bg-size), calc(var(--grid-size) * var(--stage-zoom)) calc(var(--grid-size) * var(--stage-zoom));
+    background-position: var(--stage-bg-position), 0 0;
+    background-repeat: no-repeat, repeat;
   }
   body.show-grid .stage { --grid-image: linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
                                        linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px); }
   body:not(.show-grid) .stage { --grid-image: none; }
+  .stage-plane {
+    position: absolute; inset: 0 auto auto 0; width: 2000px; height: 2000px;
+    transform: scale(var(--stage-zoom)); transform-origin: 0 0;
+  }
 
   /* overlay + outlines (design mode) */
   .overlay { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
@@ -72,6 +117,11 @@
   .dev-outline:hover { border-color: rgba(120,180,220,0.95); background: rgba(120,180,220,0.05); }
   .dev-outline.is-selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
   .dev-outline.is-locked { border-color: rgba(240,120,100,0.6); cursor: not-allowed; }
+  .dev-outline.is-drop-accept { border-color: var(--accent); background: rgba(120,180,220,.10); box-shadow: inset 0 0 0 1px rgba(120,180,220,.45); }
+  .dev-outline.is-drop-reject { border-color: rgba(240,120,100,.88); background: rgba(240,120,100,.10); box-shadow: inset 0 0 0 1px rgba(240,120,100,.45); }
+  .drop-insertion { position: absolute; z-index: 9; pointer-events: none; background: var(--accent); box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+  .drop-insertion.h { height: 2px; }
+  .drop-insertion.v { width: 2px; }
   .dev-label {
     position: absolute; top: -16px; left: -1px; font-size: 10px; color: var(--fg2);
     background: rgba(18,21,24,0.9); padding: 0 4px; border-radius: 3px; white-space: nowrap;
@@ -106,10 +156,84 @@
   .tree-row:hover { background: rgba(255,255,255,0.04); }
   .tree-row.is-selected { background: rgba(120,180,220,0.18); color: var(--fg); }
   .tree-row.is-drop-target { outline: 1px solid var(--blue); background: rgba(120,180,220,0.12); }
+  .tree-row.is-drop-before { box-shadow: inset 0 2px 0 var(--accent); }
+  .tree-row.is-drop-after { box-shadow: inset 0 -2px 0 var(--accent); }
+  .tree-row.is-drop-reject { outline: 1px solid rgba(240,120,100,.78); background: rgba(240,120,100,.12); }
   .tree-row .caret { width: 12px; text-align: center; color: var(--fg3); cursor: pointer; }
   .tree-row .kind { width: 16px; text-align: center; opacity: .8; }
   .tree-row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
   .tree-row .lock { color: var(--fg3); font-size: 10px; }
+  .behavior-panel { border-top: var(--hair); padding: 8px; background: rgba(0,0,0,.12); }
+  .behavior-panel h4 { margin: 0 0 6px; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--fg3); }
+  .behavior-log { min-height: 44px; max-height: 96px; overflow: auto; font-size: 11px; line-height: 1.35; color: var(--fg2); }
+  .behavior-entry { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px; padding: 3px 0; border-top: 1px solid rgba(255,255,255,.05); }
+  .behavior-entry:first-child { border-top: 0; }
+  .behavior-entry b { font-size: 9px; text-transform: uppercase; letter-spacing: .35px; color: var(--accent); }
+  .behavior-entry.reject b { color: #f07864; }
+  .behavior-entry.info b { color: var(--fg3); }
+
+  /* library / assets panel */
+  .library { width: 280px; height: calc(100% - 20px); position: absolute; left: 228px; top: 10px; z-index: 20;
+    background: rgba(23,26,29,0.96); border: 1px solid rgba(255,255,255,0.13); border-radius: 8px;
+    box-shadow: 0 18px 48px rgba(0,0,0,0.35); backdrop-filter: blur(18px) saturate(130%);
+    display: flex; flex-direction: column; min-height: 260px; max-height: calc(100% - 20px); overflow: hidden; }
+  .library-head { padding: 8px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--fg3); font-weight: 600; border-bottom: var(--hair); display:flex; align-items:center; justify-content:space-between; gap:8px;
+    cursor: move; user-select: none; }
+  .library-title { display:flex; align-items:center; gap:8px; min-width:0; }
+  .library-title::before { content:""; width:14px; height:10px; flex:none; opacity:.55; background:
+    radial-gradient(circle, currentColor 1px, transparent 2px) 0 0/5px 5px; }
+  .library-count { color:var(--fg3); font-size:10px; font-variant-numeric:tabular-nums; }
+  .lib-tabs { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:4px; padding:8px; border-bottom:var(--hair); }
+  .lib-tab { border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04); color:var(--fg2);
+    border-radius:6px; padding:4px 5px; font:inherit; font-size:11px; cursor:pointer; min-width:0; }
+  .lib-tab.on { background:rgba(120,180,220,0.22); border-color:rgba(120,180,220,0.5); color:var(--fg); }
+  .library-search { padding:8px 8px 0; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px; align-items:center; }
+  .library-search input { min-width:0; height:28px; background:var(--field); color:var(--fg); border:1px solid rgba(255,255,255,0.16);
+    border-radius:6px; padding:4px 7px; font:inherit; }
+  .library-tools { padding:7px 8px; border-bottom:var(--hair); display:flex; align-items:center; gap:6px; color:var(--fg3); font-size:11px; }
+  .library-tools label { flex:none; }
+  .library-tools input { min-width:0; flex:1; }
+  .library-tools output { width:38px; text-align:right; font-variant-numeric:tabular-nums; }
+  .lib-group { margin:4px 0 0; color:var(--fg3); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.45px; }
+  .lib-list { flex:1; overflow:auto; padding:8px; display:flex; flex-direction:column; gap:8px; }
+  .lib-item { width:100%; text-align:left; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);
+    color:var(--fg); border-radius:7px; padding:7px 8px; font:inherit; cursor:pointer; display:grid; gap:5px; }
+  .lib-item:hover { background:rgba(120,180,220,0.12); }
+  .lib-name { font-weight:600; line-height:1.2; }
+  .lib-item small { color:var(--fg3); font-size:10px; }
+  .lib-empty { color:var(--fg3); font-size:12px; padding:6px 2px; line-height:1.35; }
+  .lib-preview {
+    height: var(--library-preview-height, 52px); min-height: 34px;
+    border:1px solid rgba(255,255,255,0.10); border-radius:6px;
+    background:rgba(18,21,24,0.55); overflow:hidden; position:relative;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .lib-preview-inner {
+    width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+    transform:scale(var(--library-preview-scale, 1)); transform-origin:center;
+    pointer-events:none;
+  }
+  .lib-preview-canvas { position:relative; width:132px; height:58px; overflow:visible; pointer-events:none; }
+  .lib-preview-canvas > [data-c] { transform-origin:center center !important; }
+  .lib-preview-canvas [data-c] { pointer-events:none; }
+  .lib-preview-canvas [data-kind="line"],
+  .lib-preview-canvas [data-kind="divider"] {
+    min-height: 14px !important;
+    border-top-width: 8px !important;
+    background-color: rgba(244,240,232,.65) !important;
+  }
+  .lib-preview-canvas [data-label*="track" i],
+  .lib-preview-canvas [data-label*="line" i] {
+    min-height: 14px !important;
+    background-color: rgba(244,240,232,.58) !important;
+  }
+  .lib-preview svg, .icon-svg { width:32px; height:32px; display:block; color:#f4f0e8; }
+  .lib-preview-swatch { width:40px; height:30px; border-radius:7px; border:1px solid rgba(255,255,255,0.28); box-shadow:0 8px 24px rgba(0,0,0,0.24); }
+  .lib-preview-token { min-width:58px; padding:5px 8px; border-radius:999px; background:rgba(120,180,220,0.18); border:1px solid rgba(120,180,220,0.42); text-align:center; font-size:11px; font-variant-numeric:tabular-nums; }
+  .lib-preview-style { width:60px; height:34px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:rgba(18,21,24,0.55); box-shadow:0 8px 22px rgba(0,0,0,0.24); }
+  .library-resize { position:absolute; right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize; }
+  .library-resize::after { content:""; position:absolute; right:4px; bottom:4px; width:8px; height:8px; border-right:1px solid rgba(255,255,255,.45); border-bottom:1px solid rgba(255,255,255,.45); }
 
   /* right panel */
   .inspector { width: 260px; flex: none; background: var(--panel); border-left: var(--hair);
@@ -147,70 +271,312 @@
   .sb-row .lbl { flex:1; font-weight:600; }
   .sb-row .chev { color: var(--fg3); }
   .sb-footer { display:flex; justify-content:flex-end; padding: 8px 6px 2px; color: var(--fg3); }
+  .geosee-editor-panel {
+    width: 512px;
+    color: #f4f0e8;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    background: rgba(18,21,24,0.55);
+    border: 1px solid rgba(255,255,255,0.20);
+    border-radius: 34px;
+    padding: 0 0 4px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.24);
+    backdrop-filter: blur(20px) saturate(145%);
+    -webkit-backdrop-filter: blur(20px) saturate(145%);
+    overflow: hidden;
+  }
+  .ge-header { min-height:54px; padding:0 36px; display:flex; align-items:center; gap:16px; border-bottom:var(--hair); color:#f4f0e8; font-size:18px; }
+  .ge-logo { width:24px; height:24px; border-radius:8px; background:linear-gradient(135deg,#75c7ff,#ff6f7f); opacity:.92; }
+  .ge-section-stack { padding:4px 0; display:flex; flex-direction:column; gap:0; }
+  .ge-section { border-top:1px solid transparent; }
+  .ge-section-header, .ge-subheader {
+    min-height:44px; margin:10px 12px 6px; padding:0 24px; display:flex; align-items:center;
+    justify-content:space-between; gap:14px; border:1px solid transparent; border-radius:999px;
+    background:rgba(18,21,24,0.528); backdrop-filter:blur(20px) saturate(145%);
+  }
+  .ge-subheader { min-height:42px; margin-left:18px; font-size:13px; font-weight:700; background:rgba(18,21,24,0.442); }
+  .ge-section-title { display:inline-flex; align-items:center; gap:10px; font-size:15px; font-weight:600; min-width:0; }
+  .ge-icon { width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; color:rgba(244,240,232,.78); flex:none; }
+  .ge-chev { width:9px; height:9px; border-right:2px solid rgba(244,240,232,.82); border-bottom:2px solid rgba(244,240,232,.82); transform:rotate(-45deg); flex:none; }
+  .ge-section-body { padding:0 12px 0 28px; display:flex; flex-direction:column; gap:6px; }
+  .ge-row, .ge-layer-row, .ge-field-row {
+    min-height:28px; display:flex; align-items:center; gap:8px; padding:4px 8px; color:rgba(244,240,232,.72);
+    border:1px solid transparent; border-radius:999px;
+  }
+  .ge-row.active { background:rgba(18,21,24,.672); color:#f4f0e8; }
+  .ge-layer-row { border-top:var(--hair); border-radius:0; padding:10px 12px 11px 0; }
+  .ge-field-row { border-radius:8px; padding:4px 0; }
+  .ge-label { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+  .ge-type { font-size:11px; color:rgba(244,240,232,.46); font-style:italic; }
+  .ge-eye { width:24px; height:24px; display:flex; align-items:center; justify-content:center; border-radius:999px; color:rgba(244,240,232,.72); }
+  .ge-override { font-size:10px; color:rgba(244,240,232,.46); margin-left:auto; }
+  .ge-field { min-width:86px; font-size:12px; color:rgba(244,240,232,.72); }
+  .ge-input-shell { flex:1; min-height:24px; border-radius:8px; background:rgba(18,21,24,.4); border:1px solid transparent; padding:3px 8px; color:#f4f0e8; }
+  .ge-slider { flex:1; height:20px; display:flex; align-items:center; position:relative; }
+  .ge-slider-track { height:8px; flex:1; border-radius:999px; background:rgba(244,240,232,.16); }
+  .ge-slider-fill { position:absolute; left:0; top:6px; width:58%; height:8px; border-radius:999px; background:rgba(143,215,255,.92); }
+  .ge-slider-thumb { width:20px; height:20px; border-radius:999px; background:#f4f0e8; border:1px solid rgba(18,21,24,.7); margin-left:-10px; z-index:1; }
+  .ge-save-footer { height:52px; padding:8px 36px 14px; display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+  .ge-save-button { width:30px; height:30px; border-radius:999px; display:flex; align-items:center; justify-content:center; color:rgba(244,240,232,.78); }
+  .ge-overlay-card, .ge-hud {
+    width:320px; padding:30px; color:#f4f0e8; background:rgba(18,21,24,.55);
+    border:1px solid rgba(255,255,255,.2); border-radius:12px;
+    box-shadow:0 24px 80px rgba(0,0,0,.24);
+    backdrop-filter:blur(20px) saturate(145%);
+  }
+  .ge-navigator { min-height:44px; padding:7px 10px; display:flex; align-items:center; justify-content:space-between; gap:8px; color:#fff; background:rgba(18,21,24,.1); border:1px solid rgba(255,255,255,.16); border-radius:999px; backdrop-filter:blur(20px) saturate(145%); }
+  .ge-label-pill { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; color:#f6f1e8; background:rgba(17,22,27,.72); border:1px solid rgba(255,255,255,.42); border-radius:6px; font-size:12px; }
+  .ge-material-row { display:grid; grid-template-columns:18px minmax(0,1fr) 52px; align-items:center; gap:8px; padding:5px 0; border-bottom:var(--hair); }
+  .ge-swatch { width:18px; height:18px; border-radius:5px; border:1px solid rgba(255,255,255,.24); }
 </style>
 </head>
 <body class="dev show-grid">
 
   <div class="topbar">
-    <strong>GUI Editor</strong>
-    <span class="pill">standalone</span>
-    <span class="sep"></span>
-    <button class="tb on" id="btnDev" title="Toggle design overlay (D)">Design</button>
-    <button class="tb on" id="btnGrid" title="Toggle grid (G)">Grid</button>
-    <button class="tb on" id="btnSnap" title="Toggle snapping (S)">Snap</button>
-    <span class="sep"></span>
-    <button class="tb" id="btnAdd" title="Add a container (into selection if a container is selected)">+ Box</button>
-    <button class="tb" id="addText" title="Add text">+ Text</button>
-    <button class="tb" id="addRect" title="Add rectangle">+ Rect</button>
-    <button class="tb" id="addEllipse" title="Add ellipse">+ Oval</button>
-    <button class="tb" id="addRow" title="Add a row (icon + label)">+ Row</button>
-    <span class="sep"></span>
-    <button class="tb" id="btnGroup" title="Group selection (Ctrl/Cmd+G)">Group</button>
-    <button class="tb" id="btnUngroup" title="Ungroup selected group (Ctrl/Cmd+Shift+G)">Ungroup</button>
-    <button class="tb" id="btnDelete" title="Delete selection (Del)">Delete</button>
-    <span class="sep"></span>
-    <button class="tb" id="alignL" title="Align left">L</button>
-    <button class="tb" id="alignC" title="Align center">C</button>
-    <button class="tb" id="alignR" title="Align right">R</button>
-    <button class="tb" id="alignT" title="Align top">T</button>
-    <button class="tb" id="alignM" title="Align middle">M</button>
-    <button class="tb" id="alignB" title="Align bottom">B</button>
-    <button class="tb" id="distH" title="Distribute horizontally">H</button>
-    <button class="tb" id="distV" title="Distribute vertically">V</button>
-    <span class="sep"></span>
-    <button class="tb" id="btnUndo" title="Undo (Ctrl/Cmd+Z)">Undo</button>
-    <button class="tb" id="btnRedo" title="Redo (Ctrl/Cmd+Shift+Z)">Redo</button>
+    <div class="toolbar-brand">
+      <strong>GUI Editor</strong>
+      <span class="pill">standalone</span>
+    </div>
+
+    <section class="toolbar-section" data-toolbar-section="Mode" aria-label="Mode">
+      <div class="toolbar-section-label">Mode</div>
+      <div class="toolbar-actions">
+        <button class="tb mode" id="modeComponent" data-mode="component" title="Component editor: leaf items and atomic controls">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"></path><path d="M9 9h6v6H9z"></path></svg></span><span class="tb-label">Component</span>
+        </button>
+        <button class="tb mode" id="modeAssembly" data-mode="assembly" title="Assembly editor: reusable composites">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h7v7H4z"></path><path d="M13 10h7v7h-7z"></path><path d="M11 11h2"></path></svg></span><span class="tb-label">Assembly</span>
+        </button>
+        <button class="tb mode on" id="modeProduct" data-mode="product" title="Product editor: full GeoSee UI surfaces">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"></path><path d="M4 9h16"></path><path d="M8 13h4"></path><path d="M8 16h8"></path></svg></span><span class="tb-label">Product</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="toolbar-section" data-toolbar-section="View" aria-label="View">
+      <div class="toolbar-section-label">View</div>
+      <div class="toolbar-actions">
+        <button class="tb on icon-only" id="btnDev" title="Toggle design overlay (D)">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"></path><path d="M8 5v14"></path><path d="M4 10h16"></path></svg></span><span class="tb-label">Design</span>
+        </button>
+        <button class="tb on icon-only" id="btnGrid" title="Toggle grid (G)">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"></path><path d="M4 10h16"></path><path d="M4 16h16"></path><path d="M10 4v16"></path><path d="M16 4v16"></path></svg></span><span class="tb-label">Grid</span>
+        </button>
+        <button class="tb on icon-only" id="btnSnap" title="Toggle snapping (S)">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4v7a5 5 0 0 0 10 0V4"></path><path d="M7 4h4"></path><path d="M13 4h4"></path><path d="M7 14h10"></path></svg></span><span class="tb-label">Snap</span>
+        </button>
+        <span class="pill" id="zoomState">100%</span>
+      </div>
+    </section>
+
+    <section class="toolbar-section" data-toolbar-section="Background" aria-label="Background">
+      <div class="toolbar-section-label">Background</div>
+      <div class="toolbar-actions">
+        <input class="top-input" id="bgUrlInput" type="text" placeholder="background URL/data" title="Paste an image URL or data URL for the stage background">
+        <button class="tb icon-only" id="btnBgUrl" title="Load the background image URL onto the stage">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"></path><path d="M8 15l3-3 3 3 2-2 4 4"></path><path d="M8 9h.01"></path></svg></span><span class="tb-label">Load</span>
+        </button>
+        <button class="tb icon-only" id="btnBgImage" title="Load a background image file">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h6l2 3h10v8H3z"></path><path d="M8 16l2-2 2 2 2-2 3 3"></path></svg></span><span class="tb-label">File</span>
+        </button>
+        <button class="tb icon-only" id="btnBgClear" title="Clear the stage background">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"></path><path d="M8 9l8 8"></path><path d="M16 9l-8 8"></path></svg></span><span class="tb-label">Clear</span>
+        </button>
+        <input id="bgImageInput" type="file" accept="image/*" hidden>
+        <span class="pill" id="bgState">no bg</span>
+      </div>
+    </section>
+
+    <section class="toolbar-section" data-toolbar-section="Create" aria-label="Create">
+      <div class="toolbar-section-label">Create</div>
+      <div class="toolbar-actions">
+        <button class="tb icon-only" id="btnAdd" title="Add a container (into selection if a container is selected)">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"></path><path d="M12 8v8"></path><path d="M8 12h8"></path></svg></span><span class="tb-label">Box</span>
+        </button>
+        <button class="tb icon-only" id="addText" title="Add text">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 6h14"></path><path d="M12 6v12"></path><path d="M9 18h6"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="addRect" title="Add rectangle">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 6h14v12H5z"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="addEllipse" title="Add ellipse">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12a8 6 0 1 0 16 0 8 6 0 1 0-16 0"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="addLine" title="Add line">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19L19 5"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="addIcon" title="Add icon">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4l2.3 4.7 5.2.8-3.8 3.7.9 5.2-4.6-2.4-4.6 2.4.9-5.2-3.8-3.7 5.2-.8z"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="addDivider" title="Add divider">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h16"></path><path d="M4 7h16"></path><path d="M4 17h16"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="addSwatch" title="Add swatch">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 5h12v12H6z"></path><path d="M8 19h8"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="addInput" title="Add input">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16v10H4z"></path><path d="M8 12h6"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="addRow" title="Add a row (icon + label)">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 8h4v4H5z"></path><path d="M12 9h7"></path><path d="M5 16h14"></path></svg></span>
+        </button>
+      </div>
+    </section>
+
+    <section class="toolbar-section" data-toolbar-section="Arrange" aria-label="Arrange">
+      <div class="toolbar-section-label">Arrange</div>
+      <div class="toolbar-actions">
+        <button class="tb icon-only" id="btnGroup" title="Group selection (Ctrl/Cmd+G)">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4z"></path><path d="M13 13h7v7h-7z"></path><path d="M8 11v5h5"></path></svg></span><span class="tb-label">Group</span>
+        </button>
+        <button class="tb icon-only" id="btnUngroup" title="Ungroup selected group (Ctrl/Cmd+Shift+G)">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4z"></path><path d="M13 13h7v7h-7z"></path><path d="M11 8h3"></path><path d="M8 11v3"></path></svg></span><span class="tb-label">Ungroup</span>
+        </button>
+        <button class="tb icon-only" id="btnDelete" title="Delete selection (Del)">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 7h14"></path><path d="M9 7V5h6v2"></path><path d="M8 7l1 12h6l1-12"></path><path d="M10 11v5"></path><path d="M14 11v5"></path></svg></span>
+        </button>
+      </div>
+    </section>
+
+    <section class="toolbar-section" data-toolbar-section="Align" aria-label="Align">
+      <div class="toolbar-section-label">Align</div>
+      <div class="toolbar-actions">
+        <button class="tb icon-only" id="alignL" title="Align left">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4v16"></path><path d="M9 7h10"></path><path d="M9 12h7"></path><path d="M9 17h12"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="alignC" title="Align center">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v16"></path><path d="M7 7h10"></path><path d="M9 12h6"></path><path d="M5 17h14"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="alignR" title="Align right">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 4v16"></path><path d="M5 7h10"></path><path d="M8 12h7"></path><path d="M3 17h12"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="alignT" title="Align top">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16"></path><path d="M7 9v10"></path><path d="M12 9v7"></path><path d="M17 9v12"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="alignM" title="Align middle">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h16"></path><path d="M7 7v10"></path><path d="M12 9v6"></path><path d="M17 5v14"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="alignB" title="Align bottom">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"></path><path d="M7 5v10"></path><path d="M12 8v7"></path><path d="M17 3v12"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="distH" title="Distribute horizontally">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5v14"></path><path d="M19 5v14"></path><path d="M8 12h8"></path><path d="M10 9l-3 3 3 3"></path><path d="M14 9l3 3-3 3"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="distV" title="Distribute vertically">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14"></path><path d="M5 19h14"></path><path d="M12 8v8"></path><path d="M9 10l3-3 3 3"></path><path d="M9 14l3 3 3-3"></path></svg></span>
+        </button>
+      </div>
+    </section>
+
     <span class="grow"></span>
-    <button class="tb" id="btnReset" title="Clear all saved edits">Reset</button>
-    <span class="pill" id="saveState">saved</span>
+
+    <section class="toolbar-section" data-toolbar-section="History" aria-label="History">
+      <div class="toolbar-section-label">History</div>
+      <div class="toolbar-actions">
+        <button class="tb icon-only" id="btnUndo" title="Undo (Ctrl/Cmd+Z)">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 7H4v5"></path><path d="M4 12a8 8 0 0 1 13.5-5.5"></path><path d="M20 12a8 8 0 0 1-13.5 5.5"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="btnRedo" title="Redo (Ctrl/Cmd+Shift+Z)">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 7h5v5"></path><path d="M20 12A8 8 0 0 0 6.5 6.5"></path><path d="M4 12a8 8 0 0 0 13.5 5.5"></path></svg></span>
+        </button>
+        <button class="tb icon-only" id="btnReset" title="Clear all saved edits">
+          <span class="tb-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 6h14"></path><path d="M8 6V4h8v2"></path><path d="M9 10v8"></path><path d="M15 10v8"></path><path d="M7 6l1 14h8l1-14"></path></svg></span><span class="tb-label">Reset</span>
+        </button>
+        <span class="pill" id="saveState">saved</span>
+      </div>
+    </section>
   </div>
 
   <div class="main">
     <div class="layers">
       <div class="layers-head">Layers</div>
       <div class="tree" id="tree"></div>
+      <div class="behavior-panel">
+        <h4>Behavior Log</h4>
+        <div class="behavior-log" id="behaviorLog"></div>
+      </div>
+    </div>
+    <div class="library" id="libraryPanel">
+      <div class="library-head" id="libraryDragHandle">
+        <span class="library-title"><span>Library</span><span class="pill" id="libraryMode">Product</span></span>
+        <span class="library-count" id="librarySearchCount">0</span>
+      </div>
+      <div class="lib-tabs">
+        <button class="lib-tab on" data-library-tab="component">Components</button>
+        <button class="lib-tab" data-library-tab="assembly">Assemblies</button>
+        <button class="lib-tab" data-library-tab="product">Products</button>
+        <button class="lib-tab" data-library-tab="colour">Colours</button>
+        <button class="lib-tab" data-library-tab="icon">Icons</button>
+        <button class="lib-tab" data-library-tab="token">Tokens</button>
+        <button class="lib-tab" data-library-tab="style">Styles</button>
+      </div>
+      <div class="library-search">
+        <input id="librarySearch" type="search" placeholder="Search library" autocomplete="off">
+        <output id="librarySearchCountInline">0</output>
+      </div>
+      <div class="library-tools">
+        <label for="libraryPreviewScale">Preview</label>
+        <input id="libraryPreviewScale" type="range" min="0.75" max="2" step="0.05" value="1">
+        <output id="libraryPreviewScaleValue">100%</output>
+      </div>
+      <div class="lib-list" id="libraryList"></div>
+      <div class="library-resize" id="libraryResizeHandle" aria-hidden="true"></div>
     </div>
     <div class="stage-wrap" id="stageWrap">
       <div class="ruler-corner"></div>
       <div class="ruler-top" id="rulerTop"></div>
       <div class="ruler-left" id="rulerLeft"></div>
       <div class="stage" id="stage">
+        <div class="stage-plane" id="stagePlane">
         <!-- HOST: the real editable UI. Edit/extend this freely. -->
         <div class="host" id="host">
-          <div class="sidebar" data-c data-label="Sidebar">
-            <div class="sb-brand" data-c data-label="Brand"><span class="dot"></span>FORGE</div>
-            <div class="sb-row" data-c data-label="Pages"><span class="ic">[]</span><span class="lbl">Pages</span><span class="chev">&gt;</span></div>
-            <div class="sb-row" data-c data-label="Cinematics"><span class="ic">o</span><span class="lbl">Cinematics</span><span class="chev">&gt;</span></div>
-            <div class="sb-row" data-c data-label="Sections"><span class="ic">/</span><span class="lbl">Sections</span><span class="chev">&gt;</span></div>
-            <div class="sb-row" data-c data-label="Topo"><span class="ic">^</span><span class="lbl">Topo</span><span class="chev">&gt;</span></div>
-            <div class="sb-row" data-c data-label="Forge"><span class="ic">[]</span><span class="lbl">Forge</span><span class="chev">&gt;</span></div>
-            <div class="sb-row" data-c data-label="Cards"><span class="ic">-</span><span class="lbl">Cards</span><span class="chev">&gt;</span></div>
-            <div class="sb-footer" data-c data-label="Save">[ ]</div>
+          <div class="sidebar geosee-editor-panel" data-c data-label="Sidebar" data-kind="panel">
+            <div class="ge-header" data-c data-label="Editor header" data-kind="row">
+              <span class="ge-logo" data-c data-label="Client logo" data-kind="icon"></span>
+              <span class="ge-label" data-c data-label="Project title" data-kind="text">GeoSee Dev</span>
+            </div>
+            <div class="ge-section-stack" data-c data-label="Section stack" data-kind="section">
+              <div class="ge-section" data-c data-label="Pages" data-kind="section">
+                <div class="ge-section-header" data-c data-label="Pages header" data-kind="row"><span class="ge-section-title"><span class="ge-icon" data-c data-label="Icon" data-kind="icon">[]</span><span data-c data-label="Label" data-kind="text">Pages</span></span><span class="ge-chev" data-c data-label="Chevron" data-kind="icon"></span></div>
+                <div class="ge-section-body" data-c data-label="Pages body" data-kind="section">
+                  <div class="ge-row active" data-c data-label="Global Settings" data-kind="row"><span class="ge-label" data-c data-label="Label" data-kind="text">Global Settings</span><span class="ge-type" data-c data-label="Scope" data-kind="text">environment</span></div>
+                  <div class="ge-row" data-c data-label="Page row" data-kind="row"><span class="ge-label" data-c data-label="Label" data-kind="text">Base GUI reference</span><span class="ge-type" data-c data-label="Scope" data-kind="text">page</span></div>
+                </div>
+              </div>
+              <div class="ge-section" data-c data-label="Cinematics" data-kind="section">
+                <div class="ge-section-header" data-c data-label="Cinematics header" data-kind="row"><span class="ge-section-title"><span class="ge-icon" data-c data-label="Icon" data-kind="icon">o</span><span data-c data-label="Label" data-kind="text">Cinematics</span></span><span class="ge-chev" data-c data-label="Chevron" data-kind="icon"></span></div>
+              </div>
+              <div class="ge-section" data-c data-label="Sections" data-kind="section">
+                <div class="ge-section-header" data-c data-label="Sections header" data-kind="row"><span class="ge-section-title"><span class="ge-icon" data-c data-label="Icon" data-kind="icon">/</span><span data-c data-label="Label" data-kind="text">Sections</span></span><span class="ge-chev" data-c data-label="Chevron" data-kind="icon"></span></div>
+              </div>
+              <div class="ge-section" data-c data-label="Topo" data-kind="section">
+                <div class="ge-section-header" data-c data-label="Topo header" data-kind="row"><span class="ge-section-title"><span class="ge-icon" data-c data-label="Icon" data-kind="icon">^</span><span data-c data-label="Label" data-kind="text">Topo</span></span><span class="ge-chev" data-c data-label="Chevron" data-kind="icon"></span></div>
+                <div class="ge-section-body" data-c data-label="Topo body" data-kind="section">
+                  <div class="ge-subheader" data-c data-label="Topo map tile" data-kind="row"><span data-c data-label="Label" data-kind="text">Topo map tile</span><span class="ge-chev" data-c data-label="Chevron" data-kind="icon"></span></div>
+                  <div class="ge-material-row" data-c data-label="Terrain ramp" data-kind="row"><span class="ge-swatch" data-c data-label="Low" data-kind="swatch" style="background:#4f4a40"></span><span data-c data-label="Label" data-kind="text">Terrain ramp</span><span data-c data-label="Opacity" data-kind="text">1.05</span></div>
+                </div>
+              </div>
+              <div class="ge-section" data-c data-label="Forge" data-kind="section">
+                <div class="ge-section-header" data-c data-label="Forge header" data-kind="row"><span class="ge-section-title"><span class="ge-icon" data-c data-label="Icon" data-kind="icon">[]</span><span data-c data-label="Label" data-kind="text">Forge/Data</span></span><span class="ge-chev" data-c data-label="Chevron" data-kind="icon"></span></div>
+                <div class="ge-section-body" data-c data-label="Layer stack" data-kind="section">
+                  <div class="ge-layer-row" data-c data-label="Layer visibility row" data-kind="row"><span class="ge-label" data-c data-label="Layer label" data-kind="text">Base GUI reference stage</span><span class="ge-type" data-c data-label="Layer type" data-kind="text">(mesh)</span><span class="ge-eye" data-c data-label="Visible" data-kind="button">eye</span></div>
+                </div>
+              </div>
+              <div class="ge-section" data-c data-label="Cards" data-kind="section">
+                <div class="ge-section-header" data-c data-label="Cards header" data-kind="row"><span class="ge-section-title"><span class="ge-icon" data-c data-label="Icon" data-kind="icon">-</span><span data-c data-label="Label" data-kind="text">Cards</span></span><span class="ge-chev" data-c data-label="Chevron" data-kind="icon"></span></div>
+                <div class="ge-section-body" data-c data-label="Cards body" data-kind="section">
+                  <div class="ge-subheader" data-c data-label="Page Text" data-kind="row"><span data-c data-label="Label" data-kind="text">Page Text</span><span class="ge-override" data-c data-label="Visibility" data-kind="button">Visible</span></div>
+                  <div class="ge-subheader" data-c data-label="Inset image" data-kind="row"><span data-c data-label="Label" data-kind="text">Inset image</span><span class="ge-override" data-c data-label="Count" data-kind="text">0</span></div>
+                  <div class="ge-subheader" data-c data-label="Timing" data-kind="row"><span data-c data-label="Label" data-kind="text">Timing</span><span class="ge-override" data-c data-label="Detail" data-kind="text">fade and gap</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="ge-save-footer" data-c data-label="Save footer" data-kind="row"><span class="ge-override" data-c data-label="Dirty count" data-kind="text">0</span><span class="ge-save-button" data-c data-label="Save button" data-kind="button">[ ]</span></div>
           </div>
         </div>
         <!-- overlay lives INSIDE the stage so its (0,0) == stage (0,0) and it
              scrolls with the content; outlines then land exactly on elements. -->
         <div class="overlay" id="overlay"></div>
+        </div>
       </div>
     </div>
 
@@ -235,10 +601,43 @@
             <option value="slider-row">slider-row</option>
             <option value="text">text</option>
             <option value="shape">shape</option>
+            <option value="line">line</option>
+            <option value="icon">icon</option>
+            <option value="divider">divider</option>
+            <option value="swatch">swatch</option>
+            <option value="input">input</option>
             <option value="image">image</option>
           </select>
         </div>
         <div class="muted">Drives the glyph in the tree and the default chrome. From the kind catalog (docs 14/20/21).</div>
+      </div>
+      <div class="insp-sec" id="tierSec" style="display:none">
+        <h4>Tier &amp; library</h4>
+        <div class="row"><label>Tier</label>
+          <select id="inTier" style="flex:1;background:var(--field);color:var(--fg);border:var(--hair);border-radius:4px;padding:3px 6px;font:inherit">
+            <option value="component">component</option>
+            <option value="assembly">assembly</option>
+            <option value="product">product</option>
+          </select>
+        </div>
+        <div class="row"><label>Save</label>
+          <button class="tb" id="saveComponent" title="Save selection as a Component">Component</button>
+          <button class="tb" id="saveAssembly" title="Save selection as an Assembly">Assembly</button>
+          <button class="tb" id="saveProduct" title="Save selection as a Product">Product</button>
+        </div>
+      </div>
+      <div class="insp-sec" id="presetSec" style="display:none">
+        <h4>GeoSee variables</h4>
+        <div class="row"><label>Preset</label>
+          <select id="geoPreset" style="flex:1;background:var(--field);color:var(--fg);border:var(--hair);border-radius:4px;padding:3px 6px;font:inherit">
+            <option value="">choose preset</option>
+            <option value="overlay-card">Overlay card</option>
+            <option value="navigator">Navigator</option>
+            <option value="editor-chrome">Editor chrome</option>
+            <option value="label">Scene label</option>
+          </select>
+        </div>
+        <div class="muted">Presets are conceptual imports from Base GUI overlay, navigator, label, and editor chrome variables.</div>
       </div>
       <div class="insp-sec" id="geoSec" style="display:none">
         <h4>Geometry</h4>
@@ -264,9 +663,36 @@
       <div class="insp-sec" id="styleSec" style="display:none">
         <h4>Style</h4>
         <div class="row"><label>Fill</label><input type="color" id="inBg"><input type="range" id="inBgA" min="0" max="1" step="0.01"></div>
+        <div class="row"><label>Opacity</label><input type="range" id="inOpacity" min="0" max="1" step="0.01"><span class="muted" id="opacityVal"></span></div>
         <div class="row"><label>Radius</label><input type="range" id="inRad" min="0" max="40" step="1"><span class="muted" id="radVal"></span></div>
         <div class="row"><label>Border</label><input type="range" id="inBord" min="0" max="6" step="0.5"><span class="muted" id="bordVal"></span></div>
+        <div class="row"><label>Border col</label><input type="color" id="inBorderColor"><input type="range" id="inBorderA" min="0" max="1" step="0.01"></div>
+        <div class="row"><label>Text col</label><input type="color" id="inTextColor"></div>
         <div class="row"><label>Text</label><input type="text" id="inText" placeholder="(label text)"></div>
+        <div class="row"><label>Font</label>
+          <select id="inFontFamily" style="flex:1;background:var(--field);color:var(--fg);border:var(--hair);border-radius:4px;padding:3px 6px;font:inherit">
+            <option value="">inherit</option>
+            <option value="system">system</option>
+            <option value="mono">technical mono</option>
+            <option value="serif">serif</option>
+          </select>
+        </div>
+        <div class="row"><label>Size</label><input type="number" id="inFontSize" min="6" max="80" step="1"></div>
+        <div class="row"><label>Weight</label>
+          <select id="inFontWeight" style="flex:1;background:var(--field);color:var(--fg);border:var(--hair);border-radius:4px;padding:3px 6px;font:inherit">
+            <option value="">inherit</option>
+            <option value="400">400</option>
+            <option value="500">500</option>
+            <option value="600">600</option>
+            <option value="700">700</option>
+          </select>
+        </div>
+        <div class="row"><label>Blur</label><input type="range" id="inBlur" min="0" max="40" step="1"><span class="muted" id="blurVal"></span></div>
+        <div class="row"><label>Saturate</label><input type="range" id="inSaturation" min="0" max="220" step="5"><span class="muted" id="satVal"></span></div>
+        <div class="row"><label>Shadow</label><input type="range" id="inShadowA" min="0" max="1" step="0.01"><span class="muted" id="shadowVal"></span></div>
+        <div class="row"><label>Sh blur</label><input type="range" id="inShadowBlur" min="0" max="120" step="1"></div>
+        <div class="row"><label>Sh y</label><input type="range" id="inShadowY" min="0" max="48" step="1"></div>
+        <div class="row"><label>Line</label><input type="range" id="inLineWidth" min="0" max="12" step="0.5"><span class="muted" id="lineVal"></span></div>
         <div class="row"><label>Lock</label><input type="checkbox" id="inLock"></div>
       </div>
       <div class="insp-sec" id="notesSec" style="display:none">
@@ -282,6 +708,7 @@
   "use strict";
   // ---- elements ----
   const stage = document.getElementById("stage");
+  const stagePlane = document.getElementById("stagePlane");
   const overlay = document.getElementById("overlay");
   const stageWrap = document.getElementById("stageWrap");
   const host = document.getElementById("host");
@@ -289,10 +716,31 @@
   const rulerLeft = document.getElementById("rulerLeft");
   const saveState = document.getElementById("saveState");
   const treeEl = document.getElementById("tree");
+  const libraryPanel = document.getElementById("libraryPanel");
+  const libraryList = document.getElementById("libraryList");
+  const libraryMode = document.getElementById("libraryMode");
+  const librarySearch = document.getElementById("librarySearch");
+  const librarySearchCount = document.getElementById("librarySearchCount");
+  const librarySearchCountInline = document.getElementById("librarySearchCountInline");
+  const libraryDragHandle = document.getElementById("libraryDragHandle");
+  const libraryResizeHandle = document.getElementById("libraryResizeHandle");
+  const libraryPreviewScaleInput = document.getElementById("libraryPreviewScale");
+  const libraryPreviewScaleValue = document.getElementById("libraryPreviewScaleValue");
+  const behaviorLog = document.getElementById("behaviorLog");
+  const zoomState = document.getElementById("zoomState");
+  const bgUrlInput = document.getElementById("bgUrlInput");
+  const bgImageInput = document.getElementById("bgImageInput");
+  const bgState = document.getElementById("bgState");
   const STORAGE_KEY = "gui-editor.layout.v2";
+  const BASE_STAGE_W = 2000;
+  const BASE_STAGE_H = 2000;
 
   const KIND_GLYPH = { container:"C", group:"G", panel:"P", section:"S", card:"K", row:"R",
-    menu:"M", "menu-item":">", button:"B", "slider-row":"=", text:"T", shape:"*", image:"I" };
+    menu:"M", "menu-item":">", button:"B", "slider-row":"=", text:"T", shape:"*",
+    line:"/", icon:"I", divider:"-", swatch:"#", input:"N", image:"I" };
+  const LIBRARY_TIERS = ["component", "assembly", "product", "colour", "icon", "token", "style"];
+  const TIER_LABEL = { component:"Component", assembly:"Assembly", product:"Product",
+    colour:"Colour", icon:"Icon", token:"Token", style:"Style" };
   let collapsed = {}; // id -> true if its tree children are hidden
 
   // ---- state (persisted) ----
@@ -308,11 +756,23 @@
   let future = [];
   let snapEnabled = true;
   let nextId = 1;
+  let editorMode = "product";
+  let activeLibraryTier = "component";
+  let libraries = defaultLibraries();
+  let libraryPreviewScale = 1;
+  let libraryQuery = "";
+  let libraryPanelState = { x: 228, y: 10, w: 280, h: null };
+  let stageZoom = 1;
+  let stageBackground = null;
+  let behaviorLogEntries = [{ type: "info", text: "Ready for drag, snap, nest, and reorder." }];
 
   // ---- persistence ----
   function save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ layout, groups, guides, nextId, collapsed, selected, hostHTML: host.innerHTML }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        layout, groups, guides, nextId, collapsed, selected, hostHTML: host.innerHTML,
+        editorMode, activeLibraryTier, libraries, libraryPreviewScale, libraryQuery, libraryPanelState, stageZoom, stageBackground, behaviorLogEntries
+      }));
       saveState.textContent = "saved";
     } catch (e) { saveState.textContent = "save failed"; }
   }
@@ -327,8 +787,459 @@
         collapsed = raw.collapsed || {};
         selected = Array.isArray(raw.selected) ? raw.selected : [];
         nextId = raw.nextId || 1;
+        editorMode = raw.editorMode || "product";
+        activeLibraryTier = raw.activeLibraryTier || "component";
+        libraries = mergeLibraries(raw.libraries);
+        libraryPreviewScale = Number.isFinite(Number(raw.libraryPreviewScale)) ? Number(raw.libraryPreviewScale) : 1;
+        libraryQuery = typeof raw.libraryQuery === "string" ? raw.libraryQuery : "";
+        libraryPanelState = Object.assign({}, libraryPanelState, raw.libraryPanelState || {});
+        stageZoom = Number.isFinite(Number(raw.stageZoom)) ? Number(raw.stageZoom) : 1;
+        stageBackground = raw.stageBackground || null;
+        behaviorLogEntries = Array.isArray(raw.behaviorLogEntries) ? raw.behaviorLogEntries.slice(0, 8) : behaviorLogEntries;
       }
     } catch (e) { /* ignore */ }
+  }
+
+  function renderBehaviorLog() {
+    if (!behaviorLog) return;
+    behaviorLog.innerHTML = "";
+    const entries = behaviorLogEntries.length ? behaviorLogEntries : [{ type:"info", text:"No placement activity yet." }];
+    for (const entry of entries.slice(0, 5)) {
+      const row = document.createElement("div");
+      const type = entry.type || "info";
+      row.className = "behavior-entry " + type;
+      row.innerHTML = `<b>${type === "reject" ? "No" : type === "accept" ? "Yes" : "Info"}</b><span>${esc(entry.text || "")}</span>`;
+      behaviorLog.appendChild(row);
+    }
+  }
+  function logBehavior(type, text, persist = true) {
+    behaviorLogEntries = [{ type, text }, ...behaviorLogEntries].slice(0, 8);
+    renderBehaviorLog();
+    if (persist) save();
+  }
+
+  function geoseeStylePatch(overrides) {
+    return Object.assign({
+      style: {
+        bg: "#121518", bgA: 0.55,
+        borderColor: "#ffffff", borderA: 0.2, border: 1,
+        textColor: "#f4f0e8",
+        radius: 12,
+        blur: 20, saturation: 145,
+        shadowA: 0.24, shadowBlur: 80, shadowY: 24
+      }
+    }, overrides || {});
+  }
+  function esc(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+  function cssUrl(value) {
+    return String(value || "").replace(/"/g, "%22").replace(/\)/g, "%29");
+  }
+  function iconSvgMarkup(item, size = 32) {
+    if (!item || !item.svgPath) {
+      return `<span class="lib-preview-token">${esc(item?.value || item?.label || "*")}</span>`;
+    }
+    const viewBox = esc(item.viewBox || "0 0 24 24");
+    const label = esc(item.label || item.name || "Icon");
+    const path = esc(item.svgPath);
+    return `<svg class="icon-svg" aria-label="${label}" viewBox="${viewBox}" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${path}"></path></svg>`;
+  }
+  function iconEntry(id, label, svgPath, source) {
+    return { id, tier:"icon", label, value:label, svgPath, viewBox:"0 0 24 24", source:source || "GeoSee editor icons" };
+  }
+  function geoseeIconEntries() {
+    return [
+      iconEntry("icon-pages", "Pages icon", "M4 5h16v14H4zM8 5v14M8 9h12M8 13h12", "PagePanel"),
+      iconEntry("icon-topo", "Topo icon", "M3 18l6-10 4 6 3-5 5 9H3zM8 18l3-4 3 4", "TopoMapPanel"),
+      iconEntry("icon-section", "Section icon", "M4 7h16M7 4v16M4 17h16", "Sections"),
+      iconEntry("icon-cinematics", "Cinematics icon", "M4 5h16v14H4zM8 5v14M16 5v14M4 9h4M16 9h4M4 15h4M16 15h4", "Cinematics"),
+      iconEntry("icon-cards", "Cards icon", "M6 4h12v16H6zM9 8h6M9 12h6M9 16h4", "OverlayPanel"),
+      iconEntry("icon-eye", "Eye icon", "M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z", "LayerPanel"),
+      iconEntry("icon-save", "Save disk icon", "M5 3h12l2 2v16H5zM8 3v7h10M8 21v-7h8", "EditorRoot SaveButton"),
+      iconEntry("icon-chevron", "Disclosure chevron", "M9 18l6-6-6-6", "CollapsibleSection"),
+      iconEntry("icon-client-logo", "Client logo mark", "M12 3l8 5v8l-8 5-8-5V8zM8 10l4 3 4-3", "EditorRoot"),
+      iconEntry("icon-layer-stack", "Layer stack icon", "M4 7l8-4 8 4-8 4zM4 12l8 4 8-4M4 17l8 4 8-4", "LayerPanel"),
+      iconEntry("icon-material", "Material icon", "M4 17l8-14 8 14H4zM8 17l4-7 4 7", "Material controls"),
+      iconEntry("icon-navigator", "Navigator icon", "M12 3l4 9-4 9-4-9zM12 12h8M12 12H4", "Navigator"),
+      iconEntry("icon-overlay", "Overlay card icon", "M5 6h14v12H5zM8 10h8M8 14h5", "Overlay cards"),
+      iconEntry("icon-label", "Label tag icon", "M4 7v6l7 7 7-7-7-7H4zM8 10h.01", "Scene labels"),
+      iconEntry("icon-lock", "Lock icon", "M7 11V8a5 5 0 0 1 10 0v3M6 11h12v10H6z", "Editor controls"),
+      iconEntry("icon-unlock", "Unlock icon", "M9 11V8a5 5 0 0 1 9-3M6 11h12v10H6z", "Editor controls"),
+      iconEntry("icon-warning", "Warning icon", "M12 3l10 18H2zM12 9v5M12 17h.01", "Validation"),
+      iconEntry("icon-settings", "Settings icon", "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1", "Editor chrome"),
+      iconEntry("icon-sliders", "Sliders icon", "M5 5v14M12 5v14M19 5v14M3 9h4M10 15h4M17 11h4", "Style controls"),
+      iconEntry("icon-image", "Image icon", "M4 5h16v14H4zM8 13l3-3 4 5 2-2 3 4M8 8h.01", "Image controls"),
+      iconEntry("icon-text", "Text icon", "M4 5h16M12 5v14M8 19h8", "Text controls"),
+      iconEntry("icon-rect", "Rectangle icon", "M5 6h14v12H5z", "Drawing tools"),
+      iconEntry("icon-ellipse", "Ellipse icon", "M4 12a8 5 0 1 0 16 0 8 5 0 1 0-16 0", "Drawing tools"),
+      iconEntry("icon-line", "Line icon", "M5 19L19 5", "Drawing tools"),
+      iconEntry("icon-swatch", "Swatch icon", "M4 16l8-8 4 4-8 8H4zM14 6l2-2 4 4-2 2", "Colour controls"),
+      iconEntry("icon-input", "Input icon", "M4 7h16v10H4zM8 12h8", "Form controls"),
+      iconEntry("icon-component", "Component icon", "M5 5h7v7H5zM12 12h7v7h-7zM5 15h4v4H5zM15 5h4v4h-4z", "Library"),
+      iconEntry("icon-assembly", "Assembly icon", "M4 12h6M14 12h6M10 8h4v8h-4zM4 6h4v4H4zM16 14h4v4h-4z", "Library"),
+      iconEntry("icon-product", "Product icon", "M3 5h18v14H3zM3 10h18M8 10v9", "Library")
+    ];
+  }
+  function componentHtml(label, kind, body, style, className) {
+    return `<div data-c data-label="${label}" data-kind="${kind}" class="${className || ""}" style="position:absolute;left:20px;top:20px;box-sizing:border-box;${style || ""}">${body || ""}</div>`;
+  }
+  function topSectionHeaderHtml(title, icon) {
+    return componentHtml("Top-level section header", "row",
+      `<span class="ge-section-title"><span class="ge-icon" data-c data-label="Icon" data-kind="icon">${icon || "[]"}</span><span data-c data-label="Label" data-kind="text">${title || "Pages"}</span></span><span class="ge-chev" data-c data-label="Chevron" data-kind="icon"></span>`,
+      "width:360px;min-height:44px;margin:0;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid transparent;border-radius:999px;background:rgba(18,21,24,.528);backdrop-filter:blur(20px) saturate(145%);",
+      "ge-section-header");
+  }
+  function nestedHeaderHtml(title) {
+    return componentHtml("Nested section header", "row",
+      `<span data-c data-label="Label" data-kind="text">${title || "Topo map tile"}</span><span class="ge-chev" data-c data-label="Chevron" data-kind="icon"></span>`,
+      "width:320px;min-height:42px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid transparent;border-radius:999px;background:rgba(18,21,24,.442);",
+      "ge-subheader");
+  }
+  function sliderControlHtml() {
+    return componentHtml("Slider control row", "slider-row",
+      `<span class="ge-field" data-c data-label="Label" data-kind="text">Opacity</span><span class="ge-slider" data-c data-label="Slider" data-kind="row"><span class="ge-slider-track" data-c data-label="Track" data-kind="shape"></span><span class="ge-slider-fill" data-c data-label="Fill" data-kind="shape"></span><span class="ge-slider-thumb" data-c data-label="Thumb" data-kind="shape"></span></span><span data-c data-label="Readout" data-kind="text">0.55</span>`,
+      "width:320px;min-height:34px;display:flex;align-items:center;gap:8px;color:#f4f0e8;",
+      "ge-field-row");
+  }
+  function layerVisibilityRowHtml() {
+    return componentHtml("Layer visibility row", "row",
+      `<span class="ge-label" data-c data-label="Layer label" data-kind="text">Topography</span><span class="ge-type" data-c data-label="Layer type" data-kind="text">(terrain)</span><span class="ge-eye" data-c data-label="Visible" data-kind="button">eye</span>`,
+      "width:360px;min-height:38px;display:flex;align-items:center;gap:8px;padding:10px 12px 11px 0;border-top:1px solid rgba(255,255,255,.10);",
+      "ge-layer-row");
+  }
+  function overrideStyleRowHtml() {
+    return componentHtml("Override style row", "row",
+      `<span class="ge-field" data-c data-label="Field" data-kind="text">Color</span><span data-c data-label="Override checkbox" data-kind="input" style="width:14px;height:14px;border:1px solid rgba(244,240,232,.46);border-radius:3px"></span><span class="ge-swatch" data-c data-label="Color" data-kind="swatch" style="background:#75c7ff"></span><span class="ge-override" data-c data-label="State" data-kind="text">inherited</span>`,
+      "width:320px;min-height:30px;display:flex;align-items:center;gap:8px;color:rgba(244,240,232,.72);",
+      "ge-field-row");
+  }
+  function provenanceRowHtml() {
+    return componentHtml("Provenance field row", "row",
+      `<span class="ge-field" data-c data-label="Field" data-kind="text">Source file</span><span class="ge-input-shell" data-c data-label="Value" data-kind="input">environment.json</span>`,
+      "width:340px;min-height:30px;display:flex;align-items:center;gap:8px;",
+      "ge-field-row");
+  }
+  function editorHeaderHtml() {
+    return componentHtml("Editor header row", "row",
+      `<span class="ge-logo" data-c data-label="Client logo" data-kind="icon"></span><span class="ge-label" data-c data-label="Project title" data-kind="text">GeoSee Dev</span>`,
+      "width:512px;min-height:54px;padding:0 36px;display:flex;align-items:center;gap:16px;border-bottom:1px solid rgba(255,255,255,.10);color:#f4f0e8;font:18px 'SFMono-Regular',Consolas,monospace;",
+      "ge-header");
+  }
+  function saveFooterHtml() {
+    return componentHtml("Save footer", "row",
+      `<span class="ge-override" data-c data-label="Dirty count" data-kind="text">3</span><span class="ge-save-button" data-c data-label="Save button" data-kind="button">[ ]</span>`,
+      "width:360px;height:52px;padding:8px 36px 14px;display:flex;align-items:center;justify-content:flex-end;gap:8px;",
+      "ge-save-footer");
+  }
+  function pageManagerHtml() {
+    return componentHtml("Page manager sidebar", "panel",
+      `<div class="ge-subheader" data-c data-label="Global Settings" data-kind="row"><span data-c data-label="Label" data-kind="text">Global Settings</span><span class="ge-override" data-c data-label="Scope" data-kind="text">env</span></div><div class="ge-row active" data-c data-label="Page row" data-kind="row"><span class="ge-label" data-c data-label="Title" data-kind="text">Base GUI reference</span><span class="ge-type" data-c data-label="State" data-kind="text">landed</span></div><div class="ge-row" data-c data-label="Sub Master row" data-kind="row"><span class="ge-label" data-c data-label="Title" data-kind="text">Sub Master 01</span><span class="ge-type" data-c data-label="State" data-kind="text">master</span></div>`,
+      "width:380px;padding:10px 12px;background:rgba(18,21,24,.55);border:1px solid rgba(255,255,255,.2);border-radius:18px;color:#f4f0e8;",
+      "geosee-editor-panel");
+  }
+  function cardsEditorHtml() {
+    return componentHtml("Cards editor", "panel",
+      `<div class="ge-subheader" data-c data-label="Page Text" data-kind="row"><span data-c data-label="Label" data-kind="text">Page Text</span><span class="ge-override" data-c data-label="Visibility" data-kind="button">Visible</span></div><div data-c data-label="Text area" data-kind="input" style="min-height:110px;margin:8px 28px;padding:8px;border-radius:8px;background:rgba(18,21,24,.4);border:1px solid transparent;color:#f4f0e8">Use this space to tune the environment, overlay box, navigator, labels, lighting, and page GUI styles.</div><div class="ge-subheader" data-c data-label="Inset image" data-kind="row"><span data-c data-label="Label" data-kind="text">Inset image</span><span class="ge-override" data-c data-label="Count" data-kind="text">0</span></div><div class="ge-subheader" data-c data-label="Timing" data-kind="row"><span data-c data-label="Label" data-kind="text">Timing</span><span class="ge-override" data-c data-label="Detail" data-kind="text">fade and gap</span></div>`,
+      "width:420px;padding:10px 0 14px;background:rgba(18,21,24,.55);border:1px solid rgba(255,255,255,.2);border-radius:18px;color:#f4f0e8;",
+      "geosee-editor-panel");
+  }
+  function layerCardStackHtml() {
+    return componentHtml("Layer card stack", "panel",
+      `<div class="ge-subheader" data-c data-label="Topo overlays" data-kind="row"><span data-c data-label="Label" data-kind="text">Topo overlays</span><span class="ge-chev" data-c data-label="Chevron" data-kind="icon"></span></div>${layerVisibilityRowHtml().replace("position:absolute;left:20px;top:20px;box-sizing:border-box;", "")}${sliderControlHtml().replace("position:absolute;left:20px;top:20px;box-sizing:border-box;", "")}${overrideStyleRowHtml().replace("position:absolute;left:20px;top:20px;box-sizing:border-box;", "")}${provenanceRowHtml().replace("position:absolute;left:20px;top:20px;box-sizing:border-box;", "")}`,
+      "width:420px;padding:10px 12px 14px;background:rgba(18,21,24,.55);border:1px solid rgba(255,255,255,.2);border-radius:18px;color:#f4f0e8;",
+      "geosee-editor-panel");
+  }
+  function topoMaterialPanelHtml() {
+    return componentHtml("Topo material panel", "panel",
+      `<div class="ge-subheader" data-c data-label="Topo material" data-kind="row"><span data-c data-label="Label" data-kind="text">Topo material</span><span class="ge-override" data-c data-label="Preset" data-kind="text">survey-daylight</span></div><div class="ge-material-row" data-c data-label="Ramp low" data-kind="row"><span class="ge-swatch" data-c data-label="Swatch" data-kind="swatch" style="background:#4f4a40"></span><span data-c data-label="Label" data-kind="text">Ramp low</span><span data-c data-label="Value" data-kind="text">#4f4a40</span></div><div class="ge-material-row" data-c data-label="Ramp mid" data-kind="row"><span class="ge-swatch" data-c data-label="Swatch" data-kind="swatch" style="background:#8a7e68"></span><span data-c data-label="Label" data-kind="text">Ramp mid</span><span data-c data-label="Value" data-kind="text">#8a7e68</span></div><div class="ge-material-row" data-c data-label="Ramp high" data-kind="row"><span class="ge-swatch" data-c data-label="Swatch" data-kind="swatch" style="background:#d7c69e"></span><span data-c data-label="Label" data-kind="text">Ramp high</span><span data-c data-label="Value" data-kind="text">#d7c69e</span></div><div class="ge-material-row" data-c data-label="Mist volume" data-kind="row"><span class="ge-swatch" data-c data-label="Swatch" data-kind="swatch" style="background:#dfe4e8"></span><span data-c data-label="Label" data-kind="text">Mist volume</span><span data-c data-label="Value" data-kind="text">0.18</span></div>`,
+      "width:380px;padding:10px 12px 14px;background:rgba(18,21,24,.55);border:1px solid rgba(255,255,255,.2);border-radius:18px;color:#f4f0e8;",
+      "geosee-editor-panel");
+  }
+  function floatingPreviewHudHtml() {
+    return componentHtml("Floating preview HUD", "panel",
+      `<span data-c data-label="Preview action" data-kind="button" style="width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.16);background:rgba(18,21,24,.1)">play</span><span class="ge-navigator" data-c data-label="Navigator" data-kind="menu"><span data-c data-label="Previous" data-kind="button">&lt;</span><span data-c data-label="Page label" data-kind="text">Page 01</span><span data-c data-label="Next" data-kind="button">&gt;</span></span>`,
+      "width:360px;padding:12px;display:flex;align-items:center;gap:12px;background:transparent;color:#fff;",
+      "ge-hud");
+  }
+  function geoseeEditorSidebarHtml() {
+    const inner = `${editorHeaderHtml().replace("position:absolute;left:20px;top:20px;box-sizing:border-box;", "")}<div class="ge-section-stack" data-c data-label="Section stack" data-kind="section">${topSectionHeaderHtml("Pages", "[]").replace("position:absolute;left:20px;top:20px;box-sizing:border-box;", "")}${topSectionHeaderHtml("Cinematics", "o").replace("position:absolute;left:20px;top:20px;box-sizing:border-box;", "")}${topSectionHeaderHtml("Sections", "/").replace("position:absolute;left:20px;top:20px;box-sizing:border-box;", "")}${topSectionHeaderHtml("Topo", "^").replace("position:absolute;left:20px;top:20px;box-sizing:border-box;", "")}${topSectionHeaderHtml("Forge/Data", "[]").replace("position:absolute;left:20px;top:20px;box-sizing:border-box;", "")}${topSectionHeaderHtml("Cards", "-").replace("position:absolute;left:20px;top:20px;box-sizing:border-box;", "")}</div>${saveFooterHtml().replace("position:absolute;left:20px;top:20px;box-sizing:border-box;", "")}`;
+    return componentHtml("GeoSee editor sidebar", "panel", inner, "width:512px;color:#f4f0e8;font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace;background:rgba(18,21,24,.55);border:1px solid rgba(255,255,255,.20);border-radius:34px;padding:0 0 4px;box-shadow:0 24px 80px rgba(0,0,0,.24);backdrop-filter:blur(20px) saturate(145%);overflow:hidden;", "geosee-editor-panel");
+  }
+
+  function defaultLibraries() {
+    return {
+      component: [
+        { id:"starter-text", tier:"component", label:"Text", kind:"text", source:"Starter Pack" },
+        { id:"starter-icon", tier:"component", label:"Icon", kind:"icon", source:"Starter Pack" },
+        { id:"starter-rect", tier:"component", label:"Rectangle", kind:"rect", source:"Starter Pack" },
+        { id:"starter-ellipse", tier:"component", label:"Ellipse", kind:"ellipse", source:"Starter Pack" },
+        { id:"starter-line", tier:"component", label:"Line", kind:"line", source:"Starter Pack" },
+        { id:"starter-swatch", tier:"component", label:"Swatch", kind:"swatch", source:"Starter Pack" },
+        { id:"starter-divider", tier:"component", label:"Divider", kind:"divider", source:"Starter Pack" },
+        { id:"starter-input", tier:"component", label:"Numeric Input", kind:"input", source:"Starter Pack" },
+        { id:"ge-eye-button", tier:"component", label:"Visibility eye button", source:"src/editor/styleControls.tsx", html:componentHtml("Visibility eye button", "button", "eye", "width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:999px;color:rgba(244,240,232,.72);") },
+        { id:"ge-chevron", tier:"component", label:"Disclosure chevron", source:"src/editor/CollapsibleSection.tsx", html:componentHtml("Disclosure chevron", "icon", "", "width:18px;height:18px;border-right:2px solid rgba(244,240,232,.82);border-bottom:2px solid rgba(244,240,232,.82);transform:rotate(-45deg);") },
+        { id:"ge-slider-track", tier:"component", label:"Slider track", source:"src/editor/DevModeInspector.tsx", html:componentHtml("Slider track", "shape", "", "width:180px;height:8px;background:rgba(244,240,232,.16);border-radius:999px;") },
+        { id:"ge-slider-thumb", tier:"component", label:"Slider thumb", source:"src/editor/DevModeInspector.tsx", html:componentHtml("Slider thumb", "shape", "", "width:20px;height:20px;background:#f4f0e8;border:1px solid rgba(18,21,24,.7);border-radius:999px;") },
+        { id:"ge-override-checkbox", tier:"component", label:"Override checkbox", source:"src/editor/styleControls.tsx", html:componentHtml("Override checkbox", "input", "", "width:14px;height:14px;border:1px solid rgba(244,240,232,.46);border-radius:3px;background:rgba(18,21,24,.4);") },
+        { id:"ge-number-readout", tier:"component", label:"Number readout", source:"src/editor/styles.ts", html:componentHtml("Number readout", "text", "0.55", "width:46px;text-align:right;font-size:11px;color:rgba(244,240,232,.72);font-variant-numeric:tabular-nums;") },
+        { id:"ge-material-line", tier:"component", label:"Material line", source:"src/editor/layerControls/layout/layoutStyles.ts", html:componentHtml("Material line", "divider", "", "width:240px;height:1px;background:rgba(255,255,255,.10);") },
+        { id:"ge-label-chip", tier:"component", label:"Label chip", source:"projects/base-gui/environment.json gui.labels", html:componentHtml("Label chip", "text", "Site label", "display:inline-flex;align-items:center;padding:4px 8px;color:#f6f1e8;background:rgba(17,22,27,.72);border:1px solid rgba(255,255,255,.42);border-radius:6px;font-size:12px;") }
+      ],
+      assembly: [
+        { id:"starter-row", tier:"assembly", label:"Icon label row", kind:"row", source:"GeoSee section row" },
+        { id:"starter-button", tier:"assembly", label:"Pill button", kind:"button", source:"GeoSee controls" },
+        { id:"starter-slider", tier:"assembly", label:"Labelled slider", kind:"slider-row", source:"GeoSee controls" },
+        { id:"ge-editor-header-row", tier:"assembly", label:"Editor header row", source:"src/editor/EditorRoot.tsx", html:editorHeaderHtml() },
+        { id:"ge-top-section-header", tier:"assembly", label:"Top-level section header", source:"src/editor/CollapsibleSection.tsx", html:topSectionHeaderHtml("Pages", "[]") },
+        { id:"ge-nested-section-header", tier:"assembly", label:"Nested section header", source:"src/editor/layerControls/layout/layoutStyles.ts", html:nestedHeaderHtml("Topo map tile") },
+        { id:"ge-layer-visibility-row", tier:"assembly", label:"Layer visibility row", source:"src/editor/LayerPanel.tsx", html:layerVisibilityRowHtml() },
+        { id:"ge-override-style-row", tier:"assembly", label:"Override style row", source:"src/editor/styleControls.tsx", html:overrideStyleRowHtml() },
+        { id:"ge-provenance-field-row", tier:"assembly", label:"Provenance field row", source:"src/editor/LayerPanel.tsx", html:provenanceRowHtml() },
+        { id:"ge-slider-control-row", tier:"assembly", label:"Slider control row", source:"src/editor/DevModeInspector.tsx", html:sliderControlHtml() },
+        { id:"ge-save-footer", tier:"assembly", label:"Save footer", source:"src/editor/EditorRoot.tsx SaveButton", html:saveFooterHtml() }
+      ],
+      product: [
+        { id:"starter-sidebar", tier:"product", label:"Starter sidebar", kind:"sidebar", source:"Base GUI" },
+        { id:"starter-overlay-card", tier:"product", label:"Overlay card", kind:"card", source:"Base GUI overlay" },
+        { id:"starter-navigator", tier:"product", label:"Navigator bar", kind:"navigator", source:"Base GUI navigator" },
+        { id:"ge-editor-sidebar", tier:"product", label:"GeoSee editor sidebar", source:"src/editor/EditorRoot.tsx", html:geoseeEditorSidebarHtml() },
+        { id:"ge-page-manager-sidebar", tier:"product", label:"Page manager sidebar", source:"src/editor/PagePanel.tsx", html:pageManagerHtml() },
+        { id:"ge-cards-editor", tier:"product", label:"Cards editor", source:"src/editor/OverlayPanel.tsx", html:cardsEditorHtml() },
+        { id:"ge-layer-card-stack", tier:"product", label:"Layer card stack", source:"src/editor/LayerPanel.tsx", html:layerCardStackHtml() },
+        { id:"ge-topo-material-panel", tier:"product", label:"Topo material panel", source:"projects/base-gui/environment.json scene.terrain", html:topoMaterialPanelHtml() },
+        { id:"ge-floating-preview-hud", tier:"product", label:"Floating preview HUD", source:"src/editor/EditorRoot.tsx FloatingPreviewToggle", html:floatingPreviewHudHtml() }
+      ],
+      colour: [
+        { id:"colour-overlay-bg", tier:"colour", label:"Overlay background #121518", value:"#121518", source:"Base GUI overlay.backgroundColor" },
+        { id:"colour-text", tier:"colour", label:"Warm text #f4f0e8", value:"#f4f0e8", target:"textColor", source:"Base GUI overlay.textColor" },
+        { id:"colour-secondary-text", tier:"colour", label:"Secondary text #b6c3cf", value:"#b6c3cf", target:"textColor", source:"Base GUI overlay.secondaryTextColor" },
+        { id:"colour-body-text", tier:"colour", label:"Body text #ebe2d4", value:"#ebe2d4", target:"textColor", source:"Base GUI overlay.bodyTextColor" },
+        { id:"colour-accent", tier:"colour", label:"Page accent #75c7ff", value:"#75c7ff", source:"Base GUI reference stage color" },
+        { id:"colour-terrain-low", tier:"colour", label:"Terrain ramp low #4f4a40", value:"#4f4a40", source:"Base GUI terrain.rampLow" },
+        { id:"colour-terrain-mid", tier:"colour", label:"Terrain ramp mid #8a7e68", value:"#8a7e68", source:"Base GUI terrain.rampMid" },
+        { id:"colour-terrain-high", tier:"colour", label:"Terrain ramp high #d7c69e", value:"#d7c69e", source:"Base GUI terrain.rampHigh" },
+        { id:"colour-mist", tier:"colour", label:"Mist volume #dfe4e8", value:"#dfe4e8", source:"Base GUI local mist volume color" }
+      ],
+      icon: geoseeIconEntries(),
+      token: [
+        { id:"token-panel-width", tier:"token", label:"Editor panel width 512", value:"512", patch:{ width:512 }, source:"src/editor/EditorRoot.tsx SIDEBAR_WIDTH" },
+        { id:"token-ui-scale", tier:"token", label:"UI scale 0.75", value:"0.75", patch:{ style:{ scale:0.75 } }, source:"EditorChromeSettings.uiScale" },
+        { id:"token-section-gap", tier:"token", label:"Section gap 10", value:"10", patch:{ gap:10 }, source:"EDITOR_SECTION_GAP_Y" },
+        { id:"token-pill-inset", tier:"token", label:"Pill inset 24", value:"24", patch:{ padR:24, padL:24 }, source:"EDITOR_PILL_TEXT_INSET_PX" },
+        { id:"token-slider-track", tier:"token", label:"Slider track 8", value:"8", patch:{ style:{ lineWidth:8 } }, source:"EditorChromeSettings.sliderTrackHeightPx" },
+        { id:"token-slider-thumb", tier:"token", label:"Slider thumb 20", value:"20", patch:{ width:20, height:20, style:{ radius:999 } }, source:"EditorChromeSettings.sliderThumbSizePx" },
+        { id:"token-overlay-blur", tier:"token", label:"Overlay blur 20", value:"20", patch:{ style:{ blur:20, saturation:145 } }, source:"Base GUI overlay.backdropBlurPx" },
+        { id:"token-mist-opacity", tier:"token", label:"Mist opacity 0.18", value:"0.18", patch:{ style:{ bg:"#dfe4e8", bgA:0.18, opacity:0.18 } }, source:"Base GUI local mist volume opacity" },
+        { id:"token-radius", tier:"token", label:"Panel radius 12", value:"12px", patch:{ style:{ radius:12 } }, source:"Base GUI overlay.radius" },
+        { id:"token-pill", tier:"token", label:"Pill radius 999", value:"999px", patch:{ style:{ radius:999 } }, source:"GeoSee editor chrome" }
+      ],
+      style: [
+        { id:"style-overlay-card", tier:"style", label:"Overlay card glass", preset:"overlay-card", source:"Base GUI gui.overlay", patch:geoseeStylePatch({ padT:30, padR:30, padB:30, padL:30, kind:"card" }) },
+        { id:"style-navigator", tier:"style", label:"Navigator glass", preset:"navigator", source:"Base GUI gui.navigator", patch:geoseeStylePatch({ style:{ bg:"#121518", bgA:0.1, borderColor:"#ffffff", borderA:0.16, border:1, textColor:"#ffffff", radius:999, blur:20, saturation:145 }, padT:7, padR:10, padB:7, padL:10, dir:"row", gap:8, kind:"menu" }) },
+        { id:"style-editor-chrome", tier:"style", label:"Editor chrome shell", preset:"editor-chrome", source:"src/editor/styles.ts regularLightMaterial", patch:geoseeStylePatch({ width:512, padT:0, padR:0, padB:4, padL:0, kind:"panel" }) },
+        { id:"style-top-heading", tier:"style", label:"Top-level heading bar", source:"panelStyles.collapsibleHeader", patch:geoseeStylePatch({ height:44, padR:24, padL:24, style:{ bg:"#121518", bgA:0.528, borderColor:"#ffffff", borderA:0, border:1, textColor:"#f4f0e8", radius:999, blur:20, saturation:145 } }) },
+        { id:"style-nested-heading", tier:"style", label:"Nested heading bar", source:"layerGroupSummaryStyle / frostedSubheading", patch:geoseeStylePatch({ height:42, padR:24, padL:24, style:{ bg:"#121518", bgA:0.442, borderColor:"#ffffff", borderA:0, border:1, textColor:"#f4f0e8", radius:999, blur:20, saturation:145 } }) },
+        { id:"style-label-pill", tier:"style", label:"Scene label pill", preset:"label", source:"Base GUI gui.labels.styles.siteElement", patch:geoseeStylePatch({ padT:4, padR:8, padB:4, padL:8, style:{ bg:"#11161b", bgA:0.72, borderColor:"#ffffff", borderA:0.42, border:1, textColor:"#f6f1e8", radius:6, blur:0, saturation:100 } }) },
+        { id:"style-terrain-ramp", tier:"style", label:"Terrain material ramp", source:"Base GUI scene.terrain", patch:{ style:{ bg:"#8a7e68", bgA:1, borderColor:"#d7c69e", borderA:0.34, border:1, textColor:"#f4f0e8", radius:8, lineWidth:0.7 } } },
+        { id:"style-mist-volume", tier:"style", label:"Mist volume material", source:"Base GUI atmosphere layer", patch:{ style:{ bg:"#dfe4e8", bgA:0.18, opacity:0.18, borderColor:"#dfe4e8", borderA:0.24, border:1, textColor:"#f4f0e8", radius:12, blur:20, saturation:145 } } }
+      ]
+    };
+  }
+
+  function mergeLibraries(raw) {
+    const base = defaultLibraries();
+    if (!raw || typeof raw !== "object") return base;
+    for (const tier of LIBRARY_TIERS) {
+      const saved = Array.isArray(raw[tier]) ? raw[tier] : [];
+      const existing = new Set(base[tier].map(item => item.id));
+      base[tier] = [
+        ...saved.filter(item => item && item.id && !existing.has(item.id)),
+        ...base[tier]
+      ];
+    }
+    return base;
+  }
+  function safeArray(value) { return Array.isArray(value) ? value : []; }
+  function addLibraryItems(tier, items) {
+    if (!LIBRARY_TIERS.includes(tier)) return;
+    libraries[tier] = libraries[tier] || [];
+    const existing = new Set(libraries[tier].map(item => item.id));
+    for (const item of safeArray(items)) {
+      if (!item || !item.id) continue;
+      const currentIndex = libraries[tier].findIndex(entry => entry && entry.id === item.id);
+      if (currentIndex >= 0) {
+        libraries[tier][currentIndex] = Object.assign({}, libraries[tier][currentIndex], item);
+        continue;
+      }
+      libraries[tier].push(item);
+      existing.add(item.id);
+    }
+  }
+  async function fetchJsonMaybe(path) {
+    try {
+      const response = await fetch(path, { cache:"no-store" });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (_error) {
+      return null;
+    }
+  }
+  function packageTokenPatch(token) {
+    const value = Number(token.value);
+    if (!Number.isFinite(value)) {
+      if (token.category === "font-family") return { style:{ fontFamily:"mono" } };
+      return null;
+    }
+    if (token.category === "radius") return { style:{ radius:value } };
+    if (token.category === "font-size") return { style:{ fontSize:value } };
+    if (token.category === "spacing") return { gap:value, padT:value, padR:value, padB:value, padL:value };
+    return null;
+  }
+  function tokenValue(tokenRef, tokensById, fallback) {
+    const token = tokenRef && tokensById[tokenRef];
+    return token && Number.isFinite(Number(token.value)) ? Number(token.value) : fallback;
+  }
+  function colourFromRef(value, coloursById, fallbackHex, fallbackAlpha) {
+    if (!value) return { hex:fallbackHex, alpha:fallbackAlpha };
+    if (value.hex) return { hex:value.hex, alpha:value.alpha != null ? value.alpha : fallbackAlpha };
+    const ref = value.tokenRef && coloursById[value.tokenRef];
+    return ref ? { hex:ref.hex, alpha:ref.alpha != null ? ref.alpha : fallbackAlpha } : { hex:fallbackHex, alpha:fallbackAlpha };
+  }
+  function packageStylePatch(style, tokensById, coloursById) {
+    const fill = colourFromRef(style.fill, coloursById, "#121518", 0.55);
+    const border = style.border || {};
+    const borderColour = colourFromRef(border.colour, coloursById, "#ffffff", 0.16);
+    const radius = border.radius && border.radius.tokenRef
+      ? tokenValue(border.radius.tokenRef, tokensById, 8)
+      : Number.isFinite(Number(border.radius)) ? Number(border.radius) : 8;
+    const shadow = style.effects && safeArray(style.effects.shadows)[0];
+    const patch = {
+      style: {
+        bg: fill.hex, bgA: fill.alpha,
+        borderColor: borderColour.hex, borderA: borderColour.alpha,
+        border: border.width != null ? border.width : 1,
+        radius,
+        textColor: "#f4f0e8"
+      }
+    };
+    if (shadow) {
+      patch.style.shadowA = shadow.colour && shadow.colour.alpha != null ? shadow.colour.alpha : 0.24;
+      patch.style.shadowBlur = shadow.blur != null ? shadow.blur : 12;
+      patch.style.shadowY = shadow.offsetY != null ? shadow.offsetY : 4;
+    }
+    if (style.padding) {
+      const x = style.padding.x && style.padding.x.tokenRef ? tokenValue(style.padding.x.tokenRef, tokensById, 8) : Number(style.padding.x);
+      const y = style.padding.y && style.padding.y.tokenRef ? tokenValue(style.padding.y.tokenRef, tokensById, 4) : Number(style.padding.y);
+      if (Number.isFinite(x)) { patch.padL = x; patch.padR = x; }
+      if (Number.isFinite(y)) { patch.padT = y; patch.padB = y; }
+    }
+    return patch;
+  }
+  function packageComponentKind(archetype) {
+    if (/slider/.test(archetype)) return "slider-row";
+    if (/select|checkbox|input/.test(archetype)) return "input";
+    if (/button/.test(archetype)) return "button";
+    if (/swatch/.test(archetype)) return "swatch";
+    if (/divider|line/.test(archetype)) return archetype.includes("line") ? "line" : "divider";
+    if (/icon|glyph|dot/.test(archetype)) return "icon";
+    if (/rectangle|ellipse/.test(archetype)) return archetype;
+    if (/details|disclosure/.test(archetype)) return "row";
+    return "text";
+  }
+  function packageComponentHtml(component) {
+    const props = component.props || component.defaultProps || {};
+    const rect = component.rect || component.defaultSize || {};
+    const w = rect.w || 180, h = rect.h || 24;
+    const archetype = component.archetype || props.archetype || "text";
+    const kind = packageComponentKind(archetype);
+    const label = component.name || props.label || archetype;
+    if (kind === "slider-row") return componentHtml(label, "slider-row", `<span class="ge-field" data-c data-label="Label" data-kind="text">${props.label || label}</span><span class="ge-slider" data-c data-label="Slider" data-kind="row"><span class="ge-slider-track" data-c data-label="Track" data-kind="shape"></span><span class="ge-slider-fill" data-c data-label="Fill" data-kind="shape"></span><span class="ge-slider-thumb" data-c data-label="Thumb" data-kind="shape"></span></span><span data-c data-label="Value" data-kind="text">${props.value ?? ""}</span>`, `width:${Math.max(240,w)}px;min-height:${Math.max(28,h)}px;display:flex;align-items:center;gap:8px;color:#f4f0e8;`, "ge-field-row");
+    if (kind === "input") return componentHtml(label, "input", props.value ?? props.label ?? label, `width:${Math.max(90,w)}px;min-height:${Math.max(24,h)}px;padding:4px 8px;background:rgba(18,21,24,.4);border:1px solid transparent;border-radius:8px;color:#f4f0e8;`);
+    if (kind === "button") return componentHtml(label, "button", props.ariaLabel || label, `width:${Math.max(28,w)}px;height:${Math.max(24,h)}px;display:flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid transparent;background:rgba(18,21,24,.4);color:#f4f0e8;`);
+    if (kind === "swatch") return componentHtml(label, "swatch", "", `width:${Math.max(16,w)}px;height:${Math.max(16,h)}px;background:${props.currentColour?.hex || "#facdcd"};border:1px solid rgba(255,255,255,.24);border-radius:5px;`);
+    if (kind === "icon") return componentHtml(label, "icon", props.letter || props.iconLibraryEntryId || "*", `width:${Math.max(16,w)}px;height:${Math.max(16,h)}px;display:flex;align-items:center;justify-content:center;color:#f4f0e8;`);
+    if (kind === "divider") return componentHtml(label, "divider", "", `width:${Math.max(100,w)}px;height:1px;background:rgba(255,255,255,.10);`);
+    const value = props.value || props.summaryLabel || props.label || label;
+    return componentHtml(label, "text", value, `min-width:${Math.max(40,w)}px;min-height:${Math.max(16,h)}px;color:#f4f0e8;font-size:13px;`);
+  }
+  function packageContainerHtml(container) {
+    const rect = container.rect || {};
+    const label = container.name || container.archetype || "Package container";
+    const isRoot = !container.parentId;
+    return componentHtml(label, isRoot ? "panel" : "section",
+      `<div class="ge-subheader" data-c data-label="${label} header" data-kind="row"><span data-c data-label="Label" data-kind="text">${label}</span><span class="ge-override" data-c data-label="Archetype" data-kind="text">${container.archetype || "container"}</span></div><div class="ge-section-body" data-c data-label="${label} body" data-kind="section"><div class="ge-row" data-c data-label="Package metadata" data-kind="row"><span class="ge-label" data-c data-label="Frame" data-kind="text">${container.frameId || "frame"}</span><span class="ge-type" data-c data-label="Count" data-kind="text">${safeArray(container.componentIds).length} comps</span></div></div>`,
+      `width:${rect.w || 320}px;min-height:${Math.min(220, rect.h || 120)}px;padding:10px 12px;background:rgba(18,21,24,.55);border:1px solid rgba(255,255,255,.2);border-radius:18px;color:#f4f0e8;`,
+      "geosee-editor-panel");
+  }
+  async function loadPackageLibraryEntries() {
+    document.body.dataset.packageLibraryReady = "loading";
+    const [packageLib, packageComponents, packageContainers, packageTokens] = await Promise.all([
+      fetchJsonMaybe("packages/geosee_editor_sidebar/libraries.json"),
+      fetchJsonMaybe("packages/geosee_editor_sidebar/components.json"),
+      fetchJsonMaybe("packages/geosee_editor_sidebar/containers.json"),
+      fetchJsonMaybe("packages/geosee_editor_sidebar/tokens.json")
+    ]);
+    const lib = packageLib && packageLib.libraries ? packageLib.libraries : {};
+    const tokenList = safeArray(lib.tokens);
+    const tokenObjectList = packageTokens && packageTokens.tokens ? Object.values(packageTokens.tokens) : [];
+    const allTokens = [...tokenList, ...tokenObjectList];
+    const tokensById = Object.fromEntries(allTokens.map(token => [token.id, token]));
+    const colours = safeArray(lib.colours);
+    const coloursById = Object.fromEntries(colours.map(colour => [colour.id, colour]));
+    addLibraryItems("colour", colours.map(colour => ({
+      id:`pkg-colour-${colour.id}`, tier:"colour", label:colour.name, value:colour.hex,
+      source:"package:libraries.json", target:colour.semanticRole === "text" ? "textColor" : undefined
+    })));
+    addLibraryItems("icon", safeArray(lib.icons).map(icon => ({
+      id:`pkg-icon-${icon.id}`, tier:"icon", label:icon.name, value:icon.id,
+      svgPath:icon.svgPath, viewBox:icon.viewBox || "0 0 24 24", source:"package:libraries.json"
+    })));
+    addLibraryItems("token", [
+      ...tokenList.map(token => ({
+        id:`pkg-token-${token.id}`, tier:"token", label:token.name, value:String(token.value),
+        patch:packageTokenPatch(token), source:"package:libraries.json"
+      })),
+      ...tokenObjectList.map(token => ({
+        id:`pkg-token-file-${token.id}`, tier:"token", label:token.name, value:String(token.value),
+        patch:packageTokenPatch(token), source:"package:tokens.json"
+      }))
+    ]);
+    addLibraryItems("style", safeArray(lib.styles).map(style => ({
+      id:`pkg-style-${style.id}`, tier:"style", label:style.name,
+      patch:packageStylePatch(style, tokensById, coloursById), source:"package:libraries.json"
+    })));
+    addLibraryItems("component", safeArray(lib.components).filter(item => item.tier === "component").map(item => ({
+      id:`pkg-lib-component-${item.id}`, tier:"component", label:item.name, source:"package:libraries.json", html:packageComponentHtml(item)
+    })));
+    addLibraryItems("assembly", safeArray(lib.components).filter(item => item.tier === "assembly").map(item => ({
+      id:`pkg-lib-assembly-${item.id}`, tier:"assembly", label:item.name, source:"package:libraries.json", html:componentHtml(item.name, "row", `<span class="ge-label" data-c data-label="Label" data-kind="text">${item.name}</span><span class="ge-type" data-c data-label="Archetype" data-kind="text">${item.archetype || "assembly"}</span>`, `width:${item.defaultSize?.w || 280}px;min-height:${item.defaultSize?.h || 32}px;display:flex;align-items:center;gap:8px;padding:4px 8px;border:1px solid transparent;border-radius:8px;color:#f4f0e8;`, "ge-row")
+    })));
+    addLibraryItems("product", safeArray(lib.components).filter(item => item.tier === "product").map(item => ({
+      id:`pkg-lib-product-${item.id}`, tier:"product", label:item.name, source:"package:libraries.json", html:componentHtml(item.name, "panel", `<div class="ge-subheader" data-c data-label="${item.name} header" data-kind="row"><span data-c data-label="Label" data-kind="text">${item.name}</span><span class="ge-override" data-c data-label="Source" data-kind="text">package</span></div>`, `width:${item.defaultSize?.w || 320}px;min-height:${Math.min(260, item.defaultSize?.h || 160)}px;padding:10px 12px;background:rgba(18,21,24,.55);border:1px solid rgba(255,255,255,.2);border-radius:18px;color:#f4f0e8;`, "geosee-editor-panel")
+    })));
+    const componentMap = packageComponents && packageComponents.components ? packageComponents.components : {};
+    addLibraryItems("component", Object.values(componentMap).map(component => ({
+      id:`pkg-component-${component.id}`, tier:"component", label:component.name,
+      source:"package:components.json", html:packageComponentHtml(component)
+    })));
+    const containerMap = packageContainers && packageContainers.containers ? packageContainers.containers : {};
+    addLibraryItems("product", Object.values(containerMap).filter(container => !container.parentId).map(container => ({
+      id:`pkg-container-${container.id}`, tier:"product", label:container.name,
+      source:"package:containers.json", html:packageContainerHtml(container)
+    })));
+    addLibraryItems("assembly", Object.values(containerMap).filter(container => container.parentId).map(container => ({
+      id:`pkg-container-${container.id}`, tier:"assembly", label:container.name,
+      source:"package:containers.json", html:packageContainerHtml(container)
+    })));
+    document.body.dataset.packageLibraryReady = "true";
+    renderLibrary();
+    save();
   }
 
   // ---- container registry: every [data-c] in the host becomes editable ----
@@ -337,12 +1248,43 @@
     if (el.classList.contains("sidebar")) return "panel";
     if (el.classList.contains("sb-row")) return "row";
     if (el.classList.contains("sb-brand")) return "text";
+    if (el.classList.contains("ic") || el.classList.contains("chev") || el.classList.contains("dot")) return "icon";
+    if (el.classList.contains("lbl")) return "text";
     if (el.classList.contains("sb-footer")) return "button";
     return "container";
   }
+  function inferTier(kind) {
+    if (["text", "shape", "line", "icon", "divider", "swatch", "input", "image"].includes(kind)) return "component";
+    if (["row", "button", "slider-row", "menu-item"].includes(kind)) return "assembly";
+    return "product";
+  }
+  function promoteEditableLeaves() {
+    host.querySelectorAll(".ic, .lbl, .chev, .dot").forEach(el => {
+      if (el.closest("[data-library-preview]")) return;
+      if (!el.dataset.c) el.dataset.c = "";
+      if (!el.dataset.label) {
+        if (el.classList.contains("ic")) el.dataset.label = "Icon";
+        else if (el.classList.contains("lbl")) el.dataset.label = "Label";
+        else if (el.classList.contains("chev")) el.dataset.label = "Chevron";
+        else el.dataset.label = "Mark";
+      }
+      if (!el.dataset.kind) el.dataset.kind = inferKind(el);
+    });
+  }
+  function cssPx(el, prop) {
+    const value = parseFloat(getComputedStyle(el)[prop]);
+    return Number.isFinite(value) && value > 0 ? Math.round(value) : null;
+  }
+  function hydrateStateFromElement(s, el) {
+    s.padT = s.padT ?? cssPx(el, "paddingTop");
+    s.padR = s.padR ?? cssPx(el, "paddingRight");
+    s.padB = s.padB ?? cssPx(el, "paddingBottom");
+    s.padL = s.padL ?? cssPx(el, "paddingLeft");
+  }
   function registerContainers() {
+    promoteEditableLeaves();
     containers = {};
-    const nodes = stage.querySelectorAll("[data-c]");
+    const nodes = host.querySelectorAll("[data-c]");
     nodes.forEach((el, i) => {
       let id = el.dataset.cid;
       if (!id) { id = "c" + (i + 1) + "-" + (el.dataset.label || el.className.split(" ")[0] || "el"); el.dataset.cid = id; }
@@ -350,6 +1292,8 @@
       if (!layout[id]) {
         layout[id] = blankState();
         layout[id].kind = inferKind(el);
+        layout[id].tier = inferTier(layout[id].kind);
+        hydrateStateFromElement(layout[id], el);
       }
     });
     // virtual groups are containers too (no element; act on children)
@@ -361,7 +1305,7 @@
   function blankState() {
     return { x: 0, y: 0, width: null, height: null,
              padT: null, padR: null, padB: null, padL: null, gap: null, dir: "",
-             kind: "container", notes: {}, locked: false, style: {} };
+             kind: "container", tier: "product", notes: {}, locked: false, style: {} };
   }
   function st(id) { if (!layout[id]) layout[id] = blankState(); return layout[id]; }
 
@@ -391,13 +1335,52 @@
       }
       const stl = s.style || {};
       if (stl.bg) c.el.style.background = hexA(stl.bg, stl.bgA != null ? stl.bgA : 1);
+      if (stl.opacity != null) c.el.style.opacity = stl.opacity;
       if (stl.radius != null) c.el.style.borderRadius = stl.radius + "px";
-      if (stl.border != null) c.el.style.borderWidth = stl.border + "px";
+      if (stl.border != null) {
+        c.el.style.borderStyle = "solid";
+        c.el.style.borderWidth = stl.border + "px";
+      }
+      if (stl.borderColor) c.el.style.borderColor = hexA(stl.borderColor, stl.borderA != null ? stl.borderA : 1);
+      if (stl.textColor) c.el.style.color = stl.textColor;
+      if (stl.fontSize != null) c.el.style.fontSize = stl.fontSize + "px";
+      if (stl.fontFamily) c.el.style.fontFamily = fontFamilyValue(stl.fontFamily);
+      if (stl.fontWeight) c.el.style.fontWeight = stl.fontWeight;
+      if (stl.lineWidth != null) {
+        if ((s.kind || "").includes("line")) c.el.style.borderTopWidth = stl.lineWidth + "px";
+        else if ((s.kind || "") === "divider") c.el.style.height = Math.max(1, stl.lineWidth) + "px";
+      }
+      if (stl.blur != null || stl.saturation != null) {
+        const blur = stl.blur != null ? stl.blur : 0;
+        const saturation = stl.saturation != null ? stl.saturation : 100;
+        const filter = `blur(${blur}px) saturate(${saturation}%)`;
+        c.el.style.backdropFilter = filter;
+        c.el.style.webkitBackdropFilter = filter;
+      }
+      if (stl.shadowA != null || stl.shadowBlur != null || stl.shadowY != null) {
+        const a = stl.shadowA != null ? stl.shadowA : 0;
+        const blur = stl.shadowBlur != null ? stl.shadowBlur : 0;
+        const y = stl.shadowY != null ? stl.shadowY : 0;
+        c.el.style.boxShadow = a > 0 && blur > 0 ? `0 ${y}px ${blur}px rgba(0,0,0,${a})` : "none";
+      }
       if (stl.text != null) {
         const lbl = c.el.querySelector(".lbl");
         if (lbl) lbl.textContent = stl.text; else if (!c.el.children.length) c.el.textContent = stl.text;
       }
+      if (stl.iconSvgPath) {
+        c.el.innerHTML = iconSvgMarkup({
+          label: stl.iconLabel || c.label || "Icon",
+          svgPath: stl.iconSvgPath,
+          viewBox: stl.iconViewBox || "0 0 24 24"
+        }, 24);
+      }
     }
+  }
+  function fontFamilyValue(value) {
+    if (value === "mono") return '"SFMono-Regular", Consolas, "Liberation Mono", monospace';
+    if (value === "serif") return 'Georgia, "Times New Roman", serif';
+    if (value === "system") return 'system-ui, -apple-system, "Segoe UI", sans-serif';
+    return value || "";
   }
   function hexA(hex, a) {
     const h = hex.replace("#", "");
@@ -407,13 +1390,19 @@
   }
 
   // ---- rect helpers (in stage coordinates) ----
-  function stageRect() { return stage.getBoundingClientRect(); }
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+  function stageRect() { return stagePlane.getBoundingClientRect(); }
+  function stagePoint(clientX, clientY) {
+    const s = stageRect();
+    return { x:(clientX - s.left) / stageZoom, y:(clientY - s.top) / stageZoom };
+  }
   function rectOf(id) {
     const c = containers[id];
     if (c && c.el) {
       const r = c.el.getBoundingClientRect(); const s = stageRect();
-      return { left: r.left - s.left, top: r.top - s.top, width: r.width, height: r.height,
-               right: r.right - s.left, bottom: r.bottom - s.top };
+      return { left: (r.left - s.left) / stageZoom, top: (r.top - s.top) / stageZoom,
+               width: r.width / stageZoom, height: r.height / stageZoom,
+               right: (r.right - s.left) / stageZoom, bottom: (r.bottom - s.top) / stageZoom };
     }
     // group: union of children
     if (groups[id]) {
@@ -425,9 +1414,54 @@
     }
     return null;
   }
+  function stageRectFromClientRect(r) {
+    const s = stageRect();
+    return { left: (r.left - s.left) / stageZoom, top: (r.top - s.top) / stageZoom,
+      width: r.width / stageZoom, height: r.height / stageZoom,
+      right: (r.right - s.left) / stageZoom, bottom: (r.bottom - s.top) / stageZoom };
+  }
+  function contentRectOfElement(el) {
+    if (!el) return null;
+    const r = stageRectFromClientRect(el.getBoundingClientRect());
+    const cs = getComputedStyle(el);
+    const pl = parseFloat(cs.paddingLeft) || 0;
+    const pr = parseFloat(cs.paddingRight) || 0;
+    const pt = parseFloat(cs.paddingTop) || 0;
+    const pb = parseFloat(cs.paddingBottom) || 0;
+    const bl = parseFloat(cs.borderLeftWidth) || 0;
+    const br = parseFloat(cs.borderRightWidth) || 0;
+    const bt = parseFloat(cs.borderTopWidth) || 0;
+    const bb = parseFloat(cs.borderBottomWidth) || 0;
+    const left = r.left + bl + pl;
+    const top = r.top + bt + pt;
+    const right = r.right - br - pr;
+    const bottom = r.bottom - bb - pb;
+    return { left, top, right, bottom, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
+  }
+  function rectIntersectionArea(a, b) {
+    if (!a || !b) return 0;
+    const w = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+    const h = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+    return w * h;
+  }
+  function rectContainsPoint(r, x, y) {
+    return !!r && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+  }
+  function containerDepth(id) {
+    let depth = 0, pid = currentParentId(id);
+    while (pid) { depth += 1; pid = currentParentId(pid); }
+    return depth;
+  }
+  function isHiddenForPlacement(el) {
+    if (!el) return true;
+    const cs = getComputedStyle(el);
+    const r = el.getBoundingClientRect();
+    return cs.display === "none" || cs.visibility === "hidden" || Number(cs.opacity) === 0 || r.width <= 0 || r.height <= 0;
+  }
 
   // ---- overlay render ----
   let activeSnap = [];
+  let activeDropIntent = null;
   function renderOverlay() {
     overlay.innerHTML = "";
     // guides
@@ -451,7 +1485,9 @@
       const r = rectOf(id); if (!r) continue;
       const s = st(id);
       const o = document.createElement("div");
-      o.className = "dev-outline" + (selected.includes(id) ? " is-selected" : "") + (s.locked ? " is-locked" : "");
+      let cls = "dev-outline" + (selected.includes(id) ? " is-selected" : "") + (s.locked ? " is-locked" : "");
+      if (activeDropIntent && activeDropIntent.targetId === id) cls += activeDropIntent.type === "reject" ? " is-drop-reject" : " is-drop-accept";
+      o.className = cls;
       o.style.left = r.left + "px"; o.style.top = r.top + "px";
       o.style.width = r.width + "px"; o.style.height = r.height + "px";
       o.dataset.target = id;
@@ -466,6 +1502,16 @@
         o.appendChild(h);
       }
       overlay.appendChild(o);
+    }
+    if (activeDropIntent && activeDropIntent.insert) {
+      const ins = activeDropIntent.insert;
+      const d = document.createElement("div");
+      d.className = "drop-insertion " + ins.axis;
+      d.style.left = ins.left + "px";
+      d.style.top = ins.top + "px";
+      d.style.width = Math.max(2, ins.width || 2) + "px";
+      d.style.height = Math.max(2, ins.height || 2) + "px";
+      overlay.appendChild(d);
     }
     // visible padding shading for the single selected container
     if (selected.length === 1) {
@@ -539,7 +1585,9 @@
   }
   let treeDragId = null;
   function clearTreeDropTargets() {
-    treeEl.querySelectorAll(".is-drop-target").forEach(row => row.classList.remove("is-drop-target"));
+    treeEl.querySelectorAll(".is-drop-target,.is-drop-before,.is-drop-after,.is-drop-reject").forEach(row => {
+      row.classList.remove("is-drop-target", "is-drop-before", "is-drop-after", "is-drop-reject");
+    });
   }
   function startTreeDrag(e) {
     if (e.target.classList.contains("caret")) return;
@@ -549,22 +1597,56 @@
       e.dataTransfer.setData("text/plain", treeDragId);
     }
   }
+  function computeTreeDropIntent(e, targetId) {
+    if (!treeDragId || !targetId || treeDragId === targetId || !containers[treeDragId]?.el || !containers[targetId]?.el) {
+      return { type: "reject", reason: "invalid tree drag" };
+    }
+    const rowRect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY || (rowRect.top + rowRect.height / 2);
+    const zone = (y - rowRect.top) / Math.max(1, rowRect.height);
+    if (zone < 0.32 || zone > 0.68) {
+      const parentEl = containers[targetId].el.parentElement || editableRoot();
+      const movingEl = containers[treeDragId].el;
+      if (!movingEl || movingEl.contains(parentEl)) return { type: "reject", reason: "cannot drop parent into descendant" };
+      return { type: zone < 0.32 ? "before" : "after", targetId, parentEl };
+    }
+    if (!canReparent(treeDragId, targetId)) {
+      return { type: "reject", reason: "cannot nest " + (containers[treeDragId]?.label || "item") + " into " + (containers[targetId]?.label || "target") };
+    }
+    return { type: "nest", targetId };
+  }
   function treeDragOver(e) {
     const targetId = e.currentTarget.dataset.id;
-    if (!treeDragId || !targetId || treeDragId === targetId || !canReparent(treeDragId, targetId)) return;
+    const intent = computeTreeDropIntent(e, targetId);
+    clearTreeDropTargets();
+    if (intent.type === "reject") {
+      e.currentTarget.classList.add("is-drop-reject");
+      return;
+    }
     e.preventDefault();
-    e.currentTarget.classList.add("is-drop-target");
+    e.currentTarget.classList.add(
+      intent.type === "before" ? "is-drop-before" :
+      intent.type === "after" ? "is-drop-after" : "is-drop-target"
+    );
   }
   function treeDragLeave(e) {
-    e.currentTarget.classList.remove("is-drop-target");
+    e.currentTarget.classList.remove("is-drop-target", "is-drop-before", "is-drop-after", "is-drop-reject");
   }
   function treeDrop(e) {
     e.preventDefault();
     const targetId = e.currentTarget.dataset.id;
+    const intent = computeTreeDropIntent(e, targetId);
     clearTreeDropTargets();
-    if (treeDragId && targetId && treeDragId !== targetId && canReparent(treeDragId, targetId)) {
+    if (treeDragId && intent.type === "nest") {
       pushHistory();
-      reparent(treeDragId, targetId);
+      if (reparent(treeDragId, targetId)) logBehavior("accept", "nested " + (containers[treeDragId]?.label || "item") + " into " + (containers[targetId]?.label || "target"));
+    } else if (treeDragId && (intent.type === "before" || intent.type === "after")) {
+      pushHistory();
+      if (reorderElement(treeDragId, targetId, intent.type)) {
+        logBehavior("accept", "reordered " + (containers[treeDragId]?.label || "item") + " " + intent.type + " " + (containers[targetId]?.label || "target"));
+      }
+    } else if (intent.reason) {
+      logBehavior("reject", intent.reason);
     }
     treeDragId = null;
   }
@@ -581,12 +1663,28 @@
 
   // ---- drag (move) with snap ----
   let drag = null, marquee = null;
-  function snapVal(v, candidates) {
-    if (!snapEnabled) return { v, line: null };
+  function snapAxis(start, size, candidates, axis) {
+    if (!snapEnabled) return { v: start, line: null };
     const grid = 8;
-    let best = Math.round(v / grid) * grid, bestD = Math.abs(best - v), line = null;
-    for (const c of candidates) { const d = Math.abs(c - v); if (d < bestD && d <= 6) { best = c; bestD = d; line = c; } }
-    return { v: best, line: bestD <= 6 ? best : null };
+    const anchors = [
+      { name: "start", offset: 0 },
+      { name: "center", offset: size / 2 },
+      { name: "end", offset: size }
+    ];
+    let best = null;
+    for (const candidate of candidates) {
+      for (const anchor of anchors) {
+        const anchorPos = start + anchor.offset;
+        const d = Math.abs(candidate.pos - anchorPos);
+        if (d <= 6 && (!best || d <= best.d)) {
+          best = { v: start + candidate.pos - anchorPos, d, line: candidate.pos, label: (candidate.label || "target") + " " + anchor.name };
+        }
+      }
+    }
+    if (best) return best;
+    const gridValue = Math.round(start / grid) * grid;
+    const gridD = Math.abs(gridValue - start);
+    return { v: gridValue, line: gridD <= 6 ? gridValue : null, label: "grid" };
   }
   function expandMoveIds(ids) {
     const out = [];
@@ -595,13 +1693,29 @@
   }
   function moveCandidates(excludeSet) {
     const xs = [], ys = [];
+    const excludeIds = [...excludeSet];
     for (const id of Object.keys(containers)) {
       if (excludeSet.has(id) || groups[id]) continue;
+      if (isDescendantOfAny(id, excludeIds)) continue;
+      if (st(id).locked) continue;
+      if (isHiddenForPlacement(containers[id].el)) continue;
       const r = rectOf(id); if (!r) continue;
-      xs.push(r.left, r.right, r.left + r.width / 2);
-      ys.push(r.top, r.bottom, r.top + r.height / 2);
+      xs.push({ pos: r.left, label: containers[id].label + " left" }, { pos: r.right, label: containers[id].label + " right" }, { pos: r.left + r.width / 2, label: containers[id].label + " center" });
+      ys.push({ pos: r.top, label: containers[id].label + " top" }, { pos: r.bottom, label: containers[id].label + " bottom" }, { pos: r.top + r.height / 2, label: containers[id].label + " middle" });
     }
-    for (const g of guides) { if (g.axis === "v") xs.push(g.pos); else ys.push(g.pos); }
+    const parentEls = new Set();
+    for (const id of excludeSet) parentEls.add(parentElementFor(id));
+    for (const parentEl of parentEls) {
+      const cr = parentEl === editableRoot() ? { left: 0, top: 0, right: BASE_STAGE_W, bottom: BASE_STAGE_H, width: BASE_STAGE_W, height: BASE_STAGE_H } : contentRectOfElement(parentEl);
+      if (!cr) continue;
+      const label = parentEl === editableRoot() ? "stage" : (parentEl.dataset.label || "parent") + " content";
+      xs.push({ pos: cr.left, label: label + " left" }, { pos: cr.right, label: label + " right" }, { pos: cr.left + cr.width / 2, label: label + " center" });
+      ys.push({ pos: cr.top, label: label + " top" }, { pos: cr.bottom, label: label + " bottom" }, { pos: cr.top + cr.height / 2, label: label + " middle" });
+    }
+    for (const g of guides) {
+      if (g.axis === "v") xs.push({ pos: g.pos, label: "guide" });
+      else ys.push({ pos: g.pos, label: "guide" });
+    }
     return { xs, ys };
   }
   function startDrag(e) {
@@ -616,6 +1730,7 @@
     drag = {
       id, sx: e.clientX, sy: e.clientY,
       startLeft: r0.left, startTop: r0.top,   // clicked target's on-screen rect at start
+      startRect: r0,
       moveIds, gstart,
     };
     pushHistory();
@@ -630,25 +1745,172 @@
       const r = rectOf(o.dataset.target); if (!r) continue;
       o.style.left = r.left + "px"; o.style.top = r.top + "px";
       o.style.width = r.width + "px"; o.style.height = r.height + "px";
+      o.classList.remove("is-drop-accept", "is-drop-reject");
+      if (activeDropIntent && activeDropIntent.targetId === o.dataset.target) {
+        o.classList.add(activeDropIntent.type === "reject" ? "is-drop-reject" : "is-drop-accept");
+      }
     }
-    overlay.querySelectorAll(".snap-line").forEach(n => n.remove());
+    overlay.querySelectorAll(".snap-line,.drop-insertion").forEach(n => n.remove());
     for (const sl of activeSnap) {
       const d = document.createElement("div");
       d.className = "snap-line " + sl.axis;
       if (sl.axis === "v") d.style.left = sl.pos + "px"; else d.style.top = sl.pos + "px";
       overlay.appendChild(d);
     }
+    if (activeDropIntent && activeDropIntent.insert) {
+      const ins = activeDropIntent.insert;
+      const d = document.createElement("div");
+      d.className = "drop-insertion " + ins.axis;
+      d.style.left = ins.left + "px";
+      d.style.top = ins.top + "px";
+      d.style.width = Math.max(2, ins.width || 2) + "px";
+      d.style.height = Math.max(2, ins.height || 2) + "px";
+      overlay.appendChild(d);
+    }
+  }
+  function topEditableUnderPoint(clientX, clientY, excludeId) {
+    const movedEl = containers[excludeId]?.el;
+    let best = null, bestArea = Infinity;
+    for (const id of Object.keys(containers)) {
+      if (id === excludeId || groups[id]) continue;
+      const c = containers[id]; if (!c.el || isHiddenForPlacement(c.el)) continue;
+      if (movedEl && movedEl.contains(c.el)) continue;
+      const r = c.el.getBoundingClientRect();
+      if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) {
+        const area = r.width * r.height;
+        if (area < bestArea) { best = id; bestArea = area; }
+      }
+    }
+    return best;
+  }
+  function placementCandidates(movedId, clientX, clientY) {
+    const movedEl = containers[movedId]?.el;
+    if (!movedEl) return [];
+    const movedStageRect = rectOf(movedId);
+    if (!movedStageRect) return [];
+    const movedArea = Math.max(1, movedStageRect.width * movedStageRect.height);
+    const point = stagePoint(clientX, clientY);
+    const out = [];
+    let domIndex = 0;
+    for (const id of Object.keys(containers)) {
+      domIndex += 1;
+      if (id === movedId || groups[id]) continue;
+      const c = containers[id]; if (!c.el || isHiddenForPlacement(c.el)) continue;
+      if (!canAcceptChildren(id)) continue;
+      if (movedEl.contains(c.el)) continue;
+      const targetRect = rectOf(id); if (!targetRect) continue;
+      const contentRect = contentRectOfElement(c.el) || targetRect;
+      const overlap = rectIntersectionArea(movedStageRect, targetRect) / movedArea;
+      const pointerInside = rectContainsPoint(contentRect, point.x, point.y);
+      if (overlap < 0.45 && !pointerInside) continue;
+      const targetArea = Math.max(1, targetRect.width * targetRect.height);
+      out.push({
+        id,
+        overlap,
+        pointerInside,
+        depth: containerDepth(id),
+        targetArea,
+        domIndex,
+        score: overlap * 100 + (pointerInside ? 8 : 0) + containerDepth(id) * 30 - Math.log(targetArea) + domIndex * 0.01,
+        rect: targetRect,
+        contentRect
+      });
+    }
+    return out.sort((a, b) => b.score - a.score);
+  }
+  function flowInsertFor(parentId, movedId) {
+    const parent = containers[parentId];
+    if (!parent || !parent.el) return null;
+    const dir = st(parentId).dir;
+    if (dir !== "row" && dir !== "column") return null;
+    const movedRect = rectOf(movedId);
+    const content = contentRectOfElement(parent.el) || rectOf(parentId);
+    if (!movedRect || !content) return null;
+    const kids = childContainerIds(parent.el).filter(id => id !== movedId && containers[id]?.el);
+    if (!kids.length) return null;
+    const axis = dir === "row" ? "x" : "y";
+    const center = axis === "x" ? movedRect.left + movedRect.width / 2 : movedRect.top + movedRect.height / 2;
+    let beforeId = null;
+    for (const kid of kids) {
+      const kr = rectOf(kid); if (!kr) continue;
+      const kc = axis === "x" ? kr.left + kr.width / 2 : kr.top + kr.height / 2;
+      if (center < kc) { beforeId = kid; break; }
+    }
+    const refRect = beforeId ? rectOf(beforeId) : rectOf(kids[kids.length - 1]);
+    if (!refRect) return { beforeId, insert: null };
+    const insert = axis === "x"
+      ? { axis: "v", left: beforeId ? refRect.left - 3 : refRect.right + 3, top: content.top, width: 2, height: content.height }
+      : { axis: "h", left: content.left, top: beforeId ? refRect.top - 3 : refRect.bottom + 3, width: content.width, height: 2 };
+    return { beforeId, insert };
+  }
+  function computeDropIntent(e) {
+    if (!drag || drag.moveIds.length !== 1) return { type: "move" };
+    const movedId = drag.moveIds[0];
+    const movedC = containers[movedId];
+    if (!movedC || !movedC.el) return { type: "move" };
+    if (e && e.altKey) return { type: "move", reason: "nesting suppressed" };
+    const clientX = e ? e.clientX : drag.sx;
+    const clientY = e ? e.clientY : drag.sy;
+    const best = placementCandidates(movedId, clientX, clientY)[0];
+    if (best && best.overlap >= 0.55) {
+      const currentParent = currentParentId(movedId);
+      const flow = flowInsertFor(best.id, movedId);
+      if (best.id === currentParent && !flow) return { type: "move", targetId: best.id };
+      return {
+        type: "nest",
+        targetId: best.id,
+        beforeId: flow?.beforeId || null,
+        insert: flow?.insert || null,
+        reason: "overlap " + Math.round(best.overlap * 100) + "%"
+      };
+    }
+    const underId = topEditableUnderPoint(clientX, clientY, movedId);
+    if (underId && !canAcceptChildren(underId)) {
+      return {
+        type: "reject",
+        targetId: underId,
+        reason: "cannot nest " + (movedC.label || "item") + " into " + (containers[underId]?.label || "leaf")
+      };
+    }
+    if (!best) return { type: "move" };
+    const currentParent = currentParentId(movedId);
+    const flow = flowInsertFor(best.id, movedId);
+    if (best.id === currentParent && !flow) return { type: "move", targetId: best.id };
+    return {
+      type: "nest",
+      targetId: best.id,
+      beforeId: flow?.beforeId || null,
+      insert: flow?.insert || null,
+      reason: best.pointerInside ? "content zone" : "overlap " + Math.round(best.overlap * 100) + "%"
+    };
+  }
+  function commitDropIntent(intent, movedId) {
+    if (!intent || intent.type === "move") {
+      if (intent?.reason) logBehavior("info", intent.reason);
+      return;
+    }
+    if (intent.type === "reject") {
+      logBehavior("reject", intent.reason || "invalid drop target");
+      return;
+    }
+    if (intent.type === "nest" && intent.targetId) {
+      const currentParent = currentParentId(movedId);
+      if (intent.targetId === currentParent && !intent.beforeId) return;
+      if (reparent(movedId, intent.targetId, intent.beforeId)) {
+        logBehavior("accept", "nested " + (containers[movedId]?.label || "item") + " into " + (containers[intent.targetId]?.label || "target"));
+      }
+    }
   }
   function onMove(e) {
     if (drag) {
-      const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+      const dx = (e.clientX - drag.sx) / stageZoom, dy = (e.clientY - drag.sy) / stageZoom;
       activeSnap = [];
       let targetLeft = drag.startLeft + dx;   // desired on-screen left of the clicked target
       let targetTop = drag.startTop + dy;
       if (!(e.ctrlKey || e.metaKey)) {
         const cand = moveCandidates(new Set(drag.moveIds));
-        const snX = snapVal(targetLeft, cand.xs);
-        const snY = snapVal(targetTop, cand.ys);
+        const snX = snapAxis(targetLeft, drag.startRect.width, cand.xs, "x");
+        const snY = snapAxis(targetTop, drag.startRect.height, cand.ys, "y");
         if (snX.line != null) activeSnap.push({ axis: "v", pos: snX.line });
         if (snY.line != null) activeSnap.push({ axis: "h", pos: snY.line });
         targetLeft = snX.v; targetTop = snY.v;
@@ -661,22 +1923,24 @@
         ss.y = drag.gstart[mid].y + ddy;
       }
       applyAll(); positionOutlines(); markDirty();
+      activeDropIntent = computeDropIntent(e);
+      positionOutlines();
     } else if (marquee && marquee.active) {
-      const s = stageRect();
-      const cx = e.clientX - s.left, cy = e.clientY - s.top;
+      const p = stagePoint(e.clientX, e.clientY);
+      const cx = p.x, cy = p.y;
       marquee.w = Math.abs(cx - marquee.ox); marquee.h = Math.abs(cy - marquee.oy);
       marquee.x = Math.min(cx, marquee.ox); marquee.y = Math.min(cy, marquee.oy);
       renderOverlay();
     } else if (guideDrag) {
-      const s = stageRect();
+      const p = stagePoint(e.clientX, e.clientY);
       const g = guides.find(x=>x.id===guideDrag.id); if (!g) return;
-      g.pos = guideDrag.axis==="v" ? (e.clientX - s.left) : (e.clientY - s.top);
+      g.pos = guideDrag.axis==="v" ? p.x : p.y;
       const node = overlay.querySelector(`.guide[data-guide="${g.id}"]`);
       if (node) { if (g.axis==="v") node.style.left = g.pos+"px"; else node.style.top = g.pos+"px"; }
       markDirty();
     } else if (resize) {
       const ss = st(resize.id);
-      let w = resize.w + (e.clientX - resize.sx), h = resize.h + (e.clientY - resize.sy);
+      let w = resize.w + (e.clientX - resize.sx) / stageZoom, h = resize.h + (e.clientY - resize.sy) / stageZoom;
       if (snapEnabled && !(e.ctrlKey||e.metaKey)) { w = Math.round(w/8)*8; h = Math.round(h/8)*8; }
       ss.width = Math.max(8, Math.round(w)); ss.height = Math.max(8, Math.round(h));
       applyAll(); positionOutlines(); renderInspector(); markDirty();
@@ -684,18 +1948,9 @@
   }
   function onUp(e) {
     if (drag) {
-      // Drag-to-nest: if the dragged element was dropped over a container,
-      // reparent it into that container (real DOM nesting), preserving its
-      // on-screen position. Hold Alt to drop without nesting.
-      if (!(e && e.altKey) && drag.moveIds.length === 1) {
-        const movedId = drag.moveIds[0];
-        const movedC = containers[movedId];
-        if (movedC && movedC.el) {
-          const target = containerUnderPoint(e ? e.clientX : 0, e ? e.clientY : 0, movedId);
-          if (target && target !== currentParentId(movedId)) reparent(movedId, target);
-        }
-      }
-      activeSnap = []; renderOverlay(); save();
+      const intent = activeDropIntent || computeDropIntent(e);
+      if (drag.moveIds.length === 1) commitDropIntent(intent, drag.moveIds[0]);
+      activeSnap = []; activeDropIntent = null; renderOverlay(); save();
     }
     if (marquee && marquee.active) {
       const sel = [];
@@ -719,7 +1974,7 @@
   }
   function canAcceptChildren(id) {
     const kind = st(id).kind || "container";
-    return !["text", "shape", "image", "button"].includes(kind);
+    return !["text", "shape", "line", "icon", "divider", "swatch", "input", "image"].includes(kind);
   }
   function canReparent(id, newParentId) {
     const child = containers[id], parent = containers[newParentId];
@@ -746,8 +2001,8 @@
     el.style.transform = "translate(0px, 0px)";
     newParentEl.insertBefore(el, beforeEl || null);
     const zero = el.getBoundingClientRect();
-    s.x = Math.round(before.left - zero.left);
-    s.y = Math.round(before.top - zero.top);
+    s.x = Math.round((before.left - zero.left) / stageZoom);
+    s.y = Math.round((before.top - zero.top) / stageZoom);
     return true;
   }
   function revealInTree(id) {
@@ -780,6 +2035,19 @@
     registerContainers(); applyAll(); revealInTree(id); select(id); save();
     return true;
   }
+  function reorderElement(id, targetId, where) {
+    const moving = containers[id]?.el;
+    const target = containers[targetId]?.el;
+    if (!moving || !target || id === targetId) return false;
+    if (moving.contains(target)) return false;
+    const parentEl = target.parentElement || editableRoot();
+    if (moving.contains(parentEl)) return false;
+    const beforeEl = where === "before" ? target : target.nextElementSibling;
+    const beforeRect = moving.getBoundingClientRect();
+    if (!moveElementKeepingRect(id, parentEl, beforeEl, beforeRect)) return false;
+    registerContainers(); applyAll(); revealInTree(id); select(id); renderTree(); save();
+    return true;
+  }
 
   // ---- resize ----
   let resize = null;
@@ -799,8 +2067,8 @@
     const id = e.currentTarget.dataset.guide; const g = guides.find(x=>x.id===id);
     guideDrag = { id, axis: g.axis }; }
   function addGuideFromRuler(axis, clientPos) {
-    const s = stageRect();
-    const pos = axis==="v" ? (clientPos - s.left) : (clientPos - s.top);
+    const s = stagePoint(axis==="v" ? clientPos : stageRect().left, axis==="h" ? clientPos : stageRect().top);
+    const pos = axis==="v" ? s.x : s.y;
     pushHistory();
     guides.push({ id: "g"+(nextId++), axis, pos: Math.round(pos) });
     save(); renderOverlay();
@@ -810,22 +2078,41 @@
 
   // ---- marquee on empty stage ----
   overlay.parentElement.addEventListener("pointerdown", e => {
-    if (e.target !== overlay && e.target !== stage && !e.target.classList?.contains("host")) return;
-    const s = stageRect();
+    if (e.target !== overlay && e.target !== stage && e.target !== stagePlane && !e.target.classList?.contains("host")) return;
+    const p = stagePoint(e.clientX, e.clientY);
     select(null);
-    marquee = { active: true, ox: e.clientX - s.left, oy: e.clientY - s.top, x:0,y:0,w:0,h:0 };
+    marquee = { active: true, ox: p.x, oy: p.y, x:0,y:0,w:0,h:0 };
   });
 
   window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointermove", moveLibraryPanel);
   window.addEventListener("pointerup", onUp);
+  window.addEventListener("pointerup", endLibraryPanelMove);
+  [stageWrap, stage, stagePlane, overlay].forEach(node => {
+    node.addEventListener("dragover", libraryDragFeedback);
+    node.addEventListener("drop", dropLibraryItem);
+  });
 
   // ---- history (undo/redo) ----
-  function snapshot() { return JSON.stringify({ layout, groups, guides, nextId, collapsed, selected, hostHTML: host.innerHTML }); }
+  function snapshot() {
+    return JSON.stringify({
+      layout, groups, guides, nextId, collapsed, selected, hostHTML: host.innerHTML,
+      editorMode, activeLibraryTier, libraries, libraryPreviewScale, libraryQuery, libraryPanelState, stageZoom, stageBackground, behaviorLogEntries
+    });
+  }
   function pushHistory() { history.push(snapshot()); if (history.length>100) history.shift(); future = []; }
   function restore(json) { const o = JSON.parse(json); if (typeof o.hostHTML === "string") host.innerHTML = o.hostHTML;
     layout=o.layout || {}; groups=o.groups || {}; guides=o.guides || []; nextId=o.nextId || nextId;
     collapsed=o.collapsed || {}; selected=Array.isArray(o.selected) ? o.selected : [];
-    registerContainers(); applyAll(); renderOverlay(); renderInspector(); renderTree(); save(); }
+    editorMode=o.editorMode || editorMode; activeLibraryTier=o.activeLibraryTier || activeLibraryTier; libraries=mergeLibraries(o.libraries);
+    libraryPreviewScale = Number.isFinite(Number(o.libraryPreviewScale)) ? Number(o.libraryPreviewScale) : libraryPreviewScale;
+    libraryQuery = typeof o.libraryQuery === "string" ? o.libraryQuery : libraryQuery;
+    libraryPanelState = Object.assign({}, libraryPanelState, o.libraryPanelState || {});
+    stageZoom = Number.isFinite(Number(o.stageZoom)) ? Number(o.stageZoom) : stageZoom;
+    stageBackground = o.stageBackground || null;
+    behaviorLogEntries = Array.isArray(o.behaviorLogEntries) ? o.behaviorLogEntries.slice(0, 8) : behaviorLogEntries;
+    setMode(editorMode, false); setLibraryPreviewScale(libraryPreviewScale, false); setLibraryQuery(libraryQuery, false); applyLibraryPanelState(false); applyStageZoom(false); applyStageBackground(false);
+    registerContainers(); applyAll(); renderOverlay(); renderInspector(); renderTree(); renderLibrary(); renderBehaviorLog(); save(); }
   function undo() { if (!history.length) return; future.push(snapshot()); restore(history.pop()); }
   function redo() { if (!future.length) return; history.push(snapshot()); restore(future.pop()); }
 
@@ -836,9 +2123,17 @@
   function selectedContainerEl() {
     if (selected.length === 1) {
       const c = containers[selected[0]];
-      if (c && c.el) return c.el;
+      if (c && c.el && canAcceptChildren(selected[0])) return c.el;
+      if (c && c.el) return parentElementFor(selected[0]) || editableRoot();
     }
     return stage.querySelector(".host");
+  }
+  function nestedPlacement(parentEl) {
+    if (!parentEl || parentEl === editableRoot()) return { x: 20, y: 20 };
+    const cs = getComputedStyle(parentEl);
+    const pl = parseFloat(cs.paddingLeft) || 0;
+    const pt = parseFloat(cs.paddingTop) || 0;
+    return { x: Math.max(12, Math.round(pl + 8)), y: Math.max(12, Math.round(pt + 8)) };
   }
   function createEl(kind) {
     const parent = selectedContainerEl();
@@ -848,27 +2143,86 @@
     const id = "c-" + kind + "-" + (nextId++);
     const el = document.createElement("div");
     el.dataset.c = ""; el.dataset.cid = id;
-    const base = "position:absolute;left:20px;top:20px;box-sizing:border-box;";
+    const placement = nestedPlacement(parent);
+    const base = `position:absolute;left:${placement.x}px;top:${placement.y}px;box-sizing:border-box;`;
     if (kind === "text") {
       el.dataset.label = "Text";
+      el.dataset.kind = "text";
       el.style.cssText = base + "min-width:60px;color:#f4f0e8;font:14px system-ui;padding:2px 4px;";
       el.textContent = "Text";
     } else if (kind === "rect") {
       el.dataset.label = "Rect";
+      el.dataset.kind = "shape";
       el.style.cssText = base + "width:160px;height:90px;background:rgba(120,180,220,0.18);border:1px solid rgba(255,255,255,0.25);border-radius:6px;";
     } else if (kind === "ellipse") {
       el.dataset.label = "Ellipse";
+      el.dataset.kind = "shape";
       el.style.cssText = base + "width:90px;height:90px;background:rgba(200,140,180,0.22);border:1px solid rgba(255,255,255,0.25);border-radius:50%;";
+    } else if (kind === "line") {
+      el.dataset.label = "Line";
+      el.dataset.kind = "line";
+      el.style.cssText = base + "width:160px;height:8px;border-top:2px solid rgba(244,240,232,0.75);";
+    } else if (kind === "icon") {
+      el.dataset.label = "Icon";
+      el.dataset.kind = "icon";
+      el.className = "ic";
+      el.style.cssText = base + "width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.18);border-radius:6px;color:#f4f0e8;";
+      el.textContent = "[]";
+    } else if (kind === "divider") {
+      el.dataset.label = "Divider";
+      el.dataset.kind = "divider";
+      el.style.cssText = base + "width:220px;height:1px;background:rgba(244,240,232,0.28);";
+    } else if (kind === "swatch") {
+      el.dataset.label = "Swatch";
+      el.dataset.kind = "swatch";
+      el.style.cssText = base + "width:34px;height:34px;background:#75c7ff;border:1px solid rgba(255,255,255,0.35);border-radius:8px;";
+    } else if (kind === "input") {
+      el.dataset.label = "Input";
+      el.dataset.kind = "input";
+      el.style.cssText = base + "width:120px;min-height:28px;padding:5px 10px;background:rgba(18,21,24,0.5);border:1px solid rgba(255,255,255,0.16);border-radius:6px;color:#f4f0e8;font:12px system-ui;";
+      el.textContent = "123";
+    } else if (kind === "button") {
+      el.dataset.label = "Button";
+      el.dataset.kind = "button";
+      el.style.cssText = base + "width:148px;min-height:34px;padding:7px 14px;background:rgba(120,180,220,0.2);border:1px solid rgba(120,180,220,0.5);border-radius:999px;color:#f4f0e8;display:flex;align-items:center;gap:8px;";
+      el.innerHTML = '<span class="ic" data-c data-label="Icon" data-kind="icon">[]</span><span class="lbl" data-c data-label="Label" data-kind="text">Button</span>';
+    } else if (kind === "slider-row") {
+      el.dataset.label = "Slider";
+      el.dataset.kind = "slider-row";
+      el.style.cssText = base + "width:260px;min-height:36px;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;display:flex;align-items:center;gap:10px;color:#f4f0e8;";
+      el.innerHTML = '<span class="lbl" data-c data-label="Label" data-kind="text" style="flex:0 0 72px">Value</span><span data-c data-label="Track" data-kind="shape" style="height:5px;flex:1;background:rgba(255,255,255,0.14);border-radius:999px;display:block"></span>';
+    } else if (kind === "card") {
+      el.dataset.label = "Overlay card";
+      el.dataset.kind = "card";
+      el.style.cssText = base + "width:280px;min-height:160px;padding:24px;background:rgba(18,21,24,0.55);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:#f4f0e8;box-shadow:0 24px 80px rgba(0,0,0,0.24);backdrop-filter:blur(20px) saturate(145%);";
+      el.innerHTML = '<div data-c data-label="Title" data-kind="text" style="font-size:21px;font-weight:700;margin-bottom:8px">Overlay title</div><div data-c data-label="Body" data-kind="text" style="font-size:14px;color:#ebe2d4">Presentation copy goes here.</div>';
+    } else if (kind === "navigator") {
+      el.dataset.label = "Navigator";
+      el.dataset.kind = "menu";
+      el.style.cssText = base + "width:270px;min-height:44px;padding:7px 10px;background:rgba(18,21,24,0.1);border:1px solid rgba(255,255,255,0.16);border-radius:999px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px;";
+      el.innerHTML = '<span data-c data-label="Previous" data-kind="button">&lt;</span><span data-c data-label="Page label" data-kind="text">Page 01</span><span data-c data-label="Next" data-kind="button">&gt;</span>';
+    } else if (kind === "sidebar") {
+      el.dataset.label = "Sidebar";
+      el.dataset.kind = "panel";
+      el.className = "sidebar";
+      el.style.cssText = base + "width:320px;padding:14px;";
+      el.innerHTML = '<div class="sb-brand" data-c data-label="Brand" data-kind="text"><span class="dot" data-c data-label="Mark" data-kind="icon"></span>FORGE</div><div class="sb-row" data-c data-label="Pages" data-kind="row"><span class="ic" data-c data-label="Icon" data-kind="icon">[]</span><span class="lbl" data-c data-label="Label" data-kind="text">Pages</span><span class="chev" data-c data-label="Chevron" data-kind="icon">&gt;</span></div><div class="sb-row" data-c data-label="Cards" data-kind="row"><span class="ic" data-c data-label="Icon" data-kind="icon">-</span><span class="lbl" data-c data-label="Label" data-kind="text">Cards</span><span class="chev" data-c data-label="Chevron" data-kind="icon">&gt;</span></div>';
     } else if (kind === "row") {
       el.dataset.label = "Row";
+      el.dataset.kind = "row";
       el.className = "sb-row"; el.style.cssText = base + "width:280px;";
-      el.innerHTML = '<span class="ic">[]</span><span class="lbl">Row</span><span class="chev">&gt;</span>';
+      el.innerHTML = '<span class="ic" data-c data-label="Icon" data-kind="icon">[]</span><span class="lbl" data-c data-label="Label" data-kind="text">Row</span><span class="chev" data-c data-label="Chevron" data-kind="icon">&gt;</span>';
     } else { // container
       el.dataset.label = "Container";
+      el.dataset.kind = "container";
       el.style.cssText = base + "width:200px;height:120px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.25);border-radius:8px;";
     }
     pushHistory(); parent.appendChild(el);
-    registerContainers(); st(id).kind = kind === "rect" || kind === "ellipse" ? "shape" : kind;
+    registerContainers();
+    const effectiveKind = el.dataset.kind || (kind === "rect" || kind === "ellipse" ? "shape" : kind);
+    st(id).kind = effectiveKind;
+    st(id).tier = editorMode === "component" ? "component" : editorMode === "assembly" ? "assembly" : inferTier(effectiveKind);
+    revealInTree(id);
     applyAll(); select(id); renderTree(); save();
   }
   function addContainer() { createEl("container"); }
@@ -883,7 +2237,9 @@
   }
   function clientRectFromStageRect(r) {
     const sr = stageRect();
-    return { left: sr.left + r.left, top: sr.top + r.top, right: sr.left + r.right, bottom: sr.top + r.bottom, width: r.width, height: r.height };
+    return { left: sr.left + r.left * stageZoom, top: sr.top + r.top * stageZoom,
+      right: sr.left + r.right * stageZoom, bottom: sr.top + r.bottom * stageZoom,
+      width: r.width * stageZoom, height: r.height * stageZoom };
   }
   function selectedElementIds() {
     return selected.filter(id => containers[id] && containers[id].el && !st(id).locked);
@@ -952,11 +2308,13 @@
   function parentScopeRect(id) {
     const parent = parentElementFor(id);
     if (parent === editableRoot()) {
-      return { left: 0, top: 0, right: stage.clientWidth, bottom: stage.clientHeight, width: stage.clientWidth, height: stage.clientHeight };
+      return { left: 0, top: 0, right: BASE_STAGE_W, bottom: BASE_STAGE_H, width: BASE_STAGE_W, height: BASE_STAGE_H };
     }
     const pr = parent.getBoundingClientRect();
     const sr = stageRect();
-    return { left: pr.left - sr.left, top: pr.top - sr.top, right: pr.right - sr.left, bottom: pr.bottom - sr.top, width: pr.width, height: pr.height };
+    return { left: (pr.left - sr.left) / stageZoom, top: (pr.top - sr.top) / stageZoom,
+      right: (pr.right - sr.left) / stageZoom, bottom: (pr.bottom - sr.top) / stageZoom,
+      width: pr.width / stageZoom, height: pr.height / stageZoom };
   }
   function moveByStageDelta(id, dx, dy) {
     const s = st(id);
@@ -1017,36 +2375,511 @@
     selected = []; registerContainers(); applyAll(); renderOverlay(); renderInspector(); renderTree(); save();
   }
 
+  // ---- editor modes + libraries ----
+  function setMode(mode, persist = true) {
+    editorMode = ["component", "assembly", "product"].includes(mode) ? mode : "product";
+    document.body.dataset.editorMode = editorMode;
+    document.querySelectorAll("[data-mode]").forEach(btn => {
+      btn.classList.toggle("on", btn.dataset.mode === editorMode);
+    });
+    if (libraryMode) libraryMode.textContent = TIER_LABEL[editorMode] || "Product";
+    if (persist) save();
+  }
+  function setLibraryTier(tier) {
+    activeLibraryTier = LIBRARY_TIERS.includes(tier) ? tier : "component";
+    document.querySelectorAll("[data-library-tab]").forEach(btn => {
+      btn.classList.toggle("on", btn.dataset.libraryTab === activeLibraryTier);
+    });
+    if (libraryMode) libraryMode.textContent = TIER_LABEL[activeLibraryTier] || activeLibraryTier;
+    renderLibrary();
+    save();
+  }
+  function clampLibraryPanelState() {
+    if (!libraryPanel) return;
+    const main = libraryPanel.parentElement;
+    const mw = main ? main.clientWidth : 1200;
+    const mh = main ? main.clientHeight : 800;
+    const minW = 240, minH = 260;
+    libraryPanelState.w = Math.max(minW, Math.min(Number(libraryPanelState.w) || 280, Math.max(minW, mw - 24)));
+    const wantedH = Number(libraryPanelState.h) || Math.max(minH, mh - 20);
+    libraryPanelState.h = Math.max(minH, Math.min(wantedH, Math.max(minH, mh - 20)));
+    libraryPanelState.x = Math.max(0, Math.min(Number(libraryPanelState.x) || 228, Math.max(0, mw - libraryPanelState.w - 8)));
+    libraryPanelState.y = Math.max(0, Math.min(Number(libraryPanelState.y) || 10, Math.max(0, mh - libraryPanelState.h - 8)));
+  }
+  function applyLibraryPanelState(persist = true) {
+    if (!libraryPanel) return;
+    clampLibraryPanelState();
+    libraryPanel.style.left = Math.round(libraryPanelState.x) + "px";
+    libraryPanel.style.top = Math.round(libraryPanelState.y) + "px";
+    libraryPanel.style.width = Math.round(libraryPanelState.w) + "px";
+    libraryPanel.style.height = Math.round(libraryPanelState.h) + "px";
+    if (persist) save();
+  }
+  function sourceGroup(item) {
+    const source = String(item.source || "");
+    if (/^Saved/i.test(source)) return "Saved";
+    if (/^package:/i.test(source)) return "Package";
+    if (/GeoSee|Base GUI|src\/editor|projects\/base-gui/i.test(source)) return "GeoSee";
+    return TIER_LABEL[item.tier] || TIER_LABEL[activeLibraryTier] || "Library";
+  }
+  function itemMatchesLibraryQuery(item) {
+    const q = libraryQuery.trim().toLowerCase();
+    if (!q) return true;
+    return [item.label, item.id, item.source, item.tier, item.kind, item.value].some(value => String(value || "").toLowerCase().includes(q));
+  }
+  function setLibraryQuery(value, persist = true) {
+    libraryQuery = String(value || "");
+    if (librarySearch && librarySearch.value !== libraryQuery) librarySearch.value = libraryQuery;
+    renderLibrary();
+    if (persist) save();
+  }
+  function setLibraryPreviewScale(value, persist = true) {
+    libraryPreviewScale = Math.max(0.75, Math.min(2, Number(value) || 1));
+    document.body.dataset.libraryPreviewScale = String(libraryPreviewScale);
+    if (libraryPanel) {
+      libraryPanel.style.setProperty("--library-preview-scale", libraryPreviewScale);
+      libraryPanel.style.setProperty("--library-preview-height", Math.round(52 * libraryPreviewScale) + "px");
+    }
+    if (libraryPreviewScaleInput) libraryPreviewScaleInput.value = String(libraryPreviewScale);
+    if (libraryPreviewScaleValue) libraryPreviewScaleValue.textContent = Math.round(libraryPreviewScale * 100) + "%";
+    renderLibrary();
+    if (persist) save();
+  }
+  function normalizePreviewHtml(html) {
+    const wrap = document.createElement("div");
+    wrap.innerHTML = html || "";
+    const root = wrap.firstElementChild;
+    if (!root) return "";
+    stripRuntimeIds(root);
+    root.style.position = "absolute";
+    root.style.left = "50%";
+    root.style.top = "50%";
+    root.style.margin = "0";
+    root.style.transform = "translate(-50%, -50%) scale(0.34)";
+    root.style.transformOrigin = "center center";
+    root.style.maxWidth = "360px";
+    root.style.maxHeight = "160px";
+    root.style.pointerEvents = "none";
+    return root.outerHTML;
+  }
+  function previewFromHtml(html) {
+    return `<div class="lib-preview-canvas">${normalizePreviewHtml(html)}</div>`;
+  }
+  function previewForKind(kind, label) {
+    const safe = esc(label || kind || "Item");
+    if (kind === "text") return `<span style="font-size:18px;font-weight:700;color:#f4f0e8">Text</span>`;
+    if (kind === "rect" || kind === "shape") return `<span style="width:58px;height:34px;border-radius:7px;background:rgba(120,180,220,.24);border:1px solid rgba(120,180,220,.62)"></span>`;
+    if (kind === "ellipse") return `<span style="width:48px;height:34px;border-radius:999px;background:rgba(200,140,180,.28);border:1px solid rgba(255,255,255,.22)"></span>`;
+    if (kind === "line" || kind === "divider") return `<span style="width:72px;height:6px;border-radius:999px;background:rgba(244,240,232,.72)"></span>`;
+    if (kind === "swatch") return `<span class="lib-preview-swatch" style="background:#75c7ff"></span>`;
+    if (kind === "input") return `<span style="width:72px;height:26px;border-radius:6px;border:1px solid rgba(255,255,255,.16);background:rgba(18,21,24,.55);display:flex;align-items:center;justify-content:center;color:#f4f0e8;font-size:11px">123</span>`;
+    if (kind === "button") return `<span style="min-width:78px;height:28px;border-radius:999px;border:1px solid rgba(120,180,220,.48);background:rgba(120,180,220,.18);display:flex;align-items:center;justify-content:center;color:#f4f0e8;font-size:11px">${safe}</span>`;
+    if (kind === "row" || kind === "slider-row") return `<span style="width:104px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);display:flex;align-items:center;gap:6px;padding:5px"><i style="width:14px;height:14px;border-radius:4px;background:#75c7ff"></i><b style="height:5px;flex:1;border-radius:999px;background:rgba(244,240,232,.28)"></b></span>`;
+    if (kind === "sidebar" || kind === "panel" || kind === "card" || kind === "navigator") return `<span style="width:74px;height:42px;border-radius:${kind === "navigator" ? 999 : 10}px;border:1px solid rgba(255,255,255,.18);background:rgba(18,21,24,.55);box-shadow:0 8px 24px rgba(0,0,0,.22)"></span>`;
+    return `<span class="lib-preview-token">${safe.slice(0, 12)}</span>`;
+  }
+  function stylePreview(item) {
+    const patch = item.patch || {};
+    const stl = patch.style || {};
+    const bg = stl.bg ? hexA(stl.bg, stl.bgA != null ? stl.bgA : 1) : "rgba(18,21,24,.55)";
+    const border = stl.borderColor ? hexA(stl.borderColor, stl.borderA != null ? stl.borderA : 0.18) : "rgba(255,255,255,.18)";
+    const radius = stl.radius != null ? Math.min(18, stl.radius) : 10;
+    return `<span class="lib-preview-style" style="background:${bg};border-color:${border};border-radius:${radius}px"></span>`;
+  }
+  function libraryPreviewHtml(item) {
+    if (item.html) return previewFromHtml(item.html);
+    if (item.tier === "colour") return `<span class="lib-preview-swatch" style="background:${esc(item.value || "#75c7ff")}"></span>`;
+    if (item.tier === "icon") return iconSvgMarkup(item);
+    if (item.tier === "token") return `<span class="lib-preview-token">${esc(item.value || item.label || "token")}</span>`;
+    if (item.tier === "style") return stylePreview(item);
+    return previewForKind(item.kind || item.tier, item.label || item.id);
+  }
+  function renderLibrary() {
+    if (!libraryList) return;
+    libraryList.innerHTML = "";
+    if (librarySearch && librarySearch.value !== libraryQuery) librarySearch.value = libraryQuery;
+    const allItems = libraries[activeLibraryTier] || [];
+    const items = allItems.filter(itemMatchesLibraryQuery);
+    const countText = items.length + "/" + allItems.length;
+    if (librarySearchCount) librarySearchCount.textContent = countText;
+    if (librarySearchCountInline) librarySearchCountInline.textContent = countText;
+    if (!items.length) {
+      const empty = document.createElement("div");
+      empty.className = "lib-empty";
+      empty.textContent = libraryQuery.trim() ? "No matches in this library." : "No saved items in this library yet.";
+      libraryList.appendChild(empty);
+      return;
+    }
+    let lastGroup = "";
+    for (const item of items) {
+      const group = sourceGroup(item);
+      if (group !== lastGroup) {
+        const head = document.createElement("div");
+        head.className = "lib-group";
+        head.textContent = group;
+        libraryList.appendChild(head);
+        lastGroup = group;
+      }
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "lib-item";
+      btn.dataset.libraryItem = item.id;
+      btn.dataset.libraryTier = item.tier || activeLibraryTier;
+      btn.draggable = true;
+      btn.innerHTML = `<div class="lib-preview" data-library-preview><div class="lib-preview-inner">${libraryPreviewHtml(item)}</div></div><span class="lib-name" data-library-label>${esc(item.label || item.id)}</span><small>${esc(item.source || TIER_LABEL[item.tier] || activeLibraryTier)}</small>`;
+      btn.addEventListener("click", () => instantiateLibraryItem(item));
+      btn.addEventListener("dragstart", (e) => startLibraryItemDrag(e, item));
+      btn.addEventListener("dragend", endLibraryItemDrag);
+      libraryList.appendChild(btn);
+    }
+  }
+  function stripRuntimeIds(node) {
+    if (node.nodeType !== 1) return;
+    if (node.dataset) {
+      if (node.dataset.c !== undefined || node.hasAttribute("data-c")) node.dataset.c = "";
+      delete node.dataset.cid;
+    }
+    Array.from(node.children || []).forEach(stripRuntimeIds);
+  }
+  function firstNewEditableId(rootEl) {
+    if (!rootEl) return null;
+    if (rootEl.dataset && rootEl.dataset.cid) return rootEl.dataset.cid;
+    const child = rootEl.querySelector("[data-cid]");
+    return child ? child.dataset.cid : null;
+  }
+  function instantiateLibraryItem(item) {
+    if (!item) return;
+    if (item.patch && selected.length === 1) {
+      applyItemPatch(item);
+      return;
+    }
+    if (item.preset) {
+      applyGeoPreset(item.preset);
+      return;
+    }
+    if (item.value && ["colour", "token", "icon"].includes(item.tier)) {
+      applyAssetValue(item);
+      return;
+    }
+    if (!item.html) {
+      createEl(item.kind || "container");
+      return;
+    }
+    const parent = selectedContainerEl();
+    if (parent !== editableRoot() && getComputedStyle(parent).position === "static") parent.style.position = "relative";
+    const wrap = document.createElement("div");
+    wrap.innerHTML = item.html;
+    const clone = wrap.firstElementChild;
+    if (!clone) return;
+    pushHistory();
+    stripRuntimeIds(clone);
+    if (!clone.style.position || clone.style.position === "static") clone.style.position = "absolute";
+    const placement = nestedPlacement(parent);
+    clone.style.left = placement.x + "px";
+    clone.style.top = placement.y + "px";
+    clone.style.transform = "translate(0px, 0px)";
+    parent.appendChild(clone);
+    registerContainers();
+    const newId = firstNewEditableId(clone);
+    if (newId) {
+      st(newId).tier = item.tier || activeLibraryTier;
+      st(newId).kind = st(newId).kind || inferKind(clone);
+      revealInTree(newId);
+      select(newId);
+    }
+    applyAll(); renderTree(); renderLibrary(); save();
+  }
+  function applyAssetValue(item) {
+    if (item.tier === "icon" && (selected.length !== 1 || !["icon", "button", "text"].includes(st(selected[0]).kind || ""))) {
+      createEl("icon");
+    }
+    if (selected.length !== 1) return;
+    const s = st(selected[0]);
+    pushHistory();
+    if (item.tier === "colour") {
+      s.style = s.style || {};
+      if (item.target === "textColor") s.style.textColor = item.value;
+      else if (item.target === "borderColor") s.style.borderColor = item.value;
+      else {
+        s.style.bg = item.value;
+        s.style.bgA = s.style.bgA ?? 1;
+      }
+    } else if (item.tier === "icon") {
+      s.style = s.style || {};
+      if (item.svgPath) {
+        s.style.iconSvgPath = item.svgPath;
+        s.style.iconViewBox = item.viewBox || "0 0 24 24";
+        s.style.iconLabel = item.label || item.value || "Icon";
+        s.style.text = "";
+        s.kind = "icon";
+        const c = containers[selected[0]];
+        if (c && c.el) {
+          c.el.dataset.kind = "icon";
+          c.el.dataset.label = item.label || c.el.dataset.label || "Icon";
+          containers[selected[0]].label = c.el.dataset.label;
+        }
+      } else {
+        s.style.text = item.value;
+      }
+    } else if (item.tier === "token") {
+      if (item.patch) applyPatchToState(s, item.patch);
+      else if (/radius/i.test(item.label || "")) {
+        s.style = s.style || {};
+        s.style.radius = parseFloat(item.value);
+      }
+    }
+    applyAll(); renderOverlay(); renderInspector(); save();
+  }
+  function applyPatchToState(s, patch) {
+    if (!patch) return;
+    if (patch.kind) s.kind = patch.kind;
+    if (patch.tier) s.tier = patch.tier;
+    if (patch.width != null) s.width = patch.width;
+    if (patch.height != null) s.height = patch.height;
+    if (patch.padT !== undefined) s.padT = patch.padT;
+    if (patch.padR !== undefined) s.padR = patch.padR;
+    if (patch.padB !== undefined) s.padB = patch.padB;
+    if (patch.padL !== undefined) s.padL = patch.padL;
+    if (patch.gap !== undefined) s.gap = patch.gap;
+    if (patch.dir !== undefined) s.dir = patch.dir;
+    if (patch.style) s.style = Object.assign({}, s.style || {}, patch.style);
+  }
+  function applyItemPatch(item) {
+    if (selected.length !== 1) return;
+    pushHistory();
+    const id = selected[0];
+    const s = st(id);
+    applyPatchToState(s, item.patch);
+    const c = containers[id];
+    if (c && c.el && item.patch && item.patch.kind) c.el.dataset.kind = item.patch.kind;
+    applyAll(); renderOverlay(); renderInspector(); renderTree(); save();
+  }
+
+  let libraryDragItem = null;
+  function startLibraryItemDrag(e, item) {
+    libraryDragItem = item;
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "copy";
+      e.dataTransfer.setData("text/plain", item.id || item.label || "library-item");
+      const preview = e.currentTarget.querySelector("[data-library-preview]");
+      if (preview) e.dataTransfer.setDragImage(preview, Math.min(40, preview.clientWidth / 2), Math.min(28, preview.clientHeight / 2));
+    }
+  }
+  function endLibraryItemDrag() {
+    libraryDragItem = null;
+    activeDropIntent = null;
+    positionOutlines();
+  }
+  function libraryDragFeedback(e) {
+    if (!libraryDragItem) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+    const underId = topEditableUnderPoint(e.clientX, e.clientY, "");
+    if (underId) {
+      activeDropIntent = canAcceptChildren(underId)
+        ? { type: "nest", targetId: underId }
+        : { type: "reject", targetId: underId, reason: "cannot drop library item into " + (containers[underId]?.label || "leaf") };
+    } else {
+      activeDropIntent = null;
+    }
+    positionOutlines();
+  }
+  function instantiateLibraryItemAt(item, e) {
+    if (!item) return false;
+    if (!item.html) {
+      instantiateLibraryItem(item);
+      return true;
+    }
+    const wrap = document.createElement("div");
+    wrap.innerHTML = item.html;
+    const clone = wrap.firstElementChild;
+    if (!clone) return false;
+    pushHistory();
+    stripRuntimeIds(clone);
+    if (!clone.style.position || clone.style.position === "static") clone.style.position = "absolute";
+    clone.style.left = "0px";
+    clone.style.top = "0px";
+    clone.style.margin = "0";
+    clone.style.transform = "translate(0px, 0px)";
+    editableRoot().appendChild(clone);
+    registerContainers();
+    const newId = firstNewEditableId(clone);
+    if (!newId) return false;
+    const s = st(newId);
+    s.tier = item.tier || activeLibraryTier;
+    s.kind = s.kind || inferKind(clone);
+    applyAll();
+    const cr = clone.getBoundingClientRect();
+    const desired = {
+      left: e.clientX - cr.width / 2,
+      top: e.clientY - cr.height / 2,
+      right: e.clientX + cr.width / 2,
+      bottom: e.clientY + cr.height / 2,
+      width: cr.width,
+      height: cr.height
+    };
+    moveElementKeepingRect(newId, editableRoot(), null, desired);
+    registerContainers(); applyAll();
+    const previousDrag = drag;
+    drag = { id: newId, moveIds: [newId], sx: e.clientX, sy: e.clientY, startRect: rectOf(newId), gstart: { [newId]: { x: st(newId).x || 0, y: st(newId).y || 0 } } };
+    const intent = computeDropIntent(e);
+    commitDropIntent(intent, newId);
+    drag = previousDrag;
+    activeDropIntent = null;
+    revealInTree(newId);
+    select(newId);
+    renderLibrary();
+    save();
+    return true;
+  }
+  function dropLibraryItem(e) {
+    if (!libraryDragItem) return;
+    e.preventDefault();
+    instantiateLibraryItemAt(libraryDragItem, e);
+    libraryDragItem = null;
+    activeDropIntent = null;
+    renderOverlay();
+  }
+
+  let libraryPanelDrag = null;
+  function startLibraryPanelDrag(e) {
+    if (!libraryPanel) return;
+    e.preventDefault();
+    libraryPanelDrag = {
+      mode: "move",
+      sx: e.clientX,
+      sy: e.clientY,
+      x: libraryPanelState.x,
+      y: libraryPanelState.y,
+      w: libraryPanelState.w,
+      h: libraryPanelState.h
+    };
+  }
+  function startLibraryPanelResize(e) {
+    if (!libraryPanel) return;
+    e.preventDefault();
+    e.stopPropagation();
+    libraryPanelDrag = {
+      mode: "resize",
+      sx: e.clientX,
+      sy: e.clientY,
+      x: libraryPanelState.x,
+      y: libraryPanelState.y,
+      w: libraryPanelState.w,
+      h: libraryPanelState.h || libraryPanel.getBoundingClientRect().height
+    };
+  }
+  function moveLibraryPanel(e) {
+    if (!libraryPanelDrag) return;
+    const dx = e.clientX - libraryPanelDrag.sx;
+    const dy = e.clientY - libraryPanelDrag.sy;
+    if (libraryPanelDrag.mode === "resize") {
+      libraryPanelState.w = libraryPanelDrag.w + dx;
+      libraryPanelState.h = libraryPanelDrag.h + dy;
+    } else {
+      libraryPanelState.x = libraryPanelDrag.x + dx;
+      libraryPanelState.y = libraryPanelDrag.y + dy;
+    }
+    applyLibraryPanelState(false);
+  }
+  function endLibraryPanelMove() {
+    if (!libraryPanelDrag) return;
+    libraryPanelDrag = null;
+    save();
+  }
+  function saveSelectionAs(tier) {
+    if (selected.length !== 1) return;
+    const id = selected[0];
+    const c = containers[id];
+    if (!c || !c.el) return;
+    const clone = c.el.cloneNode(true);
+    stripRuntimeIds(clone);
+    const entry = {
+      id: `${tier}-${Date.now()}-${nextId++}`,
+      tier,
+      label: `${c.label || TIER_LABEL[tier]} ${TIER_LABEL[tier]}`,
+      source: "Saved from canvas",
+      kind: st(id).kind || inferKind(c.el),
+      html: clone.outerHTML
+    };
+    libraries[tier] = [entry, ...(libraries[tier] || [])];
+    st(id).tier = tier;
+    activeLibraryTier = tier;
+    setLibraryTier(tier);
+    renderInspector();
+    save();
+  }
+  function applyGeoPreset(preset) {
+    if (selected.length !== 1) return;
+    const s = st(selected[0]);
+    s.style = s.style || {};
+    if (preset === "overlay-card") {
+      s.kind = s.kind === "container" ? "card" : s.kind;
+      Object.assign(s.style, { bg:"#121518", bgA:0.55, textColor:"#f4f0e8", borderColor:"#ffffff", borderA:0.2, radius:12, border:1, blur:20, saturation:145, shadowA:0.24, shadowBlur:80, shadowY:24 });
+      s.padT = s.padT ?? 30; s.padR = s.padR ?? 30; s.padB = s.padB ?? 30; s.padL = s.padL ?? 30;
+    } else if (preset === "navigator") {
+      s.kind = s.kind === "container" ? "menu" : s.kind;
+      Object.assign(s.style, { bg:"#121518", bgA:0.1, textColor:"#ffffff", borderColor:"#ffffff", borderA:0.16, radius:999, border:1, blur:20, saturation:145 });
+      s.padT = s.padT ?? 7; s.padR = s.padR ?? 10; s.padB = s.padB ?? 7; s.padL = s.padL ?? 10;
+      s.dir = s.dir || "row"; s.gap = s.gap ?? 8;
+    } else if (preset === "editor-chrome") {
+      s.kind = s.kind === "container" ? "panel" : s.kind;
+      Object.assign(s.style, { bg:"#121518", bgA:0.528, textColor:"#f4f0e8", borderColor:"#ffffff", borderA:0.2, radius:34, border:1, blur:20, saturation:145, shadowA:0.24, shadowBlur:80, shadowY:24 });
+      s.padT = s.padT ?? 14; s.padR = s.padR ?? 14; s.padB = s.padB ?? 14; s.padL = s.padL ?? 14;
+      s.gap = s.gap ?? 10;
+    } else if (preset === "label") {
+      Object.assign(s.style, { bg:"#11161b", bgA:0.72, textColor:"#f6f1e8", borderColor:"#ffffff", borderA:0.42, radius:6, border:1 });
+      s.padT = s.padT ?? 4; s.padR = s.padR ?? 8; s.padB = s.padB ?? 4; s.padL = s.padL ?? 8;
+    }
+    applyAll(); renderOverlay(); renderInspector(); renderTree(); save();
+  }
+
   // ---- inspector ----
   const $ = id => document.getElementById(id);
   function renderInspector() {
-    const kindS = $("kindSec"), geo = $("geoSec"), box = $("boxSec"), sty = $("styleSec"), notes = $("notesSec"), info = $("selInfo");
+    const kindS = $("kindSec"), tierS = $("tierSec"), presetS = $("presetSec"), geo = $("geoSec"), box = $("boxSec"), sty = $("styleSec"), notes = $("notesSec"), info = $("selInfo");
     if (selected.length !== 1) {
-      kindS.style.display = geo.style.display = box.style.display = sty.style.display = notes.style.display = "none";
+      kindS.style.display = tierS.style.display = presetS.style.display = geo.style.display = box.style.display = sty.style.display = notes.style.display = "none";
       info.textContent = selected.length>1 ? selected.length + " selected" : "No selection.";
       return;
     }
     const id = selected[0]; const c = containers[id]; const s = st(id); const r = rectOf(id) || {width:0,height:0};
     info.innerHTML = `<strong>${c.label}</strong> <span class="pill">${id}</span>`;
     kindS.style.display = c.el ? "" : "none";
+    tierS.style.display = c.el ? "" : "none";
+    presetS.style.display = c.el ? "" : "none";
     geo.style.display = ""; box.style.display = c.el ? "" : "none"; sty.style.display = c.el ? "" : "none";
     notes.style.display = "";
     $("inKind").value = s.kind || "container";
+    $("inTier").value = s.tier || inferTier(s.kind || "container");
+    $("geoPreset").value = "";
     const noteState = s.notes || s["ai"] || {};
     $("inNoteName").value = noteState.name || "";
     $("inNoteIntent").value = noteState.intent || "";
     $("inX").value = Math.round(s.x||0); $("inY").value = Math.round(s.y||0);
     $("inW").value = Math.round(s.width ?? r.width); $("inH").value = Math.round(s.height ?? r.height);
-    $("inPadT").value = s.padT ?? ""; $("inPadR").value = s.padR ?? "";
-    $("inPadB").value = s.padB ?? ""; $("inPadL").value = s.padL ?? "";
+    $("inPadT").value = s.padT ?? cssPx(c.el, "paddingTop") ?? ""; $("inPadR").value = s.padR ?? cssPx(c.el, "paddingRight") ?? "";
+    $("inPadB").value = s.padB ?? cssPx(c.el, "paddingBottom") ?? ""; $("inPadL").value = s.padL ?? cssPx(c.el, "paddingLeft") ?? "";
     $("inGap").value = s.gap ?? ""; $("inDir").value = s.dir ?? "";
     const pid = c.el ? currentParentId(id) : null;
     $("parentInfo").textContent = pid ? ("Nested in: " + (containers[pid]?.label || pid)) : "Top level (host root)";
     const stl = s.style || {};
     $("inBg").value = stl.bg || "#1c2024"; $("inBgA").value = stl.bgA != null ? stl.bgA : 1;
+    $("inOpacity").value = stl.opacity != null ? stl.opacity : 1; $("opacityVal").textContent = Math.round(($("inOpacity").value) * 100) + "%";
     $("inRad").value = stl.radius ?? 8; $("radVal").textContent = ($("inRad").value)+"px";
     $("inBord").value = stl.border ?? 1; $("bordVal").textContent = ($("inBord").value)+"px";
+    $("inBorderColor").value = stl.borderColor || "#ffffff"; $("inBorderA").value = stl.borderA != null ? stl.borderA : 0.2;
+    $("inTextColor").value = stl.textColor || "#f4f0e8";
     $("inText").value = stl.text ?? "";
+    $("inFontFamily").value = stl.fontFamily || "";
+    $("inFontSize").value = stl.fontSize ?? "";
+    $("inFontWeight").value = stl.fontWeight || "";
+    $("inBlur").value = stl.blur != null ? stl.blur : 0; $("blurVal").textContent = ($("inBlur").value) + "px";
+    $("inSaturation").value = stl.saturation != null ? stl.saturation : 100; $("satVal").textContent = ($("inSaturation").value) + "%";
+    $("inShadowA").value = stl.shadowA != null ? stl.shadowA : 0; $("shadowVal").textContent = Math.round(($("inShadowA").value) * 100) + "%";
+    $("inShadowBlur").value = stl.shadowBlur != null ? stl.shadowBlur : 0;
+    $("inShadowY").value = stl.shadowY != null ? stl.shadowY : 0;
+    $("inLineWidth").value = stl.lineWidth != null ? stl.lineWidth : (s.kind === "line" ? 2 : 1); $("lineVal").textContent = ($("inLineWidth").value) + "px";
     $("inLock").checked = !!s.locked;
   }
   function bindNum(elId, fn) { $(elId).addEventListener("input", () => { if(selected.length!==1) return;
@@ -1064,17 +2897,36 @@
     applyAll(); renderOverlay(); renderInspector(); save(); });
   $("inKind").addEventListener("change", () => { if(selected.length!==1) return;
     pushHistory(); const id = selected[0]; const s = st(id); s.kind = $("inKind").value;
+    s.tier = s.tier || inferTier(s.kind);
     const c = containers[id]; if (c && c.el) c.el.dataset.kind = s.kind;
     renderTree(); renderInspector(); save(); });
+  $("inTier").addEventListener("change", () => { if(selected.length!==1) return;
+    const s = st(selected[0]); s.tier = $("inTier").value; save(); });
+  $("geoPreset").addEventListener("change", () => { if(selected.length!==1 || !$("geoPreset").value) return;
+    pushHistory(); applyGeoPreset($("geoPreset").value); });
+  $("saveComponent").addEventListener("click", () => saveSelectionAs("component"));
+  $("saveAssembly").addEventListener("click", () => saveSelectionAs("assembly"));
+  $("saveProduct").addEventListener("click", () => saveSelectionAs("product"));
   function bindNote(elId, key){ $(elId).addEventListener("input", ()=>{ if(selected.length!==1) return;
     const s = st(selected[0]); s.notes = s.notes||{}; s.notes[key] = $(elId).value; save(); }); }
   bindNote("inNoteName","name"); bindNote("inNoteIntent","intent");
-  function bindStyle(elId, key, fn) { $(elId).addEventListener("input", () => { if(selected.length!==1) return;
+  function bindStyle(elId, key, fn) {
+    const apply = () => { if(selected.length!==1) return;
     const s = st(selected[0]); s.style = s.style||{}; s.style[key] = fn ? fn($(elId).value) : $(elId).value;
-    applyAll(); renderOverlay(); renderInspector(); save(); }); }
+    applyAll(); renderOverlay(); renderInspector(); save(); };
+    $(elId).addEventListener("input", apply);
+    $(elId).addEventListener("change", apply);
+  }
   bindStyle("inBg","bg"); bindStyle("inBgA","bgA", parseFloat);
+  bindStyle("inOpacity","opacity", parseFloat);
   bindStyle("inRad","radius", parseFloat); bindStyle("inBord","border", parseFloat);
-  bindStyle("inText","text");
+  bindStyle("inBorderColor","borderColor"); bindStyle("inBorderA","borderA", parseFloat);
+  bindStyle("inTextColor","textColor"); bindStyle("inText","text");
+  bindStyle("inFontFamily","fontFamily"); bindStyle("inFontSize","fontSize", v => num(parseFloat(v)));
+  bindStyle("inFontWeight","fontWeight");
+  bindStyle("inBlur","blur", parseFloat); bindStyle("inSaturation","saturation", parseFloat);
+  bindStyle("inShadowA","shadowA", parseFloat); bindStyle("inShadowBlur","shadowBlur", parseFloat); bindStyle("inShadowY","shadowY", parseFloat);
+  bindStyle("inLineWidth","lineWidth", parseFloat);
   $("inLock").addEventListener("change", () => { if(selected.length!==1) return;
     st(selected[0]).locked = $("inLock").checked; renderOverlay(); save(); });
 
@@ -1086,10 +2938,43 @@
   $("btnGrid").addEventListener("click", () => { document.body.classList.toggle("show-grid");
     $("btnGrid").classList.toggle("on", document.body.classList.contains("show-grid")); });
   $("btnSnap").addEventListener("click", () => { snapEnabled = !snapEnabled; $("btnSnap").classList.toggle("on", snapEnabled); });
+  document.querySelectorAll("[data-mode]").forEach(btn => {
+    btn.addEventListener("click", () => setMode(btn.dataset.mode));
+  });
+  document.querySelectorAll("[data-library-tab]").forEach(btn => {
+    btn.addEventListener("click", () => setLibraryTier(btn.dataset.libraryTab));
+  });
+  if (libraryPreviewScaleInput) {
+    libraryPreviewScaleInput.addEventListener("input", () => setLibraryPreviewScale(libraryPreviewScaleInput.value));
+  }
+  if (librarySearch) {
+    librarySearch.addEventListener("input", () => setLibraryQuery(librarySearch.value));
+  }
+  if (libraryDragHandle) {
+    libraryDragHandle.addEventListener("pointerdown", startLibraryPanelDrag);
+  }
+  if (libraryResizeHandle) {
+    libraryResizeHandle.addEventListener("pointerdown", startLibraryPanelResize);
+  }
+  $("btnBgUrl").addEventListener("click", () => loadBackgroundUrl(bgUrlInput.value, "url bg"));
+  $("btnBgImage").addEventListener("click", () => bgImageInput.click());
+  $("btnBgClear").addEventListener("click", () => { stageBackground = null; applyStageBackground(true); });
+  bgImageInput.addEventListener("change", () => {
+    const file = bgImageInput.files && bgImageInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.addEventListener("load", () => loadBackgroundUrl(reader.result, file.name || "file bg"));
+    reader.readAsDataURL(file);
+  });
   $("btnAdd").addEventListener("click", addContainer);
   $("addText").addEventListener("click", ()=>createEl("text"));
   $("addRect").addEventListener("click", ()=>createEl("rect"));
   $("addEllipse").addEventListener("click", ()=>createEl("ellipse"));
+  $("addLine").addEventListener("click", ()=>createEl("line"));
+  $("addIcon").addEventListener("click", ()=>createEl("icon"));
+  $("addDivider").addEventListener("click", ()=>createEl("divider"));
+  $("addSwatch").addEventListener("click", ()=>createEl("swatch"));
+  $("addInput").addEventListener("click", ()=>createEl("input"));
   $("addRow").addEventListener("click", ()=>createEl("row"));
   $("btnGroup").addEventListener("click", groupSelection);
   $("btnUngroup").addEventListener("click", ungroupSelection);
@@ -1130,25 +3015,84 @@
 
   // ---- rulers ----
   function renderRulers() {
-    const w = stage.clientWidth, h = stage.clientHeight;
     let html = "";
-    for (let x=0; x<=w; x+=50) html += `<div class="tick" style="left:${x}px">${x}</div>`;
+    for (let x=0; x<=BASE_STAGE_W; x+=50) html += `<div class="tick" style="left:${Math.round(x * stageZoom)}px">${x}</div>`;
     rulerTop.innerHTML = html;
     html = "";
-    for (let y=0; y<=h; y+=50) html += `<div class="tick" style="top:${y}px">${y}</div>`;
+    for (let y=0; y<=BASE_STAGE_H; y+=50) html += `<div class="tick" style="top:${Math.round(y * stageZoom)}px">${y}</div>`;
     rulerLeft.innerHTML = html;
+  }
+  function applyStageZoom(persist = true) {
+    stageZoom = clamp(Number(stageZoom) || 1, 0.25, 3);
+    stage.style.width = Math.round(BASE_STAGE_W * stageZoom) + "px";
+    stage.style.height = Math.round(BASE_STAGE_H * stageZoom) + "px";
+    stage.style.setProperty("--stage-zoom", stageZoom);
+    stagePlane.style.setProperty("--stage-zoom", stageZoom);
+    document.body.dataset.stageZoom = String(stageZoom);
+    if (zoomState) zoomState.textContent = Math.round(stageZoom * 100) + "%";
+    renderRulers();
+    renderOverlay();
+    if (persist) save();
+  }
+  function setStageZoom(nextZoom, anchorEvent) {
+    const oldZoom = stageZoom;
+    const wrapRect = stageWrap.getBoundingClientRect();
+    const localX = anchorEvent ? anchorEvent.clientX - wrapRect.left + stageWrap.scrollLeft - 22 : stageWrap.scrollLeft;
+    const localY = anchorEvent ? anchorEvent.clientY - wrapRect.top + stageWrap.scrollTop - 22 : stageWrap.scrollTop;
+    const anchorX = localX / oldZoom;
+    const anchorY = localY / oldZoom;
+    stageZoom = clamp(nextZoom, 0.25, 3);
+    applyStageZoom(false);
+    if (anchorEvent) {
+      stageWrap.scrollLeft = Math.max(0, anchorX * stageZoom - (anchorEvent.clientX - wrapRect.left) + 22);
+      stageWrap.scrollTop = Math.max(0, anchorY * stageZoom - (anchorEvent.clientY - wrapRect.top) + 22);
+    }
+    save();
+  }
+  function applyStageBackground(persist = true) {
+    if (stageBackground && stageBackground.image) {
+      stage.style.setProperty("--stage-bg-image", `url("${cssUrl(stageBackground.image)}")`);
+      document.body.dataset.stageBackground = "true";
+      if (bgState) bgState.textContent = stageBackground.name || "bg loaded";
+    } else {
+      stage.style.setProperty("--stage-bg-image", "none");
+      document.body.dataset.stageBackground = "false";
+      if (bgState) bgState.textContent = "no bg";
+    }
+    if (persist) save();
+  }
+  function loadBackgroundUrl(value, name) {
+    const image = String(value || "").trim();
+    if (!image) return;
+    stageBackground = { image, name:name || "bg loaded" };
+    applyStageBackground(true);
   }
 
   // ---- boot ----
   load();
+  setMode(editorMode, false);
+  setLibraryPreviewScale(libraryPreviewScale, false);
+  setLibraryQuery(libraryQuery, false);
+  applyLibraryPanelState(false);
+  applyStageZoom(false);
+  applyStageBackground(false);
+  setLibraryTier(activeLibraryTier);
   registerContainers();
   applyAll();
   renderRulers();
   renderOverlay();
   renderInspector();
   renderTree();
-  window.addEventListener("resize", () => { renderRulers(); renderOverlay(); });
+  renderBehaviorLog();
+  renderLibrary();
+  loadPackageLibraryEntries();
+  window.addEventListener("resize", () => { applyLibraryPanelState(false); renderRulers(); renderOverlay(); });
   stageWrap.addEventListener("scroll", renderOverlay);
+  stageWrap.addEventListener("wheel", e => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+    setStageZoom(stageZoom * factor, e);
+  }, { passive:false });
 })();
 </script>
 </body>

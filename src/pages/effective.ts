@@ -198,6 +198,39 @@ export function mergeSceneProperties(
   if (patch.vignette) {
     next.vignette = { ...(base?.vignette ?? {}), ...patch.vignette };
   }
+  if (patch.depthOfField) {
+    next.depthOfField = {
+      ...(base?.depthOfField ?? {}),
+      ...patch.depthOfField,
+    };
+  }
+  if (patch.tiltShift) {
+    next.tiltShift = { ...(base?.tiltShift ?? {}), ...patch.tiltShift };
+  }
+  if (patch.lensEffects) {
+    next.lensEffects = {
+      ...(base?.lensEffects ?? {}),
+      ...patch.lensEffects,
+    };
+  }
+  if (patch.motionTrails) {
+    next.motionTrails = {
+      ...(base?.motionTrails ?? {}),
+      ...patch.motionTrails,
+    };
+  }
+  if (patch.presentationFrame) {
+    next.presentationFrame = {
+      ...(base?.presentationFrame ?? {}),
+      ...patch.presentationFrame,
+    };
+  }
+  if (patch.compositionGuides) {
+    next.compositionGuides = {
+      ...(base?.compositionGuides ?? {}),
+      ...patch.compositionGuides,
+    };
+  }
   if (patch.sun) next.sun = { ...(base?.sun ?? {}), ...patch.sun };
   if (patch.topoDetails) {
     next.topoDetails = { ...(base?.topoDetails ?? {}), ...patch.topoDetails };

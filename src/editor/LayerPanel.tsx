@@ -25,6 +25,7 @@ import {
   layerItemStyle,
 } from "./layerControls/layout/layoutStyles";
 import {
+  ATMOSPHERE_VOLUME_FIELDS,
   CLASSIFICATIONS,
   CONFIDENTIALITIES,
   CONTOUR_DISTANCE_STYLE_CONTROLS,
@@ -54,6 +55,10 @@ import {
   UTAH_FORGE_SCALAR_LAYER_IDS,
   type LayerDataSection,
 } from "./layerControls/layerPanelConfig";
+import {
+  AtmosphereVolumeControls,
+  atmosphereVolumePatchFromStyle,
+} from "./layerControls/atmosphere/AtmosphereVolumeControls";
 import {
   editorLayerLabel,
   editorLayerTypeLabel,
@@ -393,6 +398,7 @@ export function LayerPanel({
     const isShahbaziGroundContours =
       layer.id === SHAHBAZI_GROUND_CONTOUR_LAYER_ID;
     const isPointCloud = layer.type === "pointcloud";
+    const isAtmosphereVolume = layer.type === "atmosphere-volume";
     const isUtahForgeStationMarkers =
       layer.id === UTAH_FORGE_MT_STATIONS_LAYER_ID;
     const isUtahForgeScalarLayer = UTAH_FORGE_SCALAR_LAYER_IDS.has(layer.id);
@@ -409,7 +415,9 @@ export function LayerPanel({
     const isUtahForgeSeismicBrowser =
       layer.id === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID;
     const hasSpecializedOpacityOwner =
-      isUtahForgeMtVolume || isUtahForgeMtThresholdSurfaces;
+      isUtahForgeMtVolume ||
+      isUtahForgeMtThresholdSurfaces ||
+      isAtmosphereVolume;
     const isTopoMapGraticule = isTopoMapGraticuleLayer(layer);
     const isPublicTerrainSurface = isTopoMapSurfaceLayer(layer);
     const isPublicSurfaceContextLayer = isTopoMapLayer(layer);
@@ -467,6 +475,11 @@ export function LayerPanel({
     const seismicBrowserOverridden =
       currentPage !== null &&
       SEISMIC_BROWSER_FIELDS.some((field) =>
+        isStyleFieldOverridden(currentPage, layer.id, field),
+      );
+    const atmosphereVolumeOverridden =
+      currentPage !== null &&
+      ATMOSPHERE_VOLUME_FIELDS.some((field) =>
         isStyleFieldOverridden(currentPage, layer.id, field),
       );
 
@@ -552,7 +565,8 @@ export function LayerPanel({
                 <details style={nestedDetailsStyle}>
                   <summary style={panelStyles.summary}>Appearance</summary>
                   <div style={detailsContentStyle}>
-                    {!isUtahForgeSeismicBrowser &&
+                    {!isAtmosphereVolume &&
+                    !isUtahForgeSeismicBrowser &&
                     !isPublicTerrainSurface &&
                     isEnv ? (
                       <EnvStyleRow
@@ -563,7 +577,8 @@ export function LayerPanel({
                           setEnvLayerStyle(layer.id, { color: v })
                         }
                       />
-                    ) : !isUtahForgeSeismicBrowser &&
+                    ) : !isAtmosphereVolume &&
+                      !isUtahForgeSeismicBrowser &&
                       !isPublicTerrainSurface &&
                       currentPage ? (
                       <PageStyleRow
@@ -598,6 +613,43 @@ export function LayerPanel({
                             "color",
                           )
                         }
+                      />
+                    ) : null}
+
+                    {isAtmosphereVolume ? (
+                      <AtmosphereVolumeControls
+                        layerId={layer.id}
+                        style={isEnv ? envStyle : effectiveLayerStyle}
+                        isEnv={isEnv}
+                        currentPage={currentPage}
+                        disabled={!isEnv && !atmosphereVolumeOverridden}
+                        overridden={atmosphereVolumeOverridden}
+                        onToggleOverride={
+                          currentPage
+                            ? (enabled) => {
+                                if (enabled) {
+                                  setPageLayerOverride(
+                                    currentPage.id,
+                                    layer.id,
+                                    atmosphereVolumePatchFromStyle(
+                                      effectiveLayerStyle,
+                                    ),
+                                  );
+                                } else {
+                                  for (const field of ATMOSPHERE_VOLUME_FIELDS) {
+                                    clearPageLayerOverride(
+                                      currentPage.id,
+                                      layer.id,
+                                      field,
+                                    );
+                                  }
+                                }
+                              }
+                            : undefined
+                        }
+                        setEnvLayerStyle={setEnvLayerStyle}
+                        setPageLayerOverride={setPageLayerOverride}
+                        clearPageLayerOverride={clearPageLayerOverride}
                       />
                     ) : null}
 

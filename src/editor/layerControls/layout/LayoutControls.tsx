@@ -144,6 +144,13 @@ function LayerGroupTitleIcon({ title }: { title: string }) {
 
 function layerGroupIconForTitle(title: string): React.ReactNode {
   const normalized = title.toLowerCase();
+  if (normalized === "environment") {
+    return (
+      <>
+        <path d="M17.5 19H8a5 5 0 1 1 1.2-9.85A6.5 6.5 0 0 1 21 12.5 3.5 3.5 0 0 1 17.5 19Z" />
+      </>
+    );
+  }
   if (
     normalized.includes("topo settings") ||
     normalized.includes("topo map") ||

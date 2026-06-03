@@ -124,6 +124,12 @@ const CINEMATIC_SCENE_PATCH_KEYS = [
   "ambientOcclusion",
   "vignette",
   "colorGrade",
+  "depthOfField",
+  "tiltShift",
+  "lensEffects",
+  "motionTrails",
+  "presentationFrame",
+  "compositionGuides",
   "gui",
 ] as const satisfies readonly (keyof SceneProperties)[];
 

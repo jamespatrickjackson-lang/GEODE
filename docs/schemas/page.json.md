@@ -116,6 +116,59 @@ scalar, seismic, coordinate, loader, or computed-artifact behavior.
 button reads the current Three.js camera state and writes these values
 directly. You should rarely edit them by hand.
 
+### Dynamic camera
+
+Optional page-local motion that plays after the authored page pose is active.
+All values are presentation-only and do not affect source coordinates or data
+products.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `dynamicCamera.enabled` | boolean | no | Master toggle for page-local dynamic movement. |
+| `dynamicCamera.orbitEnabled` | boolean | no | Enables the existing orbit move around `dynamicCamera.poi` or the page target. |
+| `dynamicCamera.zoomEnabled` | boolean | no | Enables timed FOV zoom via `zoomDeltaFov`, `zoomStartMs`, `zoomEndMs`, and `zoomCurve`. |
+| `dynamicCamera.dollyEnabled` | boolean | no | Enables a camera-local forward/back move. |
+| `dynamicCamera.dollyDistanceM` | number | no | Metres to move camera and target along the view direction. |
+| `dynamicCamera.truckEnabled` | boolean | no | Enables a camera-local right/left move. |
+| `dynamicCamera.truckDistanceM` | number | no | Metres to move camera and target along camera-right. |
+| `dynamicCamera.craneEnabled` | boolean | no | Enables an up/down move. |
+| `dynamicCamera.craneHeightM` | number | no | Metres to move camera and target along the page up vector. |
+| `dynamicCamera.shotStartMs` | number | no | Start offset for dolly/truck/crane shot axes. |
+| `dynamicCamera.shotEndMs` | number | no | End offset for dolly/truck/crane shot axes. |
+| `dynamicCamera.shotCurve` | string | no | `"linear"`, `"smooth"`, or `"cinematic"`. |
+| `dynamicCamera.handheldEnabled` | boolean | no | Enables subtle camera-local drift after the authored pose is active. |
+| `dynamicCamera.handheldAmplitudeM` | number | no | Maximum drift amplitude in scene metres. |
+| `dynamicCamera.handheldFrequencyHz` | number | no | Drift frequency in cycles per second. |
+| `dynamicCamera.rollDeg` | number | no | Rotates the camera up vector around the view direction for Dutch-angle polish. |
+
+### Scene overrides
+
+`sceneOverrides` may carry page-local cinematic scene fields. These fields
+merge over the resolved environment/Sub Master scene and active render preset.
+They are aesthetic controls only.
+
+Common cinematic keys include `camera.lensPreset`, `camera.fov`,
+`depthOfField`, `tiltShift`, `lensEffects`, `motionTrails`,
+`presentationFrame`, expanded `colorGrade`, `compositionGuides`, `bloom`,
+`ambientOcclusion`, `vignette`, `toneMapping`, and `exposure`.
+
+`depthOfField.focusMode` may be `"page-target"`, `"camera-object"`,
+`"manual-distance"`, or `"picked-point"`. `"camera-object"` resolves to the
+page's saved `cameraObjectFocus.worldPoint` when present, then falls back to an
+authored focus point or page target. `focusOffsetM` shifts the resolved focus
+distance forward or backward; `debugFocusPlane` is a default-off helper with
+optional `debugFocusPlaneOpacity` and `debugFocusPlaneScale` controls.
+
+`compositionGuides.lineThickness` defaults to `0.25` and drives the
+runtime guide stroke width in the lens-grade pass.
+
+During page navigation, numeric cinematic post fields blend through the
+`main-camera/cinematic-post` transition channel using the page's
+`transition.duration` and `transition.easing`. Composition guides and lens
+preset labels are discrete. Dolly, truck, crane, handheld, and roll are timed
+camera-motion fields controlled by `dynamicCamera.shotStartMs`,
+`dynamicCamera.shotEndMs`, and `dynamicCamera.shotCurve`.
+
 ### Transition
 
 How the camera moves from the *previous* page to *this* page. The first
@@ -149,14 +202,22 @@ arrives, before transitioning to the next.
 ### Layer overrides (optional)
 
 Per-page style adjustments. Useful when one page wants to dim background
-context while emphasizing a hero layer.
+context while emphasizing a hero layer. The base style comes from
+`environment.layerStyles[<layerId>]`; `project.json` should retain stable layer
+identity, files, provenance, and immutable placement metadata instead of
+mutable top-level style. This applies to `atmosphere-volume` environmental
+layers as well as data layers.
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `layerOverrides` | object | no | Map of `layerId → partial style object`. Any field omitted falls back to the layer's default style from `project.json`. |
+| `layerOverrides` | object | no | Map of `layerId → partial style object`. Any field omitted falls back to the layer's default style from `environment.layerStyles`. |
 
 Override fields are the same as the per-type style fields documented in
-`project.json.md`. Most commonly overridden: `opacity`, `color`.
+`project.json.md` and the mutable fields stored in `environment.layerStyles`.
+Most commonly overridden: `opacity`, `color`. For `atmosphere-volume`, page
+overrides can also tune environmental style such as density, softness, puff
+count, edge fade, drift, depth test, and render order while leaving immutable
+local bounds in `project.json` metadata.
 
 ### Overlay
 

@@ -534,7 +534,7 @@ export async function loadTerrain(
   const terrainMesh = new THREE.Mesh(new THREE.BufferGeometry(), terrainHandle.material);
   terrainMesh.name = "terrain-surface";
   terrainMesh.castShadow = false;
-  terrainMesh.receiveShadow = false;
+  terrainMesh.receiveShadow = true;
   terrainMesh.userData.terrainHandle = terrainHandle;
   terrainMesh.userData.terrainUtmBounds = bbox;
   terrainMesh.userData.terrainBaseZ = terrainMesh.position.z;

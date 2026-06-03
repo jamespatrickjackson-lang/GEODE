@@ -219,7 +219,40 @@ export const SCALAR_TRANSITION_STYLE_FIELDS: readonly (keyof EditableStyle)[] = 
   "sectionIsoBandOpacity",
   "sectionIsoFillOffset",
   "sectionIsoSourceOpacity",
+  "atmosphereDensity",
+  "atmosphereSoftness",
+  "atmospherePuffCount",
+  "atmospherePuffScaleM",
+  "atmosphereScaleJitter",
+  "atmosphereVerticalFalloff",
+  "atmosphereEdgeFade",
+  "atmosphereSeed",
+  "atmosphereDriftSpeedMps",
+  "atmosphereDriftDirectionX",
+  "atmosphereDriftDirectionY",
+  "atmosphereDriftDirectionZ",
+  "atmosphereRenderOrder",
 ];
+
+const LOCAL_ATMOSPHERE_DISCRETE_STYLE_FIELDS: readonly (keyof EditableStyle)[] =
+  [
+    "atmosphereSubtype",
+    "atmosphereBoundsMode",
+    "atmosphereBoundsCenterX",
+    "atmosphereBoundsCenterY",
+    "atmosphereBoundsCenterZ",
+    "atmosphereBoundsSizeX",
+    "atmosphereBoundsSizeY",
+    "atmosphereBoundsSizeZ",
+    "atmosphereDensity",
+    "atmosphereSoftness",
+    "atmospherePuffCount",
+    "atmospherePuffScaleM",
+    "atmosphereScaleJitter",
+    "atmosphereVerticalFalloff",
+    "atmosphereEdgeFade",
+    "atmosphereSeed",
+  ];
 
 export function scalarStyleNumber(
   style: EditableStyle,
@@ -572,6 +605,13 @@ export function forgeDiscreteDataStyleChanged(
       fromStyle,
       toStyle,
       TOPO_MAP_GRATICULE_EDGE_STYLE_FIELDS,
+    );
+  }
+  if (layerSpec?.type === "atmosphere-volume") {
+    return styleFieldsChanged(
+      fromStyle,
+      toStyle,
+      LOCAL_ATMOSPHERE_DISCRETE_STYLE_FIELDS,
     );
   }
   if (!UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS.has(layerId)) return false;

@@ -110,6 +110,7 @@
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-mt-top-surface": false,
     "utah-forge-phase3-seismic-browser": false,
+    "utah-forge-topo-clouds": true,
     "naip-2024-tile-diagnostics": false,
     "utah-forge-phase3-demo-boreholes": true
   },

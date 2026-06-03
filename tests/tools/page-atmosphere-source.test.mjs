@@ -27,8 +27,8 @@ test("topo atmosphere controls can author selected-page scene overrides", () => 
   );
   assert.match(
     topoPanel,
-    /<summary[^>]*>\s*Atmosphere\s*<\/summary>/,
-    "Topo page controls should expose an Atmosphere section.",
+    /data-testid="topo-environment-controls"[\s\S]*<span>Environment<\/span>/,
+    "Topo page controls should expose an Environment section for atmosphere authoring.",
   );
   assert.doesNotMatch(
     topoPanel,

@@ -18,6 +18,7 @@ import { isTopoMapLayer } from "../../topoMap/settings";
 export const CLASSIFICATIONS = [
   "observation",
   "interpretation",
+  "environmental",
   "narrative",
   "planned",
 ] as const;
@@ -308,6 +309,34 @@ export const MT_VOLUME_FIELDS = [
   "sectionIsoFillOffset",
   "sectionIsoSourceOpacity",
   "scalarLegendVisible",
+  "opacity",
+] as const satisfies readonly (keyof EditableStyle)[];
+export const ATMOSPHERE_VOLUME_FIELDS = [
+  "atmosphereSubtype",
+  "atmosphereBoundsMode",
+  "atmosphereBoundsCenterX",
+  "atmosphereBoundsCenterY",
+  "atmosphereBoundsCenterZ",
+  "atmosphereBoundsSizeX",
+  "atmosphereBoundsSizeY",
+  "atmosphereBoundsSizeZ",
+  "atmosphereDensity",
+  "atmosphereSoftness",
+  "atmospherePuffCount",
+  "atmospherePuffScaleM",
+  "atmosphereScaleJitter",
+  "atmosphereVerticalFalloff",
+  "atmosphereEdgeFade",
+  "atmosphereSeed",
+  "atmosphereDriftEnabled",
+  "atmosphereDriftSpeedMps",
+  "atmosphereDriftDirectionX",
+  "atmosphereDriftDirectionY",
+  "atmosphereDriftDirectionZ",
+  "atmosphereDepthTest",
+  "atmosphereRenderOrder",
+  "atmosphereBoundsHelperVisible",
+  "color",
   "opacity",
 ] as const satisfies readonly (keyof EditableStyle)[];
 export const MT_THRESHOLD_SURFACE_FIELDS = [

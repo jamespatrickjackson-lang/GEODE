@@ -591,6 +591,26 @@ const CAMERA_FOCUS_EASINGS = [
   "easeOutQuart",
 ] as const;
 
+const LENS_PRESETS = [
+  { id: "ultra-wide", label: "Ultra Wide", fov: 75 },
+  { id: "wide", label: "Wide", fov: 62 },
+  { id: "documentary", label: "Documentary", fov: 54 },
+  { id: "standard", label: "Standard", fov: 45 },
+  { id: "portrait", label: "Portrait", fov: 35 },
+  { id: "tele", label: "Tele", fov: 25 },
+] as const;
+
+const COLOR_FILTER_PRESETS = [
+  ["none", "None"],
+  ["warm", "Warm"],
+  ["cool", "Cool"],
+  ["bleach", "Bleach"],
+  ["noir", "Noir"],
+  ["teal-orange", "Teal Orange"],
+  ["sepia", "Sepia"],
+  ["infrared", "Infrared"],
+] as const;
+
 function cameraFocusNumber(
   value: number | undefined,
   fallback: number,
@@ -666,6 +686,7 @@ interface CameraSetupPanelProps {
   onActivate?: () => void;
   accentColor?: string | null;
   topSlot?: React.ReactNode;
+  content?: "camera" | "post";
   scene: SceneProperties;
   setScene: (patch: Partial<SceneProperties>) => void;
 }
@@ -1586,6 +1607,7 @@ export function CameraSetupPanel({
   onActivate,
   accentColor,
   topSlot,
+  content = "camera",
   scene,
   setScene,
 }: CameraSetupPanelProps) {
@@ -1598,6 +1620,60 @@ export function CameraSetupPanel({
     setScene({ colorGrade: { ...(scene.colorGrade ?? {}), ...patch } });
   const setBloom = (patch: NonNullable<SceneProperties["bloom"]>) =>
     setScene({ bloom: { ...(scene.bloom ?? {}), ...patch } });
+  const setDepthOfField = (
+    patch: NonNullable<SceneProperties["depthOfField"]>,
+  ) =>
+    setScene({
+      depthOfField: {
+        ...(scene.depthOfField ?? {}),
+        ...patch,
+      },
+    });
+  const setTiltShift = (
+    patch: NonNullable<SceneProperties["tiltShift"]>,
+  ) =>
+    setScene({
+      tiltShift: {
+        ...(scene.tiltShift ?? {}),
+        ...patch,
+      },
+    });
+  const setLensEffects = (
+    patch: NonNullable<SceneProperties["lensEffects"]>,
+  ) =>
+    setScene({
+      lensEffects: {
+        ...(scene.lensEffects ?? {}),
+        ...patch,
+      },
+    });
+  const setMotionTrails = (
+    patch: NonNullable<SceneProperties["motionTrails"]>,
+  ) =>
+    setScene({
+      motionTrails: {
+        ...(scene.motionTrails ?? {}),
+        ...patch,
+      },
+    });
+  const setPresentationFrame = (
+    patch: NonNullable<SceneProperties["presentationFrame"]>,
+  ) =>
+    setScene({
+      presentationFrame: {
+        ...(scene.presentationFrame ?? {}),
+        ...patch,
+      },
+    });
+  const setCompositionGuides = (
+    patch: NonNullable<SceneProperties["compositionGuides"]>,
+  ) =>
+    setScene({
+      compositionGuides: {
+        ...(scene.compositionGuides ?? {}),
+        ...patch,
+      },
+    });
   const setAmbientOcclusion = (
     patch: NonNullable<SceneProperties["ambientOcclusion"]>,
   ) =>
@@ -1617,13 +1693,31 @@ export function CameraSetupPanel({
       },
     });
   const cameraFocus = scene.cameraFocus ?? {};
+  const dofFocusPoint = scene.depthOfField?.focusPoint ?? [0, 0, 0];
+  const setDepthOfFieldFocusPoint = (index: 0 | 1 | 2, value: number) => {
+    const next: [number, number, number] = [
+      dofFocusPoint[0] ?? 0,
+      dofFocusPoint[1] ?? 0,
+      dofFocusPoint[2] ?? 0,
+    ];
+    next[index] = Number.isFinite(value) ? value : 0;
+    setDepthOfField({ focusPoint: next });
+  };
+  const selectedLensPreset =
+    scene.camera?.lensPreset ??
+    LENS_PRESETS.find((preset) => preset.fov === scene.camera?.fov)?.id ??
+    "standard";
 
   return (
     <div
       style={environmentGroupStyle}
       onPointerDownCapture={onActivate}
       data-dev-source="src/editor/EnvironmentScenePanel.tsx:239"
-      data-dev-note="CameraSetupPanel controls lens, vignette, image finish, and glow settings."
+      data-dev-note={
+        content === "post"
+          ? "PostProcessingPanel controls depth, finish, glow, optics, trails, guides, and frame settings."
+          : "CameraSetupPanel controls lens and camera focus settings."
+      }
     >
       <button
         type="button"
@@ -1662,175 +1756,411 @@ export function CameraSetupPanel({
           data-dev-source="src/editor/EnvironmentScenePanel.tsx:275"
           data-dev-note="environmentBodyStyle controls indentation below Camera Setup."
         >
-          {topSlot}
+          {content === "camera" && (
+            <>
+              {topSlot && (
+                <>
+                  <div style={sectionHeaderStyle}>Render Preset</div>
+                  {topSlot}
+                </>
+              )}
 
-          <div style={sectionHeaderStyle}>Focus transition</div>
+              <div style={sectionHeaderStyle}>Lens Types</div>
+              <div style={panelStyles.section}>
+                <Row label="Lens type">
+                  <select
+                    value={selectedLensPreset}
+                    onChange={(e) => {
+                      const lensPreset = e.target.value as NonNullable<
+                        SceneProperties["camera"]
+                      >["lensPreset"];
+                      const preset = LENS_PRESETS.find(
+                        (candidate) => candidate.id === lensPreset,
+                      );
+                      setCamera({
+                        lensPreset,
+                        fov: preset?.fov ?? scene.camera?.fov ?? 45,
+                      });
+                    }}
+                    style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
+                  >
+                    {LENS_PRESETS.map((preset) => (
+                      <option key={preset.id} value={preset.id}>
+                        {preset.label}
+                      </option>
+                    ))}
+                  </select>
+                </Row>
+                <Row label="Lens">
+                  <Range
+                    value={scene.camera?.fov ?? 50}
+                    min={25}
+                    max={75}
+                    step={1}
+                    onChange={(v) => setCamera({ fov: v })}
+                    format={(v) => `${v.toFixed(0)} deg`}
+                  />
+                </Row>
+              </div>
+
+              <div style={sectionHeaderStyle}>Camera Focus</div>
+              <div style={panelStyles.section}>
+                <div style={panelStyles.muted}>
+                  Affects double-click focus only.
+                </div>
+                <Row label="Duration">
+                  <Range
+                    value={cameraFocusNumber(cameraFocus.durationMs, 900, 0, 5000)}
+                    min={0}
+                    max={5000}
+                    step={50}
+                    format={(v) => `${v.toFixed(0)} ms`}
+                    onChange={(v) => setCameraFocus({ durationMs: v })}
+                  />
+                </Row>
+                <Row label="Easing">
+                  <select
+                    value={cameraFocus.easing ?? "easeOutCubic"}
+                    onChange={(e) =>
+                      setCameraFocus({
+                        easing: e.target.value as NonNullable<
+                          SceneProperties["cameraFocus"]
+                        >["easing"],
+                      })
+                    }
+                    style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
+                  >
+                    {CAMERA_FOCUS_EASINGS.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                </Row>
+                <Row label="Fit padding">
+                  <Range
+                    value={cameraFocusNumber(cameraFocus.fitPaddingPx, 500, 0, 2000)}
+                    min={0}
+                    max={2000}
+                    step={25}
+                    format={(v) => `${v.toFixed(0)} px`}
+                    onChange={(v) => setCameraFocus({ fitPaddingPx: v })}
+                  />
+                </Row>
+                <Row label="Same target">
+                  <Range
+                    value={cameraFocusNumber(
+                      cameraFocus.sameTargetZoomFactor,
+                      0.7,
+                      0.05,
+                      1.5,
+                    )}
+                    min={0.05}
+                    max={1.5}
+                    step={0.05}
+                    format={(v) => `${v.toFixed(2)}x`}
+                    onChange={(v) => setCameraFocus({ sameTargetZoomFactor: v })}
+                  />
+                </Row>
+                <Row label="Click delay">
+                  <Range
+                    value={cameraFocusNumber(
+                      cameraFocus.singleClickDelayMs,
+                      250,
+                      120,
+                      500,
+                    )}
+                    min={120}
+                    max={500}
+                    step={10}
+                    format={(v) => `${v.toFixed(0)} ms`}
+                    onChange={(v) => setCameraFocus({ singleClickDelayMs: v })}
+                  />
+                </Row>
+                <Row label="Scroll settle">
+                  <Range
+                    value={cameraFocusNumber(
+                      cameraFocus.scrollSettleMs,
+                      250,
+                      80,
+                      800,
+                    )}
+                    min={80}
+                    max={800}
+                    step={10}
+                    format={(v) => `${v.toFixed(0)} ms`}
+                    onChange={(v) => setCameraFocus({ scrollSettleMs: v })}
+                  />
+                </Row>
+                <Row label="Pill pulse">
+                  <Range
+                    value={cameraFocusNumber(cameraFocus.pulsePillMs, 600, 200, 1600)}
+                    min={200}
+                    max={1600}
+                    step={20}
+                    format={(v) => `${v.toFixed(0)} ms`}
+                    onChange={(v) => setCameraFocus({ pulsePillMs: v })}
+                  />
+                </Row>
+                <Row label="Text pulse">
+                  <Range
+                    value={cameraFocusNumber(cameraFocus.pulseTextMs, 480, 200, 1600)}
+                    min={200}
+                    max={1600}
+                    step={20}
+                    format={(v) => `${v.toFixed(0)} ms`}
+                    onChange={(v) => setCameraFocus({ pulseTextMs: v })}
+                  />
+                </Row>
+                <Row label="Static pulse">
+                  <Range
+                    value={cameraFocusNumber(
+                      cameraFocus.pulseStaticMs,
+                      1200,
+                      400,
+                      3000,
+                    )}
+                    min={400}
+                    max={3000}
+                    step={50}
+                    format={(v) => `${v.toFixed(0)} ms`}
+                    onChange={(v) => setCameraFocus({ pulseStaticMs: v })}
+                  />
+                </Row>
+                <Row label="Reveal scroll">
+                  <select
+                    value={cameraFocus.revealScrollBehavior ?? "smooth"}
+                    onChange={(e) =>
+                      setCameraFocus({
+                        revealScrollBehavior: e.target.value as NonNullable<
+                          SceneProperties["cameraFocus"]
+                        >["revealScrollBehavior"],
+                      })
+                    }
+                    style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
+                  >
+                    <option value="smooth">smooth</option>
+                    <option value="auto">auto</option>
+                  </select>
+                </Row>
+                <Row label="RMB threshold">
+                  <Range
+                    value={cameraFocusNumber(cameraFocus.rmbExitDragPx, 0, 0, 24)}
+                    min={0}
+                    max={24}
+                    step={1}
+                    format={(v) => `${v.toFixed(0)} px`}
+                    onChange={(v) => setCameraFocus({ rmbExitDragPx: v })}
+                  />
+                </Row>
+              </div>
+            </>
+          )}
+
+          {content === "post" && (
+            <>
+              <div style={sectionHeaderStyle}>Depth of Field</div>
           <div style={panelStyles.section}>
-            <div style={panelStyles.muted}>
-              Affects double-click focus only.
-            </div>
-            <Row label="Duration">
-              <Range
-                value={cameraFocusNumber(cameraFocus.durationMs, 900, 0, 5000)}
-                min={0}
-                max={5000}
-                step={50}
-                format={(v) => `${v.toFixed(0)} ms`}
-                onChange={(v) => setCameraFocus({ durationMs: v })}
+            <Row label="Depth of field">
+              <input
+                type="checkbox"
+                checked={scene.depthOfField?.enabled === true}
+                onChange={(e) =>
+                  setDepthOfField({ enabled: e.target.checked })
+                }
               />
             </Row>
-            <Row label="Easing">
+            <div style={dofSubheadingStyle}>Focus Target</div>
+            <Row label="Focus mode">
               <select
-                value={cameraFocus.easing ?? "easeOutCubic"}
+                value={scene.depthOfField?.focusMode ?? "page-target"}
                 onChange={(e) =>
-                  setCameraFocus({
-                    easing: e.target.value as NonNullable<
-                      SceneProperties["cameraFocus"]
-                    >["easing"],
+                  setDepthOfField({
+                    focusMode: e.target.value as NonNullable<
+                      SceneProperties["depthOfField"]
+                    >["focusMode"],
                   })
                 }
                 style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
               >
-                {CAMERA_FOCUS_EASINGS.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
+                <option value="page-target">page target</option>
+                <option value="camera-object">camera object</option>
+                <option value="manual-distance">manual distance</option>
+                <option value="picked-point">picked point</option>
               </select>
             </Row>
-            <Row label="Fit padding">
+            <Row label="Focus dist.">
               <Range
-                value={cameraFocusNumber(cameraFocus.fitPaddingPx, 500, 0, 2000)}
-                min={0}
-                max={2000}
+                value={scene.depthOfField?.focusDistanceM ?? 1000}
+                min={1}
+                max={50000}
                 step={25}
-                format={(v) => `${v.toFixed(0)} px`}
-                onChange={(v) => setCameraFocus({ fitPaddingPx: v })}
+                format={(v) => `${v.toFixed(0)} m`}
+                onChange={(v) => setDepthOfField({ focusDistanceM: v })}
               />
             </Row>
-            <Row label="Same target">
+            <Row label="Focus offset">
               <Range
-                value={cameraFocusNumber(
-                  cameraFocus.sameTargetZoomFactor,
-                  0.7,
-                  0.05,
-                  1.5,
-                )}
-                min={0.05}
-                max={1.5}
+                value={scene.depthOfField?.focusOffsetM ?? 0}
+                min={-25000}
+                max={25000}
+                step={25}
+                format={(v) => `${v.toFixed(0)} m`}
+                onChange={(v) => setDepthOfField({ focusOffsetM: v })}
+              />
+            </Row>
+            <Row label="Focus X">
+              <input
+                type="number"
+                value={dofFocusPoint[0] ?? 0}
+                onChange={(e) =>
+                  setDepthOfFieldFocusPoint(0, Number(e.target.value))
+                }
+                style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
+              />
+            </Row>
+            <Row label="Focus Y">
+              <input
+                type="number"
+                value={dofFocusPoint[1] ?? 0}
+                onChange={(e) =>
+                  setDepthOfFieldFocusPoint(1, Number(e.target.value))
+                }
+                style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
+              />
+            </Row>
+            <Row label="Focus Z">
+              <input
+                type="number"
+                value={dofFocusPoint[2] ?? 0}
+                onChange={(e) =>
+                  setDepthOfFieldFocusPoint(2, Number(e.target.value))
+                }
+                style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
+              />
+            </Row>
+            <div style={dofSubheadingStyle}>Blur Strength</div>
+            <Row label="Aperture">
+              <Range
+                value={scene.depthOfField?.aperture ?? 0.00002}
+                min={0}
+                max={0.0002}
+                step={0.000005}
+                format={(v) => v.toFixed(6)}
+                onChange={(v) => setDepthOfField({ aperture: v })}
+              />
+            </Row>
+            <Row label="Max blur">
+              <Range
+                value={scene.depthOfField?.maxBlur ?? 0.004}
+                min={0}
+                max={0.03}
+                step={0.001}
+                format={(v) => v.toFixed(3)}
+                onChange={(v) => setDepthOfField({ maxBlur: v })}
+              />
+            </Row>
+            <div style={dofSubheadingStyle}>Focus Debug</div>
+            <Row label="Debug plane">
+              <input
+                type="checkbox"
+                checked={scene.depthOfField?.debugFocusPlane === true}
+                onChange={(e) =>
+                  setDepthOfField({ debugFocusPlane: e.target.checked })
+                }
+              />
+            </Row>
+            <Row label="Debug opacity">
+              <Range
+                value={scene.depthOfField?.debugFocusPlaneOpacity ?? 0.16}
+                min={0.02}
+                max={0.5}
+                step={0.01}
+                format={(v) => v.toFixed(2)}
+                onChange={(v) =>
+                  setDepthOfField({ debugFocusPlaneOpacity: v })
+                }
+              />
+            </Row>
+            <Row label="Debug scale">
+              <Range
+                value={scene.depthOfField?.debugFocusPlaneScale ?? 1}
+                min={0.1}
+                max={3}
                 step={0.05}
                 format={(v) => `${v.toFixed(2)}x`}
-                onChange={(v) => setCameraFocus({ sameTargetZoomFactor: v })}
-              />
-            </Row>
-            <Row label="Click delay">
-              <Range
-                value={cameraFocusNumber(
-                  cameraFocus.singleClickDelayMs,
-                  250,
-                  120,
-                  500,
-                )}
-                min={120}
-                max={500}
-                step={10}
-                format={(v) => `${v.toFixed(0)} ms`}
-                onChange={(v) => setCameraFocus({ singleClickDelayMs: v })}
-              />
-            </Row>
-            <Row label="Scroll settle">
-              <Range
-                value={cameraFocusNumber(
-                  cameraFocus.scrollSettleMs,
-                  250,
-                  80,
-                  800,
-                )}
-                min={80}
-                max={800}
-                step={10}
-                format={(v) => `${v.toFixed(0)} ms`}
-                onChange={(v) => setCameraFocus({ scrollSettleMs: v })}
-              />
-            </Row>
-            <Row label="Pill pulse">
-              <Range
-                value={cameraFocusNumber(cameraFocus.pulsePillMs, 600, 200, 1600)}
-                min={200}
-                max={1600}
-                step={20}
-                format={(v) => `${v.toFixed(0)} ms`}
-                onChange={(v) => setCameraFocus({ pulsePillMs: v })}
-              />
-            </Row>
-            <Row label="Text pulse">
-              <Range
-                value={cameraFocusNumber(cameraFocus.pulseTextMs, 480, 200, 1600)}
-                min={200}
-                max={1600}
-                step={20}
-                format={(v) => `${v.toFixed(0)} ms`}
-                onChange={(v) => setCameraFocus({ pulseTextMs: v })}
-              />
-            </Row>
-            <Row label="Static pulse">
-              <Range
-                value={cameraFocusNumber(
-                  cameraFocus.pulseStaticMs,
-                  1200,
-                  400,
-                  3000,
-                )}
-                min={400}
-                max={3000}
-                step={50}
-                format={(v) => `${v.toFixed(0)} ms`}
-                onChange={(v) => setCameraFocus({ pulseStaticMs: v })}
-              />
-            </Row>
-            <Row label="Reveal scroll">
-              <select
-                value={cameraFocus.revealScrollBehavior ?? "smooth"}
-                onChange={(e) =>
-                  setCameraFocus({
-                    revealScrollBehavior: e.target.value as NonNullable<
-                      SceneProperties["cameraFocus"]
-                    >["revealScrollBehavior"],
-                  })
-                }
-                style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
-              >
-                <option value="smooth">smooth</option>
-                <option value="auto">auto</option>
-              </select>
-            </Row>
-            <Row label="RMB threshold">
-              <Range
-                value={cameraFocusNumber(cameraFocus.rmbExitDragPx, 0, 0, 24)}
-                min={0}
-                max={24}
-                step={1}
-                format={(v) => `${v.toFixed(0)} px`}
-                onChange={(v) => setCameraFocus({ rmbExitDragPx: v })}
+                onChange={(v) => setDepthOfField({ debugFocusPlaneScale: v })}
               />
             </Row>
           </div>
 
-          <div style={sectionHeaderStyle}>Perspective</div>
+          <div style={sectionHeaderStyle}>Tilt-Shift</div>
           <div style={panelStyles.section}>
-            <Row label="Lens">
+            <Row label="Tilt-shift">
+              <input
+                type="checkbox"
+                checked={scene.tiltShift?.enabled === true}
+                onChange={(e) => setTiltShift({ enabled: e.target.checked })}
+              />
+            </Row>
+            <Row label="Center X">
               <Range
-                value={scene.camera?.fov ?? 50}
-                min={25}
-                max={70}
+                value={scene.tiltShift?.centerX ?? 0.5}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => setTiltShift({ centerX: v })}
+              />
+            </Row>
+            <Row label="Center Y">
+              <Range
+                value={scene.tiltShift?.centerY ?? 0.5}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => setTiltShift({ centerY: v })}
+              />
+            </Row>
+            <Row label="Angle">
+              <Range
+                value={scene.tiltShift?.angleDeg ?? 0}
+                min={-90}
+                max={90}
                 step={1}
-                onChange={(v) => setCamera({ fov: v })}
                 format={(v) => `${v.toFixed(0)} deg`}
+                onChange={(v) => setTiltShift({ angleDeg: v })}
+              />
+            </Row>
+            <Row label="Band">
+              <Range
+                value={scene.tiltShift?.bandSize ?? 0.28}
+                min={0.02}
+                max={0.9}
+                step={0.01}
+                onChange={(v) => setTiltShift({ bandSize: v })}
+              />
+            </Row>
+            <Row label="Feather">
+              <Range
+                value={scene.tiltShift?.feather ?? 0.2}
+                min={0.01}
+                max={0.8}
+                step={0.01}
+                onChange={(v) => setTiltShift({ feather: v })}
+              />
+            </Row>
+            <Row label="Blur">
+              <Range
+                value={scene.tiltShift?.blur ?? 0}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => setTiltShift({ blur: v })}
               />
             </Row>
           </div>
 
-          <div style={sectionHeaderStyle}>Vignette</div>
+          <div style={sectionHeaderStyle}>Post Production</div>
           <div style={panelStyles.section}>
             <Row label="Amount">
               <Range
@@ -1904,6 +2234,115 @@ export function CameraSetupPanel({
                 onChange={(v) => setColorGrade({ tintStrength: v })}
               />
             </Row>
+            <Row label="Temperature">
+              <Range
+                value={scene.colorGrade?.temperature ?? 0}
+                min={-1}
+                max={1}
+                step={0.01}
+                onChange={(v) => setColorGrade({ temperature: v })}
+              />
+            </Row>
+            <Row label="Black point">
+              <Range
+                value={scene.colorGrade?.blackPoint ?? 0}
+                min={0}
+                max={0.8}
+                step={0.01}
+                onChange={(v) => setColorGrade({ blackPoint: v })}
+              />
+            </Row>
+            <Row label="White point">
+              <Range
+                value={scene.colorGrade?.whitePoint ?? 1}
+                min={0.2}
+                max={2}
+                step={0.01}
+                onChange={(v) => setColorGrade({ whitePoint: v })}
+              />
+            </Row>
+            <Row label="Lift">
+              <Range
+                value={scene.colorGrade?.lift ?? 0}
+                min={-0.5}
+                max={0.5}
+                step={0.01}
+                onChange={(v) => setColorGrade({ lift: v })}
+              />
+            </Row>
+            <Row label="Gamma">
+              <Range
+                value={scene.colorGrade?.gamma ?? 1}
+                min={0.25}
+                max={3}
+                step={0.01}
+                onChange={(v) => setColorGrade({ gamma: v })}
+              />
+            </Row>
+            <Row label="Gain">
+              <Range
+                value={scene.colorGrade?.gain ?? 1}
+                min={0}
+                max={3}
+                step={0.01}
+                onChange={(v) => setColorGrade({ gain: v })}
+              />
+            </Row>
+            <Row label="Shadow tone">
+              <input
+                type="color"
+                value={scene.colorGrade?.splitShadowColor ?? "#182238"}
+                onChange={(e) =>
+                  setColorGrade({ splitShadowColor: e.target.value })
+                }
+              />
+            </Row>
+            <Row label="Highlight tone">
+              <input
+                type="color"
+                value={scene.colorGrade?.splitHighlightColor ?? "#ffd29a"}
+                onChange={(e) =>
+                  setColorGrade({ splitHighlightColor: e.target.value })
+                }
+              />
+            </Row>
+            <Row label="Split amount">
+              <Range
+                value={scene.colorGrade?.splitToneAmount ?? 0}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => setColorGrade({ splitToneAmount: v })}
+              />
+            </Row>
+            <Row label="Filter">
+              <select
+                value={scene.colorGrade?.filterPreset ?? "none"}
+                onChange={(e) =>
+                  setColorGrade({
+                    filterPreset: e.target.value as NonNullable<
+                      SceneProperties["colorGrade"]
+                    >["filterPreset"],
+                  })
+                }
+                style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
+              >
+                {COLOR_FILTER_PRESETS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Row>
+            <Row label="Filter amount">
+              <Range
+                value={scene.colorGrade?.filterIntensity ?? 0}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => setColorGrade({ filterIntensity: v })}
+              />
+            </Row>
           </div>
 
           <div style={sectionHeaderStyle}>Glow</div>
@@ -1937,7 +2376,265 @@ export function CameraSetupPanel({
             </Row>
           </div>
 
-          <div style={sectionHeaderStyle}>Contact depth</div>
+          <div style={sectionHeaderStyle}>Film / Optics</div>
+          <div style={panelStyles.section}>
+            <Row label="Grain">
+              <Range
+                value={scene.lensEffects?.grain ?? 0}
+                min={0}
+                max={0.35}
+                step={0.01}
+                onChange={(v) => setLensEffects({ grain: v })}
+              />
+            </Row>
+            <Row label="Grain size">
+              <Range
+                value={scene.lensEffects?.grainSize ?? 1}
+                min={0.25}
+                max={16}
+                step={0.25}
+                onChange={(v) => setLensEffects({ grainSize: v })}
+              />
+            </Row>
+            <Row label="Distortion">
+              <Range
+                value={scene.lensEffects?.distortion ?? 0}
+                min={-1}
+                max={1}
+                step={0.01}
+                onChange={(v) => setLensEffects({ distortion: v })}
+              />
+            </Row>
+            <Row label="Chromatic">
+              <Range
+                value={scene.lensEffects?.chromaticAberration ?? 0}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) =>
+                  setLensEffects({ chromaticAberration: v })
+                }
+              />
+            </Row>
+            <Row label="Sharpen">
+              <Range
+                value={scene.lensEffects?.sharpen ?? 0}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => setLensEffects({ sharpen: v })}
+              />
+            </Row>
+            <Row label="Diffusion">
+              <Range
+                value={scene.lensEffects?.diffusion ?? 0}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => setLensEffects({ diffusion: v })}
+              />
+            </Row>
+            <Row label="Halation">
+              <Range
+                value={scene.lensEffects?.halation ?? 0}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => setLensEffects({ halation: v })}
+              />
+            </Row>
+            <Row label="Anamorphic">
+              <Range
+                value={scene.lensEffects?.anamorphicStreak ?? 0}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => setLensEffects({ anamorphicStreak: v })}
+              />
+            </Row>
+            <Row label="Streak len.">
+              <Range
+                value={scene.lensEffects?.anamorphicStreakLength ?? 0.45}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) =>
+                  setLensEffects({ anamorphicStreakLength: v })
+                }
+              />
+            </Row>
+            <Row label="Streak gate">
+              <Range
+                value={scene.lensEffects?.anamorphicStreakThreshold ?? 0.82}
+                min={0.2}
+                max={1}
+                step={0.01}
+                onChange={(v) =>
+                  setLensEffects({ anamorphicStreakThreshold: v })
+                }
+              />
+            </Row>
+          </div>
+
+          <div style={sectionHeaderStyle}>Motion Trails</div>
+          <div style={panelStyles.section}>
+            <Row label="Trails">
+              <input
+                type="checkbox"
+                checked={scene.motionTrails?.enabled === true}
+                onChange={(e) =>
+                  setMotionTrails({ enabled: e.target.checked })
+                }
+              />
+            </Row>
+            <Row label="Amount">
+              <Range
+                value={scene.motionTrails?.amount ?? 0}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => setMotionTrails({ amount: v })}
+              />
+            </Row>
+          </div>
+
+          <div style={sectionHeaderStyle}>Composition Guides</div>
+          <div style={panelStyles.section}>
+            <Row label="Guides">
+              <input
+                type="checkbox"
+                checked={scene.compositionGuides?.enabled === true}
+                onChange={(e) =>
+                  setCompositionGuides({ enabled: e.target.checked })
+                }
+              />
+            </Row>
+            <Row label="Thirds">
+              <input
+                type="checkbox"
+                checked={scene.compositionGuides?.ruleOfThirds === true}
+                onChange={(e) =>
+                  setCompositionGuides({ ruleOfThirds: e.target.checked })
+                }
+              />
+            </Row>
+            <Row label="Center">
+              <input
+                type="checkbox"
+                checked={scene.compositionGuides?.centerCross === true}
+                onChange={(e) =>
+                  setCompositionGuides({ centerCross: e.target.checked })
+                }
+              />
+            </Row>
+            <Row label="Safe frame">
+              <input
+                type="checkbox"
+                checked={scene.compositionGuides?.safeFrame === true}
+                onChange={(e) =>
+                  setCompositionGuides({ safeFrame: e.target.checked })
+                }
+              />
+            </Row>
+            <Row label="Aspect">
+              <select
+                value={scene.compositionGuides?.aspectMask ?? "none"}
+                onChange={(e) =>
+                  setCompositionGuides({
+                    aspectMask: e.target.value as NonNullable<
+                      SceneProperties["compositionGuides"]
+                    >["aspectMask"],
+                  })
+                }
+                style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
+              >
+                <option value="none">none</option>
+                <option value="16:9">16:9</option>
+                <option value="1.85:1">1.85:1</option>
+                <option value="2.39:1">2.39:1</option>
+              </select>
+            </Row>
+            <Row label="Line thickness">
+              <Range
+                value={scene.compositionGuides?.lineThickness ?? 0.25}
+                min={0.1}
+                max={2}
+                step={0.05}
+                format={(v) => `${v.toFixed(2)}x`}
+                onChange={(v) => setCompositionGuides({ lineThickness: v })}
+              />
+            </Row>
+          </div>
+
+          <div style={sectionHeaderStyle}>Presentation Frame</div>
+          <div style={panelStyles.section}>
+            <Row label="Letterbox">
+              <input
+                type="checkbox"
+                checked={scene.presentationFrame?.letterbox === true}
+                onChange={(e) =>
+                  setPresentationFrame({ letterbox: e.target.checked })
+                }
+              />
+            </Row>
+            <Row label="Aspect">
+              <select
+                value={scene.presentationFrame?.aspectRatio ?? "none"}
+                onChange={(e) =>
+                  setPresentationFrame({
+                    aspectRatio: e.target.value as NonNullable<
+                      SceneProperties["presentationFrame"]
+                    >["aspectRatio"],
+                  })
+                }
+                style={{ ...panelStyles.textInput, flex: 1, minWidth: 0 }}
+              >
+                <option value="none">none</option>
+                <option value="16:9">16:9</option>
+                <option value="1.85:1">1.85:1</option>
+                <option value="2.39:1">2.39:1</option>
+                <option value="4:3">4:3</option>
+              </select>
+            </Row>
+            <Row label="Matte">
+              <Range
+                value={scene.presentationFrame?.matteOpacity ?? 0.72}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => setPresentationFrame({ matteOpacity: v })}
+              />
+            </Row>
+            <Row label="Matte color">
+              <input
+                type="color"
+                value={scene.presentationFrame?.matteColor ?? "#000000"}
+                onChange={(e) =>
+                  setPresentationFrame({ matteColor: e.target.value })
+                }
+              />
+            </Row>
+            <Row label="Corner fade">
+              <Range
+                value={scene.presentationFrame?.cornerFade ?? 0}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => setPresentationFrame({ cornerFade: v })}
+              />
+            </Row>
+            <Row label="Gate weave">
+              <Range
+                value={scene.presentationFrame?.gateWeave ?? 0}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => setPresentationFrame({ gateWeave: v })}
+              />
+            </Row>
+          </div>
+
+          <div style={sectionHeaderStyle}>Contact Depth</div>
           <div style={panelStyles.section}>
             <Row label="Ambient occl.">
               <input
@@ -1978,10 +2675,18 @@ export function CameraSetupPanel({
               />
             </Row>
           </div>
+            </>
+          )}
         </div>
       )}
     </div>
   );
+}
+
+export function PostProcessingPanel(
+  props: Omit<CameraSetupPanelProps, "content" | "topSlot">,
+) {
+  return <CameraSetupPanel {...props} content="post" />;
 }
 
 export function GuiSetupPanel({
@@ -4814,6 +5519,15 @@ const sectionHeaderStyle: React.CSSProperties = {
   letterSpacing: 0,
   marginTop: 10,
   marginBottom: 8,
+};
+
+const dofSubheadingStyle: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 600,
+  color: vibrancySecondaryLabel,
+  letterSpacing: 0,
+  marginTop: 10,
+  marginBottom: 4,
 };
 
 const guiSubsectionStyle: React.CSSProperties = {

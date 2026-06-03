@@ -60,12 +60,18 @@ import {
   type PublicTopoMaterialPresetId,
   type ResolvedTopoMapSettings,
 } from "../../topoMap/settings";
+import { ATMOSPHERE_VOLUME_FIELDS } from "../layerControls/layerPanelConfig";
+import {
+  AtmosphereVolumeControls,
+  atmosphereVolumePatchFromStyle,
+} from "../layerControls/atmosphere/AtmosphereVolumeControls";
 import { editorLayerTypeLabel } from "../layerControls/layerLabels";
 import { useTopoGradientHandles } from "./useTopoGradientHandles";
 
 const CLASSIFICATIONS = [
   "observation",
   "interpretation",
+  "environmental",
   "narrative",
   "planned",
 ] as const;
@@ -148,6 +154,14 @@ const topoClipReadoutStyle: CSSProperties = {
 
 type TerrainSettings = NonNullable<SceneProperties["terrain"]>;
 type TopoMapBranding = NonNullable<TerrainSettings["topoMapBranding"]>;
+type TopoFootprint = {
+  centerX: number;
+  centerY: number;
+  centerZ: number;
+  sizeX: number;
+  sizeY: number;
+  sizeZ: number;
+};
 type LayerProvenancePatch = Partial<
   Record<
     | "sourceFile"
@@ -158,7 +172,12 @@ type LayerProvenancePatch = Partial<
     string
   >
 >;
-type TopoMapPanelSection = "all" | "surface" | "graticule" | "title";
+type TopoMapPanelSection =
+  | "all"
+  | "surface"
+  | "environment"
+  | "graticule"
+  | "title";
 
 function TopoSubsection({
   label,
@@ -166,6 +185,7 @@ function TopoSubsection({
   active,
   onToggle,
   testId,
+  toggleTestId,
   defaultOpen = true,
 }: {
   label: string;
@@ -173,6 +193,7 @@ function TopoSubsection({
   active?: boolean;
   onToggle?: () => void;
   testId?: string;
+  toggleTestId?: string;
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -201,6 +222,7 @@ function TopoSubsection({
             }}
             title={active !== false ? `Hide ${label}` : `Show ${label}`}
             ariaLabel={active !== false ? `Hide ${label}` : `Show ${label}`}
+            testId={toggleTestId}
             style={{ marginLeft: "auto" }}
           />
         ) : null}
@@ -238,6 +260,167 @@ function TopoEyeToggleRow({
   );
 }
 
+function CloudIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg
+      aria-hidden="true"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ flex: "0 0 auto" }}
+    >
+      <path d="M17.5 19H8a5 5 0 1 1 1.2-9.85A6.5 6.5 0 0 1 21 12.5 3.5 3.5 0 0 1 17.5 19Z" />
+    </svg>
+  );
+}
+
+function metadataText(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function metadataRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function metadataNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function metadataVec3(value: unknown): [number, number, number] | null {
+  if (!Array.isArray(value) || value.length < 3) return null;
+  const x = metadataNumber(value[0]);
+  const y = metadataNumber(value[1]);
+  const z = metadataNumber(value[2]);
+  return x === null || y === null || z === null ? null : [x, y, z];
+}
+
+function layerGeoTransform(layer: ProjectLayerSpec | null): {
+  sourceCrs: string;
+  originX: number;
+  originY: number;
+  boundsMin: [number, number, number];
+  boundsMax: [number, number, number];
+  maxVertices: number | null;
+} | null {
+  const geoTransform = metadataRecord(layer?.metadata?.geoTransform);
+  const bounds = metadataRecord(geoTransform?.bounds);
+  const origin = metadataRecord(geoTransform?.sceneOriginUtm);
+  const boundsMin = metadataVec3(bounds?.min);
+  const boundsMax = metadataVec3(bounds?.max);
+  const originX = metadataNumber(origin?.easting_m);
+  const originY = metadataNumber(origin?.northing_m);
+  if (!geoTransform || !boundsMin || !boundsMax || originX === null || originY === null) {
+    return null;
+  }
+  return {
+    sourceCrs:
+      typeof geoTransform.sourceCrs === "string"
+        ? geoTransform.sourceCrs
+        : "unknown",
+    originX,
+    originY,
+    boundsMin,
+    boundsMax,
+    maxVertices: metadataNumber(geoTransform.terrainMaxVertices),
+  };
+}
+
+function footprintFromUtmBounds(
+  bounds: [number, number, number, number],
+  originX: number,
+  originY: number,
+  centerZ = 2000,
+  sizeZ = 12600,
+): TopoFootprint | null {
+  const [minX, minY, maxX, maxY] = bounds;
+  if (
+    !Number.isFinite(minX) ||
+    !Number.isFinite(minY) ||
+    !Number.isFinite(maxX) ||
+    !Number.isFinite(maxY) ||
+    maxX <= minX ||
+    maxY <= minY
+  ) {
+    return null;
+  }
+  return {
+    centerX: (minX + maxX) / 2 - originX,
+    centerY: (minY + maxY) / 2 - originY,
+    centerZ,
+    sizeX: maxX - minX,
+    sizeY: maxY - minY,
+    sizeZ,
+  };
+}
+
+function terrainFootprintFromLayer(layer: ProjectLayerSpec | null): TopoFootprint | null {
+  const transform = layerGeoTransform(layer);
+  if (!transform) return null;
+  const centerZ = (transform.boundsMin[2] + transform.boundsMax[2]) / 2;
+  const sizeZ = Math.max(transform.boundsMax[2] - transform.boundsMin[2], 12600);
+  return footprintFromUtmBounds(
+    [
+      transform.boundsMin[0],
+      transform.boundsMin[1],
+      transform.boundsMax[0],
+      transform.boundsMax[1],
+    ],
+    transform.originX,
+    transform.originY,
+    centerZ,
+    sizeZ,
+  );
+}
+
+function imageFootprintFromTerrain(
+  terrain: TerrainSettings,
+  layer: ProjectLayerSpec | null,
+): TopoFootprint | null {
+  const transform = layerGeoTransform(layer);
+  const bounds = terrain.orthoPhotoBounds;
+  if (!transform || !Array.isArray(bounds) || bounds.length !== 4) return null;
+  return footprintFromUtmBounds(bounds, transform.originX, transform.originY);
+}
+
+function footprintStylePatch(
+  footprint: TopoFootprint,
+): Partial<EditableStyle> {
+  return {
+    publicSurfaceClipEnabled: true,
+    publicSurfaceClipCenterX: footprint.centerX,
+    publicSurfaceClipCenterY: footprint.centerY,
+    publicSurfaceClipCenterZ: footprint.centerZ,
+    publicSurfaceClipSizeX: footprint.sizeX,
+    publicSurfaceClipSizeY: footprint.sizeY,
+    publicSurfaceClipSizeZ: footprint.sizeZ,
+    publicSurfaceClipRotationZDeg: 0,
+    publicSurfaceClipShape: "box",
+  };
+}
+
+function kmSizeLabel(sizeX: number | undefined, sizeY: number | undefined): string {
+  if (
+    typeof sizeX !== "number" ||
+    typeof sizeY !== "number" ||
+    !Number.isFinite(sizeX) ||
+    !Number.isFinite(sizeY)
+  ) {
+    return "unknown";
+  }
+  return `${Math.round(sizeX / 1000)} km x ${Math.round(sizeY / 1000)} km`;
+}
+
+function clampRange(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
 export function TopoMapPanel({
   settings,
   section = "all",
@@ -260,6 +443,9 @@ export function TopoMapPanel({
   setPageVisibilityOverride,
   clearPageVisibilityOverride,
   publicSurfaceLayerIds,
+  atmosphereLayers = [],
+  addAtmosphereLayer,
+  removeAtmosphereLayer,
   setLayerProvenance,
 }: {
   settings: ResolvedTopoMapSettings;
@@ -287,6 +473,12 @@ export function TopoMapPanel({
   ) => void;
   clearPageVisibilityOverride: (pageId: string, layerId: string) => void;
   publicSurfaceLayerIds: readonly string[];
+  atmosphereLayers?: readonly ProjectLayerSpec[];
+  addAtmosphereLayer?: (
+    style: Partial<EditableStyle>,
+    sourceLayer?: ProjectLayerSpec | null,
+  ) => string;
+  removeAtmosphereLayer?: (layerId: string) => void;
   setLayerProvenance: (layerId: string, patch: LayerProvenancePatch) => void;
 }) {
   const rawTerrain = scene.terrain ?? {};
@@ -299,6 +491,8 @@ export function TopoMapPanel({
     null,
   );
   const [brandingUploading, setBrandingUploading] = useState(false);
+  const [selectedAtmosphereLayerId, setSelectedAtmosphereLayerId] =
+    useState("");
   const setTerrain = (patch: TerrainSettings) => {
     setEnvScene({ terrain: patch });
   };
@@ -315,9 +509,28 @@ export function TopoMapPanel({
   const sceneFogEnabled = sceneFog.enabled !== false;
   const sceneFogDensity = sceneFog.density ?? DEFAULT_FOG_DENSITY;
   const sceneFogReachKm = 3 / Math.max(sceneFogDensity, 0.000001) / 1000;
+  const sceneLightMode = scene.lightMode === true;
+  const sceneDarkBackground = scene.background ?? "#23252a";
+  const sceneLightBackground = scene.lightModeBackground ?? "#a0a0a0";
+  const sceneDarkFogColor = sceneFog.color ?? sceneDarkBackground;
+  const sceneLightFogColor = sceneFog.lightModeColor ?? sceneLightBackground;
   const sceneSun = scene.sun ?? {};
+  const sceneLighting = scene.lighting ?? {};
+  const sceneDirectionalLight = sceneLighting.directional ?? {};
   const sunAzimuth = sceneSun.azimuth ?? 235;
   const sunElevation = sceneSun.elevation ?? 22;
+  const sunLightEnabled = sceneSun.lightEnabled !== false;
+  const sunOrbVisible = sceneSun.orbVisible === true;
+  const sunSourceMarkerVisible = sceneSun.sourceMarkerVisible === true;
+  const sunOrbColor = sceneSun.orbColor ?? "#fff0b8";
+  const sunOrbOpacity = sceneSun.orbOpacity ?? 0.9;
+  const sunOrbSizeM = sceneSun.orbSizeM ?? 70000;
+  const sunOrbDistanceM = sceneSun.orbDistanceM ?? 900000;
+  const sunOrbEdgeSoftness = sceneSun.orbEdgeSoftness ?? 0.55;
+  const sunOrbHaloColor = sceneSun.orbHaloColor ?? "#ffd58a";
+  const sunOrbHaloOpacity = sceneSun.orbHaloOpacity ?? 0.28;
+  const sunOrbHaloScale = sceneSun.orbHaloScale ?? 2.7;
+  const sunSourceMarkerOpacity = sceneSun.sourceMarkerOpacity ?? 0.72;
   const sceneFogGradientCurve =
     typeof rawTerrain.fogGradientCurve === "number"
       ? rawTerrain.fogGradientCurve
@@ -326,7 +539,6 @@ export function TopoMapPanel({
     typeof style.fogDensity === "number" ? style.fogDensity : sceneFogDensity;
   const topoFogReachKm = 3 / Math.max(topoFogDensity, 0.000001) / 1000;
   const topoFogIncluded = style.affectedByFog !== false;
-  const mapSunReliefActive = (terrain.hillshadeIntensity ?? 1.05) > 0;
   const surfaceElevationMinM =
     typeof terrain.surfaceElevationMinM === "number"
       ? terrain.surfaceElevationMinM
@@ -360,10 +572,10 @@ export function TopoMapPanel({
       : "square";
   const topoMapBranding = terrain.topoMapBranding ?? {};
   const rawTopoMapBranding = rawTerrain.topoMapBranding ?? {};
-  const terrainMeta = (terrainLayer?.metadata ?? {}) as Record<
-    string,
-    string | undefined
-  >;
+  const terrainMeta = (terrainLayer?.metadata ?? {}) as Record<string, unknown>;
+  const terrainGeoTransform = layerGeoTransform(terrainLayer);
+  const terrainFootprint = terrainFootprintFromLayer(terrainLayer);
+  const imageFootprint = imageFootprintFromTerrain(terrain, terrainLayer);
   const setTopoMapBranding = (patch: TopoMapBranding) => {
     setEnvScene({
       terrain: {
@@ -527,6 +739,145 @@ export function TopoMapPanel({
   const setSceneSun = (patch: NonNullable<SceneProperties["sun"]>) => {
     setEnvScene({ sun: { ...sceneSun, ...patch } });
   };
+  const setSceneLighting = (
+    patch: NonNullable<SceneProperties["lighting"]>,
+  ) => {
+    setEnvScene({ lighting: { ...sceneLighting, ...patch } });
+  };
+  const setSceneDirectionalLight = (
+    patch: NonNullable<
+      NonNullable<SceneProperties["lighting"]>["directional"]
+    >,
+  ) => {
+    setSceneLighting({
+      directional: { ...sceneDirectionalLight, ...patch },
+    });
+  };
+  const atmosphereLayer =
+    atmosphereLayers.find((layer) => layer.id === selectedAtmosphereLayerId) ??
+    atmosphereLayers[0] ??
+    null;
+  const atmosphereLayerId = atmosphereLayer?.id ?? "";
+  const atmosphereEnvStyle = atmosphereLayer
+    ? (environment.layerStyles[atmosphereLayer.id] ?? {})
+    : {};
+  const atmosphereEffectiveStyle =
+    atmosphereLayer && currentPage
+      ? effectiveStyle(environment, currentPage, atmosphereLayer.id)
+      : atmosphereEnvStyle;
+  const atmospherePageOverride =
+    atmosphereLayer && currentPage
+      ? (currentPage.layerOverrides?.[atmosphereLayer.id] ?? {})
+      : {};
+  const atmosphereVolumeOverridden =
+    currentPage !== null &&
+    ATMOSPHERE_VOLUME_FIELDS.some((field) =>
+      Object.prototype.hasOwnProperty.call(atmospherePageOverride, field),
+    );
+  const atmosphereEnvVisible =
+    atmosphereLayer !== null &&
+    environment.defaultVisibleLayers.includes(atmosphereLayer.id);
+  const atmosphereVisibilityOverride =
+    atmosphereLayer && currentPage
+      ? currentPage.visibilityOverrides?.[atmosphereLayer.id]
+      : undefined;
+  const atmosphereEffectiveVisible =
+    typeof atmosphereVisibilityOverride === "boolean"
+      ? atmosphereVisibilityOverride
+      : atmosphereEnvVisible;
+  const toggleAtmosphereVisible = () => {
+    if (!atmosphereLayer) return;
+    if (isEnv) {
+      toggleEnvDefaultVisible(atmosphereLayer.id);
+    } else if (currentPage) {
+      setPageVisibilityOverride(
+        currentPage.id,
+        atmosphereLayer.id,
+        !atmosphereEffectiveVisible,
+      );
+    }
+  };
+  const cloudFootprint = terrainFootprint ?? imageFootprint;
+  const defaultCloudStyle = (
+    source?: EditableStyle,
+  ): Partial<EditableStyle> => {
+    const terrainSizeX = cloudFootprint?.sizeX ?? 1800;
+    const terrainSizeY = cloudFootprint?.sizeY ?? 1300;
+    const terrainSizeZ = cloudFootprint?.sizeZ ?? 800;
+    const sizeX = clampRange(terrainSizeX * 0.12, 250, 12000);
+    const sizeY = clampRange(terrainSizeY * 0.12, 250, 12000);
+    const sizeZ = clampRange(terrainSizeZ * 0.12, 120, 2500);
+    const seedBase =
+      typeof source?.atmosphereSeed === "number"
+        ? source.atmosphereSeed + 17
+        : 101 + atmosphereLayers.length * 37;
+    return {
+      atmosphereSubtype: source?.atmosphereSubtype ?? "cloud-bank",
+      atmosphereBoundsMode: source?.atmosphereBoundsMode ?? "box",
+      color: source?.color ?? "#eef4f8",
+      opacity: source?.opacity ?? 0.32,
+      atmosphereDensity: source?.atmosphereDensity ?? 0.45,
+      atmosphereSoftness: source?.atmosphereSoftness ?? 0.82,
+      atmospherePuffCount: source?.atmospherePuffCount ?? 96,
+      atmospherePuffScaleM:
+        source?.atmospherePuffScaleM ?? clampRange(sizeX / 16, 80, 1200),
+      atmosphereScaleJitter: source?.atmosphereScaleJitter ?? 0.58,
+      atmosphereBoundsCenterX:
+        source?.atmosphereBoundsCenterX ?? cloudFootprint?.centerX ?? 0,
+      atmosphereBoundsCenterY:
+        source?.atmosphereBoundsCenterY ?? cloudFootprint?.centerY ?? 0,
+      atmosphereBoundsCenterZ:
+        source?.atmosphereBoundsCenterZ ??
+        clampRange((cloudFootprint?.centerZ ?? 300) + sizeZ * 0.35, 60, 12000),
+      atmosphereBoundsSizeX: source?.atmosphereBoundsSizeX ?? sizeX,
+      atmosphereBoundsSizeY: source?.atmosphereBoundsSizeY ?? sizeY,
+      atmosphereBoundsSizeZ: source?.atmosphereBoundsSizeZ ?? sizeZ,
+      atmosphereEdgeFade: source?.atmosphereEdgeFade ?? 0.88,
+      atmosphereVerticalFalloff: source?.atmosphereVerticalFalloff ?? 0.45,
+      atmosphereSeed: seedBase,
+      atmosphereDriftEnabled: source?.atmosphereDriftEnabled ?? false,
+      atmosphereDriftSpeedMps: source?.atmosphereDriftSpeedMps ?? 5,
+      atmosphereDriftDirectionX: source?.atmosphereDriftDirectionX ?? 1,
+      atmosphereDriftDirectionY: source?.atmosphereDriftDirectionY ?? 0,
+      atmosphereDriftDirectionZ: source?.atmosphereDriftDirectionZ ?? 0,
+      atmosphereDepthTest: source?.atmosphereDepthTest ?? true,
+      atmosphereRenderOrder: source?.atmosphereRenderOrder ?? 20,
+      atmosphereBoundsHelperVisible: true,
+    };
+  };
+  const addCloudLayer = () => {
+    if (!addAtmosphereLayer) return;
+    const id = addAtmosphereLayer(defaultCloudStyle(), null);
+    setSelectedAtmosphereLayerId(id);
+  };
+  const duplicateCloudLayer = () => {
+    if (!atmosphereLayer || !addAtmosphereLayer) return;
+    const source = atmosphereVolumePatchFromStyle(atmosphereEffectiveStyle);
+    const sizeX =
+      typeof source.atmosphereBoundsSizeX === "number"
+        ? source.atmosphereBoundsSizeX
+        : 120;
+    const id = addAtmosphereLayer(
+      {
+        ...defaultCloudStyle(source),
+        atmosphereBoundsCenterX:
+          (source.atmosphereBoundsCenterX ?? 0) + sizeX * 0.18,
+        atmosphereBoundsCenterY:
+          (source.atmosphereBoundsCenterY ?? 0) + sizeX * 0.1,
+        atmosphereBoundsHelperVisible: true,
+      },
+      atmosphereLayer,
+    );
+    setSelectedAtmosphereLayerId(id);
+  };
+  const deleteCloudLayer = () => {
+    if (!atmosphereLayer || !removeAtmosphereLayer) return;
+    const remaining = atmosphereLayers.filter(
+      (layer) => layer.id !== atmosphereLayer.id,
+    );
+    removeAtmosphereLayer(atmosphereLayer.id);
+    setSelectedAtmosphereLayerId(remaining[0]?.id ?? "");
+  };
   const setTopoMaterialPreset = (value: PublicTopoMaterialPresetId) => {
     const patch = topoMapPresetPatch(value, rawTerrain);
     if (!patch) {
@@ -545,14 +896,18 @@ export function TopoMapPanel({
     );
   };
   const showSurface = section === "all" || section === "surface";
+  const showEnvironment = section === "all" || section === "environment";
+  const showSurfacePanel = showSurface || showEnvironment;
   const showGraticule = section === "all" || section === "graticule";
   const showTitle = section === "all" || section === "title";
 
   return (
     <>
-      {showSurface ? (
+      {showSurfacePanel ? (
         <TopoSurfaceSettingsPanel nested={nestedContainers}>
-          {terrainLayer ? (
+          {showSurface ? (
+            <>
+              {terrainLayer ? (
             <div style={panelStyles.sectionHeader}>
               <div style={panelStyles.checkboxRow}>
                 <span
@@ -619,6 +974,49 @@ export function TopoMapPanel({
               />
             </div>
           </details>
+          <TopoSubsection label="Height map" testId="topo-height-map-controls">
+            <div style={topoClipReadoutStyle}>
+              <div>
+                Source:{" "}
+                {terrainLayer?.files?.raster ??
+                  (metadataText(terrainMeta.sourceFile) || "unknown")}
+              </div>
+              <div>CRS: {terrainGeoTransform?.sourceCrs ?? "unknown"}</div>
+              <div>
+                Footprint:{" "}
+                {terrainFootprint
+                  ? kmSizeLabel(terrainFootprint.sizeX, terrainFootprint.sizeY)
+                  : "unknown"}
+              </div>
+              <div>
+                Elevation range:{" "}
+                {terrainGeoTransform
+                  ? `${Math.round(terrainGeoTransform.boundsMin[2])} m - ${Math.round(
+                      terrainGeoTransform.boundsMax[2],
+                    )} m`
+                  : "unknown"}
+              </div>
+              <div>
+                Vertex budget:{" "}
+                {terrainGeoTransform?.maxVertices
+                  ? terrainGeoTransform.maxVertices.toLocaleString()
+                  : "unknown"}
+              </div>
+            </div>
+            <EnvStyleRow
+              label="Vertical exaggeration"
+              inputType="range"
+              value={String(terrain.verticalExaggeration ?? 1)}
+              min={0.25}
+              max={5}
+              step={0.05}
+              decimals={2}
+              onChange={(v) =>
+                setTerrain({ verticalExaggeration: parseFloat(v) })
+              }
+              testId="topo-vertical-exaggeration"
+            />
+          </TopoSubsection>
           <TopoSubsection
             label="Material source"
             testId="topo-material-controls"
@@ -633,7 +1031,7 @@ export function TopoMapPanel({
           </TopoSubsection>
           {selectedPresetIsImageBacked ? (
             <>
-              <TopoSubsection label="Image adjustment">
+              <TopoSubsection label="Satellite image">
                 <EnvSelectRow<OrthoPhotoTextureBudgetId>
                   label="Texture budget"
                   value={selectedOrthoPhotoBudget}
@@ -654,21 +1052,8 @@ export function TopoMapPanel({
                     setTerrain({ orthoPhotoOpacity: parseFloat(v) })
                   }
                 />
-                <EnvStyleRow
-                  label="Photo relief"
-                  inputType="range"
-                  value={String(terrain.orthoPhotoHillshadeBlend ?? 0.45)}
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  decimals={2}
-                  testId="topo-ortho-photo-hillshade"
-                  onChange={(v) =>
-                    setTerrain({
-                      orthoPhotoHillshadeBlend: parseFloat(v),
-                    })
-                  }
-                />
+              </TopoSubsection>
+              <TopoSubsection label="Image adjustment">
                 <EnvStyleRow
                   label="Photo bright"
                   inputType="range"
@@ -706,6 +1091,102 @@ export function TopoMapPanel({
                   testId="topo-ortho-photo-saturation"
                   onChange={(v) =>
                     setTerrain({ orthoPhotoSaturation: parseFloat(v) })
+                  }
+                />
+              </TopoSubsection>
+              <TopoSubsection label="Image sun response">
+                <EnvStyleRow
+                  label="Photo sun relief"
+                  inputType="range"
+                  value={String(terrain.orthoPhotoHillshadeBlend ?? 0.45)}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  decimals={2}
+                  testId="topo-ortho-photo-hillshade"
+                  onChange={(v) =>
+                    setTerrain({
+                      orthoPhotoHillshadeBlend: parseFloat(v),
+                    })
+                  }
+                />
+                <EnvStyleRow
+                  label="Photo shadow"
+                  inputType="range"
+                  value={String(terrain.orthoPhotoShadowStrength ?? 0.35)}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  decimals={2}
+                  testId="topo-ortho-photo-shadow-strength"
+                  onChange={(v) =>
+                    setTerrain({
+                      orthoPhotoShadowStrength: parseFloat(v),
+                    })
+                  }
+                />
+                <EnvStyleRow
+                  label="Shadow floor"
+                  inputType="range"
+                  value={String(terrain.orthoPhotoShadowFloor ?? 0.62)}
+                  min={0.05}
+                  max={1}
+                  step={0.05}
+                  decimals={2}
+                  testId="topo-ortho-photo-shadow-floor"
+                  onChange={(v) =>
+                    setTerrain({
+                      orthoPhotoShadowFloor: parseFloat(v),
+                    })
+                  }
+                />
+                <EnvStyleRow
+                  label="Shadow tint"
+                  inputType="color"
+                  value={terrain.orthoPhotoShadowTint ?? "#303640"}
+                  testId="topo-ortho-photo-shadow-tint"
+                  onChange={(v) =>
+                    setTerrain({
+                      orthoPhotoShadowTint: v,
+                    })
+                  }
+                />
+              </TopoSubsection>
+              <TopoSubsection
+                label="Outside image fill"
+                active={terrain.orthoPhotoOutsideFillEnabled === true}
+                testId="topo-ortho-photo-outside-fill"
+                onToggle={() => {
+                  const nextEnabled =
+                    terrain.orthoPhotoOutsideFillEnabled !== true;
+                  setTerrain({
+                    orthoPhotoOutsideFillEnabled: nextEnabled,
+                    orthoPhotoOutsideOpacity:
+                      nextEnabled &&
+                      (terrain.orthoPhotoOutsideOpacity ?? 0) <= 0.001
+                        ? 1
+                        : (terrain.orthoPhotoOutsideOpacity ?? 0),
+                  });
+                }}
+              >
+                <EnvStyleRow
+                  label="Fill color"
+                  inputType="color"
+                  value={terrain.orthoPhotoOutsideColor ?? "#b8ad8d"}
+                  testId="topo-ortho-photo-outside-color"
+                  onChange={(v) => setTerrain({ orthoPhotoOutsideColor: v })}
+                />
+                <EnvStyleRow
+                  label="Fill opacity"
+                  inputType="range"
+                  value={String(terrain.orthoPhotoOutsideOpacity ?? 0)}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  decimals={2}
+                  testId="topo-ortho-photo-outside-opacity"
+                  onChange={(v) =>
+                    setTerrain({ orthoPhotoOutsideOpacity: parseFloat(v) })
                   }
                 />
               </TopoSubsection>
@@ -962,19 +1443,6 @@ export function TopoMapPanel({
               onChange={(v) => setTerrain({ elevHighM: parseFloat(v) })}
             />
             <EnvStyleRow
-              label="Vertical exaggeration"
-              inputType="range"
-              value={String(terrain.verticalExaggeration ?? 1)}
-              min={0.25}
-              max={5}
-              step={0.05}
-              decimals={2}
-              onChange={(v) =>
-                setTerrain({ verticalExaggeration: parseFloat(v) })
-              }
-              testId="topo-vertical-exaggeration"
-            />
-            <EnvStyleRow
               label="Hue variance"
               inputType="range"
               value={String(terrain.rockHueVariance ?? 0.05)}
@@ -985,11 +1453,73 @@ export function TopoMapPanel({
               onChange={(v) => setTerrain({ rockHueVariance: parseFloat(v) })}
             />
           </TopoSubsection>
+          <TopoSubsection
+            label="Mesh grid and underside"
+            active={terrain.gridEnabled !== false}
+            testId="topo-mesh-grid-controls"
+            toggleTestId="topo-terrain-grid-enabled"
+            onToggle={() =>
+              setTerrain({ gridEnabled: terrain.gridEnabled === false })
+            }
+          >
+            <EnvStyleRow
+              label="Grid color"
+              inputType="color"
+              value={terrain.gridColor ?? "#f1dec0"}
+              testId="topo-terrain-grid-color"
+              onChange={(v) => setTerrain({ gridColor: v })}
+            />
+            <EnvStyleRow
+              label="Grid opacity"
+              inputType="range"
+              value={String(terrain.gridOpacity ?? 0.18)}
+              min={0}
+              max={1}
+              step={0.02}
+              decimals={2}
+              testId="topo-terrain-grid-opacity"
+              onChange={(v) => setTerrain({ gridOpacity: parseFloat(v) })}
+            />
+            <EnvStyleRow
+              label="Grid spacing"
+              inputType="range"
+              value={String(terrain.gridSpacingM ?? 1000)}
+              min={100}
+              max={10000}
+              step={100}
+              decimals={0}
+              testId="topo-terrain-grid-spacing"
+              onChange={(v) => setTerrain({ gridSpacingM: parseFloat(v) })}
+            />
+            <EnvStyleRow
+              label="Grid line width"
+              inputType="range"
+              value={String(terrain.gridLineWidthM ?? 18)}
+              min={0}
+              max={100}
+              step={1}
+              decimals={0}
+              testId="topo-terrain-grid-line-width"
+              onChange={(v) => setTerrain({ gridLineWidthM: parseFloat(v) })}
+            />
+            <EnvStyleRow
+              label="Underside opacity"
+              inputType="range"
+              value={String(terrain.undersideOpacity ?? 0)}
+              min={0}
+              max={1}
+              step={0.02}
+              decimals={2}
+              testId="topo-terrain-underside-opacity"
+              onChange={(v) => setTerrain({ undersideOpacity: parseFloat(v) })}
+            />
+          </TopoSubsection>
           <TopoSurfaceClipControls
             {...publicSurfaceLayerControlProps}
             terrain={terrain}
-            setTerrain={setTerrain}
-            edgeFadeShape={edgeFadeShape}
+            terrainLayer={terrainLayer}
+            terrainFootprint={terrainFootprint}
+            imageFootprint={imageFootprint}
             alignTitleToMapEdge={() =>
               setTopoMapBranding({
                 anchor: TOPO_MAP_BRANDING_DEFAULT_ANCHOR,
@@ -998,194 +1528,615 @@ export function TopoMapPanel({
               })
             }
           />
-          <details style={drillingAssayDetailsStyle}>
-            <summary style={drillingAssaySummaryStyle}>Atmosphere</summary>
+          <TopoMapEdgeControls
+            {...publicSurfaceLayerControlProps}
+            terrain={terrain}
+            setTerrain={setTerrain}
+            edgeFadeShape={edgeFadeShape}
+          />
+            </>
+          ) : null}
+          {showEnvironment ? (
+          <details
+            open={!nestedContainers ? true : undefined}
+            style={
+              nestedContainers
+                ? drillingAssayDetailsStyle
+                : ({ margin: 0 } as CSSProperties)
+            }
+            data-testid="topo-environment-controls"
+          >
+            <summary
+              style={
+                nestedContainers
+                  ? drillingAssaySummaryStyle
+                  : ({ display: "none" } as CSSProperties)
+              }
+            >
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <CloudIcon />
+                <span>Environment</span>
+              </span>
+            </summary>
             <div style={detailsContentStyle}>
-              <TopoSubsection
-                label="Sun"
-                active={mapSunReliefActive}
-                onToggle={() =>
-                  setTerrain({
-                    hillshadeIntensity: mapSunReliefActive ? 0 : 1.05,
-                  })
-                }
-              >
-                <EnvStyleRow
-                  label="Sun azimuth"
-                  inputType="range"
-                  value={String(sunAzimuth)}
-                  min={0}
-                  max={360}
-                  step={1}
-                  decimals={0}
-                  testId="topo-map-sun-azimuth"
-                  onChange={(v) => setSceneSun({ azimuth: parseFloat(v) })}
-                />
-                <EnvStyleRow
-                  label="Sun elevation"
-                  inputType="range"
-                  value={String(sunElevation)}
-                  min={-5}
-                  max={80}
-                  step={1}
-                  decimals={0}
-                  testId="topo-map-sun-elevation"
-                  onChange={(v) => setSceneSun({ elevation: parseFloat(v) })}
-                />
+              <TopoSubsection label="Scene atmosphere">
                 <TopoEyeToggleRow
-                  label="Camera lock"
-                  checked={sceneSun.lockToCamera === true}
+                  label="Light mode"
+                  checked={sceneLightMode}
+                  testId="topo-scene-light-mode"
                   title={
-                    sceneSun.lockToCamera === true
-                      ? "Unlock sun from camera"
-                      : "Lock sun to camera"
+                    sceneLightMode
+                      ? "Use dark scene atmosphere"
+                      : "Use light scene atmosphere"
                   }
-                  onChange={(checked) => setSceneSun({ lockToCamera: checked })}
+                  onChange={(checked) => setEnvScene({ lightMode: checked })}
                 />
                 <EnvStyleRow
-                  label="Relief strength"
-                  inputType="range"
-                  value={String(terrain.hillshadeIntensity ?? 1.05)}
-                  min={0}
-                  max={2}
-                  step={0.05}
-                  decimals={2}
-                  testId="topo-map-hillshade-strength"
-                  onChange={(v) =>
-                    setTerrain({ hillshadeIntensity: parseFloat(v) })
-                  }
-                />
-                <EnvStyleRow
-                  label="Shadow edge"
-                  inputType="range"
-                  value={String(terrain.shadowSharpness ?? 0.5)}
-                  min={0}
-                  max={1}
-                  step={0.02}
-                  decimals={2}
-                  testId="topo-map-shadow-edge"
-                  onChange={(v) =>
-                    setTerrain({ shadowSharpness: parseFloat(v) })
-                  }
-                />
-                <EnvStyleRow
-                  label="Facet highlight"
-                  inputType="range"
-                  value={String(terrain.facetStrength ?? 0.08)}
-                  min={0}
-                  max={1}
-                  step={0.02}
-                  decimals={2}
-                  testId="topo-map-facet-highlight"
-                  onChange={(v) => setTerrain({ facetStrength: parseFloat(v) })}
-                />
-                <EnvStyleRow
-                  label="Shadow tint"
+                  label="Dark background"
                   inputType="color"
-                  value={terrain.shadowTint ?? "#303640"}
-                  testId="topo-map-shadow-tint"
-                  onChange={(v) => setTerrain({ shadowTint: v })}
+                  value={sceneDarkBackground}
+                  testId="topo-scene-dark-background"
+                  onChange={(v) => setEnvScene({ background: v })}
+                />
+                <EnvStyleRow
+                  label="Dark fog"
+                  inputType="color"
+                  value={sceneDarkFogColor}
+                  testId="topo-scene-dark-fog"
+                  onChange={(v) => setSceneFog({ color: v })}
+                />
+                <EnvStyleRow
+                  label="Light background"
+                  inputType="color"
+                  value={sceneLightBackground}
+                  testId="topo-scene-light-background"
+                  onChange={(v) => setEnvScene({ lightModeBackground: v })}
+                />
+                <EnvStyleRow
+                  label="Light fog"
+                  inputType="color"
+                  value={sceneLightFogColor}
+                  testId="topo-scene-light-fog"
+                  onChange={(v) => setSceneFog({ lightModeColor: v })}
                 />
               </TopoSubsection>
-              {isEnv || currentPage ? (
+              <TopoSubsection
+                label="Clouds"
+                active={atmosphereLayer ? atmosphereEffectiveVisible : false}
+                onToggle={atmosphereLayer ? toggleAtmosphereVisible : undefined}
+                testId="topo-environment-clouds"
+              >
+                <div style={topoInlineActionRowStyle}>
+                  <button
+                    type="button"
+                    style={topoInlineActionButtonStyle}
+                    data-testid="topo-cloud-add"
+                    disabled={!addAtmosphereLayer}
+                    onClick={addCloudLayer}
+                  >
+                    Add cloud
+                  </button>
+                  <button
+                    type="button"
+                    style={topoInlineActionButtonStyle}
+                    data-testid="topo-cloud-duplicate"
+                    disabled={!atmosphereLayer || !addAtmosphereLayer}
+                    onClick={duplicateCloudLayer}
+                  >
+                    Duplicate
+                  </button>
+                  <button
+                    type="button"
+                    style={topoInlineActionButtonStyle}
+                    data-testid="topo-cloud-delete"
+                    disabled={!atmosphereLayer || !removeAtmosphereLayer}
+                    onClick={deleteCloudLayer}
+                  >
+                    Delete
+                  </button>
+                </div>
+                {atmosphereLayer ? (
+                  <>
+                    {atmosphereLayers.length > 1 ? (
+                      <div style={nestedControlRowStyle}>
+                        <label style={nestedFieldLabelStyle}>Cloud layer</label>
+                        <select
+                          value={atmosphereLayer.id}
+                          data-testid="topo-cloud-layer-select"
+                          onChange={(event) =>
+                            setSelectedAtmosphereLayerId(event.target.value)
+                          }
+                          style={{ flex: 1, minWidth: 0 }}
+                        >
+                          {atmosphereLayers.map((layer) => (
+                            <option key={layer.id} value={layer.id}>
+                              {layer.label || layer.id}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <input
+                        type="hidden"
+                        data-testid="topo-cloud-layer-select"
+                        value={atmosphereLayer.id}
+                        readOnly
+                      />
+                    )}
+                    <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
+                      {atmosphereLayer.label} controls use the same
+                      environment layer style and page override paths as the
+                      layer row.
+                    </div>
+                    {isEnv ? (
+                      <EnvVisibilityRow
+                        visible={atmosphereEnvVisible}
+                        onToggle={toggleAtmosphereVisible}
+                      />
+                    ) : currentPage ? (
+                      <PageVisibilityRow
+                        page={currentPage}
+                        layerId={atmosphereLayer.id}
+                        envVisible={atmosphereEnvVisible}
+                        onSet={(visible) =>
+                          setPageVisibilityOverride(
+                            currentPage.id,
+                            atmosphereLayer.id,
+                            visible,
+                          )
+                        }
+                        onClear={() =>
+                          clearPageVisibilityOverride(
+                            currentPage.id,
+                            atmosphereLayer.id,
+                          )
+                        }
+                      />
+                    ) : null}
+                    <AtmosphereVolumeControls
+                      layerId={atmosphereLayerId}
+                      style={
+                        isEnv ? atmosphereEnvStyle : atmosphereEffectiveStyle
+                      }
+                      isEnv={isEnv}
+                      currentPage={currentPage}
+                      disabled={!isEnv && !atmosphereVolumeOverridden}
+                      overridden={atmosphereVolumeOverridden}
+                      onToggleOverride={
+                        currentPage
+                          ? (enabled) => {
+                              if (enabled) {
+                                setPageLayerOverride(
+                                  currentPage.id,
+                                  atmosphereLayer.id,
+                                  atmosphereVolumePatchFromStyle(
+                                    atmosphereEffectiveStyle,
+                                  ),
+                                );
+                              } else {
+                                for (const field of ATMOSPHERE_VOLUME_FIELDS) {
+                                  clearPageLayerOverride(
+                                    currentPage.id,
+                                    atmosphereLayer.id,
+                                    field,
+                                  );
+                                }
+                              }
+                            }
+                          : undefined
+                      }
+                      setEnvLayerStyle={setEnvLayerStyle}
+                      setPageLayerOverride={setPageLayerOverride}
+                      clearPageLayerOverride={clearPageLayerOverride}
+                    />
+                  </>
+                ) : (
+                  <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
+                    No cloud volume is registered for this project. Add one to
+                    place, size, and tune it here or with the on-screen handles.
+                  </div>
+                )}
+              </TopoSubsection>
+
+              <TopoSubsection label="Sun" testId="topo-environment-sun">
                 <TopoSubsection
-                  label="Scene fog"
-                  active={sceneFogEnabled}
-                  onToggle={() => setSceneFog({ enabled: !sceneFogEnabled })}
+                  label="Light source"
+                  active={sunLightEnabled}
+                  testId="topo-sun-light-source"
+                  toggleTestId="topo-sun-light-enabled"
+                  onToggle={() =>
+                    setSceneSun({ lightEnabled: !sunLightEnabled })
+                  }
                 >
                   <EnvStyleRow
-                    label="Fog color"
-                    inputType="color"
-                    value={sceneFog.color ?? scene.background ?? "#383838"}
-                    onChange={(v) => setSceneFog({ color: v })}
+                    label="Sun azimuth"
+                    inputType="range"
+                    value={String(sunAzimuth)}
+                    min={0}
+                    max={360}
+                    step={1}
+                    decimals={0}
+                    testId="topo-map-sun-azimuth"
+                    onChange={(v) => setSceneSun({ azimuth: parseFloat(v) })}
                   />
-                  {sceneFogEnabled ? (
-                    <>
-                      <EnvStyleRow
-                        label="Fog dens."
-                        inputType="range"
-                        value={String(sceneFogDensity * 10000)}
-                        min={0.01}
-                        max={6}
-                        step={0.01}
-                        decimals={2}
-                        onChange={(v) =>
-                          setSceneFog({ density: parseFloat(v) / 10000 })
-                        }
-                      />
-                      <EnvStyleRow
-                        label="Fog reach"
-                        inputType="range"
-                        value={String(sceneFogReachKm)}
-                        min={5}
-                        max={3000}
-                        step={5}
-                        decimals={0}
-                        onChange={(v) =>
-                          setSceneFog({
-                            density: 3 / Math.max(parseFloat(v) * 1000, 1),
-                          })
-                        }
-                      />
-                      <EnvStyleRow
-                        label="Fog gradient"
-                        inputType="range"
-                        value={String(sceneFogGradientCurve)}
-                        min={0.35}
-                        max={4}
-                        step={0.05}
-                        decimals={2}
-                        onChange={(v) =>
-                          setTerrain({ fogGradientCurve: parseFloat(v) })
-                        }
-                      />
-                    </>
-                  ) : null}
+                  <EnvStyleRow
+                    label="Sun elevation"
+                    inputType="range"
+                    value={String(sunElevation)}
+                    min={-5}
+                    max={80}
+                    step={1}
+                    decimals={0}
+                    testId="topo-map-sun-elevation"
+                    onChange={(v) => setSceneSun({ elevation: parseFloat(v) })}
+                  />
+                  <TopoEyeToggleRow
+                    label="Camera lock"
+                    checked={sceneSun.lockToCamera === true}
+                    title={
+                      sceneSun.lockToCamera === true
+                        ? "Unlock sun from camera"
+                        : "Lock sun to camera"
+                    }
+                    onChange={(checked) =>
+                      setSceneSun({ lockToCamera: checked })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Light color"
+                    inputType="color"
+                    value={sceneDirectionalLight.color ?? "#ffe0a8"}
+                    testId="topo-sun-light-color"
+                    onChange={(v) => setSceneDirectionalLight({ color: v })}
+                  />
+                  <EnvStyleRow
+                    label="Light intensity"
+                    inputType="range"
+                    value={String(sceneDirectionalLight.intensity ?? 2.35)}
+                    min={0}
+                    max={6}
+                    step={0.05}
+                    decimals={2}
+                    testId="topo-sun-light-intensity"
+                    onChange={(v) =>
+                      setSceneDirectionalLight({ intensity: parseFloat(v) })
+                    }
+                  />
                 </TopoSubsection>
-              ) : null}
-              <TopoSubsection
-                label="Map fog"
-                active={topoFogIncluded}
-                onToggle={() =>
-                  setPublicTopoLayerStyle({ affectedByFog: !topoFogIncluded })
-                }
-              >
-                {topoFogIncluded ? (
+                <TopoSubsection
+                  label="Sky image"
+                  active={sunOrbVisible}
+                  testId="topo-sun-sky-image"
+                  toggleTestId="topo-sun-orb-visible"
+                  onToggle={() => setSceneSun({ orbVisible: !sunOrbVisible })}
+                >
+                  <TopoEyeToggleRow
+                    label="Source marker"
+                    checked={sunSourceMarkerVisible}
+                    testId="topo-sun-source-marker-visible"
+                    title={
+                      sunSourceMarkerVisible
+                        ? "Hide the sun source marker"
+                        : "Show the sun source marker"
+                    }
+                    onChange={(checked) =>
+                      setSceneSun({ sourceMarkerVisible: checked })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Orb color"
+                    inputType="color"
+                    value={sunOrbColor}
+                    testId="topo-sun-orb-color"
+                    onChange={(v) => setSceneSun({ orbColor: v })}
+                  />
+                  <EnvStyleRow
+                    label="Orb opacity"
+                    inputType="range"
+                    value={String(sunOrbOpacity)}
+                    min={0}
+                    max={1}
+                    step={0.02}
+                    decimals={2}
+                    testId="topo-sun-orb-opacity"
+                    onChange={(v) =>
+                      setSceneSun({ orbOpacity: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Orb size"
+                    inputType="range"
+                    value={String(sunOrbSizeM)}
+                    min={1000}
+                    max={600000}
+                    step={1000}
+                    decimals={0}
+                    testId="topo-sun-orb-size"
+                    onChange={(v) => setSceneSun({ orbSizeM: parseFloat(v) })}
+                  />
+                  <EnvStyleRow
+                    label="Orb distance"
+                    inputType="range"
+                    value={String(sunOrbDistanceM)}
+                    min={10000}
+                    max={5000000}
+                    step={10000}
+                    decimals={0}
+                    testId="topo-sun-orb-distance"
+                    onChange={(v) =>
+                      setSceneSun({ orbDistanceM: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Edge blur"
+                    inputType="range"
+                    value={String(sunOrbEdgeSoftness)}
+                    min={0}
+                    max={1}
+                    step={0.02}
+                    decimals={2}
+                    testId="topo-sun-orb-edge-softness"
+                    onChange={(v) =>
+                      setSceneSun({ orbEdgeSoftness: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Halo color"
+                    inputType="color"
+                    value={sunOrbHaloColor}
+                    testId="topo-sun-orb-halo-color"
+                    onChange={(v) => setSceneSun({ orbHaloColor: v })}
+                  />
+                  <EnvStyleRow
+                    label="Halo opacity"
+                    inputType="range"
+                    value={String(sunOrbHaloOpacity)}
+                    min={0}
+                    max={1}
+                    step={0.02}
+                    decimals={2}
+                    testId="topo-sun-orb-halo-opacity"
+                    onChange={(v) =>
+                      setSceneSun({ orbHaloOpacity: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Halo scale"
+                    inputType="range"
+                    value={String(sunOrbHaloScale)}
+                    min={1}
+                    max={8}
+                    step={0.1}
+                    decimals={1}
+                    testId="topo-sun-orb-halo-scale"
+                    onChange={(v) =>
+                      setSceneSun({ orbHaloScale: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Marker opacity"
+                    inputType="range"
+                    value={String(sunSourceMarkerOpacity)}
+                    min={0}
+                    max={1}
+                    step={0.02}
+                    decimals={2}
+                    testId="topo-sun-source-marker-opacity"
+                    onChange={(v) =>
+                      setSceneSun({ sourceMarkerOpacity: parseFloat(v) })
+                    }
+                  />
+                </TopoSubsection>
+                <TopoSubsection label="Terrain relief">
+                  <EnvStyleRow
+                    label="Relief strength"
+                    inputType="range"
+                    value={String(terrain.hillshadeIntensity ?? 1.05)}
+                    min={0}
+                    max={2}
+                    step={0.05}
+                    decimals={2}
+                    testId="topo-map-hillshade-strength"
+                    onChange={(v) =>
+                      setTerrain({ hillshadeIntensity: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Shadow edge"
+                    inputType="range"
+                    value={String(terrain.shadowSharpness ?? 0.5)}
+                    min={0}
+                    max={1}
+                    step={0.02}
+                    decimals={2}
+                    testId="topo-map-shadow-edge"
+                    onChange={(v) =>
+                      setTerrain({ shadowSharpness: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Facet highlight"
+                    inputType="range"
+                    value={String(terrain.facetStrength ?? 0.08)}
+                    min={0}
+                    max={1}
+                    step={0.02}
+                    decimals={2}
+                    testId="topo-map-facet-highlight"
+                    onChange={(v) =>
+                      setTerrain({ facetStrength: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Shadow tint"
+                    inputType="color"
+                    value={terrain.shadowTint ?? "#303640"}
+                    testId="topo-map-shadow-tint"
+                    onChange={(v) => setTerrain({ shadowTint: v })}
+                  />
+                </TopoSubsection>
+                <TopoSubsection
+                  label="Projected shadows"
+                  testId="topo-map-projected-shadows"
+                  toggleTestId="topo-map-projected-shadows-enabled"
+                  active={terrain.projectedMapShadowsEnabled === true}
+                  onToggle={() =>
+                    setTerrain({
+                      projectedMapShadowsEnabled:
+                        terrain.projectedMapShadowsEnabled !== true,
+                      projectedMapShadowOpacity:
+                        terrain.projectedMapShadowOpacity ?? 0.45,
+                    })
+                  }
+                >
+                {terrain.projectedMapShadowsEnabled === true ? (
                   <>
                     <EnvStyleRow
-                      label="Layer dens."
+                      label="Shadow opacity"
                       inputType="range"
-                      value={String(topoFogDensity * 10000)}
-                      min={0.01}
-                      max={6}
-                      step={0.01}
+                      value={String(terrain.projectedMapShadowOpacity ?? 0.45)}
+                      min={0}
+                      max={1}
+                      step={0.05}
                       decimals={2}
+                      testId="topo-map-projected-shadow-opacity"
                       onChange={(v) =>
-                        setPublicTopoLayerStyle({
-                          fogDensity: parseFloat(v) / 10000,
+                        setTerrain({
+                          projectedMapShadowOpacity: parseFloat(v),
                         })
                       }
                     />
                     <EnvStyleRow
-                      label="Layer reach"
+                      label="Shadow softness"
                       inputType="range"
-                      value={String(topoFogReachKm)}
-                      min={5}
-                      max={3000}
-                      step={5}
-                      decimals={0}
+                      value={String(terrain.projectedMapShadowSoftness ?? 3)}
+                      min={0}
+                      max={12}
+                      step={0.5}
+                      decimals={1}
+                      testId="topo-map-projected-shadow-softness"
                       onChange={(v) =>
-                        setPublicTopoLayerStyle({
-                          fogDensity: 3 / Math.max(parseFloat(v) * 1000, 1),
+                        setTerrain({
+                          projectedMapShadowSoftness: parseFloat(v),
+                        })
+                      }
+                    />
+                    <EnvStyleRow
+                      label="Shadow bias"
+                      inputType="range"
+                      value={String(terrain.projectedMapShadowBias ?? -0.00035)}
+                      min={-0.01}
+                      max={0.01}
+                      step={0.00005}
+                      decimals={5}
+                      testId="topo-map-projected-shadow-bias"
+                      onChange={(v) =>
+                        setTerrain({
+                          projectedMapShadowBias: parseFloat(v),
                         })
                       }
                     />
                   </>
                 ) : null}
+                </TopoSubsection>
+              </TopoSubsection>
+
+              <TopoSubsection label="Fog" testId="topo-environment-fog">
+                {isEnv || currentPage ? (
+                  <TopoSubsection
+                    label="Scene fog"
+                    active={sceneFogEnabled}
+                    onToggle={() => setSceneFog({ enabled: !sceneFogEnabled })}
+                  >
+                    {sceneFogEnabled ? (
+                      <>
+                        <EnvStyleRow
+                          label="Fog dens."
+                          inputType="range"
+                          value={String(sceneFogDensity * 10000)}
+                          min={0.01}
+                          max={6}
+                          step={0.01}
+                          decimals={2}
+                          onChange={(v) =>
+                            setSceneFog({ density: parseFloat(v) / 10000 })
+                          }
+                        />
+                        <EnvStyleRow
+                          label="Fog reach"
+                          inputType="range"
+                          value={String(sceneFogReachKm)}
+                          min={5}
+                          max={3000}
+                          step={5}
+                          decimals={0}
+                          onChange={(v) =>
+                            setSceneFog({
+                              density: 3 / Math.max(parseFloat(v) * 1000, 1),
+                            })
+                          }
+                        />
+                        <EnvStyleRow
+                          label="Fog gradient"
+                          inputType="range"
+                          value={String(sceneFogGradientCurve)}
+                          min={0.35}
+                          max={4}
+                          step={0.05}
+                          decimals={2}
+                          onChange={(v) =>
+                            setTerrain({ fogGradientCurve: parseFloat(v) })
+                          }
+                        />
+                      </>
+                    ) : null}
+                  </TopoSubsection>
+                ) : null}
+                <TopoSubsection
+                  label="Map fog"
+                  active={topoFogIncluded}
+                  onToggle={() =>
+                    setPublicTopoLayerStyle({ affectedByFog: !topoFogIncluded })
+                  }
+                >
+                  {topoFogIncluded ? (
+                    <>
+                      <EnvStyleRow
+                        label="Layer dens."
+                        inputType="range"
+                        value={String(topoFogDensity * 10000)}
+                        min={0.01}
+                        max={6}
+                        step={0.01}
+                        decimals={2}
+                        onChange={(v) =>
+                          setPublicTopoLayerStyle({
+                            fogDensity: parseFloat(v) / 10000,
+                          })
+                        }
+                      />
+                      <EnvStyleRow
+                        label="Layer reach"
+                        inputType="range"
+                        value={String(topoFogReachKm)}
+                        min={5}
+                        max={3000}
+                        step={5}
+                        decimals={0}
+                        onChange={(v) =>
+                          setPublicTopoLayerStyle({
+                            fogDensity: 3 / Math.max(parseFloat(v) * 1000, 1),
+                          })
+                        }
+                      />
+                    </>
+                  ) : null}
+                </TopoSubsection>
               </TopoSubsection>
             </div>
           </details>
-          {terrainLayer ? (
+          ) : null}
+          {showSurface && terrainLayer ? (
             <details style={drillingAssayDetailsStyle}>
               <summary style={drillingAssaySummaryStyle}>Provenance</summary>
               <div style={detailsContentStyle}>
@@ -1193,7 +2144,7 @@ export function TopoMapPanel({
                   <label style={nestedFieldLabelStyle}>Source file</label>
                   <input
                     type="text"
-                    value={terrainMeta.sourceFile ?? ""}
+                    value={metadataText(terrainMeta.sourceFile)}
                     onChange={(event) =>
                       setLayerProvenance(layerId, {
                         sourceFile: event.target.value,
@@ -1206,7 +2157,7 @@ export function TopoMapPanel({
                   <label style={nestedFieldLabelStyle}>Source date</label>
                   <input
                     type="text"
-                    value={terrainMeta.sourceDate ?? ""}
+                    value={metadataText(terrainMeta.sourceDate)}
                     placeholder="YYYY-MM-DD or source range"
                     onChange={(event) =>
                       setLayerProvenance(layerId, {
@@ -1220,7 +2171,7 @@ export function TopoMapPanel({
                   <label style={nestedFieldLabelStyle}>Origin</label>
                   <input
                     type="text"
-                    value={terrainMeta.sourceOrigin ?? ""}
+                    value={metadataText(terrainMeta.sourceOrigin)}
                     onChange={(event) =>
                       setLayerProvenance(layerId, {
                         sourceOrigin: event.target.value,
@@ -1232,7 +2183,7 @@ export function TopoMapPanel({
                 <div style={nestedControlRowStyle}>
                   <label style={nestedFieldLabelStyle}>Classification</label>
                   <select
-                    value={terrainMeta.classification ?? "observation"}
+                    value={metadataText(terrainMeta.classification) || "observation"}
                     onChange={(event) =>
                       setLayerProvenance(layerId, {
                         classification: event.target.value,
@@ -1249,7 +2200,7 @@ export function TopoMapPanel({
                 <div style={nestedControlRowStyle}>
                   <label style={nestedFieldLabelStyle}>Confidentiality</label>
                   <select
-                    value={terrainMeta.confidentiality ?? "public"}
+                    value={metadataText(terrainMeta.confidentiality) || "public"}
                     onChange={(event) =>
                       setLayerProvenance(layerId, {
                         confidentiality: event.target.value,
@@ -2172,9 +3123,133 @@ function TopoTitleBlockPanel({
 
 function TopoSurfaceClipControls({
   terrain,
+  terrainLayer,
+  terrainFootprint,
+  imageFootprint,
+  alignTitleToMapEdge,
+  style,
+  isEnv,
+  currentPage,
+  layerId,
+  setEnvLayerStyle,
+  setPageLayerOverride,
+}: {
+  terrain: TerrainSettings;
+  terrainLayer: ProjectLayerSpec | null;
+  terrainFootprint: TopoFootprint | null;
+  imageFootprint: TopoFootprint | null;
+  alignTitleToMapEdge: () => void;
+  style: EditableStyle;
+  isEnv: boolean;
+  currentPage: PresentationPage | null;
+  layerId: string;
+  setEnvLayerStyle: LayerStyleSetter;
+  setPageLayerOverride: PageStyleSetter;
+}) {
+  const publicSurfaceClipActive = style.publicSurfaceClipEnabled === true;
+  const materialSource = topoImageMaterialSourceForPreset(
+    terrain,
+    terrain.materialPreset,
+  );
+  const materialLabel =
+    materialSource?.label ??
+    (terrain.materialPreset === "ortho-photo"
+      ? "Ortho photo"
+      : "Active source");
+  const materialBounds = terrain.orthoPhotoBounds;
+  const materialFootprint =
+    materialBounds && materialBounds.length === 4
+      ? `${Math.round((materialBounds[2] - materialBounds[0]) / 1000)} km x ${Math.round((materialBounds[3] - materialBounds[1]) / 1000)} km`
+      : "No raster bounds";
+  const heightMapLabel =
+    terrainLayer?.files?.raster ?? metadataText(terrainLayer?.metadata?.sourceFile);
+  const heightMapFootprintLabel = terrainFootprint
+    ? kmSizeLabel(terrainFootprint.sizeX, terrainFootprint.sizeY)
+    : "unknown";
+  const satelliteFootprintLabel = imageFootprint
+    ? kmSizeLabel(imageFootprint.sizeX, imageFootprint.sizeY)
+    : materialFootprint;
+  const visibleFootprintLabel =
+    publicSurfaceClipActive
+      ? kmSizeLabel(style.publicSurfaceClipSizeX, style.publicSurfaceClipSizeY)
+      : `${heightMapFootprintLabel} (clip off)`;
+  const setPublicSurfaceClipPatch = (patch: Partial<EditableStyle>) => {
+    if (isEnv) {
+      setEnvLayerStyle(layerId, patch);
+    } else if (currentPage) {
+      setPageLayerOverride(currentPage.id, layerId, patch);
+    }
+  };
+  const setFootprint = (footprint: TopoFootprint | null) => {
+    if (!footprint) return;
+    setPublicSurfaceClipPatch(footprintStylePatch(footprint));
+  };
+  const enableCustomFootprint = () => {
+    setPublicSurfaceClipPatch({
+      publicSurfaceClipEnabled: true,
+      ...(style.publicSurfaceClipSizeX && style.publicSurfaceClipSizeY
+        ? {}
+        : terrainFootprint
+          ? footprintStylePatch(terrainFootprint)
+          : {}),
+    });
+  };
+  return (
+    <TopoSubsection
+      label="Map footprint / clipping"
+      testId="topo-clipping-controls"
+    >
+      <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
+        Height-map footprint is the full terrain extent. Satellite coverage
+        stays separate from the visible map edge.
+      </div>
+      <div style={topoClipReadoutStyle}>
+        <div>Height map: {heightMapLabel || "unknown"}</div>
+        <div>Height-map footprint: {heightMapFootprintLabel}</div>
+        <div>Material source: {materialLabel}</div>
+        <div>Satellite footprint: {satelliteFootprintLabel}</div>
+        <div>Visible footprint: {visibleFootprintLabel}</div>
+      </div>
+      <div style={topoInlineActionRowStyle}>
+        <button
+          type="button"
+          style={topoInlineActionButtonStyle}
+          disabled={!terrainFootprint}
+          onClick={() => setFootprint(terrainFootprint)}
+        >
+          Full height map
+        </button>
+        <button
+          type="button"
+          style={topoInlineActionButtonStyle}
+          disabled={!imageFootprint}
+          onClick={() => setFootprint(imageFootprint)}
+        >
+          Fit satellite image
+        </button>
+        <button
+          type="button"
+          style={topoInlineActionButtonStyle}
+          onClick={enableCustomFootprint}
+        >
+          Custom edge
+        </button>
+        <button
+          type="button"
+          style={topoInlineActionButtonStyle}
+          onClick={alignTitleToMapEdge}
+        >
+          Align title to edge
+        </button>
+      </div>
+    </TopoSubsection>
+  );
+}
+
+function TopoMapEdgeControls({
+  terrain,
   setTerrain,
   edgeFadeShape,
-  alignTitleToMapEdge,
   style,
   isEnv,
   currentPage,
@@ -2186,7 +3261,6 @@ function TopoSurfaceClipControls({
   terrain: TerrainSettings;
   setTerrain: (patch: TerrainSettings) => void;
   edgeFadeShape: "square" | "rounded-square" | "circle";
-  alignTitleToMapEdge: () => void;
   style: EditableStyle;
   isEnv: boolean;
   currentPage: PresentationPage | null;
@@ -2206,20 +3280,6 @@ function TopoSurfaceClipControls({
   };
   const edgeFadeActive = (terrain.edgeFadeDistanceM ?? 90_000) > 0;
   const publicSurfaceClipActive = style.publicSurfaceClipEnabled === true;
-  const materialSource = topoImageMaterialSourceForPreset(
-    terrain,
-    terrain.materialPreset,
-  );
-  const materialLabel =
-    materialSource?.label ??
-    (terrain.materialPreset === "ortho-photo"
-      ? "Ortho photo"
-      : "Active source");
-  const materialBounds = terrain.orthoPhotoBounds;
-  const materialFootprint =
-    materialBounds && materialBounds.length === 4
-      ? `${Math.round((materialBounds[2] - materialBounds[0]) / 1000)} km x ${Math.round((materialBounds[3] - materialBounds[1]) / 1000)} km`
-      : "No raster bounds";
   const resetMaterialEdgeCrop = () =>
     setTerrain({
       edgeFadeDistanceM: 0,
@@ -2230,42 +3290,19 @@ function TopoSurfaceClipControls({
       edgeOutlineOpacity: 0,
       edgeOutlineOffsetM: 0,
     });
-  const setPublicSurfaceClipEnabled = (enabled: boolean) => {
+  const setPublicSurfaceClipPatch = (patch: Partial<EditableStyle>) => {
     if (isEnv) {
-      setEnvLayerStyle(layerId, { publicSurfaceClipEnabled: enabled });
+      setEnvLayerStyle(layerId, patch);
     } else if (currentPage) {
-      setPageLayerOverride(currentPage.id, layerId, {
-        publicSurfaceClipEnabled: enabled,
-      });
+      setPageLayerOverride(currentPage.id, layerId, patch);
     }
   };
+  const setPublicSurfaceClipEnabled = (enabled: boolean) => {
+    setPublicSurfaceClipPatch({ publicSurfaceClipEnabled: enabled });
+  };
+
   return (
-    <TopoSubsection label="Clipping" testId="topo-clipping-controls">
-      <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
-        Material edge opacity fade changes the visible topo footprint by fading
-        into the active fog color. Public surface clip crops terrain, roads,
-        streams, graticule, and waterbodies together.
-      </div>
-      <div style={topoClipReadoutStyle}>
-        <div>Material source: {materialLabel}</div>
-        <div>Raster footprint: {materialFootprint}</div>
-      </div>
-      <div style={topoInlineActionRowStyle}>
-        <button
-          type="button"
-          style={topoInlineActionButtonStyle}
-          onClick={resetMaterialEdgeCrop}
-        >
-          Full material edge
-        </button>
-        <button
-          type="button"
-          style={topoInlineActionButtonStyle}
-          onClick={alignTitleToMapEdge}
-        >
-          Align title to edge
-        </button>
-      </div>
+    <>
       <TopoSubsection
         label="Material edge opacity fade"
         active={edgeFadeActive}
@@ -2277,6 +3314,15 @@ function TopoSurfaceClipControls({
         <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
           Opacity/fog fade only. Edge color is controlled by Material edge
           outline below.
+        </div>
+        <div style={topoInlineActionRowStyle}>
+          <button
+            type="button"
+            style={topoInlineActionButtonStyle}
+            onClick={resetMaterialEdgeCrop}
+          >
+            Full material edge
+          </button>
         </div>
         <EnvStyleRow
           label="Fade width"
@@ -2446,8 +3492,8 @@ function TopoSurfaceClipControls({
           label="X center"
           field="publicSurfaceClipCenterX"
           fallback={0}
-          min={-300000}
-          max={300000}
+          min={-800000}
+          max={800000}
           step={250}
           decimals={0}
           {...numberProps}
@@ -2456,8 +3502,8 @@ function TopoSurfaceClipControls({
           label="Y center"
           field="publicSurfaceClipCenterY"
           fallback={0}
-          min={-300000}
-          max={300000}
+          min={-800000}
+          max={800000}
           step={250}
           decimals={0}
           {...numberProps}
@@ -2475,9 +3521,9 @@ function TopoSurfaceClipControls({
         <LayerNumberStyleControl
           label="X size"
           field="publicSurfaceClipSizeX"
-          fallback={279150}
+          fallback={1395706.5}
           min={100}
-          max={500000}
+          max={1600000}
           step={500}
           decimals={0}
           {...numberProps}
@@ -2485,9 +3531,9 @@ function TopoSurfaceClipControls({
         <LayerNumberStyleControl
           label="Y size"
           field="publicSurfaceClipSizeY"
-          fallback={227900}
+          fallback={1139445}
           min={100}
-          max={500000}
+          max={1400000}
           step={500}
           decimals={0}
           {...numberProps}
@@ -2513,7 +3559,7 @@ function TopoSurfaceClipControls({
           {...numberProps}
         />
       </TopoSubsection>
-    </TopoSubsection>
+    </>
   );
 }
 

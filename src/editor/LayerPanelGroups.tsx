@@ -12,6 +12,7 @@ import {
   resolveEnvironmentForPage,
 } from "../pages/effective";
 import type {
+  EditableStyle,
   PresentationPage,
   ProjectLayerSpec,
   SceneProperties,
@@ -60,6 +61,26 @@ interface LayerPanelGroupsProps {
   revealTargetId?: string | null;
 }
 
+function metadataRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function isTopoEnvironmentCloudLayer(layer: ProjectLayerSpec): boolean {
+  if (layer.type !== "atmosphere-volume") return false;
+  const metadata = metadataRecord(layer.metadata);
+  const geoSeeTool = metadataRecord(metadata?.geoSeeTool);
+  const localAtmosphereVolume = metadataRecord(
+    metadata?.localAtmosphereVolume,
+  );
+  return (
+    (geoSeeTool?.id === "topo-map" &&
+      geoSeeTool?.role === "environment-clouds") ||
+    localAtmosphereVolume?.renderingRole === "topo-environment-cloud-impostor"
+  );
+}
+
 export function LayerPanelGroups({
   section,
   renderLayer,
@@ -77,6 +98,8 @@ export function LayerPanelGroups({
     clearPageVisibilityOverride,
     setPageField,
     setEnvScene,
+    addProjectLayer,
+    removeProjectLayer,
   } = useEditor();
   const isEnv = state.selectedPageId === ENVIRONMENT_SENTINEL;
   const currentPage = isEnv
@@ -136,6 +159,78 @@ export function LayerPanelGroups({
         : null;
 
   const byId = new Map(state.manifest.layers.map((layer) => [layer.id, layer]));
+  const addAtmosphereLayer = (
+    style: Partial<EditableStyle> = {},
+    sourceLayer?: ProjectLayerSpec | null,
+  ): string => {
+    const existingIds = new Set(state.manifest.layers.map((layer) => layer.id));
+    let index =
+      state.manifest.layers.filter(isTopoEnvironmentCloudLayer).length + 1;
+    let id = `topo-cloud-volume-${index}`;
+    while (existingIds.has(id)) {
+      index += 1;
+      id = `topo-cloud-volume-${index}`;
+    }
+    const center: [number, number, number] = [
+      typeof style.atmosphereBoundsCenterX === "number"
+        ? style.atmosphereBoundsCenterX
+        : 0,
+      typeof style.atmosphereBoundsCenterY === "number"
+        ? style.atmosphereBoundsCenterY
+        : 0,
+      typeof style.atmosphereBoundsCenterZ === "number"
+        ? style.atmosphereBoundsCenterZ
+        : 40,
+    ];
+    const size: [number, number, number] = [
+      typeof style.atmosphereBoundsSizeX === "number"
+        ? style.atmosphereBoundsSizeX
+        : 120,
+      typeof style.atmosphereBoundsSizeY === "number"
+        ? style.atmosphereBoundsSizeY
+        : 120,
+      typeof style.atmosphereBoundsSizeZ === "number"
+        ? style.atmosphereBoundsSizeZ
+        : 70,
+    ];
+    const subtype =
+      style.atmosphereSubtype === "ground-fog" ||
+      style.atmosphereSubtype === "steam-plume" ||
+      style.atmosphereSubtype === "mist" ||
+      style.atmosphereSubtype === "cloud-bank"
+        ? style.atmosphereSubtype
+        : "cloud-bank";
+    const layer: ProjectLayerSpec = {
+      id,
+      label: sourceLayer
+        ? `${sourceLayer.label || "Cloud volume"} copy`
+        : `Cloud volume ${index}`,
+      type: "atmosphere-volume",
+      files: {},
+      metadata: {
+        classification: "environmental",
+        geoSeeTool: {
+          id: "topo-map",
+          role: "environment-clouds",
+          settingsScope: "layer",
+        },
+        localAtmosphereVolume: {
+          subtype,
+          bounds: {
+            mode: style.atmosphereBoundsMode ?? "box",
+            center,
+            size,
+          },
+          artifactFamily: "local-atmosphere",
+          renderingRole: "topo-environment-cloud-impostor",
+          computationRole: "visual-context",
+          notes: "Authored from Topo > Environment > Clouds.",
+        },
+      },
+    };
+    addProjectLayer(layer, style, true);
+    return id;
+  };
   const projectPublicLayerGroups =
     state.projectSlug === "case-study-b"
       ? CASE_STUDY_B_PUBLIC_LAYER_GROUPS
@@ -504,6 +599,11 @@ export function LayerPanelGroups({
             setPageVisibilityOverride,
             clearPageVisibilityOverride,
             publicSurfaceLayerIds: layers.map((layer) => layer.id),
+            atmosphereLayers: state.manifest.layers.filter(
+              isTopoEnvironmentCloudLayer,
+            ),
+            addAtmosphereLayer,
+            removeAtmosphereLayer: removeProjectLayer,
             setLayerProvenance,
           };
 
@@ -519,6 +619,20 @@ export function LayerPanelGroups({
                   <TopoMapPanel
                     {...topoPanelProps}
                     section="surface"
+                    nestedContainers={false}
+                  />
+                </LayerGroup>
+              ) : null}
+              {publicTopoTerrainLayer ? (
+                <LayerGroup
+                  title="Environment"
+                  devSource="src/editor/LayerPanel.tsx:topo-environment"
+                  devNote="Environment contains the cloud, sun, light, sky-image, and fog controls for the public topo map tool."
+                  accentColor={selectedPageAccent}
+                >
+                  <TopoMapPanel
+                    {...topoPanelProps}
+                    section="environment"
                     nestedContainers={false}
                   />
                 </LayerGroup>
@@ -584,49 +698,6 @@ export function LayerPanelGroups({
                 onSetPageDensity={(pageId, layerId, fogDensity) =>
                   setPageLayerOverride(pageId, layerId, { fogDensity })
                 }
-              />
-            ) : null}
-            {section === "publicTopo" &&
-            publicTopoTerrainLayer &&
-            group.title === PUBLIC_TOPO_LAYER_GROUP_TITLE ? (
-              <TopoMapPanel
-                settings={publicTopoSettings}
-                environment={topoAuthoringEnvironment}
-                scene={topoAuthoringEnvironment.scene ?? {}}
-                isEnv={isEnv}
-                currentPage={currentPage}
-                setEnvLayerStyle={setEnvLayerStyle}
-                setPageLayerOverride={setPageLayerOverride}
-                clearPageLayerOverride={clearPageLayerOverride}
-                setEnvScene={setTopoAuthoringScene}
-                projectRoot={state.projectRoot}
-                terrainEnvVisible={publicTopoTerrainEnvVisible}
-                terrainEffectiveVisible={publicTopoTerrainEffectiveVisible}
-                toggleTerrainEnvVisible={() =>
-                  toggleEnvDefaultVisible(publicTopoTerrainLayerId)
-                }
-                setPageTerrainVisible={(visible) => {
-                  if (currentPage) {
-                    setPageVisibilityOverride(
-                      currentPage.id,
-                      publicTopoTerrainLayerId,
-                      visible,
-                    );
-                  }
-                }}
-                clearPageTerrainVisible={() => {
-                  if (currentPage) {
-                    clearPageVisibilityOverride(
-                      currentPage.id,
-                      publicTopoTerrainLayerId,
-                    );
-                  }
-                }}
-                toggleEnvDefaultVisible={toggleEnvDefaultVisible}
-                setPageVisibilityOverride={setPageVisibilityOverride}
-                clearPageVisibilityOverride={clearPageVisibilityOverride}
-                publicSurfaceLayerIds={layers.map((layer) => layer.id)}
-                setLayerProvenance={setLayerProvenance}
               />
             ) : null}
             {group.title === PUBLIC_TOPO_LAYER_GROUP_TITLE && (

@@ -22,6 +22,84 @@ const DEFAULT_LAYERS = [
   "utah-forge-phase3-working-area",
 ];
 const MAX_CONFLICT_LINES = 24;
+const POST_STACK = [
+  "RenderPass",
+  "SSAOPass",
+  "BokehPass",
+  "UnrealBloomPass",
+  "TiltShiftPass",
+  "AfterimagePass",
+  "LensGradePass",
+  "SMAAPass",
+  "OutputPass",
+];
+const CINEMATIC_TRANSITION_POLICIES = [
+  { key: "colorGrade", transitionKind: "continuous", owner: "cinematic-post" },
+  { key: "vignette", transitionKind: "continuous", owner: "cinematic-post" },
+  { key: "depthOfField", transitionKind: "continuous", owner: "cinematic-post" },
+  { key: "tiltShift", transitionKind: "continuous", owner: "cinematic-post" },
+  { key: "lensEffects", transitionKind: "continuous", owner: "cinematic-post" },
+  { key: "motionTrails", transitionKind: "continuous", owner: "cinematic-post" },
+  {
+    key: "presentationFrame",
+    transitionKind: "continuous",
+    owner: "cinematic-post",
+  },
+  { key: "compositionGuides", transitionKind: "continuous", owner: "cinematic-post" },
+  { key: "camera.lensPreset", transitionKind: "discrete", owner: "camera-runtime" },
+  { key: "dynamicCamera.dolly", transitionKind: "timed-shot", owner: "camera-runtime" },
+  { key: "dynamicCamera.truck", transitionKind: "timed-shot", owner: "camera-runtime" },
+  { key: "dynamicCamera.crane", transitionKind: "timed-shot", owner: "camera-runtime" },
+  { key: "dynamicCamera.handheld", transitionKind: "timed-shot", owner: "camera-runtime" },
+];
+const TOPO_MATERIAL_AUTHORITY_TERRAIN_FIELDS = [
+  "materialPreset",
+  "topoImageMaterialSources",
+  "orthoPhotoTextureBudget",
+  "orthoPhotoPath",
+  "orthoPhotoTexture4096Path",
+  "orthoPhotoTexture8192Path",
+  "orthoPhotoBounds",
+  "orthoPhotoOpacity",
+  "orthoPhotoHillshadeBlend",
+  "orthoPhotoBrightness",
+  "orthoPhotoContrast",
+  "orthoPhotoSaturation",
+  "orthoPhotoOutsideFillEnabled",
+  "orthoPhotoOutsideColor",
+  "orthoPhotoOutsideOpacity",
+  "orthoPhotoShadowStrength",
+  "orthoPhotoShadowFloor",
+  "orthoPhotoShadowTint",
+  "projectedMapShadowsEnabled",
+  "projectedMapShadowOpacity",
+  "projectedMapShadowSoftness",
+  "projectedMapShadowBias",
+  "surfaceElevationEnabled",
+  "surfaceElevationLegendVisible",
+  "surfaceElevationMinM",
+  "surfaceElevationMaxM",
+  "surfaceElevationColors",
+  "surfaceElevationColorPositions",
+  "surfaceElevationMidpoints",
+  "surfaceElevationTransitionSoftness",
+  "surfaceElevationColorBlend",
+  "surfaceElevationReverse",
+  "verticalExaggeration",
+  "edgeFadeDistanceM",
+  "edgeFadeShape",
+  "edgeFadeInsetM",
+  "edgeFadeCornerRadiusM",
+  "edgeOutlineEnabled",
+  "edgeOutlineOffsetM",
+  "edgeOutlineThicknessM",
+  "edgeOutlineColor",
+  "edgeOutlineOpacity",
+  "edgeTopShine",
+  "edgeCornerShine",
+  "edgeBottomShine",
+  "topoMapBranding",
+];
 
 function parseArgs(argv) {
   const result = {
@@ -30,6 +108,7 @@ function parseArgs(argv) {
     scenePaths: [...DEFAULT_SCENE_PATHS],
     layers: [...DEFAULT_LAYERS],
     json: false,
+    renderStack: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -48,6 +127,7 @@ function parseArgs(argv) {
     else if (arg === "--only-layer") result.layers = [next()];
     else if (arg === "--no-layers") result.layers = [];
     else if (arg === "--json") result.json = true;
+    else if (arg === "--render-stack") result.renderStack = true;
     else if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -76,6 +156,7 @@ Options:
   --layer <id>                 Add a layer style id to inspect
   --only-layer <id>            Inspect only this layer style id
   --no-layers                  Skip layer style inspection
+  --render-stack               Include runtime render-stack/topo authority trace
   --json                       Print machine-readable JSON
 `);
 }
@@ -195,10 +276,209 @@ function findRenderPreset(environment, id) {
 
 function presetScenePatch(preset) {
   if (!preset) return null;
-  if (preset.source === "user") return preset.scenePatch ?? {};
+  if (preset.source === "user") {
+    return stripTopoMaterialAuthorityFromScenePatch(preset.scenePatch ?? {});
+  }
   if (preset.scenePatch) return preset.scenePatch;
   if (preset.scene) return preset.scene;
   return null;
+}
+
+function topoMaterialAuthorityPatch(terrain) {
+  if (!isPlainObject(terrain)) return undefined;
+  const patch = {};
+  for (const field of TOPO_MATERIAL_AUTHORITY_TERRAIN_FIELDS) {
+    if (terrain[field] !== undefined) patch[field] = terrain[field];
+  }
+  return Object.keys(patch).length > 0 ? patch : undefined;
+}
+
+function applyTopoMaterialAuthority(terrain, authority) {
+  const patch = topoMaterialAuthorityPatch(authority);
+  if (!terrain && !patch) return undefined;
+  return {
+    ...(terrain ?? {}),
+    ...(patch ?? {}),
+  };
+}
+
+function stripTopoMaterialAuthorityFromTerrain(terrain) {
+  if (!isPlainObject(terrain)) return undefined;
+  const next = { ...terrain };
+  for (const field of TOPO_MATERIAL_AUTHORITY_TERRAIN_FIELDS) {
+    delete next[field];
+  }
+  return Object.keys(next).length > 0 ? next : undefined;
+}
+
+function stripTopoMaterialAuthorityFromScenePatch(patch) {
+  if (!isPlainObject(patch?.terrain)) return patch;
+  const terrain = stripTopoMaterialAuthorityFromTerrain(patch.terrain);
+  const next = { ...patch };
+  if (terrain) next.terrain = terrain;
+  else delete next.terrain;
+  return next;
+}
+
+function loadPages(projectDir, project) {
+  return (project.pageOrder ?? []).map((pageId) =>
+    readJson(join(projectDir, "pages", `${pageId}.json`)),
+  );
+}
+
+function resolveEnvironmentForPage(environment, pages, page) {
+  if (!page) return environment;
+  if (
+    page.envSnapshot &&
+    (!page.parentMasterId || page.parentMasterId === "global")
+  ) {
+    return page.envSnapshot;
+  }
+  if (page.parentMasterId && page.parentMasterId !== "global") {
+    const parent = pages.find((candidate) => candidate.id === page.parentMasterId);
+    if (parent?.envSnapshot) return parent.envSnapshot;
+  }
+  return environment;
+}
+
+function runtimeEffectiveScene(baseEnvironment, presetPatch, page) {
+  const baseScene = baseEnvironment.scene ?? {};
+  const withPreset = deepMerge(baseScene, presetPatch ?? {});
+  const withPage = deepMerge(withPreset, page?.sceneOverrides ?? {});
+  const terrain = applyTopoMaterialAuthority(withPage.terrain, baseScene.terrain);
+  if (terrain) return { ...withPage, terrain };
+  return withPage;
+}
+
+function textureUrlForTerrain(terrain) {
+  const preset = terrain?.materialPreset;
+  if (typeof preset === "string" && preset.startsWith("image:")) {
+    const sourceId = preset.slice("image:".length);
+    const source = (terrain.topoImageMaterialSources ?? []).find(
+      (candidate) => candidate.id === sourceId,
+    );
+    if (source) {
+      return (
+        source.texture8192Path ??
+        source.texture4096Path ??
+        source.texturePath ??
+        terrain.orthoPhotoTexture8192Path ??
+        terrain.orthoPhotoTexture4096Path ??
+        terrain.orthoPhotoPath ??
+        null
+      );
+    }
+  }
+  return (
+    terrain?.orthoPhotoTexture8192Path ??
+    terrain?.orthoPhotoTexture4096Path ??
+    terrain?.orthoPhotoPath ??
+    null
+  );
+}
+
+function cacheKeyForUrl(url) {
+  if (typeof url !== "string") return null;
+  const query = url.split("?")[1];
+  return query || null;
+}
+
+function publicClipState(layerStyle) {
+  return {
+    enabled: layerStyle?.publicSurfaceClipEnabled === true,
+    center: [
+      layerStyle?.publicSurfaceClipCenterX,
+      layerStyle?.publicSurfaceClipCenterY,
+      layerStyle?.publicSurfaceClipCenterZ,
+    ],
+    size: [
+      layerStyle?.publicSurfaceClipSizeX,
+      layerStyle?.publicSurfaceClipSizeY,
+      layerStyle?.publicSurfaceClipSizeZ,
+    ],
+    rotationZDeg: layerStyle?.publicSurfaceClipRotationZDeg,
+    shape: layerStyle?.publicSurfaceClipShape,
+  };
+}
+
+function materialShaderForTerrain(terrain) {
+  const preset = terrain?.materialPreset ?? "runtime fallback";
+  if (typeof preset === "string" && preset.startsWith("image:")) {
+    return "terrainMaterial/topo-image";
+  }
+  if (preset === "ortho-photo") return "terrainMaterial/ortho-photo";
+  return "terrainMaterial/procedural";
+}
+
+function buildRenderStackReport({
+  project,
+  page,
+  activePreset,
+  preset,
+  scenePatch,
+  resolvedEnvironment,
+  effectiveScene,
+}) {
+  const terrain = effectiveScene.terrain ?? {};
+  const textureUrl = textureUrlForTerrain(terrain);
+  const terrainLayerStyle =
+    resolvedEnvironment.layerStyles?.terrain ??
+    resolvedEnvironment.layerStyles?.["topo-map"] ??
+    {};
+  return {
+    activeRenderPreset: {
+      id: activePreset.id,
+      selectorSource: activePreset.source,
+      foundInProject: Boolean(preset),
+      label: preset?.label ?? null,
+      source: preset?.source ?? null,
+    },
+    envSnapshot: page?.envSnapshot
+      ? { present: true, id: page.envSnapshot.id ?? "environment" }
+      : { present: false },
+    scenePatch: scenePatch ?? {},
+    sceneOverrides: page?.sceneOverrides ?? {},
+    layerStyles: {
+      terrain: terrainLayerStyle,
+    },
+    topoAuthority: {
+      winner: "environment.scene.terrain topo material authority",
+      effectiveTerrain: terrain,
+      textureUrl,
+      cacheKey: cacheKeyForUrl(textureUrl),
+      bounds: terrain.orthoPhotoBounds ?? null,
+      publicClip: publicClipState(terrainLayerStyle),
+      edgeFade: {
+        shape: terrain.edgeFadeShape ?? null,
+        distanceM: terrain.edgeFadeDistanceM ?? null,
+        insetM: terrain.edgeFadeInsetM ?? null,
+        cornerRadiusM: terrain.edgeFadeCornerRadiusM ?? null,
+      },
+      edgeOutline: {
+        enabled: terrain.edgeOutlineEnabled === true,
+        offsetM: terrain.edgeOutlineOffsetM ?? null,
+        thicknessM: terrain.edgeOutlineThicknessM ?? null,
+        color: terrain.edgeOutlineColor ?? null,
+        opacity: terrain.edgeOutlineOpacity ?? null,
+      },
+      material: {
+        preset: terrain.materialPreset ?? null,
+        shader: materialShaderForTerrain(terrain),
+      },
+      geometry: {
+        source: "runtime terrain mesh",
+        projectBounds: project.bounds ?? null,
+        lod: terrain.orthoPhotoTextureBudget ?? "runtime",
+      },
+    },
+    postProcessing: {
+      stack: POST_STACK,
+    },
+    cinematicTransitions: {
+      transitionChannel: "main-camera/cinematic-post",
+      policies: CINEMATIC_TRANSITION_POLICIES,
+    },
+  };
 }
 
 function layerPatchForPreset(preset, layerId) {
@@ -206,13 +486,20 @@ function layerPatchForPreset(preset, layerId) {
   return preset.layerStylePatchesByLayerId?.[layerId] ?? null;
 }
 
-function inspectScene(environment, presetPatch, scenePaths) {
+function inspectScene(environment, presetPatch, pageOverride, effectiveScene, scenePaths) {
   const baseScene = environment.scene ?? {};
-  const effectiveScene = deepMerge(baseScene, presetPatch ?? {});
   return scenePaths.map((path) => {
     const baseHas = hasPath(baseScene, path);
     const presetHas = hasPath(presetPatch ?? {}, path);
-    const source = presetHas
+    const pageHas = hasPath(pageOverride ?? {}, path);
+    const authorityHas =
+      path.startsWith("terrain.") &&
+      TOPO_MATERIAL_AUTHORITY_TERRAIN_FIELDS.includes(path.slice("terrain.".length));
+    const source = authorityHas && baseHas
+      ? "topo material authority (environment.scene.terrain)"
+      : pageHas
+        ? "page.sceneOverrides"
+        : presetHas
       ? "active render preset scenePatch"
       : baseHas
         ? "environment.scene"
@@ -223,6 +510,7 @@ function inspectScene(environment, presetPatch, scenePaths) {
       effective: getPath(effectiveScene, path),
       environment: baseHas ? getPath(baseScene, path) : undefined,
       activeRenderPreset: presetHas ? getPath(presetPatch, path) : undefined,
+      pageOverride: pageHas ? getPath(pageOverride, path) : undefined,
     };
   });
 }
@@ -247,18 +535,34 @@ function inspectLayer(environment, page, preset, layerId) {
   };
 }
 
-function collectSceneConflicts(environment, presetPatch) {
-  if (!presetPatch) return [];
+function collectSceneConflicts(environment, presetPatch, pageOverride) {
   const baseScene = environment.scene ?? {};
-  return flattenPaths(presetPatch)
+  const conflicts = flattenPaths(presetPatch ?? {})
     .filter((path) => hasPath(baseScene, path))
     .filter((path) => valuesDiffer(getPath(baseScene, path), getPath(presetPatch, path)))
     .map((path) => ({
       path: `scene.${path}`,
       environment: getPath(baseScene, path),
       activeRenderPreset: getPath(presetPatch, path),
-      winner: "active render preset scenePatch",
+      winner:
+        path.startsWith("terrain.") &&
+        TOPO_MATERIAL_AUTHORITY_TERRAIN_FIELDS.includes(path.slice("terrain.".length))
+          ? "topo material authority"
+          : "active render preset scenePatch",
     }));
+  for (const path of flattenPaths(pageOverride ?? {})) {
+    const prior = getPath(deepMerge(baseScene, presetPatch ?? {}), path);
+    const override = getPath(pageOverride, path);
+    if (valuesDiffer(prior, override)) {
+      conflicts.push({
+        path: `scene.${path}`,
+        prior,
+        pageOverride: override,
+        winner: "page.sceneOverrides",
+      });
+    }
+  }
+  return conflicts;
 }
 
 function collectLayerConflicts(layerInspections) {
@@ -308,14 +612,27 @@ function buildReport(options) {
   const project = readJson(join(options.project, "project.json"));
   const environment = readJson(join(options.project, "environment.json"));
   const page = loadPage(options.project, project, options.page);
-  const activePreset = activeRenderPresetId(environment, page);
-  const preset = findRenderPreset(environment, activePreset.id);
+  const pages = loadPages(options.project, project);
+  const resolvedEnvironment = resolveEnvironmentForPage(environment, pages, page);
+  const activePreset = activeRenderPresetId(resolvedEnvironment, page);
+  const preset = findRenderPreset(resolvedEnvironment, activePreset.id);
   const scenePatch = presetScenePatch(preset);
-  const sceneInspections = inspectScene(environment, scenePatch, options.scenePaths);
-  const layerInspections = options.layers.map((layerId) =>
-    inspectLayer(environment, page, preset, layerId),
+  const effectiveScene = runtimeEffectiveScene(resolvedEnvironment, scenePatch, page);
+  const sceneInspections = inspectScene(
+    resolvedEnvironment,
+    scenePatch,
+    page?.sceneOverrides ?? null,
+    effectiveScene,
+    options.scenePaths,
   );
-  const sceneConflicts = collectSceneConflicts(environment, scenePatch);
+  const layerInspections = options.layers.map((layerId) =>
+    inspectLayer(resolvedEnvironment, page, preset, layerId),
+  );
+  const sceneConflicts = collectSceneConflicts(
+    resolvedEnvironment,
+    scenePatch,
+    page?.sceneOverrides ?? null,
+  );
   const layerConflicts = collectLayerConflicts(layerInspections);
   const warnings = [];
 
@@ -329,7 +646,7 @@ function buildReport(options) {
     );
   }
 
-  return {
+  const report = {
     project: {
       dir: options.project,
       id: project.id,
@@ -353,6 +670,18 @@ function buildReport(options) {
     },
     warnings,
   };
+  if (options.renderStack) {
+    report.renderStack = buildRenderStackReport({
+      project,
+      page,
+      activePreset,
+      preset,
+      scenePatch,
+      resolvedEnvironment,
+      effectiveScene,
+    });
+  }
+  return report;
 }
 
 function printReport(report) {
@@ -402,6 +731,25 @@ function printReport(report) {
     }
   }
 
+  if (report.renderStack) {
+    const topo = report.renderStack.topoAuthority;
+    console.log("\nRender stack");
+    console.log(`  post-processing: ${report.renderStack.postProcessing.stack.join(" -> ")}`);
+    console.log(
+      `  cinematic transitions: ${report.renderStack.cinematicTransitions.policies.length} policies (${report.renderStack.cinematicTransitions.transitionChannel})`,
+    );
+    console.log(`  topo winner: ${topo.winner}`);
+    console.log(`  material preset: ${formatValue(topo.material.preset)}`);
+    console.log(`  shader/material: ${formatValue(topo.material.shader)}`);
+    console.log(`  texture URL: ${formatValue(topo.textureUrl)}`);
+    console.log(`  cache key: ${formatValue(topo.cacheKey)}`);
+    console.log(`  bounds: ${formatValue(topo.bounds)}`);
+    console.log(`  public clip: ${formatValue(topo.publicClip)}`);
+    console.log(`  edge fade: ${formatValue(topo.edgeFade)}`);
+    console.log(`  edge outline: ${formatValue(topo.edgeOutline)}`);
+    console.log(`  geometry/LOD: ${formatValue(topo.geometry)}`);
+  }
+
   const sceneConflicts = report.conflicts.scene.slice(0, MAX_CONFLICT_LINES);
   const layerConflicts = report.conflicts.layers.slice(0, MAX_CONFLICT_LINES);
   console.log("\nAuthority conflicts");
@@ -412,8 +760,13 @@ function printReport(report) {
 
   for (const conflict of sceneConflicts) {
     console.log(`  ${conflict.path}`);
-    console.log(`    environment: ${formatValue(conflict.environment)}`);
-    console.log(`    active preset: ${formatValue(conflict.activeRenderPreset)}`);
+    if ("pageOverride" in conflict) {
+      console.log(`    prior: ${formatValue(conflict.prior)}`);
+      console.log(`    page override: ${formatValue(conflict.pageOverride)}`);
+    } else {
+      console.log(`    environment: ${formatValue(conflict.environment)}`);
+      console.log(`    active preset: ${formatValue(conflict.activeRenderPreset)}`);
+    }
     console.log(`    winner: ${conflict.winner}`);
   }
   for (const conflict of layerConflicts) {

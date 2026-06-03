@@ -47,8 +47,16 @@ function collectPathStrings(value, output = []) {
   return output;
 }
 
+function stripAssetQuery(target) {
+  return target.split("?")[0];
+}
+
+function assetTargetForExtension(target) {
+  return stripAssetQuery(target).toLowerCase();
+}
+
 function resolveAssetPath(projectDir, target) {
-  const normalized = target.replaceAll("\\", "/");
+  const normalized = stripAssetQuery(target).replaceAll("\\", "/");
   const candidates = [
     repoPath(normalized),
     resolve(repoPath(projectDir), normalized),
@@ -248,7 +256,7 @@ function validateEnvironmentTerrainAssets(projectDir) {
         source.texture8192Path,
       ].filter((value) => typeof value === "string" && value.length > 0)) {
         const assetPath = resolveAssetPath(projectDir, target);
-        if (target.toLowerCase().endsWith(".webp")) {
+        if (assetTargetForExtension(target).endsWith(".webp")) {
           const webpInfo = readWebpInfo(assetPath);
           assert.notEqual(
             webpInfo,
@@ -315,7 +323,7 @@ function validateEnvironmentTerrainAssets(projectDir) {
               assetPath,
             )})`,
           );
-          if (target.toLowerCase().endsWith(".webp")) {
+          if (assetTargetForExtension(target).endsWith(".webp")) {
             const webpInfo = readWebpInfo(assetPath);
             assert.notEqual(
               webpInfo,

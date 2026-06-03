@@ -75,6 +75,14 @@ export interface TerrainMaterialParams {
   orthoPhotoBrightness?: number;
   orthoPhotoContrast?: number;
   orthoPhotoSaturation?: number;
+  orthoPhotoOutsideFillEnabled?: boolean;
+  orthoPhotoOutsideColor?: string;
+  orthoPhotoOutsideOpacity?: number;
+  orthoPhotoShadowStrength?: number;
+  orthoPhotoShadowFloor?: number;
+  orthoPhotoShadowTint?: string;
+  projectedMapShadowsEnabled?: boolean;
+  projectedMapShadowOpacity?: number;
   // Color of shadowed areas. Pure black makes shadows muddy under
   // bloom; a slight cool tint reads as atmospheric.
   shadowTint?: string;
@@ -281,7 +289,7 @@ function edgeFadeShapeValue(
 export function buildTerrainMaterial(
   initial: TerrainMaterialParams = {},
 ): TerrainMaterialHandle {
-  const uniforms = {
+  const terrainUniforms = {
     uOpacity: { value: 1 },
     uRampLow: { value: new THREE.Color(initial.rampLow ?? "#3d3a30") },
     uRampMid: { value: new THREE.Color(initial.rampMid ?? "#7a6a4f") },
@@ -386,6 +394,30 @@ export function buildTerrainMaterial(
     uOrthoPhotoSaturation: {
       value: THREE.MathUtils.clamp(initial.orthoPhotoSaturation ?? 1, 0, 2),
     },
+    uOrthoPhotoOutsideFillEnabled: {
+      value: initial.orthoPhotoOutsideFillEnabled === true ? 1 : 0,
+    },
+    uOrthoPhotoOutsideColor: {
+      value: new THREE.Color(initial.orthoPhotoOutsideColor ?? "#b8ad8d"),
+    },
+    uOrthoPhotoOutsideOpacity: {
+      value: THREE.MathUtils.clamp(initial.orthoPhotoOutsideOpacity ?? 0, 0, 1),
+    },
+    uOrthoPhotoShadowStrength: {
+      value: THREE.MathUtils.clamp(initial.orthoPhotoShadowStrength ?? 0.35, 0, 1),
+    },
+    uOrthoPhotoShadowFloor: {
+      value: THREE.MathUtils.clamp(initial.orthoPhotoShadowFloor ?? 0.62, 0.05, 1),
+    },
+    uOrthoPhotoShadowTint: {
+      value: new THREE.Color(initial.orthoPhotoShadowTint ?? "#303640"),
+    },
+    uProjectedMapShadowOpacity: {
+      value:
+        initial.projectedMapShadowsEnabled === true
+          ? THREE.MathUtils.clamp(initial.projectedMapShadowOpacity ?? 0.45, 0, 1)
+          : 0,
+    },
     uTopoImageDetailMap: { value: makeBlankMask() as THREE.Texture },
     uTopoImageDetailEnabled: { value: 0 },
     uTopoImageDetailBoundsMin: { value: new THREE.Vector2(-1, -1) },
@@ -473,11 +505,18 @@ export function buildTerrainMaterial(
     uPublicClipHalfSize: { value: new THREE.Vector3(1, 1, 1) },
     uPublicClipCosSin: { value: new THREE.Vector2(1, 0) },
   };
+  const uniforms = THREE.UniformsUtils.merge([
+    THREE.UniformsLib.lights,
+    terrainUniforms,
+  ]);
 
   const material = new THREE.ShaderMaterial({
     uniforms,
     side: THREE.DoubleSide,
+    lights: true,
     vertexShader: /* glsl */ `
+      #include <common>
+      #include <shadowmap_pars_vertex>
       varying vec3 vWorldPos;
       varying vec3 vNormal;
       void main() {
@@ -490,10 +529,18 @@ export function buildTerrainMaterial(
         // (dark patches that drift across terrain as the camera
         // orbited). mat3(modelMatrix) keeps everything in world space.
         vNormal = normalize(mat3(modelMatrix) * normal);
+        vec3 transformedNormal = normalMatrix * normal;
+        vec4 worldPosition = wp;
+        #include <shadowmap_vertex>
         gl_Position = projectionMatrix * viewMatrix * wp;
       }
     `,
     fragmentShader: /* glsl */ `
+      #include <common>
+      #include <packing>
+      #include <lights_pars_begin>
+      #include <shadowmap_pars_fragment>
+      #include <shadowmask_pars_fragment>
       uniform float uOpacity;
       uniform vec3 uRampLow;
       uniform vec3 uRampMid;
@@ -539,6 +586,13 @@ export function buildTerrainMaterial(
       uniform float uOrthoPhotoBrightness;
       uniform float uOrthoPhotoContrast;
       uniform float uOrthoPhotoSaturation;
+      uniform float uOrthoPhotoOutsideFillEnabled;
+      uniform vec3 uOrthoPhotoOutsideColor;
+      uniform float uOrthoPhotoOutsideOpacity;
+      uniform float uOrthoPhotoShadowStrength;
+      uniform float uOrthoPhotoShadowFloor;
+      uniform vec3 uOrthoPhotoShadowTint;
+      uniform float uProjectedMapShadowOpacity;
       uniform sampler2D uTopoImageDetailMap;
       uniform float uTopoImageDetailEnabled;
       uniform vec2 uTopoImageDetailBoundsMin;
@@ -740,9 +794,30 @@ export function buildTerrainMaterial(
           uOrthoPhotoContrast,
           uOrthoPhotoSaturation
         );
-        vec3 photoShaded = photo *
-          (uAmbient * 0.55 + vec3(uHillshade * litAmount));
-        return mix(photo, photoShaded, uOrthoPhotoHillshadeBlend);
+        float reliefT = clamp(uOrthoPhotoHillshadeBlend, 0.0, 1.0);
+        float imageLitT = smoothstep(0.55, 1.35, litAmount);
+        float imageShade = mix(
+          clamp(uOrthoPhotoShadowFloor, 0.05, 1.0),
+          1.0 + uHillshade * 0.18,
+          imageLitT
+        );
+        vec3 photoShaded = mix(photo, photo * imageShade, reliefT);
+        float imageShadow = (1.0 - imageLitT) *
+          clamp(uOrthoPhotoShadowStrength, 0.0, 1.0);
+        photoShaded = mix(
+          photoShaded,
+          photoShaded * uOrthoPhotoShadowTint * 2.2,
+          imageShadow
+        );
+        return photoShaded;
+      }
+
+      vec3 projectedShadowSurface(vec3 surface) {
+        float opacity = clamp(uProjectedMapShadowOpacity, 0.0, 1.0);
+        if (opacity <= 0.001) return surface;
+        float shadowMask = getShadowMask();
+        float shadowAmount = (1.0 - shadowMask) * opacity;
+        return mix(surface, surface * uOrthoPhotoShadowTint * 1.7, shadowAmount);
       }
 
       float boundsEdgeWeight(vec2 worldXY, vec2 boundsMin, vec2 boundsMax, float featherM) {
@@ -903,10 +978,10 @@ export function buildTerrainMaterial(
         if (uOrthoPhotoEnabled > 0.5 && uOrthoPhotoOpacity > 0.001) {
           vec2 orthoUv = (vWorldPos.xy - uOrthoPhotoBoundsMin) /
                          (uOrthoPhotoBoundsMax - uOrthoPhotoBoundsMin);
-          if (
+          bool insideOrthoPhoto =
             orthoUv.x >= 0.0 && orthoUv.x <= 1.0 &&
-            orthoUv.y >= 0.0 && orthoUv.y <= 1.0
-          ) {
+            orthoUv.y >= 0.0 && orthoUv.y <= 1.0;
+          if (insideOrthoPhoto) {
             vec4 orthoSample = texture2D(uOrthoPhotoMap, orthoUv);
             if (orthoSample.a > 0.001) {
               float imageAlpha = clamp(uOrthoPhotoOpacity * orthoSample.a, 0.0, 1.0);
@@ -917,6 +992,14 @@ export function buildTerrainMaterial(
               );
               topoImageApplied = max(topoImageApplied, imageAlpha);
             }
+          } else if (
+            uOrthoPhotoOutsideFillEnabled > 0.5 &&
+            uOrthoPhotoOutsideOpacity > 0.001
+          ) {
+            float fillAlpha = clamp(uOrthoPhotoOutsideOpacity, 0.0, 1.0);
+            vec3 fillSurface = uOrthoPhotoOutsideColor *
+              (uAmbient * 0.55 + vec3(uHillshade * litAmount));
+            surface = mix(surface, fillSurface, fillAlpha);
           }
         }
         if (uTopoImageDetailEnabled > 0.5 && uTopoImageDetailOpacity > 0.001) {
@@ -1144,6 +1227,8 @@ export function buildTerrainMaterial(
           }
         }
 
+        surface = projectedShadowSurface(surface);
+
         float insideDist = terrainEdgeInsideDistance(vWorldPos.xy);
         float edgeBandWidth = max(max(uEdgeFadeDistance, uEdgeOutlineThickness), 1.0);
         float edgeBand = 1.0 - smoothstep(0.0, edgeBandWidth, insideDist);
@@ -1350,6 +1435,48 @@ export function buildTerrainMaterial(
           0,
           2,
         );
+      }
+      if (typeof p.orthoPhotoOutsideFillEnabled === "boolean") {
+        uniforms.uOrthoPhotoOutsideFillEnabled.value =
+          p.orthoPhotoOutsideFillEnabled ? 1 : 0;
+      }
+      if (p.orthoPhotoOutsideColor)
+        uniforms.uOrthoPhotoOutsideColor.value.set(p.orthoPhotoOutsideColor);
+      if (typeof p.orthoPhotoOutsideOpacity === "number") {
+        uniforms.uOrthoPhotoOutsideOpacity.value = THREE.MathUtils.clamp(
+          p.orthoPhotoOutsideOpacity,
+          0,
+          1,
+        );
+      }
+      if (typeof p.orthoPhotoShadowStrength === "number") {
+        uniforms.uOrthoPhotoShadowStrength.value = THREE.MathUtils.clamp(
+          p.orthoPhotoShadowStrength,
+          0,
+          1,
+        );
+      }
+      if (typeof p.orthoPhotoShadowFloor === "number") {
+        uniforms.uOrthoPhotoShadowFloor.value = THREE.MathUtils.clamp(
+          p.orthoPhotoShadowFloor,
+          0.05,
+          1,
+        );
+      }
+      if (p.orthoPhotoShadowTint)
+        uniforms.uOrthoPhotoShadowTint.value.set(p.orthoPhotoShadowTint);
+      if (
+        typeof p.projectedMapShadowsEnabled === "boolean" ||
+        typeof p.projectedMapShadowOpacity === "number"
+      ) {
+        const projectedShadowsEnabled =
+          p.projectedMapShadowsEnabled === true ||
+          (p.projectedMapShadowsEnabled === undefined &&
+            uniforms.uProjectedMapShadowOpacity.value > 0);
+        uniforms.uProjectedMapShadowOpacity.value =
+          projectedShadowsEnabled
+            ? THREE.MathUtils.clamp(p.projectedMapShadowOpacity ?? 0.45, 0, 1)
+            : 0;
       }
       if (p.shadowTint) uniforms.uShadowTint.value.set(p.shadowTint);
       if (typeof p.gridEnabled === "boolean")

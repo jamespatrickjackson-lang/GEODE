@@ -72,5 +72,6 @@ export function editorLayerLabel(layer: ProjectLayerSpec): string {
 }
 
 export function editorLayerTypeLabel(layer: ProjectLayerSpec): string {
+  if (layer.type === "atmosphere-volume") return "atmosphere volume";
   return layer.type === "pointcloud" ? "point cloud" : layer.type;
 }
