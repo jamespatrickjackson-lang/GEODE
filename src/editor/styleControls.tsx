@@ -6,6 +6,9 @@ import {
 import type { EditableStyle, PresentationPage } from "../pages/types";
 import {
   FROSTED_HAIRLINE,
+  editorFieldBackground,
+  editorFieldBorder,
+  editorFieldText,
   panelStyles,
   vibrancyLabel,
   vibrancySecondaryLabel,
@@ -79,6 +82,38 @@ export const overrideTagStyle: React.CSSProperties = {
 export const overrideTagActiveStyle: React.CSSProperties = {
   ...overrideTagStyle,
   color: vibrancySecondaryLabel,
+};
+
+export const editorDarkSelectStyle: React.CSSProperties = {
+  ...panelStyles.textInput,
+  flex: 1,
+  minWidth: 0,
+  height: 26,
+  padding: "3px 8px",
+  background: editorFieldBackground,
+  color: editorFieldText,
+  border: editorFieldBorder,
+  borderRadius: 8,
+  colorScheme: "dark",
+};
+
+export const editorCompactSegmentedRowStyle: React.CSSProperties = {
+  display: "inline-flex",
+  gap: 4,
+  flex: 1,
+  minWidth: 0,
+};
+
+export const editorCompactSegmentButtonStyle: React.CSSProperties = {
+  ...panelStyles.button,
+  flex: 1,
+  width: "auto",
+  minWidth: 0,
+  minHeight: 22,
+  padding: "2px 8px",
+  fontSize: 11,
+  lineHeight: 1.15,
+  whiteSpace: "nowrap",
 };
 
 const editorEyeSvgStyle: React.CSSProperties = {
@@ -194,6 +229,69 @@ export function EditorEyeButton({
     >
       {visible ? <EditorEyeIcon /> : <EditorEyeOffIcon />}
     </button>
+  );
+}
+
+export function EditorCompactSegmentedRow<T extends string>({
+  label,
+  value,
+  options,
+  testId,
+  disabled = false,
+  controlOpacity = 1,
+  ariaLabel,
+  onChange,
+}: {
+  label?: string;
+  value: T;
+  options: readonly {
+    value: T;
+    label: string;
+    disabled?: boolean;
+    testId?: string;
+  }[];
+  testId: string;
+  disabled?: boolean;
+  controlOpacity?: number;
+  ariaLabel?: string;
+  onChange: (value: T) => void;
+}) {
+  const groupLabel = ariaLabel ?? label ?? testId;
+  return (
+    <div style={nestedControlRowStyle}>
+      {label ? <label style={nestedFieldLabelStyle}>{label}</label> : null}
+      <div
+        role="group"
+        aria-label={groupLabel}
+        data-testid={testId}
+        style={editorCompactSegmentedRowStyle}
+      >
+        {options.map((option) => {
+          const selected = option.value === value;
+          const optionDisabled = disabled || option.disabled === true;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              data-testid={option.testId ?? `${testId}-${option.value}`}
+              disabled={optionDisabled}
+              aria-pressed={selected}
+              onClick={() => onChange(option.value)}
+              style={{
+                ...editorCompactSegmentButtonStyle,
+                color: selected ? vibrancyLabel : vibrancySecondaryLabel,
+                borderColor: selected
+                  ? "rgba(244, 240, 232, 0.56)"
+                  : "rgba(244, 240, 232, 0.18)",
+                opacity: optionDisabled ? 0.4 : controlOpacity,
+              }}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -443,7 +541,10 @@ export function EnvSelectRow<T extends string>({
         data-testid={testId}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value as T)}
-        style={{ flex: 1, opacity: disabled ? 0.4 : 1 }}
+        style={{
+          ...editorDarkSelectStyle,
+          opacity: disabled ? 0.4 : 1,
+        }}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

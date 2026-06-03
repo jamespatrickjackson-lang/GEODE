@@ -87,6 +87,11 @@ RAW_DIR_MARKERS = (
 class Product:
     id: str
     label: str
+    line_id: str
+    line_label: str
+    processing_stage: str
+    canonical_label: str
+    name_evidence: dict[str, Any]
     source_file: Path
     normalized_source_file: Path
     source_submission: str
@@ -506,9 +511,11 @@ def trace_line_id(path: Path) -> str:
     if "302" in text:
         return "302"
     if "l5" in text or "line 5" in " ".join(p.lower() for p in path.parts):
-        return "legacy-l5"
+        return "L5"
     if "l11" in text or "line 11" in " ".join(p.lower() for p in path.parts):
-        return "legacy-l11"
+        return "L11"
+    if re.search(r"(?:^|[^0-9])95(?:[^0-9]|$)", text):
+        return "95"
     return "3d"
 
 
@@ -535,7 +542,22 @@ def source_line_label(path: Path) -> str:
 
 
 def product_label(path: Path, survey: str, kind: str, domain: tuple[str, str]) -> str:
+    return canonical_product_metadata(path, survey, kind, domain, "")["canonicalLabel"]
+
+
+def source_text_name(path: Path, text_header: str) -> str:
+    return f"{text_header} {path.name} {' '.join(path.parts)}".lower()
+
+
+def canonical_product_metadata(
+    path: Path,
+    survey: str,
+    kind: str,
+    domain: tuple[str, str],
+    text_header: str,
+) -> dict[str, Any]:
     name = path.name.lower()
+    source_text = source_text_name(path, text_header)
     enhancement = enhancement_status(path)
     modifiers: list[str] = []
     if enhancement:
@@ -543,44 +565,95 @@ def product_label(path: Path, survey: str, kind: str, domain: tuple[str, str]) -
     if "meters" in name:
         modifiers.append("meters")
     modifier_text = f" ({', '.join(modifiers)})" if modifiers else ""
+    label_basis = "segy-text-header" if text_header.strip() else "filename"
 
     if survey == "3d":
         if kind == "velocity":
-            return "3D velocity model (time domain)"
-        if "poststack" in name:
-            return "3D post-stack time migration FXY decon stack"
-        if "ani" in name and "psdm" in name:
-            return f"3D anisotropic PSDM depth stack{modifier_text}"
-        if "pstm" in name:
-            return f"3D PSTM time stack{modifier_text}"
-        return f"3D processed seismic volume{modifier_text}"
+            descriptor = "velocity model (time domain)"
+            processing_stage = "velocity-model"
+            label = "3D velocity model (time domain)"
+        elif "poststack" in name:
+            descriptor = "post-stack time migration FXY decon stack"
+            processing_stage = "poststack-time-migration"
+            label = "3D post-stack time migration FXY decon stack"
+        elif "ani" in name and "psdm" in name:
+            descriptor = "anisotropic PSDM depth stack"
+            processing_stage = "psdm-depth-volume"
+            label = f"3D anisotropic PSDM depth stack{modifier_text}"
+        elif "pstm" in name:
+            descriptor = "PSTM time stack"
+            processing_stage = "pstm-time-volume"
+            label = f"3D PSTM time stack{modifier_text}"
+        else:
+            descriptor = "processed seismic volume"
+            processing_stage = "processed-volume"
+            label = f"3D processed seismic volume{modifier_text}"
+        return {
+            "lineId": "3d",
+            "lineLabel": "3D survey",
+            "processingStage": processing_stage,
+            "canonicalLabel": label,
+            "sourceDescriptor": descriptor,
+            "nameEvidence": {
+                "labelBasis": label_basis,
+                "sourceFileName": path.name,
+                "sourceStem": path.stem,
+                "sourceSubmission": None,
+                "sourceFile": rel(path),
+                "textHeaderExcerpt": text_header,
+            },
+        }
 
-    prefix = "2D legacy" if survey == "legacy-2d" else "2D"
+    prefix = "2D"
     line = source_line_label(path)
     if kind == "velocity":
         descriptor = "PSDM interval velocity" if "interval" in name else "velocity model"
+        processing_stage = "psdm-interval-velocity" if "interval" in source_text else "velocity-model"
     elif "unmigrated" in name:
         descriptor = "unmigrated time stack"
+        processing_stage = "unmigrated-time-stack"
+    elif "migrated" in source_text and "depth" in source_text and "unmigrated" not in source_text:
+        descriptor = "migrated depth section"
+        processing_stage = "migrated-depth-section"
     elif kind == "poststack-time-migration":
         descriptor = "post-stack time migration section"
+        processing_stage = "poststack-time-migration"
     elif kind == "psdm":
-        if "migr" in name and "depth" in name and "psdm" not in name and "pdm" not in name:
+        if "migr" in name and "depth" in name and "psdm" not in source_text and "pdm" not in name:
             descriptor = "migrated depth section"
+            processing_stage = "migrated-depth-section"
         else:
-            descriptor = (
-                "PDM depth section"
-                if "pdm" in name and "psdm" not in name
-                else "PSDM depth section"
-            )
+            descriptor = "PSDM depth section"
+            processing_stage = "psdm-depth-section"
     elif kind == "pstm":
-        descriptor = "PSTM time stack" if "stack" in name else "PSTM time section"
+        descriptor = "PSTM time stack"
+        processing_stage = "pstm-time-stack"
     elif kind == "stack":
         descriptor = "time stack"
+        processing_stage = "time-stack"
     elif "migr" in name and "depth" in name:
         descriptor = "migrated depth section"
+        processing_stage = "migrated-depth-section"
     else:
         descriptor = "processed seismic section"
-    return f"{prefix} {line} {descriptor}{modifier_text}"
+        processing_stage = "processed-section"
+
+    label = f"{prefix} {line} {descriptor}{modifier_text}"
+    return {
+        "lineId": trace_line_id(path),
+        "lineLabel": line,
+        "processingStage": processing_stage,
+        "canonicalLabel": label,
+        "sourceDescriptor": descriptor,
+        "nameEvidence": {
+            "labelBasis": label_basis,
+            "sourceFileName": path.name,
+            "sourceStem": path.stem,
+            "sourceSubmission": None,
+            "sourceFile": rel(path),
+            "textHeaderExcerpt": text_header,
+        },
+    }
 
 
 def read_text_header(f: segyio.SegyFile) -> str:
@@ -1180,10 +1253,17 @@ def build_product(
         "p02": min(p02s) if p02s else 0,
         "p98": max(p98s) if p98s else 1,
     }
-    label = product_label(path, survey, kind, domain)
+    naming = canonical_product_metadata(path, survey, kind, domain, text_header)
+    naming["nameEvidence"]["sourceSubmission"] = source_submission
+    label = naming["canonicalLabel"]
     return Product(
         id=product_id,
         label=label,
+        line_id=naming["lineId"],
+        line_label=naming["lineLabel"],
+        processing_stage=naming["processingStage"],
+        canonical_label=naming["canonicalLabel"],
+        name_evidence=naming["nameEvidence"],
         source_file=path,
         normalized_source_file=path,
         source_submission=source_submission,
@@ -1209,6 +1289,11 @@ def product_to_manifest(product: Product) -> dict[str, Any]:
     return {
         "id": product.id,
         "label": product.label,
+        "lineId": product.line_id,
+        "lineLabel": product.line_label,
+        "processingStage": product.processing_stage,
+        "canonicalLabel": product.canonical_label,
+        "nameEvidence": product.name_evidence,
         "sourceSubmission": product.source_submission,
         "sourceFile": rel(product.normalized_source_file),
         "provenance": {
@@ -1244,6 +1329,80 @@ def write_json(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
+REQUIRED_LINE_SOURCE_GATES = (
+    ("301", "Line 301"),
+    ("302", "Line 302"),
+    ("L11", "Line L11"),
+    ("L5", "Line L5"),
+    ("95", "Line 95"),
+)
+
+
+def source_line_match(path: Path, line_id: str) -> bool:
+    text = f"{path.name} {' '.join(path.parts)}".lower()
+    if line_id == "L11":
+        return "l11" in text or "line 11" in text
+    if line_id == "L5":
+        return "l5" in text or "line 5" in text
+    pattern = rf"(?:line|forge2d)?[_\-\s]*{re.escape(line_id.lower())}(?:[^0-9]|$)"
+    return re.search(pattern, text) is not None
+
+
+def source_gate_roots() -> list[Path]:
+    return [
+        PHASE3_SOURCE_ROOT / "source",
+        ARCHIVED_PHASE3_SOURCE_ROOT / "source",
+    ]
+
+
+def discover_line_source_candidates(line_id: str) -> list[str]:
+    candidates: list[str] = []
+    seen: set[str] = set()
+    for root in source_gate_roots():
+        if not root.exists():
+            continue
+        for extension in ("*.sgy", "*.segy"):
+            for path in root.rglob(extension):
+                if path.name.startswith("._") or "__MACOSX" in path.parts:
+                    continue
+                if not source_line_match(path, line_id):
+                    continue
+                resolved = path.resolve().as_posix()
+                if resolved not in seen:
+                    candidates.append(resolved)
+                    seen.add(resolved)
+    return candidates
+
+
+def required_line_source_gates(products: list[Product]) -> list[dict[str, Any]]:
+    gates: list[dict[str, Any]] = []
+    for line_id, line_label in REQUIRED_LINE_SOURCE_GATES:
+        product_ids = sorted(product.id for product in products if product.line_id == line_id)
+        source_candidates = discover_line_source_candidates(line_id)
+        if product_ids:
+            status = "available"
+            reason = "Required seismic line has generated browser products."
+        elif source_candidates:
+            status = "source-present-not-generated"
+            reason = "Required seismic line source exists but no browser product has been generated."
+        else:
+            status = "missing-source"
+            reason = "No matching SEG-Y source product was found in the active source path or GeoSee archive."
+        gates.append(
+            {
+                "lineId": line_id,
+                "lineLabel": line_label,
+                "required": True,
+                "status": status,
+                "productIds": product_ids,
+                "sourceCandidates": source_candidates,
+                "searchedRoots": [root.resolve().as_posix() for root in source_gate_roots()],
+                "reason": reason,
+            }
+        )
+    return gates
+
+
 def main() -> None:
     ensure_dir(PHASE3_SOURCE_ROOT)
     ensure_dir(PHASE3_PROCESSED_ROOT)
@@ -1256,17 +1415,24 @@ def main() -> None:
     product_paths = classify_products()
     products = [build_product(path, navigation, index) for index, path in enumerate(product_paths)]
     products.sort(key=lambda p: (p.survey_kind != "3d", p.product_kind, p.label))
+    source_gates = required_line_source_gates(products)
 
     inventory = {
         "schema": "geosee.seismic-source-inventory.v1",
         "project": "Utah FORGE Phase 3 seismic analysis",
         "derivedDate": DERIVED_DATE,
         "normalization": normalization,
+        "requiredLineSourceGates": source_gates,
         "activeProductCount": len(products),
         "activeProducts": [
             {
                 "id": p.id,
                 "label": p.label,
+                "lineId": p.line_id,
+                "lineLabel": p.line_label,
+                "processingStage": p.processing_stage,
+                "canonicalLabel": p.canonical_label,
+                "nameEvidence": p.name_evidence,
                 "sourceSubmission": p.source_submission,
                 "sourceFile": rel(p.normalized_source_file),
                 "surveyKind": p.survey_kind,
@@ -1326,6 +1492,7 @@ def main() -> None:
                 "Depth-domain products use depth below their parsed seismic datum where the source product is depth migrated.",
             ],
         },
+        "requiredLineSourceGates": source_gates,
         "verticalReference": {
             "coordinateSystem": "scene-local meters, X east, Y north, Z up",
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",

@@ -47,13 +47,13 @@
     "terrain": {
       "materialPreset": "image:naip-2024-aerial",
       "orthoPhotoTextureBudget": 8192,
-      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80",
-      "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=9cf80fbd86236267",
-      "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80",
+      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=684f5a7e42719aa9",
+      "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=71d894cdd3c0c64b",
+      "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=684f5a7e42719aa9",
       "orthoPhotoBounds": [
         229069.2,
-        4144854,
-        484164,
+        4094688,
+        598806,
         4414308
       ],
       "orthoPhotoOpacity": 1,

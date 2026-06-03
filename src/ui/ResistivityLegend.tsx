@@ -25,6 +25,11 @@ import {
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
 import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
+import { buildMtResistivityFigureModel } from "../geophysics/geophysicsFigureModel";
+import {
+  DEFAULT_MT_RESISTIVITY_SLICE_ID,
+  mtResistivitySliceById,
+} from "../mtResistivity/sliceProducts";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const MT_RESISTIVITY_FULL_DENSITY_LAYER_ID =
@@ -109,6 +114,28 @@ const tickMiddleStyle: CSSProperties = {
 
 const tickRightStyle: CSSProperties = {
   textAlign: "right",
+};
+
+const figureBlockStyle: CSSProperties = {
+  marginTop: 9,
+  paddingTop: 8,
+  borderTop: "1px solid rgba(255, 255, 255, 0.18)",
+  fontSize: 9,
+  lineHeight: 1.25,
+};
+
+const figureLabelStyle: CSSProperties = {
+  marginBottom: 4,
+  fontSize: 9,
+  fontWeight: 700,
+};
+
+const axisTickRowStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+  gap: 4,
+  marginTop: 4,
+  fontVariantNumeric: "tabular-nums",
 };
 
 const targetSelectorStyle: CSSProperties = {
@@ -513,6 +540,14 @@ function activeScalarLayers(visible: Set<string>): ScalarLegendLayer[] {
   return layers;
 }
 
+function metadataString(
+  layer: { metadata?: Record<string, unknown> } | undefined,
+  key: string,
+): string | undefined {
+  const value = layer?.metadata?.[key];
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
 export function ResistivityLegend({
   stacked = false,
   pageOverride = null,
@@ -633,6 +668,24 @@ export function ResistivityLegend({
         )
       : targetStyle;
   if (!styleBoolean(style, "scalarLegendVisible", true)) return null;
+  const manifestLayer = state.manifest.layers.find(
+    (candidate) => candidate.id === layerId,
+  );
+  const selectedSliceId =
+    typeof style.resistivitySelectedSliceId === "string"
+      ? style.resistivitySelectedSliceId
+      : DEFAULT_MT_RESISTIVITY_SLICE_ID;
+  const selectedSlice =
+    activeLayer === "slices"
+      ? mtResistivitySliceById(selectedSliceId) ??
+        mtResistivitySliceById(DEFAULT_MT_RESISTIVITY_SLICE_ID)
+      : undefined;
+  const figureModel = selectedSlice
+    ? buildMtResistivityFigureModel({
+        slice: selectedSlice,
+        sourceOrigin: metadataString(manifestLayer, "sourceOrigin"),
+      })
+    : null;
 
   const lowColor = styleString(style, "scalarColorLow", DEFAULT_LOW);
   const midColor = styleString(style, "scalarColorMid", DEFAULT_MID);
@@ -1111,6 +1164,44 @@ export function ResistivityLegend({
           {formatOhmMFromLog(colorMax)}
         </div>
       </div>
+      {figureModel ? (
+        <>
+          <div
+            style={{ ...figureBlockStyle, color: legendTextColors.body }}
+            data-testid={testId("resistivity-primary-axis")}
+          >
+            <div style={{ ...figureLabelStyle, color: legendTextColors.heading }}>
+              {figureModel.primaryAxis.heading} ({figureModel.primaryAxis.unit})
+            </div>
+            <div style={axisTickRowStyle}>
+              {figureModel.primaryAxis.ticks.map((tick) => (
+                <span key={`${tick.value}-${tick.label}`}>{tick.label}</span>
+              ))}
+            </div>
+            {figureModel.horizontalAxis ? (
+              <div style={{ marginTop: 6 }}>
+                {figureModel.horizontalAxis.heading} ({figureModel.horizontalAxis.unit})
+                <div style={axisTickRowStyle}>
+                  {figureModel.horizontalAxis.ticks.map((tick) => (
+                    <span key={`${tick.value}-${tick.label}`}>{tick.label}</span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+          <div
+            style={{ ...figureBlockStyle, color: legendTextColors.subtext }}
+            data-testid={testId("resistivity-figure-box")}
+          >
+            <div style={{ ...figureLabelStyle, color: legendTextColors.heading }}>
+              Figure
+            </div>
+            {figureModel.figureLines.slice(0, 5).map((line) => (
+              <div key={line}>{line}</div>
+            ))}
+          </div>
+        </>
+      ) : null}
       {activeLayer !== "volume" && edgePopoverOpen && typeof document !== "undefined"
         ? createPortal(
             (

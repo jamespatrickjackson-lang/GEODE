@@ -21,6 +21,7 @@ import {
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
 import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
+import { buildSeismicFigureModel } from "../geophysics/geophysicsFigureModel";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const SEISMIC_LAYER_ID = "utah-forge-phase3-seismic-browser";
@@ -92,6 +93,34 @@ const footerStyle: CSSProperties = {
   marginTop: 9,
   fontSize: 10,
   lineHeight: 1.25,
+};
+
+const figureBlockStyle: CSSProperties = {
+  marginTop: 9,
+  paddingTop: 8,
+  borderTop: "1px solid rgba(255, 255, 255, 0.18)",
+  fontSize: 9,
+  lineHeight: 1.25,
+};
+
+const figureLabelStyle: CSSProperties = {
+  marginBottom: 4,
+  fontSize: 9,
+  fontWeight: 700,
+};
+
+const axisTickRowStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+  gap: 4,
+  marginTop: 4,
+  fontVariantNumeric: "tabular-nums",
+};
+
+const axisSecondaryRowStyle: CSSProperties = {
+  marginTop: 4,
+  display: "grid",
+  gap: 2,
 };
 
 function clamp(value: number, min: number, max: number): number {
@@ -185,9 +214,18 @@ function sliderStyle(value: number, min: number, max: number): CSSProperties {
 }
 
 interface SeismicLegendProductInfo {
+  id: string;
   label: string;
+  lineLabel?: string;
   productKind?: string;
   domainKind?: string;
+  domainUnit?: string;
+  datumM?: number;
+  sourceSubmission?: string;
+  navigationPlacement?: {
+    statusLabel?: string;
+  };
+  sampleRange?: [number, number];
   valueEncoding?: {
     displayRangeMPerS?: [number, number];
   };
@@ -205,7 +243,7 @@ function productInfo(
   id: string,
 ): SeismicLegendProductInfo {
   const products = layer?.metadata?.seismicProducts;
-  if (!Array.isArray(products)) return { label: id };
+  if (!Array.isArray(products)) return { id, label: id };
   const product = products.find(
     (candidate) =>
       candidate &&
@@ -219,7 +257,20 @@ function productInfo(
     !Array.isArray(product.valueEncoding)
       ? (product.valueEncoding as SeismicLegendProductInfo["valueEncoding"])
       : undefined;
+  const navigationPlacement =
+    product?.navigationPlacement &&
+    typeof product.navigationPlacement === "object" &&
+    !Array.isArray(product.navigationPlacement)
+      ? (product.navigationPlacement as SeismicLegendProductInfo["navigationPlacement"])
+      : undefined;
+  const sampleRange =
+    Array.isArray(product?.sampleRange) &&
+    typeof product.sampleRange[0] === "number" &&
+    typeof product.sampleRange[1] === "number"
+      ? ([product.sampleRange[0], product.sampleRange[1]] as [number, number])
+      : undefined;
   return {
+    id,
     label: label
       .replace(/\bFORGE\s*3D\b/gi, "3D")
       .replace(/\bForge3D\b/g, "3D")
@@ -228,8 +279,22 @@ function productInfo(
       .trim(),
     productKind:
       typeof product?.productKind === "string" ? product.productKind : undefined,
+    lineLabel:
+      typeof product?.lineLabel === "string" ? product.lineLabel : undefined,
     domainKind:
       typeof product?.domainKind === "string" ? product.domainKind : undefined,
+    domainUnit:
+      typeof product?.domainUnit === "string" ? product.domainUnit : undefined,
+    datumM:
+      typeof product?.datumM === "number" && Number.isFinite(product.datumM)
+        ? product.datumM
+        : undefined,
+    sourceSubmission:
+      typeof product?.sourceSubmission === "string"
+        ? product.sourceSubmission
+        : undefined,
+    navigationPlacement,
+    sampleRange,
     valueEncoding,
     amplitudeStats:
       product?.amplitudeStats &&
@@ -397,6 +462,13 @@ export function SeismicVolumeLegend({
         ampMax,
       )
     : ampMax.toFixed(2);
+  const figureModel = buildSeismicFigureModel({
+    product: selectedProductInfo,
+    renderMode: style.seismicRenderMode === "raymarch" ? "raymarch" : "slice",
+    sliceAxis:
+      typeof style.seismicSliceAxis === "string" ? style.seismicSliceAxis : undefined,
+    sampleRange: selectedProductInfo.sampleRange,
+  });
 
   const patchStyle = (patch: Partial<EditableStyle>) => {
     if (canApplyLiveSceneEdits()) {
@@ -523,6 +595,48 @@ export function SeismicVolumeLegend({
             Velocity window {lowTick}-{highTick}
           </>
         ) : null}
+      </div>
+      <div
+        style={{ ...figureBlockStyle, color: legendTextColors.body }}
+        data-testid="seismic-primary-axis"
+      >
+        <div style={{ ...figureLabelStyle, color: legendTextColors.heading }}>
+          {figureModel.primaryAxis.heading} ({figureModel.primaryAxis.unit})
+        </div>
+        <div style={axisTickRowStyle}>
+          {figureModel.primaryAxis.ticks.map((tick) => (
+            <span key={`${tick.value}-${tick.label}`}>{tick.label}</span>
+          ))}
+        </div>
+        {figureModel.primaryAxis.ticks.some((tick) => tick.secondaryLabel) ? (
+          <div style={{ ...axisSecondaryRowStyle, color: legendTextColors.subtext }}>
+            {figureModel.primaryAxis.ticks
+              .filter((tick) => tick.secondaryLabel)
+              .slice(0, 2)
+              .map((tick) => (
+                <span key={`${tick.value}-${tick.secondaryLabel}`}>
+                  {tick.secondaryLabel}
+                </span>
+              ))}
+          </div>
+        ) : null}
+        {figureModel.valueAxis ? (
+          <div style={{ marginTop: 6 }}>
+            {figureModel.valueAxis.heading} ({figureModel.valueAxis.unit}):{" "}
+            {figureModel.valueAxis.ticks.map((tick) => tick.label).join(" / ")}
+          </div>
+        ) : null}
+      </div>
+      <div
+        style={{ ...figureBlockStyle, color: legendTextColors.subtext }}
+        data-testid="seismic-figure-box"
+      >
+        <div style={{ ...figureLabelStyle, color: legendTextColors.heading }}>
+          Figure
+        </div>
+        {figureModel.figureLines.slice(0, 6).map((line) => (
+          <div key={line}>{line}</div>
+        ))}
       </div>
       <div style={fineControlsStyle}>
         <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>

@@ -1,6 +1,7 @@
 import type React from "react";
 import { panelStyles, vibrancyTertiaryLabel } from "../../styles";
 import {
+  EditorCompactSegmentedRow,
   detailsContentStyle,
   nestedControlRowStyle,
   nestedDetailsStyle,
@@ -53,30 +54,48 @@ export function SeismicProductDisplayVariables({
   const windowMinLabel = isVelocityProduct(product) ? "Vel min" : "Amp min";
   const windowMaxLabel = isVelocityProduct(product) ? "Vel max" : "Amp max";
   const productControlActive = (_product: SeismicProductOption) => active;
+  const sliceOptions: Array<{
+    value: NonNullable<EditableStyle["seismicSliceAxis"]>;
+    label: string;
+  }> =
+    product.surveyKind === "3d"
+      ? [
+          { value: "inline", label: "Inline" },
+          { value: "crossline", label: "Crossline" },
+          { value: "sample", label: "Plane" },
+        ]
+      : [{ value: "line", label: "2D line" }];
+  const paletteOptions: Array<{
+    value: NonNullable<EditableStyle["seismicColormap"]>;
+    label: string;
+  }> = [
+    { value: "blue-white-red", label: "BWR" },
+    { value: "grayscale", label: "Gray" },
+    { value: "velocity", label: "Velocity" },
+  ];
   return (
       <details style={nestedDetailsStyle}>
         <summary style={panelStyles.summary}>Product variables</summary>
         <div style={detailsContentStyle}>
-          <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Slice</label>
-            <select
-              data-testid={`seismic-capability-slice-axis-${product.id}`}
-              value={productControlActive(product) ? sliceAxis : "inline"}
-              disabled={disabled || !productControlActive(product)}
-              onChange={(e) =>
-                commit({
-                  seismicSliceAxis: e.target.value as NonNullable<
-                    EditableStyle["seismicSliceAxis"]
-                  >,
-                })
-              }
-              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-            >
-              <option value="inline">Inline</option>
-              <option value="crossline">Crossline</option>
-              <option value="sample">Time/depth plane</option>
-            </select>
-          </div>
+          <EditorCompactSegmentedRow
+            label="Slice"
+            value={
+              productControlActive(product)
+                ? product.surveyKind === "3d"
+                  ? sliceAxis
+                  : "line"
+                : sliceOptions[0].value
+            }
+            testId={`seismic-capability-slice-axis-${product.id}`}
+            disabled={disabled || !productControlActive(product)}
+            controlOpacity={controlOpacity}
+            options={sliceOptions}
+            onChange={(value) =>
+              commit({
+                seismicSliceAxis: value,
+              })
+            }
+          />
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Position</label>
             <input
@@ -202,24 +221,19 @@ export function SeismicProductDisplayVariables({
               }
             />
           </div>
-          <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Palette</label>
-            <select
-              data-testid={`seismic-capability-colormap-${product.id}`}
-              value={colormap}
-              disabled={disabled || !productControlActive(product)}
-              onChange={(e) =>
-                commit({
-                  seismicColormap: seismicColormapFromValue(e.target.value),
-                })
-              }
-              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-            >
-              <option value="blue-white-red">Blue-white-red</option>
-              <option value="grayscale">Grayscale</option>
-              <option value="velocity">Velocity</option>
-            </select>
-          </div>
+          <EditorCompactSegmentedRow
+            label="Palette"
+            value={colormap}
+            testId={`seismic-capability-colormap-${product.id}`}
+            disabled={disabled || !productControlActive(product)}
+            controlOpacity={controlOpacity}
+            options={paletteOptions}
+            onChange={(value) =>
+              commit({
+                seismicColormap: seismicColormapFromValue(value),
+              })
+            }
+          />
           <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
             <span style={nestedFieldLabelStyle}>White bg</span>
             <input

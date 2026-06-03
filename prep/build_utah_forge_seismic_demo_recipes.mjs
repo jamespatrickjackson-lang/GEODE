@@ -29,8 +29,9 @@ const PRODUCT_IDS = {
   time3d: "gdr-1141-forge3d-pstm-stack-enh",
   fxy3d: "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack",
   velocity3d: "gdr-1015-forge3d-velo5d-float-01312018",
-  line301Depth: "gdr-1141-line-301-pdm-enh",
-  line301DepthCompare: "gdr-1141-line-301-psdm-unenh",
+  line301Depth: "gdr-1015-forge2d-301-migr-depth",
+  line301PsdmEnhanced: "gdr-1141-line-301-pdm-enh",
+  line301PsdmUnenhanced: "gdr-1141-line-301-psdm-unenh",
   line302Depth: "gdr-1141-line-302-psdm-enh",
   line302DepthCompare: "gdr-1141-line-302-psdm-unenh",
   lineL5Depth: "gdr-1141-line-l5-psdm-enh",
@@ -38,6 +39,33 @@ const PRODUCT_IDS = {
   lineL11Depth: "gdr-1141-line-l11-psdm-enh",
   lineL11DepthCompare: "gdr-1141-line-l11-psdm-unenh",
 };
+
+const REQUIRED_LINE_IDS = ["301", "302", "L11", "L5"];
+
+const PROCESSING_STAGE_RANK = {
+  "migrated-depth-section": 1,
+  "psdm-depth-section": 2,
+  "pstm-time-stack": 3,
+  "unmigrated-time-stack": 4,
+  "time-stack": 5,
+  "psdm-interval-velocity": 6,
+  "velocity-model": 7,
+};
+
+function lineCatalogProducts(products) {
+  return products
+    .filter((product) => REQUIRED_LINE_IDS.includes(product.lineId))
+    .sort((a, b) => {
+      const lineDelta =
+        REQUIRED_LINE_IDS.indexOf(a.lineId) - REQUIRED_LINE_IDS.indexOf(b.lineId);
+      if (lineDelta !== 0) return lineDelta;
+      const stageDelta =
+        (PROCESSING_STAGE_RANK[a.processingStage] ?? 99) -
+        (PROCESSING_STAGE_RANK[b.processingStage] ?? 99);
+      if (stageDelta !== 0) return stageDelta;
+      return (a.canonicalLabel ?? a.label).localeCompare(b.canonicalLabel ?? b.label);
+    });
+}
 
 const exportLayouts = [
   {
@@ -247,10 +275,49 @@ function makePreset({
   };
 }
 
+function makeProductCatalogPreset(product, index) {
+  const fallbackPlacement =
+    product.navigationPlacement?.navigationSource === "fallback" ||
+    product.navigationPlacement?.placementAccuracy === "approximate";
+  const isVelocity = product.productKind === "velocity";
+  return makePreset({
+    id: `seismic-product-${product.id}`,
+    label: product.canonicalLabel ?? product.label,
+    audienceMode: "technical",
+    rank: 100 + index,
+    summary: `${product.lineLabel} ${product.processingStage} source product.`,
+    displayRecipeId: "2d-line-theatre",
+    capabilityGroup: "seismic-product-catalog",
+    productId: product.id,
+    visibleProductIds: [product.id],
+    renderMode: "slice",
+    sliceAxis: "line",
+    opacity: isVelocity ? 0.82 : 0.74,
+    colormap: isVelocity ? "velocity" : "blue-white-red",
+    amplitudeMin: isVelocity ? 0 : 0.08,
+    amplitudeMax: isVelocity ? 1 : 0.92,
+    navigationVisible: true,
+    navigationRoleVisibility: fallbackPlacement
+      ? { sources: false, receivers: false, lines: true }
+      : { sources: true, receivers: true, lines: true },
+    mtCoRender: "seismic",
+    mtStylePatch: { opacity: 0.05, scalarLegendVisible: false },
+    cameraShot: `line-${product.lineId.toLowerCase()}-product-catalog`,
+    caveats: fallbackPlacement
+      ? ["Approximate legacy line placement; precise registration is not validated."]
+      : [],
+  });
+}
+
 function simplifyProduct(product) {
   return {
     id: product.id,
     label: product.label,
+    lineId: product.lineId,
+    lineLabel: product.lineLabel,
+    processingStage: product.processingStage,
+    canonicalLabel: product.canonicalLabel,
+    nameEvidence: product.nameEvidence,
     surveyKind: product.surveyKind,
     productKind: product.productKind,
     domainKind: product.domainKind,
@@ -297,12 +364,16 @@ async function main() {
     PRODUCT_IDS.lineL5Depth,
     PRODUCT_IDS.lineL11Depth,
   ];
+  const requiredLineCatalogProducts = lineCatalogProducts(manifest.products);
+  const productCatalogPresets = requiredLineCatalogProducts.map((product, index) =>
+    makeProductCatalogPreset(product, index),
+  );
   const comparisonPairs = [
     {
       id: "line-301-psdm-enhanced-vs-unenhanced",
       label: "Line 301 enhanced vs unenhanced PSDM",
-      primaryProductId: PRODUCT_IDS.line301Depth,
-      comparisonProductId: PRODUCT_IDS.line301DepthCompare,
+      primaryProductId: PRODUCT_IDS.line301PsdmEnhanced,
+      comparisonProductId: PRODUCT_IDS.line301PsdmUnenhanced,
       purpose: "before/after processing comparison",
     },
     {
@@ -500,19 +571,18 @@ async function main() {
       audienceMode: "technical",
       rank: 4,
       summary:
-        "Curated Line 301 PSDM curtain with enhanced/unenhanced comparison visible.",
+        "Curated Line 301 migrated-depth curtain with source-backed companion PSDM product available.",
       displayRecipeId: "2d-line-theatre",
       productId: PRODUCT_IDS.line301Depth,
-      visibleProductIds: [PRODUCT_IDS.line301Depth, PRODUCT_IDS.line301DepthCompare],
+      visibleProductIds: [PRODUCT_IDS.line301Depth, PRODUCT_IDS.line301PsdmEnhanced],
       renderMode: "slice",
       sliceAxis: "line",
       opacity: 0.72,
       navigationVisible: true,
-      comparisonProductId: PRODUCT_IDS.line301DepthCompare,
       mtCoRender: "seismic",
       mtStylePatch: { opacity: 0.05, scalarLegendVisible: false },
       cameraShot: "line-301-section",
-      caveats: ["Displays both enhanced and unenhanced processed products."],
+      caveats: ["Line 301 view starts from the GDR 1015 migrated-depth product."],
     }),
     makePreset({
       id: "line-theatre-302",
@@ -834,12 +904,12 @@ async function main() {
       summary: "Line 301 enhanced and unenhanced processed products overlaid.",
       displayRecipeId: "2d-line-theatre",
       capabilityGroup: "processing-comparison",
-      productId: PRODUCT_IDS.line301Depth,
-      visibleProductIds: [PRODUCT_IDS.line301Depth, PRODUCT_IDS.line301DepthCompare],
+      productId: PRODUCT_IDS.line301PsdmEnhanced,
+      visibleProductIds: [PRODUCT_IDS.line301PsdmEnhanced, PRODUCT_IDS.line301PsdmUnenhanced],
       renderMode: "slice",
       sliceAxis: "line",
       opacity: 0.7,
-      comparisonProductId: PRODUCT_IDS.line301DepthCompare,
+      comparisonProductId: PRODUCT_IDS.line301PsdmUnenhanced,
       comparisonMode: "overlay",
       navigationVisible: true,
       navigationRoleVisibility: { sources: true, receivers: true, lines: true },
@@ -888,6 +958,7 @@ async function main() {
       cameraShot: "integrated-geophysics",
       caveats: ["Seismic and MT are separate source-derived geophysical methods."],
     }),
+    ...productCatalogPresets,
   ];
 
   for (const preset of audiencePresets) {
@@ -904,6 +975,15 @@ async function main() {
   const productGroups = {
     raymarchCapable3d: sortByIds(manifest.products, threeDIds).map(simplifyProduct),
     lineTheatre: sortByIds(manifest.products, lineTheatreIds).map(simplifyProduct),
+    requiredLineCatalog: requiredLineCatalogProducts.map(simplifyProduct),
+    requiredLineFamilies: Object.fromEntries(
+      REQUIRED_LINE_IDS.map((lineId) => [
+        lineId,
+        requiredLineCatalogProducts
+          .filter((product) => product.lineId === lineId)
+          .map(simplifyProduct),
+      ]),
+    ),
     allProcessedProducts: manifest.products.map(simplifyProduct),
   };
 
@@ -922,6 +1002,7 @@ async function main() {
     productCount: manifest.products.length,
     raymarchProductCount: threeDIds.length,
     disclosureLabels: DISCLOSURE_LABELS,
+    requiredLineSourceGates: manifest.requiredLineSourceGates,
     productGroups,
     comparisonPairs,
     displayRecipes,
@@ -949,6 +1030,7 @@ async function main() {
     seismicVerticalReference: manifest.verticalReference,
     seismicValueEncoding: manifest.valueEncoding,
     seismicProducts: manifest.products.map(simplifyProduct),
+    seismicRequiredLineSourceGates: manifest.requiredLineSourceGates,
     seismicDemoDisclosureLabels: DISCLOSURE_LABELS,
     seismicDisplayRecipes: displayRecipes,
     seismicAudiencePresets: audiencePresets,

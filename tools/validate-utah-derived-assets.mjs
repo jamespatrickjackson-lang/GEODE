@@ -612,27 +612,35 @@ function validateSeismicProducts(seismicLayer) {
     ],
     "seismic audience presets",
   );
+  const baseSeismicCapabilityIds = [
+    "3d-volume-psdm-depth",
+    "3d-volume-pstm-time",
+    "3d-volume-fxydecon",
+    "3d-velocity-volume",
+    "inline-slice",
+    "crossline-slice",
+    "time-depth-plane",
+    "volume-slice-sync",
+    "line-301-theatre",
+    "line-302-theatre",
+    "legacy-l5-l11-theatre",
+    "enhanced-vs-unenhanced",
+    "survey-geometry",
+    "integrated-geophysics",
+  ];
+  const requiredLineCatalogPresetIds = manifest.products
+    .filter((product) => ["301", "302", "L11", "L5"].includes(product.lineId))
+    .map((product) => `seismic-product-${product.id}`);
   assertArrayContainsAll(
     manifest.capabilityPresets?.map((preset) => preset.id),
-    [
-      "3d-volume-psdm-depth",
-      "3d-volume-pstm-time",
-      "3d-volume-fxydecon",
-      "3d-velocity-volume",
-      "inline-slice",
-      "crossline-slice",
-      "time-depth-plane",
-      "volume-slice-sync",
-      "line-301-theatre",
-      "line-302-theatre",
-      "legacy-l5-l11-theatre",
-      "enhanced-vs-unenhanced",
-      "survey-geometry",
-      "integrated-geophysics",
-    ],
+    [...baseSeismicCapabilityIds, ...requiredLineCatalogPresetIds],
     "seismic capability presets",
   );
-  assert.equal(manifest.capabilityPresets.length, 14);
+  assertGreaterThanOrEqual(
+    manifest.capabilityPresets.length,
+    baseSeismicCapabilityIds.length + requiredLineCatalogPresetIds.length,
+    "seismic capability preset count",
+  );
 
   const velocityProduct = manifest.products.find(
     (product) => product.id === "gdr-1015-forge3d-velo5d-float-01312018",
@@ -836,7 +844,11 @@ function validateSeismicProducts(seismicLayer) {
     "seismic disclosure labels",
   );
   assertGreaterThanOrEqual(demoRecipes.audiencePresets.length, 8, "audience preset count");
-  assert.equal(demoRecipes.capabilityPresets.length, 14);
+  assertGreaterThanOrEqual(
+    demoRecipes.capabilityPresets.length,
+    baseSeismicCapabilityIds.length + requiredLineCatalogPresetIds.length,
+    "demo recipe capability presets",
+  );
   assertGreaterThanOrEqual(demoRecipes.exportLayouts.length, 3, "export layout count");
 
   assertGreaterThanOrEqual(
@@ -844,7 +856,11 @@ function validateSeismicProducts(seismicLayer) {
     8,
     "project audience presets",
   );
-  assert.equal(seismicLayer.metadata?.seismicCapabilityPresets?.length, 14);
+  assertGreaterThanOrEqual(
+    seismicLayer.metadata?.seismicCapabilityPresets?.length,
+    baseSeismicCapabilityIds.length + requiredLineCatalogPresetIds.length,
+    "project seismic capability presets",
+  );
   assert.equal(seismicLayer.metadata?.seismicVerticalReference?.referenceDatumM, 1800);
   assert.deepEqual(
     seismicLayer.metadata?.seismicValueEncoding?.velocity?.displayRangeMPerS,

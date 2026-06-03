@@ -53,7 +53,6 @@ import {
 } from "./styles/colorScales";
 import {
   isScalarSectionMesh,
-  isSeismicSectionMesh,
   scalarSectionMeshId,
   scalarSectionMeshKind,
   scalarSectionMeshLabel,
@@ -67,13 +66,18 @@ import {
   buildMtVolumeCutMeshImpl,
   buildSeismicVolumeCutMeshImpl,
   clearMtVolumeCutIsoOverlaysImpl,
+  clearSeismicResistivityIsoOverlaysImpl,
   clearSeismicVolumeCutIsoOverlaysImpl,
   listMtVolumeCutIsoTargetsImpl,
+  listSeismicResistivitySectionIsoTargetsImpl,
+  listSeismicResistivityVolumeCutIsoTargetsImpl,
   listSeismicVolumeCutIsoTargetsImpl,
   sampleScalarVolumeByteImpl,
   scalarVolumeIsoOverlayGroupImpl,
+  seismicResistivityIsoOverlayGroupImpl,
   seismicVolumeIsoOverlayGroupImpl,
   updateMtVolumeCutIsoOverlaysImpl,
+  updateSeismicResistivityIsoOverlaysImpl,
   updateSeismicVolumeCutIsoOverlaysImpl,
 } from "./isoOverlays/volumeCutIsoOverlays";
 import {
@@ -339,7 +343,9 @@ export type SectionIsoTargetGroup =
   | "mt-slices"
   | "mt-volume-cuts"
   | "seismic-sections"
-  | "seismic-volume-cuts";
+  | "seismic-volume-cuts"
+  | "resistivity-on-seismic-sections"
+  | "resistivity-on-seismic-volume-cuts";
 
 export interface ScalarSectionIsoTarget {
   targetKey: string;
@@ -352,6 +358,8 @@ export interface ScalarSectionIsoTarget {
   visible: boolean;
   scalarMin: number;
   scalarMax: number;
+  isoSource?: "seismic-amplitude" | "mt-resistivity";
+  sourceLayerId?: string;
 }
 
 export interface ResolvedSceneSectionPlane {
@@ -2788,21 +2796,27 @@ export class SceneManager {
     if (!group) return [];
     const targets: ScalarSectionIsoTarget[] = [];
     group.traverse((obj) => {
-      if (!isSeismicSectionMesh(obj)) return;
+      if (!(obj instanceof THREE.Mesh)) return;
+      if (obj.userData?.seismicSection !== true) return;
       const values = obj.geometry.userData.seismicAmplitudeValues as
         | Float32Array
-        | number[];
-      let scalarMin = 1;
-      let scalarMax = 0;
-      for (let i = 0; i < values.length; i += 1) {
-        const value = values[i];
-        if (!Number.isFinite(value)) continue;
-        scalarMin = Math.min(scalarMin, value);
-        scalarMax = Math.max(scalarMax, value);
-      }
-      if (scalarMax <= scalarMin) {
-        scalarMin = 0;
-        scalarMax = 1;
+        | number[]
+        | undefined;
+      let scalarMin = 0;
+      let scalarMax = 1;
+      if (values && values.length > 0) {
+        scalarMin = 1;
+        scalarMax = 0;
+        for (let i = 0; i < values.length; i += 1) {
+          const value = values[i];
+          if (!Number.isFinite(value)) continue;
+          scalarMin = Math.min(scalarMin, value);
+          scalarMax = Math.max(scalarMax, value);
+        }
+        if (scalarMax <= scalarMin) {
+          scalarMin = 0;
+          scalarMax = 1;
+        }
       }
       const sectionId = seismicSectionMeshId(obj) ?? obj.uuid;
       targets.push({
@@ -2819,6 +2833,8 @@ export class SceneManager {
         visible: group.visible && obj.visible,
         scalarMin,
         scalarMax,
+        isoSource: "seismic-amplitude",
+        sourceLayerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
       });
     });
     return targets;
@@ -2866,18 +2882,34 @@ export class SceneManager {
     return listSeismicVolumeCutIsoTargetsImpl.call(this, layerId);
   }
 
+  listSeismicResistivitySectionIsoTargets(
+    layerId?: string,
+  ): ScalarSectionIsoTarget[] {
+    return listSeismicResistivitySectionIsoTargetsImpl.call(this, layerId);
+  }
+
+  listSeismicResistivityVolumeCutIsoTargets(
+    layerId?: string,
+  ): ScalarSectionIsoTarget[] {
+    return listSeismicResistivityVolumeCutIsoTargetsImpl.call(this, layerId);
+  }
+
   listSectionIsoTargets(layerId?: string): ScalarSectionIsoTarget[] {
     const targets = [
       ...this.listAuthoredScalarSectionIsoTargets(layerId),
       ...this.listMtVolumeCutIsoTargets(layerId),
       ...this.listSeismicSectionIsoTargets(layerId),
       ...this.listSeismicVolumeCutIsoTargets(layerId),
+      ...this.listSeismicResistivitySectionIsoTargets(layerId),
+      ...this.listSeismicResistivityVolumeCutIsoTargets(layerId),
     ];
     const groupOrder: Record<SectionIsoTargetGroup, number> = {
       "mt-slices": 0,
       "mt-volume-cuts": 1,
       "seismic-sections": 2,
       "seismic-volume-cuts": 3,
+      "resistivity-on-seismic-sections": 4,
+      "resistivity-on-seismic-volume-cuts": 5,
     };
     targets.sort((a, b) => {
       if (a.visible !== b.visible) return a.visible ? -1 : 1;
@@ -2981,8 +3013,16 @@ export class SceneManager {
     return seismicVolumeIsoOverlayGroupImpl.call(this, seismicLayer);
   }
 
+  seismicResistivityIsoOverlayGroup(seismicLayer: THREE.Group): THREE.Group {
+    return seismicResistivityIsoOverlayGroupImpl.call(this, seismicLayer);
+  }
+
   clearSeismicVolumeCutIsoOverlays(seismicLayer?: THREE.Group): void {
     return clearSeismicVolumeCutIsoOverlaysImpl.call(this, seismicLayer);
+  }
+
+  clearSeismicResistivityIsoOverlays(seismicLayer?: THREE.Group): void {
+    return clearSeismicResistivityIsoOverlaysImpl.call(this, seismicLayer);
   }
 
   buildSeismicVolumeCutMesh(mesh: THREE.Mesh, plane: ResolvedSceneSectionPlane, options: {
@@ -2992,16 +3032,22 @@ export class SceneManager {
       removeBackground: boolean;
       backgroundCutoff: number;
       targetKey: string;
+      sectionFrame?: ResolvedSceneSectionFrame | null;
     }): {
     mesh: THREE.Mesh;
     values: Float32Array;
     alphaValues: Float32Array;
+    hardMaskValues: Float32Array;
   } | null {
     return buildSeismicVolumeCutMeshImpl.call(this, mesh, plane, options);
   }
 
   updateSeismicVolumeCutIsoOverlays(style: EditableStyle): void {
     return updateSeismicVolumeCutIsoOverlaysImpl.call(this, style);
+  }
+
+  updateSeismicResistivityIsoOverlays(style: EditableStyle): void {
+    return updateSeismicResistivityIsoOverlaysImpl.call(this, style);
   }
 
   mtSurfaceBoundaryDefinitionsFromGroup(

@@ -13,6 +13,13 @@ The NAIP2024 aerial topo material renders with full-height vertical
 "herringbone" smear bands flanking the FORGE site (most visible on the MT
 Volume Overview page). It looks like the aerial county tiles are disjointed.
 
+2026-06-03 catalog update: the active NAIP regional material now includes nine
+county MrSID sources after Garfield, Kane, Piute, and Wayne were added to the
+archive. See
+[NAIP2024-Regional-Source-Expansion-2026-06-03.md](NAIP2024-Regional-Source-Expansion-2026-06-03.md)
+for current source bounds and generated asset hashes. The terrain/LOD
+remediation conclusion below remains unchanged.
+
 The audit plus three code explorations established the true cause:
 
 - **The data chain is clean.** All five county MrSID `.sdw` world files are

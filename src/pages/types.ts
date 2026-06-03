@@ -180,6 +180,23 @@ export interface MtSurfaceBoundaryStyle {
   source?: "precomputed" | "live";
 }
 
+export interface SeismicProductDisplayState {
+  visible?: boolean;
+  opacity?: number;
+  renderMode?: "slice" | "raymarch";
+  sliceAxis?: "inline" | "crossline" | "sample" | "line";
+  sliceFraction?: number;
+  sliceThroughVolume?: boolean;
+  amplitudeMin?: number;
+  amplitudeMax?: number;
+  amplitudeGamma?: number;
+  colormap?: "blue-white-red" | "grayscale" | "velocity";
+  removeBackground?: boolean;
+  backgroundCutoff?: number;
+  timeScale?: number;
+  volumeSampleSteps?: number;
+}
+
 // Style fields the alpha actually applies to the live scene. Loaders read
 // these; the editor writes them. Unknown fields pass through untouched
 // so future polish work can add fields without breaking the loader.
@@ -429,6 +446,7 @@ export interface EditableStyle {
   // SEG-Y products and only affect browser display state.
   seismicProductId?: string;
   seismicProductVisibility?: Record<string, boolean>;
+  seismicProductStates?: Record<string, SeismicProductDisplayState>;
   seismicRenderMode?: "slice" | "raymarch";
   seismicSliceAxis?: "inline" | "crossline" | "sample" | "line";
   seismicSliceFraction?: number;
@@ -451,6 +469,7 @@ export interface EditableStyle {
   seismicComparisonSpacingM?: number;
   seismicExportLayoutId?: string;
   seismicMtCoRender?: "seismic" | "mt" | "integrated";
+  seismicIsoSource?: "seismic-amplitude" | "mt-resistivity";
   seismicNavigationRoleVisibility?: {
     sources?: boolean;
     receivers?: boolean;

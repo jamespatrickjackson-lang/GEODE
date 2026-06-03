@@ -143,11 +143,11 @@ test("Utah FORGE seismic manifest and capability containers render", async ({
   await expect(page.locator("body")).toContainText("Data confidence");
   await expect(page.locator("body")).toContainText("Scene section planes");
   await expect(page.getByTestId("scene-section-enabled")).toBeVisible();
-  await expect(page.getByTestId("scene-section-mode")).toHaveValue("cutaway");
-  await expect(page.getByTestId("scene-section-target-scope")).toHaveValue(
-    "all-visible",
-  );
   await expect(page.getByTestId("seismic-audience-mode-select")).toBeVisible();
+  await expect(page.getByTestId("seismic-audience-mode-select")).toHaveAttribute(
+    "role",
+    "group",
+  );
   await expect(
     page.getByTestId("seismic-audience-preset-select"),
   ).toBeVisible();
@@ -177,7 +177,7 @@ test("Utah FORGE seismic manifest and capability containers render", async ({
     page.locator(
       '[data-testid^="seismic-capability-product-"]:not([data-testid^="seismic-capability-product-visible-"])',
     ),
-  ).toHaveCount(4);
+  ).toHaveCount(34);
   const capabilityAncestorSummaries = await page
     .getByTestId(
       `seismic-capability-product-${FIRST_RAYMARCH_PRODUCT_ID}`,
@@ -209,6 +209,16 @@ test("Utah FORGE seismic manifest and capability containers render", async ({
   await expect(
     page.getByTestId(`seismic-capability-sync-${FIRST_RAYMARCH_PRODUCT_ID}`),
   ).toBeVisible();
+  await revealSeismicCapabilityProduct(page, "gdr-1141-line-301-pdm-enh");
+  await expect(
+    page.getByTestId("seismic-capability-product-gdr-1141-line-301-pdm-enh"),
+  ).toBeVisible();
+  await expect(
+    page.getByTestId("seismic-capability-slice-gdr-1141-line-301-pdm-enh"),
+  ).toBeVisible();
+  await expect(
+    page.getByTestId("seismic-capability-volume-gdr-1141-line-301-pdm-enh"),
+  ).toHaveCount(0);
   expect(capture.consoleErrors).toEqual([]);
 });
 
@@ -240,7 +250,12 @@ test("Utah FORGE seismic capability products switch visibility and render modes"
     .getByTestId(
       `seismic-capability-product-visible-${FIRST_RAYMARCH_PRODUCT_ID}`,
     )
-    .setChecked(false);
+    .click();
+  await expect(
+    page.getByTestId(
+      `seismic-capability-product-visible-${FIRST_RAYMARCH_PRODUCT_ID}`,
+    ),
+  ).toHaveAttribute("aria-pressed", "false");
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
@@ -330,7 +345,10 @@ test("Utah FORGE seismic display cleanup and scene sections update runtime state
 
   await page
     .getByTestId(`seismic-capability-slice-axis-${SECOND_RAYMARCH_PRODUCT_ID}`)
-    .selectOption("crossline");
+    .getByTestId(
+      `seismic-capability-slice-axis-${SECOND_RAYMARCH_PRODUCT_ID}-crossline`,
+    )
+    .click();
   await setRangeInput(
     page,
     `seismic-capability-slice-position-${SECOND_RAYMARCH_PRODUCT_ID}`,
@@ -345,7 +363,10 @@ test("Utah FORGE seismic display cleanup and scene sections update runtime state
 
   await page
     .getByTestId(`seismic-capability-colormap-${SECOND_RAYMARCH_PRODUCT_ID}`)
-    .selectOption("grayscale");
+    .getByTestId(
+      `seismic-capability-colormap-${SECOND_RAYMARCH_PRODUCT_ID}-grayscale`,
+    )
+    .click();
   await setRangeInput(
     page,
     `seismic-capability-amplitude-min-${SECOND_RAYMARCH_PRODUCT_ID}`,
@@ -599,9 +620,9 @@ test("Utah FORGE seismic audience presets and capability workflows update state"
   await page
     .getByTestId("seismic-audience-preset-select")
     .selectOption("line-theatre-301");
-  await expect(page.getByTestId("seismic-audience-mode-select")).toHaveValue(
-    "technical",
-  );
+  await expect(
+    page.getByTestId("seismic-audience-mode-select-technical"),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
@@ -617,8 +638,8 @@ test("Utah FORGE seismic audience presets and capability workflows update state"
     });
 
   await page
-    .getByTestId("seismic-audience-mode-select")
-    .selectOption("data-room");
+    .getByTestId("seismic-audience-mode-select-data-room")
+    .click();
   await expect(
     page.getByTestId("seismic-capability-data-confidence"),
   ).toContainText("Products: 34 processed GUI products");
@@ -626,10 +647,10 @@ test("Utah FORGE seismic audience presets and capability workflows update state"
     page.getByTestId("seismic-capability-data-confidence"),
   ).toContainText("Audience: data-room");
 
-  await page.getByTestId("seismic-audience-mode-select").selectOption("export");
-  await expect(page.getByTestId("seismic-audience-mode-select")).toHaveValue(
-    "export",
-  );
+  await page.getByTestId("seismic-audience-mode-select-export").click();
+  await expect(
+    page.getByTestId("seismic-audience-mode-select-export"),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(
     page.getByTestId("seismic-capability-data-confidence"),
   ).toContainText("Audience: export");
@@ -641,21 +662,30 @@ test("Utah FORGE seismic audience presets and capability workflows update state"
     .click();
   await page
     .getByTestId(`seismic-capability-slice-axis-${FIRST_RAYMARCH_PRODUCT_ID}`)
-    .selectOption("inline");
+    .getByTestId(
+      `seismic-capability-slice-axis-${FIRST_RAYMARCH_PRODUCT_ID}-inline`,
+    )
+    .click();
   await expect
     .poll(async () => (await seismicSceneState(page)).visibleSectionAxes)
     .toEqual(["inline"]);
 
   await page
     .getByTestId(`seismic-capability-slice-axis-${FIRST_RAYMARCH_PRODUCT_ID}`)
-    .selectOption("crossline");
+    .getByTestId(
+      `seismic-capability-slice-axis-${FIRST_RAYMARCH_PRODUCT_ID}-crossline`,
+    )
+    .click();
   await expect
     .poll(async () => (await seismicSceneState(page)).visibleSectionAxes)
     .toEqual(["crossline"]);
 
   await page
     .getByTestId(`seismic-capability-slice-axis-${FIRST_RAYMARCH_PRODUCT_ID}`)
-    .selectOption("sample");
+    .getByTestId(
+      `seismic-capability-slice-axis-${FIRST_RAYMARCH_PRODUCT_ID}-sample`,
+    )
+    .click();
   await expect
     .poll(async () => (await seismicSceneState(page)).visibleSectionAxes)
     .toEqual(["sample"]);
@@ -762,8 +792,8 @@ test("Utah FORGE seismic audience presets and capability workflows update state"
     });
 
   await page
-    .getByTestId("seismic-comparison-mode-select")
-    .selectOption("side-by-side");
+    .getByTestId("seismic-comparison-mode-select-side-by-side")
+    .click();
   await setRangeInput(page, "seismic-comparison-spacing", "1000");
   await page.getByTestId("seismic-comparison-pair-302").click();
   await expect

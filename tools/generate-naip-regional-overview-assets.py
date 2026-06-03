@@ -33,6 +33,19 @@ DEFAULT_REGIONAL_COG_PATH = (
 DEFAULT_REGIONAL_COG_LONG_EDGE = 8192
 EXPECTED_SOURCE_EPSG = 26912
 VRT_BOUNDS_TOLERANCE_M = 1.0
+NAIP_MATERIAL_ID = "naip-2024-aerial"
+NAIP_DIAGNOSTIC_LAYER_ID = "naip-2024-tile-diagnostics"
+NAIP_DIAGNOSTIC_COLORS = {
+    "beaver": "#ff2d2d",
+    "garfield": "#ff8a2d",
+    "iron": "#f4ff2d",
+    "kane": "#8b5cf6",
+    "millard": "#22ff66",
+    "piute": "#00e5a8",
+    "sanpete": "#26c6ff",
+    "sevier": "#ff4df0",
+    "wayne": "#ff6b9a",
+}
 NAIP_REFERENCE_FILES = (
     Path("projects/utah-forge/environment.json"),
     Path("projects/utah-forge/project.json"),
@@ -64,6 +77,13 @@ SOURCE_CATALOG = [
         "ties": [],
     },
     {
+        "id": "garfield",
+        "label": "NAIP2024_Garfield",
+        "path": ARCHIVE_ROOT / "NAIP2024_Garfield" / "NAIP2024_Garfield.sid",
+        "bounds": (345498.0, 4150140.0, 598806.0, 4227882.0),
+        "ties": [],
+    },
+    {
         # Zero-rotation source. Keep identity ties; do not rotate during mosaic.
         "id": "iron",
         "label": "NAIP2024_Iron",
@@ -72,10 +92,24 @@ SOURCE_CATALOG = [
         "ties": [],
     },
     {
+        "id": "kane",
+        "label": "NAIP2024_Kane",
+        "path": ARCHIVE_ROOT / "NAIP2024_Kane" / "NAIP2024_Kane.sid",
+        "bounds": (327396.0, 4094688.0, 533376.0, 4159242.0),
+        "ties": [],
+    },
+    {
         "id": "millard",
         "label": "NAIP2024_Millard",
         "path": ARCHIVE_ROOT / "NAIP2024_Millard" / "NAIP2024_Millard.sid",
         "bounds": (232725.0, 4269006.0, 414066.0, 4384072.2),
+        "ties": [],
+    },
+    {
+        "id": "piute",
+        "label": "NAIP2024_Piute",
+        "path": ARCHIVE_ROOT / "NAIP2024_Piute" / "NAIP2024_Piute.sid",
+        "bounds": (363432.0, 4219794.0, 434856.0, 4269588.0),
         "ties": [],
     },
     {
@@ -91,6 +125,13 @@ SOURCE_CATALOG = [
         "label": "NAIP2024_Sevier",
         "path": ARCHIVE_ROOT / "NAIP2024_Sevier" / "NAIP2024_Sevier.sid",
         "bounds": (363546.0, 4261122.0, 478572.0, 4324452.0),
+        "ties": [],
+    },
+    {
+        "id": "wayne",
+        "label": "NAIP2024_Wayne",
+        "path": ARCHIVE_ROOT / "NAIP2024_Wayne" / "NAIP2024_Wayne.sid",
+        "bounds": (423108.0, 4219482.0, 598806.0, 4268742.0),
         "ties": [],
     },
 ]
@@ -125,8 +166,8 @@ def rigid_from_ties(ties: list[dict]) -> tuple[float, float, float] | None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Generate regional NAIP 2024 overview WebP assets from Beaver, "
-            "Iron, Millard, Sanpete, and Sevier MrSID mosaics."
+            "Generate regional NAIP 2024 overview WebP assets from the "
+            "Utah county MrSID mosaics in SOURCE_CATALOG."
         ),
     )
     parser.add_argument(
@@ -870,14 +911,153 @@ def versioned_project_path(path: Path) -> tuple[str, str]:
     return (relative.as_posix(), digest)
 
 
-def update_naip_manifest_cache_versions(
+def county_names_from_catalog(catalog: list[dict]) -> list[str]:
+    names: list[str] = []
+    for source in catalog:
+        label = str(source.get("label", ""))
+        names.append(label.removeprefix("NAIP2024_") or str(source["id"]).title())
+    return names
+
+
+def joined_county_names(catalog: list[dict]) -> str:
+    names = county_names_from_catalog(catalog)
+    if len(names) <= 1:
+        return "".join(names)
+    return ", ".join(names[:-1]) + f", and {names[-1]}"
+
+
+def bounds_json(bounds: tuple[float, float, float, float]) -> list[float]:
+    return [float(value) for value in bounds]
+
+
+def same_bounds(
+    left: object,
+    right: tuple[float, float, float, float],
+    tolerance: float = 1e-6,
+) -> bool:
+    if not isinstance(left, list) or len(left) != len(right):
+        return False
+    return all(
+        abs(float(left[index]) - right[index]) <= tolerance
+        for index in range(len(right))
+    )
+
+
+def source_display_name(source: dict) -> str:
+    label = str(source.get("label", ""))
+    return label.removeprefix("NAIP2024_") or str(source["id"]).title()
+
+
+def diagnostic_tile_entries(catalog: list[dict]) -> list[dict]:
+    entries: list[dict] = []
+    for source in catalog:
+        source_id = str(source["id"])
+        entries.append(
+            {
+                "id": source_id,
+                "label": f"NAIP {source_display_name(source)}",
+                "color": NAIP_DIAGNOSTIC_COLORS.get(source_id, "#ff2d2d"),
+                "bounds": bounds_json(source["bounds"]),
+            },
+        )
+    return entries
+
+
+def object_uses_regional_naip(value: dict) -> bool:
+    if value.get("materialPreset") == f"image:{NAIP_MATERIAL_ID}":
+        return True
+    for key in (
+        "orthoPhotoPath",
+        "orthoPhotoTexture4096Path",
+        "orthoPhotoTexture8192Path",
+        "texture4096Path",
+        "texture8192Path",
+    ):
+        path = value.get(key)
+        if isinstance(path, str) and "naip_2024_regional_" in path:
+            return True
+    return False
+
+
+def update_naip_metadata_value(
+    value: object,
+    catalog: list[dict],
+    bounds: tuple[float, float, float, float],
+) -> bool:
+    changed = False
+    if isinstance(value, dict):
+        if value.get("id") == NAIP_MATERIAL_ID and not same_bounds(
+            value.get("bounds"),
+            bounds,
+        ):
+            value["bounds"] = bounds_json(bounds)
+            changed = True
+
+        if (
+            "orthoPhotoBounds" in value
+            and object_uses_regional_naip(value)
+            and not same_bounds(
+                value.get("orthoPhotoBounds"),
+                bounds,
+            )
+        ):
+            value["orthoPhotoBounds"] = bounds_json(bounds)
+            changed = True
+
+        if (
+            value.get("id") == NAIP_DIAGNOSTIC_LAYER_ID
+            and isinstance(value.get("metadata"), dict)
+        ):
+            metadata = value["metadata"]
+            tiles = diagnostic_tile_entries(catalog)
+            if metadata.get("naipTiles") != tiles:
+                metadata["naipTiles"] = tiles
+                changed = True
+            if metadata.get("derivedArtifactDate") != "2026-06-03":
+                metadata["derivedArtifactDate"] = "2026-06-03"
+                changed = True
+            notes = (
+                "Temporary diagnostic overlay for locating NAIP county-source "
+                "seams and missing-tile artifacts. Rectangles show source "
+                f"raster bounds for the current {len(catalog)}-county regional "
+                "overview, not a crop request."
+            )
+            if metadata.get("notes") != notes:
+                metadata["notes"] = notes
+                changed = True
+
+        for child in value.values():
+            changed = update_naip_metadata_value(child, catalog, bounds) or changed
+    elif isinstance(value, list):
+        for child in value:
+            changed = update_naip_metadata_value(child, catalog, bounds) or changed
+    return changed
+
+
+def update_naip_manifest_metadata_and_cache_versions(
     output_dir: Path,
+    catalog: list[dict],
+    bounds: tuple[float, float, float, float],
     versions_by_file: dict[str, str],
 ) -> None:
     manifest_path = output_dir / "manifest.json"
     if not manifest_path.exists():
         return
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    county_names = joined_county_names(catalog)
+    source = data.setdefault("source", {})
+    source["name"] = f"NAIP 2024 {county_names} County MrSID mosaics"
+    source["archivePaths"] = [
+        source_entry["path"].as_posix()
+        for source_entry in catalog
+    ]
+    data["sourceBounds"] = list(bounds)
+    aoi = data.setdefault("aoi", {})
+    aoi["anchor"] = f"Combined available NAIP 2024 {county_names} County MrSID extents"
+    aoi["bounds"] = list(bounds)
+    aoi["widthM"] = bounds[2] - bounds[0]
+    aoi["heightM"] = bounds[3] - bounds[1]
+
     variants = data.get("variants")
     if isinstance(variants, dict):
         for key, filename in (
@@ -892,6 +1072,29 @@ def update_naip_manifest_cache_versions(
             variant["sha256"] = digest
             variant["cacheVersion"] = token
             variant["versionedFile"] = f"{filename}?v={token}"
+            variant["width"], variant["height"] = output_size(bounds, int(key))
+            variant["resolutionMApprox"] = round(
+                max(
+                    (bounds[2] - bounds[0]) / variant["width"],
+                    (bounds[3] - bounds[1]) / variant["height"],
+                ),
+                2,
+            )
+    processing = data.setdefault("processing", {})
+    notes = processing.setdefault("notes", [])
+    if isinstance(notes, list):
+        replacement = (
+            "Regional overview assets keep the combined "
+            f"{len(catalog)}-county MrSID extent but use alpha-aware color "
+            "dilation and feathering so tile-shaped gaps do not dominate "
+            "the presentation."
+        )
+        for index, note in enumerate(notes):
+            if isinstance(note, str) and "Regional overview assets keep" in note:
+                notes[index] = replacement
+                break
+        else:
+            notes.insert(0, replacement)
     manifest_path.write_text(
         f"{json.dumps(data, indent=2)}\n",
         encoding="utf-8",
@@ -944,6 +1147,36 @@ def update_project_naip_cache_refs(
     if changed:
         print(
             "Updated NAIP cache-busted references: "
+            + ", ".join(changed),
+        )
+
+
+def update_project_naip_metadata_refs(
+    catalog: list[dict],
+    bounds: tuple[float, float, float, float],
+) -> None:
+    repo_root = Path.cwd().resolve()
+    targets = [repo_root / path for path in NAIP_REFERENCE_FILES]
+    pages_dir = repo_root / NAIP_REFERENCE_PAGE_DIR
+    if pages_dir.exists():
+        targets.extend(sorted(pages_dir.glob("*.json")))
+
+    changed: list[str] = []
+    for target_path in targets:
+        if not target_path.exists():
+            continue
+        data = json.loads(target_path.read_text(encoding="utf-8"))
+        if not update_naip_metadata_value(data, catalog, bounds):
+            continue
+        target_path.write_text(
+            f"{json.dumps(data, indent=2)}\n",
+            encoding="utf-8",
+        )
+        changed.append(target_path.relative_to(repo_root).as_posix())
+
+    if changed:
+        print(
+            "Updated NAIP bounds and diagnostic metadata: "
             + ", ".join(changed),
         )
 
@@ -1071,7 +1304,13 @@ def main() -> None:
         _, digest = versioned_project_path(final_path)
         if digest:
             versions_by_file[final_path.name] = digest
-    update_naip_manifest_cache_versions(output_dir, versions_by_file)
+    update_naip_manifest_metadata_and_cache_versions(
+        output_dir,
+        SOURCE_CATALOG,
+        bounds,
+        versions_by_file,
+    )
+    update_project_naip_metadata_refs(SOURCE_CATALOG, bounds)
     update_project_naip_cache_refs(output_dir, versions_by_file)
 
 

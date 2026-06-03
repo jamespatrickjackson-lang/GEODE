@@ -1009,7 +1009,7 @@
       "metadata": {
         "sourceFile": "NAIP 2024 county MrSID source bounds",
         "sourceDate": "2024",
-        "derivedArtifactDate": "2026-06-02",
+        "derivedArtifactDate": "2026-06-03",
         "sourceOrigin": "USDA NAIP 2024 county mosaics used by the regional overview generator",
         "classification": "public raster source diagnostics",
         "confidentiality": "public",
@@ -1058,6 +1058,17 @@
             ]
           },
           {
+            "id": "garfield",
+            "label": "NAIP Garfield",
+            "color": "#ff8a2d",
+            "bounds": [
+              345498,
+              4150140,
+              598806,
+              4227882
+            ]
+          },
+          {
             "id": "iron",
             "label": "NAIP Iron",
             "color": "#f4ff2d",
@@ -1069,6 +1080,17 @@
             ]
           },
           {
+            "id": "kane",
+            "label": "NAIP Kane",
+            "color": "#8b5cf6",
+            "bounds": [
+              327396,
+              4094688,
+              533376,
+              4159242
+            ]
+          },
+          {
             "id": "millard",
             "label": "NAIP Millard",
             "color": "#22ff66",
@@ -1077,6 +1099,17 @@
               4269006,
               414066,
               4384072.2
+            ]
+          },
+          {
+            "id": "piute",
+            "label": "NAIP Piute",
+            "color": "#00e5a8",
+            "bounds": [
+              363432,
+              4219794,
+              434856,
+              4269588
             ]
           },
           {
@@ -1100,9 +1133,20 @@
               478572,
               4324452
             ]
+          },
+          {
+            "id": "wayne",
+            "label": "NAIP Wayne",
+            "color": "#ff6b9a",
+            "bounds": [
+              423108,
+              4219482,
+              598806,
+              4268742
+            ]
           }
         ],
-        "notes": "Temporary diagnostic overlay for locating NAIP county-source seams and missing-tile artifacts. Rectangles show source raster bounds, not a crop request."
+        "notes": "Temporary diagnostic overlay for locating NAIP county-source seams and missing-tile artifacts. Rectangles show source raster bounds for the current 9-county regional overview, not a crop request."
       }
     },
     {
@@ -1311,6 +1355,18 @@
           {
             "id": "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack",
             "label": "3D post-stack time migration FXY decon stack",
+            "lineId": "3d",
+            "lineLabel": "3D survey",
+            "processingStage": "poststack-time-migration",
+            "canonicalLabel": "3D post-stack time migration FXY decon stack",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Forge3d_Poststack_Time_Migration_FXYDecon_Stack.segy",
+              "sourceStem": "Forge3d_Poststack_Time_Migration_FXYDecon_Stack",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_Poststack_Time_Migration_FXYDecon_Stack.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE Forge3d POSTSTACK Migration AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4000 ms C 5 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 25m x 25m C13 PRODUCT: POSTMigration Stack C14 IL 1, XL 1, (332800.5, 4260778.0 ) C15 IL 170, XL 1, (322874.25, 4265002.25) C16 IL 170, XL 213,(338173.44, 4264910.0 ) C17 C18 C19 C20 C21 PROCESSING FLOW: C22 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C23 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C24 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C25 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C26 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C27 POST DECON NOISE ATTENUAT"
+            },
             "surveyKind": "3d",
             "productKind": "poststack-time-migration",
             "domainKind": "time",
@@ -1322,7 +1378,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "3d",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "3D placement uses source geometry and navigation envelope; control-point validation is still required."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -1413,6 +1469,18 @@
           {
             "id": "gdr-1141-forge3d-ani-psdm-stack-unenh",
             "label": "3D anisotropic PSDM depth stack (unenhanced)",
+            "lineId": "3d",
+            "lineLabel": "3D survey",
+            "processingStage": "psdm-depth-volume",
+            "canonicalLabel": "3D anisotropic PSDM depth stack (unenhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Forge3d_ANI_PSDM_Stack_UnEnh.segy",
+              "sourceStem": "Forge3d_ANI_PSDM_Stack_UnEnh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE Forge3d AniPSDM Stack UnEnhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 5000 m C 5 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:4/12/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 25m x 25m C13 PRODUCT: Aniso PSDM UnEnhanced Stack C14 IL 1, XL 1, (332800.5, 4260778.0 ) C15 IL 170, XL 1, (322874.25, 4265002.25) C16 IL 170, XL 213,(338173.44, 4264910.0 ) C17 C18 C19 C20 C21 PROCESSING FLOW: C22 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C23 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C24 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C25 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C26 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C27 POST DECON NOI"
+            },
             "surveyKind": "3d",
             "productKind": "psdm",
             "domainKind": "depth",
@@ -1424,7 +1492,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "3d",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "3D placement uses source geometry and navigation envelope; control-point validation is still required."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -1515,6 +1583,18 @@
           {
             "id": "gdr-1141-forge3d-pstm-stack-enh",
             "label": "3D PSTM time stack (enhanced)",
+            "lineId": "3d",
+            "lineLabel": "3D survey",
+            "processingStage": "pstm-time-volume",
+            "canonicalLabel": "3D PSTM time stack (enhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Forge3d_PSTM_Stack_Enh.segy",
+              "sourceStem": "Forge3d_PSTM_Stack_Enh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_PSTM_Stack_Enh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE Forge3d PSTM Stack Enhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ms TRACE LENGTH: 4000 ms C 5 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 25m x 25m C13 PRODUCT: PSTM Stack in time C14 IL 1, XL 1, (332800.5, 4260778.0 ) C15 IL 170, XL 1, (322874.25, 4265002.25) C16 IL 170, XL 213,(338173.44, 4264910.0 ) C17 C18 C19 C20 C21 PROCESSING FLOW: C22 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C23 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C24 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C25 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C26 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C27 POST DECON NOISE ATTENUATI"
+            },
             "surveyKind": "3d",
             "productKind": "pstm",
             "domainKind": "time",
@@ -1526,7 +1606,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "3d",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "3D placement uses source geometry and navigation envelope; control-point validation is still required."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -1617,6 +1697,18 @@
           {
             "id": "gdr-1015-forge3d-velo5d-float-01312018",
             "label": "3D velocity model (time domain)",
+            "lineId": "3d",
+            "lineLabel": "3D survey",
+            "processingStage": "velocity-model",
+            "canonicalLabel": "3D velocity model (time domain)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Forge3D_velo5D_float_01312018.sgy",
+              "sourceStem": "Forge3D_velo5D_float_01312018",
+              "sourceSubmission": "GDR 1015",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Velocity/Velocity/Forge3D_velo5D_float_01312018.sgy",
+              "textHeaderExcerpt": "C01 Client: University of Utah Dataset: Forge3D_velo5D_float_01312018.sgy C02 Project: Forge 3D velocity volume at floating datum C03 Area: Beaver Co., UT C04 Date of file: January 31, 2018 C05 Media ID: 01312018-4 Media Format: SEG-Y, IBM 32-bit float, 4sec, 1ms C06 Recorded By: Paragon Geophysical (2017) C07 Source Type: Vib, 4 swps, Linear sweep 4-84hz, 12s sweep C08 C09 Source Interval: 50 meters Source Line Interval: 375.55 m C10 Receiver Interval: 50 meters Receiver Line Interval: 200 m C11 Sample Interval: 1ms Record Length: 4s Data Samples/Trace: 4000 C12 Datum: 1800 m ASL Replacement Vel: 2500 m/s C13 C14 Key Header Word Byte Locations: C15 Description Byte Loc. Format C16 Inline 9-12 4i C17 Xline 13-16 4i C18 CDP-X 81-84 4i C19 CDP-Y 85-89 4i C20 CDP_elev 41-44 4i C21 FNL_stat 103-106 4i C22 C23 Processing: geometry extract, gain recovery, trace C24 equalization, min phase filt"
+            },
             "surveyKind": "3d",
             "productKind": "velocity",
             "domainKind": "velocity-time",
@@ -1628,7 +1720,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "3d",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "3D placement uses source geometry and navigation envelope; control-point validation is still required."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -1726,7 +1818,19 @@
           },
           {
             "id": "gdr-1141-line-301-pdm-enh",
-            "label": "2D Line 301 PDM depth section (enhanced)",
+            "label": "2D Line 301 PSDM depth section (enhanced)",
+            "lineId": "301",
+            "lineLabel": "Line 301",
+            "processingStage": "psdm-depth-section",
+            "canonicalLabel": "2D Line 301 PSDM depth section (enhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_301_PDM_Enh.segy",
+              "sourceStem": "Line_301_PDM_Enh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PDM_Enh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 Enhanced PSDM AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 500 FT MEDIAN SCALING C24 DATA AT FINLA DATUM C25 FXDecon C"
+            },
             "surveyKind": "2d",
             "productKind": "psdm",
             "domainKind": "depth",
@@ -1738,7 +1842,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "301",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -1775,6 +1879,18 @@
           {
             "id": "gdr-1141-line-301-psdm-unenh",
             "label": "2D Line 301 PSDM depth section (unenhanced)",
+            "lineId": "301",
+            "lineLabel": "Line 301",
+            "processingStage": "psdm-depth-section",
+            "canonicalLabel": "2D Line 301 PSDM depth section (unenhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line-301_PSDM_UNEnh.segy",
+              "sourceStem": "Line-301_PSDM_UNEnh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line-301_PSDM_UNEnh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 PSDM UnEnhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 500 FT MEDIAN SCALING C24 DATA AT FINLA DATUM C25 C26 C27"
+            },
             "surveyKind": "2d",
             "productKind": "psdm",
             "domainKind": "depth",
@@ -1786,7 +1902,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "301",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -1823,6 +1939,18 @@
           {
             "id": "gdr-1015-forge2d-301-migr-depth",
             "label": "2D Line 301 migrated depth section",
+            "lineId": "301",
+            "lineLabel": "Line 301",
+            "processingStage": "migrated-depth-section",
+            "canonicalLabel": "2D Line 301 migrated depth section",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Forge2D-301_Migr-Depth.sgy",
+              "sourceStem": "Forge2D-301_Migr-Depth",
+              "sourceSubmission": "GDR 1015",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Migr-Depth.sgy",
+              "textHeaderExcerpt": "Line 301; STAR Geophsics stack. Enhanced, Migrated, and converted to depth using Pahvant well vels. -end-"
+            },
             "surveyKind": "2d",
             "productKind": "psdm",
             "domainKind": "depth",
@@ -1834,7 +1962,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "301",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -1871,6 +1999,18 @@
           {
             "id": "gdr-1141-line-302-psdm-enh",
             "label": "2D Line 302 PSDM depth section (enhanced)",
+            "lineId": "302",
+            "lineLabel": "Line 302",
+            "processingStage": "psdm-depth-section",
+            "canonicalLabel": "2D Line 302 PSDM depth section (enhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_302_PSDM_Enh.segy",
+              "sourceStem": "Line_302_PSDM_Enh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_Enh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 Enhanced PSDM AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-307 CMP_FOLD: 90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 500 FT MEDIAN SCALING C24 DATA AT FINLA DATUM C25 FXDecon C26 C"
+            },
             "surveyKind": "2d",
             "productKind": "psdm",
             "domainKind": "depth",
@@ -1882,7 +2022,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "302",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -1919,6 +2059,18 @@
           {
             "id": "gdr-1141-line-302-psdm-unenh",
             "label": "2D Line 302 PSDM depth section (unenhanced)",
+            "lineId": "302",
+            "lineLabel": "Line 302",
+            "processingStage": "psdm-depth-section",
+            "canonicalLabel": "2D Line 302 PSDM depth section (unenhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_302_PSDM_UNEnh.segy",
+              "sourceStem": "Line_302_PSDM_UNEnh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_UNEnh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 PSDM UnEnhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-307 CMP_FOLD:90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 500 FT MEDIAN SCALING C24 DATA AT FINLA DATUM C25 C26 C27 C28 "
+            },
             "surveyKind": "2d",
             "productKind": "psdm",
             "domainKind": "depth",
@@ -1930,7 +2082,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "302",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -1966,7 +2118,19 @@
           },
           {
             "id": "gdr-1141-line-l11-psdm-enh",
-            "label": "2D legacy Line L11 PSDM depth section (enhanced)",
+            "label": "2D Line L11 PSDM depth section (enhanced)",
+            "lineId": "L11",
+            "lineLabel": "Line L11",
+            "processingStage": "psdm-depth-section",
+            "canonicalLabel": "2D Line L11 PSDM depth section (enhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L11_PSDM_Enh.segy",
+              "sourceStem": "Line_L11_PSDM_Enh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Enh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Enhanced Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPASS C26 C27 C28 "
+            },
             "surveyKind": "legacy-2d",
             "productKind": "psdm",
             "domainKind": "depth",
@@ -1976,9 +2140,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l11",
+              "lineId": "L11",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -2020,7 +2184,19 @@
           },
           {
             "id": "gdr-1141-line-l11-psdm-enh-meters",
-            "label": "2D legacy Line L11 PSDM depth section (enhanced, meters)",
+            "label": "2D Line L11 PSDM depth section (enhanced, meters)",
+            "lineId": "L11",
+            "lineLabel": "Line L11",
+            "processingStage": "psdm-depth-section",
+            "canonicalLabel": "2D Line L11 PSDM depth section (enhanced, meters)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L11_PSDM_Enh_Meters.segy",
+              "sourceStem": "Line_L11_PSDM_Enh_Meters",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Enh_Meters.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Enhanced Stack SEGY CONVERT TO METERS AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPA"
+            },
             "surveyKind": "legacy-2d",
             "productKind": "psdm",
             "domainKind": "depth",
@@ -2030,9 +2206,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l11",
+              "lineId": "L11",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -2074,7 +2250,19 @@
           },
           {
             "id": "gdr-1141-line-l11-psdm-unenh",
-            "label": "2D legacy Line L11 PSDM depth section (unenhanced)",
+            "label": "2D Line L11 PSDM depth section (unenhanced)",
+            "lineId": "L11",
+            "lineLabel": "Line L11",
+            "processingStage": "psdm-depth-section",
+            "canonicalLabel": "2D Line L11 PSDM depth section (unenhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L11_PSDM_UnEnh.segy",
+              "sourceStem": "Line_L11_PSDM_UnEnh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_UnEnh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: by"
+            },
             "surveyKind": "legacy-2d",
             "productKind": "psdm",
             "domainKind": "depth",
@@ -2084,9 +2272,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l11",
+              "lineId": "L11",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -2128,7 +2316,19 @@
           },
           {
             "id": "gdr-1141-line-l5-psdm-enh",
-            "label": "2D legacy Line L5 PSDM depth section (enhanced)",
+            "label": "2D Line L5 PSDM depth section (enhanced)",
+            "lineId": "L5",
+            "lineLabel": "Line L5",
+            "processingStage": "psdm-depth-section",
+            "canonicalLabel": "2D Line L5 PSDM depth section (enhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L5_PSDM_Enh.segy",
+              "sourceStem": "Line_L5_PSDM_Enh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Enh.segy",
+              "textHeaderExcerpt": "C 1 CLIENC 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic NoiseC 2 LINE 2D -A5 PSDM Enhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPASS C26 C27 C28 C29 C3"
+            },
             "surveyKind": "legacy-2d",
             "productKind": "psdm",
             "domainKind": "depth",
@@ -2138,9 +2338,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l5",
+              "lineId": "L5",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -2182,7 +2382,19 @@
           },
           {
             "id": "gdr-1141-line-l5-psdm-enh-meters",
-            "label": "2D legacy Line L5 PSDM depth section (enhanced, meters)",
+            "label": "2D Line L5 PSDM depth section (enhanced, meters)",
+            "lineId": "L5",
+            "lineLabel": "Line L5",
+            "processingStage": "psdm-depth-section",
+            "canonicalLabel": "2D Line L5 PSDM depth section (enhanced, meters)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L5_PSDM_Enh_Meters.segy",
+              "sourceStem": "Line_L5_PSDM_Enh_Meters",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Enh_Meters.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah ROCESSOR: Land Seismic Noise Specialists C 2 LINE 2D -A5 PSDM Enhanced SEGY CONVERTED TO METERES AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 10000 m C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth CONVERTED TO METERS C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING, FX Decon C"
+            },
             "surveyKind": "legacy-2d",
             "productKind": "psdm",
             "domainKind": "depth",
@@ -2192,9 +2404,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l5",
+              "lineId": "L5",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -2236,7 +2448,19 @@
           },
           {
             "id": "gdr-1141-line-l5-psdm-unenh",
-            "label": "2D legacy Line L5 PSDM depth section (unenhanced)",
+            "label": "2D Line L5 PSDM depth section (unenhanced)",
+            "lineId": "L5",
+            "lineLabel": "Line L5",
+            "processingStage": "psdm-depth-section",
+            "canonicalLabel": "2D Line L5 PSDM depth section (unenhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L5_PSDM_UnEnh.segy",
+              "sourceStem": "Line_L5_PSDM_UnEnh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_UnEnh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSDM Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31"
+            },
             "surveyKind": "legacy-2d",
             "productKind": "psdm",
             "domainKind": "depth",
@@ -2246,9 +2470,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l5",
+              "lineId": "L5",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -2290,7 +2514,19 @@
           },
           {
             "id": "gdr-1141-line-l5-psdm-unenh-meters",
-            "label": "2D legacy Line L5 PSDM depth section (unenhanced, meters)",
+            "label": "2D Line L5 PSDM depth section (unenhanced, meters)",
+            "lineId": "L5",
+            "lineLabel": "Line L5",
+            "processingStage": "psdm-depth-section",
+            "canonicalLabel": "2D Line L5 PSDM depth section (unenhanced, meters)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L5_PSDM_UnEnh_Meters.segy",
+              "sourceStem": "Line_L5_PSDM_UnEnh_Meters",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_UnEnh_Meters.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah ROCESSOR: Land Seismic Noise Specialists C 2 LINE 2D -A5 PSDM Unenhanced SEGY CONVERTED TO METERES AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 10000 m C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth CONVERTED TO METERS C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA "
+            },
             "surveyKind": "legacy-2d",
             "productKind": "psdm",
             "domainKind": "depth",
@@ -2300,9 +2536,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l5",
+              "lineId": "L5",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -2345,6 +2581,18 @@
           {
             "id": "gdr-1141-line-301-pstm-stack-enh",
             "label": "2D Line 301 PSTM time stack (enhanced)",
+            "lineId": "301",
+            "lineLabel": "Line 301",
+            "processingStage": "pstm-time-stack",
+            "canonicalLabel": "2D Line 301 PSTM time stack (enhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_301_PSTM_Stack_Enh.segy",
+              "sourceStem": "Line_301_PSTM_Stack_Enh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PSTM_Stack_Enh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 PSTM Stack Enhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1ms TRACE LENGTH: 4000ms C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 BILATERAL FILTER C24 STACK C25 FXY DECON C26 FK FILTER C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 by"
+            },
             "surveyKind": "2d",
             "productKind": "pstm",
             "domainKind": "time",
@@ -2356,7 +2604,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "301",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -2393,6 +2641,18 @@
           {
             "id": "gdr-1141-line-301-pstm-stack-unenh",
             "label": "2D Line 301 PSTM time stack (unenhanced)",
+            "lineId": "301",
+            "lineLabel": "Line 301",
+            "processingStage": "pstm-time-stack",
+            "canonicalLabel": "2D Line 301 PSTM time stack (unenhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_301_PSTM_Stack_UnEnh.segy",
+              "sourceStem": "Line_301_PSTM_Stack_UnEnh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PSTM_Stack_UnEnh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 PSTM Stack UnEnhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1ms TRACE LENGTH: 4000 ms C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 "
+            },
             "surveyKind": "2d",
             "productKind": "pstm",
             "domainKind": "time",
@@ -2404,7 +2664,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "301",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -2441,6 +2701,18 @@
           {
             "id": "gdr-1141-line-301-unmigrated-stack",
             "label": "2D Line 301 unmigrated time stack",
+            "lineId": "301",
+            "lineLabel": "Line 301",
+            "processingStage": "unmigrated-time-stack",
+            "canonicalLabel": "2D Line 301 unmigrated time stack",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_301_Unmigrated_Stack.segy",
+              "sourceStem": "Line_301_Unmigrated_Stack",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_Unmigrated_Stack.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 Unmigrated Time stack AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: Unmigrated Time Stack C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 BPF, 500 FT MEDIAN SCALING C22 DATA AT FINLA DATUM C23 C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byt"
+            },
             "surveyKind": "2d",
             "productKind": "pstm",
             "domainKind": "time",
@@ -2452,7 +2724,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "301",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -2489,6 +2761,18 @@
           {
             "id": "gdr-1141-line-302-pstm-stack-enh",
             "label": "2D Line 302 PSTM time stack (enhanced)",
+            "lineId": "302",
+            "lineLabel": "Line 302",
+            "processingStage": "pstm-time-stack",
+            "canonicalLabel": "2D Line 302 PSTM time stack (enhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_302_PSTM_Stack_Enh.segy",
+              "sourceStem": "Line_302_PSTM_Stack_Enh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_Enh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 PSTM Stack Enhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1ms TRACE LENGTH: 4000 ms C 5 CMP RANGE: 1-307 CMP_FOLD:90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 2100 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 BPF, 500 FT MEDIAN SCALING C21 AGC C22 PSTM C23 BILATERAL FILTER C24 STACK C25 FX-DECON C26 C27 DATA AT FINAL DATUM C28 C29 C30 C31 C32 CMP_X"
+            },
             "surveyKind": "2d",
             "productKind": "pstm",
             "domainKind": "time",
@@ -2500,7 +2784,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "302",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -2537,6 +2821,18 @@
           {
             "id": "gdr-1141-line-302-pstm-stack-unenh",
             "label": "2D Line 302 PSTM time stack (unenhanced)",
+            "lineId": "302",
+            "lineLabel": "Line 302",
+            "processingStage": "pstm-time-stack",
+            "canonicalLabel": "2D Line 302 PSTM time stack (unenhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_302_PSTM_Stack_UnEnh.segy",
+              "sourceStem": "Line_302_PSTM_Stack_UnEnh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_UnEnh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 PSTM Stack Unenhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1ms TRACE LENGTH: 4000 ms C 5 CMP RANGE: 1-307 CMP_FOLD:90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 2100 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 BPF, 500 FT MEDIAN SCALING C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 DATA AT FINAL DATUM C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm re"
+            },
             "surveyKind": "2d",
             "productKind": "pstm",
             "domainKind": "time",
@@ -2548,7 +2844,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "302",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -2585,6 +2881,18 @@
           {
             "id": "gdr-1141-line-302-unmigrated-stack",
             "label": "2D Line 302 unmigrated time stack",
+            "lineId": "302",
+            "lineLabel": "Line 302",
+            "processingStage": "unmigrated-time-stack",
+            "canonicalLabel": "2D Line 302 unmigrated time stack",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_302_Unmigrated_Stack.segy",
+              "sourceStem": "Line_302_Unmigrated_Stack",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_Unmigrated_Stack.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 UnMigrated Time Stack AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-307 CMP_FOLD:90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: Time Stack input to Depth migration C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 BPF, 500 FT MEDIAN SCALING C21 C22 C23 C24 DATA AT FINLA DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm re"
+            },
             "surveyKind": "2d",
             "productKind": "pstm",
             "domainKind": "time",
@@ -2596,7 +2904,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "302",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -2632,7 +2940,19 @@
           },
           {
             "id": "gdr-1141-line-l11-pstm-enh",
-            "label": "2D legacy Line L11 PSTM time section (enhanced)",
+            "label": "2D Line L11 PSTM time stack (enhanced)",
+            "lineId": "L11",
+            "lineLabel": "Line L11",
+            "processingStage": "pstm-time-stack",
+            "canonicalLabel": "2D Line L11 PSTM time stack (enhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L11_ PSTM_Enh.segy",
+              "sourceStem": "Line_L11_ PSTM_Enh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_ PSTM_Enh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 Enhanced PSTM Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 BILATERAL FILTER C24 STACK C25 FX-DECON C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ib"
+            },
             "surveyKind": "legacy-2d",
             "productKind": "pstm",
             "domainKind": "time",
@@ -2642,9 +2962,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l11",
+              "lineId": "L11",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -2686,7 +3006,19 @@
           },
           {
             "id": "gdr-1141-line-l11-pstm-unenh",
-            "label": "2D legacy Line L11 PSTM time section (unenhanced)",
+            "label": "2D Line L11 PSTM time stack (unenhanced)",
+            "lineId": "L11",
+            "lineLabel": "Line L11",
+            "processingStage": "pstm-time-stack",
+            "canonicalLabel": "2D Line L11 PSTM time stack (unenhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L11 _PSTM_UnEnh.segy",
+              "sourceStem": "Line_L11 _PSTM_UnEnh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11 _PSTM_UnEnh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSTM Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte"
+            },
             "surveyKind": "legacy-2d",
             "productKind": "pstm",
             "domainKind": "time",
@@ -2696,9 +3028,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l11",
+              "lineId": "L11",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -2740,7 +3072,19 @@
           },
           {
             "id": "gdr-1141-line-l11-unmigrated-time-stack",
-            "label": "2D legacy Line L11 unmigrated time stack",
+            "label": "2D Line L11 unmigrated time stack",
+            "lineId": "L11",
+            "lineLabel": "Line L11",
+            "processingStage": "unmigrated-time-stack",
+            "canonicalLabel": "2D Line L11 unmigrated time stack",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L11_Unmigrated_Time_Stack.segy",
+              "sourceStem": "Line_L11_Unmigrated_Time_Stack",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_Unmigrated_Time_Stack.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 Unmigrated Time Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 Stack C23 BPF, 1000 ms AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte "
+            },
             "surveyKind": "legacy-2d",
             "productKind": "pstm",
             "domainKind": "time",
@@ -2750,9 +3094,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l11",
+              "lineId": "L11",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -2794,7 +3138,19 @@
           },
           {
             "id": "gdr-1141-line-l5-pstm-enh",
-            "label": "2D legacy Line L5 PSTM time section (enhanced)",
+            "label": "2D Line L5 PSTM time stack (enhanced)",
+            "lineId": "L5",
+            "lineLabel": "Line L5",
+            "processingStage": "pstm-time-stack",
+            "canonicalLabel": "2D Line L5 PSTM time stack (enhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L5_PSTM_Enh.segy",
+              "sourceStem": "Line_L5_PSTM_Enh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSTM_Enh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSTM Stack Enhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 5"
+            },
             "surveyKind": "legacy-2d",
             "productKind": "pstm",
             "domainKind": "time",
@@ -2804,9 +3160,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l5",
+              "lineId": "L5",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -2848,7 +3204,19 @@
           },
           {
             "id": "gdr-1141-line-l5-pstm-unenh",
-            "label": "2D legacy Line L5 PSTM time section (unenhanced)",
+            "label": "2D Line L5 PSTM time stack (unenhanced)",
+            "lineId": "L5",
+            "lineLabel": "Line L5",
+            "processingStage": "pstm-time-stack",
+            "canonicalLabel": "2D Line L5 PSTM time stack (unenhanced)",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L5_PSTM_UnEnh.segy",
+              "sourceStem": "Line_L5_PSTM_UnEnh",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSTM_UnEnh.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSTM Stack Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte"
+            },
             "surveyKind": "legacy-2d",
             "productKind": "pstm",
             "domainKind": "time",
@@ -2858,9 +3226,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l5",
+              "lineId": "L5",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -2902,7 +3270,19 @@
           },
           {
             "id": "gdr-1141-line-l5-unmigrated-time-stack",
-            "label": "2D legacy Line L5 unmigrated time stack",
+            "label": "2D Line L5 unmigrated time stack",
+            "lineId": "L5",
+            "lineLabel": "Line L5",
+            "processingStage": "unmigrated-time-stack",
+            "canonicalLabel": "2D Line L5 unmigrated time stack",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L5_Unmigrated_Time_Stack.segy",
+              "sourceStem": "Line_L5_Unmigrated_Time_Stack",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_Unmigrated_Time_Stack.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 Unmigrated Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: Time Stack C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 C22 Stack C23 BPF, 1000 ms AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ib"
+            },
             "surveyKind": "legacy-2d",
             "productKind": "pstm",
             "domainKind": "time",
@@ -2912,9 +3292,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l5",
+              "lineId": "L5",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -2957,6 +3337,18 @@
           {
             "id": "gdr-1015-forge2d-301-stack-01312018",
             "label": "2D Line 301 time stack",
+            "lineId": "301",
+            "lineLabel": "Line 301",
+            "processingStage": "time-stack",
+            "canonicalLabel": "2D Line 301 time stack",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Forge2D-301_Stack_01312018.sgy",
+              "sourceStem": "Forge2D-301_Stack_01312018",
+              "sourceSubmission": "GDR 1015",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Stack_01312018.sgy",
+              "textHeaderExcerpt": "C 1 Client: University of Utah Dataset: Forge2D-301_Stack_01312018.sgy C 2 Project: Forge 2D - 301 Stack at final datum C 3 Area: Beaver Co., UT Processing Flow Dataset: stk-elev-v3-m2-grrm C 4 Date of File: January 31, 2018 C 5 Media ID: 01312018-1 Media Format: SEG-Y,IBM 32-bit float,4sec,1ms C 6 Recorded: Paragon Geophysical (2017) C 7 Source Type: Vib, 4 swps, Linear Sweep 4-84 Hz, 12s sweep C 8 C 9 C10 Max offset: C11 Source Interval: 50m Receiver Interval: 50m C12 C13 Sample Interval: 1 ms Record Length: 4 sec Data Samples/Trace: 4000 C14 Datum: 1800 m ASL Replacement Vel: 2500 m/s C15 C16 Key Header Word Byte Locations: C17 Description Byte Loc. Format C18 Shotpoint 17-20 4i C19 CDP 21-24 4i C20 CDP-X 81-84 4i C21 CDP-Y 85-89 4i C22 C23 Processing: segy in, typed geometry from observer notes, gain recovery, C24 trace equalization, surface consistent spiking deconvolution, elevatio"
+            },
             "surveyKind": "2d",
             "productKind": "stack",
             "domainKind": "time",
@@ -2968,7 +3360,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "301",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -3005,6 +3397,18 @@
           {
             "id": "gdr-1015-forge2d-302-stack",
             "label": "2D Line 302 time stack",
+            "lineId": "302",
+            "lineLabel": "Line 302",
+            "processingStage": "time-stack",
+            "canonicalLabel": "2D Line 302 time stack",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Forge2D-302_Stack.sgy",
+              "sourceStem": "Forge2D-302_Stack",
+              "sourceSubmission": "GDR 1015",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-302_Stack.sgy",
+              "textHeaderExcerpt": "Line 302; FORGE Stack Sincle velocity Function. Offsets <=500m. -end-"
+            },
             "surveyKind": "2d",
             "productKind": "stack",
             "domainKind": "time",
@@ -3016,7 +3420,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "302",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -3053,6 +3457,18 @@
           {
             "id": "gdr-1141-line-301-psdm-interval-velocity",
             "label": "2D Line 301 PSDM interval velocity",
+            "lineId": "301",
+            "lineLabel": "Line 301",
+            "processingStage": "psdm-interval-velocity",
+            "canonicalLabel": "2D Line 301 PSDM interval velocity",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_301_PSDM_Interval_Velocity.segy",
+              "sourceStem": "Line_301_PSDM_Interval_Velocity",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PSDM_Interval_Velocity.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 PSDM Interval Velocity AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Interval velocity at surface C14 PROCESSING FLOW: C15 PSDM tomographic VELOCITY ANALYSIS C16 data at topography (BIN_ELEV)with 10000 ft/s replacement velocity flood C17 C18 C19 C20 C21 C22 C23 C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+            },
             "surveyKind": "2d",
             "productKind": "velocity",
             "domainKind": "velocity-time",
@@ -3064,7 +3480,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "301",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -3105,6 +3521,18 @@
           {
             "id": "gdr-1141-line-302-psdm-interval-velocity",
             "label": "2D Line 302 PSDM interval velocity",
+            "lineId": "302",
+            "lineLabel": "Line 302",
+            "processingStage": "psdm-interval-velocity",
+            "canonicalLabel": "2D Line 302 PSDM interval velocity",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_302_PSDM_Interval_Velocity.segy",
+              "sourceStem": "Line_302_PSDM_Interval_Velocity",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_Interval_Velocity.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 PSDM Interval Velocity AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-307 CMP_FOLD: 90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Interval velocity at surface C14 PROCESSING FLOW: C15 PSDM tomographic VELOCITY ANALYSIS C16 data at topography (BIN_ELEV)with 10000 ft/s replacement velocity flood C17 C18 C19 C20 C21 C22 C23 C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+            },
             "surveyKind": "2d",
             "productKind": "velocity",
             "domainKind": "velocity-time",
@@ -3116,7 +3544,7 @@
               "canClaimPreciseRegistration": false,
               "lineId": "302",
               "statusLabel": "Delivered navigation present; precise registration requires validation evidence.",
-              "reason": "Line placement uses delivered navigation where present; control-point validation is still required before precision claims."
+              "reason": "Delivered navigation exists; precise registration remains review-gated until control-point validation."
             },
             "verticalReference": {
               "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -3156,7 +3584,19 @@
           },
           {
             "id": "gdr-1141-line-l11-psdm-interval-velocity",
-            "label": "2D legacy Line L11 PSDM interval velocity",
+            "label": "2D Line L11 PSDM interval velocity",
+            "lineId": "L11",
+            "lineLabel": "Line L11",
+            "processingStage": "psdm-interval-velocity",
+            "canonicalLabel": "2D Line L11 PSDM interval velocity",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L11_PSDM_Interval_Velocity.segy",
+              "sourceStem": "Line_L11_PSDM_Interval_Velocity",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Interval_Velocity.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Interval Velocity AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: NA C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 PSDM tomographic VELOCITY ANALYSIS C16 iterations of handpicking guide and tomographic updates C17 data at topography (BIN_ELEV)with 10000 ft/s replacement velocity flood C18 C19 C20 C21 C22 C23 C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+            },
             "surveyKind": "legacy-2d",
             "productKind": "velocity",
             "domainKind": "velocity-time",
@@ -3166,9 +3606,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l11",
+              "lineId": "L11",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l11 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -3214,7 +3654,19 @@
           },
           {
             "id": "gdr-1141-line-l5-psdm-interval-velocity",
-            "label": "2D legacy Line L5 PSDM interval velocity",
+            "label": "2D Line L5 PSDM interval velocity",
+            "lineId": "L5",
+            "lineLabel": "Line L5",
+            "processingStage": "psdm-interval-velocity",
+            "canonicalLabel": "2D Line L5 PSDM interval velocity",
+            "nameEvidence": {
+              "labelBasis": "segy-text-header",
+              "sourceFileName": "Line_L5_PSDM_Interval_Velocity.segy",
+              "sourceStem": "Line_L5_PSDM_Interval_Velocity",
+              "sourceSubmission": "GDR 1141",
+              "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Interval_Velocity.segy",
+              "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSDM velocity SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM velocities C14 PROCESSING FLOW: C15 PSDM tomographic VELOCITY ANALYSIS C16 model building for PSDM C17 data at topography (BIN_ELEV)with 10000 ft/s replacement velocity flood C18 C19 C20 C21 C22 C23 C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+            },
             "surveyKind": "legacy-2d",
             "productKind": "velocity",
             "domainKind": "velocity-time",
@@ -3224,9 +3676,9 @@
               "navigationSource": "fallback",
               "placementAccuracy": "approximate",
               "canClaimPreciseRegistration": false,
-              "lineId": "legacy-l5",
+              "lineId": "L5",
               "statusLabel": "Approximate legacy line placement; precise registration not validated.",
-              "reason": "No delivered navigation line is present for legacy-l5 in the active source set; endpoints are explicit approximate reference placement.",
+              "reason": "At least one section uses explicit approximate fallback endpoints.",
               "validationPath": [
                 "ingest delivered navigation if available",
                 "otherwise georeference against report maps or control points",
@@ -3326,7 +3778,7 @@
             "audience": "technical / investor",
             "purpose": "Present one section curtain at a time with comparison products, navigation provenance, and placement-status disclosure.",
             "productIds": [
-              "gdr-1141-line-301-pdm-enh",
+              "gdr-1015-forge2d-301-migr-depth",
               "gdr-1141-line-302-psdm-enh",
               "gdr-1141-line-l5-psdm-enh",
               "gdr-1141-line-l11-psdm-enh"
@@ -3472,7 +3924,7 @@
             "audience": "export",
             "purpose": "Create static map and section layouts with scale, legend, CRS, source, date, and caveats.",
             "productIds": [
-              "gdr-1141-line-301-pdm-enh",
+              "gdr-1015-forge2d-301-migr-depth",
               "gdr-1141-line-302-psdm-enh",
               "gdr-1141-line-l5-psdm-enh",
               "gdr-1141-line-l11-psdm-enh"
@@ -3656,12 +4108,12 @@
             "label": "Line 301 theatre",
             "audienceMode": "technical",
             "rank": 4,
-            "summary": "Curated Line 301 PSDM curtain with enhanced/unenhanced comparison visible.",
+            "summary": "Curated Line 301 migrated-depth curtain with source-backed companion PSDM product available.",
             "displayRecipeId": "2d-line-theatre",
-            "productId": "gdr-1141-line-301-pdm-enh",
+            "productId": "gdr-1015-forge2d-301-migr-depth",
             "visibleProductIds": [
-              "gdr-1141-line-301-pdm-enh",
-              "gdr-1141-line-301-psdm-unenh"
+              "gdr-1015-forge2d-301-migr-depth",
+              "gdr-1141-line-301-pdm-enh"
             ],
             "renderMode": "slice",
             "sliceAxis": "line",
@@ -3676,7 +4128,6 @@
             "timeScale": 2,
             "navigationVisible": true,
             "sliceThroughVolume": false,
-            "comparisonProductId": "gdr-1141-line-301-psdm-unenh",
             "comparisonMode": "overlay",
             "mtCoRender": "seismic",
             "removeBackground": false,
@@ -3694,7 +4145,7 @@
               "public geothermal demo data",
               "processed seismic product",
               "not a mineral resource estimate",
-              "Displays both enhanced and unenhanced processed products."
+              "Line 301 view starts from the GDR 1015 migrated-depth product."
             ]
           },
           {
@@ -3838,9 +4289,9 @@
             "rank": 8,
             "summary": "PDF-ready Line 301 layout metadata with legend, scale, CRS, source, date, and caveat text.",
             "displayRecipeId": "regulatory-export-pack",
-            "productId": "gdr-1141-line-301-pdm-enh",
+            "productId": "gdr-1015-forge2d-301-migr-depth",
             "visibleProductIds": [
-              "gdr-1141-line-301-pdm-enh"
+              "gdr-1015-forge2d-301-migr-depth"
             ],
             "renderMode": "slice",
             "sliceAxis": "line",
@@ -4401,9 +4852,9 @@
             "rank": 9,
             "summary": "Line 301 as a single georeferenced section curtain.",
             "displayRecipeId": "2d-line-theatre",
-            "productId": "gdr-1141-line-301-pdm-enh",
+            "productId": "gdr-1015-forge2d-301-migr-depth",
             "visibleProductIds": [
-              "gdr-1141-line-301-pdm-enh"
+              "gdr-1015-forge2d-301-migr-depth"
             ],
             "renderMode": "slice",
             "sliceAxis": "line",
@@ -4694,6 +5145,1491 @@
               "not a mineral resource estimate",
               "Seismic and MT are separate source-derived geophysical methods."
             ]
+          },
+          {
+            "id": "seismic-product-gdr-1015-forge2d-301-migr-depth",
+            "label": "2D Line 301 migrated depth section",
+            "audienceMode": "technical",
+            "rank": 100,
+            "summary": "Line 301 migrated-depth-section source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1015-forge2d-301-migr-depth",
+            "visibleProductIds": [
+              "gdr-1015-forge2d-301-migr-depth"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-301-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-301-pdm-enh",
+            "label": "2D Line 301 PSDM depth section (enhanced)",
+            "audienceMode": "technical",
+            "rank": 101,
+            "summary": "Line 301 psdm-depth-section source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-301-pdm-enh",
+            "visibleProductIds": [
+              "gdr-1141-line-301-pdm-enh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-301-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-301-psdm-unenh",
+            "label": "2D Line 301 PSDM depth section (unenhanced)",
+            "audienceMode": "technical",
+            "rank": 102,
+            "summary": "Line 301 psdm-depth-section source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-301-psdm-unenh",
+            "visibleProductIds": [
+              "gdr-1141-line-301-psdm-unenh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-301-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-301-pstm-stack-enh",
+            "label": "2D Line 301 PSTM time stack (enhanced)",
+            "audienceMode": "technical",
+            "rank": 103,
+            "summary": "Line 301 pstm-time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-301-pstm-stack-enh",
+            "visibleProductIds": [
+              "gdr-1141-line-301-pstm-stack-enh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-301-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-301-pstm-stack-unenh",
+            "label": "2D Line 301 PSTM time stack (unenhanced)",
+            "audienceMode": "technical",
+            "rank": 104,
+            "summary": "Line 301 pstm-time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-301-pstm-stack-unenh",
+            "visibleProductIds": [
+              "gdr-1141-line-301-pstm-stack-unenh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-301-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-301-unmigrated-stack",
+            "label": "2D Line 301 unmigrated time stack",
+            "audienceMode": "technical",
+            "rank": 105,
+            "summary": "Line 301 unmigrated-time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-301-unmigrated-stack",
+            "visibleProductIds": [
+              "gdr-1141-line-301-unmigrated-stack"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-301-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1015-forge2d-301-stack-01312018",
+            "label": "2D Line 301 time stack",
+            "audienceMode": "technical",
+            "rank": 106,
+            "summary": "Line 301 time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1015-forge2d-301-stack-01312018",
+            "visibleProductIds": [
+              "gdr-1015-forge2d-301-stack-01312018"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-301-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-301-psdm-interval-velocity",
+            "label": "2D Line 301 PSDM interval velocity",
+            "audienceMode": "technical",
+            "rank": 107,
+            "summary": "Line 301 psdm-interval-velocity source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-301-psdm-interval-velocity",
+            "visibleProductIds": [
+              "gdr-1141-line-301-psdm-interval-velocity"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.82,
+            "amplitudeMin": 0,
+            "amplitudeMax": 1,
+            "amplitudeGamma": 1,
+            "colormap": "velocity",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-301-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-302-psdm-enh",
+            "label": "2D Line 302 PSDM depth section (enhanced)",
+            "audienceMode": "technical",
+            "rank": 108,
+            "summary": "Line 302 psdm-depth-section source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-302-psdm-enh",
+            "visibleProductIds": [
+              "gdr-1141-line-302-psdm-enh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-302-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-302-psdm-unenh",
+            "label": "2D Line 302 PSDM depth section (unenhanced)",
+            "audienceMode": "technical",
+            "rank": 109,
+            "summary": "Line 302 psdm-depth-section source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-302-psdm-unenh",
+            "visibleProductIds": [
+              "gdr-1141-line-302-psdm-unenh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-302-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-302-pstm-stack-enh",
+            "label": "2D Line 302 PSTM time stack (enhanced)",
+            "audienceMode": "technical",
+            "rank": 110,
+            "summary": "Line 302 pstm-time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-302-pstm-stack-enh",
+            "visibleProductIds": [
+              "gdr-1141-line-302-pstm-stack-enh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-302-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-302-pstm-stack-unenh",
+            "label": "2D Line 302 PSTM time stack (unenhanced)",
+            "audienceMode": "technical",
+            "rank": 111,
+            "summary": "Line 302 pstm-time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-302-pstm-stack-unenh",
+            "visibleProductIds": [
+              "gdr-1141-line-302-pstm-stack-unenh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-302-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-302-unmigrated-stack",
+            "label": "2D Line 302 unmigrated time stack",
+            "audienceMode": "technical",
+            "rank": 112,
+            "summary": "Line 302 unmigrated-time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-302-unmigrated-stack",
+            "visibleProductIds": [
+              "gdr-1141-line-302-unmigrated-stack"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-302-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1015-forge2d-302-stack",
+            "label": "2D Line 302 time stack",
+            "audienceMode": "technical",
+            "rank": 113,
+            "summary": "Line 302 time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1015-forge2d-302-stack",
+            "visibleProductIds": [
+              "gdr-1015-forge2d-302-stack"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-302-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-302-psdm-interval-velocity",
+            "label": "2D Line 302 PSDM interval velocity",
+            "audienceMode": "technical",
+            "rank": 114,
+            "summary": "Line 302 psdm-interval-velocity source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-302-psdm-interval-velocity",
+            "visibleProductIds": [
+              "gdr-1141-line-302-psdm-interval-velocity"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.82,
+            "amplitudeMin": 0,
+            "amplitudeMax": 1,
+            "amplitudeGamma": 1,
+            "colormap": "velocity",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-302-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l11-psdm-enh-meters",
+            "label": "2D Line L11 PSDM depth section (enhanced, meters)",
+            "audienceMode": "technical",
+            "rank": 115,
+            "summary": "Line L11 psdm-depth-section source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l11-psdm-enh-meters",
+            "visibleProductIds": [
+              "gdr-1141-line-l11-psdm-enh-meters"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l11-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l11-psdm-enh",
+            "label": "2D Line L11 PSDM depth section (enhanced)",
+            "audienceMode": "technical",
+            "rank": 116,
+            "summary": "Line L11 psdm-depth-section source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l11-psdm-enh",
+            "visibleProductIds": [
+              "gdr-1141-line-l11-psdm-enh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l11-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l11-psdm-unenh",
+            "label": "2D Line L11 PSDM depth section (unenhanced)",
+            "audienceMode": "technical",
+            "rank": 117,
+            "summary": "Line L11 psdm-depth-section source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l11-psdm-unenh",
+            "visibleProductIds": [
+              "gdr-1141-line-l11-psdm-unenh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l11-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l11-pstm-enh",
+            "label": "2D Line L11 PSTM time stack (enhanced)",
+            "audienceMode": "technical",
+            "rank": 118,
+            "summary": "Line L11 pstm-time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l11-pstm-enh",
+            "visibleProductIds": [
+              "gdr-1141-line-l11-pstm-enh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l11-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l11-pstm-unenh",
+            "label": "2D Line L11 PSTM time stack (unenhanced)",
+            "audienceMode": "technical",
+            "rank": 119,
+            "summary": "Line L11 pstm-time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l11-pstm-unenh",
+            "visibleProductIds": [
+              "gdr-1141-line-l11-pstm-unenh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l11-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l11-unmigrated-time-stack",
+            "label": "2D Line L11 unmigrated time stack",
+            "audienceMode": "technical",
+            "rank": 120,
+            "summary": "Line L11 unmigrated-time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l11-unmigrated-time-stack",
+            "visibleProductIds": [
+              "gdr-1141-line-l11-unmigrated-time-stack"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l11-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l11-psdm-interval-velocity",
+            "label": "2D Line L11 PSDM interval velocity",
+            "audienceMode": "technical",
+            "rank": 121,
+            "summary": "Line L11 psdm-interval-velocity source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l11-psdm-interval-velocity",
+            "visibleProductIds": [
+              "gdr-1141-line-l11-psdm-interval-velocity"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.82,
+            "amplitudeMin": 0,
+            "amplitudeMax": 1,
+            "amplitudeGamma": 1,
+            "colormap": "velocity",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l11-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l5-psdm-enh-meters",
+            "label": "2D Line L5 PSDM depth section (enhanced, meters)",
+            "audienceMode": "technical",
+            "rank": 122,
+            "summary": "Line L5 psdm-depth-section source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l5-psdm-enh-meters",
+            "visibleProductIds": [
+              "gdr-1141-line-l5-psdm-enh-meters"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l5-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l5-psdm-enh",
+            "label": "2D Line L5 PSDM depth section (enhanced)",
+            "audienceMode": "technical",
+            "rank": 123,
+            "summary": "Line L5 psdm-depth-section source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l5-psdm-enh",
+            "visibleProductIds": [
+              "gdr-1141-line-l5-psdm-enh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l5-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l5-psdm-unenh-meters",
+            "label": "2D Line L5 PSDM depth section (unenhanced, meters)",
+            "audienceMode": "technical",
+            "rank": 124,
+            "summary": "Line L5 psdm-depth-section source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l5-psdm-unenh-meters",
+            "visibleProductIds": [
+              "gdr-1141-line-l5-psdm-unenh-meters"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l5-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l5-psdm-unenh",
+            "label": "2D Line L5 PSDM depth section (unenhanced)",
+            "audienceMode": "technical",
+            "rank": 125,
+            "summary": "Line L5 psdm-depth-section source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l5-psdm-unenh",
+            "visibleProductIds": [
+              "gdr-1141-line-l5-psdm-unenh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l5-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l5-pstm-enh",
+            "label": "2D Line L5 PSTM time stack (enhanced)",
+            "audienceMode": "technical",
+            "rank": 126,
+            "summary": "Line L5 pstm-time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l5-pstm-enh",
+            "visibleProductIds": [
+              "gdr-1141-line-l5-pstm-enh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l5-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l5-pstm-unenh",
+            "label": "2D Line L5 PSTM time stack (unenhanced)",
+            "audienceMode": "technical",
+            "rank": 127,
+            "summary": "Line L5 pstm-time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l5-pstm-unenh",
+            "visibleProductIds": [
+              "gdr-1141-line-l5-pstm-unenh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l5-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l5-unmigrated-time-stack",
+            "label": "2D Line L5 unmigrated time stack",
+            "audienceMode": "technical",
+            "rank": 128,
+            "summary": "Line L5 unmigrated-time-stack source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l5-unmigrated-time-stack",
+            "visibleProductIds": [
+              "gdr-1141-line-l5-unmigrated-time-stack"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.74,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l5-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
+          },
+          {
+            "id": "seismic-product-gdr-1141-line-l5-psdm-interval-velocity",
+            "label": "2D Line L5 PSDM interval velocity",
+            "audienceMode": "technical",
+            "rank": 129,
+            "summary": "Line L5 psdm-interval-velocity source product.",
+            "displayRecipeId": "2d-line-theatre",
+            "productId": "gdr-1141-line-l5-psdm-interval-velocity",
+            "visibleProductIds": [
+              "gdr-1141-line-l5-psdm-interval-velocity"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "line",
+            "sliceFraction": 0.5,
+            "opacity": 0.82,
+            "amplitudeMin": 0,
+            "amplitudeMax": 1,
+            "amplitudeGamma": 1,
+            "colormap": "velocity",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 96,
+            "timeScale": 2,
+            "navigationVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "seismic",
+            "navigationRoleVisibility": {
+              "sources": false,
+              "receivers": false,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "seismic-product-catalog",
+            "mtStylePatch": {
+              "opacity": 0.05,
+              "scalarLegendVisible": false
+            },
+            "cameraShot": "line-l5-product-catalog",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Approximate legacy line placement; precise registration is not validated."
+            ]
           }
         ],
         "seismicVerticalReference": {
@@ -4739,7 +6675,142 @@
           "registrationStatus": "unverified",
           "accuracyClaimStatus": "CRS/datum review required",
           "notes": "Navigation and product placement pass through the seismic registration contract, but survey-grade CRS/datum acceptance is pending control-point review."
-        }
+        },
+        "seismicRequiredLineSourceGates": [
+          {
+            "lineId": "301",
+            "lineLabel": "Line 301",
+            "required": true,
+            "status": "available",
+            "productIds": [
+              "gdr-1015-forge2d-301-migr-depth",
+              "gdr-1015-forge2d-301-stack-01312018",
+              "gdr-1141-line-301-pdm-enh",
+              "gdr-1141-line-301-psdm-interval-velocity",
+              "gdr-1141-line-301-psdm-unenh",
+              "gdr-1141-line-301-pstm-stack-enh",
+              "gdr-1141-line-301-pstm-stack-unenh",
+              "gdr-1141-line-301-unmigrated-stack"
+            ],
+            "sourceCandidates": [
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Migr-Depth.sgy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Stack_01312018.sgy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line-301_PSDM_UNEnh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PDM_Enh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PSDM_Interval_Velocity.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PSTM_Stack_Enh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PSTM_Stack_UnEnh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_Unmigrated_Stack.segy"
+            ],
+            "searchedRoots": [
+              "C:/GeoSee/GeoSee_Dev/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source"
+            ],
+            "reason": "Required seismic line has generated browser products."
+          },
+          {
+            "lineId": "302",
+            "lineLabel": "Line 302",
+            "required": true,
+            "status": "available",
+            "productIds": [
+              "gdr-1015-forge2d-302-stack",
+              "gdr-1141-line-302-psdm-enh",
+              "gdr-1141-line-302-psdm-interval-velocity",
+              "gdr-1141-line-302-psdm-unenh",
+              "gdr-1141-line-302-pstm-stack-enh",
+              "gdr-1141-line-302-pstm-stack-unenh",
+              "gdr-1141-line-302-unmigrated-stack"
+            ],
+            "sourceCandidates": [
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-302_Stack.sgy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_Enh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_Interval_Velocity.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_UNEnh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_Enh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_UnEnh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_Unmigrated_Stack.segy"
+            ],
+            "searchedRoots": [
+              "C:/GeoSee/GeoSee_Dev/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source"
+            ],
+            "reason": "Required seismic line has generated browser products."
+          },
+          {
+            "lineId": "L11",
+            "lineLabel": "Line L11",
+            "required": true,
+            "status": "available",
+            "productIds": [
+              "gdr-1141-line-l11-psdm-enh",
+              "gdr-1141-line-l11-psdm-enh-meters",
+              "gdr-1141-line-l11-psdm-interval-velocity",
+              "gdr-1141-line-l11-psdm-unenh",
+              "gdr-1141-line-l11-pstm-enh",
+              "gdr-1141-line-l11-pstm-unenh",
+              "gdr-1141-line-l11-unmigrated-time-stack"
+            ],
+            "sourceCandidates": [
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11 _PSTM_UnEnh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_ PSTM_Enh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Enh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Enh_Meters.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Interval_Velocity.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_UnEnh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_Unmigrated_Time_Stack.segy"
+            ],
+            "searchedRoots": [
+              "C:/GeoSee/GeoSee_Dev/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source"
+            ],
+            "reason": "Required seismic line has generated browser products."
+          },
+          {
+            "lineId": "L5",
+            "lineLabel": "Line L5",
+            "required": true,
+            "status": "available",
+            "productIds": [
+              "gdr-1141-line-l5-psdm-enh",
+              "gdr-1141-line-l5-psdm-enh-meters",
+              "gdr-1141-line-l5-psdm-interval-velocity",
+              "gdr-1141-line-l5-psdm-unenh",
+              "gdr-1141-line-l5-psdm-unenh-meters",
+              "gdr-1141-line-l5-pstm-enh",
+              "gdr-1141-line-l5-pstm-unenh",
+              "gdr-1141-line-l5-unmigrated-time-stack"
+            ],
+            "sourceCandidates": [
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Enh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Enh_Meters.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Interval_Velocity.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_UnEnh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_UnEnh_Meters.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSTM_Enh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSTM_UnEnh.segy",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_Unmigrated_Time_Stack.segy"
+            ],
+            "searchedRoots": [
+              "C:/GeoSee/GeoSee_Dev/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source"
+            ],
+            "reason": "Required seismic line has generated browser products."
+          },
+          {
+            "lineId": "95",
+            "lineLabel": "Line 95",
+            "required": true,
+            "status": "missing-source",
+            "productIds": [],
+            "sourceCandidates": [],
+            "searchedRoots": [
+              "C:/GeoSee/GeoSee_Dev/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source",
+              "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source"
+            ],
+            "reason": "No matching SEG-Y source product was found in the active source path or GeoSee archive."
+          }
+        ]
       }
     },
     {
@@ -5378,6 +7449,40 @@
           "notes": "MT model/local-mesh alignment must remain review-gated before north-alignment or survey-grade claims."
         }
       }
+    },
+    {
+      "id": "topo-cloud-volume-2",
+      "label": "Topo test cloud copy",
+      "type": "atmosphere-volume",
+      "files": {},
+      "metadata": {
+        "classification": "environmental",
+        "geoSeeTool": {
+          "id": "topo-map",
+          "role": "environment-clouds",
+          "settingsScope": "layer"
+        },
+        "localAtmosphereVolume": {
+          "subtype": "cloud-bank",
+          "bounds": {
+            "mode": "box",
+            "center": [
+              -6511.9528411588135,
+              32127.773235457305,
+              7200
+            ],
+            "size": [
+              28388.124725349953,
+              7200,
+              2600
+            ]
+          },
+          "artifactFamily": "local-atmosphere",
+          "renderingRole": "topo-environment-cloud-impostor",
+          "computationRole": "visual-context",
+          "notes": "Authored from Topo > Environment > Clouds."
+        }
+      }
     }
   ],
   "pageOrder": [
@@ -5397,6 +7502,11 @@
     "51_mt_marching_cubes_focused",
     "52_mt_marching_cubes_full_extent",
     "53_mt_product_stack_demo",
+    "54_seismic_product_catalog",
+    "55_line_301_seismic_products",
+    "56_line_302_seismic_products",
+    "57_legacy_line_l11_seismic_products",
+    "58_legacy_line_l5_seismic_products",
     "46_tem_shallow_resistivity",
     "47_seismic_footprint_velocity_support",
     "48_basement_top_granite_surface",
@@ -5476,7 +7586,7 @@
     ]
   },
   "watermark": "GeoSee Utah FORGE - Phase 3 seismic + MT",
-  "modified": "2026-06-02T22:31:29.913Z",
+  "modified": "2026-06-03T22:47:16.735Z",
   "registrationFrame": {
     "horizontalCrs": "EPSG:26912",
     "verticalDatum": "layer-specific; terrain/wells use source elevation metres, seismic products record per-product datum, time-domain seismic uses display-derived vertical scale",

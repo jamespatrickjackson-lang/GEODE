@@ -583,9 +583,17 @@ export async function revealSeismicCapabilityProduct(
   const productItem = page.getByTestId(
     `seismic-capability-product-${productId}`,
   );
-  await productItem
-    .getByTestId(`seismic-capability-product-visible-${productId}`)
-    .setChecked(true);
+  const visibilityControl = productItem.getByTestId(
+    `seismic-capability-product-visible-${productId}`,
+  );
+  const controlTag = await visibilityControl.evaluate((el) =>
+    el.tagName.toLowerCase(),
+  );
+  if (controlTag === "input") {
+    await visibilityControl.setChecked(true);
+  } else if ((await visibilityControl.getAttribute("aria-pressed")) !== "true") {
+    await visibilityControl.click();
+  }
   await productItem.locator("details").evaluateAll((details) => {
     for (const detail of details) {
       (detail as HTMLDetailsElement).open = true;
@@ -930,9 +938,13 @@ export type SectionIsoSceneState = {
     sectionId: string;
     label: string;
     group: string;
+    isoSource: string | null;
+    sourceLayerId: string | null;
     visible: boolean;
   }>;
   overlayTargets: string[];
+  overlaySources: string[];
+  overlaySourceLayerIds: string[];
   overlayPlanePositions: number[];
   lineOverlayCount: number;
   bandOverlayCount: number;
@@ -3567,6 +3579,8 @@ export async function sectionIsoSceneState(
               sectionId: string;
               label: string;
               group?: string;
+              isoSource?: string | null;
+              sourceLayerId?: string | null;
               visible: boolean;
             }>;
             listSectionIsoTargets?: () => Array<{
@@ -3575,6 +3589,8 @@ export async function sectionIsoSceneState(
               sectionId: string;
               label: string;
               group: string;
+              isoSource?: string | null;
+              sourceLayerId?: string | null;
               visible: boolean;
             }>;
           };
@@ -3588,7 +3604,15 @@ export async function sectionIsoSceneState(
       []
     ).filter((target) =>
       groupFilterArg ? (target.group ?? "mt-slices") === groupFilterArg : true,
-    );
+    ).map((target) => ({
+      ...target,
+      isoSource:
+        typeof target.isoSource === "string" ? target.isoSource : null,
+      sourceLayerId:
+        typeof target.sourceLayerId === "string"
+          ? target.sourceLayerId
+          : null,
+    }));
     const targetKeys = new Set(targets.map((target) => target.targetKey));
     const layerIds = Array.from(
       new Set(targets.map((target) => target.layerId)),
@@ -3603,6 +3627,8 @@ export async function sectionIsoSceneState(
     let firstBandUniforms: SectionIsoSceneState["firstBandUniforms"] = null;
     let firstSourceOpacity: number | null = null;
     const overlayTargets = new Set<string>();
+    const overlaySources = new Set<string>();
+    const overlaySourceLayerIds = new Set<string>();
     const overlayPlanePositions: number[] = [];
     const readSourceOpacity = (
       material:
@@ -3710,6 +3736,12 @@ export async function sectionIsoSceneState(
       if (groupFilterArg === "seismic-volume-cuts") {
         return data.seismicRaymarchVolume === true;
       }
+      if (groupFilterArg === "resistivity-on-seismic-sections") {
+        return data.seismicSection === true;
+      }
+      if (groupFilterArg === "resistivity-on-seismic-volume-cuts") {
+        return data.seismicRaymarchVolume === true;
+      }
       return false;
     };
 
@@ -3754,6 +3786,12 @@ export async function sectionIsoSceneState(
         const targetKey = root.userData?.sectionIsoTargetKey;
         if (typeof targetKey !== "string" || !targetKeys.has(targetKey)) return;
         overlayTargets.add(targetKey);
+        if (typeof root.userData?.sectionIsoSource === "string") {
+          overlaySources.add(root.userData.sectionIsoSource);
+        }
+        if (typeof root.userData?.sectionIsoSourceLayerId === "string") {
+          overlaySourceLayerIds.add(root.userData.sectionIsoSourceLayerId);
+        }
         if (typeof obj.userData?.sectionIsoPlanePositionM === "number") {
           overlayPlanePositions.push(obj.userData.sectionIsoPlanePositionM);
         }
@@ -3834,6 +3872,8 @@ export async function sectionIsoSceneState(
     return {
       targets,
       overlayTargets: Array.from(overlayTargets),
+      overlaySources: Array.from(overlaySources),
+      overlaySourceLayerIds: Array.from(overlaySourceLayerIds),
       overlayPlanePositions,
       lineOverlayCount,
       bandOverlayCount,

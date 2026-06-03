@@ -3,15 +3,19 @@
   "id": "naip-2024-aerial",
   "label": "NAIP 2024 Aerial Image",
   "source": {
-    "name": "NAIP 2024 Beaver, Iron, Millard, Sanpete, and Sevier County MrSID mosaics",
+    "name": "NAIP 2024 Beaver, Garfield, Iron, Kane, Millard, Piute, Sanpete, Sevier, and Wayne County MrSID mosaics",
     "provider": "USDA Farm Production and Conservation - Business Center, Geospatial Enterprise Operations",
     "distribution": "UGRC Raster Data Discovery",
     "archivePaths": [
       "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Beaver/NAIP2024_Beaver.sid",
+      "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Garfield/NAIP2024_Garfield.sid",
       "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Iron/NAIP2024_Iron.sid",
+      "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Kane/NAIP2024_Kane.sid",
       "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Millard/NAIP2024_Millard.sid",
+      "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Piute/NAIP2024_Piute.sid",
       "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Sanpete/NAIP2024_Sanpete.sid",
-      "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Sevier/NAIP2024_Sevier.sid"
+      "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Sevier/NAIP2024_Sevier.sid",
+      "C:/GeoSee/GeoSee_Archive/projects/utah-forge/data/Satellite Maps/NAIP2024_Wayne/NAIP2024_Wayne.sid"
     ],
     "collectionDate": "2024 summer",
     "license": "Public domain U.S. government work"
@@ -36,47 +40,47 @@
   },
   "sourceBounds": [
     229069.2,
-    4144854,
-    484164,
-    4414308
+    4094688.0,
+    598806.0,
+    4414308.0
   ],
   "aoi": {
-    "anchor": "Combined available NAIP 2024 Beaver, Iron, Millard, Sanpete, and Sevier County MrSID extents",
+    "anchor": "Combined available NAIP 2024 Beaver, Garfield, Iron, Kane, Millard, Piute, Sanpete, Sevier, and Wayne County MrSID extents",
     "bounds": [
       229069.2,
-      4144854,
-      484164,
-      4414308
+      4094688.0,
+      598806.0,
+      4414308.0
     ],
-    "widthM": 255094.8,
-    "heightM": 269454
+    "widthM": 369736.8,
+    "heightM": 319620.0
   },
   "variants": {
     "4096": {
       "file": "naip_2024_regional_4096.webp",
-      "width": 3878,
-      "height": 4096,
-      "resolutionMApprox": 65.78,
+      "width": 4096,
+      "height": 3541,
+      "resolutionMApprox": 90.27,
       "format": "webp",
       "hasAlpha": true,
       "quality": 94,
       "visualTreatment": "alpha-aware coverage fill and feather",
-      "sha256": "9cf80fbd86236267f441efde60c692849e4f1158d4d0ebcf8e6e0c14058dac3e",
-      "cacheVersion": "9cf80fbd86236267",
-      "versionedFile": "naip_2024_regional_4096.webp?v=9cf80fbd86236267"
+      "sha256": "71d894cdd3c0c64b45363d8c89c3f0a9797ac258ebf3bc2529b65d7ca6c595e6",
+      "cacheVersion": "71d894cdd3c0c64b",
+      "versionedFile": "naip_2024_regional_4096.webp?v=71d894cdd3c0c64b"
     },
     "8192": {
       "file": "naip_2024_regional_8192.webp",
-      "width": 7755,
-      "height": 8192,
-      "resolutionMApprox": 32.89,
+      "width": 8192,
+      "height": 7082,
+      "resolutionMApprox": 45.13,
       "format": "webp",
       "hasAlpha": true,
       "quality": 94,
       "visualTreatment": "alpha-aware coverage fill and feather",
-      "sha256": "14db7e6b94489d8007d9f86a543ce1d67451695c18c82807785dae9f5d4a9d9e",
-      "cacheVersion": "14db7e6b94489d80",
-      "versionedFile": "naip_2024_regional_8192.webp?v=14db7e6b94489d80"
+      "sha256": "684f5a7e42719aa94beb232448665b7c123cb1b3f85f5f0271bcf8f3beb6d4ff",
+      "cacheVersion": "684f5a7e42719aa9",
+      "versionedFile": "naip_2024_regional_8192.webp?v=684f5a7e42719aa9"
     }
   },
   "processing": {
@@ -87,7 +91,7 @@
       "python tools/generate-naip-beauty-assets.py"
     ],
     "notes": [
-      "Regional overview assets keep the combined five-county MrSID extent but use alpha-aware color dilation and feathering so tile-shaped gaps do not dominate the presentation.",
+      "Regional overview assets keep the combined 9-county MrSID extent but use alpha-aware color dilation and feathering so tile-shaped gaps do not dominate the presentation.",
       "The FORGE detail overlay is a native-resolution 0.6 m/px crop centered near well 68-32 and is feathered in the terrain shader.",
       "No Ortho photo pixels are composited into NAIP assets."
     ]

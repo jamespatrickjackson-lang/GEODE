@@ -4,6 +4,18 @@ import { SCALAR_SOURCE_MAX, SCALAR_SOURCE_MIN } from "../scalarSourceRange";
 export interface SeismicProductOption {
   id: string;
   label: string;
+  lineId?: string;
+  lineLabel?: string;
+  processingStage?: string;
+  canonicalLabel?: string;
+  nameEvidence?: {
+    labelBasis?: string;
+    sourceFileName?: string;
+    sourceStem?: string;
+    sourceSubmission?: string;
+    sourceFile?: string;
+    textHeaderExcerpt?: string;
+  };
   surveyKind?: string;
   productKind?: string;
   domainKind?: string;
@@ -141,9 +153,28 @@ export function seismicProductOptions(
       if (typeof product.id !== "string" || typeof product.label !== "string") {
         return null;
       }
+      const canonicalLabel =
+        typeof product.canonicalLabel === "string"
+          ? seismicIndustryLabel(product.canonicalLabel)
+          : undefined;
       return {
         id: product.id,
-        label: seismicIndustryLabel(product.label),
+        label: canonicalLabel ?? seismicIndustryLabel(product.label),
+        lineId:
+          typeof product.lineId === "string" ? product.lineId : undefined,
+        lineLabel:
+          typeof product.lineLabel === "string" ? product.lineLabel : undefined,
+        processingStage:
+          typeof product.processingStage === "string"
+            ? product.processingStage
+            : undefined,
+        canonicalLabel,
+        nameEvidence:
+          product.nameEvidence &&
+          typeof product.nameEvidence === "object" &&
+          !Array.isArray(product.nameEvidence)
+            ? (product.nameEvidence as SeismicProductOption["nameEvidence"])
+            : undefined,
         surveyKind:
           typeof product.surveyKind === "string"
             ? product.surveyKind
@@ -180,6 +211,86 @@ export function seismicProductOptions(
       };
     })
     .filter((product): product is SeismicProductOption => product !== null);
+}
+
+const SEISMIC_LINE_GROUP_ORDER = ["3d", "301", "302", "95", "L11", "L5"];
+
+const SEISMIC_PROCESSING_STAGE_ORDER: Record<string, number> = {
+  "psdm-depth-volume": 1,
+  "pstm-time-volume": 2,
+  "poststack-time-migration": 3,
+  "migrated-depth-section": 10,
+  "psdm-depth-section": 11,
+  "pstm-time-stack": 12,
+  "unmigrated-time-stack": 13,
+  "time-stack": 14,
+  "psdm-interval-velocity": 15,
+  "velocity-model": 16,
+};
+
+const SEISMIC_PROCESSING_STAGE_LABELS: Record<string, string> = {
+  "psdm-depth-volume": "PSDM depth volume",
+  "pstm-time-volume": "PSTM time volume",
+  "poststack-time-migration": "Post-stack migration",
+  "migrated-depth-section": "Migrated depth",
+  "psdm-depth-section": "PSDM depth",
+  "pstm-time-stack": "PSTM time",
+  "unmigrated-time-stack": "Unmigrated time",
+  "time-stack": "Time stack",
+  "psdm-interval-velocity": "PSDM interval velocity",
+  "velocity-model": "Velocity model",
+  "processed-section": "Processed section",
+  "processed-volume": "Processed volume",
+};
+
+function seismicProductLineKey(product: SeismicProductOption): string {
+  if (product.lineId) return product.lineId;
+  if (product.navigationPlacement?.lineId) return product.navigationPlacement.lineId;
+  return product.surveyKind === "3d" ? "3d" : "other";
+}
+
+function seismicProductGroupSortKey(key: string): number {
+  const index = SEISMIC_LINE_GROUP_ORDER.indexOf(key);
+  return index >= 0 ? index : 100;
+}
+
+export function seismicProcessingStageLabel(stage: string | undefined): string {
+  if (!stage) return "Processed product";
+  return (
+    SEISMIC_PROCESSING_STAGE_LABELS[stage] ??
+    stage.replace(/-/g, " ")
+  );
+}
+
+export function seismicProductGroups(products: SeismicProductOption[]): {
+  key: string;
+  label: string;
+  products: SeismicProductOption[];
+}[] {
+  const groups = new Map<string, SeismicProductOption[]>();
+  for (const product of products) {
+    const key = seismicProductLineKey(product);
+    groups.set(key, [...(groups.get(key) ?? []), product]);
+  }
+  return [...groups.entries()]
+    .sort(([a], [b]) => {
+      const groupDelta =
+        seismicProductGroupSortKey(a) - seismicProductGroupSortKey(b);
+      return groupDelta !== 0 ? groupDelta : a.localeCompare(b);
+    })
+    .map(([key, groupProducts]) => ({
+      key,
+      label:
+        groupProducts[0]?.lineLabel ??
+        (key === "3d" ? "3D seismic products" : "Other seismic products"),
+      products: groupProducts.sort((a, b) => {
+        const stageDelta =
+          (SEISMIC_PROCESSING_STAGE_ORDER[a.processingStage ?? ""] ?? 99) -
+          (SEISMIC_PROCESSING_STAGE_ORDER[b.processingStage ?? ""] ?? 99);
+        if (stageDelta !== 0) return stageDelta;
+        return a.label.localeCompare(b.label);
+      }),
+    }));
 }
 
 export function seismicAudiencePresets(
@@ -526,6 +637,10 @@ export function sectionIsoPatchFromStyle(
     sectionIsoBandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32),
     sectionIsoFillOffset: styleNumber(style, "sectionIsoFillOffset", 0),
     sectionIsoSourceOpacity: styleNumber(style, "sectionIsoSourceOpacity", 0),
+    seismicIsoSource:
+      style.seismicIsoSource === "mt-resistivity"
+        ? "mt-resistivity"
+        : "seismic-amplitude",
   };
 }
 
@@ -560,6 +675,11 @@ export function seismicBrowserPatchFromStyle(
       products,
       productId,
     ),
+    seismicProductStates:
+      typeof style.seismicProductStates === "object" &&
+      style.seismicProductStates !== null
+        ? style.seismicProductStates
+        : undefined,
     seismicRenderMode:
       style.seismicRenderMode === "raymarch" ? "raymarch" : "slice",
     seismicSliceAxis:

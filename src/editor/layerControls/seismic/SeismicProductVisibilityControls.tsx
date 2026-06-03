@@ -1,12 +1,17 @@
 import { panelStyles, vibrancyLabel, vibrancyTertiaryLabel } from "../../styles";
 import {
+  EditorEyeButton,
   detailsContentStyle,
   nestedControlRowStyle,
   nestedDetailsStyle,
   nestedFieldLabelStyle,
 } from "../../styleControls";
 import type { EditableStyle } from "../../../pages/types";
-import type { SeismicProductOption } from "./seismicModel";
+import {
+  seismicProcessingStageLabel,
+  seismicProductGroups,
+  type SeismicProductOption,
+} from "./seismicModel";
 
 export function SeismicProductVisibilityControls({
   products,
@@ -26,6 +31,7 @@ export function SeismicProductVisibilityControls({
   const visibleProductCount = products.filter(
     (product) => productVisibility[product.id] === true,
   ).length;
+  const productGroups = seismicProductGroups(products);
   const setProductVisible = (id: string, visible: boolean) => {
     commit({
       seismicProductVisibility: {
@@ -113,71 +119,119 @@ export function SeismicProductVisibilityControls({
             </button>
           ))}
         </div>
-        {products.map((product) => {
-          const selected = product.id === productId;
-          return (
+        {productGroups.map((group) => (
+          <div key={group.key}>
             <div
-              key={product.id}
               style={{
-                ...nestedControlRowStyle,
-                borderRadius: 6,
-                background: selected
-                  ? "rgba(244, 240, 232, 0.08)"
-                  : "transparent",
+                color: vibrancyTertiaryLabel,
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: 0,
+                margin: "8px 0 3px 0",
+                opacity: controlOpacity,
+                textTransform: "uppercase",
               }}
             >
-              <input
-                data-testid={`seismic-product-visible-${product.id}`}
-                type="checkbox"
-                checked={productVisibility[product.id] === true}
-                disabled={disabled}
-                onChange={(e) =>
-                  setProductVisible(product.id, e.target.checked)
-                }
-                title="Show or hide this product"
-                style={{ opacity: controlOpacity }}
-              />
-              <button
-                type="button"
-                data-testid={`seismic-product-row-${product.id}`}
-                disabled={disabled}
-                onClick={() => selectProduct(product.id)}
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  appearance: "none",
-                  border: "none",
-                  background: "transparent",
-                  color: selected ? vibrancyLabel : vibrancyTertiaryLabel,
-                  font: "inherit",
-                  fontSize: 11,
-                  fontWeight: selected ? 800 : 650,
-                  textAlign: "left",
-                  cursor: disabled ? "default" : "pointer",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  opacity: controlOpacity,
-                }}
-                title={product.label}
-              >
-                {product.label}
-              </button>
-              <span
-                style={{
-                  color: vibrancyTertiaryLabel,
-                  fontSize: 11,
-                  opacity: controlOpacity,
-                  minWidth: 54,
-                  textAlign: "right",
-                }}
-              >
-                {product.raymarchCapable ? "3D" : (product.surveyKind ?? "2D")}
-                {product.domainUnit ? ` / ${product.domainUnit}` : ""}
-              </span>
+              {group.label}
             </div>
-          );
-        })}
+            {group.products.map((product) => {
+              const selected = product.id === productId;
+              const placementStatus =
+                product.navigationPlacement?.navigationSource === "fallback"
+                  ? (product.navigationPlacement.statusLabel ??
+                    "Approximate legacy line placement; precise registration not validated.")
+                  : null;
+              return (
+                <div key={product.id}>
+                  <div
+                    style={{
+                      ...nestedControlRowStyle,
+                      borderRadius: 6,
+                      background: selected
+                        ? "rgba(244, 240, 232, 0.08)"
+                        : "transparent",
+                    }}
+                  >
+                    <EditorEyeButton
+                      testId={`seismic-product-visible-${product.id}`}
+                      visible={productVisibility[product.id] === true}
+                      disabled={disabled}
+                      onClick={() =>
+                        setProductVisible(
+                          product.id,
+                          productVisibility[product.id] !== true,
+                        )
+                      }
+                      title={
+                        productVisibility[product.id] === true
+                          ? "Hide this product"
+                          : "Show this product"
+                      }
+                      ariaLabel={
+                        productVisibility[product.id] === true
+                          ? `Hide ${product.label}`
+                          : `Show ${product.label}`
+                      }
+                      style={{ opacity: controlOpacity }}
+                    />
+                    <button
+                      type="button"
+                      data-testid={`seismic-product-row-${product.id}`}
+                      disabled={disabled}
+                      onClick={() => selectProduct(product.id)}
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        appearance: "none",
+                        border: "none",
+                        background: "transparent",
+                        color: selected ? vibrancyLabel : vibrancyTertiaryLabel,
+                        font: "inherit",
+                        fontSize: 11,
+                        fontWeight: selected ? 800 : 650,
+                        textAlign: "left",
+                        cursor: disabled ? "default" : "pointer",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        opacity: controlOpacity,
+                      }}
+                      title={product.label}
+                    >
+                      {product.label}
+                    </button>
+                    <span
+                      style={{
+                        color: vibrancyTertiaryLabel,
+                        fontSize: 10,
+                        opacity: controlOpacity,
+                        minWidth: 86,
+                        textAlign: "right",
+                      }}
+                    >
+                      {seismicProcessingStageLabel(product.processingStage)}
+                      {product.domainUnit ? ` / ${product.domainUnit}` : ""}
+                    </span>
+                  </div>
+                  {selected && placementStatus ? (
+                    <div
+                      data-testid={`seismic-product-placement-${product.id}`}
+                      style={{
+                        color: vibrancyTertiaryLabel,
+                        fontSize: 10,
+                        lineHeight: 1.35,
+                        margin: "0 0 4px 32px",
+                        opacity: controlOpacity,
+                      }}
+                    >
+                      {placementStatus}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </details>
   );

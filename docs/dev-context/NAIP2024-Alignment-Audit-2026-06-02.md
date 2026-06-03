@@ -11,6 +11,13 @@ every declared bound agrees. The residual misalignment is therefore a **runtime
 drape rendering artifact**, not a data or registration error. One **latent
 defect was introduced during the prior "fix" attempts** and must be reverted.
 
+**2026-06-03 update:** the active regional NAIP source set was expanded after
+additional county source folders were added to the archive. See
+[NAIP2024-Regional-Source-Expansion-2026-06-03.md](NAIP2024-Regional-Source-Expansion-2026-06-03.md)
+for the current nine-county catalog, regenerated bounds, dimensions, hashes,
+and runtime JSON updates. This audit remains the evidence record for the
+original five-county alignment diagnosis.
+
 ---
 
 ## 1. Source data — CLEAN (eliminated)

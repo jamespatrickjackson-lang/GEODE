@@ -1,6 +1,8 @@
 import { vibrancyTertiaryLabel } from "../../styles";
 import {
+  EditorCompactSegmentedRow,
   detailsContentStyle,
+  editorDarkSelectStyle,
   nestedControlRowStyle,
   nestedFieldLabelStyle,
 } from "../../styleControls";
@@ -84,28 +86,16 @@ export function SeismicAudienceAndDataConfidenceControls({
           type="preset"
         >
           <div style={detailsContentStyle}>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Audience</label>
-              <select
-                data-testid="seismic-audience-mode-select"
-                value={audienceMode}
-                disabled={disabled}
-                onChange={(e) =>
-                  applyAudienceMode(
-                    e.target.value as NonNullable<
-                      EditableStyle["seismicAudienceMode"]
-                    >,
-                  )
-                }
-                style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-              >
-                {SEISMIC_AUDIENCE_MODE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <EditorCompactSegmentedRow
+              label="Audience"
+              value={audienceMode}
+              testId="seismic-audience-mode-select"
+              disabled={disabled}
+              controlOpacity={controlOpacity}
+              ariaLabel="Seismic audience mode"
+              options={SEISMIC_AUDIENCE_MODE_OPTIONS}
+              onChange={applyAudienceMode}
+            />
             <div style={nestedControlRowStyle}>
               <label style={nestedFieldLabelStyle}>Preset</label>
               <select
@@ -113,7 +103,7 @@ export function SeismicAudienceAndDataConfidenceControls({
                 value={selectedPreset?.id ?? ""}
                 disabled={disabled}
                 onChange={(e) => applyPreset(e.target.value)}
-                style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+                style={{ ...editorDarkSelectStyle, opacity: controlOpacity }}
               >
                 {presets.map((preset) => (
                   <option key={preset.id} value={preset.id}>

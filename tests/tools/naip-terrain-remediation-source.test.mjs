@@ -72,11 +72,33 @@ test("terrain camera LOD is selected once and rendered as one continuous mesh", 
 test("NAIP generator supports a regional COG source and validates CRS plus bounds", () => {
   const source = readSource("tools", "generate-naip-regional-overview-assets.py");
 
-  for (const county of ["iron", "sevier"]) {
+  for (const county of [
+    "beaver",
+    "garfield",
+    "iron",
+    "kane",
+    "millard",
+    "piute",
+    "sanpete",
+    "sevier",
+    "wayne",
+  ]) {
     assert.match(
       source,
       new RegExp(`"id": "${county}",[\\s\\S]*?"ties": \\[\\]`),
-      `${county} should keep identity ties against the zero-rotation source.`,
+      `${county} should keep identity ties against zero-rotation source imagery.`,
+    );
+  }
+  for (const label of [
+    "NAIP2024_Garfield",
+    "NAIP2024_Kane",
+    "NAIP2024_Piute",
+    "NAIP2024_Wayne",
+  ]) {
+    assert.match(
+      source,
+      new RegExp(`"label": "${label}"`),
+      `${label} should be included in the regional source catalog.`,
     );
   }
   assert.match(
@@ -141,13 +163,38 @@ test("NAIP generator supports a regional COG source and validates CRS plus bound
   );
   assert.match(
     source,
+    /update_naip_manifest_metadata_and_cache_versions\(/,
+    "Manifest provenance, AOI bounds, dimensions, and cache keys should stay catalog-driven.",
+  );
+  assert.match(
+    source,
+    /NAIP_DIAGNOSTIC_LAYER_ID\s*=\s*"naip-2024-tile-diagnostics"/,
+    "County diagnostic overlay updates should target the NAIP tile layer explicitly.",
+  );
+  assert.match(
+    source,
+    /def update_project_naip_metadata_refs\(/,
+    "Project NAIP material bounds and diagnostic tiles should update with the source catalog.",
+  );
+  assert.match(
+    source,
+    /update_project_naip_metadata_refs\(SOURCE_CATALOG,\s*bounds\)/,
+    "Main should refresh project NAIP bounds before cache references are updated.",
+  );
+  assert.match(
+    source,
     /assert_raster_bounds_match_region\(qgis_bat,\s*regional_cog,\s*bounds\)/,
     "COG-source builds should validate the COG CRS and bounds before use.",
   );
   assert.match(
     source,
-    /source_path = resolve_webp_source\(args,\s*qgis_bat,\s*temp_dir,\s*bounds\)/,
-    "Main should generate WebP outputs from the resolved single source path.",
+    /build_best_interior_composite\(/,
+    "Default county-source builds should composite valid county pixels by best interior coverage.",
+  );
+  assert.match(
+    source,
+    /else resolve_webp_source\(args,\s*qgis_bat,\s*temp_dir,\s*bounds\)/,
+    "VRT and COG modes should still generate WebP outputs from a resolved source path.",
   );
 });
 

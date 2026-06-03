@@ -1,23 +1,23 @@
 {
   "id": "133_page",
-  "title": "MT High-Resistivity Context duplicate duplicate duplicate duplicate duplicate",
+  "title": "L11 BAND",
   "camera": {
     "position": [
-      -14080.597179279197,
-      21910.678528917102,
-      4330.855963709391
+      -6886.068651776337,
+      7803.904653935288,
+      -1731.6585176449912
     ],
     "target": [
-      -7605.1090070183045,
-      -9699.677151797205,
-      -257.1823013565895
+      -6329.594094492472,
+      -9704.257385631265,
+      -3549.4470809305944
     ],
     "up": [
       0,
       0,
       1
     ],
-    "fov": 52
+    "fov": 70
   },
   "transition": {
     "duration": 3000,
@@ -34,8 +34,8 @@
       "scalarEdgeLineWidth": 1.3,
       "scalarEdgeAverage": 0.59,
       "scalarEdgeLowerValue": 1.8114104195761795,
-      "scalarLegendVisible": true,
-      "opacity": 0.36
+      "scalarLegendVisible": false,
+      "opacity": 0.05
     },
     "utah-forge-mt-top-surface": {
       "opacity": 0
@@ -331,9 +331,8 @@
       "sectionIsoFillOffset": -1,
       "sectionIsoSourceOpacity": 0,
       "seismicAudienceMode": "technical",
-      "seismicAudiencePresetId": "showcase-time-volume",
-      "seismicDisplayRecipeId": "3d-seismic-showcase",
-      "seismicProductId": "gdr-1141-forge3d-pstm-stack-enh",
+      "seismicDisplayRecipeId": "2d-line-theatre",
+      "seismicProductId": "gdr-1141-line-l11-psdm-enh",
       "seismicProductVisibility": {
         "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack": false,
         "gdr-1141-forge3d-ani-psdm-stack-unenh": false,
@@ -344,9 +343,9 @@
         "gdr-1015-forge2d-301-migr-depth": false,
         "gdr-1141-line-302-psdm-enh": false,
         "gdr-1141-line-302-psdm-unenh": false,
-        "gdr-1141-line-l11-psdm-enh": false,
+        "gdr-1141-line-l11-psdm-enh": true,
         "gdr-1141-line-l11-psdm-enh-meters": false,
-        "gdr-1141-line-l11-psdm-unenh": false,
+        "gdr-1141-line-l11-psdm-unenh": true,
         "gdr-1141-line-l5-psdm-enh": false,
         "gdr-1141-line-l5-psdm-enh-meters": false,
         "gdr-1141-line-l5-psdm-unenh": false,
@@ -368,31 +367,33 @@
         "gdr-1141-line-301-psdm-interval-velocity": false,
         "gdr-1141-line-302-psdm-interval-velocity": false,
         "gdr-1141-line-l11-psdm-interval-velocity": false,
-        "gdr-1141-line-l5-psdm-interval-velocity": true
+        "gdr-1141-line-l5-psdm-interval-velocity": false
       },
       "seismicRenderMode": "slice",
-      "seismicSliceAxis": "crossline",
-      "seismicSliceFraction": 0.52,
+      "seismicSliceAxis": "line",
+      "seismicSliceFraction": 0.5,
       "seismicAmplitudeMin": 0.08,
       "seismicAmplitudeMax": 0.92,
-      "seismicAmplitudeGamma": 1.05,
+      "seismicAmplitudeGamma": 1,
       "seismicColormap": "blue-white-red",
       "seismicRemoveBackground": false,
       "seismicBackgroundCutoff": 0.16,
-      "seismicVolumeSampleSteps": 120,
-      "seismicTimeScale": 0.75,
+      "seismicVolumeSampleSteps": 96,
+      "seismicTimeScale": 2,
       "seismicNavigationVisible": true,
       "seismicNavigationRoleVisibility": {
         "sources": true,
         "receivers": true,
         "lines": true
       },
-      "seismicSliceThroughVolume": true,
+      "seismicSliceThroughVolume": false,
       "seismicComparisonMode": "overlay",
       "seismicComparisonSpacingM": 650,
-      "seismicMtCoRender": "integrated",
+      "seismicMtCoRender": "seismic",
       "seismicLegendVisible": true,
-      "opacity": 0.3
+      "opacity": 0.74,
+      "seismicCapabilityPresetId": "enhanced-vs-unenhanced-l11",
+      "seismicComparisonProductId": "gdr-1141-line-l11-psdm-unenh"
     }
   },
   "accentColor": "#f27826",

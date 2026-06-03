@@ -1,0 +1,79 @@
+{
+  "id": "56_line_302_seismic_products",
+  "title": "Line 302 Seismic Products",
+  "subtitle": "Source-backed PSDM, PSTM, unmigrated, time-stack, and velocity variants",
+  "camera": {
+    "position": [
+      -72734.67301267442,
+      -10579.26309022274,
+      -6006.157920848738
+    ],
+    "target": [
+      6096,
+      -3222,
+      -18974
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 5000,
+  "overlayLayout": {
+    "x": 0.0130859375,
+    "y": 0.0618569636,
+    "width": 0.226
+  },
+  "overlay": {
+    "position": "left",
+    "contentFile": "overlays/56_line_302_seismic_products/text.md",
+    "timing": {
+      "fadeMs": 900,
+      "gapMs": 80,
+      "easing": "easeOutCubic"
+    },
+    "images": []
+  },
+  "accentColor": "#75c7ff",
+  "visibilityOverrides": {
+    "utah-forge-phase3-working-area": true,
+    "terrain": true,
+    "utah-forge-phase3-seismic-browser": true,
+    "utah-forge-phase3-demo-boreholes": true
+  },
+  "layerOverrides": {
+    "terrain": {
+      "opacity": 0.42
+    },
+    "utah-forge-phase3-seismic-browser": {
+      "opacity": 0.74,
+      "seismicProductId": "gdr-1141-line-302-psdm-enh",
+      "seismicCapabilityPresetId": "seismic-product-gdr-1141-line-302-psdm-enh",
+      "seismicProductVisibility": {
+        "gdr-1141-line-302-psdm-enh": true
+      },
+      "seismicRenderMode": "slice",
+      "seismicSliceAxis": "line",
+      "seismicSliceFraction": 0.5,
+      "seismicAmplitudeMin": 0.08,
+      "seismicAmplitudeMax": 0.92,
+      "seismicColormap": "blue-white-red",
+      "seismicTimeScale": 1,
+      "seismicNavigationVisible": true,
+      "seismicNavigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "seismicRemoveBackground": true,
+      "sectionIsoEnabled": false,
+      "seismicLegendVisible": true
+    }
+  }
+}

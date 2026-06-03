@@ -239,7 +239,11 @@ function defaultDisplayMin(
   if (group === "seismic-sections") {
     return styleNumber(style, "seismicAmplitudeMin", fallback);
   }
-  if (group === "mt-volume-cuts") {
+  if (
+    group === "mt-volume-cuts" ||
+    group === "resistivity-on-seismic-sections" ||
+    group === "resistivity-on-seismic-volume-cuts"
+  ) {
     return styleNumber(
       style,
       "scalarVolumeThresholdMin",
@@ -257,7 +261,11 @@ function defaultDisplayMax(
   if (group === "seismic-sections") {
     return styleNumber(style, "seismicAmplitudeMax", fallback);
   }
-  if (group === "mt-volume-cuts") {
+  if (
+    group === "mt-volume-cuts" ||
+    group === "resistivity-on-seismic-sections" ||
+    group === "resistivity-on-seismic-volume-cuts"
+  ) {
     return styleNumber(
       style,
       "scalarVolumeThresholdMax",
@@ -268,7 +276,11 @@ function defaultDisplayMax(
 }
 
 function groupSupportsVolumeToggle(group: SectionIsoTargetGroup): boolean {
-  return group === "mt-volume-cuts" || group === "seismic-volume-cuts";
+  return (
+    group === "mt-volume-cuts" ||
+    group === "seismic-volume-cuts" ||
+    group === "resistivity-on-seismic-volume-cuts"
+  );
 }
 
 export function SectionIsoLegend({

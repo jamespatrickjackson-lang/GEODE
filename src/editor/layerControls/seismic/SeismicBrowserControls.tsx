@@ -1,7 +1,9 @@
 import type React from "react";
 import { panelStyles, vibrancySecondaryLabel, vibrancyTertiaryLabel } from "../../styles";
 import {
+  EditorCompactSegmentedRow,
   detailsContentStyle,
+  editorDarkSelectStyle,
   nestedControlRowStyle,
   nestedDetailsStyle,
   nestedFieldLabelStyle,
@@ -25,6 +27,8 @@ import {
   seismicColormapFromValue,
   seismicDefaultProductId,
   seismicExportLayouts,
+  seismicProcessingStageLabel,
+  seismicProductGroups,
   seismicPresetPatch,
   seismicProductOptions,
   seismicProductVisibilityFromStyle,
@@ -59,6 +63,7 @@ export function SeismicBrowserControls({
   setPageLayerOverride: PageStyleSetter;
 }) {
   const products = seismicProductOptions(layer);
+  const productGroups = seismicProductGroups(products);
   const presets = seismicAudiencePresets(layer);
   const exportLayouts = seismicExportLayouts(layer);
   const defaultProductId = seismicDefaultProductId(layer);
@@ -310,28 +315,16 @@ export function SeismicBrowserControls({
         <div style={detailsContentStyle}>
           {presets.length > 0 ? (
             <>
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Audience</label>
-                <select
-                  data-testid="seismic-audience-mode-select"
-                  value={audienceMode}
-                  disabled={disabled}
-                  onChange={(e) =>
-                    applyAudienceMode(
-                      e.target.value as NonNullable<
-                        EditableStyle["seismicAudienceMode"]
-                      >,
-                    )
-                  }
-                  style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-                >
-                  {SEISMIC_AUDIENCE_MODE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <EditorCompactSegmentedRow
+                label="Audience"
+                value={audienceMode}
+                testId="seismic-audience-mode-select"
+                disabled={disabled}
+                controlOpacity={controlOpacity}
+                ariaLabel="Seismic audience mode"
+                options={SEISMIC_AUDIENCE_MODE_OPTIONS}
+                onChange={applyAudienceMode}
+              />
               <div style={nestedControlRowStyle}>
                 <label style={nestedFieldLabelStyle}>Preset</label>
                 <select
@@ -339,7 +332,7 @@ export function SeismicBrowserControls({
                   value={selectedPreset?.id ?? ""}
                   disabled={disabled}
                   onChange={(e) => applyPreset(e.target.value)}
-                  style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+                  style={{ ...editorDarkSelectStyle, opacity: controlOpacity }}
                 >
                   {presets.map((preset) => (
                     <option key={preset.id} value={preset.id}>
@@ -413,26 +406,19 @@ export function SeismicBrowserControls({
             ) : null}
           </div>
 
-          <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>MT view</label>
-            <select
-              data-testid="seismic-mt-co-render-select"
-              value={mtCoRender}
-              disabled={disabled}
-              onChange={(e) =>
-                setMtCoRender(
-                  e.target.value as NonNullable<
-                    EditableStyle["seismicMtCoRender"]
-                  >,
-                )
-              }
-              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-            >
-              <option value="seismic">Seismic only</option>
-              <option value="mt">MT only</option>
-              <option value="integrated">Integrated</option>
-            </select>
-          </div>
+          <EditorCompactSegmentedRow
+            label="MT view"
+            value={mtCoRender}
+            testId="seismic-mt-co-render-select"
+            disabled={disabled}
+            controlOpacity={controlOpacity}
+            options={[
+              { value: "seismic", label: "Seismic" },
+              { value: "mt", label: "MT" },
+              { value: "integrated", label: "Integrated" },
+            ]}
+            onChange={setMtCoRender}
+          />
 
           <div
             data-testid="seismic-crs-registration-status"
@@ -516,7 +502,7 @@ export function SeismicBrowserControls({
                   onChange={(e) =>
                     commit({ seismicExportLayoutId: e.target.value })
                   }
-                  style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+                  style={{ ...editorDarkSelectStyle, opacity: controlOpacity }}
                 >
                   {exportLayouts.map((layout) => (
                     <option key={layout.id} value={layout.id}>
@@ -570,12 +556,17 @@ export function SeismicBrowserControls({
               value={productId}
               disabled={disabled || products.length === 0}
               onChange={(e) => selectProduct(e.target.value)}
-              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+              style={{ ...editorDarkSelectStyle, opacity: controlOpacity }}
             >
-              {products.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.label}
-                </option>
+              {productGroups.map((group) => (
+                <optgroup key={group.key} label={group.label}>
+                  {group.products.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {seismicProcessingStageLabel(product.processingStage)}:{" "}
+                      {product.label}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </div>
@@ -587,39 +578,48 @@ export function SeismicBrowserControls({
               value={comparisonProductId ?? "none"}
               disabled={disabled}
               onChange={(e) => setComparisonProduct(e.target.value)}
-              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+              style={{ ...editorDarkSelectStyle, opacity: controlOpacity }}
             >
               <option value="none">None</option>
-              {products
-                .filter((product) => product.id !== productId)
-                .map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.label}
-                  </option>
-                ))}
+              {productGroups.map((group) => {
+                const comparisonProducts = group.products.filter(
+                  (product) => product.id !== productId,
+                );
+                if (comparisonProducts.length === 0) return null;
+                return (
+                  <optgroup key={group.key} label={group.label}>
+                    {comparisonProducts.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {seismicProcessingStageLabel(product.processingStage)}:{" "}
+                        {product.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
             </select>
           </div>
 
-          <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>RenderMode</label>
-            <select
-              data-testid="seismic-render-mode-select"
-              value={renderMode}
-              disabled={disabled || !selectedProduct?.raymarchCapable}
-              onChange={(e) =>
-                commit({
-                  seismicRenderMode:
-                    e.target.value === "raymarch" ? "raymarch" : "slice",
-                })
-              }
-              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-            >
-              <option value="slice">Slice</option>
-              {selectedProduct?.raymarchCapable ? (
-                <option value="raymarch">Raymarch</option>
-              ) : null}
-            </select>
-          </div>
+          <EditorCompactSegmentedRow
+            label="RenderMode"
+            value={renderMode}
+            testId="seismic-render-mode-select"
+            disabled={disabled || !selectedProduct?.raymarchCapable}
+            controlOpacity={controlOpacity}
+            options={[
+              { value: "slice", label: "Slice" },
+              {
+                value: "raymarch",
+                label: "Raymarch",
+                disabled: !selectedProduct?.raymarchCapable,
+              },
+            ]}
+            onChange={(value) =>
+              commit({
+                seismicRenderMode: value === "raymarch" ? "raymarch" : "slice",
+              })
+            }
+          />
 
           {selectedProduct?.raymarchCapable ? (
             <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
@@ -647,34 +647,30 @@ export function SeismicBrowserControls({
             </label>
           ) : null}
 
-          <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Slice</label>
-            <select
-              data-testid="seismic-slice-axis-select"
-              value={sliceAxis}
-              disabled={
-                disabled || (renderMode === "raymarch" && !sliceThroughVolume)
-              }
-              onChange={(e) =>
-                commit({
-                  seismicSliceAxis: e.target.value as NonNullable<
-                    EditableStyle["seismicSliceAxis"]
-                  >,
-                })
-              }
-              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-            >
-              {selectedProduct?.surveyKind === "3d" ? (
-                <>
-                  <option value="inline">Inline</option>
-                  <option value="crossline">Crossline</option>
-                  <option value="sample">Time/depth plane</option>
-                </>
-              ) : (
-                <option value="line">2D line</option>
-              )}
-            </select>
-          </div>
+          <EditorCompactSegmentedRow
+            label="Slice"
+            value={sliceAxis}
+            testId="seismic-slice-axis-select"
+            disabled={
+              disabled || (renderMode === "raymarch" && !sliceThroughVolume)
+            }
+            controlOpacity={controlOpacity}
+            options={
+              selectedProduct?.surveyKind === "3d"
+                ? [
+                    { value: "inline", label: "Inline" },
+                    { value: "crossline", label: "Crossline" },
+                    { value: "sample", label: "Plane" },
+                  ]
+                : [{ value: "line", label: "2D line" }]
+            }
+            onChange={(value) =>
+              commit({
+                seismicSliceAxis:
+                  value as NonNullable<EditableStyle["seismicSliceAxis"]>,
+              })
+            }
+          />
 
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Position</label>

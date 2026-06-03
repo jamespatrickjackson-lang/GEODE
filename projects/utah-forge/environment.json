@@ -210,30 +210,30 @@
     "utah-forge-topo-clouds": {
       "atmosphereSubtype": "cloud-bank",
       "atmosphereBoundsMode": "box",
-      "atmosphereBoundsCenterX": 0,
-      "atmosphereBoundsCenterY": 0,
+      "atmosphereBoundsCenterX": -11621.815291721805,
+      "atmosphereBoundsCenterY": 29288.96076292231,
       "atmosphereBoundsCenterZ": 7200,
-      "atmosphereBoundsSizeX": 7200,
+      "atmosphereBoundsSizeX": 28388.124725349953,
       "atmosphereBoundsSizeY": 7200,
       "atmosphereBoundsSizeZ": 2600,
       "color": "#ffffff",
       "opacity": 0.88,
       "atmosphereDensity": 1,
-      "atmosphereSoftness": 0.68,
-      "atmospherePuffCount": 1,
+      "atmosphereSoftness": 0.76,
+      "atmospherePuffCount": 227,
       "atmospherePuffScaleM": 4800,
       "atmosphereScaleJitter": 0,
-      "atmosphereVerticalFalloff": 0,
-      "atmosphereEdgeFade": 0,
+      "atmosphereVerticalFalloff": 1,
+      "atmosphereEdgeFade": 0.56,
       "atmosphereSeed": 101,
-      "atmosphereDriftEnabled": false,
-      "atmosphereDriftSpeedMps": 5,
+      "atmosphereDriftEnabled": true,
+      "atmosphereDriftSpeedMps": 8.1,
       "atmosphereDriftDirectionX": 1,
-      "atmosphereDriftDirectionY": 0,
-      "atmosphereDriftDirectionZ": 0,
-      "atmosphereDepthTest": false,
+      "atmosphereDriftDirectionY": 0.82,
+      "atmosphereDriftDirectionZ": 0.79,
+      "atmosphereDepthTest": true,
       "atmosphereRenderOrder": 80,
-      "atmosphereBoundsHelperVisible": false,
+      "atmosphereBoundsHelperVisible": true,
       "affectedByFog": false,
       "showLabels": false
     },
@@ -684,6 +684,34 @@
       "meshMetalness": 0.02,
       "affectedByFog": false,
       "showLabels": false
+    },
+    "topo-cloud-volume-2": {
+      "atmosphereSubtype": "cloud-bank",
+      "atmosphereBoundsMode": "box",
+      "color": "#ffffff",
+      "opacity": 0.88,
+      "atmosphereDensity": 1,
+      "atmosphereSoftness": 0.76,
+      "atmospherePuffCount": 227,
+      "atmospherePuffScaleM": 4800,
+      "atmosphereScaleJitter": 0,
+      "atmosphereBoundsCenterX": -5063.295111351388,
+      "atmosphereBoundsCenterY": 48825.0400865867,
+      "atmosphereBoundsCenterZ": 7200,
+      "atmosphereBoundsSizeX": 28388.124725349953,
+      "atmosphereBoundsSizeY": 7200,
+      "atmosphereBoundsSizeZ": 2600,
+      "atmosphereEdgeFade": 0.56,
+      "atmosphereVerticalFalloff": 1,
+      "atmosphereSeed": 118,
+      "atmosphereDriftEnabled": false,
+      "atmosphereDriftSpeedMps": 8.1,
+      "atmosphereDriftDirectionX": 1,
+      "atmosphereDriftDirectionY": 0.82,
+      "atmosphereDriftDirectionZ": 0.79,
+      "atmosphereDepthTest": true,
+      "atmosphereRenderOrder": 80,
+      "atmosphereBoundsHelperVisible": true
     }
   },
   "defaultVisibleLayers": [
@@ -692,7 +720,8 @@
     "utah-forge-mt-resistivity-full-density",
     "utah-forge-topo-graticule",
     "utah-forge-topo-clouds",
-    "terrain"
+    "terrain",
+    "topo-cloud-volume-2"
   ],
   "scene": {
     "background": "#383838",
@@ -817,15 +846,15 @@
         {
           "id": "naip-2024-aerial",
           "label": "NAIP 2024 Aerial Image",
-          "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=9cf80fbd86236267",
-          "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80",
+          "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=71d894cdd3c0c64b",
+          "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=684f5a7e42719aa9",
           "textureBudget": 4096,
           "format": "webp",
           "hasAlpha": true,
           "bounds": [
             229069.2,
-            4144854,
-            484164,
+            4094688,
+            598806,
             4414308
           ],
           "attribution": "USDA Farm Production and Conservation - Business Center, Geospatial Enterprise Operations; UGRC Raster Data Discovery",
@@ -859,13 +888,13 @@
         }
       ],
       "orthoPhotoTextureBudget": 8192,
-      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80",
-      "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=9cf80fbd86236267",
-      "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80",
+      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=684f5a7e42719aa9",
+      "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=71d894cdd3c0c64b",
+      "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=684f5a7e42719aa9",
       "orthoPhotoBounds": [
         229069.2,
-        4144854,
-        484164,
+        4094688,
+        598806,
         4414308
       ],
       "orthoPhotoOpacity": 1,
@@ -1104,7 +1133,7 @@
       "fitPaddingPx": 725,
       "revealScrollBehavior": "auto"
     },
-    "lightMode": false,
+    "lightMode": true,
     "lightModeBackground": "#d4d4d4"
   },
   "customRenderPresets": [
@@ -1915,15 +1944,15 @@
             {
               "id": "naip-2024-aerial",
               "label": "NAIP 2024 Aerial Image",
-              "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=9cf80fbd86236267",
-              "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80",
+              "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=71d894cdd3c0c64b",
+              "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=684f5a7e42719aa9",
               "textureBudget": 4096,
               "format": "webp",
               "hasAlpha": true,
               "bounds": [
                 229069.2,
-                4144854,
-                484164,
+                4094688,
+                598806,
                 4414308
               ],
               "attribution": "USDA Farm Production and Conservation - Business Center, Geospatial Enterprise Operations; UGRC Raster Data Discovery",
@@ -2143,7 +2172,7 @@
             "nestedBarHeightPx": 45
           }
         },
-        "lightMode": false
+        "lightMode": true
       },
       "layerStylePatchesByLayerId": {
         "utah-forge-phase3-working-area": {
@@ -2477,6 +2506,34 @@
           "labelTextColor": "#09e2f1",
           "labelFillOpacity": 0.8,
           "labelOutlineOpacity": 0.9
+        },
+        "utah-forge-topo-clouds": {
+          "atmospherePuffCount": 227,
+          "atmosphereBoundsHelperVisible": true,
+          "atmosphereDriftEnabled": true,
+          "atmosphereDriftSpeedMps": 8.1,
+          "atmosphereSoftness": 0.76,
+          "atmosphereBoundsSizeX": 28388.124725349953,
+          "atmosphereDriftDirectionY": 0.82,
+          "atmosphereDriftDirectionZ": 0.79,
+          "atmosphereVerticalFalloff": 1,
+          "atmosphereEdgeFade": 0.56,
+          "atmosphereBoundsCenterX": -11621.815291721805,
+          "atmosphereBoundsCenterY": 29288.96076292231,
+          "atmosphereBoundsCenterZ": 7200,
+          "atmosphereBoundsSizeY": 7200,
+          "atmosphereBoundsSizeZ": 2600,
+          "atmosphereDepthTest": true
+        },
+        "topo-cloud-volume-2": {
+          "atmosphereBoundsCenterX": -5063.295111351388,
+          "atmosphereBoundsCenterY": 48825.0400865867,
+          "atmosphereBoundsCenterZ": 7200,
+          "atmosphereBoundsSizeX": 28388.124725349953,
+          "atmosphereBoundsSizeY": 7200,
+          "atmosphereBoundsSizeZ": 2600,
+          "atmosphereDriftEnabled": false,
+          "atmosphereBoundsHelperVisible": true
         }
       }
     }

@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import type React from "react";
 import { panelStyles, vibrancyTertiaryLabel } from "../../styles";
 import {
+  EditorCompactSegmentedRow,
+  EditorEyeButton,
   detailsContentStyle,
   nestedControlRowStyle,
   nestedDetailsStyle,
@@ -170,12 +172,70 @@ export function SeismicCapabilityLayerContainers({
   const commit = (patch: Partial<EditableStyle>) => {
     commitLayerStyle(layerId, patch);
   };
+  const commitProductState = (
+    id: string,
+    patch: Partial<EditableStyle>,
+  ) => {
+    const currentStates =
+      typeof liveSeismicStyleRef.current.seismicProductStates === "object" &&
+      liveSeismicStyleRef.current.seismicProductStates !== null
+        ? liveSeismicStyleRef.current.seismicProductStates
+        : {};
+    const currentState = currentStates[id] ?? {};
+    const nextState = { ...currentState };
+    const patchVisibility =
+      typeof patch.seismicProductVisibility === "object" &&
+      patch.seismicProductVisibility !== null
+        ? patch.seismicProductVisibility[id]
+        : undefined;
+    if (typeof patchVisibility === "boolean") {
+      nextState.visible = patchVisibility;
+    }
+    if (typeof patch.opacity === "number") nextState.opacity = patch.opacity;
+    if (patch.seismicRenderMode) nextState.renderMode = patch.seismicRenderMode;
+    if (patch.seismicSliceAxis) nextState.sliceAxis = patch.seismicSliceAxis;
+    if (typeof patch.seismicSliceFraction === "number") {
+      nextState.sliceFraction = patch.seismicSliceFraction;
+    }
+    if (typeof patch.seismicSliceThroughVolume === "boolean") {
+      nextState.sliceThroughVolume = patch.seismicSliceThroughVolume;
+    }
+    if (typeof patch.seismicAmplitudeMin === "number") {
+      nextState.amplitudeMin = patch.seismicAmplitudeMin;
+    }
+    if (typeof patch.seismicAmplitudeMax === "number") {
+      nextState.amplitudeMax = patch.seismicAmplitudeMax;
+    }
+    if (typeof patch.seismicAmplitudeGamma === "number") {
+      nextState.amplitudeGamma = patch.seismicAmplitudeGamma;
+    }
+    if (patch.seismicColormap) nextState.colormap = patch.seismicColormap;
+    if (typeof patch.seismicRemoveBackground === "boolean") {
+      nextState.removeBackground = patch.seismicRemoveBackground;
+    }
+    if (typeof patch.seismicBackgroundCutoff === "number") {
+      nextState.backgroundCutoff = patch.seismicBackgroundCutoff;
+    }
+    if (typeof patch.seismicTimeScale === "number") {
+      nextState.timeScale = patch.seismicTimeScale;
+    }
+    if (typeof patch.seismicVolumeSampleSteps === "number") {
+      nextState.volumeSampleSteps = patch.seismicVolumeSampleSteps;
+    }
+    commit({
+      ...patch,
+      seismicProductStates: {
+        ...currentStates,
+        [id]: nextState,
+      },
+    });
+  };
   const selectedOnlyVisibility = (id: string) =>
     Object.fromEntries(
       products.map((product) => [product.id, product.id === id]),
     );
   const setProductVisible = (id: string, visible: boolean) => {
-    commit({
+    commitProductState(id, {
       seismicProductVisibility: {
         ...productVisibility,
         [id]: visible,
@@ -189,7 +249,7 @@ export function SeismicCapabilityLayerContainers({
   ) => {
     const nextRenderMode =
       mode === "raymarch" && product.raymarchCapable ? "raymarch" : "slice";
-    commit({
+    commitProductState(product.id, {
       seismicCapabilityPresetId: `${product.id}-${nextRenderMode}${
         syncSlice ? "-sync" : ""
       }`,
@@ -269,9 +329,138 @@ export function SeismicCapabilityLayerContainers({
   const raymarchProducts = products.filter(
     (product) => product.raymarchCapable === true,
   );
+  const sectionOnlyProducts = products.filter(
+    (product) => product.raymarchCapable !== true,
+  );
   const productControlActive = (product: SeismicProductOption) =>
     product.id === productId;
 
+  const renderProductCapabilityItem = (product: SeismicProductOption) => {
+    const productVisible = productVisibility[product.id] === true;
+    const active = productControlActive(product);
+    const capabilityMode: "volume" | "slice" | "sync" =
+      active &&
+      renderMode === "raymarch" &&
+      styleBoolean(style, "seismicSliceThroughVolume", false)
+        ? "sync"
+        : active && renderMode === "raymarch"
+          ? "volume"
+          : "slice";
+    return (
+      <SeismicCapabilityLayerItem
+        key={product.id}
+        testId={`seismic-capability-product-${product.id}`}
+        title={product.label}
+        type={
+          product.raymarchCapable
+            ? isVelocityProduct(product)
+              ? "3D velocity"
+              : "3D seismic"
+            : "section"
+        }
+        inactive={!productVisible}
+      >
+        <div style={nestedControlRowStyle}>
+          <span style={nestedFieldLabelStyle}>Visible</span>
+          <EditorEyeButton
+            testId={`seismic-capability-product-visible-${product.id}`}
+            visible={productVisible}
+            disabled={disabled}
+            onClick={() => setProductVisible(product.id, !productVisible)}
+            title={productVisible ? "Hide this product" : "Show this product"}
+            ariaLabel={
+              productVisible ? `Hide ${product.label}` : `Show ${product.label}`
+            }
+            style={{ opacity: controlOpacity }}
+          />
+          <span
+            style={{
+              flex: 1,
+              color: vibrancyTertiaryLabel,
+              fontSize: 11,
+              opacity: controlOpacity,
+            }}
+          >
+            {productVisible
+              ? active
+                ? product.raymarchCapable && renderMode === "raymarch"
+                  ? "active volume"
+                  : "active slice"
+                : (product.domainKind ?? "processed product")
+              : "inactive"}
+          </span>
+        </div>
+        {productVisible ? (
+          <>
+            <details style={nestedDetailsStyle}>
+              <summary style={panelStyles.summary}>Render</summary>
+              <div style={detailsContentStyle}>
+                <EditorCompactSegmentedRow
+                  label="RenderMode"
+                  value={product.raymarchCapable ? capabilityMode : "slice"}
+                  testId={`seismic-capability-render-${product.id}`}
+                  disabled={disabled}
+                  controlOpacity={controlOpacity}
+                  options={
+                    product.raymarchCapable
+                      ? [
+                          {
+                            value: "volume",
+                            label: "Volume",
+                            testId: `seismic-capability-volume-${product.id}`,
+                          },
+                          {
+                            value: "slice",
+                            label: "Slice",
+                            testId: `seismic-capability-slice-${product.id}`,
+                          },
+                          {
+                            value: "sync",
+                            label: "Sync",
+                            testId: `seismic-capability-sync-${product.id}`,
+                          },
+                        ]
+                      : [
+                          {
+                            value: "slice",
+                            label: "Slice",
+                            testId: `seismic-capability-slice-${product.id}`,
+                          },
+                        ]
+                  }
+                  onChange={(value) =>
+                    setCapabilityForProduct(
+                      product,
+                      value === "slice" ? "slice" : "raymarch",
+                      value === "sync",
+                    )
+                  }
+                />
+              </div>
+            </details>
+            <SeismicProductDisplayVariables
+              product={product}
+              active={active}
+              disabled={disabled}
+              controlOpacity={controlOpacity}
+              sliceAxis={sliceAxis}
+              sliceFraction={sliceFraction}
+              seismicOpacity={seismicOpacity}
+              amplitudeMin={amplitudeMin}
+              amplitudeMax={amplitudeMax}
+              amplitudeGamma={amplitudeGamma}
+              colormap={colormap}
+              removeBackground={removeBackground}
+              backgroundCutoff={backgroundCutoff}
+              volumeSampleSteps={volumeSampleSteps}
+              timeScale={timeScale}
+                commit={(patch) => commitProductState(product.id, patch)}
+              />
+          </>
+        ) : null}
+      </SeismicCapabilityLayerItem>
+    );
+  };
 
   return (
     <>
@@ -284,121 +473,23 @@ export function SeismicCapabilityLayerContainers({
         commit={commit}
       />
 
-      {raymarchProducts.map((product) => {
-        const productVisible = productVisibility[product.id] === true;
-        return (
-          <SeismicCapabilityLayerItem
-            key={product.id}
-            testId={`seismic-capability-product-${product.id}`}
-            title={product.label}
-            type={isVelocityProduct(product) ? "3D velocity" : "3D seismic"}
-            inactive={!productVisible}
-          >
-            <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-              <span style={nestedFieldLabelStyle}>Visible</span>
-              <input
-                data-testid={`seismic-capability-product-visible-${product.id}`}
-                type="checkbox"
-                checked={productVisible}
-                disabled={disabled}
-                onChange={(e) =>
-                  setProductVisible(product.id, e.target.checked)
-                }
-                style={{ opacity: controlOpacity }}
-              />
-              <span
-                style={{
-                  flex: 1,
-                  color: vibrancyTertiaryLabel,
-                  fontSize: 11,
-                  opacity: controlOpacity,
-                }}
-              >
-                {productVisible
-                  ? productControlActive(product)
-                    ? renderMode === "raymarch"
-                      ? "active volume"
-                      : "active slice"
-                    : (product.domainKind ?? "processed product")
-                  : "inactive"}
-              </span>
-            </label>
-            {productVisible ? (
-              <>
-                <details style={nestedDetailsStyle}>
-                  <summary style={panelStyles.summary}>Render</summary>
-                  <div style={detailsContentStyle}>
-                    <div
-                      style={{
-                        ...nestedControlRowStyle,
-                        gap: 6,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <label style={nestedFieldLabelStyle}>RenderMode</label>
-                      {[
-                        {
-                          label: "Volume",
-                          testId: `seismic-capability-volume-${product.id}`,
-                          onClick: () =>
-                            setCapabilityForProduct(product, "raymarch", false),
-                        },
-                        {
-                          label: "Slice",
-                          testId: `seismic-capability-slice-${product.id}`,
-                          onClick: () =>
-                            setCapabilityForProduct(product, "slice", false),
-                        },
-                        {
-                          label: "Sync",
-                          testId: `seismic-capability-sync-${product.id}`,
-                          onClick: () =>
-                            setCapabilityForProduct(product, "raymarch", true),
-                        },
-                      ].map((action) => (
-                        <button
-                          key={action.testId}
-                          type="button"
-                          data-testid={action.testId}
-                          disabled={disabled}
-                          onClick={action.onClick}
-                          style={{
-                            ...panelStyles.iconButton,
-                            width: "auto",
-                            padding: "3px 7px",
-                            fontSize: 10,
-                            opacity: controlOpacity,
-                          }}
-                        >
-                          {action.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </details>
-                <SeismicProductDisplayVariables
-                  product={product}
-                  active={productControlActive(product)}
-                  disabled={disabled}
-                  controlOpacity={controlOpacity}
-                  sliceAxis={sliceAxis}
-                  sliceFraction={sliceFraction}
-                  seismicOpacity={seismicOpacity}
-                  amplitudeMin={amplitudeMin}
-                  amplitudeMax={amplitudeMax}
-                  amplitudeGamma={amplitudeGamma}
-                  colormap={colormap}
-                  removeBackground={removeBackground}
-                  backgroundCutoff={backgroundCutoff}
-                  volumeSampleSteps={volumeSampleSteps}
-                  timeScale={timeScale}
-                  commit={commit}
-                />
-              </>
-            ) : null}
-          </SeismicCapabilityLayerItem>
-        );
-      })}
+      {raymarchProducts.length > 0 ? (
+        <details style={nestedDetailsStyle} open>
+          <summary style={panelStyles.summary}>3D / raymarch products</summary>
+          <div style={detailsContentStyle}>
+            {raymarchProducts.map(renderProductCapabilityItem)}
+          </div>
+        </details>
+      ) : null}
+
+      {sectionOnlyProducts.length > 0 ? (
+        <details style={nestedDetailsStyle} open>
+          <summary style={panelStyles.summary}>Section-only products</summary>
+          <div style={detailsContentStyle}>
+            {sectionOnlyProducts.map(renderProductCapabilityItem)}
+          </div>
+        </details>
+      ) : null}
 
       <SeismicCapabilityLayerItem
         testId="seismic-capability-line-theatre"
@@ -437,26 +528,23 @@ export function SeismicCapabilityLayerContainers({
         title="Processing comparison"
         type="comparison"
       >
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Mode</label>
-          <select
-            data-testid="seismic-comparison-mode-select"
-            value={comparisonMode}
-            disabled={disabled}
-            onChange={(e) =>
-              commit({
-                seismicComparisonMode:
-                  e.target.value === "side-by-side"
-                    ? "side-by-side"
-                    : "overlay",
-              })
-            }
-            style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-          >
-            <option value="overlay">Overlay</option>
-            <option value="side-by-side">Side-by-side</option>
-          </select>
-        </div>
+        <EditorCompactSegmentedRow
+          label="Mode"
+          value={comparisonMode}
+          testId="seismic-comparison-mode-select"
+          disabled={disabled}
+          controlOpacity={controlOpacity}
+          options={[
+            { value: "overlay", label: "Overlay" },
+            { value: "side-by-side", label: "Side-by-side" },
+          ]}
+          onChange={(value) =>
+            commit({
+              seismicComparisonMode:
+                value === "side-by-side" ? "side-by-side" : "overlay",
+            })
+          }
+        />
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Spacing</label>
           <input
@@ -547,24 +635,23 @@ export function SeismicCapabilityLayerContainers({
             }
           />
         </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Palette</label>
-          <select
-            data-testid="seismic-capability-colormap-select"
-            value={colormap}
-            disabled={disabled}
-            onChange={(e) =>
-              commit({
-                seismicColormap: seismicColormapFromValue(e.target.value),
-              })
-            }
-            style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-          >
-            <option value="blue-white-red">Blue-white-red</option>
-            <option value="grayscale">Grayscale</option>
-            <option value="velocity">Velocity</option>
-          </select>
-        </div>
+        <EditorCompactSegmentedRow
+          label="Palette"
+          value={colormap}
+          testId="seismic-capability-colormap-select"
+          disabled={disabled}
+          controlOpacity={controlOpacity}
+          options={[
+            { value: "blue-white-red", label: "BWR" },
+            { value: "grayscale", label: "Gray" },
+            { value: "velocity", label: "Velocity" },
+          ]}
+          onChange={(value) =>
+            commit({
+              seismicColormap: seismicColormapFromValue(value),
+            })
+          }
+        />
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Gain curve</label>
           <input
@@ -737,43 +824,42 @@ export function SeismicCapabilityLayerContainers({
         title="Integrated geophysics"
         type="preset"
       >
-        <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
-          <label style={nestedFieldLabelStyle}>View</label>
-          {[
+        <EditorCompactSegmentedRow
+          label="View"
+          value={
+            style.seismicMtCoRender === "mt" ||
+            style.seismicMtCoRender === "integrated"
+              ? style.seismicMtCoRender
+              : "seismic"
+          }
+          testId="seismic-capability-mt-view"
+          disabled={disabled}
+          controlOpacity={controlOpacity}
+          options={[
             {
+              value: "seismic",
               label: "Seismic",
               testId: "seismic-capability-seismic-only",
-              onClick: () => setMtCoRender("seismic"),
             },
             {
+              value: "mt",
               label: "MT",
               testId: "seismic-capability-mt-only",
-              onClick: () => setMtCoRender("mt"),
             },
             {
+              value: "integrated",
               label: "Integrated",
               testId: "seismic-capability-integrated",
-              onClick: () => applyCapabilityPreset("integrated-geophysics"),
             },
-          ].map((action) => (
-            <button
-              key={action.testId}
-              type="button"
-              data-testid={action.testId}
-              disabled={disabled}
-              onClick={action.onClick}
-              style={{
-                ...panelStyles.iconButton,
-                width: "auto",
-                padding: "3px 7px",
-                fontSize: 10,
-                opacity: controlOpacity,
-              }}
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
+          ]}
+          onChange={(value) => {
+            if (value === "integrated") {
+              applyCapabilityPreset("integrated-geophysics");
+            } else {
+              setMtCoRender(value);
+            }
+          }}
+        />
       </SeismicCapabilityLayerItem>
 
       <SeismicAudienceAndDataConfidenceControls

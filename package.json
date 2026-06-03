@@ -13,6 +13,7 @@
     "check:workspace": "node tools/check-workspace-state.mjs",
     "inspect:effective": "node tools/inspect-effective-state.mjs",
     "check:runtime-assets": "node tools/validate-runtime-assets.mjs",
+    "check:seismic-source-gates": "node tools/validate-seismic-source-gates.mjs",
     "check:utah-derived": "node tools/validate-utah-derived-assets.mjs",
     "check:mt-resistivity": "node tools/audit-mt-resistivity.mjs",
     "check:utah-snapshot": "node tools/validate-utah-presentation-snapshot.mjs",
