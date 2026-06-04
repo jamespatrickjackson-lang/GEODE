@@ -577,6 +577,18 @@ export function SceneSectionPlanesContainer({
       );
     }
   };
+  const setTargetProduct = (productId: string, checked: boolean) => {
+    const next = new Set(targetProductIds);
+    if (checked) {
+      next.add(productId);
+    } else {
+      next.delete(productId);
+    }
+    commit({
+      sceneSectionTargetScope: "selected-targets",
+      sceneSectionTargetProductIds: Array.from(next),
+    });
+  };
   const commitFrameEntries = (
     entries: SceneSectionFrameUiEntry[],
     patch: Partial<EditableStyle> = {},
@@ -932,6 +944,41 @@ export function SceneSectionPlanesContainer({
             }
           />
         </label>
+        {products.length > 0 ? (
+          <details open style={nestedDetailsStyle}>
+            <summary style={panelStyles.summary}>Target seismic products</summary>
+            <div style={detailsContentStyle}>
+              {products.map((product) => (
+                <label
+                  key={product.id}
+                  style={{ ...nestedControlRowStyle, cursor: "pointer" }}
+                >
+                  <span
+                    title={product.label}
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {product.label}
+                  </span>
+                  <input
+                    data-testid={`scene-section-target-product-${product.id}`}
+                    type="checkbox"
+                    disabled={disabled}
+                    checked={targetProductIds.has(product.id)}
+                    onChange={(event) =>
+                      setTargetProduct(product.id, event.target.checked)
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+          </details>
+        ) : null}
         <div data-testid="scene-section-window" style={sectionFrameListStyle}>
           {frameEntries.map((frame) => {
               const axis = frame.axis;

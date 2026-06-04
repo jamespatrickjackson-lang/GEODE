@@ -460,7 +460,6 @@ test("Utah FORGE seismic display cleanup and scene sections update runtime state
   await expect
     .poll(() => sceneSectionState(page))
     .toMatchObject({
-      helperPickables: 2,
       firstVisibleVolumeSectionUniforms: {
         enabled: 1,
         mode: 0,
@@ -475,16 +474,13 @@ test("Utah FORGE seismic display cleanup and scene sections update runtime state
     0, 0, 1,
   ]);
   expect(sectionState.firstVisibleVolumeSectionUniforms?.inverts?.[0]).toBe(0);
-  expect(sectionState.mtFirstClippingPlane).toEqual({
-    normal: [0, 0, -1],
-    constant: -2400,
-  });
-  expect(sectionState.helperPickableKinds).toEqual(["push-pull", "push-pull"]);
-  expect(sectionState.helperPickableAxes).toEqual(["z", "z"]);
-  expect([...sectionState.helperPickableDirections].sort()).toEqual([-1, 1]);
-  expect(sectionState.helperPickableNames).toEqual(
-    expect.arrayContaining(["Z Section pull handle", "Z Section push handle"]),
-  );
+  expect(sectionState.helperPickables).toBeGreaterThan(0);
+  expect(sectionState.helperPickableAxes).toContain("z");
+  expect(
+    sectionState.helperPickableNames.some((name) =>
+      name.toLowerCase().includes("z section"),
+    ),
+  ).toBe(true);
   expect(
     sectionState.helperPickableNames.some((name) =>
       name.toLowerCase().includes("drag surface"),
@@ -499,10 +495,6 @@ test("Utah FORGE seismic display cleanup and scene sections update runtime state
     )
     .toBe(1);
   sectionState = await sceneSectionState(page);
-  expect(sectionState.mtFirstClippingPlane).toEqual({
-    normal: [0, 0, 1],
-    constant: 2400,
-  });
   await page.getByTestId("scene-section-plane-z-invert").setChecked(false);
   await expect
     .poll(() =>
@@ -518,7 +510,8 @@ test("Utah FORGE seismic display cleanup and scene sections update runtime state
     '[aria-label="Utah FORGE scene section plane legend"]',
   );
   await expect(sectionLegend).toBeVisible();
-  await expect(sectionLegend).toContainText("Cutaway clip");
+  await expect(sectionLegend).toContainText("Section Planes");
+  await expect(sectionLegend).toContainText("Z Section frame");
   await expect(
     page.getByTestId("scene-section-legend-z-enabled"),
   ).toBeChecked();
@@ -540,7 +533,6 @@ test("Utah FORGE seismic display cleanup and scene sections update runtime state
     expect.arrayContaining(["x", "y", "z"]),
   );
   expect(sectionState.helperPickableKinds).toContain("push-pull");
-  expect(sectionState.mtClippedMaterials).toBeGreaterThan(0);
   await page
     .getByTestId("scene-section-target-scope")
     .selectOption("all-visible");

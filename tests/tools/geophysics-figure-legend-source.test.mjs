@@ -15,6 +15,7 @@ test("seismic legend renders figure and source-domain axis metadata from the sha
   assert.match(source, /data-testid="seismic-primary-axis"/);
   assert.match(source, /figureModel\.figureLines/);
   assert.match(source, /figureModel\.primaryAxis\.ticks/);
+  assert.match(source, /background:\s*"rgba\(0,\s*0,\s*0,\s*0\.32\)"/);
 });
 
 test("MT resistivity legend renders slice figure metadata from static slice product extents", () => {
@@ -25,6 +26,7 @@ test("MT resistivity legend renders slice figure metadata from static slice prod
   assert.match(legend, /mtResistivitySliceById/);
   assert.match(legend, /data-testid=\{testId\("resistivity-figure-box"\)\}/);
   assert.match(legend, /data-testid=\{testId\("resistivity-primary-axis"\)\}/);
+  assert.match(legend, /background:\s*"rgba\(0,\s*0,\s*0,\s*0\.32\)"/);
   assert.match(sliceProducts, /sourceWindowM/);
   assert.match(sliceProducts, /sectionLine/);
 });

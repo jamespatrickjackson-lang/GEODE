@@ -33,6 +33,65 @@ import {
   seismicProductVisibilityFromStyle,
   type SeismicProductOption,
 } from "./seismicModel";
+
+function formatHorizonPoints(points: EditableStyle["seismicFigureHorizonPoints"]): string {
+  if (!Array.isArray(points)) return "";
+  return points
+    .filter(
+      (point): point is [number, number] =>
+        Array.isArray(point) &&
+        typeof point[0] === "number" &&
+        Number.isFinite(point[0]) &&
+        typeof point[1] === "number" &&
+        Number.isFinite(point[1]),
+    )
+    .map(([x, y]) => `${x.toFixed(3)},${y.toFixed(3)}`)
+    .join("; ");
+}
+
+function parseHorizonPoints(text: string): Array<[number, number]> {
+  return text
+    .split(/[;\n]+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part): [number, number] | null => {
+      const [rawX, rawY] = part.split(/[\s,]+/);
+      const x = Number.parseFloat(rawX ?? "");
+      const y = Number.parseFloat(rawY ?? "");
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+      return [Math.max(0, Math.min(1, x)), Math.max(0, Math.min(1, y))];
+    })
+    .filter((point): point is [number, number] => point !== null);
+}
+
+const compactTextInputStyle: React.CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  height: 24,
+  borderRadius: 5,
+  border: "1px solid rgba(255,255,255,0.16)",
+  background: "rgba(255,255,255,0.07)",
+  color: "#f6f1e8",
+  fontSize: 11,
+  padding: "0 7px",
+};
+
+const compactTextareaStyle: React.CSSProperties = {
+  ...compactTextInputStyle,
+  height: 54,
+  resize: "vertical",
+  padding: "5px 7px",
+  lineHeight: 1.25,
+};
+
+const compactColorInputStyle: React.CSSProperties = {
+  width: 34,
+  height: 24,
+  padding: 0,
+  border: "1px solid rgba(255,255,255,0.16)",
+  borderRadius: 5,
+  background: "transparent",
+};
 export function SeismicCapabilityLayerContainers({
   layer,
   style,
@@ -141,6 +200,69 @@ export function SeismicCapabilityLayerContainers({
   const navigationReceiversVisible =
     navigationRoleVisibility.receivers !== false;
   const navigationLinesVisible = navigationRoleVisibility.lines !== false;
+  const figureAnnotationsVisible = styleBoolean(
+    style,
+    "seismicFigureAnnotationsVisible",
+    false,
+  );
+  const figureTextColor = styleString(
+    style,
+    "seismicFigureTextColor",
+    "#f7f7f2",
+  );
+  const figureAxisColor = styleString(
+    style,
+    "seismicFigureAxisColor",
+    "#f7f7f2",
+  );
+  const figureCaptionBoxColor = styleString(
+    style,
+    "seismicFigureCaptionBoxColor",
+    "#050505",
+  );
+  const figureCaptionBoxOpacity = Math.max(
+    0,
+    Math.min(1, styleNumber(style, "seismicFigureCaptionBoxOpacity", 0.54)),
+  );
+  const figureHorizonColor = styleString(
+    style,
+    "seismicFigureHorizonColor",
+    "#ffcc33",
+  );
+  const figureWellColor = styleString(
+    style,
+    "seismicFigureWellColor",
+    "#5875ff",
+  );
+  const figureTitle = styleString(style, "seismicFigureTitle", "");
+  const figureCaption = styleString(style, "seismicFigureCaption", "");
+  const figureScaleLabel = styleString(style, "seismicFigureScaleLabel", "");
+  const figureWellLabel = styleString(style, "seismicFigureWellLabel", "");
+  const figureWellVisible = styleBoolean(
+    style,
+    "seismicFigureWellVisible",
+    false,
+  );
+  const figureWellPosition = Math.max(
+    0,
+    Math.min(1, styleNumber(style, "seismicFigureWellPosition", 0.5)),
+  );
+  const figureHorizonVisible = styleBoolean(
+    style,
+    "seismicFigureHorizonVisible",
+    false,
+  );
+  const figureHorizonPointsText = formatHorizonPoints(
+    style.seismicFigureHorizonPoints,
+  );
+  const figureOutsideOffsetM = Math.max(
+    40,
+    Math.min(1500, styleNumber(style, "seismicFigureOutsideOffsetM", 240)),
+  );
+  const figureLabelSizeM = Math.max(
+    60,
+    Math.min(420, styleNumber(style, "seismicFigureLabelSizeM", 140)),
+  );
   const currentCapabilityPresetId =
     typeof style.seismicCapabilityPresetId === "string"
       ? style.seismicCapabilityPresetId
@@ -181,15 +303,25 @@ export function SeismicCapabilityLayerContainers({
       liveSeismicStyleRef.current.seismicProductStates !== null
         ? liveSeismicStyleRef.current.seismicProductStates
         : {};
-    const currentState = currentStates[id] ?? {};
+    const nextStates = { ...currentStates };
+    const currentState = nextStates[id] ?? {};
     const nextState = { ...currentState };
     const patchVisibility =
       typeof patch.seismicProductVisibility === "object" &&
       patch.seismicProductVisibility !== null
-        ? patch.seismicProductVisibility[id]
+        ? patch.seismicProductVisibility
         : undefined;
-    if (typeof patchVisibility === "boolean") {
-      nextState.visible = patchVisibility;
+    if (patchVisibility) {
+      for (const [stateId, visible] of Object.entries(patchVisibility)) {
+        if (typeof visible !== "boolean") continue;
+        nextStates[stateId] = {
+          ...(nextStates[stateId] ?? {}),
+          visible,
+        };
+      }
+      if (typeof patchVisibility[id] === "boolean") {
+        nextState.visible = patchVisibility[id];
+      }
     }
     if (typeof patch.opacity === "number") nextState.opacity = patch.opacity;
     if (patch.seismicRenderMode) nextState.renderMode = patch.seismicRenderMode;
@@ -225,7 +357,7 @@ export function SeismicCapabilityLayerContainers({
     commit({
       ...patch,
       seismicProductStates: {
-        ...currentStates,
+        ...nextStates,
         [id]: nextState,
       },
     });
@@ -741,6 +873,288 @@ export function SeismicCapabilityLayerContainers({
                 "--editor-slider-fill": `${((volumeSampleSteps - 24) / 136) * 100}%`,
               } as React.CSSProperties
             }
+          />
+        </div>
+      </SeismicCapabilityLayerItem>
+
+      <SeismicCapabilityLayerItem
+        testId="seismic-capability-figure-annotations"
+        title="Figure annotations"
+        type="display"
+      >
+        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+          <span style={nestedFieldLabelStyle}>Frame</span>
+          <input
+            data-testid="seismic-figure-annotations-visible"
+            type="checkbox"
+            checked={figureAnnotationsVisible}
+            disabled={disabled}
+            onChange={(e) =>
+              commit({ seismicFigureAnnotationsVisible: e.target.checked })
+            }
+            style={{ opacity: controlOpacity }}
+          />
+          <span style={{ flex: 1 }} />
+        </label>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Title</label>
+          <input
+            data-testid="seismic-figure-title"
+            type="text"
+            value={figureTitle}
+            placeholder={selectedProduct?.label ?? "Auto"}
+            disabled={disabled || !figureAnnotationsVisible}
+            onChange={(e) => commit({ seismicFigureTitle: e.target.value })}
+            style={{
+              ...compactTextInputStyle,
+              opacity: figureAnnotationsVisible ? controlOpacity : 0.35,
+            }}
+          />
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Caption</label>
+          <textarea
+            data-testid="seismic-figure-caption"
+            value={figureCaption}
+            placeholder="Auto"
+            disabled={disabled || !figureAnnotationsVisible}
+            onChange={(e) => commit({ seismicFigureCaption: e.target.value })}
+            style={{
+              ...compactTextareaStyle,
+              opacity: figureAnnotationsVisible ? controlOpacity : 0.35,
+            }}
+          />
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Scale</label>
+          <input
+            data-testid="seismic-figure-scale-label"
+            type="text"
+            value={figureScaleLabel}
+            placeholder="Auto"
+            disabled={disabled || !figureAnnotationsVisible}
+            onChange={(e) =>
+              commit({ seismicFigureScaleLabel: e.target.value })
+            }
+            style={{
+              ...compactTextInputStyle,
+              opacity: figureAnnotationsVisible ? controlOpacity : 0.35,
+            }}
+          />
+        </div>
+        <div style={{ ...nestedControlRowStyle, gap: 8, flexWrap: "wrap" }}>
+          <label style={nestedFieldLabelStyle}>Colors</label>
+          {[
+            {
+              key: "seismicFigureTextColor" as const,
+              testId: "seismic-figure-text-color",
+              value: figureTextColor,
+              title: "Text",
+            },
+            {
+              key: "seismicFigureAxisColor" as const,
+              testId: "seismic-figure-axis-color",
+              value: figureAxisColor,
+              title: "Axis",
+            },
+            {
+              key: "seismicFigureCaptionBoxColor" as const,
+              testId: "seismic-figure-caption-box-color",
+              value: figureCaptionBoxColor,
+              title: "Box",
+            },
+            {
+              key: "seismicFigureHorizonColor" as const,
+              testId: "seismic-figure-horizon-color",
+              value: figureHorizonColor,
+              title: "Horizon",
+            },
+            {
+              key: "seismicFigureWellColor" as const,
+              testId: "seismic-figure-well-color",
+              value: figureWellColor,
+              title: "Well",
+            },
+          ].map((item) => (
+            <input
+              key={item.key}
+              data-testid={item.testId}
+              type="color"
+              value={item.value}
+              title={item.title}
+              disabled={disabled || !figureAnnotationsVisible}
+              onChange={(e) => commit({ [item.key]: e.target.value })}
+              style={{
+                ...compactColorInputStyle,
+                opacity: figureAnnotationsVisible ? controlOpacity : 0.35,
+              }}
+            />
+          ))}
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Box</label>
+          <input
+            data-testid="seismic-figure-caption-box-opacity"
+            type="range"
+            min={0}
+            max={1}
+            step={0.02}
+            value={figureCaptionBoxOpacity}
+            disabled={disabled || !figureAnnotationsVisible}
+            onChange={(e) =>
+              commit({
+                seismicFigureCaptionBoxOpacity: parseFloat(e.target.value),
+              })
+            }
+            style={
+              {
+                flex: 1,
+                opacity: figureAnnotationsVisible ? controlOpacity : 0.35,
+                "--editor-slider-fill": `${figureCaptionBoxOpacity * 100}%`,
+              } as React.CSSProperties
+            }
+          />
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Offset</label>
+          <input
+            data-testid="seismic-figure-outside-offset"
+            type="range"
+            min={40}
+            max={1500}
+            step={20}
+            value={figureOutsideOffsetM}
+            disabled={disabled || !figureAnnotationsVisible}
+            onChange={(e) =>
+              commit({
+                seismicFigureOutsideOffsetM: parseFloat(e.target.value),
+              })
+            }
+            style={
+              {
+                flex: 1,
+                opacity: figureAnnotationsVisible ? controlOpacity : 0.35,
+                "--editor-slider-fill": `${((figureOutsideOffsetM - 40) / 1460) * 100}%`,
+              } as React.CSSProperties
+            }
+          />
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Text size</label>
+          <input
+            data-testid="seismic-figure-label-size"
+            type="range"
+            min={60}
+            max={420}
+            step={10}
+            value={figureLabelSizeM}
+            disabled={disabled || !figureAnnotationsVisible}
+            onChange={(e) =>
+              commit({ seismicFigureLabelSizeM: parseFloat(e.target.value) })
+            }
+            style={
+              {
+                flex: 1,
+                opacity: figureAnnotationsVisible ? controlOpacity : 0.35,
+                "--editor-slider-fill": `${((figureLabelSizeM - 60) / 360) * 100}%`,
+              } as React.CSSProperties
+            }
+          />
+        </div>
+        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+          <span style={nestedFieldLabelStyle}>Well</span>
+          <input
+            data-testid="seismic-figure-well-visible"
+            type="checkbox"
+            checked={figureWellVisible}
+            disabled={disabled || !figureAnnotationsVisible}
+            onChange={(e) =>
+              commit({ seismicFigureWellVisible: e.target.checked })
+            }
+            style={{
+              opacity: figureAnnotationsVisible ? controlOpacity : 0.35,
+            }}
+          />
+          <input
+            data-testid="seismic-figure-well-label"
+            type="text"
+            value={figureWellLabel}
+            disabled={
+              disabled || !figureAnnotationsVisible || !figureWellVisible
+            }
+            onChange={(e) => commit({ seismicFigureWellLabel: e.target.value })}
+            style={{
+              ...compactTextInputStyle,
+              opacity:
+                figureAnnotationsVisible && figureWellVisible
+                  ? controlOpacity
+                  : 0.35,
+            }}
+          />
+        </label>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Well pos</label>
+          <input
+            data-testid="seismic-figure-well-position"
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={figureWellPosition}
+            disabled={
+              disabled || !figureAnnotationsVisible || !figureWellVisible
+            }
+            onChange={(e) =>
+              commit({ seismicFigureWellPosition: parseFloat(e.target.value) })
+            }
+            style={
+              {
+                flex: 1,
+                opacity:
+                  figureAnnotationsVisible && figureWellVisible
+                    ? controlOpacity
+                    : 0.35,
+                "--editor-slider-fill": `${figureWellPosition * 100}%`,
+              } as React.CSSProperties
+            }
+          />
+        </div>
+        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+          <span style={nestedFieldLabelStyle}>Horizon</span>
+          <input
+            data-testid="seismic-figure-horizon-visible"
+            type="checkbox"
+            checked={figureHorizonVisible}
+            disabled={disabled || !figureAnnotationsVisible}
+            onChange={(e) =>
+              commit({ seismicFigureHorizonVisible: e.target.checked })
+            }
+            style={{
+              opacity: figureAnnotationsVisible ? controlOpacity : 0.35,
+            }}
+          />
+          <span style={{ flex: 1 }} />
+        </label>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Horizon pts</label>
+          <textarea
+            data-testid="seismic-figure-horizon-points"
+            value={figureHorizonPointsText}
+            disabled={
+              disabled || !figureAnnotationsVisible || !figureHorizonVisible
+            }
+            onChange={(e) =>
+              commit({
+                seismicFigureHorizonPoints: parseHorizonPoints(e.target.value),
+              })
+            }
+            style={{
+              ...compactTextareaStyle,
+              opacity:
+                figureAnnotationsVisible && figureHorizonVisible
+                  ? controlOpacity
+                  : 0.35,
+            }}
           />
         </div>
       </SeismicCapabilityLayerItem>

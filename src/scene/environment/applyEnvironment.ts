@@ -808,6 +808,7 @@ export function applyEnvironment(this: any, environment: EnvironmentSetup): void
     }
     this.topoRuntime.applyAllGraticuleStyles();
     this.topoRuntime.rebuildBranding(sp);
+    this.reapplyTopoAlignedOverlays?.();
   }
 
   // ---- post-processing -----------------------------------------------

@@ -112,6 +112,7 @@ const MT_STATION_PREVIEW_FIELDS = [
   "pointMarkerRadiusM",
   "pointMarkerLiftM",
   "pointMarkerLabelLiftM",
+  "pointMarkerAlignToTopo",
 ] as const;
 
 const SEISMIC_BROWSER_PREVIEW_FIELDS = [

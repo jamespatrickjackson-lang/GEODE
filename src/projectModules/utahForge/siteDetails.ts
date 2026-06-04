@@ -78,6 +78,7 @@ export interface ResolvedDemoBoreholeSourceLocationStyle {
 
 export interface ResolvedDemoBoreholeSourceLocationItemStyle {
   visible: boolean;
+  labelVisible: boolean;
 }
 
 export type ScenePointTuple = [number, number, number];
@@ -486,6 +487,7 @@ export function resolveDemoBoreholeSourceLocationItemStyle(
     style.demoBoreholeSourceLocations?.items?.[sourceLocationId] ?? {};
   return {
     visible: booleanValue(authored.visible, true),
+    labelVisible: booleanValue(authored.labelVisible, true),
   };
 }
 

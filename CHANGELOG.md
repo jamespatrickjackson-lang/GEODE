@@ -1,5 +1,14 @@
 # GeoSee Change Log
 
+## 2026-06-04 - Utah FORGE Seismic Figure Annotations And Site Detail Alignment
+
+- Added source-derived seismic figure annotations for section products: outside-frame axes, ticks, title, caption box, distance scale label, optional well trace, and optional horizon polyline.
+- Added editor controls for seismic figure annotations, including visibility, text/color choices, caption box styling, outside offset, label size, scale/title/caption overrides, well marker settings, and horizon points.
+- Kept figure annotation text/numbers tied to active app product data and section metadata. The reference image is a layout guide only; no `Inline 93`, `58-32`, or `1 KILOMETER` example values are hard-coded.
+- Added Site Details and MT station marker display alignment to the rendered topo surface, plus Site Details always-on-top and per-source-location label controls.
+- Restored explicit seismic scene-section target product controls and kept product visibility maps authoritative over stale per-product visibility state.
+- Added source guards for seismic figure annotations, site-details controls, and compact dark framed geophysics legend blocks.
+
 ## 2026-06-03 - Topo Environment Clouds, Sun, Cinematics, And GUI Editor
 
 - Added `Topo > Environment` as the Topo-owned home for Scene atmosphere,

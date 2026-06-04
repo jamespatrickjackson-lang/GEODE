@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 import type { EditableStyle } from "../../src/pages/types";
 import {
   cleanDemoBoreholePath,
+  resolveDemoBoreholeSourceLocationItemStyle,
+  resolveDemoBoreholeSourceLocationStyle,
   resolveDemoBoreholeWellStyle,
   resolveDemoOrientationBlockStyle,
 } from "../../src/projectModules/utahForge/siteDetails";
@@ -84,4 +86,39 @@ test("site detail path cleanup preserves endpoints", () => {
   expect(normalized[0]).toEqual(survey[0]);
   expect(normalized[normalized.length - 1]).toEqual(survey[survey.length - 1]);
   expect(Math.abs(normalized[2][1])).toBeLessThan(Math.abs(survey[2][1]));
+});
+
+test("source location label visibility resolves independently from marker visibility", () => {
+  const style: EditableStyle = {
+    siteDetailsAlwaysOnTop: true,
+    demoBoreholeSourceLocations: {
+      labelVisible: false,
+      items: {
+        "58-32-WELL": { visible: true, labelVisible: true },
+        BOR2: { visible: false, labelVisible: false },
+      },
+    },
+  };
+
+  const sourceLocations = resolveDemoBoreholeSourceLocationStyle(style);
+  const wellLocation = resolveDemoBoreholeSourceLocationItemStyle(
+    style,
+    "58-32-WELL",
+  );
+  const hiddenCandidate = resolveDemoBoreholeSourceLocationItemStyle(
+    style,
+    "BOR2",
+  );
+  const inheritedCandidate = resolveDemoBoreholeSourceLocationItemStyle(
+    style,
+    "BOR3",
+  );
+
+  expect(sourceLocations.labelVisible).toBe(false);
+  expect(wellLocation.visible).toBe(true);
+  expect(wellLocation.labelVisible).toBe(true);
+  expect(hiddenCandidate.visible).toBe(false);
+  expect(hiddenCandidate.labelVisible).toBe(false);
+  expect(inheritedCandidate.visible).toBe(true);
+  expect(inheritedCandidate.labelVisible).toBe(true);
 });

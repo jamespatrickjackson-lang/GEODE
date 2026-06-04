@@ -580,9 +580,12 @@ export async function revealSeismicCapabilityProduct(
   page: Page,
   productId: string,
 ): Promise<void> {
+  await openEditorSection(page, "Forge", 30_000, "Seismic analysis");
+  await openEditorSection(page, "Seismic analysis", 10_000, "Seismic browser");
   const productItem = page.getByTestId(
     `seismic-capability-product-${productId}`,
   );
+  await expect(productItem).toBeVisible({ timeout: 30_000 });
   const visibilityControl = productItem.getByTestId(
     `seismic-capability-product-visible-${productId}`,
   );
@@ -677,6 +680,18 @@ export type SceneSectionState = {
   }>;
   whiteFrameOutlineCount: number;
   firstVisibleVolumeSectionUniforms: {
+    enabled: number | null;
+    mode: number | null;
+    planeCount: number | null;
+    normals: number[][] | null;
+    positions: number[] | null;
+    thickness: number[] | null;
+    inverts: number[] | null;
+    frameCount: number | null;
+    frameAxes: number[] | null;
+    frameBounds: number[][] | null;
+  } | null;
+  mtFirstVolumeSectionUniforms: {
     enabled: number | null;
     mode: number | null;
     planeCount: number | null;
@@ -1467,6 +1482,8 @@ export async function sceneSectionState(page: Page): Promise<SceneSectionState> 
     };
     let firstVisibleVolumeSectionUniforms: SceneSectionState["firstVisibleVolumeSectionUniforms"] =
       null;
+    let mtFirstVolumeSectionUniforms: SceneSectionState["mtFirstVolumeSectionUniforms"] =
+      null;
     let mtClippedMaterials = 0;
     let mtFirstClippingPlane: SceneSectionState["mtFirstClippingPlane"] = null;
     const vector4ToArray = (value: unknown): number[] | null => {
@@ -1483,6 +1500,56 @@ export async function sceneSectionState(page: Page): Promise<SceneSectionState> 
         typeof vector.w === "number"
         ? [vector.x, vector.y, vector.z, vector.w]
         : null;
+    };
+    const readVolumeSectionUniforms = (
+      material:
+        | {
+            uniforms?: Record<string, { value: unknown }>;
+          }
+        | undefined,
+    ): SceneSectionState["firstVisibleVolumeSectionUniforms"] => {
+      const uniforms = material?.uniforms ?? {};
+      if (!uniforms.uSceneSectionEnabled) return null;
+      return {
+        enabled:
+          typeof uniforms.uSceneSectionEnabled?.value === "number"
+            ? uniforms.uSceneSectionEnabled.value
+            : null,
+        mode:
+          typeof uniforms.uSceneSectionMode?.value === "number"
+            ? uniforms.uSceneSectionMode.value
+            : null,
+        planeCount:
+          typeof uniforms.uSceneSectionPlaneCount?.value === "number"
+            ? uniforms.uSceneSectionPlaneCount.value
+            : null,
+        normals: Array.isArray(uniforms.uSceneSectionNormals?.value)
+          ? (uniforms.uSceneSectionNormals.value as unknown[])
+              .map(vectorToArray)
+              .filter((normal): normal is [number, number, number] => !!normal)
+          : null,
+        positions: Array.isArray(uniforms.uSceneSectionPositions?.value)
+          ? (uniforms.uSceneSectionPositions.value as number[])
+          : null,
+        thickness: Array.isArray(uniforms.uSceneSectionThickness?.value)
+          ? (uniforms.uSceneSectionThickness.value as number[])
+          : null,
+        inverts: Array.isArray(uniforms.uSceneSectionInvert?.value)
+          ? (uniforms.uSceneSectionInvert.value as number[])
+          : null,
+        frameCount:
+          typeof uniforms.uSceneSectionFrameCount?.value === "number"
+            ? uniforms.uSceneSectionFrameCount.value
+            : null,
+        frameAxes: Array.isArray(uniforms.uSceneSectionFrameAxes?.value)
+          ? (uniforms.uSceneSectionFrameAxes.value as number[])
+          : null,
+        frameBounds: Array.isArray(uniforms.uSceneSectionFrameBounds?.value)
+          ? (uniforms.uSceneSectionFrameBounds.value as unknown[])
+              .map(vector4ToArray)
+              .filter((bounds): bounds is number[] => !!bounds)
+          : null,
+      };
     };
     const worldPoint = (
       matrix: { elements?: number[] } | undefined,
@@ -1631,6 +1698,9 @@ export async function sceneSectionState(page: Page): Promise<SceneSectionState> 
           ? [obj.material]
           : [];
       for (const material of materials) {
+        if (!mtFirstVolumeSectionUniforms) {
+          mtFirstVolumeSectionUniforms = readVolumeSectionUniforms(material);
+        }
         if (
           Array.isArray(material.clippingPlanes) &&
           material.clippingPlanes.length > 0
@@ -1691,6 +1761,7 @@ export async function sceneSectionState(page: Page): Promise<SceneSectionState> 
           (outline.color === "ffffff" || outline.color === "f8f4e8"),
       ).length,
       firstVisibleVolumeSectionUniforms,
+      mtFirstVolumeSectionUniforms,
       mtClippedMaterials,
       mtFirstClippingPlane,
     };

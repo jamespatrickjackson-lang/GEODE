@@ -73,7 +73,18 @@
       },
       "seismicRemoveBackground": true,
       "sectionIsoEnabled": false,
-      "seismicLegendVisible": true
+      "seismicLegendVisible": true,
+      "seismicFigureAnnotationsVisible": true,
+      "seismicFigureTextColor": "#f7f7f2",
+      "seismicFigureAxisColor": "#f7f7f2",
+      "seismicFigureCaptionBoxColor": "#050505",
+      "seismicFigureCaptionBoxOpacity": 0.54,
+      "seismicFigureHorizonColor": "#ffcc33",
+      "seismicFigureWellColor": "#5875ff",
+      "seismicFigureHorizonVisible": false,
+      "seismicFigureWellVisible": false,
+      "seismicFigureOutsideOffsetM": 420,
+      "seismicFigureLabelSizeM": 260
     }
   }
 }

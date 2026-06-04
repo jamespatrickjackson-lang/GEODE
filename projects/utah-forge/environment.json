@@ -101,6 +101,8 @@
       "labelPointerVisible": true,
       "labelFadeNearM": 20000,
       "labelFadeFarM": 120000,
+      "siteDetailsAlwaysOnTop": true,
+      "siteDetailsAlignToTopo": true,
       "demoBoreholeSourceLocations": {
         "items": {
           "58-32-WELL": {
@@ -296,6 +298,7 @@
       "pointMarkerRadiusM": 350,
       "pointMarkerLiftM": 50,
       "pointMarkerLabelLiftM": 0,
+      "pointMarkerAlignToTopo": true,
       "affectedByFog": false,
       "showLabels": false,
       "mtStationQcSelectedStationId": "FRG19100",
@@ -719,8 +722,6 @@
     "utah-forge-phase3-demo-boreholes",
     "utah-forge-mt-resistivity-full-density",
     "utah-forge-topo-graticule",
-    "utah-forge-topo-clouds",
-    "terrain",
     "topo-cloud-volume-2"
   ],
   "scene": {
@@ -729,9 +730,13 @@
     "exposure": 1.2,
     "shadows": false,
     "sun": {
-      "azimuth": 284,
-      "elevation": 1,
-      "lockToCamera": false
+      "azimuth": 340,
+      "elevation": 19,
+      "lockToCamera": false,
+      "orbVisible": true,
+      "orbOpacity": 0.68,
+      "sourceMarkerVisible": true,
+      "lightEnabled": true
     },
     "fog": {
       "enabled": true,
@@ -758,7 +763,7 @@
       },
       "directional": {
         "color": "#ffe0a8",
-        "intensity": 1.6,
+        "intensity": 1.75,
         "position": [
           -3000,
           -2400,
@@ -1133,7 +1138,7 @@
       "fitPaddingPx": 725,
       "revealScrollBehavior": "auto"
     },
-    "lightMode": true,
+    "lightMode": false,
     "lightModeBackground": "#d4d4d4"
   },
   "customRenderPresets": [
@@ -1804,9 +1809,13 @@
           "lightModeColor": "#b5b5b5"
         },
         "sun": {
-          "azimuth": 284,
-          "elevation": 1,
-          "lockToCamera": false
+          "azimuth": 340,
+          "elevation": 19,
+          "lockToCamera": false,
+          "orbVisible": true,
+          "orbOpacity": 0.68,
+          "sourceMarkerVisible": true,
+          "lightEnabled": true
         },
         "lighting": {
           "enabled": true,
@@ -1818,7 +1827,7 @@
           },
           "directional": {
             "color": "#ffe0a8",
-            "intensity": 1.6,
+            "intensity": 1.75,
             "position": [
               -3000,
               -2400,
@@ -2172,7 +2181,7 @@
             "nestedBarHeightPx": 45
           }
         },
-        "lightMode": true
+        "lightMode": false
       },
       "layerStylePatchesByLayerId": {
         "utah-forge-phase3-working-area": {

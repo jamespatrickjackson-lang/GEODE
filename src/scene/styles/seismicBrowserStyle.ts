@@ -13,6 +13,10 @@ import {
   updateScalarSectionIsoOverlay,
   type ScalarSectionIsoOptions,
 } from "../isoOverlays/sectionIsoOverlay";
+import {
+  disposeSeismicFigureAnnotations,
+  updateSeismicFigureAnnotations,
+} from "./seismicFigureAnnotations";
 
 type SeismicLodTierName = "coarse" | "standard" | "source";
 
@@ -211,17 +215,18 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
     effectiveStyle.seismicProductVisibility !== null
       ? (effectiveStyle.seismicProductVisibility as Record<string, boolean>)
       : {};
-  const hasExplicitProductVisibility =
-    Object.keys(productVisibility).length > 0 ||
-    Object.values(productStates).some(
-      (state) => typeof state?.visible === "boolean",
-    );
+  const hasExplicitVisibilityMap = Object.keys(productVisibility).length > 0;
+  const hasExplicitProductStateVisibility = Object.values(productStates).some(
+    (state) => typeof state?.visible === "boolean",
+  );
   const productEnabled = (candidateId: string): boolean =>
-    typeof productStates[candidateId]?.visible === "boolean"
-      ? productStates[candidateId]?.visible === true
-      : hasExplicitProductVisibility
-        ? productVisibility[candidateId] === true
-        : candidateId === productId;
+    hasExplicitVisibilityMap
+      ? productVisibility[candidateId] === true
+      : typeof productStates[candidateId]?.visible === "boolean"
+        ? productStates[candidateId]?.visible === true
+        : hasExplicitProductStateVisibility
+          ? false
+          : candidateId === productId;
   const enabledProductIds = new Set(
     index.productSummaries
       .map((product) => product.id)
@@ -764,6 +769,11 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
             ? "mt-resistivity-source"
             : "section-iso-disabled";
         disposeScalarSectionIsoOverlay(obj);
+      }
+      if (obj.visible) {
+        updateSeismicFigureAnnotations(obj, effectiveStyle);
+      } else {
+        disposeSeismicFigureAnnotations(obj);
       }
     }
   }

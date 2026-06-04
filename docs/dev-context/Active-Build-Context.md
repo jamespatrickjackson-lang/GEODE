@@ -92,6 +92,23 @@ threshold surfaces remain editable material surfaces: opacity 1 renders as an
 opaque depth-writing solid, and partial master or per-boundary opacity renders
 as a transparent non-depth-writing surface.
 
+Current Utah FORGE seismic product names are source-backed labels, not invented
+app labels. Product naming follows `2D Line <line> <source-backed product
+description>`, using SEG-Y text headers first, filename second, and
+folder/submission context only as fallback. Line 301 includes the GDR-1015
+migrated-depth product alongside the GDR-1141 migrated/unmigrated/time/depth
+variants. Product controls are grouped by line family and processing stage, and
+figure annotations are a presentation layer on top of the seismic product rather
+than a new data product. Line 95 remains source-gated until a real source product
+exists.
+
+Site Details and `GDR 1255 Station Locations` can align their display Z to the
+rendered topo surface. The alignment is display-only: source coordinates,
+registration manifests, and authored survey/source Z remain unchanged. Utah
+FORGE defaults both alignments on; when terrain is hidden or the topo sampler is
+unavailable, the runtime falls back to source-authored Z. Station markers add
+their authored marker lift after sampling the rendered topo surface.
+
 Current topo/graticule rendering treats longitude/latitude graticules as
 reference geometry on the topo surface. Graticule lines depth-test against
 terrain and scene geometry, do not write depth, and should not render as
@@ -132,6 +149,24 @@ normal presentation overview zooms. Use authored public surface crop, scene
 sections, or opacity/fade tools for composition instead of relying on the camera
 far plane to trim imagery.
 
+Site Details and MT station markers can optionally align their rendered
+presentation height to the active public topo surface. The alignment samples the
+currently rendered topo height after terrain scale/lift, falls back to source Z
+when the topo surface is hidden or unavailable, and reapplies dependent overlays
+after topo style/environment changes. These controls are visual presentation
+alignment only; they do not change source coordinates or promote CRS/datum
+validation.
+
+Seismic sections now include a v1 figure-annotation surface for source-domain
+presentation metrics. The runtime derives axis ticks, direction labels,
+distance scale bars, captions, optional well traces, and optional horizon
+polylines from seismic section metadata and style fields. Time-domain products
+must keep TWT as the primary vertical axis; depth-domain products use metres
+below the seismic datum. The figure annotation layer is a visual communication
+overlay and does not validate seismic CRS, datum, or interpretation accuracy.
+Reference figures are layout examples only; never hard-code external example
+line numbers, well labels, scale labels, or captions into app output.
+
 ## Focused Routing
 
 - Workspace state and verification tiers: `docs/dev-context/Verification-Routing.md`
@@ -139,6 +174,7 @@ far plane to trim imagery.
 - Global toolset structure and topo map precedent: `docs/dev-context/Global-Toolset-Structure.md`
 - Topo Environment/clouds/sun/cinematics thread receipt: `docs/dev-context/Topo-Environment-Clouds-Cinematics-Thread-Update-2026-06-03.md`
 - Topo editor panel field audit: `docs/dev-context/Topo-Editor-Panel-Audit-2026-06-03.md`
+- Seismic and site-details editor update receipt: `docs/dev-context/Seismic-Site-Details-Editor-Update-2026-06-04.md`
 - Current visual review loop: `docs/dev-context/Visual-Review-Current.md`
 - UI visual standards and shared legend/slider rules: `docs/dev-context/UI-Visual-Standards.md`
 - Large code surfaces and extraction guidance: `docs/dev-context/Architecture-Hotspots.md`

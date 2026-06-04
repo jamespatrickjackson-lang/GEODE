@@ -43,8 +43,8 @@
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
       "mtThresholdSurfaceVisibility": {
-        "conductive-le-10-ohm-m": false,
-        "conductive-le-30-ohm-m": false,
+        "conductive-le-10-ohm-m": true,
+        "conductive-le-30-ohm-m": true,
         "resistive-ge-1000-ohm-m": true
       },
       "mtThresholdSurfaceWireframe": false,
@@ -65,7 +65,7 @@
       ],
       "mtSurfaceBoundariesById": {
         "conductive-le-10-ohm-m": {
-          "visible": false,
+          "visible": true,
           "label": "<=10 Ohm-m",
           "color": "#2cc9ff",
           "comparison": "<=",
@@ -75,7 +75,7 @@
           "source": "precomputed"
         },
         "conductive-le-30-ohm-m": {
-          "visible": false,
+          "visible": true,
           "label": "<=30 Ohm-m",
           "color": "#38f0b3",
           "comparison": "<=",
@@ -94,7 +94,8 @@
           "opacity": 1,
           "source": "precomputed"
         }
-      }
+      },
+      "mtSurfaceBoundaryMode": "live-compute"
     },
     "utah-forge-phase3-demo-boreholes": {
       "opacity": 0.84,
@@ -332,7 +333,7 @@
       "sectionIsoSourceOpacity": 0,
       "seismicAudienceMode": "technical",
       "seismicDisplayRecipeId": "2d-line-theatre",
-      "seismicProductId": "gdr-1141-line-l11-psdm-enh",
+      "seismicProductId": "gdr-1141-line-l5-psdm-enh",
       "seismicProductVisibility": {
         "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack": false,
         "gdr-1141-forge3d-ani-psdm-stack-unenh": false,
@@ -343,12 +344,12 @@
         "gdr-1015-forge2d-301-migr-depth": false,
         "gdr-1141-line-302-psdm-enh": false,
         "gdr-1141-line-302-psdm-unenh": false,
-        "gdr-1141-line-l11-psdm-enh": true,
+        "gdr-1141-line-l11-psdm-enh": false,
         "gdr-1141-line-l11-psdm-enh-meters": false,
-        "gdr-1141-line-l11-psdm-unenh": true,
-        "gdr-1141-line-l5-psdm-enh": false,
+        "gdr-1141-line-l11-psdm-unenh": false,
+        "gdr-1141-line-l5-psdm-enh": true,
         "gdr-1141-line-l5-psdm-enh-meters": false,
-        "gdr-1141-line-l5-psdm-unenh": false,
+        "gdr-1141-line-l5-psdm-unenh": true,
         "gdr-1141-line-l5-psdm-unenh-meters": false,
         "gdr-1141-line-301-pstm-stack-enh": false,
         "gdr-1141-line-301-pstm-stack-unenh": false,
@@ -372,12 +373,12 @@
       "seismicRenderMode": "slice",
       "seismicSliceAxis": "line",
       "seismicSliceFraction": 0.5,
-      "seismicAmplitudeMin": 0.08,
-      "seismicAmplitudeMax": 0.92,
-      "seismicAmplitudeGamma": 1,
-      "seismicColormap": "blue-white-red",
+      "seismicAmplitudeMin": 0,
+      "seismicAmplitudeMax": 1,
+      "seismicAmplitudeGamma": 0.35,
+      "seismicColormap": "grayscale",
       "seismicRemoveBackground": false,
-      "seismicBackgroundCutoff": 0.16,
+      "seismicBackgroundCutoff": 0.45,
       "seismicVolumeSampleSteps": 96,
       "seismicTimeScale": 2,
       "seismicNavigationVisible": true,
@@ -391,9 +392,10 @@
       "seismicComparisonSpacingM": 650,
       "seismicMtCoRender": "seismic",
       "seismicLegendVisible": true,
-      "opacity": 0.74,
-      "seismicCapabilityPresetId": "enhanced-vs-unenhanced-l11",
-      "seismicComparisonProductId": "gdr-1141-line-l11-psdm-unenh"
+      "opacity": 1,
+      "seismicCapabilityPresetId": "enhanced-vs-unenhanced-l5",
+      "seismicComparisonProductId": "gdr-1141-line-l5-psdm-unenh",
+      "seismicFigureAnnotationsVisible": true
     }
   },
   "accentColor": "#f27826",

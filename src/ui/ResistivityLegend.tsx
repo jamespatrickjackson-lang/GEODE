@@ -118,8 +118,10 @@ const tickRightStyle: CSSProperties = {
 
 const figureBlockStyle: CSSProperties = {
   marginTop: 9,
-  paddingTop: 8,
-  borderTop: "1px solid rgba(255, 255, 255, 0.18)",
+  padding: "6px 7px",
+  background: "rgba(0, 0, 0, 0.32)",
+  border: "1px solid rgba(255, 255, 255, 0.16)",
+  borderRadius: 4,
   fontSize: 9,
   lineHeight: 1.25,
 };

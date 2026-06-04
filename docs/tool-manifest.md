@@ -108,7 +108,7 @@ Tools for spatial framing and site-level orientation. Currently Utah FORGE only.
 | Tool | Description | Scope |
 | --- | --- | --- |
 | **Site Boundary** | Visibility and style control for the site polygon boundary layer. | Utah FORGE |
-| **Demo Boreholes** | Controls for well trajectory visualization (16A injection, 16B production). Line style (solid/dashed), path treatment (survey/smoothed/normalized), and color. | Utah FORGE |
+| **Demo Boreholes** | Controls for well trajectory visualization (16A injection, 16B production), priority source-location markers, label visibility, optional always-on-top rendering, and optional rendered-topo alignment. Line style, path treatment, top rings, source marker modes, and color remain visual presentation controls only. | Utah FORGE |
 
 ---
 
@@ -119,6 +119,7 @@ Tools for magnetotelluric resistivity data. Utah FORGE only. These are the secon
 | Tool | Description |
 | --- | --- |
 | **MT Stations** | Marker visibility for the 122 physical MT station locations. Supports a QC data panel and color/size styling. |
+| **MT Station Topo Alignment** | Optional rendered-topo alignment for station markers and labels. Uses the active topo surface height for presentation placement and falls back to source elevation when the surface is unavailable. |
 | **MT Full-Density Points** | Tiled scalar point cloud from the full 1,094,624-point resistivity model. Scalar ramp controls (color gradient, blend range, display range, contrast). |
 | **MT Volume** | 3D scalar volume renderer. Product selector, raymarch or slice mode, opacity, density, sample step, transfer function, threshold min/max, scalar ramp, and section isoband overlay. |
 | **MT Threshold Surfaces** | Isosurfaces extracted from the scalar volume at user-defined resistivity boundaries. Product selector, boundary definitions editor, per-boundary opacity, wireframe toggle, roughness/metalness, smooth normals, and emissive boost. |
@@ -139,6 +140,7 @@ Tools for the Phase 3 seismic browser. Utah FORGE only.
 | **Capability Product Rows** | One control row per seismic product. Supports per-product visibility and product-specific slice/volume state. |
 | **Raymarch Volume Products** | Four 3D-capable products expose volume visibility, sample density, opacity, amplitude, colormap, and synced slice-through-volume controls. |
 | **Section Products** | Section-only products expose slice visibility, active section selection, position, amplitude, palette, and time-scale controls. |
+| **Figure Annotations** | Section-attached presentation overlay for source-domain axis ticks, distance scale bar, direction labels, caption box, optional well trace, and optional horizon polyline. Time products keep TWT as the primary vertical axis; depth products use metres below datum. |
 | **Display Cleanup** | Shared cleanup controls for white-background removal, amplitude windowing, time-scale, and global navigation visibility. |
 | **Survey Navigation** | Source, receiver, line, and integrated-geophysics visibility controls for technical review pages. |
 | **Theatre / Comparison** | Presentation workflows for 2D theatre, side-by-side product comparison, data-room review, export layout, and MT coexistence. |

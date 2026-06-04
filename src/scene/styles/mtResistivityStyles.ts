@@ -385,6 +385,22 @@ export function applyPointMarkerStyleImpl(this: any, id: string, style: Editable
       0,
       50000,
     );
+    const alignToTopo = style.pointMarkerAlignToTopo === true;
+    const markerBaseZ = (obj: THREE.Object3D) => {
+      const baseZ =
+        typeof obj.userData.baseZ === "number"
+          ? obj.userData.baseZ
+          : obj.position.z;
+      if (!alignToTopo) return baseZ;
+      const baseX =
+        typeof obj.userData.baseX === "number" ? obj.userData.baseX : obj.position.x;
+      const baseY =
+        typeof obj.userData.baseY === "number" ? obj.userData.baseY : obj.position.y;
+      const topoZ = this.renderedTopoSurfaceZ?.(baseX, baseY);
+      return typeof topoZ === "number" && Number.isFinite(topoZ)
+        ? topoZ
+        : baseZ;
+    };
     const selectedStationId =
       typeof style.mtStationQcSelectedStationId === "string"
         ? style.mtStationQcSelectedStationId
@@ -399,11 +415,7 @@ export function applyPointMarkerStyleImpl(this: any, id: string, style: Editable
             : defaultRadius;
         const scale = radius / Math.max(0.0001, baseRadius);
         obj.scale.setScalar(scale);
-        const baseZ =
-          typeof obj.userData.baseZ === "number"
-            ? obj.userData.baseZ
-            : obj.position.z;
-        obj.position.z = baseZ + lift;
+        obj.position.z = markerBaseZ(obj) + lift;
         const stationId =
           typeof obj.userData.sourceProperties?.stationId === "string"
             ? obj.userData.sourceProperties.stationId
@@ -431,11 +443,7 @@ export function applyPointMarkerStyleImpl(this: any, id: string, style: Editable
         }
       }
       if (obj.userData?.pointMarkerLabelAnchor === true) {
-        const baseZ =
-          typeof obj.userData.baseZ === "number"
-            ? obj.userData.baseZ
-            : obj.position.z;
-        obj.position.z = baseZ + lift + labelLift;
+        obj.position.z = markerBaseZ(obj) + lift + labelLift;
       }
     });
   }

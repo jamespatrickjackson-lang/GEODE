@@ -1,6 +1,6 @@
 # Seismic Axis Metrics Requirements
 
-Status: requirements/audit document only. No runtime behavior, page JSON, generated artifact, or schema change is accepted by this document.
+Status: requirements/audit document plus v1 runtime implementation map. Runtime source remains authoritative for executable behavior.
 
 Source of truth for current product facts: `projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_manifest.json`.
 
@@ -13,6 +13,33 @@ The locked convention is:
 - Depth-domain products: vertical axis is depth in metres below the source seismic datum, with absolute scene elevation available from `sceneZ_m = datumM - sample * verticalScaleMPerUnit`.
 - Time-domain products: primary vertical axis is two-way travel time (TWT) in ms or s. Any metre/elevation annotation is secondary, display-derived, and must not be presented as true depth without depth-conversion authority.
 - Velocity products: vertical axis follows the product sample domain; value legend is interval velocity in m/s, expected display range `2000-5000 m/s` unless source metadata supersedes it.
+
+## Current V1 Runtime Implementation
+
+The first runtime implementation is a section-attached figure annotation layer,
+not a full geophysical interpretation workspace.
+
+| Surface | Runtime source | Current behavior |
+| --- | --- | --- |
+| Model builder | `src/geophysics/seismicFigureAnnotationModel.ts` | Pure helper that builds title, caption, direction labels, source-domain ticks, and scale-bar values from section metadata and optional style overrides. |
+| Section runtime overlay | `src/scene/styles/seismicFigureAnnotations.ts` | Adds figure title, endpoint direction labels, distance scale bar, left/right source-domain axes, optional caption box, optional well trace, and optional normalized horizon polyline to visible seismic section planes. |
+| Editor controls | `src/editor/layerControls/seismic/SeismicCapabilityLayerContainers.tsx` | Exposes `Figure annotations` controls for frame visibility, title, caption, scale label, colors, caption-box opacity, offset, text size, optional well marker, and optional horizon points. |
+| Style fields | `src/pages/types.ts` | Stores `seismicFigure*` fields in layer style state so annotations can be authored globally or per page. |
+| Runtime application | `src/scene/styles/seismicBrowserStyle.ts` | Updates annotations only for visible seismic section meshes and disposes stale annotation geometry when sections hide. |
+
+V1 limits:
+
+- Section annotations are visual presentation overlays, not certified
+  interpretation or registration evidence.
+- Time-domain products still show TWT as the source vertical axis; any
+  metre/elevation context remains display-derived unless later backed by a
+  validated velocity/depth conversion.
+- Optional well and horizon marks are authored normalized figure overlays. They
+  are not spatial picks or control-point validation until a later source-backed
+  workflow exists.
+- Current labels use section endpoint geometry for scale/direction. Full curved
+  line-distance annotation remains a future enhancement when per-line
+  navigation polyline metrics are promoted into the renderer.
 
 ## Current Utah FORGE Product Audit
 

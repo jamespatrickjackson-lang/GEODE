@@ -668,6 +668,7 @@ export function LayerBooleanStyleControl({
   setEnvLayerStyle,
   setPageLayerOverride,
   clearPageLayerOverride,
+  testId,
 }: {
   label: string;
   field: keyof EditableStyle;
@@ -679,6 +680,7 @@ export function LayerBooleanStyleControl({
   setEnvLayerStyle: LayerStyleSetter;
   setPageLayerOverride: PageStyleSetter;
   clearPageLayerOverride: PageStyleClearer;
+  testId?: string;
 }) {
   const checked = styleBoolean(style, field, fallback);
   if (isEnv) {
@@ -687,13 +689,14 @@ export function LayerBooleanStyleControl({
         label={label}
         checked={checked}
         onChange={(value) => setEnvLayerStyle(layerId, { [field]: value })}
+        testId={testId}
       />
     );
   }
   if (!currentPage) return null;
   const overridden = isStyleFieldOverridden(currentPage, layerId, field);
   return (
-    <div style={nestedControlRowStyle}>
+    <div data-testid={testId} style={nestedControlRowStyle}>
       <label style={nestedFieldLabelStyle}>{label}</label>
       <input
         type="checkbox"

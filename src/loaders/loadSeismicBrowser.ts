@@ -89,6 +89,7 @@ interface SeismicVolumeSpec {
 interface SeismicProductSpec {
   id: string;
   label: string;
+  lineLabel?: string;
   sourceSubmission: string;
   surveyKind: "2d" | "3d" | "legacy-2d";
   productKind: string;
@@ -586,6 +587,8 @@ async function buildSectionMesh(
     seismicSectionIsoDisabledReason: "texture-plane-v1",
     seismicProductId: product.id,
     seismicProductLabel: product.label,
+    seismicProductLineLabel: product.lineLabel,
+    seismicProductSourceSubmission: product.sourceSubmission,
     seismicProductSurveyKind: product.surveyKind,
     seismicProductKind: product.productKind,
     seismicProductDomainKind: product.domainKind,

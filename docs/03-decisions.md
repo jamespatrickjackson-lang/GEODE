@@ -914,3 +914,23 @@ fake-cloud looks.
 **Trade-off accepted:** These controls are aesthetic only. They must not alter MT/scalar/seismic products, CRS transforms, source paths, generated artifacts, loaders, or computed geometry. Page-local numeric cinematic post fields blend through `main-camera/cinematic-post`; toggles, focus mode, debug helpers, and aspect-mask choices remain discrete. Composition guide/presentation-frame `lineThickness` defaults to `0.25`, half of the prior guide/frame stroke weight. Visual looks remain ready for human visual check until the running browser or a human review confirms them.
 
 **Diagnostics:** `npm run inspect:effective -- --render-stack` is the required starting trace for Utah FORGE visual diagnosis. It reports active preset, environment/Sub Master/preset/page scene sources, layer styles, topo material authority, texture URL/cache key, bounds, public clip, edge fade, edge outline, material/shader, terrain geometry/LOD, and pass order.
+
+## DEC-087 - Seismic product names stay source-backed; figure annotations are presentation overlays
+
+**Considered:** allow short app-authored names for Utah FORGE seismic products and encode figure text directly into product identity, or keep seismic product identity tied to source-backed product labels while adding separate presentation annotations.
+
+**Chose:** Utah FORGE seismic labels use canonical source-backed names in the form `2D Line <line> <source-backed product description>`. SEG-Y text headers are primary evidence, filenames are secondary evidence, and folder/submission context is only fallback evidence. The product catalog and controls group products by line family and processing stage. Figure annotations are independent presentation styles on the seismic layer and must not replace product names, product ids, source evidence, registration status, or source lineage.
+
+**Why:** The app had started to hide real product distinctions behind convenience names and page-level assumptions. Source-backed naming keeps GDR-1015 migrated-depth Line 301, GDR-1141 migrated/unmigrated/time/depth products, legacy L11/L5 variants, and future Line 95 products auditable. Presentation annotations solve the need for readable section figures without mutating source identity.
+
+**Trade-off accepted:** Some labels are longer than shorthand app names, and the editor needs grouped controls to keep them readable. Line 95 remains source-gated until a real product exists. Legacy L5/L11 fallback navigation remains approximate reference context under DEC-084 and cannot be promoted by renaming.
+
+## DEC-088 - Site Details and station markers align to rendered topo as display-only state
+
+**Considered:** keep Site Details and MT station marker Z fixed at source-authored elevation regardless of terrain exaggeration and surface lift, or add authored display toggles that drape them to the currently rendered topo surface.
+
+**Chose:** add independent `siteDetailsAlignToTopo` and `pointMarkerAlignToTopo` style fields. Utah FORGE defaults both on. When enabled and terrain is visible, the runtime samples DEM height at scene XY, converts to scene Z, applies terrain `scale.z` and `position.z`, and uses that rendered topo Z for display. Station markers add their authored marker and label lift after the topo sample. When terrain is hidden, no sampler is available, or a toggle is off, the objects fall back to source-authored Z.
+
+**Why:** Utah FORGE terrain can use strong vertical exaggeration and surface lift, so source-Z Site Details and station markers appeared below or detached from the rendered surface. The requested authoring behavior is visual alignment with the active topo, while still preserving source coordinates for provenance and registration.
+
+**Trade-off accepted:** Drape behavior is display-only and may visually distort borehole trajectory shape under exaggerated topo. Source survey coordinates, manifests, registration evidence, and CRS status remain unchanged. Visual acceptance still requires a browser/runtime check because static validation only proves the fields and code paths exist.

@@ -160,6 +160,9 @@ const CINEMATIC_LAYER_STYLE_PATCH_KEYS = [
   "labelPointerSide",
   "labelFadeNearM",
   "labelFadeFarM",
+  "siteDetailsAlwaysOnTop",
+  "siteDetailsAlignToTopo",
+  "pointMarkerAlignToTopo",
 ] as const satisfies readonly (keyof EditableStyle)[];
 
 export function findRenderPreset(

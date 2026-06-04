@@ -67,6 +67,8 @@
 ## Utah FORGE Seismic State
 
 - Observed: Seismic browser products, manifests, prep scripts, source loader/editor/scene code, project config, environment config, and focused Utah browser tests exist.
+- Observed: Seismic section products now have editable figure annotations for outside-frame axes, ticks, titles, captions, distance scales, optional well traces, and optional horizon polylines. Labels and numbers are derived from active product/section metadata unless explicitly authored as presentation text.
+- Observed: Line 301 includes a figure-annotation presentation setup for the migrated-depth section. Optional interpretation overlays remain authored controls and are not source-validated picks by default.
 - Observed: `projects/utah-forge/DATA_LAYER_STATUS.md` records seismic as needed/underway, separates processed/render-ready/QA/provenance roles, and preserves the raw-to-computed artifact guardrail without changing runtime behavior.
 - Unverified / needs human review: Final demo loading/visibility policy for seismic remains pending human review.
 

@@ -142,10 +142,10 @@ export function applyStyle(this: any, id: string, style: EditableStyle): void {
   }
   this.applyTerrainFogStyle(id, affectedByFog, fogDensity);
   this.applyTerrainLiftStyle(id, style);
-  if (
+  const topoPublicSurfaceChanged =
     this.isTopoSurfaceLayerId(id) ||
-    this.topoPublicSurfaceLayerIds().includes(id)
-  ) {
+    this.topoPublicSurfaceLayerIds().includes(id);
+  if (topoPublicSurfaceChanged) {
     this.topoRuntime.applyPublicSurfaceClipStyle(
       this.styleForLayer(this.topoSurfaceLayerId()),
     );
@@ -162,6 +162,9 @@ export function applyStyle(this: any, id: string, style: EditableStyle): void {
       UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
       this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID),
     );
+  }
+  if (topoPublicSurfaceChanged) {
+    this.reapplyTopoAlignedOverlays();
   }
   this.applyTerrainCompositeStyle(id, style);
   this.topoRuntime.applyGraticuleStyle(id, style);

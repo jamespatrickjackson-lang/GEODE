@@ -79,6 +79,10 @@ interface SourceLocationVisibilityRow {
   label: string;
 }
 
+function siteDetailsRowId(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 function sourceLocationVisibilityRows(
   layer?: ProjectLayerSpec,
 ): SourceLocationVisibilityRow[] {
@@ -128,6 +132,16 @@ interface SiteDetailsPanelProps {
   activeSignalPrefix?: string;
   boreholeLayerActive?: boolean;
   disabled?: boolean;
+}
+
+interface SiteLabelRow {
+  id: string;
+  label: string;
+  visible: boolean;
+  text?: string;
+  disabled?: boolean;
+  setVisible: (visible: boolean) => void;
+  setText?: (text: string) => void;
 }
 
 function controlDisabled(isEnv: boolean, currentPage: PresentationPage | null) {
@@ -388,9 +402,9 @@ export function SiteDetailsPanel({
   const block = resolveDemoOrientationBlockStyle(style);
   const sourceLocations = resolveDemoBoreholeSourceLocationStyle(style);
   const sourceLocationRows = sourceLocationVisibilityRows(boreholeLayer);
-  const siteLabelRows = UTAH_FORGE_DEMO_BOREHOLE_WELL_IDS.flatMap((wellId) => {
+  const siteLabelRows: SiteLabelRow[] = UTAH_FORGE_DEMO_BOREHOLE_WELL_IDS.flatMap((wellId) => {
     const well = resolveDemoBoreholeWellStyle(style, wellId);
-    const keyBase = wellId.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const keyBase = siteDetailsRowId(wellId);
     return [
       {
         id: `${keyBase}-collar`,
@@ -422,6 +436,29 @@ export function SiteDetailsPanel({
     setVisible: (labelVisible: boolean) => updateBlock({ labelVisible }),
     setText: (labelText: string) => updateBlock({ labelText }),
   });
+  if (sourceLocationRows.length > 0) {
+    siteLabelRows.push({
+      id: "source-locations",
+      label: "Source locations",
+      visible: sourceLocations.labelVisible,
+      setVisible: (labelVisible: boolean) =>
+        updateSourceLocations({ labelVisible }),
+    });
+    for (const row of sourceLocationRows) {
+      const itemStyle = resolveDemoBoreholeSourceLocationItemStyle(
+        style,
+        row.id,
+      );
+      siteLabelRows.push({
+        id: `source-${siteDetailsRowId(row.id)}`,
+        label: `${row.label} source`,
+        visible: itemStyle.labelVisible,
+        disabled: !sourceLocations.labelVisible,
+        setVisible: (labelVisible: boolean) =>
+          updateSourceLocationItem(row.id, { labelVisible }),
+      });
+    }
+  }
 
   return (
     <>
@@ -440,6 +477,24 @@ export function SiteDetailsPanel({
             disabled={disabled}
             onChange={(checked) => applyPatch({ showLabels: checked })}
           />
+          <SiteDetailsBooleanRow
+            label="Always on top"
+            checked={style.siteDetailsAlwaysOnTop === true}
+            disabled={disabled}
+            onChange={(checked) =>
+              applyPatch({ siteDetailsAlwaysOnTop: checked })
+            }
+            testId="site-details-always-on-top"
+          />
+          <SiteDetailsBooleanRow
+            label="Align to topo"
+            checked={style.siteDetailsAlignToTopo === true}
+            disabled={disabled}
+            onChange={(checked) =>
+              applyPatch({ siteDetailsAlignToTopo: checked })
+            }
+            testId="site-details-align-to-topo"
+          />
           <AutoOpenDetails summary="Site Labels" defaultOpen>
             <div style={detailsContentStyle}>
               {siteLabelRows.map((row) => (
@@ -454,15 +509,17 @@ export function SiteDetailsPanel({
                   <SiteDetailsBooleanRow
                     label={row.label}
                     checked={row.visible}
-                    disabled={disabled}
+                    disabled={disabled || row.disabled === true}
                     onChange={row.setVisible}
                   />
-                  <SiteDetailsTextRow
-                    label="Text"
-                    value={row.text}
-                    disabled={disabled}
-                    onChange={row.setText}
-                  />
+                  {row.text !== undefined && row.setText ? (
+                    <SiteDetailsTextRow
+                      label="Text"
+                      value={row.text}
+                      disabled={disabled}
+                      onChange={row.setText}
+                    />
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -610,14 +667,6 @@ export function SiteDetailsPanel({
                 disabled={disabled || !sourceLocations.topRingVisible}
                 onChange={(topRingOpacity) =>
                   updateSourceLocations({ topRingOpacity })
-                }
-              />
-              <SiteDetailsBooleanRow
-                label="Labels"
-                checked={sourceLocations.labelVisible}
-                disabled={disabled}
-                onChange={(labelVisible) =>
-                  updateSourceLocations({ labelVisible })
                 }
               />
               <SiteDetailsNumberRow

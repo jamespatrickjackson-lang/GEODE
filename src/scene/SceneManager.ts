@@ -213,6 +213,7 @@ import {
   createTopoMapRuntime,
   type TopoMapRuntime,
 } from "../topoMap/runtime";
+import { peekHeightSampler } from "./heightSampler";
 import {
   applyCinematicPostProcessing,
   applyEnvironment as applyEnvironmentImpl,
@@ -1146,6 +1147,7 @@ export class SceneManager {
     for (const id of this.topoGraticuleLayerIds()) {
       this.topoRuntime.applyGraticuleStyle(id, this.styleForLayer(id));
     }
+    this.reapplyTopoAlignedOverlays();
     this.reapplySceneSectionPlanes();
     this.reapplyWorkingAreaFocus();
   }
@@ -1705,6 +1707,72 @@ export class SceneManager {
       return effectiveStyle(this.lastEffectiveEnv, this.lastEffectivePage, id);
     }
     return this.lastEnv?.layerStyles[id] ?? {};
+  }
+
+  private topoSurfaceVisibleForAlignment(): boolean {
+    const surfaceLayerId = this.topoSurfaceLayerId();
+    const terrainGroup = this.topoSurfaceGroup();
+    if (!terrainGroup) return false;
+    const visibleByState = this.currentVisibleLayerIds
+      ? this.currentVisibleLayerIds.has(surfaceLayerId)
+      : terrainGroup.visible;
+    return visibleByState && terrainGroup.visible;
+  }
+
+  renderedTopoSurfaceKey(): string {
+    const sampleHeight = peekHeightSampler();
+    const terrainGroup = this.topoSurfaceGroup();
+    if (!terrainGroup) return "topo:no-group";
+    if (!this.topoSurfaceVisibleForAlignment()) return "topo:hidden";
+    if (!sampleHeight) return "topo:no-sampler";
+    const scaleZ =
+      typeof terrainGroup.scale.z === "number" &&
+      Number.isFinite(terrainGroup.scale.z)
+        ? terrainGroup.scale.z
+        : 1;
+    const liftZ =
+      typeof terrainGroup.position.z === "number" &&
+      Number.isFinite(terrainGroup.position.z)
+        ? terrainGroup.position.z
+        : 0;
+    return `topo:${scaleZ.toFixed(6)}:${liftZ.toFixed(3)}`;
+  }
+
+  renderedTopoSurfaceZ(x: number, y: number): number | null {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    const sampleHeight = peekHeightSampler();
+    if (!sampleHeight) return null;
+    const terrainGroup = this.topoSurfaceGroup();
+    if (!terrainGroup || !this.topoSurfaceVisibleForAlignment()) return null;
+    const origin = this.siteSurfaceGuideOrigin(terrainGroup);
+    const sourceZ =
+      sampleHeight(origin.easting + x, origin.northing + y) -
+      origin.elevation;
+    if (!Number.isFinite(sourceZ)) return null;
+    const scaleZ =
+      typeof terrainGroup.scale.z === "number" &&
+      Number.isFinite(terrainGroup.scale.z)
+        ? terrainGroup.scale.z
+        : 1;
+    const liftZ =
+      typeof terrainGroup.position.z === "number" &&
+      Number.isFinite(terrainGroup.position.z)
+        ? terrainGroup.position.z
+        : 0;
+    const z = sourceZ * scaleZ + liftZ;
+    return Number.isFinite(z) ? z : null;
+  }
+
+  reapplyTopoAlignedOverlays(): void {
+    for (const id of this.layers.keys()) {
+      const style = this.styleForLayer(id);
+      if (style.siteDetailsAlignToTopo === true) {
+        this.applyDemoBoreholeStyle(id, style);
+      }
+      if (style.pointMarkerAlignToTopo === true) {
+        this.applyPointMarkerStyle(id, style);
+      }
+    }
   }
 
   isSiteSurfaceGuideLayerId(id: string): boolean {

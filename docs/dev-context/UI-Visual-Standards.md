@@ -189,6 +189,33 @@ Current color swatch toggle examples:
   `Options` popout.
 - MT resistivity volume fine controls are hidden in the viewport legend.
 
+## Seismic Figure Annotations
+
+- Seismic figure annotations attach to the visible section plane, not to a
+  floating screen overlay.
+- The annotation frame is a presentation aid for source-domain metrics:
+  section title, direction labels, horizontal distance scale, vertical
+  source-domain ticks, caption, optional well trace, and optional horizon
+  polyline.
+- Time-domain products use TWT in ms/s as the primary vertical axis.
+  Depth-domain products use metres below the seismic datum. Velocity products
+  need a separate m/s value legend when shown as value products.
+- Caption boxes use a compact dark translucent backplate so white labels remain
+  legible over textured seismic sections.
+- Authored well traces and horizon polylines are visual annotation marks unless
+  a later source-backed validation workflow promotes them to registered control
+  geometry.
+
+## Topo-Aligned Site Overlays
+
+- Site Details and MT station marker alignment to topo is a visual presentation
+  mode. It samples the rendered topo surface and does not change source
+  coordinates.
+- Alignment falls back to source elevation when the topo surface is hidden or
+  the height sampler is unavailable.
+- Always-on-top Site Details rendering is allowed for presentation clarity, but
+  should remain distinguishable from validated subsurface geometry.
+
 ## Section Frame Scale Axes
 
 Section frame controls live inside each `X Section frame`, `Y Section frame`,

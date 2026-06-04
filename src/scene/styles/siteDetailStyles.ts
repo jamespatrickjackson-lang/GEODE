@@ -17,7 +17,50 @@ import { clamp01, clampRange } from "./styleUtils";
 
 type SiteDetailStyleHost = {
   layers: Map<string, THREE.Group>;
+  renderedTopoSurfaceKey?: () => string;
+  renderedTopoSurfaceZ?: (x: number, y: number) => number | null;
 };
+
+const SITE_DETAILS_ALWAYS_ON_TOP_RENDER_ORDER = 10_000;
+
+function objectMaterials(obj: THREE.Object3D): THREE.Material[] {
+  const material = (obj as { material?: THREE.Material | THREE.Material[] })
+    .material;
+  if (!material) return [];
+  return Array.isArray(material) ? material : [material];
+}
+
+function applySiteDetailsRenderPolicy(
+  obj: THREE.Object3D,
+  alwaysOnTop: boolean,
+): void {
+  if (typeof obj.userData.siteDetailsBaseRenderOrder !== "number") {
+    obj.userData.siteDetailsBaseRenderOrder = obj.renderOrder;
+  }
+  const baseRenderOrder =
+    typeof obj.userData.siteDetailsBaseRenderOrder === "number"
+      ? obj.userData.siteDetailsBaseRenderOrder
+      : 0;
+  obj.renderOrder = alwaysOnTop
+    ? SITE_DETAILS_ALWAYS_ON_TOP_RENDER_ORDER + baseRenderOrder
+    : baseRenderOrder;
+
+  for (const material of objectMaterials(obj)) {
+    if (typeof material.userData.siteDetailsBaseDepthTest !== "boolean") {
+      material.userData.siteDetailsBaseDepthTest = material.depthTest;
+    }
+    if (typeof material.userData.siteDetailsBaseDepthWrite !== "boolean") {
+      material.userData.siteDetailsBaseDepthWrite = material.depthWrite;
+    }
+    material.depthTest = alwaysOnTop
+      ? false
+      : material.userData.siteDetailsBaseDepthTest;
+    material.depthWrite = alwaysOnTop
+      ? false
+      : material.userData.siteDetailsBaseDepthWrite;
+    material.needsUpdate = true;
+  }
+}
 
 export function applyEzGammaStyle(this: unknown, layerId: string, style: EditableStyle): void {
   if (layerId !== "ez-gamma-2024") return;
@@ -252,6 +295,11 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
   const layerOpacity = clamp01(
     typeof style.opacity === "number" ? style.opacity : 1,
   );
+  const alwaysOnTop = style.siteDetailsAlwaysOnTop === true;
+  const alignToTopo = style.siteDetailsAlignToTopo === true;
+  const topoTransformKey = alignToTopo
+    ? (host.renderedTopoSurfaceKey?.() ?? "topo:unavailable")
+    : "source";
   const displayPointsByWellId = new Map<string, THREE.Vector3[]>();
   const blockStyle = resolveDemoOrientationBlockStyle(style);
   const sourceLocationStyle = resolveDemoBoreholeSourceLocationStyle(style);
@@ -278,6 +326,16 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
     return sourceLocationId
       ? resolveDemoBoreholeSourceLocationItemStyle(style, sourceLocationId)
           .visible
+      : true;
+  };
+  const sourceLocationItemLabelVisible = (obj: THREE.Object3D) => {
+    const sourceLocationId =
+      typeof obj.userData?.demoBoreholeSourceLocationId === "string"
+        ? obj.userData.demoBoreholeSourceLocationId
+        : null;
+    return sourceLocationId
+      ? resolveDemoBoreholeSourceLocationItemStyle(style, sourceLocationId)
+          .labelVisible
       : true;
   };
   const applyMeshSourceMaterial = (
@@ -323,6 +381,25 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
     }
     return new THREE.Vector3(value[0], value[1], value[2]);
   };
+  const alignPointToTopo = (point: THREE.Vector3): THREE.Vector3 => {
+    const next = point.clone();
+    if (!alignToTopo) return next;
+    const topoZ = host.renderedTopoSurfaceZ?.(point.x, point.y);
+    if (typeof topoZ === "number" && Number.isFinite(topoZ)) {
+      next.z = topoZ;
+    }
+    return next;
+  };
+  const basePositionForObject = (obj: THREE.Object3D): THREE.Vector3 | null => {
+    const stored = tupleToVector(obj.userData.demoBoreholeBasePosition);
+    if (stored) return stored;
+    obj.userData.demoBoreholeBasePosition = [
+      obj.position.x,
+      obj.position.y,
+      obj.position.z,
+    ];
+    return obj.position.clone();
+  };
 
   group.traverse((obj) => {
     if (obj.userData?.demoBoreholePipeRoot === true) {
@@ -341,6 +418,8 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
         dashGapM: wellStyle.dashGapM,
         pathTreatment: wellStyle.pathTreatment,
         smoothingStrength: wellStyle.smoothingStrength,
+        displayPointTransform: alignToTopo ? alignPointToTopo : undefined,
+        displayPointTransformKey: topoTransformKey,
       });
       displayPointsByWellId.set(wellId, displayPoints);
     }
@@ -428,6 +507,8 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
         sourceLocationsActive &&
         sourceLocationItemVisible(obj) &&
         sourceLocationStyle.mode === "rounded-trace";
+      const basePosition = basePositionForObject(obj);
+      if (basePosition) obj.position.copy(alignPointToTopo(basePosition));
     }
     if (obj.userData?.demoBoreholeSourceTrace === true) {
       obj.visible =
@@ -468,6 +549,8 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
         sourceLocationItemVisible(obj) &&
         (sourceLocationStyle.mode === "line" ||
           sourceLocationStyle.mode === "pin");
+      const basePosition = basePositionForObject(obj);
+      if (basePosition) obj.position.copy(alignPointToTopo(basePosition));
       const baseLength =
         typeof obj.userData.demoBoreholeBaseSourceTraceLengthM === "number"
           ? obj.userData.demoBoreholeBaseSourceTraceLengthM
@@ -485,6 +568,8 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
         sourceLocationsActive &&
         sourceLocationItemVisible(obj) &&
         sourceLocationStyle.mode === "pin";
+      const basePosition = basePositionForObject(obj);
+      if (basePosition) obj.position.copy(alignPointToTopo(basePosition));
       const baseDiameter =
         typeof obj.userData.demoBoreholeBaseSourceTraceDiameterM === "number"
           ? obj.userData.demoBoreholeBaseSourceTraceDiameterM
@@ -503,6 +588,8 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
         sourceLocationsActive &&
         sourceLocationItemVisible(obj) &&
         sourceLocationStyle.mode === "crosshair";
+      const basePosition = basePositionForObject(obj);
+      if (basePosition) obj.position.copy(alignPointToTopo(basePosition));
       const baseLength =
         typeof obj.userData.demoBoreholeBaseSourceCrosshairLengthM === "number"
           ? obj.userData.demoBoreholeBaseSourceCrosshairLengthM
@@ -522,6 +609,8 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
         sourceLocationsActive &&
         sourceLocationItemVisible(obj) &&
         sourceLocationStyle.topRingVisible;
+      const basePosition = basePositionForObject(obj);
+      if (basePosition) obj.position.copy(alignPointToTopo(basePosition));
       const mesh = obj as THREE.Mesh;
       if (
         mesh.geometry instanceof THREE.TorusGeometry &&
@@ -555,10 +644,11 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
       obj.visible =
         sourceLocationsActive &&
         sourceLocationItemVisible(obj) &&
+        sourceLocationItemLabelVisible(obj) &&
         sourceLocationStyle.labelVisible;
       const basePosition = tupleToVector(obj.userData.demoBoreholeBaseLabelPosition);
       if (basePosition) {
-        obj.position.copy(basePosition);
+        obj.position.copy(alignPointToTopo(basePosition));
         obj.position.z += sourceLocationStyle.labelLiftM;
       }
     }
@@ -581,7 +671,9 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
       obj.position.set(
         baseCenter.x,
         baseCenter.y,
-        baseCenter.z + blockStyle.liftM + (blockStyle.heightM - baseHeight) * 0.5,
+        alignPointToTopo(baseCenter).z +
+          blockStyle.liftM +
+          (blockStyle.heightM - baseHeight) * 0.5,
       );
       obj.scale.set(
         blockStyle.widthM / Math.max(0.001, baseWidth),
@@ -638,6 +730,10 @@ export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: Ed
         obj.userData.displayName = blockStyle.labelText;
       }
     }
+  });
+
+  group.traverse((obj) => {
+    applySiteDetailsRenderPolicy(obj, alwaysOnTop);
   });
 }
 

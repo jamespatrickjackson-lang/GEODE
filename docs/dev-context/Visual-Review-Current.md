@@ -19,7 +19,7 @@ narrow patch
 ## Current Visual Contract
 
 - Goal: make Utah FORGE visual/topo/editor/cinematic changes converge by direct human review before slow smoke tests.
-- Current focus: expanded Cinematics authoring, including Camera Studio, Post Processing, object/distance-aware DOF, composition guides, presentation-frame thickness, Topo Environment grouping, and cloud/sun/fog visual controls.
+- Current focus: Utah FORGE visual/editor convergence, including seismic figure annotations, Site Details/topo alignment, Camera Studio, Post Processing, Topo Environment grouping, and cloud/sun/fog visual controls.
 - Accepted decisions:
   - Top-level editor containers are peers when they represent real workflows or tools.
   - Container shape, fill, spacing, and contrast should come from shared editor tokens.
@@ -38,6 +38,13 @@ narrow patch
   - Sun visual authoring separates light-source effects from visible sky
     imagery. The visible orb/halo/source marker can be hidden while terrain
     light remains active.
+  - Site Details and `GDR 1255 Station Locations` have independent `Align to
+    topo` toggles. Utah FORGE defaults them on; the rendered position follows
+    terrain exaggeration and surface lift while the original source Z remains
+    the fallback when topo is hidden.
+  - Seismic product labels are source-backed and grouped by line family /
+    processing stage. Figure annotations are an authored presentation overlay
+    for section products, not a replacement for source product names.
   - Section ISO overlay opacity is composed from authored opacity, transition opacity, and threshold-surface attenuation.
   - Compatible section-frame page changes slide/interpolate; incompatible helper states crossfade by outgoing snapshot plus incoming fade.
   - Camera Studio is split from Post Processing. Camera Studio owns render preset, lens types/FOV, and double-click focus timing.
@@ -55,6 +62,10 @@ narrow patch
   - Final sidebar polish and toolset grouping remain iterative.
   - Legend panel behavior has a first implementation pass: sequenced per-container left slide, row gap closure after exit, row opening before entry, and MT resistivity fixed at the bottom. It remains under human visual review.
   - Zoom-out camera far-plane clipping is being handled before the oblique longitude/latitude grid line artifact. The grid line issue remains held until clipping is verified visually.
+  - `npm run check:utah-runtime` currently stops in `check:utah-derived` on
+    `utah-forge-topo-clouds registration`. Treat this as the active derived
+    asset registration blocker until resolved; narrower runtime asset and MT
+    resistivity checks can still pass.
 - Do not revisit unless asked:
   - Intake directives or intake drops for normal software-build work.
   - Full broad Utah FORGE smoke runs during visual iteration.

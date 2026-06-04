@@ -1,4 +1,10 @@
-import { LayerNumberStyleControl, type LayerStyleSetter, type PageStyleClearer, type PageStyleSetter } from "../../styleControls";
+import {
+  LayerBooleanStyleControl,
+  LayerNumberStyleControl,
+  type LayerStyleSetter,
+  type PageStyleClearer,
+  type PageStyleSetter,
+} from "../../styleControls";
 import type { EditableStyle, PresentationPage } from "../../../pages/types";
 
 export function PointMarkerControls({
@@ -68,7 +74,19 @@ export function PointMarkerControls({
         setPageLayerOverride={setPageLayerOverride}
         clearPageLayerOverride={clearPageLayerOverride}
       />
+      <LayerBooleanStyleControl
+        label="Align to topo"
+        field="pointMarkerAlignToTopo"
+        fallback={false}
+        style={style}
+        isEnv={isEnv}
+        currentPage={currentPage}
+        layerId={layerId}
+        setEnvLayerStyle={setEnvLayerStyle}
+        setPageLayerOverride={setPageLayerOverride}
+        clearPageLayerOverride={clearPageLayerOverride}
+        testId="point-marker-align-to-topo"
+      />
     </>
   );
 }
-

@@ -167,6 +167,7 @@ export interface DemoBoreholeSourceLocationStyle {
 
 export interface DemoBoreholeSourceLocationItemStyle {
   visible?: boolean;
+  labelVisible?: boolean;
 }
 
 export interface MtSurfaceBoundaryStyle {
@@ -400,11 +401,14 @@ export interface EditableStyle {
   pointMarkerRadiusM?: number;
   pointMarkerLiftM?: number;
   pointMarkerLabelLiftM?: number;
+  pointMarkerAlignToTopo?: boolean;
   // Utah FORGE demo/orientation borehole layer controls. Coordinates are
   // source-derived where available; these fields only tune presentation.
   demoBoreholeWells?: Record<string, DemoBoreholeWellStyle>;
   demoBoreholeBlock?: DemoOrientationBlockStyle;
   demoBoreholeSourceLocations?: DemoBoreholeSourceLocationStyle;
+  siteDetailsAlwaysOnTop?: boolean;
+  siteDetailsAlignToTopo?: boolean;
   demoBoreholePipeRadiusM?: number;
   demoBoreholeBlockVisible?: boolean;
   // Utah FORGE authored resistivity slice controls. Vertical scale remains
@@ -476,6 +480,23 @@ export interface EditableStyle {
     lines?: boolean;
   };
   seismicLegendVisible?: boolean;
+  seismicFigureAnnotationsVisible?: boolean;
+  seismicFigureTextColor?: string;
+  seismicFigureAxisColor?: string;
+  seismicFigureCaptionBoxColor?: string;
+  seismicFigureCaptionBoxOpacity?: number;
+  seismicFigureHorizonColor?: string;
+  seismicFigureWellColor?: string;
+  seismicFigureTitle?: string;
+  seismicFigureCaption?: string;
+  seismicFigureScaleLabel?: string;
+  seismicFigureWellLabel?: string;
+  seismicFigureWellVisible?: boolean;
+  seismicFigureWellPosition?: number;
+  seismicFigureHorizonVisible?: boolean;
+  seismicFigureHorizonPoints?: Array<[number, number]>;
+  seismicFigureOutsideOffsetM?: number;
+  seismicFigureLabelSizeM?: number;
   // Utah FORGE scene-wide section plane tool. Stored as a virtual layer style
   // so environment defaults and page overrides can author walkthrough cuts.
   sceneSectionEnabled?: boolean;
@@ -1455,6 +1476,9 @@ export type CinematicLayerStylePatch = Partial<
     | "labelPointerSide"
     | "labelFadeNearM"
     | "labelFadeFarM"
+    | "siteDetailsAlwaysOnTop"
+    | "siteDetailsAlignToTopo"
+    | "pointMarkerAlignToTopo"
   >
 >;
 

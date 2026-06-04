@@ -352,6 +352,9 @@ function addLabelAnchor(
     demoBoreholeLabelAnchor: true,
     demoBoreholeLabelRole: labelRole,
     demoBoreholeOwnerId: ownerId,
+    ...(labelRole === "source-location"
+      ? { demoBoreholeSourceLocationId: ownerId }
+      : {}),
     demoBoreholeBaseLabelPosition: position.toArray(),
     demoBoreholeBaseLabelLiftM: liftM,
   };
@@ -824,6 +827,8 @@ export interface DemoBoreholeGeometryStyle {
   dashGapM: number;
   pathTreatment: DemoBoreholePathTreatment;
   smoothingStrength: number;
+  displayPointTransform?: (point: THREE.Vector3) => THREE.Vector3;
+  displayPointTransformKey?: string;
 }
 
 export function rebuildDemoBoreholePipeGeometry(
@@ -842,7 +847,10 @@ export function rebuildDemoBoreholePipeGeometry(
     style.pathTreatment,
     style.smoothingStrength,
   );
-  const displayPoints = vectorsFromTuples(displayTuples);
+  const sourceDisplayPoints = vectorsFromTuples(displayTuples);
+  const displayPoints = style.displayPointTransform
+    ? sourceDisplayPoints.map((point) => style.displayPointTransform?.(point) ?? point)
+    : sourceDisplayPoints;
   const buildKey = JSON.stringify({
     r: Number(style.radiusM.toFixed(3)),
     lineStyle: style.lineStyle,
@@ -850,6 +858,7 @@ export function rebuildDemoBoreholePipeGeometry(
     dashGapM: Number(style.dashGapM.toFixed(3)),
     pathTreatment: style.pathTreatment,
     smoothingStrength: Number(style.smoothingStrength.toFixed(3)),
+    displayPointTransformKey: style.displayPointTransformKey ?? "source",
   });
   if (pipeRoot.userData.demoBoreholePipeBuildKey !== buildKey) {
     const root = pipeRoot as THREE.Group;
