@@ -54,15 +54,18 @@ Line 301 figure-annotation trace:
 
 ## Verification
 
-Fresh verification for the commit should include:
+Completed before commit:
 
-- `npm run check:workspace`
-- `npm run build`
-- `node -e "await import('./tests/tools/site-details-source.test.mjs')"`
-- `node -e "await import('./tests/tools/seismic-figure-annotations.test.mjs')"`
-- `node -e "await import('./tests/tools/geophysics-figure-legend-source.test.mjs')"`
-- `npx playwright test tests/utah-forge/site-details-labels.spec.ts --workers=1`
-- `npx playwright test tests/utah-forge/seismic-browser.spec.ts --workers=1`
+- `npm run check:workspace` - exit 0; reported local changes and snapshot-sensitive local work before staging.
+- `npx tsc -b --pretty false` - exit 0.
+- `node -e "await import('./tests/tools/site-details-source.test.mjs')"` - exit 0; 5 TAP tests passed.
+- `node -e "await import('./tests/tools/seismic-figure-annotations.test.mjs')"` - exit 0.
+- `node -e "await import('./tests/tools/geophysics-figure-legend-source.test.mjs')"` - exit 0; 2 TAP tests passed.
+
+Browser verification status:
+
+- Focused Playwright was started against seismic/site-details editor specs, then stopped per instruction to avoid additional testing in this run.
+- The interrupted browser run had already exposed a timeout in `tests/utah-forge/site-details-labels.spec.ts` for topo-alignment runtime sampling. Treat browser state as not fully verified until a future visual/browser pass is requested.
 
 ## Visual Status
 
