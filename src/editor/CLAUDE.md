@@ -43,6 +43,13 @@ Smaller (safe to read whole):
 
 ## Editing Discipline
 
+- Before changing sidebar bars, groups, subsections, action controls, persisted
+  controls, or editor-backed fields, read
+  `../../docs/dev-context/editor-control-manifest.json` and
+  `../../docs/dev-context/Editor-Control-Manifest-Policy.md`.
+- Preserve existing manifest ids when moving controls. Add new ids before
+  adding controls. Mark removals, renames, or hidden controls with manifest
+  approval metadata.
 - Locate the target with `Grep` (pattern + this dir), then `Read` only the
   relevant slice.
 - `Edit` operations on the large files must include enough surrounding

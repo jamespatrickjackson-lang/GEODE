@@ -749,6 +749,7 @@ export function PagePanel({ sceneHandle }: Props) {
         <span style={pageFooterActionsStyle}>
           <button
             className="editor-action-button"
+            data-editor-control-id="page.action.add"
             style={pageFooterActionButtonStyle(pageStructureLocked)}
             disabled={pageStructureLocked}
             onClick={onAdd}

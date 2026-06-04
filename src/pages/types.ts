@@ -281,6 +281,7 @@ export interface EditableStyle {
   publicSurfaceClipSizeZ?: number;
   publicSurfaceClipRotationZDeg?: number;
   publicSurfaceClipShape?: "box" | "circle";
+  publicSurfaceClipPreviewVisible?: boolean;
   // Opt-in: when true, this layer's topo-context objects (topo map surface
   // labels/legends, longitude/latitude graticule lines, ribbons, and labels,
   // topo map branding) participate in scene-section clipping instead of
@@ -1319,11 +1320,14 @@ export interface SceneProperties {
     orthoPhotoTexture8192Path?: string;
     orthoPhotoBounds?: [number, number, number, number];
     orthoPhotoOpacity?: number;
+    orthoPhotoEdgeClipInsetM?: number;
+    orthoPhotoEdgeFadeDistanceM?: number;
     orthoPhotoHillshadeBlend?: number;
     orthoPhotoBrightness?: number;
     orthoPhotoContrast?: number;
     orthoPhotoSaturation?: number;
     orthoPhotoOutsideFillEnabled?: boolean;
+    orthoPhotoOutsideSurfaceMode?: "solid" | "topo";
     orthoPhotoOutsideColor?: string;
     orthoPhotoOutsideOpacity?: number;
     orthoPhotoShadowStrength?: number;

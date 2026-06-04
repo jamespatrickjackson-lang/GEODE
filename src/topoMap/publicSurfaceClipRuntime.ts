@@ -262,6 +262,7 @@ function publicSurfaceClipSegmentPositions(box: PublicSurfaceClipBox): number[] 
 export class PublicSurfaceClipRuntime {
   private handle: PublicSurfaceClipHandle | null = null;
   private active = false;
+  private previewVisible = false;
 
   constructor(private readonly scene: THREE.Scene) {}
 
@@ -270,7 +271,10 @@ export class PublicSurfaceClipRuntime {
   }
 
   setEditorMode(enabled: boolean): void {
-    if (this.handle) this.handle.group.visible = enabled && this.active;
+    if (this.handle) {
+      this.handle.group.visible =
+        enabled && this.active && this.previewVisible;
+    }
   }
 
   notifyResize(width: number, height: number): void {
@@ -290,12 +294,14 @@ export class PublicSurfaceClipRuntime {
     }
     this.handle = null;
     this.active = false;
+    this.previewVisible = false;
   }
 
   applyStyle(style: EditableStyle, context: PublicSurfaceClipApplyContext): void {
     const box = publicSurfaceClipBox(style);
     const planes = box.enabled ? publicSurfaceClipPlanes(box) : [];
     this.active = box.enabled;
+    this.previewVisible = style.publicSurfaceClipPreviewVisible === true;
     context.onActiveChange(box.enabled);
     context.updateRendererLocalClipping();
 
@@ -380,7 +386,7 @@ export class PublicSurfaceClipRuntime {
 
   private rebuildHelper(box: PublicSurfaceClipBox, editorMode: boolean): void {
     const handle = this.ensureHandle();
-    handle.group.visible = editorMode && box.enabled;
+    handle.group.visible = editorMode && box.enabled && this.previewVisible;
     if (!box.enabled) return;
     const geometry = new LineSegmentsGeometry();
     geometry.setPositions(publicSurfaceClipSegmentPositions(box));

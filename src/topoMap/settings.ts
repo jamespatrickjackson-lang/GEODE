@@ -150,6 +150,7 @@ export const TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS = [
   "publicSurfaceClipSizeZ",
   "publicSurfaceClipRotationZDeg",
   "publicSurfaceClipShape",
+  "publicSurfaceClipPreviewVisible",
 ] as const satisfies readonly (keyof EditableStyle)[];
 
 export function topoMapToolMetadata(

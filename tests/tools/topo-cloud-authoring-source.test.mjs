@@ -56,14 +56,19 @@ test("topo environment clouds can create and manage cloud volumes", () => {
   );
 });
 
-test("topo extents and environment are peer groups under Topo", () => {
+test("topo extents, satellite, and environment are peer groups under Topo", () => {
   const topoPanel = readSource("src", "editor", "topoMap", "TopoMapPanel.tsx");
   const layerPanelGroups = readSource("src", "editor", "LayerPanelGroups.tsx");
 
   assert.match(
     topoPanel,
-    /type TopoMapPanelSection =[\s\S]*\| "surface"[\s\S]*\| "extents"[\s\S]*\| "environment"[\s\S]*\| "graticule"[\s\S]*\| "title"/,
-    "TopoMapPanel should expose dedicated extents and environment sections.",
+    /type TopoMapPanelSection =[\s\S]*\| "surface"[\s\S]*\| "satellite"[\s\S]*\| "extents"[\s\S]*\| "environment"[\s\S]*\| "graticule"[\s\S]*\| "title"/,
+    "TopoMapPanel should expose dedicated satellite, extents, and environment sections.",
+  );
+  assert.match(
+    topoPanel,
+    /section === "satellite"/,
+    "TopoMapPanel should render the Satellite image settings controls as their own section.",
   );
   assert.match(
     topoPanel,
@@ -84,6 +89,16 @@ test("topo extents and environment are peer groups under Topo", () => {
     layerPanelGroups,
     /section="extents"/,
     "The peer Extents group should render the Topo extents section.",
+  );
+  assert.match(
+    layerPanelGroups,
+    /title="Satellite image settings"/,
+    "Topo should include a peer Satellite image settings group.",
+  );
+  assert.match(
+    layerPanelGroups,
+    /section="satellite"/,
+    "The peer Satellite image settings group should render the Topo satellite section.",
   );
   assert.match(
     layerPanelGroups,

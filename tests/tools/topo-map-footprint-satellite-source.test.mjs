@@ -17,9 +17,15 @@ test("topo satellite image exposes outside fill and image shadow authoring field
   const pageTypes = readSource("src", "pages", "types.ts");
   const terrainMaterial = readSource("src", "scene", "terrainMaterial.ts");
   const topoPanel = readSource("src", "editor", "topoMap", "TopoMapPanel.tsx");
+  const materialAuthority = readSource("src", "topoMap", "materialAuthority.ts");
+  const layerPanelGroups = readSource("src", "editor", "LayerPanelGroups.tsx");
+  const environment = readJson("projects", "utah-forge", "environment.json");
 
   for (const field of [
+    "orthoPhotoEdgeClipInsetM",
+    "orthoPhotoEdgeFadeDistanceM",
     "orthoPhotoOutsideFillEnabled",
+    "orthoPhotoOutsideSurfaceMode",
     "orthoPhotoOutsideColor",
     "orthoPhotoOutsideOpacity",
     "orthoPhotoShadowStrength",
@@ -36,12 +42,76 @@ test("topo satellite image exposes outside fill and image shadow authoring field
       new RegExp(field),
       `Terrain shader pipeline should consume ${field}.`,
     );
+    assert.match(
+      materialAuthority,
+      new RegExp(`"${field}"`),
+      `Topo material authority should preserve ${field}.`,
+    );
   }
 
   assert.match(
+    terrainMaterial,
+    /uniform float uOrthoPhotoEdgeClipInset;[\s\S]*uniform float uOrthoPhotoEdgeFadeDistance;/,
+    "Terrain shader should expose satellite edge clip and edge gradient uniforms.",
+  );
+  assert.match(
+    terrainMaterial,
+    /float orthoPhotoEdgeWeight[\s\S]*uOrthoPhotoEdgeClipInset[\s\S]*uOrthoPhotoEdgeFadeDistance/,
+    "Terrain shader should calculate satellite image alpha from clipped edge distance.",
+  );
+  assert.match(
+    terrainMaterial,
+    /uOrthoPhotoOpacity \* orthoSample\.a \* edgeWeight/,
+    "Satellite image alpha should be multiplied by the edge opacity gradient.",
+  );
+  assert.match(
     topoPanel,
-    /Outside image fill/,
-    "Topo editor should expose a dedicated outside-image fill section.",
+    /label="Satellite image"[\s\S]*testId="topo-ortho-photo-edge-clip-inset"[\s\S]*testId="topo-ortho-photo-edge-fade"[\s\S]*label="Image adjustment"/,
+    "Satellite image controls should expose edge clipping and opacity gradient before image adjustment.",
+  );
+  assert.match(
+    topoPanel,
+    /type TopoMapPanelSection =[\s\S]*\| "satellite"/,
+    "TopoMapPanel should expose a dedicated satellite section.",
+  );
+  assert.match(
+    topoPanel,
+    /section === "satellite"/,
+    "TopoMapPanel should render satellite controls from a dedicated section switch.",
+  );
+  assert.match(
+    layerPanelGroups,
+    /title="Satellite image settings"[\s\S]*section="satellite"/,
+    "Topo editor should expose Satellite image settings as a peer group.",
+  );
+  assert.match(
+    topoPanel,
+    /Outside image surface/,
+    "Topo editor should expose a dedicated outside-image surface section.",
+  );
+  assert.match(
+    topoPanel,
+    /Surface mode[\s\S]*Topo ramp[\s\S]*Solid fill/,
+    "Outside image surface controls should choose between topo ramp and solid fill.",
+  );
+  assert.match(
+    terrainMaterial,
+    /uOrthoPhotoOutsideSurfaceMode[\s\S]*topoOutsideSurface/,
+    "Terrain shader should expose an outside-image topo surface mode.",
+  );
+  assert.equal(
+    environment.scene?.terrain?.orthoPhotoOutsideFillEnabled,
+    true,
+    "Utah FORGE satellite diff should enable outside image surface authoring.",
+  );
+  assert.equal(
+    environment.scene?.terrain?.orthoPhotoOutsideSurfaceMode,
+    "topo",
+    "Utah FORGE satellite diff should default the outside image surface to topo ramp.",
+  );
+  assert.ok(
+    (environment.scene?.terrain?.orthoPhotoOutsideOpacity ?? 0) > 0,
+    "Utah FORGE outside image surface should be visible.",
   );
   assert.match(
     topoPanel,
@@ -84,8 +154,8 @@ test("topo material controls are split by source, image adjustment, and sun resp
 
   assert.match(
     topoPanel,
-    /label="Satellite image"[\s\S]*label="Image adjustment"[\s\S]*label="Image sun response"[\s\S]*label="Outside image fill"/,
-    "Satellite controls should separate source, color adjustment, sun response, and outside fill.",
+    /label="Satellite image"[\s\S]*label="Image adjustment"[\s\S]*label="Image sun response"[\s\S]*label="Outside image surface"/,
+    "Satellite controls should separate source, color adjustment, sun response, and outside surface.",
   );
   assert.equal(
     (topoPanel.match(/testId="topo-map-hillshade-strength"/g) ?? []).length,
@@ -130,12 +200,28 @@ test("topo panel exposes terrain grid and underside shader controls", () => {
 
 test("topo edge controls are sibling subsections under topo, not inside map footprint", () => {
   const topoPanel = readSource("src", "editor", "topoMap", "TopoMapPanel.tsx");
-  const clipControlsMatch = topoPanel.match(
-    /function TopoSurfaceClipControls[\s\S]*?\n}\n\nfunction /,
+  const clipControlsStart = topoPanel.indexOf("function TopoSurfaceClipControls");
+  const edgeControlsStart = topoPanel.indexOf("function TopoMapEdgeControls");
+  assert.notStrictEqual(
+    clipControlsStart,
+    -1,
+    "TopoSurfaceClipControls should exist.",
   );
-  assert.ok(clipControlsMatch, "TopoSurfaceClipControls should be isolated.");
+  assert.notStrictEqual(
+    edgeControlsStart,
+    -1,
+    "TopoMapEdgeControls should exist.",
+  );
+  assert.ok(
+    clipControlsStart < edgeControlsStart,
+    "TopoSurfaceClipControls should be isolated before TopoMapEdgeControls.",
+  );
+  const clipControlsSource = topoPanel.slice(
+    clipControlsStart,
+    edgeControlsStart,
+  );
   assert.doesNotMatch(
-    clipControlsMatch[0],
+    clipControlsSource,
     /Material edge opacity fade|Material edge outline|Public surface clip/,
     "Map footprint controls should not contain the lower topo edge subsections.",
   );

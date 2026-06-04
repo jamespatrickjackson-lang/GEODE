@@ -830,7 +830,7 @@
       "label": "Topo Surface",
       "type": "geotiff",
       "files": {
-        "raster": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/terrain_public_context_200m.tif"
+        "raster": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/terrain_public_context_1000m.tif"
       },
       "metadata": {
         "sourceFile": "USGS 3DEP / The National Map elevation service clipped to a 500% XY public context extent around the 3D MT resistivity full-density model",
@@ -848,7 +848,7 @@
         },
         "geoTransform": {
           "sourceCrs": "EPSG:26912",
-          "terrainMaxVertices": 900000,
+          "terrainMaxVertices": 450000,
           "terrainGridEnabled": false,
           "sceneOriginUtm": {
             "easting_m": 341467.35,
@@ -868,7 +868,7 @@
             ]
           }
         },
-        "notes": "Regional public terrain context resampled to approximately 200 m with 200% XY padding on each side of the full MT footprint, producing a 500% total source tile so public-surface clipping boxes can be pushed farther out without exposing missing tile edges.",
+        "notes": "Regional public terrain context resampled to approximately 1000 m with 200% XY padding on each side of the full MT footprint, producing a 500% total source tile so public-surface clipping boxes can be pushed farther out without exposing missing tile edges.",
         "crsRegistration": {
           "horizontalCrs": "EPSG:26912",
           "verticalDatum": "public terrain/vector source elevation or draped terrain context in metres",
@@ -7483,10 +7483,47 @@
           "notes": "Authored from Topo > Environment > Clouds."
         }
       }
+    },
+    {
+      "id": "topo-cloud-volume-3",
+      "label": "Cloud volume 3",
+      "type": "atmosphere-volume",
+      "files": {},
+      "metadata": {
+        "classification": "environmental",
+        "geoSeeTool": {
+          "id": "topo-map",
+          "role": "environment-clouds",
+          "settingsScope": "layer"
+        },
+        "localAtmosphereVolume": {
+          "subtype": "cloud-bank",
+          "bounds": {
+            "mode": "box",
+            "center": [
+              0,
+              0,
+              2529.2
+            ],
+            "size": [
+              12000,
+              12000,
+              1512
+            ]
+          },
+          "artifactFamily": "local-atmosphere",
+          "renderingRole": "topo-environment-cloud-impostor",
+          "computationRole": "visual-context",
+          "notes": "Authored from Topo > Environment > Clouds."
+        }
+      }
     }
   ],
   "pageOrder": [
     "12_mt_volume_overview",
+    "156_page",
+    "157_page",
+    "158_page",
     "145_page",
     "06_mt_low_resistivity_seismic",
     "108_page",
@@ -7573,7 +7610,8 @@
     "144_page",
     "152_page",
     "153_page",
-    "154_page"
+    "154_page",
+    "155_page"
   ],
   "presentationDefaults": {
     "transitionDuration": 1400,
@@ -7586,7 +7624,7 @@
     ]
   },
   "watermark": "GeoSee Utah FORGE - Phase 3 seismic + MT",
-  "modified": "2026-06-03T22:47:16.735Z",
+  "modified": "2026-06-04T04:43:47.090Z",
   "registrationFrame": {
     "horizontalCrs": "EPSG:26912",
     "verticalDatum": "layer-specific; terrain/wells use source elevation metres, seismic products record per-product datum, time-domain seismic uses display-derived vertical scale",

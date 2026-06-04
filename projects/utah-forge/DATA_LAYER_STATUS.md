@@ -71,7 +71,7 @@ Legacy L5/L11 placement: current L5/L11 products use explicit approximate fallba
 
 | Artifact | File | Status |
 | --- | --- | --- |
-| Terrain | `public_context/terrain_public_context_200m.tif` | Default-visible. Public source. 1000 m version retained as support/history data. |
+| Terrain | `public_context/terrain_public_context_1000m.tif` | Default-visible full-extent public source. 200 m crop retained as support/history data. |
 | Roads | `public_context/roads.geojson` | Default-visible. Public source. |
 | Streams | `public_context/hydrography_streams.geojson` | Default-visible. Public source. |
 | Lakes | `public_context/hydrography_lakes.geojson` | Default-visible. Public source. |

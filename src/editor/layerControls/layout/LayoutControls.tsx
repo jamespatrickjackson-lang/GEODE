@@ -43,6 +43,7 @@ export function LayerGroup({
   devSource = "src/editor/LayerPanel.tsx:423",
   devNote,
   accentColor,
+  manifestId,
 }: {
   title: string;
   children: React.ReactNode;
@@ -51,6 +52,7 @@ export function LayerGroup({
   devSource?: string;
   devNote?: string;
   accentColor?: string | null;
+  manifestId?: string;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const previousOpenSignal = useRef(openSignal);
@@ -84,6 +86,7 @@ export function LayerGroup({
       data-dev-container-name={title}
       data-dev-container-scope="LayerGroup / layerGroupSummaryStyle"
       data-dev-note="layerGroupStyle controls the left inset and spacing around each Layers subheading."
+      data-editor-section-id={manifestId}
     >
       <button
         type="button"
@@ -383,6 +386,7 @@ export function LayerGroupFogControl({
       <div style={layerGroupFogControlRowStyle}>
         <label style={nestedFieldLabelStyle}>Use fog</label>
         <ToggleButton
+          editorControlId="layer.fog.use"
           active={allOn}
           title="Toggle fog for every layer in this section"
           onClick={() => {

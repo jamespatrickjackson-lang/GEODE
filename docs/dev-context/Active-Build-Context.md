@@ -179,6 +179,9 @@ line numbers, well labels, scale labels, or captions into app output.
 - Global toolset structure and topo map precedent: `docs/dev-context/Global-Toolset-Structure.md`
 - Topo Environment/clouds/sun/cinematics thread receipt: `docs/dev-context/Topo-Environment-Clouds-Cinematics-Thread-Update-2026-06-03.md`
 - Topo editor panel field audit: `docs/dev-context/Topo-Editor-Panel-Audit-2026-06-03.md`
+- Editor sidebar control manifest and change checklist:
+  `docs/dev-context/editor-control-manifest.json`,
+  `docs/dev-context/Editor-Control-Manifest-Policy.md`
 - Seismic and site-details editor update receipt: `docs/dev-context/Seismic-Site-Details-Editor-Update-2026-06-04.md`
 - Current visual review loop: `docs/dev-context/Visual-Review-Current.md`
 - UI visual standards and shared legend/slider rules: `docs/dev-context/UI-Visual-Standards.md`

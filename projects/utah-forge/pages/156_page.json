@@ -1,0 +1,149 @@
+{
+  "id": "156_page",
+  "title": "GeoSee Intro",
+  "subtitle": "Who We Are",
+  "camera": {
+    "position": [
+      -45834.60021580089,
+      -108608.1511378511,
+      6999.1504004752705
+    ],
+    "target": [
+      -7767.389955980874,
+      -15296.268046050607,
+      2640.9571376663434
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 70
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutSine"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#42f236",
+  "dynamicCamera": {
+    "enabled": false,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      10844.11738335307,
+      -5098.606116313531,
+      -64366.201871915524
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 275129.9999999952,
+    "orbitHeight": 13000,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false,
+    "dollyEnabled": false,
+    "dollyDistanceM": 0,
+    "truckEnabled": false,
+    "truckDistanceM": 0,
+    "craneEnabled": false,
+    "craneHeightM": 0,
+    "shotStartMs": 0,
+    "shotEndMs": 2500,
+    "shotCurve": "smooth",
+    "handheldEnabled": false,
+    "handheldAmplitudeM": 0,
+    "handheldFrequencyHz": 0.35,
+    "rollDeg": 0
+  },
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "opacity": 0.48,
+      "pointSizePx": 1.25,
+      "scalarInclusionMode": "all-valid"
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "opacity": 0.28,
+      "scalarVolumeOpacity": 0.28,
+      "scalarVolumeDensity": 0.42,
+      "scalarVolumeSampleSteps": 96,
+      "scalarVolumeThresholdMin": -2,
+      "scalarVolumeThresholdMax": 4.5,
+      "scalarVolumeProductId": "mt-resistivity-forge-focused-volume",
+      "scalarLegendVisible": true,
+      "scalarFocusMin": -2,
+      "scalarFocusMax": 4.5,
+      "scalarBlendMin": 0.139879,
+      "scalarBlendMax": 3.937122
+    },
+    "utah-forge-mt-stations": {
+      "opacity": 0.5,
+      "showLabels": false,
+      "mtStationQcSelectedStationId": "FRG19065",
+      "mtStationQcPanelOpen": true
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": false,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": true
+      },
+      "mtThresholdSurfaceWireframe": false,
+      "opacity": 0.82,
+      "affectedByFog": false,
+      "showLabels": false,
+      "mtThresholdSurfaceRoughness": 0.64,
+      "mtThresholdSurfaceMetalness": 0,
+      "mtThresholdSurfaceSide": "double",
+      "mtThresholdSurfaceSmoothNormals": true,
+      "mtThresholdSurfaceEmissiveBoost": 0.08,
+      "mtThresholdSurfaceWireframeColor": "#f8f4e8",
+      "mtThresholdSurfaceWireframeOpacity": 0.42
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.72,
+      "showLabels": false
+    }
+  },
+  "visibilityOverrides": {
+    "utah-forge-phase3-working-area": false,
+    "terrain": true,
+    "utah-forge-mt-stations": true,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": true,
+    "utah-forge-mt-resistivity-volume": true,
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-phase3-seismic-browser": false,
+    "utah-forge-topo-clouds": true,
+    "naip-2024-tile-diagnostics": false,
+    "utah-forge-phase3-demo-boreholes": true
+  },
+  "overlayLayout": {
+    "x": 0.6658723958333334,
+    "y": 0.02368883312421575,
+    "width": 0.33380208333333333,
+    "height": 0.3696612296110414
+  },
+  "cameraObjectFocus": {
+    "targetId": "product:utah-forge-mt-stations:FRG19023",
+    "worldPoint": [
+      -7767.389955980874,
+      -15296.268046050607,
+      2640.9571376663434
+    ]
+  },
+  "sceneOverrides": {
+    "lightMode": true
+  }
+}

@@ -266,6 +266,9 @@ test("terrain material layers selected image and detail overlay before procedura
   expect(shader).toContain("vec4 orthoSample = texture2D(uOrthoPhotoMap, orthoUv)");
   expect(shader).toContain("if (orthoSample.a > 0.001)");
   expect(shader).toContain("uOrthoPhotoOpacity * orthoSample.a");
+  expect(shader).toContain("uniform float uOrthoPhotoOutsideSurfaceMode");
+  expect(shader).toContain("topoOutsideSurface");
+  expect(shader).toContain("uOrthoPhotoOutsideSurfaceMode > 0.5");
   expect(shader).toContain("uTopoImageDetailMap");
   expect(shader).toContain("vec4 detailSample = texture2D(uTopoImageDetailMap, detailUv)");
   expect(shader).toContain("uTopoImageDetailOpacity * detailSample.a * edgeWeight");

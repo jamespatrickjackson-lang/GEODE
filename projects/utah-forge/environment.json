@@ -90,7 +90,7 @@
         "labelLiftM": 25.5
       },
       "affectedByFog": false,
-      "showLabels": true,
+      "showLabels": false,
       "labelKind": "siteElement",
       "labelTextColor": "#f4f0e8",
       "labelTextOpacity": 1,
@@ -120,7 +120,8 @@
         "topRingRadiusM": 195,
         "lineWidth": 3,
         "labelLiftM": 145,
-        "topRingOpacity": 0.63
+        "topRingOpacity": 0.63,
+        "visible": false
       },
       "opacity": 1
     },
@@ -151,9 +152,18 @@
         "utah-forge-mt-resistivity-full-density": 0.15,
         "utah-forge-mt-resistivity-preview": 0.15,
         "utah-forge-mt-resistivity-volume": 0.15,
-        "utah-forge-phase3-seismic-browser": 0.15
+        "utah-forge-phase3-seismic-browser": 0.15,
+        "utah-forge-mt-resistivity-slices": 0.15,
+        "utah-forge-mt-resistivity-threshold-surfaces": 0.15,
+        "utah-forge-mt-top-surface": 0.15,
+        "utah-forge-mt-stations": 0.15,
+        "utah-forge-reference-stage": 0.15,
+        "terrain": 0.15,
+        "transport-roads": 0.15,
+        "hydrography-streams": 0.15,
+        "hydrography-lakes": 0.15
       },
-      "workingAreaFocusHelperVisible": true,
+      "workingAreaFocusHelperVisible": false,
       "affectedByFog": false,
       "showLabels": false
     },
@@ -162,17 +172,18 @@
       "opacity": 1,
       "meshSurfaceLiftM": -3125,
       "publicSurfaceClipEnabled": true,
-      "publicSurfaceClipCenterX": 0,
-      "publicSurfaceClipCenterY": 0,
+      "publicSurfaceClipCenterX": 21000,
+      "publicSurfaceClipCenterY": 21000,
       "publicSurfaceClipCenterZ": 2000,
-      "publicSurfaceClipSizeX": 1395706.5,
-      "publicSurfaceClipSizeY": 1139445,
-      "publicSurfaceClipSizeZ": 12600,
+      "publicSurfaceClipSizeX": 1599600,
+      "publicSurfaceClipSizeY": 1399600,
+      "publicSurfaceClipSizeZ": 50000,
       "publicSurfaceClipRotationZDeg": 0,
       "publicSurfaceClipShape": "box",
-      "affectedByFog": false,
+      "affectedByFog": true,
       "showLabels": false,
-      "fogDensity": 0.000005042016806722689
+      "fogDensity": 0.000012,
+      "publicSurfaceClipPreviewVisible": true
     },
     "utah-forge-topo-graticule": {
       "color": "#5e5e5e",
@@ -189,9 +200,9 @@
       "graticuleEdgeLabelVisible": true,
       "graticuleEdgeLabelOffsetM": 47000,
       "graticuleEdgeLabelGapM": -32000,
-      "affectedByFog": false,
+      "affectedByFog": true,
       "showLabels": false,
-      "fogDensity": 0.000005042016806722689,
+      "fogDensity": 0.000012,
       "graticulePerspectiveLineWidth": false,
       "graticuleRibbonMode": true,
       "graticuleRibbonWidthM": 400,
@@ -200,40 +211,41 @@
       "graticuleMinorOpacity": 0.25,
       "graticuleRibbonBrightness": 0.5,
       "publicSurfaceClipEnabled": true,
-      "publicSurfaceClipCenterX": 0,
-      "publicSurfaceClipCenterY": 0,
+      "publicSurfaceClipCenterX": 21000,
+      "publicSurfaceClipCenterY": 21000,
       "publicSurfaceClipCenterZ": 2000,
-      "publicSurfaceClipSizeX": 1395706.5,
-      "publicSurfaceClipSizeY": 1139445,
-      "publicSurfaceClipSizeZ": 12600,
+      "publicSurfaceClipSizeX": 1599600,
+      "publicSurfaceClipSizeY": 1399600,
+      "publicSurfaceClipSizeZ": 50000,
       "publicSurfaceClipRotationZDeg": 0,
-      "publicSurfaceClipShape": "box"
+      "publicSurfaceClipShape": "box",
+      "publicSurfaceClipPreviewVisible": true
     },
     "utah-forge-topo-clouds": {
       "atmosphereSubtype": "cloud-bank",
       "atmosphereBoundsMode": "box",
-      "atmosphereBoundsCenterX": -11621.815291721805,
-      "atmosphereBoundsCenterY": 29288.96076292231,
-      "atmosphereBoundsCenterZ": 7200,
-      "atmosphereBoundsSizeX": 28388.124725349953,
-      "atmosphereBoundsSizeY": 7200,
+      "atmosphereBoundsCenterX": -102278.82885037779,
+      "atmosphereBoundsCenterY": 32927.13765337801,
+      "atmosphereBoundsCenterZ": 5000,
+      "atmosphereBoundsSizeX": 10000,
+      "atmosphereBoundsSizeY": 50000,
       "atmosphereBoundsSizeZ": 2600,
       "color": "#ffffff",
-      "opacity": 0.88,
+      "opacity": 0.58,
       "atmosphereDensity": 1,
       "atmosphereSoftness": 0.76,
-      "atmospherePuffCount": 227,
-      "atmospherePuffScaleM": 4800,
-      "atmosphereScaleJitter": 0,
+      "atmospherePuffCount": 200,
+      "atmospherePuffScaleM": 4996,
+      "atmosphereScaleJitter": 0.59,
       "atmosphereVerticalFalloff": 1,
-      "atmosphereEdgeFade": 0.56,
+      "atmosphereEdgeFade": 1,
       "atmosphereSeed": 101,
-      "atmosphereDriftEnabled": true,
+      "atmosphereDriftEnabled": false,
       "atmosphereDriftSpeedMps": 8.1,
       "atmosphereDriftDirectionX": 1,
       "atmosphereDriftDirectionY": 0.82,
       "atmosphereDriftDirectionZ": 0.79,
-      "atmosphereDepthTest": true,
+      "atmosphereDepthTest": false,
       "atmosphereRenderOrder": 80,
       "atmosphereBoundsHelperVisible": true,
       "affectedByFog": false,
@@ -243,35 +255,37 @@
       "color": "#5a4f3d",
       "opacity": 0.78,
       "lineWidth": 2.1,
-      "affectedByFog": false,
+      "affectedByFog": true,
       "showLabels": false,
-      "fogDensity": 0.000005042016806722689,
+      "fogDensity": 0.000012,
       "publicSurfaceClipEnabled": true,
-      "publicSurfaceClipCenterX": 0,
-      "publicSurfaceClipCenterY": 0,
+      "publicSurfaceClipCenterX": 21000,
+      "publicSurfaceClipCenterY": 21000,
       "publicSurfaceClipCenterZ": 2000,
-      "publicSurfaceClipSizeX": 1395706.5,
-      "publicSurfaceClipSizeY": 1139445,
-      "publicSurfaceClipSizeZ": 12600,
+      "publicSurfaceClipSizeX": 1599600,
+      "publicSurfaceClipSizeY": 1399600,
+      "publicSurfaceClipSizeZ": 50000,
       "publicSurfaceClipRotationZDeg": 0,
-      "publicSurfaceClipShape": "box"
+      "publicSurfaceClipShape": "box",
+      "publicSurfaceClipPreviewVisible": true
     },
     "hydrography-streams": {
       "color": "#3d9db8",
       "opacity": 0.78,
       "lineWidth": 1.05,
-      "affectedByFog": false,
+      "affectedByFog": true,
       "showLabels": false,
-      "fogDensity": 0.000005042016806722689,
+      "fogDensity": 0.000012,
       "publicSurfaceClipEnabled": true,
-      "publicSurfaceClipCenterX": 0,
-      "publicSurfaceClipCenterY": 0,
+      "publicSurfaceClipCenterX": 21000,
+      "publicSurfaceClipCenterY": 21000,
       "publicSurfaceClipCenterZ": 2000,
-      "publicSurfaceClipSizeX": 1395706.5,
-      "publicSurfaceClipSizeY": 1139445,
-      "publicSurfaceClipSizeZ": 12600,
+      "publicSurfaceClipSizeX": 1599600,
+      "publicSurfaceClipSizeY": 1399600,
+      "publicSurfaceClipSizeZ": 50000,
       "publicSurfaceClipRotationZDeg": 0,
-      "publicSurfaceClipShape": "box"
+      "publicSurfaceClipShape": "box",
+      "publicSurfaceClipPreviewVisible": true
     },
     "hydrography-lakes": {
       "color": "#385a65",
@@ -279,18 +293,19 @@
       "opacity": 0.78,
       "fillOpacity": 0.28,
       "lineWidth": 1.8,
-      "affectedByFog": false,
+      "affectedByFog": true,
       "showLabels": false,
-      "fogDensity": 0.000005042016806722689,
+      "fogDensity": 0.000012,
       "publicSurfaceClipEnabled": true,
-      "publicSurfaceClipCenterX": 0,
-      "publicSurfaceClipCenterY": 0,
+      "publicSurfaceClipCenterX": 21000,
+      "publicSurfaceClipCenterY": 21000,
       "publicSurfaceClipCenterZ": 2000,
-      "publicSurfaceClipSizeX": 1395706.5,
-      "publicSurfaceClipSizeY": 1139445,
-      "publicSurfaceClipSizeZ": 12600,
+      "publicSurfaceClipSizeX": 1599600,
+      "publicSurfaceClipSizeY": 1399600,
+      "publicSurfaceClipSizeZ": 50000,
       "publicSurfaceClipRotationZDeg": 0,
-      "publicSurfaceClipShape": "box"
+      "publicSurfaceClipShape": "box",
+      "publicSurfaceClipPreviewVisible": true
     },
     "utah-forge-mt-stations": {
       "color": "#6f6767",
@@ -688,32 +703,44 @@
       "affectedByFog": false,
       "showLabels": false
     },
-    "topo-cloud-volume-2": {
+    "naip-2024-tile-diagnostics": {
+      "publicSurfaceClipEnabled": true,
+      "publicSurfaceClipCenterY": 21000,
+      "publicSurfaceClipCenterX": 21000,
+      "publicSurfaceClipShape": "box",
+      "publicSurfaceClipSizeX": 1599600,
+      "publicSurfaceClipSizeZ": 50000,
+      "publicSurfaceClipSizeY": 1399600,
+      "affectedByFog": true,
+      "fogDensity": 0.000012,
+      "publicSurfaceClipPreviewVisible": true
+    },
+    "topo-cloud-volume-3": {
       "atmosphereSubtype": "cloud-bank",
       "atmosphereBoundsMode": "box",
-      "color": "#ffffff",
-      "opacity": 0.88,
-      "atmosphereDensity": 1,
-      "atmosphereSoftness": 0.76,
-      "atmospherePuffCount": 227,
-      "atmospherePuffScaleM": 4800,
-      "atmosphereScaleJitter": 0,
-      "atmosphereBoundsCenterX": -5063.295111351388,
-      "atmosphereBoundsCenterY": 48825.0400865867,
-      "atmosphereBoundsCenterZ": 7200,
-      "atmosphereBoundsSizeX": 28388.124725349953,
-      "atmosphereBoundsSizeY": 7200,
-      "atmosphereBoundsSizeZ": 2600,
-      "atmosphereEdgeFade": 0.56,
-      "atmosphereVerticalFalloff": 1,
-      "atmosphereSeed": 118,
+      "color": "#eef4f8",
+      "opacity": 0.32,
+      "atmosphereDensity": 0.45,
+      "atmosphereSoftness": 0.82,
+      "atmospherePuffCount": 96,
+      "atmospherePuffScaleM": 750,
+      "atmosphereScaleJitter": 0.58,
+      "atmosphereBoundsCenterX": 0,
+      "atmosphereBoundsCenterY": 0,
+      "atmosphereBoundsCenterZ": 2529.2,
+      "atmosphereBoundsSizeX": 12000,
+      "atmosphereBoundsSizeY": 12000,
+      "atmosphereBoundsSizeZ": 1512,
+      "atmosphereEdgeFade": 0.88,
+      "atmosphereVerticalFalloff": 0.45,
+      "atmosphereSeed": 175,
       "atmosphereDriftEnabled": false,
-      "atmosphereDriftSpeedMps": 8.1,
+      "atmosphereDriftSpeedMps": 5,
       "atmosphereDriftDirectionX": 1,
-      "atmosphereDriftDirectionY": 0.82,
-      "atmosphereDriftDirectionZ": 0.79,
+      "atmosphereDriftDirectionY": 0,
+      "atmosphereDriftDirectionZ": 0,
       "atmosphereDepthTest": true,
-      "atmosphereRenderOrder": 80,
+      "atmosphereRenderOrder": 20,
       "atmosphereBoundsHelperVisible": true
     }
   },
@@ -721,9 +748,8 @@
     "utah-forge-site-boundary",
     "utah-forge-phase3-demo-boreholes",
     "utah-forge-mt-resistivity-full-density",
-    "utah-forge-topo-graticule",
-    "topo-cloud-volume-2",
-    "terrain"
+    "terrain",
+    "utah-forge-topo-clouds"
   ],
   "scene": {
     "background": "#383838",
@@ -742,7 +768,7 @@
     "fog": {
       "enabled": true,
       "color": "#e82626",
-      "density": 0.000072,
+      "density": 0.0000037267080745341615,
       "lightModeColor": "#b5b5b5"
     },
     "topoDetails": {
@@ -798,28 +824,28 @@
     },
     "terrain": {
       "materialPreset": "image:naip-2024-aerial",
-      "rampLow": "#575145",
+      "rampLow": "#757470",
       "rampMid": "#958a72",
-      "rampHigh": "#d9cba3",
-      "elevLowM": 0,
-      "elevHighM": 180,
+      "rampHigh": "#b8ac89",
+      "elevLowM": -2000,
+      "elevHighM": 75,
       "surfaceElevationEnabled": false,
-      "surfaceElevationLegendVisible": true,
+      "surfaceElevationLegendVisible": false,
       "surfaceElevationColors": [
-        "#8b806c",
-        "#b5aa8d",
-        "#8ea083",
-        "#53675c",
-        "#f1eee4"
+        "#b7b1a9",
+        "#948371",
+        "#8d8a86",
+        "#83877d",
+        "#adadad"
       ],
       "hillshadeIntensity": 0.75,
-      "rockHueVariance": 0,
+      "rockHueVariance": 0.005,
       "shadowSharpness": 0.12,
       "facetStrength": 0.04,
-      "edgeFadeDistanceM": 10000,
+      "edgeFadeDistanceM": 90000,
       "edgeFadeShape": "rounded-square",
-      "edgeFadeInsetM": 10000,
-      "edgeFadeCornerRadiusM": 75000,
+      "edgeFadeInsetM": 40000,
+      "edgeFadeCornerRadiusM": 140000,
       "shadowTint": "#303640",
       "gridEnabled": false,
       "gridColor": "#d7d1c7",
@@ -936,28 +962,34 @@
         "textOpacity": 0.98,
         "opacity": 0
       },
-      "surfaceElevationMinM": 1500,
-      "surfaceElevationMaxM": 3500,
+      "surfaceElevationMinM": 375,
+      "surfaceElevationMaxM": 1825,
       "surfaceElevationColorPositions": [
         0,
-        0.34,
-        0.58,
-        0.82,
+        0.1508631028701684,
+        0.3457948154551811,
+        0.6437617768516467,
         1
       ],
       "surfaceElevationMidpoints": [
         0.58,
-        0.44,
-        0.52,
-        0.46
+        0.48148127217000936,
+        0.3768106006660798,
+        0.6097316162722806
       ],
       "surfaceElevationTransitionSoftness": 1,
-      "surfaceElevationColorBlend": 0.92,
+      "surfaceElevationColorBlend": 0.5,
       "surfaceElevationReverse": false,
       "edgeTopShine": 0,
       "verticalExaggeration": 3.25,
-      "edgeOutlineEnabled": true,
-      "fogGradientCurve": 0.75
+      "edgeOutlineEnabled": false,
+      "fogGradientCurve": 4,
+      "orthoPhotoEdgeFadeDistanceM": 25000,
+      "orthoPhotoOutsideFillEnabled": true,
+      "orthoPhotoOutsideSurfaceMode": "topo",
+      "orthoPhotoOutsideColor": "#d4d4d4",
+      "orthoPhotoOutsideOpacity": 1,
+      "orthoPhotoEdgeClipInsetM": 0
     },
     "gui": {
       "overlay": {
@@ -1806,7 +1838,7 @@
         "fog": {
           "enabled": true,
           "color": "#e82626",
-          "density": 0.000072,
+          "density": 0.0000037267080745341615,
           "lightModeColor": "#b5b5b5"
         },
         "sun": {
@@ -1857,11 +1889,11 @@
         },
         "terrain": {
           "materialPreset": "ortho-photo",
-          "rampLow": "#575145",
+          "rampLow": "#757470",
           "rampMid": "#958a72",
-          "rampHigh": "#d9cba3",
-          "elevLowM": 0,
-          "elevHighM": 180,
+          "rampHigh": "#b8ac89",
+          "elevLowM": -2000,
+          "elevHighM": 75,
           "surfaceElevationEnabled": false,
           "surfaceElevationLegendVisible": true,
           "surfaceElevationColors": [
@@ -1872,7 +1904,7 @@
             "#fff24d"
           ],
           "hillshadeIntensity": 0.75,
-          "rockHueVariance": 0,
+          "rockHueVariance": 0.005,
           "shadowSharpness": 0.12,
           "facetStrength": 0.04,
           "edgeFadeDistanceM": 15000,
@@ -1995,7 +2027,7 @@
               ]
             }
           ],
-          "fogGradientCurve": 0.75
+          "fogGradientCurve": 4
         },
         "topoDetails": {
           "distanceFadeNear": 60000,
@@ -2200,25 +2232,64 @@
         },
         "utah-forge-working-area-focus": {
           "affectedByFog": false,
-          "showLabels": false
+          "showLabels": false,
+          "workingAreaFocusEnabled": false,
+          "workingAreaFocusMode": "outside-context",
+          "workingAreaFocusBoundsLayerId": "utah-forge-phase3-working-area",
+          "workingAreaFocusTargetLayerIds": [
+            "utah-forge-mt-resistivity-full-density",
+            "utah-forge-mt-resistivity-preview",
+            "utah-forge-mt-resistivity-volume",
+            "utah-forge-phase3-seismic-browser"
+          ],
+          "workingAreaFocusOutsideOpacityByLayerId": {
+            "utah-forge-mt-resistivity-full-density": 0.15,
+            "utah-forge-mt-resistivity-preview": 0.15,
+            "utah-forge-mt-resistivity-volume": 0.15,
+            "utah-forge-phase3-seismic-browser": 0.15,
+            "utah-forge-mt-resistivity-slices": 0.15,
+            "utah-forge-mt-resistivity-threshold-surfaces": 0.15,
+            "utah-forge-mt-top-surface": 0.15,
+            "utah-forge-mt-stations": 0.15,
+            "utah-forge-reference-stage": 0.15,
+            "terrain": 0.15,
+            "transport-roads": 0.15,
+            "hydrography-streams": 0.15,
+            "hydrography-lakes": 0.15
+          },
+          "workingAreaFocusHelperVisible": false
         },
         "transport-roads": {
           "color": "#5a4f3d",
           "opacity": 0.78,
           "lineWidth": 2.1,
-          "affectedByFog": false,
-          "fogDensity": 0.000005042016806722689,
+          "affectedByFog": true,
+          "fogDensity": 0.000012,
           "showLabels": false,
-          "publicSurfaceClipEnabled": false
+          "publicSurfaceClipEnabled": true,
+          "publicSurfaceClipCenterY": 21000,
+          "publicSurfaceClipCenterX": 21000,
+          "publicSurfaceClipShape": "box",
+          "publicSurfaceClipSizeX": 1599600,
+          "publicSurfaceClipSizeZ": 50000,
+          "publicSurfaceClipSizeY": 1399600,
+          "publicSurfaceClipPreviewVisible": true
         },
         "hydrography-streams": {
           "color": "#3d9db8",
           "opacity": 0.78,
           "lineWidth": 1.05,
-          "affectedByFog": false,
-          "fogDensity": 0.000005042016806722689,
+          "affectedByFog": true,
+          "fogDensity": 0.000012,
           "showLabels": false,
-          "publicSurfaceClipEnabled": false
+          "publicSurfaceClipEnabled": true,
+          "publicSurfaceClipCenterY": 21000,
+          "publicSurfaceClipCenterX": 21000,
+          "publicSurfaceClipShape": "box",
+          "publicSurfaceClipSizeX": 1599600,
+          "publicSurfaceClipSizeZ": 50000,
+          "publicSurfaceClipSizeY": 1399600,
+          "publicSurfaceClipPreviewVisible": true
         },
         "hydrography-lakes": {
           "color": "#385a65",
@@ -2226,17 +2297,31 @@
           "fillOpacity": 0.28,
           "opacity": 0.78,
           "lineWidth": 1.8,
-          "affectedByFog": false,
-          "fogDensity": 0.000005042016806722689,
+          "affectedByFog": true,
+          "fogDensity": 0.000012,
           "showLabels": false,
-          "publicSurfaceClipEnabled": false
+          "publicSurfaceClipEnabled": true,
+          "publicSurfaceClipCenterY": 21000,
+          "publicSurfaceClipCenterX": 21000,
+          "publicSurfaceClipShape": "box",
+          "publicSurfaceClipSizeX": 1599600,
+          "publicSurfaceClipSizeZ": 50000,
+          "publicSurfaceClipSizeY": 1399600,
+          "publicSurfaceClipPreviewVisible": true
         },
         "terrain": {
           "opacity": 1,
           "meshSurfaceLiftM": -3125,
-          "affectedByFog": false,
-          "fogDensity": 0.000005042016806722689,
-          "publicSurfaceClipEnabled": false
+          "affectedByFog": true,
+          "fogDensity": 0.000012,
+          "publicSurfaceClipEnabled": true,
+          "publicSurfaceClipCenterY": 21000,
+          "publicSurfaceClipCenterX": 21000,
+          "publicSurfaceClipShape": "box",
+          "publicSurfaceClipSizeX": 1599600,
+          "publicSurfaceClipSizeZ": 50000,
+          "publicSurfaceClipSizeY": 1399600,
+          "publicSurfaceClipPreviewVisible": true
         },
         "utah-forge-mt-resistivity-slices": {
           "sectionIsoEnabled": true,
@@ -2406,10 +2491,17 @@
           "graticuleMinorOpacity": 0.25,
           "graticuleRibbonBrightness": 0.5,
           "graticuleLabelSizeM": 17500,
-          "affectedByFog": false,
-          "fogDensity": 0.000005042016806722689,
+          "affectedByFog": true,
+          "fogDensity": 0.000012,
           "graticuleEdgeLabelOffsetM": 47000,
-          "publicSurfaceClipEnabled": false
+          "publicSurfaceClipEnabled": true,
+          "publicSurfaceClipCenterY": 21000,
+          "publicSurfaceClipCenterX": 21000,
+          "publicSurfaceClipShape": "box",
+          "publicSurfaceClipSizeX": 1599600,
+          "publicSurfaceClipSizeZ": 50000,
+          "publicSurfaceClipSizeY": 1399600,
+          "publicSurfaceClipPreviewVisible": true
         },
         "utah-forge-phase3-demo-boreholes": {
           "demoBoreholeBlock": {
@@ -2477,7 +2569,7 @@
               "toeLabelLiftM": 40
             }
           },
-          "showLabels": true,
+          "showLabels": false,
           "demoBoreholeSourceLocations": {
             "items": {
               "58-32-WELL": {
@@ -2495,10 +2587,13 @@
             "topRingRadiusM": 195,
             "lineWidth": 3,
             "labelLiftM": 145,
-            "topRingOpacity": 0.63
+            "topRingOpacity": 0.63,
+            "visible": false
           },
           "opacity": 1,
-          "labelPointerVisible": true
+          "labelPointerVisible": true,
+          "siteDetailsAlwaysOnTop": true,
+          "siteDetailsAlignToTopo": true
         },
         "utah-forge-mt-stations": {
           "opacity": 1,
@@ -2518,22 +2613,25 @@
           "labelOutlineOpacity": 0.9
         },
         "utah-forge-topo-clouds": {
-          "atmospherePuffCount": 227,
+          "atmospherePuffCount": 200,
           "atmosphereBoundsHelperVisible": true,
-          "atmosphereDriftEnabled": true,
+          "atmosphereDriftEnabled": false,
           "atmosphereDriftSpeedMps": 8.1,
           "atmosphereSoftness": 0.76,
-          "atmosphereBoundsSizeX": 28388.124725349953,
+          "atmosphereBoundsSizeX": 10000,
           "atmosphereDriftDirectionY": 0.82,
           "atmosphereDriftDirectionZ": 0.79,
           "atmosphereVerticalFalloff": 1,
-          "atmosphereEdgeFade": 0.56,
-          "atmosphereBoundsCenterX": -11621.815291721805,
-          "atmosphereBoundsCenterY": 29288.96076292231,
-          "atmosphereBoundsCenterZ": 7200,
-          "atmosphereBoundsSizeY": 7200,
+          "atmosphereEdgeFade": 1,
+          "atmosphereBoundsCenterX": -102278.82885037779,
+          "atmosphereBoundsCenterY": 32927.13765337801,
+          "atmosphereBoundsCenterZ": 5000,
+          "atmosphereBoundsSizeY": 50000,
           "atmosphereBoundsSizeZ": 2600,
-          "atmosphereDepthTest": true
+          "atmosphereDepthTest": false,
+          "atmospherePuffScaleM": 4996,
+          "atmosphereScaleJitter": 0.59,
+          "opacity": 0.58
         },
         "topo-cloud-volume-2": {
           "atmosphereBoundsCenterX": -5063.295111351388,
@@ -2544,6 +2642,18 @@
           "atmosphereBoundsSizeZ": 2600,
           "atmosphereDriftEnabled": false,
           "atmosphereBoundsHelperVisible": true
+        },
+        "naip-2024-tile-diagnostics": {
+          "publicSurfaceClipEnabled": true,
+          "publicSurfaceClipCenterY": 21000,
+          "publicSurfaceClipCenterX": 21000,
+          "publicSurfaceClipShape": "box",
+          "publicSurfaceClipSizeX": 1599600,
+          "publicSurfaceClipSizeZ": 50000,
+          "publicSurfaceClipSizeY": 1399600,
+          "affectedByFog": true,
+          "fogDensity": 0.000012,
+          "publicSurfaceClipPreviewVisible": true
         }
       }
     }

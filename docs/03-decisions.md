@@ -934,3 +934,13 @@ fake-cloud looks.
 **Why:** Utah FORGE terrain can use strong vertical exaggeration and surface lift, so source-Z Site Details and station markers appeared below or detached from the rendered surface. The requested authoring behavior is visual alignment with the active topo, while still preserving source coordinates for provenance and registration.
 
 **Trade-off accepted:** Drape behavior is display-only and may visually distort borehole trajectory shape under exaggerated topo. Source survey coordinates, manifests, registration evidence, and CRS status remain unchanged. Visual acceptance still requires a browser/runtime check because static validation only proves the fields and code paths exist.
+
+## DEC-089 - Editor sidebar controls require a manifest guard
+
+**Considered:** keep editor control protection in scattered source-string tests and reference docs, or create a canonical field-level manifest that must be updated whenever editor sidebar controls move, appear, disappear, or become hidden.
+
+**Chose:** create `docs/dev-context/editor-control-manifest.json` with stable ids for top-level bars, peer groups, subsections, persisted controls, action controls, and dynamic control families. Editor sidebar source changes must keep active manifest anchors valid. Removals, renames, and hidden controls require structured approval metadata in the manifest.
+
+**Why:** Repeated editor regrouping has made it too easy to lose, hide, or orphan controls and backed fields. A checked manifest makes control identity explicit and gives future agents a preflight checklist before touching the editor bar.
+
+**Trade-off accepted:** Individual future control removals use manifest approval metadata rather than a durable decision entry by default. A new `docs/03-decisions.md` entry is still required when a control change alters product architecture, persistence, runtime ownership, or another durable product decision.

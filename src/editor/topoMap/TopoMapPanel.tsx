@@ -175,6 +175,7 @@ type LayerProvenancePatch = Partial<
 type TopoMapPanelSection =
   | "all"
   | "surface"
+  | "satellite"
   | "extents"
   | "environment"
   | "graticule"
@@ -187,6 +188,7 @@ function TopoSubsection({
   onToggle,
   testId,
   toggleTestId,
+  manifestId,
   defaultOpen = true,
 }: {
   label: string;
@@ -195,6 +197,7 @@ function TopoSubsection({
   onToggle?: () => void;
   testId?: string;
   toggleTestId?: string;
+  manifestId?: string;
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -204,6 +207,7 @@ function TopoSubsection({
       onToggle={(event) => setOpen(event.currentTarget.open)}
       style={topoSubsectionDetailsStyle}
       data-testid={testId}
+      data-editor-section-id={manifestId}
     >
       <summary
         style={{
@@ -704,6 +708,8 @@ export function TopoMapPanel({
     isImageBackedTopoMaterialPreset(selectedPreset);
   const selectedOrthoPhotoBudget: OrthoPhotoTextureBudgetId =
     terrain.orthoPhotoTextureBudget === 8192 ? "8192" : "4096";
+  const outsideSurfaceMode =
+    terrain.orthoPhotoOutsideSurfaceMode ?? "solid";
   const targetLayerIds =
     publicSurfaceLayerIds.length > 0 ? publicSurfaceLayerIds : [layerId];
   const setPublicTopoLayerStyle = (patch: Partial<EditableStyle>) => {
@@ -897,9 +903,11 @@ export function TopoMapPanel({
     );
   };
   const showSurface = section === "all" || section === "surface";
+  const showSatellite = section === "all" || section === "satellite";
   const showExtents = section === "all" || section === "extents";
   const showEnvironment = section === "all" || section === "environment";
-  const showSurfacePanel = showSurface || showExtents || showEnvironment;
+  const showSurfacePanel =
+    showSurface || showSatellite || showExtents || showEnvironment;
   const showGraticule = section === "all" || section === "graticule";
   const showTitle = section === "all" || section === "title";
 
@@ -1025,7 +1033,11 @@ export function TopoMapPanel({
               </TopoSubsection>
             </div>
           </details>
-          <TopoSubsection label="Map Type" testId="topo-material-controls">
+          <TopoSubsection
+            label="Map Type"
+            testId="topo-material-controls"
+            manifestId="topo.surface.map-type"
+          >
             <EnvSelectRow<PublicTopoMaterialPresetId>
               label="Map Type"
               value={selectedPreset}
@@ -1043,162 +1055,6 @@ export function TopoMapPanel({
               />
             ) : null}
           </TopoSubsection>
-          {selectedPresetIsImageBacked ? (
-            <>
-              <TopoSubsection label="Satellite image">
-                <EnvStyleRow
-                  label="Photo opacity"
-                  inputType="range"
-                  value={String(terrain.orthoPhotoOpacity ?? 1)}
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  decimals={2}
-                  testId="topo-ortho-photo-opacity"
-                  onChange={(v) =>
-                    setTerrain({ orthoPhotoOpacity: parseFloat(v) })
-                  }
-                />
-              </TopoSubsection>
-              <TopoSubsection label="Image adjustment">
-                <EnvStyleRow
-                  label="Photo bright"
-                  inputType="range"
-                  value={String(terrain.orthoPhotoBrightness ?? 0)}
-                  min={-0.5}
-                  max={0.5}
-                  step={0.02}
-                  decimals={2}
-                  testId="topo-ortho-photo-brightness"
-                  onChange={(v) =>
-                    setTerrain({ orthoPhotoBrightness: parseFloat(v) })
-                  }
-                />
-                <EnvStyleRow
-                  label="Photo contrast"
-                  inputType="range"
-                  value={String(terrain.orthoPhotoContrast ?? 1)}
-                  min={0.25}
-                  max={2}
-                  step={0.05}
-                  decimals={2}
-                  testId="topo-ortho-photo-contrast"
-                  onChange={(v) =>
-                    setTerrain({ orthoPhotoContrast: parseFloat(v) })
-                  }
-                />
-                <EnvStyleRow
-                  label="Photo sat."
-                  inputType="range"
-                  value={String(terrain.orthoPhotoSaturation ?? 1)}
-                  min={0}
-                  max={2}
-                  step={0.05}
-                  decimals={2}
-                  testId="topo-ortho-photo-saturation"
-                  onChange={(v) =>
-                    setTerrain({ orthoPhotoSaturation: parseFloat(v) })
-                  }
-                />
-              </TopoSubsection>
-              <TopoSubsection label="Image sun response">
-                <EnvStyleRow
-                  label="Photo sun relief"
-                  inputType="range"
-                  value={String(terrain.orthoPhotoHillshadeBlend ?? 0.45)}
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  decimals={2}
-                  testId="topo-ortho-photo-hillshade"
-                  onChange={(v) =>
-                    setTerrain({
-                      orthoPhotoHillshadeBlend: parseFloat(v),
-                    })
-                  }
-                />
-                <EnvStyleRow
-                  label="Photo shadow"
-                  inputType="range"
-                  value={String(terrain.orthoPhotoShadowStrength ?? 0.35)}
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  decimals={2}
-                  testId="topo-ortho-photo-shadow-strength"
-                  onChange={(v) =>
-                    setTerrain({
-                      orthoPhotoShadowStrength: parseFloat(v),
-                    })
-                  }
-                />
-                <EnvStyleRow
-                  label="Shadow floor"
-                  inputType="range"
-                  value={String(terrain.orthoPhotoShadowFloor ?? 0.62)}
-                  min={0.05}
-                  max={1}
-                  step={0.05}
-                  decimals={2}
-                  testId="topo-ortho-photo-shadow-floor"
-                  onChange={(v) =>
-                    setTerrain({
-                      orthoPhotoShadowFloor: parseFloat(v),
-                    })
-                  }
-                />
-                <EnvStyleRow
-                  label="Shadow tint"
-                  inputType="color"
-                  value={terrain.orthoPhotoShadowTint ?? "#303640"}
-                  testId="topo-ortho-photo-shadow-tint"
-                  onChange={(v) =>
-                    setTerrain({
-                      orthoPhotoShadowTint: v,
-                    })
-                  }
-                />
-              </TopoSubsection>
-              <TopoSubsection
-                label="Outside image fill"
-                active={terrain.orthoPhotoOutsideFillEnabled === true}
-                testId="topo-ortho-photo-outside-fill"
-                onToggle={() => {
-                  const nextEnabled =
-                    terrain.orthoPhotoOutsideFillEnabled !== true;
-                  setTerrain({
-                    orthoPhotoOutsideFillEnabled: nextEnabled,
-                    orthoPhotoOutsideOpacity:
-                      nextEnabled &&
-                      (terrain.orthoPhotoOutsideOpacity ?? 0) <= 0.001
-                        ? 1
-                        : (terrain.orthoPhotoOutsideOpacity ?? 0),
-                  });
-                }}
-              >
-                <EnvStyleRow
-                  label="Fill color"
-                  inputType="color"
-                  value={terrain.orthoPhotoOutsideColor ?? "#b8ad8d"}
-                  testId="topo-ortho-photo-outside-color"
-                  onChange={(v) => setTerrain({ orthoPhotoOutsideColor: v })}
-                />
-                <EnvStyleRow
-                  label="Fill opacity"
-                  inputType="range"
-                  value={String(terrain.orthoPhotoOutsideOpacity ?? 0)}
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  decimals={2}
-                  testId="topo-ortho-photo-outside-opacity"
-                  onChange={(v) =>
-                    setTerrain({ orthoPhotoOutsideOpacity: parseFloat(v) })
-                  }
-                />
-              </TopoSubsection>
-            </>
-          ) : null}
           <TopoSubsection
             label="Elevation ramp"
             active={terrain.surfaceElevationEnabled === true}
@@ -1410,7 +1266,10 @@ export function TopoMapPanel({
               />
             ))}
           </TopoSubsection>
-          <TopoSubsection label="Terrain shading">
+          <TopoSubsection
+            label="Terrain shading"
+            manifestId="topo.surface.terrain-shading"
+          >
             <EnvStyleRow
               label="Ramp low"
               inputType="color"
@@ -1523,6 +1382,220 @@ export function TopoMapPanel({
           </TopoSubsection>
             </>
           ) : null}
+          {showSatellite && selectedPresetIsImageBacked ? (
+            <>
+              <TopoSubsection
+                label="Satellite image"
+                manifestId="topo.satellite.image"
+              >
+                <EnvStyleRow
+                  label="Photo opacity"
+                  inputType="range"
+                  value={String(terrain.orthoPhotoOpacity ?? 1)}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  decimals={2}
+                  testId="topo-ortho-photo-opacity"
+                  onChange={(v) =>
+                    setTerrain({ orthoPhotoOpacity: parseFloat(v) })
+                  }
+                />
+                <EnvStyleRow
+                  label="Edge clip"
+                  inputType="range"
+                  value={String(terrain.orthoPhotoEdgeClipInsetM ?? 0)}
+                  min={0}
+                  max={250_000}
+                  step={5_000}
+                  decimals={0}
+                  testId="topo-ortho-photo-edge-clip-inset"
+                  onChange={(v) =>
+                    setTerrain({ orthoPhotoEdgeClipInsetM: parseFloat(v) })
+                  }
+                />
+                <EnvStyleRow
+                  label="Opacity gradient"
+                  inputType="range"
+                  value={String(terrain.orthoPhotoEdgeFadeDistanceM ?? 0)}
+                  min={0}
+                  max={250_000}
+                  step={5_000}
+                  decimals={0}
+                  testId="topo-ortho-photo-edge-fade"
+                  onChange={(v) =>
+                    setTerrain({ orthoPhotoEdgeFadeDistanceM: parseFloat(v) })
+                  }
+                />
+              </TopoSubsection>
+              <TopoSubsection
+                label="Image adjustment"
+                manifestId="topo.satellite.image-adjustment"
+              >
+                <EnvStyleRow
+                  label="Photo bright"
+                  inputType="range"
+                  value={String(terrain.orthoPhotoBrightness ?? 0)}
+                  min={-0.5}
+                  max={0.5}
+                  step={0.02}
+                  decimals={2}
+                  testId="topo-ortho-photo-brightness"
+                  onChange={(v) =>
+                    setTerrain({ orthoPhotoBrightness: parseFloat(v) })
+                  }
+                />
+                <EnvStyleRow
+                  label="Photo contrast"
+                  inputType="range"
+                  value={String(terrain.orthoPhotoContrast ?? 1)}
+                  min={0.25}
+                  max={2}
+                  step={0.05}
+                  decimals={2}
+                  testId="topo-ortho-photo-contrast"
+                  onChange={(v) =>
+                    setTerrain({ orthoPhotoContrast: parseFloat(v) })
+                  }
+                />
+                <EnvStyleRow
+                  label="Photo sat."
+                  inputType="range"
+                  value={String(terrain.orthoPhotoSaturation ?? 1)}
+                  min={0}
+                  max={2}
+                  step={0.05}
+                  decimals={2}
+                  testId="topo-ortho-photo-saturation"
+                  onChange={(v) =>
+                    setTerrain({ orthoPhotoSaturation: parseFloat(v) })
+                  }
+                />
+              </TopoSubsection>
+              <TopoSubsection
+                label="Image sun response"
+                manifestId="topo.satellite.sun-response"
+              >
+                <EnvStyleRow
+                  label="Photo sun relief"
+                  inputType="range"
+                  value={String(terrain.orthoPhotoHillshadeBlend ?? 0.45)}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  decimals={2}
+                  testId="topo-ortho-photo-hillshade"
+                  onChange={(v) =>
+                    setTerrain({
+                      orthoPhotoHillshadeBlend: parseFloat(v),
+                    })
+                  }
+                />
+                <EnvStyleRow
+                  label="Photo shadow"
+                  inputType="range"
+                  value={String(terrain.orthoPhotoShadowStrength ?? 0.35)}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  decimals={2}
+                  testId="topo-ortho-photo-shadow-strength"
+                  onChange={(v) =>
+                    setTerrain({
+                      orthoPhotoShadowStrength: parseFloat(v),
+                    })
+                  }
+                />
+                <EnvStyleRow
+                  label="Shadow floor"
+                  inputType="range"
+                  value={String(terrain.orthoPhotoShadowFloor ?? 0.62)}
+                  min={0.05}
+                  max={1}
+                  step={0.05}
+                  decimals={2}
+                  testId="topo-ortho-photo-shadow-floor"
+                  onChange={(v) =>
+                    setTerrain({
+                      orthoPhotoShadowFloor: parseFloat(v),
+                    })
+                  }
+                />
+                <EnvStyleRow
+                  label="Shadow tint"
+                  inputType="color"
+                  value={terrain.orthoPhotoShadowTint ?? "#303640"}
+                  testId="topo-ortho-photo-shadow-tint"
+                  onChange={(v) =>
+                    setTerrain({
+                      orthoPhotoShadowTint: v,
+                    })
+                  }
+                />
+              </TopoSubsection>
+              <TopoSubsection
+                label="Outside image surface"
+                active={terrain.orthoPhotoOutsideFillEnabled === true}
+                testId="topo-ortho-photo-outside-fill"
+                manifestId="topo.satellite.outside-surface"
+                onToggle={() => {
+                  const nextEnabled =
+                    terrain.orthoPhotoOutsideFillEnabled !== true;
+                  setTerrain({
+                    orthoPhotoOutsideFillEnabled: nextEnabled,
+                    orthoPhotoOutsideSurfaceMode: nextEnabled
+                      ? "topo"
+                      : outsideSurfaceMode,
+                    orthoPhotoOutsideOpacity:
+                      nextEnabled &&
+                      (terrain.orthoPhotoOutsideOpacity ?? 0) <= 0.001
+                        ? 1
+                        : (terrain.orthoPhotoOutsideOpacity ?? 0),
+                  });
+                }}
+              >
+                <div style={nestedControlRowStyle}>
+                  <label style={nestedFieldLabelStyle}>Surface mode</label>
+                  <select
+                    data-testid="topo-ortho-photo-outside-surface-mode"
+                    value={outsideSurfaceMode}
+                    onChange={(event) =>
+                      setTerrain({
+                        orthoPhotoOutsideSurfaceMode: event.currentTarget
+                          .value as TerrainSettings["orthoPhotoOutsideSurfaceMode"],
+                      })
+                    }
+                    style={{ flex: 1 }}
+                  >
+                    <option value="topo">Topo ramp</option>
+                    <option value="solid">Solid fill</option>
+                  </select>
+                </div>
+                {outsideSurfaceMode === "solid" ? (
+                  <EnvStyleRow
+                    label="Fill color"
+                    inputType="color"
+                    value={terrain.orthoPhotoOutsideColor ?? "#b8ad8d"}
+                    testId="topo-ortho-photo-outside-color"
+                    onChange={(v) => setTerrain({ orthoPhotoOutsideColor: v })}
+                  />
+                ) : null}
+                <EnvStyleRow
+                  label="Surface opacity"
+                  inputType="range"
+                  value={String(terrain.orthoPhotoOutsideOpacity ?? 0)}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  decimals={2}
+                  testId="topo-ortho-photo-outside-opacity"
+                  onChange={(v) =>
+                    setTerrain({ orthoPhotoOutsideOpacity: parseFloat(v) })
+                  }
+                />
+              </TopoSubsection>
+            </>
+          ) : null}
           {showExtents && terrainLayer ? (
             <>
               <TopoSurfaceClipControls
@@ -1570,7 +1643,108 @@ export function TopoMapPanel({
               </span>
             </summary>
             <div style={detailsContentStyle}>
-              <TopoSubsection label="Scene atmosphere">
+              <TopoSubsection
+                label="Fog"
+                testId="topo-environment-fog"
+                manifestId="topo.environment.fog"
+              >
+                <TopoSubsection
+                  label="Map fog"
+                  manifestId="topo.environment.map-fog"
+                  active={topoFogIncluded}
+                  onToggle={() =>
+                    setPublicTopoLayerStyle({ affectedByFog: !topoFogIncluded })
+                  }
+                >
+                  {topoFogIncluded ? (
+                    <>
+                      <EnvStyleRow
+                        label="Layer dens."
+                        inputType="range"
+                        value={String(topoFogDensity * 10000)}
+                        min={0.01}
+                        max={6}
+                        step={0.01}
+                        decimals={2}
+                        onChange={(v) =>
+                          setPublicTopoLayerStyle({
+                            fogDensity: parseFloat(v) / 10000,
+                          })
+                        }
+                      />
+                      <EnvStyleRow
+                        label="Layer reach"
+                        inputType="range"
+                        value={String(topoFogReachKm)}
+                        min={5}
+                        max={3000}
+                        step={5}
+                        decimals={0}
+                        onChange={(v) =>
+                          setPublicTopoLayerStyle({
+                            fogDensity: 3 / Math.max(parseFloat(v) * 1000, 1),
+                          })
+                        }
+                      />
+                    </>
+                  ) : null}
+                </TopoSubsection>
+                {isEnv || currentPage ? (
+                  <TopoSubsection
+                    label="Scene fog"
+                    manifestId="topo.environment.scene-fog"
+                    active={sceneFogEnabled}
+                    onToggle={() => setSceneFog({ enabled: !sceneFogEnabled })}
+                  >
+                    {sceneFogEnabled ? (
+                      <>
+                        <EnvStyleRow
+                          label="Fog dens."
+                          inputType="range"
+                          value={String(sceneFogDensity * 10000)}
+                          min={0.01}
+                          max={6}
+                          step={0.01}
+                          decimals={2}
+                          onChange={(v) =>
+                            setSceneFog({ density: parseFloat(v) / 10000 })
+                          }
+                        />
+                        <EnvStyleRow
+                          label="Fog reach"
+                          inputType="range"
+                          value={String(sceneFogReachKm)}
+                          min={5}
+                          max={3000}
+                          step={5}
+                          decimals={0}
+                          onChange={(v) =>
+                            setSceneFog({
+                              density: 3 / Math.max(parseFloat(v) * 1000, 1),
+                            })
+                          }
+                        />
+                        <EnvStyleRow
+                          label="Fog gradient"
+                          inputType="range"
+                          value={String(sceneFogGradientCurve)}
+                          min={0.35}
+                          max={4}
+                          step={0.05}
+                          decimals={2}
+                          onChange={(v) =>
+                            setTerrain({ fogGradientCurve: parseFloat(v) })
+                          }
+                        />
+                      </>
+                    ) : null}
+                  </TopoSubsection>
+                ) : null}
+              </TopoSubsection>
+              <TopoSubsection
+                label="Scene atmosphere"
+                manifestId="topo.environment.scene-atmosphere"
+              >
                 <TopoEyeToggleRow
                   label="Light mode"
                   checked={sceneLightMode}
@@ -1613,6 +1787,7 @@ export function TopoMapPanel({
               </TopoSubsection>
               <TopoSubsection
                 label="Clouds"
+                manifestId="topo.environment.clouds"
                 active={atmosphereLayer ? atmosphereEffectiveVisible : false}
                 onToggle={atmosphereLayer ? toggleAtmosphereVisible : undefined}
                 testId="topo-environment-clouds"
@@ -1749,7 +1924,11 @@ export function TopoMapPanel({
                 )}
               </TopoSubsection>
 
-              <TopoSubsection label="Sun" testId="topo-environment-sun">
+              <TopoSubsection
+                label="Sun"
+                testId="topo-environment-sun"
+                manifestId="topo.environment.sun"
+              >
                 <TopoSubsection
                   label="Light source"
                   active={sunLightEnabled}
@@ -1938,7 +2117,10 @@ export function TopoMapPanel({
                     }
                   />
                 </TopoSubsection>
-                <TopoSubsection label="Terrain relief">
+                <TopoSubsection
+                  label="Terrain relief"
+                  manifestId="topo.environment.terrain-relief"
+                >
                   <EnvStyleRow
                     label="Relief strength"
                     inputType="range"
@@ -2052,98 +2234,6 @@ export function TopoMapPanel({
                 </TopoSubsection>
               </TopoSubsection>
 
-              <TopoSubsection label="Fog" testId="topo-environment-fog">
-                {isEnv || currentPage ? (
-                  <TopoSubsection
-                    label="Scene fog"
-                    active={sceneFogEnabled}
-                    onToggle={() => setSceneFog({ enabled: !sceneFogEnabled })}
-                  >
-                    {sceneFogEnabled ? (
-                      <>
-                        <EnvStyleRow
-                          label="Fog dens."
-                          inputType="range"
-                          value={String(sceneFogDensity * 10000)}
-                          min={0.01}
-                          max={6}
-                          step={0.01}
-                          decimals={2}
-                          onChange={(v) =>
-                            setSceneFog({ density: parseFloat(v) / 10000 })
-                          }
-                        />
-                        <EnvStyleRow
-                          label="Fog reach"
-                          inputType="range"
-                          value={String(sceneFogReachKm)}
-                          min={5}
-                          max={3000}
-                          step={5}
-                          decimals={0}
-                          onChange={(v) =>
-                            setSceneFog({
-                              density: 3 / Math.max(parseFloat(v) * 1000, 1),
-                            })
-                          }
-                        />
-                        <EnvStyleRow
-                          label="Fog gradient"
-                          inputType="range"
-                          value={String(sceneFogGradientCurve)}
-                          min={0.35}
-                          max={4}
-                          step={0.05}
-                          decimals={2}
-                          onChange={(v) =>
-                            setTerrain({ fogGradientCurve: parseFloat(v) })
-                          }
-                        />
-                      </>
-                    ) : null}
-                  </TopoSubsection>
-                ) : null}
-                <TopoSubsection
-                  label="Map fog"
-                  active={topoFogIncluded}
-                  onToggle={() =>
-                    setPublicTopoLayerStyle({ affectedByFog: !topoFogIncluded })
-                  }
-                >
-                  {topoFogIncluded ? (
-                    <>
-                      <EnvStyleRow
-                        label="Layer dens."
-                        inputType="range"
-                        value={String(topoFogDensity * 10000)}
-                        min={0.01}
-                        max={6}
-                        step={0.01}
-                        decimals={2}
-                        onChange={(v) =>
-                          setPublicTopoLayerStyle({
-                            fogDensity: parseFloat(v) / 10000,
-                          })
-                        }
-                      />
-                      <EnvStyleRow
-                        label="Layer reach"
-                        inputType="range"
-                        value={String(topoFogReachKm)}
-                        min={5}
-                        max={3000}
-                        step={5}
-                        decimals={0}
-                        onChange={(v) =>
-                          setPublicTopoLayerStyle({
-                            fogDensity: 3 / Math.max(parseFloat(v) * 1000, 1),
-                          })
-                        }
-                      />
-                    </>
-                  ) : null}
-                </TopoSubsection>
-              </TopoSubsection>
             </div>
           </details>
           ) : null}
@@ -3477,6 +3567,19 @@ function TopoMapEdgeControls({
         testId="public-surface-clip-enabled"
         onToggle={() => setPublicSurfaceClipEnabled(!publicSurfaceClipActive)}
       >
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>Preview shape</label>
+          <input
+            data-testid="public-surface-clip-preview-visible"
+            type="checkbox"
+            checked={style.publicSurfaceClipPreviewVisible === true}
+            onChange={(event) =>
+              setPublicSurfaceClipPatch({
+                publicSurfaceClipPreviewVisible: event.currentTarget.checked,
+              })
+            }
+          />
+        </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>Shape</label>
           <select
