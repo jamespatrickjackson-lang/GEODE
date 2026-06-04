@@ -175,6 +175,7 @@ type LayerProvenancePatch = Partial<
 type TopoMapPanelSection =
   | "all"
   | "surface"
+  | "extents"
   | "environment"
   | "graticule"
   | "title";
@@ -896,8 +897,9 @@ export function TopoMapPanel({
     );
   };
   const showSurface = section === "all" || section === "surface";
+  const showExtents = section === "all" || section === "extents";
   const showEnvironment = section === "all" || section === "environment";
-  const showSurfacePanel = showSurface || showEnvironment;
+  const showSurfacePanel = showSurface || showExtents || showEnvironment;
   const showGraticule = section === "all" || section === "graticule";
   const showTitle = section === "all" || section === "title";
 
@@ -972,73 +974,78 @@ export function TopoMapPanel({
                 decimals={0}
                 {...layerControlProps}
               />
+              <TopoSubsection
+                label="Height map"
+                testId="topo-height-map-controls"
+              >
+                <div style={topoClipReadoutStyle}>
+                  <div>
+                    Source:{" "}
+                    {terrainLayer?.files?.raster ??
+                      (metadataText(terrainMeta.sourceFile) || "unknown")}
+                  </div>
+                  <div>CRS: {terrainGeoTransform?.sourceCrs ?? "unknown"}</div>
+                  <div>
+                    Footprint:{" "}
+                    {terrainFootprint
+                      ? kmSizeLabel(
+                          terrainFootprint.sizeX,
+                          terrainFootprint.sizeY,
+                        )
+                      : "unknown"}
+                  </div>
+                  <div>
+                    Elevation range:{" "}
+                    {terrainGeoTransform
+                      ? `${Math.round(terrainGeoTransform.boundsMin[2])} m - ${Math.round(
+                          terrainGeoTransform.boundsMax[2],
+                        )} m`
+                      : "unknown"}
+                  </div>
+                  <div>
+                    Vertex budget:{" "}
+                    {terrainGeoTransform?.maxVertices
+                      ? terrainGeoTransform.maxVertices.toLocaleString()
+                      : "unknown"}
+                  </div>
+                </div>
+                <EnvStyleRow
+                  label="Vertical exaggeration"
+                  inputType="range"
+                  value={String(terrain.verticalExaggeration ?? 1)}
+                  min={0.25}
+                  max={5}
+                  step={0.05}
+                  decimals={2}
+                  onChange={(v) =>
+                    setTerrain({ verticalExaggeration: parseFloat(v) })
+                  }
+                  testId="topo-vertical-exaggeration"
+                />
+              </TopoSubsection>
             </div>
           </details>
-          <TopoSubsection label="Height map" testId="topo-height-map-controls">
-            <div style={topoClipReadoutStyle}>
-              <div>
-                Source:{" "}
-                {terrainLayer?.files?.raster ??
-                  (metadataText(terrainMeta.sourceFile) || "unknown")}
-              </div>
-              <div>CRS: {terrainGeoTransform?.sourceCrs ?? "unknown"}</div>
-              <div>
-                Footprint:{" "}
-                {terrainFootprint
-                  ? kmSizeLabel(terrainFootprint.sizeX, terrainFootprint.sizeY)
-                  : "unknown"}
-              </div>
-              <div>
-                Elevation range:{" "}
-                {terrainGeoTransform
-                  ? `${Math.round(terrainGeoTransform.boundsMin[2])} m - ${Math.round(
-                      terrainGeoTransform.boundsMax[2],
-                    )} m`
-                  : "unknown"}
-              </div>
-              <div>
-                Vertex budget:{" "}
-                {terrainGeoTransform?.maxVertices
-                  ? terrainGeoTransform.maxVertices.toLocaleString()
-                  : "unknown"}
-              </div>
-            </div>
-            <EnvStyleRow
-              label="Vertical exaggeration"
-              inputType="range"
-              value={String(terrain.verticalExaggeration ?? 1)}
-              min={0.25}
-              max={5}
-              step={0.05}
-              decimals={2}
-              onChange={(v) =>
-                setTerrain({ verticalExaggeration: parseFloat(v) })
-              }
-              testId="topo-vertical-exaggeration"
-            />
-          </TopoSubsection>
-          <TopoSubsection
-            label="Material source"
-            testId="topo-material-controls"
-          >
+          <TopoSubsection label="Map Type" testId="topo-material-controls">
             <EnvSelectRow<PublicTopoMaterialPresetId>
-              label="Material"
+              label="Map Type"
               value={selectedPreset}
               options={settings.materialOptions}
               testId="topo-material-preset"
               onChange={setTopoMaterialPreset}
             />
+            {selectedPresetIsImageBacked ? (
+              <EnvSelectRow<OrthoPhotoTextureBudgetId>
+                label="Map resolution"
+                value={selectedOrthoPhotoBudget}
+                options={ORTHO_PHOTO_TEXTURE_BUDGETS}
+                testId="topo-ortho-photo-texture-budget"
+                onChange={setImageTextureBudget}
+              />
+            ) : null}
           </TopoSubsection>
           {selectedPresetIsImageBacked ? (
             <>
               <TopoSubsection label="Satellite image">
-                <EnvSelectRow<OrthoPhotoTextureBudgetId>
-                  label="Texture budget"
-                  value={selectedOrthoPhotoBudget}
-                  options={ORTHO_PHOTO_TEXTURE_BUDGETS}
-                  testId="topo-ortho-photo-texture-budget"
-                  onChange={setImageTextureBudget}
-                />
                 <EnvStyleRow
                   label="Photo opacity"
                   inputType="range"
@@ -1514,26 +1521,30 @@ export function TopoMapPanel({
               onChange={(v) => setTerrain({ undersideOpacity: parseFloat(v) })}
             />
           </TopoSubsection>
-          <TopoSurfaceClipControls
-            {...publicSurfaceLayerControlProps}
-            terrain={terrain}
-            terrainLayer={terrainLayer}
-            terrainFootprint={terrainFootprint}
-            imageFootprint={imageFootprint}
-            alignTitleToMapEdge={() =>
-              setTopoMapBranding({
-                anchor: TOPO_MAP_BRANDING_DEFAULT_ANCHOR,
-                offsetXM: TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M,
-                offsetYM: TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M,
-              })
-            }
-          />
-          <TopoMapEdgeControls
-            {...publicSurfaceLayerControlProps}
-            terrain={terrain}
-            setTerrain={setTerrain}
-            edgeFadeShape={edgeFadeShape}
-          />
+            </>
+          ) : null}
+          {showExtents && terrainLayer ? (
+            <>
+              <TopoSurfaceClipControls
+                {...publicSurfaceLayerControlProps}
+                terrain={terrain}
+                terrainLayer={terrainLayer}
+                terrainFootprint={terrainFootprint}
+                imageFootprint={imageFootprint}
+                alignTitleToMapEdge={() =>
+                  setTopoMapBranding({
+                    anchor: TOPO_MAP_BRANDING_DEFAULT_ANCHOR,
+                    offsetXM: TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M,
+                    offsetYM: TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M,
+                  })
+                }
+              />
+              <TopoMapEdgeControls
+                {...publicSurfaceLayerControlProps}
+                terrain={terrain}
+                setTerrain={setTerrain}
+                edgeFadeShape={edgeFadeShape}
+              />
             </>
           ) : null}
           {showEnvironment ? (
@@ -3206,7 +3217,7 @@ function TopoSurfaceClipControls({
       <div style={topoClipReadoutStyle}>
         <div>Height map: {heightMapLabel || "unknown"}</div>
         <div>Height-map footprint: {heightMapFootprintLabel}</div>
-        <div>Material source: {materialLabel}</div>
+        <div>Map type: {materialLabel}</div>
         <div>Satellite footprint: {satelliteFootprintLabel}</div>
         <div>Visible footprint: {visibleFootprintLabel}</div>
       </div>

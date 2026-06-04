@@ -625,6 +625,20 @@ export function LayerPanelGroups({
               ) : null}
               {publicTopoTerrainLayer ? (
                 <LayerGroup
+                  title="Extents"
+                  devSource="src/editor/LayerPanel.tsx:topo-extents"
+                  devNote="Extents contains map footprint, clipping, material edge fade, and edge outline controls for the public topo map tool."
+                  accentColor={selectedPageAccent}
+                >
+                  <TopoMapPanel
+                    {...topoPanelProps}
+                    section="extents"
+                    nestedContainers={false}
+                  />
+                </LayerGroup>
+              ) : null}
+              {publicTopoTerrainLayer ? (
+                <LayerGroup
                   title="Environment"
                   devSource="src/editor/LayerPanel.tsx:topo-environment"
                   devNote="Environment contains the cloud, sun, light, sky-image, and fog controls for the public topo map tool."
