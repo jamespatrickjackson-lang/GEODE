@@ -377,7 +377,7 @@ The MT resistivity ramp uses four draggable spectral handles:
 - Trim and feather handles stay bottom-aligned on the ramp.
 - Handle dimensions live in `src/ui/ResistivityLegend.tsx`.
 
-## Sub Master Page Rows (DEC-079)
+## Sub Master Page Rows And Staff Archive (DEC-079, DEC-094)
 
 The page list distinguishes three row roles:
 
@@ -392,6 +392,13 @@ The page list distinguishes three row roles:
 - **Sub Master child** — same hue as its master (via the parent's
   ordinal). Row is indented `12px` left (`subMasterChildIndentStyle`).
   Label is `XX.M.NN` where `NN` is the 1-based child rank.
+
+Sub Master rows show an `M` relationship badge at the start of the visible
+name. Sub Master child rows show a `C` relationship badge at the same position.
+The badge color matches the row/group accent. Clicking `C` reveals and pulses
+the tied master row without selecting it, opening the staff Archive first if
+the master is archived. Clicking `M` reveals and pulses the first tied child row
+without selecting it, preferring active Pages before archived rows.
 
 The `+` button on the Global Settings row creates a new Sub Master at the
 end of `pageOrder`. The `+` button on each Sub Master row adds a child
@@ -418,6 +425,21 @@ page into a Sub Master by freezing its effective visual state into an
 `envSnapshot`. `Make Child` is enabled only for a selected Sub Master and
 duplicates that master into a child under it; it does not reparent an
 arbitrary selected page.
+
+The staff Archive header sits below the Page Manager footer and aligns to the
+same three-button footer column. It is a compact container-style button labeled
+`Archive` with a disclosure arrow. Clicking the header toggles archived row
+reveal/collapse. Dropping a page onto the header archives it and must not toggle
+the header. Archived rows render as full page rows, including title, color,
+visibility, M/C relationship badge, and drag grip. Dragging an archived row back
+to active Pages restores it at the indicated before/after insertion line.
+
+Archived pages stay editable and may preview in the viewport, but they are not
+part of presenter next/previous navigation and do not ship in built
+client/project output. A Sub Master may be archived while its children remain
+active; those children keep `parentMasterId` and continue to inherit from the
+archived master's `envSnapshot`. The visible archive is not `pages/_archive/`;
+that folder remains delete recovery.
 
 The author's per-page `accentColor` override continues to win on any row
 kind. Helpers live in [styles.ts](../../src/editor/styles.ts):

@@ -48,6 +48,10 @@ Current priority:
   - reset selected page overrides
   - Sub Master hierarchy actions: `M` / `C` / trash lower row for Make Master,
     Make Child, and delete
+  - staff-only Page Archive for editable draft/alternate pages outside
+    presentation navigation and built client output
+  - M/C relationship badges that reveal and pulse linked master/child rows
+    without changing selection
   - page visibility/navigation controls
 - Page duplication that copies page data and attempts to copy overlay markdown/image assets.
 - Layer panels for public and customer/project data.

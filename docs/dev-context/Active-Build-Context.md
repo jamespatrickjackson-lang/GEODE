@@ -31,7 +31,8 @@ GeoSee is a Vite + React + TypeScript + Three.js internal authoring and presenta
 
 Core runtime/project surfaces:
 
-- `projects/*/project.json`: layer registry, project metadata, `pageOrder`
+- `projects/*/project.json`: layer registry, project metadata, `pageOrder`,
+  and staff archive order (`archivedPageOrder`)
 - `projects/*/environment.json`: default scene and layer style state
 - `projects/*/pages/*.json`: page-local camera, visibility, transition, and layer overrides
 - `projects/*/overlays/<page_id>/text.md`: overlay copy
@@ -188,6 +189,10 @@ line numbers, well labels, scale labels, or captions into app output.
 - Editor sidebar control manifest and change checklist:
   `docs/dev-context/editor-control-manifest.json`,
   `docs/dev-context/Editor-Control-Manifest-Policy.md`
+- Page Archive preimplementation audit:
+  `docs/dev-context/Page-Archive-Preimplementation-Audit-2026-06-04.md`
+- Page Archive implementation plan:
+  `docs/dev-context/Page-Archive-Implementation-Plan-2026-06-04.md`
 - Seismic and site-details editor update receipt: `docs/dev-context/Seismic-Site-Details-Editor-Update-2026-06-04.md`
 - Current visual review loop: `docs/dev-context/Visual-Review-Current.md`
 - UI visual standards and shared legend/slider rules: `docs/dev-context/UI-Visual-Standards.md`

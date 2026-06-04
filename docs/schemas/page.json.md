@@ -1,17 +1,20 @@
 # page.json schema
 
-A single page in the presentation sequence. Captures a moment: where
-the camera is, what is visible, what the audience is reading, and
-which annotations are pinned to 3D positions.
+A single editable page. Active pages are part of the presentation sequence;
+staff-archived pages are draft/alternate pages that remain editable but are
+excluded from audience navigation and built client/project output. Each page
+captures a moment: where the camera is, what is visible, what the audience is
+reading, and which annotations are pinned to 3D positions.
 
 ## Where it lives
 
     projects/<project-name>/pages/<page-id>.json
 
-One file per page. The page IDs are referenced by `pageOrder` in
-`project.json`. Filename prefix convention is `NN_descriptive-slug.json`
-(e.g. `01_district_overview.json`) — the prefix makes file ordering
-match presentation order on disk.
+One file per page. The page IDs are referenced by `pageOrder` or
+`archivedPageOrder` in `project.json`. Filename prefix convention is
+`NN_descriptive-slug.json` (e.g. `01_district_overview.json`) for active
+presentation pages; staff-archived pages may keep their last active prefix even
+though they no longer participate in presenter order.
 
 ## Complete annotated example
 
@@ -95,7 +98,7 @@ match presentation order on disk.
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `id` | string | yes | Unique page identifier. Must match the filename (without `.json`) and an entry in `project.json`'s `pageOrder`. |
+| `id` | string | yes | Unique page identifier. Must match the filename (without `.json`) and an entry in `project.json`'s `pageOrder` or `archivedPageOrder`. |
 | `title` | string | yes | Page title shown in the presenter view and in the page indicator. |
 | `subtitle` | string | no | Optional secondary line shown below the title. |
 | `renderPreset` | string | no | Optional cinematic render preset override for this page. Missing inherits the project environment default. Supported built-in IDs: `"cinematic-dark"`, `"survey-daylight"`, `"boardroom"`, `"data-room"`, `"night-ops"`. User preset IDs such as `"user-1"` may also be selected when defined in `environment.json` `customRenderPresets`. |
@@ -303,9 +306,19 @@ five or more becomes visual clutter.
 - **On page reorder:** `project.json`'s `pageOrder` is updated; page
   files themselves are not moved or renamed (rename is optional manual
   cleanup).
+- **On staff archive:** the page id moves from `pageOrder` to
+  `archivedPageOrder`. The page file remains at `pages/<id>.json`; it is
+  still editable in the staff authoring UI and can still be used as a Sub
+  Master inheritance source. It is authoring-only and must be omitted from
+  built client/project output.
+- **On restore from staff archive:** the page id moves from
+  `archivedPageOrder` back into `pageOrder` at the chosen active-page drop
+  position. The page file is not moved or renamed.
 - **On page delete:** the page is removed from `pageOrder`, but the
   `pages/<id>.json` file is moved to `pages/_archive/` rather than
-  deleted, in case it's wanted back.
+  deleted, in case it's wanted back. This delete-recovery folder is distinct
+  from the staff Page Archive and is not auto-imported into
+  `archivedPageOrder`.
 
 ## Common pitfalls
 
@@ -322,6 +335,7 @@ five or more becomes visual clutter.
 - **Annotations off-screen:** an annotation at a position not currently
   visible in the camera frustum will not render. The authoring UI should
   warn but doesn't always — visual check after capture.
-- **Filename prefix and `pageOrder` disagree:** if you rename a file but
-  forget to update `pageOrder`, the page disappears from the sequence.
-  Use the page-management UI to reorder, not file renames.
+- **Filename prefix and page order disagree:** if you rename a file but
+  forget to update `pageOrder` or `archivedPageOrder`, the page disappears
+  from the editor-managed lists. Use the page-management UI to reorder or
+  archive pages, not file renames.

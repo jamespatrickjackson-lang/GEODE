@@ -56,6 +56,18 @@ keep `aria-label="Drag page to reorder"`, remain rightmost in the row action
 group, use the DEC-093 Page Manager action-button geometry, and retain focused
 source/rendered tests before any future layout change is accepted.
 
+The staff Page Archive is a manifest-controlled Page Manager surface once it is
+implemented. The implementation phase must add active manifest entries together
+with matching source anchors for:
+
+- `page.archive.toggle` for the Archive reveal/collapse header.
+- `page.relationship.badge` or a more specific active control-family id for
+  the repeated `M`/`C` relationship reveal badges.
+
+Archive controls must preserve DEC-094 behavior: the Archive header toggles only
+on click, accepts page drops without toggling, archived rows render as full page
+rows, and relationship badges reveal/pulse their target without selecting it.
+
 ## Approval Metadata
 
 Any `removed`, `renamed`, or `hidden` entry must keep the old id in the

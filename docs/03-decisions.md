@@ -988,3 +988,21 @@ fake-cloud looks.
 **Why:** The accepted Global Settings add button is the reference control. Matching that geometry and surface prevents row-to-row apparent size or centering drift, especially over the translucent editor shell and changing scene colors.
 
 **Guard:** Do not reintroduce translucent pale fills, selected-versus-unselected row action surface switching, or per-row button geometry differences in the Pages panel. Current docs should name `MOVE_PAGE_BLOCK` for page reorder behavior rather than the historical `REORDER_PAGE` reducer name. UI docs and focused Page Manager tests must be updated with any future Page Manager action-button geometry change.
+
+## DEC-094 - Staff Page Archive is an editable authoring shelf, not delete recovery
+
+**Supersedes:** DEC-079, DEC-090, and DEC-092 only where those entries assume a Sub Master and all of its children must always remain visible, active, and contiguous inside `pageOrder`.
+
+**Considered:** reuse `pages/_archive` as the visible staff archive, mark archived pages with `hidden`, or add an explicit staff archive list on the project manifest.
+
+**Chose:** add a staff-only Page Archive concept backed by `project.json` `archivedPageOrder?: string[]`. `pageOrder` remains the active presentation sequence. `archivedPageOrder` is an ordered authoring shelf for draft or alternate pages that stay saved, selectable, previewable, and editable in the editor but are excluded from presenter next/previous navigation and audience playback. Archived page files remain ordinary `pages/<id>.json` files in the dev/editor workspace, but must be excluded from built client/project output. The existing `pages/_archive/` folder remains delete-recovery storage and must not be used as the staff archive or auto-imported into it.
+
+**Why:** Staff need a place to keep draft pages without cluttering the active presentation tree. `hidden` only changes navigation visibility and keeps the row in the main Pages list. Reusing delete recovery would blur the difference between intentional draft storage and pages removed as a safety fallback.
+
+**Sub Master behavior:** A Sub Master may live in the staff archive while one or more of its children remain active in `pageOrder`. The child keeps `parentMasterId` and continues inheriting from the archived master's `envSnapshot`. Making a child into a new Sub Master is the deliberate way to break that relationship. Active children of an archived master are no longer required to appear contiguously under the master row, because the master row is not in the active presentation list.
+
+**UI guard:** The Archive affordance belongs below the Page Manager footer, aligned to the three-button footer column. Clicking the Archive header toggles reveal/collapse; dropping a page onto the header archives that page without toggling reveal state. Archived rows render as full page rows. `M` and `C` relationship badges appear at the start of master/child row names in the group accent color. Clicking a `C` badge reveals and pulses its master row, opening Archive if needed, but does not select it. Clicking an `M` badge reveals and pulses the first tied child row, preferring active Pages before archived rows, but does not select it.
+
+**Trade-off accepted:** The inheritance graph can reference a master outside the active presentation sequence. Implementation must therefore distinguish active-page controller indexes from all editable pages and must resolve Sub Master inheritance against active plus archived pages, not only `pageOrder`.
+
+**Build/export guard:** Static/client builds and future export packaging must emit `pageOrder` pages only. `archivedPageOrder` and archived page JSON are authoring-only state. Build or export code that copies project folders must filter archived page ids and omit archive-only page files from shipped output.

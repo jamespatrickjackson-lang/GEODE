@@ -16,7 +16,7 @@ Tools that define and manage the presentation sequence.
 
 | Tool | Description |
 | --- | --- |
-| **Pages** | Create, select, reorder, show/hide, duplicate, and delete presentation pages. Each page carries its own camera pose, layer visibility, environment, and overlay copy. |
+| **Pages** | Create, select, reorder, show/hide, duplicate, archive, restore, and delete pages. Active pages define presenter navigation; staff-archived pages stay editable draft/alternate pages outside that sequence and outside built client output. |
 | **Page Color** | Per-page accent hue/saturation, used in the presenter UI chrome. |
 | **Page Render Override** | Per-page cinematic quality preset inside Cinematics that overrides the project-wide default for that page only. |
 | **Cards** | Per-page text editor. Controls page title, subtitle, markdown body, inset images, and fade/gap/easing timing for the text animation. |
