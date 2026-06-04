@@ -35,7 +35,7 @@ Core runtime/project surfaces:
 - `src/editor/EditorRoot.tsx`: editor shell and top-level tool/workflow section tree
 - `src/editor/PagePanel.tsx`: Pages, page selection/actions, and exported Cinematics tool panels
 - `src/editor/LayerPanel.tsx`: project data layer controls that have not yet moved into tool modules
-- `src/editor/topoMap/TopoMapPanel.tsx`: public topo map and Topo Environment tool editor
+- `src/editor/topoMap/TopoMapPanel.tsx`: public topo map, Topo Extents, and Topo Environment tool editor
 - `src/editor/layerControls/atmosphere/AtmosphereVolumeControls.tsx`: local cloud/mist volume controls
 - `src/scene/atmosphere/`: procedural local atmosphere volume runtime, generated texture, editor bounds helpers, and drift
 - `src/scene/environment/sunVisual.ts`: visible sun orb, halo, and source marker runtime
@@ -136,6 +136,11 @@ visible sky image/orb/marker, so an author can keep terrain lighting while
 hiding the sky image or create a fake visual sun without using it as the light
 source.
 
+Topo Extents is a peer container under the Topo tool. `Topo > Extents` owns
+public surface clip, visible map footprint, material edge fade, and edge outline
+controls; `Topo > Topo Settings` keeps map type, resolution, opacity, transform,
+height-map, and surface material controls.
+
 Utah FORGE currently includes a visible one-puff `Topo test cloud` layer for
 review. Its runtime debug state should report `textureSource:
 generated-canvas`, cache key shape `local-atmosphere:<layerId>:<seed>:<softness>`,
@@ -174,6 +179,9 @@ line numbers, well labels, scale labels, or captions into app output.
 - Global toolset structure and topo map precedent: `docs/dev-context/Global-Toolset-Structure.md`
 - Topo Environment/clouds/sun/cinematics thread receipt: `docs/dev-context/Topo-Environment-Clouds-Cinematics-Thread-Update-2026-06-03.md`
 - Topo editor panel field audit: `docs/dev-context/Topo-Editor-Panel-Audit-2026-06-03.md`
+- Editor sidebar control manifest and change checklist:
+  `docs/dev-context/editor-control-manifest.json`,
+  `docs/dev-context/Editor-Control-Manifest-Policy.md`
 - Seismic and site-details editor update receipt: `docs/dev-context/Seismic-Site-Details-Editor-Update-2026-06-04.md`
 - Current visual review loop: `docs/dev-context/Visual-Review-Current.md`
 - UI visual standards and shared legend/slider rules: `docs/dev-context/UI-Visual-Standards.md`

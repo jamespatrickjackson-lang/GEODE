@@ -12,6 +12,19 @@ import {
 
 test.setTimeout(900_000);
 
+async function setInputValue(locator: Locator, value: string) {
+  await locator.evaluate((input, nextValue) => {
+    const el = input as HTMLInputElement;
+    const valueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      "value",
+    )?.set;
+    valueSetter?.call(el, nextValue);
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }, value);
+}
+
 test("Utah FORGE topo editor exposes surface elevation coloring", async ({
   page,
 }) => {
@@ -213,6 +226,10 @@ test("Utah FORGE topo editor exposes ortho photo terrain material", async ({
     "4096",
   );
   await expect(page.getByTestId("topo-ortho-photo-opacity")).toHaveValue("1");
+  await expect(page.getByTestId("topo-ortho-photo-edge-clip-inset")).toHaveValue(
+    "0",
+  );
+  await expect(page.getByTestId("topo-ortho-photo-edge-fade")).toHaveValue("0");
   await expect(page.getByTestId("topo-ortho-photo-hillshade")).toHaveValue(
     "0.45",
   );
@@ -224,6 +241,8 @@ test("Utah FORGE topo editor exposes ortho photo terrain material", async ({
       surfaceElevationEnabled: 0,
       orthoPhotoEnabled: 1,
       orthoPhotoOpacity: 1,
+      orthoPhotoEdgeClipInsetM: 0,
+      orthoPhotoEdgeFadeDistanceM: 0,
       orthoPhotoHillshadeBlend: 0.45,
       orthoPhotoBrightness: 0,
       orthoPhotoContrast: 1,
@@ -294,6 +313,8 @@ test("Utah FORGE topo editor exposes ortho photo terrain material", async ({
     materialCount: 1,
     orthoPhotoEnabled: 1,
     orthoPhotoOpacity: 1,
+    orthoPhotoEdgeClipInsetM: 0,
+    orthoPhotoEdgeFadeDistanceM: 0,
     orthoPhotoHillshadeBlend: 0.12,
     orthoPhotoBrightness: 0.08,
     orthoPhotoContrast: 1.28,
@@ -320,6 +341,24 @@ test("Utah FORGE topo editor exposes ortho photo terrain material", async ({
       surfaceElevationEnabled: 1,
       orthoPhotoEnabled: 1,
     });
+  const elevationPhotoCanvas = await page.locator("canvas").screenshot();
+  await setInputValue(
+    page.getByTestId("topo-ortho-photo-edge-clip-inset"),
+    "20000",
+  );
+  await setInputValue(page.getByTestId("topo-ortho-photo-edge-fade"), "25000");
+  await expect
+    .poll(() => terrainMaterialSceneState(page))
+    .toMatchObject({
+      surfaceElevationEnabled: 1,
+      orthoPhotoEnabled: 1,
+      orthoPhotoEdgeClipInsetM: 20000,
+      orthoPhotoEdgeFadeDistanceM: 25000,
+    });
+  const fadedPhotoCanvas = await page.locator("canvas").screenshot();
+  expect(changedByteCount(elevationPhotoCanvas, fadedPhotoCanvas)).toBeGreaterThan(
+    1000,
+  );
 
   expect(consoleErrors).toEqual([]);
 });

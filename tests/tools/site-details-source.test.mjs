@@ -15,6 +15,14 @@ const styles = readFileSync("src/scene/styles/siteDetailStyles.ts", "utf8");
 const mtStyles = readFileSync("src/scene/styles/mtResistivityStyles.ts", "utf8");
 const types = readFileSync("src/pages/types.ts", "utf8");
 const renderPresets = readFileSync("src/pages/renderPresets.ts", "utf8");
+const terrainStyleController = readFileSync(
+  "src/scene/terrain/terrainStyleController.ts",
+  "utf8",
+);
+const applyEnvironment = readFileSync(
+  "src/scene/environment/applyEnvironment.ts",
+  "utf8",
+);
 const sceneManager = readFileSync("src/scene/SceneManager.ts", "utf8");
 const environment = JSON.parse(
   readFileSync("projects/utah-forge/environment.json", "utf8"),
@@ -72,4 +80,22 @@ test("topo alignment samples rendered terrain and reapplies dependent overlays",
   assert.match(styles, /renderedTopoSurfaceZ/);
   assert.match(mtStyles, /pointMarkerAlignToTopo/);
   assert.match(mtStyles, /renderedTopoSurfaceZ/);
+});
+
+test("site boundary guide lines follow the rendered elevated topo surface", () => {
+  assert.match(
+    terrainStyleController,
+    /renderedTopoSurfaceZ\?\.\(x,\s*y\)/,
+    "Site guide line and fill Z should prefer rendered topo elevation, including terrain lift and vertical scale.",
+  );
+  assert.match(
+    applyEnvironment,
+    /reapplySiteSurfaceGuides\?\.\(\)/,
+    "Changing the topo environment should refresh draped site boundary guide geometry.",
+  );
+  assert.match(
+    sceneManager,
+    /reapplySiteSurfaceGuides\(\):\s*void/,
+    "SceneManager should expose a site-surface guide refresh hook for environment-driven topo changes.",
+  );
 });

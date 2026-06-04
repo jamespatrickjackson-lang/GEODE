@@ -243,6 +243,10 @@ export function resampleSiteGuideLineImpl(this: any, line: Vec3[], stepM: number
   }
 
 export function siteGuideSurfaceZImpl(this: any, x: number, y: number, sampleHeight: (easting: number, northing: number) => number, origin: { easting: number; northing: number; elevation: number }, liftM: number): number {
+    const renderedZ = this.renderedTopoSurfaceZ?.(x, y);
+    if (typeof renderedZ === "number" && Number.isFinite(renderedZ)) {
+      return renderedZ + liftM;
+    }
     return (
       sampleHeight(origin.easting + x, origin.northing + y) -
       origin.elevation +

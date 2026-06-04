@@ -612,6 +612,7 @@ export function LayerPanelGroups({
               {publicTopoTerrainLayer ? (
                 <LayerGroup
                   title="Topo Settings"
+                  manifestId="topo.group.surface"
                   devSource="src/editor/LayerPanel.tsx:topo-settings"
                   devNote="Topo Settings contains the global topo surface controls for the public topo map tool."
                   accentColor={selectedPageAccent}
@@ -625,9 +626,25 @@ export function LayerPanelGroups({
               ) : null}
               {publicTopoTerrainLayer ? (
                 <LayerGroup
+                  title="Satellite image settings"
+                  manifestId="topo.group.satellite"
+                  devSource="src/editor/LayerPanel.tsx:topo-satellite"
+                  devNote="Satellite image settings contains satellite opacity, image adjustment, image sun response, and outside-image fill controls for the public topo map tool."
+                  accentColor={selectedPageAccent}
+                >
+                  <TopoMapPanel
+                    {...topoPanelProps}
+                    section="satellite"
+                    nestedContainers={false}
+                  />
+                </LayerGroup>
+              ) : null}
+              {publicTopoTerrainLayer ? (
+                <LayerGroup
                   title="Extents"
+                  manifestId="topo.group.extents"
                   devSource="src/editor/LayerPanel.tsx:topo-extents"
-                  devNote="Extents contains map footprint, material edge, and public surface clip controls for the public topo map tool."
+                  devNote="Extents contains map footprint, clipping, material edge fade, and edge outline controls for the public topo map tool."
                   accentColor={selectedPageAccent}
                 >
                   <TopoMapPanel
@@ -640,6 +657,7 @@ export function LayerPanelGroups({
               {publicTopoTerrainLayer ? (
                 <LayerGroup
                   title="Environment"
+                  manifestId="topo.group.environment"
                   devSource="src/editor/LayerPanel.tsx:topo-environment"
                   devNote="Environment contains the cloud, sun, light, sky-image, and fog controls for the public topo map tool."
                   accentColor={selectedPageAccent}
@@ -654,6 +672,7 @@ export function LayerPanelGroups({
               {publicTopoSettings.graticuleLayers.length > 0 ? (
                 <LayerGroup
                   title="Longitude / latitude grid"
+                  manifestId="topo.group.graticule"
                   devSource="src/editor/LayerPanel.tsx:topo-graticule"
                   devNote="Longitude / latitude grid contains the graticule visibility and style controls for the public topo map tool."
                   accentColor={selectedPageAccent}
@@ -668,6 +687,7 @@ export function LayerPanelGroups({
               {publicTopoTerrainLayer ? (
                 <LayerGroup
                   title="Title block"
+                  manifestId="topo.group.title"
                   devSource="src/editor/LayerPanel.tsx:topo-title-block"
                   devNote="Title block contains the branding controls for the public topo map tool."
                   accentColor={selectedPageAccent}

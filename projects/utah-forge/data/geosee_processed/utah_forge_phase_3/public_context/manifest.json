@@ -29,10 +29,10 @@
     "elevation_m": 0
   },
   "terrain": {
-    "file": "terrain_public_context_200m.tif",
-    "width": 1675,
-    "height": 1368,
-    "resolutionM": 200,
+    "file": "terrain_public_context_1000m.tif",
+    "width": 1396,
+    "height": 1140,
+    "resolutionM": 1000,
     "source": "USGS 3DEP / The National Map elevation service"
   },
   "vectors": {

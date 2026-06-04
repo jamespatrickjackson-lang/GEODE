@@ -40,15 +40,17 @@ type GuiLabelStyleKind = keyof NonNullable<GuiLabelSettings["styles"]>;
 
 interface RowProps {
   label: string;
+  manifestId?: string;
   children: React.ReactNode;
 }
 
-function Row({ label, children }: RowProps) {
+function Row({ label, manifestId, children }: RowProps) {
   return (
     <div
       style={panelStyles.row}
       data-dev-source="src/editor/EnvironmentScenePanel.tsx:30"
       data-dev-note="Row controls Global Settings label/control alignment."
+      data-editor-control-id={manifestId}
     >
       <label
         style={panelStyles.fieldLabel}
@@ -3413,7 +3415,7 @@ export function GuiSetupPanel({
                     format={(v) => `${Math.round(v * 100)}%`}
                   />
                 </Row>
-                <Row label="Width">
+                <Row label="Width" manifestId="editor.chrome.panel-width">
                   <Range
                     value={editor.panelWidthPx ?? 512}
                     min={360}

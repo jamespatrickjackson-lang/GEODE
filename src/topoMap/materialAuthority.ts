@@ -11,6 +11,8 @@ export const TOPO_MATERIAL_AUTHORITY_TERRAIN_FIELDS = [
   "orthoPhotoTexture8192Path",
   "orthoPhotoBounds",
   "orthoPhotoOpacity",
+  "orthoPhotoEdgeClipInsetM",
+  "orthoPhotoEdgeFadeDistanceM",
   "orthoPhotoHillshadeBlend",
   "orthoPhotoBrightness",
   "orthoPhotoContrast",

@@ -200,7 +200,7 @@ function validateProjectLayerWiring(project) {
   assert.equal(publicTerrainLayer.type, "geotiff");
   assert.equal(
     publicTerrainLayer.files?.raster,
-    `${PUBLIC_CONTEXT_DIR}/terrain_public_context_200m.tif`,
+    `${PUBLIC_CONTEXT_DIR}/terrain_public_context_1000m.tif`,
   );
   assert.equal(publicRoadsLayer.type, "line");
   assert.equal(
@@ -295,7 +295,7 @@ function validateProjectLayerWiring(project) {
 
 function validatePublicContext() {
   for (const path of [
-    `${PUBLIC_CONTEXT_DIR}/terrain_public_context_200m.tif`,
+    `${PUBLIC_CONTEXT_DIR}/terrain_public_context_1000m.tif`,
     `${PUBLIC_CONTEXT_DIR}/roads.geojson`,
     `${PUBLIC_CONTEXT_DIR}/hydrography_streams.geojson`,
     `${PUBLIC_CONTEXT_DIR}/hydrography_lakes.geojson`,
@@ -309,10 +309,10 @@ function validatePublicContext() {
   assert.equal(manifest.targetCrs, "EPSG:26912");
   assert.deepEqual(manifest.sourceBounds.easting_m, [-356385.9, 1039320.6]);
   assert.deepEqual(manifest.sourceBounds.northing_m, [3703652, 4843097]);
-  assert.equal(manifest.terrain.file, "terrain_public_context_200m.tif");
-  assert.equal(manifest.terrain.resolutionM, 200);
-  assertGreaterThan(manifest.terrain.width, 1000, "public terrain width");
-  assertGreaterThan(manifest.terrain.height, 900, "public terrain height");
+  assert.equal(manifest.terrain.file, "terrain_public_context_1000m.tif");
+  assert.equal(manifest.terrain.resolutionM, 1000);
+  assert.equal(manifest.terrain.width, 1396);
+  assert.equal(manifest.terrain.height, 1140);
   assertGreaterThan(manifest.vectors.roads.renderFeatureCount, 0, "roads features");
   assertGreaterThan(manifest.vectors.streams.renderFeatureCount, 0, "stream features");
   assertGreaterThan(

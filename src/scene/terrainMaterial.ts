@@ -71,6 +71,8 @@ export interface TerrainMaterialParams {
   edgeBottomShine?: number;
   orthoPhotoBounds?: [number, number, number, number];
   orthoPhotoOpacity?: number;
+  orthoPhotoEdgeClipInsetM?: number;
+  orthoPhotoEdgeFadeDistanceM?: number;
   orthoPhotoHillshadeBlend?: number;
   orthoPhotoBrightness?: number;
   orthoPhotoContrast?: number;
@@ -385,6 +387,12 @@ export function buildTerrainMaterial(
     uOrthoPhotoOpacity: {
       value: THREE.MathUtils.clamp(initial.orthoPhotoOpacity ?? 0, 0, 1),
     },
+    uOrthoPhotoEdgeClipInset: {
+      value: Math.max(initial.orthoPhotoEdgeClipInsetM ?? 0, 0),
+    },
+    uOrthoPhotoEdgeFadeDistance: {
+      value: Math.max(initial.orthoPhotoEdgeFadeDistanceM ?? 0, 0),
+    },
     uOrthoPhotoHillshadeBlend: {
       value: THREE.MathUtils.clamp(
         initial.orthoPhotoHillshadeBlend ?? 0.5,
@@ -594,6 +602,8 @@ export function buildTerrainMaterial(
       uniform vec2 uOrthoPhotoBoundsMin;
       uniform vec2 uOrthoPhotoBoundsMax;
       uniform float uOrthoPhotoOpacity;
+      uniform float uOrthoPhotoEdgeClipInset;
+      uniform float uOrthoPhotoEdgeFadeDistance;
       uniform float uOrthoPhotoHillshadeBlend;
       uniform float uOrthoPhotoBrightness;
       uniform float uOrthoPhotoContrast;
@@ -787,6 +797,19 @@ export function buildTerrainMaterial(
         return uSurfaceElevationColors[4];
       }
 
+      float surfaceElevationT(float elev) {
+        float elevationT = clamp(
+          (elev - uSurfaceElevationMin) /
+            max(0.0001, uSurfaceElevationMax - uSurfaceElevationMin),
+          0.0,
+          1.0
+        );
+        if (uSurfaceElevationReverse > 0.5) {
+          elevationT = 1.0 - elevationT;
+        }
+        return elevationT;
+      }
+
       vec3 adjustedPhotoColor(
         vec3 color,
         float brightness,
@@ -909,6 +932,27 @@ export function buildTerrainMaterial(
         return smoothstep(0.0, max(featherM, 1.0), distToEdge);
       }
 
+      float orthoPhotoEdgeWeight(vec2 worldXY) {
+        float clipInset = max(uOrthoPhotoEdgeClipInset, 0.0);
+        vec2 clippedMin = uOrthoPhotoBoundsMin + vec2(clipInset);
+        vec2 clippedMax = uOrthoPhotoBoundsMax - vec2(clipInset);
+        if (clippedMax.x <= clippedMin.x || clippedMax.y <= clippedMin.y) {
+          return 0.0;
+        }
+        if (
+          worldXY.x < clippedMin.x || worldXY.x > clippedMax.x ||
+          worldXY.y < clippedMin.y || worldXY.y > clippedMax.y
+        ) {
+          return 0.0;
+        }
+        return boundsEdgeWeight(
+          worldXY,
+          clippedMin,
+          clippedMax,
+          uOrthoPhotoEdgeFadeDistance
+        );
+      }
+
       float terrainEdgeInsideDistance(vec2 worldXY) {
         vec2 terrainCenter = (uTerrainBoundsMin + uTerrainBoundsMax) * 0.5;
         vec2 terrainHalfSize = max(
@@ -992,19 +1036,11 @@ export function buildTerrainMaterial(
                      smoothstep(0.0, 1.0, (t - 0.5) * 2.0));
         }
         vec3 topoBase = base;
-        float surfaceElevationT = clamp(
-          (elev - uSurfaceElevationMin) /
-            max(0.0001, uSurfaceElevationMax - uSurfaceElevationMin),
-          0.0,
-          1.0
-        );
-        if (uSurfaceElevationReverse > 0.5) {
-          surfaceElevationT = 1.0 - surfaceElevationT;
-        }
+        float elevationRampT = surfaceElevationT(elev);
         if (uSurfaceElevationEnabled > 0.5) {
           base = mix(
             topoBase,
-            surfaceElevationRamp(surfaceElevationT),
+            surfaceElevationRamp(elevationRampT),
             clamp(uSurfaceElevationColorBlend, 0.0, 1.0)
           );
         }
@@ -1060,12 +1096,15 @@ export function buildTerrainMaterial(
             orthoUv.x >= 0.0 && orthoUv.x <= 1.0 &&
             orthoUv.y >= 0.0 && orthoUv.y <= 1.0;
           if (insideOrthoPhoto) {
-            orthoSample = texture2D(uOrthoPhotoMap, orthoUv);
-            photoCoverage = clamp(
-              uOrthoPhotoOpacity * orthoSample.a,
-              0.0,
-              1.0
-            );
+            float edgeWeight = orthoPhotoEdgeWeight(vWorldPos.xy);
+            if (edgeWeight > 0.001) {
+              orthoSample = texture2D(uOrthoPhotoMap, orthoUv);
+              photoCoverage = clamp(
+                uOrthoPhotoOpacity * orthoSample.a * edgeWeight,
+                0.0,
+                1.0
+              );
+            }
           }
         }
         if (
@@ -1079,7 +1118,7 @@ export function buildTerrainMaterial(
           );
           vec3 outsideSurface = outsideImageSurface(
             topoBase,
-            surfaceElevationT,
+            elevationRampT,
             n,
             litAmount,
             shadowAmount,
@@ -1500,6 +1539,18 @@ export function buildTerrainMaterial(
           p.orthoPhotoOpacity,
           0,
           1,
+        );
+      }
+      if (typeof p.orthoPhotoEdgeClipInsetM === "number") {
+        uniforms.uOrthoPhotoEdgeClipInset.value = Math.max(
+          p.orthoPhotoEdgeClipInsetM,
+          0,
+        );
+      }
+      if (typeof p.orthoPhotoEdgeFadeDistanceM === "number") {
+        uniforms.uOrthoPhotoEdgeFadeDistance.value = Math.max(
+          p.orthoPhotoEdgeFadeDistanceM,
+          0,
         );
       }
       if (typeof p.orthoPhotoHillshadeBlend === "number") {

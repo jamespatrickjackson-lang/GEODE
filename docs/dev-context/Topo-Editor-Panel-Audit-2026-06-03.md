@@ -1,5 +1,9 @@
 # Topo Editor Panel Audit - 2026-06-03
 
+Status: reference-only snapshot. Current editor control identity and approval
+state are owned by `docs/dev-context/editor-control-manifest.json` and
+`docs/dev-context/Editor-Control-Manifest-Policy.md`.
+
 ## Scope
 
 Reviewed `src/editor/topoMap/TopoMapPanel.tsx`, the Topo panel routing in

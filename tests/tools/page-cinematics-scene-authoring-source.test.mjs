@@ -61,6 +61,29 @@ test("Cinematics keeps the selected authoring target instead of forcing Global S
   );
 });
 
+test("New pages capture the currently shown day or night atmosphere", () => {
+  assert.match(
+    editorContext,
+    /function\s+pageAtmosphereSceneOverrides\([^)]*scene:\s*SceneProperties[^)]*\):\s*Partial<SceneProperties>/,
+    "EditorContext should have a focused helper for page-local atmosphere snapshots.",
+  );
+  assert.match(
+    editorContext,
+    /lightMode:\s*scene\.lightMode\s*===\s*true/,
+    "New page atmosphere snapshots should store false as an explicit night value.",
+  );
+  assert.match(
+    editorContext,
+    /function\s+currentAuthoringScene\([^)]*state:\s*EditorState[^)]*\):\s*SceneProperties/,
+    "New pages should capture the resolved scene currently being authored.",
+  );
+  assert.match(
+    editorContext,
+    /sceneOverrides:\s*pageAtmosphereSceneOverrides\([\s\S]*currentAuthoringScene\(cur\)[\s\S]*\)/,
+    "New page creation should persist the shown day/night atmosphere into page.sceneOverrides.",
+  );
+});
+
 test("Environment and Camera panels are scoped by props, not global editor state", () => {
   const environmentScenePanel = functionBody(
     environmentPanel,

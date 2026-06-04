@@ -1915,6 +1915,8 @@ export type TerrainMaterialSceneState = {
   edgeBottomShine: number | null;
   orthoPhotoEnabled: number | null;
   orthoPhotoOpacity: number | null;
+  orthoPhotoEdgeClipInsetM: number | null;
+  orthoPhotoEdgeFadeDistanceM: number | null;
   orthoPhotoHillshadeBlend: number | null;
   orthoPhotoBrightness: number | null;
   orthoPhotoContrast: number | null;
@@ -1996,6 +1998,8 @@ export async function terrainMaterialSceneState(
     let edgeBottomShine: number | null = null;
     let orthoPhotoEnabled: number | null = null;
     let orthoPhotoOpacity: number | null = null;
+    let orthoPhotoEdgeClipInsetM: number | null = null;
+    let orthoPhotoEdgeFadeDistanceM: number | null = null;
     let orthoPhotoHillshadeBlend: number | null = null;
     let orthoPhotoBrightness: number | null = null;
     let orthoPhotoContrast: number | null = null;
@@ -2111,6 +2115,14 @@ export async function terrainMaterialSceneState(
         orthoPhotoOpacity =
           typeof uniforms.uOrthoPhotoOpacity?.value === "number"
             ? uniforms.uOrthoPhotoOpacity.value
+            : null;
+        orthoPhotoEdgeClipInsetM =
+          typeof uniforms.uOrthoPhotoEdgeClipInset?.value === "number"
+            ? uniforms.uOrthoPhotoEdgeClipInset.value
+            : null;
+        orthoPhotoEdgeFadeDistanceM =
+          typeof uniforms.uOrthoPhotoEdgeFadeDistance?.value === "number"
+            ? uniforms.uOrthoPhotoEdgeFadeDistance.value
             : null;
         orthoPhotoHillshadeBlend =
           typeof uniforms.uOrthoPhotoHillshadeBlend?.value === "number"
@@ -2312,6 +2324,8 @@ export async function terrainMaterialSceneState(
       edgeBottomShine,
       orthoPhotoEnabled,
       orthoPhotoOpacity,
+      orthoPhotoEdgeClipInsetM,
+      orthoPhotoEdgeFadeDistanceM,
       orthoPhotoHillshadeBlend,
       orthoPhotoBrightness,
       orthoPhotoContrast,

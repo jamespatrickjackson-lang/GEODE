@@ -23,6 +23,7 @@ interface Props {
   openSignal?: unknown;
   closeSignal?: unknown;
   accentColor?: string | null;
+  manifestId?: string;
   onActivate?: () => void;
   children: ReactNode;
 }
@@ -33,6 +34,7 @@ export function CollapsibleSection({
   openSignal,
   closeSignal,
   accentColor,
+  manifestId,
   onActivate,
   children,
 }: Props) {
@@ -79,6 +81,7 @@ export function CollapsibleSection({
       data-dev-container-name={title}
       data-dev-container-scope="CollapsibleSection / panelStyles.collapsibleHeader"
       data-dev-note="CollapsibleSection renders top-level sidebar sections; visual styles come from panelStyles in styles.ts."
+      data-editor-section-id={manifestId}
     >
       <div
         style={headerStyle}

@@ -349,6 +349,34 @@ function cinematicScenePatchForEdit(
   return next;
 }
 
+function currentAuthoringScene(state: EditorState): SceneProperties {
+  const selectedPageId = state.selectedPageId;
+  if (selectedPageId && selectedPageId !== ENVIRONMENT_SENTINEL) {
+    const page = state.pages.find((candidate) => candidate.id === selectedPageId);
+    if (page) {
+      return (
+        resolveEnvironmentForPage(state.environment, state.pages, page).scene ??
+        {}
+      );
+    }
+  }
+  return state.environment.scene ?? {};
+}
+
+function pageAtmosphereSceneOverrides(
+  scene: SceneProperties,
+): Partial<SceneProperties> {
+  const next: Partial<SceneProperties> = {
+    lightMode: scene.lightMode === true,
+  };
+  if (scene.background !== undefined) next.background = scene.background;
+  if (scene.lightModeBackground !== undefined) {
+    next.lightModeBackground = scene.lightModeBackground;
+  }
+  if (scene.fog !== undefined) next.fog = clone(scene.fog);
+  return next;
+}
+
 function syncActiveUserRenderPresetScene(
   environment: EnvironmentSetup,
   patch: Partial<SceneProperties>,
@@ -2755,13 +2783,17 @@ export function EditorProvider({
 
   const addPage = useCallback<EditorContextValue["addPage"]>(
     (basePose) => {
-      const id = newPageId(stateRef.current.pages.map((p) => p.id));
+      const cur = stateRef.current;
+      const id = newPageId(cur.pages.map((p) => p.id));
       const page: PresentationPage = {
         id,
         title: "New page",
         camera: basePose,
         transition: { duration: 3000, easing: "easeInOutCubic" },
         holdDuration: 4000,
+        sceneOverrides: pageAtmosphereSceneOverrides(
+          currentAuthoringScene(cur),
+        ),
       };
       dispatch({ type: "ADD_PAGE", page });
       return id;

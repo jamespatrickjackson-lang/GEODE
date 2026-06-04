@@ -35,6 +35,9 @@ copy under review, and required wording from tools, tests, or external APIs.
 - Decision log: `docs/03-decisions.md`
 - Active software-work routing: `docs/dev-context/Active-Build-Context.md`
 - Workspace and verification routing: `docs/dev-context/Verification-Routing.md`
+- Editor sidebar control manifest and approval policy:
+  `docs/dev-context/editor-control-manifest.json` and
+  `docs/dev-context/Editor-Control-Manifest-Policy.md`
 - Page transitions and section-frame helpers (directives doc):
   `docs/dev-context/Page-Transitions-And-Section-Frames.md`
 
@@ -52,6 +55,9 @@ copy under review, and required wording from tools, tests, or external APIs.
   otherwise.
 - Do not stage, rewrite, delete, or normalize excluded user work while doing
   unrelated changes.
+- Before changing editor sidebar bars, groups, subsections, controls, or backed
+  editor fields, read the editor control manifest and policy. Add, move, rename,
+  hide, or remove controls only through the manifest guard.
 
 ## Search Hygiene
 

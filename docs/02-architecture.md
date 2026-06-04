@@ -221,7 +221,7 @@ Current editor section rule:
 - top-level bars represent peer workflows or toolsets;
 - `Pages` owns page selection/order/actions;
 - `Cinematics` owns global render, per-page render presets, camera, cinematic post, client UI, editor chrome variables, and per-page camera dynamics controls;
-- `Topo` owns the global topo map tool editor, including Topo Settings, Topo Environment, longitude/latitude grid, title block, and reference layers;
+- `Topo` owns the global topo map tool editor, including Topo Settings, Extents, Topo Environment, longitude/latitude grid, title block, and reference layers;
 - `Sections` owns section planes and crop/focus controls;
 - project data and card sections remain separate peer containers.
 

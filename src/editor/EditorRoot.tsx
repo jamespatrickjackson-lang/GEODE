@@ -1440,11 +1440,12 @@ export function EditorRoot({
           data-dev-padding-source="src/editor/EditorRoot.tsx:50"
           data-dev-note="stackStyle controls the scrollable sidebar content; global.css hides this scrollbar."
         >
-          <CollapsibleSection title="Pages">
+          <CollapsibleSection title="Pages" manifestId="section.pages">
             <PagePanel sceneHandle={sceneHandle} />
           </CollapsibleSection>
           <CollapsibleSection
             title="Cinematics"
+            manifestId="section.cinematics"
             accentColor={
               globalSettingsSelected ? globalSettingsAccent : selectedPageAccent
             }
@@ -1485,6 +1486,7 @@ export function EditorRoot({
           {hasSectionsCropping && (
             <CollapsibleSection
               title="Sections"
+              manifestId="section.sections"
               openSignal={
                 sectionsCroppingActiveSignal && sectionsRevealOpenSignal > 0
                   ? `${sectionsCroppingActiveSignal}:${sectionsRevealOpenSignal}`
@@ -1505,6 +1507,7 @@ export function EditorRoot({
           {hasPublicTopoMap && (
             <CollapsibleSection
               title="Topo"
+              manifestId="section.topo"
               openSignal={
                 publicTopoOpenSignal > 0 ? publicTopoOpenSignal : undefined
               }
@@ -1519,6 +1522,7 @@ export function EditorRoot({
           )}
           <CollapsibleSection
             title={publicDataTitle}
+            manifestId="section.forge-data"
             openSignal={forgeDataActiveSignal}
             accentColor={selectedPageAccent}
           >
@@ -1526,6 +1530,7 @@ export function EditorRoot({
           </CollapsibleSection>
           <CollapsibleSection
             title="Cards"
+            manifestId="section.cards"
             accentColor={selectedPageAccent}
           >
             <OverlayPanel />

@@ -30,8 +30,13 @@ test("topo panel groups atmospheric tools under Environment with cloud controls"
   );
   assert.match(
     topoPanel,
-    /label="Fog"[^]*label="Scene fog"[^]*label="Map fog"/,
-    "Scene fog and map fog should live under the Topo Environment/Fog section.",
+    /label="Fog"[^]*label="Map fog"[^]*label="Scene fog"/,
+    "Map fog and scene fog should live under the Topo Environment/Fog section, with map fog first.",
+  );
+  assert.match(
+    topoPanel,
+    /label="Fog"[\s\S]*label="Scene atmosphere"[\s\S]*label="Clouds"[\s\S]*label="Sun"/,
+    "Fog settings should be the first Topo Environment subsection before atmosphere colors and the longer cloud and sun controls.",
   );
   assert.match(
     layerPanelGroups,

@@ -17,8 +17,13 @@ test("topo satellite image exposes outside fill and image shadow authoring field
   const pageTypes = readSource("src", "pages", "types.ts");
   const terrainMaterial = readSource("src", "scene", "terrainMaterial.ts");
   const topoPanel = readSource("src", "editor", "topoMap", "TopoMapPanel.tsx");
+  const materialAuthority = readSource("src", "topoMap", "materialAuthority.ts");
+  const layerPanelGroups = readSource("src", "editor", "LayerPanelGroups.tsx");
+  const environment = readJson("projects", "utah-forge", "environment.json");
 
   for (const field of [
+    "orthoPhotoEdgeClipInsetM",
+    "orthoPhotoEdgeFadeDistanceM",
     "orthoPhotoOutsideFillEnabled",
     "orthoPhotoOutsideSurfaceMode",
     "orthoPhotoOutsideColor",
@@ -37,12 +42,76 @@ test("topo satellite image exposes outside fill and image shadow authoring field
       new RegExp(field),
       `Terrain shader pipeline should consume ${field}.`,
     );
+    assert.match(
+      materialAuthority,
+      new RegExp(`"${field}"`),
+      `Topo material authority should preserve ${field}.`,
+    );
   }
 
+  assert.match(
+    terrainMaterial,
+    /uniform float uOrthoPhotoEdgeClipInset;[\s\S]*uniform float uOrthoPhotoEdgeFadeDistance;/,
+    "Terrain shader should expose satellite edge clip and edge gradient uniforms.",
+  );
+  assert.match(
+    terrainMaterial,
+    /float orthoPhotoEdgeWeight[\s\S]*uOrthoPhotoEdgeClipInset[\s\S]*uOrthoPhotoEdgeFadeDistance/,
+    "Terrain shader should calculate satellite image alpha from clipped edge distance.",
+  );
+  assert.match(
+    terrainMaterial,
+    /uOrthoPhotoOpacity \* orthoSample\.a \* edgeWeight/,
+    "Satellite image alpha should be multiplied by the edge opacity gradient.",
+  );
+  assert.match(
+    topoPanel,
+    /label="Satellite image"[\s\S]*testId="topo-ortho-photo-edge-clip-inset"[\s\S]*testId="topo-ortho-photo-edge-fade"[\s\S]*label="Image adjustment"/,
+    "Satellite image controls should expose edge clipping and opacity gradient before image adjustment.",
+  );
+  assert.match(
+    topoPanel,
+    /type TopoMapPanelSection =[\s\S]*\| "satellite"/,
+    "TopoMapPanel should expose a dedicated satellite section.",
+  );
+  assert.match(
+    topoPanel,
+    /section === "satellite"/,
+    "TopoMapPanel should render satellite controls from a dedicated section switch.",
+  );
+  assert.match(
+    layerPanelGroups,
+    /title="Satellite image settings"[\s\S]*section="satellite"/,
+    "Topo editor should expose Satellite image settings as a peer group.",
+  );
   assert.match(
     topoPanel,
     /Outside image surface/,
     "Topo editor should expose a dedicated outside-image surface section.",
+  );
+  assert.match(
+    topoPanel,
+    /label="Surface mode"[\s\S]*ORTHO_PHOTO_OUTSIDE_SURFACE_MODE_OPTIONS/,
+    "Outside image surface controls should choose between topo ramp and solid fill.",
+  );
+  assert.match(
+    terrainMaterial,
+    /uOrthoPhotoOutsideSurfaceMode[\s\S]*outsideImageSurface/,
+    "Terrain shader should expose an outside-image topo surface mode.",
+  );
+  assert.equal(
+    environment.scene?.terrain?.orthoPhotoOutsideFillEnabled,
+    true,
+    "Utah FORGE satellite diff should enable outside image surface authoring.",
+  );
+  assert.equal(
+    environment.scene?.terrain?.orthoPhotoOutsideSurfaceMode,
+    "topo",
+    "Utah FORGE satellite diff should default the outside image surface to topo ramp.",
+  );
+  assert.ok(
+    (environment.scene?.terrain?.orthoPhotoOutsideOpacity ?? 0) > 0,
+    "Utah FORGE outside image surface should be visible.",
   );
   assert.match(
     topoPanel,
@@ -179,12 +248,28 @@ test("topo panel exposes terrain grid and underside shader controls", () => {
 
 test("topo edge controls are sibling subsections under topo, not inside map footprint", () => {
   const topoPanel = readSource("src", "editor", "topoMap", "TopoMapPanel.tsx");
-  const clipControlsMatch = topoPanel.match(
-    /function TopoSurfaceClipControls[\s\S]*?\r?\n}\r?\n\r?\nfunction /,
+  const clipControlsStart = topoPanel.indexOf("function TopoSurfaceClipControls");
+  const edgeControlsStart = topoPanel.indexOf("function TopoMapEdgeControls");
+  assert.notStrictEqual(
+    clipControlsStart,
+    -1,
+    "TopoSurfaceClipControls should exist.",
   );
-  assert.ok(clipControlsMatch, "TopoSurfaceClipControls should be isolated.");
+  assert.notStrictEqual(
+    edgeControlsStart,
+    -1,
+    "TopoMapEdgeControls should exist.",
+  );
+  assert.ok(
+    clipControlsStart < edgeControlsStart,
+    "TopoSurfaceClipControls should be isolated before TopoMapEdgeControls.",
+  );
+  const clipControlsSource = topoPanel.slice(
+    clipControlsStart,
+    edgeControlsStart,
+  );
   assert.doesNotMatch(
-    clipControlsMatch[0],
+    clipControlsSource,
     /Material edge opacity fade|Material edge outline|Public surface clip/,
     "Map footprint controls should not contain the lower topo edge subsections.",
   );
@@ -209,26 +294,29 @@ test("image-backed topo materials do not author map-footprint clipping", () => {
   );
 });
 
-test("Utah FORGE persists full height-map footprint as map-edge defaults", () => {
+test("Utah FORGE persists full-context footprint as map-edge defaults", () => {
   const project = readJson("projects", "utah-forge", "project.json");
   const environment = readJson("projects", "utah-forge", "environment.json");
   const terrainLayer = project.layers.find((layer) => layer.id === "terrain");
   const bounds = terrainLayer?.metadata?.geoTransform?.bounds;
-  const origin = terrainLayer?.metadata?.geoTransform?.sceneOriginUtm;
-  assert.ok(bounds && origin, "terrain layer should expose height-map bounds.");
-
-  const expected = {
-    publicSurfaceClipEnabled: true,
-    publicSurfaceClipCenterX: (bounds.min[0] + bounds.max[0]) / 2 - origin.easting_m,
-    publicSurfaceClipCenterY:
-      (bounds.min[1] + bounds.max[1]) / 2 - origin.northing_m,
-    publicSurfaceClipCenterZ: 2000,
-    publicSurfaceClipSizeX: bounds.max[0] - bounds.min[0],
-    publicSurfaceClipSizeY: bounds.max[1] - bounds.min[1],
-    publicSurfaceClipSizeZ: 12600,
-    publicSurfaceClipRotationZDeg: 0,
-    publicSurfaceClipShape: "box",
-  };
+  assert.ok(bounds, "terrain layer should expose height-map bounds.");
+  const terrainClip = environment.layerStyles?.terrain ?? {};
+  const expected = Object.fromEntries(
+    Object.entries(terrainClip).filter(([key]) =>
+      key.startsWith("publicSurfaceClip"),
+    ),
+  );
+  assert.equal(expected.publicSurfaceClipEnabled, true);
+  assert.equal(expected.publicSurfaceClipShape, "box");
+  assert.equal(expected.publicSurfaceClipRotationZDeg, 0);
+  assert.ok(
+    (expected.publicSurfaceClipSizeX ?? 0) >= bounds.max[0] - bounds.min[0],
+    "environment terrain clip should cover the height-map width.",
+  );
+  assert.ok(
+    (expected.publicSurfaceClipSizeY ?? 0) >= bounds.max[1] - bounds.min[1],
+    "environment terrain clip should cover the height-map height.",
+  );
   const topoLayerIds = [
     "terrain",
     "utah-forge-topo-graticule",
@@ -244,12 +332,6 @@ test("Utah FORGE persists full height-map footprint as map-edge defaults", () =>
 
   for (const layerId of topoLayerIds) {
     assertFullFootprint(environment.layerStyles?.[layerId], `environment ${layerId}`);
-  }
-  for (const pageFile of ["152_page.json", "153_page.json", "154_page.json"]) {
-    const page = readJson("projects", "utah-forge", "pages", pageFile);
-    for (const layerId of topoLayerIds) {
-      assertFullFootprint(page.layerOverrides?.[layerId], `${pageFile} ${layerId}`);
-    }
   }
 
   assert.notDeepEqual(

@@ -1,6 +1,10 @@
 # GeoSee Tool Manifest
 
-Status: reference doc - describes all user-facing editor tools grouped by category. Does not constrain implementation.
+Status: reference doc - describes all user-facing editor tools grouped by category.
+
+Implementation constraint: field-level editor sidebar control identity is owned
+by `docs/dev-context/editor-control-manifest.json`; editor changes must follow
+`docs/dev-context/Editor-Control-Manifest-Policy.md`.
 
 Scope: all projects unless noted. "Project-specific" entries carry a scope tag.
 

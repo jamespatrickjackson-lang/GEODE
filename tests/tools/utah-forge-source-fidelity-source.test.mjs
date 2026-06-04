@@ -537,11 +537,11 @@ test("MT volume prep script derives grid dimensions from source spacing", () => 
   assert.match(source, /deriveSourceFidelityVolumeDimensions/);
 });
 
-test("terrain primary artifact is no longer fixed to the 1000 m raster", () => {
+test("terrain primary artifact uses the full-extent 1000 m public context raster", () => {
   const project = readJson("projects", "utah-forge", "project.json");
   const terrain = project.layers.find((layer) => layer.id === "terrain");
   assert.ok(terrain, "terrain layer should exist");
-  assert.doesNotMatch(
+  assert.match(
     terrain.files?.raster ?? "",
     /terrain_public_context_1000m\.tif$/,
   );
@@ -555,11 +555,13 @@ test("terrain primary artifact is no longer fixed to the 1000 m raster", () => {
     "public_context",
     "manifest.json",
   );
-  assert.notEqual(publicContext.terrain?.resolutionM, 1000);
-  assert.match(publicContext.terrain?.file ?? "", /terrain_public_context_200m\.tif$/);
+  assert.equal(publicContext.terrain?.file, "terrain_public_context_1000m.tif");
+  assert.equal(publicContext.terrain?.width, 1396);
+  assert.equal(publicContext.terrain?.height, 1140);
+  assert.equal(publicContext.terrain?.resolutionM, 1000);
   assert.equal(
     terrain.metadata?.geoTransform?.terrainMaxVertices,
-    900000,
+    450000,
     "terrain runtime budget should stay below unsafe full-raster rendering",
   );
 });

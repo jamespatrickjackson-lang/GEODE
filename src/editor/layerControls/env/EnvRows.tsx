@@ -159,16 +159,19 @@ export function ToggleButton({
   active,
   onClick,
   title,
+  editorControlId,
 }: {
   active: boolean;
   onClick: () => void;
   title?: string;
+  editorControlId?: string;
 }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={active}
+      data-editor-control-id={editorControlId}
       onClick={onClick}
       title={title}
       style={{
