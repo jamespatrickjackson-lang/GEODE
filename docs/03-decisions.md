@@ -964,3 +964,27 @@ fake-cloud looks.
 **Why:** The active app already owns the editor sidebar, runtime, project persistence, and verification pipeline. Mixing the separate UI editor package back into `main` would reintroduce obsolete package files and broad deletes/reverts from parked branch history.
 
 **Trade-off accepted:** Any future UI editor package work needs an explicit branch/package task. Normal GeoSee editor work continues in the active app tree and should not mine the parked package branch for source unless the task asks for it.
+
+## DEC-092 - Page manager footer compacts hierarchy actions
+
+**Supersedes:** DEC-090 for page-manager grip orientation and footer layout only.
+
+**Considered:** keep the vertical three-dot grip and a two-button hierarchy footer row, or compact the page-manager footer while keeping the direct-manipulation reorder model.
+
+**Chose:** page rows keep one three-dot reorder grip, but the grip is horizontal and right-aligned after color and visibility controls. Page row action buttons use the same 28px target, 14px centered icon, and opaque tinted fill as the Global Settings add button, so the live 3D scene cannot tint identical controls differently through the translucent editor panel. While dragging, the source row remains in its original slot at 50% opacity, a floating page-row preview follows the pointer with the same editor-panel material and text styling, and the hovered target row shows a crisp insertion line on the before/after edge. The footer keeps add, duplicate, and reset as the top icon row. The lower footer row is `M`, `C`, and delete, with accessible labels/tooltips preserving `Make Master`, `Make Child`, and `Delete selected page`.
+
+**Why:** The compact row keeps hierarchy actions and deletion on the same visual line while preserving the existing Sub Master behavior and confirmation semantics. The half-opacity source row preserves the original location, while the floating preview and insertion rule make the direct-manipulation reorder state visible before release.
+
+**Trade-off accepted:** The visible `M` and `C` labels are abbreviated, so accessible names and tooltips carry the full action names.
+
+## DEC-093 - Page manager action controls match Global Settings add geometry
+
+**Supersedes:** DEC-092 for Page Manager action-button surface and geometry guard only.
+
+**Considered:** keep page-row actions on a darker unselected surface, or make every enabled Page Manager action button match the visually accepted Global Settings add button.
+
+**Chose:** enabled Page Manager action buttons use the Global Settings add-button treatment everywhere: 28px circular target, 14px centered icon, zero padding, opaque tinted fill `rgb(32, 36, 40)`, and stable accessible labels. Page accent swatches keep the same 28px target but remain page-accent filled. Disabled action buttons keep the opaque dark fill and signal disabled state through text/icon opacity.
+
+**Why:** The accepted Global Settings add button is the reference control. Matching that geometry and surface prevents row-to-row apparent size or centering drift, especially over the translucent editor shell and changing scene colors.
+
+**Guard:** Do not reintroduce translucent pale fills, selected-versus-unselected row action surface switching, or per-row button geometry differences in the Pages panel. Current docs should name `MOVE_PAGE_BLOCK` for page reorder behavior rather than the historical `REORDER_PAGE` reducer name. UI docs and focused Page Manager tests must be updated with any future Page Manager action-button geometry change.

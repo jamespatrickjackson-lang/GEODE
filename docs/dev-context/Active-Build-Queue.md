@@ -16,6 +16,9 @@ This file lists current software-build issues that help shape the alpha. It inte
 - Preserve rendering quality. Bloat reduction means reducing structural confusion, not weakening visual fidelity or data richness.
 - Continue aligning editor sections to real tool/workflow boundaries. Top-level containers are peers; nested containers should represent actual hierarchy, not spacing fixes.
 - Keep Page Manager, Visual Studio, UI, Public Topo Map, project data, and overlay tools structurally separate unless a new global tool contract says otherwise.
+- Keep Page Manager action controls aligned with DEC-093: Global Settings
+  add-button geometry, rightmost horizontal reorder grip, floating drag preview,
+  insertion line, and compact footer rows.
 
 ## Current Build Friction
 

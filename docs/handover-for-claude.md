@@ -226,6 +226,10 @@ Done/current:
 - unsaved prompt appears before leaving with unsaved edits
 - Page Manager duplicate action inserts page directly below source page
 - duplicate page attempts to copy overlay markdown/image assets
+- Page Manager reorder uses the rightmost horizontal grip with floating preview,
+  50% source-row opacity, and before/after insertion line
+- Page Manager footer uses add / duplicate / reset above `M` / `C` / trash;
+  enabled action buttons match the Global Settings add-button geometry
 
 ### Architecture cleanup
 

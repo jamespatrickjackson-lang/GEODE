@@ -299,6 +299,15 @@ Presentation pages apply deltas through:
 
 A Sub Master is a renderable `PresentationPage` that carries a frozen `envSnapshot: EnvironmentSetup` captured from the live global environment at creation time. Pages with `parentMasterId` referencing a Sub Master inherit from that snapshot instead of from `environment.json`. The hierarchy is single-level (Global → Sub Master → child) and `pageOrder` keeps Sub Master blocks (master + children) contiguous. `PageController.resolvePresentationState` chooses the inheritance base per page; the env-change re-apply effect depends on the resolved environment, not the raw `environment`, so editing `environment.json` does not re-apply on Sub Master pages or their children. The author re-syncs explicitly via a `Re-snapshot from Global` affordance on the Sub Master row. Display numbering is `XX.M.NN` (slot, ordinal, child rank); `pageOrder` slug is unchanged.
 
+The Pages panel owns the authoring controls for this hierarchy. Reorder uses the
+rightmost horizontal three-dot grip and `MOVE_PAGE_BLOCK` so Sub Master blocks
+move together, Sub Master children stay within their sibling block, and Global
+children skip grouped blocks as units. Footer hierarchy controls are compact:
+top row add / duplicate / reset; lower row `M` / `C` / trash for Make Master,
+Make Child, and delete. Enabled Page Manager action buttons use the Global
+Settings add-button treatment: 28px target, 14px centered icon, and opaque
+tinted fill.
+
 ## Cinematic Camera And Post Stack
 
 The Cinematics editor is split into focused authoring surfaces:

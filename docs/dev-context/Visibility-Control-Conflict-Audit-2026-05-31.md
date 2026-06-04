@@ -32,8 +32,8 @@ Page hide, reorder, duplicate, delete, add, reset, and Sub Master structure acti
 Primary evidence:
 
 - `src/pages/PageController.tsx`: transition state stores `targetIndexRef`.
-- `src/editor/PagePanel.tsx`: page row actions call `reorderPage`, `setPageField(... hidden ...)`, duplicate, delete, reset, add Sub Master, add Sub Master child, and re-snapshot without a transition lock.
-- `src/editor/EditorContext.tsx`: `REORDER_PAGE` rebuilds `pages` order.
+- `src/editor/PagePanel.tsx`: page row actions call `movePageBlock`, `setPageField(... hidden ...)`, duplicate, delete, reset, add Sub Master, add Sub Master child, and re-snapshot. Structural actions are transition-locked by the current Page Manager guard.
+- `src/editor/EditorContext.tsx`: `MOVE_PAGE_BLOCK` rebuilds `pages` order while preserving Sub Master block constraints.
 
 ### P2 - Section controls and legends bypass the same transition boundary
 

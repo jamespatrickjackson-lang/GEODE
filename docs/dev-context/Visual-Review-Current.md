@@ -24,6 +24,10 @@ narrow patch
   - Top-level editor containers are peers when they represent real workflows or tools.
   - Container shape, fill, spacing, and contrast should come from shared editor tokens.
   - Page Manager keeps compact page-list spacing; full-panel end padding belongs to the scroll extent.
+  - Page Manager row actions use the accepted Global Settings add-button
+    geometry: 28px target, 14px centered icon, opaque tinted fill, and no
+    row-specific surface switching. Reorder uses the rightmost horizontal grip
+    with a floating preview and before/after insertion line.
   - Viewport legends should be lightweight overlays unless a specific tool requires a card/backplate.
   - Viewport legend edge anchoring, stack spacing, circular toggle rows, overlay text-color mapping, slider variables, and MT ramp handle sizes are captured in `docs/dev-context/UI-Visual-Standards.md`.
   - Topo graticules are depth-tested reference lines, not through-scene overlays.

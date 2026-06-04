@@ -401,12 +401,19 @@ inline confirm; auto-cancel after 5 seconds). Deleting a Sub Master shows
 a confirm dialog that names the child count and cascade-deletes the
 entire group.
 
-Page rows use a single vertical three-dot grip for reorder. Dragging a
+Page rows use a single right-aligned horizontal three-dot grip for reorder. Dragging a
 Sub Master moves its full block, dragging a Global child moves only that
 page and skips Sub Master blocks as units, and dragging a Sub Master child
-reorders only inside its sibling block. The page-manager footer keeps the
-primary add / duplicate / reset / delete icon row and adds `Make Master`
-and `Make Child` underneath. `Make Master` converts a selected non-master
+reorders only inside its sibling block. During drag, the source row remains
+in its original slot at 50% opacity, a floating row preview follows the
+pointer using the editor-panel material and row typography, and a thin
+insertion line appears on the target row's before/after edge. The
+page row action buttons follow DEC-093 and use the same 28px target, 14px
+centered icon, zero padding, and opaque tinted fill as the Global Settings add
+button, so identical controls do not shift color over red/orange versus dark
+scene content behind the translucent editor shell. The page-manager footer
+keeps add / duplicate / reset as the top icon row and places `M` / `C` / trash
+on the lower row. `Make Master` converts a selected non-master
 page into a Sub Master by freezing its effective visual state into an
 `envSnapshot`. `Make Child` is enabled only for a selected Sub Master and
 duplicates that master into a child under it; it does not reparent an

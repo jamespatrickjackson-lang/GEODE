@@ -160,7 +160,11 @@ interface EditorContextValue {
   duplicatePageById: (pageId: string) => string | null;
   deletePageById: (pageId: string) => void;
   reorderPage: (pageId: string, direction: "up" | "down") => void;
-  movePageBlock: (pageId: string, targetPageId: string) => void;
+  movePageBlock: (
+    pageId: string,
+    targetPageId: string,
+    insertPosition?: "before" | "after",
+  ) => void;
   // Sub Master page hierarchy (DEC-079). addSubMaster creates a new Sub
   // Master that snapshots the current environment; addSubMasterChild creates
   // a child page inheriting from the given Sub Master; reSnapshotSubMaster
@@ -1370,8 +1374,10 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         const withoutSource = order.filter((id) => id !== source.id);
         const nextTargetIndex = withoutSource.indexOf(target.id);
         if (nextTargetIndex < 0) return state;
+        const insertPosition =
+          action.insertPosition ?? (sourceIndex < targetIndex ? "after" : "before");
         const insertIndex =
-          sourceIndex < targetIndex ? nextTargetIndex + 1 : nextTargetIndex;
+          insertPosition === "after" ? nextTargetIndex + 1 : nextTargetIndex;
         nextOrder = [
           ...withoutSource.slice(0, insertIndex),
           source.id,
@@ -1389,8 +1395,11 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         const targetEnd =
           withoutSource.indexOf(targetBlock[targetBlock.length - 1]) + 1;
         if (targetStart < 0 || targetEnd <= 0) return state;
+        const insertPosition =
+          action.insertPosition ??
+          (sourceBlockStart < targetBlockStart ? "after" : "before");
         const insertIndex =
-          sourceBlockStart < targetBlockStart ? targetEnd : targetStart;
+          insertPosition === "after" ? targetEnd : targetStart;
         nextOrder = [
           ...withoutSource.slice(0, insertIndex),
           ...sourceBlock,
@@ -3043,8 +3052,8 @@ export function EditorProvider({
   );
 
   const movePageBlock = useCallback<EditorContextValue["movePageBlock"]>(
-    (pageId, targetPageId) =>
-      dispatch({ type: "MOVE_PAGE_BLOCK", pageId, targetPageId }),
+    (pageId, targetPageId, insertPosition) =>
+      dispatch({ type: "MOVE_PAGE_BLOCK", pageId, targetPageId, insertPosition }),
     [],
   );
 

@@ -118,8 +118,10 @@ workarounds or nested historical containers.
 
 Current top-level peer sections include:
 
-- `Pages`: page selection, ordering, page-level actions, and global/page
-  selection state.
+- `Pages`: Global Settings selection, page selection, right-grip ordering,
+  page-level actions, Sub Master hierarchy actions, and global/page selection
+  state. Current footer layout is add / duplicate / reset above `M` / `C` /
+  trash.
 - `Cinematics`: global render preset, per-page render presets, environment,
   lighting, camera, terrain-grid, client UI, editor chrome variables, and page
   camera dynamics controls.

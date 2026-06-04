@@ -41,9 +41,13 @@ Current priority:
 - Page Manager with:
   - global settings pseudo-page
   - page selection
+  - right-aligned horizontal three-dot drag grip for page reorder
+  - floating drag preview, 50% source-row opacity, and before/after insertion line
   - add page
   - duplicate selected page directly below source page
   - reset selected page overrides
+  - Sub Master hierarchy actions: `M` / `C` / trash lower row for Make Master,
+    Make Child, and delete
   - page visibility/navigation controls
 - Page duplication that copies page data and attempts to copy overlay markdown/image assets.
 - Layer panels for public and customer/project data.

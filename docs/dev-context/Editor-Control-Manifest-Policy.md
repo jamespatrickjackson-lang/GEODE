@@ -35,6 +35,27 @@ Pure decorative icons, static styling wrappers, and non-interactive helper text
 do not need manifest entries unless they become actionable or backed by stored
 state.
 
+## Page Manager Guard
+
+The Pages footer actions are manifest-controlled and must retain these active
+ids when moved or restyled:
+
+- `page.action.add`
+- `page.action.duplicate`
+- `page.action.reset-overrides`
+- `page.action.make-master`
+- `page.action.make-child`
+- `page.action.delete`
+
+The current layout is add / duplicate / reset on the top icon row and `M` / `C`
+/ trash on the lower row. The visible `M` and `C` labels keep the accessible
+names `Make Master` and `Make Child`.
+
+The repeated page-row reorder grip is a direct-manipulation page action. It must
+keep `aria-label="Drag page to reorder"`, remain rightmost in the row action
+group, use the DEC-093 Page Manager action-button geometry, and retain focused
+source/rendered tests before any future layout change is accepted.
+
 ## Approval Metadata
 
 Any `removed`, `renamed`, or `hidden` entry must keep the old id in the

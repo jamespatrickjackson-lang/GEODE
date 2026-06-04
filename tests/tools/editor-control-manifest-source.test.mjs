@@ -59,6 +59,8 @@ test("editor control manifest policy and guard are installed", () => {
     "topo.environment.fog",
     "topo.satellite.outside-surface",
     "page.action.add",
+    "page.action.make-master",
+    "page.action.make-child",
     "page.render-preset",
     "layer.fog.use",
     "editor.chrome.panel-width",

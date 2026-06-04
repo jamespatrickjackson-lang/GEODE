@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { useEditor } from "./EditorContext";
 import { usePageController } from "../pages/PageController";
 import { capturePose } from "../pages/capturePose";
@@ -175,6 +175,28 @@ interface Props {
   sceneHandle: SceneHandle;
 }
 
+type PageDragInsertPosition = "before" | "after";
+const PAGE_DRAG_PREVIEW_MAX_WIDTH = 360;
+
+interface PageDragTarget {
+  pageId: string;
+  insertPosition: PageDragInsertPosition;
+}
+
+function pageDragPreviewPointFromClient(clientX: number, clientY: number) {
+  if (typeof window === "undefined") {
+    return { x: clientX, y: clientY };
+  }
+  const halfWidth = PAGE_DRAG_PREVIEW_MAX_WIDTH / 2;
+  const margin = 16;
+  const minX = Math.min(halfWidth + margin, window.innerWidth / 2);
+  const maxX = Math.max(minX, window.innerWidth - halfWidth - margin);
+  return {
+    x: Math.min(Math.max(clientX, minX), maxX),
+    y: Math.max(clientY, 56),
+  };
+}
+
 export function PagePanel({ sceneHandle }: Props) {
   const [hoveredPageId, setHoveredPageId] = useState<string | null>(null);
   const [visualSelectedPageId, setVisualSelectedPageId] = useState<
@@ -207,10 +229,13 @@ export function PagePanel({ sceneHandle }: Props) {
     null,
   );
   const pageDragCleanupRef = useRef<(() => void) | null>(null);
-  const pageDragOverRef = useRef<string | null>(null);
+  const pageDragTargetRef = useRef<PageDragTarget | null>(null);
   const [pageDragState, setPageDragState] = useState<{
     pageId: string;
     overPageId: string | null;
+    insertPosition: PageDragInsertPosition | null;
+    pointerX: number;
+    pointerY: number;
   } | null>(null);
   const {
     currentIndex,
@@ -324,9 +349,26 @@ export function PagePanel({ sceneHandle }: Props) {
     if (pageStructureLocked) return;
     event.stopPropagation();
     event.preventDefault();
+    const dragButton = event.currentTarget;
+    const pointerId = event.pointerId;
+    try {
+      dragButton.setPointerCapture(pointerId);
+    } catch {
+      // Pointer capture can fail if the pointer is already released.
+    }
     pageDragCleanupRef.current?.();
-    pageDragOverRef.current = null;
-    setPageDragState({ pageId, overPageId: null });
+    pageDragTargetRef.current = null;
+    const dragPoint = pageDragPreviewPointFromClient(
+      event.clientX,
+      event.clientY,
+    );
+    setPageDragState({
+      pageId,
+      overPageId: null,
+      insertPosition: null,
+      pointerX: dragPoint.x,
+      pointerY: dragPoint.y,
+    });
 
     const onPointerMove = (moveEvent: PointerEvent) => {
       const element = document.elementFromPoint(
@@ -338,17 +380,43 @@ export function PagePanel({ sceneHandle }: Props) {
           ? (element.closest("[data-page-id]") as HTMLElement | null)
           : null;
       const overPageId = row?.dataset.pageId ?? null;
-      const nextOverPageId =
-        overPageId && overPageId !== pageId ? overPageId : null;
-      pageDragOverRef.current = nextOverPageId;
+      let nextTarget: PageDragTarget | null = null;
+      if (row && overPageId && overPageId !== pageId) {
+        const rowRect = row.getBoundingClientRect();
+        nextTarget = {
+          pageId: overPageId,
+          insertPosition:
+            moveEvent.clientY < rowRect.top + rowRect.height / 2
+              ? "before"
+              : "after",
+        };
+      }
+      pageDragTargetRef.current = nextTarget;
+      const dragPoint = pageDragPreviewPointFromClient(
+        moveEvent.clientX,
+        moveEvent.clientY,
+      );
       setPageDragState((current) =>
         current?.pageId === pageId
-          ? { pageId, overPageId: nextOverPageId }
+          ? {
+              pageId,
+              overPageId: nextTarget?.pageId ?? null,
+              insertPosition: nextTarget?.insertPosition ?? null,
+              pointerX: dragPoint.x,
+              pointerY: dragPoint.y,
+            }
           : current,
       );
     };
 
     const cleanup = () => {
+      try {
+        if (dragButton.hasPointerCapture(pointerId)) {
+          dragButton.releasePointerCapture(pointerId);
+        }
+      } catch {
+        // Pointer capture can already be released by the browser.
+      }
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerCancel);
@@ -356,18 +424,18 @@ export function PagePanel({ sceneHandle }: Props) {
     };
 
     const onPointerUp = () => {
-      const targetPageId = pageDragOverRef.current;
+      const target = pageDragTargetRef.current;
       cleanup();
-      pageDragOverRef.current = null;
+      pageDragTargetRef.current = null;
       setPageDragState(null);
-      if (targetPageId) {
-        movePageBlock(pageId, targetPageId);
+      if (target) {
+        movePageBlock(pageId, target.pageId, target.insertPosition);
       }
     };
 
     const onPointerCancel = () => {
       cleanup();
-      pageDragOverRef.current = null;
+      pageDragTargetRef.current = null;
       setPageDragState(null);
     };
 
@@ -444,6 +512,24 @@ export function PagePanel({ sceneHandle }: Props) {
     if (id) setVisualSelectedPageId(id);
   };
 
+  const draggedPageIndex = pageDragState
+    ? state.pages.findIndex((page) => page.id === pageDragState.pageId)
+    : -1;
+  const draggedPage =
+    draggedPageIndex >= 0 ? state.pages[draggedPageIndex] : null;
+  const draggedPageMeta =
+    draggedPageIndex >= 0 ? pageRowMetas[draggedPageIndex] : null;
+  const dragPreviewAccent =
+    draggedPage && draggedPageMeta
+      ? pageAccentForPageWithGroup(
+          draggedPage,
+          draggedPageMeta.role,
+          draggedPageMeta.globalRank - 1,
+          draggedPageMeta.ordinal,
+          0.74,
+        )
+      : null;
+
   return (
     <div
       style={panelStyles.body}
@@ -513,7 +599,7 @@ export function PagePanel({ sceneHandle }: Props) {
             <button
               className="editor-action-button"
               style={pageManagerIconButtonStyle({
-                surface: globalSettingsSelected ? "tinted" : "dark",
+                surface: "tinted",
                 disabled: pageStructureLocked,
               })}
               disabled={pageStructureLocked}
@@ -581,9 +667,12 @@ export function PagePanel({ sceneHandle }: Props) {
             (meta.role === "global"
               ? pageAccentHexForIndex(accentGlobalIdx)
               : subMasterAccentHexForOrdinal(meta.ordinal ?? 1));
-          const actionSurface = pageIsChosen ? "tinted" : "dark";
+          const actionSurface = "tinted";
           const reSnapshotPending = reSnapshotConfirmId === p.id;
           const pageIsDragTarget = pageDragState?.overPageId === p.id;
+          const pageDragInsertPosition = pageIsDragTarget
+            ? pageDragState?.insertPosition
+            : null;
           const pageIsDragging = pageDragState?.pageId === p.id;
           return (
             <div
@@ -614,7 +703,9 @@ export function PagePanel({ sceneHandle }: Props) {
                       ...selectedPageRowStyle(pageAccent),
                     }
                   : {}),
-                ...(pageIsDragTarget ? pageDragTargetRowStyle : {}),
+                ...(pageIsDragTarget && pageDragInsertPosition
+                  ? pageDragTargetRowStyle
+                  : {}),
                 ...(pageIsDragging ? pageDraggingRowStyle : {}),
                 ...(pageHidden ? hiddenPageRowStyle : {}),
               }}
@@ -631,6 +722,13 @@ export function PagePanel({ sceneHandle }: Props) {
                 selectPageThenMoveCamera(p.id, i);
               }}
             >
+              {pageIsDragTarget && pageDragInsertPosition && (
+                <span
+                  data-testid="page-drop-indicator"
+                  aria-hidden="true"
+                  style={pageDropIndicatorStyle(pageDragInsertPosition)}
+                />
+              )}
               <span
                 style={{
                   flex: 1,
@@ -759,22 +857,6 @@ export function PagePanel({ sceneHandle }: Props) {
                 <button
                   className="editor-action-button"
                   data-dev-source="src/editor/styles.ts:148"
-                  data-dev-note="panelStyles.iconButton controls the page drag reorder grip."
-                  style={pageManagerIconButtonStyle({
-                    surface: actionSurface,
-                    disabled: pageStructureLocked,
-                  })}
-                  disabled={pageStructureLocked}
-                  onPointerDown={(e) => startPageDrag(p.id, e)}
-                  onClick={(e) => e.stopPropagation()}
-                  title={pageStructureActionTitle("Drag to reorder")}
-                  aria-label="Drag page to reorder"
-                >
-                  <DragGripIcon />
-                </button>
-                <button
-                  className="editor-action-button"
-                  data-dev-source="src/editor/styles.ts:148"
                   data-dev-note="panelStyles.iconButton controls these reorder and visibility button circles."
                   style={pageManagerIconButtonStyle({
                     surface: actionSurface,
@@ -796,6 +878,25 @@ export function PagePanel({ sceneHandle }: Props) {
                   aria-label={pageHidden ? "Show page" : "Hide page"}
                 >
                   {pageHidden ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+                <button
+                  className="editor-action-button"
+                  data-dev-source="src/editor/styles.ts:148"
+                  data-dev-note="panelStyles.iconButton controls the page drag reorder grip."
+                  style={{
+                    ...pageManagerIconButtonStyle({
+                      surface: actionSurface,
+                      disabled: pageStructureLocked,
+                    }),
+                    touchAction: "none",
+                  }}
+                  disabled={pageStructureLocked}
+                  onPointerDown={(e) => startPageDrag(p.id, e)}
+                  onClick={(e) => e.stopPropagation()}
+                  title={pageStructureActionTitle("Drag to reorder")}
+                  aria-label="Drag page to reorder"
+                >
+                  <DragGripIcon />
                 </button>
               </span>
             </div>
@@ -823,6 +924,7 @@ export function PagePanel({ sceneHandle }: Props) {
             </button>
             <button
               className="editor-action-button"
+              data-editor-control-id="page.action.duplicate"
               style={pageFooterActionButtonStyle(
                 pageStructureLocked || !selectedActionPage,
               )}
@@ -841,6 +943,7 @@ export function PagePanel({ sceneHandle }: Props) {
             </button>
             <button
               className="editor-action-button"
+              data-editor-control-id="page.action.reset-overrides"
               style={pageFooterActionButtonStyle(
                 pageStructureLocked || !selectedActionPage,
               )}
@@ -865,8 +968,47 @@ export function PagePanel({ sceneHandle }: Props) {
             >
               <ResetIcon />
             </button>
+          </span>
+          <span style={pageFooterHierarchyActionsStyle}>
             <button
               className="editor-action-button"
+              data-editor-control-id="page.action.make-master"
+              style={pageFooterHierarchyButtonStyle(makeMasterDisabled)}
+              disabled={makeMasterDisabled}
+              onClick={onMakeMasterSelected}
+              title={
+                pageStructureLocked
+                  ? pageStructureLockedTitle
+                  : selectedIsSubMaster
+                  ? "Selected page is already a Sub Master"
+                  : selectedActionPage
+                  ? `Convert ${selectedActionPage.title} to a Sub Master`
+                  : "Select a page first"
+              }
+              aria-label="Make Master"
+            >
+              M
+            </button>
+            <button
+              className="editor-action-button"
+              data-editor-control-id="page.action.make-child"
+              style={pageFooterHierarchyButtonStyle(makeChildDisabled)}
+              disabled={makeChildDisabled}
+              onClick={onMakeChildSelected}
+              title={
+                pageStructureLocked
+                  ? pageStructureLockedTitle
+                  : selectedIsSubMaster
+                  ? `Duplicate ${selectedActionPage?.title ?? "Sub Master"} as a child`
+                  : "Select a Sub Master first"
+              }
+              aria-label="Make Child"
+            >
+              C
+            </button>
+            <button
+              className="editor-action-button"
+              data-editor-control-id="page.action.delete"
               style={pageFooterActionButtonStyle(
                 pageStructureLocked ||
                   !selectedActionPage ||
@@ -890,45 +1032,32 @@ export function PagePanel({ sceneHandle }: Props) {
               <TrashIcon />
             </button>
           </span>
-          <span style={pageFooterHierarchyActionsStyle}>
-            <button
-              className="editor-action-button"
-              style={pageFooterHierarchyButtonStyle(makeMasterDisabled)}
-              disabled={makeMasterDisabled}
-              onClick={onMakeMasterSelected}
-              title={
-                pageStructureLocked
-                  ? pageStructureLockedTitle
-                  : selectedIsSubMaster
-                  ? "Selected page is already a Sub Master"
-                  : selectedActionPage
-                  ? `Convert ${selectedActionPage.title} to a Sub Master`
-                  : "Select a page first"
-              }
-              aria-label="Make Master"
-            >
-              Make Master
-            </button>
-            <button
-              className="editor-action-button"
-              style={pageFooterHierarchyButtonStyle(makeChildDisabled)}
-              disabled={makeChildDisabled}
-              onClick={onMakeChildSelected}
-              title={
-                pageStructureLocked
-                  ? pageStructureLockedTitle
-                  : selectedIsSubMaster
-                  ? `Duplicate ${selectedActionPage?.title ?? "Sub Master"} as a child`
-                  : "Select a Sub Master first"
-              }
-              aria-label="Make Child"
-            >
-              Make Child
-            </button>
-          </span>
         </span>
       </div>
 
+      {pageDragState &&
+        draggedPage &&
+        draggedPageMeta &&
+        dragPreviewAccent &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            data-testid="page-drag-preview"
+            aria-hidden="true"
+            style={pageDragPreviewStyle({
+              x: pageDragState.pointerX,
+              y: pageDragState.pointerY,
+              accentColor: dragPreviewAccent,
+            })}
+          >
+            <span style={pageDragPreviewLabelStyle}>
+              {draggedPageMeta.label}
+              {draggedPageMeta.role === "global" ? "." : " "}
+            </span>
+            <span style={pageDragPreviewTitleStyle}>{draggedPage.title}</span>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -2662,27 +2791,95 @@ const hiddenPageRowStyle: React.CSSProperties = {
 };
 
 const pageDragTargetRowStyle: React.CSSProperties = {
-  outline: "1px solid rgba(244, 240, 232, 0.72)",
-  outlineOffset: -2,
+  position: "relative",
+  overflow: "visible",
 };
 
 const pageDraggingRowStyle: React.CSSProperties = {
-  opacity: 0.72,
+  opacity: 0.5,
+};
+
+function pageDropIndicatorStyle(
+  insertPosition: PageDragInsertPosition,
+): React.CSSProperties {
+  return {
+    position: "absolute",
+    left: 8,
+    right: 8,
+    top: insertPosition === "before" ? -2 : undefined,
+    bottom: insertPosition === "after" ? -2 : undefined,
+    height: 2,
+    borderRadius: 999,
+    background: "rgba(244, 240, 232, 0.94)",
+    boxShadow: "0 0 0 1px rgba(18, 21, 24, 0.8), 0 0 12px rgba(244, 240, 232, 0.38)",
+    pointerEvents: "none",
+    zIndex: 2,
+  };
+}
+
+function pageDragPreviewStyle({
+  x,
+  y,
+  accentColor,
+}: {
+  x: number;
+  y: number;
+  accentColor: string;
+}): React.CSSProperties {
+  return {
+    position: "fixed",
+    left: x,
+    top: y - 18,
+    transform: "translate(-50%, -100%)",
+    width: "max-content",
+    maxWidth: `min(${PAGE_DRAG_PREVIEW_MAX_WIDTH}px, calc(100vw - 32px))`,
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    padding: "7px 12px",
+    boxSizing: "border-box",
+    borderRadius: 999,
+    border: `1px solid ${accentColor}`,
+    color: vibrancyLabel,
+    fontFamily: TECHNICAL_MONO_FONT,
+    ...regularLightMaterial,
+    boxShadow:
+      "0 18px 52px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.096)",
+    pointerEvents: "none",
+    zIndex: 10000,
+  };
+}
+
+const pageDragPreviewLabelStyle: React.CSSProperties = {
+  color: "inherit",
+  fontFamily: TECHNICAL_MONO_FONT,
+  fontSize: 10,
+  lineHeight: 1,
+  flex: "none",
+};
+
+const pageDragPreviewTitleStyle: React.CSSProperties = {
+  minWidth: 0,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  fontWeight: 700,
+  fontSize: 11,
+  lineHeight: 1.2,
 };
 
 type PageManagerActionSurface = "dark" | "tinted";
 
-const PAGE_MANAGER_ACTION_SIZE = 24;
-const PAGE_MANAGER_ACTION_GAP = 12;
+const PAGE_MANAGER_ACTION_SIZE = 28;
+const PAGE_MANAGER_ACTION_GAP = 10;
+const PAGE_MANAGER_ICON_SIZE = 14;
 const PAGE_ROW_ACTION_EXTENT =
   PAGE_MANAGER_ACTION_SIZE * 5 + PAGE_MANAGER_ACTION_GAP * 4;
 const PAGE_FOOTER_ACTION_EXTENT =
-  PAGE_MANAGER_ACTION_SIZE * 4 + PAGE_MANAGER_ACTION_GAP * 3;
-const PAGE_FOOTER_HIERARCHY_BUTTON_WIDTH =
-  (PAGE_FOOTER_ACTION_EXTENT - PAGE_MANAGER_ACTION_GAP) / 2;
-const PAGE_MANAGER_DARK_SURFACE_FILL = "rgba(244, 240, 232, 0.066)";
-const PAGE_MANAGER_TINTED_SURFACE_FILL = "rgba(18, 21, 24, 0.192)";
-const PAGE_MANAGER_DISABLED_FILL = "rgba(244, 240, 232, 0.038)";
+  PAGE_MANAGER_ACTION_SIZE * 3 + PAGE_MANAGER_ACTION_GAP * 2;
+const PAGE_MANAGER_DARK_SURFACE_FILL = "rgb(18, 21, 24)";
+const PAGE_MANAGER_TINTED_SURFACE_FILL = "rgb(32, 36, 40)";
+const PAGE_MANAGER_DISABLED_FILL = "rgb(18, 21, 24)";
 
 const pageActionButtonBaseStyle: React.CSSProperties = {
   ...panelStyles.iconButton,
@@ -2690,11 +2887,16 @@ const pageActionButtonBaseStyle: React.CSSProperties = {
   height: PAGE_MANAGER_ACTION_SIZE,
   minWidth: PAGE_MANAGER_ACTION_SIZE,
   flex: `0 0 ${PAGE_MANAGER_ACTION_SIZE}px`,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
   boxSizing: "border-box",
   lineHeight: 0,
   padding: 0,
   alignSelf: "center",
   color: vibrancyLabel,
+  verticalAlign: "middle",
+  textAlign: "center",
 };
 
 function pageManagerActionContrastStyle(
@@ -2767,8 +2969,8 @@ function pageColorButtonStyle(accentColor: string): React.CSSProperties {
 const pageColorInputStyle: React.CSSProperties = {
   position: "absolute",
   inset: -4,
-  width: 32,
-  height: 32,
+  width: PAGE_MANAGER_ACTION_SIZE + 8,
+  height: PAGE_MANAGER_ACTION_SIZE + 8,
   opacity: 0,
   cursor: "pointer",
   padding: 0,
@@ -2776,10 +2978,12 @@ const pageColorInputStyle: React.CSSProperties = {
 };
 
 const pageActionSvgStyle: React.CSSProperties = {
-  width: 13,
-  height: 13,
+  width: PAGE_MANAGER_ICON_SIZE,
+  height: PAGE_MANAGER_ICON_SIZE,
   display: "block",
   flex: "none",
+  margin: "auto",
+  overflow: "visible",
 };
 
 function EyeIcon() {
@@ -2915,9 +3119,9 @@ function DragGripIcon() {
       focusable="false"
       style={pageActionSvgStyle}
     >
-      <circle cx="12" cy="6" r="1.8" fill="currentColor" />
-      <circle cx="12" cy="12" r="1.8" fill="currentColor" />
-      <circle cx="12" cy="18" r="1.8" fill="currentColor" />
+      <circle cx="6" cy="12" r="2.15" fill="currentColor" />
+      <circle cx="12" cy="12" r="2.15" fill="currentColor" />
+      <circle cx="18" cy="12" r="2.15" fill="currentColor" />
     </svg>
   );
 }
@@ -2940,14 +3144,14 @@ const pageFooterActionsStyle: React.CSSProperties = {
 
 const pageFooterPrimaryActionsStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: `repeat(4, ${PAGE_MANAGER_ACTION_SIZE}px)`,
+  gridTemplateColumns: `repeat(3, ${PAGE_MANAGER_ACTION_SIZE}px)`,
   justifyContent: "end",
   gap: PAGE_MANAGER_ACTION_GAP,
 };
 
 const pageFooterHierarchyActionsStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: `repeat(2, ${PAGE_FOOTER_HIERARCHY_BUTTON_WIDTH}px)`,
+  gridTemplateColumns: `repeat(3, ${PAGE_MANAGER_ACTION_SIZE}px)`,
   justifyContent: "end",
   gap: PAGE_MANAGER_ACTION_GAP,
 };
@@ -2955,19 +3159,20 @@ const pageFooterHierarchyActionsStyle: React.CSSProperties = {
 function pageFooterActionButtonStyle(disabled = false): React.CSSProperties {
   return {
     ...pageActionButtonBaseStyle,
-    ...pageManagerActionContrastStyle("dark", disabled),
+    ...pageManagerActionContrastStyle("tinted", disabled),
   };
 }
 
 function pageFooterHierarchyButtonStyle(disabled = false): React.CSSProperties {
   return {
     ...pageActionButtonBaseStyle,
-    ...pageManagerActionContrastStyle("dark", disabled),
-    width: PAGE_FOOTER_HIERARCHY_BUTTON_WIDTH,
-    minWidth: PAGE_FOOTER_HIERARCHY_BUTTON_WIDTH,
-    flex: `0 0 ${PAGE_FOOTER_HIERARCHY_BUTTON_WIDTH}px`,
-    padding: "0 6px",
-    fontSize: 9,
+    ...pageManagerActionContrastStyle("tinted", disabled),
+    width: PAGE_MANAGER_ACTION_SIZE,
+    minWidth: PAGE_MANAGER_ACTION_SIZE,
+    flex: `0 0 ${PAGE_MANAGER_ACTION_SIZE}px`,
+    padding: 0,
+    fontSize: 12,
+    fontWeight: 700,
     lineHeight: 1,
     whiteSpace: "nowrap",
   };

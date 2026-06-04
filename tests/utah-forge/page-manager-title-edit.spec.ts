@@ -111,12 +111,14 @@ test("Pages single-click selects title and double-click edits it", async ({
 });
 
 test("Pages grip drag reorders rows in memory", async ({ page }) => {
+  test.setTimeout(120_000);
   await openPagesPanel(page);
 
   const rows = pageRows(page);
-  await expect(rows.nth(1)).toBeVisible({ timeout: 30_000 });
+  await expect(rows.nth(2)).toBeVisible({ timeout: 30_000 });
   const firstTitle = (await pageRowTitle(rows.nth(0)).innerText()).trim();
   const secondTitle = (await pageRowTitle(rows.nth(1)).innerText()).trim();
+  const thirdTitle = (await pageRowTitle(rows.nth(2)).innerText()).trim();
   const grip = rows.nth(0).getByRole("button", {
     name: "Drag page to reorder",
   });
@@ -124,6 +126,41 @@ test("Pages grip drag reorders rows in memory", async ({ page }) => {
   const secondBox = await rows.nth(1).boundingBox();
   expect(gripBox).not.toBeNull();
   expect(secondBox).not.toBeNull();
+  const buttonRects = await rows
+    .nth(0)
+    .getByRole("button")
+    .evaluateAll((buttons) =>
+      buttons.map((button) => {
+        const rect = button.getBoundingClientRect();
+        return {
+          name: button.getAttribute("aria-label"),
+          right: rect.right,
+        };
+      }),
+    );
+  const gripRect = buttonRects.find(
+    (button) => button.name === "Drag page to reorder",
+  );
+  expect(gripRect).toBeTruthy();
+  expect(gripRect!.right).toBe(
+    Math.max(...buttonRects.map((button) => button.right)),
+  );
+  const rowActionBackgrounds = await rows
+    .evaluateAll((rowElements) =>
+      rowElements.slice(0, 13).flatMap((row) =>
+        Array.from(row.querySelectorAll("button"))
+          .filter((button) => {
+            const label = button.getAttribute("aria-label") ?? "";
+            return (
+              label === "Hide page" ||
+              label === "Show page" ||
+              label === "Drag page to reorder"
+            );
+          })
+          .map((button) => getComputedStyle(button).backgroundColor),
+      ),
+    );
+  expect(new Set(rowActionBackgrounds)).toEqual(new Set(["rgb(32, 36, 40)"]));
 
   await page.mouse.move(
     gripBox!.x + gripBox!.width / 2,
@@ -132,13 +169,83 @@ test("Pages grip drag reorders rows in memory", async ({ page }) => {
   await page.mouse.down();
   await page.mouse.move(
     secondBox!.x + secondBox!.width / 2,
-    secondBox!.y + secondBox!.height / 2,
+    secondBox!.y + secondBox!.height * 0.75,
     { steps: 6 },
   );
+  await expect(page.getByTestId("page-drag-preview")).toBeVisible();
+  await expect(page.getByTestId("page-drop-indicator")).toBeVisible();
+  const dragSourceStyles = await rows.nth(0).evaluate((row) => {
+    const styles = getComputedStyle(row);
+    return {
+      opacity: styles.opacity,
+      visibility: styles.visibility,
+    };
+  });
+  expect(dragSourceStyles).toEqual({
+    opacity: "0.5",
+    visibility: "visible",
+  });
+  const previewStyles = await page
+    .getByTestId("page-drag-preview")
+    .evaluate((preview) => {
+      const styles = getComputedStyle(preview);
+      return {
+        backgroundColor: styles.backgroundColor,
+        borderBottomColor: styles.borderBottomColor,
+        borderBottomWidth: styles.borderBottomWidth,
+        borderLeftColor: styles.borderLeftColor,
+        borderLeftWidth: styles.borderLeftWidth,
+        borderRightColor: styles.borderRightColor,
+        borderRightWidth: styles.borderRightWidth,
+        borderTopColor: styles.borderTopColor,
+        borderTopWidth: styles.borderTopWidth,
+        color: styles.color,
+        fontFamily: styles.fontFamily,
+      };
+    });
+  expect(previewStyles.backgroundColor).toBe("rgba(18, 21, 24, 0.53)");
+  expect(previewStyles.color).toBe("rgb(244, 240, 232)");
+  expect(previewStyles.fontFamily).toContain("Consolas");
+  expect(previewStyles.borderTopColor).toBe(previewStyles.borderRightColor);
+  expect(previewStyles.borderTopColor).toBe(previewStyles.borderBottomColor);
+  expect(previewStyles.borderTopColor).toBe(previewStyles.borderLeftColor);
+  expect(previewStyles.borderTopWidth).toBe(previewStyles.borderRightWidth);
+  expect(previewStyles.borderTopWidth).toBe(previewStyles.borderBottomWidth);
+  expect(previewStyles.borderTopWidth).toBe(previewStyles.borderLeftWidth);
   await page.mouse.up();
 
+  await expect(page.getByTestId("page-drag-preview")).toHaveCount(0);
+  await expect(page.getByTestId("page-drop-indicator")).toHaveCount(0);
   await expect(pageRowTitle(rows.nth(0))).toHaveText(secondTitle);
   await expect(pageRowTitle(rows.nth(1))).toHaveText(firstTitle);
+
+  const thirdGrip = rows.nth(2).getByRole("button", {
+    name: "Drag page to reorder",
+  });
+  const thirdGripBox = await thirdGrip.boundingBox();
+  const firstAfterMoveBox = await rows.nth(1).boundingBox();
+  expect(thirdGripBox).not.toBeNull();
+  expect(firstAfterMoveBox).not.toBeNull();
+
+  await page.mouse.move(
+    thirdGripBox!.x + thirdGripBox!.width / 2,
+    thirdGripBox!.y + thirdGripBox!.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    firstAfterMoveBox!.x + firstAfterMoveBox!.width / 2,
+    firstAfterMoveBox!.y + firstAfterMoveBox!.height * 0.25,
+    { steps: 6 },
+  );
+  await expect(page.getByTestId("page-drag-preview")).toBeVisible();
+  await expect(page.getByTestId("page-drop-indicator")).toBeVisible();
+  await page.mouse.up();
+
+  await expect(page.getByTestId("page-drag-preview")).toHaveCount(0);
+  await expect(page.getByTestId("page-drop-indicator")).toHaveCount(0);
+  await expect(pageRowTitle(rows.nth(0))).toHaveText(secondTitle);
+  await expect(pageRowTitle(rows.nth(1))).toHaveText(thirdTitle);
+  await expect(pageRowTitle(rows.nth(2))).toHaveText(firstTitle);
 });
 
 test("Pages footer converts a page to master and duplicates it as a child", async ({
@@ -148,6 +255,28 @@ test("Pages footer converts a page to master and duplicates it as a child", asyn
 
   const rows = pageRows(page);
   await expect(rows.first()).toBeVisible({ timeout: 30_000 });
+  const makeMaster = page.getByRole("button", { name: "Make Master" });
+  const makeChild = page.getByRole("button", { name: "Make Child" });
+  const deletePage = page.getByRole("button", { name: "Delete selected page" });
+  await makeMaster.scrollIntoViewIfNeeded();
+  await expect(makeMaster).toHaveText("M");
+  await expect(makeChild).toHaveText("C");
+  const makeMasterBox = await makeMaster.boundingBox();
+  const makeChildBox = await makeChild.boundingBox();
+  const deleteBox = await deletePage.boundingBox();
+  expect(makeMasterBox).not.toBeNull();
+  expect(makeChildBox).not.toBeNull();
+  expect(deleteBox).not.toBeNull();
+  const rowCenterY = makeMasterBox!.y + makeMasterBox!.height / 2;
+  expect(
+    Math.abs(rowCenterY - (makeChildBox!.y + makeChildBox!.height / 2)),
+  ).toBeLessThan(3);
+  expect(
+    Math.abs(rowCenterY - (deleteBox!.y + deleteBox!.height / 2)),
+  ).toBeLessThan(3);
+  expect(makeMasterBox!.x).toBeLessThan(makeChildBox!.x);
+  expect(makeChildBox!.x).toBeLessThan(deleteBox!.x);
+
   await rows.first().click();
 
   await page.getByRole("button", { name: "Make Master" }).click();

@@ -218,7 +218,12 @@ export type EditorAction =
     }
   | { type: "DELETE_PAGE"; pageId: string }
   | { type: "REORDER_PAGE"; pageId: string; direction: "up" | "down" }
-  | { type: "MOVE_PAGE_BLOCK"; pageId: string; targetPageId: string }
+  | {
+      type: "MOVE_PAGE_BLOCK";
+      pageId: string;
+      targetPageId: string;
+      insertPosition?: "before" | "after";
+    }
   // Sub Master page hierarchy (DEC-079). ADD_SUB_MASTER creates a new
   // renderable page that snapshots the current global environment and acts
   // as the inheritance base for its own children. ADD_SUB_MASTER_CHILD
