@@ -160,6 +160,7 @@ interface EditorContextValue {
   duplicatePageById: (pageId: string) => string | null;
   deletePageById: (pageId: string) => void;
   reorderPage: (pageId: string, direction: "up" | "down") => void;
+  movePageBlock: (pageId: string, targetPageId: string) => void;
   // Sub Master page hierarchy (DEC-079). addSubMaster creates a new Sub
   // Master that snapshots the current environment; addSubMasterChild creates
   // a child page inheriting from the given Sub Master; reSnapshotSubMaster
@@ -168,6 +169,8 @@ interface EditorContextValue {
   // that references it. Returns the new page id where applicable.
   addSubMaster: (basePose: Pose) => string;
   addSubMasterChild: (parentMasterId: string, basePose: Pose) => string | null;
+  makePageSubMaster: (pageId: string) => void;
+  duplicateSubMasterAsChild: (pageId: string) => string | null;
   reSnapshotSubMaster: (pageId: string) => void;
   deleteSubMasterById: (pageId: string) => void;
   selectPage: (pageId: string | EnvironmentSentinel) => void;
@@ -492,6 +495,40 @@ function nextSubMasterOrdinal(pages: PresentationPage[]): number {
     }
   }
   return max + 1;
+}
+
+function pagesInManifestOrder(
+  pages: PresentationPage[],
+  pageOrder: readonly string[],
+): PresentationPage[] {
+  const byId = new Map(pages.map((p) => [p.id, p]));
+  return pageOrder
+    .map((id) => byId.get(id))
+    .filter((p): p is PresentationPage => p != null);
+}
+
+function materializePageEnvironmentSnapshot(
+  state: EditorState,
+  page: PresentationPage,
+): EnvironmentSetup {
+  const base = clone(
+    resolveEnvironmentForPage(state.environment, state.pages, page),
+  );
+  const layerIds = new Set([
+    ...Object.keys(base.layerStyles ?? {}),
+    ...Object.keys(page.layerOverrides ?? {}),
+  ]);
+  const layerStyles: EnvironmentSetup["layerStyles"] = {
+    ...(base.layerStyles ?? {}),
+  };
+  for (const layerId of layerIds) {
+    layerStyles[layerId] = effectiveStyle(base, page, layerId);
+  }
+  return {
+    ...base,
+    defaultVisibleLayers: Array.from(effectiveVisibility(base, page)),
+    layerStyles,
+  };
 }
 
 function withoutLayerOverrideFields(
@@ -1310,6 +1347,69 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         dirty: withDirty(state.dirty, "project"),
       };
     }
+    case "MOVE_PAGE_BLOCK": {
+      if (action.pageId === action.targetPageId) return state;
+      const source = state.pages.find((p) => p.id === action.pageId);
+      const target = state.pages.find((p) => p.id === action.targetPageId);
+      if (!source || !target) return state;
+
+      const manifest = clone(state.manifest);
+      const order = manifest.pageOrder;
+      const sourceIndex = order.indexOf(source.id);
+      const targetIndex = order.indexOf(target.id);
+      if (sourceIndex < 0 || targetIndex < 0) return state;
+
+      let nextOrder: string[] | null = null;
+      if (isSubMasterChildPage(source)) {
+        if (
+          !isSubMasterChildPage(target) ||
+          target.parentMasterId !== source.parentMasterId
+        ) {
+          return state;
+        }
+        const withoutSource = order.filter((id) => id !== source.id);
+        const nextTargetIndex = withoutSource.indexOf(target.id);
+        if (nextTargetIndex < 0) return state;
+        const insertIndex =
+          sourceIndex < targetIndex ? nextTargetIndex + 1 : nextTargetIndex;
+        nextOrder = [
+          ...withoutSource.slice(0, insertIndex),
+          source.id,
+          ...withoutSource.slice(insertIndex),
+        ];
+      } else {
+        const sourceBlock = atomicBlockFor(source.id, state.pages, order);
+        const targetBlock = atomicBlockFor(target.id, state.pages, order);
+        if (targetBlock.some((id) => sourceBlock.includes(id))) return state;
+
+        const sourceBlockStart = order.indexOf(sourceBlock[0]);
+        const targetBlockStart = order.indexOf(targetBlock[0]);
+        const withoutSource = order.filter((id) => !sourceBlock.includes(id));
+        const targetStart = withoutSource.indexOf(targetBlock[0]);
+        const targetEnd =
+          withoutSource.indexOf(targetBlock[targetBlock.length - 1]) + 1;
+        if (targetStart < 0 || targetEnd <= 0) return state;
+        const insertIndex =
+          sourceBlockStart < targetBlockStart ? targetEnd : targetStart;
+        nextOrder = [
+          ...withoutSource.slice(0, insertIndex),
+          ...sourceBlock,
+          ...withoutSource.slice(insertIndex),
+        ];
+      }
+
+      if (!nextOrder || nextOrder.join("\u0000") === order.join("\u0000")) {
+        return state;
+      }
+      manifest.pageOrder = nextOrder;
+      const pages = pagesInManifestOrder(state.pages, nextOrder);
+      return {
+        ...state,
+        manifest,
+        pages,
+        dirty: withDirty(state.dirty, "project"),
+      };
+    }
     case "ADD_SUB_MASTER": {
       const manifest = clone(state.manifest);
       const pageOrder = [...manifest.pageOrder];
@@ -1375,6 +1475,101 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         pages,
         selectedPageId: action.page.id,
         dirty: withDirty(state.dirty, ["project", `page:${action.page.id}`]),
+      };
+    }
+    case "MAKE_PAGE_SUB_MASTER": {
+      const target = state.pages.find((p) => p.id === action.pageId);
+      if (!target || isSubMasterPage(target)) return state;
+
+      const envSnapshot = materializePageEnvironmentSnapshot(state, target);
+      const converted: PresentationPage = {
+        ...target,
+        parentMasterId: "global",
+        envSnapshot,
+        subMasterOrdinal: nextSubMasterOrdinal(state.pages),
+      };
+      delete converted.layerOverrides;
+      delete converted.visibilityOverrides;
+      delete converted.sceneOverrides;
+
+      const manifest = clone(state.manifest);
+      let nextOrder = [...manifest.pageOrder];
+      if (isSubMasterChildPage(target)) {
+        const parentMasterId = target.parentMasterId!;
+        const remainingChildren = childrenOfSubMaster(
+          parentMasterId,
+          state.pages,
+          manifest.pageOrder,
+        ).filter((id) => id !== target.id);
+        nextOrder = nextOrder.filter((id) => id !== target.id);
+        const insertAfterId =
+          remainingChildren.length > 0
+            ? remainingChildren[remainingChildren.length - 1]
+            : parentMasterId;
+        const insertAfterIdx = nextOrder.indexOf(insertAfterId);
+        nextOrder.splice(
+          insertAfterIdx >= 0 ? insertAfterIdx + 1 : nextOrder.length,
+          0,
+          target.id,
+        );
+      }
+      manifest.pageOrder = nextOrder;
+      const pages = pagesInManifestOrder(
+        state.pages.map((p) => (p.id === target.id ? converted : p)),
+        nextOrder,
+      );
+      return {
+        ...state,
+        manifest,
+        pages,
+        selectedPageId: target.id,
+        dirty: withDirty(state.dirty, ["project", `page:${target.id}`]),
+      };
+    }
+    case "DUPLICATE_SUB_MASTER_AS_CHILD": {
+      const parentMasterId = action.page.parentMasterId;
+      if (!parentMasterId || parentMasterId === "global") return state;
+      const parent = state.pages.find((p) => p.id === parentMasterId);
+      if (!parent || !isSubMasterPage(parent)) return state;
+
+      const manifest = clone(state.manifest);
+      const existingChildren = childrenOfSubMaster(
+        parentMasterId,
+        state.pages,
+        manifest.pageOrder,
+      );
+      const insertAfterId =
+        existingChildren.length > 0
+          ? existingChildren[existingChildren.length - 1]
+          : parentMasterId;
+      const insertAfterIdx = manifest.pageOrder.indexOf(insertAfterId);
+      const newOrder = [...manifest.pageOrder];
+      newOrder.splice(insertAfterIdx + 1, 0, action.page.id);
+      manifest.pageOrder = newOrder;
+      const insertAfterPageIdx = state.pages.findIndex(
+        (p) => p.id === insertAfterId,
+      );
+      const pages = [...state.pages];
+      pages.splice(
+        insertAfterPageIdx >= 0 ? insertAfterPageIdx + 1 : pages.length,
+        0,
+        action.page,
+      );
+      const overlays =
+        action.overlayText !== undefined
+          ? { ...state.overlays, [action.page.id]: action.overlayText }
+          : state.overlays;
+      const dirtyKeys: EntityKey[] = ["project", `page:${action.page.id}`];
+      if (action.overlayText !== undefined) {
+        dirtyKeys.push(`overlay:${action.page.id}`);
+      }
+      return {
+        ...state,
+        manifest,
+        pages,
+        overlays,
+        selectedPageId: action.page.id,
+        dirty: withDirty(state.dirty, dirtyKeys),
       };
     }
     case "RE_SNAPSHOT_SUB_MASTER": {
@@ -2847,6 +3042,12 @@ export function EditorProvider({
     [],
   );
 
+  const movePageBlock = useCallback<EditorContextValue["movePageBlock"]>(
+    (pageId, targetPageId) =>
+      dispatch({ type: "MOVE_PAGE_BLOCK", pageId, targetPageId }),
+    [],
+  );
+
   const addSubMaster = useCallback<EditorContextValue["addSubMaster"]>(
     (basePose) => {
       const cur = stateRef.current;
@@ -2885,6 +3086,43 @@ export function EditorProvider({
       parentMasterId,
     };
     dispatch({ type: "ADD_SUB_MASTER_CHILD", page });
+    return id;
+  }, []);
+
+  const makePageSubMaster = useCallback<
+    EditorContextValue["makePageSubMaster"]
+  >((pageId) => {
+    dispatch({ type: "MAKE_PAGE_SUB_MASTER", pageId });
+  }, []);
+
+  const duplicateSubMasterAsChild = useCallback<
+    EditorContextValue["duplicateSubMasterAsChild"]
+  >((pageId) => {
+    const cur = stateRef.current;
+    const source = cur.pages.find((page) => page.id === pageId);
+    if (!source || !isSubMasterPage(source)) return null;
+    const id = newPageId(cur.pages.map((p) => p.id));
+    const page: PresentationPage = {
+      ...rewriteOverlayForDuplicate(source, source.id, id),
+      id,
+      title: `${source.title} child`,
+      parentMasterId: source.id,
+    };
+    delete page.envSnapshot;
+    delete page.subMasterOrdinal;
+    const overlayText = cur.overlays[pageId];
+    dispatch({
+      type: "DUPLICATE_SUB_MASTER_AS_CHILD",
+      page,
+      overlayText,
+    });
+    void copyDuplicateOverlayAssets(
+      cur.projectRoot,
+      source.id,
+      id,
+      source,
+      overlayText,
+    );
     return id;
   }, []);
 
@@ -3004,8 +3242,11 @@ export function EditorProvider({
       duplicatePageById,
       deletePageById,
       reorderPage,
+      movePageBlock,
       addSubMaster,
       addSubMasterChild,
+      makePageSubMaster,
+      duplicateSubMasterAsChild,
       reSnapshotSubMaster,
       deleteSubMasterById,
       selectPage,
@@ -3054,8 +3295,11 @@ export function EditorProvider({
       duplicatePageById,
       deletePageById,
       reorderPage,
+      movePageBlock,
       addSubMaster,
       addSubMasterChild,
+      makePageSubMaster,
+      duplicateSubMasterAsChild,
       reSnapshotSubMaster,
       deleteSubMasterById,
       selectPage,

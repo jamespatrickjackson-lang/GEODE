@@ -187,11 +187,13 @@ export function PagePanel({ sceneHandle }: Props) {
     addPage,
     addSubMaster,
     addSubMasterChild,
+    makePageSubMaster,
+    duplicateSubMasterAsChild,
     reSnapshotSubMaster,
     deleteSubMasterById,
     deletePageById,
     duplicatePageById,
-    reorderPage,
+    movePageBlock,
     selectPage,
     setPageField,
     resetPageOverrides,
@@ -204,6 +206,12 @@ export function PagePanel({ sceneHandle }: Props) {
   const [reSnapshotConfirmId, setReSnapshotConfirmId] = useState<string | null>(
     null,
   );
+  const pageDragCleanupRef = useRef<(() => void) | null>(null);
+  const pageDragOverRef = useRef<string | null>(null);
+  const [pageDragState, setPageDragState] = useState<{
+    pageId: string;
+    overPageId: string | null;
+  } | null>(null);
   const {
     currentIndex,
     goto,
@@ -245,6 +253,7 @@ export function PagePanel({ sceneHandle }: Props) {
       if (navigationPaintFrameRef.current !== null) {
         window.cancelAnimationFrame(navigationPaintFrameRef.current);
       }
+      pageDragCleanupRef.current?.();
     };
   }, []);
 
@@ -308,6 +317,66 @@ export function PagePanel({ sceneHandle }: Props) {
     addSubMasterChild(parentMasterId, pose);
   };
 
+  const startPageDrag = (
+    pageId: string,
+    event: React.PointerEvent<HTMLButtonElement>,
+  ) => {
+    if (pageStructureLocked) return;
+    event.stopPropagation();
+    event.preventDefault();
+    pageDragCleanupRef.current?.();
+    pageDragOverRef.current = null;
+    setPageDragState({ pageId, overPageId: null });
+
+    const onPointerMove = (moveEvent: PointerEvent) => {
+      const element = document.elementFromPoint(
+        moveEvent.clientX,
+        moveEvent.clientY,
+      );
+      const row =
+        element instanceof Element
+          ? (element.closest("[data-page-id]") as HTMLElement | null)
+          : null;
+      const overPageId = row?.dataset.pageId ?? null;
+      const nextOverPageId =
+        overPageId && overPageId !== pageId ? overPageId : null;
+      pageDragOverRef.current = nextOverPageId;
+      setPageDragState((current) =>
+        current?.pageId === pageId
+          ? { pageId, overPageId: nextOverPageId }
+          : current,
+      );
+    };
+
+    const cleanup = () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
+      pageDragCleanupRef.current = null;
+    };
+
+    const onPointerUp = () => {
+      const targetPageId = pageDragOverRef.current;
+      cleanup();
+      pageDragOverRef.current = null;
+      setPageDragState(null);
+      if (targetPageId) {
+        movePageBlock(pageId, targetPageId);
+      }
+    };
+
+    const onPointerCancel = () => {
+      cleanup();
+      pageDragOverRef.current = null;
+      setPageDragState(null);
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp, { once: true });
+    window.addEventListener("pointercancel", onPointerCancel, { once: true });
+    pageDragCleanupRef.current = cleanup;
+  };
+
   const onReSnapshotClick = (pageId: string) => {
     if (pageStructureLocked) return;
     if (reSnapshotConfirmId === pageId) {
@@ -357,6 +426,24 @@ export function PagePanel({ sceneHandle }: Props) {
     }
   };
 
+  const selectedIsSubMaster =
+    selectedActionPage != null && isSubMasterPage(selectedActionPage);
+  const makeMasterDisabled =
+    pageStructureLocked || !selectedActionPage || selectedIsSubMaster;
+  const makeChildDisabled =
+    pageStructureLocked || !selectedActionPage || !selectedIsSubMaster;
+
+  const onMakeMasterSelected = () => {
+    if (makeMasterDisabled || !selectedActionPage) return;
+    makePageSubMaster(selectedActionPage.id);
+  };
+
+  const onMakeChildSelected = () => {
+    if (makeChildDisabled || !selectedActionPage) return;
+    const id = duplicateSubMasterAsChild(selectedActionPage.id);
+    if (id) setVisualSelectedPageId(id);
+  };
+
   return (
     <div
       style={panelStyles.body}
@@ -376,7 +463,7 @@ export function PagePanel({ sceneHandle }: Props) {
             ...panelStyles.globalSettingsBar,
             background: globalSettingsSelected
               ? globalSettingsAccent
-              : frostedSubheading.background,
+              : "transparent",
             ...(hoveredPageId === ENVIRONMENT_SENTINEL &&
             !globalSettingsSelected
               ? pageRowHoverStyle(globalSettingsHoverAccent)
@@ -495,18 +582,13 @@ export function PagePanel({ sceneHandle }: Props) {
               ? pageAccentHexForIndex(accentGlobalIdx)
               : subMasterAccentHexForOrdinal(meta.ordinal ?? 1));
           const actionSurface = pageIsChosen ? "tinted" : "dark";
-          const canMoveUp = isMasterChildRow
-            ? (meta.childRank ?? 1) > 1
-            : i > 0;
-          const canMoveDown = isMasterChildRow
-            ? (meta.childRank ?? 1) < (meta.siblingCount ?? 1)
-            : i < state.pages.length - 1;
-          const moveUpDisabled = pageStructureLocked || !canMoveUp;
-          const moveDownDisabled = pageStructureLocked || !canMoveDown;
           const reSnapshotPending = reSnapshotConfirmId === p.id;
+          const pageIsDragTarget = pageDragState?.overPageId === p.id;
+          const pageIsDragging = pageDragState?.pageId === p.id;
           return (
             <div
               key={p.id}
+              data-page-id={p.id}
               data-dev-source="src/editor/styles.ts:135"
               data-dev-padding-source="src/editor/styles.ts:140"
               data-dev-note="panelStyles.pageRow and pageRowSelected control page row shape, selection material, and row spacing."
@@ -532,6 +614,8 @@ export function PagePanel({ sceneHandle }: Props) {
                       ...selectedPageRowStyle(pageAccent),
                     }
                   : {}),
+                ...(pageIsDragTarget ? pageDragTargetRowStyle : {}),
+                ...(pageIsDragging ? pageDraggingRowStyle : {}),
                 ...(pageHidden ? hiddenPageRowStyle : {}),
               }}
               onMouseEnter={() => setHoveredPageId(p.id)}
@@ -675,40 +759,18 @@ export function PagePanel({ sceneHandle }: Props) {
                 <button
                   className="editor-action-button"
                   data-dev-source="src/editor/styles.ts:148"
-                  data-dev-note="panelStyles.iconButton controls these reorder and visibility button circles."
+                  data-dev-note="panelStyles.iconButton controls the page drag reorder grip."
                   style={pageManagerIconButtonStyle({
                     surface: actionSurface,
-                    disabled: moveUpDisabled,
+                    disabled: pageStructureLocked,
                   })}
-                  disabled={moveUpDisabled}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (moveUpDisabled) return;
-                    reorderPage(p.id, "up");
-                  }}
-                  title={pageStructureActionTitle("Move up")}
-                  aria-label="Move page up"
+                  disabled={pageStructureLocked}
+                  onPointerDown={(e) => startPageDrag(p.id, e)}
+                  onClick={(e) => e.stopPropagation()}
+                  title={pageStructureActionTitle("Drag to reorder")}
+                  aria-label="Drag page to reorder"
                 >
-                  <span style={upTriangleIconStyle} aria-hidden="true" />
-                </button>
-                <button
-                  className="editor-action-button"
-                  data-dev-source="src/editor/styles.ts:148"
-                  data-dev-note="panelStyles.iconButton controls these reorder and visibility button circles."
-                  style={pageManagerIconButtonStyle({
-                    surface: actionSurface,
-                    disabled: moveDownDisabled,
-                  })}
-                  disabled={moveDownDisabled}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (moveDownDisabled) return;
-                    reorderPage(p.id, "down");
-                  }}
-                  title={pageStructureActionTitle("Move down")}
-                  aria-label="Move page down"
-                >
-                  <span style={downTriangleIconStyle} aria-hidden="true" />
+                  <DragGripIcon />
                 </button>
                 <button
                   className="editor-action-button"
@@ -747,81 +809,123 @@ export function PagePanel({ sceneHandle }: Props) {
         data-dev-note="pageActionsStyle aligns Pages footer icon buttons to the page-row action column."
       >
         <span style={pageFooterActionsStyle}>
-          <button
-            className="editor-action-button"
-            data-editor-control-id="page.action.add"
-            style={pageFooterActionButtonStyle(pageStructureLocked)}
-            disabled={pageStructureLocked}
-            onClick={onAdd}
-            title={pageStructureActionTitle("Add page")}
-            aria-label="Add page"
-          >
-            <AddIcon />
-          </button>
-          <button
-            className="editor-action-button"
-            style={pageFooterActionButtonStyle(
-              pageStructureLocked || !selectedActionPage,
-            )}
-            disabled={pageStructureLocked || !selectedActionPage}
-            onClick={onDuplicateSelected}
-            title={
-              pageStructureLocked
-                ? pageStructureLockedTitle
-                : selectedActionPage
-                ? `Duplicate ${selectedActionPage.title}`
-                : "Select a page first"
-            }
-            aria-label="Duplicate selected page"
-          >
-            <DuplicateIcon />
-          </button>
-          <button
-            className="editor-action-button"
-            style={pageFooterActionButtonStyle(
-              pageStructureLocked || !selectedActionPage,
-            )}
-            disabled={pageStructureLocked || !selectedActionPage}
-            onClick={() => {
-              if (pageStructureLocked) return;
-              if (!selectedActionPage) return;
-              if (
-                confirm(
-                  `Reset page "${selectedActionPage.title}" to Global Settings defaults? Camera, dynamic camera, title, timing, and text/image overlays will be preserved.`,
-                )
-              ) {
-                resetPageOverrides(selectedActionPage.id);
+          <span style={pageFooterPrimaryActionsStyle}>
+            <button
+              className="editor-action-button"
+              data-editor-control-id="page.action.add"
+              style={pageFooterActionButtonStyle(pageStructureLocked)}
+              disabled={pageStructureLocked}
+              onClick={onAdd}
+              title={pageStructureActionTitle("Add page")}
+              aria-label="Add page"
+            >
+              <AddIcon />
+            </button>
+            <button
+              className="editor-action-button"
+              style={pageFooterActionButtonStyle(
+                pageStructureLocked || !selectedActionPage,
+              )}
+              disabled={pageStructureLocked || !selectedActionPage}
+              onClick={onDuplicateSelected}
+              title={
+                pageStructureLocked
+                  ? pageStructureLockedTitle
+                  : selectedActionPage
+                  ? `Duplicate ${selectedActionPage.title}`
+                  : "Select a page first"
               }
-            }}
-            title={
-              pageStructureLocked
-                ? pageStructureLockedTitle
-                : "Strip layer, visibility, exposure, and bloom overrides from the selected page only."
-            }
-            aria-label="Reset selected page overrides"
-          >
-            <ResetIcon />
-          </button>
-          <button
-            className="editor-action-button"
-            style={pageFooterActionButtonStyle(
-              pageStructureLocked || !selectedActionPage || state.pages.length <= 1,
-            )}
-            disabled={
-              pageStructureLocked || !selectedActionPage || state.pages.length <= 1
-            }
-            onClick={onDeleteSelected}
-            title={
-              pageStructureLocked
-                ? pageStructureLockedTitle
-                : selectedActionPage
-                ? `Delete ${selectedActionPage.title}`
-                : "Select a page first"
-            }
-            aria-label="Delete selected page"
-          >
-            <TrashIcon />
-          </button>
+              aria-label="Duplicate selected page"
+            >
+              <DuplicateIcon />
+            </button>
+            <button
+              className="editor-action-button"
+              style={pageFooterActionButtonStyle(
+                pageStructureLocked || !selectedActionPage,
+              )}
+              disabled={pageStructureLocked || !selectedActionPage}
+              onClick={() => {
+                if (pageStructureLocked) return;
+                if (!selectedActionPage) return;
+                if (
+                  confirm(
+                    `Reset page "${selectedActionPage.title}" to Global Settings defaults? Camera, dynamic camera, title, timing, and text/image overlays will be preserved.`,
+                  )
+                ) {
+                  resetPageOverrides(selectedActionPage.id);
+                }
+              }}
+              title={
+                pageStructureLocked
+                  ? pageStructureLockedTitle
+                  : "Strip layer, visibility, exposure, and bloom overrides from the selected page only."
+              }
+              aria-label="Reset selected page overrides"
+            >
+              <ResetIcon />
+            </button>
+            <button
+              className="editor-action-button"
+              style={pageFooterActionButtonStyle(
+                pageStructureLocked ||
+                  !selectedActionPage ||
+                  state.pages.length <= 1,
+              )}
+              disabled={
+                pageStructureLocked ||
+                !selectedActionPage ||
+                state.pages.length <= 1
+              }
+              onClick={onDeleteSelected}
+              title={
+                pageStructureLocked
+                  ? pageStructureLockedTitle
+                  : selectedActionPage
+                  ? `Delete ${selectedActionPage.title}`
+                  : "Select a page first"
+              }
+              aria-label="Delete selected page"
+            >
+              <TrashIcon />
+            </button>
+          </span>
+          <span style={pageFooterHierarchyActionsStyle}>
+            <button
+              className="editor-action-button"
+              style={pageFooterHierarchyButtonStyle(makeMasterDisabled)}
+              disabled={makeMasterDisabled}
+              onClick={onMakeMasterSelected}
+              title={
+                pageStructureLocked
+                  ? pageStructureLockedTitle
+                  : selectedIsSubMaster
+                  ? "Selected page is already a Sub Master"
+                  : selectedActionPage
+                  ? `Convert ${selectedActionPage.title} to a Sub Master`
+                  : "Select a page first"
+              }
+              aria-label="Make Master"
+            >
+              Make Master
+            </button>
+            <button
+              className="editor-action-button"
+              style={pageFooterHierarchyButtonStyle(makeChildDisabled)}
+              disabled={makeChildDisabled}
+              onClick={onMakeChildSelected}
+              title={
+                pageStructureLocked
+                  ? pageStructureLockedTitle
+                  : selectedIsSubMaster
+                  ? `Duplicate ${selectedActionPage?.title ?? "Sub Master"} as a child`
+                  : "Select a Sub Master first"
+              }
+              aria-label="Make Child"
+            >
+              Make Child
+            </button>
+          </span>
         </span>
       </div>
 
@@ -2557,12 +2661,25 @@ const hiddenPageRowStyle: React.CSSProperties = {
   opacity: 0.58,
 };
 
+const pageDragTargetRowStyle: React.CSSProperties = {
+  outline: "1px solid rgba(244, 240, 232, 0.72)",
+  outlineOffset: -2,
+};
+
+const pageDraggingRowStyle: React.CSSProperties = {
+  opacity: 0.72,
+};
+
 type PageManagerActionSurface = "dark" | "tinted";
 
 const PAGE_MANAGER_ACTION_SIZE = 24;
 const PAGE_MANAGER_ACTION_GAP = 12;
 const PAGE_ROW_ACTION_EXTENT =
+  PAGE_MANAGER_ACTION_SIZE * 5 + PAGE_MANAGER_ACTION_GAP * 4;
+const PAGE_FOOTER_ACTION_EXTENT =
   PAGE_MANAGER_ACTION_SIZE * 4 + PAGE_MANAGER_ACTION_GAP * 3;
+const PAGE_FOOTER_HIERARCHY_BUTTON_WIDTH =
+  (PAGE_FOOTER_ACTION_EXTENT - PAGE_MANAGER_ACTION_GAP) / 2;
 const PAGE_MANAGER_DARK_SURFACE_FILL = "rgba(244, 240, 232, 0.066)";
 const PAGE_MANAGER_TINTED_SURFACE_FILL = "rgba(18, 21, 24, 0.192)";
 const PAGE_MANAGER_DISABLED_FILL = "rgba(244, 240, 232, 0.038)";
@@ -2790,6 +2907,21 @@ function TrashIcon() {
   );
 }
 
+function DragGripIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      style={pageActionSvgStyle}
+    >
+      <circle cx="12" cy="6" r="1.8" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.8" fill="currentColor" />
+      <circle cx="12" cy="18" r="1.8" fill="currentColor" />
+    </svg>
+  );
+}
+
 const pageActionsStyle: React.CSSProperties = {
   marginTop: 16,
   marginBottom: 24,
@@ -2799,9 +2931,23 @@ const pageActionsStyle: React.CSSProperties = {
 };
 
 const pageFooterActionsStyle: React.CSSProperties = {
-  width: PAGE_ROW_ACTION_EXTENT,
+  width: PAGE_FOOTER_ACTION_EXTENT,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "stretch",
+  gap: 8,
+};
+
+const pageFooterPrimaryActionsStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: `repeat(4, ${PAGE_MANAGER_ACTION_SIZE}px)`,
+  justifyContent: "end",
+  gap: PAGE_MANAGER_ACTION_GAP,
+};
+
+const pageFooterHierarchyActionsStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: `repeat(2, ${PAGE_FOOTER_HIERARCHY_BUTTON_WIDTH}px)`,
   justifyContent: "end",
   gap: PAGE_MANAGER_ACTION_GAP,
 };
@@ -2810,6 +2956,20 @@ function pageFooterActionButtonStyle(disabled = false): React.CSSProperties {
   return {
     ...pageActionButtonBaseStyle,
     ...pageManagerActionContrastStyle("dark", disabled),
+  };
+}
+
+function pageFooterHierarchyButtonStyle(disabled = false): React.CSSProperties {
+  return {
+    ...pageActionButtonBaseStyle,
+    ...pageManagerActionContrastStyle("dark", disabled),
+    width: PAGE_FOOTER_HIERARCHY_BUTTON_WIDTH,
+    minWidth: PAGE_FOOTER_HIERARCHY_BUTTON_WIDTH,
+    flex: `0 0 ${PAGE_FOOTER_HIERARCHY_BUTTON_WIDTH}px`,
+    padding: "0 6px",
+    fontSize: 9,
+    lineHeight: 1,
+    whiteSpace: "nowrap",
   };
 }
 
@@ -3261,24 +3421,6 @@ const dynamicCameraCheckSvgStyle: React.CSSProperties = {
   display: "block",
 };
 
-const triangleIconBaseStyle: React.CSSProperties = {
-  width: 0,
-  height: 0,
-  display: "block",
-  borderLeft: "4px solid transparent",
-  borderRight: "4px solid transparent",
-};
-
-const upTriangleIconStyle: React.CSSProperties = {
-  ...triangleIconBaseStyle,
-  borderBottom: "6px solid currentColor",
-};
-
-const downTriangleIconStyle: React.CSSProperties = {
-  ...triangleIconBaseStyle,
-  borderTop: "6px solid currentColor",
-};
-
 // DEV NOTES: page list contents
 // -----------------------------
 // This is the plain list under the Pages top-level section. It should
@@ -3288,6 +3430,7 @@ const globalSettingsSelectorStyle: React.CSSProperties = {
   flexDirection: "column",
   marginTop: 6,
   paddingLeft: `var(--editor-page-list-indent, ${EDITOR_PAGE_LIST_INDENT_X}px)`,
+  paddingRight: `var(--editor-page-list-indent, ${EDITOR_PAGE_LIST_INDENT_X}px)`,
 };
 
 const pageListStyle: React.CSSProperties = {

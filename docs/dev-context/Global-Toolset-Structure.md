@@ -22,8 +22,8 @@ Current topo map structure:
 - `src/topoMap/`: global defaults, settings resolution, presets, edge fade,
   editor/runtime helpers, and compatibility fallback behavior.
 - `src/editor/topoMap/`: topo map editor UI for the global tool.
-- `src/editor/topoMap/TopoMapPanel.tsx`: Topo Settings, Topo Environment,
-  longitude/latitude grid, and title-block authoring.
+- `src/editor/topoMap/TopoMapPanel.tsx`: Topo Settings, Extents, Topo
+  Environment, longitude/latitude grid, and title-block authoring.
 - `src/editor/layerControls/atmosphere/AtmosphereVolumeControls.tsx`: reusable
   `atmosphere-volume` cloud/mist style controls used by Topo Environment.
 - `src/scene/atmosphere/`: local atmosphere runtime for generated-canvas sprite
@@ -47,7 +47,11 @@ Topo Environment is part of the public topo tool. It groups:
 - Sun: source light toggle, visible sky image/orb toggle, source marker,
   azimuth/elevation/camera lock, orb color/opacity/size/distance, edge softness,
   halo, terrain relief, and projected-map shadow controls.
-- Fog: scene fog and map/layer fog participation controls.
+- Scene fog: scene fog density/reach and scene fog colors.
+
+Topo Extents groups public map footprint, satellite opacity, material edge
+fade/outline, public surface clip, map/layer fog participation, map fog
+density/reach, and terrain fog gradient.
 
 Clouds are project layers, not terrain shader fields. The project manifest owns
 stable identity, provenance, and immutable/default placement metadata. Mutable
@@ -122,9 +126,8 @@ Current top-level peer sections include:
 - `Sections`: Utah FORGE spatial-section workflow container for
   scene section planes, the Phase 3 working-area boundary, and working-area
   focus cropping.
-- `Topo`: the topo tool editor, including topo surface settings,
-  Topo Environment, longitude/latitude grid, title block, and topo reference
-  layers.
+- `Topo`: the topo tool editor, including topo surface settings, Extents, Topo
+  Environment, longitude/latitude grid, title block, and topo reference layers.
 - project data sections and card tools.
 
 Container styling should come from shared editor tokens in `src/editor/styles.ts`.

@@ -944,3 +944,23 @@ fake-cloud looks.
 **Why:** Repeated editor regrouping has made it too easy to lose, hide, or orphan controls and backed fields. A checked manifest makes control identity explicit and gives future agents a preflight checklist before touching the editor bar.
 
 **Trade-off accepted:** Individual future control removals use manifest approval metadata rather than a durable decision entry by default. A new `docs/03-decisions.md` entry is still required when a control change alters product architecture, persistence, runtime ownership, or another durable product decision.
+
+## DEC-090 - Page manager hierarchy controls use grip drag, Make Master, and Make Child
+
+**Considered:** keep arrow buttons for page reordering and row-only Sub Master creation, or expose the hierarchy operations in the page-manager footer while making reordering direct-manipulation.
+
+**Chose:** page rows use one three-dot grip handle for drag reordering. Dragging a Sub Master moves its full block, dragging a Global child moves only that page and skips Sub Master blocks as units, and dragging a Sub Master child reorders only within its current sibling block. The footer exposes `Make Master` and `Make Child`: `Make Master` converts a selected non-master page into a Sub Master by freezing its current effective visual state into `envSnapshot`; `Make Child` is enabled only for a selected Sub Master and duplicates that master into a new child directly under it.
+
+**Why:** Arrow controls were slower for larger page sets and hid the real grouped behavior. Footer controls make the authoring hierarchy explicit without changing the single-level Global -> Sub Master -> child model from DEC-079.
+
+**Trade-off accepted:** Drag does not reparent pages across Sub Masters. `Make Child` does not convert arbitrary pages into children; it duplicates the selected master so the new child starts from the master's authored presentation state.
+
+## DEC-091 - UI_EDITOR prototype package remains separate from the active app tree
+
+**Considered:** merge parked `UI_EDITOR` / `UI_EDITOR_v1_0` prototype package history into active `main`, or keep that work separate from the current GeoSee app tree.
+
+**Chose:** keep standalone `UI_EDITOR` prototype/package work separate. The active repo tree remains the Vite + React + TypeScript GeoSee app under `src/`, `projects/`, `docs/`, `tests/`, and current tooling. Parked `UI_EDITOR/` and `UI_EDITOR_v1_0/` package content must not be merged, resurrected, or used as active source unless a future request explicitly scopes that standalone package.
+
+**Why:** The active app already owns the editor sidebar, runtime, project persistence, and verification pipeline. Mixing the separate UI editor package back into `main` would reintroduce obsolete package files and broad deletes/reverts from parked branch history.
+
+**Trade-off accepted:** Any future UI editor package work needs an explicit branch/package task. Normal GeoSee editor work continues in the active app tree and should not mine the parked package branch for source unless the task asks for it.

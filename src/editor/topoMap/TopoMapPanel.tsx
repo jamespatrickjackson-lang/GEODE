@@ -1395,50 +1395,6 @@ export function TopoMapPanel({
           {showSatellite && selectedPresetIsImageBacked ? (
             <>
               <TopoSubsection
-                label="Satellite image"
-                manifestId="topo.satellite.image"
-              >
-                <EnvStyleRow
-                  label="Photo opacity"
-                  inputType="range"
-                  value={String(terrain.orthoPhotoOpacity ?? 1)}
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  decimals={2}
-                  testId="topo-ortho-photo-opacity"
-                  onChange={(v) =>
-                    setTerrain({ orthoPhotoOpacity: parseFloat(v) })
-                  }
-                />
-                <EnvStyleRow
-                  label="Edge clip"
-                  inputType="range"
-                  value={String(terrain.orthoPhotoEdgeClipInsetM ?? 0)}
-                  min={0}
-                  max={250_000}
-                  step={5_000}
-                  decimals={0}
-                  testId="topo-ortho-photo-edge-clip-inset"
-                  onChange={(v) =>
-                    setTerrain({ orthoPhotoEdgeClipInsetM: parseFloat(v) })
-                  }
-                />
-                <EnvStyleRow
-                  label="Opacity gradient"
-                  inputType="range"
-                  value={String(terrain.orthoPhotoEdgeFadeDistanceM ?? 0)}
-                  min={0}
-                  max={250_000}
-                  step={5_000}
-                  decimals={0}
-                  testId="topo-ortho-photo-edge-fade"
-                  onChange={(v) =>
-                    setTerrain({ orthoPhotoEdgeFadeDistanceM: parseFloat(v) })
-                  }
-                />
-              </TopoSubsection>
-              <TopoSubsection
                 label="Image adjustment"
                 manifestId="topo.satellite.image-adjustment"
               >
@@ -1600,6 +1556,53 @@ export function TopoMapPanel({
           ) : null}
           {showExtents && terrainLayer ? (
             <>
+              {selectedPresetIsImageBacked ? (
+                <TopoSubsection
+                  label="Satellite image edge / opacity"
+                  testId="topo-satellite-extents"
+                  manifestId="topo.satellite.image"
+                >
+                  <EnvStyleRow
+                    label="Photo opacity"
+                    inputType="range"
+                    value={String(terrain.orthoPhotoOpacity ?? 1)}
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    decimals={2}
+                    testId="topo-ortho-photo-opacity"
+                    onChange={(v) =>
+                      setTerrain({ orthoPhotoOpacity: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Edge clip"
+                    inputType="range"
+                    value={String(terrain.orthoPhotoEdgeClipInsetM ?? 0)}
+                    min={0}
+                    max={250_000}
+                    step={5_000}
+                    decimals={0}
+                    testId="topo-ortho-photo-edge-clip-inset"
+                    onChange={(v) =>
+                      setTerrain({ orthoPhotoEdgeClipInsetM: parseFloat(v) })
+                    }
+                  />
+                  <EnvStyleRow
+                    label="Opacity gradient"
+                    inputType="range"
+                    value={String(terrain.orthoPhotoEdgeFadeDistanceM ?? 0)}
+                    min={0}
+                    max={250_000}
+                    step={5_000}
+                    decimals={0}
+                    testId="topo-ortho-photo-edge-fade"
+                    onChange={(v) =>
+                      setTerrain({ orthoPhotoEdgeFadeDistanceM: parseFloat(v) })
+                    }
+                  />
+                </TopoSubsection>
+              ) : null}
               <TopoSurfaceClipControls
                 {...publicSurfaceLayerControlProps}
                 terrain={terrain}
@@ -1620,6 +1623,55 @@ export function TopoMapPanel({
                 setTerrain={setTerrain}
                 edgeFadeShape={edgeFadeShape}
               />
+              <TopoSubsection
+                label="Map fog"
+                manifestId="topo.environment.map-fog"
+                active={topoFogIncluded}
+                onToggle={() =>
+                  setPublicTopoLayerStyle({ affectedByFog: !topoFogIncluded })
+                }
+              >
+                <EnvStyleRow
+                  label="Layer dens."
+                  inputType="range"
+                  value={String(topoFogDensity * 10000)}
+                  min={0.01}
+                  max={6}
+                  step={0.01}
+                  decimals={2}
+                  onChange={(v) =>
+                    setPublicTopoLayerStyle({
+                      fogDensity: parseFloat(v) / 10000,
+                    })
+                  }
+                />
+                <EnvStyleRow
+                  label="Layer reach"
+                  inputType="range"
+                  value={String(topoFogReachKm)}
+                  min={5}
+                  max={3000}
+                  step={5}
+                  decimals={0}
+                  onChange={(v) =>
+                    setPublicTopoLayerStyle({
+                      fogDensity: 3 / Math.max(parseFloat(v) * 1000, 1),
+                    })
+                  }
+                />
+                <EnvStyleRow
+                  label="Fog gradient"
+                  inputType="range"
+                  value={String(sceneFogGradientCurve)}
+                  min={0.35}
+                  max={4}
+                  step={0.05}
+                  decimals={2}
+                  onChange={(v) =>
+                    setTerrain({ fogGradientCurve: parseFloat(v) })
+                  }
+                />
+              </TopoSubsection>
             </>
           ) : null}
           {showEnvironment ? (
@@ -1650,47 +1702,6 @@ export function TopoMapPanel({
                 testId="topo-environment-fog"
                 manifestId="topo.environment.fog"
               >
-                <TopoSubsection
-                  label="Map fog"
-                  manifestId="topo.environment.map-fog"
-                  active={topoFogIncluded}
-                  onToggle={() =>
-                    setPublicTopoLayerStyle({ affectedByFog: !topoFogIncluded })
-                  }
-                >
-                  {topoFogIncluded ? (
-                    <>
-                      <EnvStyleRow
-                        label="Layer dens."
-                        inputType="range"
-                        value={String(topoFogDensity * 10000)}
-                        min={0.01}
-                        max={6}
-                        step={0.01}
-                        decimals={2}
-                        onChange={(v) =>
-                          setPublicTopoLayerStyle({
-                            fogDensity: parseFloat(v) / 10000,
-                          })
-                        }
-                      />
-                      <EnvStyleRow
-                        label="Layer reach"
-                        inputType="range"
-                        value={String(topoFogReachKm)}
-                        min={5}
-                        max={3000}
-                        step={5}
-                        decimals={0}
-                        onChange={(v) =>
-                          setPublicTopoLayerStyle({
-                            fogDensity: 3 / Math.max(parseFloat(v) * 1000, 1),
-                          })
-                        }
-                      />
-                    </>
-                  ) : null}
-                </TopoSubsection>
                 {isEnv || currentPage ? (
                   <TopoSubsection
                     label="Scene fog"
@@ -1724,18 +1735,6 @@ export function TopoMapPanel({
                             setSceneFog({
                               density: 3 / Math.max(parseFloat(v) * 1000, 1),
                             })
-                          }
-                        />
-                        <EnvStyleRow
-                          label="Fog gradient"
-                          inputType="range"
-                          value={String(sceneFogGradientCurve)}
-                          min={0.35}
-                          max={4}
-                          step={0.05}
-                          decimals={2}
-                          onChange={(v) =>
-                            setTerrain({ fogGradientCurve: parseFloat(v) })
                           }
                         />
                       </>

@@ -32,6 +32,11 @@ Canonical active repo root:
 Run commands from this folder. `C:\GeoSee_Dev` is an obsolete/stale location
 and should not be used for current work.
 
+Standalone `UI_EDITOR` prototype/package work is intentionally separate from
+this active app tree. Do not treat parked `UI_EDITOR/` or `UI_EDITOR_v1_0/`
+history as content to merge into `main` unless that package is explicitly in
+scope.
+
     C:\GeoSee\GeoSee_Dev\
       CLAUDE.md             # agent rules and routing
       README.md             # this file

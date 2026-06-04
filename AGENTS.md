@@ -50,6 +50,9 @@ APIs.
   committing.
 - `C:\GeoSee_Dev\` is obsolete/stale and must not be treated as the
   current working tree.
+- `UI_EDITOR` prototype/package work stays separate from this active app tree.
+  Do not merge or resurrect `UI_EDITOR/` or `UI_EDITOR_v1_0/` content into
+  `main` unless a request explicitly asks for that standalone package.
 - Run `npm run check:workspace` before commits or broad verification.
 - Stage exact paths for focused commits; do not use broad staging when
   unrelated local work exists.

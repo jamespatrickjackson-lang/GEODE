@@ -31,7 +31,7 @@ Tools that control how the 3D scene looks globally.
 | --- | --- |
 | **Cinematics** | Top-level container for global rendering, UI, and page camera controls. Houses the sub-tools below. |
 | **Cinematic Render Preset** | Project-wide render quality selector. Save and update named presets. Drives antialiasing, shadow quality, AO, bloom, and related passes. |
-| **Environment** | Cinematic scene atmosphere and world-building controls that are not owned by a more specific tool. Topo map atmosphere, clouds, sun, and map fog live under Topo Environment. |
+| **Environment** | Cinematic scene atmosphere and world-building controls that are not owned by a more specific tool. Topo scene atmosphere, clouds, sun, and scene fog live under Topo Environment; map/topo fog lives under Topo Extents. |
 | **Local Atmosphere Volume** | Environmental `atmosphere-volume` layer model for local mist/fog/cloud volumes. In the editor, user-facing cloud authoring lives under `Topo > Environment > Clouds`. |
 | **Lighting Studio** | Sun azimuth and elevation, plus key/fill/rim light intensities. Supports movable source lights for accent and shadow control. |
 | **Camera Studio** | Global cinematic camera controls: render presets, lens type/FOV, and double-click camera focus timing. |
@@ -95,10 +95,12 @@ Tools for the public topographic map surface and associated cartographic layers.
 | --- | --- |
 | **Topo** | Global toolset container for the topographic surface, graticule, title block, and reference layers. Present when the project has topo-tagged layers. |
 | **Topo Settings** | Terrain material preset and elevation gradient controls, including the named Utah high-desert/topo preset, low/mid/high color stops, midpoint position, contrast, and blend mode. |
-| **Topo Environment** | Cloud-icon section under Topo for scene atmosphere, clouds, sun, and fog. |
+| **Topo Extents** | Map footprint, satellite opacity, material edge fade/outline, public surface clip, and map/topo fog controls. |
+| **Topo Environment** | Cloud-icon section under Topo for scene atmosphere, clouds, sun, and scene fog. |
 | **Clouds** | Add, duplicate, delete, select, show/hide, page-override, move, size, and style `atmosphere-volume` cloud banks. Controls subtype, color, opacity, density, softness, puff count/scale, bounds, falloff, seed, drift, depth test, render order, and optional on-screen bounds handles. |
 | **Sun** | Controls whether the sun is a light source, a visible sky image/orb, both, or neither. Exposes azimuth, elevation, camera lock, orb color/opacity/size/distance, edge blur, halo color/opacity/scale, source marker, light color/intensity, terrain relief, shadow edge/tint, projected shadows, shadow opacity/softness/bias. |
-| **Fog** | Scene fog and map/layer fog controls, including fog color, density/reach, terrain fog gradient, and layer fog participation. |
+| **Scene Fog** | Scene fog controls under Topo Environment, including fog color and scene density/reach. |
+| **Map / Topo Fog** | Map/layer fog controls under Topo Extents, including layer participation, layer density/reach, and terrain fog gradient. |
 | **Longitude / Latitude Grid** | Graticule appearance: line spacing, color, width, opacity, and label distance from the surface. |
 | **Title Block** | Upload and position a map title or branding image on the topo surface. Supports anchor and XY offset. |
 | **Reference Layers** | Fine cartographic detail layers (roads, streams, etc.). Controls distance fade near/far, far-plane scale, far opacity, and surface lift. |

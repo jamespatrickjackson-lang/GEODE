@@ -327,11 +327,11 @@ defaults, depth/compositing rules) that the contract enforces.
 
 ## Topo Environment
 
-`Topo > Environment` is the visual authoring home for the public topo
-environment. Do not scatter these controls back into unrelated Topo surface,
-layer, or Cinematics containers.
+`Topo > Environment` is the visual authoring home for scene-level public topo
+environment controls. `Topo > Extents` owns map-edge and topo-surface extent
+controls, including satellite opacity and map/topo fog.
 
-- Group order: Scene atmosphere, Clouds, Sun, Fog.
+- Environment group order: Scene atmosphere, Clouds, Sun, Scene fog.
 - Use a cloud icon for the Environment section.
 - Clouds get their own container. It includes add, duplicate, delete, layer
   selection, visibility, page override state, appearance, puffs, bounds, falloff,
@@ -344,8 +344,9 @@ layer, or Cinematics containers.
 - Sun controls must distinguish the light source from the visible sky image.
   Authors can hide the orb/halo/marker while keeping terrain light, or show a
   fake visual sun without using it as the terrain light source.
-- Fog controls include both scene fog and map/layer fog participation. Local
-  clouds do not mutate global `scene.fog`.
+- Scene fog controls include scene fog density/reach and scene fog colors. Map
+  fog participation, map fog density/reach, and terrain fog gradient live under
+  `Topo > Extents`. Local clouds do not mutate global `scene.fog`.
 
 ## Sliders
 
@@ -399,6 +400,17 @@ each Sub Master row arms a `Re-snapshot from Global` confirm (two-click
 inline confirm; auto-cancel after 5 seconds). Deleting a Sub Master shows
 a confirm dialog that names the child count and cascade-deletes the
 entire group.
+
+Page rows use a single vertical three-dot grip for reorder. Dragging a
+Sub Master moves its full block, dragging a Global child moves only that
+page and skips Sub Master blocks as units, and dragging a Sub Master child
+reorders only inside its sibling block. The page-manager footer keeps the
+primary add / duplicate / reset / delete icon row and adds `Make Master`
+and `Make Child` underneath. `Make Master` converts a selected non-master
+page into a Sub Master by freezing its effective visual state into an
+`envSnapshot`. `Make Child` is enabled only for a selected Sub Master and
+duplicates that master into a child under it; it does not reparent an
+arbitrary selected page.
 
 The author's per-page `accentColor` override continues to win on any row
 kind. Helpers live in [styles.ts](../../src/editor/styles.ts):

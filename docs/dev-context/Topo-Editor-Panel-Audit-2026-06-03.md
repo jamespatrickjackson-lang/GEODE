@@ -39,11 +39,16 @@ fixture or an equivalent QA fixture available when making future cloud changes.
   - Elevation ramp
   - Terrain shading
   - Mesh grid and underside
+  - Provenance
+- Extents
+  - Satellite image edge / opacity
   - Map footprint / clipping
   - Material edge opacity fade
   - Material edge outline
   - Public surface clip
-  - Provenance
+  - Map fog
+    - Layer density/reach
+    - Terrain fog gradient
 - Topo Environment
   - Scene atmosphere
   - Clouds
@@ -54,7 +59,6 @@ fixture or an equivalent QA fixture available when making future cloud changes.
     - Projected shadows
   - Fog
     - Scene fog
-    - Map fog
 - Longitude / latitude grid
 - Title block
 
@@ -69,6 +73,9 @@ fixture or an equivalent QA fixture available when making future cloud changes.
 - `scene.fog.color`
 - `scene.fog.lightModeColor`
 - `scene.fog.density`
+
+### Map / Topo Fog
+
 - `scene.terrain.fogGradientCurve`
 - layer `affectedByFog`
 - layer `fogDensity`
@@ -197,6 +204,8 @@ Source-owned satellite fields remain read-only through the material picker:
   explicit Topo Environment controls.
 - Material edge opacity fade, material edge outline, and public surface clip are
   sibling Topo sections rather than hidden under `Map footprint / clipping`.
+- Satellite opacity, map/layer fog participation, map fog density/reach, and
+  terrain fog gradient live under `Topo > Extents`.
 - Terrain grid and underside shader fields are exposed directly in Topo Settings.
 - `lightModeBackground` is included in the cinematic render-preset sync filter,
   so active user preset edits do not drop light-mode background changes.

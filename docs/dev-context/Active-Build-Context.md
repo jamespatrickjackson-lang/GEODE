@@ -21,6 +21,10 @@ Do not route normal work through staged-intake records, old review-route artifac
 
 Large raw/source inputs are archived outside the active repo at `C:\GeoSee\GeoSee_Archive`. When current provenance, prep scripts, or generated metadata mention old repo-relative source paths, resolve them through `docs/archive-map.md` and `docs/archive-manifest.json`.
 
+Standalone `UI_EDITOR` prototype/package history stays separate from the active
+GeoSee app. Do not merge or resurrect `UI_EDITOR/` or `UI_EDITOR_v1_0/` content
+into `main` unless a request explicitly scopes that package.
+
 ## Current App Shape
 
 GeoSee is a Vite + React + TypeScript + Three.js internal authoring and presentation app.
@@ -128,8 +132,10 @@ snow/rock high peaks. This is a reusable five-stop terrain shader preset, not a
 new raster or CRS transform.
 
 Topo Environment is now part of the Topo tool, not a loose Cinematics dumping
-ground. `Topo > Environment` owns scene atmosphere, Clouds, Sun, and Fog. Clouds
-are `atmosphere-volume` layers with style in `environment.layerStyles` and page
+ground. `Topo > Environment` owns scene atmosphere, Clouds, Sun, and scene fog.
+`Topo > Extents` owns public map footprint, satellite opacity, material edge
+fade/outline, public surface clip, and map/topo fog controls. Clouds are
+`atmosphere-volume` layers with style in `environment.layerStyles` and page
 `layerOverrides`; project metadata owns immutable/default placement and
 environmental provenance. Sun authoring separates the light source from the
 visible sky image/orb/marker, so an author can keep terrain lighting while

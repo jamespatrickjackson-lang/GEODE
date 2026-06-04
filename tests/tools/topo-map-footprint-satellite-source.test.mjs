@@ -66,8 +66,8 @@ test("topo satellite image exposes outside fill and image shadow authoring field
   );
   assert.match(
     topoPanel,
-    /label="Satellite image"[\s\S]*testId="topo-ortho-photo-edge-clip-inset"[\s\S]*testId="topo-ortho-photo-edge-fade"[\s\S]*label="Image adjustment"/,
-    "Satellite image controls should expose edge clipping and opacity gradient before image adjustment.",
+    /label="Satellite image edge \/ opacity"[\s\S]*testId="topo-ortho-photo-edge-clip-inset"[\s\S]*testId="topo-ortho-photo-edge-fade"/,
+    "Topo Extents should expose satellite edge clipping and opacity gradient controls.",
   );
   assert.match(
     topoPanel,
@@ -135,6 +135,9 @@ test("topo satellite image exposes outside fill and image shadow authoring field
 test("topo editor exposes height-map and footprint controls backed by public clip fields", () => {
   const topoPanel = readSource("src", "editor", "topoMap", "TopoMapPanel.tsx");
   const layerPanelGroups = readSource("src", "editor", "LayerPanelGroups.tsx");
+  const extentsBlock = topoPanel.match(
+    /\{showExtents && terrainLayer \? \([\s\S]*?\)\s*:\s*null\}\s*\{showEnvironment \? \(/,
+  );
 
   for (const label of [
     "Height map",
@@ -147,6 +150,39 @@ test("topo editor exposes height-map and footprint controls backed by public cli
       topoPanel,
       new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
       `Topo editor should expose ${label}.`,
+    );
+  }
+
+  assert.ok(extentsBlock, "Topo Extents branch should be isolated in source.");
+  for (const label of [
+    "Photo opacity",
+    "Edge clip",
+    "Opacity gradient",
+    "Map fog",
+    "Layer dens.",
+    "Layer reach",
+    "Fog gradient",
+  ]) {
+    assert.match(
+      extentsBlock[0],
+      new RegExp(`label="${label}"`),
+      `Topo Extents should expose ${label}.`,
+    );
+  }
+  assert.match(
+    extentsBlock[0],
+    /<TopoMapEdgeControls/,
+    "Topo Extents should mount material edge and public surface clip controls.",
+  );
+  for (const label of [
+    "Material edge opacity fade",
+    "Material edge outline",
+    "Public surface clip",
+  ]) {
+    assert.match(
+      topoPanel,
+      new RegExp(`label="${label}"`),
+      `Topo edge controls should expose ${label}.`,
     );
   }
 
@@ -182,8 +218,8 @@ test("topo material controls are split by source, image adjustment, and sun resp
 
   assert.match(
     topoPanel,
-    /label="Satellite image"[\s\S]*label="Image adjustment"[\s\S]*label="Image sun response"[\s\S]*label="Outside image surface"/,
-    "Satellite controls should separate source, color adjustment, sun response, and outside surface.",
+    /label="Image adjustment"[\s\S]*label="Image sun response"[\s\S]*label="Outside image surface"/,
+    "Satellite controls should separate color adjustment, sun response, and outside surface.",
   );
   assert.equal(
     (topoPanel.match(/testId="topo-map-hillshade-strength"/g) ?? []).length,

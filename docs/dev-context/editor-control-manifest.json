@@ -125,7 +125,7 @@
       "sourceFile": "src/editor/LayerPanelGroups.tsx",
       "sourceAnchor": "manifestId=\"topo.group.extents\"",
       "scope": "projects-with-public-topo",
-      "backedBy": "public surface clip, edge fade, edge outline fields",
+      "backedBy": "public surface clip, satellite image edge/opacity, material edge fade, edge outline, and map fog fields",
       "setterRoute": "TopoMapPanel section=extents",
       "status": "active"
     },
@@ -227,9 +227,9 @@
     },
     {
       "id": "topo.satellite.image",
-      "label": "Satellite image",
+      "label": "Satellite image edge / opacity",
       "kind": "subsection",
-      "parentId": "topo.group.satellite",
+      "parentId": "topo.group.extents",
       "sourceFile": "src/editor/topoMap/TopoMapPanel.tsx",
       "sourceAnchor": "manifestId=\"topo.satellite.image\"",
       "scope": "image-backed-topo",
@@ -317,20 +317,20 @@
       "sourceFile": "src/editor/topoMap/TopoMapPanel.tsx",
       "sourceAnchor": "manifestId=\"topo.environment.fog\"",
       "scope": "projects-with-public-topo",
-      "backedBy": "scene.fog and topo layer affectedByFog/fogDensity",
-      "setterRoute": "setEnvScene/setEnvLayerStyle/setPageLayerOverride",
+      "backedBy": "scene.fog",
+      "setterRoute": "setEnvScene",
       "status": "active"
     },
     {
       "id": "topo.environment.map-fog",
       "label": "Map fog",
       "kind": "subsection",
-      "parentId": "topo.environment.fog",
+      "parentId": "topo.group.extents",
       "sourceFile": "src/editor/topoMap/TopoMapPanel.tsx",
       "sourceAnchor": "manifestId=\"topo.environment.map-fog\"",
       "scope": "projects-with-public-topo",
-      "backedBy": "terrain layer affectedByFog/fogDensity",
-      "setterRoute": "setEnvLayerStyle/setPageLayerOverride",
+      "backedBy": "terrain layer affectedByFog/fogDensity and scene.terrain.fogGradientCurve",
+      "setterRoute": "setEnvLayerStyle/setPageLayerOverride/setEnvScene({ terrain })",
       "status": "active"
     },
     {
@@ -341,7 +341,7 @@
       "sourceFile": "src/editor/topoMap/TopoMapPanel.tsx",
       "sourceAnchor": "manifestId=\"topo.environment.scene-fog\"",
       "scope": "projects-with-public-topo",
-      "backedBy": "scene.fog and terrain fogGradientCurve",
+      "backedBy": "scene.fog",
       "setterRoute": "setEnvScene",
       "status": "active"
     },
