@@ -263,9 +263,11 @@ test("terrain material exposes selected image, edge outline, shine, and vertical
 test("terrain material layers selected image and detail overlay before procedural fallback", () => {
   const handle = buildTerrainMaterial({});
   const shader = handle.material.fragmentShader;
-  expect(shader).toContain("vec4 orthoSample = texture2D(uOrthoPhotoMap, orthoUv)");
-  expect(shader).toContain("if (orthoSample.a > 0.001)");
+  expect(shader).toContain("orthoSample = texture2D(uOrthoPhotoMap, orthoUv)");
+  expect(shader).toContain("float photoCoverage = 0.0");
   expect(shader).toContain("uOrthoPhotoOpacity * orthoSample.a");
+  expect(shader).toContain("surface = mix(surface, outsideSurface, outsideSurfaceAlpha)");
+  expect(shader).toContain("topoImageSurface(orthoSample, litAmount)");
   expect(shader).toContain("uTopoImageDetailMap");
   expect(shader).toContain("vec4 detailSample = texture2D(uTopoImageDetailMap, detailUv)");
   expect(shader).toContain("uTopoImageDetailOpacity * detailSample.a * edgeWeight");

@@ -154,6 +154,16 @@ const topoClipReadoutStyle: CSSProperties = {
 
 type TerrainSettings = NonNullable<SceneProperties["terrain"]>;
 type TopoMapBranding = NonNullable<TerrainSettings["topoMapBranding"]>;
+type OrthoPhotoOutsideSurfaceMode = NonNullable<
+  TerrainSettings["orthoPhotoOutsideSurfaceMode"]
+>;
+const ORTHO_PHOTO_OUTSIDE_SURFACE_MODE_OPTIONS: readonly {
+  value: OrthoPhotoOutsideSurfaceMode;
+  label: string;
+}[] = [
+  { value: "topo", label: "Topo ramp" },
+  { value: "solid", label: "Solid fill" },
+];
 type TopoFootprint = {
   centerX: number;
   centerY: number;
@@ -703,6 +713,8 @@ export function TopoMapPanel({
     isImageBackedTopoMaterialPreset(selectedPreset);
   const selectedOrthoPhotoBudget: OrthoPhotoTextureBudgetId =
     terrain.orthoPhotoTextureBudget === 8192 ? "8192" : "4096";
+  const orthoPhotoOutsideSurfaceMode: OrthoPhotoOutsideSurfaceMode =
+    terrain.orthoPhotoOutsideSurfaceMode ?? "solid";
   const targetLayerIds =
     publicSurfaceLayerIds.length > 0 ? publicSurfaceLayerIds : [layerId];
   const setPublicTopoLayerStyle = (patch: Partial<EditableStyle>) => {
@@ -1153,7 +1165,7 @@ export function TopoMapPanel({
                 />
               </TopoSubsection>
               <TopoSubsection
-                label="Outside image fill"
+                label="Outside image surface"
                 active={terrain.orthoPhotoOutsideFillEnabled === true}
                 testId="topo-ortho-photo-outside-fill"
                 onToggle={() => {
@@ -1161,6 +1173,9 @@ export function TopoMapPanel({
                     terrain.orthoPhotoOutsideFillEnabled !== true;
                   setTerrain({
                     orthoPhotoOutsideFillEnabled: nextEnabled,
+                    orthoPhotoOutsideSurfaceMode: nextEnabled
+                      ? "topo"
+                      : orthoPhotoOutsideSurfaceMode,
                     orthoPhotoOutsideOpacity:
                       nextEnabled &&
                       (terrain.orthoPhotoOutsideOpacity ?? 0) <= 0.001
@@ -1169,15 +1184,26 @@ export function TopoMapPanel({
                   });
                 }}
               >
-                <EnvStyleRow
-                  label="Fill color"
-                  inputType="color"
-                  value={terrain.orthoPhotoOutsideColor ?? "#b8ad8d"}
-                  testId="topo-ortho-photo-outside-color"
-                  onChange={(v) => setTerrain({ orthoPhotoOutsideColor: v })}
+                <EnvSelectRow<OrthoPhotoOutsideSurfaceMode>
+                  label="Surface mode"
+                  value={orthoPhotoOutsideSurfaceMode}
+                  options={ORTHO_PHOTO_OUTSIDE_SURFACE_MODE_OPTIONS}
+                  testId="topo-ortho-photo-outside-surface-mode"
+                  onChange={(v) =>
+                    setTerrain({ orthoPhotoOutsideSurfaceMode: v })
+                  }
                 />
+                {orthoPhotoOutsideSurfaceMode === "solid" ? (
+                  <EnvStyleRow
+                    label="Fill color"
+                    inputType="color"
+                    value={terrain.orthoPhotoOutsideColor ?? "#b8ad8d"}
+                    testId="topo-ortho-photo-outside-color"
+                    onChange={(v) => setTerrain({ orthoPhotoOutsideColor: v })}
+                  />
+                ) : null}
                 <EnvStyleRow
-                  label="Fill opacity"
+                  label="Surface opacity"
                   inputType="range"
                   value={String(terrain.orthoPhotoOutsideOpacity ?? 0)}
                   min={0}

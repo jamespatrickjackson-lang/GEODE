@@ -16,6 +16,7 @@ export const TOPO_MATERIAL_AUTHORITY_TERRAIN_FIELDS = [
   "orthoPhotoContrast",
   "orthoPhotoSaturation",
   "orthoPhotoOutsideFillEnabled",
+  "orthoPhotoOutsideSurfaceMode",
   "orthoPhotoOutsideColor",
   "orthoPhotoOutsideOpacity",
   "orthoPhotoShadowStrength",

@@ -20,6 +20,7 @@ test("topo satellite image exposes outside fill and image shadow authoring field
 
   for (const field of [
     "orthoPhotoOutsideFillEnabled",
+    "orthoPhotoOutsideSurfaceMode",
     "orthoPhotoOutsideColor",
     "orthoPhotoOutsideOpacity",
     "orthoPhotoShadowStrength",
@@ -40,9 +41,21 @@ test("topo satellite image exposes outside fill and image shadow authoring field
 
   assert.match(
     topoPanel,
-    /Outside image fill/,
-    "Topo editor should expose a dedicated outside-image fill section.",
+    /Outside image surface/,
+    "Topo editor should expose a dedicated outside-image surface section.",
   );
+  assert.match(
+    topoPanel,
+    /Surface mode/,
+    "Outside image surface should expose a mode selector.",
+  );
+  for (const label of ["Topo ramp", "Solid fill"]) {
+    assert.match(
+      topoPanel,
+      new RegExp(label),
+      `Outside image surface should expose ${label}.`,
+    );
+  }
   assert.match(
     topoPanel,
     /Photo sun relief/,
@@ -84,13 +97,33 @@ test("topo material controls are split by source, image adjustment, and sun resp
 
   assert.match(
     topoPanel,
-    /label="Satellite image"[\s\S]*label="Image adjustment"[\s\S]*label="Image sun response"[\s\S]*label="Outside image fill"/,
-    "Satellite controls should separate source, color adjustment, sun response, and outside fill.",
+    /label="Satellite image"[\s\S]*label="Image adjustment"[\s\S]*label="Image sun response"[\s\S]*label="Outside image surface"/,
+    "Satellite controls should separate source, color adjustment, sun response, and outside surface.",
   );
   assert.equal(
     (topoPanel.match(/testId="topo-map-hillshade-strength"/g) ?? []).length,
     1,
     "Terrain hillshade strength should have one editor control to avoid conflicting writes.",
+  );
+});
+
+test("satellite opacity fades to outside image surface instead of base fill", () => {
+  const terrainMaterial = readSource("src", "scene", "terrainMaterial.ts");
+
+  assert.match(
+    terrainMaterial,
+    /float photoCoverage = 0\.0;[\s\S]*surface = mix\(surface, outsideSurface, outsideSurfaceAlpha\);[\s\S]*surface = mix\(\s*surface,\s*topoImageSurface\(orthoSample, litAmount\),\s*photoCoverage\s*\)/,
+    "Terrain shader should place outside image surface under partial satellite coverage.",
+  );
+  assert.doesNotMatch(
+    terrainMaterial,
+    /}\s*else if\s*\(\s*uOrthoPhotoOutsideFillEnabled/,
+    "Outside image surface must not be gated behind the old inside-image else branch.",
+  );
+  assert.match(
+    terrainMaterial,
+    /uOrthoPhotoOutsideSurfaceMode[\s\S]*topoRampSurface/,
+    "Outside image surface should support topo ramp mode independent of global surface elevation.",
   );
 });
 
@@ -131,7 +164,7 @@ test("topo panel exposes terrain grid and underside shader controls", () => {
 test("topo edge controls are sibling subsections under topo, not inside map footprint", () => {
   const topoPanel = readSource("src", "editor", "topoMap", "TopoMapPanel.tsx");
   const clipControlsMatch = topoPanel.match(
-    /function TopoSurfaceClipControls[\s\S]*?\n}\n\nfunction /,
+    /function TopoSurfaceClipControls[\s\S]*?\r?\n}\r?\n\r?\nfunction /,
   );
   assert.ok(clipControlsMatch, "TopoSurfaceClipControls should be isolated.");
   assert.doesNotMatch(
@@ -149,7 +182,7 @@ test("topo edge controls are sibling subsections under topo, not inside map foot
 test("image-backed topo materials do not author map-footprint clipping", () => {
   const topoSettings = readSource("src", "topoMap", "settings.ts");
   const imagePatchMatch = topoSettings.match(
-    /export function topoImageMaterialDefaultPatch[\s\S]*?\n}\n/,
+    /export function topoImageMaterialDefaultPatch[\s\S]*?\r?\n}\r?\n/,
   );
 
   assert.ok(imagePatchMatch, "topoImageMaterialDefaultPatch should exist.");

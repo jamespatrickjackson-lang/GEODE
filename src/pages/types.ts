@@ -1324,6 +1324,7 @@ export interface SceneProperties {
     orthoPhotoContrast?: number;
     orthoPhotoSaturation?: number;
     orthoPhotoOutsideFillEnabled?: boolean;
+    orthoPhotoOutsideSurfaceMode?: "solid" | "topo";
     orthoPhotoOutsideColor?: string;
     orthoPhotoOutsideOpacity?: number;
     orthoPhotoShadowStrength?: number;

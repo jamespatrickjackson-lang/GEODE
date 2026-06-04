@@ -76,6 +76,7 @@ export interface TerrainMaterialParams {
   orthoPhotoContrast?: number;
   orthoPhotoSaturation?: number;
   orthoPhotoOutsideFillEnabled?: boolean;
+  orthoPhotoOutsideSurfaceMode?: "solid" | "topo";
   orthoPhotoOutsideColor?: string;
   orthoPhotoOutsideOpacity?: number;
   orthoPhotoShadowStrength?: number;
@@ -286,6 +287,12 @@ function edgeFadeShapeValue(
   return 0;
 }
 
+function orthoPhotoOutsideSurfaceModeValue(
+  mode: TerrainMaterialParams["orthoPhotoOutsideSurfaceMode"],
+): number {
+  return mode === "topo" ? 1 : 0;
+}
+
 export function buildTerrainMaterial(
   initial: TerrainMaterialParams = {},
 ): TerrainMaterialHandle {
@@ -396,6 +403,11 @@ export function buildTerrainMaterial(
     },
     uOrthoPhotoOutsideFillEnabled: {
       value: initial.orthoPhotoOutsideFillEnabled === true ? 1 : 0,
+    },
+    uOrthoPhotoOutsideSurfaceMode: {
+      value: orthoPhotoOutsideSurfaceModeValue(
+        initial.orthoPhotoOutsideSurfaceMode,
+      ),
     },
     uOrthoPhotoOutsideColor: {
       value: new THREE.Color(initial.orthoPhotoOutsideColor ?? "#b8ad8d"),
@@ -587,6 +599,7 @@ export function buildTerrainMaterial(
       uniform float uOrthoPhotoContrast;
       uniform float uOrthoPhotoSaturation;
       uniform float uOrthoPhotoOutsideFillEnabled;
+      uniform float uOrthoPhotoOutsideSurfaceMode;
       uniform vec3 uOrthoPhotoOutsideColor;
       uniform float uOrthoPhotoOutsideOpacity;
       uniform float uOrthoPhotoShadowStrength;
@@ -812,6 +825,73 @@ export function buildTerrainMaterial(
         return photoShaded;
       }
 
+      vec3 litTerrainSurface(
+        vec3 surfaceBase,
+        float litAmount,
+        float shadowAmount,
+        float slope,
+        float litCompressed
+      ) {
+        vec3 litSurface = surfaceBase *
+          (uAmbient * 0.55 + uHillshade * litAmount);
+        litSurface = mix(
+          litSurface,
+          litSurface * uShadowTint * 2.5,
+          shadowAmount * 0.12
+        );
+        litSurface += surfaceBase * pow(slope, 5.0) * litCompressed * 0.4 *
+          uFacetStrength;
+        return litSurface;
+      }
+
+      vec3 topoRampSurface(
+        vec3 topoBase,
+        float elevationT,
+        float noiseAmount,
+        float litAmount,
+        float shadowAmount,
+        float slope,
+        float litCompressed
+      ) {
+        vec3 rampBase = mix(
+          topoBase,
+          surfaceElevationRamp(elevationT),
+          clamp(uSurfaceElevationColorBlend, 0.0, 1.0)
+        );
+        rampBase *= 1.0 + noiseAmount * uHueVariance;
+        return litTerrainSurface(
+          rampBase,
+          litAmount,
+          shadowAmount,
+          slope,
+          litCompressed
+        );
+      }
+
+      vec3 outsideImageSurface(
+        vec3 topoBase,
+        float elevationT,
+        float noiseAmount,
+        float litAmount,
+        float shadowAmount,
+        float slope,
+        float litCompressed
+      ) {
+        if (uOrthoPhotoOutsideSurfaceMode > 0.5) {
+          return topoRampSurface(
+            topoBase,
+            elevationT,
+            noiseAmount,
+            litAmount,
+            shadowAmount,
+            slope,
+            litCompressed
+          );
+        }
+        return uOrthoPhotoOutsideColor *
+          (uAmbient * 0.55 + vec3(uHillshade * litAmount));
+      }
+
       vec3 projectedShadowSurface(vec3 surface) {
         float opacity = clamp(uProjectedMapShadowOpacity, 0.0, 1.0);
         if (opacity <= 0.001) return surface;
@@ -912,19 +992,19 @@ export function buildTerrainMaterial(
                      smoothstep(0.0, 1.0, (t - 0.5) * 2.0));
         }
         vec3 topoBase = base;
+        float surfaceElevationT = clamp(
+          (elev - uSurfaceElevationMin) /
+            max(0.0001, uSurfaceElevationMax - uSurfaceElevationMin),
+          0.0,
+          1.0
+        );
+        if (uSurfaceElevationReverse > 0.5) {
+          surfaceElevationT = 1.0 - surfaceElevationT;
+        }
         if (uSurfaceElevationEnabled > 0.5) {
-          float elevationT = clamp(
-            (elev - uSurfaceElevationMin) /
-              max(0.0001, uSurfaceElevationMax - uSurfaceElevationMin),
-            0.0,
-            1.0
-          );
-          if (uSurfaceElevationReverse > 0.5) {
-            elevationT = 1.0 - elevationT;
-          }
           base = mix(
             topoBase,
-            surfaceElevationRamp(elevationT),
+            surfaceElevationRamp(surfaceElevationT),
             clamp(uSurfaceElevationColorBlend, 0.0, 1.0)
           );
         }
@@ -961,20 +1041,18 @@ export function buildTerrainMaterial(
         // floor down.
         litAmount += uShadowSharpness * 0.4 * litCompressed;
 
-        vec3 surface = base * (uAmbient * 0.55 + uHillshade * litAmount);
-
-        // Subtle atmospheric tint on the shadow side -- multiplied at
-        // very low blend weight so it cools the shadows slightly without
-        // muting their color. Capped at 12% mix at full shadow.
         float shadowAmount = 1.0 - litCompressed;
-        surface = mix(surface, surface * uShadowTint * 2.5, shadowAmount * 0.12);
-
-        // Ridge highlight on cliff facets -- pure additive so it can't
-        // pull surface darker. Scales with sharpness.
         float slope = 1.0 - clamp(facetN.z, 0.0, 1.0);
-        surface += base * pow(slope, 5.0) * litCompressed * 0.4 *
-                   uFacetStrength;
+        vec3 surface = litTerrainSurface(
+          base,
+          litAmount,
+          shadowAmount,
+          slope,
+          litCompressed
+        );
         float topoImageApplied = 0.0;
+        vec4 orthoSample = vec4(0.0);
+        float photoCoverage = 0.0;
         if (uOrthoPhotoEnabled > 0.5 && uOrthoPhotoOpacity > 0.001) {
           vec2 orthoUv = (vWorldPos.xy - uOrthoPhotoBoundsMin) /
                          (uOrthoPhotoBoundsMax - uOrthoPhotoBoundsMin);
@@ -982,25 +1060,41 @@ export function buildTerrainMaterial(
             orthoUv.x >= 0.0 && orthoUv.x <= 1.0 &&
             orthoUv.y >= 0.0 && orthoUv.y <= 1.0;
           if (insideOrthoPhoto) {
-            vec4 orthoSample = texture2D(uOrthoPhotoMap, orthoUv);
-            if (orthoSample.a > 0.001) {
-              float imageAlpha = clamp(uOrthoPhotoOpacity * orthoSample.a, 0.0, 1.0);
-              surface = mix(
-                surface,
-                topoImageSurface(orthoSample, litAmount),
-                imageAlpha
-              );
-              topoImageApplied = max(topoImageApplied, imageAlpha);
-            }
-          } else if (
-            uOrthoPhotoOutsideFillEnabled > 0.5 &&
-            uOrthoPhotoOutsideOpacity > 0.001
-          ) {
-            float fillAlpha = clamp(uOrthoPhotoOutsideOpacity, 0.0, 1.0);
-            vec3 fillSurface = uOrthoPhotoOutsideColor *
-              (uAmbient * 0.55 + vec3(uHillshade * litAmount));
-            surface = mix(surface, fillSurface, fillAlpha);
+            orthoSample = texture2D(uOrthoPhotoMap, orthoUv);
+            photoCoverage = clamp(
+              uOrthoPhotoOpacity * orthoSample.a,
+              0.0,
+              1.0
+            );
           }
+        }
+        if (
+          uOrthoPhotoOutsideFillEnabled > 0.5 &&
+          uOrthoPhotoOutsideOpacity > 0.001
+        ) {
+          float outsideSurfaceAlpha = clamp(
+            uOrthoPhotoOutsideOpacity,
+            0.0,
+            1.0
+          );
+          vec3 outsideSurface = outsideImageSurface(
+            topoBase,
+            surfaceElevationT,
+            n,
+            litAmount,
+            shadowAmount,
+            slope,
+            litCompressed
+          );
+          surface = mix(surface, outsideSurface, outsideSurfaceAlpha);
+        }
+        if (photoCoverage > 0.001) {
+          surface = mix(
+            surface,
+            topoImageSurface(orthoSample, litAmount),
+            photoCoverage
+          );
+          topoImageApplied = max(topoImageApplied, photoCoverage);
         }
         if (uTopoImageDetailEnabled > 0.5 && uTopoImageDetailOpacity > 0.001) {
           vec2 detailUv = (vWorldPos.xy - uTopoImageDetailBoundsMin) /
@@ -1439,6 +1533,10 @@ export function buildTerrainMaterial(
       if (typeof p.orthoPhotoOutsideFillEnabled === "boolean") {
         uniforms.uOrthoPhotoOutsideFillEnabled.value =
           p.orthoPhotoOutsideFillEnabled ? 1 : 0;
+      }
+      if (typeof p.orthoPhotoOutsideSurfaceMode === "string") {
+        uniforms.uOrthoPhotoOutsideSurfaceMode.value =
+          orthoPhotoOutsideSurfaceModeValue(p.orthoPhotoOutsideSurfaceMode);
       }
       if (p.orthoPhotoOutsideColor)
         uniforms.uOrthoPhotoOutsideColor.value.set(p.orthoPhotoOutsideColor);
