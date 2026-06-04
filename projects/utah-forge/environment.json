@@ -722,7 +722,8 @@
     "utah-forge-phase3-demo-boreholes",
     "utah-forge-mt-resistivity-full-density",
     "utah-forge-topo-graticule",
-    "topo-cloud-volume-2"
+    "topo-cloud-volume-2",
+    "terrain"
   ],
   "scene": {
     "background": "#383838",
