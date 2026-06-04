@@ -65,6 +65,7 @@ test("topo satellite image exposes outside fill and image shadow authoring field
 
 test("topo editor exposes height-map and footprint controls backed by public clip fields", () => {
   const topoPanel = readSource("src", "editor", "topoMap", "TopoMapPanel.tsx");
+  const layerPanelGroups = readSource("src", "editor", "LayerPanelGroups.tsx");
 
   for (const label of [
     "Height map",
@@ -89,6 +90,21 @@ test("topo editor exposes height-map and footprint controls backed by public cli
     topoPanel,
     /terrainMeta[\s\S]*bounds/,
     "Height-map footprint should be derived from terrain layer metadata bounds.",
+  );
+  assert.match(
+    topoPanel,
+    /type TopoMapPanelSection[\s\S]*\| "extents"/,
+    "Topo panel should expose a dedicated extents section.",
+  );
+  assert.match(
+    topoPanel,
+    /const showExtents = section === "all" \|\| section === "extents"/,
+    "Topo panel should gate footprint controls through the extents section.",
+  );
+  assert.match(
+    layerPanelGroups,
+    /title="Extents"[\s\S]*section="extents"/,
+    "Layer panel should render a peer Extents group for map clipping controls.",
   );
 });
 

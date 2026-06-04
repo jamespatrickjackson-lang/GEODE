@@ -185,6 +185,7 @@ type LayerProvenancePatch = Partial<
 type TopoMapPanelSection =
   | "all"
   | "surface"
+  | "extents"
   | "environment"
   | "graticule"
   | "title";
@@ -908,8 +909,9 @@ export function TopoMapPanel({
     );
   };
   const showSurface = section === "all" || section === "surface";
+  const showExtents = section === "all" || section === "extents";
   const showEnvironment = section === "all" || section === "environment";
-  const showSurfacePanel = showSurface || showEnvironment;
+  const showSurfacePanel = showSurface || showExtents || showEnvironment;
   const showGraticule = section === "all" || section === "graticule";
   const showTitle = section === "all" || section === "title";
 
@@ -1540,26 +1542,30 @@ export function TopoMapPanel({
               onChange={(v) => setTerrain({ undersideOpacity: parseFloat(v) })}
             />
           </TopoSubsection>
-          <TopoSurfaceClipControls
-            {...publicSurfaceLayerControlProps}
-            terrain={terrain}
-            terrainLayer={terrainLayer}
-            terrainFootprint={terrainFootprint}
-            imageFootprint={imageFootprint}
-            alignTitleToMapEdge={() =>
-              setTopoMapBranding({
-                anchor: TOPO_MAP_BRANDING_DEFAULT_ANCHOR,
-                offsetXM: TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M,
-                offsetYM: TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M,
-              })
-            }
-          />
-          <TopoMapEdgeControls
-            {...publicSurfaceLayerControlProps}
-            terrain={terrain}
-            setTerrain={setTerrain}
-            edgeFadeShape={edgeFadeShape}
-          />
+            </>
+          ) : null}
+          {showExtents ? (
+            <>
+              <TopoSurfaceClipControls
+                {...publicSurfaceLayerControlProps}
+                terrain={terrain}
+                terrainLayer={terrainLayer}
+                terrainFootprint={terrainFootprint}
+                imageFootprint={imageFootprint}
+                alignTitleToMapEdge={() =>
+                  setTopoMapBranding({
+                    anchor: TOPO_MAP_BRANDING_DEFAULT_ANCHOR,
+                    offsetXM: TOPO_MAP_BRANDING_DEFAULT_OFFSET_X_M,
+                    offsetYM: TOPO_MAP_BRANDING_DEFAULT_OFFSET_Y_M,
+                  })
+                }
+              />
+              <TopoMapEdgeControls
+                {...publicSurfaceLayerControlProps}
+                terrain={terrain}
+                setTerrain={setTerrain}
+                edgeFadeShape={edgeFadeShape}
+              />
             </>
           ) : null}
           {showEnvironment ? (
