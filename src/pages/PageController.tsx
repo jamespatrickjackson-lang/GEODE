@@ -2553,6 +2553,15 @@ export function PageControllerProvider({
         transitionReason,
         transitionRun.runId,
       );
+      sceneHandle.manager.beginEnvironmentSceneTransition(
+        sourceResolved.environment,
+        targetResolved.environment,
+        sourceResolved.page,
+        targetResolved.page,
+        transitionDuration,
+        target.transition.easing,
+        transitionStartMs,
+      );
       sceneHandle.manager.beginCinematicSceneTransition(
         sourceResolved.environment,
         targetResolved.environment,

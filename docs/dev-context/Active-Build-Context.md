@@ -75,6 +75,13 @@ overwritten by it. This prevents hidden section sources from appearing during
 camera/page transitions and keeps ISO overlays from changing color or
 brightness mid-transition.
 
+Background and fog are page-transition environment-scene channels. Renderer
+background, scene fog color/density, topo fog uniforms, layer fog density, and
+fog-driven post tint blend through the environment-scene transition owner;
+terrain light-mode ramps, lighting, sun visuals, material preset identity,
+textures, public clip, edge fade, shaders, and geometry remain discrete unless
+a later decision expands that owner.
+
 Pages are disposable fixtures for testing the global transition runtime. Do not
 repair transition behavior with fixture-id, fixture-index, fixture-title,
 source/target fixture path, or Utah-FORGE-only conditionals. Before touching

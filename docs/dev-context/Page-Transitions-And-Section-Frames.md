@@ -66,6 +66,12 @@ an opacity tween realised through a `LayerTransitionSnapshot`
 ([transitionStyles.ts:77-81](../../src/scene/transitions/transitionStyles.ts#L77-L81)).
 Adding a `slide` kind requires a new decision-log entry, not an ad-hoc string.
 
+Background/fog scene channels are not `LayerTransitionKind` values. Renderer
+background color, scene fog color, scene fog density, topo fog uniforms, layer
+fog density, and fog-driven post tint use the environment-scene transition
+owner accepted in TRD-009. Do not add background/fog to the layer enum or route
+them through layer opacity/snapshot classification.
+
 Layer classification compares resolved source and target presentation state in
 [transitionEffectiveLayersForPage.ts:160-166](../../src/scene/transitions/transitionEffectiveLayersForPage.ts#L160-L166)
 and is gated by `transitionEnvelopeAllowsLayer()` at

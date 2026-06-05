@@ -56,8 +56,13 @@ test("Cinematics keeps the selected authoring target instead of forcing Global S
   );
   assert.match(
     visualStudioPanel,
-    /sceneOverrides:\s*mergeSceneProperties\([^)]*sceneOverrides[^)]*patch/s,
-    "Selected-page Cinematics writes should persist into page.sceneOverrides.",
+    /setCinematicsScene\s*=\s*useCallback\([\s\S]*setAuthoringScene\(patch\)/,
+    "Selected-page Cinematics writes should route through the scoped authoring scene writer.",
+  );
+  assert.match(
+    editorContext,
+    /sceneOverrides:\s*mergeSceneEdit\(page\.sceneOverrides,\s*patch\)/,
+    "The scoped authoring scene writer should persist normal page writes into page.sceneOverrides.",
   );
 });
 

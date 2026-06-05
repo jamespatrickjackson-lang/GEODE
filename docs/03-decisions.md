@@ -1018,3 +1018,15 @@ fake-cloud looks.
 **Why:** Light/dark, atmosphere, and other scene controls are authoring state. Changing them on a normal page or child page must create a page-local override, while changing them on a Sub Master must update the inheritance source for its children. Global scene edits should remain global only when the author is editing Global Settings.
 
 **Render-stack guard:** The selected page render path must trace through `environment.scene`, Sub Master `envSnapshot.scene`, render preset `scenePatch`, page `sceneOverrides`, layer styles, topo material authority, active asset URL/cache key, shader/material, and mesh geometry before visual-scene fixes. `PageController.resolvePresentationState` remains the inheritance merge point. The scene application order remains resolved environment, visibility/styles, page scene, and overlays; this decision does not change topo material, texture URL, bounds, public clip, edge fade, edge outline, or geometry authority.
+
+## DEC-096 - Background and fog blend through an environment-scene transition owner
+
+**Supersedes:** DEC-086 only where it could imply that page-transition scene blending is limited to `main-camera/cinematic-post` numeric post fields.
+
+**Considered:** keep renderer background and fog as final-commit environment state, or add a narrow page-transition owner for background/fog scene channels.
+
+**Chose:** background color, fog color, and fog density blend over the target page's `transition.duration` and `transition.easing` through a dedicated environment-scene transition owner. The frame path updates renderer clear color, `scene.background`, `THREE.FogExp2`, topo fog uniforms, layer fog density, and fog-driven post tint before cinematic post-processing renders the frame. Disabled fog maps to density `0` during the blend; the final enabled/disabled state still lands through the normal target `applyEnvironment(...)` commit.
+
+**Why:** Dark/light and fog handoffs are resolved scene mood channels, not page fixtures. Leaving them to the final environment commit caused a visible snap after otherwise smooth camera/post/layer transitions.
+
+**Trade-off accepted:** This is not a full scene mood interpolation system. Terrain light-mode ramps, lighting colors/intensities, visible sun state, material preset identity, texture URL/cache key, bounds, public clip, edge fade, edge outline, shader choice, and geometry remain discrete unless a later decision explicitly expands the environment-scene transition owner. Background/fog must stay outside `LayerTransitionKind` and outside the cinematic-post policy list.

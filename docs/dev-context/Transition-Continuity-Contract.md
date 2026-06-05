@@ -50,6 +50,26 @@ A page transition is a deterministic diff between two resolved render graphs:
 | Visible | Visible | Incompatible | `crossfade` or `discrete-commit` | `crossfade` or `commit-discrete` |
 | Visible | Visible | Unknown | Conservative fallback | `crossfade`, `hold-source`, or `commit-discrete` |
 
+## Environment-Scene Transition Channels
+
+Background and fog are environment-scene transition channels, not layer
+entities and not cinematic-post fields. Their execution owner is the
+page-transition runtime's narrow environment-scene frame path.
+
+Compatible background and fog colors interpolate over the page transition
+duration/easing. Fog density interpolates numerically. Disabled fog is treated
+as density `0` during the blend, and the final enabled/disabled state is
+landed by the normal target environment commit. This keeps final commit
+visually idempotent for background/fog without rebuilding the full environment
+on every frame.
+
+The v1 environment-scene owner is limited to renderer clear color, scene
+background/fog, topo fog uniforms, layer fog density, and fog-driven post tint.
+Terrain light-mode ramps, lighting, sun visuals, material preset identity,
+texture URL/cache key, bounds, public clip, edge fade, edge outline, shader
+choice, and geometry remain discrete follow-up channels unless a later
+decision expands the scope.
+
 ## Invariants
 
 1. Runtime transition behavior must not depend on page id, page index, page
@@ -78,6 +98,8 @@ Current allowed implementation scope:
 - Pure classifier module in `src/scene/transitions`.
 - Classifier tests and source guards.
 - Documentation and decision log entries.
+- Narrow environment-scene execution owner for background/fog channels accepted
+  by TRD-009.
 
 Current excluded implementation scope:
 
@@ -88,7 +110,8 @@ Current excluded implementation scope:
 - Isoband or ground-line remediation.
 - Snapshot execution changes.
 - Page JSON or fixture composition edits.
-- Wiring classifier assignments into scene mutation.
+- Wiring the pure classifier assignments into broad scene mutation.
+- Terrain light-mode ramp, lighting, sun, and full scene mood interpolation.
 
 Execution-layer consumers can be designed after this contract and classifier
 shape are accepted.

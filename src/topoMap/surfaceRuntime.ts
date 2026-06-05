@@ -45,6 +45,12 @@ export interface TopoSurfaceEnvironmentParams {
   lightMode: boolean;
 }
 
+export interface TopoSurfaceFogFrameParams {
+  terrainGroup: THREE.Group | undefined;
+  fogColor: THREE.Color;
+  fogDensity: number;
+}
+
 export interface TopoSurfaceLiftParams {
   layerId: string;
   style: EditableStyle;
@@ -171,6 +177,23 @@ export class TopoSurfaceRuntime {
     this.applyOrthoPhotoBounds(terrainGroup, terrain);
     this.applyOrthoPhotoTexture(terrainGroup, terrain);
     this.applyTopoImageDetailOverlay(terrainGroup, terrain);
+  }
+
+  applyFogFrame({
+    terrainGroup,
+    fogColor,
+    fogDensity,
+  }: TopoSurfaceFogFrameParams): void {
+    terrainGroup?.traverse((obj) => {
+      const handle = (obj as THREE.Mesh).userData
+        ?.terrainHandle as TerrainMaterialHandle | undefined;
+      if (!handle) return;
+      handle.setParams({
+        fogColor: "#" + fogColor.getHexString(),
+        fogNear: 0,
+        fogFar: 3 / Math.max(fogDensity, 0.000001),
+      });
+    });
   }
 
   updateGridCameraVisibility(

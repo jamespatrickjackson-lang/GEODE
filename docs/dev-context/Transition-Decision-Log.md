@@ -182,3 +182,30 @@ classifier contract.
 
 Evidence: `Transition-Continuity-Contract.md`,
 `tests/tools/transition-entity-channel-policy.test.mjs`.
+
+## TRD-009 - Background/Fog Scene Channels Blend During Page Transitions
+
+Status: accepted
+
+Problem: Background and fog are resolved scene channels, but they were applied
+only by final `applyEnvironment(...)` commit. Dark-to-light and fog-density
+changes therefore snapped at the end of otherwise smooth page transitions.
+
+Decision: Background color, fog color, and fog density are
+environment-scene transition channels. During page navigation, they blend over
+the target page's `transition.duration` and `transition.easing`. Fog disabled
+on either side maps to density `0` during the blend, while the final
+enabled/disabled state is committed by the normal target environment apply.
+
+Consequences: The transition runtime owns a narrow background/fog frame path
+for renderer clear color, scene background/fog, topo fog uniforms, layer fog
+density, and fog-driven post tint. This path must not call full
+`applyEnvironment(...)` per frame and must not transition terrain light-mode
+ramps, lighting, sun visuals, material presets, texture URLs/cache keys,
+bounds, public clip, edge fade, edge outline, shaders, or geometry.
+
+Revisit when: Full scene mood transitions are intentionally expanded to include
+terrain ramps, lighting, sun, or other discrete environment channels.
+
+Evidence: `Dark-Light-Scene-Transition-Audit-2026-06-05.md`,
+`tests/tools/environment-scene-transition-source.test.mjs`.

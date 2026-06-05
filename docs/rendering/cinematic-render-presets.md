@@ -84,6 +84,14 @@ transition path. Dolly, truck, crane, handheld, and roll are timed-shot camera
 motion fields driven by
 `dynamicCamera` `shotStartMs`, `shotEndMs`, and `shotCurve`.
 
+Background and fog are separate environment-scene transition channels, not
+`main-camera/cinematic-post` fields. Renderer background, scene fog color,
+scene fog density, topo fog uniforms, layer fog density, and fog-driven post
+tint blend over the same page transition timing. Terrain light-mode ramps,
+lighting, sun visuals, material preset identity, texture URL/cache key, bounds,
+public clip, edge fade, edge outline, shader choice, and geometry remain
+outside this v1 transition smoothing scope.
+
 ## Reference Models
 
 The expanded Camera Studio/Post Processing toolset follows established

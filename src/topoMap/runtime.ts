@@ -34,6 +34,11 @@ export interface ApplyTopoMapEnvironmentParams {
   lightMode: boolean;
 }
 
+export interface ApplyTopoMapFogFrameParams {
+  fogColor: THREE.Color;
+  fogDensity: number;
+}
+
 export class TopoMapRuntime {
   private readonly surface: TopoSurfaceRuntime;
   private readonly clip: PublicSurfaceClipRuntime;
@@ -109,6 +114,17 @@ export class TopoMapRuntime {
       terrain,
       publicLayerIds: this.options.getPublicSurfaceLayerIds(),
       getLayerGroup: this.options.getLayerGroup,
+    });
+  }
+
+  applyFogFrame({
+    fogColor,
+    fogDensity,
+  }: ApplyTopoMapFogFrameParams): void {
+    this.surface.applyFogFrame({
+      terrainGroup: this.surfaceGroup(),
+      fogColor,
+      fogDensity,
     });
   }
 

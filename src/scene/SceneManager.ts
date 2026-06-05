@@ -246,9 +246,17 @@ import {
   cinematicSceneTransitionDebugState,
   createCinematicSceneTransition,
   inactiveCinematicSceneTransitionDebugState,
+  resolveCinematicSceneForTransition,
   type CinematicSceneTransitionDebugState,
   type CinematicSceneTransitionRuntime,
 } from "./transitions/cinematicSceneTransitions";
+import {
+  blendEnvironmentSceneTransitionFrame,
+  createEnvironmentSceneTransition,
+  syntheticSceneForEnvironmentFrame,
+  type EnvironmentSceneTransitionFrame,
+  type EnvironmentSceneTransitionRuntime,
+} from "./transitions/environmentSceneTransition";
 import {
   enforceTransitionVisibilityEnvelopeImpl,
   interpolatedScalarStyleImpl,
@@ -258,6 +266,7 @@ import {
   warnUnexpectedTransitionLayerImpl,
 } from "./transitions/layerTweenRuntime";
 import { applyStyle as applyStyleImpl } from "./styles/applyLayerStyle";
+import { setMaterialFog } from "./shaders/layerFogShader";
 import {
   addLightingStudioHandleImpl,
   addLightingStudioSourceImpl,
@@ -596,6 +605,7 @@ interface FrameUpdateDebugState {
   totalMs: number;
   cameraLockedSunMs: number;
   layerTweensMs: number;
+  environmentSceneMs: number;
   cinematicPostMs: number;
   boreLensMs: number;
   lightingStudioScaleMs: number;
@@ -733,6 +743,10 @@ export class SceneManager {
   sceneSectionHelperTransitionOpacity = 1;
   private activeSceneTransitionContext: SceneTransitionContext | null = null;
   private cinematicSceneTransition: CinematicSceneTransitionRuntime | null = null;
+  private environmentSceneTransition: EnvironmentSceneTransitionRuntime | null =
+    null;
+  private currentEnvironmentSceneTransitionFrame: EnvironmentSceneTransitionFrame | null =
+    null;
   private lastCinematicSceneTransitionDebug: CinematicSceneTransitionDebugState =
     inactiveCinematicSceneTransitionDebugState();
   private lastTransitionCommitState: SceneTransitionContext["commitState"] | null =
@@ -2718,6 +2732,8 @@ export class SceneManager {
     });
     if (finalTrace?.allowed) {
       this.cinematicSceneTransition = null;
+      this.environmentSceneTransition = null;
+      this.currentEnvironmentSceneTransitionFrame = null;
       this.lastCinematicSceneTransitionDebug =
         inactiveCinematicSceneTransitionDebugState();
       this.applyEnvironment(environment);
@@ -3858,6 +3874,106 @@ export class SceneManager {
     this.updateCinematicPostFrame(startMs);
   }
 
+  beginEnvironmentSceneTransition(
+    fromEnvironment: EnvironmentSetup,
+    toEnvironment: EnvironmentSetup,
+    fromPage: PresentationPage,
+    toPage: PresentationPage,
+    durationMs: number,
+    easing: EasingName,
+    startMs: number = performance.now(),
+  ): void {
+    this.environmentSceneTransition = createEnvironmentSceneTransition({
+      sourcePageId: fromPage.id,
+      targetPageId: toPage.id,
+      sourceScene: resolveCinematicSceneForTransition(fromEnvironment, fromPage),
+      targetScene: resolveCinematicSceneForTransition(toEnvironment, toPage),
+      durationMs,
+      easing,
+      startMs,
+    });
+    this.updateEnvironmentSceneTransitionFrame(startMs);
+  }
+
+  private updateEnvironmentSceneTransitionFrame(nowMs: number): void {
+    const transition = this.environmentSceneTransition;
+    if (!transition) {
+      this.currentEnvironmentSceneTransitionFrame = null;
+      return;
+    }
+
+    const frame = blendEnvironmentSceneTransitionFrame(transition, nowMs);
+    this.applyEnvironmentSceneTransitionFrame(frame);
+    this.currentEnvironmentSceneTransitionFrame = frame;
+    if (frame.done) {
+      this.environmentSceneTransition = null;
+    }
+  }
+
+  private layerFogDensityForFrame(
+    style: EditableStyle,
+    fallback: number,
+  ): number {
+    return typeof style.fogDensity === "number" &&
+      Number.isFinite(style.fogDensity)
+      ? clampRange(style.fogDensity, 0.000001, 0.002)
+      : fallback;
+  }
+
+  private applyLayerFogFrame(
+    fogEnabled: boolean,
+    fallbackDensity: number,
+  ): void {
+    for (const [id, group] of this.layers.entries()) {
+      const style = this.styleForLayer(id);
+      const affectedByFog = style.affectedByFog !== false;
+      const fogDensity = this.layerFogDensityForFrame(style, fallbackDensity);
+      group.traverse((obj: THREE.Object3D) => {
+        const mat = (obj as THREE.Mesh | THREE.Line).material as
+          | THREE.Material
+          | THREE.Material[]
+          | undefined;
+        if (!mat) return;
+        const mats = Array.isArray(mat) ? mat : [mat];
+        for (const material of mats) {
+          if (material.userData?.ignoreLayerStyle === true) continue;
+          setMaterialFog(material, fogEnabled && affectedByFog, fogDensity);
+        }
+      });
+      this.applyTerrainFogStyle(id, affectedByFog, fogDensity);
+    }
+  }
+
+  private applyEnvironmentSceneTransitionFrame(
+    frame: EnvironmentSceneTransitionFrame,
+  ): void {
+    const backgroundColor = new THREE.Color(frame.backgroundHex);
+    const fogColor = new THREE.Color(frame.fogHex);
+    this.renderer.setClearColor(backgroundColor);
+    this.scene.background = backgroundColor;
+
+    this.envFogEnabled = frame.fogEnabled;
+    this.envFogDensity = frame.fogDensity;
+    if (frame.fogEnabled) {
+      if (!this.envFog) {
+        this.envFog = new THREE.FogExp2(fogColor, frame.fogDensity);
+      } else {
+        this.envFog.color.copy(fogColor);
+        this.envFog.density = frame.fogDensity;
+      }
+      this.scene.fog = this.envFog;
+    } else {
+      this.scene.fog = null;
+      this.envFog = null;
+    }
+
+    this.topoRuntime.applyFogFrame({
+      fogColor,
+      fogDensity: frame.fogDensity,
+    });
+    this.applyLayerFogFrame(frame.fogEnabled, frame.fogDensity);
+  }
+
   private updateCinematicPostFrame(nowMs: number): void {
     const transition = this.cinematicSceneTransition;
     if (!transition) {
@@ -3870,7 +3986,14 @@ export class SceneManager {
     }
 
     const frame = blendCinematicSceneForTransition(transition, nowMs);
-    applyCinematicPostProcessing.call(this, frame.scene, {
+    const environmentFrame = this.currentEnvironmentSceneTransitionFrame;
+    const scene = environmentFrame
+      ? {
+          ...frame.scene,
+          ...syntheticSceneForEnvironmentFrame(environmentFrame),
+        }
+      : frame.scene;
+    applyCinematicPostProcessing.call(this, scene, {
       page: frame.page,
       nowMs,
       applyPageMood: true,
@@ -4289,6 +4412,12 @@ export class SceneManager {
     const layerTweensMs = transitionDebugMs(performance.now() - stageStart);
     stageStart = performance.now();
 
+    this.updateEnvironmentSceneTransitionFrame(nowMs);
+    const environmentSceneMs = transitionDebugMs(
+      performance.now() - stageStart,
+    );
+    stageStart = performance.now();
+
     this.updateCinematicPostFrame(nowMs);
     const cinematicPostMs = transitionDebugMs(performance.now() - stageStart);
     stageStart = performance.now();
@@ -4355,6 +4484,7 @@ export class SceneManager {
       totalMs: transitionDebugMs(performance.now() - startedAt),
       cameraLockedSunMs,
       layerTweensMs,
+      environmentSceneMs,
       cinematicPostMs,
       boreLensMs,
       lightingStudioScaleMs,

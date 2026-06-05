@@ -198,6 +198,14 @@ crane, handheld, and roll are timed camera-motion fields controlled by
 `dynamicCamera.shotStartMs`,
 `dynamicCamera.shotEndMs`, and `dynamicCamera.shotCurve`.
 
+During page navigation, background/fog scene channels blend through the
+environment-scene transition owner using the same `transition.duration` and
+`transition.easing`. This covers renderer background, scene fog color, scene
+fog density, topo fog uniforms, layer fog density, and fog-driven post tint.
+It does not make background/fog part of `LayerTransitionKind`, and it does not
+expand `main-camera/cinematic-post` to terrain ramps, lighting, sun visuals,
+material presets, textures, public clip, edge fade, shaders, or geometry.
+
 ### Transition
 
 How the camera moves from the *previous* page to *this* page. The first
