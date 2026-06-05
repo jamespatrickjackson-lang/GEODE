@@ -69,7 +69,7 @@
   "visibilityOverrides": {
     "utah-forge-phase3-working-area": true,
     "utah-forge-site-boundary": false,
-    "terrain": true,
+    "terrain": false,
     "transport-roads": false,
     "hydrography-streams": false,
     "hydrography-lakes": false,

@@ -102,5 +102,6 @@
       "opacity": 0.4,
       "showLabels": false
     }
-  }
+  },
+  "hidden": true
 }

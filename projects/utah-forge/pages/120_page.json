@@ -60,13 +60,13 @@
   "layerOverrides": {
     "utah-forge-scene-section-planes": {
       "sceneSectionEnabled": true,
-      "sceneSectionActiveAxis": "y",
+      "sceneSectionActiveAxis": "x",
       "sceneSectionWindowEnabled": true,
-      "sceneSectionWindowActiveAxis": "y",
+      "sceneSectionWindowActiveAxis": "x",
       "sceneSectionWindowByAxis": {
         "x": {
-          "minAlongM": -52100,
-          "maxAlongM": 19284.57589479845,
+          "minAlongM": -33487.51903582346,
+          "maxAlongM": 10899.413500988101,
           "bottomElevationM": -14609.101887030438
         },
         "y": {
@@ -78,11 +78,11 @@
       "sceneSectionPlanes": {
         "x": {
           "enabled": true,
-          "positionM": -2669.1113347263804,
+          "positionM": 5225.232337648249,
           "invert": false
         },
         "y": {
-          "enabled": true,
+          "enabled": false,
           "positionM": 44632.56231706365,
           "invert": false
         },
@@ -96,16 +96,16 @@
       "sceneSectionTargetScope": "all-visible",
       "sceneSectionGroundTraceVisible": true,
       "sceneSectionAxesVisible": true,
-      "sceneSectionActiveFrameId": "axis:y",
+      "sceneSectionActiveFrameId": "axis:x",
       "sceneSectionFrames": [
         {
           "id": "axis:x",
           "label": "X Section frame",
-          "legendVisible": true,
+          "legendVisible": false,
           "axis": "x",
           "plane": {
             "enabled": true,
-            "positionM": -2669.1113347263804,
+            "positionM": 5225.232337648249,
             "invert": false
           },
           "frame": {
@@ -113,16 +113,17 @@
             "axisAHeading": "Latitude (°)",
             "axisBHeading": "Elevation (km)",
             "axisDatum": "latlon",
-            "maxAM": 19284.57589479845
+            "maxAM": 10899.413500988101,
+            "minAM": -33487.51903582346
           }
         },
         {
           "id": "axis:y",
           "label": "Y Section frame",
-          "legendVisible": true,
+          "legendVisible": false,
           "axis": "y",
           "plane": {
-            "enabled": true,
+            "enabled": false,
             "positionM": 44632.56231706365,
             "invert": false
           },
@@ -152,7 +153,8 @@
           "axisAHeading": "Latitude (°)",
           "axisBHeading": "Elevation (km)",
           "axisDatum": "latlon",
-          "maxAM": 19284.57589479845
+          "maxAM": 10899.413500988101,
+          "minAM": -33487.51903582346
         },
         "y": {
           "maxAM": 38434.765542233654,

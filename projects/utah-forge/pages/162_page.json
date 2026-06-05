@@ -1,0 +1,38 @@
+{
+  "id": "162_page",
+  "title": "New page",
+  "camera": {
+    "position": [
+      215488.292622323,
+      -188993.35438487917,
+      -51366.201871915524
+    ],
+    "target": [
+      10844.11738335307,
+      -5098.606116313531,
+      -64366.201871915524
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 70
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "sceneOverrides": {
+    "lightMode": false,
+    "background": "#383838",
+    "lightModeBackground": "#d4d4d4",
+    "fog": {
+      "enabled": true,
+      "color": "#e82626",
+      "density": 0.0000037267080745341615,
+      "lightModeColor": "#b5b5b5"
+    }
+  }
+}

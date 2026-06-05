@@ -148,10 +148,10 @@
     "utah-forge-phase3-demo-boreholes": true
   },
   "overlayLayout": {
-    "x": 0.85,
-    "y": 0.00612296110414047,
-    "width": 0.15,
-    "height": 0.10303638644918445
+    "x": 0.6316646316646316,
+    "y": 0.09318178463355224,
+    "width": 0.1938135938135938,
+    "height": 0.32813442566487067
   },
   "cameraObjectFocus": {
     "targetId": "product:utah-forge-mt-stations:FRG19023",

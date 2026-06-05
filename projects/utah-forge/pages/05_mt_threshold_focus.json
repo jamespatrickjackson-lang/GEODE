@@ -35,7 +35,8 @@
       "scalarEdgeAverage": 1,
       "scalarEdgeLowerValue": 3.0555553761897336,
       "scalarNoiseThreshold": 0.65,
-      "scalarLegendVisible": false
+      "scalarLegendVisible": false,
+      "opacity": 0.05
     },
     "utah-forge-phase3-seismic-browser": {
       "opacity": 0,
@@ -44,9 +45,9 @@
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
       "mtThresholdSurfaceVisibility": {
-        "conductive-le-10-ohm-m": true,
-        "conductive-le-30-ohm-m": true,
-        "resistive-ge-1000-ohm-m": true
+        "conductive-le-10-ohm-m": false,
+        "conductive-le-30-ohm-m": false,
+        "resistive-ge-1000-ohm-m": false
       },
       "mtThresholdSurfaceWireframe": false,
       "opacity": 0.82,
@@ -58,7 +59,44 @@
       "mtThresholdSurfaceSmoothNormals": true,
       "mtThresholdSurfaceEmissiveBoost": 0.08,
       "mtThresholdSurfaceWireframeColor": "#f8f4e8",
-      "mtThresholdSurfaceWireframeOpacity": 0.42
+      "mtThresholdSurfaceWireframeOpacity": 0.42,
+      "mtSurfaceBoundaryOrder": [
+        "conductive-le-10-ohm-m",
+        "conductive-le-30-ohm-m",
+        "resistive-ge-1000-ohm-m"
+      ],
+      "mtSurfaceBoundariesById": {
+        "conductive-le-10-ohm-m": {
+          "visible": false,
+          "label": "<=10 Ohm-m",
+          "color": "#2cc9ff",
+          "comparison": "<=",
+          "thresholdOhmM": 10,
+          "thresholdLog10": 1,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "conductive-le-30-ohm-m": {
+          "visible": false,
+          "label": "<=30 Ohm-m",
+          "color": "#38f0b3",
+          "comparison": "<=",
+          "thresholdOhmM": 30,
+          "thresholdLog10": 1.477121,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "resistive-ge-1000-ohm-m": {
+          "visible": false,
+          "label": ">=1000 Ohm-m",
+          "color": "#ff637a",
+          "comparison": ">=",
+          "thresholdOhmM": 1000,
+          "thresholdLog10": 3,
+          "opacity": 1,
+          "source": "precomputed"
+        }
+      }
     },
     "utah-forge-phase3-demo-boreholes": {
       "opacity": 0.9,
@@ -101,7 +139,7 @@
     "utah-forge-mt-resistivity-full-density": true,
     "utah-forge-phase3-seismic-browser": false,
     "terrain": false,
-    "utah-forge-phase3-working-area": true,
+    "utah-forge-phase3-working-area": false,
     "utah-forge-phase3-demo-boreholes": true,
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-mt-resistivity-volume": false,

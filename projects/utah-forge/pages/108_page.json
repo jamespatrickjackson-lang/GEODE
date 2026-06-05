@@ -3,21 +3,21 @@
   "title": "MT High-Resistivity Context duplicate duplicate",
   "camera": {
     "position": [
-      -88734.90318739192,
-      -88943.7167018159,
-      30138.474109371047
+      -23582.646089929123,
+      -53507.47902203717,
+      3756.735612336507
     ],
     "target": [
-      6096,
-      -3222,
-      -18974
+      -16786,
+      -36873,
+      1939
     ],
     "up": [
       0,
       0,
       1
     ],
-    "fov": 52
+    "fov": 70
   },
   "transition": {
     "duration": 3000,
@@ -126,7 +126,9 @@
     },
     "utah-forge-mt-stations": {
       "opacity": 0.35,
-      "showLabels": false
+      "showLabels": false,
+      "mtStationQcSelectedStationId": "FRG19122",
+      "mtStationQcPanelOpen": true
     },
     "utah-forge-mt-resistivity-volume": {
       "scalarLegendVisible": false
@@ -168,13 +170,13 @@
     "mode": "orbit",
     "orbitEnabled": true,
     "poi": [
-      6096,
-      -3222,
-      -18974
+      -16786,
+      -36873,
+      1939
     ],
     "orbitSpeedDegPerSec": 4,
-    "orbitRadius": 47880,
-    "orbitHeight": 30200,
+    "orbitRadius": 17969,
+    "orbitHeight": 1818,
     "orbitDirection": -1,
     "zoomFov": 52,
     "zoomEnabled": false,
@@ -186,7 +188,20 @@
     "transitionLeadMs": 1600,
     "transitionExitMs": 900,
     "transitionBlendCurve": "smooth",
-    "pathAwareBlend": false
+    "pathAwareBlend": false,
+    "dollyEnabled": false,
+    "dollyDistanceM": 0,
+    "truckEnabled": false,
+    "truckDistanceM": 0,
+    "craneEnabled": false,
+    "craneHeightM": 0,
+    "shotStartMs": 0,
+    "shotEndMs": 2500,
+    "shotCurve": "smooth",
+    "handheldEnabled": false,
+    "handheldAmplitudeM": 0,
+    "handheldFrequencyHz": 0.35,
+    "rollDeg": 0
   },
   "subtitle": "Resistive MT shells with site orientation context",
   "visibilityOverrides": {
@@ -198,5 +213,13 @@
     "utah-forge-mt-resistivity-slices": false,
     "utah-forge-mt-top-surface": false,
     "terrain": false
+  },
+  "cameraObjectFocus": {
+    "targetId": "product:utah-forge-mt-resistivity-threshold-surfaces:resistive-ge-1000-ohm-m",
+    "worldPoint": [
+      -5498.437807656337,
+      -11079.919544029755,
+      -297.12844635672354
+    ]
   }
 }

@@ -1,0 +1,282 @@
+{
+  "id": "166_page",
+  "title": "1 duplicate duplicate duplicate duplicate",
+  "subtitle": "Source-derived MT volume with focused Marching Cubes context",
+  "camera": {
+    "position": [
+      -38690.51906577064,
+      -10029.967412831877,
+      19020.165066647925
+    ],
+    "target": [
+      -6511.182934297072,
+      -10099.655743741318,
+      2523.9792096363435
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 70
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutSine"
+  },
+  "holdDuration": 4000,
+  "accentColor": "#42f236",
+  "dynamicCamera": {
+    "enabled": false,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      10844.11738335307,
+      -5098.606116313531,
+      -64366.201871915524
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 275129.9999999952,
+    "orbitHeight": 13000,
+    "orbitDirection": 1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false,
+    "dollyEnabled": false,
+    "dollyDistanceM": 0,
+    "truckEnabled": false,
+    "truckDistanceM": 0,
+    "craneEnabled": false,
+    "craneHeightM": 0,
+    "shotStartMs": 0,
+    "shotEndMs": 2500,
+    "shotCurve": "smooth",
+    "handheldEnabled": false,
+    "handheldAmplitudeM": 0,
+    "handheldFrequencyHz": 0.35,
+    "rollDeg": 0
+  },
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "opacity": 0.48,
+      "pointSizePx": 1.25,
+      "scalarInclusionMode": "all-valid"
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "opacity": 0.28,
+      "scalarVolumeOpacity": 0.28,
+      "scalarVolumeDensity": 0.42,
+      "scalarVolumeSampleSteps": 96,
+      "scalarVolumeThresholdMin": -2,
+      "scalarVolumeThresholdMax": 4.5,
+      "scalarVolumeProductId": "mt-resistivity-full-extent-volume",
+      "scalarLegendVisible": true,
+      "scalarFocusMin": -2,
+      "scalarFocusMax": 4.5,
+      "scalarBlendMin": 0.139879,
+      "scalarBlendMax": 3.937122,
+      "scalarVolumeRenderMode": "raymarch"
+    },
+    "utah-forge-mt-stations": {
+      "opacity": 1,
+      "showLabels": false,
+      "mtStationQcSelectedStationId": "FRG19078",
+      "mtStationQcPanelOpen": true
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtIsosurfaceProductId": "mt-isosurface-full-extent",
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": false,
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": true
+      },
+      "mtThresholdSurfaceWireframe": false,
+      "opacity": 0.82,
+      "affectedByFog": false,
+      "showLabels": false,
+      "mtThresholdSurfaceRoughness": 0.64,
+      "mtThresholdSurfaceMetalness": 0,
+      "mtThresholdSurfaceSide": "double",
+      "mtThresholdSurfaceSmoothNormals": true,
+      "mtThresholdSurfaceEmissiveBoost": 0.08,
+      "mtThresholdSurfaceWireframeColor": "#f8f4e8",
+      "mtThresholdSurfaceWireframeOpacity": 0.42,
+      "mtSurfaceBoundaryOrder": [
+        "conductive-le-10-ohm-m",
+        "conductive-le-30-ohm-m",
+        "resistive-ge-1000-ohm-m"
+      ],
+      "mtSurfaceBoundariesById": {
+        "conductive-le-10-ohm-m": {
+          "visible": false,
+          "label": "<=10 Ohm-m",
+          "color": "#2cc9ff",
+          "comparison": "<=",
+          "thresholdOhmM": 10,
+          "thresholdLog10": 1,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "conductive-le-30-ohm-m": {
+          "visible": true,
+          "label": "<=30 Ohm-m",
+          "color": "#38f0b3",
+          "comparison": "<=",
+          "thresholdOhmM": 30,
+          "thresholdLog10": 1.477121,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "resistive-ge-1000-ohm-m": {
+          "visible": true,
+          "label": ">=1000 Ohm-m",
+          "color": "#ff637a",
+          "comparison": ">=",
+          "thresholdOhmM": 1000,
+          "thresholdLog10": 3,
+          "opacity": 1,
+          "source": "precomputed"
+        }
+      }
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.72,
+      "showLabels": false,
+      "siteDetailsAlignToTopo": true,
+      "siteDetailsAlwaysOnTop": true
+    },
+    "utah-forge-scene-section-planes": {
+      "sceneSectionEnabled": true,
+      "sceneSectionMode": "cutaway",
+      "sceneSectionFrames": [
+        {
+          "id": "axis:x",
+          "label": "X Section frame",
+          "legendVisible": false,
+          "axis": "x",
+          "plane": {
+            "enabled": true,
+            "positionM": -5753.338077166321,
+            "invert": true
+          },
+          "frame": {
+            "axisAlignment": "cardinal",
+            "axisAHeading": "Latitude (°)",
+            "axisBHeading": "Elevation (km)",
+            "axisDatum": "latlon",
+            "minBM": -29224.043008694527
+          }
+        },
+        {
+          "id": "axis:y",
+          "label": "Y Section frame",
+          "legendVisible": true,
+          "axis": "y",
+          "plane": {
+            "enabled": false,
+            "positionM": -14276.695748094688,
+            "invert": false
+          },
+          "frame": {}
+        },
+        {
+          "id": "axis:z",
+          "label": "Z Section frame",
+          "legendVisible": true,
+          "axis": "z",
+          "plane": {
+            "enabled": false,
+            "positionM": -2200,
+            "invert": false
+          },
+          "frame": {}
+        }
+      ],
+      "sceneSectionActiveFrameId": "axis:x",
+      "sceneSectionFrameEnabled": true,
+      "sceneSectionActiveAxis": "x",
+      "sceneSectionPlanes": {
+        "x": {
+          "enabled": true,
+          "positionM": -5753.338077166321,
+          "invert": true
+        },
+        "y": {
+          "enabled": false,
+          "positionM": -14276.695748094688,
+          "invert": false
+        },
+        "z": {
+          "enabled": false,
+          "positionM": -2200,
+          "invert": false
+        }
+      },
+      "sceneSectionFrameByAxis": {
+        "x": {
+          "axisAlignment": "cardinal",
+          "axisAHeading": "Latitude (°)",
+          "axisBHeading": "Elevation (km)",
+          "axisDatum": "latlon",
+          "minBM": -29224.043008694527
+        }
+      },
+      "sceneSectionWindowEnabled": true,
+      "sceneSectionWindowActiveAxis": "x",
+      "sceneSectionWindowByAxis": {
+        "x": {
+          "minAlongM": -31841.698353892432,
+          "maxAlongM": 20526.81071996565,
+          "bottomElevationM": -29224.043008694527
+        },
+        "y": {
+          "minAlongM": -118667.98253963646,
+          "maxAlongM": 34046.04347254154,
+          "bottomElevationM": -25000
+        }
+      },
+      "sceneSectionHelperVisible": false
+    }
+  },
+  "visibilityOverrides": {
+    "utah-forge-phase3-working-area": false,
+    "terrain": true,
+    "utah-forge-mt-stations": true,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-resistivity-full-density": true,
+    "utah-forge-mt-resistivity-volume": true,
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": true,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-phase3-seismic-browser": false,
+    "utah-forge-topo-clouds": true,
+    "naip-2024-tile-diagnostics": false,
+    "utah-forge-phase3-demo-boreholes": true,
+    "utah-forge-topo-graticule": false
+  },
+  "overlayLayout": {
+    "x": 0.692890625,
+    "y": 0,
+    "width": 0.307109375,
+    "height": 0.27681304893350067
+  },
+  "cameraObjectFocus": {
+    "targetId": "product:utah-forge-mt-stations:FRG19070",
+    "worldPoint": [
+      -6511.182934297071,
+      -10099.655743741318,
+      2523.9792096363435
+    ]
+  },
+  "sceneOverrides": {
+    "lightMode": false
+  }
+}

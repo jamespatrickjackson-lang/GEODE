@@ -45,7 +45,7 @@
       "mtThresholdSurfaceVisibility": {
         "conductive-le-10-ohm-m": false,
         "conductive-le-30-ohm-m": false,
-        "resistive-ge-1000-ohm-m": true
+        "resistive-ge-1000-ohm-m": false
       },
       "mtThresholdSurfaceWireframe": false,
       "opacity": 1,
@@ -85,7 +85,7 @@
           "source": "precomputed"
         },
         "resistive-ge-1000-ohm-m": {
-          "visible": true,
+          "visible": false,
           "label": ">=1000 Ohm-m",
           "color": "#ff637a",
           "comparison": ">=",
@@ -392,7 +392,7 @@
       "seismicComparisonSpacingM": 650,
       "seismicMtCoRender": "integrated",
       "seismicLegendVisible": true,
-      "opacity": 0.25
+      "opacity": 0.65
     }
   },
   "accentColor": "#f27826",

@@ -23,5 +23,37 @@
     "duration": 3000,
     "easing": "easeInOutCubic"
   },
-  "holdDuration": 4000
+  "holdDuration": 4000,
+  "layerOverrides": {
+    "utah-forge-mt-resistivity-full-density": {
+      "opacity": 0.05,
+      "sectionIsoEnabled": false,
+      "sectionIsoLinesVisible": true,
+      "sectionIsoBandsVisible": true,
+      "sectionIsoTargetIds": {},
+      "sectionIsoMin": -2,
+      "sectionIsoMax": 4.5,
+      "sectionIsoLevelCount": 32,
+      "sectionIsoLineWidth": 2.6,
+      "sectionIsoLineStyle": "solid",
+      "sectionIsoBandOpacity": 0.32,
+      "sectionIsoFillOffset": 0,
+      "sectionIsoSourceOpacity": 0,
+      "scalarColorLow": "#2cc9ff",
+      "scalarColorMid": "#f8dd6d",
+      "scalarColorHigh": "#ff637a",
+      "scalarBlendMin": 0.139879,
+      "scalarBlendMax": 3.937122,
+      "scalarDisplayMin": 0.139879,
+      "scalarDisplayMax": 3.937122,
+      "scalarFocusMin": -2,
+      "scalarFocusMax": 4.5,
+      "scalarInclusionMode": "all-valid",
+      "scalarMidpoint": 0.5,
+      "scalarContrast": 1.05,
+      "scalarNoiseThreshold": 0,
+      "scalarDistanceLightStrength": 0.04,
+      "pointSizePx": 1
+    }
+  }
 }

@@ -177,6 +177,50 @@
         "labelText": "FORGE surface facility / orientation block",
         "labelLiftM": 25.5
       }
+    },
+    "utah-forge-mt-resistivity-threshold-surfaces": {
+      "mtSurfaceBoundaryOrder": [
+        "conductive-le-10-ohm-m",
+        "conductive-le-30-ohm-m",
+        "resistive-ge-1000-ohm-m"
+      ],
+      "mtThresholdSurfaceVisibility": {
+        "conductive-le-10-ohm-m": false,
+        "conductive-le-30-ohm-m": false,
+        "resistive-ge-1000-ohm-m": false
+      },
+      "mtSurfaceBoundariesById": {
+        "conductive-le-10-ohm-m": {
+          "visible": false,
+          "label": "<=10 Ohm-m",
+          "color": "#2cc9ff",
+          "comparison": "<=",
+          "thresholdOhmM": 10,
+          "thresholdLog10": 1,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "conductive-le-30-ohm-m": {
+          "visible": false,
+          "label": "<=30 Ohm-m",
+          "color": "#38f0b3",
+          "comparison": "<=",
+          "thresholdOhmM": 30,
+          "thresholdLog10": 1.477121,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "resistive-ge-1000-ohm-m": {
+          "visible": false,
+          "label": ">=1000 Ohm-m",
+          "color": "#ff637a",
+          "comparison": ">=",
+          "thresholdOhmM": 1000,
+          "thresholdLog10": 3,
+          "opacity": 1,
+          "source": "precomputed"
+        }
+      }
     }
   }
 }

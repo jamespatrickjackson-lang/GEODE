@@ -34,7 +34,8 @@
       "scalarEdgeLineWidth": 3,
       "scalarNoiseThreshold": 0.6,
       "scalarEdgeAverage": 0.75,
-      "scalarLegendVisible": false
+      "scalarLegendVisible": false,
+      "opacity": 0.1
     },
     "utah-forge-phase3-seismic-browser": {
       "opacity": 0,
@@ -163,7 +164,7 @@
     "utah-forge-phase3-working-area": true,
     "utah-forge-phase3-demo-boreholes": true,
     "utah-forge-phase3-seismic-browser": false,
-    "utah-forge-mt-resistivity-threshold-surfaces": true,
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
     "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-slices": false,
     "utah-forge-mt-top-surface": false
