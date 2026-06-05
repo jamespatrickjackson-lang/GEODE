@@ -59,8 +59,9 @@ Do not assume Utah FORGE is the product standard. It is one case study probing M
 
 Current Utah FORGE authoring savepoint: the active deck front block starts with
 pages `156_page`, `157_page`, `158_page`, then the duplicated MT/section review
-pages `159_page`, `166_page`, `160_page`, `164_page`, followed by the reordered
-resistivity, section, and context pages in `project.json` `pageOrder`.
+pages `159_page`, `166_page`, `167_page`, `160_page`, `164_page`, followed by
+the reordered resistivity, section, and context pages in `project.json`
+`pageOrder`.
 `165_page` is the current staff Page Archive entry through
 `archivedPageOrder`; `pages/_archive/166_page.json` is delete-recovery storage,
 not staff archive state.
