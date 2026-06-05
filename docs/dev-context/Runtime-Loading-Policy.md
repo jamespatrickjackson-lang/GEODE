@@ -33,7 +33,7 @@ and built output remain `pageOrder` only.
 | Page application | `PageController` applies first-page visibility, styles, page scene, overlays, and camera. Page transitions fade layer visibility/style state rather than changing what has been allocated. | `src/pages/PageController.tsx` |
 | Product-aware transitions | Page transitions must preserve product/object identity inside visible layers. MT scalar-volume source opacity, section ISO overlays, threshold boundaries, and seismic section/volume source opacity are render entities, not generic layer opacity. | `src/scene/SceneManager.ts`, `tests/utah-forge/mt-rendering.spec.ts` |
 | Scene overlays | Scene overlays load eagerly from `environment.sceneOverlays`; per-page activation controls opacity/visibility. | `src/scene.ts`, `src/pages/effective.ts` |
-| Project scale | Observed layer/page counts: Utah FORGE 22 layers / 99 active pages / 1 staff archived page, Case Study B 28 layers / 6 pages, Woodjam 21 layers / 4 pages, Base GUI 2 layers / 1 page. | Project manifests/environments |
+| Project scale | Observed layer/page counts: Utah FORGE 22 layers / 100 active pages / 1 staff archived page, Case Study B 28 layers / 6 pages, Woodjam 21 layers / 4 pages, Base GUI 2 layers / 1 page. | Project manifests/environments |
 
 Observed conclusion: current runtime behavior appears manifest-eager at scene mount. Visibility and page overrides control presentation state, but they do not appear to be a loading/allocation boundary.
 

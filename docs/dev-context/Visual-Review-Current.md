@@ -58,9 +58,9 @@ narrow patch
   - Composition guide and presentation-frame line thickness defaults to `lineThickness: 0.25`, half of the earlier guide/frame width.
   - Human visual judgment is the first acceptance filter for composition.
   - The current Utah FORGE deck savepoint fronts pages `156_page`, `157_page`,
-    `158_page`, `159_page`, `166_page`, `160_page`, and `164_page`, then
-    continues through the reordered resistivity, section, seismic, and context
-    review pages.
+    `158_page`, `159_page`, `166_page`, `167_page`, `160_page`, and
+    `164_page`, then continues through the reordered resistivity, section,
+    seismic, and context review pages.
     `165_page` is the only staff Page Archive entry in `archivedPageOrder`;
     `pages/_archive/166_page.json` is delete-recovery storage only.
 - Still wrong / under review:

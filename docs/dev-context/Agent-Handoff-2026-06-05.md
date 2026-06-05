@@ -21,13 +21,13 @@ runtime savepoint.
 ## Utah FORGE Savepoint
 
 - `project.json` active `pageOrder` now starts with `156_page`, `157_page`,
-  `158_page`, `159_page`, `166_page`, `160_page`, and `164_page`, then
-  continues through the reordered resistivity, section, seismic, and context
-  review pages.
+  `158_page`, `159_page`, `166_page`, `167_page`, `160_page`, and `164_page`,
+  then continues through the reordered resistivity, section, seismic, and
+  context review pages.
 - New active authoring pages: `159_page`, `160_page`, `161_page`, `162_page`,
-  `163_page`, `164_page`, `165_page`, and `166_page`.
+  `163_page`, `164_page`, `165_page`, `166_page`, and `167_page`.
 - Empty overlay text files were saved for `159_page`, `160_page`, `161_page`,
-  `163_page`, `164_page`, and `166_page`.
+  `163_page`, `164_page`, `166_page`, and `167_page`.
 - `archivedPageOrder` contains `165_page`.
 - `projects/utah-forge/pages/_archive/166_page.json` remains delete-recovery
   storage and is not part of the staff Page Archive.
