@@ -90,6 +90,27 @@ export interface LayerTransitionSnapshot extends LayerOpacityTween {
   style?: EditableStyle;
 }
 
+export type SectionIsoOverlayTransitionRootKind =
+  | "mt-volume"
+  | "seismic-volume"
+  | "seismic-resistivity";
+
+export interface SectionIsoOverlayTransitionRoot {
+  kind: SectionIsoOverlayTransitionRootKind;
+  layerId: string;
+  group: THREE.Group;
+  role: "source" | "target";
+}
+
+export interface SectionIsoOverlayTransition {
+  sourceRoots: SectionIsoOverlayTransitionRoot[];
+  targetRoots: SectionIsoOverlayTransitionRoot[];
+  startMs: number;
+  durationMs: number;
+  easing: EasingName;
+  targetOpacity: number;
+}
+
 export interface ScalarStyleTween extends LayerOpacityTween {
   id: string;
   fromStyle: EditableStyle;

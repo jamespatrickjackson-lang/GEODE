@@ -248,3 +248,32 @@ transition timing.
 
 Evidence: `Scene-Section-Transition-Fade-Audit-2026-06-05.md`,
 `tests/tools/scene-section-transition-behavior-source.test.mjs`.
+
+## TRD-011 - Section ISO Overlay Roots Crossfade During Page Transitions
+
+Status: accepted
+
+Problem: Section ISO bands and isolines are generated overlay roots. Even after
+TRD-010 made section masks and helper opacity transition-aware, target cut ISO
+roots could still be created only at final full apply, causing bands or lines to
+appear in one frame.
+
+Decision: Section ISO overlay roots are derived transition-scene entities. On
+page-transition start, source roots are snapshotted, target roots are built once
+under the target style, and source/target roots crossfade on the same
+`transition.duration` and `transition.easing` used by the page transition.
+Delayed height-sampler retries attach target roots at the current Section ISO
+transition opacity.
+
+Consequences: Section ISO material opacity remains composed from authored
+opacity, transition opacity, and threshold-surface attenuation. Geometry or
+identity changes crossfade source and target roots rather than morphing contour
+geometry every frame. Final full apply may land exact target state, but must not
+make Section ISO roots appear at full opacity after the tween.
+
+Revisit when: Section ISO contour geometry itself needs continuous morphing, or
+when a non-page transition timing source is introduced for derived section
+overlays.
+
+Evidence: `tests/tools/section-iso-transition-smoothing-source.test.mjs`,
+`docs/dev-context/Section-Iso-Transition-Smoothing-Temp-Log-2026-06-05.md`.

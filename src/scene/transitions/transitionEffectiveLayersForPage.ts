@@ -316,6 +316,7 @@ export function transitionEffectiveLayersForPage(
   this.workingAreaFocusTween = null;
   this.sceneSectionStyleTween = null;
   this.sceneSectionHelperTransitionOpacity = 1;
+  this.clearSectionIsoOverlayTransition?.();
   this.clearLayerTransitionSnapshots();
   this.lastEffectiveEnv = toEnvironment;
   this.lastEffectivePage = toPage;
@@ -598,6 +599,13 @@ export function transitionEffectiveLayersForPage(
       }),
     );
   }
+  this.beginSectionIsoOverlayTransition(
+    fromSceneSectionStyle,
+    targetSceneSectionStyle,
+    now,
+    duration,
+    easing,
+  );
 
   this.sceneSectionReapplySuspended = true;
   try {

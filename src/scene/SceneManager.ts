@@ -79,6 +79,7 @@ import {
   updateMtVolumeCutIsoOverlaysImpl,
   updateSeismicResistivityIsoOverlaysImpl,
   updateSeismicVolumeCutIsoOverlaysImpl,
+  type SectionIsoOverlayUpdateOptions,
 } from "./isoOverlays/volumeCutIsoOverlays";
 import {
   type LayerOpacityTween,
@@ -87,6 +88,8 @@ import {
   type ProductTransitionDecision,
   type ResolvedLayerRenderState,
   type ScalarStyleTween,
+  type SectionIsoOverlayTransition,
+  type SectionIsoOverlayTransitionRootKind,
   type SceneSectionStyleTween,
   type SceneTransitionContext,
   type WorkingAreaFocusStyleTween,
@@ -763,6 +766,8 @@ export class SceneManager {
   private layerTweens = new Map<string, LayerOpacityTween>();
   private scalarStyleTweens = new Map<string, ScalarStyleTween>();
   private layerTransitionSnapshots = new Map<string, LayerTransitionSnapshot>();
+  private sectionIsoOverlayTransition: SectionIsoOverlayTransition | null =
+    null;
   private workingAreaFocusTween: WorkingAreaFocusStyleTween | null = null;
   sceneSectionStyleTween: SceneSectionStyleTween | null = null;
   sceneSectionHelperTransitionOpacity = 1;
@@ -1704,6 +1709,173 @@ export class SceneManager {
       durationMs,
       easing,
     };
+  }
+
+  private sectionIsoOverlayGroupsForTransition(): Array<{
+    kind: SectionIsoOverlayTransitionRootKind;
+    layerId: string;
+    group: THREE.Group;
+  }> {
+    const groups: Array<{
+      kind: SectionIsoOverlayTransitionRootKind;
+      layerId: string;
+      group: THREE.Group;
+    }> = [];
+    const mtLayer = this.layers.get(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID);
+    const mtGroup = mtLayer?.userData.mtVolumeSectionIsoOverlayGroup as
+      | THREE.Group
+      | undefined;
+    if (mtGroup?.parent) {
+      groups.push({
+        kind: "mt-volume",
+        layerId: UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+        group: mtGroup,
+      });
+    }
+    const seismicLayer = this.layers.get(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID);
+    const seismicVolumeGroup = seismicLayer?.userData
+      .seismicVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
+    if (seismicVolumeGroup?.parent) {
+      groups.push({
+        kind: "seismic-volume",
+        layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+        group: seismicVolumeGroup,
+      });
+    }
+    const seismicResistivityGroup = seismicLayer?.userData
+      .seismicResistivitySectionIsoOverlayGroup as THREE.Group | undefined;
+    if (seismicResistivityGroup?.parent) {
+      groups.push({
+        kind: "seismic-resistivity",
+        layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+        group: seismicResistivityGroup,
+      });
+    }
+    return groups;
+  }
+
+  clearSectionIsoOverlayTransition(): void {
+    const transition = this.sectionIsoOverlayTransition;
+    if (!transition) return;
+    for (const root of transition.targetRoots) {
+      this.applyRenderOpacityToTree(root.group, 1, 1);
+    }
+    for (const root of transition.sourceRoots) {
+      root.group.parent?.remove(root.group);
+      disposeObjectTree(root.group);
+    }
+    this.sectionIsoOverlayTransition = null;
+  }
+
+  beginSectionIsoOverlayTransition(
+    fromSceneSectionStyle: EditableStyle,
+    toSceneSectionStyle: EditableStyle,
+    startMs: number,
+    durationMs: number,
+    easing: EasingName,
+  ): void {
+    void fromSceneSectionStyle;
+    void toSceneSectionStyle;
+    this.clearSectionIsoOverlayTransition();
+    if (durationMs <= 0) return;
+    const sourceRoots = this.sectionIsoOverlayGroupsForTransition().map(
+      ({ kind, layerId, group }) => {
+        const snapshot = this.cloneTransitionObjectTree(
+          layerId,
+          group,
+        ) as THREE.Group;
+        snapshot.name = `${group.name || "section-iso-overlay"}-transition-source`;
+        snapshot.userData = {
+          ...snapshot.userData,
+          sectionIsoOverlayTransitionRoot: true,
+          sectionIsoOverlayTransitionRole: "source",
+        };
+        const parent = group.parent ?? this.scene;
+        parent.add(snapshot);
+        this.applyRenderOpacityToTree(snapshot, 1, 1);
+        return {
+          kind,
+          layerId,
+          group: snapshot,
+          role: "source" as const,
+        };
+      },
+    );
+    this.sectionIsoOverlayTransition = {
+      sourceRoots,
+      targetRoots: [],
+      startMs,
+      durationMs,
+      easing,
+      targetOpacity: 0,
+    };
+  }
+
+  currentSectionIsoOverlayTransitionOpacity(): number {
+    return this.sectionIsoOverlayTransition?.targetOpacity ?? 1;
+  }
+
+  registerSectionIsoOverlayTransitionTargetRoot(
+    kind: SectionIsoOverlayTransitionRootKind,
+    layerId: string,
+    group: THREE.Group,
+  ): void {
+    const transition = this.sectionIsoOverlayTransition;
+    if (!transition) return;
+    if (transition.targetRoots.some((root) => root.group === group)) {
+      this.applyRenderOpacityToTree(group, 1, transition.targetOpacity);
+      return;
+    }
+    group.userData.sectionIsoOverlayTransitionRoot = true;
+    group.userData.sectionIsoOverlayTransitionRole = "target";
+    transition.targetRoots.push({
+      kind,
+      layerId,
+      group,
+      role: "target",
+    });
+    this.applyRenderOpacityToTree(group, 1, transition.targetOpacity);
+  }
+
+  tickSectionIsoOverlayTransition(nowMs: number, eased?: number): boolean {
+    const transition = this.sectionIsoOverlayTransition;
+    if (!transition) return false;
+    const progress =
+      typeof eased === "number" && Number.isFinite(eased)
+        ? clamp01(eased)
+        : transition.durationMs <= 0
+          ? 1
+          : easeProgress(
+              (nowMs - transition.startMs) / transition.durationMs,
+              transition.easing,
+            );
+    const targetOpacity = clamp01(progress);
+    const sourceOpacity = 1 - targetOpacity;
+    transition.targetOpacity = targetOpacity;
+    for (const root of transition.sourceRoots) {
+      this.applyRenderOpacityToTree(root.group, 1, sourceOpacity);
+    }
+    for (const root of transition.targetRoots) {
+      this.applyRenderOpacityToTree(root.group, 1, targetOpacity);
+    }
+    return true;
+  }
+
+  commitSectionIsoOverlayTransition(): void {
+    const transition = this.sectionIsoOverlayTransition;
+    if (!transition) return;
+    this.tickSectionIsoOverlayTransition(
+      transition.startMs + transition.durationMs,
+      1,
+    );
+    for (const root of transition.targetRoots) {
+      this.applyRenderOpacityToTree(root.group, 1, 1);
+    }
+    for (const root of transition.sourceRoots) {
+      root.group.parent?.remove(root.group);
+      disposeObjectTree(root.group);
+    }
+    this.sectionIsoOverlayTransition = null;
   }
 
   addSceneSectionHelperObjectToTransitionSnapshot(
@@ -3132,8 +3304,11 @@ export class SceneManager {
     return buildMtVolumeCutMeshImpl.call(this, mesh, plane, options);
   }
 
-  updateMtVolumeCutIsoOverlays(style: EditableStyle): void {
-    return updateMtVolumeCutIsoOverlaysImpl.call(this, style);
+  updateMtVolumeCutIsoOverlays(
+    style: EditableStyle,
+    options?: SectionIsoOverlayUpdateOptions,
+  ): void {
+    return updateMtVolumeCutIsoOverlaysImpl.call(this, style, options);
   }
 
   seismicVolumeIsoOverlayGroup(seismicLayer: THREE.Group): THREE.Group {
@@ -3169,12 +3344,18 @@ export class SceneManager {
     return buildSeismicVolumeCutMeshImpl.call(this, mesh, plane, options);
   }
 
-  updateSeismicVolumeCutIsoOverlays(style: EditableStyle): void {
-    return updateSeismicVolumeCutIsoOverlaysImpl.call(this, style);
+  updateSeismicVolumeCutIsoOverlays(
+    style: EditableStyle,
+    options?: SectionIsoOverlayUpdateOptions,
+  ): void {
+    return updateSeismicVolumeCutIsoOverlaysImpl.call(this, style, options);
   }
 
-  updateSeismicResistivityIsoOverlays(style: EditableStyle): void {
-    return updateSeismicResistivityIsoOverlaysImpl.call(this, style);
+  updateSeismicResistivityIsoOverlays(
+    style: EditableStyle,
+    options?: SectionIsoOverlayUpdateOptions,
+  ): void {
+    return updateSeismicResistivityIsoOverlaysImpl.call(this, style, options);
   }
 
   mtSurfaceBoundaryDefinitionsFromGroup(
@@ -3775,6 +3956,7 @@ export class SceneManager {
     this.workingAreaFocusTween = null;
     this.sceneSectionStyleTween = null;
     this.sceneSectionHelperTransitionOpacity = 1;
+    this.clearSectionIsoOverlayTransition();
     this.clearLayerTransitionSnapshots();
     this.activeSceneTransitionContext = null;
     this.lastEffectiveEnv = environment;
@@ -3800,6 +3982,7 @@ export class SceneManager {
     this.workingAreaFocusTween = null;
     this.sceneSectionStyleTween = null;
     this.sceneSectionHelperTransitionOpacity = 1;
+    this.clearSectionIsoOverlayTransition();
     this.clearLayerTransitionSnapshots();
     this.activeSceneTransitionContext = null;
     this.lastEffectiveEnv = environment;

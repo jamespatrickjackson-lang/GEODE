@@ -30,6 +30,11 @@ import {
   type ScalarSectionIsoOverlayUpdateDebugState,
   type ScalarSectionIsoOptions,
 } from "./sectionIsoOverlay";
+
+export interface SectionIsoOverlayUpdateOptions {
+  preserveExisting?: boolean;
+  initialTransitionOpacity?: number;
+}
 import type {
   ResolvedSceneSectionFrame,
   ResolvedSceneSectionPlane,
@@ -916,7 +921,11 @@ export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: Res
     return { mesh: cut, values, alphaValues, hardMaskValues, debug };
   }
 
-export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle): void {
+export function updateMtVolumeCutIsoOverlaysImpl(
+  this: any,
+  style: EditableStyle,
+  options?: SectionIsoOverlayUpdateOptions,
+): void {
     const startedAt = performance.now();
     const debug: MtVolumeCutIsoUpdateDebugState = {
       policy: "full-rebuild",
@@ -960,7 +969,9 @@ export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle
     }
 
     let stageStart = performance.now();
-    this.clearMtVolumeCutIsoOverlays(volumeLayer);
+    if (!options?.preserveExisting) {
+      this.clearMtVolumeCutIsoOverlays(volumeLayer);
+    }
     debug.clearMs += cutIsoDebugMs(performance.now() - stageStart);
 
     if (style.sectionIsoEnabled !== true) {
@@ -1000,6 +1011,11 @@ export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle
       void getHeightSampler().then(() => {
         this.updateMtVolumeCutIsoOverlays(
           this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID),
+          {
+            ...options,
+            initialTransitionOpacity:
+              this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+          },
         );
       });
     }
@@ -1154,9 +1170,25 @@ export function updateMtVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle
     }
     if (overlayGroup.children.length === 0) {
       stageStart = performance.now();
-      this.clearMtVolumeCutIsoOverlays(volumeLayer);
+      if (!options?.preserveExisting) {
+        this.clearMtVolumeCutIsoOverlays(volumeLayer);
+      }
       debug.disposeMs += cutIsoDebugMs(performance.now() - stageStart);
+      finish();
+      return;
     }
+    this.registerSectionIsoOverlayTransitionTargetRoot?.(
+      "mt-volume",
+      UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+      overlayGroup,
+    );
+    this.applyRenderOpacityToTree?.(
+      overlayGroup,
+      1,
+      options?.initialTransitionOpacity ??
+        this.currentSectionIsoOverlayTransitionOpacity?.() ??
+        1,
+    );
     finish();
   }
 
@@ -1521,10 +1553,16 @@ function buildSeismicSectionResistivityIsoMesh(
   return { mesh: helper, values, alphaValues, hardMaskValues };
 }
 
-export function updateSeismicVolumeCutIsoOverlaysImpl(this: any, style: EditableStyle): void {
+export function updateSeismicVolumeCutIsoOverlaysImpl(
+  this: any,
+  style: EditableStyle,
+  options?: SectionIsoOverlayUpdateOptions,
+): void {
     const seismicLayer = this.layers.get(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID);
     if (!seismicLayer) return;
-    this.clearSeismicVolumeCutIsoOverlays(seismicLayer);
+    if (!options?.preserveExisting) {
+      this.clearSeismicVolumeCutIsoOverlays(seismicLayer);
+    }
     if (style.seismicIsoSource === "mt-resistivity") return;
     if (style.sectionIsoEnabled !== true || !seismicLayer.visible) return;
     const mesh = this.activeSeismicVolumeMesh();
@@ -1547,6 +1585,11 @@ export function updateSeismicVolumeCutIsoOverlaysImpl(this: any, style: Editable
       void getHeightSampler().then(() => {
         this.updateSeismicVolumeCutIsoOverlays(
           this.styleForLayer(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID),
+          {
+            ...options,
+            initialTransitionOpacity:
+              this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+          },
         );
       });
     }
@@ -1671,14 +1714,35 @@ export function updateSeismicVolumeCutIsoOverlaysImpl(this: any, style: Editable
       }
     }
     if (overlayGroup.children.length === 0) {
-      this.clearSeismicVolumeCutIsoOverlays(seismicLayer);
+      if (!options?.preserveExisting) {
+        this.clearSeismicVolumeCutIsoOverlays(seismicLayer);
+      }
+      return;
     }
+    this.registerSectionIsoOverlayTransitionTargetRoot?.(
+      "seismic-volume",
+      UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+      overlayGroup,
+    );
+    this.applyRenderOpacityToTree?.(
+      overlayGroup,
+      1,
+      options?.initialTransitionOpacity ??
+        this.currentSectionIsoOverlayTransitionOpacity?.() ??
+        1,
+    );
   }
 
-export function updateSeismicResistivityIsoOverlaysImpl(this: any, style: EditableStyle): void {
+export function updateSeismicResistivityIsoOverlaysImpl(
+  this: any,
+  style: EditableStyle,
+  options?: SectionIsoOverlayUpdateOptions,
+): void {
     const seismicLayer = this.layers.get(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID);
     if (!seismicLayer) return;
-    this.clearSeismicResistivityIsoOverlays(seismicLayer);
+    if (!options?.preserveExisting) {
+      this.clearSeismicResistivityIsoOverlays(seismicLayer);
+    }
     if (style.seismicIsoSource !== "mt-resistivity") return;
     if (style.sectionIsoEnabled !== true || !seismicLayer.visible) return;
     const mtMesh = findMtResistivityVolumeMesh(this);
@@ -1839,6 +1903,11 @@ export function updateSeismicResistivityIsoOverlaysImpl(this: any, style: Editab
         void getHeightSampler().then(() => {
           this.updateSeismicResistivityIsoOverlays(
             this.styleForLayer(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID),
+            {
+              ...options,
+              initialTransitionOpacity:
+                this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+            },
           );
         });
       }
@@ -1925,6 +1994,21 @@ export function updateSeismicResistivityIsoOverlaysImpl(this: any, style: Editab
     }
 
     if (overlayGroup.children.length === 0) {
-      this.clearSeismicResistivityIsoOverlays(seismicLayer);
+      if (!options?.preserveExisting) {
+        this.clearSeismicResistivityIsoOverlays(seismicLayer);
+      }
+      return;
     }
+    this.registerSectionIsoOverlayTransitionTargetRoot?.(
+      "seismic-resistivity",
+      UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+      overlayGroup,
+    );
+    this.applyRenderOpacityToTree?.(
+      overlayGroup,
+      1,
+      options?.initialTransitionOpacity ??
+        this.currentSectionIsoOverlayTransitionOpacity?.() ??
+        1,
+    );
   }

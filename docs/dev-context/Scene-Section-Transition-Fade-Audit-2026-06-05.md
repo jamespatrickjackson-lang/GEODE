@@ -77,7 +77,9 @@ traces should fade in or out on the same transition clock.
   helpers. Outgoing helper snapshots are not allowed to carry source
   section-frame studio controls into inactive or unrelated target pages.
 - Transition frames update material/shader uniforms and helper opacity only.
-  Helper rebuilds and cut-ISO refreshes remain start/final-commit work.
+  Helper rebuilds remain start/final-commit work. Section ISO cut-overlay
+  roots now follow the TRD-011 root crossfade lifecycle instead of final-only
+  refresh.
 - Public clip, terrain texture identity, bounds, material preset, edge fade,
   edge outline, shader identity, terrain geometry, lighting, sun, and camera
   path remain out of scope.

@@ -315,6 +315,9 @@ defaults, depth/compositing rules) that the contract enforces.
 - Section ISO overlay opacity is composed, not overwritten. Effective opacity
   equals authored overlay opacity multiplied by page/layer transition opacity
   and the threshold-surface occlusion attenuation.
+- Section ISO bands and lines crossfade by overlay root during page transitions.
+  Entering roots fade in, exiting roots fade out, and geometry/identity changes
+  crossfade source and target roots rather than snapping at final commit.
 - ISO line attenuation through MT threshold surfaces remains `0.8^surfaceCount`,
   with short-frame smoothing so camera motion does not cause flicker.
 - Compatible section-frame transitions interpolate numeric frame geometry by

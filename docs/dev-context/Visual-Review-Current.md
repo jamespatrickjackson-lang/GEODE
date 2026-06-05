@@ -49,7 +49,7 @@ narrow patch
   - Seismic product labels are source-backed and grouped by line family /
     processing stage. Figure annotations are an authored presentation overlay
     for section products, not a replacement for source product names.
-  - Section ISO overlay opacity is composed from authored opacity, transition opacity, and threshold-surface attenuation.
+  - Section ISO overlay opacity is composed from authored opacity, transition opacity, and threshold-surface attenuation; Section ISO roots crossfade on page transitions when bands/lines enter, exit, or change geometry.
   - Compatible section-frame page changes slide/interpolate; incompatible helper states crossfade by outgoing snapshot plus incoming fade.
   - Camera Studio is split from Post Processing. Camera Studio owns render preset, lens types/FOV, and double-click focus timing.
   - Post Processing owns Depth of Field, Tilt-Shift, Post Production, Image finish, Glow, Film / Optics, Motion Trails, Composition Guides, Presentation Frame, and Contact Depth.

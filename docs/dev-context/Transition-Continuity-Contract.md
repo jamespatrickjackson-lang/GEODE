@@ -102,6 +102,7 @@ Current allowed implementation scope:
   by TRD-009.
 - Narrow section-scene execution owner for scene section mask alpha and helper
   opacity accepted by TRD-010.
+- Narrow Section ISO derived-root crossfade owner accepted by TRD-011.
 
 Current excluded implementation scope:
 
@@ -110,7 +111,7 @@ Current excluded implementation scope:
 - Contour cadence or LOD changes.
 - Broad section-helper behavior changes outside the TRD-010 mask/helper-opacity
   transition owner.
-- Isoband or ground-line remediation.
+- Broad ground-line remediation outside existing helper/height-sampler paths.
 - Snapshot execution changes.
 - Page JSON or fixture composition edits.
 - Wiring the pure classifier assignments into broad scene mutation.

@@ -73,7 +73,8 @@ scalar-volume source opacity, seismic section/volume source opacity, and
 Section ISO overlay opacity must be composed with layer/page fade opacity, not
 overwritten by it. This prevents hidden section sources from appearing during
 camera/page transitions and keeps ISO overlays from changing color or
-brightness mid-transition.
+brightness mid-transition. Section ISO overlay roots also crossfade as derived
+transition-scene entities when bands/lines enter, exit, or change geometry.
 
 Background and fog are page-transition environment-scene channels. Renderer
 background, scene fog color/density, topo fog uniforms, layer fog density, and

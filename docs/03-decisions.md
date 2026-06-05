@@ -1058,3 +1058,15 @@ fake-cloud looks.
 **Why:** Sectioned content uses outside-opacity settings as presentation state. Snapping the mask while the rest of the page transition eases creates a visible mismatch, especially across pages that add/remove frames or change hidden-object opacity. Keeping frame controls topmost preserves direct manipulation over clipped terrain and transparent products.
 
 **Trade-off accepted:** This decision does not animate terrain material preset identity, texture URL/cache key, bounds, public surface clip settings, material edge fade, edge outline, shader identity, terrain geometry, lighting, sun visuals, or camera path. Those remain discrete unless a later decision expands the transition-scene owner.
+
+## DEC-099 - Section ISO overlay roots crossfade during page transitions
+
+**Supersedes:** DEC-098 only where it says cut-ISO refreshes remain start/final-commit work.
+
+**Considered:** keep Section ISO bands and isolines as final full-apply rebuilds, or make their derived overlay roots participate in the page transition clock.
+
+**Chose:** Section ISO overlay roots are transition-scene derived entities. During page navigation, current Section ISO roots are snapshotted before target style application, target roots are built once and attached at the current Section ISO transition opacity, and source/target roots crossfade on the target page's `transition.duration` and `transition.easing`. Enter transitions fade target roots from `0` to authored opacity; exit transitions fade source roots to `0`; geometry/identity changes crossfade source and target roots. Delayed height-sampler rebuilds must attach at the current transition opacity, not full opacity.
+
+**Why:** Section ISO bands and lines are derived geometry, not just material uniforms. Leaving target cut ISO refresh to final full apply caused bands and isolines to appear in one frame even while section masks and helper opacity eased correctly.
+
+**Trade-off accepted:** This is opacity/crossfade smoothing, not per-frame contour geometry morphing. Terrain material preset identity, texture URL/cache key, bounds, public clip, edge fade, edge outline, shader identity, terrain geometry, lighting, sun visuals, and camera path remain outside this transition owner.

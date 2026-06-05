@@ -191,6 +191,7 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
         ? 1
         : this.sceneSectionHelperOpacityForTween(tween, eased);
       if (!done) {
+        this.tickSectionIsoOverlayTransition(nowMs, eased);
         this.applySceneSectionPlanes(style, {
           transitionFrame: true,
           maskTransition,
@@ -199,11 +200,13 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
         sceneSectionApplyMode = "transition-frame";
         if (tween.discreteChanged) tween.appliedDiscreteTarget = true;
       } else {
+        this.tickSectionIsoOverlayTransition(nowMs, 1);
         this.applySceneSectionPlanes(style);
         sceneSectionApplyDebug = this.lastSceneSectionApplyDebug ?? null;
         sceneSectionApplyMode = "full";
       }
       if (done) {
+        this.commitSectionIsoOverlayTransition();
         this.sceneSectionStyleTween = null;
         this.sceneSectionHelperTransitionOpacity = 1;
       }
@@ -303,6 +306,7 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
     stageStart = performance.now();
 
     this.enforceTransitionVisibilityEnvelope();
+    this.tickSectionIsoOverlayTransition(nowMs);
     const envelopeMs = transitionDebugMs(performance.now() - stageStart);
 
     this.lastLayerTweenTickDebug = {
@@ -343,6 +347,7 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
         transition.durationMs <= 0 ||
         performance.now() - transition.startMs >= transition.durationMs;
       if (transitionDone) {
+        this.commitSectionIsoOverlayTransition?.();
         this.recordTransitionCommitAttempt?.({
           phase: "tween-completion",
           attemptedBy: "layerTweenRuntime.tickLayerTweens",

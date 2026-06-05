@@ -109,6 +109,11 @@ Section ISO / MT / seismic cut identities include the section frame id so
 multiple same-orientation frames cannot overwrite each other through the
 transition pipeline.
 
+Section ISO roots have their own derived-entity lifecycle. Page transitions
+snapshot current roots, build target roots once, and crossfade root opacity on
+the page transition clock. Target roots created by delayed height sampling must
+start at the current Section ISO transition opacity, not full opacity.
+
 ## Section-frame helper stability contract
 
 Helpers are the on-canvas visuals attached to a section frame: ISO bands, ISO
@@ -137,6 +142,9 @@ The contract:
      [layerTweenRuntime.ts:104-110](../../src/scene/transitions/layerTweenRuntime.ts#L104-L110).
    - ISO band material `uOpacity` and per-helper authored opacity move via the
      composition above.
+   - Section ISO source/target roots crossfade when Section ISO enters, exits,
+     or changes geometry/identity. The transition does not rebuild contour
+     geometry every frame.
    - Source helper snapshots are allowed only for active-to-active section
      helper changes. When the target page has section helpers inactive, source
      frame outlines, cones, ground traces, and scale helpers must not carry
@@ -279,4 +287,6 @@ Before claiming a transition fix:
   differs.
 - **Section ISO**: late readability overlay drawn on the section plane;
   authored opacity composes through transition opacity and threshold-surface
-  attenuation, never overwritten.
+  attenuation, never overwritten. Root lifecycle follows TRD-011: source roots
+  fade out, target roots fade in, and final commit lands exact target state
+  without a full-opacity snap.

@@ -149,3 +149,24 @@ Changes:
 Verification:
 
 - `tests/tools/section-iso-transition-source.test.mjs`
+
+## 2026-06-05 - Section ISO Overlay Root Crossfade
+
+Decision links: TRD-011.
+
+Changes:
+
+- Section ISO overlay roots are snapshotted at page-transition start.
+- Target roots are built once and attached at the current transition opacity.
+- Source/target roots crossfade on the page transition clock, including delayed
+  height-sampler rebuilds.
+
+Verification:
+
+- `tests/tools/section-iso-transition-smoothing-source.test.mjs`
+- `tests/tools/section-iso-transition-source.test.mjs`
+- `tests/tools/scene-section-transition-behavior-source.test.mjs`
+- `tests/tools/scene-section-helper-transition-source.test.mjs`
+- `npm run check:pages`
+- `npm run build`
+- `npm run check:workspace`
