@@ -7525,10 +7525,11 @@
     "158_page",
     "159_page",
     "166_page",
+    "167_page",
     "160_page",
     "164_page",
-    "45_resistivity_isosurfaces",
     "117_page",
+    "45_resistivity_isosurfaces",
     "140_page",
     "143_page",
     "06_mt_low_resistivity_seismic",
@@ -7631,7 +7632,7 @@
     ]
   },
   "watermark": "GeoSee Utah FORGE - Phase 3 seismic + MT",
-  "modified": "2026-06-05T18:29:15.700Z",
+  "modified": "2026-06-05T18:32:24.758Z",
   "registrationFrame": {
     "horizontalCrs": "EPSG:26912",
     "verticalDatum": "layer-specific; terrain/wells use source elevation metres, seismic products record per-product datum, time-domain seismic uses display-derived vertical scale",

@@ -135,16 +135,17 @@ function validateEnvironment() {
 
 function validatePages() {
   const project = readJson("projects/utah-forge/project.json");
-  assert.deepEqual(project.pageOrder.slice(0, 21), [
+  assert.deepEqual(project.pageOrder.slice(0, 22), [
     "156_page",
     "157_page",
     "158_page",
     "159_page",
     "166_page",
+    "167_page",
     "160_page",
     "164_page",
-    "45_resistivity_isosurfaces",
     "117_page",
+    "45_resistivity_isosurfaces",
     "140_page",
     "143_page",
     "06_mt_low_resistivity_seismic",
