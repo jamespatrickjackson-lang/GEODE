@@ -404,7 +404,7 @@ export interface ResolvedSceneSectionFrame {
   label: string;
   axis: SceneSectionAxis;
   enabled: boolean;
-  legendVisible: boolean;
+  controlsVisible: boolean;
   minAM: number;
   maxAM: number;
   minBM: number;

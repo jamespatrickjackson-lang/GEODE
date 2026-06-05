@@ -94,6 +94,118 @@
       "status": "active"
     },
     {
+      "id": "sections.scene-section",
+      "label": "Scene section planes",
+      "kind": "group",
+      "parentId": "section.sections",
+      "sourceFile": "src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx",
+      "sourceAnchor": "data-testid=\"scene-section-planes-container\"",
+      "scope": "scene-section layers",
+      "backedBy": "EditableStyle sceneSection* fields",
+      "setterRoute": "SceneSectionPlanesContainer commit",
+      "status": "active"
+    },
+    {
+      "id": "sections.scene-section.enabled",
+      "label": "Enabled",
+      "kind": "control",
+      "parentId": "sections.scene-section",
+      "sourceFile": "src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx",
+      "sourceAnchor": "data-testid=\"scene-section-enabled\"",
+      "scope": "scene-section layers",
+      "backedBy": "EditableStyle.sceneSectionEnabled",
+      "setterRoute": "SceneSectionPlanesContainer commit",
+      "status": "active"
+    },
+    {
+      "id": "sections.scene-section.legend-visible",
+      "label": "Legend",
+      "kind": "control",
+      "parentId": "sections.scene-section",
+      "sourceFile": "src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx",
+      "sourceAnchor": "data-testid=\"scene-section-legend-visible\"",
+      "scope": "scene-section layers",
+      "backedBy": "EditableStyle.sceneSectionLegendVisible",
+      "setterRoute": "SceneSectionPlanesContainer commit",
+      "status": "active"
+    },
+    {
+      "id": "sections.scene-section.axis-show",
+      "label": "Show",
+      "kind": "control-family",
+      "parentId": "sections.scene-section",
+      "sourceFile": "src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx",
+      "sourceAnchor": "data-testid={`scene-section-plane-${controlKey}-enabled`}",
+      "scope": "scene-section layers",
+      "backedBy": "EditableStyle.sceneSectionPlanes.<axis>.enabled",
+      "setterRoute": "setPlaneSpecificPatch",
+      "status": "active"
+    },
+    {
+      "id": "sections.scene-section.axis-flip",
+      "label": "Flip",
+      "kind": "control-family",
+      "parentId": "sections.scene-section",
+      "sourceFile": "src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx",
+      "sourceAnchor": "data-testid={`scene-section-plane-${controlKey}-invert`}",
+      "scope": "scene-section layers",
+      "backedBy": "EditableStyle.sceneSectionPlanes.<axis>.invert",
+      "setterRoute": "setPlaneSpecificPatch",
+      "status": "active"
+    },
+    {
+      "id": "sections.scene-section.axis-controls",
+      "label": "Controls",
+      "kind": "control-family",
+      "parentId": "sections.scene-section",
+      "sourceFile": "src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx",
+      "sourceAnchor": "data-testid={`scene-section-plane-${controlKey}-controls`}",
+      "scope": "scene-section layers",
+      "backedBy": "EditableStyle.sceneSectionFrameByAxis.<axis>.controlsVisible",
+      "setterRoute": "setFrameEntryPatch",
+      "status": "active"
+    },
+    {
+      "id": "sections.scene-section.axis-ground-trace",
+      "label": "Ground trace",
+      "kind": "control-family",
+      "parentId": "sections.scene-section",
+      "sourceFile": "src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx",
+      "sourceAnchor": "data-testid={`scene-section-frame-${controlKey}-ground-trace-visible`}",
+      "scope": "scene-section layers",
+      "backedBy": "EditableStyle.sceneSectionFrameByAxis.<axis>.groundTraceVisible",
+      "setterRoute": "setFrameEntryPatch",
+      "status": "active"
+    },
+    {
+      "id": "sections.scene-section.axis-scale-axes",
+      "label": "Scale axes",
+      "kind": "control-family",
+      "parentId": "sections.scene-section",
+      "sourceFile": "src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx",
+      "sourceAnchor": "data-testid={`scene-section-frame-${controlKey}-axes-visible`}",
+      "scope": "scene-section layers",
+      "backedBy": "EditableStyle.sceneSectionFrameByAxis.<axis>.axesVisible",
+      "setterRoute": "setFrameEntryPatch",
+      "status": "active"
+    },
+    {
+      "id": "sections.scene-section.helper-visible",
+      "label": "Global Gizmo / P Controle helper toggle",
+      "kind": "control",
+      "parentId": "sections.scene-section",
+      "scope": "scene-section layers",
+      "backedBy": "legacy EditableStyle.sceneSectionHelperVisible",
+      "setterRoute": "retired by DEC-105",
+      "status": "removed",
+      "approval": {
+        "status": "approved",
+        "approvedBy": "James via Codex",
+        "approvedAt": "2026-06-05",
+        "reason": "DEC-105 makes Controls a per-axis frame control and removes the conflicting global helper/Gizmo toggle from the section editor and quick legend."
+      }
+    },
+    {
       "id": "topo.group.surface",
       "label": "Topo Settings",
       "kind": "group",

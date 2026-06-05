@@ -58,7 +58,8 @@ const builtInFrameId = (axis: SceneSectionAxis) => `axis:${axis}`;
 type SceneSectionFrameUiEntry = {
   id: string;
   label: string;
-  legendVisible: boolean;
+  controlsVisible: boolean;
+  legendVisible?: boolean;
   axis: SceneSectionAxis;
   builtIn: boolean;
   plane: SceneSectionPlaneState;
@@ -358,23 +359,31 @@ function normalizeSceneSectionFrameEntries(
   const builtIns: SceneSectionFrameUiEntry[] = sceneSectionAxes.map((axis) => {
     const id = builtInFrameId(axis);
     const entry = explicitById.get(id);
+    const frame = {
+      ...(frameByAxis[axis] ?? {}),
+      ...(entry?.frame ?? {}),
+    };
+    const controlsVisible =
+      typeof frame.controlsVisible === "boolean"
+        ? frame.controlsVisible
+        : entry?.legendVisible === false
+          ? false
+          : styleBoolean(style, "sceneSectionHelperVisible", true);
     return {
       id,
       label:
         typeof entry?.label === "string" && entry.label.trim()
           ? entry.label
           : frameDefaultLabel(id, axis),
-      legendVisible: entry?.legendVisible !== false,
+      controlsVisible,
+      legendVisible: entry?.legendVisible,
       axis,
       builtIn: true,
       plane: {
         ...(planes[axis] ?? {}),
         ...(entry?.plane ?? {}),
       },
-      frame: {
-        ...(frameByAxis[axis] ?? {}),
-        ...(entry?.frame ?? {}),
-      },
+      frame,
     };
   });
   const custom: SceneSectionFrameUiEntry[] = [];
@@ -394,7 +403,13 @@ function normalizeSceneSectionFrameEntries(
         typeof entry.label === "string" && entry.label.trim()
           ? entry.label
           : frameDefaultLabel(entry.id, entry.axis),
-      legendVisible: entry.legendVisible !== false,
+      controlsVisible:
+        typeof entry.frame?.controlsVisible === "boolean"
+          ? entry.frame.controlsVisible
+          : entry.legendVisible === false
+            ? false
+            : styleBoolean(style, "sceneSectionHelperVisible", true),
+      legendVisible: entry.legendVisible,
       axis: entry.axis,
       builtIn: false,
       plane: { ...(entry.plane ?? {}) },
@@ -410,10 +425,15 @@ function serializeFrameEntries(
   return entries.map((entry) => ({
     id: entry.id,
     label: entry.label,
-    legendVisible: entry.legendVisible,
+    ...(!entry.builtIn && typeof entry.legendVisible === "boolean"
+      ? { legendVisible: entry.legendVisible }
+      : {}),
     axis: entry.axis,
     plane: { ...entry.plane },
-    frame: { ...entry.frame },
+    frame: {
+      ...entry.frame,
+      controlsVisible: entry.controlsVisible,
+    },
   }));
 }
 
@@ -471,7 +491,6 @@ export function SceneSectionPlanesContainer({
         ? [defaultProductId]
         : [],
   );
-  const helperVisible = styleBoolean(style, "sceneSectionHelperVisible", true);
   const legendVisible = styleBoolean(style, "sceneSectionLegendVisible", true);
   const legacyFrameEnabled = styleBoolean(
     style,
@@ -605,7 +624,7 @@ export function SceneSectionPlanesContainer({
       plane?: Partial<SceneSectionPlaneState>;
       frame?: Partial<SceneSectionFrameState>;
       label?: string;
-      legendVisible?: boolean;
+      controlsVisible?: boolean;
     },
   ) => {
     const currentEntries = normalizeSceneSectionFrameEntries(liveStyleRef.current);
@@ -616,18 +635,21 @@ export function SceneSectionPlanesContainer({
       ...currentEntry.plane,
       ...(patch.plane ?? {}),
     };
+    const nextControlsVisible =
+      patch.controlsVisible ?? currentEntry.controlsVisible;
     const nextFrame = {
       ...currentEntry.frame,
       ...(patch.frame ?? {}),
+      ...(patch.controlsVisible !== undefined
+        ? { controlsVisible: nextControlsVisible }
+        : {}),
     };
-    const nextLegendVisible =
-      patch.legendVisible ?? currentEntry.legendVisible;
     const nextEntries = currentEntries.map((entry) =>
       entry.id === id
         ? {
             ...entry,
             label: patch.label ?? entry.label,
-            legendVisible: nextLegendVisible,
+            controlsVisible: nextControlsVisible,
             axis: nextAxis,
             plane: nextPlane,
             frame: nextFrame,
@@ -680,18 +702,8 @@ export function SceneSectionPlanesContainer({
             },
           }
         : {};
-    const nextAnyPlaneEnabled = nextEntries.some(
-      (entry) => entry.plane.enabled === true,
-    );
-    const nextAnyExplicitFrameEnabled = nextEntries.some(
-      (entry) => entry.frame.enabled === true,
-    );
     const nextSectionEnabled =
-      hasPlanePatch || hasFramePatch
-        ? hasFramePatch && patch.frame?.enabled !== false && !hasPlanePatch
-          ? true
-          : nextAnyPlaneEnabled || nextAnyExplicitFrameEnabled
-        : null;
+      hasPlanePatch || hasFramePatch ? true : null;
     const sectionActivationPatch: Partial<EditableStyle> =
       typeof nextSectionEnabled === "boolean"
         ? {
@@ -744,6 +756,7 @@ export function SceneSectionPlanesContainer({
     const nextEntry: SceneSectionFrameUiEntry = {
       id,
       label,
+      controlsVisible: true,
       legendVisible: true,
       axis: source.axis,
       builtIn: false,
@@ -917,18 +930,6 @@ export function SceneSectionPlanesContainer({
                 sceneSectionEnabled: e.target.checked,
                 sceneSectionMode: "cutaway",
               })
-            }
-          />
-        </label>
-        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-          <span style={nestedFieldLabelStyle}>Gizmo</span>
-          <input
-            data-testid="scene-section-helper-visible"
-            type="checkbox"
-            disabled={disabled}
-            checked={helperVisible}
-            onChange={(e) =>
-              commit({ sceneSectionHelperVisible: e.target.checked })
             }
           />
         </label>
@@ -1198,7 +1199,7 @@ export function SceneSectionPlanesContainer({
                             }
                             style={frameSummaryToggleInputStyle}
                           />
-                          <span>Enable</span>
+                          <span>Show</span>
                         </label>
                         <label
                           style={{
@@ -1225,21 +1226,21 @@ export function SceneSectionPlanesContainer({
                             ...frameSummaryToggleStyle,
                             opacity: planeEnabled ? 1 : 0.48,
                           }}
-                          title="When off: section still cuts onscreen objects, but no legend entry or push/pull handles render"
+                          title="When off: section still cuts onscreen objects, but no outline or push/pull controls render"
                         >
                           <input
-                            data-testid={`scene-section-plane-${controlKey}-show`}
+                            data-testid={`scene-section-plane-${controlKey}-controls`}
                             type="checkbox"
                             disabled={disabled || !planeEnabled}
-                            checked={frame.legendVisible}
+                            checked={frame.controlsVisible}
                             onChange={(e) =>
                               setFrameEntryPatch(frame.id, {
-                                legendVisible: e.target.checked,
+                                controlsVisible: e.target.checked,
                               })
                             }
                             style={frameSummaryToggleInputStyle}
                           />
-                          <span>Show</span>
+                          <span>Controls</span>
                         </label>
                         <button
                           type="button"

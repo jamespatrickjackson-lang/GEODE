@@ -113,6 +113,49 @@ test("validateProjectPages records raw scene section frame mismatch as fixture e
   assert.match(result.warnings.join("\n"), /frame axis:y plane.positionM 15 does not match/);
 });
 
+test("validateProjectPages rejects built-in scene section legendVisible fields", () => {
+  const root = makeProject({
+    id: "page-built-in-legend",
+    title: "Page Built In Legend",
+    camera: { position: [0, 0, 1], target: [0, 0, 0], up: [0, 0, 1] },
+    transition: { duration: 1 },
+    holdDuration: 1,
+    layerOverrides: {
+      "utah-forge-scene-section-planes": {
+        sceneSectionActiveAxis: "x",
+        sceneSectionActiveFrameId: "axis:x",
+        sceneSectionPlanes: {
+          x: {
+            enabled: true,
+            positionM: 10,
+            invert: false,
+          },
+        },
+        sceneSectionFrames: [
+          {
+            id: "axis:x",
+            legendVisible: false,
+            axis: "x",
+            plane: {
+              enabled: true,
+              positionM: 10,
+              invert: false,
+            },
+            frame: {},
+          },
+        ],
+      },
+    },
+  });
+
+  const result = validateProjectPages(root);
+  assert.equal(result.ok, false);
+  assert.match(
+    result.errors.join("\n"),
+    /page-built-in-legend:effective:utah-forge-scene-section-planes: built-in frame axis:x must not use legendVisible/,
+  );
+});
+
 test("validateProjectPages normalizes effective scene section frame state inherited from environment", () => {
   const root = makeProject(
     {

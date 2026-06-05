@@ -433,6 +433,7 @@ function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
   enabled: boolean;
   invert: boolean;
   frameEnabled: boolean | null;
+  controlsVisible: boolean | null;
   groundTraceVisible: boolean | null;
   axisAHeading: string | null;
   axisBHeading: string | null;
@@ -459,6 +460,7 @@ function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
     enabled: boolean;
     invert: boolean;
     frameEnabled: boolean | null;
+    controlsVisible: boolean | null;
     groundTraceVisible: boolean | null;
     axisAHeading: string | null;
     axisBHeading: string | null;
@@ -482,6 +484,10 @@ function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
       invert: plane.invert === true,
       frameEnabled:
         typeof frame.enabled === "boolean" ? frame.enabled : null,
+      controlsVisible:
+        typeof frame.controlsVisible === "boolean"
+          ? frame.controlsVisible
+          : null,
       groundTraceVisible:
         typeof frame.groundTraceVisible === "boolean"
           ? frame.groundTraceVisible
@@ -532,6 +538,10 @@ function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
       invert: plane.invert === true,
       frameEnabled:
         typeof frame.enabled === "boolean" ? frame.enabled : null,
+      controlsVisible:
+        typeof frame.controlsVisible === "boolean"
+          ? frame.controlsVisible
+          : null,
       groundTraceVisible:
         typeof frame.groundTraceVisible === "boolean"
           ? frame.groundTraceVisible

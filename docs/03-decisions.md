@@ -1128,3 +1128,15 @@ fake-cloud looks.
 **Why:** The large build chunks came from the editor and Three.js scene runtime, not from page JSON or project payload duplication. Broad manual source chunks removed the large-chunk warning but introduced Rollup circular chunk warnings because scene styles, sectioning, topo runtime, page controller, editor controls, and scene loaders cross-import shared runtime state. Narrow async-boundary splitting keeps the production chunks below the guard without creating circular chunk output.
 
 **Guard:** `vite-source-code-splitting-source.test.mjs` must cover `sourceManualChunk`, the `app-scene-loaders` route, `EditorRoot` lazy loading, type-only `SceneManager` use in `layerLoaders`, and the unchanged 600 kB warning limit. Build verification must report no Vite large-chunk warning and no Rollup circular chunk warnings before claiming this issue fixed.
+
+## DEC-105 - Section legend mirrors per-axis editor controls
+
+**Supersedes:** DEC-060 only where built-in X/Y/Z `sceneSectionFrames[].legendVisible` could hide quick legend rows or scene helper controls.
+
+**Considered:** keep `legendVisible` as the shared quick-legend/helper gate, keep one global Gizmo/P Controle toggle, or make built-in section axes expose the same page-local controls in both the editor header and quick legend.
+
+**Chose:** built-in X/Y/Z section axes use `Show`, `Flip`, and `Controls`. `Show` is `sceneSectionPlanes.<axis>.enabled` and controls the actual section cut. `Flip` is `sceneSectionPlanes.<axis>.invert`. `Controls` is `sceneSectionFrameByAxis.<axis>.controlsVisible` and hides only outlines plus push/pull handles. The quick legend always lists X/Y/Z when the section legend is visible and mirrors the selected authoring page. It also exposes per-axis Scale axes and X/Y-only Ground trace controls.
+
+**Why:** The old `legendVisible` field mixed three concerns: whether a row appeared in the quick legend, whether outlines/handles rendered, and whether an enabled section looked available from the viewport legend. Duplicate pages could keep a section cut on while hiding its only enabled row, so the quick legend appeared to contradict the editor. A per-axis Controls field keeps the section cut, helper controls, ground trace, and scale axes independent.
+
+**Guard:** built-in X/Y/Z frame entries must not persist `legendVisible`. Existing built-in values are migrated to `sceneSectionFrameByAxis.<axis>.controlsVisible` when they were false, then removed. `validate-project-pages` rejects built-in `legendVisible`, and `scene-section-legend-contract-source.test.mjs` covers the quick legend/editor/runtime mapping.

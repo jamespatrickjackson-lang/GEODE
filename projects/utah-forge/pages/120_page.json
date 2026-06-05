@@ -101,7 +101,6 @@
         {
           "id": "axis:x",
           "label": "X Section frame",
-          "legendVisible": false,
           "axis": "x",
           "plane": {
             "enabled": true,
@@ -114,13 +113,13 @@
             "axisBHeading": "Elevation (km)",
             "axisDatum": "latlon",
             "maxAM": 10899.413500988101,
-            "minAM": -33487.51903582346
+            "minAM": -33487.51903582346,
+            "controlsVisible": false
           }
         },
         {
           "id": "axis:y",
           "label": "Y Section frame",
-          "legendVisible": false,
           "axis": "y",
           "plane": {
             "enabled": false,
@@ -130,13 +129,13 @@
           "frame": {
             "maxAM": 38434.765542233654,
             "maxBM": 9144.931457519531,
-            "minAM": -61778.81228623845
+            "minAM": -61778.81228623845,
+            "controlsVisible": false
           }
         },
         {
           "id": "axis:z",
           "label": "Z Section frame",
-          "legendVisible": true,
           "axis": "z",
           "plane": {
             "enabled": false,
@@ -154,12 +153,14 @@
           "axisBHeading": "Elevation (km)",
           "axisDatum": "latlon",
           "maxAM": 10899.413500988101,
-          "minAM": -33487.51903582346
+          "minAM": -33487.51903582346,
+          "controlsVisible": false
         },
         "y": {
           "maxAM": 38434.765542233654,
           "maxBM": 9144.931457519531,
-          "minAM": -61778.81228623845
+          "minAM": -61778.81228623845,
+          "controlsVisible": false
         }
       }
     },

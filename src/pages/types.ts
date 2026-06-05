@@ -684,10 +684,9 @@ export interface SceneSectionWindowState {
 export interface SceneSectionFrameEntry {
   id: string;
   label?: string;
-  // When false, the frame is hidden from the section legend AND its on-canvas
-  // helper visuals (crop-box outline, push/pull handles, frame label) are
-  // suppressed. The section cut itself remains active, so the frame keeps
-  // clipping/sectioning targeted objects silently. Defaults to true.
+  // Deprecated for built-in X/Y/Z frames. Custom frames may still use this to
+  // opt out of the quick legend. Per-axis helper visibility now lives on
+  // SceneSectionFrameState.controlsVisible.
   legendVisible?: boolean;
   axis: "x" | "y" | "z";
   plane?: SceneSectionPlaneState;
@@ -699,6 +698,7 @@ export type SceneSectionAxisDatum = "utm" | "local" | "latlon";
 
 export interface SceneSectionFrameState {
   enabled?: boolean;
+  controlsVisible?: boolean;
   minAM?: number;
   maxAM?: number;
   minBM?: number;

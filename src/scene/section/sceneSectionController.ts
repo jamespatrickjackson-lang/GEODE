@@ -899,7 +899,9 @@ function sceneSectionAxisOutsideOpacity(
 type SceneSectionResolvedFrameEntry = {
   id: string;
   label: string;
-  legendVisible: boolean;
+  builtIn: boolean;
+  controlsVisible: boolean;
+  legendVisible?: boolean;
   axis: SceneSectionAxis;
   plane: NonNullable<EditableStyle["sceneSectionPlanes"]>[SceneSectionAxis];
   frame: NonNullable<EditableStyle["sceneSectionFrameByAxis"]>[SceneSectionAxis];
@@ -922,22 +924,33 @@ function sceneSectionResolvedFrameEntries(
   for (const axis of sceneSectionAxes()) {
     const id = sceneSectionBuiltInFrameId(axis);
     const explicit = explicitById.get(id);
+    const frame = {
+      ...(frames[axis] ?? {}),
+      ...(explicit?.frame ?? {}),
+    };
+    const controlsVisible =
+      typeof frame.controlsVisible === "boolean"
+        ? frame.controlsVisible
+        : explicit?.legendVisible === false
+          ? false
+          : typeof style.sceneSectionHelperVisible === "boolean"
+            ? style.sceneSectionHelperVisible
+            : true;
     resolved.push({
       id,
       label:
         typeof explicit?.label === "string" && explicit.label.trim()
           ? explicit.label
           : sceneSectionDefaultFrameLabel(id, axis),
-      legendVisible: explicit?.legendVisible !== false,
+      builtIn: true,
+      controlsVisible,
+      legendVisible: explicit?.legendVisible,
       axis,
       plane: {
         ...(explicit?.plane ?? {}),
         ...(planes[axis] ?? {}),
       },
-      frame: {
-        ...(frames[axis] ?? {}),
-        ...(explicit?.frame ?? {}),
-      },
+      frame,
     });
   }
   for (const entry of explicitEntries) {
@@ -956,7 +969,16 @@ function sceneSectionResolvedFrameEntries(
         typeof entry.label === "string" && entry.label.trim()
           ? entry.label
           : sceneSectionDefaultFrameLabel(entry.id, entry.axis),
-      legendVisible: entry.legendVisible !== false,
+      builtIn: false,
+      controlsVisible:
+        typeof entry.frame?.controlsVisible === "boolean"
+          ? entry.frame.controlsVisible
+          : entry.legendVisible === false
+            ? false
+            : typeof style.sceneSectionHelperVisible === "boolean"
+              ? style.sceneSectionHelperVisible
+              : true,
+      legendVisible: entry.legendVisible,
       axis: entry.axis,
       plane: { ...(entry.plane ?? {}) },
       frame: { ...(entry.frame ?? {}) },
@@ -982,7 +1004,9 @@ function sceneSectionFrameListWithPatch(
       ? {
           id: entry.id,
           label: entry.label,
-          legendVisible: entry.legendVisible,
+          ...(!entry.builtIn && typeof entry.legendVisible === "boolean"
+            ? { legendVisible: entry.legendVisible }
+            : {}),
           axis,
           plane: {
             ...(entry.plane ?? {}),
@@ -996,17 +1020,20 @@ function sceneSectionFrameListWithPatch(
       : {
           id: entry.id,
           label: entry.label,
-          legendVisible: entry.legendVisible,
+          ...(!entry.builtIn && typeof entry.legendVisible === "boolean"
+            ? { legendVisible: entry.legendVisible }
+            : {}),
           axis: entry.axis,
           plane: entry.plane,
           frame: entry.frame,
         },
   );
   if (!existing && next.length < SCENE_SECTION_MAX_FRAME_COUNT) {
+    const builtIn = frameId === sceneSectionBuiltInFrameId(axis);
     next.push({
       id: frameId,
       label: sceneSectionDefaultFrameLabel(frameId, axis),
-      legendVisible: true,
+      ...(!builtIn ? { legendVisible: true } : {}),
       axis,
       plane: patch.plane ?? {},
       frame: patch.frame ?? {},
@@ -1733,7 +1760,7 @@ export function resolveSceneSectionFrames(this: any,
       label: entry.label,
       axis,
       enabled: true,
-      legendVisible: entry.legendVisible,
+      controlsVisible: entry.controlsVisible,
       minAM: basis.minAM,
       maxAM: basis.maxAM,
       minBM: basis.minBM,
@@ -2901,12 +2928,12 @@ export function rebuildSceneSectionHelpers(this: any,
       0,
     );
 
-    const frameHelperVisible = frame?.legendVisible !== false;
+    const frameControlsVisible = frame?.controlsVisible !== false;
     const frameOutlineVisible =
       frame !== null &&
-      frameHelperVisible &&
+      frameControlsVisible &&
       style.sceneSectionFrameEnabled === true;
-    const controlHandlesVisible = helperVisible && frameHelperVisible;
+    const controlHandlesVisible = helperVisible && frameControlsVisible;
     if (frameOutlineVisible || controlHandlesVisible) {
       const controlGroup = new THREE.Group();
       controlGroup.name = `${plane.label} push/pull controls`;

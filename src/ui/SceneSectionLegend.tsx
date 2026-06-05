@@ -14,7 +14,13 @@ import {
   resolveEnvironmentForPage,
 } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
-import type { EditableStyle, PresentationPage } from "../pages/types";
+import type {
+  EditableStyle,
+  PresentationPage,
+  SceneSectionFrameEntry,
+  SceneSectionFrameState,
+  SceneSectionPlaneState,
+} from "../pages/types";
 import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
@@ -32,6 +38,7 @@ const rootStyle: CSSProperties = {
   left: LEGEND_PAGE_EDGE_MARGIN_PX,
   bottom: LEGEND_BOTTOM_EDGE_OFFSET_PX + 256,
   padding: 13,
+  minWidth: 220,
 };
 
 const titleStyle: CSSProperties = {
@@ -44,6 +51,7 @@ const titleStyle: CSSProperties = {
 const rowStyle: CSSProperties = {
   ...legendControlRowStyle(),
   fontSize: 10,
+  alignItems: "flex-start",
 };
 
 const firstRowStyle: CSSProperties = {
@@ -51,9 +59,27 @@ const firstRowStyle: CSSProperties = {
   ...legendControlRowStyle({ first: true }),
 };
 
-const helperRowStyle: CSSProperties = {
-  ...rowStyle,
-  ...legendControlRowStyle({ cursor: "pointer" }),
+const axisGroupStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "64px repeat(5, auto)",
+  alignItems: "center",
+  columnGap: 7,
+  rowGap: 4,
+  width: "100%",
+};
+
+const axisLabelStyle: CSSProperties = {
+  minWidth: 0,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+
+const compactLabelStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 3,
+  minWidth: 0,
 };
 
 function styleBoolean(
@@ -63,6 +89,112 @@ function styleBoolean(
 ): boolean {
   const value = style[key];
   return typeof value === "boolean" ? value : fallback;
+}
+
+function frameBoolean(
+  frame: SceneSectionFrameState,
+  key: keyof SceneSectionFrameState,
+  fallback: boolean,
+): boolean {
+  const value = frame[key];
+  return typeof value === "boolean" ? value : fallback;
+}
+
+function builtInFrameId(axis: SceneSectionLegendAxis): string {
+  return `axis:${axis}`;
+}
+
+function builtInFrameLabel(axis: SceneSectionLegendAxis): string {
+  return `${axis.toUpperCase()} Section`;
+}
+
+function builtInFrameEntries(
+  style: EditableStyle,
+  axis: SceneSectionLegendAxis,
+  planePatch: Partial<SceneSectionPlaneState> = {},
+  framePatch: Partial<SceneSectionFrameState> = {},
+): SceneSectionFrameEntry[] {
+  const explicit = Array.isArray(style.sceneSectionFrames)
+    ? style.sceneSectionFrames
+    : [];
+  const explicitById = new Map(
+    explicit
+      .filter((entry) => typeof entry?.id === "string" && entry.id.trim())
+      .map((entry) => [entry.id, entry] as const),
+  );
+  const builtIns = SCENE_SECTION_AXES.map((entryAxis) => {
+    const id = builtInFrameId(entryAxis);
+    const entry = explicitById.get(id);
+    const nextPlane = {
+      ...(entry?.plane ?? {}),
+      ...(style.sceneSectionPlanes?.[entryAxis] ?? {}),
+      ...(entryAxis === axis ? planePatch : {}),
+    };
+    const nextFrame = {
+      ...(style.sceneSectionFrameByAxis?.[entryAxis] ?? {}),
+      ...(entry?.frame ?? {}),
+      ...(entryAxis === axis ? framePatch : {}),
+    };
+    return {
+      id,
+      label:
+        typeof entry?.label === "string" && entry.label.trim()
+          ? entry.label
+          : builtInFrameLabel(entryAxis),
+      axis: entryAxis,
+      plane: nextPlane,
+      frame: nextFrame,
+    };
+  });
+  const custom = explicit.filter(
+    (entry) =>
+      entry &&
+      typeof entry.id === "string" &&
+      entry.id.trim() &&
+      !entry.id.startsWith("axis:"),
+  );
+  return [...builtIns, ...custom];
+}
+
+function axisModel(style: EditableStyle, axis: SceneSectionLegendAxis) {
+  const entry = Array.isArray(style.sceneSectionFrames)
+    ? style.sceneSectionFrames.find((candidate) => candidate?.id === builtInFrameId(axis))
+    : null;
+  const plane = {
+    ...(entry?.plane ?? {}),
+    ...(style.sceneSectionPlanes?.[axis] ?? {}),
+  };
+  const frame = {
+    ...(style.sceneSectionFrameByAxis?.[axis] ?? {}),
+    ...(entry?.frame ?? {}),
+  };
+  const controlsVisible =
+    typeof frame.controlsVisible === "boolean"
+      ? frame.controlsVisible
+      : entry?.legendVisible === false
+        ? false
+        : styleBoolean(style, "sceneSectionHelperVisible", true);
+  return {
+    label:
+      typeof entry?.label === "string" && entry.label.trim()
+        ? entry.label
+        : builtInFrameLabel(axis),
+    plane,
+    frame,
+    shown: plane.enabled === true,
+    flipped: plane.invert === true,
+    controlsVisible,
+    groundTraceVisible: frameBoolean(
+      frame,
+      "groundTraceVisible",
+      styleBoolean(style, "sceneSectionGroundTraceVisible", true),
+    ),
+    axesVisible: frameBoolean(
+      frame,
+      "axesVisible",
+      styleBoolean(style, "sceneSectionAxesVisible", true),
+    ),
+  };
 }
 
 export function SceneSectionLegend({
@@ -85,6 +217,7 @@ export function SceneSectionLegend({
     state.environment.scene?.gui?.overlay,
   );
 
+  const allAuthoringPages = [...state.pages, ...state.archivedPages];
   const targetIndex = transitionFrame.targetIndex;
   const controllerPage =
     pageOverride ??
@@ -98,7 +231,7 @@ export function SceneSectionLegend({
     !editingEnvironment &&
     !transitionFrame.active &&
     state.selectedPageId
-      ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
+      ? allAuthoringPages.find((candidate) => candidate.id === state.selectedPageId)
       : null;
   const page =
     pageOverride ??
@@ -107,7 +240,7 @@ export function SceneSectionLegend({
       : selectedPage ?? controllerPage);
   const writePage = authoringPage ?? page;
   const pageEnvironment = page
-    ? resolveEnvironmentForPage(state.environment, state.pages, page)
+    ? resolveEnvironmentForPage(state.environment, allAuthoringPages, page)
     : state.environment;
   const style = editingEnvironment
     ? state.environment.layerStyles[SCENE_SECTION_LAYER_ID] ?? {}
@@ -117,23 +250,6 @@ export function SceneSectionLegend({
   if (style.sceneSectionEnabled !== true) return null;
   if (!styleBoolean(style, "sceneSectionLegendVisible", true)) return null;
 
-  const planes = style.sceneSectionPlanes ?? {};
-  const explicitFrameById = new Map(
-    (Array.isArray(style.sceneSectionFrames) ? style.sceneSectionFrames : [])
-      .filter((entry) => typeof entry?.id === "string" && entry.id.trim())
-      .map((entry) => [entry.id, entry] as const),
-  );
-  const axisFrameEntry = (axis: SceneSectionLegendAxis) =>
-    explicitFrameById.get(`axis:${axis}`);
-  const axisLabel = (axis: SceneSectionLegendAxis) => {
-    const entry = axisFrameEntry(axis);
-    const label = typeof entry?.label === "string" && entry.label.trim()
-      ? entry.label
-      : `${axis.toUpperCase()} Section`;
-    return label;
-  };
-  const axisInLegend = (axis: SceneSectionLegendAxis) =>
-    axisFrameEntry(axis)?.legendVisible !== false;
   const bodyRowStyle: CSSProperties = {
     ...rowStyle,
     color: legendTextColors.body,
@@ -142,14 +258,6 @@ export function SceneSectionLegend({
     ...firstRowStyle,
     color: legendTextColors.body,
   };
-  const helperBodyRowStyle: CSSProperties = {
-    ...helperRowStyle,
-    color: legendTextColors.body,
-  };
-  const helperVisible =
-    typeof style.sceneSectionHelperVisible === "boolean"
-      ? style.sceneSectionHelperVisible
-      : !state.presenterMode;
   const commit = (patch: Partial<EditableStyle>) => {
     const merged = { ...style, ...patch };
     if (canApplyLiveSceneEdits()) {
@@ -163,58 +271,45 @@ export function SceneSectionLegend({
       setEnvLayerStyle(SCENE_SECTION_LAYER_ID, patch);
     }
   };
-  const setAxisEnabled = (axis: SceneSectionLegendAxis, enabled: boolean) => {
-    const nextAxisPlane = {
-      ...(planes[axis] ?? {}),
-      enabled,
+  const setAxisPlanePatch = (
+    axis: SceneSectionLegendAxis,
+    planePatch: Partial<SceneSectionPlaneState>,
+  ) => {
+    const nextPlane = {
+      ...(style.sceneSectionPlanes?.[axis] ?? {}),
+      ...planePatch,
     };
-    const nextPlanes = {
-      ...planes,
-      [axis]: nextAxisPlane,
-    };
-    const frameEntries = Array.isArray(style.sceneSectionFrames)
-      ? style.sceneSectionFrames
-      : null;
-    let matchedFrameEntry = false;
-    const nextFrameEntries = frameEntries
-      ? frameEntries.map((entry) => {
-          if (entry?.id !== `axis:${axis}`) return entry;
-          matchedFrameEntry = true;
-          return {
-            ...entry,
-            axis,
-            plane: {
-              ...(entry.plane ?? {}),
-              ...nextAxisPlane,
-            },
-          };
-        })
-      : null;
-    const frameEntryForAxis = (entryAxis: SceneSectionLegendAxis) =>
-      nextFrameEntries?.find((entry) => entry?.id === `axis:${entryAxis}`);
-    const anyBuiltInPlaneEnabled = SCENE_SECTION_AXES.some((entryAxis) => {
-      const frameEntry = frameEntryForAxis(entryAxis);
-      const resolvedPlane = {
-        ...(nextPlanes[entryAxis] ?? {}),
-        ...(frameEntry?.plane ?? {}),
-      };
-      return resolvedPlane.enabled === true;
-    });
-    const anyCustomPlaneEnabled =
-      nextFrameEntries?.some(
-        (entry) =>
-          typeof entry?.id === "string" &&
-          !entry.id.startsWith("axis:") &&
-          entry.plane?.enabled === true,
-      ) === true;
     commit({
-      sceneSectionEnabled: anyBuiltInPlaneEnabled || anyCustomPlaneEnabled,
+      sceneSectionEnabled: true,
       sceneSectionMode: "cutaway",
       sceneSectionActiveAxis: axis,
-      sceneSectionPlanes: nextPlanes,
-      ...(matchedFrameEntry && nextFrameEntries
-        ? { sceneSectionFrames: nextFrameEntries }
-        : {}),
+      sceneSectionActiveFrameId: builtInFrameId(axis),
+      sceneSectionPlanes: {
+        ...(style.sceneSectionPlanes ?? {}),
+        [axis]: nextPlane,
+      },
+      sceneSectionFrames: builtInFrameEntries(style, axis, planePatch),
+    });
+  };
+  const setAxisFramePatch = (
+    axis: SceneSectionLegendAxis,
+    framePatch: Partial<SceneSectionFrameState>,
+  ) => {
+    const nextFrame = {
+      ...(style.sceneSectionFrameByAxis?.[axis] ?? {}),
+      ...framePatch,
+    };
+    commit({
+      sceneSectionEnabled: true,
+      sceneSectionMode: "cutaway",
+      sceneSectionActiveAxis: axis,
+      sceneSectionActiveFrameId: builtInFrameId(axis),
+      sceneSectionFrameEnabled: true,
+      sceneSectionFrameByAxis: {
+        ...(style.sceneSectionFrameByAxis ?? {}),
+        [axis]: nextFrame,
+      },
+      sceneSectionFrames: builtInFrameEntries(style, axis, {}, framePatch),
     });
   };
 
@@ -229,47 +324,111 @@ export function SceneSectionLegend({
       <h2 style={{ ...titleStyle, color: legendTextColors.heading }}>
         Section Planes
       </h2>
-      {SCENE_SECTION_AXES
-        .filter((axis) => axisInLegend(axis))
-        .map((axis, index) => {
-          const plane = planes[axis] ?? {};
-          const enabled = plane.enabled === true;
-          const label = axisLabel(axis);
-          return (
-            <div key={axis} style={index === 0 ? firstBodyRowStyle : bodyRowStyle}>
-              <input
-                type="checkbox"
-                aria-label={label}
-                checked={enabled}
-                data-testid={`scene-section-legend-${axis}-enabled`}
-                onChange={(event) => setAxisEnabled(axis, event.currentTarget.checked)}
-                style={legendCheckboxStyle(enabled, {
-                  checkedColor: AXIS_COLORS[axis],
-                })}
-              />
-              <span>
-                <strong>{label}</strong>
+      {SCENE_SECTION_AXES.map((axis, index) => {
+        const model = axisModel(style, axis);
+        return (
+          <div key={axis} style={index === 0 ? firstBodyRowStyle : bodyRowStyle}>
+            <div style={axisGroupStyle}>
+              <span style={{ ...axisLabelStyle, color: AXIS_COLORS[axis] }}>
+                <strong>{model.label}</strong>
               </span>
+              <label style={compactLabelStyle}>
+                <input
+                  type="checkbox"
+                  aria-label={`${model.label} Show`}
+                  checked={model.shown}
+                  data-testid={`scene-section-legend-${axis}-show`}
+                  onChange={(event) =>
+                    setAxisPlanePatch(axis, {
+                      enabled: event.currentTarget.checked,
+                    })
+                  }
+                  style={legendCheckboxStyle(model.shown, {
+                    checkedColor: AXIS_COLORS[axis],
+                  })}
+                />
+                <span>Show</span>
+              </label>
+              <label style={compactLabelStyle}>
+                <input
+                  type="checkbox"
+                  aria-label={`${model.label} Flip`}
+                  checked={model.flipped}
+                  disabled={!model.shown}
+                  data-testid={`scene-section-legend-${axis}-flip`}
+                  onChange={(event) =>
+                    setAxisPlanePatch(axis, {
+                      invert: event.currentTarget.checked,
+                    })
+                  }
+                  style={legendCheckboxStyle(model.flipped, {
+                    checkedColor: AXIS_COLORS[axis],
+                  })}
+                />
+                <span>Flip</span>
+              </label>
+              <label style={compactLabelStyle}>
+                <input
+                  type="checkbox"
+                  aria-label={`${model.label} Controls`}
+                  checked={model.controlsVisible}
+                  disabled={!model.shown}
+                  data-testid={`scene-section-legend-${axis}-controls`}
+                  onChange={(event) =>
+                    setAxisFramePatch(axis, {
+                      controlsVisible: event.currentTarget.checked,
+                    })
+                  }
+                  style={legendCheckboxStyle(model.controlsVisible, {
+                    checkedColor: AXIS_COLORS[axis],
+                  })}
+                />
+                <span>Controls</span>
+              </label>
+              {axis !== "z" ? (
+                <label style={compactLabelStyle}>
+                  <input
+                    type="checkbox"
+                    aria-label={`${model.label} Ground trace`}
+                    checked={model.groundTraceVisible}
+                    disabled={!model.shown}
+                    data-testid={`scene-section-legend-${axis}-ground-trace-visible`}
+                    onChange={(event) =>
+                      setAxisFramePatch(axis, {
+                        groundTraceVisible: event.currentTarget.checked,
+                      })
+                    }
+                    style={legendCheckboxStyle(model.groundTraceVisible, {
+                      checkedColor: AXIS_COLORS[axis],
+                    })}
+                  />
+                  <span>Ground trace</span>
+                </label>
+              ) : (
+                <span aria-hidden="true" />
+              )}
+              <label style={compactLabelStyle}>
+                <input
+                  type="checkbox"
+                  aria-label={`${model.label} Scale axes`}
+                  checked={model.axesVisible}
+                  disabled={!model.shown}
+                  data-testid={`scene-section-legend-${axis}-axes-visible`}
+                  onChange={(event) =>
+                    setAxisFramePatch(axis, {
+                      axesVisible: event.currentTarget.checked,
+                    })
+                  }
+                  style={legendCheckboxStyle(model.axesVisible, {
+                    checkedColor: AXIS_COLORS[axis],
+                  })}
+                />
+                <span>Scale axes</span>
+              </label>
             </div>
-          );
-        })}
-      <label style={helperBodyRowStyle}>
-        <input
-          type="checkbox"
-          aria-label="P Controle"
-          checked={helperVisible}
-          data-testid="scene-section-legend-helper-visible"
-          onChange={(event) =>
-            commit({ sceneSectionHelperVisible: event.currentTarget.checked })
-          }
-          style={legendCheckboxStyle(helperVisible, {
-            checkedColor: legendTextColors.heading,
-          })}
-        />
-        <span>
-          <strong>P Controle</strong>
-        </span>
-      </label>
+          </div>
+        );
+      })}
     </aside>
   );
 }

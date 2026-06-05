@@ -180,6 +180,51 @@ function sceneSectionTransitionActiveForStyle(
   return style.sceneSectionEnabled === true;
 }
 
+function sceneSectionBuiltInFrameEntry(
+  style: EffectiveLayerStyle,
+  axis: "x" | "y" | "z",
+) {
+  return Array.isArray(style.sceneSectionFrames)
+    ? style.sceneSectionFrames.find((entry) => entry?.id === `axis:${axis}`)
+    : null;
+}
+
+function sceneSectionFrameState(
+  style: EffectiveLayerStyle,
+  axis: "x" | "y" | "z",
+) {
+  const entry = sceneSectionBuiltInFrameEntry(style, axis);
+  return {
+    ...(style.sceneSectionFrameByAxis?.[axis] ?? {}),
+    ...(entry?.frame ?? {}),
+  };
+}
+
+function sceneSectionPlaneShown(
+  style: EffectiveLayerStyle,
+  axis: "x" | "y" | "z",
+): boolean {
+  const entry = sceneSectionBuiltInFrameEntry(style, axis);
+  const plane = {
+    ...(entry?.plane ?? {}),
+    ...(style.sceneSectionPlanes?.[axis] ?? {}),
+  };
+  return plane.enabled === true;
+}
+
+function sceneSectionAnyFrameBoolean(
+  style: EffectiveLayerStyle,
+  key: "groundTraceVisible" | "axesVisible",
+  fallback: boolean,
+): boolean {
+  return (["x", "y", "z"] as const).some((axis) => {
+    if (!sceneSectionPlaneShown(style, axis)) return false;
+    const frame = sceneSectionFrameState(style, axis);
+    const value = frame[key];
+    return typeof value === "boolean" ? value : fallback;
+  });
+}
+
 function sceneSectionDerivedEntities(input: {
   layerId: string;
   style: EffectiveLayerStyle;
@@ -193,8 +238,19 @@ function sceneSectionDerivedEntities(input: {
   const frameEnabled =
     sectionEnabled && input.style.sceneSectionFrameEnabled === true;
   const groundTraceVisible =
-    sectionEnabled && input.style.sceneSectionGroundTraceVisible !== false;
-  const axesVisible = sectionEnabled && input.style.sceneSectionAxesVisible !== false;
+    sectionEnabled &&
+    sceneSectionAnyFrameBoolean(
+      input.style,
+      "groundTraceVisible",
+      input.style.sceneSectionGroundTraceVisible !== false,
+    );
+  const axesVisible =
+    sectionEnabled &&
+    sceneSectionAnyFrameBoolean(
+      input.style,
+      "axesVisible",
+      input.style.sceneSectionAxesVisible !== false,
+    );
   const sectionIsoEnabled = sectionIsoOverlayVisible(input.style);
   const lineIsoVisible =
     input.style.sectionIsoEnabled === true &&

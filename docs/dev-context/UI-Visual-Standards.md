@@ -223,8 +223,9 @@ and `Z Section frame` editor subsection:
 
 | Control | Style field | Range | Default |
 | --- | --- | ---: | ---: |
-| Section enable | `sceneSectionPlanes.<axis>.enabled` | on/off | off |
+| Show | `sceneSectionPlanes.<axis>.enabled` | on/off | off |
 | Flip side | `sceneSectionPlanes.<axis>.invert` | on/off | off |
+| Controls | `sceneSectionFrameByAxis.<axis>.controlsVisible` | on/off | legacy/global fallback |
 | Active handle | `sceneSectionActiveAxis` | X/Y/Z | Z |
 | Cut position | `sceneSectionPlanes.<axis>.positionM` | axis bounds | project default |
 | Frame crop | `sceneSectionFrameByAxis.<axis>.enabled` | on/off | legacy/global fallback |
@@ -256,9 +257,17 @@ and `Z Section frame` editor subsection:
   easting/northing labels, `local` uses the frame's local datum origin for
   distance ticks, and `latlon` shows decimal-degree longitude/latitude.
   Elevation labels remain absolute elevation in kilometres.
-- Section enable, flip side, and active-handle controls are compact header
+- Show, flip side, controls, and active-handle controls are compact header
   controls on each X/Y/Z frame; there is no separate `X Section active` /
   `Y Section` / `Z Section` editor subsection.
+- The quick viewport section legend mirrors the same per-axis page state: X, Y,
+  and Z rows are always listed when the section legend is visible, with Show,
+  Flip, Controls, and Scale axes controls. Ground trace is shown only for X/Y
+  rows because Z frames do not render ground traces.
+- Controls hides section outlines and push/pull handles only. It does not
+  disable the section cut, ground trace, or scale axes. Built-in X/Y/Z frames
+  must not use `sceneSectionFrames[].legendVisible`; stale values are migrated
+  to `sceneSectionFrameByAxis.<axis>.controlsVisible`.
 - Text size has both slider and numeric inputs per frame, displayed as a scale
   factor.
 - Axis interval and text-size numeric fields render `km` / `x` as

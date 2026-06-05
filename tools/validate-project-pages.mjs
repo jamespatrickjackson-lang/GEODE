@@ -173,6 +173,15 @@ function validateSceneSectionFrameState(context, style, issues) {
   const legacyPlanes = style.sceneSectionPlanes ?? {};
   for (const frame of frames) {
     if (!frame?.id || !frame.axis || !frame.plane) continue;
+    if (
+      typeof frame.id === "string" &&
+      frame.id.startsWith("axis:") &&
+      frame.legendVisible !== undefined
+    ) {
+      issues.push(
+        `${context}: built-in frame ${frame.id} must not use legendVisible; use sceneSectionFrameByAxis.${frame.axis}.controlsVisible instead`,
+      );
+    }
     const legacyPlane = legacyPlanes[frame.axis];
     if (!legacyPlane) continue;
     for (const field of ["enabled", "positionM", "invert"]) {

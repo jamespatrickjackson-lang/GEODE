@@ -172,7 +172,6 @@
         {
           "id": "axis:x",
           "label": "X Section frame",
-          "legendVisible": true,
           "axis": "x",
           "plane": {
             "enabled": false,
@@ -189,7 +188,6 @@
         {
           "id": "axis:y",
           "label": "Y Section frame",
-          "legendVisible": true,
           "axis": "y",
           "plane": {
             "enabled": false,
@@ -203,7 +201,6 @@
         {
           "id": "axis:z",
           "label": "Z Section frame",
-          "legendVisible": true,
           "axis": "z",
           "plane": {
             "enabled": false,
