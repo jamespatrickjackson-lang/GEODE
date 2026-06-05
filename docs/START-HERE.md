@@ -93,8 +93,9 @@ projects/<slug>/
   data_refs/
 ```
 
-`project.json` owns project metadata, layer manifest, page order, active
-preview file references, and future target references.
+`project.json` owns project metadata, layer manifest, active page order,
+staff archive order, active preview file references, and future target
+references.
 
 `environment.json` owns default visibility, global layer styles, scene
 settings, lighting/environment defaults, and GUI/presenter style defaults.

@@ -57,8 +57,16 @@ narrow patch
   - Page-local cinematic post values blend through `main-camera/cinematic-post`; toggles, focus mode, and debug helpers remain discrete.
   - Composition guide and presentation-frame line thickness defaults to `lineThickness: 0.25`, half of the earlier guide/frame width.
   - Human visual judgment is the first acceptance filter for composition.
+  - The current Utah FORGE deck savepoint fronts pages `156_page`, `157_page`,
+    `158_page`, `159_page`, `166_page`, `160_page`, and `164_page`, then
+    continues through the reordered resistivity, section, seismic, and context
+    review pages.
+    `165_page` is the only staff Page Archive entry in `archivedPageOrder`;
+    `pages/_archive/166_page.json` is delete-recovery storage only.
 - Still wrong / under review:
   - The expanded cinematic toolset is implemented and ready for ongoing human visual tuning. Do not mark a look final from static checks alone.
+  - The committed Utah FORGE deck savepoint is ready for visual check; static
+    page/build checks do not accept the page look.
   - If the running in-app browser still shows an old `Focus / DOF` heading or thick guide/frame lines, hard-refresh the current `5173` tab before diagnosing code. A stale Vite module graph can preserve old labels after source changes.
   - Base GUI local atmosphere volume remains a generic sample. Utah FORGE's
     visible test cloud was accepted in this thread, but any new Base GUI-specific

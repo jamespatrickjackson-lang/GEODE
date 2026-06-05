@@ -200,7 +200,7 @@ Known issue:
 
 ## Editor Architecture
 
-`EditorChrome` is lazy-loaded from `App.tsx`, so the landing page does not carry the full editor bundle on first load.
+`EditorChrome` is lazy-loaded from `App.tsx`, so the landing page does not carry the full editor bundle on first load. `EditorRoot` is also lazy-loaded from `EditorChrome`, keeping the presenter/navigation shell separate from the heavier editor panel tree.
 
 `EditorChrome` wraps:
 
@@ -215,6 +215,16 @@ Known issue:
 - overlay display
 
 `EditorRoot` owns the visible editor shell and top-level section layout.
+
+## Build Chunking
+
+The app keeps Vite's `chunkSizeWarningLimit` at `600` kB. `App.tsx`
+dynamically imports the scene runtime, `EditorChrome` lazy-loads `EditorRoot`,
+and `vite.config.ts` routes `src/loaders/` into the `app-scene-loaders` source
+chunk before vendor chunking. Manual source chunks should stay narrow and avoid
+cutting through mutually dependent scene/editor runtime modules; broad folder
+slicing can create Rollup circular chunk warnings even when it hides size
+warnings.
 
 Current editor section rule:
 
