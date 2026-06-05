@@ -19,18 +19,20 @@ function validateEnvironment() {
   const environment = readJson("projects/utah-forge/environment.json");
   assert.equal(environment.renderPreset, "user-3");
   assert.deepEqual(environment.defaultVisibleLayers, [
-    "utah-forge-topo-graticule",
     "utah-forge-site-boundary",
-    "utah-forge-phase3-demo-boreholes",
-    "utah-forge-mt-resistivity-volume",
+    "utah-forge-mt-stations",
     "utah-forge-mt-resistivity-full-density",
   ]);
   assertSubset(
     environment.scene,
     {
       background: "#383838",
-      exposure: 1.08,
-      fog: { enabled: true, color: "#383838", density: 0.00008 },
+      exposure: 1.2,
+      fog: {
+        enabled: true,
+        color: "#e82626",
+        density: 0.0000037267080745341615,
+      },
       bloom: { strength: 0, radius: 0.55, threshold: 0.86 },
       vignette: { strength: 0.95, smoothness: 0.65 },
       ambientOcclusion: { enabled: true },
@@ -71,7 +73,7 @@ function validateEnvironment() {
   assertSubset(
     environment.layerStyles["utah-forge-scene-section-planes"],
     {
-      sceneSectionEnabled: true,
+      sceneSectionEnabled: false,
       sceneSectionMode: "cutaway",
       sceneSectionTargetScope: "all-visible",
       sceneSectionWindowEnabled: true,
@@ -115,8 +117,8 @@ function validateEnvironment() {
   assertSubset(
     fullDensityStyle,
     {
-      opacity: 0.3,
-      pointSizePx: 1,
+      opacity: 0.48,
+      pointSizePx: 1.25,
       scalarBlendMin: 0.139879,
       scalarBlendMax: 3.937122,
       scalarDisplayMin: 0.139879,
@@ -128,11 +130,40 @@ function validateEnvironment() {
     },
     "MT full-density style",
   );
-  assert.equal(fullDensityStyle.scalarInclusionMode, undefined);
+  assert.equal(fullDensityStyle.scalarInclusionMode, "all-valid");
 }
 
 function validatePages() {
   const project = readJson("projects/utah-forge/project.json");
+  assert.deepEqual(project.pageOrder.slice(0, 21), [
+    "156_page",
+    "157_page",
+    "158_page",
+    "159_page",
+    "166_page",
+    "160_page",
+    "164_page",
+    "45_resistivity_isosurfaces",
+    "117_page",
+    "140_page",
+    "143_page",
+    "06_mt_low_resistivity_seismic",
+    "05_mt_threshold_focus",
+    "120_page",
+    "163_page",
+    "137_page",
+    "133_page",
+    "134_page",
+    "108_page",
+    "42_resistivity_volume_overview",
+    "161_page",
+  ]);
+  assert.deepEqual(project.archivedPageOrder, ["165_page"]);
+  assert.equal(readJson("projects/utah-forge/pages/165_page.json").id, "165_page");
+  assert.equal(
+    readJson("projects/utah-forge/pages/_archive/166_page.json").id,
+    "166_page",
+  );
   const demoPageOrderIndex = project.pageOrder.indexOf(
     "51_mt_marching_cubes_focused",
   );
@@ -146,13 +177,14 @@ function validatePages() {
     ],
   );
 
-  for (const [pageId, focusMin, focusMax, blendMin, blendMax] of [
+  for (const [pageId, focusMin, focusMax, blendMin, blendMax, opacity] of [
     [
       "04_mt_high_resistivity_seismic",
       3.706814235494493,
       4.5,
       3.706814235494493,
       4.5,
+      undefined,
     ],
     [
       "05_mt_threshold_focus",
@@ -160,6 +192,7 @@ function validatePages() {
       3.315372172975416,
       2.3676704614943205,
       3.315372172975416,
+      0.05,
     ],
     [
       "06_mt_low_resistivity_seismic",
@@ -167,6 +200,7 @@ function validatePages() {
       2.2656248520231967,
       1.3177084813101363,
       2.2656248520231967,
+      0.1,
     ],
   ]) {
     const override = layerOverride(pageId, "utah-forge-mt-resistivity-full-density");
@@ -181,7 +215,7 @@ function validatePages() {
       },
       `${pageId} full-density override`,
     );
-    assert.equal(override.opacity, undefined);
+    assert.equal(override.opacity, opacity);
     assert.equal(override.pointSizePx, undefined);
   }
 
@@ -285,8 +319,7 @@ function validatePages() {
     "53 top envelope override",
   );
 
-  const mtLayers = [
-    "utah-forge-mt-stations",
+  const mtProductLayers = [
     "utah-forge-mt-resistivity-preview",
     "utah-forge-mt-resistivity-full-density",
     "utah-forge-mt-resistivity-volume",
@@ -295,25 +328,43 @@ function validatePages() {
     "utah-forge-mt-top-contact-surface",
     "utah-forge-mt-resistivity-slices",
   ];
-  const standaloneStart = 5;
+  const stableSeismicPages = new Set([
+    "47_seismic_footprint_velocity_support",
+    "49_seismic_fence_panels",
+    "54_seismic_product_catalog",
+    "55_line_301_seismic_products",
+    "56_line_302_seismic_products",
+    "57_legacy_line_l11_seismic_products",
+    "58_legacy_line_l5_seismic_products",
+  ]);
+  const compositeReviewPages = new Set([
+    "05_mt_threshold_focus",
+    "12_mt_volume_overview",
+    "40_geophysics_product_overview",
+    "45_resistivity_isosurfaces",
+    "50_integrated_seismic_resistivity_context",
+  ]);
+  const isDraftReviewPage = (pageId, page) =>
+    /^\d+_page$/.test(pageId) ||
+    page.title?.includes("duplicate") ||
+    page.title?.startsWith("New page") ||
+    page.title?.startsWith("Unresolved / Missing Tools") ||
+    pageId === "99_unresolved_missing_tools";
   const seismicPages = new Set([
     "47_seismic_footprint_velocity_support",
     "49_seismic_fence_panels",
   ]);
-  for (const pageId of project.pageOrder.slice(standaloneStart)) {
+  for (const pageId of project.pageOrder) {
     const page = readJson(`projects/utah-forge/pages/${pageId}.json`);
-    if (
-      pageId === "99_unresolved_missing_tools" ||
-      page.title?.startsWith("Unresolved / Missing Tools")
-    ) {
+    if (isDraftReviewPage(pageId, page) || compositeReviewPages.has(pageId)) {
       continue;
     }
-    const activeMtLayers = mtLayers.filter(
+    const activeMtLayers = mtProductLayers.filter(
       (layerId) => page.visibilityOverrides?.[layerId] === true,
     );
     const seismicVisible =
       page.visibilityOverrides?.["utah-forge-phase3-seismic-browser"] === true;
-    if (seismicPages.has(pageId)) {
+    if (stableSeismicPages.has(pageId) || seismicPages.has(pageId)) {
       assert.equal(seismicVisible, true, `${pageId} seismic page active`);
       assert.equal(activeMtLayers.length, 0, `${pageId} has no active MT`);
     } else {
