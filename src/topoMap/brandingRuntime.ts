@@ -162,11 +162,9 @@ export class TopoMapBrandingRuntime {
     group.name = "__topo_map_branding__";
     group.renderOrder = 4564;
     group.userData.topoMapBranding = true;
-    // DEC-077: when the terrain layer style opts in via topoSectionable, the
-    // branding meshes flow through scene-section clipping like ordinary
-    // layer geometry. Default off preserves prior reference-context
-    // behavior. The flag is mirrored onto every child + material after the
-    // group is built (see end of rebuild).
+    // DEC-077 compatibility: older project JSON may still carry the legacy
+    // topoSectionable flag. DEC-097 makes targeted topo context section by
+    // default, so this stamp no longer gates clipping behavior.
     group.userData.topoSectionable = terrainStyle.topoSectionable === true;
     group.rotation.z =
       this.frameRotationRad(terrainStyle) +
@@ -466,10 +464,9 @@ export class TopoMapBrandingRuntime {
     layoutTitleBlock();
     group.add(contentGroup);
 
-    // DEC-077: propagate the section-clipping opt-in onto every descendant
-    // object + material so sceneSectionObjectExcludedFromClipping and
-    // applySceneSectionMaterial honor the flag without needing to walk back
-    // up to the root group.
+    // DEC-077 compatibility: older project JSON may still carry the legacy
+    // section flag. DEC-097 makes targeted topo context section by default,
+    // so this stamp no longer gates clipping behavior.
     const sectionable = group.userData.topoSectionable === true;
     group.traverse((obj) => {
       obj.userData.topoSectionable = sectionable;

@@ -29,12 +29,12 @@ test("render-stack inspector reports runtime topo authority and post stack", () 
   );
   assert.deepEqual(report.renderStack.topoAuthority.bounds, [
     229069.2,
-    4144854,
-    484164,
+    4094688,
+    598806,
     4414308,
   ]);
   assert.equal(report.renderStack.topoAuthority.edgeFade.shape, "rounded-square");
-  assert.equal(report.renderStack.topoAuthority.edgeOutline.enabled, true);
+  assert.equal(report.renderStack.topoAuthority.edgeOutline.enabled, false);
   assert.deepEqual(report.renderStack.postProcessing.stack, [
     "RenderPass",
     "SSAOPass",

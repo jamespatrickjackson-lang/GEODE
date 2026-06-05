@@ -17,6 +17,26 @@ function fogDensityToFar(density: number): number {
   return 3 / Math.max(density, 0.000001);
 }
 
+const SCENE_SECTION_TERRAIN_SLOT_COUNT = 8;
+
+function sceneSectionVectorSlots(): THREE.Vector3[] {
+  return Array.from(
+    { length: SCENE_SECTION_TERRAIN_SLOT_COUNT },
+    () => new THREE.Vector3(),
+  );
+}
+
+function sceneSectionVector4Slots(): THREE.Vector4[] {
+  return Array.from(
+    { length: SCENE_SECTION_TERRAIN_SLOT_COUNT },
+    () => new THREE.Vector4(),
+  );
+}
+
+function sceneSectionNumberSlots(value: number): number[] {
+  return Array.from({ length: SCENE_SECTION_TERRAIN_SLOT_COUNT }, () => value);
+}
+
 // Stylized terrain shader. Reads world-space elevation (Z, since we're Z-up)
 // and produces an elevation-based ramp modulated by hillshade (N·L). Adds a
 // subtle deterministic value-noise to break up flat color plateaus so the
@@ -524,6 +544,23 @@ export function buildTerrainMaterial(
     uPublicClipCenter: { value: new THREE.Vector3(0, 0, 0) },
     uPublicClipHalfSize: { value: new THREE.Vector3(1, 1, 1) },
     uPublicClipCosSin: { value: new THREE.Vector2(1, 0) },
+    uSceneSectionEnabled: { value: 0 },
+    uSceneSectionMode: { value: 0 },
+    uSceneSectionPlaneCount: { value: 0 },
+    uSceneSectionNormals: { value: sceneSectionVectorSlots() },
+    uSceneSectionPositions: { value: sceneSectionNumberSlots(0) },
+    uSceneSectionThickness: { value: sceneSectionNumberSlots(1) },
+    uSceneSectionInvert: { value: sceneSectionNumberSlots(0) },
+    uSceneSectionPlaneOutsideOpacity: {
+      value: sceneSectionNumberSlots(1),
+    },
+    uSceneSectionFrameCount: { value: 0 },
+    uSceneSectionFrameAxisA: { value: sceneSectionVectorSlots() },
+    uSceneSectionFrameAxisB: { value: sceneSectionVectorSlots() },
+    uSceneSectionFrameBounds: { value: sceneSectionVector4Slots() },
+    uSceneSectionFrameOutsideOpacity: {
+      value: sceneSectionNumberSlots(1),
+    },
   };
   const uniforms = THREE.UniformsUtils.merge([
     THREE.UniformsLib.lights,
@@ -686,6 +723,19 @@ export function buildTerrainMaterial(
       uniform vec3 uPublicClipCenter;
       uniform vec3 uPublicClipHalfSize;
       uniform vec2 uPublicClipCosSin;
+      uniform int uSceneSectionEnabled;
+      uniform int uSceneSectionMode;
+      uniform int uSceneSectionPlaneCount;
+      uniform vec3 uSceneSectionNormals[8];
+      uniform float uSceneSectionPositions[8];
+      uniform float uSceneSectionThickness[8];
+      uniform int uSceneSectionInvert[8];
+      uniform float uSceneSectionPlaneOutsideOpacity[8];
+      uniform int uSceneSectionFrameCount;
+      uniform vec3 uSceneSectionFrameAxisA[8];
+      uniform vec3 uSceneSectionFrameAxisB[8];
+      uniform vec4 uSceneSectionFrameBounds[8];
+      uniform float uSceneSectionFrameOutsideOpacity[8];
 
       varying vec3 vWorldPos;
       varying vec3 vNormal;
@@ -994,6 +1044,33 @@ export function buildTerrainMaterial(
         return smoothstep(0.62, 0.98, min(normalizedCorner.x, normalizedCorner.y));
       }
 
+      float sceneSectionAlpha(vec3 position) {
+        if (uSceneSectionEnabled == 0) return 1.0;
+        float alpha = 1.0;
+        for (int i = 0; i < 8; i += 1) {
+          if (i >= uSceneSectionPlaneCount) break;
+          vec3 normal = normalize(uSceneSectionNormals[i]);
+          float distance = dot(position, normal) - uSceneSectionPositions[i];
+          if (uSceneSectionInvert[i] == 1) distance = -distance;
+          if (distance > 0.0) {
+            alpha = min(alpha, clamp(uSceneSectionPlaneOutsideOpacity[i], 0.0, 1.0));
+          }
+        }
+        for (int i = 0; i < 8; i += 1) {
+          if (i >= uSceneSectionFrameCount) break;
+          vec3 axisA = normalize(uSceneSectionFrameAxisA[i]);
+          vec3 axisB = normalize(uSceneSectionFrameAxisB[i]);
+          float a = dot(position, axisA);
+          float b = dot(position, axisB);
+          vec4 bounds = uSceneSectionFrameBounds[i];
+          bool inside = a >= bounds.x && a <= bounds.y && b >= bounds.z && b <= bounds.w;
+          if (!inside) {
+            alpha = min(alpha, clamp(uSceneSectionFrameOutsideOpacity[i], 0.0, 1.0));
+          }
+        }
+        return alpha;
+      }
+
       void main() {
         if (uPublicClipEnabled > 0.5) {
           vec3 rel = vWorldPos - uPublicClipCenter;
@@ -1019,6 +1096,8 @@ export function buildTerrainMaterial(
             }
           }
         }
+        float sectionAlpha = sceneSectionAlpha(vWorldPos);
+        if (sectionAlpha <= 0.001) discard;
 
         // Elevation ramp.
         float elevationScale = max(uVerticalExaggeration, 0.0001);
@@ -1401,11 +1480,11 @@ export function buildTerrainMaterial(
         // surface remains visible with a grid to orient position.
         if (!gl_FrontFacing) {
           float alpha = clamp(max(uUndersideOpacity, uOpacity), 0.0, 1.0);
-          gl_FragColor = vec4(surface, alpha);
+          gl_FragColor = vec4(surface, alpha * sectionAlpha);
           return;
         }
 
-        gl_FragColor = vec4(surface, clamp(uOpacity, 0.0, 1.0));
+        gl_FragColor = vec4(surface, clamp(uOpacity, 0.0, 1.0) * sectionAlpha);
       }
     `,
   });

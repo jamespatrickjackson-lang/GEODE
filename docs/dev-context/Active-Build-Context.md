@@ -130,9 +130,11 @@ colors, apply a directional edge-gradient fade, or draw long through-page edge
 leaders. Short white edge leaders are allowed as boundary cues, must attach to
 the same boundary-side crossing used by the edge label, and remain hard-clipped
 to the public surface clip. Edge leaders are capped boundary ticks, not full
-label-offset extensions, and topo graticule lines/labels are excluded from
-scene-section clipping. Terrain underside grid helpers use camera-side hysteresis
-so they do not chatter during small camera movements.
+label-offset extensions. Scene section planes and section-frame crops now clip
+targeted topo context by default per DEC-097, including terrain/topomap pixels,
+satellite imagery, graticule lines/labels, legends, and branding. Terrain
+underside grid helpers use camera-side hysteresis so they do not chatter during
+small camera movements.
 
 The current Utah FORGE public topo surface uses the named `Utah` material
 preset: khaki desert lows, muted sage/tree middle elevations, and warm

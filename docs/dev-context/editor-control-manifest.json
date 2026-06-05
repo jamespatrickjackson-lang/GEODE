@@ -406,6 +406,22 @@
       "status": "active"
     },
     {
+      "id": "topo.graticule.section-crop-opt-in",
+      "label": "Retired topo section opt-in",
+      "kind": "control",
+      "parentId": "topo.group.graticule",
+      "scope": "projects-with-graticule",
+      "backedBy": "legacy DEC-077 topo section compatibility flag",
+      "setterRoute": "retired by DEC-097",
+      "status": "removed",
+      "approval": {
+        "status": "approved",
+        "approvedBy": "James via Codex",
+        "approvedAt": "2026-06-05",
+        "reason": "DEC-097 makes targeted topo context participate in scene section planes and frames by default, so the graticule opt-in checkbox is no longer editor-facing."
+      }
+    },
+    {
       "id": "topo.title.controls",
       "label": "Title block controls",
       "kind": "control-family",

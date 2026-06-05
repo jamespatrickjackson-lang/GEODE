@@ -325,7 +325,8 @@ Additional must-not-change items:
 
 - Preserve `leader` and `leader-dashed` as visible white edge cues.
 - Do not lower or revert `CAMERA_FAR_M = 5_000_000`.
-- Keep topo graticule lines and labels excluded from scene-section clipping.
+- DEC-097 supersedes the old default exclusion: targeted scene section planes
+  and frames now clip topo graticule lines and labels by default.
 - Preserve `userData.topoGraticule`, `topoGraticuleLines`,
   `topoGraticuleLineRole`, `topoGraticuleLineMaterial`,
   `topoGraticuleLabel`, and `topoGraticuleLabelMaterial` tags because runtime,

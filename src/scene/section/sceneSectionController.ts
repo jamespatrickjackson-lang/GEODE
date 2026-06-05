@@ -860,7 +860,6 @@ function sceneSectionLegacyObjectTargeted(
   layerTargets: Set<string>,
   productTargets: Set<string>,
 ): boolean {
-  if (sceneSectionObjectExcludedFromClipping(obj)) return false;
   if (obj.userData?.sceneSectionHelper === true) return false;
   if (style.sceneSectionTargetScope === "all-visible") return true;
   if (layerId === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) {
@@ -871,33 +870,6 @@ function sceneSectionLegacyObjectTargeted(
     return layerTargets.has(layerId);
   }
   return layerTargets.has(layerId);
-}
-
-function sceneSectionObjectExcludedFromClipping(obj: THREE.Object3D): boolean {
-  // DEC-077: any topo-context object whose owning layer's style has
-  // `topoSectionable: true` opts in to scene-section clipping. The runtime
-  // (graticuleRuntime / brandingRuntime) mirrors that flag onto every child
-  // so the exclusion check is local.
-  if (obj.userData?.topoSectionable === true) return false;
-  return (
-    obj.userData?.topoGraticule === true ||
-    obj.userData?.topoGraticuleLines === true ||
-    obj.userData?.topoGraticuleRibbon === true ||
-    obj.userData?.topoGraticuleLabel === true ||
-    obj.userData?.topoMapBranding === true
-  );
-}
-
-function sceneSectionVisibilityInactive(
-  objectId: string,
-): SceneSectionObjectVisibility {
-  return {
-    objectId,
-    outsideOpacityByAxis: { x: 1, y: 1, z: 1 },
-    outsideOpacityByFrameId: {},
-    active: false,
-    hasSoftOpacity: false,
-  };
 }
 
 function sceneSectionAxisOutsideOpacity(
@@ -1058,9 +1030,6 @@ export function sceneSectionObjectVisibilityForObject(this: any,
   productTargets: Set<string>,
 ): SceneSectionObjectVisibility {
   const objectId = sceneSectionObjectIdForObject(layerId, obj);
-  if (sceneSectionObjectExcludedFromClipping(obj)) {
-    return sceneSectionVisibilityInactive(objectId);
-  }
   const legacyTargeted = sceneSectionLegacyObjectTargeted(
     layerId,
     obj,
@@ -1819,8 +1788,11 @@ export function setSceneSectionUniforms(this: any,
     return uniforms[key] as { value: T };
   };
   const targeted = visibility.active;
+  const activeFrames = targeted
+    ? frames.slice(0, SCENE_SECTION_MAX_FRAME_COUNT)
+    : [];
   ensure<number>("uSceneSectionEnabled", 0).value =
-    targeted && planes.length > 0 ? 1 : 0;
+    targeted && (planes.length > 0 || activeFrames.length > 0) ? 1 : 0;
   ensure<number>("uSceneSectionMode", 0).value = 0;
   ensure<number>("uSceneSectionPlaneCount", 0).value = targeted
     ? Math.min(SCENE_SECTION_MAX_FRAME_COUNT, planes.length)
@@ -1873,9 +1845,6 @@ export function setSceneSectionUniforms(this: any,
         )
       : 1;
   }
-  const activeFrames = targeted
-    ? frames.slice(0, SCENE_SECTION_MAX_FRAME_COUNT)
-    : [];
   ensure<number>("uSceneSectionFrameCount", 0).value = activeFrames.length;
   const frameAxisAUniform = ensure<THREE.Vector3[]>(
     "uSceneSectionFrameAxisA",
@@ -1956,26 +1925,6 @@ export function applySceneSectionMaterial(this: any,
   frameClippingPlanes: THREE.Plane[],
 ): void {
   if (material.userData?.sceneSectionHelper === true) return;
-  if (
-    // DEC-077: when the owning layer's style opts in via topoSectionable,
-    // skip this early-return and let the material fall through to the
-    // standard section-clipping path below.
-    material.userData?.topoSectionable !== true &&
-    (material.userData?.topoGraticuleLineMaterial === true ||
-      material.userData?.topoGraticuleRibbonMaterial === true ||
-      material.userData?.topoGraticuleLabelMaterial === true)
-  ) {
-    const publicSurfaceClipPlanes = Array.isArray(
-      material.userData?.publicSurfaceClipPlanes,
-    )
-      ? (material.userData.publicSurfaceClipPlanes as THREE.Plane[])
-      : [];
-    material.clippingPlanes =
-      publicSurfaceClipPlanes.length > 0 ? publicSurfaceClipPlanes : null;
-    material.clipIntersection = false;
-    material.needsUpdate = true;
-    return;
-  }
   const affectedAxes = new Set<SceneSectionAxis>([
     ...planes.map((plane) => plane.axis),
     ...frames.map((frame) => frame.axis),
@@ -2004,6 +1953,14 @@ export function applySceneSectionMaterial(this: any,
     (material.userData?.seismicRaymarchMaterial === true ||
       material.userData?.seismicSectionMaterial === true ||
       material.userData?.scalarVolumeRaymarchMaterial === true);
+  const terrainShader =
+    material instanceof THREE.ShaderMaterial &&
+    material.userData?.terrainMaterial === true;
+  if (terrainShader) {
+    this.setSceneSectionUniforms(material, planes, visibility, frames);
+    material.needsUpdate = true;
+    return;
+  }
   if (seismicShader) {
     this.setSceneSectionUniforms(material, planes, visibility, frames);
     setSceneSectionObjectVisibilityUniforms(

@@ -146,32 +146,24 @@ The next round of runtime work re-routes `tickLayerTweens()` so the per-frame
 path animates only opacity and uniforms, and the rebuild is gated to tween
 start / tween end. This file is the contract that fix must satisfy.
 
-## Topo / graticule sectioning opt-in (DEC-077)
+## Topo / graticule sectioning default (DEC-097)
 
-Topo map labels and legends, the longitude/latitude graticule (lines,
-ribbons, labels), and the topo map branding are excluded from
-scene-section clipping by **default** so the topo context still reads as
-reference geometry on the terrain. This is the DEC-071 behavior.
+Scene section planes and section-frame crops apply to targeted topo context by
+default. The terrain/topomap surface, satellite/orthophoto imagery sampled by
+the terrain shader, terrain-composited overlays, longitude/latitude graticule
+lines/ribbons/labels, topo labels/legends, and topo branding all flow through
+the section-clipping path when the active target scope includes them.
 
-Setting `EditableStyle.topoSectionable = true` on a layer's style opts
-that layer's topo-context objects in to the section-clipping pipeline
-(DEC-077). The exclusion gate that previously short-circuited them in
-[sceneSectionController.ts:714-722](../../src/scene/section/sceneSectionController.ts#L714-L722)
-and the material-level early-return at
-[sceneSectionController.ts:1632-1652](../../src/scene/section/sceneSectionController.ts#L1632-L1652)
-both honor the per-object / per-material `topoSectionable` flag. The
-flag is stamped on every descendant + material by
-`graticuleRuntime.applyTopoGraticuleStyle` and `brandingRuntime.rebuild`
-on each style apply.
+Existing target-scope behavior remains. `all-visible` clips all visible content.
+`selected-targets` clips only selected layers/products, but topo objects and
+materials no longer have a special bypass once targeted.
 
-When sectioning is on, the graticule line material's
-`publicSurfaceClipPlanes` are not applied as the only clip source — the
-material falls through to the standard section-clipping path. Off
-matches DEC-071 bit-for-bit.
-
-Editor surface: "Section frames clip grid" boolean on the graticule
-layer panel ([TopoMapPanel.tsx](../../src/editor/topoMap/TopoMapPanel.tsx)).
-Topo branding inherits the flag from the terrain layer's style.
+`EditableStyle.topoSectionable` is deprecated compatibility state from DEC-077
+and is now a no-op for the default clipping contract. Older project JSON may
+still carry the field, but the editor no longer presents an opt-in checkbox.
+Public surface clip composition remains intact: public crop still applies to the
+topo surface and graticule materials, and scene section planes/frames layer on
+top of that crop.
 
 ## Frame compatibility: continuous interpolation vs crossfade
 
