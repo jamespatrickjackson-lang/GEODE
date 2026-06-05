@@ -57,6 +57,14 @@ Current Utah FORGE work includes active Phase 3 MT, seismic browser products, pu
 
 Do not assume Utah FORGE is the product standard. It is one case study probing MT/seismic/public-context/geophysics architecture and presentation needs.
 
+Current Utah FORGE authoring savepoint: the active deck front block starts with
+pages `156_page`, `157_page`, `158_page`, then the duplicated MT/section review
+pages `159_page`, `166_page`, `160_page`, `164_page`, followed by the reordered
+resistivity, section, and context pages in `project.json` `pageOrder`.
+`165_page` is the current staff Page Archive entry through
+`archivedPageOrder`; `pages/_archive/166_page.json` is delete-recovery storage,
+not staff archive state.
+
 Current editor/toolset work is an iteration toward a cleaner global-tool
 structure. It is not a shipped endpoint. Preserve current behavior while moving
 tool defaults, runtime behavior, editor panels, and style tokens out of
@@ -222,7 +230,7 @@ line numbers, well labels, scale labels, or captions into app output.
 - User-facing editor tool inventory: `docs/tool-manifest.md`
 - Utah FORGE project-local data/layer status: `projects/utah-forge/DATA_LAYER_STATUS.md`
 - Source monolith split plan and progress: `docs/dev-context/Source-Monolith-Split-Plan.md`
-- Most recent cross-session handoff: `docs/dev-context/Agent-Handoff-2026-05-26.md`
+- Most recent cross-session handoff: `docs/dev-context/Agent-Handoff-2026-06-05.md`
 
 ## Inactive / Historical Reference Docs
 
