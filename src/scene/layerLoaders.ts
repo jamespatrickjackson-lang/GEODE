@@ -44,7 +44,7 @@ import { registerUtahForgeReferenceLoaders } from "../projectModules/utahForge/r
 import { UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID } from "../projectModules/utahForge/layerIds";
 import { isTopoMapGraticuleLayer } from "../topoMap/settings";
 import { appAssetUrl } from "../projects/projectPathsRuntime";
-import { SceneManager } from "./SceneManager";
+import type { SceneManager } from "./SceneManager";
 import {
   createLayerLoaderRegistry,
   type LayerLoadContext,

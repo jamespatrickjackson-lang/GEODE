@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { SceneHandle } from "../scene";
 import type { PresentationPage } from "../pages/types";
@@ -8,7 +8,6 @@ import {
 } from "../pages/PageController";
 import { NavControls } from "../ui/NavControls";
 import { useEditor } from "./EditorContext";
-import { EditorRoot } from "./EditorRoot";
 import { ENVIRONMENT_SENTINEL } from "./types";
 import { OverlayDisplay } from "../presenter/OverlayDisplay";
 import { PresenterLogo } from "../presenter/PresenterLogo";
@@ -49,6 +48,12 @@ import {
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
 import { resolveTopoMapSettings } from "../topoMap/settings";
+
+const EditorRoot = lazy(() =>
+  import("./EditorRoot").then((module) => ({
+    default: module.EditorRoot,
+  })),
+);
 
 const utahForgeLegendStackStyle: CSSProperties = {
   position: "absolute",
@@ -230,11 +235,13 @@ export function EditorChrome({
       <SelectedPageMirror />
       <NavControls />
       <ScaleBarWithTransitionState sceneHandle={sceneHandle} />
-      <EditorRoot
-        sceneHandle={sceneHandle}
-        activeAudienceLens={activeAudienceLens}
-        onAudienceLensChange={setActiveAudienceLens}
-      />
+      <Suspense fallback={null}>
+        <EditorRoot
+          sceneHandle={sceneHandle}
+          activeAudienceLens={activeAudienceLens}
+          onAudienceLensChange={setActiveAudienceLens}
+        />
+      </Suspense>
       <LightModeToggle sceneHandle={sceneHandle} onReturnHome={onReturnHome} />
       <AssayLegend sceneHandle={sceneHandle} />
       {state.projectSlug === "utah-forge" ? (

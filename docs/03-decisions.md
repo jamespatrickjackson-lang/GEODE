@@ -1118,3 +1118,13 @@ fake-cloud looks.
 **Why:** Initial MT pages do not need seismic sample or volume `.u8` payloads. Eager hidden-product loading caused hidden seismic products to fetch and decode during page boot, increasing browser CPU, GPU memory pressure, and network churn even when the visible page had no seismic content.
 
 **Guard:** `loadSeismicBrowser` must not call `seismicEnsureProductsLoaded([manifest.defaultProductId], ...)` before returning its runtime group. `applySeismicBrowserStyle` must gate product loads on `group.visible === true`, non-empty requested product ids, and product-enabled state. Source and browser audits should flag repeated project payload requests from hidden seismic layers.
+
+## DEC-104 - Vite source chunks stay at async app boundaries
+
+**Considered:** raise Vite's chunk-size warning limit, manually slice many scene/editor source folders, or add narrow code-splitting at natural async boundaries.
+
+**Chose:** keep `chunkSizeWarningLimit: 600` and split only along boundaries that do not cut through mutually dependent runtime code. Scene loader modules build as the `app-scene-loaders` source chunk. `EditorRoot` is loaded through a React `lazy` boundary from `EditorChrome`, while the existing scene mount remains a dynamic `import("./scene")` from `App`. Vendor chunks remain separate for React, Three core, Three examples, raster decoding, markdown, animation, and remaining shared vendor code.
+
+**Why:** The large build chunks came from the editor and Three.js scene runtime, not from page JSON or project payload duplication. Broad manual source chunks removed the large-chunk warning but introduced Rollup circular chunk warnings because scene styles, sectioning, topo runtime, page controller, editor controls, and scene loaders cross-import shared runtime state. Narrow async-boundary splitting keeps the production chunks below the guard without creating circular chunk output.
+
+**Guard:** `vite-source-code-splitting-source.test.mjs` must cover `sourceManualChunk`, the `app-scene-loaders` route, `EditorRoot` lazy loading, type-only `SceneManager` use in `layerLoaders`, and the unchanged 600 kB warning limit. Build verification must report no Vite large-chunk warning and no Rollup circular chunk warnings before claiming this issue fixed.

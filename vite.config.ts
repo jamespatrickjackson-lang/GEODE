@@ -180,6 +180,18 @@ function copyProjectsPlugin(): Plugin {
   };
 }
 
+function sourceManualChunk(id: string): string | undefined {
+  const normalized = id.replace(/\\/g, "/");
+  const srcIndex = normalized.lastIndexOf("/src/");
+  if (srcIndex < 0) return undefined;
+  const sourcePath = normalized.slice(srcIndex);
+
+  if (sourcePath.includes("/src/loaders/")) {
+    return "app-scene-loaders";
+  }
+  return undefined;
+}
+
 export default defineConfig(({ command }) => ({
   base: "./",
   plugins: [
@@ -195,6 +207,8 @@ export default defineConfig(({ command }) => ({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          const sourceChunk = sourceManualChunk(id);
+          if (sourceChunk) return sourceChunk;
           if (!id.includes("node_modules")) return undefined;
           if (
             id.includes("/react/") ||
