@@ -83,7 +83,8 @@
       "scalarFocusMax": 4.5,
       "scalarBlendMin": 0.139879,
       "scalarBlendMax": 3.937122,
-      "scalarVolumeRenderMode": "raymarch"
+      "scalarVolumeRenderMode": "raymarch",
+      "sectionIsoEnabled": true
     },
     "utah-forge-mt-stations": {
       "opacity": 1,
