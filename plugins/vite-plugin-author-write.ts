@@ -29,6 +29,7 @@ interface WriteBody {
   path: string;
   content: string;
   encoding?: "utf8" | "base64";
+  expectedContent?: string | null;
 }
 
 interface WriteBatchBody {
@@ -130,6 +131,32 @@ async function refuseUnlessRegularOrMissing(absolute: string): Promise<void> {
   } catch (e: unknown) {
     if ((e as NodeJS.ErrnoException).code === "ENOENT") return; // OK -- new file
     throw e;
+  }
+}
+
+async function readExpectedComparableContent(
+  absolute: string,
+): Promise<string | null> {
+  try {
+    await refuseUnlessRegularOrMissing(absolute);
+    return await fs.readFile(absolute, "utf8");
+  } catch (e: unknown) {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw e;
+  }
+}
+
+async function assertExpectedContent(
+  requestedPath: string,
+  absolute: string,
+  expectedContent: string | null | undefined,
+): Promise<void> {
+  if (expectedContent === undefined) return;
+  const currentContent = await readExpectedComparableContent(absolute);
+  if (currentContent !== expectedContent) {
+    throw new Error(
+      `write conflict: ${requestedPath} changed on disk since the editor loaded it; reload the project before saving.`,
+    );
   }
 }
 
@@ -305,6 +332,7 @@ export function authorWritePlugin(): Plugin {
             const body = await readJsonBody<WriteBody>(req);
             const abs = resolveSafePath(projectRoot, body.path);
             await refuseUnlessRegularOrMissing(abs);
+            await assertExpectedContent(body.path, abs, body.expectedContent);
             await fs.mkdir(dirname(abs), { recursive: true });
             const buf =
               body.encoding === "base64"
@@ -335,6 +363,11 @@ export function authorWritePlugin(): Plugin {
               for (const [index, file] of files.entries()) {
                 const target = resolveSafePath(projectRoot, file.path);
                 await refuseUnlessRegularOrMissing(target);
+                await assertExpectedContent(
+                  file.path,
+                  target,
+                  file.expectedContent,
+                );
                 const temp = `${target}.geosee-${batchId}-${index}.tmp`;
                 await refuseUnlessRegularOrMissing(temp);
                 prepared.push({

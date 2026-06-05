@@ -68,6 +68,46 @@ test("page transitions begin and tick Section ISO overlay fades beside section m
   );
 });
 
+test("new transitions discard Section ISO transition roots instead of promoting cancelled targets", () => {
+  assert.match(
+    sceneManager,
+    /discardSectionIsoOverlayTransition\(\):\s*void/,
+    "SceneManager should expose a cancel/discard path separate from final commit.",
+  );
+  const discardBody = sceneManager.match(
+    /discardSectionIsoOverlayTransition\(\):\s*void\s*\{[\s\S]*?\n  \}/,
+  );
+  assert.ok(discardBody, "Discard path should have an inspectable body.");
+  assert.doesNotMatch(
+    discardBody[0],
+    /applyRenderOpacityToTree\(\s*root\.group\s*,\s*1\s*,\s*1\s*\)/,
+    "Discarding an interrupted transition must not promote target roots to full opacity.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /this\.discardSectionIsoOverlayTransition\?\.\(\)/,
+    "Starting a new page transition should discard old Section ISO roots instead of committing them.",
+  );
+});
+
+test("Section ISO roots are not snapshotted for inactive or unrelated target pages", () => {
+  assert.doesNotMatch(
+    sceneManager,
+    /void fromSceneSectionStyle;[\s\S]*void toSceneSectionStyle;/,
+    "Section ISO transition gating should consume source and target section styles.",
+  );
+  assert.match(
+    sceneManager,
+    /sectionIsoOverlayTransitionShouldStart\(\s*fromSceneSectionStyle,\s*toSceneSectionStyle,?\s*\)/,
+    "Section ISO transition start should be gated by source/target section activity.",
+  );
+  assert.match(
+    sceneManager,
+    /if\s*\(\s*!this\.sectionIsoOverlayTransitionShouldStart\(\s*fromSceneSectionStyle,\s*toSceneSectionStyle,?\s*\)\s*\)\s*\{?\s*return/,
+    "Inactive or unrelated target pages should not snapshot source Section ISO roots.",
+  );
+});
+
 test("cut ISO overlay updates support non-destructive target preparation", () => {
   assert.match(
     volumeCutIsoOverlays,

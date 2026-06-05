@@ -247,7 +247,7 @@
       "atmosphereDriftDirectionZ": 0.79,
       "atmosphereDepthTest": false,
       "atmosphereRenderOrder": 80,
-      "atmosphereBoundsHelperVisible": true,
+      "atmosphereBoundsHelperVisible": false,
       "affectedByFog": false,
       "showLabels": false
     },
@@ -308,9 +308,9 @@
       "publicSurfaceClipPreviewVisible": false
     },
     "utah-forge-mt-stations": {
-      "color": "#6f6767",
+      "color": "#fd7244",
       "opacity": 1,
-      "pointMarkerRadiusM": 350,
+      "pointMarkerRadiusM": 100,
       "pointMarkerLiftM": 50,
       "pointMarkerLabelLiftM": 0,
       "pointMarkerAlignToTopo": true,
@@ -343,8 +343,9 @@
       "showLabels": false
     },
     "utah-forge-mt-resistivity-full-density": {
-      "opacity": 0.3,
-      "pointSizePx": 1,
+      "opacity": 0.48,
+      "pointSizePx": 1.25,
+      "scalarInclusionMode": "all-valid",
       "scalarColorLow": "#2cc9ff",
       "scalarColorMid": "#f8dd6d",
       "scalarColorHigh": "#ff637a",
@@ -746,10 +747,8 @@
   },
   "defaultVisibleLayers": [
     "utah-forge-site-boundary",
-    "utah-forge-phase3-demo-boreholes",
-    "utah-forge-mt-resistivity-full-density",
-    "terrain",
-    "utah-forge-topo-clouds"
+    "utah-forge-mt-stations",
+    "utah-forge-mt-resistivity-full-density"
   ],
   "scene": {
     "background": "#383838",
@@ -757,12 +756,12 @@
     "exposure": 1.2,
     "shadows": false,
     "sun": {
-      "azimuth": 340,
+      "azimuth": 333,
       "elevation": 19,
       "lockToCamera": false,
       "orbVisible": true,
       "orbOpacity": 0.68,
-      "sourceMarkerVisible": true,
+      "sourceMarkerVisible": false,
       "lightEnabled": true
     },
     "fog": {
@@ -1842,12 +1841,12 @@
           "lightModeColor": "#b5b5b5"
         },
         "sun": {
-          "azimuth": 340,
+          "azimuth": 333,
           "elevation": 19,
           "lockToCamera": false,
           "orbVisible": true,
           "orbOpacity": 0.68,
-          "sourceMarkerVisible": true,
+          "sourceMarkerVisible": false,
           "lightEnabled": true
         },
         "lighting": {
@@ -2597,9 +2596,9 @@
         },
         "utah-forge-mt-stations": {
           "opacity": 1,
-          "color": "#6f6767",
+          "color": "#fd7244",
           "pointMarkerLabelLiftM": 0,
-          "pointMarkerRadiusM": 350,
+          "pointMarkerRadiusM": 100,
           "mtStationQcSelectedStationId": "FRG19100",
           "mtStationQcPanelOpen": true,
           "pointMarkerLiftM": 50
@@ -2614,7 +2613,7 @@
         },
         "utah-forge-topo-clouds": {
           "atmospherePuffCount": 200,
-          "atmosphereBoundsHelperVisible": true,
+          "atmosphereBoundsHelperVisible": false,
           "atmosphereDriftEnabled": false,
           "atmosphereDriftSpeedMps": 8.1,
           "atmosphereSoftness": 0.76,
@@ -2654,6 +2653,9 @@
           "affectedByFog": true,
           "fogDensity": 0.000012,
           "publicSurfaceClipPreviewVisible": false
+        },
+        "utah-forge-mt-resistivity-full-density": {
+          "opacity": 0.05
         }
       }
     }

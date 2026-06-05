@@ -1070,3 +1070,51 @@ fake-cloud looks.
 **Why:** Section ISO bands and lines are derived geometry, not just material uniforms. Leaving target cut ISO refresh to final full apply caused bands and isolines to appear in one frame even while section masks and helper opacity eased correctly.
 
 **Trade-off accepted:** This is opacity/crossfade smoothing, not per-frame contour geometry morphing. Terrain material preset identity, texture URL/cache key, bounds, public clip, edge fade, edge outline, shader identity, terrain geometry, lighting, sun visuals, and camera path remain outside this transition owner.
+
+## DEC-100 - Scene section transitions do not bleed into inactive target pages
+
+**Supersedes:** DEC-098 and DEC-099 only where they allow active-to-inactive section exit fades to carry source page section masks, helpers, frame controls, ground traces, or Section ISO roots into a target page with `sceneSectionEnabled !== true`.
+
+**Considered:** keep source section masks and derived Section ISO roots fading out across unrelated target page transitions, or make section transition smoothing target-active only.
+
+**Chose:** section transition smoothing is target-active. Active-to-active section changes keep dual-mask alpha fades, helper crossfades, and Section ISO root crossfades. Inactive-to-active section changes may fade the target section state in. Active-to-inactive and active-to-unrelated transitions must apply the inactive target section state at transition start, must not create source helper snapshots, and must not snapshot or preserve Section ISO transition roots. Transition interruption must discard transition-owned Section ISO roots instead of promoting target roots to full opacity.
+
+**Why:** An inactive or unrelated target page is authored as unsectioned. Showing source page section cuts, helper controls, frame outlines, cones, ground traces, or Section ISO roots during that target transition reads as page bleed, even when the fade is technically smooth.
+
+**Trade-off accepted:** Exit transitions from section pages are less visually continuous when the target page has no active section. That is intentional: no section visual should appear on a target page that does not own section state. Active-to-active and inactive-to-active smoothing remain intact.
+
+## DEC-101 - Editor saves reject stale disk snapshots
+
+**Supersedes:** DEC-022 only where the dev-only write endpoint previously allowed unconditional project file overwrites.
+
+**Considered:** keep trusting the open editor's in-memory dirty entities as write authority, or require every saved project file to match the disk state loaded by that editor before the write batch commits.
+
+**Chose:** editor saves must carry per-file expected disk content into `/api/write-batch`. The dev author-write endpoint must reject any file whose current disk content no longer matches that expected snapshot. The editor must log these as `[editor] save conflict`, leave dirty state in place, and surface a save error instead of clearing dirty bits. A reload is the recovery path because the disk has a newer project state than the open editor.
+
+**Why:** Global Settings edits persist `environment.json` as a whole entity. An editor tab opened before a source or agent change can hold a stale Global Settings environment.json snapshot and later overwrite newer MT full-density defaults, making duplicated or new pages inherit the old cloud opacity, point size, or inclusion mode. Stale writes are a persistence conflict, not a rendering or duplication behavior.
+
+**Guard:** `write-file` and `write-batch` both accept `expectedContent`. Batch writes must validate every expected snapshot before writing temp files or renaming targets. Editor save code tracks known disk content for project, environment, page, and overlay files; JSON comparison is semantic, while overlay text comparison is exact. Future editor save paths must either participate in this precondition model or explicitly document why a direct write is safe.
+
+## DEC-102 - Global Settings is virtual page 00 in editor navigation
+
+**Supersedes:** DEC-095 only where selected Global Settings could be visually treated as the first authored page through the presenter overlay and bottom navigator.
+
+**Considered:** keep the page controller's active index as the only navigation source, or make the editor-selected Global Settings sentinel behave as a virtual page before the active `pageOrder`.
+
+**Chose:** in editor mode, selected Global Settings is page `00` for navigator display and page-forward semantics, but it is not a renderable `PresentationPage`. Global Settings renders no presenter overlay card. The bottom navigator label shows `00. Global Settings`; clicking Next selects and navigates to the first visible authored page. Clicking Previous from page `00` selects and navigates to the last visible authored page, matching the existing wraparound navigation model.
+
+**Why:** The editor opens on Global Settings so global controls are immediately available. Showing page 1's overlay card while the selected authoring target is Global Settings made the app appear to be on page 1 while navigation logic treated the first active page as already current, so a forward click skipped to page 2.
+
+**Guard:** `OverlayDisplay` must suppress card panel instances when the selected editor target is `ENVIRONMENT_SENTINEL`. `NavControls` must branch on the same sentinel, show the `00. Global Settings` label, and select the first visible authored page before calling `goto(firstVisibleIndex)` for Next from page `00`. Source and browser checks should cover both the no-card boot state and the Next-to-page-1 transition.
+
+## DEC-103 - Hidden seismic layers do not load product payloads
+
+**Supersedes:** DEC-086 only where eager project-layer initialization implied that hidden seismic product data could be fetched at scene mount.
+
+**Considered:** keep the seismic browser's manifest loader preloading its default product, or make seismic product payloads lazy and visible-state driven.
+
+**Chose:** the seismic browser loads manifest and navigation metadata at layer initialization, but amplitude section and raymarch volume payloads follow the `visible-style-request-only` policy. Product payload loading is allowed only when the seismic layer is effectively visible and the requested product is enabled by product visibility state. A selected product id alone is not enough to fetch data when every product is disabled or the parent layer is hidden.
+
+**Why:** Initial MT pages do not need seismic sample or volume `.u8` payloads. Eager hidden-product loading caused hidden seismic products to fetch and decode during page boot, increasing browser CPU, GPU memory pressure, and network churn even when the visible page had no seismic content.
+
+**Guard:** `loadSeismicBrowser` must not call `seismicEnsureProductsLoaded([manifest.defaultProductId], ...)` before returning its runtime group. `applySeismicBrowserStyle` must gate product loads on `group.visible === true`, non-empty requested product ids, and product-enabled state. Source and browser audits should flag repeated project payload requests from hidden seismic layers.

@@ -6,6 +6,7 @@ const transitionDecisionLog = readFileSync(
   "docs/dev-context/Transition-Decision-Log.md",
   "utf8",
 );
+const decisions = readFileSync("docs/03-decisions.md", "utf8");
 const transitionDirectives = readFileSync(
   "docs/dev-context/Page-Transitions-And-Section-Frames.md",
   "utf8",
@@ -56,6 +57,24 @@ test("docs define section masks as transition-scene channels without adding a la
   );
 });
 
+test("docs supersede section exit fades with the no-bleed target-active contract", () => {
+  assert.match(
+    decisions,
+    /DEC-100 - Scene section transitions do not bleed into inactive target pages/,
+    "Durable decisions should supersede active-to-inactive section exit fades.",
+  );
+  assert.match(
+    transitionDecisionLog,
+    /TRD-012 - Scene Section No-Bleed Target-Active Guard/,
+    "Transition decision log should record the target-active no-bleed guard.",
+  );
+  assert.match(
+    transitionDirectives,
+    /active-to-inactive[\s\S]*must not carry source\s+section masks, helpers, frame controls, ground traces, or Section ISO roots/i,
+    "Transition directives should forbid section visuals on inactive or unrelated target pages.",
+  );
+});
+
 test("section object visibility is a continuous opacity channel, not a discrete snap", () => {
   assert.match(
     sceneSectionController,
@@ -99,6 +118,32 @@ test("incompatible section changes use a dual-mask fade with the page transition
     sceneSectionController,
     /SceneSectionMaskTransition/,
     "Scene section material application should accept explicit mask transition state.",
+  );
+});
+
+test("inactive target pages do not carry source section masks into the transition", () => {
+  assert.match(
+    transitionEffectiveLayers,
+    /const targetSceneSectionTransitionActive\s*=\s*sceneSectionTransitionActiveForStyle\(\s*targetSceneSectionStyle\s*\)/,
+    "Transition setup should compute target section activity from the target section style.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /if\s*\(\s*sceneSectionStyleChanged\s*&&\s*duration\s*>\s*0\s*&&\s*targetSceneSectionTransitionActive\s*\)/,
+    "Section mask tweens should only start when the target page owns active section state.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /else\s+if\s*\(\s*sceneSectionStyleChanged\s*&&\s*!targetSceneSectionTransitionActive\s*\)\s*\{[\s\S]*this\.applySceneSectionPlanes\(\s*targetSceneSectionStyle\s*\)/,
+    "Inactive target pages should apply the target section state immediately instead of fading source masks.",
+  );
+});
+
+test("scene-section frame transition graph presence requires section enablement", () => {
+  assert.match(
+    transitionEffectiveLayers,
+    /const frameEnabled\s*=\s*sectionEnabled\s*&&\s*input\.style\.sceneSectionFrameEnabled\s*===\s*true/,
+    "Transition graph diagnostics should not report frame presence when sceneSectionEnabled is false.",
   );
 });
 

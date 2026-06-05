@@ -137,6 +137,7 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
   const host = this as SeismicBrowserStyleHost;
   const group = host.layers.get(id);
   if (!group) return;
+  const layerVisible = group.visible === true;
   const index = host.seismicBrowserRuntimeIndex(group);
   if (!index) return;
 
@@ -387,9 +388,21 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
     typeof index.root.userData.seismicSelectedProductId === "string"
       ? index.root.userData.seismicSelectedProductId
       : "";
-  const requestedLoadProductIds = new Set(enabledProductIds);
-  requestedLoadProductIds.add(productId);
-  if (comparisonProductId && productIds.has(comparisonProductId)) {
+  const requestedLoadProductIds = new Set<string>();
+  if (layerVisible) {
+    for (const enabledProductId of enabledProductIds) {
+      requestedLoadProductIds.add(enabledProductId);
+    }
+  }
+  if (layerVisible && productEnabled(productId)) {
+    requestedLoadProductIds.add(productId);
+  }
+  if (
+    layerVisible &&
+    comparisonProductId &&
+    productIds.has(comparisonProductId) &&
+    productEnabled(comparisonProductId)
+  ) {
     requestedLoadProductIds.add(comparisonProductId);
   }
   const retainedProductIds = new Set(requestedLoadProductIds);
@@ -402,7 +415,11 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
     retainProducts(Array.from(retainedProductIds));
   }
   const ensureProductsLoaded = index.root.userData.seismicEnsureProductsLoaded;
-  if (typeof ensureProductsLoaded === "function") {
+  if (
+    layerVisible &&
+    requestedLoadProductIds.size > 0 &&
+    typeof ensureProductsLoaded === "function"
+  ) {
     const targetTier = seismicResolveTargetLodTier(
       index.root,
       productId,

@@ -4,6 +4,14 @@ import { appAssetUrl } from "../projects/projectPathsRuntime";
 
 interface WriteOpts {
   encoding?: "utf8" | "base64";
+  expectedContent?: string | null;
+}
+
+export interface BatchWriteFile {
+  path: string;
+  content: string;
+  encoding?: WriteOpts["encoding"];
+  expectedContent?: string | null;
 }
 
 export async function writeFile(
@@ -14,7 +22,12 @@ export async function writeFile(
   const res = await fetch("/api/write-file", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ path, content, encoding: opts.encoding ?? "utf8" }),
+    body: JSON.stringify({
+      path,
+      content,
+      encoding: opts.encoding ?? "utf8",
+      expectedContent: opts.expectedContent,
+    }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
@@ -23,7 +36,7 @@ export async function writeFile(
 }
 
 export async function writeFilesBatch(
-  files: Array<{ path: string; content: string; encoding?: WriteOpts["encoding"] }>,
+  files: BatchWriteFile[],
 ): Promise<void> {
   if (files.length === 0) return;
   const res = await fetch("/api/write-batch", {

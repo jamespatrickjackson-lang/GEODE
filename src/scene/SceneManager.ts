@@ -1754,17 +1754,33 @@ export class SceneManager {
     return groups;
   }
 
-  clearSectionIsoOverlayTransition(): void {
+  discardSectionIsoOverlayTransition(): void {
     const transition = this.sectionIsoOverlayTransition;
     if (!transition) return;
     for (const root of transition.targetRoots) {
-      this.applyRenderOpacityToTree(root.group, 1, 1);
+      root.group.parent?.remove(root.group);
+      disposeObjectTree(root.group);
     }
     for (const root of transition.sourceRoots) {
       root.group.parent?.remove(root.group);
       disposeObjectTree(root.group);
     }
     this.sectionIsoOverlayTransition = null;
+  }
+
+  clearSectionIsoOverlayTransition(): void {
+    this.discardSectionIsoOverlayTransition();
+  }
+
+  private sectionIsoOverlayTransitionShouldStart(
+    fromSceneSectionStyle: EditableStyle,
+    toSceneSectionStyle: EditableStyle,
+  ): boolean {
+    const sourceActive = fromSceneSectionStyle.sceneSectionEnabled === true;
+    const targetActive = toSceneSectionStyle.sceneSectionEnabled === true;
+    const activeToActive = sourceActive && targetActive;
+    const inactiveToActive = !sourceActive && targetActive;
+    return activeToActive || inactiveToActive;
   }
 
   beginSectionIsoOverlayTransition(
@@ -1774,10 +1790,16 @@ export class SceneManager {
     durationMs: number,
     easing: EasingName,
   ): void {
-    void fromSceneSectionStyle;
-    void toSceneSectionStyle;
-    this.clearSectionIsoOverlayTransition();
+    this.discardSectionIsoOverlayTransition();
     if (durationMs <= 0) return;
+    if (
+      !this.sectionIsoOverlayTransitionShouldStart(
+        fromSceneSectionStyle,
+        toSceneSectionStyle,
+      )
+    ) {
+      return;
+    }
     const sourceRoots = this.sectionIsoOverlayGroupsForTransition().map(
       ({ kind, layerId, group }) => {
         const snapshot = this.cloneTransitionObjectTree(
@@ -3781,8 +3803,16 @@ export class SceneManager {
       root.userData.seismicCameraMoving = seismicCameraMoving;
       root.userData.seismicCameraMovingUntilMs = this.seismicCameraMovingUntilMs;
       root.userData.seismicTransientLodReason = seismicTransientLodReason;
+      if (group.visible !== true) {
+        root.userData.seismicFrameRequestedLodTier = null;
+        root.userData.seismicFrameRequestedProductKey = "";
+        continue;
+      }
 
-      const visibleProductIds = Array.isArray(root.userData.seismicVisibleProductIds)
+      const hasVisibleProductIdsState = Array.isArray(
+        root.userData.seismicVisibleProductIds,
+      );
+      const visibleProductIds = hasVisibleProductIdsState
         ? (root.userData.seismicVisibleProductIds as unknown[]).filter(
             (value): value is string => typeof value === "string" && value.length > 0,
           )
@@ -3796,7 +3826,7 @@ export class SceneManager {
       const productIds =
         visibleProductIds.length > 0
           ? visibleProductIds
-          : selectedProductId
+          : !hasVisibleProductIdsState && selectedProductId
             ? [selectedProductId]
             : [];
       if (productIds.length === 0) continue;

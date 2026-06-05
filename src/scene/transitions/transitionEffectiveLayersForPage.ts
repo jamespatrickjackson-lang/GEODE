@@ -174,6 +174,12 @@ function derivedPresence(visible: boolean): TransitionRenderGraphLayerState["pre
   return visible ? "visible" : "hidden";
 }
 
+function sceneSectionTransitionActiveForStyle(
+  style: EffectiveLayerStyle,
+): boolean {
+  return style.sceneSectionEnabled === true;
+}
+
 function sceneSectionDerivedEntities(input: {
   layerId: string;
   style: EffectiveLayerStyle;
@@ -184,7 +190,8 @@ function sceneSectionDerivedEntities(input: {
 }): TransitionRenderGraphDerivedEntityState[] {
   if (input.layerId !== UTAH_FORGE_SCENE_SECTION_LAYER_ID) return [];
   const sectionEnabled = input.style.sceneSectionEnabled === true;
-  const frameEnabled = input.style.sceneSectionFrameEnabled === true;
+  const frameEnabled =
+    sectionEnabled && input.style.sceneSectionFrameEnabled === true;
   const groundTraceVisible =
     sectionEnabled && input.style.sceneSectionGroundTraceVisible !== false;
   const axesVisible = sectionEnabled && input.style.sceneSectionAxesVisible !== false;
@@ -316,7 +323,7 @@ export function transitionEffectiveLayersForPage(
   this.workingAreaFocusTween = null;
   this.sceneSectionStyleTween = null;
   this.sceneSectionHelperTransitionOpacity = 1;
-  this.clearSectionIsoOverlayTransition?.();
+  this.discardSectionIsoOverlayTransition?.();
   this.clearLayerTransitionSnapshots();
   this.lastEffectiveEnv = toEnvironment;
   this.lastEffectivePage = toPage;
@@ -568,7 +575,13 @@ export function transitionEffectiveLayersForPage(
       fromSceneSectionStyle,
       targetSceneSectionStyle,
     );
-  if (sceneSectionStyleChanged && duration > 0) {
+  const targetSceneSectionTransitionActive =
+    sceneSectionTransitionActiveForStyle(targetSceneSectionStyle);
+  if (
+    sceneSectionStyleChanged &&
+    duration > 0 &&
+    targetSceneSectionTransitionActive
+  ) {
     this.sceneSectionStyleTween = {
       fromStyle: fromSceneSectionStyle,
       toStyle: targetSceneSectionStyle,
@@ -588,6 +601,12 @@ export function transitionEffectiveLayersForPage(
     ) {
       this.beginSceneSectionHelperTransitionSnapshot?.(now, duration, easing);
     }
+  } else if (sceneSectionStyleChanged && !targetSceneSectionTransitionActive) {
+    this.sceneSectionStyleTween = null;
+    this.sceneSectionHelperTransitionOpacity = 0;
+    this.applySceneSectionPlanes(targetSceneSectionStyle);
+  }
+  if (sceneSectionStyleChanged) {
     this.activeSceneTransitionContext.productFamilies.push(
       sceneSectionHelperDecision({
         layerId: UTAH_FORGE_SCENE_SECTION_LAYER_ID,
@@ -642,6 +661,7 @@ export function transitionEffectiveLayersForPage(
         !!group &&
         duration > 0 &&
         sceneSectionDiscreteChanged &&
+        targetSceneSectionTransitionActive &&
         fromOpacity > 0.001 &&
         SCENE_SECTION_AFFECTED_LAYER_IDS.has(id);
       const shouldTweenScalarStyle =

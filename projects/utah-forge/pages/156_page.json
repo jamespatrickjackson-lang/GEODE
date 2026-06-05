@@ -135,12 +135,12 @@
   "visibilityOverrides": {
     "utah-forge-phase3-working-area": false,
     "terrain": true,
-    "utah-forge-mt-stations": true,
+    "utah-forge-mt-stations": false,
     "utah-forge-mt-resistivity-preview": false,
     "utah-forge-mt-resistivity-full-density": true,
-    "utah-forge-mt-resistivity-volume": true,
+    "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-slices": false,
-    "utah-forge-mt-resistivity-threshold-surfaces": true,
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
     "utah-forge-mt-top-surface": false,
     "utah-forge-phase3-seismic-browser": false,
     "utah-forge-topo-clouds": true,
@@ -148,10 +148,10 @@
     "utah-forge-phase3-demo-boreholes": true
   },
   "overlayLayout": {
-    "x": 0.6658723958333334,
-    "y": 0.02368883312421575,
-    "width": 0.33380208333333333,
-    "height": 0.3696612296110414
+    "x": 0.85,
+    "y": 0.00612296110414047,
+    "width": 0.15,
+    "height": 0.10303638644918445
   },
   "cameraObjectFocus": {
     "targetId": "product:utah-forge-mt-stations:FRG19023",

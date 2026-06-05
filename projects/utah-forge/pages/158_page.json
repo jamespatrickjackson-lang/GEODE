@@ -4,14 +4,14 @@
   "subtitle": "Source-derived MT volume with focused Marching Cubes context",
   "camera": {
     "position": [
-      -38690.51906577064,
-      -10029.967412831877,
-      19020.165066647925
+      -29462.758932332155,
+      -2797.8316397091003,
+      10143.681719851355
     ],
     "target": [
-      -6511.182934297072,
-      -10099.655743741318,
-      2523.9792096363435
+      -7335.477525207981,
+      -10850.895688263377,
+      1020.4014972835332
     ],
     "up": [
       0,
@@ -85,10 +85,11 @@
       "scalarBlendMax": 3.937122
     },
     "utah-forge-mt-stations": {
-      "opacity": 0.5,
+      "opacity": 0.9,
       "showLabels": false,
       "mtStationQcSelectedStationId": "FRG19078",
-      "mtStationQcPanelOpen": true
+      "mtStationQcPanelOpen": true,
+      "color": "#fd7244"
     },
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
@@ -111,11 +112,16 @@
     },
     "utah-forge-phase3-demo-boreholes": {
       "opacity": 0.72,
-      "showLabels": false
+      "showLabels": false,
+      "siteDetailsAlignToTopo": false
+    },
+    "utah-forge-site-boundary": {
+      "color": "#4dfcff",
+      "fillOpacity": 0
     }
   },
   "visibilityOverrides": {
-    "utah-forge-phase3-working-area": true,
+    "utah-forge-phase3-working-area": false,
     "terrain": true,
     "utah-forge-mt-stations": true,
     "utah-forge-mt-resistivity-preview": false,
@@ -135,14 +141,6 @@
     "y": 0,
     "width": 0.307109375,
     "height": 0.27681304893350067
-  },
-  "cameraObjectFocus": {
-    "targetId": "product:utah-forge-mt-stations:FRG19070",
-    "worldPoint": [
-      -6511.182934297071,
-      -10099.655743741318,
-      2523.9792096363435
-    ]
   },
   "sceneOverrides": {
     "lightMode": true

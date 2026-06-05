@@ -1104,7 +1104,7 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
     { promise: Promise<void>; tier: SeismicLodTierName }
   >();
   const loadSequences = new Map<string, number>();
-  const retainedProductIds = new Set<string>([manifest.defaultProductId]);
+  const retainedProductIds = new Set<string>();
   const disposedProductIds: string[] = [];
 
   const publishRuntimeState = () => {
@@ -1242,6 +1242,7 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
     seismicDisposedProductIds: [],
     seismicApproxBytesByProduct: {},
     seismicApproxTotalBytes: 0,
+    seismicProductPayloadPolicy: "visible-style-request-only",
     seismicEnsureProductsLoaded(productIds: string[], tier?: SeismicLodTierName) {
       const requestedTier =
         tier === "coarse" || tier === "source" || tier === "standard"
@@ -1276,9 +1277,5 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
   }
 
   publishRuntimeState();
-  await group.userData.seismicEnsureProductsLoaded(
-    [manifest.defaultProductId],
-    SEISMIC_DEFAULT_LOD_TIER,
-  );
   return group;
 }

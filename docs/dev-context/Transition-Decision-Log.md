@@ -277,3 +277,32 @@ overlays.
 
 Evidence: `tests/tools/section-iso-transition-smoothing-source.test.mjs`,
 `docs/dev-context/Section-Iso-Transition-Smoothing-Temp-Log-2026-06-05.md`.
+
+## TRD-012 - Scene Section No-Bleed Target-Active Guard
+
+Status: accepted
+
+Problem: TRD-010 and TRD-011 smoothed section masks, helper opacity, and Section
+ISO roots, but active-to-inactive exits still carried source section visuals
+into unrelated target page transitions. That smooth exit fade reads as bleed
+when the target page has `sceneSectionEnabled !== true`.
+
+Decision: Section transition smoothing is target-active. Active-to-active
+section changes may use the TRD-010 dual-mask fade and helper crossfade.
+Inactive-to-active changes may fade the target section state in. Active-to-inactive
+and active-to-unrelated transitions must not carry source section masks, helpers,
+frame controls, ground traces, or Section ISO roots. They apply the inactive
+target section state at transition start, prevent helper snapshots, and discard
+transition-owned Section ISO roots without promoting target roots.
+
+Consequences: Transition graph diagnostics must treat scene-section frame
+presence as active only when `sceneSectionEnabled === true` and
+`sceneSectionFrameEnabled === true`. Section ISO root cancellation and final
+commit remain separate paths: discard removes transition roots, while commit is
+reserved for completed target-active transitions.
+
+Revisit when: A page-level authoring option is added to deliberately show source
+section exits on unsectioned target pages.
+
+Evidence: `tests/tools/scene-section-transition-behavior-source.test.mjs`,
+`tests/tools/section-iso-transition-smoothing-source.test.mjs`.

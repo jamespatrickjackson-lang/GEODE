@@ -1,5 +1,6 @@
 import { useEditor } from "../editor/EditorContext";
 import { frostedRoot, vibrancyLabel } from "../editor/styles";
+import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import { usePageController } from "../pages/PageController";
 
 // Nav button group as a single frosted chip. Its material follows
@@ -151,16 +152,52 @@ function NavTriangle({
 }
 
 export function NavControls() {
-  const { state } = useEditor();
+  const { state, selectPage } = useEditor();
   const {
     currentIndex,
     pages,
     isTransitioning,
     freelookActive,
+    goto,
     next,
     prev,
     resetToPose,
   } = usePageController();
+  const globalSettingsSelected =
+    !state.presenterMode && state.selectedPageId === ENVIRONMENT_SENTINEL;
+  const firstVisibleIndex = pages.findIndex(
+    (candidate) => candidate.hidden !== true,
+  );
+  const firstVisiblePage =
+    firstVisibleIndex >= 0 ? pages[firstVisibleIndex] : null;
+  let lastVisibleIndex = -1;
+  for (let i = pages.length - 1; i >= 0; i -= 1) {
+    if (pages[i].hidden !== true) {
+      lastVisibleIndex = i;
+      break;
+    }
+  }
+  const lastVisiblePage =
+    lastVisibleIndex >= 0 ? pages[lastVisibleIndex] : null;
+  const handlePrevious = () => {
+    if (globalSettingsSelected && lastVisiblePage) {
+      selectPage(lastVisiblePage.id);
+      goto(lastVisibleIndex);
+      return;
+    }
+    prev();
+  };
+  const handleNext = () => {
+    if (globalSettingsSelected && firstVisiblePage) {
+      selectPage(firstVisiblePage.id);
+      goto(firstVisibleIndex);
+      return;
+    }
+    next();
+  };
+  const navPageLabel = globalSettingsSelected
+    ? "00. Global Settings"
+    : (pages[currentIndex]?.title ?? "");
 
   const gui = state.environment.scene?.gui ?? {};
   const guiOverlay = gui.overlay ?? {};
@@ -323,7 +360,7 @@ export function NavControls() {
               }
             : { ...buttonStyle, ...arrowButtonStyle, ...arrowButtonPaddingStyle }
         }
-        onClick={prev}
+        onClick={handlePrevious}
         disabled={isTransitioning}
         title="Previous page"
         aria-label="Previous page"
@@ -347,8 +384,8 @@ export function NavControls() {
         disabled={!freelookActive || isTransitioning}
         title={freelookActive ? "Reset view to this page's pose" : undefined}
       >
-        <span>{pages[currentIndex]?.title ?? ""}</span>
-      </button>
+          <span>{navPageLabel}</span>
+        </button>
       <button
         style={
           isTransitioning
@@ -360,7 +397,7 @@ export function NavControls() {
               }
             : { ...buttonStyle, ...arrowButtonStyle, ...arrowButtonPaddingStyle }
         }
-        onClick={next}
+        onClick={handleNext}
         disabled={isTransitioning}
         title="Next page"
         aria-label="Next page"

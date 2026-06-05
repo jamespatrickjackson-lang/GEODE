@@ -32,6 +32,7 @@ import type {
 } from "./types";
 import { ENVIRONMENT_SENTINEL, POSE_HISTORY_LIMIT } from "./types";
 import {
+  type BatchWriteFile,
   environmentJsonPath,
   overlayMarkdownPath,
   pageArchivePath,
@@ -215,6 +216,78 @@ const EditorContext = createContext<EditorContextValue | null>(null);
 
 function clone<T>(v: T): T {
   return JSON.parse(JSON.stringify(v)) as T;
+}
+
+type KnownDiskContent = Record<string, string | null>;
+
+function comparableJsonContent(value: unknown): string {
+  return JSON.stringify(value);
+}
+
+function comparableContentForPath(
+  path: string,
+  content: string | null,
+): string | null {
+  if (content === null) return null;
+  if (!path.endsWith(".json")) return content;
+  try {
+    return JSON.stringify(JSON.parse(content));
+  } catch {
+    throw new Error(
+      `save conflict: ${path} is no longer valid JSON; reload the project before saving.`,
+    );
+  }
+}
+
+function buildInitialKnownDiskContent(
+  projectRoot: string,
+  manifest: ProjectManifest,
+  environment: EnvironmentSetup,
+  pages: readonly PresentationPage[],
+  archivedPages: readonly PresentationPage[],
+): KnownDiskContent {
+  const known: KnownDiskContent = {
+    [projectJsonPath(projectRoot)]: comparableJsonContent(manifest),
+    [environmentJsonPath(projectRoot)]: comparableJsonContent(environment),
+  };
+  for (const page of [...pages, ...archivedPages]) {
+    known[pageJsonPath(page.id, projectRoot)] = comparableJsonContent(page);
+  }
+  return known;
+}
+
+function saveConflictMessage(path: string): string {
+  return (
+    `save conflict: ${path} changed on disk since the editor loaded it; ` +
+    "reload the project before saving."
+  );
+}
+
+async function expectedContentForSave(
+  path: string,
+  knownDiskContent: KnownDiskContent,
+): Promise<string | null> {
+  const knownComparable = knownDiskContent[path];
+  const currentContent = await readFile(path).catch(() => null);
+  if (knownComparable === undefined) {
+    if (currentContent !== null) {
+      throw new Error(saveConflictMessage(path));
+    }
+    return null;
+  }
+  const currentComparable = comparableContentForPath(path, currentContent);
+  if (currentComparable !== knownComparable) {
+    throw new Error(saveConflictMessage(path));
+  }
+  return currentContent;
+}
+
+function rememberWrittenContent(
+  knownDiskContent: KnownDiskContent,
+  path: string,
+  content: string | null,
+): void {
+  knownDiskContent[path] = comparableContentForPath(path, content);
 }
 
 function withDirty(
@@ -2202,6 +2275,16 @@ export function EditorProvider({
   }));
 
   const stateRef = useRef(state);
+  const knownDiskContentRef = useRef<KnownDiskContent | null>(null);
+  if (knownDiskContentRef.current === null) {
+    knownDiskContentRef.current = buildInitialKnownDiskContent(
+      projectRoot,
+      initialManifest,
+      initialEnvironment,
+      initialPages,
+      initialArchivedPages,
+    );
+  }
   const liveApplyTransitionActiveRef = useRef(false);
   const deferredLiveSceneApplyRef = useRef(false);
   stateRef.current = state;
@@ -2239,6 +2322,11 @@ export function EditorProvider({
     readFile(overlayMarkdownPath(pageId, state.projectRoot))
       .then((text) => {
         if (cancelled) return;
+        rememberWrittenContent(
+          knownDiskContentRef.current ?? {},
+          overlayMarkdownPath(pageId, state.projectRoot),
+          text,
+        );
         dispatch({ type: "HYDRATE_OVERLAY", pageId, text: text ?? "" });
       })
       .catch((e) => {
@@ -2279,7 +2367,8 @@ export function EditorProvider({
         ),
         ...snapshot.filter((k) => k === "project"),
       ];
-      const batchWrites: Array<{ path: string; content: string }> = [];
+      const knownDiskContent = knownDiskContentRef.current ?? {};
+      const batchWrites: BatchWriteFile[] = [];
       const deletedPageIds =
         ordered.includes("project") || deletedPageIdsRef.current.size > 0
           ? Array.from(deletedPageIdsRef.current)
@@ -2287,23 +2376,34 @@ export function EditorProvider({
       for (const key of ordered) {
         if (key === "project") {
           const m = stateRef.current.manifest;
+          const path = projectJsonPath(cur.projectRoot);
+          const content =
+            JSON.stringify(
+              { ...m, modified: new Date().toISOString() },
+              null,
+              2,
+            ) + "\n";
           batchWrites.push({
-            path: projectJsonPath(cur.projectRoot),
-            content:
-              JSON.stringify(
-                { ...m, modified: new Date().toISOString() },
-                null,
-                2,
-              ) + "\n",
+            path,
+            content,
+            expectedContent: await expectedContentForSave(
+              path,
+              knownDiskContent,
+            ),
           });
           for (const id of deletedPageIds) {
             const content = await readFile(pageJsonPath(id, cur.projectRoot)).catch(
               () => null,
             );
             if (content !== null) {
+              const path = pageArchivePath(id, cur.projectRoot);
               batchWrites.push({
-                path: pageArchivePath(id, cur.projectRoot),
+                path,
                 content,
+                expectedContent: await expectedContentForSave(
+                  path,
+                  knownDiskContent,
+                ),
               });
             }
           }
@@ -2311,9 +2411,15 @@ export function EditorProvider({
           const environmentForWrite = normalizeMtBoundaryVisibilityEnvironment(
             stateRef.current.environment,
           );
+          const path = environmentJsonPath(cur.projectRoot);
+          const content = JSON.stringify(environmentForWrite, null, 2) + "\n";
           batchWrites.push({
-            path: environmentJsonPath(cur.projectRoot),
-            content: JSON.stringify(environmentForWrite, null, 2) + "\n",
+            path,
+            content,
+            expectedContent: await expectedContentForSave(
+              path,
+              knownDiskContent,
+            ),
           });
         } else if (key.startsWith("page:")) {
           const id = key.slice(5);
@@ -2322,25 +2428,44 @@ export function EditorProvider({
           const pageForWrite = normalizeMtBoundaryVisibilityPage(
             normalizeSubMasterAuthoringPage(page),
           );
+          const path = pageJsonPath(id, cur.projectRoot);
+          const content = JSON.stringify(pageForWrite, null, 2) + "\n";
           batchWrites.push({
-            path: pageJsonPath(id, cur.projectRoot),
-            content: JSON.stringify(pageForWrite, null, 2) + "\n",
+            path,
+            content,
+            expectedContent: await expectedContentForSave(
+              path,
+              knownDiskContent,
+            ),
           });
         } else if (key.startsWith("overlay:")) {
           const id = key.slice(8);
           const text = stateRef.current.overlays[id] ?? "";
+          const path = overlayMarkdownPath(id, cur.projectRoot);
           batchWrites.push({
-            path: overlayMarkdownPath(id, cur.projectRoot),
+            path,
             content: text,
+            expectedContent: await expectedContentForSave(
+              path,
+              knownDiskContent,
+            ),
           });
         }
       }
 
       await writeFilesBatch(batchWrites);
+      for (const write of batchWrites) {
+        rememberWrittenContent(knownDiskContent, write.path, write.content);
+      }
       for (const id of deletedPageIds) {
         await deleteFile(pageJsonPath(id, cur.projectRoot)).catch(() => {
           /* ignore */
         });
+        rememberWrittenContent(
+          knownDiskContent,
+          pageJsonPath(id, cur.projectRoot),
+          null,
+        );
       }
       deletedPageIdsRef.current.clear();
       for (const key of ordered) {
@@ -2350,7 +2475,13 @@ export function EditorProvider({
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       // eslint-disable-next-line no-console
-      console.error("[editor] save failed:", msg);
+      if (/write conflict|save conflict/i.test(msg)) {
+        // eslint-disable-next-line no-console
+        console.warn("[editor] save conflict:", msg);
+      } else {
+        // eslint-disable-next-line no-console
+        console.error("[editor] save failed:", msg);
+      }
       dispatch({ type: "SAVE_STATUS", status: "error", error: msg });
     }
   }, []);

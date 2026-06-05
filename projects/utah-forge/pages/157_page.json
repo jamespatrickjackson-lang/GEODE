@@ -112,8 +112,8 @@
     "utah-forge-phase3-demo-boreholes": {
       "opacity": 0.72,
       "showLabels": false,
-      "siteDetailsAlwaysOnTop": false,
-      "siteDetailsAlignToTopo": true
+      "siteDetailsAlwaysOnTop": true,
+      "siteDetailsAlignToTopo": false
     },
     "utah-forge-working-area-focus": {
       "workingAreaFocusEnabled": false,
@@ -141,12 +141,16 @@
         "hydrography-lakes": 0.15
       },
       "workingAreaFocusHelperVisible": true
+    },
+    "utah-forge-site-boundary": {
+      "color": "#4dfcff",
+      "fillOpacity": 0
     }
   },
   "visibilityOverrides": {
     "utah-forge-phase3-working-area": false,
     "terrain": true,
-    "utah-forge-mt-stations": true,
+    "utah-forge-mt-stations": false,
     "utah-forge-mt-resistivity-preview": false,
     "utah-forge-mt-resistivity-full-density": true,
     "utah-forge-mt-resistivity-volume": true,

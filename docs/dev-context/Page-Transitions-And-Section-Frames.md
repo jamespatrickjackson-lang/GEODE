@@ -142,13 +142,17 @@ The contract:
      [layerTweenRuntime.ts:104-110](../../src/scene/transitions/layerTweenRuntime.ts#L104-L110).
    - ISO band material `uOpacity` and per-helper authored opacity move via the
      composition above.
-   - Section ISO source/target roots crossfade when Section ISO enters, exits,
-     or changes geometry/identity. The transition does not rebuild contour
-     geometry every frame.
+   - Section ISO source/target roots crossfade when the target page has active
+      section state and Section ISO enters or changes geometry/identity. The
+      transition does not rebuild contour geometry every frame.
    - Source helper snapshots are allowed only for active-to-active section
-     helper changes. When the target page has section helpers inactive, source
-     frame outlines, cones, ground traces, and scale helpers must not carry
-     into the target transition.
+      helper changes. When the target page has section helpers inactive, source
+      frame outlines, cones, ground traces, and scale helpers must not carry
+      into the target transition.
+   - Active-to-inactive and active-to-unrelated transitions must not carry source
+      section masks, helpers, frame controls, ground traces, or Section ISO roots.
+      They apply the inactive target section state at transition start and discard
+      transition-owned Section ISO roots instead of promoting them.
    - For active-to-active incompatible helper changes, the outgoing snapshot
      fades out while the live target helper group fades in. This is a true
      crossfade, not two fully opaque helper sets.
@@ -287,6 +291,6 @@ Before claiming a transition fix:
   differs.
 - **Section ISO**: late readability overlay drawn on the section plane;
   authored opacity composes through transition opacity and threshold-surface
-  attenuation, never overwritten. Root lifecycle follows TRD-011: source roots
-  fade out, target roots fade in, and final commit lands exact target state
-  without a full-opacity snap.
+  attenuation, never overwritten. Root lifecycle follows TRD-011 and TRD-012:
+  target-active transitions crossfade source/target roots, while inactive or
+  unrelated target pages discard transition roots at transition start.

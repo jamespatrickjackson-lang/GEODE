@@ -100,9 +100,10 @@ Current allowed implementation scope:
 - Documentation and decision log entries.
 - Narrow environment-scene execution owner for background/fog channels accepted
   by TRD-009.
-- Narrow section-scene execution owner for scene section mask alpha and helper
-  opacity accepted by TRD-010.
-- Narrow Section ISO derived-root crossfade owner accepted by TRD-011.
+- Narrow target-active section-scene execution owner for scene section mask alpha
+  and helper opacity accepted by TRD-010 and bounded by TRD-012.
+- Narrow target-active Section ISO derived-root crossfade owner accepted by
+  TRD-011 and bounded by TRD-012.
 
 Current excluded implementation scope:
 

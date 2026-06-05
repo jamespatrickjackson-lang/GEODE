@@ -8,6 +8,7 @@ import {
   vibrancySecondaryLabel,
 } from "../editor/styles";
 import { useEditor } from "../editor/EditorContext";
+import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import { appAssetUrl } from "../projects/projectPathsRuntime";
 import type { EasingName, PresentationPage } from "../pages/types";
 
@@ -206,6 +207,8 @@ export function OverlayDisplay() {
   const { state, setPageOverlayLayout } = useEditor();
   const projectRoot = state.projectRoot;
   const isEditor = !state.presenterMode;
+  const globalSettingsSuppressesOverlayCard =
+    isEditor && state.selectedPageId === ENVIRONMENT_SENTINEL;
 
   const [htmlByPage, setHtmlByPage] = useState<Record<string, string>>({});
   // Live layout during a drag/resize. Null when not interacting.
@@ -446,7 +449,9 @@ export function OverlayDisplay() {
   const transitionT = clamp(transitionFrame.progress, 0, 1);
 
   const panelInstances =
-    transitionActive && page && targetPage
+    globalSettingsSuppressesOverlayCard
+      ? []
+      : transitionActive && page && targetPage
       ? [
           {
             page,
