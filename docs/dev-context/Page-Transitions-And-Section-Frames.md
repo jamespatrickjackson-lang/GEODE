@@ -137,6 +137,13 @@ The contract:
      [layerTweenRuntime.ts:104-110](../../src/scene/transitions/layerTweenRuntime.ts#L104-L110).
    - ISO band material `uOpacity` and per-helper authored opacity move via the
      composition above.
+   - Source helper snapshots are allowed only for active-to-active section
+     helper changes. When the target page has section helpers inactive, source
+     frame outlines, cones, ground traces, and scale helpers must not carry
+     into the target transition.
+   - For active-to-active incompatible helper changes, the outgoing snapshot
+     fades out while the live target helper group fades in. This is a true
+     crossfade, not two fully opaque helper sets.
    - Section-frame outlines and push/pull control cones are studio overlay
      controls. They stay in the transparent render queue with depth testing
      disabled and use the top scene-section control render order so terrain,
@@ -185,10 +192,11 @@ Per DEC-071:
 - **Compatible** section-frame transitions interpolate numeric frame geometry
   by stable frame id: plane position, crop bounds, scale interval, label /
   heading sizing and padding, and ground trace width.
-- **Incompatible** section-frame transitions crossfade helpers. Frame
-  identity, orientation, enable state, flip state, target layer/product state,
-  and added / removed frame ids are discrete for helper geometry. Sectioned
-  render content still fades through the TRD-010 dual-mask alpha path.
+- **Incompatible** section-frame transitions crossfade helpers only when both
+  source and target pages have active section helpers. Frame identity,
+  orientation, enable state, flip state, target layer/product state, and added /
+  removed frame ids are discrete for helper geometry. Sectioned render content
+  still fades through the TRD-010 dual-mask alpha path.
 - `sceneSectionObjectVisibilityByAxis` and
   `sceneSectionObjectVisibilityByFrameId` outside-opacity maps are continuous
   opacity channels. Adding, removing, or changing one of these values must fade

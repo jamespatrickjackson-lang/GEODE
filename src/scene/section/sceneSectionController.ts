@@ -2425,18 +2425,46 @@ function sceneSectionReferenceHelperVisible(
   );
 }
 
+function sceneSectionHelperActiveForStyle(
+  style: EditableStyle,
+  editorMode: boolean,
+): boolean {
+  return (
+    style.sceneSectionEnabled === true &&
+    sceneSectionReferenceHelperVisible(style, editorMode)
+  );
+}
+
+export function sceneSectionHelperSnapshotAllowedForTween(
+  this: any,
+  tween: SceneSectionStyleTween,
+): boolean {
+  const sourceActive = sceneSectionHelperActiveForStyle(
+    tween.fromStyle,
+    this.editorMode,
+  );
+  const targetActive = sceneSectionHelperActiveForStyle(
+    tween.toStyle,
+    this.editorMode,
+  );
+  return targetActive && sourceActive && tween.discreteChanged === true;
+}
+
 export function sceneSectionHelperOpacityForTween(this: any, 
   tween: SceneSectionStyleTween,
   eased: number,
 ): number {
-  const fromActive =
-    tween.fromStyle.sceneSectionEnabled === true &&
-    sceneSectionReferenceHelperVisible(tween.fromStyle, this.editorMode);
-  const toActive =
-    tween.toStyle.sceneSectionEnabled === true &&
-    sceneSectionReferenceHelperVisible(tween.toStyle, this.editorMode);
+  const fromActive = sceneSectionHelperActiveForStyle(
+    tween.fromStyle,
+    this.editorMode,
+  );
+  const toActive = sceneSectionHelperActiveForStyle(
+    tween.toStyle,
+    this.editorMode,
+  );
+  if (fromActive && toActive && tween.discreteChanged) return clamp01(eased);
   if (!fromActive && toActive) return clamp01(eased);
-  if (fromActive && !toActive) return 1 - clamp01(eased);
+  if (fromActive && !toActive) return 0;
   return 1;
 }
 

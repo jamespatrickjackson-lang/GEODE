@@ -73,7 +73,9 @@ traces should fade in or out on the same transition clock.
 - Incompatible section-frame, target, or enable-state changes use
   `lerp(sourceMaskAlpha, targetMaskAlpha, easedProgress)`.
 - Helper/reference visuals use `sceneSectionHelperTransitionOpacity` on the
-  same page transition clock.
+  same page transition clock only when the target page has active section
+  helpers. Outgoing helper snapshots are not allowed to carry source
+  section-frame studio controls into inactive or unrelated target pages.
 - Transition frames update material/shader uniforms and helper opacity only.
   Helper rebuilds and cut-ISO refreshes remain start/final-commit work.
 - Public clip, terrain texture identity, bounds, material preset, edge fade,

@@ -322,7 +322,9 @@ defaults, depth/compositing rules) that the contract enforces.
   sizing and padding, and ground trace width.
 - Incompatible section-frame transitions crossfade helpers. Frame identity,
   orientation, enable state, flip state, target membership state, and added or
-  removed frame ids are discrete for helper geometry.
+  removed frame ids are discrete for helper geometry. Helper crossfades are
+  active-to-active only; section-frame studio controls must not fade into
+  inactive/unrelated target pages.
 - Sectioned render content uses transition-aware section masks. Compatible
   section changes interpolate numeric values; incompatible target/frame changes
   blend source and target mask alpha on the page transition clock.

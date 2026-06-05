@@ -87,8 +87,10 @@ interpolate numeric section values; incompatible section-frame, target, or
 enable-state changes use dual-mask alpha blending on the target page
 transition clock. Section helper geometry is rebuilt only at tween start/final
 commit, while transition frames update material uniforms and helper opacity.
-Section-frame outlines and push/pull control cones are studio controls and
-render above scene content in editor/studio views.
+Helper snapshots are active-to-active only, so source section-frame controls do
+not bleed into inactive/unrelated target pages. Section-frame outlines and
+push/pull control cones are studio controls and render above scene content in
+editor/studio views.
 
 Pages are disposable fixtures for testing the global transition runtime. Do not
 repair transition behavior with fixture-id, fixture-index, fixture-title,

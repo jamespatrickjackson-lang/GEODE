@@ -234,10 +234,13 @@ Consequences: Section materials must update shader/uniform state during
 transition frames without rebuilding helper geometry. Ground traces, axes,
 frame outlines, labels, and intersection traces use
 `sceneSectionHelperTransitionOpacity` on the same target page
-`transition.duration` and `transition.easing`. Public surface clip remains a
-hard terrain/topo crop; texture URLs/cache keys, bounds, material presets, edge
-fade, edge outline, shader identity, terrain geometry, lighting, sun, and
-camera path remain outside this v1 section-mask transition owner.
+`transition.duration` and `transition.easing` only when the target page also has
+active section helpers. Outgoing helper snapshots are allowed for active-to-active
+section helper changes; they are not allowed to carry section-frame studio
+controls into inactive/unrelated target pages. Public surface clip
+remains a hard terrain/topo crop; texture URLs/cache keys, bounds, material
+presets, edge fade, edge outline, shader identity, terrain geometry, lighting,
+sun, and camera path remain outside this v1 section-mask transition owner.
 
 Revisit when: Section helper geometry itself needs continuous morphing, or
 section masks need a authored transition timing source separate from page

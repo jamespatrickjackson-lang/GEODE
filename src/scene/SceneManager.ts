@@ -178,6 +178,7 @@ import {
   sceneSectionFrameClippingPlanes as sceneSectionFrameClippingPlanesImpl,
   sceneSectionFrameForObject as sceneSectionFrameForObjectImpl,
   sceneSectionHelperOpacityForTween as sceneSectionHelperOpacityForTweenImpl,
+  sceneSectionHelperSnapshotAllowedForTween as sceneSectionHelperSnapshotAllowedForTweenImpl,
   sceneSectionMaskTransitionForTween as sceneSectionMaskTransitionForTweenImpl,
   sceneSectionLayerIds as sceneSectionLayerIdsImpl,
   sceneSectionObjectVisibilityForObject as sceneSectionObjectVisibilityForObjectImpl,
@@ -2012,6 +2013,12 @@ export class SceneManager {
     eased: number,
   ): number {
     return sceneSectionHelperOpacityForTweenImpl.call(this, tween, eased);
+  }
+
+  sceneSectionHelperSnapshotAllowedForTween(
+    tween: SceneSectionStyleTween,
+  ): boolean {
+    return sceneSectionHelperSnapshotAllowedForTweenImpl.call(this, tween);
   }
 
   sceneSectionMaskTransitionForTween(

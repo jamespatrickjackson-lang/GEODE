@@ -23,10 +23,23 @@ test("scene-section helper opacity treats reference lines as active across trans
     /sceneSectionAxesVisible/,
     "Axis visibility must keep the helper layer active even when editor handles are hidden.",
   );
-  assert.doesNotMatch(
+  assert.match(
     source,
     /fromActive\s*&&\s*toActive\s*&&\s*tween\.discreteChanged\)\s*return\s*clamp01\(eased\)/,
-    "Already-active helper/reference elements should not fade the target helper layer from zero during discrete changes.",
+    "Discrete active-to-active helper changes should crossfade the incoming live helper layer from zero while the outgoing snapshot fades out.",
+  );
+});
+
+test("scene-section helper snapshots do not bleed into inactive target pages", () => {
+  assert.match(
+    source,
+    /sceneSectionHelperSnapshotAllowedForTween/,
+    "Helper snapshot creation should be routed through an explicit bleed guard.",
+  );
+  assert.match(
+    source,
+    /targetActive[\s\S]*&&[\s\S]*sourceActive/,
+    "Helper snapshots should require both source and target helper states to be active.",
   );
 });
 
