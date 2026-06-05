@@ -82,6 +82,14 @@ terrain light-mode ramps, lighting, sun visuals, material preset identity,
 textures, public clip, edge fade, shaders, and geometry remain discrete unless
 a later decision expands that owner.
 
+Scene section masks are transition-scene channels. Compatible frame changes
+interpolate numeric section values; incompatible section-frame, target, or
+enable-state changes use dual-mask alpha blending on the target page
+transition clock. Section helper geometry is rebuilt only at tween start/final
+commit, while transition frames update material uniforms and helper opacity.
+Section-frame outlines and push/pull control cones are studio controls and
+render above scene content in editor/studio views.
+
 Pages are disposable fixtures for testing the global transition runtime. Do not
 repair transition behavior with fixture-id, fixture-index, fixture-title,
 source/target fixture path, or Utah-FORGE-only conditionals. Before touching

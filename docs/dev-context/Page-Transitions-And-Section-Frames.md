@@ -5,7 +5,7 @@ contract. Cross-referenced from `CLAUDE.md` Source Of Truth,
 `docs/dev-context/Active-Build-Context.md`,
 `docs/dev-context/UI-Visual-Standards.md`,
 `docs/dev-context/Runtime-Diagnostics.md`, and `docs/03-decisions.md` (DEC-071,
-DEC-076).
+DEC-076, DEC-097, DEC-098).
 
 ## Read this before
 
@@ -72,6 +72,14 @@ fog density, and fog-driven post tint use the environment-scene transition
 owner accepted in TRD-009. Do not add background/fog to the layer enum or route
 them through layer opacity/snapshot classification.
 
+Scene section masks are transition-scene channels, not `LayerTransitionKind`
+values. Per TRD-010, compatible same-frame section changes interpolate numeric
+section style values, while incompatible section frame, target, or enable-state
+changes use a dual-mask alpha fade:
+`lerp(sourceMaskAlpha, targetMaskAlpha, easedProgress)`. The section mask path
+uses the target page `transition.duration` and `transition.easing`; it must not
+add `section-mask` or any other section-specific layer kind.
+
 Layer classification compares resolved source and target presentation state in
 [transitionEffectiveLayersForPage.ts:160-166](../../src/scene/transitions/transitionEffectiveLayersForPage.ts#L160-L166)
 and is gated by `transitionEnvelopeAllowsLayer()` at
@@ -129,6 +137,11 @@ The contract:
      [layerTweenRuntime.ts:104-110](../../src/scene/transitions/layerTweenRuntime.ts#L104-L110).
    - ISO band material `uOpacity` and per-helper authored opacity move via the
      composition above.
+   - Section-frame outlines and push/pull control cones are studio overlay
+     controls. They stay in the transparent render queue with depth testing
+     disabled and use the top scene-section control render order so terrain,
+     topo, satellite, Section ISO, and transparent data products cannot cover
+     them.
 4. The **load-bearing offender today** is
    `rebuildSceneSectionHelpers()` at
    [sceneSectionController.ts:2845-2851](../../src/scene/section/sceneSectionController.ts#L2845-L2851).
@@ -142,9 +155,9 @@ The contract:
    changed — the cone material's shading state has been rebuilt. The fix is
    material-instance stability, not geometry replacement.
 
-The next round of runtime work re-routes `tickLayerTweens()` so the per-frame
-path animates only opacity and uniforms, and the rebuild is gated to tween
-start / tween end. This file is the contract that fix must satisfy.
+Runtime transition frames route `tickLayerTweens()` through the section
+transition-frame path so only material/shader uniforms and helper opacity move
+per frame. Helper rebuilds stay gated to tween start / tween end.
 
 ## Topo / graticule sectioning default (DEC-097)
 
@@ -173,8 +186,13 @@ Per DEC-071:
   by stable frame id: plane position, crop bounds, scale interval, label /
   heading sizing and padding, and ground trace width.
 - **Incompatible** section-frame transitions crossfade helpers. Frame
-  identity, orientation, enable state, flip state, object visibility target
-  state, and added / removed frame ids are discrete.
+  identity, orientation, enable state, flip state, target layer/product state,
+  and added / removed frame ids are discrete for helper geometry. Sectioned
+  render content still fades through the TRD-010 dual-mask alpha path.
+- `sceneSectionObjectVisibilityByAxis` and
+  `sceneSectionObjectVisibilityByFrameId` outside-opacity maps are continuous
+  opacity channels. Adding, removing, or changing one of these values must fade
+  to the target opacity on the page transition clock.
 
 `transitionEffectiveLayersForPage.ts` is the classifier. The crossfade path
 fades **between two pre-built helper snapshots** — not between a snapshot and
@@ -222,6 +240,10 @@ Before claiming a transition fix:
     sibling to this doc.**
   - DEC-076 — names this doc as canonical; codifies the helper-stability
     contract above.
+  - DEC-097 — targeted topo context participates in scene-section clipping by
+    default.
+  - DEC-098 — section masks and section studio controls transition as scene
+    overlay channels.
 - `docs/dev-context/UI-Visual-Standards.md` — "Section Frame Scale Axes" and
   "Scene Overlay And Transition Rendering" sections carry the visual rules
   themselves (numeric ranges, defaults).

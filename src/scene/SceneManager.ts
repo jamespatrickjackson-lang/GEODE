@@ -178,6 +178,7 @@ import {
   sceneSectionFrameClippingPlanes as sceneSectionFrameClippingPlanesImpl,
   sceneSectionFrameForObject as sceneSectionFrameForObjectImpl,
   sceneSectionHelperOpacityForTween as sceneSectionHelperOpacityForTweenImpl,
+  sceneSectionMaskTransitionForTween as sceneSectionMaskTransitionForTweenImpl,
   sceneSectionLayerIds as sceneSectionLayerIdsImpl,
   sceneSectionObjectVisibilityForObject as sceneSectionObjectVisibilityForObjectImpl,
   sceneSectionObjectTargeted as sceneSectionObjectTargetedImpl,
@@ -446,6 +447,29 @@ export interface SceneSectionObjectVisibility {
   outsideOpacityByFrameId: Record<string, number>;
   active: boolean;
   hasSoftOpacity: boolean;
+}
+
+export interface SceneSectionMaskUniformState {
+  planes: ResolvedSceneSectionPlane[];
+  frames: ResolvedSceneSectionFrame[];
+  visibility: SceneSectionObjectVisibility;
+}
+
+export interface SceneSectionMaskTransition {
+  progress: number;
+  source: SceneSectionMaskUniformState;
+  target: SceneSectionMaskUniformState;
+}
+
+export interface SceneSectionStyleMaskTransition {
+  fromStyle: EditableStyle;
+  toStyle: EditableStyle;
+  progress: number;
+}
+
+export interface SceneSectionApplyOptions {
+  transitionFrame?: boolean;
+  maskTransition?: SceneSectionStyleMaskTransition | null;
 }
 
 export interface SceneSectionRuntime {
@@ -1954,8 +1978,9 @@ export class SceneManager {
     planes: ResolvedSceneSectionPlane[],
     visibility: SceneSectionObjectVisibility,
     frames: ResolvedSceneSectionFrame[],
+    maskTransition?: SceneSectionMaskTransition | null,
   ): void {
-    return setSceneSectionUniformsImpl.call(this, material, planes, visibility, frames);
+    return setSceneSectionUniformsImpl.call(this, material, planes, visibility, frames, maskTransition);
   }
 
   applySceneSectionMaterial(
@@ -1965,8 +1990,9 @@ export class SceneManager {
     clippingPlanes: THREE.Plane[],
     frames: ResolvedSceneSectionFrame[],
     frameClippingPlanes: THREE.Plane[],
+    maskTransition?: SceneSectionMaskTransition | null,
   ): void {
-    return applySceneSectionMaterialImpl.call(this, material, planes, visibility, clippingPlanes, frames, frameClippingPlanes);
+    return applySceneSectionMaterialImpl.call(this, material, planes, visibility, clippingPlanes, frames, frameClippingPlanes, maskTransition);
   }
 
   interpolatedSceneSectionStyle(
@@ -1986,6 +2012,13 @@ export class SceneManager {
     eased: number,
   ): number {
     return sceneSectionHelperOpacityForTweenImpl.call(this, tween, eased);
+  }
+
+  sceneSectionMaskTransitionForTween(
+    tween: SceneSectionStyleTween,
+    eased: number,
+  ): SceneSectionStyleMaskTransition {
+    return sceneSectionMaskTransitionForTweenImpl.call(this, tween, eased);
   }
 
   applySceneSectionHelperTransitionOpacity(): void {
@@ -2025,8 +2058,11 @@ export class SceneManager {
     return rebuildSceneSectionHelpersImpl.call(this, style, planes, layerTargets, productTargets);
   }
 
-  applySceneSectionPlanes(style: EditableStyle): void {
-    return applySceneSectionPlanesImpl.call(this, style);
+  applySceneSectionPlanes(
+    style: EditableStyle,
+    options?: SceneSectionApplyOptions,
+  ): void {
+    return applySceneSectionPlanesImpl.call(this, style, options);
   }
 
   updateSceneSectionPlanarTextFacing(camera: THREE.Camera): void {

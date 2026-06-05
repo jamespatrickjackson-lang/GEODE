@@ -100,13 +100,16 @@ Current allowed implementation scope:
 - Documentation and decision log entries.
 - Narrow environment-scene execution owner for background/fog channels accepted
   by TRD-009.
+- Narrow section-scene execution owner for scene section mask alpha and helper
+  opacity accepted by TRD-010.
 
 Current excluded implementation scope:
 
 - Camera smoothing.
 - Opacity behavior changes.
 - Contour cadence or LOD changes.
-- Section-helper behavior changes.
+- Broad section-helper behavior changes outside the TRD-010 mask/helper-opacity
+  transition owner.
 - Isoband or ground-line remediation.
 - Snapshot execution changes.
 - Page JSON or fixture composition edits.

@@ -1044,3 +1044,17 @@ fake-cloud looks.
 **Why:** Authors expect section tools to cut the complete visible scene, not only MT/seismic/data meshes. Satellite imagery is sampled inside the terrain shader, so the terrain shader must consume the shared scene-section uniforms for section planes and frames instead of relying on ordinary `material.clippingPlanes`.
 
 **Trade-off accepted:** `EditableStyle.topoSectionable` remains readable as deprecated compatibility state, but it no longer controls whether topo context participates in section clipping. This supersedes DEC-077 for default topo-context sectioning and the editor opt-in checkbox. DEC-071 and DEC-077 remain historical for graticule composition, edge-aware behavior, public surface clip composition, and helper transition stability where those clauses do not conflict with this default sectioning rule.
+
+## DEC-098 - Scene section masks and studio controls transition as scene overlay channels
+
+**Supersedes:** DEC-071 and DEC-076 only where they could imply that sectioned render content may snap to the target mask while helper visuals fade separately, or that section-frame outline/control handles may be occluded by scene content in editor/studio views.
+
+**Considered:** keep scene section masks as final-commit clipping state with helper-only fades, or make section masks and section helper opacity transition-aware scene channels.
+
+**Chose:** scene section masks are transition-scene channels, not `LayerTransitionKind` values. Compatible same-frame section changes interpolate numeric style values. Incompatible section-frame, target, enable-state, or target-scope changes use a dual-mask alpha fade, evaluating the source and target section masks independently and blending final alpha as `lerp(sourceMaskAlpha, targetMaskAlpha, easedProgress)` on the target page's `transition.duration` and `transition.easing`. Section object outside-opacity maps are continuous opacity channels and fade on the same transition clock. Transition frames update material/shader uniforms and helper opacity only; helper rebuilds and cut-ISO refreshes remain start/final-commit work.
+
+**Studio overlay guard:** Section-frame outlines and push/pull control cones are editor/studio controls. They must stay in the transparent render queue with depth testing disabled and use the top scene-section control render order so terrain, topo/satellite imagery, Section ISO, and transparent data products cannot cover them while authoring.
+
+**Why:** Sectioned content uses outside-opacity settings as presentation state. Snapping the mask while the rest of the page transition eases creates a visible mismatch, especially across pages that add/remove frames or change hidden-object opacity. Keeping frame controls topmost preserves direct manipulation over clipped terrain and transparent products.
+
+**Trade-off accepted:** This decision does not animate terrain material preset identity, texture URL/cache key, bounds, public surface clip settings, material edge fade, edge outline, shader identity, terrain geometry, lighting, sun visuals, or camera path. Those remain discrete unless a later decision expands the transition-scene owner.

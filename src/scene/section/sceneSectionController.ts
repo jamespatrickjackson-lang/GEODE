@@ -30,10 +30,13 @@ import type {
   ResolvedSceneSectionFrame,
   ResolvedSceneSectionPlane,
   ResolvedSceneSectionWindow,
+  SceneSectionApplyOptions,
   SceneSectionAxis,
+  SceneSectionMaskTransition,
   SceneSectionObjectTarget,
   SceneSectionObjectVisibility,
   SceneSectionRuntime,
+  SceneSectionStyleMaskTransition,
   SceneSectionWindowHandleKind,
 } from "../SceneManager";
 import {
@@ -45,6 +48,10 @@ import {
   utmToLatLon,
   utmZoneFromSourceCrs,
 } from "../../loaders/utmProjection";
+
+type SceneSectionApplyTransitionFrameOptions = SceneSectionApplyOptions & {
+  transitionFrame?: boolean;
+};
 
 const SCENE_SECTION_AXIS_NORMALS = {
   x: new THREE.Vector3(1, 0, 0),
@@ -94,6 +101,7 @@ const SCENE_SECTION_DEFAULT_POSITIONS = {
   z: -2200,
 } as const;
 const SCENE_SECTION_RENDER_ORDER = 4560;
+const SCENE_SECTION_CONTROL_OVERLAY_RENDER_ORDER = 9000;
 const SCENE_SECTION_CLIP_EPSILON_M = 0.001;
 const SCENE_SECTION_MIN_HELPER_SIZE_M = 1200;
 const SCENE_SECTION_HELPER_PADDING = 1.14;
@@ -146,6 +154,7 @@ function hardenStudioHelperMaterial(material: THREE.Material): void {
   material.depthWrite = false;
   material.toneMapped = false;
   material.userData.ignoreLayerFog = true;
+  material.userData.forceTransparent = true;
   (material as THREE.Material & { fog?: boolean }).fog = false;
   material.transparent = true;
   material.needsUpdate = true;
@@ -630,7 +639,7 @@ function makeSceneSectionOutlineMaterial(
     fog: false,
   });
   hardenStudioHelperMaterial(material);
-  material.transparent = opacity < 1;
+  material.transparent = true;
   (
     material as THREE.MeshBasicMaterial & {
       forceSinglePass?: boolean;
@@ -659,7 +668,7 @@ function makeSceneSectionConeMaterial(
     fog: false,
   });
   hardenStudioHelperMaterial(material);
-  material.transparent = opacity < 1;
+  material.transparent = true;
   material.userData.sceneSectionHelper = true;
   material.needsUpdate = true;
   return material;
@@ -1020,6 +1029,91 @@ function sceneSectionFrameOutsideOpacity(
     return clamp01(byFrameValue);
   }
   return sceneSectionAxisOutsideOpacity(style, axis, objectId, legacyTargeted);
+}
+
+type SceneSectionObjectVisibilityMap =
+  Record<string, { outsideOpacity?: number }>;
+
+function sceneSectionVisibilityEntryOutsideOpacity(
+  entries: SceneSectionObjectVisibilityMap | undefined,
+  objectId: string,
+  fallback: number,
+): number {
+  const value = entries?.[objectId]?.outsideOpacity;
+  return typeof value === "number" && Number.isFinite(value)
+    ? clamp01(value)
+    : clamp01(fallback);
+}
+
+function interpolatedSceneSectionObjectVisibilityMap(
+  fromEntries: SceneSectionObjectVisibilityMap | undefined,
+  toEntries: SceneSectionObjectVisibilityMap | undefined,
+  t: number,
+): SceneSectionObjectVisibilityMap | undefined {
+  const objectIds = new Set<string>([
+    ...Object.keys(fromEntries ?? {}),
+    ...Object.keys(toEntries ?? {}),
+  ]);
+  if (objectIds.size === 0) return undefined;
+  const next: SceneSectionObjectVisibilityMap = {};
+  for (const objectId of objectIds) {
+    const fromOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+      fromEntries,
+      objectId,
+      1,
+    );
+    const toOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+      toEntries,
+      objectId,
+      1,
+    );
+    next[objectId] = {
+      outsideOpacity:
+        fromOutsideOpacity + (toOutsideOpacity - fromOutsideOpacity) * t,
+    };
+  }
+  return next;
+}
+
+function interpolatedSceneSectionObjectVisibilityByAxis(
+  fromStyle: EditableStyle,
+  toStyle: EditableStyle,
+  t: number,
+): EditableStyle["sceneSectionObjectVisibilityByAxis"] {
+  const next: NonNullable<EditableStyle["sceneSectionObjectVisibilityByAxis"]> =
+    {};
+  for (const axis of sceneSectionAxes()) {
+    const entries = interpolatedSceneSectionObjectVisibilityMap(
+      fromStyle.sceneSectionObjectVisibilityByAxis?.[axis],
+      toStyle.sceneSectionObjectVisibilityByAxis?.[axis],
+      t,
+    );
+    if (entries) next[axis] = entries;
+  }
+  return Object.keys(next).length > 0 ? next : undefined;
+}
+
+function interpolatedSceneSectionObjectVisibilityByFrameId(
+  fromStyle: EditableStyle,
+  toStyle: EditableStyle,
+  t: number,
+): EditableStyle["sceneSectionObjectVisibilityByFrameId"] {
+  const frameIds = new Set<string>([
+    ...Object.keys(fromStyle.sceneSectionObjectVisibilityByFrameId ?? {}),
+    ...Object.keys(toStyle.sceneSectionObjectVisibilityByFrameId ?? {}),
+  ]);
+  if (frameIds.size === 0) return undefined;
+  const next: NonNullable<EditableStyle["sceneSectionObjectVisibilityByFrameId"]> =
+    {};
+  for (const frameId of frameIds) {
+    const entries = interpolatedSceneSectionObjectVisibilityMap(
+      fromStyle.sceneSectionObjectVisibilityByFrameId?.[frameId],
+      toStyle.sceneSectionObjectVisibilityByFrameId?.[frameId],
+      t,
+    );
+    if (entries) next[frameId] = entries;
+  }
+  return Object.keys(next).length > 0 ? next : undefined;
 }
 
 export function sceneSectionObjectVisibilityForObject(this: any,
@@ -1781,16 +1875,28 @@ export function setSceneSectionUniforms(this: any,
   planes: ResolvedSceneSectionPlane[],
   visibility: SceneSectionObjectVisibility,
   frames: ResolvedSceneSectionFrame[],
+  maskTransition?: SceneSectionMaskTransition | null,
 ): void {
   const uniforms = material.uniforms;
   const ensure = <T>(key: string, value: T) => {
     if (!uniforms[key]) uniforms[key] = { value };
     return uniforms[key] as { value: T };
   };
+  if (maskTransition) {
+    planes = maskTransition.source.planes;
+    visibility = maskTransition.source.visibility;
+    frames = maskTransition.source.frames;
+  }
   const targeted = visibility.active;
   const activeFrames = targeted
     ? frames.slice(0, SCENE_SECTION_MAX_FRAME_COUNT)
     : [];
+  ensure<number>("uSceneSectionTransitionEnabled", 0).value = maskTransition
+    ? 1
+    : 0;
+  ensure<number>("uSceneSectionTransitionProgress", 0).value = clamp01(
+    maskTransition?.progress ?? 0,
+  );
   ensure<number>("uSceneSectionEnabled", 0).value =
     targeted && (planes.length > 0 || activeFrames.length > 0) ? 1 : 0;
   ensure<number>("uSceneSectionMode", 0).value = 0;
@@ -1901,6 +2007,97 @@ export function setSceneSectionUniforms(this: any,
         )
       : 1;
   }
+  const targetVisibility = maskTransition?.target.visibility ?? visibility;
+  const targetPlanes = maskTransition?.target.planes ?? [];
+  const targetFrames =
+    targetVisibility.active && maskTransition
+      ? maskTransition.target.frames.slice(0, SCENE_SECTION_MAX_FRAME_COUNT)
+      : [];
+  ensure<number>("uSceneSectionTargetPlaneCount", 0).value =
+    maskTransition && targetVisibility.active
+      ? Math.min(SCENE_SECTION_MAX_FRAME_COUNT, targetPlanes.length)
+      : 0;
+  const targetNormalUniform = ensure<THREE.Vector3[]>(
+    "uSceneSectionTargetNormals",
+    Array.from({ length: SCENE_SECTION_MAX_FRAME_COUNT }, () => new THREE.Vector3()),
+  );
+  const targetPositionUniform = ensure<number[]>(
+    "uSceneSectionTargetPositions",
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  );
+  const targetInvertUniform = ensure<number[]>(
+    "uSceneSectionTargetInvert",
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  );
+  const targetPlaneOpacityUniform = ensure<number[]>(
+    "uSceneSectionTargetPlaneOutsideOpacity",
+    [1, 1, 1, 1, 1, 1, 1, 1],
+  );
+  for (let i = 0; i < SCENE_SECTION_MAX_FRAME_COUNT; i += 1) {
+    const plane = targetPlanes[i];
+    if (!targetNormalUniform.value[i]) {
+      targetNormalUniform.value[i] = new THREE.Vector3();
+    }
+    targetNormalUniform.value[i].copy(plane?.normal ?? new THREE.Vector3());
+    targetPositionUniform.value[i] = plane?.signedDistanceM ?? 0;
+    targetInvertUniform.value[i] = plane?.invert ? 1 : 0;
+    targetPlaneOpacityUniform.value[i] = plane
+      ? clamp01(
+          targetVisibility.outsideOpacityByFrameId[plane.frameId] ??
+            targetVisibility.outsideOpacityByAxis[plane.axis] ??
+            1,
+        )
+      : 1;
+  }
+  ensure<number>("uSceneSectionTargetFrameCount", 0).value =
+    targetFrames.length;
+  const targetFrameAxisAUniform = ensure<THREE.Vector3[]>(
+    "uSceneSectionTargetFrameAxisA",
+    Array.from({ length: SCENE_SECTION_MAX_FRAME_COUNT }, () => new THREE.Vector3()),
+  );
+  const targetFrameAxisBUniform = ensure<THREE.Vector3[]>(
+    "uSceneSectionTargetFrameAxisB",
+    Array.from({ length: SCENE_SECTION_MAX_FRAME_COUNT }, () => new THREE.Vector3()),
+  );
+  const targetFrameBoundsUniform = ensure<THREE.Vector4[]>(
+    "uSceneSectionTargetFrameBounds",
+    Array.from({ length: SCENE_SECTION_MAX_FRAME_COUNT }, () => new THREE.Vector4()),
+  );
+  const targetFrameOpacityUniform = ensure<number[]>(
+    "uSceneSectionTargetFrameOutsideOpacity",
+    [1, 1, 1, 1, 1, 1, 1, 1],
+  );
+  for (let i = 0; i < SCENE_SECTION_MAX_FRAME_COUNT; i += 1) {
+    const frame = targetFrames[i];
+    if (!targetFrameAxisAUniform.value[i]) {
+      targetFrameAxisAUniform.value[i] = new THREE.Vector3();
+    }
+    if (!targetFrameAxisBUniform.value[i]) {
+      targetFrameAxisBUniform.value[i] = new THREE.Vector3();
+    }
+    targetFrameAxisAUniform.value[i].copy(
+      frame?.axisAVector ?? new THREE.Vector3(1, 0, 0),
+    );
+    targetFrameAxisBUniform.value[i].copy(
+      frame?.axisBVector ?? new THREE.Vector3(0, 1, 0),
+    );
+    if (!targetFrameBoundsUniform.value[i]) {
+      targetFrameBoundsUniform.value[i] = new THREE.Vector4();
+    }
+    targetFrameBoundsUniform.value[i].set(
+      frame?.minAM ?? -250_000,
+      frame?.maxAM ?? 250_000,
+      frame?.minBM ?? -250_000,
+      frame?.maxBM ?? 250_000,
+    );
+    targetFrameOpacityUniform.value[i] = frame
+      ? clamp01(
+          targetVisibility.outsideOpacityByFrameId[frame.frameId] ??
+            targetVisibility.outsideOpacityByAxis[frame.axis] ??
+            1,
+        )
+      : 1;
+  }
   const legacyFrame = activeFrames.find(
     (frame) => frame.axis === "x" || frame.axis === "y",
   );
@@ -1923,6 +2120,7 @@ export function applySceneSectionMaterial(this: any,
   clippingPlanes: THREE.Plane[],
   frames: ResolvedSceneSectionFrame[],
   frameClippingPlanes: THREE.Plane[],
+  maskTransition?: SceneSectionMaskTransition | null,
 ): void {
   if (material.userData?.sceneSectionHelper === true) return;
   const affectedAxes = new Set<SceneSectionAxis>([
@@ -1940,11 +2138,35 @@ export function applySceneSectionMaterial(this: any,
     Array.from(affectedAxes).some(
       (axis) => (visibility.outsideOpacityByAxis[axis] ?? 1) < 0.999,
     );
-  const requiresShaderVisibility =
-    sectionAffectsMaterial &&
-    (affectedFrameIds.some(
-      (frameId) => (visibility.outsideOpacityByFrameId[frameId] ?? 1) > 0.001,
+  const transitionAffectsMaterial =
+    !!maskTransition &&
+    (maskTransition.source.visibility.active ||
+      maskTransition.target.visibility.active) &&
+    (maskTransition.source.planes.length > 0 ||
+      maskTransition.source.frames.length > 0 ||
+      maskTransition.target.planes.length > 0 ||
+      maskTransition.target.frames.length > 0) &&
+    (Object.values(maskTransition.source.visibility.outsideOpacityByAxis).some(
+      (opacity) => opacity < 0.999,
     ) ||
+      Object.values(
+        maskTransition.source.visibility.outsideOpacityByFrameId,
+      ).some((opacity) => opacity < 0.999) ||
+      Object.values(maskTransition.target.visibility.outsideOpacityByAxis).some(
+        (opacity) => opacity < 0.999,
+      ) ||
+      Object.values(
+        maskTransition.target.visibility.outsideOpacityByFrameId,
+      ).some((opacity) => opacity < 0.999));
+  const effectiveSectionAffectsMaterial =
+    sectionAffectsMaterial || transitionAffectsMaterial;
+  const requiresShaderVisibility =
+    effectiveSectionAffectsMaterial &&
+    (maskTransition ||
+      affectedFrameIds.some(
+        (frameId) =>
+          (visibility.outsideOpacityByFrameId[frameId] ?? 1) > 0.001,
+      ) ||
       Array.from(affectedAxes).some(
         (axis) => (visibility.outsideOpacityByAxis[axis] ?? 1) > 0.001,
       ));
@@ -1957,23 +2179,28 @@ export function applySceneSectionMaterial(this: any,
     material instanceof THREE.ShaderMaterial &&
     material.userData?.terrainMaterial === true;
   if (terrainShader) {
-    this.setSceneSectionUniforms(material, planes, visibility, frames);
+    if (maskTransition) {
+      this.setSceneSectionUniforms(material, planes, visibility, frames, maskTransition);
+    } else {
+      this.setSceneSectionUniforms(material, planes, visibility, frames);
+    }
     material.needsUpdate = true;
     return;
   }
   if (seismicShader) {
-    this.setSceneSectionUniforms(material, planes, visibility, frames);
+    this.setSceneSectionUniforms(material, planes, visibility, frames, maskTransition);
     setSceneSectionObjectVisibilityUniforms(
       material.uniforms,
-      sectionAffectsMaterial,
+      effectiveSectionAffectsMaterial,
       planes,
       frames,
       visibility,
+      maskTransition,
     );
     material.needsUpdate = true;
     return;
   }
-  const active = sectionAffectsMaterial;
+  const active = effectiveSectionAffectsMaterial;
   const publicSurfaceClipPlanes = Array.isArray(
     material.userData?.publicSurfaceClipPlanes,
   )
@@ -1986,6 +2213,7 @@ export function applySceneSectionMaterial(this: any,
       planes,
       frames,
       visibility,
+      maskTransition,
     );
     material.clippingPlanes =
       publicSurfaceClipPlanes.length > 0 ? publicSurfaceClipPlanes : null;
@@ -2000,6 +2228,7 @@ export function applySceneSectionMaterial(this: any,
       planes,
       frames,
       visibility,
+      maskTransition,
     );
   }
   const combinedPlanes = [
@@ -2158,6 +2387,10 @@ export function interpolatedSceneSectionStyle(this: any,
       };
     });
   }
+  next.sceneSectionObjectVisibilityByAxis =
+    interpolatedSceneSectionObjectVisibilityByAxis(fromStyle, toStyle, t);
+  next.sceneSectionObjectVisibilityByFrameId =
+    interpolatedSceneSectionObjectVisibilityByFrameId(fromStyle, toStyle, t);
   return next;
 }
 
@@ -2205,6 +2438,18 @@ export function sceneSectionHelperOpacityForTween(this: any,
   if (!fromActive && toActive) return clamp01(eased);
   if (fromActive && !toActive) return 1 - clamp01(eased);
   return 1;
+}
+
+export function sceneSectionMaskTransitionForTween(
+  this: any,
+  tween: SceneSectionStyleTween,
+  eased: number,
+): SceneSectionStyleMaskTransition {
+  return {
+    fromStyle: tween.fromStyle,
+    toStyle: tween.toStyle,
+    progress: clamp01(eased),
+  };
 }
 
 export function applySceneSectionHelperTransitionOpacity(this: any): void {
@@ -2640,7 +2885,7 @@ export function rebuildSceneSectionHelpers(this: any,
       controlGroup.position.copy(planeCenter);
       controlGroup.quaternion.copy(planeQuaternion);
       controlGroup.userData.sceneSectionHelper = true;
-      controlGroup.renderOrder = SCENE_SECTION_RENDER_ORDER + 1;
+      controlGroup.renderOrder = SCENE_SECTION_CONTROL_OVERLAY_RENDER_ORDER;
 
       const outlineWidthM = referenceOutlineWidthM;
       const outlineGeometry = buildSceneSectionOutlineGeometry(
@@ -2690,7 +2935,7 @@ export function rebuildSceneSectionHelpers(this: any,
               axisBVector: frame.axisBVector.toArray(),
             }
           : null;
-        outline.renderOrder = SCENE_SECTION_RENDER_ORDER;
+        outline.renderOrder = SCENE_SECTION_CONTROL_OVERLAY_RENDER_ORDER;
         controlGroup.add(outline);
       }
 
@@ -2735,7 +2980,7 @@ export function rebuildSceneSectionHelpers(this: any,
           group.userData.sceneSectionHandleVisual = "double-arrow";
           group.userData.sceneSectionHandleScale =
             SCENE_SECTION_HANDLE_VISUAL_SCALE;
-          group.renderOrder = SCENE_SECTION_RENDER_ORDER + 3;
+          group.renderOrder = SCENE_SECTION_CONTROL_OVERLAY_RENDER_ORDER;
 
           const material = makeSceneSectionConeMaterial(color, outlineOpacity);
 
@@ -2752,12 +2997,14 @@ export function rebuildSceneSectionHelpers(this: any,
           topCone.castShadow = false;
           topCone.receiveShadow = false;
           topCone.userData.sceneSectionHelper = true;
+          topCone.renderOrder = SCENE_SECTION_CONTROL_OVERLAY_RENDER_ORDER;
           const bottomCone = new THREE.Mesh(coneGeometry.clone(), material);
           bottomCone.position.y = -arrowSpan * 0.5;
           bottomCone.rotation.z = Math.PI;
           bottomCone.castShadow = false;
           bottomCone.receiveShadow = false;
           bottomCone.userData.sceneSectionHelper = true;
+          bottomCone.renderOrder = SCENE_SECTION_CONTROL_OVERLAY_RENDER_ORDER;
           group.add(topCone, bottomCone);
 
           const pickMaterial = new THREE.MeshBasicMaterial({
@@ -2788,7 +3035,7 @@ export function rebuildSceneSectionHelpers(this: any,
           if (direction) {
             pickProxy.userData.sceneSectionPlaneHandleDirection = direction;
           }
-          pickProxy.renderOrder = SCENE_SECTION_RENDER_ORDER + 4;
+          pickProxy.renderOrder = SCENE_SECTION_CONTROL_OVERLAY_RENDER_ORDER;
           group.add(pickProxy);
           runtime.pickables.push(pickProxy);
           return group;
@@ -3097,7 +3344,33 @@ export function rebuildSceneSectionHelpers(this: any,
   }
 }
 
-export function applySceneSectionPlanes(this: any, style: EditableStyle): void {
+function resolveSceneSectionMaskContext(this: any, style: EditableStyle) {
+  const planes = this.sceneSectionActivePlanes(style);
+  const layerTargets = this.sceneSectionLayerIds(style);
+  const productTargets = this.sceneSectionProductIds(style);
+  const bounds = this.sceneSectionBounds(style, layerTargets, productTargets);
+  const activePlaneFrameIds = new Set(
+    planes.map((plane: ResolvedSceneSectionPlane) => plane.frameId),
+  );
+  const frames = this
+    .resolveSceneSectionFrames(style, bounds)
+    .filter((frame: ResolvedSceneSectionFrame) =>
+      activePlaneFrameIds.has(frame.frameId),
+    );
+  return {
+    style,
+    planes,
+    frames,
+    layerTargets,
+    productTargets,
+  };
+}
+
+export function applySceneSectionPlanes(
+  this: any,
+  style: EditableStyle,
+  options?: SceneSectionApplyTransitionFrameOptions,
+): void {
   const startedAt = performance.now();
   let stageStart = startedAt;
   this.lastSceneSectionStyle = style;
@@ -3127,6 +3400,12 @@ export function applySceneSectionPlanes(this: any, style: EditableStyle): void {
     (frame: ResolvedSceneSectionFrame) =>
       this.sceneSectionFrameClippingPlanes(frame),
   );
+  const sourceMaskContext = options?.maskTransition
+    ? resolveSceneSectionMaskContext.call(this, options.maskTransition.fromStyle)
+    : null;
+  const targetMaskContext = options?.maskTransition
+    ? resolveSceneSectionMaskContext.call(this, options.maskTransition.toStyle)
+    : null;
   let traversedObjectCount = 0;
   let materialApplyCount = 0;
   for (const [layerId, group] of this.layers) {
@@ -3159,11 +3438,39 @@ export function applySceneSectionPlanes(this: any, style: EditableStyle): void {
         .flatMap((frame: ResolvedSceneSectionFrame) =>
           this.sceneSectionFrameClippingPlanes(frame),
         );
+      const materialMaskTransition =
+        sourceMaskContext && targetMaskContext && options?.maskTransition
+          ? {
+              progress: options.maskTransition.progress,
+              source: {
+                planes: sourceMaskContext.planes,
+                frames: sourceMaskContext.frames,
+                visibility: this.sceneSectionObjectVisibilityForObject(
+                  layerId,
+                  obj,
+                  sourceMaskContext.style,
+                  sourceMaskContext.layerTargets,
+                  sourceMaskContext.productTargets,
+                ),
+              },
+              target: {
+                planes: targetMaskContext.planes,
+                frames: targetMaskContext.frames,
+                visibility: this.sceneSectionObjectVisibilityForObject(
+                  layerId,
+                  obj,
+                  targetMaskContext.style,
+                  targetMaskContext.layerTargets,
+                  targetMaskContext.productTargets,
+                ),
+              },
+            } satisfies SceneSectionMaskTransition
+          : null;
       updateSceneSectionLabelCullState(
         obj,
         visibility.active,
-        hardPlaneClippingPlanes,
-        hardFrameClippingPlanes,
+        materialMaskTransition ? [] : hardPlaneClippingPlanes,
+        materialMaskTransition ? [] : hardFrameClippingPlanes,
         labelAnchorPoint,
       );
       const material = (
@@ -3180,32 +3487,41 @@ export function applySceneSectionPlanes(this: any, style: EditableStyle): void {
           clippingPlanes,
           sectionFrames,
           frameClippingPlanes,
+          materialMaskTransition,
         );
       }
     });
   }
   const materialApplyMs = transitionDebugMs(performance.now() - stageStart);
   stageStart = performance.now();
-  this.rebuildSceneSectionHelpers(
-    style,
-    planes,
-    layerTargets,
-    productTargets,
-  );
+  if (!options?.transitionFrame) {
+    this.rebuildSceneSectionHelpers(
+      style,
+      planes,
+      layerTargets,
+      productTargets,
+    );
+  }
   const helperRebuildMs = transitionDebugMs(performance.now() - stageStart);
   stageStart = performance.now();
   this.applySceneSectionHelperTransitionOpacity();
   const helperOpacityMs = transitionDebugMs(performance.now() - stageStart);
   stageStart = performance.now();
-  this.updateMtVolumeCutIsoOverlays(
-    this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID),
-  );
-  const mtCutIsoUpdate = this.lastMtVolumeCutIsoUpdateDebug ?? null;
+  if (!options?.transitionFrame) {
+    this.updateMtVolumeCutIsoOverlays(
+      this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID),
+    );
+  }
+  const mtCutIsoUpdate = options?.transitionFrame
+    ? null
+    : this.lastMtVolumeCutIsoUpdateDebug ?? null;
   const mtCutIsoMs = transitionDebugMs(performance.now() - stageStart);
   stageStart = performance.now();
-  this.updateSeismicVolumeCutIsoOverlays(
-    this.styleForLayer(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID),
-  );
+  if (!options?.transitionFrame) {
+    this.updateSeismicVolumeCutIsoOverlays(
+      this.styleForLayer(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID),
+    );
+  }
   const seismicCutIsoMs = transitionDebugMs(performance.now() - stageStart);
   let helperObjectCount = 0;
   this.sceneSectionRuntime?.group.traverse(() => {

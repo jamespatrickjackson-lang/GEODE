@@ -55,3 +55,44 @@ test("scene-section frame outlines are independent from editor handle visibility
     "Editor controls should remain separately gated by sceneSectionHelperVisible.",
   );
 });
+
+test("scene-section frame outlines and cones render as topmost studio overlays", () => {
+  assert.match(
+    source,
+    /SCENE_SECTION_CONTROL_OVERLAY_RENDER_ORDER/,
+    "Frame outlines and control cones should use a dedicated topmost overlay render order.",
+  );
+  assert.match(
+    source,
+    /material\.userData\.forceTransparent\s*=\s*true/,
+    "Studio helper material opacity maintenance should force helpers to stay in the transparent queue.",
+  );
+  const outlineFactory = source.match(
+    /function makeSceneSectionOutlineMaterial[\s\S]*?return material;\r?\n}/,
+  );
+  assert.ok(outlineFactory, "Outline material factory should exist.");
+  assert.doesNotMatch(
+    outlineFactory[0],
+    /material\.transparent\s*=\s*opacity\s*<\s*1/,
+    "Frame outlines should not leave the transparent render queue at full opacity.",
+  );
+  const coneFactory = source.match(
+    /function makeSceneSectionConeMaterial[\s\S]*?return material;\r?\n}/,
+  );
+  assert.ok(coneFactory, "Cone material factory should exist.");
+  assert.doesNotMatch(
+    coneFactory[0],
+    /material\.transparent\s*=\s*opacity\s*<\s*1/,
+    "Control cones should not leave the transparent render queue at full opacity.",
+  );
+  assert.match(
+    source,
+    /outline\.renderOrder\s*=\s*SCENE_SECTION_CONTROL_OVERLAY_RENDER_ORDER/,
+    "Frame outlines should render above scene content.",
+  );
+  assert.match(
+    source,
+    /topCone\.renderOrder\s*=\s*SCENE_SECTION_CONTROL_OVERLAY_RENDER_ORDER[\s\S]*bottomCone\.renderOrder\s*=\s*SCENE_SECTION_CONTROL_OVERLAY_RENDER_ORDER/,
+    "Control cones should render above scene content.",
+  );
+});

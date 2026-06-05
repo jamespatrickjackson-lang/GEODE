@@ -162,8 +162,11 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
       return;
     }
     let stageStart = performance.now();
-    let sceneSectionApplyMode: "none" | "full" | "helper-opacity-only" =
-      "none";
+    let sceneSectionApplyMode:
+      | "none"
+      | "full"
+      | "transition-frame"
+      | "helper-opacity-only" = "none";
     let sceneSectionApplyDebug = null;
     if (this.sceneSectionStyleTween) {
       const tween = this.sceneSectionStyleTween;
@@ -173,30 +176,32 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
       const eased = done ? 1 : easeProgress(t, tween.easing);
       const style = done
         ? tween.toStyle
-        : tween.discreteChanged
+        : tween.maskMode === "dual-mask"
           ? tween.toStyle
           : this.interpolatedSceneSectionStyle(
               tween.fromStyle,
               tween.toStyle,
               eased,
             );
+      const maskTransition =
+        !done && tween.maskMode === "dual-mask"
+          ? this.sceneSectionMaskTransitionForTween(tween, eased)
+          : null;
       this.sceneSectionHelperTransitionOpacity = done
         ? 1
         : this.sceneSectionHelperOpacityForTween(tween, eased);
-      if (
-        tween.discreteChanged &&
-        tween.appliedDiscreteTarget === true &&
-        !done
-      ) {
-        this.applySceneSectionHelperTransitionOpacity();
-        sceneSectionApplyMode = "helper-opacity-only";
+      if (!done) {
+        this.applySceneSectionPlanes(style, {
+          transitionFrame: true,
+          maskTransition,
+        });
+        sceneSectionApplyDebug = this.lastSceneSectionApplyDebug ?? null;
+        sceneSectionApplyMode = "transition-frame";
+        if (tween.discreteChanged) tween.appliedDiscreteTarget = true;
       } else {
         this.applySceneSectionPlanes(style);
         sceneSectionApplyDebug = this.lastSceneSectionApplyDebug ?? null;
         sceneSectionApplyMode = "full";
-        if (tween.discreteChanged && !done) {
-          tween.appliedDiscreteTarget = true;
-        }
       }
       if (done) {
         this.sceneSectionStyleTween = null;

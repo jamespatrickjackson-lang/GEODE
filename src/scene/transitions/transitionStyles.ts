@@ -187,6 +187,7 @@ export interface SceneSectionStyleTween {
   durationMs: number;
   easing: EasingName;
   discreteChanged: boolean;
+  maskMode: "interpolated" | "dual-mask";
   appliedDiscreteTarget?: boolean;
 }
 
@@ -550,8 +551,6 @@ export function sceneSectionDiscreteSignature(style: EditableStyle): string {
     windowActiveAxis: style.sceneSectionWindowActiveAxis ?? null,
     frameEnabled: style.sceneSectionFrameEnabled === true,
     frames: sceneSectionFrameDiscreteSignature(style),
-    objectVisibilityByAxis: style.sceneSectionObjectVisibilityByAxis ?? {},
-    objectVisibilityByFrameId: style.sceneSectionObjectVisibilityByFrameId ?? {},
     targetLayerIds: style.sceneSectionTargetLayerIds ?? [],
     targetProductIds: style.sceneSectionTargetProductIds ?? [],
     groundTraceVisible: style.sceneSectionGroundTraceVisible === true,

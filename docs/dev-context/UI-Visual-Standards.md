@@ -305,8 +305,10 @@ defaults, depth/compositing rules) that the contract enforces.
   boundary cues; they attach to the same boundary-side crossing used by the edge
   label, are capped to boundary-tick length rather than label-offset length, and
   must stay clipped to the public surface clip rather than crossing the page.
-- Topo graticule lines and edge labels are terrain/reference context and are not
-  affected by scene-section clipping planes.
+- Targeted topo context follows scene-section clipping by default. This
+  includes terrain/topomap pixels, satellite imagery sampled by the terrain
+  shader, terrain-composited overlays, longitude/latitude graticule lines and
+  labels, legends, and branding.
 - Terrain underside grid helpers use camera-side hysteresis. The grid appears
   only when the camera is clearly below terrain and hides only after returning
   clearly above terrain; it also stays hidden outside terrain XY bounds.
@@ -319,8 +321,14 @@ defaults, depth/compositing rules) that the contract enforces.
   stable frame id: plane position, crop bounds, scale interval, label/heading
   sizing and padding, and ground trace width.
 - Incompatible section-frame transitions crossfade helpers. Frame identity,
-  orientation, enable state, flip state, object visibility target state, and
-  added or removed frame ids are discrete.
+  orientation, enable state, flip state, target membership state, and added or
+  removed frame ids are discrete for helper geometry.
+- Sectioned render content uses transition-aware section masks. Compatible
+  section changes interpolate numeric values; incompatible target/frame changes
+  blend source and target mask alpha on the page transition clock.
+- Section-frame outlines and push/pull control cones are editor/studio
+  controls. They render above terrain, topo/satellite imagery, Section ISO, and
+  transparent data products so the handles stay usable while authoring.
 - Section ISO and MT/seismic cut identities include section frame id so multiple
   same-orientation section frames do not overwrite one another during page
   transitions.

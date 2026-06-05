@@ -544,6 +544,8 @@ export function buildTerrainMaterial(
     uPublicClipCenter: { value: new THREE.Vector3(0, 0, 0) },
     uPublicClipHalfSize: { value: new THREE.Vector3(1, 1, 1) },
     uPublicClipCosSin: { value: new THREE.Vector2(1, 0) },
+    uSceneSectionTransitionEnabled: { value: 0 },
+    uSceneSectionTransitionProgress: { value: 0 },
     uSceneSectionEnabled: { value: 0 },
     uSceneSectionMode: { value: 0 },
     uSceneSectionPlaneCount: { value: 0 },
@@ -559,6 +561,20 @@ export function buildTerrainMaterial(
     uSceneSectionFrameAxisB: { value: sceneSectionVectorSlots() },
     uSceneSectionFrameBounds: { value: sceneSectionVector4Slots() },
     uSceneSectionFrameOutsideOpacity: {
+      value: sceneSectionNumberSlots(1),
+    },
+    uSceneSectionTargetPlaneCount: { value: 0 },
+    uSceneSectionTargetNormals: { value: sceneSectionVectorSlots() },
+    uSceneSectionTargetPositions: { value: sceneSectionNumberSlots(0) },
+    uSceneSectionTargetInvert: { value: sceneSectionNumberSlots(0) },
+    uSceneSectionTargetPlaneOutsideOpacity: {
+      value: sceneSectionNumberSlots(1),
+    },
+    uSceneSectionTargetFrameCount: { value: 0 },
+    uSceneSectionTargetFrameAxisA: { value: sceneSectionVectorSlots() },
+    uSceneSectionTargetFrameAxisB: { value: sceneSectionVectorSlots() },
+    uSceneSectionTargetFrameBounds: { value: sceneSectionVector4Slots() },
+    uSceneSectionTargetFrameOutsideOpacity: {
       value: sceneSectionNumberSlots(1),
     },
   };
@@ -724,6 +740,8 @@ export function buildTerrainMaterial(
       uniform vec3 uPublicClipHalfSize;
       uniform vec2 uPublicClipCosSin;
       uniform int uSceneSectionEnabled;
+      uniform int uSceneSectionTransitionEnabled;
+      uniform float uSceneSectionTransitionProgress;
       uniform int uSceneSectionMode;
       uniform int uSceneSectionPlaneCount;
       uniform vec3 uSceneSectionNormals[8];
@@ -736,6 +754,16 @@ export function buildTerrainMaterial(
       uniform vec3 uSceneSectionFrameAxisB[8];
       uniform vec4 uSceneSectionFrameBounds[8];
       uniform float uSceneSectionFrameOutsideOpacity[8];
+      uniform int uSceneSectionTargetPlaneCount;
+      uniform vec3 uSceneSectionTargetNormals[8];
+      uniform float uSceneSectionTargetPositions[8];
+      uniform int uSceneSectionTargetInvert[8];
+      uniform float uSceneSectionTargetPlaneOutsideOpacity[8];
+      uniform int uSceneSectionTargetFrameCount;
+      uniform vec3 uSceneSectionTargetFrameAxisA[8];
+      uniform vec3 uSceneSectionTargetFrameAxisB[8];
+      uniform vec4 uSceneSectionTargetFrameBounds[8];
+      uniform float uSceneSectionTargetFrameOutsideOpacity[8];
 
       varying vec3 vWorldPos;
       varying vec3 vNormal;
@@ -1044,6 +1072,8 @@ export function buildTerrainMaterial(
         return smoothstep(0.62, 0.98, min(normalizedCorner.x, normalizedCorner.y));
       }
 
+      float sceneSectionTargetAlpha(vec3 position);
+
       float sceneSectionAlpha(vec3 position) {
         if (uSceneSectionEnabled == 0) return 1.0;
         float alpha = 1.0;
@@ -1066,6 +1096,32 @@ export function buildTerrainMaterial(
           bool inside = a >= bounds.x && a <= bounds.y && b >= bounds.z && b <= bounds.w;
           if (!inside) {
             alpha = min(alpha, clamp(uSceneSectionFrameOutsideOpacity[i], 0.0, 1.0));
+          }
+        }
+        return alpha;
+      }
+
+      float sceneSectionTargetAlpha(vec3 position) {
+        float alpha = 1.0;
+        for (int i = 0; i < 8; i += 1) {
+          if (i >= uSceneSectionTargetPlaneCount) break;
+          vec3 normal = normalize(uSceneSectionTargetNormals[i]);
+          float distance = dot(position, normal) - uSceneSectionTargetPositions[i];
+          if (uSceneSectionTargetInvert[i] == 1) distance = -distance;
+          if (distance > 0.0) {
+            alpha = min(alpha, clamp(uSceneSectionTargetPlaneOutsideOpacity[i], 0.0, 1.0));
+          }
+        }
+        for (int i = 0; i < 8; i += 1) {
+          if (i >= uSceneSectionTargetFrameCount) break;
+          vec3 axisA = normalize(uSceneSectionTargetFrameAxisA[i]);
+          vec3 axisB = normalize(uSceneSectionTargetFrameAxisB[i]);
+          float a = dot(position, axisA);
+          float b = dot(position, axisB);
+          vec4 bounds = uSceneSectionTargetFrameBounds[i];
+          bool inside = a >= bounds.x && a <= bounds.y && b >= bounds.z && b <= bounds.w;
+          if (!inside) {
+            alpha = min(alpha, clamp(uSceneSectionTargetFrameOutsideOpacity[i], 0.0, 1.0));
           }
         }
         return alpha;
@@ -1097,6 +1153,11 @@ export function buildTerrainMaterial(
           }
         }
         float sectionAlpha = sceneSectionAlpha(vWorldPos);
+        if (uSceneSectionTransitionEnabled != 0) {
+          float sourceAlpha = sceneSectionAlpha(vWorldPos);
+          float targetAlpha = sceneSectionTargetAlpha(vWorldPos);
+          sectionAlpha = mix(sourceAlpha, targetAlpha, clamp(uSceneSectionTransitionProgress, 0.0, 1.0));
+        }
         if (sectionAlpha <= 0.001) discard;
 
         // Elevation ramp.

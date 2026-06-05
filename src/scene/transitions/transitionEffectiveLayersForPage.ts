@@ -575,6 +575,7 @@ export function transitionEffectiveLayersForPage(
       durationMs: duration,
       easing,
       discreteChanged: sceneSectionDiscreteChanged,
+      maskMode: sceneSectionDiscreteChanged ? "dual-mask" : "interpolated",
     };
     this.sceneSectionHelperTransitionOpacity =
       this.sceneSectionHelperOpacityForTween(this.sceneSectionStyleTween, 0);
@@ -771,7 +772,16 @@ export function transitionEffectiveLayersForPage(
   } finally {
     this.sceneSectionReapplySuspended = false;
   }
-  this.reapplySceneSectionPlanes();
+  if (this.sceneSectionStyleTween?.maskMode === "dual-mask") {
+    this.applySceneSectionPlanes(this.sceneSectionStyleTween.toStyle, {
+      maskTransition: this.sceneSectionMaskTransitionForTween(
+        this.sceneSectionStyleTween,
+        0,
+      ),
+    });
+  } else {
+    this.reapplySceneSectionPlanes();
+  }
   if (this.sceneSectionStyleTween?.discreteChanged) {
     this.sceneSectionStyleTween.appliedDiscreteTarget = true;
   }

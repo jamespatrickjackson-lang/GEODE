@@ -112,6 +112,24 @@
     "utah-forge-phase3-demo-boreholes": {
       "opacity": 0.72,
       "showLabels": false
+    },
+    "terrain": {
+      "publicSurfaceClipPreviewVisible": false
+    },
+    "utah-forge-topo-graticule": {
+      "publicSurfaceClipPreviewVisible": false
+    },
+    "naip-2024-tile-diagnostics": {
+      "publicSurfaceClipPreviewVisible": false
+    },
+    "transport-roads": {
+      "publicSurfaceClipPreviewVisible": false
+    },
+    "hydrography-streams": {
+      "publicSurfaceClipPreviewVisible": false
+    },
+    "hydrography-lakes": {
+      "publicSurfaceClipPreviewVisible": false
     }
   },
   "visibilityOverrides": {

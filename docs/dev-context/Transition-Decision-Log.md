@@ -209,3 +209,39 @@ terrain ramps, lighting, sun, or other discrete environment channels.
 
 Evidence: `Dark-Light-Scene-Transition-Audit-2026-06-05.md`,
 `tests/tools/environment-scene-transition-source.test.mjs`.
+
+## TRD-010 - Scene Section Masks And Helpers Blend During Page Transitions
+
+Status: accepted
+
+Problem: Scene section planes and section frames are resolved scene masks, but
+incompatible section changes could still snap clipped render content to the
+target mask while helper visuals crossfaded separately. Sectioned items are
+tied to outside-opacity variables, so visible content should fade down or up
+to the target section state on the same page-transition clock.
+
+Decision: Scene section masks are transition-scene channels, not
+`LayerTransitionKind` values. During page navigation, compatible section-frame
+changes interpolate authored numeric section style values. Incompatible
+section-frame, target, or enable-state changes use a dual-mask fade: evaluate
+the source section mask and target section mask independently, then compute
+final alpha as `lerp(sourceMaskAlpha, targetMaskAlpha, easedProgress)`.
+`sceneSectionObjectVisibilityByAxis` and
+`sceneSectionObjectVisibilityByFrameId` outside-opacity maps are continuous
+opacity channels and do not by themselves force a discrete snap.
+
+Consequences: Section materials must update shader/uniform state during
+transition frames without rebuilding helper geometry. Ground traces, axes,
+frame outlines, labels, and intersection traces use
+`sceneSectionHelperTransitionOpacity` on the same target page
+`transition.duration` and `transition.easing`. Public surface clip remains a
+hard terrain/topo crop; texture URLs/cache keys, bounds, material presets, edge
+fade, edge outline, shader identity, terrain geometry, lighting, sun, and
+camera path remain outside this v1 section-mask transition owner.
+
+Revisit when: Section helper geometry itself needs continuous morphing, or
+section masks need a authored transition timing source separate from page
+transition timing.
+
+Evidence: `Scene-Section-Transition-Fade-Audit-2026-06-05.md`,
+`tests/tools/scene-section-transition-behavior-source.test.mjs`.

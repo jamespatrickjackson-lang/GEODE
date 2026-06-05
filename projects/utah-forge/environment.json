@@ -183,7 +183,7 @@
       "affectedByFog": true,
       "showLabels": false,
       "fogDensity": 0.000012,
-      "publicSurfaceClipPreviewVisible": true
+      "publicSurfaceClipPreviewVisible": false
     },
     "utah-forge-topo-graticule": {
       "color": "#5e5e5e",
@@ -219,7 +219,7 @@
       "publicSurfaceClipSizeZ": 50000,
       "publicSurfaceClipRotationZDeg": 0,
       "publicSurfaceClipShape": "box",
-      "publicSurfaceClipPreviewVisible": true
+      "publicSurfaceClipPreviewVisible": false
     },
     "utah-forge-topo-clouds": {
       "atmosphereSubtype": "cloud-bank",
@@ -267,7 +267,7 @@
       "publicSurfaceClipSizeZ": 50000,
       "publicSurfaceClipRotationZDeg": 0,
       "publicSurfaceClipShape": "box",
-      "publicSurfaceClipPreviewVisible": true
+      "publicSurfaceClipPreviewVisible": false
     },
     "hydrography-streams": {
       "color": "#3d9db8",
@@ -285,7 +285,7 @@
       "publicSurfaceClipSizeZ": 50000,
       "publicSurfaceClipRotationZDeg": 0,
       "publicSurfaceClipShape": "box",
-      "publicSurfaceClipPreviewVisible": true
+      "publicSurfaceClipPreviewVisible": false
     },
     "hydrography-lakes": {
       "color": "#385a65",
@@ -305,7 +305,7 @@
       "publicSurfaceClipSizeZ": 50000,
       "publicSurfaceClipRotationZDeg": 0,
       "publicSurfaceClipShape": "box",
-      "publicSurfaceClipPreviewVisible": true
+      "publicSurfaceClipPreviewVisible": false
     },
     "utah-forge-mt-stations": {
       "color": "#6f6767",
@@ -713,7 +713,7 @@
       "publicSurfaceClipSizeY": 1399600,
       "affectedByFog": true,
       "fogDensity": 0.000012,
-      "publicSurfaceClipPreviewVisible": true
+      "publicSurfaceClipPreviewVisible": false
     },
     "topo-cloud-volume-3": {
       "atmosphereSubtype": "cloud-bank",
@@ -2273,7 +2273,7 @@
           "publicSurfaceClipSizeX": 1599600,
           "publicSurfaceClipSizeZ": 50000,
           "publicSurfaceClipSizeY": 1399600,
-          "publicSurfaceClipPreviewVisible": true
+          "publicSurfaceClipPreviewVisible": false
         },
         "hydrography-streams": {
           "color": "#3d9db8",
@@ -2289,7 +2289,7 @@
           "publicSurfaceClipSizeX": 1599600,
           "publicSurfaceClipSizeZ": 50000,
           "publicSurfaceClipSizeY": 1399600,
-          "publicSurfaceClipPreviewVisible": true
+          "publicSurfaceClipPreviewVisible": false
         },
         "hydrography-lakes": {
           "color": "#385a65",
@@ -2307,7 +2307,7 @@
           "publicSurfaceClipSizeX": 1599600,
           "publicSurfaceClipSizeZ": 50000,
           "publicSurfaceClipSizeY": 1399600,
-          "publicSurfaceClipPreviewVisible": true
+          "publicSurfaceClipPreviewVisible": false
         },
         "terrain": {
           "opacity": 1,
@@ -2321,7 +2321,7 @@
           "publicSurfaceClipSizeX": 1599600,
           "publicSurfaceClipSizeZ": 50000,
           "publicSurfaceClipSizeY": 1399600,
-          "publicSurfaceClipPreviewVisible": true
+          "publicSurfaceClipPreviewVisible": false
         },
         "utah-forge-mt-resistivity-slices": {
           "sectionIsoEnabled": true,
@@ -2501,7 +2501,7 @@
           "publicSurfaceClipSizeX": 1599600,
           "publicSurfaceClipSizeZ": 50000,
           "publicSurfaceClipSizeY": 1399600,
-          "publicSurfaceClipPreviewVisible": true
+          "publicSurfaceClipPreviewVisible": false
         },
         "utah-forge-phase3-demo-boreholes": {
           "demoBoreholeBlock": {
@@ -2653,7 +2653,7 @@
           "publicSurfaceClipSizeY": 1399600,
           "affectedByFog": true,
           "fogDensity": 0.000012,
-          "publicSurfaceClipPreviewVisible": true
+          "publicSurfaceClipPreviewVisible": false
         }
       }
     }
