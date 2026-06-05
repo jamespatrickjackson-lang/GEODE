@@ -9,11 +9,15 @@ export function isSubMasterPage(page: PresentationPage): boolean {
 }
 
 export function selectedAuthoringPage(
-  state: Pick<EditorState, "selectedPageId" | "pages">,
+  state: Pick<EditorState, "selectedPageId" | "pages" | "archivedPages">,
 ): PresentationPage | null {
   const selectedPageId = state.selectedPageId;
   if (!selectedPageId || selectedPageId === ENVIRONMENT_SENTINEL) return null;
-  return state.pages.find((page) => page.id === selectedPageId) ?? null;
+  return (
+    state.pages.find((page) => page.id === selectedPageId) ??
+    state.archivedPages.find((page) => page.id === selectedPageId) ??
+    null
+  );
 }
 
 export function pageSelectionHasLanded({

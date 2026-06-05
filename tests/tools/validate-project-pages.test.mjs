@@ -10,18 +10,24 @@ function writeJson(filePath, value) {
   writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-function makeProject(page, environment = null) {
+function makeProject(page, environment = null, options = {}) {
   const root = mkdtempSync(join(tmpdir(), "geosee-validate-pages-"));
   const projectDir = join(root, "projects", "fixture");
   mkdirSync(join(projectDir, "pages"), { recursive: true });
   writeJson(join(projectDir, "project.json"), {
     id: "fixture",
-    pageOrder: [page.id],
+    pageOrder: options.pageOrder ?? [page.id],
+    ...(options.archivedPageOrder
+      ? { archivedPageOrder: options.archivedPageOrder }
+      : {}),
   });
   if (environment) {
     writeJson(join(projectDir, "environment.json"), environment);
   }
   writeJson(join(projectDir, "pages", `${page.id}.json`), page);
+  for (const archivedPage of options.archivedPages ?? []) {
+    writeJson(join(projectDir, "pages", `${archivedPage.id}.json`), archivedPage);
+  }
   return root;
 }
 
@@ -204,5 +210,92 @@ test("validateProjectPages rejects effective scene section state that cannot be 
   assert.match(
     result.errors.join("\n"),
     /page-d:effective:utah-forge-scene-section-planes: active frame custom:missing is missing/,
+  );
+});
+
+test("validateProjectPages accepts archived master as active child inheritance source", () => {
+  const root = makeProject(
+    {
+      id: "active-child",
+      title: "Active child",
+      parentMasterId: "archived-master",
+      camera: { position: [0, 0, 1], target: [0, 0, 0], up: [0, 0, 1] },
+      transition: { duration: 1 },
+      holdDuration: 1,
+    },
+    null,
+    {
+      archivedPageOrder: ["archived-master"],
+      archivedPages: [
+        {
+          id: "archived-master",
+          title: "Untitled page",
+          parentMasterId: "global",
+          envSnapshot: { layerStyles: {} },
+          camera: { position: [0, 0, 1], target: [0, 0, 0], up: [0, 0, 1] },
+          transition: { duration: 1 },
+          holdDuration: 1,
+        },
+      ],
+    },
+  );
+
+  const result = validateProjectPages(root);
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.errors, []);
+});
+
+test("validateProjectPages rejects duplicate active and archived page ids", () => {
+  const root = makeProject(
+    {
+      id: "same-page",
+      title: "Same Page",
+      camera: { position: [0, 0, 1], target: [0, 0, 0], up: [0, 0, 1] },
+      transition: { duration: 1 },
+      holdDuration: 1,
+    },
+    null,
+    {
+      archivedPageOrder: ["same-page"],
+      archivedPages: [
+        {
+          id: "same-page",
+          title: "Same Page Draft",
+          camera: { position: [0, 0, 1], target: [0, 0, 0], up: [0, 0, 1] },
+          transition: { duration: 1 },
+          holdDuration: 1,
+        },
+      ],
+    },
+  );
+
+  const result = validateProjectPages(root);
+  assert.equal(result.ok, false);
+  assert.match(
+    result.errors.join("\n"),
+    /same-page appears in both pageOrder and archivedPageOrder/,
+  );
+});
+
+test("validateProjectPages rejects missing archived page files", () => {
+  const root = makeProject(
+    {
+      id: "active-page",
+      title: "Active Page",
+      camera: { position: [0, 0, 1], target: [0, 0, 0], up: [0, 0, 1] },
+      transition: { duration: 1 },
+      holdDuration: 1,
+    },
+    null,
+    {
+      archivedPageOrder: ["missing-archive"],
+    },
+  );
+
+  const result = validateProjectPages(root);
+  assert.equal(result.ok, false);
+  assert.match(
+    result.errors.join("\n"),
+    /archivedPageOrder page missing pages\/missing-archive\.json/,
   );
 });

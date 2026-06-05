@@ -8,14 +8,12 @@ import {
   effectiveStyle,
   effectiveVisibility,
   isVisibilityOverridden,
-  mergeSceneProperties,
   resolveEnvironmentForPage,
 } from "../pages/effective";
 import type {
   EditableStyle,
   PresentationPage,
   ProjectLayerSpec,
-  SceneProperties,
 } from "../pages/types";
 import { TopoMapPanel } from "./topoMap/TopoMapPanel";
 import { SiteDetailsPanel } from "./SiteDetailsPanel";
@@ -53,7 +51,7 @@ import {
   UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
 import { isTopoMapGraticuleLayer, isTopoMapSurfaceLayer, resolveTopoMapSettings, topoMapLayerIds } from "../topoMap/settings";
-import { pageSelectionHasLanded } from "./authoringTarget";
+import { pageSelectionHasLanded, selectedAuthoringPage } from "./authoringTarget";
 
 interface LayerPanelGroupsProps {
   section: LayerDataSection;
@@ -98,53 +96,38 @@ export function LayerPanelGroups({
     clearPageVisibilityOverride,
     setPageField,
     setEnvScene,
+    setAuthoringScene,
     addProjectLayer,
     removeProjectLayer,
   } = useEditor();
   const isEnv = state.selectedPageId === ENVIRONMENT_SENTINEL;
-  const currentPage = isEnv
-    ? null
-    : (state.pages.find((p) => p.id === state.selectedPageId) ?? null);
+  const currentPage = isEnv ? null : selectedAuthoringPage(state);
   const currentPageEnvironment = currentPage
-    ? resolveEnvironmentForPage(state.environment, state.pages, currentPage)
+    ? resolveEnvironmentForPage(
+        state.environment,
+        [...state.pages, ...state.archivedPages],
+        currentPage,
+      )
     : state.environment;
   const topoAuthoringEnvironment = currentPageEnvironment;
-  const { currentIndex, isTransitioning, targetIndex } = usePageController();
+  const {
+    currentIndex,
+    isTransitioning,
+    targetIndex,
+    authoringPreviewPageId,
+  } = usePageController();
   const selectedPageIndex = currentPage
     ? state.pages.findIndex((p) => p.id === currentPage.id)
     : -1;
   const selectedPageHasLanded =
-    pageSelectionHasLanded({
-      selectedPageIndex,
-      currentIndex,
-      isTransitioning,
-      targetIndex,
-    });
-  const setTopoAuthoringScene = (patch: Partial<SceneProperties>) => {
-    if (!currentPage) {
-      setEnvScene(patch);
-      return;
-    }
-    const sceneOverrides = mergeSceneProperties(
-      currentPage.sceneOverrides,
-      patch,
-    );
-    const nextPage = { ...currentPage, sceneOverrides };
-    const nextPages = state.pages.map((page) =>
-      page.id === nextPage.id ? nextPage : page,
-    );
-    const nextPageEnvironment = resolveEnvironmentForPage(
-      state.environment,
-      nextPages,
-      nextPage,
-    );
-    if (selectedPageHasLanded) {
-      sceneHandle.manager.applyEnvironment(nextPageEnvironment);
-    }
-    setPageField(currentPage.id, {
-      sceneOverrides: mergeSceneProperties(currentPage.sceneOverrides, patch),
-    });
-  };
+    currentPage && selectedPageIndex < 0
+      ? authoringPreviewPageId === currentPage.id
+      : pageSelectionHasLanded({
+          selectedPageIndex,
+          currentIndex,
+          isTransitioning,
+          targetIndex,
+        });
   const pageStyleControlsDisabled =
     !isEnv && (!currentPage || !selectedPageHasLanded);
   const selectedPageAccent =
@@ -572,7 +555,7 @@ export function LayerPanelGroups({
             setEnvLayerStyle,
             setPageLayerOverride,
             clearPageLayerOverride,
-            setEnvScene: setTopoAuthoringScene,
+            setEnvScene: setAuthoringScene,
             projectRoot: state.projectRoot,
             terrainEnvVisible: publicTopoTerrainEnvVisible,
             terrainEffectiveVisible: publicTopoTerrainEffectiveVisible,

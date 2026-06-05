@@ -213,6 +213,111 @@ function mergedLayerStyles(environment, page) {
   return merged;
 }
 
+function manifestPageIds(manifest, projectName, fieldName, errors) {
+  const value = manifest[fieldName];
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) {
+    errors.push(`${projectName}: ${fieldName} must be an array of page ids`);
+    return [];
+  }
+
+  const ids = [];
+  const seen = new Set();
+  for (const pageId of value) {
+    if (typeof pageId !== "string" || pageId.trim() === "") {
+      errors.push(`${projectName}: ${fieldName} contains a non-string page id`);
+      continue;
+    }
+    if (seen.has(pageId)) {
+      errors.push(`${projectName}: ${fieldName} contains duplicate page id ${pageId}`);
+      continue;
+    }
+    seen.add(pageId);
+    ids.push(pageId);
+  }
+  return ids;
+}
+
+function effectiveEnvironmentForPage(projectEnvironment, pagesById, page, seen = new Set()) {
+  if (page?.envSnapshot) return page.envSnapshot;
+  const parentMasterId = page?.parentMasterId;
+  if (!parentMasterId || parentMasterId === "global") return projectEnvironment;
+  if (seen.has(parentMasterId)) return projectEnvironment;
+  const parent = pagesById.get(parentMasterId);
+  if (!parent) return projectEnvironment;
+  seen.add(parentMasterId);
+  return effectiveEnvironmentForPage(projectEnvironment, pagesById, parent, seen);
+}
+
+function validatePageRecord({
+  projectDir,
+  projectName,
+  pageId,
+  page,
+  projectEnvironment,
+  pagesById,
+  active,
+  errors,
+  warnings,
+}) {
+  if (page.id !== pageId) {
+    errors.push(
+      `${projectName}:${pageId}: page id ${JSON.stringify(page.id)} does not match filename/${active ? "pageOrder" : "archivedPageOrder"}`,
+    );
+  }
+
+  if (active && (page.title === "Untitled page" || /\s+copy$/i.test(page.title ?? ""))) {
+    errors.push(`${projectName}:${pageId}: active page title is no-function text`);
+  }
+
+  if (
+    page.parentMasterId &&
+    page.parentMasterId !== "global" &&
+    !pagesById.has(page.parentMasterId)
+  ) {
+    errors.push(
+      `${projectName}:${pageId}: parentMasterId ${page.parentMasterId} is missing from pageOrder and archivedPageOrder`,
+    );
+  }
+
+  validateLayerStyles(`${projectName}:${pageId}`, page.layerOverrides, warnings);
+  validateLayerStyles(
+    `${projectName}:${pageId}:envSnapshot`,
+    page.envSnapshot?.layerStyles,
+    warnings,
+  );
+  const effectiveEnvironment = effectiveEnvironmentForPage(
+    projectEnvironment,
+    pagesById,
+    page,
+  );
+  validateLayerStyles(
+    `${projectName}:${pageId}:effective`,
+    mergedLayerStyles(effectiveEnvironment, page),
+    errors,
+  );
+
+  assertProjectAssetExists(
+    projectDir,
+    projectName,
+    pageId,
+    page.overlay?.contentFile,
+    "overlay.contentFile",
+    errors,
+  );
+
+  for (const image of page.overlay?.images ?? []) {
+    assertProjectAssetExists(
+      projectDir,
+      projectName,
+      pageId,
+      image?.file,
+      "overlay.images[].file",
+      errors,
+    );
+  }
+}
+
 export function validateProjectPages(rootDir = process.cwd()) {
   const projectsDir = path.join(rootDir, "projects");
   const errors = [];
@@ -246,67 +351,74 @@ export function validateProjectPages(rootDir = process.cwd()) {
       );
     }
 
-    const pageOrder = Array.isArray(manifest.pageOrder) ? manifest.pageOrder : [];
+    const pageOrder = manifestPageIds(manifest, entry.name, "pageOrder", errors);
+    const archivedPageOrder = manifestPageIds(
+      manifest,
+      entry.name,
+      "archivedPageOrder",
+      errors,
+    );
+    const archivedPageIds = new Set(archivedPageOrder);
     for (const pageId of pageOrder) {
-      if (typeof pageId !== "string" || pageId.trim() === "") {
-        errors.push(`${entry.name}: pageOrder contains a non-string page id`);
-        continue;
+      if (archivedPageIds.has(pageId)) {
+        errors.push(`${entry.name}: ${pageId} appears in both pageOrder and archivedPageOrder`);
       }
       if (pageId.includes("_untitled")) {
         errors.push(`${entry.name}: active pageOrder contains ${pageId}`);
       }
+    }
 
+    const pagesById = new Map();
+    const activePages = [];
+    const archivedPages = [];
+    for (const [fieldName, ids, target] of [
+      ["pageOrder", pageOrder, activePages],
+      ["archivedPageOrder", archivedPageOrder, archivedPages],
+    ]) {
+      for (const pageId of ids) {
+        const pagePath = path.join(projectDir, "pages", `${pageId}.json`);
+        if (!existsSync(pagePath)) {
+          errors.push(`${entry.name}: ${fieldName} page missing pages/${pageId}.json`);
+          continue;
+        }
+
+        const page = readJson(pagePath, rootDir, errors);
+        if (!page) continue;
+        target.push({ pageId, page });
+        if (!pagesById.has(pageId)) {
+          pagesById.set(pageId, page);
+        }
+      }
+    }
+
+    for (const { pageId, page } of activePages) {
       const pagePath = path.join(projectDir, "pages", `${pageId}.json`);
-      if (!existsSync(pagePath)) {
-        errors.push(`${entry.name}: pageOrder page missing pages/${pageId}.json`);
-        continue;
-      }
-
-      const page = readJson(pagePath, rootDir, errors);
-      if (!page) continue;
-
-      if (page.id !== pageId) {
-        errors.push(
-          `${entry.name}:${pageId}: page id ${JSON.stringify(page.id)} does not match filename/pageOrder`,
-        );
-      }
-
-      if (page.title === "Untitled page" || /\s+copy$/i.test(page.title ?? "")) {
-        errors.push(`${entry.name}:${pageId}: active page title is no-function text`);
-      }
-
-      validateLayerStyles(`${entry.name}:${pageId}`, page.layerOverrides, warnings);
-      validateLayerStyles(
-        `${entry.name}:${pageId}:envSnapshot`,
-        page.envSnapshot?.layerStyles,
-        warnings,
-      );
-      const effectiveEnvironment = page.envSnapshot ?? projectEnvironment;
-      validateLayerStyles(
-        `${entry.name}:${pageId}:effective`,
-        mergedLayerStyles(effectiveEnvironment, page),
-        errors,
-      );
-
-      assertProjectAssetExists(
+      if (!existsSync(pagePath)) continue;
+      validatePageRecord({
         projectDir,
-        entry.name,
+        projectName: entry.name,
         pageId,
-        page.overlay?.contentFile,
-        "overlay.contentFile",
+        page,
+        projectEnvironment,
+        pagesById,
+        active: true,
         errors,
-      );
+        warnings,
+      });
+    }
 
-      for (const image of page.overlay?.images ?? []) {
-        assertProjectAssetExists(
-          projectDir,
-          entry.name,
-          pageId,
-          image?.file,
-          "overlay.images[].file",
-          errors,
-        );
-      }
+    for (const { pageId, page } of archivedPages) {
+      validatePageRecord({
+        projectDir,
+        projectName: entry.name,
+        pageId,
+        page,
+        projectEnvironment,
+        pagesById,
+        active: false,
+        errors,
+        warnings,
+      });
     }
   }
 

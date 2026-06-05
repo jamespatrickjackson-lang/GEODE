@@ -61,6 +61,7 @@ import { stripTopoMaterialAuthorityFromTerrain } from "../topoMap/materialAuthor
 
 interface EditorContextValue {
   state: EditorState;
+  allEditablePages: PresentationPage[];
   /** Scene handle exposed for components that need direct GPU-side
    *  reads (e.g. the geology sub-layer panel reads the loaded units). */
   sceneHandle: SceneHandle;
@@ -68,6 +69,7 @@ interface EditorContextValue {
   setEnvLayerStyle: (layerId: string, style: Partial<EditableStyle>) => void;
   toggleEnvDefaultVisible: (layerId: string) => void;
   setEnvScene: (patch: Partial<SceneProperties>) => void;
+  setAuthoringScene: (patch: Partial<SceneProperties>) => void;
   setEnvRenderPreset: (renderPreset: RenderPresetId | null) => void;
   saveEnvCustomRenderPreset: () => string | null;
   updateSelectedEnvCustomRenderPreset: () => boolean;
@@ -165,6 +167,21 @@ interface EditorContextValue {
     targetPageId: string,
     insertPosition?: "before" | "after",
   ) => void;
+  archivePage: (
+    pageId: string,
+    targetPageId?: string,
+    insertPosition?: "before" | "after",
+  ) => void;
+  restoreArchivedPage: (
+    pageId: string,
+    targetPageId?: string,
+    insertPosition?: "before" | "after",
+  ) => void;
+  moveArchivedPage: (
+    pageId: string,
+    targetPageId: string,
+    insertPosition?: "before" | "after",
+  ) => void;
   // Sub Master page hierarchy (DEC-079). addSubMaster creates a new Sub
   // Master that snapshots the current environment; addSubMasterChild creates
   // a child page inheriting from the given Sub Master; reSnapshotSubMaster
@@ -207,6 +224,52 @@ function withDirty(
   const next = new Set(prev);
   for (const k of Array.isArray(add) ? add : [add]) next.add(k);
   return next;
+}
+
+type EditablePageLists = Pick<EditorState, "pages" | "archivedPages">;
+
+function archivedPageOrderOf(manifest: ProjectManifest): string[] {
+  return Array.isArray(manifest.archivedPageOrder)
+    ? manifest.archivedPageOrder.filter(
+        (id): id is string => typeof id === "string" && id !== "",
+      )
+    : [];
+}
+
+function allEditablePages(state: EditablePageLists): PresentationPage[] {
+  return [...state.pages, ...state.archivedPages];
+}
+
+function findEditablePage(
+  state: EditablePageLists,
+  pageId: string | null | undefined,
+): PresentationPage | null {
+  if (!pageId) return null;
+  return (
+    state.pages.find((page) => page.id === pageId) ??
+    state.archivedPages.find((page) => page.id === pageId) ??
+    null
+  );
+}
+
+function mapEditablePages(
+  state: EditablePageLists,
+  mapper: (page: PresentationPage) => PresentationPage,
+): EditablePageLists {
+  return {
+    pages: state.pages.map(mapper),
+    archivedPages: state.archivedPages.map(mapper),
+  };
+}
+
+function pagesInOrderFrom(
+  pages: readonly PresentationPage[],
+  pageOrder: readonly string[],
+): PresentationPage[] {
+  const byId = new Map(pages.map((page) => [page.id, page]));
+  return pageOrder
+    .map((id) => byId.get(id))
+    .filter((page): page is PresentationPage => page != null);
 }
 
 function withoutDirty(
@@ -359,10 +422,14 @@ function cinematicScenePatchForEdit(
 function currentAuthoringScene(state: EditorState): SceneProperties {
   const selectedPageId = state.selectedPageId;
   if (selectedPageId && selectedPageId !== ENVIRONMENT_SENTINEL) {
-    const page = state.pages.find((candidate) => candidate.id === selectedPageId);
+    const page = findEditablePage(state, selectedPageId);
     if (page) {
       return (
-        resolveEnvironmentForPage(state.environment, state.pages, page).scene ??
+        resolveEnvironmentForPage(
+          state.environment,
+          allEditablePages(state),
+          page,
+        ).scene ??
         {}
       );
     }
@@ -516,7 +583,7 @@ function materializePageEnvironmentSnapshot(
   page: PresentationPage,
 ): EnvironmentSetup {
   const base = clone(
-    resolveEnvironmentForPage(state.environment, state.pages, page),
+    resolveEnvironmentForPage(state.environment, allEditablePages(state), page),
   );
   const layerIds = new Set([
     ...Object.keys(base.layerStyles ?? {}),
@@ -859,7 +926,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       // we don't leave dangling refs in the saved JSON.
       const dirty = new Set(state.dirty);
       dirty.add("environment");
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         const refs = p.sceneOverlays ?? [];
         if (!refs.some((r) => r.id === action.id)) return p;
         const next: PresentationPage = { ...p };
@@ -869,10 +936,10 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         dirty.add(`page:${p.id}`);
         return next;
       });
-      return { ...state, environment, pages, dirty };
+      return { ...state, environment, pages, archivedPages, dirty };
     }
     case "SET_PAGE_SCENE_OVERLAY": {
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         if (p.id !== action.pageId) return p;
         const refs = [...(p.sceneOverlays ?? [])];
         const idx = refs.findIndex((r) => r.id === action.overlayId);
@@ -886,11 +953,12 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
     case "REMOVE_PAGE_SCENE_OVERLAY": {
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         if (p.id !== action.pageId) return p;
         const refs = (p.sceneOverlays ?? []).filter(
           (r) => r.id !== action.overlayId,
@@ -906,6 +974,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
@@ -959,7 +1028,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         (layerId) => layerId !== action.layerId,
       );
       const dirty = withDirty(state.dirty, ["project", "environment"]);
-      const pages = state.pages.map((page) => {
+      const { pages, archivedPages } = mapEditablePages(state, (page) => {
         let changed = false;
         const next: PresentationPage = { ...page };
         if (next.layerOverrides?.[action.layerId]) {
@@ -1008,13 +1077,14 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         manifest,
         environment,
         pages,
+        archivedPages,
         dirty,
       };
     }
 
     // ---- presentation-page deltas ----------------------------------------
     case "SET_PAGE_LAYER_OVERRIDE": {
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         if (p.id !== action.pageId) return p;
         if (isSubMasterPage(p)) {
           return setSubMasterSnapshotLayerStyle(
@@ -1033,11 +1103,12 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
     case "CLEAR_PAGE_LAYER_OVERRIDE": {
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         if (p.id !== action.pageId) return p;
         if (isSubMasterPage(p)) {
           return clearSubMasterSnapshotLayerStyle(
@@ -1065,11 +1136,12 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
     case "SET_PAGE_VISIBILITY_OVERRIDE": {
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         if (p.id !== action.pageId) return p;
         if (isSubMasterPage(p)) {
           return setSubMasterSnapshotVisible(p, action.layerId, action.visible);
@@ -1081,11 +1153,12 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
     case "CLEAR_PAGE_VISIBILITY_OVERRIDE": {
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         if (p.id !== action.pageId) return p;
         if (isSubMasterPage(p)) {
           return withoutVisibilityOverride(p, action.layerId);
@@ -1099,23 +1172,25 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
 
     // ---- page metadata (unchanged from Week 3) ----------------------------
     case "SET_PAGE_FIELD": {
-      const pages = state.pages.map((p) =>
+      const { pages, archivedPages } = mapEditablePages(state, (p) =>
         p.id === action.pageId ? { ...p, ...action.patch } : p,
       );
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
     case "SET_PAGE_TRANSITION": {
-      const pages = state.pages.map((p) =>
+      const { pages, archivedPages } = mapEditablePages(state, (p) =>
         p.id === action.pageId
           ? { ...p, transition: { ...p.transition, ...action.patch } }
           : p,
@@ -1123,11 +1198,12 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
     case "CAPTURE_POSE": {
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         if (p.id !== action.pageId) return p;
         const next: PresentationPage = { ...p, camera: action.pose };
         if (action.cameraObjectFocus) {
@@ -1147,22 +1223,24 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       return {
         ...state,
         pages,
+        archivedPages,
         poseHistory: { ...state.poseHistory, [action.pageId]: nextHistory },
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
     case "SET_PAGE_OVERLAY_LAYOUT": {
-      const pages = state.pages.map((p) =>
+      const { pages, archivedPages } = mapEditablePages(state, (p) =>
         p.id === action.pageId ? { ...p, overlayLayout: action.layout } : p,
       );
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
     case "SET_PAGE_OVERLAY_TIMING": {
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         if (p.id !== action.pageId) return p;
         const overlay = p.overlay ?? {
           position: "right",
@@ -1180,11 +1258,12 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
     case "SET_PAGE_OVERLAY_HIDDEN": {
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         if (p.id !== action.pageId) return p;
         const overlay = p.overlay ?? {
           position: "right",
@@ -1199,6 +1278,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
@@ -1206,35 +1286,52 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       const history = state.poseHistory[action.pageId] ?? [];
       const pose = history[action.index];
       if (!pose) return state;
-      const pages = state.pages.map((p) =>
+      const { pages, archivedPages } = mapEditablePages(state, (p) =>
         p.id === action.pageId ? { ...p, camera: pose } : p,
       );
       // Restoring does NOT push to history -- this entry already exists.
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
     case "ADD_PAGE": {
       const manifest = clone(state.manifest);
       const pageOrder = [...manifest.pageOrder];
+      const archivedPageOrder = archivedPageOrderOf(manifest);
+      const sourceIsArchived =
+        action.afterPageId !== undefined &&
+        archivedPageOrder.includes(action.afterPageId);
       const pageIndex =
         action.afterPageId !== undefined
-          ? pageOrder.indexOf(action.afterPageId)
+          ? (sourceIsArchived
+              ? archivedPageOrder.indexOf(action.afterPageId)
+              : pageOrder.indexOf(action.afterPageId))
           : -1;
-      if (pageIndex >= 0) {
+      if (sourceIsArchived && pageIndex >= 0) {
+        archivedPageOrder.splice(pageIndex + 1, 0, action.page.id);
+      } else if (pageIndex >= 0) {
         pageOrder.splice(pageIndex + 1, 0, action.page.id);
       } else {
         pageOrder.push(action.page.id);
       }
       manifest.pageOrder = pageOrder;
+      manifest.archivedPageOrder = archivedPageOrder;
       const sourceIndex =
         action.afterPageId !== undefined
-          ? state.pages.findIndex((page) => page.id === action.afterPageId)
+          ? (sourceIsArchived
+              ? state.archivedPages.findIndex(
+                  (page) => page.id === action.afterPageId,
+                )
+              : state.pages.findIndex((page) => page.id === action.afterPageId))
           : -1;
       const pages = [...state.pages];
-      if (sourceIndex >= 0) {
+      const archivedPages = [...state.archivedPages];
+      if (sourceIsArchived && sourceIndex >= 0) {
+        archivedPages.splice(sourceIndex + 1, 0, action.page);
+      } else if (sourceIndex >= 0) {
         pages.splice(sourceIndex + 1, 0, action.page);
       } else {
         pages.push(action.page);
@@ -1251,18 +1348,26 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         ...state,
         manifest,
         pages,
+        archivedPages,
         overlays,
         selectedPageId: action.page.id,
         dirty: withDirty(state.dirty, dirtyKeys),
       };
     }
     case "DELETE_PAGE": {
-      if (state.pages.length <= 1) return state;
+      const activeTarget = state.pages.some((p) => p.id === action.pageId);
+      if (activeTarget && state.pages.length <= 1) return state;
       const manifest = clone(state.manifest);
       manifest.pageOrder = manifest.pageOrder.filter(
         (id) => id !== action.pageId,
       );
+      manifest.archivedPageOrder = archivedPageOrderOf(manifest).filter(
+        (id) => id !== action.pageId,
+      );
       const pages = state.pages.filter((p) => p.id !== action.pageId);
+      const archivedPages = state.archivedPages.filter(
+        (p) => p.id !== action.pageId,
+      );
       const selectedPageId =
         state.selectedPageId === action.pageId
           ? pages[0]?.id ?? null
@@ -1271,6 +1376,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         ...state,
         manifest,
         pages,
+        archivedPages,
         selectedPageId,
         dirty: withDirty(state.dirty, "project"),
       };
@@ -1419,6 +1525,99 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         dirty: withDirty(state.dirty, "project"),
       };
     }
+    case "ARCHIVE_PAGE": {
+      if (state.pages.length <= 1) return state;
+      const source = state.pages.find((p) => p.id === action.pageId);
+      if (!source) return state;
+      const manifest = clone(state.manifest);
+      const nextPageOrder = manifest.pageOrder.filter((id) => id !== source.id);
+      const nextArchivedOrder = archivedPageOrderOf(manifest).filter(
+        (id) => id !== source.id,
+      );
+      const targetIndex =
+        action.targetPageId !== undefined
+          ? nextArchivedOrder.indexOf(action.targetPageId)
+          : -1;
+      const insertIndex =
+        targetIndex >= 0
+          ? action.insertPosition === "after"
+            ? targetIndex + 1
+            : targetIndex
+          : 0;
+      nextArchivedOrder.splice(insertIndex, 0, source.id);
+      manifest.pageOrder = nextPageOrder;
+      manifest.archivedPageOrder = nextArchivedOrder;
+      const pages = state.pages.filter((p) => p.id !== source.id);
+      const archivedPages = state.archivedPages.filter(
+        (p) => p.id !== source.id,
+      );
+      archivedPages.splice(insertIndex, 0, source);
+      return {
+        ...state,
+        manifest,
+        pages,
+        archivedPages,
+        selectedPageId: source.id,
+        dirty: withDirty(state.dirty, "project"),
+      };
+    }
+    case "RESTORE_ARCHIVED_PAGE": {
+      const source = state.archivedPages.find((p) => p.id === action.pageId);
+      if (!source) return state;
+      const manifest = clone(state.manifest);
+      const nextArchivedOrder = archivedPageOrderOf(manifest).filter(
+        (id) => id !== source.id,
+      );
+      const nextPageOrder = manifest.pageOrder.filter((id) => id !== source.id);
+      const targetIndex =
+        action.targetPageId !== undefined
+          ? nextPageOrder.indexOf(action.targetPageId)
+          : -1;
+      const insertIndex =
+        targetIndex >= 0
+          ? action.insertPosition === "after"
+            ? targetIndex + 1
+            : targetIndex
+          : nextPageOrder.length;
+      nextPageOrder.splice(insertIndex, 0, source.id);
+      manifest.pageOrder = nextPageOrder;
+      manifest.archivedPageOrder = nextArchivedOrder;
+      const archivedPages = state.archivedPages.filter((p) => p.id !== source.id);
+      const pages = state.pages.filter((p) => p.id !== source.id);
+      pages.splice(insertIndex, 0, source);
+      return {
+        ...state,
+        manifest,
+        pages,
+        archivedPages,
+        selectedPageId: source.id,
+        dirty: withDirty(state.dirty, "project"),
+      };
+    }
+    case "MOVE_ARCHIVED_PAGE": {
+      if (action.pageId === action.targetPageId) return state;
+      const source = state.archivedPages.find((p) => p.id === action.pageId);
+      const target = state.archivedPages.find((p) => p.id === action.targetPageId);
+      if (!source || !target) return state;
+      const manifest = clone(state.manifest);
+      const withoutSource = archivedPageOrderOf(manifest).filter(
+        (id) => id !== source.id,
+      );
+      const targetIndex = withoutSource.indexOf(target.id);
+      if (targetIndex < 0) return state;
+      const insertIndex =
+        action.insertPosition === "after" ? targetIndex + 1 : targetIndex;
+      withoutSource.splice(insertIndex, 0, source.id);
+      manifest.archivedPageOrder = withoutSource;
+      const archivedPages = pagesInOrderFrom(state.archivedPages, withoutSource);
+      return {
+        ...state,
+        manifest,
+        archivedPages,
+        selectedPageId: source.id,
+        dirty: withDirty(state.dirty, "project"),
+      };
+    }
     case "ADD_SUB_MASTER": {
       const manifest = clone(state.manifest);
       const pageOrder = [...manifest.pageOrder];
@@ -1453,12 +1652,50 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
     case "ADD_SUB_MASTER_CHILD": {
       const parentMasterId = action.page.parentMasterId;
       if (!parentMasterId || parentMasterId === "global") return state;
-      const parent = state.pages.find((p) => p.id === parentMasterId);
+      const parent = findEditablePage(state, parentMasterId);
       if (!parent || !isSubMasterPage(parent)) return state;
+      const parentArchived = state.archivedPages.some(
+        (p) => p.id === parentMasterId,
+      );
       const manifest = clone(state.manifest);
+      const archivedPageOrder = archivedPageOrderOf(manifest);
+      if (parentArchived) {
+        const existingArchivedChildren = state.archivedPages
+          .filter((p) => p.parentMasterId === parentMasterId)
+          .map((p) => p.id);
+        const insertAfterId =
+          existingArchivedChildren.length > 0
+            ? existingArchivedChildren[existingArchivedChildren.length - 1]
+            : parentMasterId;
+        const insertAfterIdx = archivedPageOrder.indexOf(insertAfterId);
+        archivedPageOrder.splice(
+          insertAfterIdx >= 0 ? insertAfterIdx + 1 : archivedPageOrder.length,
+          0,
+          action.page.id,
+        );
+        manifest.archivedPageOrder = archivedPageOrder;
+        const insertAfterPageIdx = state.archivedPages.findIndex(
+          (p) => p.id === insertAfterId,
+        );
+        const archivedPages = [...state.archivedPages];
+        archivedPages.splice(
+          insertAfterPageIdx >= 0
+            ? insertAfterPageIdx + 1
+            : archivedPages.length,
+          0,
+          action.page,
+        );
+        return {
+          ...state,
+          manifest,
+          archivedPages,
+          selectedPageId: action.page.id,
+          dirty: withDirty(state.dirty, ["project", `page:${action.page.id}`]),
+        };
+      }
       const existingChildren = childrenOfSubMaster(
         parentMasterId,
-        state.pages,
+        allEditablePages(state),
         manifest.pageOrder,
       );
       const insertAfterId =
@@ -1487,7 +1724,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       };
     }
     case "MAKE_PAGE_SUB_MASTER": {
-      const target = state.pages.find((p) => p.id === action.pageId);
+      const target = findEditablePage(state, action.pageId);
       if (!target || isSubMasterPage(target)) return state;
 
       const envSnapshot = materializePageEnvironmentSnapshot(state, target);
@@ -1495,7 +1732,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         ...target,
         parentMasterId: "global",
         envSnapshot,
-        subMasterOrdinal: nextSubMasterOrdinal(state.pages),
+        subMasterOrdinal: nextSubMasterOrdinal(allEditablePages(state)),
       };
       delete converted.layerOverrides;
       delete converted.visibilityOverrides;
@@ -1523,14 +1760,14 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         );
       }
       manifest.pageOrder = nextOrder;
-      const pages = pagesInManifestOrder(
-        state.pages.map((p) => (p.id === target.id ? converted : p)),
-        nextOrder,
+      const { pages, archivedPages } = mapEditablePages(state, (p) =>
+        p.id === target.id ? converted : p,
       );
       return {
         ...state,
         manifest,
         pages,
+        archivedPages,
         selectedPageId: target.id,
         dirty: withDirty(state.dirty, ["project", `page:${target.id}`]),
       };
@@ -1538,13 +1775,60 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
     case "DUPLICATE_SUB_MASTER_AS_CHILD": {
       const parentMasterId = action.page.parentMasterId;
       if (!parentMasterId || parentMasterId === "global") return state;
-      const parent = state.pages.find((p) => p.id === parentMasterId);
+      const parent = findEditablePage(state, parentMasterId);
       if (!parent || !isSubMasterPage(parent)) return state;
 
       const manifest = clone(state.manifest);
+      const parentArchived = state.archivedPages.some(
+        (p) => p.id === parentMasterId,
+      );
+      if (parentArchived) {
+        const archivedPageOrder = archivedPageOrderOf(manifest);
+        const existingChildren = state.archivedPages
+          .filter((p) => p.parentMasterId === parentMasterId)
+          .map((p) => p.id);
+        const insertAfterId =
+          existingChildren.length > 0
+            ? existingChildren[existingChildren.length - 1]
+            : parentMasterId;
+        const insertAfterIdx = archivedPageOrder.indexOf(insertAfterId);
+        archivedPageOrder.splice(
+          insertAfterIdx >= 0 ? insertAfterIdx + 1 : archivedPageOrder.length,
+          0,
+          action.page.id,
+        );
+        manifest.archivedPageOrder = archivedPageOrder;
+        const insertAfterPageIdx = state.archivedPages.findIndex(
+          (p) => p.id === insertAfterId,
+        );
+        const archivedPages = [...state.archivedPages];
+        archivedPages.splice(
+          insertAfterPageIdx >= 0
+            ? insertAfterPageIdx + 1
+            : archivedPages.length,
+          0,
+          action.page,
+        );
+        const overlays =
+          action.overlayText !== undefined
+            ? { ...state.overlays, [action.page.id]: action.overlayText }
+            : state.overlays;
+        const dirtyKeys: EntityKey[] = ["project", `page:${action.page.id}`];
+        if (action.overlayText !== undefined) {
+          dirtyKeys.push(`overlay:${action.page.id}`);
+        }
+        return {
+          ...state,
+          manifest,
+          archivedPages,
+          overlays,
+          selectedPageId: action.page.id,
+          dirty: withDirty(state.dirty, dirtyKeys),
+        };
+      }
       const existingChildren = childrenOfSubMaster(
         parentMasterId,
-        state.pages,
+        allEditablePages(state),
         manifest.pageOrder,
       );
       const insertAfterId =
@@ -1582,32 +1866,37 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       };
     }
     case "RE_SNAPSHOT_SUB_MASTER": {
-      const target = state.pages.find((p) => p.id === action.pageId);
+      const target = findEditablePage(state, action.pageId);
       if (!target || !isSubMasterPage(target)) return state;
       const snapshot = clone(state.environment);
-      const pages = state.pages.map((p) =>
+      const { pages, archivedPages } = mapEditablePages(state, (p) =>
         p.id === action.pageId ? { ...p, envSnapshot: snapshot } : p,
       );
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
     case "DELETE_SUB_MASTER": {
-      const target = state.pages.find((p) => p.id === action.pageId);
+      const target = findEditablePage(state, action.pageId);
       if (!target || !isSubMasterPage(target)) return state;
-      const childIds = state.pages
+      const childIds = allEditablePages(state)
         .filter((p) => p.parentMasterId === target.id)
         .map((p) => p.id);
       const blockIds = new Set([target.id, ...childIds]);
-      if (state.pages.length - blockIds.size < 1) return state;
+      if (state.pages.filter((p) => !blockIds.has(p.id)).length < 1) return state;
       const oldIdxOfFirstBlockMember = state.manifest.pageOrder.findIndex(
         (id) => blockIds.has(id),
       );
       const manifest = clone(state.manifest);
       manifest.pageOrder = manifest.pageOrder.filter((id) => !blockIds.has(id));
+      manifest.archivedPageOrder = archivedPageOrderOf(manifest).filter(
+        (id) => !blockIds.has(id),
+      );
       const pages = state.pages.filter((p) => !blockIds.has(p.id));
+      const archivedPages = state.archivedPages.filter((p) => !blockIds.has(p.id));
       const previousId =
         oldIdxOfFirstBlockMember > 0
           ? state.manifest.pageOrder[oldIdxOfFirstBlockMember - 1]
@@ -1625,6 +1914,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         ...state,
         manifest,
         pages,
+        archivedPages,
         selectedPageId,
         dirty: withDirty(state.dirty, "project"),
       };
@@ -1643,7 +1933,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         overlays: { ...state.overlays, [action.pageId]: action.text },
       };
     case "ADD_OVERLAY_IMAGE": {
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         if (p.id !== action.pageId) return p;
         const overlay: TextOverlayContainer = p.overlay ?? {
           position: "right",
@@ -1663,11 +1953,12 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
     case "REMOVE_OVERLAY_IMAGE": {
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         if (p.id !== action.pageId) return p;
         const overlay: TextOverlayContainer = p.overlay ?? {};
         const images = Array.isArray(overlay.images)
@@ -1680,11 +1971,12 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
     case "RESET_PAGE_OVERRIDES": {
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         if (p.id !== action.pageId) return p;
         const hadOverrides =
           p.layerOverrides !== undefined ||
@@ -1701,11 +1993,14 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         delete next.sunLockToCamera;
         return next;
       });
-      const changed = pages.some((p, i) => p !== state.pages[i]);
+      const changed =
+        pages.some((p, i) => p !== state.pages[i]) ||
+        archivedPages.some((p, i) => p !== state.archivedPages[i]);
       if (!changed) return state;
       return {
         ...state,
         pages,
+        archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
       };
     }
@@ -1715,7 +2010,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       // transition, holdDuration, overlay, annotations, presenterNotes
       // intact. Mark each modified page dirty so the save loop persists.
       const dirtyAdd: EntityKey[] = [];
-      const pages = state.pages.map((p) => {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
         const hadOverrides =
           p.layerOverrides !== undefined ||
           p.visibilityOverrides !== undefined ||
@@ -1733,7 +2028,12 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         return next;
       });
       if (dirtyAdd.length === 0) return state;
-      return { ...state, pages, dirty: withDirty(state.dirty, dirtyAdd) };
+      return {
+        ...state,
+        pages,
+        archivedPages,
+        dirty: withDirty(state.dirty, dirtyAdd),
+      };
     }
     case "MARK_SAVED":
       return { ...state, dirty: withoutDirty(state.dirty, action.key) };
@@ -1867,6 +2167,7 @@ interface ProviderProps {
   manifest: ProjectManifest;
   environment: EnvironmentSetup;
   pages: PresentationPage[];
+  archivedPages?: PresentationPage[];
   sceneHandle: SceneHandle;
   children: ReactNode;
 }
@@ -1877,6 +2178,7 @@ export function EditorProvider({
   manifest: initialManifest,
   environment: initialEnvironment,
   pages: initialPages,
+  archivedPages: initialArchivedPages = [],
   sceneHandle,
   children,
 }: ProviderProps) {
@@ -1886,6 +2188,7 @@ export function EditorProvider({
     manifest: initialManifest,
     environment: normalizeMtBoundaryVisibilityEnvironment(initialEnvironment),
     pages: normalizeSubMasterAuthoringPages(initialPages),
+    archivedPages: normalizeSubMasterAuthoringPages(initialArchivedPages),
     overlays: {},
     poseHistory: {},
     // Open the editor on the editor-only Global Settings pseudo-page so
@@ -1902,6 +2205,10 @@ export function EditorProvider({
   const liveApplyTransitionActiveRef = useRef(false);
   const deferredLiveSceneApplyRef = useRef(false);
   stateRef.current = state;
+  const editablePages = useMemo(() => allEditablePages(state), [
+    state.pages,
+    state.archivedPages,
+  ]);
 
   const setLiveApplyTransitionActive = useCallback((active: boolean) => {
     liveApplyTransitionActiveRef.current = active;
@@ -2010,7 +2317,7 @@ export function EditorProvider({
           });
         } else if (key.startsWith("page:")) {
           const id = key.slice(5);
-          const page = stateRef.current.pages.find((p) => p.id === id);
+          const page = findEditablePage(stateRef.current, id);
           if (!page) continue;
           const pageForWrite = normalizeMtBoundaryVisibilityPage(
             normalizeSubMasterAuthoringPage(page),
@@ -2071,9 +2378,7 @@ export function EditorProvider({
       // Live scene update: recompute effective style for the currently
       // displayed page (env base ⊕ page override) and apply.
       const cur = stateRef.current;
-      const pageIdx = cur.pages.findIndex((p) => p.id === cur.selectedPageId);
-      const displayPage =
-        pageIdx >= 0 ? cur.pages[pageIdx] : cur.pages[0];
+      const displayPage = findEditablePage(cur, cur.selectedPageId) ?? cur.pages[0];
       if (displayPage && canApplyLiveSceneEdits()) {
         const previewEnvironmentBase =
           cur.selectedPageId === ENVIRONMENT_SENTINEL;
@@ -2099,7 +2404,11 @@ export function EditorProvider({
           : displayPage;
         const previewEnvironment = previewEnvironmentBase
           ? nextEnvironment
-          : resolveEnvironmentForPage(nextEnvironment, cur.pages, displayPage);
+          : resolveEnvironmentForPage(
+              nextEnvironment,
+              allEditablePages(cur),
+              displayPage,
+            );
         sceneHandle.manager.applyStyle(
           layerId,
           effectiveStyle(previewEnvironment, previewPage, layerId),
@@ -2119,8 +2428,7 @@ export function EditorProvider({
       const set = new Set(cur.environment.defaultVisibleLayers);
       if (set.has(layerId)) set.delete(layerId);
       else set.add(layerId);
-      const displayPage = cur.pages.find((p) => p.id === cur.selectedPageId)
-        ?? cur.pages[0];
+      const displayPage = findEditablePage(cur, cur.selectedPageId) ?? cur.pages[0];
       if (displayPage && canApplyLiveSceneEdits()) {
         const nextDefaultVisibleLayers = Array.from(set);
         const visEnv =
@@ -2132,7 +2440,7 @@ export function EditorProvider({
                     ...cur.environment,
                     defaultVisibleLayers: nextDefaultVisibleLayers,
                   },
-                  cur.pages,
+                  allEditablePages(cur),
                   displayPage,
                 ),
                 displayPage,
@@ -2160,6 +2468,52 @@ export function EditorProvider({
       dispatch({ type: "SET_ENV_SCENE", patch });
     },
     [canApplyLiveSceneEdits, sceneHandle],
+  );
+
+  const setAuthoringScene = useCallback<
+    EditorContextValue["setAuthoringScene"]
+  >(
+    (patch) => {
+      const cur = stateRef.current;
+      const page = findEditablePage(cur, cur.selectedPageId);
+      if (!page) {
+        setEnvScene(patch);
+        return;
+      }
+
+      const nextPage = isSubMasterPage(page)
+        ? {
+            ...page,
+            envSnapshot: {
+              ...page.envSnapshot!,
+              scene: mergeSceneEdit(page.envSnapshot?.scene, patch),
+            },
+          }
+        : {
+            ...page,
+            sceneOverrides: mergeSceneEdit(page.sceneOverrides, patch),
+          };
+      const nextPages = allEditablePages(cur).map((candidate) =>
+        candidate.id === nextPage.id ? nextPage : candidate,
+      );
+      const nextPageEnvironment = resolveEnvironmentForPage(
+        cur.environment,
+        nextPages,
+        nextPage,
+      );
+      if (canApplyLiveSceneEdits()) {
+        sceneHandle.manager.applyEnvironment(nextPageEnvironment);
+        sceneHandle.manager.applyPageScene(nextPage);
+      }
+      dispatch({
+        type: "SET_PAGE_FIELD",
+        pageId: nextPage.id,
+        patch: isSubMasterPage(page)
+          ? { envSnapshot: nextPage.envSnapshot }
+          : { sceneOverrides: nextPage.sceneOverrides },
+      });
+    },
+    [canApplyLiveSceneEdits, sceneHandle, setEnvScene],
   );
 
   const setEnvRenderPreset = useCallback<
@@ -2277,7 +2631,7 @@ export function EditorProvider({
   >(
     (pageId, overlayId, patch) => {
       const cur = stateRef.current;
-      const nextPages = cur.pages.map((p) => {
+      const nextPages = allEditablePages(cur).map((p) => {
         if (p.id !== pageId) return p;
         const refs = [...(p.sceneOverlays ?? [])];
         const idx = refs.findIndex((r) => r.id === overlayId);
@@ -2296,7 +2650,7 @@ export function EditorProvider({
   >(
     (pageId, overlayId) => {
       const cur = stateRef.current;
-      const nextPages = cur.pages.map((p) => {
+      const nextPages = allEditablePages(cur).map((p) => {
         if (p.id !== pageId) return p;
         const refs = (p.sceneOverlays ?? []).filter((r) => r.id !== overlayId);
         const next: PresentationPage = { ...p };
@@ -2371,10 +2725,10 @@ export function EditorProvider({
       const selectedPageId = cur.selectedPageId;
       const page =
         selectedPageId && selectedPageId !== ENVIRONMENT_SENTINEL
-          ? cur.pages.find((candidate) => candidate.id === selectedPageId)
+          ? findEditablePage(cur, selectedPageId)
           : null;
       const pageEnvironment = page
-        ? resolveEnvironmentForPage(cur.environment, cur.pages, page)
+        ? resolveEnvironmentForPage(cur.environment, allEditablePages(cur), page)
         : cur.environment;
       const scene = pageEnvironment.scene ?? {};
       const lighting = scene.lighting ?? {};
@@ -2414,10 +2768,10 @@ export function EditorProvider({
       const cur = stateRef.current;
       const page =
         cur.selectedPageId && cur.selectedPageId !== ENVIRONMENT_SENTINEL
-          ? cur.pages.find((candidate) => candidate.id === cur.selectedPageId)
+          ? findEditablePage(cur, cur.selectedPageId)
           : null;
       const pageEnvironment = page
-        ? resolveEnvironmentForPage(cur.environment, cur.pages, page)
+        ? resolveEnvironmentForPage(cur.environment, allEditablePages(cur), page)
         : cur.environment;
       const scene = pageEnvironment.scene ?? {};
       const outlines = scene.areaOutlines ?? [];
@@ -2463,10 +2817,10 @@ export function EditorProvider({
       const cur = stateRef.current;
       const page =
         cur.selectedPageId && cur.selectedPageId !== ENVIRONMENT_SENTINEL
-          ? cur.pages.find((candidate) => candidate.id === cur.selectedPageId)
+          ? findEditablePage(cur, cur.selectedPageId)
           : null;
       const pageEnvironment = page
-        ? resolveEnvironmentForPage(cur.environment, cur.pages, page)
+        ? resolveEnvironmentForPage(cur.environment, allEditablePages(cur), page)
         : cur.environment;
       const currentStyle = page
         ? effectiveStyle(pageEnvironment, page, layerId)
@@ -2497,11 +2851,11 @@ export function EditorProvider({
       const selectedPageId = cur.selectedPageId;
       const page =
         selectedPageId && selectedPageId !== ENVIRONMENT_SENTINEL
-          ? cur.pages.find((candidate) => candidate.id === selectedPageId)
+          ? findEditablePage(cur, selectedPageId)
           : null;
       const layerId = "utah-forge-scene-section-planes";
       const pageEnvironment = page
-        ? resolveEnvironmentForPage(cur.environment, cur.pages, page)
+        ? resolveEnvironmentForPage(cur.environment, allEditablePages(cur), page)
         : cur.environment;
       const currentStyle = page
         ? effectiveStyle(pageEnvironment, page, layerId)
@@ -2580,11 +2934,11 @@ export function EditorProvider({
       const selectedPageId = cur.selectedPageId;
       const page =
         selectedPageId && selectedPageId !== ENVIRONMENT_SENTINEL
-          ? cur.pages.find((candidate) => candidate.id === selectedPageId)
+          ? findEditablePage(cur, selectedPageId)
           : null;
       const layerId = "utah-forge-scene-section-planes";
       const pageEnvironment = page
-        ? resolveEnvironmentForPage(cur.environment, cur.pages, page)
+        ? resolveEnvironmentForPage(cur.environment, allEditablePages(cur), page)
         : cur.environment;
       const currentStyle = page
         ? effectiveStyle(pageEnvironment, page, layerId)
@@ -2732,7 +3086,7 @@ export function EditorProvider({
                 ),
         };
         const displayPage =
-          cur.pages.find((page) => page.id === cur.selectedPageId) ??
+          findEditablePage(cur, cur.selectedPageId) ??
           cur.pages[0];
         if (displayPage) {
           const pageEnvironment =
@@ -2740,7 +3094,7 @@ export function EditorProvider({
               ? nextEnvironment
               : resolveEnvironmentForPage(
                   nextEnvironment,
-                  cur.pages,
+                  allEditablePages(cur),
                   displayPage,
                 );
           sceneHandle.manager.applyStyle(
@@ -2785,11 +3139,11 @@ export function EditorProvider({
         deferredLiveSceneApplyRef.current = true;
       }
       if (cur.selectedPageId === pageId && canApplyLiveSceneEdits()) {
-        const page = cur.pages.find((p) => p.id === pageId);
+        const page = findEditablePage(cur, pageId);
         if (page) {
           const pageEnvironment = resolveEnvironmentForPage(
             cur.environment,
-            cur.pages,
+            allEditablePages(cur),
             page,
           );
           const nextLayerOverride = normalizeMtBoundaryVisibilityStyle({
@@ -2830,11 +3184,11 @@ export function EditorProvider({
         deferredLiveSceneApplyRef.current = true;
       }
       if (cur.selectedPageId === pageId && canApplyLiveSceneEdits()) {
-        const page = cur.pages.find((candidate) => candidate.id === pageId);
+        const page = findEditablePage(cur, pageId);
         if (page) {
           const pageEnvironment = resolveEnvironmentForPage(
             cur.environment,
-            cur.pages,
+            allEditablePages(cur),
             page,
           );
           const overrides = { ...(page.layerOverrides ?? {}) };
@@ -2882,11 +3236,11 @@ export function EditorProvider({
         deferredLiveSceneApplyRef.current = true;
       }
       if (cur.selectedPageId === pageId && canApplyLiveSceneEdits()) {
-        const page = cur.pages.find((p) => p.id === pageId);
+        const page = findEditablePage(cur, pageId);
         if (page) {
           const pageEnvironment = resolveEnvironmentForPage(
             cur.environment,
-            cur.pages,
+            allEditablePages(cur),
             page,
           );
           const merged = effectiveVisibility(pageEnvironment, {
@@ -2924,11 +3278,11 @@ export function EditorProvider({
         deferredLiveSceneApplyRef.current = true;
       }
       if (cur.selectedPageId === pageId && canApplyLiveSceneEdits()) {
-        const page = cur.pages.find((p) => p.id === pageId);
+        const page = findEditablePage(cur, pageId);
         if (page) {
           const pageEnvironment = resolveEnvironmentForPage(
             cur.environment,
-            cur.pages,
+            allEditablePages(cur),
             page,
           );
           const overrides = { ...(page.visibilityOverrides ?? {}) };
@@ -2988,7 +3342,7 @@ export function EditorProvider({
   const addPage = useCallback<EditorContextValue["addPage"]>(
     (basePose) => {
       const cur = stateRef.current;
-      const id = newPageId(cur.pages.map((p) => p.id));
+      const id = newPageId(allEditablePages(cur).map((p) => p.id));
       const page: PresentationPage = {
         id,
         title: "New page",
@@ -3010,9 +3364,9 @@ export function EditorProvider({
   >(
     (pageId) => {
       const cur = stateRef.current;
-      const source = cur.pages.find((page) => page.id === pageId);
+      const source = findEditablePage(cur, pageId);
       if (!source) return null;
-      const id = newPageId(cur.pages.map((p) => p.id));
+      const id = newPageId(allEditablePages(cur).map((p) => p.id));
       const page: PresentationPage = {
         ...rewriteOverlayForDuplicate(source, source.id, id),
         id,
@@ -3039,6 +3393,9 @@ export function EditorProvider({
 
   const deletePageById = useCallback<EditorContextValue["deletePageById"]>(
     (pageId) => {
+      const cur = stateRef.current;
+      const activeTarget = cur.pages.some((page) => page.id === pageId);
+      if (activeTarget && cur.pages.length <= 1) return;
       deletedPageIdsRef.current.add(pageId);
       dispatch({ type: "DELETE_PAGE", pageId });
     },
@@ -3057,11 +3414,41 @@ export function EditorProvider({
     [],
   );
 
+  const archivePage = useCallback<EditorContextValue["archivePage"]>(
+    (pageId, targetPageId, insertPosition) =>
+      dispatch({ type: "ARCHIVE_PAGE", pageId, targetPageId, insertPosition }),
+    [],
+  );
+
+  const restoreArchivedPage = useCallback<
+    EditorContextValue["restoreArchivedPage"]
+  >(
+    (pageId, targetPageId, insertPosition) =>
+      dispatch({
+        type: "RESTORE_ARCHIVED_PAGE",
+        pageId,
+        targetPageId,
+        insertPosition,
+      }),
+    [],
+  );
+
+  const moveArchivedPage = useCallback<EditorContextValue["moveArchivedPage"]>(
+    (pageId, targetPageId, insertPosition) =>
+      dispatch({
+        type: "MOVE_ARCHIVED_PAGE",
+        pageId,
+        targetPageId,
+        insertPosition,
+      }),
+    [],
+  );
+
   const addSubMaster = useCallback<EditorContextValue["addSubMaster"]>(
     (basePose) => {
       const cur = stateRef.current;
-      const id = newPageId(cur.pages.map((p) => p.id));
-      const ordinal = nextSubMasterOrdinal(cur.pages);
+      const id = newPageId(allEditablePages(cur).map((p) => p.id));
+      const ordinal = nextSubMasterOrdinal(allEditablePages(cur));
       const envSnapshot = clone(cur.environment);
       const page: PresentationPage = {
         id,
@@ -3083,9 +3470,9 @@ export function EditorProvider({
     EditorContextValue["addSubMasterChild"]
   >((parentMasterId, basePose) => {
     const cur = stateRef.current;
-    const parent = cur.pages.find((p) => p.id === parentMasterId);
+    const parent = findEditablePage(cur, parentMasterId);
     if (!parent || !isSubMasterPage(parent)) return null;
-    const id = newPageId(cur.pages.map((p) => p.id));
+    const id = newPageId(allEditablePages(cur).map((p) => p.id));
     const page: PresentationPage = {
       id,
       title: "New child",
@@ -3108,9 +3495,9 @@ export function EditorProvider({
     EditorContextValue["duplicateSubMasterAsChild"]
   >((pageId) => {
     const cur = stateRef.current;
-    const source = cur.pages.find((page) => page.id === pageId);
+    const source = findEditablePage(cur, pageId);
     if (!source || !isSubMasterPage(source)) return null;
-    const id = newPageId(cur.pages.map((p) => p.id));
+    const id = newPageId(allEditablePages(cur).map((p) => p.id));
     const page: PresentationPage = {
       ...rewriteOverlayForDuplicate(source, source.id, id),
       id,
@@ -3145,15 +3532,18 @@ export function EditorProvider({
     EditorContextValue["deleteSubMasterById"]
   >((pageId) => {
     const cur = stateRef.current;
-    const target = cur.pages.find((p) => p.id === pageId);
+    const target = findEditablePage(cur, pageId);
     if (!target || !isSubMasterPage(target)) return;
+    const blockIds = new Set(
+      [pageId, ...allEditablePages(cur)
+        .filter((p) => p.parentMasterId === pageId)
+        .map((p) => p.id)],
+    );
+    if (cur.pages.filter((p) => !blockIds.has(p.id)).length < 1) return;
     // Track every id touched so commitPending can clean up the orphaned
     // page files on disk (same convention as deletePageById).
-    deletedPageIdsRef.current.add(pageId);
-    for (const p of cur.pages) {
-      if (p.parentMasterId === pageId) {
-        deletedPageIdsRef.current.add(p.id);
-      }
+    for (const id of blockIds) {
+      deletedPageIdsRef.current.add(id);
     }
     dispatch({ type: "DELETE_SUB_MASTER", pageId });
   }, []);
@@ -3221,10 +3611,12 @@ export function EditorProvider({
   const value = useMemo<EditorContextValue>(
     () => ({
       state,
+      allEditablePages: editablePages,
       sceneHandle,
       setEnvLayerStyle,
       toggleEnvDefaultVisible,
       setEnvScene,
+      setAuthoringScene,
       setEnvRenderPreset,
       saveEnvCustomRenderPreset,
       updateSelectedEnvCustomRenderPreset,
@@ -3252,6 +3644,9 @@ export function EditorProvider({
       deletePageById,
       reorderPage,
       movePageBlock,
+      archivePage,
+      restoreArchivedPage,
+      moveArchivedPage,
       addSubMaster,
       addSubMasterChild,
       makePageSubMaster,
@@ -3274,10 +3669,12 @@ export function EditorProvider({
     }),
     [
       state,
+      editablePages,
       sceneHandle,
       setEnvLayerStyle,
       toggleEnvDefaultVisible,
       setEnvScene,
+      setAuthoringScene,
       setEnvRenderPreset,
       saveEnvCustomRenderPreset,
       updateSelectedEnvCustomRenderPreset,
@@ -3305,6 +3702,9 @@ export function EditorProvider({
       deletePageById,
       reorderPage,
       movePageBlock,
+      archivePage,
+      restoreArchivedPage,
+      moveArchivedPage,
       addSubMaster,
       addSubMasterChild,
       makePageSubMaster,

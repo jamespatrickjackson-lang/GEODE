@@ -135,7 +135,7 @@ function utahForgeLegendPresenceForPage(
   }
   const environment = resolveEnvironmentForPage(
     state.environment,
-    state.pages,
+    [...state.pages, ...state.archivedPages],
     page,
   );
   const visible = effectiveVisibility(environment, page);
@@ -212,6 +212,7 @@ export function EditorChrome({
   return (
     <PageControllerProvider
       pages={state.pages}
+      authoringPages={[...state.pages, ...state.archivedPages]}
       environment={state.environment}
       sceneHandle={sceneHandle}
       previewEnvironmentBase={state.selectedPageId === ENVIRONMENT_SENTINEL}
@@ -499,7 +500,7 @@ function renderUtahForgeLegendItem(
 // page immediately while the camera is still travelling there.
 // Skips the mirror when the user has explicitly selected Global Settings.
 function SelectedPageMirror() {
-  const { pages, currentIndex } = usePageController();
+  const { pages, currentIndex, authoringPreviewPageId } = usePageController();
   const { state, selectPage } = useEditor();
   const selectedPageIdRef = useRef(state.selectedPageId);
 
@@ -510,8 +511,9 @@ function SelectedPageMirror() {
   useEffect(() => {
     const selectedPageId = selectedPageIdRef.current;
     if (selectedPageId === ENVIRONMENT_SENTINEL) return;
+    if (authoringPreviewPageId) return;
     const id = pages[currentIndex]?.id;
     if (id && id !== selectedPageId) selectPage(id);
-  }, [pages, currentIndex, selectPage]);
+  }, [pages, currentIndex, selectPage, authoringPreviewPageId]);
   return null;
 }

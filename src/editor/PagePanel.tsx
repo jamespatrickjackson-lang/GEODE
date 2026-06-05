@@ -8,10 +8,9 @@ import {
   renderPresetOptionsForEnvironment,
 } from "../pages/renderPresets";
 import {
-  mergeSceneProperties,
   resolveEnvironmentForPage,
 } from "../pages/effective";
-import { pageSelectionHasLanded } from "./authoringTarget";
+import { selectedAuthoringPage } from "./authoringTarget";
 import {
   EDITOR_PAGE_LIST_INDENT_X,
   EDITOR_PILL_TEXT_INSET_PX,
@@ -178,10 +177,16 @@ interface Props {
 type PageDragInsertPosition = "before" | "after";
 const PAGE_DRAG_PREVIEW_MAX_WIDTH = 360;
 
-interface PageDragTarget {
-  pageId: string;
-  insertPosition: PageDragInsertPosition;
-}
+type PageDragShelf = "active" | "archived";
+
+type PageDragTarget =
+  | {
+      kind: "row";
+      pageId: string;
+      shelf: PageDragShelf;
+      insertPosition: PageDragInsertPosition;
+    }
+  | { kind: "archive-header" };
 
 function pageDragPreviewPointFromClient(clientX: number, clientY: number) {
   if (typeof window === "undefined") {
@@ -206,6 +211,7 @@ export function PagePanel({ sceneHandle }: Props) {
   const navigationPaintFrameRef = useRef<number | null>(null);
   const {
     state,
+    allEditablePages,
     addPage,
     addSubMaster,
     addSubMasterChild,
@@ -216,6 +222,9 @@ export function PagePanel({ sceneHandle }: Props) {
     deletePageById,
     duplicatePageById,
     movePageBlock,
+    archivePage,
+    restoreArchivedPage,
+    moveArchivedPage,
     selectPage,
     setPageField,
     resetPageOverrides,
@@ -223,6 +232,12 @@ export function PagePanel({ sceneHandle }: Props) {
   // Per-render Sub Master row metadata. Cheap to recompute since pages list
   // changes infrequently. Indexed by the same i as the page-list .map.
   const pageRowMetas = computePageRowMetas(state.pages);
+  const archivedPageRowMetas = computePageRowMetas([
+    ...state.pages,
+    ...state.archivedPages,
+  ]).slice(state.pages.length);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [pulsePageId, setPulsePageId] = useState<string | null>(null);
   // Inline confirm state for the Sub Master "Re-snapshot from Global"
   // affordance. Holds the pageId currently in confirm mode (one at a time).
   const [reSnapshotConfirmId, setReSnapshotConfirmId] = useState<string | null>(
@@ -230,10 +245,12 @@ export function PagePanel({ sceneHandle }: Props) {
   );
   const pageDragCleanupRef = useRef<(() => void) | null>(null);
   const pageDragTargetRef = useRef<PageDragTarget | null>(null);
+  const pulseRevealTimerRef = useRef<number | null>(null);
   const [pageDragState, setPageDragState] = useState<{
     pageId: string;
     overPageId: string | null;
     insertPosition: PageDragInsertPosition | null;
+    overArchiveHeader: boolean;
     pointerX: number;
     pointerY: number;
   } | null>(null);
@@ -242,13 +259,26 @@ export function PagePanel({ sceneHandle }: Props) {
     goto,
     isTransitioning,
     targetIndex,
+    authoringPreviewPageId,
+    previewAuthoringPage,
+    clearAuthoringPreview,
   } = usePageController();
   const selectedActionPage =
-    state.pages.find((p) => p.id === visualSelectedPageId) ??
+    allEditablePages.find((p) => p.id === visualSelectedPageId) ??
     (state.selectedPageId && state.selectedPageId !== ENVIRONMENT_SENTINEL
-      ? state.pages.find((p) => p.id === state.selectedPageId)
+      ? allEditablePages.find((p) => p.id === state.selectedPageId)
       : null);
   const pageStructureLocked = isTransitioning || targetIndex !== null;
+  const selectedActionPageIsActive = selectedActionPage
+    ? state.pages.some((page) => page.id === selectedActionPage.id)
+    : false;
+  const selectedActionPageIsArchived = selectedActionPage
+    ? state.archivedPages.some((page) => page.id === selectedActionPage.id)
+    : false;
+  const deleteSelectedDisabled =
+    pageStructureLocked ||
+    !selectedActionPage ||
+    (selectedActionPageIsActive && state.pages.length <= 1);
   const pageStructureLockedTitle =
     "Page structure is locked while the camera is transitioning";
   const pageStructureActionTitle = (title: string) =>
@@ -278,6 +308,9 @@ export function PagePanel({ sceneHandle }: Props) {
       if (navigationPaintFrameRef.current !== null) {
         window.cancelAnimationFrame(navigationPaintFrameRef.current);
       }
+      if (pulseRevealTimerRef.current !== null) {
+        window.clearTimeout(pulseRevealTimerRef.current);
+      }
       pageDragCleanupRef.current?.();
     };
   }, []);
@@ -295,11 +328,23 @@ export function PagePanel({ sceneHandle }: Props) {
 
   const moveCameraAfterSelectionPaint = (index: number) => {
     cancelPendingNavigation();
+    clearAuthoringPreview();
     navigationFrameRef.current = window.requestAnimationFrame(() => {
       navigationFrameRef.current = null;
       navigationPaintFrameRef.current = window.requestAnimationFrame(() => {
         navigationPaintFrameRef.current = null;
         goto(index);
+      });
+    });
+  };
+
+  const previewPageAfterSelectionPaint = (pageId: string) => {
+    cancelPendingNavigation();
+    navigationFrameRef.current = window.requestAnimationFrame(() => {
+      navigationFrameRef.current = null;
+      navigationPaintFrameRef.current = window.requestAnimationFrame(() => {
+        navigationPaintFrameRef.current = null;
+        previewAuthoringPage(pageId);
       });
     });
   };
@@ -319,6 +364,106 @@ export function PagePanel({ sceneHandle }: Props) {
   const selectPageThenMoveCamera = (pageId: string, index: number) => {
     selectPageImmediately(pageId);
     moveCameraAfterSelectionPaint(index);
+  };
+
+  const selectArchivedPageThenPreview = (pageId: string) => {
+    selectPageImmediately(pageId);
+    previewPageAfterSelectionPaint(pageId);
+  };
+
+  const revealPageRow = (pageId: string) => {
+    if (state.archivedPages.some((page) => page.id === pageId)) {
+      setArchiveOpen(true);
+    }
+    if (pulseRevealTimerRef.current !== null) {
+      window.clearTimeout(pulseRevealTimerRef.current);
+    }
+    setPulsePageId(pageId);
+    pulseRevealTimerRef.current = window.setTimeout(() => {
+      setPulsePageId((current) => (current === pageId ? null : current));
+      pulseRevealTimerRef.current = null;
+    }, 1400);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const row = Array.from(
+          document.querySelectorAll<HTMLElement>("[data-page-id]"),
+        ).find((node) => node.dataset.pageId === pageId);
+        row?.scrollIntoView({ block: "nearest" });
+      });
+    });
+  };
+
+  const relationshipTargetForPage = (page: PresentationPage) => {
+    if (isSubMasterChildPage(page)) {
+      return page.parentMasterId ?? null;
+    }
+    if (!isSubMasterPage(page)) return null;
+    return (
+      state.pages.find((candidate) => candidate.parentMasterId === page.id)
+        ?.id ??
+      state.archivedPages.find(
+        (candidate) => candidate.parentMasterId === page.id,
+      )?.id ??
+      null
+    );
+  };
+
+  const onRelationshipBadgeClick = (page: PresentationPage) => {
+    const targetPageId = relationshipTargetForPage(page);
+    if (targetPageId) revealPageRow(targetPageId);
+  };
+
+  const renderRelationshipBadge = (
+    page: PresentationPage,
+    role: PageRowRole,
+  ) => {
+    if (role !== "subMaster" && role !== "subMasterChild") return null;
+    const isMaster = role === "subMaster";
+    const targetPageId = relationshipTargetForPage(page);
+    if (isMaster) {
+      return (
+        <button
+          type="button"
+          className="editor-action-button"
+          data-editor-control-id="page.relationship.badge.master"
+          style={pageRelationshipBadgeStyle(!targetPageId)}
+          disabled={!targetPageId}
+          title={
+            targetPageId ? "Reveal first child page" : "No child page to reveal"
+          }
+          aria-label="Reveal first child page"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRelationshipBadgeClick(page);
+          }}
+        >
+          M
+        </button>
+      );
+    }
+    return (
+      <button
+        type="button"
+        className="editor-action-button"
+        data-editor-control-id="page.relationship.badge.child"
+        style={pageRelationshipBadgeStyle(!targetPageId)}
+        disabled={!targetPageId}
+        title={
+          targetPageId
+            ? "Reveal parent master page"
+            : "Parent master page is missing"
+        }
+        aria-label="Reveal parent master page"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRelationshipBadgeClick(page);
+        }}
+      >
+        C
+      </button>
+    );
   };
 
   const onAdd = () => {
@@ -366,6 +511,7 @@ export function PagePanel({ sceneHandle }: Props) {
       pageId,
       overPageId: null,
       insertPosition: null,
+      overArchiveHeader: false,
       pointerX: dragPoint.x,
       pointerY: dragPoint.y,
     });
@@ -375,16 +521,25 @@ export function PagePanel({ sceneHandle }: Props) {
         moveEvent.clientX,
         moveEvent.clientY,
       );
+      const archiveHeader =
+        element instanceof Element
+          ? (element.closest("[data-page-archive-drop]") as HTMLElement | null)
+          : null;
       const row =
         element instanceof Element
           ? (element.closest("[data-page-id]") as HTMLElement | null)
           : null;
       const overPageId = row?.dataset.pageId ?? null;
       let nextTarget: PageDragTarget | null = null;
-      if (row && overPageId && overPageId !== pageId) {
+      if (archiveHeader) {
+        nextTarget = { kind: "archive-header" };
+      } else if (row && overPageId && overPageId !== pageId) {
         const rowRect = row.getBoundingClientRect();
         nextTarget = {
+          kind: "row",
           pageId: overPageId,
+          shelf:
+            row.dataset.pageShelf === "archived" ? "archived" : "active",
           insertPosition:
             moveEvent.clientY < rowRect.top + rowRect.height / 2
               ? "before"
@@ -400,8 +555,10 @@ export function PagePanel({ sceneHandle }: Props) {
         current?.pageId === pageId
           ? {
               pageId,
-              overPageId: nextTarget?.pageId ?? null,
-              insertPosition: nextTarget?.insertPosition ?? null,
+              overPageId: nextTarget?.kind === "row" ? nextTarget.pageId : null,
+              insertPosition:
+                nextTarget?.kind === "row" ? nextTarget.insertPosition : null,
+              overArchiveHeader: nextTarget?.kind === "archive-header",
               pointerX: dragPoint.x,
               pointerY: dragPoint.y,
             }
@@ -429,7 +586,34 @@ export function PagePanel({ sceneHandle }: Props) {
       pageDragTargetRef.current = null;
       setPageDragState(null);
       if (target) {
-        movePageBlock(pageId, target.pageId, target.insertPosition);
+        const sourceArchived = state.archivedPages.some((page) => page.id === pageId);
+        if (target.kind === "archive-header") {
+          if (!sourceArchived && state.pages.length > 1) {
+            archivePage(pageId);
+            previewPageAfterSelectionPaint(pageId);
+          }
+        } else if (target.shelf === "archived") {
+          if (sourceArchived) {
+            moveArchivedPage(pageId, target.pageId, target.insertPosition);
+          } else if (state.pages.length > 1) {
+            archivePage(pageId, target.pageId, target.insertPosition);
+            previewPageAfterSelectionPaint(pageId);
+          }
+        } else if (sourceArchived) {
+          const targetIndex = state.pages.findIndex(
+            (page) => page.id === target.pageId,
+          );
+          const restoredIndex =
+            targetIndex >= 0 && target.insertPosition === "after"
+              ? targetIndex + 1
+              : targetIndex;
+          restoreArchivedPage(pageId, target.pageId, target.insertPosition);
+          if (restoredIndex >= 0) {
+            moveCameraAfterSelectionPaint(restoredIndex);
+          }
+        } else {
+          movePageBlock(pageId, target.pageId, target.insertPosition);
+        }
       }
     };
 
@@ -466,16 +650,19 @@ export function PagePanel({ sceneHandle }: Props) {
     setVisualSelectedPageId(id);
     if (sourceIndex >= 0) {
       moveCameraAfterSelectionPaint(sourceIndex + 1);
+    } else if (selectedActionPageIsArchived) {
+      setArchiveOpen(true);
+      previewPageAfterSelectionPaint(id);
     }
   };
 
   const onDeleteSelected = () => {
     if (pageStructureLocked) return;
-    if (!selectedActionPage || state.pages.length <= 1) return;
+    if (!selectedActionPage || deleteSelectedDisabled) return;
     // Sub Master deletion cascades to every child (DEC-079). Surface the
     // child count so the author cannot delete a populated group by accident.
     if (isSubMasterPage(selectedActionPage)) {
-      const childCount = state.pages.filter(
+      const childCount = allEditablePages.filter(
         (p) => p.parentMasterId === selectedActionPage.id,
       ).length;
       const message =
@@ -509,16 +696,32 @@ export function PagePanel({ sceneHandle }: Props) {
   const onMakeChildSelected = () => {
     if (makeChildDisabled || !selectedActionPage) return;
     const id = duplicateSubMasterAsChild(selectedActionPage.id);
-    if (id) setVisualSelectedPageId(id);
+    if (!id) return;
+    setVisualSelectedPageId(id);
+    if (selectedActionPageIsArchived) {
+      setArchiveOpen(true);
+      previewPageAfterSelectionPaint(id);
+    }
   };
 
-  const draggedPageIndex = pageDragState
+  const draggedActivePageIndex = pageDragState
     ? state.pages.findIndex((page) => page.id === pageDragState.pageId)
     : -1;
+  const draggedArchivedPageIndex = pageDragState
+    ? state.archivedPages.findIndex((page) => page.id === pageDragState.pageId)
+    : -1;
   const draggedPage =
-    draggedPageIndex >= 0 ? state.pages[draggedPageIndex] : null;
+    draggedActivePageIndex >= 0
+      ? state.pages[draggedActivePageIndex]
+      : draggedArchivedPageIndex >= 0
+        ? state.archivedPages[draggedArchivedPageIndex]
+        : null;
   const draggedPageMeta =
-    draggedPageIndex >= 0 ? pageRowMetas[draggedPageIndex] : null;
+    draggedActivePageIndex >= 0
+      ? pageRowMetas[draggedActivePageIndex]
+      : draggedArchivedPageIndex >= 0
+        ? archivedPageRowMetas[draggedArchivedPageIndex]
+        : null;
   const dragPreviewAccent =
     draggedPage && draggedPageMeta
       ? pageAccentForPageWithGroup(
@@ -678,6 +881,7 @@ export function PagePanel({ sceneHandle }: Props) {
             <div
               key={p.id}
               data-page-id={p.id}
+              data-page-shelf="active"
               data-dev-source="src/editor/styles.ts:135"
               data-dev-padding-source="src/editor/styles.ts:140"
               data-dev-note="panelStyles.pageRow and pageRowSelected control page row shape, selection material, and row spacing."
@@ -707,6 +911,7 @@ export function PagePanel({ sceneHandle }: Props) {
                   ? pageDragTargetRowStyle
                   : {}),
                 ...(pageIsDragging ? pageDraggingRowStyle : {}),
+                ...(pulsePageId === p.id ? pageRevealPulseStyle : {}),
                 ...(pageHidden ? hiddenPageRowStyle : {}),
               }}
               onMouseEnter={() => setHoveredPageId(p.id)}
@@ -759,6 +964,7 @@ export function PagePanel({ sceneHandle }: Props) {
                     F
                   </span>
                 )}
+                {renderRelationshipBadge(p, meta.role)}
                 <span
                   style={{ marginRight: 4 }}
                   data-dev-text-source="src/editor/PagePanel.tsx:90"
@@ -1009,16 +1215,8 @@ export function PagePanel({ sceneHandle }: Props) {
             <button
               className="editor-action-button"
               data-editor-control-id="page.action.delete"
-              style={pageFooterActionButtonStyle(
-                pageStructureLocked ||
-                  !selectedActionPage ||
-                  state.pages.length <= 1,
-              )}
-              disabled={
-                pageStructureLocked ||
-                !selectedActionPage ||
-                state.pages.length <= 1
-              }
+              style={pageFooterActionButtonStyle(deleteSelectedDisabled)}
+              disabled={deleteSelectedDisabled}
               onClick={onDeleteSelected}
               title={
                 pageStructureLocked
@@ -1034,6 +1232,257 @@ export function PagePanel({ sceneHandle }: Props) {
           </span>
         </span>
       </div>
+
+      <div style={pageArchiveHeaderShellStyle}>
+        <button
+          type="button"
+          className="editor-action-button"
+          data-editor-control-id="page.archive.toggle"
+          data-page-archive-drop="true"
+          style={pageArchiveHeaderStyle(pageDragState?.overArchiveHeader === true)}
+          aria-label="Archive"
+          aria-expanded={archiveOpen}
+          onClick={(e) => {
+            e.stopPropagation();
+            setArchiveOpen((open) => !open);
+          }}
+        >
+          <span style={pageArchiveHeaderLabelStyle}>Archive</span>
+          <span style={pageArchiveDisclosureStyle} aria-hidden="true">
+            <span style={pageArchiveChevronStyle(archiveOpen)} />
+          </span>
+        </button>
+      </div>
+
+      {archiveOpen && (
+        <div
+          style={pageArchiveListStyle}
+          data-dev-source="src/editor/PagePanel.tsx:archive"
+          data-dev-note="Archived authoring pages stay editable but are excluded from presenter navigation and built output."
+        >
+          {state.archivedPages.map((p, i) => {
+            const pageHidden = p.hidden === true;
+            const pageIsChosen = p.id === visualSelectedPageId;
+            const pageHasLanded =
+              pageIsChosen &&
+              authoringPreviewPageId === p.id &&
+              !isTransitioning &&
+              targetIndex === null;
+            const pageIsWaiting = pageIsChosen && !pageHasLanded;
+            const hovered = p.id === hoveredPageId;
+            const meta = archivedPageRowMetas[i] ?? {
+              role: pageRowRoleOf(p),
+              globalRank: state.pages.length + i + 1,
+              label: `A${String(i + 1).padStart(2, "0")}`,
+            };
+            const isMasterRow = meta.role === "subMaster";
+            const isMasterChildRow = meta.role === "subMasterChild";
+            const accentGlobalIdx = meta.globalRank - 1;
+            const pageAccent = pageAccentForPageWithGroup(
+              p,
+              meta.role,
+              accentGlobalIdx,
+              meta.ordinal,
+            );
+            const pageHoverAccent = pageAccentForPageWithGroup(
+              p,
+              meta.role,
+              accentGlobalIdx,
+              meta.ordinal,
+              0.384,
+            );
+            const pagePendingAccent = pageAccentForPageWithGroup(
+              p,
+              meta.role,
+              accentGlobalIdx,
+              meta.ordinal,
+              0.192,
+            );
+            const pageAccentHex =
+              p.accentColor ??
+              (meta.role === "global"
+                ? pageAccentHexForIndex(accentGlobalIdx)
+                : subMasterAccentHexForOrdinal(meta.ordinal ?? 1));
+            const actionSurface = "tinted";
+            const pageIsDragTarget = pageDragState?.overPageId === p.id;
+            const pageDragInsertPosition = pageIsDragTarget
+              ? pageDragState?.insertPosition
+              : null;
+            const pageIsDragging = pageDragState?.pageId === p.id;
+            return (
+              <div
+                key={p.id}
+                data-page-id={p.id}
+                data-page-shelf="archived"
+                data-page-role={meta.role}
+                data-sub-master-ordinal={meta.ordinal ?? ""}
+                style={{
+                  ...panelStyles.pageRow,
+                  ...(isMasterRow
+                    ? subMasterRowBorderStyle(
+                        subMasterAccentHexForOrdinal(meta.ordinal ?? 1),
+                      )
+                    : {}),
+                  ...(isMasterChildRow ? subMasterChildIndentStyle : {}),
+                  ...(hovered && !pageIsChosen
+                    ? pageRowHoverStyle(pageHoverAccent)
+                    : {}),
+                  ...(pageIsWaiting
+                    ? waitingPageRowStyle(pagePendingAccent, pageHoverAccent)
+                    : {}),
+                  ...(pageHasLanded
+                    ? {
+                        ...panelStyles.pageRowSelected,
+                        ...selectedPageRowStyle(pageAccent),
+                      }
+                    : {}),
+                  ...(pageIsDragTarget && pageDragInsertPosition
+                    ? pageDragTargetRowStyle
+                    : {}),
+                  ...(pageIsDragging ? pageDraggingRowStyle : {}),
+                  ...(pulsePageId === p.id ? pageRevealPulseStyle : {}),
+                  ...(pageHidden ? hiddenPageRowStyle : {}),
+                }}
+                onMouseEnter={() => setHoveredPageId(p.id)}
+                onMouseLeave={() =>
+                  setHoveredPageId((id) => (id === p.id ? null : id))
+                }
+                onPointerDownCapture={(e) => {
+                  const target = e.target as HTMLElement | null;
+                  if (target?.closest("button,input,label")) return;
+                  selectPageImmediately(p.id);
+                }}
+                onClick={() => {
+                  selectArchivedPageThenPreview(p.id);
+                }}
+              >
+                {pageIsDragTarget && pageDragInsertPosition && (
+                  <span
+                    data-testid="page-drop-indicator"
+                    aria-hidden="true"
+                    style={pageDropIndicatorStyle(pageDragInsertPosition)}
+                  />
+                )}
+                <span
+                  style={{
+                    flex: 1,
+                    fontWeight: pageHasLanded ? 600 : 400,
+                    color: pageHidden
+                      ? vibrancyTertiaryLabel
+                      : pageIsChosen
+                        ? vibrancyLabel
+                        : vibrancySecondaryLabel,
+                    display: "flex",
+                    alignItems: "center",
+                    minWidth: 0,
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {(state.dirty.has(`page:${p.id}`) ||
+                    state.dirty.has(`overlay:${p.id}`)) && (
+                    <span style={dirtyDotStyle} title="Unsaved changes">
+                      •
+                    </span>
+                  )}
+                  {p.cameraObjectFocus && (
+                    <span
+                      style={pageFocusCueStyle}
+                      title="Camera object focus saved"
+                    >
+                      F
+                    </span>
+                  )}
+                  {renderRelationshipBadge(p, meta.role)}
+                  <span
+                    style={{ marginRight: 4 }}
+                    data-dev-text-source="src/editor/PagePanel.tsx:archive-label"
+                  >
+                    {meta.label}
+                    {meta.role === "global" ? "." : " "}
+                  </span>
+                  <InlineEditableTitle
+                    value={p.title}
+                    onCommit={(next) => setPageField(p.id, { title: next })}
+                    title={p.title}
+                    truncate
+                    editTrigger="doubleClick"
+                    textStyle={{
+                      fontWeight: pageHasLanded ? 600 : 400,
+                      color: pageHidden
+                        ? vibrancyTertiaryLabel
+                        : pageIsChosen
+                          ? vibrancyLabel
+                          : vibrancySecondaryLabel,
+                    }}
+                  />
+                </span>
+                <span style={pageRowActionsStyle}>
+                  <label
+                    style={pageColorButtonStyle(pageAccent)}
+                    title="Change page color"
+                    aria-label="Change page color"
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="color"
+                      value={pageAccentHex}
+                      style={pageColorInputStyle}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) =>
+                        setPageField(p.id, {
+                          accentColor: e.currentTarget.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <button
+                    className="editor-action-button"
+                    style={pageManagerIconButtonStyle({
+                      surface: actionSurface,
+                      disabled: pageStructureLocked,
+                    })}
+                    disabled={pageStructureLocked}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (pageStructureLocked) return;
+                      setPageField(p.id, { hidden: !pageHidden });
+                    }}
+                    title={
+                      pageStructureLocked
+                        ? pageStructureLockedTitle
+                        : pageHidden
+                          ? "Show page"
+                          : "Hide page"
+                    }
+                    aria-label={pageHidden ? "Show page" : "Hide page"}
+                  >
+                    {pageHidden ? <EyeOffIcon /> : <EyeIcon />}
+                  </button>
+                  <button
+                    className="editor-action-button"
+                    style={{
+                      ...pageManagerIconButtonStyle({
+                        surface: actionSurface,
+                        disabled: pageStructureLocked,
+                      }),
+                      touchAction: "none",
+                    }}
+                    disabled={pageStructureLocked}
+                    onPointerDown={(e) => startPageDrag(p.id, e)}
+                    onClick={(e) => e.stopPropagation()}
+                    title={pageStructureActionTitle("Drag to reorder")}
+                    aria-label="Drag page to reorder"
+                  >
+                    <DragGripIcon />
+                  </button>
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {pageDragState &&
         draggedPage &&
@@ -1074,72 +1523,26 @@ interface VisualStudioPanelProps extends GlobalToolPanelProps {
 
 export function VisualStudioPanel({
   accentColor = globalSettingsAccent,
-  sceneHandle,
+  sceneHandle: _sceneHandle,
 }: VisualStudioPanelProps) {
   const {
     state,
-    canApplyLiveSceneEdits,
-    setEnvScene,
-    setPageField,
+    allEditablePages,
+    setAuthoringScene,
     setEnvRenderPreset,
     saveEnvCustomRenderPreset,
     updateSelectedEnvCustomRenderPreset,
   } = useEditor();
-  const { currentIndex, isTransitioning, targetIndex } = usePageController();
-  const currentPage =
-    state.selectedPageId && state.selectedPageId !== ENVIRONMENT_SENTINEL
-      ? (state.pages.find((page) => page.id === state.selectedPageId) ?? null)
-      : null;
-  const selectedPageIndex = currentPage
-    ? state.pages.findIndex((page) => page.id === currentPage.id)
-    : -1;
-  const selectedPageHasLanded = pageSelectionHasLanded({
-    selectedPageIndex,
-    currentIndex,
-    isTransitioning,
-    targetIndex,
-  });
+  const currentPage = selectedAuthoringPage(state);
   const currentPageEnvironment = currentPage
-    ? resolveEnvironmentForPage(state.environment, state.pages, currentPage)
+    ? resolveEnvironmentForPage(state.environment, allEditablePages, currentPage)
     : state.environment;
   const cinematicsScene: SceneProperties = currentPageEnvironment.scene ?? {};
   const setCinematicsScene = useCallback(
     (patch: Partial<SceneProperties>) => {
-      if (!currentPage) {
-        setEnvScene(patch);
-        return;
-      }
-      const sceneOverrides = mergeSceneProperties(
-        currentPage.sceneOverrides,
-        patch,
-      );
-      const nextPage: PresentationPage = { ...currentPage, sceneOverrides };
-      const nextPages = state.pages.map((page) =>
-        page.id === nextPage.id ? nextPage : page,
-      );
-      const nextPageEnvironment = resolveEnvironmentForPage(
-        state.environment,
-        nextPages,
-        nextPage,
-      );
-      if (selectedPageHasLanded && canApplyLiveSceneEdits()) {
-        sceneHandle.manager.applyEnvironment(nextPageEnvironment);
-        sceneHandle.manager.applyPageScene(nextPage);
-      }
-      setPageField(currentPage.id, {
-        sceneOverrides: mergeSceneProperties(currentPage.sceneOverrides, patch),
-      });
+      setAuthoringScene(patch);
     },
-    [
-      canApplyLiveSceneEdits,
-      currentPage,
-      sceneHandle,
-      selectedPageHasLanded,
-      setEnvScene,
-      setPageField,
-      state.environment,
-      state.pages,
-    ],
+    [setAuthoringScene],
   );
   const renderPresetOptions = renderPresetOptionsForEnvironment(
     state.environment,
@@ -2799,6 +3202,35 @@ const pageDraggingRowStyle: React.CSSProperties = {
   opacity: 0.5,
 };
 
+const pageRevealPulseStyle: React.CSSProperties = {
+  boxShadow:
+    "0 0 0 1px rgba(244, 240, 232, 0.82), 0 0 18px rgba(244, 240, 232, 0.34)",
+};
+
+function pageRelationshipBadgeStyle(disabled: boolean): React.CSSProperties {
+  return {
+    width: 18,
+    height: 18,
+    minWidth: 18,
+    flex: "0 0 18px",
+    marginRight: 5,
+    borderRadius: 999,
+    border: FROSTED_HAIRLINE,
+    background: "rgba(18, 21, 24, 0.42)",
+    color: disabled ? vibrancyTertiaryLabel : vibrancyLabel,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontFamily: TECHNICAL_MONO_FONT,
+    fontSize: 10,
+    fontWeight: 700,
+    lineHeight: 1,
+    padding: 0,
+    opacity: disabled ? 0.46 : 1,
+    cursor: disabled ? "default" : "pointer",
+  };
+}
+
 function pageDropIndicatorStyle(
   insertPosition: PageDragInsertPosition,
 ): React.CSSProperties {
@@ -3128,7 +3560,7 @@ function DragGripIcon() {
 
 const pageActionsStyle: React.CSSProperties = {
   marginTop: 16,
-  marginBottom: 24,
+  marginBottom: 10,
   paddingRight: `calc(var(--editor-page-list-indent, ${EDITOR_PAGE_LIST_INDENT_X}px) + 8px)`,
   display: "flex",
   justifyContent: "flex-end",
@@ -3175,6 +3607,67 @@ function pageFooterHierarchyButtonStyle(disabled = false): React.CSSProperties {
     fontWeight: 700,
     lineHeight: 1,
     whiteSpace: "nowrap",
+  };
+}
+
+const pageArchiveHeaderShellStyle: React.CSSProperties = {
+  paddingRight: `calc(var(--editor-page-list-indent, ${EDITOR_PAGE_LIST_INDENT_X}px) + 8px)`,
+  display: "flex",
+  justifyContent: "flex-end",
+  marginBottom: 8,
+};
+
+function pageArchiveHeaderStyle(dragOver: boolean): React.CSSProperties {
+  return {
+    width: PAGE_FOOTER_ACTION_EXTENT,
+    minHeight: PAGE_MANAGER_ACTION_SIZE,
+    borderRadius: 999,
+    border: dragOver
+      ? "1px solid rgba(244, 240, 232, 0.88)"
+      : FROSTED_HAIRLINE,
+    background: dragOver
+      ? "rgba(244, 240, 232, 0.16)"
+      : "rgba(18, 21, 24, 0.5)",
+    color: vibrancyLabel,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    padding: "0 9px 0 11px",
+    boxSizing: "border-box",
+    font: "inherit",
+    cursor: "pointer",
+    boxShadow: dragOver
+      ? "0 0 0 1px rgba(18, 21, 24, 0.78), 0 0 16px rgba(244, 240, 232, 0.26)"
+      : "none",
+  };
+}
+
+const pageArchiveHeaderLabelStyle: React.CSSProperties = {
+  fontFamily: TECHNICAL_MONO_FONT,
+  fontSize: 11,
+  fontWeight: 700,
+  lineHeight: 1,
+};
+
+const pageArchiveDisclosureStyle: React.CSSProperties = {
+  width: 14,
+  height: 14,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flex: "none",
+};
+
+function pageArchiveChevronStyle(open: boolean): React.CSSProperties {
+  return {
+    width: 7,
+    height: 7,
+    borderRight: "2px solid rgba(244, 240, 232, 0.82)",
+    borderBottom: "2px solid rgba(244, 240, 232, 0.82)",
+    transform: open ? "rotate(45deg)" : "rotate(-45deg)",
+    transformOrigin: "center",
+    transition: "transform 160ms ease",
   };
 }
 
@@ -3648,4 +4141,10 @@ const pageListStyle: React.CSSProperties = {
   paddingLeft: `var(--editor-page-list-indent, ${EDITOR_PAGE_LIST_INDENT_X}px)`,
   // Mirror the left inset so selected rows have balanced rounded ends.
   paddingRight: `var(--editor-page-list-indent, ${EDITOR_PAGE_LIST_INDENT_X}px)`,
+};
+
+const pageArchiveListStyle: React.CSSProperties = {
+  ...pageListStyle,
+  marginTop: 6,
+  marginBottom: 24,
 };

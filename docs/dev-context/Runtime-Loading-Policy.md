@@ -14,17 +14,16 @@ Runtime loading policy must be reviewed against `docs/dev-context/Render-Quality
 
 ## Current observed behavior
 
-DEC-094 adds a pending staff Page Archive contract. Current source still loads
-only active `pageOrder` pages. Archive implementation must split editor loading
-from presenter navigation: editor state needs active plus archived pages, while
-presenter navigation, audience playback, and built output remain `pageOrder`
-only.
+DEC-094 adds the staff Page Archive contract. Current source splits editor page
+loading from presenter navigation: editor state loads active `pageOrder` plus
+staff `archivedPageOrder` pages, while presenter navigation, audience playback,
+and built output remain `pageOrder` only.
 
 | Area | Observed behavior | Evidence |
 | --- | --- | --- |
 | Project selection | The app starts on a landing/project chooser unless a `?project=` query param is present. Opening a project calls `loadProject(projectSlug)`. | `src/App.tsx` |
-| Project metadata load | Current source: `loadProject` fetches `project.json` and `environment.json` with `cache: "no-store"`, then fetches each page named in `manifest.pageOrder`. DEC-094 implementation must add editor loading for `archivedPageOrder` without adding archived pages to presenter navigation. | `src/pages/loadPages.ts` |
-| Page source of truth | Current source: `pageOrder` is the loaded page list; the loader does not enumerate the folder. DEC-094 changes the editor source of truth to `pageOrder` plus `archivedPageOrder`, while active presentation order remains `pageOrder`. Missing pages warn and are skipped. | `src/pages/loadPages.ts` |
+| Project metadata load | Current source: `loadProject` fetches `project.json` and `environment.json` with `cache: "no-store"`, then fetches each page named in `manifest.pageOrder` and `manifest.archivedPageOrder`. Archived pages load for editor authoring only and do not join presenter navigation. | `src/pages/loadPages.ts` |
+| Page source of truth | Current source: `pageOrder` plus `archivedPageOrder` are the loaded editor page lists; the loader does not enumerate the folder. Active presentation order remains `pageOrder`. Missing pages warn and are skipped. | `src/pages/loadPages.ts` |
 | Scene mount | After project metadata resolves, the app dynamically imports `./scene` and calls `mountScene(container, project.manifest.layers, overlays)`. | `src/App.tsx`, `src/scene.ts` |
 | Layer registration | `mountScene` registers every manifest layer ID with `SceneManager`. | `src/scene.ts` |
 | Layer loading | `mountScene` then calls `loadLayerInto(spec, manager)` for every manifest layer. `loadLayerInto` skips only disabled specs, then finds a matching loader and starts loading. | `src/scene.ts`, `src/scene/layerLoaders.ts` |

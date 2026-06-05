@@ -1776,6 +1776,7 @@ export interface ProjectManifest {
   // defaultCamera removed per #023 (page 1 is the establishing shot).
   layers: ProjectLayerSpec[];
   pageOrder: string[];
+  archivedPageOrder?: string[];
   presentationDefaults?: PresentationDefaults;
   watermark: string;
   [k: string]: unknown;

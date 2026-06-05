@@ -34,6 +34,33 @@ export interface LoadedProject {
   manifest: ProjectManifest;
   environment: EnvironmentSetup;
   pages: PresentationPage[];
+  archivedPages: PresentationPage[];
+}
+
+function normalizedPageIds(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((id): id is string => typeof id === "string" && id !== "")
+    : [];
+}
+
+function pagesFromResults(
+  ids: readonly string[],
+  results: PromiseSettledResult<PresentationPage>[],
+  listName: "pageOrder" | "archivedPageOrder",
+): PresentationPage[] {
+  const pages: PresentationPage[] = [];
+  results.forEach((result, index) => {
+    const id = ids[index];
+    if (result.status === "fulfilled") {
+      pages.push(result.value);
+    } else {
+      console.warn(
+        `[loadProject] page "${id}" in ${listName} but fetch failed:`,
+        result.reason,
+      );
+    }
+  });
+  return pages;
 }
 
 export async function loadProject(
@@ -45,33 +72,36 @@ export async function loadProject(
     fetchJson<EnvironmentSetup>(paths.environmentJson),
   ]);
 
-  // Fetch each page named in pageOrder. We don't try to enumerate the pages
-  // directory -- pageOrder is the source of truth for what pages exist
-  // (per the schema), and missing pages are warned about below.
-  const pageResults = await Promise.allSettled(
-    manifest.pageOrder.map((id) =>
-      fetchJson<PresentationPage>(paths.pageJson(id)),
+  const pageOrder = normalizedPageIds(manifest.pageOrder);
+  const archivedPageOrder = normalizedPageIds(manifest.archivedPageOrder);
+  manifest.pageOrder = pageOrder;
+  manifest.archivedPageOrder = archivedPageOrder;
+
+  // Fetch pages named in manifest lists. We don't enumerate the pages directory:
+  // pageOrder and archivedPageOrder are the source of truth for authored pages.
+  const [pageResults, archivedPageResults] = await Promise.all([
+    Promise.allSettled(
+      pageOrder.map((id) => fetchJson<PresentationPage>(paths.pageJson(id))),
     ),
+    Promise.allSettled(
+      archivedPageOrder.map((id) =>
+        fetchJson<PresentationPage>(paths.pageJson(id)),
+      ),
+    ),
+  ]);
+  const pages = pagesFromResults(pageOrder, pageResults, "pageOrder");
+  const archivedPages = pagesFromResults(
+    archivedPageOrder,
+    archivedPageResults,
+    "archivedPageOrder",
   );
-  const pages: PresentationPage[] = [];
-  pageResults.forEach((r, i) => {
-    const id = manifest.pageOrder[i];
-    if (r.status === "fulfilled") {
-      pages.push(r.value);
-    } else {
-      console.warn(
-        `[loadProject] page "${id}" in pageOrder but fetch failed:`,
-        r.reason,
-      );
-    }
-  });
 
   if (pages.length === 0) {
     throw new Error("loadProject: no pages resolved from pageOrder");
   }
   debugLog(
     `[loadProject] ${manifest.id}: ${pages.length} pages, ` +
-      `${manifest.layers.length} layers`,
+      `${archivedPages.length} archived pages, ${manifest.layers.length} layers`,
   );
   return {
     projectSlug: paths.slug,
@@ -79,5 +109,6 @@ export async function loadProject(
     manifest,
     environment,
     pages,
+    archivedPages,
   };
 }

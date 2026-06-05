@@ -43,6 +43,7 @@ import { computeDynamicPose } from "./dynamicCameraPose";
 
 interface PageControllerValue {
   pages: PresentationPage[];
+  authoringPreviewPageId: string | null;
   currentIndex: number;
   targetIndex: number | null;
   transitionProgress: number;
@@ -53,6 +54,8 @@ interface PageControllerValue {
   goto: (index: number, reason?: NavigationReason) => void;
   next: () => void;
   prev: () => void;
+  previewAuthoringPage: (pageId: string) => void;
+  clearAuthoringPreview: () => void;
   resetToPose: () => void;
   /** Force-tween the camera to an arbitrary pose (used by pose history). */
   tweenToPose: (pose: PresentationPage["camera"]) => void;
@@ -652,6 +655,7 @@ export type PreviewLayerOverrideFields = Readonly<
 
 interface ProviderProps {
   pages: PresentationPage[];
+  authoringPages?: PresentationPage[];
   environment: EnvironmentSetup;
   sceneHandle: SceneHandle;
   allowPageCameraMarker?: boolean;
@@ -952,6 +956,7 @@ function lastVisiblePageIndex(pages: PresentationPage[]): number {
 
 export function PageControllerProvider({
   pages,
+  authoringPages,
   environment,
   sceneHandle,
   allowPageCameraMarker = true,
@@ -967,6 +972,9 @@ export function PageControllerProvider({
   const [freelookActive, setFreelookActive] = useState(false);
   const [cameraObjectFocus, setCameraObjectFocus] =
     useState<CameraObjectFocus | null>(null);
+  const [authoringPreviewPageId, setAuthoringPreviewPageId] = useState<
+    string | null
+  >(null);
 
   const tweenerRef = useRef<CameraTweener | null>(null);
   const arrivalPoseRef = useRef<PresentationPage["camera"] | null>(null);
@@ -1023,6 +1031,8 @@ export function PageControllerProvider({
   const focusTweeningRef = useRef(false);
   const focusPreviousPanEnabledRef = useRef<boolean | null>(null);
   const pagesRef = useRef(pages);
+  const allEditablePagesRef = useRef(authoringPages ?? pages);
+  const authoringPreviewPageIdRef = useRef(authoringPreviewPageId);
   const currentIndexRef = useRef(currentIndex);
   const targetIndexRef = useRef<number | null>(targetIndex);
   const freelookActiveRef = useRef(freelookActive);
@@ -1033,6 +1043,8 @@ export function PageControllerProvider({
   environmentRef.current = environment;
   presentationStateTransformRef.current = presentationStateTransform;
   pagesRef.current = pages;
+  allEditablePagesRef.current = authoringPages ?? pages;
+  authoringPreviewPageIdRef.current = authoringPreviewPageId;
   currentIndexRef.current = currentIndex;
   targetIndexRef.current = targetIndex;
   freelookActiveRef.current = freelookActive;
@@ -1055,7 +1067,7 @@ export function PageControllerProvider({
       if (isMaster) {
         resolvedBase = page.envSnapshot!;
       } else if (page.parentMasterId && page.parentMasterId !== "global") {
-        const parent = pagesRef.current.find(
+        const parent = allEditablePagesRef.current.find(
           (p) => p.id === page.parentMasterId,
         );
         if (parent?.envSnapshot) {
@@ -2276,7 +2288,13 @@ export function PageControllerProvider({
   // not the global environment. So global `environment.json` edits do not
   // trigger re-apply on those pages, which is the central runtime invariant
   // that prevents cascade pollution.
-  const currentPageForReapply = pages[currentIndex];
+  const authoringPreviewPage =
+    authoringPreviewPageId != null
+      ? allEditablePagesRef.current.find(
+          (page) => page.id === authoringPreviewPageId,
+        ) ?? null
+      : null;
+  const currentPageForReapply = authoringPreviewPage ?? pages[currentIndex];
   const resolvedEnvForReapply = useMemo(
     () =>
       currentPageForReapply
@@ -2286,7 +2304,13 @@ export function PageControllerProvider({
   );
 
   const reapplyCurrentPageState = useCallback(() => {
-    const page = pagesRef.current[currentIndexRef.current];
+    const previewPage =
+      authoringPreviewPageId != null
+        ? allEditablePagesRef.current.find(
+            (page) => page.id === authoringPreviewPageId,
+          )
+        : null;
+    const page = previewPage ?? pagesRef.current[currentIndexRef.current];
     if (!page) return;
     if (isTransitioningRef.current) {
       return;
@@ -2346,7 +2370,63 @@ export function PageControllerProvider({
         };
       }
     }
-  }, [resolvePresentationState, sceneHandle]);
+  }, [authoringPreviewPageId, resolvePresentationState, sceneHandle]);
+
+  const applyAuthoringPageNow = useCallback(
+    (
+      page: PresentationPage,
+      options: { setPreviewId: string | null },
+    ) => {
+      if (isTransitioningRef.current) return;
+      const resolved = resolvePresentationState(page, environmentRef.current);
+      const pagePose = poseWithEnvironmentCamera(
+        resolved.page.camera,
+        resolved.environment,
+      );
+      if (cameraObjectFocusRef.current || focusTweeningRef.current) {
+        releaseCameraFocus("navigation");
+      }
+      applyPose(sceneHandle.camera, sceneHandle.controls, pagePose);
+      arrivalPoseRef.current = pagePose;
+      dynamicBasePoseRef.current = pagePose;
+      dynamicPageIdRef.current = null;
+      dynamicStartMsRef.current = null;
+      dynamicOrbitBlendMsRef.current = null;
+      currentCameraKeyRef.current = `${page.id}:${poseKey(page.camera)}`;
+      sceneHandle.manager.applyEnvironment(resolved.environment);
+      sceneHandle.manager.applyEffectiveVisibilityForPage(
+        resolved.environment,
+        resolved.page,
+      );
+      sceneHandle.manager.applyEffectiveStylesForPage(
+        resolved.environment,
+        resolved.page,
+      );
+      sceneHandle.manager.applyPageScene(resolved.page);
+      sceneHandle.manager.applySceneOverlaysForPage(
+        resolved.environment,
+        resolved.page,
+      );
+      setFreelookActive(false);
+      setAuthoringPreviewPageId(options.setPreviewId);
+    },
+    [releaseCameraFocus, resolvePresentationState, sceneHandle],
+  );
+
+  const previewAuthoringPage = useCallback(
+    (pageId: string) => {
+      const page = allEditablePagesRef.current.find(
+        (candidate) => candidate.id === pageId,
+      );
+      if (!page) return;
+      applyAuthoringPageNow(page, { setPreviewId: page.id });
+    },
+    [applyAuthoringPageNow],
+  );
+
+  const clearAuthoringPreview = useCallback(() => {
+    setAuthoringPreviewPageId(null);
+  }, []);
 
   useEffect(() => {
     reapplyCurrentPageState();
@@ -2364,16 +2444,21 @@ export function PageControllerProvider({
   const goto = useCallback(
     (index: number, reason: NavigationReason = "page-click") => {
       if (index < 0 || index >= pages.length) return;
+      const previousAuthoringPreviewPageId = authoringPreviewPageIdRef.current;
+      setAuthoringPreviewPageId(null);
       const activeTargetIndex = targetIndexRef.current;
       if (isTransitioningRef.current && index === activeTargetIndex) return;
+      const target = pages[index];
       if (
         !isTransitioningRef.current &&
         index === currentIndexRef.current &&
         !freelookActiveRef.current
       ) {
+        if (previousAuthoringPreviewPageId && target) {
+          applyAuthoringPageNow(target, { setPreviewId: null });
+        }
         return;
       }
-      const target = pages[index];
       const tweener = tweenerRef.current;
       if (!tweener) return;
       if (cameraObjectFocusRef.current || focusTweeningRef.current) {
@@ -2664,6 +2749,7 @@ export function PageControllerProvider({
     [
       pages,
       sceneHandle,
+      applyAuthoringPageNow,
       resolvePresentationState,
       releaseCameraFocus,
       activateCameraFocus,
@@ -2941,6 +3027,7 @@ export function PageControllerProvider({
   const value = useMemo<PageControllerValue>(
     () => ({
       pages,
+      authoringPreviewPageId,
       currentIndex,
       targetIndex,
       transitionProgress,
@@ -2951,12 +3038,15 @@ export function PageControllerProvider({
       goto,
       next,
       prev,
+      previewAuthoringPage,
+      clearAuthoringPreview,
       resetToPose,
       tweenToPose,
       reapplyCurrentPageState,
     }),
     [
       pages,
+      authoringPreviewPageId,
       currentIndex,
       targetIndex,
       transitionProgress,
@@ -2967,6 +3057,8 @@ export function PageControllerProvider({
       goto,
       next,
       prev,
+      previewAuthoringPage,
+      clearAuthoringPreview,
       resetToPose,
       tweenToPose,
       reapplyCurrentPageState,

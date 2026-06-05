@@ -131,6 +131,10 @@ Always at the project root. There is exactly one per project.
     "05_campaign_update"
   ],
 
+  "archivedPageOrder": [
+    "06_alternate_close"
+  ],
+
   "theme": {
     "background": "#1C1A18",
     "panelColor": "#F0EDE8",
@@ -300,7 +304,8 @@ and mutable style.
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `pageOrder` | string[] | yes | Ordered list of page IDs. Each ID corresponds to a file at `pages/<id>.json`. |
+| `pageOrder` | string[] | yes | Ordered active presentation list. Each ID corresponds to a file at `pages/<id>.json` and participates in presenter next/previous navigation, audience playback, and built client/project output. |
+| `archivedPageOrder` | string[] | no | Ordered staff-only authoring shelf. Each ID corresponds to a file at `pages/<id>.json`, remains editable and previewable in the editor, and is excluded from presenter navigation, audience playback, and built client/project output. |
 
 ### Environment cinematic scene
 
@@ -363,9 +368,10 @@ Optional. Client logo path (relative to project root) and a project subtitle.
 
 ## Lifecycle
 
-- **On project creation:** copy `projects/_template/project.json`, edit `id`, `name`, `client`, `crs`, `bounds`, `sceneOrigin`. Leave `layers` empty and `pageOrder` empty initially.
+- **On project creation:** copy `projects/_template/project.json`, edit `id`, `name`, `client`, `crs`, `bounds`, `sceneOrigin`. Leave `layers` empty and `pageOrder` empty initially; omit `archivedPageOrder` or initialize it as an empty array.
 - **As layers are added:** the authoring UI appends to `layers`, writes data files to `data/`.
-- **As pages are added:** the authoring UI creates `pages/<id>.json` and appends the ID to `pageOrder`.
+- **As pages are added:** the authoring UI creates `pages/<id>.json` and appends the ID to `pageOrder`, unless the source page is archived and the duplicate belongs beside it in `archivedPageOrder`.
+- **As pages are archived or restored:** the authoring UI moves the page ID between `pageOrder` and `archivedPageOrder`; it does not move the JSON file into `pages/_archive/`.
 - **On every save:** `modified` timestamp updates.
 - **On version bump:** the user manually bumps `version` (semver). Patch for small edits, minor for new pages, major for restructures.
 - **On release:** `status` flips to `"released"`. Should not be reversible without a new version bump.
@@ -382,4 +388,5 @@ Optional. Client logo path (relative to project root) and a project subtitle.
   records immutable/default placement. The current authored cloud position and
   size are the resolved style fields from `environment.layerStyles`,
   Sub Master `envSnapshot`, or page `layerOverrides`.
-- **pageOrder out of sync with files:** if `pageOrder` references a page that does not exist as `pages/<id>.json`, that page is skipped. If a `pages/<id>.json` exists but is not in `pageOrder`, it is invisible. Use the page-management UI to keep them aligned.
+- **page lists out of sync with files:** if `pageOrder` or `archivedPageOrder` references a page that does not exist as `pages/<id>.json`, that page is skipped and validation fails. If a `pages/<id>.json` exists but is in neither list, it is orphaned and invisible to the editor. Use the Page Manager to keep active and archived lists aligned.
+- **Confusing staff archive with delete recovery:** `archivedPageOrder` pages remain ordinary `pages/<id>.json` files. `pages/_archive/` is delete recovery only and is not imported into the staff Archive.

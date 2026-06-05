@@ -377,7 +377,7 @@ The MT resistivity ramp uses four draggable spectral handles:
 - Trim and feather handles stay bottom-aligned on the ramp.
 - Handle dimensions live in `src/ui/ResistivityLegend.tsx`.
 
-## Sub Master Page Rows And Staff Archive (DEC-079, DEC-094)
+## Sub Master Page Rows And Staff Archive (DEC-079, DEC-094, DEC-095)
 
 The page list distinguishes three row roles:
 
@@ -440,6 +440,14 @@ client/project output. A Sub Master may be archived while its children remain
 active; those children keep `parentMasterId` and continue to inherit from the
 archived master's `envSnapshot`. The visible archive is not `pages/_archive/`;
 that folder remains delete recovery.
+
+Archived preview is page-id based authoring state. Selecting an active page
+after an archived preview must refresh the viewport to that active page even
+when the active page index did not change. Scene controls, including light/dark
+and atmosphere controls, are scoped to the selected authoring target: Global
+Settings writes global `environment.scene`, a selected Sub Master writes
+`envSnapshot.scene`, and a selected normal page or child writes page-local
+`sceneOverrides`.
 
 The author's per-page `accentColor` override continues to win on any row
 kind. Helpers live in [styles.ts](../../src/editor/styles.ts):

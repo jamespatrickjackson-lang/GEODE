@@ -1,8 +1,15 @@
 # Page Archive Preimplementation Audit
 
-Status: pre-implementation audit for staff-only Page Archive
+Status: historical pre-implementation audit. Superseded for current behavior by
+DEC-094, DEC-095, `src/pages/loadPages.ts`, `src/editor/EditorContext.tsx`,
+`src/editor/PagePanel.tsx`, `src/pages/PageController.tsx`,
+`tools/validate-project-pages.mjs`, and `vite.config.ts`.
 
 Recorded on 2026-06-04.
+
+Note: Original findings below intentionally preserve the preimplementation
+snapshot. Do not treat "implementation must" language in this file as current
+source state without checking the superseding files listed above.
 
 ## Intent Locked
 

@@ -43,6 +43,7 @@ export interface EditorState {
   manifest: ProjectManifest;
   environment: EnvironmentSetup;
   pages: PresentationPage[];
+  archivedPages: PresentationPage[];
   // Markdown text per page. Loaded from overlays/<id>/text.md on first
   // selection; held in memory until save flushes.
   overlays: Record<string, string>;
@@ -220,6 +221,24 @@ export type EditorAction =
   | { type: "REORDER_PAGE"; pageId: string; direction: "up" | "down" }
   | {
       type: "MOVE_PAGE_BLOCK";
+      pageId: string;
+      targetPageId: string;
+      insertPosition?: "before" | "after";
+    }
+  | {
+      type: "ARCHIVE_PAGE";
+      pageId: string;
+      targetPageId?: string;
+      insertPosition?: "before" | "after";
+    }
+  | {
+      type: "RESTORE_ARCHIVED_PAGE";
+      pageId: string;
+      targetPageId?: string;
+      insertPosition?: "before" | "after";
+    }
+  | {
+      type: "MOVE_ARCHIVED_PAGE";
       pageId: string;
       targetPageId: string;
       insertPosition?: "before" | "after";

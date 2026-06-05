@@ -295,9 +295,9 @@ Presentation pages apply deltas through:
 - presenter preview
 - current-page environment application
 
-### Sub Master pages and staff archive (DEC-079, DEC-094)
+### Sub Master pages and staff archive (DEC-079, DEC-094, DEC-095)
 
-A Sub Master is a renderable `PresentationPage` that carries a frozen `envSnapshot: EnvironmentSetup` captured from the live global environment at creation time. Pages with `parentMasterId` referencing a Sub Master inherit from that snapshot instead of from `environment.json`. The hierarchy is single-level (Global -> Sub Master -> child). Active Sub Master blocks in `pageOrder` stay contiguous when the master is active, but DEC-094 allows a master to live in the staff Page Archive while its children remain active. `PageController.resolvePresentationState` chooses the inheritance base per page; the env-change re-apply effect depends on the resolved environment, not the raw `environment`, so editing `environment.json` does not re-apply on Sub Master pages or their children. The author re-syncs explicitly via a `Re-snapshot from Global` affordance on the Sub Master row. Display numbering is `XX.M.NN` (slot, ordinal, child rank); `pageOrder` slug is unchanged.
+A Sub Master is a renderable `PresentationPage` that carries a frozen `envSnapshot: EnvironmentSetup` captured from the live global environment at creation time. Pages with `parentMasterId` referencing a Sub Master inherit from that snapshot instead of from `environment.json`. The hierarchy is single-level (Global -> Sub Master -> child). Active Sub Master blocks in `pageOrder` stay contiguous when the master is active, but DEC-094 allows a master to live in the staff Page Archive while its children remain active. `PageController.resolvePresentationState` chooses the inheritance base per page; the env-change re-apply effect depends on the resolved environment, not the raw `environment`, so editing `environment.json` does not re-apply on Sub Master pages or their children. The author re-syncs explicitly via a `Re-snapshot from Global` affordance on the Sub Master row. Scene controls route through DEC-095 authoring target semantics: Global Settings writes `environment.scene`, a selected Sub Master writes `envSnapshot.scene`, and a selected normal page or child writes `sceneOverrides`. Display numbering is `XX.M.NN` (slot, ordinal, child rank); `pageOrder` slug is unchanged.
 
 `project.json` owns two page-order lists:
 
@@ -310,6 +310,13 @@ Archived page files remain ordinary `pages/<id>.json` files. The legacy
 `pages/_archive/` folder is delete recovery only and is not the staff Page
 Archive. Build/export packaging must filter project page files against
 `pageOrder` and omit archive-only page JSON.
+
+Archived preview is id-based authoring preview state, not presenter navigation.
+Selecting an archived row applies that row's resolved camera and scene state
+without changing active `currentIndex`, `targetIndex`, NavControls, or
+keyboard next/previous behavior. Selecting an active row after an archived
+preview must apply the active row's resolved presentation state even when the
+active numeric index is unchanged.
 
 The Pages panel owns the authoring controls for this hierarchy. Reorder uses the
 rightmost horizontal three-dot grip and `MOVE_PAGE_BLOCK` for active-page

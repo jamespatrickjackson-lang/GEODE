@@ -111,16 +111,14 @@ import {
   effectiveStyle,
   isStyleFieldOverridden,
   isVisibilityOverridden,
-  mergeSceneProperties,
   resolveEnvironmentForPage,
 } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type {
   EditableStyle,
   ProjectLayerSpec,
-  SceneProperties,
 } from "../pages/types";
-import { pageSelectionHasLanded } from "./authoringTarget";
+import { pageSelectionHasLanded, selectedAuthoringPage } from "./authoringTarget";
 import { SCENE_ORIGIN } from "../constants";
 import {
   UTAH_FORGE_MT_STATIONS_LAYER_ID,
@@ -328,38 +326,39 @@ export function LayerPanel({
     setPageLayerOverride,
     clearPageLayerOverride,
     setPageVisibilityOverride,
-    setPageField,
-    setEnvScene,
+    setAuthoringScene,
   } = useEditor();
 
   const isEnv = state.selectedPageId === ENVIRONMENT_SENTINEL;
-  const currentPage = isEnv
-    ? null
-    : (state.pages.find((p) => p.id === state.selectedPageId) ?? null);
+  const currentPage = isEnv ? null : selectedAuthoringPage(state);
   const currentPageEnvironment = currentPage
-    ? resolveEnvironmentForPage(state.environment, state.pages, currentPage)
+    ? resolveEnvironmentForPage(
+        state.environment,
+        [...state.pages, ...state.archivedPages],
+        currentPage,
+      )
     : state.environment;
-  const { currentIndex, isTransitioning, targetIndex } = usePageController();
-  const selectedPageIndex = currentPage
-    ? state.pages.findIndex((p) => p.id === currentPage.id)
-    : -1;
-  const selectedPageHasLanded = pageSelectionHasLanded({
-    selectedPageIndex,
+  const {
     currentIndex,
     isTransitioning,
     targetIndex,
-  });
+    authoringPreviewPageId,
+  } = usePageController();
+  const selectedPageIndex = currentPage
+    ? state.pages.findIndex((p) => p.id === currentPage.id)
+    : -1;
+  const selectedPageHasLanded =
+    currentPage && selectedPageIndex < 0
+      ? authoringPreviewPageId === currentPage.id
+      : pageSelectionHasLanded({
+          selectedPageIndex,
+          currentIndex,
+          isTransitioning,
+          targetIndex,
+        });
   const pageStyleControlsDisabled =
     !isEnv && (!currentPage || !selectedPageHasLanded);
-  const setSelectedPageSceneOverride = (patch: Partial<SceneProperties>) => {
-    if (!currentPage) {
-      setEnvScene(patch);
-      return;
-    }
-    setPageField(currentPage.id, {
-      sceneOverrides: mergeSceneProperties(currentPage.sceneOverrides, patch),
-    });
-  };
+  const setSelectedPageSceneOverride = setAuthoringScene;
 
   const renderLayer = (layer: ProjectLayerSpec, index = 0) => {
     const meta = layer.metadata as Record<string, unknown>;

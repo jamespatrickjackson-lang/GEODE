@@ -45,6 +45,7 @@ import {
   effectiveVisibility,
   resolveEnvironmentForPage,
 } from "../pages/effective";
+import { selectedAuthoringPage } from "./authoringTarget";
 import { layerDataSection } from "./layerControls/layerPanelConfig";
 import {
   UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
@@ -508,8 +509,13 @@ export function EditorRoot({
     setEnvLayerStyle,
     setPageLayerOverride,
   } = useEditor();
-  const { currentIndex, isTransitioning, targetIndex, cameraObjectFocus } =
-    usePageController();
+  const {
+    currentIndex,
+    isTransitioning,
+    targetIndex,
+    cameraObjectFocus,
+    authoringPreviewPageId,
+  } = usePageController();
   const panelRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const [panelPosition, setPanelPosition] = useState(initialPanelPosition);
@@ -529,12 +535,14 @@ export function EditorRoot({
       ? state.pages.findIndex((page) => page.id === state.selectedPageId)
       : -1;
   const selectedPage =
-    selectedPageIndex >= 0 ? state.pages[selectedPageIndex] : null;
+    selectedPageIndex >= 0 ? state.pages[selectedPageIndex] : selectedAuthoringPage(state);
   const selectedPageHasLanded =
-    selectedPageIndex >= 0 &&
-    selectedPageIndex === currentIndex &&
-    !isTransitioning &&
-    targetIndex === null;
+    selectedPage && selectedPageIndex < 0
+      ? authoringPreviewPageId === selectedPage.id
+      : selectedPageIndex >= 0 &&
+        selectedPageIndex === currentIndex &&
+        !isTransitioning &&
+        targetIndex === null;
   const cameraFocusSettings = state.environment.scene?.cameraFocus ?? {};
   const sceneRevealDelayMs = clampEditorNumber(
     cameraFocusSettings.singleClickDelayMs,
@@ -816,7 +824,11 @@ export function EditorRoot({
   const hasPublicTopoMap = topoMapLayerIds(state.manifest.layers).length > 0;
   const hasSectionsCropping = state.projectSlug === "utah-forge";
   const selectedPageEnvironment = selectedPage
-    ? resolveEnvironmentForPage(state.environment, state.pages, selectedPage)
+    ? resolveEnvironmentForPage(
+        state.environment,
+        [...state.pages, ...state.archivedPages],
+        selectedPage,
+      )
     : state.environment;
   const forgeDataVisibleLayerIds = selectedPage
     ? effectiveVisibility(selectedPageEnvironment, selectedPage)
@@ -967,7 +979,7 @@ export function EditorRoot({
       const page =
         state.selectedPageId &&
         state.selectedPageId !== ENVIRONMENT_SENTINEL
-          ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
+          ? selectedAuthoringPage(state)
           : null;
       const envVisibility =
         state.environment.layerStyles[UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID]
@@ -1054,7 +1066,7 @@ export function EditorRoot({
       const page =
         state.selectedPageId &&
         state.selectedPageId !== ENVIRONMENT_SENTINEL
-          ? state.pages.find((candidate) => candidate.id === state.selectedPageId)
+          ? selectedAuthoringPage(state)
           : null;
       const patch: Partial<EditableStyle> = {
         mtStationQcSelectedStationId: detail.stationId,

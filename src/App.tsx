@@ -184,6 +184,7 @@ export function App() {
           manifest={project.manifest}
           environment={project.environment}
           pages={project.pages}
+          archivedPages={project.archivedPages}
           sceneHandle={sceneHandle}
         >
           <Suspense fallback={<div style={statusStyle}>Loading editor...</div>}>

@@ -1006,3 +1006,15 @@ fake-cloud looks.
 **Trade-off accepted:** The inheritance graph can reference a master outside the active presentation sequence. Implementation must therefore distinguish active-page controller indexes from all editable pages and must resolve Sub Master inheritance against active plus archived pages, not only `pageOrder`.
 
 **Build/export guard:** Static/client builds and future export packaging must emit `pageOrder` pages only. `archivedPageOrder` and archived page JSON are authoring-only state. Build or export code that copies project folders must filter archived page ids and omit archive-only page files from shipped output.
+
+## DEC-095 - Authoring scene edits are scoped by selected page target
+
+**Supersedes:** DEC-079 and DEC-094 only where their implementation notes could imply that editor scene controls write through a single global or active-index-only path.
+
+**Considered:** keep scene controls writing to the current active page index, or route scene writes through the selected authoring target across Global Settings, active pages, archived pages, Sub Masters, and Sub Master children.
+
+**Chose:** editor scene controls must write through selected authoring target semantics. Global Settings writes `environment.scene`. A selected Sub Master writes its local `envSnapshot.scene`. A selected normal page or Sub Master child writes page-local `sceneOverrides`. Archived pages follow the same rules as active pages: they remain editable and previewable by id, but they do not enter presenter next/previous indexes. Selecting an active page after an archived preview must force-apply that active page's resolved presentation state even when the active numeric `currentIndex` is unchanged.
+
+**Why:** Light/dark, atmosphere, and other scene controls are authoring state. Changing them on a normal page or child page must create a page-local override, while changing them on a Sub Master must update the inheritance source for its children. Global scene edits should remain global only when the author is editing Global Settings.
+
+**Render-stack guard:** The selected page render path must trace through `environment.scene`, Sub Master `envSnapshot.scene`, render preset `scenePatch`, page `sceneOverrides`, layer styles, topo material authority, active asset URL/cache key, shader/material, and mesh geometry before visual-scene fixes. `PageController.resolvePresentationState` remains the inheritance merge point. The scene application order remains resolved environment, visibility/styles, page scene, and overlays; this decision does not change topo material, texture URL, bounds, public clip, edge fade, edge outline, or geometry authority.

@@ -1,8 +1,13 @@
 # Page Archive Implementation Plan
 
-Status: approved implementation plan, hold until explicitly resumed
+Status: historical implementation plan. Implemented on branch
+`codex/page-archive-implementation`; current behavior is governed by DEC-094,
+DEC-095, the active source files, validation tools, and UI docs.
 
 Recorded on 2026-06-04.
+
+Note: Original implementation-order language below is preserved as planning
+history, not as a hold condition.
 
 ## Summary
 

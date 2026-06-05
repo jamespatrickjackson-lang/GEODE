@@ -490,6 +490,42 @@
       "status": "active"
     },
     {
+      "id": "page.archive.toggle",
+      "label": "Archive",
+      "kind": "action",
+      "parentId": "section.pages",
+      "sourceFile": "src/editor/PagePanel.tsx",
+      "sourceAnchor": "data-editor-control-id=\"page.archive.toggle\"",
+      "scope": "staff-authoring",
+      "backedBy": "archivedPageOrder",
+      "setterRoute": "local reveal state / archivePage drop target",
+      "status": "active"
+    },
+    {
+      "id": "page.relationship.badge.master",
+      "label": "Master relationship badge",
+      "kind": "action",
+      "parentId": "section.pages",
+      "sourceFile": "src/editor/PagePanel.tsx",
+      "sourceAnchor": "data-editor-control-id=\"page.relationship.badge.master\"",
+      "scope": "staff-authoring",
+      "backedBy": "page.parentMasterId and Sub Master envSnapshot",
+      "setterRoute": "reveal related page row",
+      "status": "active"
+    },
+    {
+      "id": "page.relationship.badge.child",
+      "label": "Child relationship badge",
+      "kind": "action",
+      "parentId": "section.pages",
+      "sourceFile": "src/editor/PagePanel.tsx",
+      "sourceAnchor": "data-editor-control-id=\"page.relationship.badge.child\"",
+      "scope": "staff-authoring",
+      "backedBy": "page.parentMasterId",
+      "setterRoute": "reveal related page row",
+      "status": "active"
+    },
+    {
       "id": "page.color",
       "label": "Page color",
       "kind": "control",
