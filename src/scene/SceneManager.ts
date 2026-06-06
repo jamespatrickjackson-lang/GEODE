@@ -32,6 +32,7 @@ import {
 import type { SceneOverlayDef } from "../pages/types";
 import { disposeObjectTree } from "./disposeObjectTree";
 import {
+  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
   UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
@@ -2909,6 +2910,7 @@ export class SceneManager {
     ) {
       return false;
     }
+    this.applySettledMtCellPointsTargetStyle(pageId);
     const trace = this.recordTransitionCommitAttempt({
       phase: "duplicate-target-assertion",
       attemptedBy,
@@ -2926,6 +2928,7 @@ export class SceneManager {
     if (!state?.hasFinalized || !page || state.targetPageId !== page.id) {
       return false;
     }
+    this.applySettledMtCellPointsTargetStyle(page.id);
     const trace = this.recordTransitionCommitAttempt({
       phase: "editor-deferred-reapply",
       attemptedBy: "SceneManager.reapplyCurrentPageState",
@@ -2936,6 +2939,27 @@ export class SceneManager {
       return true;
     }
     return false;
+  }
+
+  private applySettledMtCellPointsTargetStyle(
+    pageId: string | null,
+  ): void {
+    if (
+      !pageId ||
+      this.lastEffectivePage?.id !== pageId ||
+      !this.lastEffectiveEnv ||
+      this.scalarStyleTweens.has(UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID)
+    ) {
+      return;
+    }
+    this.applyStyle(
+      UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+      effectiveStyle(
+        this.lastEffectiveEnv,
+        this.lastEffectivePage,
+        UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+      ),
+    );
   }
 
   finalizePageTransitionCommit(

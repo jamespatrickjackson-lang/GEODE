@@ -30,6 +30,10 @@ narrow patch
     with a floating preview and before/after insertion line.
   - Viewport legends should be lightweight overlays unless a specific tool requires a card/backplate.
   - Viewport legend edge anchoring, stack spacing, circular toggle rows, overlay text-color mapping, slider variables, and MT ramp handle sizes are captured in `docs/dev-context/UI-Visual-Standards.md`.
+  - `MT Cell Points` uses the compact quick-legend rule from `UI-Visual-Standards.md`: title toggles only the full-density point cloud, `Full Cloud` and `Spectrum` are exclusive modes, Full Cloud hides the spectrum and scalar edge-line overlays, and Spectrum owns threshold/filter controls.
+  - Spectrum-authored MT Cell Points pages must load their scalar window and edge-line detail immediately from Global Settings/page 00. That preview-environment load path is guarded in the Utah FORGE preview field map; visual review should not accept a page that needs a Full Cloud/Spectrum click to reveal authored Spectrum detail.
+  - During page-to-page navigation, MT Cell Points mode buttons must reflect the target authored mode, not the transient ramp interpolation. Spectrum pages with line controls on must show scalar edge-line detail through the full-density scalar transition, not by a final-commit pop or a manual mode click.
+  - Settled page loads may rebuild MT Cell Points Spectrum edge lines by refreshing only the full-density point-cloud style. A broad final page visibility/style replay is not acceptable because it can make overlays jump.
   - Topo graticules are depth-tested reference lines, not through-scene overlays.
   - Public topo surface colour defaults now use the named `Utah` material preset:
     khaki desert lows, muted sage/tree middle elevations, and warm snow/rock
@@ -57,12 +61,10 @@ narrow patch
   - Page-local cinematic post values blend through `main-camera/cinematic-post`; toggles, focus mode, and debug helpers remain discrete.
   - Composition guide and presentation-frame line thickness defaults to `lineThickness: 0.25`, half of the earlier guide/frame width.
   - Human visual judgment is the first acceptance filter for composition.
-  - The current Utah FORGE deck savepoint fronts pages `156_page`, `157_page`,
-    `158_page`, `159_page`, `166_page`, `167_page`, `160_page`, and
-    `164_page`, then continues through the reordered resistivity, section,
-    seismic, and context review pages.
-    `165_page` is the only staff Page Archive entry in `archivedPageOrder`;
-    `pages/_archive/166_page.json` is delete-recovery storage only.
+  - Utah FORGE deck composition notes must describe app-level behavior and
+    visual review status, not disposable page ids, page order, or fixture names.
+    Page JSON, project order, environment fixtures, and archive entries are
+    authoring state and must stay outside runtime/UI implementation guidance.
 - Still wrong / under review:
   - The expanded cinematic toolset is implemented and ready for ongoing human visual tuning. Do not mark a look final from static checks alone.
   - The committed Utah FORGE deck savepoint is ready for visual check; static

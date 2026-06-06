@@ -1140,3 +1140,175 @@ fake-cloud looks.
 **Why:** The old `legendVisible` field mixed three concerns: whether a row appeared in the quick legend, whether outlines/handles rendered, and whether an enabled section looked available from the viewport legend. Duplicate pages could keep a section cut on while hiding its only enabled row, so the quick legend appeared to contradict the editor. A per-axis Controls field keeps the section cut, helper controls, ground trace, and scale axes independent.
 
 **Guard:** built-in X/Y/Z frame entries must not persist `legendVisible`. Existing built-in values are migrated to `sceneSectionFrameByAxis.<axis>.controlsVisible` when they were false, then removed. `validate-project-pages` rejects built-in `legendVisible`, and `scene-section-legend-contract-source.test.mjs` covers the quick legend/editor/runtime mapping.
+
+## DEC-106 - Section ISO quick legend separates availability from state
+
+**Considered:** make every Section ISO quick icon reflect only its own stored toggle state, let controls opener buttons reflect whether their popout is open, or separate parent availability from child state in the quick legend.
+
+**Chose:** Section ISO quick rows use three visual states. Parent buttons (`ISO Volume`, `ISO Section`) show the feature on/off state. Controls opener buttons show row availability, not popout-open state: volume controls are full white when `ISO Volume` is on, and section controls are full white when `ISO Section` is on. State toggles (`Remove empty`, `ISO Lines`, `ISO Bands`) show their own stored state only while their parent row is on; otherwise they render gray/off even if a stored detailed setting is true.
+
+**Why:** The quick legend is a compact editor mirror. A controls opener that turns gray while its parent feature is active reads as unavailable, even when it can still be selected. Popout-open state is interaction chrome, not the authored feature state. Separating availability from stored toggle state keeps the legend aligned with the editor and prevents active ISO Section controls from looking disabled.
+
+**Guard:** `SectionIsoLegend.tsx` must keep controls opener styling on an availability helper and state toggles on a separate state helper. `scene-section-legend-contract-source.test.mjs` covers the helper split, `section-iso-configure`, `section-iso-volume-controls`, and durable doc anchors in this decision plus `UI-Visual-Standards.md`.
+
+## DEC-107 - Compact quick legends use shared geometry
+
+**Considered:** keep Scene Section, Section ISO, and MT threshold boundary quick legend button geometry local to each component, or centralize the primary pill, icon circle, gap, inactive gray, and color-alpha rules.
+
+**Chose:** compact quick legends use the shared helpers in `src/ui/legendStyles.ts`. Primary pills are fixed at `108px` by `28px`, centered, `11px` technical-mono text, dark text/icons, and no outline. Icon circles are fixed at `24px` with centered `14px` icons. Quick rows use the shared `6px` horizontal gap, stacked quick rows use the shared compact vertical gap, inactive buttons use `rgba(128, 134, 145, 0.38)`, and color transparency uses the shared `colorWithAlpha()` helper.
+
+**Why:** the quick legend is one reusable viewport control surface. Local geometry drift made MT thresholds left-aligned and smaller than Scene/ISO pills, and made icon alignment regress without a shared source contract.
+
+**Guard:** local quick-legend button geometry is not allowed for Scene Section, Section ISO, or MT threshold boundary quick legends without a documented decision-log exception. `scene-section-legend-contract-source.test.mjs` must verify the shared `legendStyles.ts` helpers, component imports, centered MT threshold buttons, centered Scene Section flip icon path, and this durable docs/agent guard.
+
+## DEC-108 - MT resistivity title controls cloud visibility only
+
+**Status:** superseded by DEC-109.
+
+**Considered:** keep the MT resistivity title static, make `Full-density` and `Volume` target buttons act as visibility toggles, or make the title a narrow master visibility toggle for the heavy cloud-like MT sources.
+
+**Chose:** the MT resistivity title is the cloud master. It toggles only `utah-forge-mt-resistivity-full-density` and `utah-forge-mt-resistivity-volume`. Turning it off hides those two layers and collapses the legend body to title-only. Turning it on forces those two layers visible for the current authoring target and selects the full-density point-cloud ramp target. The target selector buttons remain scalar ramp selectors and use clear labels: `Full-density points`, `3D volume`, `Authored slices`, and `QA subset`.
+
+**Why:** authors need a quick clarity toggle for the dense MT point cloud and 3D volume without disturbing Section ISO bands/lines, scene sections, threshold boundaries, authored slices, or QA preview. The former `Full density` / `Volume` labels looked like show/hide buttons even though they only changed which scalar ramp was being edited.
+
+**Guard:** the cloud master layer tuple must contain only full-density points and 3D volume. It must not include slices, QA preview, threshold surfaces, section planes, Section ISO helpers, top surfaces, or project/page fixture-specific ids. Full-density point-cloud scalar sliders must keep the all-valid source inclusion guard unless `scalarInclusionMode === "thresholded"`. `mt-resistivity-legend-cloud-toggle-source.test.mjs` covers this contract.
+
+## DEC-109 - MT resistivity point-cloud legend separates volume
+
+**Status:** superseded by DEC-110.
+
+This decision supersedes DEC-108.
+
+**Considered:** keep the prior MT title cloud-master behavior, move volume into the same quick bar under a different label, or make the MT quick legend point-cloud-only and leave volume to its own controls.
+
+**Chose:** the viewport bar is named `3D MT resistivity point cloud`. Its title button toggles only `utah-forge-mt-resistivity-full-density`. The controls button opens full-density point-cloud controls. `utah-forge-mt-resistivity-volume`, slices, QA preview, Section ISO, scene sections, and threshold boundaries are not toggled, selected, restored, or described by this legend.
+
+**Why:** the dense full-density point cloud is the clarity toggle authors need in this legend. Volume is a different render product and needs a separate legend/control owner instead of being hidden by a point-cloud title.
+
+**Guard:** `UTAH_FORGE_MT_RESISTIVITY_POINT_CLOUD_LEGEND_LAYER_IDS` must contain only the full-density point-cloud layer. The point-cloud legend must keep the existing spectrum math and respect effective page/environment inclusion mode: thresholded pages may filter, while all-valid pages keep valid source points drawn. Full-density sliders must still route through `scalarInclusionFilterActive` so filtering happens only when `scalarInclusionMode === "thresholded"`.
+
+## DEC-110 - MT Cell Points legend separates Full Cloud and Spectrum views
+
+This decision supersedes DEC-109.
+
+**Considered:** keep `3D MT resistivity point cloud` as a single title-plus-controls bar, make Full Cloud reset all scalar trim values to the source range, or rename the legend to `MT Cell Points` and make Full Cloud/Spectrum separate view buttons over the same full-density layer.
+
+**Chose:** the viewport bar is named `MT Cell Points`. Its title button toggles only `utah-forge-mt-resistivity-full-density`. `Full Cloud` is a view button that sets `scalarLegendVisible: false` and `scalarInclusionMode: "all-valid"`, hides the compact spectrum/ramp body, and closes spectrum controls without changing trim, feather, noise, opacity, point size, or color fields. `Spectrum` is a filter view button that sets `scalarLegendVisible: true` and `scalarInclusionMode: "thresholded"`, shows the compact spectrum/ramp body, and makes the controls button available for trim, feather, noise, color, inclusion, value legend, distance light, draw QA, and point size edits.
+
+**Why:** authors need a quick way to see the complete MT cell-point cloud and a separate way to introduce a spectrum filter for selecting part of the scalar range. Resetting scalar fields when viewing the full cloud would destroy useful trim/feather work and could break the existing page-transition scalar tween path, but leaving thresholded inclusion active in Full Cloud would not show the full cloud.
+
+**Guard:** `UTAH_FORGE_MT_RESISTIVITY_POINT_CLOUD_LEGEND_LAYER_IDS` must still contain only the full-density point-cloud layer. Full Cloud and Spectrum must write only `scalarLegendVisible` plus `scalarInclusionMode` and must not mutate visibility overrides, volume, slices, QA preview, Section ISO, scene sections, thresholds, or scalar trim/feather/noise/color fields. Spectrum mode intentionally opts the effective authoring target into thresholded filtering; Full Cloud intentionally restores all-valid inclusion while preserving the authored scalar window values for the next Spectrum use. Full-density sliders must keep routing through `scalarInclusionFilterActive`, and MT Cell Points scalar transitions must keep using the existing `full-density-scalar` path. No page-id, page-index, fixture-title, project page, or environment fixture special cases are allowed, and implementation must not edit project page or environment fixtures for this behavior.
+
+## DEC-111 - MT Cell Points mode buttons are exclusive and slider-transitioned
+
+This decision supersedes DEC-110 only where that decision allowed Full Cloud and Spectrum to behave like independent clickable toggles or allowed the mode switch to snap the full-density point index.
+
+**Considered:** keep both mode buttons independently clickable, instantly flip `scalarInclusionMode`, or make Full Cloud and Spectrum a one-of-two mode group with a live scalar transition.
+
+**Chose:** `Full Cloud` and `Spectrum` are mutually exclusive MT Cell Points modes. The selected mode is not re-selectable while active, and controls are available only in a settled Spectrum mode. Switching modes uses a local 1.5s slider-style scalar interpolation over the same numeric scalar fields used by spectrum handle drags: Full Cloud expands the live preview to a full scalar window and clears noise and scalar edge-line width before the final all-valid mode write, while Spectrum animates from the full scalar window back to the authored trim, feather, noise, and edge-line values before the final thresholded mode write.
+
+**Why:** authors read Full Cloud and Spectrum as alternative views of the same point cloud, not independent toggles. Snapping from all-valid to thresholded filtering causes a point-index pop even though moving the spectrum sliders already proves the point cloud can transition through the scalar window smoothly.
+
+**Guard:** final persistence still writes only `scalarLegendVisible` plus `scalarInclusionMode`. The live transition may temporarily apply numeric scalar preview values through `SceneManager.applyStyle`, and Full Cloud display must suppress scalar edge-line overlays by driving `scalarEdgeLineWidth` to `0` in the live/full-cloud display style. It must not persist trim, feather, noise, color, opacity, point size, edge-line settings, visibility overrides, volume, slices, QA preview, Section ISO, scene sections, thresholds, page fixtures, or environment fixtures. Do not add a new transition kind or mutate `scalarInclusionFilterActive`, `scalarFullDensityAllValidMode`, `SCALAR_TRANSITION_STYLE_FIELDS`, or the existing `full-density-scalar` page-transition path for this legend click. A stale local mode animation must be scoped to the effective page context and invalidated when that context changes, so an unfinished Full Cloud/Spectrum click cannot apply or persist an old page's style after navigation.
+
+## DEC-112 - MT Cell Points Spectrum load preserves authored scalar fields
+
+This decision extends DEC-111 for page-load behavior while the editor is selected on Global Settings/page 00.
+
+**Considered:** repair Spectrum-authored pages by editing page fixtures, force users through the Full Cloud/Spectrum button transition on every load, or make the preview-environment page resolver preserve the authored MT Cell Points scalar fields that the scene needs for initial Spectrum rendering.
+
+**Chose:** `UTAH_FORGE_PREVIEW_LAYER_OVERRIDE_FIELDS` preserves the full-density MT scalar window, color ramp, display range, edge-line, surface-mask, opacity, `scalarLegendVisible`, and `scalarInclusionMode` fields when `previewEnvironmentBase` strips unrelated page deltas. Spectrum-authored pages must therefore resolve into the same visual scalar style on initial load that the Full Cloud/Spectrum button transition can apply live.
+
+**Why:** Global Settings/page 00 is a virtual editor target, but page navigation still needs the selected page to present its authored MT Cell Points Spectrum look. Stripping all full-density scalar fields except inclusion mode makes the viewport say Spectrum while the scene lacks the authored edge-line and scalar-window fields, so lines/details appear only after a manual mode click.
+
+**Guard:** this is an app-level preview-resolution contract, not page authoring. Do not add page-id, page-index, fixture-title, project page, or environment fixture special cases, and do not edit `projects/*/pages/**`, `projects/*/overlays/**`, `projects/*/project.json`, or `projects/*/environment.json` for this behavior. Do not mutate `setMtCellPointsMode`, `scalarInclusionFilterActive`, `scalarFullDensityAllValidMode`, `SCALAR_TRANSITION_STYLE_FIELDS`, scalar edge overlay generation, or the existing `full-density-scalar` transition path for this load bug.
+
+## DEC-113 - MT threshold boundary all-off maps inherit default visibility
+
+**Considered:** repair pages that carry all MT threshold boundaries as false, keep canonical `mtSurfaceBoundariesById.*.visible = false` authoritative even when every boundary is off, or treat all-off boundary maps as empty/stale visibility state and fall back to legacy/default boundary visibility.
+
+**Chose:** the MT threshold boundary resolver treats canonical boundary visibility as authoritative only when at least one canonical boundary is visible. If the canonical map has no visible boundary, the resolver uses legacy visibility only when legacy has at least one visible boundary; otherwise it falls back to default/environment boundary visibility. Hiding every threshold line should be done by hiding the threshold-boundary layer, not by leaving the layer visible with every boundary false.
+
+**Why:** page-to-page navigation can otherwise land on a visible MT threshold-boundary layer with no boundary lines because disposable page state contains an all-false boundary map. That reads as a broken transition even though the render layer is present. The reusable product behavior should keep the line product visible when the layer is visible, without repairing page fixtures.
+
+**Guard:** this is an app-level resolver rule in `mtSurfaceBoundaries.ts`. Do not fix missing MT threshold boundary lines by editing `projects/*/pages/**`, `projects/*/overlays/**`, `projects/*/project.json`, or `projects/*/environment.json`, and do not add page-id, page-index, or fixture-title special cases. Keep canonical per-boundary on/off behavior for states where at least one boundary is visible.
+
+## DEC-114 - MT Cell Points Spectrum lines assert final target style after page navigation
+
+**Status:** superseded by DEC-115.
+
+This decision extends DEC-111 and DEC-112 for page-to-page navigation.
+
+**Considered:** repair individual Spectrum pages, make users click Full Cloud and Spectrum after navigation, or make page-transition completion assert the final target effective style.
+
+**Chose:** page-transition commit performs a final target-style assertion after commit tracing. The final target page visibility and effective styles are replayed through the normal scene style path so the full-density point cloud receives its authored `scalarLegendVisible`, scalar window, and scalar edge-line fields, and `applyScalarPreviewStyle` rebuilds `mt-scalar-edge-line-overlay`. The MT Cell Points quick legend derives its selected Full Cloud/Spectrum header state from the target authored mode, while using interpolated scalar style only for ramp and handle visuals during transitions.
+
+**Why:** a Spectrum page with line controls on must land with the sketchy scalar edge/isoline overlay visible. Relying only on the scalar tween end frame or a later suppressed post-commit reapply can leave the point cloud in a target-looking ramp state without the edge overlay until a manual Full Cloud/Spectrum click reapplies the style.
+
+**Guard:** this is app-level transition/UI code. Do not edit `projects/*/pages/**`, `projects/*/overlays/**`, `projects/*/project.json`, or `projects/*/environment.json`, and do not add page-id, page-index, fixture-title, or page-order conditionals. Do not change `setMtCellPointsMode`, `scalarInclusionFilterActive`, `scalarFullDensityAllValidMode`, `SCALAR_TRANSITION_STYLE_FIELDS`, scalar edge overlay generation, or the existing `full-density-scalar` interpolation. Header mode buttons must reflect the target authored mode; the controls button is available only when the target mode is Spectrum and no local mode transition is running.
+
+## DEC-115 - MT Cell Points Spectrum lines use scalar transition ownership
+
+**Status:** extended by DEC-116 for settled page-load and suppressed reapply
+rebuilds.
+
+This decision supersedes DEC-114 only where DEC-114 repaired missing Spectrum
+edge lines by replaying final target visibility/styles after transition commit.
+
+**Considered:** keep the final target-style assertion, special-case pages that
+missed MT Spectrum lines, or make the page-transition classifier always register
+the MT full-density scalar tween when authored Spectrum scalar fields differ.
+
+**Chose:** MT Cell Points Spectrum line entry is owned by the existing
+`full-density-scalar` page-transition path. When the full-density point cloud is
+visible on both source and target pages and authored scalar fields differ, the
+transition classifier records a scalar tween even if the scalar edge geometry is
+not ready at setup time. Runtime ticks and async layer reapply then apply the
+interpolated scalar style on the page-transition clock until the authored target
+style is reached.
+
+**Why:** final target-style replay made the edge/isoline overlay appear, but it
+also cleared transition state and visibly popped the lines in after navigation.
+The slider and Full Cloud/Spectrum mode paths already prove scalar edge width,
+noise, and trim can move smoothly through `interpolatedScalarStyle`; page
+navigation should use the same numeric scalar path rather than a commit-time
+repair.
+
+**Guard:** post-commit graph checks are observational and must not call
+`applyEffectiveVisibilityForPage` or `applyEffectiveStylesForPage` as an MT line
+repair. Do not edit `projects/*/pages/**`, `projects/*/overlays/**`,
+`projects/*/project.json`, or `projects/*/environment.json`, and do not add
+page-id, page-index, fixture-title, or page-order conditionals. Do not change
+`setMtCellPointsMode`, `scalarInclusionFilterActive`,
+`scalarFullDensityAllValidMode`, `SCALAR_TRANSITION_STYLE_FIELDS`, scalar edge
+overlay generation, or the existing `full-density-scalar` transition kind.
+
+## DEC-116 - MT Cell Points settled loads refresh only full-density target style
+
+This decision extends DEC-115 for settled page loads and suppressed post-commit
+page reapply.
+
+**Considered:** bring back the broad final target-style replay, let the
+post-commit PageController reapply stay fully suppressed, or apply only the
+settled MT full-density target style when that reapply is suppressed.
+
+**Chose:** when a settled post-commit page reapply is suppressed for the target
+page, `SceneManager` may narrowly reapply only
+`utah-forge-mt-resistivity-full-density` through `applyStyle(effectiveStyle(...))`.
+That rebuilds `mt-scalar-edge-line-overlay` for Spectrum-authored pages whose
+point-cloud geometry or scalar edge overlay was not ready during the first style
+application. If a full-density scalar tween is active, the narrow refresh is
+skipped so the page-transition clock remains the owner.
+
+**Why:** removing the broad final replay fixed the visible jump, but it also
+removed the settled safety net that built missing Spectrum edge lines after a
+suppressed target-page reapply. A narrow layer-style refresh keeps page-load
+correctness without clearing tweens, replaying visibility, rebuilding unrelated
+layers, or editing disposable page fixtures.
+
+**Guard:** this is app-level scene style repair only. Do not call
+`applyEffectiveVisibilityForPage` or `applyEffectiveStylesForPage` from the
+settled MT Cell Points repair path, and do not edit `projects/*/pages/**`,
+`projects/*/overlays/**`, `projects/*/project.json`, or
+`projects/*/environment.json`. The transition path from DEC-115 remains
+authoritative while scalar tweens are active.

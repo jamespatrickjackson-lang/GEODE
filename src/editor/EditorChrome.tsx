@@ -40,7 +40,7 @@ import { audienceLensById } from "../projectModules/caseStudyB/audienceLenses";
 import { UTAH_FORGE_PREVIEW_LAYER_OVERRIDE_FIELDS } from "../projectModules/utahForge/editorPreviewFields";
 import {
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
-  UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_POINT_CLOUD_LEGEND_LAYER_IDS,
   UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
   UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
@@ -95,9 +95,6 @@ const UTAH_FORGE_LEGENDS: readonly UtahForgeLegendId[] = [
 
 const UTAH_FORGE_MT_RESISTIVITY_LEGEND_LAYER_IDS = [
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
-  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
-  UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
-  UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
 ] as const;
 
 interface UtahForgeLegendTransitionItem {
@@ -147,10 +144,15 @@ function utahForgeLegendPresenceForPage(
   const styleFor = (layerId: string) =>
     effectiveStyle(environment, page, layerId);
   const scalarVisible = UTAH_FORGE_MT_RESISTIVITY_LEGEND_LAYER_IDS.some(
-    (layerId) =>
-      visible.has(layerId) &&
-      styleFor(layerId).scalarLegendVisible !== false,
+    (layerId) => visible.has(layerId),
   );
+  const pointCloudExplicitPageOverride =
+    UTAH_FORGE_MT_RESISTIVITY_POINT_CLOUD_LEGEND_LAYER_IDS.some(
+      (layerId) => page.visibilityOverrides?.[layerId] !== undefined,
+    );
+  const globalSettingsAuthoring =
+    state.projectSlug === "utah-forge" &&
+    state.selectedPageId === ENVIRONMENT_SENTINEL;
   const seismicStyle = styleFor(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID);
   const sceneSectionStyle = styleFor(UTAH_FORGE_SCENE_SECTION_LAYER_ID);
   const thresholdStyle = styleFor(UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID);
@@ -182,7 +184,8 @@ function utahForgeLegendPresenceForPage(
       visible.has(UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID) &&
       thresholdStyle.mtSurfaceBoundaryLegendVisible !== false,
     "surface-elevation": surfaceElevationVisible,
-    "mt-resistivity": scalarVisible,
+    "mt-resistivity":
+      scalarVisible || pointCloudExplicitPageOverride || globalSettingsAuthoring,
   };
 }
 

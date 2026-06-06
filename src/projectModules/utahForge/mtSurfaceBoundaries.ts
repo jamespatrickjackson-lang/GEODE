@@ -223,6 +223,12 @@ export function resolveMtSurfaceBoundaries(
     style.mtSurfaceBoundariesById !== null
       ? style.mtSurfaceBoundariesById
       : {};
+  const canonicalHasVisibleBoundary = Object.values(authored).some(
+    (boundary) => boundary?.visible === true,
+  );
+  const legacyHasVisibleBoundary = Object.values(legacyVisibility).some(
+    (visible) => visible === true,
+  );
 
   return order
     .map((id) => {
@@ -259,9 +265,9 @@ export function resolveMtSurfaceBoundaries(
           id as (typeof DEFAULT_MT_SURFACE_BOUNDARY_IDS)[number],
         ) || orderedIds.has(id);
       const visible =
-        typeof override.visible === "boolean"
+        canonicalHasVisibleBoundary && typeof override.visible === "boolean"
           ? override.visible
-          : typeof legacyVisibility[id] === "boolean"
+          : legacyHasVisibleBoundary && typeof legacyVisibility[id] === "boolean"
             ? legacyVisibility[id]
             : visibleDefault;
       const thresholdOhmM =

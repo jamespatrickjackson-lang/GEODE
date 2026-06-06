@@ -3,7 +3,7 @@ import type {
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useEditor } from "../editor/EditorContext";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
@@ -14,6 +14,10 @@ import {
 import {
   LEGEND_BOTTOM_EDGE_OFFSET_PX,
   LEGEND_PAGE_EDGE_MARGIN_PX,
+  QUICK_LEGEND_INACTIVE_BACKGROUND,
+  compactQuickLegendIconButtonBaseStyle,
+  compactQuickLegendPrimaryButtonBaseStyle,
+  compactQuickLegendRowStyle,
   resolveLegendTextColors,
   transparentLegendPanelStyle,
 } from "./legendStyles";
@@ -25,18 +29,20 @@ import {
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
 import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
-import { buildMtResistivityFigureModel } from "../geophysics/geophysicsFigureModel";
-import {
-  DEFAULT_MT_RESISTIVITY_SLICE_ID,
-  mtResistivitySliceById,
-} from "../mtResistivity/sliceProducts";
+import { easeProgress } from "../scene/transitions/transitionStyles";
+import { UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID } from "../projectModules/utahForge/layerIds";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
-const MT_RESISTIVITY_FULL_DENSITY_LAYER_ID =
-  "utah-forge-mt-resistivity-full-density";
-const MT_RESISTIVITY_SLICES_LAYER_ID = "utah-forge-mt-resistivity-slices";
-const MT_RESISTIVITY_PREVIEW_LAYER_ID = "utah-forge-mt-resistivity-preview";
-const MT_RESISTIVITY_VOLUME_LAYER_ID = "utah-forge-mt-resistivity-volume";
+const MT_CELL_POINTS_MODE_TRANSITION_MS = 1500;
+type MtCellPointsMode = "full-cloud" | "spectrum";
+
+interface MtCellPointsModeTransitionScopeArgs {
+  projectSlug: string;
+  editingEnvironment: boolean;
+  pageId: string | null;
+  writePageId: string | null;
+  layerId: string;
+}
 
 const DEFAULT_LOW = "#2cc9ff";
 const DEFAULT_MID = "#f8dd6d";
@@ -52,27 +58,6 @@ const EDGE_POPOVER_WIDTH_PX = 300;
 const EDGE_POPOVER_MARGIN_PX = 12;
 const rootBaseStyle: CSSProperties = {
   ...transparentLegendPanelStyle,
-};
-
-const titleStyle: CSSProperties = {
-  margin: 0,
-  fontSize: 12,
-  lineHeight: 1.15,
-  fontWeight: 700,
-};
-
-const headerRowStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "baseline",
-  flexWrap: "wrap",
-  columnGap: 10,
-  rowGap: 2,
-};
-
-const subtitleStyle: CSSProperties = {
-  margin: 0,
-  fontSize: 10,
-  lineHeight: 1.25,
 };
 
 const rampStyle: CSSProperties = {
@@ -114,48 +99,6 @@ const tickMiddleStyle: CSSProperties = {
 
 const tickRightStyle: CSSProperties = {
   textAlign: "right",
-};
-
-const figureBlockStyle: CSSProperties = {
-  marginTop: 9,
-  padding: "6px 7px",
-  background: "rgba(0, 0, 0, 0.32)",
-  border: "1px solid rgba(255, 255, 255, 0.16)",
-  borderRadius: 4,
-  fontSize: 9,
-  lineHeight: 1.25,
-};
-
-const figureLabelStyle: CSSProperties = {
-  marginBottom: 4,
-  fontSize: 9,
-  fontWeight: 700,
-};
-
-const axisTickRowStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-  gap: 4,
-  marginTop: 4,
-  fontVariantNumeric: "tabular-nums",
-};
-
-const targetSelectorStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(74px, 1fr))",
-  gap: 5,
-  marginTop: 9,
-};
-
-const targetButtonBaseStyle: CSSProperties = {
-  border: "1px solid rgba(255, 255, 255, 0.18)",
-  borderRadius: 6,
-  background: "rgba(255, 255, 255, 0.07)",
-  fontFamily: TECHNICAL_MONO_FONT,
-  fontSize: 9,
-  lineHeight: 1.1,
-  padding: "5px 6px",
-  cursor: "pointer",
 };
 
 const fineControlLabelStyle: CSSProperties = {
@@ -218,6 +161,91 @@ const closeButtonStyle: CSSProperties = {
   padding: "3px 7px",
   cursor: "pointer",
 };
+
+const mtCellPointsHeaderStyle: CSSProperties = {
+  ...compactQuickLegendRowStyle,
+  marginBottom: 10,
+};
+
+const mtCellPointsPrimaryButtonStyle: CSSProperties = {
+  ...compactQuickLegendPrimaryButtonBaseStyle,
+  width: 164,
+};
+
+function mtCellPointsPrimaryStyle(visible: boolean): CSSProperties {
+  return {
+    ...mtCellPointsPrimaryButtonStyle,
+    background: visible ? "#f4f5f7" : QUICK_LEGEND_INACTIVE_BACKGROUND,
+    opacity: visible ? 1 : 0.82,
+    cursor: "pointer",
+  };
+}
+
+function mtCellPointsIconStyle(
+  active: boolean,
+  available: boolean,
+): CSSProperties {
+  return {
+    ...compactQuickLegendIconButtonBaseStyle,
+    background: !available
+      ? QUICK_LEGEND_INACTIVE_BACKGROUND
+      : active
+        ? "#f4f5f7"
+        : "rgba(244, 245, 247, 0.46)",
+    opacity: available ? 1 : 0.68,
+    cursor: available ? "pointer" : "default",
+  };
+}
+
+function MtCellPointsIcon({
+  kind,
+}: {
+  kind: "full-cloud" | "spectrum" | "controls";
+}) {
+  if (kind === "full-cloud") {
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M7 18h10a4 4 0 0 0 .5-7.97 6 6 0 0 0-11.11-1.9A4.8 4.8 0 0 0 7 18Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (kind === "spectrum") {
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M4 17h16M6 13l3-5 4 7 3-5 2 3"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h8M16 17h4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="16" cy="7" r="2" fill="currentColor" />
+      <circle cx="8" cy="12" r="2" fill="currentColor" />
+      <circle cx="14" cy="17" r="2" fill="currentColor" />
+    </svg>
+  );
+}
 
 function styleString(
   style: EditableStyle,
@@ -510,44 +538,33 @@ function edgeHandleStyle(leftPercent: number, color: string): CSSProperties {
   };
 }
 
-type ScalarLegendLayer = "volume" | "full-density" | "slices" | "preview";
-
-function scalarLegendLayerLabel(layer: ScalarLegendLayer): string {
-  if (layer === "volume") return "Volume";
-  if (layer === "full-density") return "Full density";
-  if (layer === "slices") return "Slices";
-  return "Preview";
+function fullCloudScalarLegendStyle(style: EditableStyle): EditableStyle {
+  const colorMin = styleNumber(style, "scalarDisplayMin", DEFAULT_MIN);
+  const rawColorMax = styleNumber(style, "scalarDisplayMax", DEFAULT_MAX);
+  const colorMax = Math.max(rawColorMax, colorMin + 0.000001);
+  const sourceMin = Math.min(DEFAULT_SOURCE_MIN, colorMin);
+  const sourceMax = Math.max(DEFAULT_SOURCE_MAX, colorMax);
+  return {
+    ...style,
+    scalarFocusMin: sourceMin,
+    scalarBlendMin: sourceMin,
+    scalarBlendMax: sourceMax,
+    scalarFocusMax: sourceMax,
+    scalarNoiseThreshold: 0,
+    scalarEdgeLineWidth: 0,
+  };
 }
 
-function scalarLegendLayerSubtitle(layer: ScalarLegendLayer): string {
-  if (layer === "volume") return "Scalar volume";
-  if (layer === "full-density") return "Full-density model";
-  if (layer === "slices") return "Authored slices";
-  return "Point preview";
-}
-
-function scalarLegendSubtitleLine(layer: ScalarLegendLayer): string {
-  if (layer === "volume") return "Scalar - log10";
-  return `${scalarLegendLayerSubtitle(layer)} - log10 resistivity`;
-}
-
-function activeScalarLayers(visible: Set<string>): ScalarLegendLayer[] {
-  const layers: ScalarLegendLayer[] = [];
-  if (visible.has(MT_RESISTIVITY_FULL_DENSITY_LAYER_ID)) {
-    layers.push("full-density");
-  }
-  if (visible.has(MT_RESISTIVITY_VOLUME_LAYER_ID)) layers.push("volume");
-  if (visible.has(MT_RESISTIVITY_SLICES_LAYER_ID)) layers.push("slices");
-  if (visible.has(MT_RESISTIVITY_PREVIEW_LAYER_ID)) layers.push("preview");
-  return layers;
-}
-
-function metadataString(
-  layer: { metadata?: Record<string, unknown> } | undefined,
-  key: string,
-): string | undefined {
-  const value = layer?.metadata?.[key];
-  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+function mtCellPointsModeTransitionScopeKey({
+  projectSlug,
+  editingEnvironment,
+  pageId,
+  writePageId,
+  layerId,
+}: MtCellPointsModeTransitionScopeArgs): string {
+  const pageScope = editingEnvironment ? "environment" : (pageId ?? "no-page");
+  const writeScope = writePageId ?? "no-write-page";
+  return `${projectSlug}:${pageScope}:${writeScope}:${layerId}`;
 }
 
 export function ResistivityLegend({
@@ -563,21 +580,25 @@ export function ResistivityLegend({
     state,
     sceneHandle,
     setEnvLayerStyle,
+    toggleEnvDefaultVisible,
     setPageLayerOverride,
+    setPageVisibilityOverride,
     canApplyLiveSceneEdits,
   } = useEditor();
   const { pages, currentIndex, transitionFrame } = usePageController();
   const rootRef = useRef<HTMLElement | null>(null);
   const rampRef = useRef<HTMLDivElement | null>(null);
   const edgePopoverRef = useRef<HTMLDivElement | null>(null);
+  const modeTransitionFrameRef = useRef<number | null>(null);
+  const modeTransitionTokenRef = useRef(0);
+  const modeTransitionScopeKeyRef = useRef<string | null>(null);
   const [edgePopoverOpen, setEdgePopoverOpen] = useState(false);
+  const [modeTransitionTarget, setModeTransitionTarget] =
+    useState<MtCellPointsMode | null>(null);
   const [edgePopoverPosition, setEdgePopoverPosition] = useState({
     left: EDGE_POPOVER_MARGIN_PX,
     top: EDGE_POPOVER_MARGIN_PX,
   });
-  const [selectedLayer, setSelectedLayer] = useState<ScalarLegendLayer | null>(
-    null,
-  );
   useEffect(() => {
     if (!edgePopoverOpen) return;
     const update = () => {
@@ -593,14 +614,20 @@ export function ResistivityLegend({
       window.removeEventListener("resize", update);
     };
   }, [edgePopoverOpen]);
-  if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
-  const legendTextColors = resolveLegendTextColors(
-    state.environment.scene?.gui?.overlay,
-  );
+  useEffect(() => {
+    return () => {
+      modeTransitionTokenRef.current += 1;
+      if (modeTransitionFrameRef.current !== null) {
+        window.cancelAnimationFrame(modeTransitionFrameRef.current);
+        modeTransitionFrameRef.current = null;
+      }
+    };
+  }, []);
 
   const sourceIndex = transitionFrame.sourceIndex;
   const targetIndex = transitionFrame.targetIndex;
   const transitionActive = transitionFrame.active;
+  const layerId = UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID;
   const controllerPage =
     pageOverride ??
     pages[targetIndex ?? sourceIndex] ??
@@ -621,6 +648,35 @@ export function ResistivityLegend({
       ? controllerPage
       : selectedPage ?? controllerPage);
   const writePage = authoringPage ?? page;
+  const modeTransitionScopeKey = mtCellPointsModeTransitionScopeKey({
+    projectSlug: state.projectSlug,
+    editingEnvironment,
+    pageId: page?.id ?? null,
+    writePageId: writePage?.id ?? null,
+    layerId,
+  });
+  useLayoutEffect(() => {
+    const previousScopeKey = modeTransitionScopeKeyRef.current;
+    modeTransitionScopeKeyRef.current = modeTransitionScopeKey;
+    if (
+      previousScopeKey === null ||
+      previousScopeKey === modeTransitionScopeKey
+    ) {
+      return;
+    }
+    modeTransitionTokenRef.current += 1;
+    if (modeTransitionFrameRef.current !== null) {
+      window.cancelAnimationFrame(modeTransitionFrameRef.current);
+      modeTransitionFrameRef.current = null;
+    }
+    setModeTransitionTarget(null);
+    setEdgePopoverOpen(false);
+  }, [modeTransitionScopeKey]);
+
+  if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
+  const legendTextColors = resolveLegendTextColors(
+    state.environment.scene?.gui?.overlay,
+  );
   if (!page) return null;
   const pageEnvironment = resolveEnvironmentForPage(
     state.environment,
@@ -631,23 +687,17 @@ export function ResistivityLegend({
   const visible = editingEnvironment
     ? new Set(state.environment.defaultVisibleLayers)
     : effectiveVisibility(pageEnvironment, page);
-  const visibleScalarLayers = activeScalarLayers(visible);
-  const activeLayer =
-    selectedLayer && visibleScalarLayers.includes(selectedLayer)
-      ? selectedLayer
-      : visibleScalarLayers[0] ?? null;
-  if (!activeLayer) {
+  const pointCloudVisible = visible.has(layerId);
+  const pointCloudExplicitPageOverride =
+    writePage?.visibilityOverrides?.[layerId] !== undefined;
+  if (
+    !pointCloudVisible &&
+    !pointCloudExplicitPageOverride &&
+    !editingEnvironment
+  ) {
     return null;
   }
 
-  const layerId =
-    activeLayer === "volume"
-      ? MT_RESISTIVITY_VOLUME_LAYER_ID
-      : activeLayer === "full-density"
-      ? MT_RESISTIVITY_FULL_DENSITY_LAYER_ID
-      : activeLayer === "slices"
-      ? MT_RESISTIVITY_SLICES_LAYER_ID
-      : MT_RESISTIVITY_PREVIEW_LAYER_ID;
   const targetStyle = editingEnvironment
     ? state.environment.layerStyles[layerId] ?? {}
     : effectiveStyle(pageEnvironment, page, layerId);
@@ -669,25 +719,22 @@ export function ResistivityLegend({
           transitionFrame.progress,
         )
       : targetStyle;
-  if (!styleBoolean(style, "scalarLegendVisible", true)) return null;
-  const manifestLayer = state.manifest.layers.find(
-    (candidate) => candidate.id === layerId,
-  );
-  const selectedSliceId =
-    typeof style.resistivitySelectedSliceId === "string"
-      ? style.resistivitySelectedSliceId
-      : DEFAULT_MT_RESISTIVITY_SLICE_ID;
-  const selectedSlice =
-    activeLayer === "slices"
-      ? mtResistivitySliceById(selectedSliceId) ??
-        mtResistivitySliceById(DEFAULT_MT_RESISTIVITY_SLICE_ID)
-      : undefined;
-  const figureModel = selectedSlice
-    ? buildMtResistivityFigureModel({
-        slice: selectedSlice,
-        sourceOrigin: metadataString(manifestLayer, "sourceOrigin"),
-      })
-    : null;
+  const targetMode: MtCellPointsMode = styleBoolean(
+    targetStyle,
+    "scalarLegendVisible",
+    true,
+  )
+    ? "spectrum"
+    : "full-cloud";
+  const displayedMode = modeTransitionTarget ?? targetMode;
+  const spectrumBodyVisible =
+    pointCloudVisible &&
+    (displayedMode === "spectrum" ||
+      (modeTransitionTarget === "full-cloud" && targetMode === "spectrum"));
+  const controlsAvailable =
+    pointCloudVisible &&
+    targetMode === "spectrum" &&
+    modeTransitionTarget === null;
 
   const lowColor = styleString(style, "scalarColorLow", DEFAULT_LOW);
   const midColor = styleString(style, "scalarColorMid", DEFAULT_MID);
@@ -698,16 +745,12 @@ export function ResistivityLegend({
   const sourceMin = Math.min(DEFAULT_SOURCE_MIN, colorMin);
   const sourceMax = Math.max(DEFAULT_SOURCE_MAX, colorMax);
   const trimMin = clamp(
-    activeLayer === "volume"
-      ? styleNumber(style, "scalarVolumeThresholdMin", sourceMin)
-      : styleNumber(style, "scalarFocusMin", sourceMin),
+    styleNumber(style, "scalarFocusMin", sourceMin),
     sourceMin,
     sourceMax,
   );
   const trimMax = clamp(
-    activeLayer === "volume"
-      ? styleNumber(style, "scalarVolumeThresholdMax", sourceMax)
-      : styleNumber(style, "scalarFocusMax", sourceMax),
+    styleNumber(style, "scalarFocusMax", sourceMax),
     trimMin,
     sourceMax,
   );
@@ -814,10 +857,6 @@ export function ResistivityLegend({
       scalarBlendMin: nextBlendMin,
       scalarBlendMax: nextBlendMax,
     };
-    if (activeLayer === "volume") {
-      patch.scalarVolumeThresholdMin = nextTrimMin;
-      patch.scalarVolumeThresholdMax = nextTrimMax;
-    }
     if (canApplyLiveSceneEdits()) {
       sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
     }
@@ -836,6 +875,111 @@ export function ResistivityLegend({
     } else if (writePage) {
       setPageLayerOverride(writePage.id, layerId, patch);
     }
+  };
+  const setPointCloudVisible = (nextVisible: boolean) => {
+    if (!nextVisible) setEdgePopoverOpen(false);
+    if (editingEnvironment) {
+      const currentlyDefaultVisible =
+        state.environment.defaultVisibleLayers.includes(layerId);
+      if (currentlyDefaultVisible !== nextVisible) {
+        toggleEnvDefaultVisible(layerId);
+      }
+      return;
+    }
+    if (writePage) {
+      setPageVisibilityOverride(writePage.id, layerId, nextVisible);
+    }
+  };
+  const persistMtCellPointsMode = (mode: MtCellPointsMode) => {
+    const patch: Partial<EditableStyle> = {
+      scalarLegendVisible: mode === "spectrum",
+      scalarInclusionMode: mode === "spectrum" ? "thresholded" : "all-valid",
+    };
+    if (editingEnvironment) {
+      setEnvLayerStyle(layerId, patch);
+    } else if (writePage) {
+      setPageLayerOverride(writePage.id, layerId, patch);
+    }
+  };
+  const applyLiveMtCellPointsStyle = (nextStyle: EditableStyle) => {
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyStyle(layerId, nextStyle);
+    }
+  };
+  const setMtCellPointsMode = (nextMode: MtCellPointsMode) => {
+    if (!pointCloudVisible || nextMode === displayedMode) return;
+    if (modeTransitionFrameRef.current !== null) {
+      window.cancelAnimationFrame(modeTransitionFrameRef.current);
+      modeTransitionFrameRef.current = null;
+    }
+    const transitionToken = modeTransitionTokenRef.current + 1;
+    modeTransitionTokenRef.current = transitionToken;
+    const transitionScopeKey =
+      modeTransitionScopeKeyRef.current ?? modeTransitionScopeKey;
+    setEdgePopoverOpen(false);
+    setModeTransitionTarget(nextMode);
+
+    const authoredSpectrumStyle: EditableStyle = {
+      ...style,
+      scalarLegendVisible: true,
+      scalarInclusionMode: "thresholded",
+    };
+    const fullCloudPreviewStyle: EditableStyle = {
+      ...fullCloudScalarLegendStyle(style),
+      scalarLegendVisible: true,
+      scalarInclusionMode: "thresholded",
+    };
+    const fromStyle =
+      nextMode === "spectrum" ? fullCloudPreviewStyle : authoredSpectrumStyle;
+    const toStyle =
+      nextMode === "spectrum" ? authoredSpectrumStyle : fullCloudPreviewStyle;
+    const startMs = window.performance.now();
+    const tick = (nowMs: number) => {
+      if (
+        transitionToken !== modeTransitionTokenRef.current ||
+        transitionScopeKey !== modeTransitionScopeKeyRef.current
+      ) {
+        modeTransitionFrameRef.current = null;
+        return;
+      }
+      const progress = clamp(
+        (nowMs - startMs) / MT_CELL_POINTS_MODE_TRANSITION_MS,
+        0,
+        1,
+      );
+      const eased = easeProgress(progress, "easeInOutSine");
+      const liveStyle = interpolatedScalarLegendStyle(
+        fromStyle,
+        toStyle,
+        eased,
+      );
+      applyLiveMtCellPointsStyle({
+        ...liveStyle,
+        scalarLegendVisible: true,
+        scalarInclusionMode: "thresholded",
+      });
+      if (progress < 1) {
+        modeTransitionFrameRef.current = window.requestAnimationFrame(tick);
+        return;
+      }
+      modeTransitionFrameRef.current = null;
+      persistMtCellPointsMode(nextMode);
+      applyLiveMtCellPointsStyle(
+        nextMode === "spectrum"
+          ? {
+              ...style,
+              scalarLegendVisible: true,
+              scalarInclusionMode: "thresholded",
+            }
+          : {
+              ...fullCloudScalarLegendStyle(style),
+              scalarLegendVisible: false,
+              scalarInclusionMode: "all-valid",
+            },
+      );
+      setModeTransitionTarget(null);
+    };
+    modeTransitionFrameRef.current = window.requestAnimationFrame(tick);
   };
   const setEdgeValue = (handle: EdgeHandle, value: number) => {
     const patch: Partial<EditableStyle> =
@@ -983,47 +1127,81 @@ export function ResistivityLegend({
               bottom: LEGEND_BOTTOM_EDGE_OFFSET_PX,
             }),
       }}
-      aria-label="Utah FORGE MT resistivity color legend"
+      aria-label="MT Cell Points legend"
     >
-      <div style={headerRowStyle}>
-        <h2 style={{ ...titleStyle, color: legendTextColors.heading }}>
-          MT resistivity
-        </h2>
-        <div style={{ ...subtitleStyle, color: legendTextColors.subtext }}>
-          {scalarLegendSubtitleLine(activeLayer)}
+      <div style={mtCellPointsHeaderStyle}>
+        <button
+          type="button"
+          data-testid={testId("resistivity-legend-master-toggle")}
+          aria-pressed={pointCloudVisible}
+          title={pointCloudVisible ? "Hide MT Cell Points" : "Show MT Cell Points"}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() => setPointCloudVisible(!pointCloudVisible)}
+          style={mtCellPointsPrimaryStyle(pointCloudVisible)}
+        >
+          MT Cell Points
+        </button>
+        <div
+          role="radiogroup"
+          aria-label="MT Cell Points view"
+          style={{ display: "contents" }}
+        >
+          <button
+            type="button"
+            role="radio"
+            aria-checked={displayedMode === "full-cloud"}
+            data-testid={testId("resistivity-legend-full-cloud-toggle")}
+            title="Full Cloud"
+            disabled={
+              !pointCloudVisible ||
+              displayedMode === "full-cloud" ||
+              modeTransitionTarget !== null
+            }
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => setMtCellPointsMode("full-cloud")}
+            style={mtCellPointsIconStyle(
+              displayedMode === "full-cloud",
+              pointCloudVisible,
+            )}
+          >
+            <MtCellPointsIcon kind="full-cloud" />
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={displayedMode === "spectrum"}
+            data-testid={testId("resistivity-legend-spectrum-toggle")}
+            title="Spectrum"
+            disabled={
+              !pointCloudVisible ||
+              displayedMode === "spectrum" ||
+              modeTransitionTarget !== null
+            }
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => setMtCellPointsMode("spectrum")}
+            style={mtCellPointsIconStyle(
+              displayedMode === "spectrum",
+              pointCloudVisible,
+            )}
+          >
+            <MtCellPointsIcon kind="spectrum" />
+          </button>
         </div>
+        <button
+          type="button"
+          data-testid={testId("resistivity-legend-controls-toggle")}
+          aria-expanded={controlsAvailable && edgePopoverOpen}
+          title="MT Cell Points controls"
+          disabled={!controlsAvailable}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() => setEdgePopoverOpen((open) => !open)}
+          style={mtCellPointsIconStyle(edgePopoverOpen, controlsAvailable)}
+        >
+          <MtCellPointsIcon kind="controls" />
+        </button>
       </div>
-      {visibleScalarLayers.length > 1 ? (
-        <div style={targetSelectorStyle} aria-label="MT resistivity legend target">
-          {visibleScalarLayers.map((layer) => {
-            const selected = layer === activeLayer;
-            return (
-              <button
-                key={layer}
-                type="button"
-                data-testid={testId(`resistivity-legend-target-${layer}`)}
-                title={`Control ${scalarLegendLayerSubtitle(layer).toLowerCase()}`}
-                onPointerDown={(event) => event.stopPropagation()}
-                onClick={() => setSelectedLayer(layer)}
-                style={{
-                  ...targetButtonBaseStyle,
-                  border: selected
-                    ? "1px solid rgba(255, 255, 255, 0.55)"
-                    : targetButtonBaseStyle.border,
-                  background: selected
-                    ? "rgba(255, 255, 255, 0.18)"
-                    : targetButtonBaseStyle.background,
-                  color: selected
-                    ? legendTextColors.heading
-                    : legendTextColors.body,
-                }}
-              >
-                {scalarLegendLayerLabel(layer)}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
+      {spectrumBodyVisible ? (
+        <>
       <div
         ref={rampRef}
         style={rampWrapStyle}
@@ -1166,45 +1344,9 @@ export function ResistivityLegend({
           {formatOhmMFromLog(colorMax)}
         </div>
       </div>
-      {figureModel ? (
-        <>
-          <div
-            style={{ ...figureBlockStyle, color: legendTextColors.body }}
-            data-testid={testId("resistivity-primary-axis")}
-          >
-            <div style={{ ...figureLabelStyle, color: legendTextColors.heading }}>
-              {figureModel.primaryAxis.heading} ({figureModel.primaryAxis.unit})
-            </div>
-            <div style={axisTickRowStyle}>
-              {figureModel.primaryAxis.ticks.map((tick) => (
-                <span key={`${tick.value}-${tick.label}`}>{tick.label}</span>
-              ))}
-            </div>
-            {figureModel.horizontalAxis ? (
-              <div style={{ marginTop: 6 }}>
-                {figureModel.horizontalAxis.heading} ({figureModel.horizontalAxis.unit})
-                <div style={axisTickRowStyle}>
-                  {figureModel.horizontalAxis.ticks.map((tick) => (
-                    <span key={`${tick.value}-${tick.label}`}>{tick.label}</span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-          <div
-            style={{ ...figureBlockStyle, color: legendTextColors.subtext }}
-            data-testid={testId("resistivity-figure-box")}
-          >
-            <div style={{ ...figureLabelStyle, color: legendTextColors.heading }}>
-              Figure
-            </div>
-            {figureModel.figureLines.slice(0, 5).map((line) => (
-              <div key={line}>{line}</div>
-            ))}
-          </div>
         </>
       ) : null}
-      {activeLayer !== "volume" && edgePopoverOpen && typeof document !== "undefined"
+      {controlsAvailable && edgePopoverOpen && typeof document !== "undefined"
         ? createPortal(
             (
         <div
@@ -1219,7 +1361,11 @@ export function ResistivityLegend({
           onPointerDown={(event) => event.stopPropagation()}
         >
           <div style={{ ...edgePopoverHeaderStyle, color: legendTextColors.heading }}>
-            <span>Iso line</span>
+            <span>
+              3D MT resistivity full-density model
+              <br />
+              <span style={{ color: legendTextColors.subtext }}>(point cloud)</span>
+            </span>
             <button
               type="button"
               style={{ ...closeButtonStyle, color: legendTextColors.body }}
@@ -1227,6 +1373,22 @@ export function ResistivityLegend({
             >
               Close
             </button>
+          </div>
+          <div
+            style={{
+              ...edgePopoverFullRowStyle,
+              marginBottom: 10,
+              fontSize: 9,
+              lineHeight: 1.35,
+              color: legendTextColors.subtext,
+            }}
+          >
+            Scalar controls target: MT full-density points
+            <br />
+            Inclusion:{" "}
+            {style.scalarInclusionMode === "thresholded"
+              ? "Threshold/filter points"
+              : "All valid points"}
           </div>
           <div style={edgePopoverGridStyle}>
             <label

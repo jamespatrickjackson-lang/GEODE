@@ -3,9 +3,11 @@ import { useEditor } from "../editor/EditorContext";
 import {
   LEGEND_BOTTOM_EDGE_OFFSET_PX,
   LEGEND_PAGE_EDGE_MARGIN_PX,
-  legendCheckboxStyle,
-  legendControlRowStyle,
-  resolveLegendTextColors,
+  QUICK_LEGEND_INACTIVE_BACKGROUND,
+  colorWithAlpha,
+  compactQuickLegendIconButtonBaseStyle,
+  compactQuickLegendPrimaryButtonBaseStyle,
+  compactQuickLegendRowStyle,
   transparentLegendPanelStyle,
 } from "./legendStyles";
 import { ENVIRONMENT_SENTINEL } from "../editor/types";
@@ -32,6 +34,7 @@ const AXIS_COLORS = {
 } as const;
 const SCENE_SECTION_AXES = ["x", "y", "z"] as const;
 type SceneSectionLegendAxis = (typeof SCENE_SECTION_AXES)[number];
+type LegendToggleKind = "flip" | "controls" | "groundTrace" | "axes";
 
 const rootStyle: CSSProperties = {
   ...transparentLegendPanelStyle,
@@ -41,45 +44,25 @@ const rootStyle: CSSProperties = {
   minWidth: 220,
 };
 
-const titleStyle: CSSProperties = {
-  margin: 0,
-  fontSize: 12,
-  lineHeight: 1.15,
-  fontWeight: 700,
-};
-
 const rowStyle: CSSProperties = {
-  ...legendControlRowStyle(),
-  fontSize: 10,
-  alignItems: "flex-start",
+  ...compactQuickLegendRowStyle,
+  marginTop: 8,
 };
 
 const firstRowStyle: CSSProperties = {
   ...rowStyle,
-  ...legendControlRowStyle({ first: true }),
+  marginTop: 0,
 };
 
 const axisGroupStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "64px repeat(5, auto)",
-  alignItems: "center",
-  columnGap: 7,
-  rowGap: 4,
-  width: "100%",
+  ...compactQuickLegendRowStyle,
+  minWidth: 0,
 };
 
-const axisLabelStyle: CSSProperties = {
-  minWidth: 0,
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-};
-
-const compactLabelStyle: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 3,
-  minWidth: 0,
+const iconSpacerStyle: CSSProperties = {
+  height: 24,
+  flex: "0 0 24px",
+  width: 24,
 };
 
 function styleBoolean(
@@ -98,6 +81,101 @@ function frameBoolean(
 ): boolean {
   const value = frame[key];
   return typeof value === "boolean" ? value : fallback;
+}
+
+function sectionButtonLabel(
+  label: string,
+  axis: SceneSectionLegendAxis,
+): string {
+  const trimmed = label.replace(/\s*frame\s*$/i, "").trim();
+  return trimmed || `${axis.toUpperCase()} Section`;
+}
+
+function axisButtonStyle(color: string, active: boolean): CSSProperties {
+  return {
+    ...compactQuickLegendPrimaryButtonBaseStyle,
+    background: colorWithAlpha(color, active ? 1 : 0.36),
+    boxShadow: "none",
+  };
+}
+
+function iconButtonStyle(color: string, available: boolean): CSSProperties {
+  return {
+    ...compactQuickLegendIconButtonBaseStyle,
+    background: available
+      ? colorWithAlpha(color, 1)
+      : QUICK_LEGEND_INACTIVE_BACKGROUND,
+    opacity: available ? 1 : 0.82,
+    cursor: available ? "pointer" : "default",
+    boxShadow: "none",
+  };
+}
+
+function LegendToggleIcon({ kind }: { kind: LegendToggleKind }) {
+  if (kind === "flip") {
+    return (
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+        <path
+          d="M8 8 4 12l4 4M4 12h16M16 8l4 4-4 4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (kind === "controls") {
+    return (
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+        <path
+          d="M5 7h14M5 12h14M5 17h14"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <circle cx="9" cy="7" r="2" fill="currentColor" />
+        <circle cx="15" cy="12" r="2" fill="currentColor" />
+        <circle cx="11" cy="17" r="2" fill="currentColor" />
+      </svg>
+    );
+  }
+  if (kind === "groundTrace") {
+    return (
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+        <path
+          d="M4 15c3-6 5 3 8-3s5 3 8-2"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M5 18h14"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          opacity="0.72"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+      <path
+        d="M6 18V5M6 18h13M6 9h4M11 18v-4M16 18v-7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 function builtInFrameId(axis: SceneSectionLegendAxis): string {
@@ -213,9 +291,6 @@ export function SceneSectionLegend({
   } = useEditor();
   const { pages, currentIndex, transitionFrame } = usePageController();
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
-  const legendTextColors = resolveLegendTextColors(
-    state.environment.scene?.gui?.overlay,
-  );
 
   const allAuthoringPages = [...state.pages, ...state.archivedPages];
   const targetIndex = transitionFrame.targetIndex;
@@ -250,14 +325,6 @@ export function SceneSectionLegend({
   if (style.sceneSectionEnabled !== true) return null;
   if (!styleBoolean(style, "sceneSectionLegendVisible", true)) return null;
 
-  const bodyRowStyle: CSSProperties = {
-    ...rowStyle,
-    color: legendTextColors.body,
-  };
-  const firstBodyRowStyle: CSSProperties = {
-    ...firstRowStyle,
-    color: legendTextColors.body,
-  };
   const commit = (patch: Partial<EditableStyle>) => {
     const merged = { ...style, ...patch };
     if (canApplyLiveSceneEdits()) {
@@ -321,110 +388,96 @@ export function SceneSectionLegend({
       }}
       aria-label="Utah FORGE scene section plane legend"
     >
-      <h2 style={{ ...titleStyle, color: legendTextColors.heading }}>
-        Section Planes
-      </h2>
       {SCENE_SECTION_AXES.map((axis, index) => {
         const model = axisModel(style, axis);
+        const axisColor = AXIS_COLORS[axis];
+        const axisLabel = sectionButtonLabel(model.label, axis);
         return (
-          <div key={axis} style={index === 0 ? firstBodyRowStyle : bodyRowStyle}>
+          <div key={axis} style={index === 0 ? firstRowStyle : rowStyle}>
             <div style={axisGroupStyle}>
-              <span style={{ ...axisLabelStyle, color: AXIS_COLORS[axis] }}>
-                <strong>{model.label}</strong>
-              </span>
-              <label style={compactLabelStyle}>
-                <input
-                  type="checkbox"
-                  aria-label={`${model.label} Show`}
-                  checked={model.shown}
-                  data-testid={`scene-section-legend-${axis}-show`}
-                  onChange={(event) =>
-                    setAxisPlanePatch(axis, {
-                      enabled: event.currentTarget.checked,
-                    })
-                  }
-                  style={legendCheckboxStyle(model.shown, {
-                    checkedColor: AXIS_COLORS[axis],
-                  })}
-                />
-                <span>Show</span>
-              </label>
-              <label style={compactLabelStyle}>
-                <input
-                  type="checkbox"
-                  aria-label={`${model.label} Flip`}
-                  checked={model.flipped}
-                  disabled={!model.shown}
-                  data-testid={`scene-section-legend-${axis}-flip`}
-                  onChange={(event) =>
-                    setAxisPlanePatch(axis, {
-                      invert: event.currentTarget.checked,
-                    })
-                  }
-                  style={legendCheckboxStyle(model.flipped, {
-                    checkedColor: AXIS_COLORS[axis],
-                  })}
-                />
-                <span>Flip</span>
-              </label>
-              <label style={compactLabelStyle}>
-                <input
-                  type="checkbox"
-                  aria-label={`${model.label} Controls`}
-                  checked={model.controlsVisible}
-                  disabled={!model.shown}
-                  data-testid={`scene-section-legend-${axis}-controls`}
-                  onChange={(event) =>
-                    setAxisFramePatch(axis, {
-                      controlsVisible: event.currentTarget.checked,
-                    })
-                  }
-                  style={legendCheckboxStyle(model.controlsVisible, {
-                    checkedColor: AXIS_COLORS[axis],
-                  })}
-                />
-                <span>Controls</span>
-              </label>
+              <button
+                type="button"
+                aria-label={`${axisLabel} Show`}
+                aria-pressed={model.shown}
+                title={`${axisLabel} Show`}
+                data-testid={`scene-section-legend-${axis}-show`}
+                onClick={() =>
+                  setAxisPlanePatch(axis, {
+                    enabled: !model.shown,
+                  })
+                }
+                style={axisButtonStyle(axisColor, model.shown)}
+              >
+                {axisLabel}
+              </button>
+              <button
+                type="button"
+                aria-label={`${axisLabel} Controls`}
+                aria-pressed={model.controlsVisible}
+                title="Controls"
+                disabled={!model.shown}
+                data-testid={`scene-section-legend-${axis}-controls`}
+                onClick={() =>
+                  setAxisFramePatch(axis, {
+                    controlsVisible: !model.controlsVisible,
+                  })
+                }
+                style={iconButtonStyle(axisColor, model.shown)}
+              >
+                <LegendToggleIcon kind="controls" />
+              </button>
+              <button
+                type="button"
+                aria-label={`${axisLabel} Flip`}
+                aria-pressed={model.flipped}
+                title="Flip side"
+                disabled={!model.shown}
+                data-testid={`scene-section-legend-${axis}-flip`}
+                onClick={() =>
+                  setAxisPlanePatch(axis, {
+                    invert: !model.flipped,
+                  })
+                }
+                style={iconButtonStyle(axisColor, model.shown)}
+              >
+                <LegendToggleIcon kind="flip" />
+              </button>
+              <button
+                type="button"
+                aria-label={`${axisLabel} Scale axes`}
+                aria-pressed={model.axesVisible}
+                title="Scale axes"
+                disabled={!model.shown}
+                data-testid={`scene-section-legend-${axis}-axes-visible`}
+                onClick={() =>
+                  setAxisFramePatch(axis, {
+                    axesVisible: !model.axesVisible,
+                  })
+                }
+                style={iconButtonStyle(axisColor, model.shown)}
+              >
+                <LegendToggleIcon kind="axes" />
+              </button>
               {axis !== "z" ? (
-                <label style={compactLabelStyle}>
-                  <input
-                    type="checkbox"
-                    aria-label={`${model.label} Ground trace`}
-                    checked={model.groundTraceVisible}
-                    disabled={!model.shown}
-                    data-testid={`scene-section-legend-${axis}-ground-trace-visible`}
-                    onChange={(event) =>
-                      setAxisFramePatch(axis, {
-                        groundTraceVisible: event.currentTarget.checked,
-                      })
-                    }
-                    style={legendCheckboxStyle(model.groundTraceVisible, {
-                      checkedColor: AXIS_COLORS[axis],
-                    })}
-                  />
-                  <span>Ground trace</span>
-                </label>
-              ) : (
-                <span aria-hidden="true" />
-              )}
-              <label style={compactLabelStyle}>
-                <input
-                  type="checkbox"
-                  aria-label={`${model.label} Scale axes`}
-                  checked={model.axesVisible}
+                <button
+                  type="button"
+                  aria-label={`${axisLabel} Ground trace`}
+                  aria-pressed={model.groundTraceVisible}
+                  title="Ground trace"
                   disabled={!model.shown}
-                  data-testid={`scene-section-legend-${axis}-axes-visible`}
-                  onChange={(event) =>
+                  data-testid={`scene-section-legend-${axis}-ground-trace-visible`}
+                  onClick={() =>
                     setAxisFramePatch(axis, {
-                      axesVisible: event.currentTarget.checked,
+                      groundTraceVisible: !model.groundTraceVisible,
                     })
                   }
-                  style={legendCheckboxStyle(model.axesVisible, {
-                    checkedColor: AXIS_COLORS[axis],
-                  })}
-                />
-                <span>Scale axes</span>
-              </label>
+                  style={iconButtonStyle(axisColor, model.shown)}
+                >
+                  <LegendToggleIcon kind="groundTrace" />
+                </button>
+              ) : (
+                <span aria-hidden="true" style={iconSpacerStyle} />
+              )}
             </div>
           </div>
         );

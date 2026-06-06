@@ -31,6 +31,140 @@ import {
 
 test.setTimeout(900_000);
 
+test("MT Cell Points legend toggles full-density points and filters in Spectrum mode", async ({
+  page,
+}) => {
+  await page.goto("/?project=utah-forge", {
+    waitUntil: "networkidle",
+  });
+  await expect(page.locator("body")).toContainText("Utah FORGE", {
+    timeout: 90_000,
+  });
+
+  const toggle = page.getByTestId("resistivity-legend-master-toggle");
+  const fullCloud = page.getByTestId("resistivity-legend-full-cloud-toggle");
+  const spectrum = page.getByTestId("resistivity-legend-spectrum-toggle");
+  const controls = page.getByTestId("resistivity-legend-controls-toggle");
+  await expect(toggle).toBeVisible({ timeout: 60_000 });
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await expect(toggle).toHaveText("MT Cell Points");
+  await expect(page.getByTestId("resistivity-legend-track")).toBeVisible();
+  await expect(spectrum).toHaveAttribute("aria-checked", "true");
+  await expect(fullCloud).toHaveAttribute("aria-checked", "false");
+  await expect(spectrum).toBeDisabled();
+  await expect(fullCloud).toBeEnabled();
+
+  const initialFullDensity = await mtFullDensityPointSceneState(page);
+  expect(initialFullDensity.layerVisible).toBe(true);
+  expect(initialFullDensity.indexedVisiblePointCount).toBe(
+    initialFullDensity.totalPointCount,
+  );
+  const initialVolume = await mtVolumeSceneState(page);
+  const volumeInitiallyVisible = initialVolume.volumeLayerVisible;
+  const thresholdInitiallyVisible = initialVolume.thresholdLayerVisible;
+
+  await fullCloud.click();
+  await expect(fullCloud).toHaveAttribute("aria-pressed", "true");
+  await expect(fullCloud).toHaveAttribute("aria-checked", "true");
+  await expect(spectrum).toHaveAttribute("aria-checked", "false");
+  await expect(fullCloud).toBeDisabled();
+  await expect(spectrum).toBeEnabled();
+  await expect(page.getByTestId("resistivity-legend-track")).toBeHidden();
+  await expect(controls).toBeDisabled();
+  const fullCloudFullDensity = await mtFullDensityPointSceneState(page);
+  expect(fullCloudFullDensity.layerVisible).toBe(true);
+  expect(fullCloudFullDensity.indexedVisiblePointCount).toBe(
+    fullCloudFullDensity.totalPointCount,
+  );
+  const afterFullCloudVolume = await mtVolumeSceneState(page);
+  expect(afterFullCloudVolume.volumeLayerVisible).toBe(volumeInitiallyVisible);
+  expect(afterFullCloudVolume.thresholdLayerVisible).toBe(
+    thresholdInitiallyVisible,
+  );
+
+  await spectrum.click();
+  await expect(spectrum).toHaveAttribute("aria-pressed", "true");
+  await expect(spectrum).toHaveAttribute("aria-checked", "true");
+  await expect(fullCloud).toHaveAttribute("aria-checked", "false");
+  await expect(spectrum).toBeDisabled();
+  await expect(fullCloud).toBeEnabled();
+  await expect(page.getByTestId("resistivity-legend-track")).toBeVisible();
+  await expect(controls).toBeEnabled();
+
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByTestId("resistivity-legend-track")).toBeHidden();
+  await expect
+    .poll(() =>
+      mtFullDensityPointSceneState(page).then((state) => state.layerVisible),
+    )
+    .toBe(false);
+  const afterOffVolume = await mtVolumeSceneState(page);
+  expect(afterOffVolume.volumeLayerVisible).toBe(volumeInitiallyVisible);
+  expect(afterOffVolume.thresholdLayerVisible).toBe(thresholdInitiallyVisible);
+
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("resistivity-legend-track")).toBeVisible();
+  await expect
+    .poll(() =>
+      mtFullDensityPointSceneState(page).then((state) => state.layerVisible),
+    )
+    .toBe(true);
+  expect((await mtVolumeSceneState(page)).volumeLayerVisible).toBe(
+    volumeInitiallyVisible,
+  );
+  await controls.click();
+  const popout = page.getByTestId("resistivity-legend-controls-popout");
+  await expect(popout).toBeVisible();
+  await expect(popout).toContainText("MT Cell Points full-density model");
+  await expect(popout).toContainText("(point cloud)");
+  await expect(popout).toContainText(
+    "Scalar controls target: MT full-density points",
+  );
+
+  const restoredFullDensity = await mtFullDensityPointSceneState(page);
+  expect(restoredFullDensity.layerVisible).toBe(true);
+  const beforeTrimCanvas = await page.locator("canvas").screenshot();
+  const trackBox = await page
+    .getByTestId("resistivity-legend-track")
+    .boundingBox();
+  const focusMinBox = await page
+    .getByTestId("resistivity-legend-focusMin")
+    .boundingBox();
+  expect(trackBox).not.toBeNull();
+  expect(focusMinBox).not.toBeNull();
+  if (trackBox && focusMinBox) {
+    await page.mouse.move(
+      focusMinBox.x + focusMinBox.width / 2,
+      focusMinBox.y + focusMinBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(trackBox.x + trackBox.width * 0.52, trackBox.y + 8, {
+      steps: 6,
+    });
+    await page.mouse.up();
+  }
+  const afterTrimCanvas = await page.locator("canvas").screenshot();
+  expect(changedByteCount(beforeTrimCanvas, afterTrimCanvas)).toBeGreaterThan(
+    1000,
+  );
+  await expect
+    .poll(() =>
+      mtFullDensityPointSceneState(page).then(
+        (state) => state.indexedVisiblePointCount,
+      ),
+    )
+    .toBeLessThan(restoredFullDensity.totalPointCount);
+  const afterTrimFullDensity = await mtFullDensityPointSceneState(page);
+  expect(afterTrimFullDensity.indexedVisiblePointCount).toBeLessThan(
+    afterTrimFullDensity.totalPointCount,
+  );
+  expect(afterTrimFullDensity.totalPointCount).toBe(
+    restoredFullDensity.totalPointCount,
+  );
+});
+
 test("Utah FORGE full-density MT point cloud renders all-valid and thresholded states", async ({
   page,
 }) => {

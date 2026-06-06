@@ -133,6 +133,57 @@ Current color swatch toggle examples:
 - Section plane rows: `X Section`, `Y Section`, `Z Section`.
 - MT surface boundary rows under `MT Threshold Boundaries`.
 
+## Compact quick legend geometry
+
+- Scene Section, Section ISO, and MT threshold boundary quick legends use the
+  shared compact quick-legend helpers in `src/ui/legendStyles.ts`.
+- Primary pills are centered compact buttons; icon buttons are centered compact
+  circles. Do not hand-tune local quick-legend widths, alignment, font sizes, or
+  icon centering without adding a documented exception.
+- Inactive quick-legend buttons use the shared inactive gray. Active parent
+  rows keep full color; unavailable child actions may dim only through the
+  shared inactive/transparent state.
+- Controls opener buttons use row availability, not popout-open state.
+- `MT Cell Points` uses the same compact quick-legend geometry. Its title
+  toggles only `utah-forge-mt-resistivity-full-density`; volume, slices, QA
+  preview, Section ISO, scene sections, and threshold products stay under their
+  own owners.
+- `Full Cloud` and `Spectrum` are exclusive MT Cell Points modes. Full Cloud
+  hides the compact spectrum body and shows the full point cloud; Spectrum shows
+  the trim/feather controls and enables threshold/filter points. Mode changes
+  use the 1.5s slider-style scalar transition and must preserve authored scalar
+  values for the next Spectrum use.
+- Full Cloud display suppresses scalar edge-line overlays while preserving
+  authored edge-line settings. Final mode persistence writes only
+  `scalarLegendVisible` and `scalarInclusionMode`.
+- Local MT Cell Points mode animations are app-level view transitions. They
+  must be scoped to the current effective page context and canceled/ignored when
+  navigation changes that context, so a stale animation cannot overwrite an
+  already-Spectrum page with an old Full Cloud style.
+- When the editor is on Global Settings/page 00, `previewEnvironmentBase` may
+  strip unrelated page deltas, but it must preserve MT Cell Points authored
+  Spectrum scalar fields for the full-density point cloud. A Spectrum-authored
+  page must load with its scalar window and edge-line detail without requiring a
+  Full Cloud/Spectrum click. Fix this through the Utah FORGE preview field map,
+  not through page fixtures or transition internals such as
+  `scalarInclusionFilterActive`, `SCALAR_TRANSITION_STYLE_FIELDS`, or
+  `full-density-scalar`.
+- During page transitions, the MT Cell Points header state is the target
+  authored mode. Interpolated scalar style may drive the ramp and handles only.
+  Spectrum pages with line controls on must use transition-time scalar tween
+  ownership: register the full-density scalar tween at transition setup so
+  scalar edge-line overlays rebuild through the page-transition clock. Do not use
+  a final-commit replay of target visibility or styles to make missing lines
+  appear; that creates a visible jump.
+- Once a page is settled, a suppressed target-page reapply may refresh only the
+  full-density point-cloud style so page-load Spectrum edge lines build. That
+  narrow refresh must skip active scalar tweens and must not replay full page
+  visibility/styles.
+- No page-id, page-index, fixture-title, project page, or environment fixture
+  special cases are allowed for viewport quick legends. Do not edit
+  `projects/*/pages/**`, `projects/*/overlays/**`, `projects/*/project.json`,
+  or `projects/*/environment.json` for quick-legend behavior.
+
 ## Legend Copy Rules
 
 - Keep viewport legend copy compact and technical.
@@ -150,10 +201,10 @@ Current color swatch toggle examples:
   - Dataset selector belongs in `Options`, not in the main legend body.
   - Do not show selected-target count subtitles such as `2/2 ...`
 - MT resistivity legend:
-  - Heading and subtitle render in one horizontal header row.
-  - Volume subtitle: `Scalar - log10`
-  - Volume opacity, density, and sample-step fine controls are hidden in the
-    viewport legend.
+  - Live point-cloud bar label: `MT Cell Points`.
+  - The title button is point-cloud visibility only.
+  - `Full Cloud` and `Spectrum` are exclusive mode buttons.
+  - Volume is handled by a separate owner, not this legend.
 - MT threshold boundaries legend:
   - Heading: `MT Threshold Boundaries`
   - No subtitle.
@@ -183,6 +234,12 @@ Current color swatch toggle examples:
 - Surface boundary rows use their color circles as show/hide controls for each
   MT threshold boundary. Hidden rows stay listed while the boundary opacity is
   non-zero so they can be restored from the legend.
+- MT threshold boundary all-off maps are treated as empty/stale visibility
+  state. If the threshold-boundary layer is visible and no canonical or legacy
+  boundary is active, the resolver inherits default boundary visibility so
+  page-to-page navigation does not land on a visible line product with no lines.
+  Hide the threshold-boundary layer to hide all boundary lines; do not repair
+  this with page-level fixture edits.
 - Section ISO keeps quick controls in the main legend as one stack: `ISO
   overlay`, optional `Show volume`, then `Options` at the bottom.
 - Section ISO dataset selection and detailed line/band controls live in the

@@ -18,6 +18,13 @@ export const legendControlSpacing = {
   firstRowMarginTopPx: 11.475,
   rowMarginTopPx: 9,
 } as const;
+export const QUICK_LEGEND_INACTIVE_BACKGROUND =
+  "rgba(128, 134, 145, 0.38)";
+export const QUICK_LEGEND_PRIMARY_WIDTH_PX = 108;
+export const QUICK_LEGEND_PRIMARY_HEIGHT_PX = 28;
+export const QUICK_LEGEND_ICON_SIZE_PX = 24;
+export const QUICK_LEGEND_BUTTON_GAP_PX = 6;
+export const QUICK_LEGEND_STACK_GAP_PX = 7;
 
 const LEGEND_CHECKBOX_OFF_COLOR = "rgba(132, 136, 145, 0.46)";
 const LEGEND_CHECKBOX_ON_COLOR = vibrancyLabel;
@@ -42,6 +49,15 @@ export function resolveLegendTextColors(
   };
 }
 
+export function colorWithAlpha(hexColor: string, alpha: number): string {
+  const normalized = hexColor.replace("#", "");
+  if (normalized.length !== 6) return hexColor;
+  const red = Number.parseInt(normalized.slice(0, 2), 16);
+  const green = Number.parseInt(normalized.slice(2, 4), 16);
+  const blue = Number.parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
 export const transparentLegendPanelStyle: CSSProperties = {
   position: "absolute",
   zIndex: 11,
@@ -57,6 +73,66 @@ export const transparentLegendPanelStyle: CSSProperties = {
   boxShadow: "none",
   backdropFilter: "none",
   WebkitBackdropFilter: "none",
+};
+
+export const compactQuickLegendRowStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 6,
+  width: "100%",
+  boxSizing: "border-box",
+  fontSize: 10,
+  flexWrap: "nowrap",
+};
+
+export const compactQuickLegendStackStyle: CSSProperties = {
+  display: "grid",
+  gap: 7,
+};
+
+export const compactQuickLegendPrimaryButtonBaseStyle: CSSProperties = {
+  appearance: "none",
+  WebkitAppearance: "none",
+  borderRadius: 999,
+  border: 0,
+  flex: "0 0 108px",
+  width: 108,
+  height: 28,
+  justifyContent: "center",
+  padding: "0 12px",
+  boxSizing: "border-box",
+  display: "inline-flex",
+  alignItems: "center",
+  fontFamily: TECHNICAL_MONO_FONT,
+  fontSize: 11,
+  fontWeight: 700,
+  lineHeight: 1,
+  letterSpacing: 0,
+  color: "#101216",
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+  minWidth: 0,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  outline: "none",
+};
+
+export const compactQuickLegendIconButtonBaseStyle: CSSProperties = {
+  appearance: "none",
+  WebkitAppearance: "none",
+  borderRadius: 999,
+  border: 0,
+  flex: "0 0 24px",
+  width: 24,
+  height: 24,
+  justifyContent: "center",
+  padding: 0,
+  display: "inline-flex",
+  alignItems: "center",
+  boxSizing: "border-box",
+  color: "#101216",
+  cursor: "pointer",
+  outline: "none",
 };
 
 export function legendCheckboxStyle(

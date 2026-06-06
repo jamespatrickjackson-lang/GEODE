@@ -5,11 +5,12 @@ import {
   TECHNICAL_MONO_FONT,
 } from "../editor/styles";
 import {
+  QUICK_LEGEND_INACTIVE_BACKGROUND,
+  colorWithAlpha,
+  compactQuickLegendPrimaryButtonBaseStyle,
+  compactQuickLegendStackStyle,
   LEGEND_BOTTOM_EDGE_OFFSET_PX,
   LEGEND_PAGE_EDGE_MARGIN_PX,
-  legendCheckboxStyle,
-  legendControlRowStyle,
-  resolveLegendTextColors,
   transparentLegendPanelStyle,
 } from "./legendStyles";
 import {
@@ -34,20 +35,27 @@ const MT_THRESHOLD_SURFACES_LAYER_ID =
 const rootStyle: CSSProperties = {
   ...transparentLegendPanelStyle,
   fontFamily: TECHNICAL_MONO_FONT,
-};
-
-const titleStyle: CSSProperties = {
-  margin: 0,
-  fontSize: 12,
-  lineHeight: 1.15,
-  fontWeight: 700,
+  minWidth: 220,
 };
 
 const rowStyle: CSSProperties = {
-  ...legendControlRowStyle(),
-  fontSize: 10,
-  lineHeight: 1.2,
+  ...compactQuickLegendStackStyle,
 };
+
+const boundaryButtonBaseStyle: CSSProperties = {
+  ...compactQuickLegendPrimaryButtonBaseStyle,
+};
+
+function boundaryButtonStyle(color: string, active: boolean): CSSProperties {
+  return {
+    ...boundaryButtonBaseStyle,
+    background: active ? colorWithAlpha(color, 1) : QUICK_LEGEND_INACTIVE_BACKGROUND,
+  };
+}
+
+function boundaryLegendLabel(label: string): string {
+  return `MT ${label.replace(/\s+(Ohm-m)\b/g, "$1")}`;
+}
 
 export function MtSurfaceBoundaryLegend({
   stacked = false,
@@ -65,9 +73,6 @@ export function MtSurfaceBoundaryLegend({
   } = useEditor();
   const { pages, currentIndex, transitionFrame } = usePageController();
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
-  const legendTextColors = resolveLegendTextColors(
-    state.environment.scene?.gui?.overlay,
-  );
 
   const targetIndex = transitionFrame.targetIndex;
   const controllerPage =
@@ -175,30 +180,25 @@ export function MtSurfaceBoundaryLegend({
       }}
       aria-label="MT threshold boundaries legend"
     >
-      <h2 style={{ ...titleStyle, color: legendTextColors.heading }}>
-        MT Threshold Boundaries
-      </h2>
-      {boundaries.map((boundary) => (
-        <label
-          key={boundary.id}
-          style={{ ...rowStyle, color: legendTextColors.body }}
-        >
-          <input
-            type="checkbox"
-            aria-label={`${boundary.label} surface boundary`}
-            checked={boundary.visible}
-            onChange={(event) =>
-              setBoundaryVisibility(boundary.id, event.currentTarget.checked)
-            }
-            style={legendCheckboxStyle(boundary.visible, {
-              checkedColor: boundary.color,
-            })}
-          />
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {boundary.label}
-          </span>
-        </label>
-      ))}
+      <div style={rowStyle}>
+        {boundaries.map((boundary) => {
+          const label = boundaryLegendLabel(boundary.label);
+          return (
+            <button
+              key={boundary.id}
+              type="button"
+              aria-label={`${label} surface boundary`}
+              aria-pressed={boundary.visible}
+              title={label}
+              data-testid={`mt-boundary-legend-${boundary.id}`}
+              onClick={() => setBoundaryVisibility(boundary.id, !boundary.visible)}
+              style={boundaryButtonStyle(boundary.color, boundary.visible)}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
     </aside>
   );
 }

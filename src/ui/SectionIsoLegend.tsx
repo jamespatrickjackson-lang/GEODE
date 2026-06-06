@@ -9,8 +9,12 @@ import {
 import {
   LEGEND_BOTTOM_EDGE_OFFSET_PX,
   LEGEND_PAGE_EDGE_MARGIN_PX,
+  QUICK_LEGEND_INACTIVE_BACKGROUND,
+  compactQuickLegendIconButtonBaseStyle,
+  compactQuickLegendPrimaryButtonBaseStyle,
+  compactQuickLegendRowStyle,
+  compactQuickLegendStackStyle,
   legendCheckboxStyle,
-  legendControlRowStyle,
   resolveLegendTextColors,
   transparentLegendPanelStyle,
 } from "./legendStyles";
@@ -30,36 +34,23 @@ import type {
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const POPOVER_WIDTH_PX = 312;
 const POPOVER_MARGIN_PX = 12;
+const ISO_BUTTON_ACTIVE_BACKGROUND = "#ffffff";
+const ISO_BUTTON_ACTIVE_SUB_INACTIVE_BACKGROUND = "rgba(255, 255, 255, 0.36)";
+const ISO_BUTTON_INACTIVE_BACKGROUND = QUICK_LEGEND_INACTIVE_BACKGROUND;
+const ISO_BUTTON_DISABLED_BACKGROUND = "rgba(128, 134, 145, 0.24)";
 
 const rootStyle: CSSProperties = {
   ...transparentLegendPanelStyle,
   padding: 13,
+  minWidth: 220,
 };
 
-const titleStyle: CSSProperties = {
-  margin: 0,
-  fontSize: 12,
-  lineHeight: 1.15,
-  fontWeight: 700,
+const quickStackStyle: CSSProperties = {
+  ...compactQuickLegendStackStyle,
 };
 
 const rowStyle: CSSProperties = {
-  display: "grid",
-  marginTop: 10,
-  fontSize: 10,
-};
-
-const toggleStackStyle: CSSProperties = {
-  display: "grid",
-};
-
-const toggleLabelStyle: CSSProperties = {
-  ...legendControlRowStyle(),
-};
-
-const firstToggleLabelStyle: CSSProperties = {
-  ...toggleLabelStyle,
-  marginTop: 0,
+  ...compactQuickLegendRowStyle,
 };
 
 const closeButtonStyle: CSSProperties = {
@@ -143,6 +134,14 @@ const targetListStyle: CSSProperties = {
   background: "rgba(255, 255, 255, 0.04)",
 };
 
+const primaryButtonBaseStyle: CSSProperties = {
+  ...compactQuickLegendPrimaryButtonBaseStyle,
+};
+
+const iconButtonBaseStyle: CSSProperties = {
+  ...compactQuickLegendIconButtonBaseStyle,
+};
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -165,6 +164,151 @@ function styleBoolean(
 ): boolean {
   const value = style[key];
   return typeof value === "boolean" ? value : fallback;
+}
+
+function quickButtonBackground({
+  active,
+  parentActive,
+  disabled,
+}: {
+  active: boolean;
+  parentActive: boolean;
+  disabled?: boolean;
+}): string {
+  if (disabled) return ISO_BUTTON_DISABLED_BACKGROUND;
+  if (active) return ISO_BUTTON_ACTIVE_BACKGROUND;
+  if (parentActive) return ISO_BUTTON_ACTIVE_SUB_INACTIVE_BACKGROUND;
+  return ISO_BUTTON_INACTIVE_BACKGROUND;
+}
+
+function primaryButtonStyle(active: boolean, disabled = false): CSSProperties {
+  return {
+    ...primaryButtonBaseStyle,
+    background: quickButtonBackground({
+      active,
+      parentActive: active,
+      disabled,
+    }),
+    opacity: 1,
+    cursor: disabled ? "default" : "pointer",
+  };
+}
+
+function availabilityIconButtonStyle({
+  available,
+  disabled,
+}: {
+  available: boolean;
+  disabled?: boolean;
+}): CSSProperties {
+  return {
+    ...iconButtonBaseStyle,
+    background: quickButtonBackground({
+      active: available,
+      parentActive: available,
+      disabled,
+    }),
+    opacity: 1,
+    cursor: disabled ? "default" : "pointer",
+  };
+}
+
+function stateIconButtonStyle({
+  active,
+  parentActive,
+  disabled,
+}: {
+  active: boolean;
+  parentActive: boolean;
+  disabled?: boolean;
+}): CSSProperties {
+  return {
+    ...iconButtonBaseStyle,
+    background: quickButtonBackground({ active, parentActive, disabled }),
+    opacity: 1,
+    cursor: disabled ? "default" : "pointer",
+  };
+}
+
+type IsoLegendIconKind =
+  | "sectionControls"
+  | "volumeControls"
+  | "removeEmpty"
+  | "lines"
+  | "bands";
+
+function IsoLegendIcon({ kind }: { kind: IsoLegendIconKind }) {
+  if (kind === "volumeControls") {
+    return (
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+        <path
+          d="M5 7h14M5 12h14M5 17h14"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <circle cx="9" cy="7" r="2" fill="currentColor" />
+        <circle cx="15" cy="12" r="2" fill="currentColor" />
+        <circle cx="11" cy="17" r="2" fill="currentColor" />
+      </svg>
+    );
+  }
+  if (kind === "sectionControls") {
+    return (
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+        <path
+          d="M5 7h14M5 12h14M5 17h14"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <circle cx="9" cy="7" r="2" fill="currentColor" />
+        <circle cx="15" cy="12" r="2" fill="currentColor" />
+        <circle cx="11" cy="17" r="2" fill="currentColor" />
+      </svg>
+    );
+  }
+  if (kind === "removeEmpty") {
+    return (
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+        <path
+          d="M5 7h14M8 7l1 13h6l1-13M10 11v5M14 11v5M10 4h4l1 3"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (kind === "lines") {
+    return (
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+        <path
+          d="M5 8h14M5 12h14M5 16h14"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+      <path
+        d="M6 16c3-7 5 5 8-2s4 2 6-4M6 19c3-7 5 5 8-2s4 2 6-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 function positionForLegend(
@@ -428,6 +572,9 @@ export function SectionIsoLegend({
   );
   const showVolume = sourceOpacity > 0.001;
   const supportsVolumeToggle = groupSupportsVolumeToggle(resolvedGroup);
+  const maskVisible = styleBoolean(style, "scalarVolumeMaskVisible", true);
+  const bandsActive = enabled && bandsVisible;
+  const linesActive = enabled && linesVisible;
   const targetIds =
     typeof style.sectionIsoTargetIds === "object" &&
     style.sectionIsoTargetIds !== null
@@ -473,6 +620,11 @@ export function SectionIsoLegend({
       ...patch,
     });
   };
+  const setSectionEnabled = (nextEnabled: boolean) => {
+    commit({
+      sectionIsoEnabled: nextEnabled ? overlayVisibleForPatch({}) : false,
+    });
+  };
   const setTargetSelected = (target: ScalarSectionIsoTarget, checked: boolean) => {
     const nextTargetIds = {
       ...targetIds,
@@ -502,57 +654,122 @@ export function SectionIsoLegend({
       aria-label="Scalar section ISO legend"
       data-testid="section-iso-legend"
     >
-      <h2 style={{ ...titleStyle, color: legendTextColors.heading }}>
-        Section ISO
-      </h2>
-      <div style={{ ...rowStyle, color: legendTextColors.body }}>
-        <div style={toggleStackStyle}>
-          <label style={firstToggleLabelStyle}>
-            <input
-              type="checkbox"
-              data-testid="section-iso-toggle"
-              checked={enabled}
-              onChange={(event) =>
-                commit({ sectionIsoEnabled: event.currentTarget.checked })
-              }
-              style={legendCheckboxStyle(enabled, {
-                checkedColor: legendTextColors.heading,
-              })}
-            />
-            ISO overlay
-          </label>
-          {supportsVolumeToggle ? (
-            <label style={toggleLabelStyle}>
-              <input
-                type="checkbox"
-                data-testid="section-iso-show-volume"
-                checked={showVolume}
-                onChange={(event) =>
-                  commit({
-                    sectionIsoSourceOpacity: event.currentTarget.checked ? 1 : 0,
-                  })
-                }
-                style={legendCheckboxStyle(showVolume, {
-                  checkedColor: legendTextColors.heading,
-                })}
-              />
-              Show volume
-            </label>
-          ) : null}
-          <label style={toggleLabelStyle}>
-            <input
-              type="checkbox"
-              data-testid="section-iso-configure"
-              checked={popoverOpen}
-              onChange={(event) =>
-                setPopoverOpen(event.currentTarget.checked)
-              }
-              style={legendCheckboxStyle(popoverOpen, {
-                checkedColor: legendTextColors.heading,
-              })}
-            />
-            Options
-          </label>
+      <div style={quickStackStyle}>
+        <div style={rowStyle}>
+          <button
+            type="button"
+            aria-label="ISO Volume"
+            aria-pressed={supportsVolumeToggle && showVolume}
+            data-testid="section-iso-show-volume"
+            title="ISO Volume"
+            disabled={!supportsVolumeToggle}
+            onClick={() =>
+              commit({
+                sectionIsoSourceOpacity: showVolume ? 0 : 1,
+              })
+            }
+            style={primaryButtonStyle(
+              supportsVolumeToggle && showVolume,
+              !supportsVolumeToggle,
+            )}
+          >
+            ISO Volume
+          </button>
+          <button
+            type="button"
+            aria-label="ISO Volume controls"
+            aria-pressed={supportsVolumeToggle && showVolume}
+            aria-expanded={popoverOpen}
+            data-testid="section-iso-volume-controls"
+            title="ISO Volume controls"
+            disabled={!supportsVolumeToggle}
+            onClick={() => setPopoverOpen((current) => !current)}
+            style={availabilityIconButtonStyle({
+              available: supportsVolumeToggle && showVolume,
+              disabled: !supportsVolumeToggle,
+            })}
+          >
+            <IsoLegendIcon kind="volumeControls" />
+          </button>
+          <button
+            type="button"
+            aria-label="Remove empty"
+            aria-pressed={supportsVolumeToggle && showVolume && maskVisible}
+            data-testid="section-iso-remove-empty"
+            title="Remove empty"
+            disabled={!supportsVolumeToggle}
+            onClick={() =>
+              commit({
+                scalarVolumeMaskVisible: !maskVisible,
+              })
+            }
+            style={stateIconButtonStyle({
+              active: supportsVolumeToggle && showVolume && maskVisible,
+              parentActive: supportsVolumeToggle && showVolume,
+              disabled: !supportsVolumeToggle,
+            })}
+          >
+            <IsoLegendIcon kind="removeEmpty" />
+          </button>
+        </div>
+        <div style={rowStyle}>
+          <button
+            type="button"
+            aria-label="ISO Section"
+            aria-pressed={enabled}
+            data-testid="section-iso-section-toggle"
+            title="ISO Section"
+            onClick={() => setSectionEnabled(!enabled)}
+            style={primaryButtonStyle(enabled)}
+          >
+            ISO Section
+          </button>
+          <button
+            type="button"
+            aria-label="ISO Section controls"
+            aria-pressed={enabled}
+            aria-expanded={popoverOpen}
+            data-testid="section-iso-configure"
+            title="ISO Section controls"
+            onClick={() => setPopoverOpen((current) => !current)}
+            style={availabilityIconButtonStyle({
+              available: enabled,
+            })}
+          >
+            <IsoLegendIcon kind="sectionControls" />
+          </button>
+          <button
+            type="button"
+            aria-label="ISO Lines"
+            aria-pressed={linesActive}
+            data-testid="section-iso-lines-quick"
+            title="ISO Lines"
+            onClick={() =>
+              commitIsoOverlayPatch({ sectionIsoLinesVisible: !linesActive })
+            }
+            style={stateIconButtonStyle({
+              active: linesActive,
+              parentActive: enabled,
+            })}
+          >
+            <IsoLegendIcon kind="lines" />
+          </button>
+          <button
+            type="button"
+            aria-label="ISO Bands"
+            aria-pressed={bandsActive}
+            data-testid="section-iso-bands-quick"
+            title="ISO Bands"
+            onClick={() =>
+              commitIsoOverlayPatch({ sectionIsoBandsVisible: !bandsActive })
+            }
+            style={stateIconButtonStyle({
+              active: bandsActive,
+              parentActive: enabled,
+            })}
+          >
+            <IsoLegendIcon kind="bands" />
+          </button>
         </div>
       </div>
       {popoverOpen && typeof document !== "undefined"

@@ -18,10 +18,12 @@ Shared vocabulary for these states lives in `docs/dev-context/GeoSee-Terms.md`.
 - `npm run check:workspace`: report-only. Use this before commits and verification to see whether local sketch or excluded user work is present.
 - `npm run check:workspace -- --commit`: commit-scope policy. Fails only when staged paths mix snapshot-sensitive files with unrelated categories, or when the staged set is broadly mixed across too many categories.
 - `npm run check:workspace -- --broad`: broad-verification policy. Fails when snapshot-sensitive local files are dirty, because broad snapshot/browser results would describe local sketch state rather than committed repo state.
+- `npm run check:visual-qa-clean`: named visual-QA policy. This runs the broad-verification policy and should be run before and after agent-driven browser/editor checks that may trigger dev persistence.
 
 ## Command Tiers
 
 - Workspace state: `npm run check:workspace`
+- Visual/browser QA cleanliness: `npm run check:visual-qa-clean`
 - Static page/project wiring: `npm run check:pages`
 - Active context-drag markers: `npm run check:agent-drag`
 - Runtime asset wiring: `npm run check:runtime-assets`
@@ -40,7 +42,7 @@ Shared vocabulary for these states lives in `docs/dev-context/GeoSee-Terms.md`.
 - Layer file or runtime data path changes: add `npm run check:runtime-assets`.
 - Utah derived/data product changes: add `npm run check:utah-runtime`.
 - Utah presentation sketch changes: use `npm run check:utah-snapshot` only when the sketch state is intentionally being checked.
-- Browser/render/editor behavior: use the smallest targeted Utah browser script that covers the changed behavior.
+- Browser/render/editor behavior: run `npm run check:visual-qa-clean` before opening the app and again after closing the app, then use the smallest targeted Utah browser script that covers the changed behavior. If the after-check finds snapshot-sensitive files, stop and treat the browser evidence as contaminated by disposable page or overlay state until those files are reverted, stashed, or intentionally accepted.
 - Full `npm run test:utah-forge` is broad regression only, not default iteration. Treat it as committed-state evidence only when `npm run check:workspace` reports no relevant local sketch files.
 
 ## Dev Server Rule

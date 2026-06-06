@@ -184,7 +184,10 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
   await page.getByTestId("section-iso-configure").click();
   await expect(page.getByTestId("section-iso-popout")).toBeVisible();
   await page.getByTestId("section-iso-popout-dataset").selectOption("mt-slices");
-  await page.getByTestId("section-iso-toggle").setChecked(true);
+  const quickBandsToggle = page.getByTestId("section-iso-bands-quick");
+  if ((await quickBandsToggle.getAttribute("aria-pressed")) !== "true") {
+    await quickBandsToggle.click();
+  }
 
   const activeIsoState = await sectionIsoSceneState(page);
   expect(activeIsoState.targets.length).toBeGreaterThanOrEqual(2);
@@ -248,9 +251,11 @@ test("Utah FORGE MT scalar sections expose selectable ISO lines and bands", asyn
     0,
   );
 
-  const sectionIsoToggle = page.getByTestId("section-iso-toggle");
-  await expect(sectionIsoToggle).toBeVisible();
-  await sectionIsoToggle.setChecked(false);
+  const quickLinesToggle = page.getByTestId("section-iso-lines-quick");
+  await expect(quickLinesToggle).toBeVisible();
+  if ((await quickLinesToggle.getAttribute("aria-pressed")) === "true") {
+    await quickLinesToggle.click();
+  }
   await expect
     .poll(() =>
       sectionIsoSceneState(page).then((state) => ({

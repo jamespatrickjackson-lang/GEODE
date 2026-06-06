@@ -510,14 +510,17 @@ test("Utah FORGE seismic display cleanup and scene sections update runtime state
     '[aria-label="Utah FORGE scene section plane legend"]',
   );
   await expect(sectionLegend).toBeVisible();
-  await expect(sectionLegend).toContainText("Section Planes");
-  await expect(sectionLegend).toContainText("Z Section frame");
+  await expect(sectionLegend).toContainText("Z Section");
   await expect(
-    page.getByTestId("scene-section-legend-z-enabled"),
-  ).toBeChecked();
+    page.getByTestId("scene-section-legend-z-show"),
+  ).toHaveAttribute("aria-pressed", "true");
 
-  await page.getByTestId("scene-section-legend-x-enabled").setChecked(true);
-  await page.getByTestId("scene-section-legend-y-enabled").setChecked(true);
+  for (const axis of ["x", "y"] as const) {
+    const showButton = page.getByTestId(`scene-section-legend-${axis}-show`);
+    if ((await showButton.getAttribute("aria-pressed")) !== "true") {
+      await showButton.click();
+    }
+  }
   await expect
     .poll(() => sceneSectionState(page))
     .toMatchObject({

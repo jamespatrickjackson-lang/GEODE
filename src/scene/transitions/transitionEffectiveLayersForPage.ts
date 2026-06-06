@@ -720,6 +720,9 @@ export function transitionEffectiveLayersForPage(
         targetSceneSectionTransitionActive &&
         fromOpacity > 0.001 &&
         SCENE_SECTION_AFFECTED_LAYER_IDS.has(id);
+      const shouldTweenFullDensityScalarStyle =
+        id === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID &&
+        scalarTransitionStyleChanged(fromStyle, targetStyle);
       const shouldTweenScalarStyle =
         !!group &&
         !shouldCrossfadeDiscreteData &&
@@ -727,7 +730,8 @@ export function transitionEffectiveLayersForPage(
         scalarStyleDurationMs > 0 &&
         fromOpacity > 0.001 &&
         toOpacity > 0.001 &&
-        this.layerSupportsScalarStyleTween(id, group) &&
+        (this.layerSupportsScalarStyleTween(id, group) ||
+          shouldTweenFullDensityScalarStyle) &&
         scalarTransitionStyleChanged(fromStyle, targetStyle);
       const shouldCrossfadeScalarStyle =
         !!group &&

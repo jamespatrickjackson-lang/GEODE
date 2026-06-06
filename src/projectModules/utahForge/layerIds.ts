@@ -17,6 +17,10 @@ export const UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID =
 export const UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID =
   "utah-forge-mt-resistivity-volume";
 
+export const UTAH_FORGE_MT_RESISTIVITY_POINT_CLOUD_LEGEND_LAYER_IDS = [
+  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+] as const;
+
 export const UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID =
   "utah-forge-mt-resistivity-threshold-surfaces";
 

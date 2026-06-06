@@ -51,13 +51,16 @@ export function applyScalarPreviewStyle(this: unknown, id: string, style: Editab
   );
   const midpoint = styleNumber(style, "scalarMidpoint", 0.5, 0.05, 0.95);
   const contrast = styleNumber(style, "scalarContrast", 1, 0.35, 3);
-  const edgeLineWidth = styleNumber(
-    style,
-    "scalarEdgeLineWidth",
-    styleNumber(style, "scalarEdgeHighlight", 0, 0, 1) * 8,
-    0,
-    16,
-  );
+  const scalarLegendVisible = style.scalarLegendVisible !== false;
+  const edgeLineWidth = scalarLegendVisible
+    ? styleNumber(
+        style,
+        "scalarEdgeLineWidth",
+        styleNumber(style, "scalarEdgeHighlight", 0, 0, 1) * 8,
+        0,
+        16,
+      )
+    : 0;
   const edgeAverage = styleNumber(style, "scalarEdgeAverage", 0.45, 0, 1);
   const edgeFillOffset = styleNumber(style, "scalarEdgeFillOffset", 0, -1, 1);
   const edgeLineStyle =

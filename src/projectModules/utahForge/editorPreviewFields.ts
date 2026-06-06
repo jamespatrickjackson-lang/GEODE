@@ -72,20 +72,20 @@ const MT_VOLUME_PREVIEW_FIELDS = [
 ] as const;
 
 const MT_FULL_DENSITY_PREVIEW_FIELDS = [
+  ...MT_SCALAR_WINDOW_FIELDS,
   "scalarInclusionMode",
-  "scalarDistanceLightStrength",
-  "sectionIsoEnabled",
-  "sectionIsoLinesVisible",
-  "sectionIsoBandsVisible",
-  "sectionIsoTargetIds",
-  "sectionIsoMin",
-  "sectionIsoMax",
-  "sectionIsoLevelCount",
-  "sectionIsoLineWidth",
-  "sectionIsoLineStyle",
-  "sectionIsoBandOpacity",
-  "sectionIsoFillOffset",
-  "sectionIsoSourceOpacity",
+  "scalarLegendVisible",
+  "scalarColorLow",
+  "scalarColorMid",
+  "scalarColorHigh",
+  "scalarDisplayMin",
+  "scalarDisplayMax",
+  "scalarMidpoint",
+  "scalarContrast",
+  "scalarSurfaceMaskEnabled",
+  "scalarSurfaceMaskDepthM",
+  "scalarSurfaceMaskFeatherM",
+  "opacity",
 ] as const;
 
 const MT_THRESHOLD_PREVIEW_FIELDS = [
