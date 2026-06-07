@@ -1,0 +1,58 @@
+{
+  "schema": "CaptureStillRenderJobV1",
+  "version": 1,
+  "jobId": "fixture-640x360",
+  "projectSlug": "runtime-test",
+  "pageId": "page-a",
+  "app": {
+    "url": "http://127.0.0.1:5173/?project=runtime-test",
+    "projectSlug": "runtime-test"
+  },
+  "recipe": {
+    "version": 1,
+    "projectSlug": "runtime-test",
+    "pageId": "page-a",
+    "mode": "scene-only",
+    "resolution": {
+      "width": 640,
+      "height": 360,
+      "label": "Fixture"
+    },
+    "fps": 30,
+    "durationSeconds": 0.1,
+    "camera": {
+      "position": [0, 0, 10],
+      "target": [0, 0, 0],
+      "up": [0, 0, 1],
+      "fov": 50
+    },
+    "cameraKeyframes": [],
+    "layerVisibility": {},
+    "layerStyles": {},
+    "environmentState": null,
+    "visualPreset": null,
+    "supersampleScale": 1,
+    "qualityPreset": "preview",
+    "renderFidelity": "max-detail-render",
+    "createdAt": "2026-06-06T00:00:00.000Z",
+    "captureScope": "current-page",
+    "pageRangeStartId": null,
+    "pageRangeEndId": null,
+    "pageRangeTiming": "authored",
+    "equalHoldSeconds": null
+  },
+  "still": {
+    "width": 640,
+    "height": 360,
+    "type": "png",
+    "filename": "capture-still-self-test.png"
+  },
+  "tile": {
+    "width": 320,
+    "height": 180,
+    "overlapPixels": 0
+  },
+  "fidelity": "max-detail-render",
+  "failureReason": "fixture synthetic test",
+  "createdAt": "2026-06-06T00:00:00.000Z"
+}

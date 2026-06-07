@@ -52,14 +52,14 @@ export function editorLayerLabel(layer: ProjectLayerSpec): string {
     [UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID]: "Phase 3 working area",
     [UTAH_FORGE_MT_STATIONS_LAYER_ID]: "GDR 1255 Station Locations",
     [UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID]:
-      "3D MT resistivity full-density model",
+      "3D MT inversion resistivity cell centers",
     [UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID]: "3D MT top surface",
     [UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID]:
       "3D MT top-contact surface",
     [UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID]: "3D MT resistivity preview",
     [UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID]: "2D MT resistivity slices",
     [UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID]: "3D MT resistivity volume",
-    [UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID]: "MT thresholds",
+    [UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID]: "MT iso-resistivity surfaces",
   };
   const label =
     layer.id === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID

@@ -13,8 +13,7 @@ import {
   drillingAssaySummaryStyle,
   nestedControlRowStyle,
   nestedFieldLabelStyle,
-  overrideTagActiveStyle,
-  overrideTagStyle,
+  OverrideStateIndicator,
 } from "../../styleControls";
 import { ToggleButton } from "../env/EnvRows";
 import {
@@ -384,7 +383,7 @@ export function LayerGroupFogControl({
   return (
     <div style={layerGroupFogControlStyle}>
       <div style={layerGroupFogControlRowStyle}>
-        <label style={nestedFieldLabelStyle}>Use fog</label>
+        <label style={nestedFieldLabelStyle}>Fog participation</label>
         <ToggleButton
           editorControlId="layer.fog.use"
           active={allOn}
@@ -398,9 +397,7 @@ export function LayerGroupFogControl({
             }
           }}
         />
-        <span style={mixed ? overrideTagActiveStyle : overrideTagStyle}>
-          {mixed ? "mixed" : allOn ? "included" : "excluded"}
-        </span>
+        <OverrideStateIndicator active={mixed || allOn} />
       </div>
       {!allOff ? (
         <div style={layerGroupFogControlRowStyle}>
@@ -425,11 +422,7 @@ export function LayerGroupFogControl({
               } as React.CSSProperties
             }
           />
-          <span
-            style={densityMixed ? overrideTagActiveStyle : overrideTagStyle}
-          >
-            {densityMixed ? "mixed" : "density"}
-          </span>
+          <OverrideStateIndicator active={densityMixed} />
         </div>
       ) : null}
     </div>

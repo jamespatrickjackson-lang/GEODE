@@ -126,7 +126,7 @@ Tools for magnetotelluric resistivity data. Utah FORGE only. These are the secon
 | --- | --- |
 | **MT Stations** | Marker visibility for the 122 physical MT station locations. Supports a QC data panel and color/size styling. |
 | **MT Station Topo Alignment** | Optional rendered-topo alignment for station markers and labels. Uses the active topo surface height for presentation placement and falls back to source elevation when the surface is unavailable. |
-| **MT Full-Density Points** | Tiled scalar point cloud from the full 1,094,624-point resistivity model. Scalar ramp controls (color gradient, blend range, display range, contrast). |
+| **MT Resistivity Cells** | Tiled MT inversion cell centers from the full 1,094,624-cell resistivity model. Log10 resistivity window controls (color ramp, opacity ramp, display range, contrast). |
 | **MT Volume** | 3D scalar volume renderer. Product selector, raymarch or slice mode, opacity, density, sample step, transfer function, threshold min/max, scalar ramp, and section isoband overlay. |
 | **MT Threshold Surfaces** | Isosurfaces extracted from the scalar volume at user-defined resistivity boundaries. Product selector, boundary definitions editor, per-boundary opacity, wireframe toggle, roughness/metalness, smooth normals, and emissive boost. |
 | **MT Top Surface** | Observed top-envelope mesh derived from the top-most full-density cell-center point per XY column. Surface lift, wireframe, roughness, metalness. |

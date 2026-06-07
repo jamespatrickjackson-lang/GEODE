@@ -255,6 +255,21 @@ function layerVisibilityButtonStyle(
     border: "1px solid transparent",
   };
 }
+
+const elevatedDetailsContentStyle = {
+  ...detailsContentStyle,
+  padding: "4px 0 0 0",
+};
+
+const layerInputHeadingStyle = {
+  margin: "10px 0 3px",
+  color: "rgba(244, 240, 232, 0.62)",
+  fontSize: 10,
+  fontWeight: 800,
+  letterSpacing: 0,
+  textTransform: "uppercase" as const,
+};
+
 function LayerEyeIcon() {
   return (
     <svg
@@ -303,12 +318,11 @@ function LayerEyeOffIcon() {
 
 // LayerPanel has two modes driven by selectedPageId:
 //   "environment"      -> editing the base; controls write env.layerStyles
-//                         and env.defaultVisibleLayers directly. No
-//                         inherited/overridden state.
+//                         and env.defaultVisibleLayers directly.
 //   "<page id>"        -> editing a presentation page. Each control has a
-//                         small override checkbox; if off, the row shows
-//                         the inherited value (greyed); if on, the control
-//                         is active and edits page.layerOverrides.
+//                         small page-value checkbox; if off, the row shows
+//                         the base value (greyed); if on, the control is
+//                         active and edits page.layerOverrides.
 
 export function LayerPanel({
   section = "customer",
@@ -561,9 +575,28 @@ export function LayerPanel({
           {effectiveLayerVisible ? (
             <>
               {!isAreaOutlines ? (
-                <details style={nestedDetailsStyle}>
-                  <summary style={panelStyles.summary}>Appearance</summary>
-                  <div style={detailsContentStyle}>
+                <details
+                  open={isUtahForgeFullDensityScalarLayer ? true : undefined}
+                  style={
+                    isUtahForgeFullDensityScalarLayer
+                      ? {
+                          ...nestedDetailsStyle,
+                          marginTop: 4,
+                          paddingLeft: 0,
+                        }
+                      : nestedDetailsStyle
+                  }
+                >
+                  {isUtahForgeFullDensityScalarLayer ? null : (
+                    <summary style={panelStyles.summary}>Appearance</summary>
+                  )}
+                  <div
+                    style={
+                      isUtahForgeFullDensityScalarLayer
+                        ? elevatedDetailsContentStyle
+                        : detailsContentStyle
+                    }
+                  >
                     {!isAtmosphereVolume &&
                     !isUtahForgeSeismicBrowser &&
                     !isPublicTerrainSurface &&
@@ -909,6 +942,10 @@ export function LayerPanel({
                       />
                     ) : null}
 
+                    {isUtahForgeFullDensityScalarLayer ? (
+                      <div style={layerInputHeadingStyle}>Output</div>
+                    ) : null}
+
                     {isUtahForgeTopSurface ? (
                       <MtTopSurfaceControls
                         style={isEnv ? envStyle : effectiveLayerStyle}
@@ -954,7 +991,7 @@ export function LayerPanel({
 
                     {isUtahForgeScalarLayer ? (
                       <LayerBooleanStyleControl
-                        label="Value legend"
+                        label="Resistivity legend"
                         field={SCALAR_LEGEND_FIELD}
                         fallback={true}
                         style={isEnv ? envStyle : effectiveLayerStyle}
@@ -969,7 +1006,7 @@ export function LayerPanel({
 
                     {isUtahForgeFullDensityScalarLayer ? (
                       <LayerNumberStyleControl
-                        label="Distance light"
+                        label="Distance brightness"
                         field="scalarDistanceLightStrength"
                         fallback={0.35}
                         min={0}
@@ -987,16 +1024,19 @@ export function LayerPanel({
                     ) : null}
 
                     {isUtahForgeFullDensityScalarLayer ? (
-                      <ScalarPointDrawReadout
-                        sceneHandle={sceneHandle}
-                        layerId={layer.id}
-                        inclusionMode={
-                          effectiveLayerStyle.scalarInclusionMode ===
-                          "thresholded"
-                            ? "thresholded"
-                            : "all-valid"
-                        }
-                      />
+                      <>
+                        <div style={layerInputHeadingStyle}>QA</div>
+                        <ScalarPointDrawReadout
+                          sceneHandle={sceneHandle}
+                          layerId={layer.id}
+                          inclusionMode={
+                            effectiveLayerStyle.scalarInclusionMode ===
+                            "thresholded"
+                              ? "thresholded"
+                              : "all-valid"
+                          }
+                        />
+                      </>
                     ) : null}
 
                     {isUtahForgeStationMarkers ? (
@@ -1207,7 +1247,9 @@ export function LayerPanel({
                       />
                     ) : null}
 
-                    {!isPublicSurfaceContextLayer && isEnv ? (
+                    {!isPublicSurfaceContextLayer &&
+                    !isUtahForgeFullDensityScalarLayer &&
+                    isEnv ? (
                       <EnvAffectedByFogRow
                         value={envAffectedByFog}
                         onToggle={() =>
@@ -1216,7 +1258,9 @@ export function LayerPanel({
                           })
                         }
                       />
-                    ) : !isPublicSurfaceContextLayer && currentPage ? (
+                    ) : !isPublicSurfaceContextLayer &&
+                      !isUtahForgeFullDensityScalarLayer &&
+                      currentPage ? (
                       <PageAffectedByFogRow
                         page={currentPage}
                         layerId={layer.id}
@@ -1237,6 +1281,7 @@ export function LayerPanel({
                     ) : null}
 
                     {!isPublicSurfaceContextLayer &&
+                    !isUtahForgeFullDensityScalarLayer &&
                     envAffectedByFog &&
                     isEnv ? (
                       <EnvStyleRow
@@ -1257,6 +1302,7 @@ export function LayerPanel({
                         }
                       />
                     ) : !isPublicSurfaceContextLayer &&
+                      !isUtahForgeFullDensityScalarLayer &&
                       effectiveAffectedByFog &&
                       currentPage ? (
                       <PageStyleRow

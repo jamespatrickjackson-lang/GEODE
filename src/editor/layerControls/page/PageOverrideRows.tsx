@@ -1,6 +1,6 @@
 import { useEditor } from "../../EditorContext";
 import { panelStyles } from "../../styles";
-import { overrideTagActiveStyle, overrideTagStyle } from "../../styleControls";
+import { OverrideStateIndicator } from "../../styleControls";
 import { TransientSlider } from "../../TransientSlider";
 import { renderPresetOptionsForEnvironment } from "../../../pages/renderPresets";
 import type { RenderPresetId } from "../../../pages/types";
@@ -32,9 +32,7 @@ export function PageRenderPresetOverrideRow({
           </option>
         ))}
       </select>
-      <span style={value ? overrideTagActiveStyle : overrideTagStyle}>
-        {value ? "overridden" : "inherited"}
-      </span>
+      <OverrideStateIndicator active={value !== ""} />
     </div>
   );
 }
@@ -73,9 +71,7 @@ export function PageBooleanOverrideRow({
         onChange={(e) => onChange(e.target.checked)}
         title="Force this page on or off"
       />
-      <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {overridden ? "overridden" : "inherited"}
-      </span>
+      <OverrideStateIndicator active={overridden} />
     </div>
   );
 }
@@ -121,11 +117,14 @@ export function PageMoodOverrideRow({
         disabled={!overridden}
         onChange={onChange}
         format={(nextValue) => nextValue.toFixed(2)}
-        style={{ flex: 1, opacity: overridden ? 1 : 0.4 }}
+        style={{
+          flex: "0 1 118px",
+          minWidth: 72,
+          maxWidth: 132,
+          opacity: overridden ? 1 : 0.4,
+        }}
       />
-      <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {overridden ? "overridden" : "inherited"}
-      </span>
+      <OverrideStateIndicator active={overridden} />
     </div>
   );
 }

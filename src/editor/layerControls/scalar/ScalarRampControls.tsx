@@ -3,14 +3,34 @@ import { FROSTED_HAIRLINE, vibrancyLabel, vibrancyTertiaryLabel } from "../../st
 import {
   nestedControlRowStyle,
   nestedFieldLabelStyle,
-  overrideTagActiveStyle,
-  overrideTagStyle,
+  OverrideStateIndicator,
   styleNumber,
   styleString,
 } from "../../styleControls";
 import type { EditableStyle } from "../../../pages/types";
 import { SurfaceGradientColorInput } from "../style/StyleControls";
 import { SCALAR_SOURCE_MAX, SCALAR_SOURCE_MIN } from "../scalarSourceRange";
+
+const scalarGroupHeadingStyle: React.CSSProperties = {
+  margin: "10px 0 3px",
+  color: "rgba(244, 240, 232, 0.62)",
+  fontSize: 10,
+  fontWeight: 800,
+  letterSpacing: 0,
+  textTransform: "uppercase",
+};
+
+const scalarCompactRangeStyle: React.CSSProperties = {
+  flex: "0 1 108px",
+  minWidth: 72,
+  maxWidth: 118,
+};
+
+const scalarCompactSelectStyle: React.CSSProperties = {
+  flex: "0 1 136px",
+  minWidth: 112,
+  maxWidth: 152,
+};
 
 export function ScalarRampControls({
   style,
@@ -89,6 +109,27 @@ export function ScalarRampControls({
     0.35,
     Math.min(3, styleNumber(style, "scalarContrast", 1)),
   );
+  const edgeLineWidth = Math.max(
+    0,
+    Math.min(
+      8,
+      styleNumber(
+        style,
+        "scalarEdgeLineWidth",
+        styleNumber(style, "scalarEdgeHighlight", 0) * 8,
+      ),
+    ),
+  );
+  const edgeAverage = Math.max(
+    0,
+    Math.min(1, styleNumber(style, "scalarEdgeAverage", 0.45)),
+  );
+  const edgeFillOffset = Math.max(
+    -1,
+    Math.min(1, styleNumber(style, "scalarEdgeFillOffset", 0)),
+  );
+  const edgeLineStyle =
+    style.scalarEdgeLineStyle === "dashed" ? "dashed" : "solid";
   const midpointFill = Math.max(0, Math.min(100, midpoint * 100));
   const contrastFill = Math.max(
     0,
@@ -130,6 +171,25 @@ export function ScalarRampControls({
   );
   const valueFill = (value: number) =>
     `${Math.max(0, Math.min(100, ((value - sourceMin) / sourceRange) * 100))}%`;
+  const percentFill = (value: number, min: number, max: number) =>
+    `${Math.max(
+      0,
+      Math.min(100, ((value - min) / Math.max(0.000001, max - min)) * 100),
+    )}%`;
+  const edgeLowerValue = Math.max(
+    trimMin,
+    Math.min(
+      Math.max(trimMin, blendMin),
+      styleNumber(style, "scalarEdgeLowerValue", (trimMin + blendMin) / 2),
+    ),
+  );
+  const edgeUpperValue = Math.max(
+    Math.min(blendMax, trimMax),
+    Math.min(
+      trimMax,
+      styleNumber(style, "scalarEdgeUpperValue", (blendMax + trimMax) / 2),
+    ),
+  );
   const spectrumBackground = `linear-gradient(90deg, ${lowColor} 0%, ${lowColor} ${colorMinFill.toFixed(
     1,
   )}%, ${midColor} ${colorMidFill.toFixed(1)}%, ${highColor} ${colorMaxFill.toFixed(
@@ -138,8 +198,9 @@ export function ScalarRampControls({
 
   return (
     <>
+      <div style={scalarGroupHeadingStyle}>Data</div>
       <div style={nestedControlRowStyle}>
-        <label style={nestedFieldLabelStyle}>Target</label>
+        <label style={nestedFieldLabelStyle}>Dataset</label>
         <span
           style={{
             flex: 1,
@@ -150,7 +211,7 @@ export function ScalarRampControls({
             opacity: controlOpacity,
           }}
         >
-          Scalar controls target: {targetLabel}
+          Dataset: {targetLabel}
         </span>
       </div>
       {fullDensityMode ? (
@@ -169,16 +230,16 @@ export function ScalarRampControls({
                 })
               }
               style={{
-                flex: 1,
+                ...scalarCompactSelectStyle,
                 opacity: controlOpacity,
               }}
             >
-              <option value="all-valid">All valid points</option>
-              <option value="thresholded">Threshold/filter points</option>
+              <option value="all-valid">All valid resistivity cells</option>
+              <option value="thresholded">Filter by log10 resistivity</option>
             </select>
           </div>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Mode note</label>
+            <label style={nestedFieldLabelStyle}>Inclusion rule</label>
             <span
               style={{
                 flex: 1,
@@ -189,12 +250,13 @@ export function ScalarRampControls({
               }}
             >
               {inclusionMode === "thresholded"
-                ? "Trim, feather, and noise can filter drawn points."
-                : "Trim, feather, and noise change visual emphasis; all valid points stay drawn."}
+                ? "Window, fade, and lateral support can filter rendered cells."
+                : "Window, fade, and lateral support adjust visual emphasis; all valid cells stay rendered."}
             </span>
           </div>
+          <div style={scalarGroupHeadingStyle}>Mask</div>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Surface mask</label>
+            <label style={nestedFieldLabelStyle}>Topographic mask</label>
             <input
               type="checkbox"
               checked={style.scalarSurfaceMaskEnabled !== false}
@@ -205,10 +267,10 @@ export function ScalarRampControls({
             />
           </div>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Mask depth</label>
+            <label style={nestedFieldLabelStyle}>Mask depth (m)</label>
             <input
               type="range"
-              aria-label="MT surface mask depth"
+              aria-label="MT topographic mask depth below surface"
               min={0}
               max={500}
               step={5}
@@ -221,7 +283,7 @@ export function ScalarRampControls({
               }
               style={
                 {
-                  flex: 1,
+                  ...scalarCompactRangeStyle,
                   opacity:
                     disabled || style.scalarSurfaceMaskEnabled === false
                       ? 0.4
@@ -235,10 +297,10 @@ export function ScalarRampControls({
             />
           </div>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Mask feather</label>
+            <label style={nestedFieldLabelStyle}>Mask transition (m)</label>
             <input
               type="range"
-              aria-label="MT surface mask feather"
+              aria-label="MT topographic mask transition width"
               min={0}
               max={1000}
               step={10}
@@ -251,7 +313,7 @@ export function ScalarRampControls({
               }
               style={
                 {
-                  flex: 1,
+                  ...scalarCompactRangeStyle,
                   opacity:
                     disabled || style.scalarSurfaceMaskEnabled === false
                       ? 0.4
@@ -267,8 +329,9 @@ export function ScalarRampControls({
           </div>
         </>
       ) : null}
+      <div style={scalarGroupHeadingStyle}>Log10 Resistivity Window</div>
       <div style={nestedControlRowStyle}>
-        <label style={nestedFieldLabelStyle}>Spectrum</label>
+        <label style={nestedFieldLabelStyle}>Log10 resistivity window</label>
         {isPageOverride ? (
           <input
             type="checkbox"
@@ -374,13 +437,12 @@ export function ScalarRampControls({
             : null}
         </div>
         {isPageOverride ? (
-          <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-            {overridden ? "overridden" : "inherited"}
-          </span>
+          <OverrideStateIndicator active={overridden} />
         ) : null}
       </div>
+      <div style={scalarGroupHeadingStyle}>Ramp</div>
       <div style={nestedControlRowStyle}>
-        <label style={nestedFieldLabelStyle}>Colors</label>
+        <label style={nestedFieldLabelStyle}>Resistivity ramp</label>
         <div
           style={{
             flex: 1,
@@ -390,21 +452,21 @@ export function ScalarRampControls({
           }}
         >
           <SurfaceGradientColorInput
-            label="Low"
+            label="Low resistivity"
             value={lowColor}
             disabled={disabled}
             opacity={controlOpacity}
             onChange={(value) => onChange({ scalarColorLow: value })}
           />
           <SurfaceGradientColorInput
-            label="Mid"
+            label="Mid resistivity"
             value={midColor}
             disabled={disabled}
             opacity={controlOpacity}
             onChange={(value) => onChange({ scalarColorMid: value })}
           />
           <SurfaceGradientColorInput
-            label="High"
+            label="High resistivity"
             value={highColor}
             disabled={disabled}
             opacity={controlOpacity}
@@ -414,16 +476,19 @@ export function ScalarRampControls({
       </div>
       {thresholdControlsVisible ? (
         <>
+          <div style={scalarGroupHeadingStyle}>Window limits</div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>
-              {volumeThresholdMode ? "Cut min" : "Trim min"}
+              {volumeThresholdMode
+                ? "Volume min log10(Ohm-m)"
+                : "Window min log10(Ohm-m)"}
             </label>
             <input
               type="range"
               aria-label={
                 volumeThresholdMode
-                  ? "Scalar volume cut minimum"
-                  : "Scalar trim minimum"
+                  ? "MT volume threshold minimum log10 resistivity"
+                  : "Log10 resistivity window minimum"
               }
               min={sourceMin}
               max={sourceMax}
@@ -455,7 +520,7 @@ export function ScalarRampControls({
               }}
               style={
                 {
-                  flex: 1,
+                  ...scalarCompactRangeStyle,
                   opacity: controlOpacity,
                   "--editor-slider-fill": `${trimMinFill}%`,
                 } as React.CSSProperties
@@ -464,14 +529,16 @@ export function ScalarRampControls({
           </div>
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>
-              {volumeThresholdMode ? "Cut max" : "Trim max"}
+              {volumeThresholdMode
+                ? "Volume max log10(Ohm-m)"
+                : "Window max log10(Ohm-m)"}
             </label>
             <input
               type="range"
               aria-label={
                 volumeThresholdMode
-                  ? "Scalar volume cut maximum"
-                  : "Scalar trim maximum"
+                  ? "MT volume threshold maximum log10 resistivity"
+                  : "Log10 resistivity window maximum"
               }
               min={sourceMin}
               max={sourceMax}
@@ -503,7 +570,7 @@ export function ScalarRampControls({
               }}
               style={
                 {
-                  flex: 1,
+                  ...scalarCompactRangeStyle,
                   opacity: controlOpacity,
                   "--editor-slider-fill": `${trimMaxFill}%`,
                 } as React.CSSProperties
@@ -511,10 +578,12 @@ export function ScalarRampControls({
             />
           </div>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Feather min</label>
+            <label style={nestedFieldLabelStyle}>
+              Opacity ramp min log10(Ohm-m)
+            </label>
             <input
               type="range"
-              aria-label="Scalar feather minimum"
+              aria-label="Log10 resistivity opacity ramp minimum"
               min={sourceMin}
               max={sourceMax}
               step={0.01}
@@ -530,7 +599,7 @@ export function ScalarRampControls({
               }
               style={
                 {
-                  flex: 1,
+                  ...scalarCompactRangeStyle,
                   opacity: controlOpacity,
                   "--editor-slider-fill": valueFill(blendMin),
                 } as React.CSSProperties
@@ -538,10 +607,12 @@ export function ScalarRampControls({
             />
           </div>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Feather max</label>
+            <label style={nestedFieldLabelStyle}>
+              Opacity ramp max log10(Ohm-m)
+            </label>
             <input
               type="range"
-              aria-label="Scalar feather maximum"
+              aria-label="Log10 resistivity opacity ramp maximum"
               min={sourceMin}
               max={sourceMax}
               step={0.01}
@@ -557,7 +628,7 @@ export function ScalarRampControls({
               }
               style={
                 {
-                  flex: 1,
+                  ...scalarCompactRangeStyle,
                   opacity: controlOpacity,
                   "--editor-slider-fill": valueFill(blendMax),
                 } as React.CSSProperties
@@ -566,10 +637,10 @@ export function ScalarRampControls({
           </div>
           {fullDensityMode ? (
             <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Noise</label>
+              <label style={nestedFieldLabelStyle}>Lateral support filter</label>
               <input
                 type="range"
-                aria-label="Scalar noise threshold"
+                aria-label="Lateral support filter"
                 min={0}
                 max={1}
                 step={0.01}
@@ -580,7 +651,7 @@ export function ScalarRampControls({
                 }
                 style={
                   {
-                    flex: 1,
+                    ...scalarCompactRangeStyle,
                     opacity: controlOpacity,
                     "--editor-slider-fill": `${Math.round(
                       styleNumber(style, "scalarNoiseThreshold", 0) * 100,
@@ -593,7 +664,7 @@ export function ScalarRampControls({
         </>
       ) : (
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Trim</label>
+          <label style={nestedFieldLabelStyle}>Window</label>
           <span
             style={{
               flex: 1,
@@ -603,13 +674,15 @@ export function ScalarRampControls({
               opacity: controlOpacity,
             }}
           >
-            All-valid mode draws every valid source point. Trim, feather, and
-            noise controls are available in Threshold/filter points mode.
+            All-valid mode renders every valid resistivity cell. Window, fade,
+            and lateral support controls are available in Filter by log10
+            resistivity mode.
           </span>
         </div>
       )}
+      <div style={scalarGroupHeadingStyle}>Ramp shaping</div>
       <div style={nestedControlRowStyle}>
-        <label style={nestedFieldLabelStyle}>Midpoint</label>
+        <label style={nestedFieldLabelStyle}>Ramp midpoint</label>
         <input
           type="range"
           min={0.05}
@@ -622,7 +695,7 @@ export function ScalarRampControls({
           }
           style={
             {
-              flex: 1,
+              ...scalarCompactRangeStyle,
               opacity: controlOpacity,
               "--editor-slider-fill": `${midpointFill}%`,
             } as React.CSSProperties
@@ -630,7 +703,7 @@ export function ScalarRampControls({
         />
       </div>
       <div style={nestedControlRowStyle}>
-        <label style={nestedFieldLabelStyle}>Nuance</label>
+        <label style={nestedFieldLabelStyle}>Ramp contrast</label>
         <input
           type="range"
           min={0.35}
@@ -643,13 +716,160 @@ export function ScalarRampControls({
           }
           style={
             {
-              flex: 1,
+              ...scalarCompactRangeStyle,
               opacity: controlOpacity,
               "--editor-slider-fill": `${contrastFill}%`,
             } as React.CSSProperties
           }
         />
       </div>
+      {fullDensityMode ? (
+        <>
+          <div style={scalarGroupHeadingStyle}>Isoline rendering</div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>
+              Lower isoline log10(Ohm-m)
+            </label>
+            <input
+              type="range"
+              aria-label="Lower isoline log10 resistivity"
+              min={trimMin}
+              max={Math.max(trimMin, blendMin)}
+              step={0.01}
+              value={edgeLowerValue}
+              disabled={disabled}
+              onChange={(e) =>
+                onChange({ scalarEdgeLowerValue: parseFloat(e.target.value) })
+              }
+              style={
+                {
+                  ...scalarCompactRangeStyle,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": percentFill(
+                    edgeLowerValue,
+                    trimMin,
+                    Math.max(trimMin, blendMin),
+                  ),
+                } as React.CSSProperties
+              }
+            />
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>
+              Upper isoline log10(Ohm-m)
+            </label>
+            <input
+              type="range"
+              aria-label="Upper isoline log10 resistivity"
+              min={Math.min(blendMax, trimMax)}
+              max={trimMax}
+              step={0.01}
+              value={edgeUpperValue}
+              disabled={disabled}
+              onChange={(e) =>
+                onChange({ scalarEdgeUpperValue: parseFloat(e.target.value) })
+              }
+              style={
+                {
+                  ...scalarCompactRangeStyle,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": percentFill(
+                    edgeUpperValue,
+                    Math.min(blendMax, trimMax),
+                    trimMax,
+                  ),
+                } as React.CSSProperties
+              }
+            />
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Isoline width</label>
+            <input
+              type="range"
+              aria-label="MT resistivity isoline width"
+              min={0}
+              max={8}
+              step={0.1}
+              value={edgeLineWidth}
+              disabled={disabled}
+              onChange={(e) =>
+                onChange({ scalarEdgeLineWidth: parseFloat(e.target.value) })
+              }
+              style={
+                {
+                  ...scalarCompactRangeStyle,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": percentFill(edgeLineWidth, 0, 8),
+                } as React.CSSProperties
+              }
+            />
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Isoline smoothing</label>
+            <input
+              type="range"
+              aria-label="MT resistivity isoline smoothing"
+              min={0}
+              max={1}
+              step={0.01}
+              value={edgeAverage}
+              disabled={disabled}
+              onChange={(e) =>
+                onChange({ scalarEdgeAverage: parseFloat(e.target.value) })
+              }
+              style={
+                {
+                  ...scalarCompactRangeStyle,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": percentFill(edgeAverage, 0, 1),
+                } as React.CSSProperties
+              }
+            />
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Band fill offset</label>
+            <input
+              type="range"
+              aria-label="MT resistivity isoline band fill offset"
+              min={-1}
+              max={1}
+              step={0.01}
+              value={edgeFillOffset}
+              disabled={disabled}
+              onChange={(e) =>
+                onChange({ scalarEdgeFillOffset: parseFloat(e.target.value) })
+              }
+              style={
+                {
+                  ...scalarCompactRangeStyle,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": percentFill(edgeFillOffset, -1, 1),
+                } as React.CSSProperties
+              }
+            />
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Isoline style</label>
+            <select
+              value={edgeLineStyle}
+              disabled={disabled}
+              onChange={(e) =>
+                onChange({
+                  scalarEdgeLineStyle:
+                    e.target.value === "dashed" ? "dashed" : "solid",
+                })
+              }
+              style={{
+                ...scalarCompactSelectStyle,
+                opacity: controlOpacity,
+              }}
+            >
+              <option value="solid">Solid</option>
+              <option value="dashed">Dashed</option>
+            </select>
+          </div>
+        </>
+      ) : null}
     </>
   );
 }

@@ -72,36 +72,38 @@ fog density, and fog-driven post tint use the environment-scene transition
 owner accepted in TRD-009. Do not add background/fog to the layer enum or route
 them through layer opacity/snapshot classification.
 
-`MT Cell Points` Full Cloud / Spectrum clicks are local legend view transitions,
-not page-transition kinds. They use a 1.5s live scalar-style interpolation in
-`src/ui/ResistivityLegend.tsx`, persist only `scalarLegendVisible` and
-`scalarInclusionMode`, and must not mutate `LayerTransitionKind`,
-`SCALAR_TRANSITION_STYLE_FIELDS`, `scalarInclusionFilterActive`, or the
-`full-density-scalar` page-transition path. Local mode animations are scoped to
-the effective page context; when navigation changes that context, stale RAF
-ticks must be canceled or ignored before they can apply an old page's style.
-Initial Spectrum page loads from Global Settings/page 00 are a separate
-preview-environment resolution concern: `previewEnvironmentBase` must preserve
-the full-density authored scalar window and edge-line fields through the Utah
-FORGE preview field map. Do not repair that load path by changing transition
-internals or by editing page fixtures.
+`MT Resistivity Cells` All Valid Cells / Log10 Resistivity Window clicks are
+local legend view transitions, not page-transition kinds. They use a 1.5s live
+scalar-style interpolation in `src/ui/ResistivityLegend.tsx`, persist only
+`scalarLegendVisible` and `scalarInclusionMode`, and must not mutate
+`LayerTransitionKind`, `SCALAR_TRANSITION_STYLE_FIELDS`,
+`scalarInclusionFilterActive`, or the `full-density-scalar` page-transition
+path. Local mode animations are scoped to the effective page context; when
+navigation changes that context, stale RAF ticks must be canceled or ignored
+before they can apply an old page's style. Initial Log10 Resistivity Window page
+loads from Global Settings/page 00 are a separate preview-environment resolution
+concern: `previewEnvironmentBase` must preserve the full-density authored scalar
+window and isoline fields through the Utah FORGE preview field map. Do not
+repair that load path by changing transition internals or by editing page
+fixtures.
 
-MT Cell Points Spectrum pages require transition-time scalar tween ownership for
-their edge-line overlays. The full-density point-cloud layer must register a
-`full-density-scalar` tween whenever authored Spectrum scalar fields differ,
-even if scalar edge geometry is not ready at transition setup; async reapply and
-tween ticks then apply the interpolated scalar style on the page-transition
-clock. The post-commit graph check is observational only and must not replay
-final page visibility/styles, because that makes edge lines pop in after the
-transition. The legend header must reflect the target authored mode; use
-interpolated scalar style only for ramp/handle visuals during the transition.
-Do not repair missing MT Cell Points Spectrum lines by editing page fixtures or
-by changing `SCALAR_TRANSITION_STYLE_FIELDS`,
-`scalarInclusionFilterActive`, or scalar edge overlay generation.
+MT Resistivity Cells Log10 Resistivity Window pages require transition-time
+scalar tween ownership for their isoline overlays. The full-density
+MT inversion cell-center layer must register a `full-density-scalar` tween
+whenever authored Log10 Resistivity Window fields differ, even if scalar
+edge geometry is not ready at transition setup; async reapply and tween ticks
+then apply the interpolated scalar style on the page-transition clock. The
+post-commit graph check is observational only and must not replay final page
+visibility/styles, because that makes isolines pop in after the transition.
+The legend header must reflect the target authored mode; use interpolated scalar
+style only for ramp/handle visuals during the transition. Do not repair missing
+MT Resistivity Cells Log10 Resistivity Window lines by editing page fixtures or
+by changing `SCALAR_TRANSITION_STYLE_FIELDS`, `scalarInclusionFilterActive`, or
+resistivity isoline overlay generation.
 
 After a transition has settled, suppressed target-page reapply may still need to
-build an edge overlay for an already-loaded Spectrum page. That settled repair is
-limited to reapplying the effective style for
+build an isoline overlay for an already-loaded Log10 Resistivity Window page. That
+settled repair is limited to reapplying the effective style for
 `utah-forge-mt-resistivity-full-density` only, and it must skip when a scalar
 tween is active. Do not use full visibility/style replay as this safety net.
 

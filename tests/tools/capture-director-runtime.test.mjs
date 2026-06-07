@@ -1,0 +1,2620 @@
+import { existsSync } from "node:fs";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import test from "node:test";
+import assert from "node:assert/strict";
+import * as esbuild from "esbuild";
+
+const repoRoot = process.cwd();
+const execFileAsync = promisify(execFile);
+
+async function importBundled(entryPoint) {
+  const dir = await mkdtemp(join(tmpdir(), "geosee-capture-test-"));
+  const outfile = join(dir, "bundle.mjs");
+  await esbuild.build({
+    entryPoints: [join(repoRoot, entryPoint)],
+    bundle: true,
+    format: "esm",
+    platform: "browser",
+    outfile,
+    logLevel: "silent",
+  });
+  return import(pathToFileURL(outfile).href);
+}
+
+function pose(position, target = [0, 0, 0]) {
+  return {
+    position,
+    target,
+    up: [0, 0, 1],
+    fov: 50,
+  };
+}
+
+function validRecipe(overrides = {}) {
+  return {
+    version: 1,
+    projectSlug: "runtime-test",
+    pageId: "page-a",
+    mode: "scene-only",
+    resolution: { width: 640, height: 360, label: "Runtime" },
+    fps: 30,
+    durationSeconds: 0.1,
+    camera: pose([0, 0, 10]),
+    cameraKeyframes: [],
+    layerVisibility: {},
+    layerStyles: {},
+    environmentState: null,
+    visualPreset: null,
+    supersampleScale: 1,
+    qualityPreset: "preview",
+    renderFidelity: "max-detail-render",
+    createdAt: "2026-06-06T00:00:00.000Z",
+    captureScope: "current-page",
+    pageRangeStartId: null,
+    pageRangeEndId: null,
+    pageRangeTiming: "authored",
+    equalHoldSeconds: null,
+    ...overrides,
+  };
+}
+
+function cameraPathV2(overrides = {}) {
+  return {
+    version: 2,
+    id: "camera-path-v2-runtime",
+    name: "Camera Path v2 Runtime",
+    loop: false,
+    focusPoints: [],
+    nodes: [
+      {
+        id: "start",
+        kind: "keyframe",
+        position: [0, 0, 0],
+        target: [0, 0, 0],
+        up: [0, 0, 1],
+        fov: 50,
+        lookMode: "free-direction",
+        holdSecondsAfter: 0,
+      },
+      {
+        id: "end",
+        kind: "keyframe",
+        position: [60, 0, 0],
+        target: [6, 0, 0],
+        up: [0, 0, 1],
+        fov: 50,
+        lookMode: "free-direction",
+        holdSecondsAfter: 0,
+      },
+    ],
+    segments: [
+      {
+        id: "start:end",
+        fromNodeId: "start",
+        toNodeId: "end",
+        transitionSeconds: 2,
+      },
+    ],
+    ...overrides,
+  };
+}
+
+test("capture profiles expose behavior-level mode visibility", async () => {
+  const {
+    captureVisibilityProfileForMode,
+    isCaptureGroupVisible,
+  } = await importBundled("src/capture/captureProfiles.ts");
+
+  assert.equal(isCaptureGroupVisible("scene-only", "navControls"), false);
+  assert.equal(isCaptureGroupVisible("scene-only", "legends"), false);
+  assert.equal(
+    isCaptureGroupVisible("scene-annotations", "captureNativeAnnotations"),
+    true,
+  );
+  assert.equal(isCaptureGroupVisible("presentation-ui", "editorSidebar"), false);
+  assert.equal(isCaptureGroupVisible("full-ui", "editorSidebar"), true);
+  assert.equal(captureVisibilityProfileForMode("off").fullChrome, true);
+});
+
+test("capture MIME fallback and resolution validation behave at runtime", async () => {
+  const {
+    selectSupportedMediaRecorderMimeType,
+  } = await importBundled("src/capture/canvasPreviewRecorder.ts");
+  const {
+    captureResolutionPresetById,
+    captureResolutionPresetIdForResolution,
+    validateRenderResolutionRequest,
+    validateCaptureFps,
+    validateCaptureResolution,
+  } = await importBundled("src/capture/captureResolution.ts");
+
+  assert.equal(
+    selectSupportedMediaRecorderMimeType({
+      isTypeSupported: (mimeType) => mimeType === "video/webm;codecs=vp8",
+    }),
+    "video/webm;codecs=vp8",
+  );
+  assert.equal(
+    selectSupportedMediaRecorderMimeType({
+      isTypeSupported: () => false,
+    }),
+    null,
+  );
+  assert.equal(selectSupportedMediaRecorderMimeType(undefined), null);
+  assert.equal(captureResolutionPresetById("marketing-4k").width, 3840);
+  assert.equal(captureResolutionPresetById("render-8k").width, 7680);
+  assert.equal(
+    captureResolutionPresetIdForResolution({ width: 7680, height: 4320 }),
+    "render-8k",
+  );
+  assert.equal(validateCaptureResolution({ width: 7680, height: 4320 }), true);
+  assert.equal(validateCaptureResolution({ width: 7681, height: 4320 }), false);
+  assert.equal(
+    validateRenderResolutionRequest({
+      resolution: captureResolutionPresetById("render-8k"),
+      supersampleScale: 1,
+      maxTextureSize: 8192,
+    }).valid,
+    true,
+  );
+  assert.match(
+    validateRenderResolutionRequest({
+      resolution: captureResolutionPresetById("render-8k"),
+      supersampleScale: 2,
+      maxTextureSize: 8192,
+    }).errors.join("\n"),
+    /exceeds/,
+  );
+  assert.equal(validateCaptureFps(60), true);
+  assert.equal(validateCaptureFps(24), true);
+  assert.equal(validateCaptureFps(25), false);
+});
+
+test("capture frame-time helper rejects invalid inputs", async () => {
+  const { getCaptureFrameTime } = await importBundled(
+    "src/capture/captureRecipe.ts",
+  );
+
+  assert.equal(getCaptureFrameTime(15, 30), 0.5);
+  assert.throws(() => getCaptureFrameTime(-1, 30), /frameIndex/);
+  assert.throws(() => getCaptureFrameTime(1, 0), /fps/);
+});
+
+test("CaptureCameraPath validates, normalizes, samples, and moves spline-owned keyframes", async () => {
+  const {
+    createCaptureCameraPathFromKeyframes,
+    cameraPathToRecipeKeyframes,
+    moveCaptureCameraPathKeyframe,
+    moveCaptureCameraPathSegment,
+    normalizeCaptureCameraPath,
+    recipeKeyframesToCameraPath,
+    sampleCaptureCameraPath,
+    validateCaptureCameraPath,
+  } = await importBundled("src/capture/captureCameraPath.ts");
+
+  const path = createCaptureCameraPathFromKeyframes(
+    [
+      {
+        id: "b",
+        timeSeconds: 2,
+        position: [20, 0, 10],
+        target: [2, 0, 0],
+        up: [0, 0, 1],
+        fov: 45,
+        easing: "ease-in-out",
+      },
+      {
+        id: "a",
+        timeSeconds: 0,
+        position: [0, 0, 10],
+        target: [0, 0, 0],
+        up: [0, 0, 1],
+        fov: 50,
+        easing: "linear",
+      },
+      {
+        id: "c",
+        timeSeconds: 4,
+        position: [40, 0, 10],
+        target: [4, 0, 0],
+        up: [0, 0, 1],
+        fov: 40,
+        easing: "linear",
+      },
+    ],
+    4,
+    { id: "path-test", name: "Path Test" },
+  );
+
+  assert.equal(validateCaptureCameraPath(path, 4).valid, true);
+  assert.deepEqual(
+    normalizeCaptureCameraPath(path).keyframes.map((keyframe) => keyframe.id),
+    ["a", "b", "c"],
+  );
+  assert.equal(sampleCaptureCameraPath(path, 2).timeSeconds, 2);
+  assert.deepEqual(sampleCaptureCameraPath(path, 0).position, [0, 0, 10]);
+  assert.deepEqual(sampleCaptureCameraPath(path, 4).position, [40, 0, 10]);
+  const middle = sampleCaptureCameraPath(path, 1);
+  assert.equal(middle.position.length, 3);
+  assert.equal(middle.target.length, 3);
+  assert.equal(Number.isFinite(middle.fov), true);
+
+  const movedPoint = moveCaptureCameraPathKeyframe(path, "b", [25, 5, 15]);
+  assert.deepEqual(
+    movedPoint.keyframes.find((keyframe) => keyframe.id === "b").position,
+    [25, 5, 15],
+  );
+  const movedSegment = moveCaptureCameraPathSegment(path, "a:b", [1, 2, 3]);
+  assert.deepEqual(
+    movedSegment.keyframes.find((keyframe) => keyframe.id === "a").position,
+    [1, 2, 13],
+  );
+  assert.deepEqual(
+    movedSegment.keyframes.find((keyframe) => keyframe.id === "b").position,
+    [21, 2, 13],
+  );
+  assert.deepEqual(
+    cameraPathToRecipeKeyframes(path).map((keyframe) => keyframe.timeSeconds),
+    [0, 2, 4],
+  );
+  assert.equal(
+    recipeKeyframesToCameraPath(
+      {
+        cameraKeyframes: cameraPathToRecipeKeyframes(path),
+        durationSeconds: 4,
+      },
+      { id: "upgraded", name: "Upgraded" },
+    ).keyframes.length,
+    3,
+  );
+
+  const invalid = validateCaptureCameraPath(
+    {
+      ...path,
+      keyframes: [
+        path.keyframes[0],
+        { ...path.keyframes[1], timeSeconds: 0, easing: "bounce" },
+      ],
+    },
+    4,
+  );
+  assert.equal(invalid.valid, false);
+  assert.match(invalid.errors.join("\n"), /unique/);
+  assert.match(invalid.errors.join("\n"), /easing/);
+});
+
+test("CaptureRecipe validation rejects malformed deterministic export state", async () => {
+  const { validateCaptureRecipe } = await importBundled(
+    "src/capture/captureRecipe.ts",
+  );
+
+  assert.equal(validateCaptureRecipe(validRecipe()).valid, true);
+
+  const invalid = validateCaptureRecipe(
+    validRecipe({
+      mode: "invalid-mode",
+      camera: { position: [1, 2], target: [0, 0, 0], up: [0, 0, 1], fov: 50 },
+      cameraKeyframes: [
+        {
+          timeSeconds: -1,
+          camera: { position: [1, 2, 3], target: [0, 0, 0], up: [0, 0, 1] },
+          easing: "bounce",
+        },
+      ],
+      layerVisibility: { a: "yes" },
+      layerStyles: { a: null },
+    }),
+  );
+
+  assert.equal(invalid.valid, false);
+  assert.match(invalid.errors.join("\n"), /mode is not supported/);
+  assert.match(invalid.errors.join("\n"), /camera must be a valid pose/);
+  assert.match(invalid.errors.join("\n"), /timeSeconds must be non-negative/);
+  assert.match(invalid.errors.join("\n"), /easing is not supported/);
+  assert.match(invalid.errors.join("\n"), /layerVisibility\.a must be boolean/);
+  assert.match(invalid.errors.join("\n"), /layerStyles\.a must be an object/);
+
+  const invalidPageRange = validateCaptureRecipe(
+    validRecipe({
+      captureScope: "page-range",
+      pageRangeStartId: "",
+      pageRangeEndId: null,
+      pageRangeTiming: "wild",
+      equalHoldSeconds: -1,
+    }),
+  );
+  assert.equal(invalidPageRange.valid, false);
+  assert.match(invalidPageRange.errors.join("\n"), /pageRangeStartId/);
+  assert.match(invalidPageRange.errors.join("\n"), /pageRangeEndId/);
+  assert.match(invalidPageRange.errors.join("\n"), /pageRangeTiming/);
+  assert.match(invalidPageRange.errors.join("\n"), /equalHoldSeconds/);
+});
+
+test("CaptureRecipe JSON helpers roundtrip and validate keyframe timelines", async () => {
+  const {
+    captureRecipeFilename,
+    parseCaptureRecipeJson,
+    serializeCaptureRecipe,
+    validateCaptureRecipe,
+  } = await importBundled("src/capture/captureRecipe.ts");
+  const recipe = validRecipe({
+    resolution: { width: 7680, height: 4320, label: "8K" },
+    previewResolution: { width: 1920, height: 1080, label: "1080p" },
+    durationSeconds: 4,
+    cameraKeyframes: [
+      { timeSeconds: 2, camera: pose([20, 0, 10]), easing: "ease-in-out" },
+      { timeSeconds: 0, camera: pose([0, 0, 10]), easing: "linear" },
+    ],
+    captureScope: "page-range",
+    pageRangeStartId: "page-a",
+    pageRangeEndId: "page-c",
+    pageRangeTiming: "authored",
+  });
+
+  const serialized = serializeCaptureRecipe(recipe);
+  assert.ok(serialized.endsWith("\n"));
+  const parsed = parseCaptureRecipeJson(serialized);
+  assert.equal(parsed.validation.valid, true);
+  assert.equal(parsed.recipe.resolution.width, 7680);
+  assert.equal(parsed.recipe.renderFidelity, "max-detail-render");
+  assert.equal(parsed.recipe.captureScope, "page-range");
+  assert.equal(parsed.recipe.pageRangeStartId, "page-a");
+  assert.equal(parsed.recipe.pageRangeEndId, "page-c");
+  assert.deepEqual(
+    parsed.recipe.cameraKeyframes.map((keyframe) => keyframe.timeSeconds),
+    [0, 2],
+  );
+  assert.match(captureRecipeFilename(parsed.recipe), /^geosee-runtime-test-page-a-8k-\d{8}T\d{6}Z\.capture\.json$/);
+
+  assert.equal(parseCaptureRecipeJson("{ nope").recipe, null);
+  const invalidDuplicate = validateCaptureRecipe(
+    validRecipe({
+      durationSeconds: 1,
+      cameraKeyframes: [
+        { timeSeconds: 0.5, camera: pose([0, 0, 10]) },
+        { timeSeconds: 0.5, camera: pose([1, 0, 10]) },
+      ],
+    }),
+  );
+  assert.match(invalidDuplicate.errors.join("\n"), /keyframe times must be unique/);
+
+  const invalidFrameIndex = validateCaptureRecipe(
+    validRecipe({
+      fps: 30,
+      cameraKeyframes: [
+        { timeSeconds: 1, frameIndex: 2, camera: pose([0, 0, 10]) },
+      ],
+    }),
+  );
+  assert.match(invalidFrameIndex.errors.join("\n"), /frameIndex/);
+});
+
+test("CaptureRecipe JSON helpers roundtrip v2 camera paths and mirror legacy keyframes", async () => {
+  const {
+    parseCaptureRecipeJson,
+    serializeCaptureRecipe,
+    validateCaptureRecipe,
+  } = await importBundled("src/capture/captureRecipe.ts");
+  const recipe = validRecipe({
+    fps: 30,
+    durationSeconds: 2,
+    cameraKeyframes: [],
+    cameraPath: cameraPathV2(),
+  });
+
+  const validation = validateCaptureRecipe(recipe);
+  assert.equal(validation.valid, true, validation.errors.join("\n"));
+
+  const parsed = parseCaptureRecipeJson(serializeCaptureRecipe(recipe));
+  assert.equal(parsed.validation.valid, true, parsed.validation.errors.join("\n"));
+  assert.equal(parsed.recipe.cameraPath.version, 2);
+  assert.deepEqual(
+    parsed.recipe.cameraPath.nodes.map((node) => node.id),
+    ["start", "end"],
+  );
+  assert.deepEqual(
+    parsed.recipe.cameraKeyframes.map((keyframe) => [
+      keyframe.frameIndex,
+      keyframe.timeSeconds,
+      keyframe.camera.position,
+    ]),
+    [
+      [0, 0, [0, 0, 0]],
+      [60, 2, [60, 0, 0]],
+    ],
+  );
+  assert.deepEqual(parsed.recipe.cameraTimeline, {
+    version: 2,
+    fps: 30,
+    durationFrames: 60,
+    durationSeconds: 2,
+    keyframeCount: 2,
+  });
+});
+
+test("CaptureRecipe normalization drops empty v2 camera paths", async () => {
+  const {
+    createCaptureRecipeFromCurrentState,
+    normalizeCaptureRecipe,
+  } = await importBundled("src/capture/captureRecipe.ts");
+  const emptyCameraPath = cameraPathV2({
+    nodes: [],
+    segments: [],
+    timeline: { durationSeconds: 0 },
+  });
+
+  const normalized = normalizeCaptureRecipe(
+    validRecipe({
+      durationSeconds: 4,
+      cameraPath: emptyCameraPath,
+      cameraKeyframes: [],
+    }),
+  );
+  assert.equal(normalized.cameraPath, null);
+  assert.equal(normalized.cameraTimeline, null);
+  assert.deepEqual(normalized.cameraKeyframes, []);
+
+  const snapshot = createCaptureRecipeFromCurrentState(
+    validRecipe({
+      durationSeconds: 4,
+      cameraPath: emptyCameraPath,
+      cameraKeyframes: [],
+    }),
+  );
+  assert.equal(snapshot.cameraPath, null);
+  assert.equal(snapshot.cameraTimeline, null);
+  assert.deepEqual(snapshot.cameraKeyframes, []);
+});
+
+test("CaptureCameraPath v2 playback validation rejects unusable recipe paths", async () => {
+  const {
+    captureCameraPathV2Renderable,
+    validateCaptureCameraPathV2,
+    validateCaptureCameraPathV2Playback,
+  } = await importBundled("src/capture/captureCameraPathV2.ts");
+  const allDisabledPath = cameraPathV2({
+    nodes: cameraPathV2().nodes.map((node) => ({ ...node, enabled: false })),
+    segments: cameraPathV2().segments.map((segment) => ({
+      ...segment,
+      enabled: false,
+    })),
+  });
+  const zeroDurationPath = cameraPathV2({
+    nodes: cameraPathV2().nodes.map((node) => ({
+      ...node,
+      holdSecondsAfter: 0,
+    })),
+    segments: cameraPathV2().segments.map((segment) => ({
+      ...segment,
+      transitionSeconds: 0,
+    })),
+    timeline: { durationSeconds: 0 },
+  });
+
+  for (const [label, cameraPath, message] of [
+    [
+      "empty",
+      cameraPathV2({ nodes: [], segments: [], timeline: { durationSeconds: 0 } }),
+      /at least two active camera views/i,
+    ],
+    ["all-disabled", allDisabledPath, /at least two active camera views/i],
+    ["zero-duration", zeroDurationPath, /duration.*greater than zero/i],
+  ]) {
+    assert.equal(
+      validateCaptureCameraPathV2(cameraPath).valid,
+      true,
+      `${label} path should remain a valid draft recipe path`,
+    );
+    assert.equal(
+      captureCameraPathV2Renderable(cameraPath),
+      false,
+      `${label} path should not be renderable for Play Path or preview recording`,
+    );
+    const validation = validateCaptureCameraPathV2Playback(cameraPath);
+    assert.equal(validation.valid, false, `${label} path should be rejected`);
+    assert.match(validation.errors.join("\n"), message);
+  }
+});
+
+test("CaptureRecipe keeps empty v2 paths as cameraPath null while still and render exports remain valid", async () => {
+  const restoreDocument = installDocumentStub();
+  const urlStub = installUrlStub();
+  try {
+    const {
+      createCaptureRecipeFromCurrentState,
+      validateCaptureRecipe,
+    } = await importBundled("src/capture/captureRecipe.ts");
+    const { exportDeterministicFrameSequence } = await importBundled(
+      "src/capture/deterministicFrameSequenceExporter.ts",
+    );
+    const { exportDeterministicStill } = await importBundled(
+      "src/capture/deterministicStillExporter.ts",
+    );
+    const recipe = createCaptureRecipeFromCurrentState(
+      validRecipe({
+        fps: 24,
+        durationSeconds: 1 / 24,
+        resolution: { width: 320, height: 180, label: "Focused" },
+        camera: pose([1, 2, 3], [0, 0, 0]),
+        cameraKeyframes: [],
+        cameraPath: cameraPathV2({
+          nodes: [],
+          segments: [],
+          timeline: { durationSeconds: 0 },
+        }),
+      }),
+    );
+
+    assert.equal(recipe.cameraPath, null);
+    assert.equal(recipe.cameraTimeline, null);
+    assert.deepEqual(recipe.cameraKeyframes, []);
+    assert.equal(recipe.fps, 24);
+    assert.equal(validateCaptureRecipe(recipe).valid, true);
+
+    const renderScene = fakeSceneHandle();
+    const sequence = await exportDeterministicFrameSequence({
+      sceneHandle: renderScene,
+      recipe,
+    });
+    assert.equal(sequence.totalFrames, 1);
+    assert.deepEqual(
+      renderScene.calls.find((call) => call[0] === "renderCaptureFrame")?.[1],
+      { timeSeconds: 0, frameIndex: 0 },
+    );
+    sequence.cleanup();
+
+    const stillScene = fakeSceneHandle();
+    const still = await exportDeterministicStill({
+      sceneHandle: stillScene,
+      recipe,
+      frameIndex: 0,
+    });
+    assert.equal(still.width, 320);
+    assert.equal(still.height, 180);
+    assert.deepEqual(
+      stillScene.calls.find((call) => call[0] === "renderCaptureFrame")?.[1],
+      { timeSeconds: 0, frameIndex: 0 },
+    );
+    still.cleanup();
+  } finally {
+    urlStub.restore();
+    restoreDocument();
+  }
+});
+
+test("capture page-range helper validates ordered visible page ranges", async () => {
+  const {
+    visibleCapturePages,
+    resolveCapturePageRange,
+  } = await importBundled("src/capture/capturePageRange.ts");
+  const pages = [
+    {
+      id: "page-a",
+      title: "A",
+      transition: { duration: 1000, easing: "linear" },
+      holdDuration: 2000,
+    },
+    {
+      id: "page-hidden",
+      title: "Hidden",
+      hidden: true,
+      transition: { duration: 1000, easing: "linear" },
+      holdDuration: 2000,
+    },
+    {
+      id: "page-b",
+      title: "B",
+      transition: { duration: 500, easing: "easeInOutCubic" },
+      holdDuration: 1500,
+    },
+    {
+      id: "page-c",
+      title: "C",
+      transition: { duration: 250, easing: "easeOutQuart" },
+      holdDuration: 1000,
+    },
+  ];
+
+  assert.deepEqual(
+    visibleCapturePages(pages).map((page) => page.id),
+    ["page-a", "page-b", "page-c"],
+  );
+
+  const authored = resolveCapturePageRange({
+    pages,
+    currentPageId: "page-a",
+    captureScope: "page-range",
+    pageRangeStartId: "page-a",
+    pageRangeEndId: "page-c",
+    pageRangeTiming: "authored",
+    equalHoldSeconds: 2,
+    fps: 30,
+    currentPageDurationSeconds: 4,
+  });
+  assert.equal(authored.valid, true);
+  assert.deepEqual(authored.pageIds, ["page-a", "page-b", "page-c"]);
+  assert.equal(authored.durationSeconds, 5.25);
+  assert.equal(authored.totalFrames, 158);
+
+  const equalHolds = resolveCapturePageRange({
+    pages,
+    currentPageId: "page-a",
+    captureScope: "page-range",
+    pageRangeStartId: "page-a",
+    pageRangeEndId: "page-c",
+    pageRangeTiming: "equal-holds",
+    equalHoldSeconds: 1.5,
+    fps: 60,
+    currentPageDurationSeconds: 4,
+  });
+  assert.equal(equalHolds.durationSeconds, 4.5);
+  assert.equal(equalHolds.totalFrames, 270);
+
+  const reversed = resolveCapturePageRange({
+    pages,
+    currentPageId: "page-a",
+    captureScope: "page-range",
+    pageRangeStartId: "page-c",
+    pageRangeEndId: "page-a",
+    pageRangeTiming: "authored",
+    equalHoldSeconds: 2,
+    fps: 30,
+    currentPageDurationSeconds: 4,
+  });
+  assert.equal(reversed.valid, false);
+  assert.match(reversed.errors.join("\n"), /before or equal/);
+});
+
+test("Screen Capture save options validate type and quality", async () => {
+  const {
+    captureStillExtension,
+    captureStillMimeType,
+    normalizeCaptureStillQuality,
+    validateCaptureStillSaveOptions,
+  } = await importBundled("src/capture/screenCaptureSaveOptions.ts");
+
+  assert.equal(captureStillMimeType("png"), "image/png");
+  assert.equal(captureStillMimeType("webp"), "image/webp");
+  assert.equal(captureStillMimeType("jpeg"), "image/jpeg");
+  assert.equal(captureStillExtension("jpeg"), "jpg");
+  assert.equal(normalizeCaptureStillQuality("png", 0.2), undefined);
+  assert.equal(normalizeCaptureStillQuality("webp", 2), 1);
+  assert.equal(normalizeCaptureStillQuality("jpeg", -1), 0.01);
+  assert.equal(
+    validateCaptureStillSaveOptions({ type: "webp", quality: 0.8 }).valid,
+    true,
+  );
+  assert.match(
+    validateCaptureStillSaveOptions({ type: "tiff", quality: 0.8 }).errors.join("\n"),
+    /type/,
+  );
+  assert.match(
+    validateCaptureStillSaveOptions({ type: "jpeg", quality: 2 }).errors.join("\n"),
+    /quality/,
+  );
+});
+
+test("external still render job schema roundtrips exact 8K tile state", async () => {
+  const {
+    createExternalStillRenderJob,
+    parseExternalStillRenderJobJson,
+    serializeExternalStillRenderJob,
+    validateExternalStillRenderJob,
+  } = await importBundled("src/capture/externalStillRenderJob.ts");
+
+  const recipe = validRecipe({
+    resolution: { width: 7680, height: 4320, label: "8K" },
+    mode: "scene-annotations",
+  });
+  const job = createExternalStillRenderJob({
+    appUrl: "http://127.0.0.1:5173/?project=runtime-test",
+    recipe,
+    stillOptions: { type: "webp", quality: 0.8 },
+    failureReason: "browser cap",
+    createdAt: "2026-06-06T00:00:00.000Z",
+  });
+
+  assert.equal(job.schema, "CaptureStillRenderJobV1");
+  assert.equal(job.version, 1);
+  assert.equal(job.projectSlug, "runtime-test");
+  assert.equal(job.app.projectSlug, "runtime-test");
+  assert.equal(job.still.width, 7680);
+  assert.equal(job.still.height, 4320);
+  assert.equal(job.still.type, "webp");
+  assert.equal(job.still.quality, 0.8);
+  assert.equal(job.tile.width, 1920);
+  assert.equal(job.tile.height, 1080);
+  assert.equal(job.tile.overlapPixels, 0);
+  assert.equal(job.fidelity, "max-detail-render");
+  assert.equal(validateExternalStillRenderJob(job).valid, true);
+
+  const parsed = parseExternalStillRenderJobJson(serializeExternalStillRenderJob(job));
+  assert.equal(parsed.validation.valid, true, parsed.validation.errors.join("\n"));
+  assert.equal(parsed.job.still.width, 7680);
+  assert.equal(parsed.job.recipe.mode, "scene-annotations");
+
+  const invalid = validateExternalStillRenderJob({
+    ...job,
+    recipe: { ...job.recipe, mode: "full-ui" },
+    still: { ...job.still, type: "gif", width: 0 },
+    tile: { ...job.tile, overlapPixels: 4 },
+  });
+  assert.equal(invalid.valid, false);
+  assert.match(invalid.errors.join("\n"), /full-ui/);
+  assert.match(invalid.errors.join("\n"), /type/);
+  assert.match(invalid.errors.join("\n"), /width/);
+  assert.match(invalid.errors.join("\n"), /overlapPixels/);
+});
+
+test("external still CLI synthetic job writes exact output and diagnostics", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "geosee-external-still-cli-"));
+  const jobPath = join(dir, "job.json");
+  const outPath = join(dir, "out.png");
+  try {
+    const {
+      createExternalStillRenderJob,
+      serializeExternalStillRenderJob,
+    } = await importBundled("src/capture/externalStillRenderJob.ts");
+    const job = createExternalStillRenderJob({
+      appUrl: "http://127.0.0.1:5173/?project=runtime-test",
+      recipe: validRecipe({
+        resolution: { width: 640, height: 360, label: "Test" },
+        mode: "scene-only",
+      }),
+      stillOptions: { type: "png" },
+      failureReason: "runtime synthetic test",
+      createdAt: "2026-06-06T00:00:00.000Z",
+    });
+    const smallJob = {
+      ...job,
+      still: { ...job.still, width: 640, height: 360, filename: "out.png" },
+      tile: { width: 320, height: 180, overlapPixels: 0 },
+    };
+    await writeFile(jobPath, serializeExternalStillRenderJob(smallJob), "utf8");
+
+    const { stdout } = await execFileAsync(
+      "node",
+      [
+        join(repoRoot, "tools", "render-capture-still-job.mjs"),
+        "--job",
+        jobPath,
+        "--out",
+        outPath,
+        "--synthetic",
+      ],
+      { cwd: repoRoot, timeout: 120_000 },
+    );
+    const diagnostics = JSON.parse(stdout);
+    assert.equal(diagnostics.status, "pass");
+    assert.equal(diagnostics.finalOutput.width, 640);
+    assert.equal(diagnostics.finalOutput.height, 360);
+    assert.equal(diagnostics.tilePlan.grid.tileCount, 4);
+    assert.ok(existsSync(outPath), "synthetic output image should exist");
+    assert.ok(
+      existsSync(`${outPath}.capture-diagnostics.json`),
+      "synthetic diagnostics file should exist",
+    );
+    const file = await readFile(outPath);
+    assert.ok(file.byteLength > 0, "synthetic output image should be non-empty");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("external still render jobs serialize requested 8K output for out-of-browser fallback", async () => {
+  const {
+    createExternalStillRenderJob,
+    externalStillRenderJobFilename,
+  } = await importBundled("src/capture/externalStillRenderJob.ts");
+  const recipe = validRecipe({
+    resolution: { width: 7680, height: 4320, label: "8K" },
+    qualityPreset: "render-8k",
+  });
+  const job = createExternalStillRenderJob({
+    recipe,
+    stillOptions: { type: "webp", quality: 0.82 },
+    failureReason: "8K exceeds browser limit",
+  });
+
+  assert.equal(job.version, 1);
+  assert.equal(job.schema, "CaptureStillRenderJobV1");
+  assert.equal(job.recipe.resolution.width, 7680);
+  assert.equal(job.still.type, "webp");
+  assert.equal(job.still.quality, 0.82);
+  assert.equal(job.fidelity, "max-detail-render");
+  assert.equal(job.tile.overlapPixels, 0);
+  assert.match(job.failureReason, /browser limit/);
+  assert.match(
+    externalStillRenderJobFilename(job),
+    /^runtime-test-page-a-8k-external-still-\d{8}T\d{6}Z\.json$/,
+  );
+});
+
+test("deterministic exporter frame math and keyframe interpolation are fixed-time", async () => {
+  const {
+    getCaptureFrameCount,
+    interpolateCaptureCameraKeyframes,
+    sampleCaptureRecipeCameraPoseAtFrame,
+  } = await importBundled("src/capture/deterministicFrameSequenceExporter.ts");
+  const recipe = validRecipe({
+    fps: 60,
+    durationSeconds: 1.01,
+    cameraKeyframes: [
+      { timeSeconds: 0, camera: pose([0, 0, 0]) },
+      { timeSeconds: 1, camera: pose([60, 0, 0]) },
+    ],
+  });
+
+  assert.equal(getCaptureFrameCount(recipe), 61);
+  assert.deepEqual(
+    interpolateCaptureCameraKeyframes(recipe, 0.5).position,
+    [30, 0, 0],
+  );
+
+  const v2Recipe = validRecipe({
+    fps: 30,
+    durationSeconds: 2,
+    cameraPath: cameraPathV2(),
+  });
+  assert.deepEqual(
+    sampleCaptureRecipeCameraPoseAtFrame(v2Recipe, 30).position,
+    [30, 0, 0],
+  );
+});
+
+test("deterministic exporter samples enabled v2 camera path playback only", async () => {
+  const {
+    getCaptureFrameCount,
+    sampleCaptureRecipeCameraPoseAtFrame,
+  } = await importBundled("src/capture/deterministicFrameSequenceExporter.ts");
+  const {
+    captureCameraPathV2EnabledNodes,
+    captureCameraPathV2EnabledSegments,
+    cameraPathV2SampledPoints,
+    resolveCaptureCameraPathV2Timeline,
+    sampleCaptureCameraPathV2,
+  } = await importBundled("src/capture/captureCameraPathV2.ts");
+  const path = cameraPathV2({
+    nodes: [
+      {
+        ...cameraPathV2().nodes[0],
+        id: "start",
+        position: [0, 0, 0],
+        target: [0, 0, 0],
+      },
+      {
+        ...cameraPathV2().nodes[1],
+        id: "disabled-node",
+        enabled: false,
+        position: [90, 0, 0],
+        target: [9, 0, 0],
+      },
+      {
+        ...cameraPathV2().nodes[1],
+        id: "hidden-middle",
+        hidden: true,
+        position: [30, 0, 0],
+        target: [3, 0, 0],
+      },
+      {
+        ...cameraPathV2().nodes[1],
+        id: "end",
+        position: [60, 0, 0],
+        target: [6, 0, 0],
+      },
+    ],
+    segments: [
+      {
+        id: "start-disabled",
+        fromNodeId: "start",
+        toNodeId: "disabled-node",
+        transitionSeconds: 4,
+      },
+      {
+        id: "disabled-hidden",
+        fromNodeId: "disabled-node",
+        toNodeId: "hidden-middle",
+        transitionSeconds: 4,
+      },
+      {
+        id: "start-hidden-disabled",
+        fromNodeId: "start",
+        toNodeId: "hidden-middle",
+        enabled: false,
+        transitionSeconds: 4,
+      },
+      {
+        id: "start-hidden",
+        fromNodeId: "start",
+        toNodeId: "hidden-middle",
+        transitionSeconds: 2,
+      },
+      {
+        id: "hidden-end",
+        fromNodeId: "hidden-middle",
+        toNodeId: "end",
+        transitionSeconds: 2,
+      },
+    ],
+  });
+  const recipe = validRecipe({
+    fps: 30,
+    durationSeconds: 4,
+    cameraPath: path,
+  });
+
+  assert.deepEqual(
+    captureCameraPathV2EnabledNodes(path).map((node) => [node.id, node.hidden]),
+    [
+      ["start", false],
+      ["hidden-middle", true],
+      ["end", false],
+    ],
+  );
+  assert.deepEqual(
+    captureCameraPathV2EnabledSegments(path).map((segment) => segment.id),
+    ["start-hidden", "hidden-end"],
+  );
+  assert.deepEqual(resolveCaptureCameraPathV2Timeline(path).activeNodeIds, [
+    "start",
+    "hidden-middle",
+    "end",
+  ]);
+  assert.deepEqual(sampleCaptureCameraPathV2(path, 2).position, [30, 0, 0]);
+  assert.ok(
+    cameraPathV2SampledPoints(path, 5).some(
+      (point) => point[0] === 30 && point[1] === 0 && point[2] === 0,
+    ),
+    "hidden active nodes should remain sampled for path geometry",
+  );
+  assert.equal(getCaptureFrameCount(recipe), 120);
+  assert.deepEqual(sampleCaptureRecipeCameraPoseAtFrame(recipe, 60).position, [
+    30,
+    0,
+    0,
+  ]);
+  assert.deepEqual(sampleCaptureRecipeCameraPoseAtFrame(recipe, 90).position, [
+    45,
+    0,
+    0,
+  ]);
+});
+
+test("Capture Camera Path v2 focus binding stays recipe-local and drives locked samples", async () => {
+  const {
+    bindCaptureCameraPathV2FocusPoint,
+    moveCaptureCameraPathV2NodeTarget,
+    sampleCaptureCameraPathV2,
+    validateCaptureCameraPathV2,
+  } = await importBundled("src/capture/captureCameraPathV2.ts");
+  const focused = bindCaptureCameraPathV2FocusPoint(
+    cameraPathV2(),
+    "end",
+    {
+      id: "focus-end",
+      label: "End Focus",
+      position: [12, 3, 4],
+      picked: true,
+    },
+  );
+
+  assert.deepEqual(focused.focusPoints, [
+    {
+      id: "focus-end",
+      label: "End Focus",
+      position: [12, 3, 4],
+      picked: true,
+    },
+  ]);
+  const focusedNode = focused.nodes.find((node) => node.id === "end");
+  assert.equal(focusedNode?.lookMode, "focus-point-lock");
+  assert.equal(focusedNode?.focusPointId, "focus-end");
+  assert.equal(focusedNode?.enabled, true);
+  assert.equal(focusedNode?.hidden, false);
+  assert.equal(focusedNode?.timeSeconds, 2);
+  assert.deepEqual(sampleCaptureCameraPathV2(focused, 2).target, [12, 3, 4]);
+  assert.equal(validateCaptureCameraPathV2(focused).valid, true);
+
+  const movedTarget = moveCaptureCameraPathV2NodeTarget(focused, "end", [
+    20,
+    4,
+    8,
+  ]);
+  assert.deepEqual(
+    movedTarget.focusPoints.find((point) => point.id === "focus-end")?.position,
+    [20, 4, 8],
+  );
+  assert.equal(
+    movedTarget.nodes.find((node) => node.id === "end")?.focusPointId,
+    "focus-end",
+  );
+  assert.deepEqual(sampleCaptureCameraPathV2(movedTarget, 2).target, [20, 4, 8]);
+});
+
+test("Capture Camera Path timeline layout helper preserves drag-duration blocks", async () => {
+  const { resolveCaptureCameraPathV2Timeline } = await importBundled(
+    "src/capture/captureCameraPathV2.ts",
+  );
+  const { layoutCapturePathTimeline } = await importBundled(
+    "src/capture/cameraPathTimelineLayout.ts",
+  );
+  const timeline = resolveCaptureCameraPathV2Timeline(
+    cameraPathV2({
+      nodes: [
+        { ...cameraPathV2().nodes[0], id: "start", holdSecondsAfter: 1 },
+        { ...cameraPathV2().nodes[1], id: "end", holdSecondsAfter: 2 },
+      ],
+      segments: [
+        {
+          id: "start:end",
+          fromNodeId: "start",
+          toNodeId: "end",
+          transitionSeconds: 3,
+        },
+      ],
+    }),
+  );
+  const blocks = layoutCapturePathTimeline({
+    timeline,
+    minBlockPercent: 0.8,
+  });
+
+  assert.equal(timeline.durationSeconds, 6);
+  assert.deepEqual(
+    blocks.map((block) => [
+      block.id,
+      block.kind,
+      block.startSeconds,
+      block.durationSeconds,
+      block.nodeId ?? block.segmentId,
+    ]),
+    [
+      ["hold:start", "hold", 0, 1, "start"],
+      ["transition:start:end", "transition", 1, 3, "start:end"],
+      ["hold:end", "hold", 4, 2, "end"],
+    ],
+  );
+  assert.ok(Math.abs(blocks[0].leftPercent - 0) < 0.000_001);
+  assert.ok(Math.abs(blocks[0].widthPercent - 100 / 6) < 0.000_001);
+  assert.ok(Math.abs(blocks[1].leftPercent - 100 / 6) < 0.000_001);
+  assert.ok(Math.abs(blocks[1].widthPercent - 50) < 0.000_001);
+  assert.ok(Math.abs(blocks[2].leftPercent - (400 / 6)) < 0.000_001);
+  assert.ok(Math.abs(blocks[2].widthPercent - (200 / 6)) < 0.000_001);
+});
+
+test("Capture Camera Path timeline layout exposes V3 surfacing metadata", async () => {
+  const { layoutCapturePathTimeline } = await importBundled(
+    "src/capture/cameraPathTimelineLayout.ts",
+  );
+  const blocks = layoutCapturePathTimeline({
+    timeline: {
+      durationSeconds: 10,
+      activeNodeIds: ["start", "end"],
+      activeSegmentIds: ["start:end"],
+      nodeTimeSeconds: { start: 0, end: 10 },
+      entries: [
+        {
+          kind: "transition",
+          startSeconds: 2,
+          endSeconds: 8,
+          durationSeconds: 6,
+          segmentId: "start:end",
+          fromNodeId: "start",
+          toNodeId: "end",
+          easing: "ease-in-out",
+          timeCurve: {
+            mode: "custom-ramp",
+            ramp: [
+              { t: 0, value: 0 },
+              { t: 0.5, value: 0.72 },
+              { t: 1, value: 1 },
+            ],
+          },
+          continuity: "G2",
+          gdStartPercent: 25,
+          gdEndPercent: 75,
+          focusMode: "focus-point-lock",
+          equationVisible: true,
+        },
+      ],
+    },
+  });
+
+  assert.equal(blocks.length, 1);
+  assert.equal(blocks[0].timeCurve.mode, "custom-ramp");
+  assert.deepEqual(blocks[0].timeCurve.ramp?.map((point) => point.value), [
+    0,
+    0.72,
+    1,
+  ]);
+  assert.equal(blocks[0].continuity, "G2");
+  assert.equal(blocks[0].gdStartPercent, 25);
+  assert.equal(blocks[0].gdEndPercent, 75);
+  assert.equal(blocks[0].focusMode, "focus-point-lock");
+  assert.equal(blocks[0].equationVisible, true);
+
+  const fallback = layoutCapturePathTimeline({
+    timeline: {
+      durationSeconds: 4,
+      activeNodeIds: [],
+      activeSegmentIds: [],
+      nodeTimeSeconds: {},
+      entries: [
+        {
+          kind: "transition",
+          startSeconds: 0,
+          endSeconds: 4,
+          durationSeconds: 4,
+          segmentId: "fallback",
+          easing: "linear",
+        },
+      ],
+    },
+  })[0];
+
+  assert.equal(fallback.timeCurve.mode, "linear");
+  assert.equal(fallback.continuity, "G1");
+  assert.equal(fallback.gdStartPercent, 0);
+  assert.equal(fallback.gdEndPercent, 100);
+  assert.equal(fallback.focusMode, "free-direction");
+  assert.equal(fallback.equationVisible, false);
+});
+
+test("Capture Director toolbar keeps timeline layout blocks when lower helper exists", async () => {
+  const toolbarSource = await readFile(
+    join(repoRoot, "src/capture/CaptureDirectorToolbar.tsx"),
+    "utf8",
+  );
+  const timelineSource = await readFile(
+    join(repoRoot, "src/capture/CameraPathTimeline.tsx"),
+    "utf8",
+  );
+  const helperIndex = toolbarSource.indexOf(
+    "<CameraPathTimeline",
+  );
+  assert.notEqual(helperIndex, -1, "lower timeline helper should exist");
+  assert.match(
+    timelineSource,
+    /const rootStyle: CSSProperties = \{[\s\S]*display:\s*"grid"/,
+    "timeline helper should keep controls and lanes in grid blocks",
+  );
+  for (const laneTestId of [
+    "capture-timeline-keyframe-track",
+    "capture-timeline-position-lane",
+    "capture-timeline-look-lane",
+    "capture-timeline-focus-lane",
+  ]) {
+    const laneIndex = timelineSource.indexOf(`data-testid="${laneTestId}"`);
+    assert.ok(
+      laneIndex >= 0,
+      `${laneTestId} should stay inside the lower timeline helper layout`,
+    );
+  }
+});
+
+class FakeVector {
+  constructor(x = 0, y = 0, z = 0) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+  }
+
+  set(x, y, z) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+  }
+}
+
+function installRecorderUrlStub() {
+  const created = [];
+  const previousCreate = URL.createObjectURL;
+  URL.createObjectURL = (blob) => {
+    const url = `blob:recorder-${created.length}`;
+    created.push({ url, blob });
+    return url;
+  };
+  return {
+    created,
+    restore() {
+      URL.createObjectURL = previousCreate;
+    },
+  };
+}
+
+function installMediaRecorderStub({
+  chunks = [new Blob(["recording"], { type: "video/webm" })],
+} = {}) {
+  const previous = globalThis.MediaRecorder;
+  const calls = [];
+  class FakeMediaRecorder extends EventTarget {
+    static isTypeSupported() {
+      return true;
+    }
+
+    constructor(_stream, options = {}) {
+      super();
+      this.state = "inactive";
+      this.mimeType = options.mimeType ?? "video/webm";
+      calls.push(["constructor", this.mimeType]);
+    }
+
+    start() {
+      this.state = "recording";
+      calls.push(["start"]);
+    }
+
+    requestData() {
+      calls.push(["requestData"]);
+      this.#emitChunk();
+    }
+
+    stop() {
+      calls.push(["stop"]);
+      if (this.state === "inactive") return;
+      this.state = "inactive";
+      queueMicrotask(() => {
+        this.dispatchEvent(new Event("stop"));
+      });
+    }
+
+    #emitChunk() {
+      const index = calls.filter((call) => call[0] === "dataavailable").length;
+      const data = chunks[Math.min(index, chunks.length - 1)] ?? new Blob([]);
+      calls.push(["dataavailable", data.size]);
+      const event = new Event("dataavailable");
+      Object.defineProperty(event, "data", { value: data });
+      this.dispatchEvent(event);
+    }
+  }
+  globalThis.MediaRecorder = FakeMediaRecorder;
+  return {
+    calls,
+    restore() {
+      globalThis.MediaRecorder = previous;
+    },
+  };
+}
+
+function fakeCaptureTrack() {
+  const calls = [];
+  return {
+    calls,
+    track: {
+      requestFrame() {
+        calls.push("requestFrame");
+      },
+      stop() {
+        calls.push("stop");
+      },
+    },
+  };
+}
+
+test("preview recorder rejects zero-byte realtime output and creates no download URL", async () => {
+  const recorderStub = installMediaRecorderStub({ chunks: [new Blob([])] });
+  const urlStub = installRecorderUrlStub();
+  try {
+    const { createCanvasPreviewRecorder } = await importBundled(
+      "src/capture/canvasPreviewRecorder.ts",
+    );
+    const { track } = fakeCaptureTrack();
+    const canvas = {
+      captureStream() {
+        return {
+          getTracks: () => [track],
+          getVideoTracks: () => [track],
+        };
+      },
+    };
+
+    const recorder = createCanvasPreviewRecorder({
+      canvas,
+      fps: 60,
+      mimeType: "video/webm",
+      outputContext: {
+        width: 3840,
+        height: 2160,
+        fps: 60,
+      },
+    });
+
+    await assert.rejects(
+      () => recorder.stop(),
+      /No video data was produced for 3840x2160 at 60 FPS/,
+    );
+    assert.equal(urlStub.created.length, 0);
+    assert.ok(
+      recorderStub.calls.some((call) => call[0] === "requestData"),
+      "recorder should request pending data before stop",
+    );
+  } finally {
+    urlStub.restore();
+    recorderStub.restore();
+  }
+});
+
+test("preview recorder requests direct canvas frames and reports byte length", async () => {
+  const recorderStub = installMediaRecorderStub();
+  const urlStub = installRecorderUrlStub();
+  try {
+    const { createCanvasPreviewRecorder } = await importBundled(
+      "src/capture/canvasPreviewRecorder.ts",
+    );
+    const { track, calls } = fakeCaptureTrack();
+    let afterRender = null;
+    let unsubscribed = false;
+    const canvas = {
+      captureStream() {
+        return {
+          getTracks: () => [track],
+          getVideoTracks: () => [track],
+        };
+      },
+    };
+
+    const recorder = createCanvasPreviewRecorder({
+      canvas,
+      fps: 30,
+      mimeType: "video/webm",
+      onAfterRender(callback) {
+        afterRender = callback;
+        return () => {
+          unsubscribed = true;
+        };
+      },
+    });
+
+    assert.deepEqual(calls, ["requestFrame"]);
+    afterRender();
+    assert.deepEqual(calls, ["requestFrame", "requestFrame"]);
+
+    const result = await recorder.stop();
+    assert.equal(result.byteLength, "recording".length);
+    assert.equal(unsubscribed, true);
+    assert.ok(
+      recorderStub.calls.findIndex((call) => call[0] === "requestData") <
+        recorderStub.calls.findIndex((call) => call[0] === "stop"),
+      "requestData should run before stop",
+    );
+  } finally {
+    urlStub.restore();
+    recorderStub.restore();
+  }
+});
+
+class FakeCanvas {
+  constructor() {
+    this.width = 0;
+    this.height = 0;
+    this.dataset = {};
+    this.contextCalls = [];
+    this.captureTrackCalls = [];
+  }
+
+  getContext() {
+    const contextCalls = this.contextCalls;
+    return {
+      clearRect() {
+        contextCalls.push(["clearRect"]);
+      },
+      drawImage() {
+        contextCalls.push(["drawImage"]);
+      },
+      fill() {
+        contextCalls.push(["fill"]);
+      },
+      stroke() {
+        contextCalls.push(["stroke"]);
+      },
+      beginPath() {
+        contextCalls.push(["beginPath"]);
+      },
+      moveTo() {
+        contextCalls.push(["moveTo"]);
+      },
+      lineTo() {
+        contextCalls.push(["lineTo"]);
+      },
+      quadraticCurveTo() {
+        contextCalls.push(["quadraticCurveTo"]);
+      },
+      closePath() {
+        contextCalls.push(["closePath"]);
+      },
+      fillText(text) {
+        contextCalls.push(["fillText", text]);
+      },
+      arc() {
+        contextCalls.push(["arc"]);
+      },
+      save() {
+        contextCalls.push(["save"]);
+      },
+      restore() {
+        contextCalls.push(["restore"]);
+      },
+      set fillStyle(_value) {},
+      set strokeStyle(_value) {},
+      set lineWidth(_value) {},
+      set textBaseline(_value) {},
+      set textAlign(_value) {},
+      set font(_value) {},
+    };
+  }
+
+  toBlob(callback, mimeType) {
+    callback(new Blob(["frame"], { type: mimeType }));
+  }
+
+  captureStream() {
+    const captureTrackCalls = this.captureTrackCalls;
+    const track = {
+      requestFrame() {
+        captureTrackCalls.push("requestFrame");
+      },
+      stop() {
+        captureTrackCalls.push("stop");
+      },
+    };
+    return {
+      getTracks: () => [track],
+      getVideoTracks: () => [track],
+    };
+  }
+}
+
+function installDocumentStub() {
+  const previousDocument = globalThis.document;
+  const createdCanvases = [];
+  globalThis.document = {
+    createElement(tag) {
+      assert.equal(tag, "canvas");
+      const canvas = new FakeCanvas();
+      createdCanvases.push(canvas);
+      return canvas;
+    },
+  };
+  const restore = () => {
+    globalThis.document = previousDocument;
+  };
+  restore.createdCanvases = createdCanvases;
+  return restore;
+}
+
+function installUrlStub() {
+  const created = [];
+  const revoked = [];
+  const previousCreate = URL.createObjectURL;
+  const previousRevoke = URL.revokeObjectURL;
+  URL.createObjectURL = (blob) => {
+    const url = `blob:runtime-${created.length}`;
+    created.push({ url, blob });
+    return url;
+  };
+  URL.revokeObjectURL = (url) => {
+    revoked.push(url);
+  };
+  return {
+    created,
+    revoked,
+    restore() {
+      URL.createObjectURL = previousCreate;
+      URL.revokeObjectURL = previousRevoke;
+    },
+  };
+}
+
+function fakeSceneHandle({ throwOnRestoreStyle = false, maxTextureSize = 16384 } = {}) {
+  const calls = [];
+  let afterRender = null;
+  const styles = new Map([
+    ["a", { opacity: 0.3 }],
+    ["b", { opacity: 0.7 }],
+  ]);
+  const manager = {
+    currentVisibleLayerIds: new Set(["virtual", "a"]),
+    layers: new Map([
+      ["a", { visible: true }],
+      ["b", { visible: false }],
+    ]),
+    styleForLayer(id) {
+      return styles.get(id);
+    },
+    setVisible(nextVisible) {
+      this.currentVisibleLayerIds = new Set(nextVisible);
+      calls.push(["setVisible", [...nextVisible].sort()]);
+    },
+    applyStyle(id, style) {
+      calls.push(["applyStyle", id, { ...style }]);
+      if (throwOnRestoreStyle && style.opacity === 0.3) {
+        throw new Error("restore style failed");
+      }
+      styles.set(id, { ...style });
+    },
+  };
+  const camera = {
+    position: new FakeVector(0, 0, 10),
+    up: new FakeVector(0, 0, 1),
+    fov: 50,
+    updateProjectionMatrix() {
+      calls.push(["cameraProjection"]);
+    },
+  };
+  const controls = {
+    target: new FakeVector(0, 0, 0),
+    update() {
+      calls.push(["controlsUpdate"]);
+    },
+  };
+  return {
+    calls,
+    manager,
+    camera,
+    controls,
+    beginCaptureSize(options) {
+      calls.push(["beginCaptureSize", options]);
+    },
+    endCaptureSize() {
+      calls.push(["endCaptureSize"]);
+    },
+    onAfterRender(callback) {
+      afterRender = callback;
+      calls.push(["onAfterRender"]);
+      return () => calls.push(["unsubscribeAfterRender"]);
+    },
+    triggerAfterRender() {
+      afterRender?.();
+    },
+    renderCaptureFrame(options) {
+      calls.push(["renderCaptureFrame", options]);
+    },
+    getCanvas() {
+      return new FakeCanvas();
+    },
+    getCaptureCapabilities() {
+      return {
+        maxTextureSize,
+        maxRenderbufferSize: maxTextureSize,
+      };
+    },
+  };
+}
+
+test("composited recorder rejects zero-byte output and cleans stream resources", async () => {
+  const restoreDocument = installDocumentStub();
+  const recorderStub = installMediaRecorderStub({ chunks: [new Blob([])] });
+  const urlStub = installRecorderUrlStub();
+  try {
+    const { createCompositedCaptureRecorder } = await importBundled(
+      "src/capture/compositedCaptureRecorder.ts",
+    );
+    const sceneHandle = fakeSceneHandle();
+    const recorder = createCompositedCaptureRecorder({
+      sceneHandle,
+      width: 3840,
+      height: 2160,
+      fps: 60,
+      mimeType: "video/webm",
+      overlayContext: () => ({
+        mode: "scene-annotations",
+        width: 3840,
+        height: 2160,
+        title: "Runtime Overlay",
+      }),
+      outputContext: {
+        mode: "scene-annotations",
+        width: 3840,
+        height: 2160,
+        fps: 60,
+      },
+    });
+
+    sceneHandle.triggerAfterRender();
+    await assert.rejects(
+      () => recorder.stop(),
+      /No video data was produced for 3840x2160 at 60 FPS/,
+    );
+    assert.equal(urlStub.created.length, 0);
+    assert.ok(
+      sceneHandle.calls.some((call) => call[0] === "unsubscribeAfterRender"),
+      "after-render callback should be cleaned up",
+    );
+    assert.ok(
+      restoreDocument.createdCanvases[0].captureTrackCalls.includes("stop"),
+      "capture stream tracks should be stopped",
+    );
+    assert.ok(
+      recorderStub.calls.some((call) => call[0] === "requestData"),
+      "composited recorder should request pending data before stop",
+    );
+  } finally {
+    urlStub.restore();
+    recorderStub.restore();
+    restoreDocument();
+  }
+});
+
+test("deterministic exporter writes fixed-timestep frame metadata and overlays", async () => {
+  const restoreDocument = installDocumentStub();
+  const urlStub = installUrlStub();
+  try {
+    const { exportDeterministicFrameSequence } = await importBundled(
+      "src/capture/deterministicFrameSequenceExporter.ts",
+    );
+    const sceneHandle = fakeSceneHandle();
+    const recipe = validRecipe({
+      mode: "scene-annotations",
+      durationSeconds: 0.1,
+      fps: 30,
+      resolution: { width: 640, height: 360, label: "Runtime" },
+      layerVisibility: { a: false, b: true },
+      layerStyles: { a: { opacity: 0.9 }, b: { opacity: 0.4 } },
+    });
+
+    const sequence = await exportDeterministicFrameSequence({
+      sceneHandle,
+      recipe,
+      overlayContext: () => ({ title: "Runtime Overlay" }),
+    });
+
+    assert.equal(sequence.totalFrames, 3);
+    assert.deepEqual(
+      sequence.frames.map((frame) => frame.timeSeconds),
+      [0, 1 / 30, 2 / 30],
+    );
+    assert.deepEqual(sequence.frames.map((frame) => frame.width), [640, 640, 640]);
+    assert.deepEqual(sequence.frames.map((frame) => frame.height), [360, 360, 360]);
+    assert.deepEqual(
+      sceneHandle.calls.filter((call) => call[0] === "beginCaptureSize"),
+      [["beginCaptureSize", { width: 640, height: 360, pixelRatio: 1 }]],
+    );
+    assert.deepEqual(
+      sceneHandle.calls
+        .filter((call) => call[0] === "renderCaptureFrame")
+        .map((call) => call[1]),
+      [
+        { timeSeconds: 0, frameIndex: 0 },
+        { timeSeconds: 1 / 30, frameIndex: 1 },
+        { timeSeconds: 2 / 30, frameIndex: 2 },
+      ],
+    );
+    assert.ok(
+      restoreDocument.createdCanvases.some((canvas) =>
+        canvas.contextCalls.some(
+          (call) => call[0] === "fillText" && call[1] === "Runtime Overlay",
+        ),
+      ),
+    );
+    assert.equal(urlStub.created.length, 3);
+
+    sequence.cleanup();
+    assert.deepEqual(urlStub.revoked, [
+      "blob:runtime-0",
+      "blob:runtime-1",
+      "blob:runtime-2",
+    ]);
+  } finally {
+    restoreDocument();
+    urlStub.restore();
+  }
+});
+
+test("deterministic frame and still exporters sample v2 camera paths from frame index", async () => {
+  const restoreDocument = installDocumentStub();
+  const urlStub = installUrlStub();
+  try {
+    const { exportDeterministicFrameSequence } = await importBundled(
+      "src/capture/deterministicFrameSequenceExporter.ts",
+    );
+    const { exportDeterministicStill } = await importBundled(
+      "src/capture/deterministicStillExporter.ts",
+    );
+    const recipe = validRecipe({
+      durationSeconds: 3 / 30,
+      fps: 30,
+      cameraPath: cameraPathV2({
+        nodes: [
+          {
+            id: "start",
+            kind: "keyframe",
+            position: [0, 0, 0],
+            target: [0, 0, 0],
+            up: [0, 0, 1],
+            fov: 50,
+            lookMode: "free-direction",
+            holdSecondsAfter: 0,
+          },
+          {
+            id: "end",
+            kind: "keyframe",
+            position: [60, 0, 0],
+            target: [6, 0, 0],
+            up: [0, 0, 1],
+            fov: 50,
+            lookMode: "free-direction",
+            holdSecondsAfter: 0,
+          },
+        ],
+        segments: [
+          {
+            id: "start:end",
+            fromNodeId: "start",
+            toNodeId: "end",
+            transitionSeconds: 2 / 30,
+          },
+        ],
+      }),
+    });
+    const sequenceSceneHandle = fakeSceneHandle();
+    const sequencePositions = [];
+
+    const sequence = await exportDeterministicFrameSequence({
+      sceneHandle: sequenceSceneHandle,
+      recipe,
+      onFrame() {
+        sequencePositions.push([
+          sequenceSceneHandle.camera.position.x,
+          sequenceSceneHandle.camera.position.y,
+          sequenceSceneHandle.camera.position.z,
+        ]);
+      },
+    });
+
+    assert.deepEqual(sequencePositions, [
+      [0, 0, 0],
+      [30, 0, 0],
+      [60, 0, 0],
+    ]);
+    sequence.cleanup();
+
+    const stillSceneHandle = fakeSceneHandle();
+    const stillPositions = [];
+    stillSceneHandle.renderCaptureFrame = (options) => {
+      stillSceneHandle.calls.push(["renderCaptureFrame", options]);
+      stillPositions.push([
+        stillSceneHandle.camera.position.x,
+        stillSceneHandle.camera.position.y,
+        stillSceneHandle.camera.position.z,
+      ]);
+    };
+
+    const still = await exportDeterministicStill({
+      sceneHandle: stillSceneHandle,
+      recipe,
+      frameIndex: 1,
+    });
+
+    assert.deepEqual(stillPositions, [[30, 0, 0]]);
+    assert.deepEqual(
+      stillSceneHandle.calls.find((call) => call[0] === "renderCaptureFrame")?.[1],
+      { timeSeconds: 1 / 30, frameIndex: 1 },
+    );
+    still.cleanup();
+  } finally {
+    urlStub.restore();
+    restoreDocument();
+  }
+});
+
+test("deterministic exporter restores visibility and revokes partial frame URLs after onFrame failure", async () => {
+  const restoreDocument = installDocumentStub();
+  const urlStub = installUrlStub();
+  try {
+    const { exportDeterministicFrameSequence } = await importBundled(
+      "src/capture/deterministicFrameSequenceExporter.ts",
+    );
+    const sceneHandle = fakeSceneHandle();
+    const recipe = validRecipe({
+      durationSeconds: 0.08,
+      fps: 30,
+      layerVisibility: { a: false, b: true },
+      layerStyles: { a: { opacity: 1 } },
+    });
+
+    await assert.rejects(
+      () =>
+        exportDeterministicFrameSequence({
+          sceneHandle,
+          recipe,
+          onFrame() {
+            throw new Error("stop after first frame");
+          },
+        }),
+      /stop after first frame/,
+    );
+
+    assert.deepEqual([...sceneHandle.manager.currentVisibleLayerIds].sort(), [
+      "a",
+      "virtual",
+    ]);
+    assert.deepEqual(urlStub.created.map((entry) => entry.url), ["blob:runtime-0"]);
+    assert.deepEqual(urlStub.revoked, ["blob:runtime-0"]);
+    assert.ok(sceneHandle.calls.some((call) => call[0] === "endCaptureSize"));
+  } finally {
+    urlStub.restore();
+    restoreDocument();
+  }
+});
+
+test("capture job runtime tracks progress, completion, failure, and URL cleanup", async () => {
+  const {
+    createCaptureJobRecord,
+    updateCaptureJobStatus,
+    updateCaptureJobProgress,
+    completeCaptureJob,
+    failCaptureJob,
+    cancelCaptureJob,
+    clearCaptureJobRecord,
+    isCaptureJobRunning,
+    canStartCaptureJob,
+  } = await importBundled("src/capture/captureJobRuntime.ts");
+  const { capturePathJobDiagnostics, captureVideoOutputDiagnostics } =
+    await importBundled("src/capture/captureJobDiagnostics.ts");
+
+  const revoked = [];
+  const originalUrl = globalThis.URL;
+  globalThis.URL = {
+    ...originalUrl,
+    revokeObjectURL(url) {
+      revoked.push(url);
+    },
+  };
+  try {
+    const job = createCaptureJobRecord({
+      kind: "path-video",
+      label: "Render Path Video",
+      now: () => 1000,
+      abortController: { signal: { aborted: false } },
+      diagnostics: capturePathJobDiagnostics({
+        mode: "scene-only",
+        pathVersion: 3,
+        nodeCount: 2,
+        segmentCount: 1,
+        durationSeconds: 2,
+        fps: 30,
+        resolution: { width: 3840, height: 2160, label: "4K" },
+        format: "mp4",
+        totalFrames: 60,
+        renderedFrames: 0,
+        maxDetail: true,
+      }),
+    });
+    assert.equal(job.status, "queued");
+    assert.equal(isCaptureJobRunning(job), true);
+    assert.equal(canStartCaptureJob([job]), false);
+
+    const rendering = updateCaptureJobStatus(job, "rendering", { now: () => 1100 });
+    const progressed = updateCaptureJobProgress(rendering, {
+      renderedFrames: 10,
+      totalFrames: 60,
+      phase: "rendering",
+    });
+    assert.equal(progressed.status, "rendering");
+    assert.equal(progressed.progress.renderedFrames, 10);
+    assert.equal(progressed.diagnostics.maxDetail, true);
+
+    const complete = completeCaptureJob(progressed, {
+      now: () => 2000,
+      output: {
+        blob: { size: 12 },
+        url: "blob:path-render",
+        filename: "path.mp4",
+        mimeType: "video/mp4",
+        byteLength: 12,
+        cleanup: () => revoked.push("cleanup:path-render"),
+      },
+      diagnostics: captureVideoOutputDiagnostics({
+        outputByteLength: 12,
+        encoderPreset: "mp4-h264-marketing",
+      }),
+    });
+    assert.equal(complete.status, "complete");
+    assert.equal(complete.output.byteLength, 12);
+    assert.equal(complete.diagnostics.outputByteLength, 12);
+    assert.equal(canStartCaptureJob([complete]), true);
+
+    clearCaptureJobRecord(complete);
+    assert.deepEqual(revoked, ["cleanup:path-render", "blob:path-render"]);
+
+    const failed = failCaptureJob(job, new Error("encoder failed"), {
+      now: () => 2100,
+      diagnostics: { renderedFrames: 4 },
+    });
+    assert.equal(failed.status, "failed");
+    assert.equal(failed.error, "encoder failed");
+    assert.equal(failed.diagnostics.renderedFrames, 4);
+
+    const cancelled = cancelCaptureJob(job, { now: () => 2200, reason: "user" });
+    assert.equal(cancelled.status, "cancelled");
+    assert.equal(cancelled.error, "user");
+  } finally {
+    globalThis.URL = originalUrl;
+  }
+});
+
+test("deterministic exporter still ends capture size when layer restore throws", async () => {
+  const restoreDocument = installDocumentStub();
+  const urlStub = installUrlStub();
+  try {
+    const { exportDeterministicFrameSequence } = await importBundled(
+      "src/capture/deterministicFrameSequenceExporter.ts",
+    );
+    const sceneHandle = fakeSceneHandle({ throwOnRestoreStyle: true });
+    const recipe = validRecipe({
+      durationSeconds: 0.02,
+      fps: 30,
+      layerStyles: { a: { opacity: 1 } },
+    });
+
+    await assert.rejects(
+      () =>
+        exportDeterministicFrameSequence({
+          sceneHandle,
+          recipe,
+          onFrame() {
+            throw new Error("trigger cleanup");
+          },
+        }),
+      /restore style failed/,
+    );
+
+    assert.ok(sceneHandle.calls.some((call) => call[0] === "endCaptureSize"));
+    assert.deepEqual(urlStub.revoked, ["blob:runtime-0"]);
+  } finally {
+    urlStub.restore();
+    restoreDocument();
+  }
+});
+
+test("deterministic still exporter renders Screen Capture at output resolution", async () => {
+  const restoreDocument = installDocumentStub();
+  const urlStub = installUrlStub();
+  try {
+    const { exportDeterministicStill } = await importBundled(
+      "src/capture/deterministicStillExporter.ts",
+    );
+    const sceneHandle = fakeSceneHandle();
+    const recipe = validRecipe({
+      mode: "presentation-ui",
+      resolution: { width: 7680, height: 4320, label: "8K" },
+      durationSeconds: 4,
+      layerVisibility: { a: false, b: true },
+      layerStyles: { a: { opacity: 0.9 } },
+    });
+
+    const result = await exportDeterministicStill({
+      sceneHandle,
+      recipe,
+      timeSeconds: 2,
+      mimeType: "image/jpeg",
+      imageQuality: 0.72,
+      filenamePrefix: "screen-capture",
+      overlayContext: () => ({ title: "Screen Capture Runtime" }),
+    });
+
+    assert.equal(result.width, 7680);
+    assert.equal(result.height, 4320);
+    assert.equal(result.byteLength, "frame".length);
+    assert.equal(result.mimeType, "image/jpeg");
+    assert.equal(result.filename, "screen-capture-screen-capture.jpg");
+    assert.equal(result.url, "blob:runtime-0");
+    assert.deepEqual(
+      sceneHandle.calls.filter((call) => call[0] === "beginCaptureSize"),
+      [["beginCaptureSize", { width: 7680, height: 4320, pixelRatio: 1 }]],
+    );
+    assert.deepEqual(
+      sceneHandle.calls.find((call) => call[0] === "renderCaptureFrame")?.[1],
+      { timeSeconds: 2, frameIndex: 60 },
+    );
+    assert.ok(sceneHandle.calls.some((call) => call[0] === "endCaptureSize"));
+    assert.ok(
+      restoreDocument.createdCanvases.some((canvas) =>
+        canvas.contextCalls.some(
+          (call) => call[0] === "fillText" && call[1] === "Screen Capture Runtime",
+        ),
+      ),
+    );
+
+    result.cleanup();
+    assert.deepEqual(urlStub.revoked, ["blob:runtime-0"]);
+  } finally {
+    urlStub.restore();
+    restoreDocument();
+  }
+});
+
+test("deterministic still exporter rejects empty output without a download URL", async () => {
+  const restoreDocument = installDocumentStub();
+  const urlStub = installUrlStub();
+  try {
+    const { exportDeterministicStill } = await importBundled(
+      "src/capture/deterministicStillExporter.ts",
+    );
+    FakeCanvas.prototype.toBlob = function toBlob(callback, mimeType) {
+      callback(new Blob([], { type: mimeType }));
+    };
+
+    await assert.rejects(
+      () =>
+        exportDeterministicStill({
+          sceneHandle: fakeSceneHandle(),
+          recipe: validRecipe(),
+        }),
+      /Screen Capture produced an empty image/,
+    );
+    assert.equal(urlStub.created.length, 0);
+  } finally {
+    delete FakeCanvas.prototype.toBlob;
+    FakeCanvas.prototype.toBlob = function toBlob(callback, mimeType) {
+      callback(new Blob(["frame"], { type: mimeType }));
+    };
+    urlStub.restore();
+    restoreDocument();
+  }
+});
+
+test("deterministic still exporter preflights oversized render requests before scene mutation", async () => {
+  const restoreDocument = installDocumentStub();
+  try {
+    const { exportDeterministicStill } = await importBundled(
+      "src/capture/deterministicStillExporter.ts",
+    );
+    const sceneHandle = fakeSceneHandle({ maxTextureSize: 8192 });
+
+    await assert.rejects(
+      () =>
+        exportDeterministicStill({
+          sceneHandle,
+          recipe: validRecipe({
+            resolution: { width: 7680, height: 4320, label: "8K" },
+            supersampleScale: 2,
+          }),
+        }),
+      /exceeds/,
+    );
+    assert.equal(sceneHandle.calls.some((call) => call[0] === "setVisible"), false);
+    assert.equal(sceneHandle.calls.some((call) => call[0] === "applyStyle"), false);
+    assert.equal(
+      sceneHandle.calls.some((call) => call[0] === "beginCaptureSize"),
+      false,
+    );
+  } finally {
+    restoreDocument();
+  }
+});
+
+function fakeEncodingSequence(overrides = {}) {
+  const recipe = overrides.recipe ?? validRecipe({
+    mode: "scene-annotations",
+    resolution: { width: 1920, height: 1080, label: "1080p" },
+    durationSeconds: 0.1,
+    fps: 30,
+  });
+  const fps = overrides.fps ?? recipe.fps;
+  const width = overrides.width ?? recipe.resolution.width;
+  const height = overrides.height ?? recipe.resolution.height;
+  const totalFrames =
+    overrides.totalFrames ??
+    Math.max(1, Math.ceil(recipe.durationSeconds * recipe.fps));
+  const mimeType = overrides.mimeType ?? "image/png";
+  const frames = Array.from({ length: totalFrames }, (_, frameIndex) => ({
+    frameIndex,
+    timeSeconds: frameIndex / fps,
+    blob: new Blob([`frame-${frameIndex}`], { type: mimeType }),
+    url: `blob:frame-${frameIndex}`,
+    filename: `unsafe/path/frame-${frameIndex}.${
+      mimeType === "image/webp" ? "webp" : "png"
+    }`,
+    width,
+    height,
+    mimeType,
+  }));
+  return {
+    recipe,
+    frames,
+    totalFrames,
+    width,
+    height,
+    renderWidth: width,
+    renderHeight: height,
+    fps,
+    durationSeconds: recipe.durationSeconds,
+    supersampleScale: recipe.supersampleScale,
+    cleanup() {
+      this.cleaned = true;
+    },
+    ...overrides,
+  };
+}
+
+function fakeFfmpegRuntime({ failExec = false } = {}) {
+  const calls = [];
+  const files = new Map();
+  return {
+    calls,
+    files,
+    async writeFile(path, data) {
+      calls.push(["writeFile", path, data.length]);
+      files.set(path, data);
+    },
+    async exec(args) {
+      calls.push(["exec", args]);
+      if (failExec) {
+        throw new Error("ffmpeg failed");
+      }
+      const outputPath = Array.isArray(args) ? args[args.length - 1] : null;
+      files.set("/geosee-capture/output.mp4", new Uint8Array([1, 2, 3]));
+      files.set("/geosee-capture/output.webm", new Uint8Array([4, 5, 6]));
+      if (typeof outputPath === "string") {
+        files.set(outputPath, new Uint8Array([9, 8, 7]));
+      }
+    },
+    async readFile(path) {
+      calls.push(["readFile", path]);
+      const data = files.get(path);
+      if (!data) throw new Error(`missing file ${path}`);
+      return data;
+    },
+    async deleteFile(path) {
+      calls.push(["deleteFile", path]);
+      files.delete(path);
+    },
+  };
+}
+
+test("frame-sequence encoder validates deterministic frame integrity", async () => {
+  const {
+    validateDeterministicFrameSequenceForEncoding,
+  } = await importBundled("src/capture/frameSequenceVideoEncoder.ts");
+
+  assert.equal(
+    validateDeterministicFrameSequenceForEncoding(fakeEncodingSequence()).valid,
+    true,
+  );
+
+  const invalid = fakeEncodingSequence({
+    recipe: validRecipe({ mode: "full-ui" }),
+    width: 1919,
+    frames: [
+      {
+        frameIndex: 1,
+        timeSeconds: 0.25,
+        blob: new Blob([], { type: "image/jpeg" }),
+        url: "blob:bad",
+        filename: "bad.jpg",
+        width: 1900,
+        height: 1080,
+        mimeType: "image/jpeg",
+      },
+    ],
+  });
+  const result = validateDeterministicFrameSequenceForEncoding(invalid);
+
+  assert.equal(result.valid, false);
+  assert.match(result.errors.join("\n"), /full-ui/);
+  assert.match(result.errors.join("\n"), /frame count/);
+  assert.match(result.errors.join("\n"), /frameIndex/);
+  assert.match(result.errors.join("\n"), /timeSeconds/);
+  assert.match(result.errors.join("\n"), /blob/);
+  assert.match(result.errors.join("\n"), /mimeType/);
+  assert.match(result.errors.join("\n"), /dimensions/);
+});
+
+test("frame-sequence encoder builds deterministic MP4 and WebM FFmpeg plans", async () => {
+  const {
+    createFfmpegFrameSequenceEncodePlan,
+  } = await importBundled("src/capture/frameSequenceVideoEncoder.ts");
+  const sequence = fakeEncodingSequence();
+  const mp4 = createFfmpegFrameSequenceEncodePlan(sequence, {
+    preset: "mp4-h264-marketing",
+  });
+  const webm = createFfmpegFrameSequenceEncodePlan(sequence, {
+    preset: "webm-vp9-marketing",
+    virtualDirectory: "/custom",
+    outputBasename: "demo",
+  });
+
+  assert.equal(mp4.outputPath, "/geosee-capture/output.mp4");
+  assert.equal(mp4.inputPattern, "/geosee-capture/frame-%06d.png");
+  assert.deepEqual(mp4.inputFiles.map((file) => file.path), [
+    "/geosee-capture/frame-000000.png",
+    "/geosee-capture/frame-000001.png",
+    "/geosee-capture/frame-000002.png",
+  ]);
+  assert.deepEqual(mp4.args, [
+    "-hide_banner",
+    "-y",
+    "-framerate",
+    "30",
+    "-start_number",
+    "0",
+    "-i",
+    "/geosee-capture/frame-%06d.png",
+    "-an",
+    "-c:v",
+    "libx264",
+    "-preset",
+    "medium",
+    "-crf",
+    "18",
+    "-pix_fmt",
+    "yuv420p",
+    "-movflags",
+    "+faststart",
+    "/geosee-capture/output.mp4",
+  ]);
+  assert.equal(webm.outputPath, "/custom/demo.webm");
+  assert.ok(webm.args.includes("libvpx-vp9"));
+  assert.ok(webm.args.includes("-row-mt"));
+  assert.ok(!webm.inputPattern.includes("unsafe/path"));
+});
+
+test("frame-sequence encoder writes frames, executes FFmpeg, and cleans virtual files", async () => {
+  const {
+    encodeDeterministicFrameSequenceWithFfmpeg,
+  } = await importBundled("src/capture/frameSequenceVideoEncoder.ts");
+  const urlStub = installUrlStub();
+  const runtime = fakeFfmpegRuntime();
+  try {
+    const sequence = fakeEncodingSequence();
+    const result = await encodeDeterministicFrameSequenceWithFfmpeg({
+      sequence,
+      runtime,
+      preset: "mp4-h264-marketing",
+    });
+
+    assert.equal(result.mimeType, "video/mp4");
+    assert.equal(result.url, "blob:runtime-0");
+    assert.equal(urlStub.created.length, 1);
+    assert.equal(runtime.calls.filter((call) => call[0] === "writeFile").length, 3);
+    assert.equal(runtime.calls.filter((call) => call[0] === "exec").length, 1);
+    assert.equal(runtime.calls.filter((call) => call[0] === "readFile").length, 1);
+    assert.equal(
+      runtime.calls.filter((call) => call[0] === "deleteFile").length,
+      4,
+    );
+    assert.equal(sequence.cleaned, undefined);
+
+    result.cleanup();
+    assert.deepEqual(urlStub.revoked, ["blob:runtime-0"]);
+  } finally {
+    urlStub.restore();
+  }
+});
+
+test("frame-sequence encoder cleans virtual files when FFmpeg fails", async () => {
+  const {
+    encodeDeterministicFrameSequenceWithFfmpeg,
+  } = await importBundled("src/capture/frameSequenceVideoEncoder.ts");
+  const runtime = fakeFfmpegRuntime({ failExec: true });
+
+  await assert.rejects(
+    encodeDeterministicFrameSequenceWithFfmpeg({
+      sequence: fakeEncodingSequence(),
+      runtime,
+      preset: "mp4-h264-marketing",
+    }),
+    /ffmpeg failed/,
+  );
+  assert.equal(
+    runtime.calls.filter((call) => call[0] === "deleteFile").length,
+    4,
+  );
+});
+
+test("frame-sequence encoder cleans input frames when encode planning fails", async () => {
+  const {
+    encodeDeterministicFrameSequenceWithFfmpeg,
+  } = await importBundled("src/capture/frameSequenceVideoEncoder.ts");
+  const runtime = fakeFfmpegRuntime();
+  const sequence = fakeEncodingSequence({
+    recipe: validRecipe({
+      resolution: { width: 641, height: 360, label: "Odd Width" },
+    }),
+    width: 641,
+    frames: [
+      {
+        frameIndex: 0,
+        timeSeconds: 0,
+        blob: new Blob(["a"], { type: "image/png" }),
+        url: "blob:a",
+        filename: "frame-000000.png",
+        width: 641,
+        height: 360,
+        mimeType: "image/png",
+      },
+      {
+        frameIndex: 1,
+        timeSeconds: 1 / 30,
+        blob: new Blob(["b"], { type: "image/png" }),
+        url: "blob:b",
+        filename: "frame-000001.png",
+        width: 641,
+        height: 360,
+        mimeType: "image/png",
+      },
+      {
+        frameIndex: 2,
+        timeSeconds: 2 / 30,
+        blob: new Blob(["c"], { type: "image/png" }),
+        url: "blob:c",
+        filename: "frame-000002.png",
+        width: 641,
+        height: 360,
+        mimeType: "image/png",
+      },
+    ],
+  });
+
+  await assert.rejects(
+    encodeDeterministicFrameSequenceWithFfmpeg({
+      sequence,
+      runtime,
+      preset: "mp4-h264-marketing",
+      cleanupInputFrames: true,
+    }),
+    /requires even sequence width/,
+  );
+  assert.equal(sequence.cleaned, true);
+  assert.equal(runtime.calls.length, 0);
+});
+
+test("video save options validate blobs and handle picker outcomes", async () => {
+  const {
+    captureVideoFilename,
+    captureVideoMimeType,
+    saveCaptureVideoBlobWithPicker,
+    validateCaptureVideoBlob,
+  } = await importBundled("src/capture/captureVideoSaveOptions.ts");
+
+  assert.equal(captureVideoFilename("unsafe name.mp4", "mp4"), "unsafe-name.mp4");
+  assert.equal(captureVideoMimeType("webm"), "video/webm");
+  assert.throws(
+    () => validateCaptureVideoBlob(new Blob([]), "Preview MP4"),
+    /no video data/,
+  );
+  assert.deepEqual(
+    await saveCaptureVideoBlobWithPicker({
+      blob: new Blob(["video"], { type: "video/webm" }),
+      filename: "preview.webm",
+      type: "webm",
+      picker: null,
+    }),
+    { status: "unavailable" },
+  );
+
+  const writes = [];
+  const saved = await saveCaptureVideoBlobWithPicker({
+    blob: new Blob(["video"], { type: "video/mp4" }),
+    filename: "preview.mp4",
+    type: "mp4",
+    picker: async (options) => {
+      writes.push(["picker", options.suggestedName, options.types[0].accept]);
+      return {
+        async createWritable() {
+          return {
+            async write(blob) {
+              writes.push(["write", blob.size]);
+            },
+            async close() {
+              writes.push(["close"]);
+            },
+          };
+        },
+      };
+    },
+  });
+  assert.deepEqual(saved, { status: "saved" });
+  assert.deepEqual(writes, [
+    ["picker", "preview.mp4", { "video/mp4": [".mp4"] }],
+    ["write", 5],
+    ["close"],
+  ]);
+
+  const cancelled = await saveCaptureVideoBlobWithPicker({
+    blob: new Blob(["video"], { type: "video/mp4" }),
+    filename: "preview.mp4",
+    type: "mp4",
+    picker: async () => {
+      throw new DOMException("cancelled", "AbortError");
+    },
+  });
+  assert.deepEqual(cancelled, { status: "cancelled" });
+});
+
+test("preview WebM transcode builds MP4 plan and validates output bytes", async () => {
+  const {
+    createPreviewVideoTranscodePlan,
+    transcodePreviewVideoToMp4,
+  } = await importBundled("src/capture/previewVideoTranscoder.ts");
+  const urlStub = installUrlStub();
+  const runtime = fakeFfmpegRuntime();
+  try {
+    const plan = createPreviewVideoTranscodePlan({
+      outputBasename: "path-preview",
+      virtualDirectory: "/preview",
+    });
+    assert.equal(plan.inputPath, "/preview/input.webm");
+    assert.equal(plan.outputPath, "/preview/path-preview.mp4");
+    assert.ok(plan.args.includes("libx264"));
+    assert.ok(plan.args.includes("+faststart"));
+
+    const result = await transcodePreviewVideoToMp4({
+      inputBlob: new Blob(["webm-data"], { type: "video/webm" }),
+      runtime,
+      outputBasename: "path-preview",
+      virtualDirectory: "/preview",
+    });
+    assert.equal(result.mimeType, "video/mp4");
+    assert.equal(result.filename, "path-preview.mp4");
+    assert.equal(result.blob.size, 3);
+    assert.equal(runtime.calls.filter((call) => call[0] === "writeFile").length, 1);
+    assert.equal(runtime.calls.filter((call) => call[0] === "exec").length, 1);
+    assert.equal(runtime.calls.filter((call) => call[0] === "readFile").length, 1);
+    assert.equal(runtime.calls.filter((call) => call[0] === "deleteFile").length, 2);
+    result.cleanup();
+    assert.deepEqual(urlStub.revoked, ["blob:runtime-0"]);
+  } finally {
+    urlStub.restore();
+  }
+
+  await assert.rejects(
+    transcodePreviewVideoToMp4({
+      inputBlob: new Blob([]),
+      runtime: fakeFfmpegRuntime(),
+    }),
+    /Preview WebM produced no video data/,
+  );
+});
+
+test("browser FFmpeg runtime adapter loads lazily and maps filesystem calls", async () => {
+  const {
+    createBrowserFfmpegFrameSequenceRuntime,
+  } = await importBundled("src/capture/browserFfmpegRuntime.ts");
+  const calls = [];
+
+  class FakeFFmpeg {
+    async load(options) {
+      calls.push(["load", options]);
+    }
+
+    async writeFile(path, data) {
+      calls.push(["writeFile", path, data.length]);
+    }
+
+    async exec(args) {
+      calls.push(["exec", args]);
+    }
+
+    async readFile(path) {
+      calls.push(["readFile", path]);
+      return new Uint8Array([7, 8, 9]);
+    }
+
+    async deleteFile(path) {
+      calls.push(["deleteFile", path]);
+    }
+
+    terminate() {
+      calls.push(["terminate"]);
+    }
+  }
+
+  const handle = await createBrowserFfmpegFrameSequenceRuntime({
+    loadOptions: { coreURL: "/ffmpeg-core.js" },
+    loadModule: async () => ({ FFmpeg: FakeFFmpeg }),
+  });
+  await handle.runtime.writeFile("/frames/frame-000000.png", new Uint8Array([1, 2]));
+  await handle.runtime.exec(["-version"]);
+  assert.deepEqual(await handle.runtime.readFile("/frames/output.mp4"), new Uint8Array([7, 8, 9]));
+  await handle.runtime.deleteFile?.("/frames/frame-000000.png");
+  handle.dispose();
+
+  assert.deepEqual(calls, [
+    ["load", { coreURL: "/ffmpeg-core.js" }],
+    ["writeFile", "/frames/frame-000000.png", 2],
+    ["exec", ["-version"]],
+    ["readFile", "/frames/output.mp4"],
+    ["deleteFile", "/frames/frame-000000.png"],
+    ["terminate"],
+  ]);
+});
+
+test("browser FFmpeg runtime adapter defaults to self-hosted core assets", async () => {
+  const {
+    createBrowserFfmpegFrameSequenceRuntime,
+  } = await importBundled("src/capture/browserFfmpegRuntime.ts");
+  const calls = [];
+  const previousDocument = globalThis.document;
+  globalThis.document = { baseURI: "https://example.test/app/" };
+
+  class FakeFFmpeg {
+    async load(options) {
+      calls.push(["load", options]);
+    }
+
+    async writeFile(path, data) {
+      calls.push(["writeFile", path, data.length]);
+    }
+  }
+
+  try {
+    const handle = createBrowserFfmpegFrameSequenceRuntime({
+      loadModule: async () => ({ FFmpeg: FakeFFmpeg }),
+    });
+    await handle.runtime.writeFile("/frame.png", new Uint8Array([1]));
+    handle.dispose();
+  } finally {
+    globalThis.document = previousDocument;
+  }
+
+  assert.deepEqual(calls, [
+    [
+      "load",
+      {
+        coreURL: "https://example.test/runtime/ffmpeg/ffmpeg-core.js",
+        wasmURL: "https://example.test/runtime/ffmpeg/ffmpeg-core.wasm",
+        workerURL: "https://example.test/runtime/ffmpeg/ffmpeg-core.worker.js",
+      },
+    ],
+    ["writeFile", "/frame.png", 1],
+  ]);
+});
+
+test("browser FFmpeg runtime adapter forwards abort signals to FFmpeg calls", async () => {
+  const {
+    createBrowserFfmpegFrameSequenceRuntime,
+  } = await importBundled("src/capture/browserFfmpegRuntime.ts");
+  const calls = [];
+  const controller = new AbortController();
+
+  class FakeFFmpeg {
+    async load(options, runtimeOptions) {
+      calls.push(["load", options, runtimeOptions?.signal === controller.signal]);
+    }
+
+    async writeFile(path, data, runtimeOptions) {
+      calls.push(["writeFile", path, data.length, runtimeOptions?.signal === controller.signal]);
+    }
+
+    async exec(args, timeout, runtimeOptions) {
+      calls.push(["exec", args, timeout, runtimeOptions?.signal === controller.signal]);
+      return 0;
+    }
+
+    async readFile(path, encoding, runtimeOptions) {
+      calls.push(["readFile", path, encoding, runtimeOptions?.signal === controller.signal]);
+      return new Uint8Array([1]);
+    }
+
+    async deleteFile(path, runtimeOptions) {
+      calls.push(["deleteFile", path, runtimeOptions?.signal === controller.signal]);
+    }
+  }
+
+  const handle = createBrowserFfmpegFrameSequenceRuntime({
+    signal: controller.signal,
+    loadModule: async () => ({ FFmpeg: FakeFFmpeg }),
+  });
+  await handle.runtime.writeFile("/frame.png", new Uint8Array([1]));
+  await handle.runtime.exec(["-version"]);
+  await handle.runtime.readFile("/output.mp4");
+  await handle.runtime.deleteFile?.("/frame.png");
+
+  assert.equal(calls[0][0], "load");
+  assert.equal(calls[0][2], true);
+  assert.match(calls[0][1].coreURL, /\/runtime\/ffmpeg\/ffmpeg-core\.js$/);
+  assert.match(calls[0][1].wasmURL, /\/runtime\/ffmpeg\/ffmpeg-core\.wasm$/);
+  assert.deepEqual(calls.slice(1), [
+    ["writeFile", "/frame.png", 1, true],
+    ["exec", ["-version"], undefined, true],
+    ["readFile", "/output.mp4", undefined, true],
+    ["deleteFile", "/frame.png", true],
+  ]);
+});

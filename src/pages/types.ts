@@ -359,9 +359,10 @@ export interface EditableStyle {
   scalarDisplayMax?: number;
   scalarFocusMin?: number;
   scalarFocusMax?: number;
-  // Source point inclusion is separate from scalar display/focus styling.
-  // "all-valid" keeps source points drawable while visual windows adjust color
-  // and emphasis; "thresholded" permits scalar windows/noise to filter draws.
+  // Source cell inclusion is separate from resistivity display/focus styling.
+  // "all-valid" keeps source cells drawable while visual windows adjust color
+  // and emphasis; "thresholded" permits log10 resistivity windows and lateral
+  // support to filter draws.
   scalarInclusionMode?: "all-valid" | "thresholded";
   scalarMidpoint?: number;
   scalarContrast?: number;

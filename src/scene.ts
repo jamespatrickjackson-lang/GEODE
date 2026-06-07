@@ -16,8 +16,19 @@ import type {
 import { buildPostprocessing } from "./scene/postprocessing";
 import { setHoverTooltip } from "./ui/HoverTooltip";
 import type { Pose, ProjectLayerSpec, SceneOverlayDef, Vec3 } from "./pages/types";
+import { applyPose, capturePose } from "./pages/capturePose";
 import { debugLog } from "./utils/debugLog";
 import { UTAH_FORGE_MT_STATIONS_LAYER_ID } from "./projectModules/utahForge/layerIds";
+import {
+  createCaptureCameraPathLine,
+  disposeCaptureCameraPathOverlayObject,
+  setCaptureCameraPathLineResolution,
+} from "./scene/captureCameraPathOverlayLine";
+import type {
+  CaptureCameraPathKeyframeV1,
+  CaptureCameraPathSample,
+  CaptureVec3,
+} from "./capture/captureCameraPath";
 
 // Z-up convention for the whole scene.
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
@@ -169,12 +180,249 @@ export interface SceneRenderLoopDebugState {
   }>;
 }
 
+export interface CaptureFidelityDiagnostics {
+  requestedWidth: number;
+  requestedHeight: number;
+  effectiveWidth: number;
+  effectiveHeight: number;
+  rendererPixelRatio: number;
+  downsamplingDisabled: boolean;
+  dynamicResolutionDisabled: boolean;
+  maxTextureSize: number;
+  maxRenderbufferSize: number;
+  layerDetailPolicy: Array<{
+    layerId: string;
+    requested: "max";
+    effective: "max" | "highest-available-preview";
+    note?: string;
+  }>;
+}
+
+export interface CaptureFidelitySnapshot {
+  reason: "render-out" | "still-capture" | "external-still";
+  width: number;
+  height: number;
+  pixelRatio: number;
+  cameraAspect: number;
+  diagnostics: CaptureFidelityDiagnostics;
+}
+
+export interface CaptureCameraPathOverlayKeyframe {
+  id: string;
+  displayIndex?: number;
+  enabled?: boolean;
+  hidden?: boolean;
+  nodeKind?: "keyframe" | "transition";
+  position: CaptureVec3;
+  target?: CaptureVec3;
+  lookMode?:
+    | "free-direction"
+    | "focus-point-lock"
+    | "follow-path-tangent"
+    | "target-blend";
+  focusLocked?: boolean;
+}
+
+export interface CaptureCameraPathOverlaySegment {
+  id: string;
+  displayIndex?: number;
+  enabled?: boolean;
+  hidden?: boolean;
+  fromNodeId: string;
+  toNodeId: string;
+}
+
+export interface CaptureCameraPathOverlaySample {
+  timeSeconds: number;
+  position: CaptureVec3;
+  target: CaptureVec3;
+  up: CaptureVec3;
+  fov: number;
+  nodeId?: string | null;
+}
+
+export interface CaptureCameraPathEquationOptions {
+  visible: boolean;
+  selectedTransitionOnly?: boolean;
+  showStackLabels?: boolean;
+  showTemporalRamp?: boolean;
+  showTangents?: boolean;
+  showInfluenceHandles?: boolean;
+  showCurvatureComb?: boolean;
+  showFocusDistance?: boolean;
+}
+
+export interface CaptureCameraPathTransitionEquation {
+  id: string;
+  segmentId: string;
+  label?: string;
+  position?: CaptureVec3;
+  anchor?: CaptureVec3;
+  continuity?: "G0" | "G1" | "G2" | "G3";
+  timeCurve?: string;
+  visible?: boolean;
+}
+
+export interface CaptureCameraPathTangentHandle {
+  id: string;
+  segmentId?: string;
+  nodeId?: string;
+  label?: string;
+  start: CaptureVec3;
+  end: CaptureVec3;
+}
+
+export interface CaptureCameraPathInfluenceHandle {
+  id: string;
+  segmentId?: string;
+  nodeId?: string;
+  label?: string;
+  position: CaptureVec3;
+  anchor?: CaptureVec3;
+  gdPercent?: number;
+}
+
+export interface CaptureCameraPathCurvatureCombSample {
+  position: CaptureVec3;
+  normal: CaptureVec3;
+  length: number;
+}
+
+export interface CaptureCameraPathCurvatureComb {
+  id: string;
+  segmentId?: string;
+  samples: CaptureCameraPathCurvatureCombSample[];
+}
+
+export interface CaptureCameraPathFocusDistanceVector {
+  id: string;
+  nodeId?: string;
+  segmentId?: string;
+  label?: string;
+  start: CaptureVec3;
+  end: CaptureVec3;
+  distanceM?: number;
+}
+
+export interface CaptureCameraPathSplineHandle {
+  id: string;
+  nodeId: string;
+  side: "in" | "out";
+  label?: string;
+  anchor: CaptureVec3;
+  position: CaptureVec3;
+  tangentCoupled?: boolean;
+}
+
+export interface CaptureCameraPathNodeAxisHandle {
+  id: string;
+  nodeId: string;
+  axis: "x" | "y" | "z";
+  start: CaptureVec3;
+  end: CaptureVec3;
+}
+
+export interface CaptureCameraPathOverlayState {
+  visible: boolean;
+  editable: boolean;
+  selectedKeyframeId: string | null;
+  selectedSegmentId?: string | null;
+  sampledPoints: CaptureVec3[];
+  keyframes: CaptureCameraPathOverlayKeyframe[];
+  segmentIds: string[];
+  segments?: CaptureCameraPathOverlaySegment[];
+  currentSample?: CaptureCameraPathOverlaySample | null;
+  colors?: {
+    path?: string;
+    selected?: string;
+    keyframe?: string;
+    target?: string;
+    hover?: string;
+  };
+  lineSize?: number;
+  directionRayLength?: number;
+  handleScale?: number;
+  showCameraFrustum?: boolean;
+  showLookRays?: boolean;
+  showFocusLockRays?: boolean;
+  showNodeLabels?: boolean;
+  showTimelineGhost?: boolean;
+  previewMonitorMode?: string;
+  equationOptions?: CaptureCameraPathEquationOptions;
+  transitionEquations?: CaptureCameraPathTransitionEquation[];
+  tangentHandles?: CaptureCameraPathTangentHandle[];
+  influenceHandles?: CaptureCameraPathInfluenceHandle[];
+  splineHandles?: CaptureCameraPathSplineHandle[];
+  nodeAxisHandles?: CaptureCameraPathNodeAxisHandle[];
+  curvatureComb?: CaptureCameraPathCurvatureComb[];
+  focusDistanceVectors?: CaptureCameraPathFocusDistanceVector[];
+}
+
+export interface CaptureCameraPathInteractionOptions {
+  onSelectKeyframe?: (id: string) => void;
+  onMoveKeyframe?: (id: string, position: CaptureVec3) => void;
+  onMoveTarget?: (id: string, target: CaptureVec3) => void;
+  onMoveSegment?: (segmentId: string, delta: CaptureVec3) => void;
+  onMoveInfluenceHandle?: (id: string, position: CaptureVec3) => void;
+  onMoveSplineHandle?: (
+    nodeId: string,
+    side: "in" | "out",
+    position: CaptureVec3,
+  ) => void;
+  onMoveNodeAxis?: (nodeId: string, axis: "x" | "y" | "z", delta: number) => void;
+  onMoveFocusDistance?: (id: string, position: CaptureVec3) => void;
+  onSelectEquationSegment?: (segmentId: string) => void;
+  bindFocusKeyframeId?: string | null;
+  onBindFocusPoint?: (id: string, point: CaptureVec3) => void;
+}
+
 export interface SceneHandle {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   controls: OrbitControls;
   renderer: THREE.WebGLRenderer;
   manager: SceneManager;
+  getCanvas(): HTMLCanvasElement;
+  beginCaptureSize(options: {
+    width: number;
+    height: number;
+    pixelRatio?: number;
+    suppressCameraPathOverlay?: boolean;
+  }): void;
+  endCaptureSize(): void;
+  onAfterRender(callback: () => void): () => void;
+  renderCaptureFrame?(options: {
+    timeSeconds: number;
+    frameIndex: number;
+  }): void;
+  getCameraPose(): CaptureCameraPathKeyframeV1;
+  setCameraPose(pose: CaptureCameraPathSample | CaptureCameraPathKeyframeV1): void;
+  beginCaptureFidelityLock(options: {
+    reason: "render-out" | "still-capture" | "external-still";
+    width: number;
+    height: number;
+    fullOutputWidth?: number;
+    fullOutputHeight?: number;
+    tileX?: number;
+    tileY?: number;
+    tileId?: string;
+    mode: "max-detail-render";
+  }): CaptureFidelitySnapshot;
+  endCaptureFidelityLock(snapshot: CaptureFidelitySnapshot): void;
+  setCaptureCameraPathOverlay(options: CaptureCameraPathOverlayState): void;
+  clearCaptureCameraPathOverlay(): void;
+  setCaptureCameraPathInteraction(
+    options: CaptureCameraPathInteractionOptions,
+  ): () => void;
+  renderCameraPathPreviewFrame(options: {
+    pose: CaptureCameraPathSample;
+    width: number;
+    height: number;
+  }): string | null;
+  getCaptureCapabilities(): {
+    maxTextureSize: number;
+    maxRenderbufferSize: number;
+  };
   onTick(fn: (timeMs: number) => void, debugName?: string): () => void;
   getFrameLoopDebugState(): SceneRenderLoopDebugState | null;
   onDrillFocus(fn: (focus: DrillFocus | null) => void): () => void;
@@ -283,6 +531,12 @@ export function mountScene(
   container.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
+  const captureCameraPathOverlay = new THREE.Group();
+  captureCameraPathOverlay.name = "__capture_camera_path_overlay__";
+  captureCameraPathOverlay.visible = false;
+  captureCameraPathOverlay.userData.geoseePickIgnore = true;
+  captureCameraPathOverlay.userData.captureCameraPathOverlay = true;
+  scene.add(captureCameraPathOverlay);
 
   const camera = new THREE.PerspectiveCamera(
     50,
@@ -350,6 +604,14 @@ export function mountScene(
     fn: (t: number) => void;
     debugName: string;
   }>();
+  const afterRenderCallbacks = new Set<() => void>();
+  let captureSizeSnapshot: {
+    width: number;
+    height: number;
+    pixelRatio: number;
+    cameraAspect: number;
+    cameraPathOverlayVisible: boolean;
+  } | null = null;
   let lastFrameLoopDebug: SceneRenderLoopDebugState | null = null;
   let frameLoopIndex = 0;
   let lastRafTimeMs: number | null = null;
@@ -361,6 +623,258 @@ export function mountScene(
     return () => tickers.delete(entry);
   };
   const getFrameLoopDebugState = () => lastFrameLoopDebug;
+  const getCanvas = () => renderer.domElement;
+  const onAfterRender = (callback: () => void) => {
+    afterRenderCallbacks.add(callback);
+    return () => afterRenderCallbacks.delete(callback);
+  };
+  const getCameraPose = (): CaptureCameraPathKeyframeV1 => ({
+    id: "current-camera",
+    timeSeconds: 0,
+    ...capturePose(camera, controls),
+    easing: "linear",
+  });
+  const setCameraPose = (
+    pose: CaptureCameraPathSample | CaptureCameraPathKeyframeV1,
+  ) => {
+    applyPose(camera, controls, {
+      position: [pose.position[0], pose.position[1], pose.position[2]],
+      target: [pose.target[0], pose.target[1], pose.target[2]],
+      up: [pose.up[0], pose.up[1], pose.up[2]],
+      fov: pose.fov,
+    });
+  };
+  const notifyAfterRenderCallbacks = () => {
+    for (const callback of afterRenderCallbacks) {
+      try {
+        callback();
+      } catch (error) {
+        console.error("[scene] after-render callback failed:", error);
+      }
+    }
+  };
+  const applyRenderSize = (
+    width: number,
+    height: number,
+    pixelRatio: number,
+    updateCanvasStyle: boolean,
+  ) => {
+    const safeWidth = Math.max(1, Math.round(width));
+    const safeHeight = Math.max(1, Math.round(height));
+    const safePixelRatio = Math.max(0.25, Math.min(4, pixelRatio));
+    renderer.setPixelRatio(safePixelRatio);
+    renderer.setSize(safeWidth, safeHeight, updateCanvasStyle);
+    setCaptureCameraPathLineResolution(
+      captureCameraPathOverlay,
+      safeWidth,
+      safeHeight,
+    );
+    camera.aspect = safeWidth / safeHeight;
+    camera.updateProjectionMatrix();
+    post.setPixelRatio(safePixelRatio);
+    post.setSize(safeWidth, safeHeight);
+    manager.notifyResize(safeWidth, safeHeight);
+  };
+  const beginCaptureSize = (options: {
+    width: number;
+    height: number;
+    pixelRatio?: number;
+    suppressCameraPathOverlay?: boolean;
+  }) => {
+    if (captureSizeSnapshot) {
+      endCaptureSize();
+    }
+    const currentSize = renderer.getSize(new THREE.Vector2());
+    captureSizeSnapshot = {
+      width: currentSize.x,
+      height: currentSize.y,
+      pixelRatio: renderer.getPixelRatio(),
+      cameraAspect: camera.aspect,
+      cameraPathOverlayVisible: captureCameraPathOverlay.visible,
+    };
+    if (options.suppressCameraPathOverlay !== false) {
+      captureCameraPathOverlay.visible = false;
+    }
+    applyRenderSize(
+      options.width,
+      options.height,
+      options.pixelRatio ?? renderer.getPixelRatio(),
+      false,
+    );
+  };
+  const endCaptureSize = () => {
+    const snapshot = captureSizeSnapshot;
+    if (!snapshot) return;
+    captureSizeSnapshot = null;
+    const liveWidth = container.clientWidth || snapshot.width;
+    const liveHeight = container.clientHeight || snapshot.height;
+    captureCameraPathOverlay.visible = snapshot.cameraPathOverlayVisible;
+    applyRenderSize(
+      liveWidth,
+      liveHeight,
+      snapshot.pixelRatio,
+      !!container.clientWidth && !!container.clientHeight,
+    );
+    if (!container.clientWidth || !container.clientHeight) {
+      camera.aspect = snapshot.cameraAspect;
+      camera.updateProjectionMatrix();
+    }
+  };
+  const renderCaptureFrame = ({
+    timeSeconds,
+  }: {
+    timeSeconds: number;
+    frameIndex: number;
+  }) => {
+    const timeMs = timeSeconds * 1000;
+    const cameraPathOverlayVisible = captureCameraPathOverlay.visible;
+    captureCameraPathOverlay.visible = false;
+    try {
+      for (const ticker of tickers) {
+        ticker.fn(timeMs);
+      }
+      controls.update();
+      manager.frameUpdate(camera, timeMs);
+      post.composer.render();
+      notifyAfterRenderCallbacks();
+    } finally {
+      if (!captureSizeSnapshot) {
+        captureCameraPathOverlay.visible = cameraPathOverlayVisible;
+      }
+    }
+  };
+  const renderCameraPathPreviewFrame = ({
+    pose,
+    width,
+    height,
+  }: {
+    pose: CaptureCameraPathSample;
+    width: number;
+    height: number;
+  }): string | null => {
+    const safeWidth = Math.max(1, Math.min(640, Math.round(width)));
+    const safeHeight = Math.max(1, Math.min(360, Math.round(height)));
+    const previewCamera = camera.clone() as THREE.PerspectiveCamera;
+    previewCamera.position.set(pose.position[0], pose.position[1], pose.position[2]);
+    previewCamera.up.set(pose.up[0], pose.up[1], pose.up[2]);
+    previewCamera.fov = pose.fov;
+    previewCamera.aspect = safeWidth / safeHeight;
+    previewCamera.lookAt(new THREE.Vector3(pose.target[0], pose.target[1], pose.target[2]));
+    previewCamera.updateProjectionMatrix();
+    const renderTarget = new THREE.WebGLRenderTarget(safeWidth, safeHeight, {
+      depthBuffer: true,
+      stencilBuffer: false,
+    });
+    const previousRenderTarget = renderer.getRenderTarget();
+    const overlayWasVisible = captureCameraPathOverlay.visible;
+    const pixelBuffer = new Uint8Array(safeWidth * safeHeight * 4);
+    try {
+      captureCameraPathOverlay.visible = false;
+      renderer.setRenderTarget(renderTarget);
+      renderer.render(scene, previewCamera);
+      renderer.readRenderTargetPixels(
+        renderTarget,
+        0,
+        0,
+        safeWidth,
+        safeHeight,
+        pixelBuffer,
+      );
+      const canvas = document.createElement("canvas");
+      canvas.width = safeWidth;
+      canvas.height = safeHeight;
+      const context = canvas.getContext("2d");
+      if (!context) return null;
+      const imageData = context.createImageData(safeWidth, safeHeight);
+      const rowBytes = safeWidth * 4;
+      for (let y = 0; y < safeHeight; y += 1) {
+        const sourceOffset = (safeHeight - y - 1) * rowBytes;
+        const targetOffset = y * rowBytes;
+        imageData.data.set(
+          pixelBuffer.subarray(sourceOffset, sourceOffset + rowBytes),
+          targetOffset,
+        );
+      }
+      context.putImageData(imageData, 0, 0);
+      return canvas.toDataURL("image/jpeg", 0.76);
+    } catch (error) {
+      debugLog("capture", "camera path preview render failed", error);
+      return null;
+    } finally {
+      renderer.setRenderTarget(previousRenderTarget);
+      captureCameraPathOverlay.visible = overlayWasVisible;
+      renderTarget.dispose();
+    }
+  };
+  const getCaptureCapabilities = () => {
+    const gl = renderer.getContext();
+    const maxTextureSize =
+      renderer.capabilities.maxTextureSize ??
+      gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    const maxRenderbufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
+    return {
+      maxTextureSize:
+        typeof maxTextureSize === "number" && Number.isFinite(maxTextureSize)
+          ? maxTextureSize
+          : 4096,
+      maxRenderbufferSize:
+        typeof maxRenderbufferSize === "number" &&
+        Number.isFinite(maxRenderbufferSize)
+          ? maxRenderbufferSize
+      : 4096,
+    };
+  };
+  const beginCaptureFidelityLock = (options: {
+    reason: "render-out" | "still-capture" | "external-still";
+    width: number;
+    height: number;
+    fullOutputWidth?: number;
+    fullOutputHeight?: number;
+    tileX?: number;
+    tileY?: number;
+    tileId?: string;
+    mode: "max-detail-render";
+  }): CaptureFidelitySnapshot => {
+    const currentSize = renderer.getSize(new THREE.Vector2());
+    const capabilities = getCaptureCapabilities();
+    const snapshot: CaptureFidelitySnapshot = {
+      reason: options.reason,
+      width: currentSize.x,
+      height: currentSize.y,
+      pixelRatio: renderer.getPixelRatio(),
+      cameraAspect: camera.aspect,
+      diagnostics: {
+        requestedWidth: options.width,
+        requestedHeight: options.height,
+        effectiveWidth: options.width,
+        effectiveHeight: options.height,
+        rendererPixelRatio: 1,
+        downsamplingDisabled: true,
+        dynamicResolutionDisabled: true,
+        maxTextureSize: capabilities.maxTextureSize,
+        maxRenderbufferSize: capabilities.maxRenderbufferSize,
+        layerDetailPolicy: Array.from(manager.layerEntries()).map(([layerId]) => ({
+          layerId,
+          requested: "max" as const,
+          effective: "highest-available-preview" as const,
+          note: "Capture Director uses the highest currently loaded app source without additional render downsampling.",
+        })),
+      },
+    };
+    beginCaptureSize({
+      width: options.width,
+      height: options.height,
+      pixelRatio: 1,
+    });
+    renderer.domElement.dataset.captureFidelity = options.mode;
+    renderer.domElement.dataset.captureDownsampling = "disabled";
+    return snapshot;
+  };
+  const endCaptureFidelityLock = (_snapshot: CaptureFidelitySnapshot) => {
+    delete renderer.domElement.dataset.captureFidelity;
+    delete renderer.domElement.dataset.captureDownsampling;
+    endCaptureSize();
+  };
   const drillFocusListeners = new Set<(focus: DrillFocus | null) => void>();
   let currentDrillFocus: DrillFocus | null = null;
   const cloneDrillFocus = (focus: DrillFocus | null): DrillFocus | null =>
@@ -378,13 +892,12 @@ export function mountScene(
   };
 
   const onResize = () => {
+    if (captureSizeSnapshot) {
+      return;
+    }
     const w = container.clientWidth;
     const h = container.clientHeight;
-    renderer.setSize(w, h);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    post.setSize(w, h);
-    manager.notifyResize(w, h);
+    applyRenderSize(w, h, renderer.getPixelRatio(), true);
   };
   window.addEventListener("resize", onResize);
 
@@ -421,6 +934,7 @@ export function mountScene(
     const managerEndMs = performance.now();
     const renderStartMs = performance.now();
     post.composer.render();
+    notifyAfterRenderCallbacks();
     const frameEndMs = performance.now();
     lastFrameLoopDebug = {
       frameIndex,
@@ -571,6 +1085,7 @@ export function mountScene(
       data.sceneSectionHelper === true ||
       data.sceneSectionPlaneHandle === true ||
       data.pageCameraMarker === true ||
+      data.captureCameraPathOverlay === true ||
       data.publicSurfaceClipHelper === true ||
       data.workingAreaFocusHelper === true ||
       data.lightingSourceHandle === true ||
@@ -847,6 +1362,28 @@ export function mountScene(
         metersPerPixel: number;
       }
     | null = null;
+  let captureCameraPathInteraction: CaptureCameraPathInteractionOptions | null =
+    null;
+  let captureCameraPathOverlayEditable = false;
+  let captureCameraPathSelectedKeyframeId: string | null = null;
+  let dragCaptureCameraPath:
+    | {
+        type:
+          | "keyframe"
+          | "segment"
+          | "target"
+          | "influence"
+          | "spline-handle"
+          | "node-axis"
+          | "focus-distance";
+        id: string;
+        side?: "in" | "out";
+        axis?: "x" | "y" | "z";
+        startWorld: THREE.Vector3;
+        lastWorld: THREE.Vector3;
+        dragPlane: THREE.Plane;
+      }
+    | null = null;
   let focusPointerDown: { x: number; y: number } | null = null;
   let suppressNextDrillFocusClick = false;
   let overlayBoundsCommit:
@@ -959,6 +1496,7 @@ export function mountScene(
     manager.setEditorMode(on);
     if (!on) {
       orbitCenterPick = null;
+      cancelCaptureCameraPathInteraction();
       dragOrbitCenter = null;
       dragAreaOutline = null;
       dragLocalAtmosphere = null;
@@ -966,6 +1504,760 @@ export function mountScene(
       manager.setHoveredSceneOverlay(null);
       renderer.domElement.style.cursor = "";
     }
+  };
+
+  const captureVecToThree = (value: CaptureVec3): THREE.Vector3 =>
+    new THREE.Vector3(value[0], value[1], value[2]);
+  const threeToCaptureVec = (value: THREE.Vector3): CaptureVec3 => [
+    value.x,
+    value.y,
+    value.z,
+  ];
+
+  const createCaptureCameraPathTextLabel = (
+    labelText: string,
+    position: THREE.Vector3,
+    scale: number,
+  ): THREE.Sprite | null => {
+    if (typeof document === "undefined") return null;
+    const labelCanvas = document.createElement("canvas");
+    labelCanvas.width = 192;
+    labelCanvas.height = 48;
+    const labelContext = labelCanvas.getContext("2d");
+    if (!labelContext) return null;
+    labelContext.fillStyle = "rgba(12, 18, 24, 0.72)";
+    labelContext.fillRect(0, 0, labelCanvas.width, labelCanvas.height);
+    labelContext.fillStyle = "#f8fafc";
+    labelContext.font = "22px Inter, system-ui, sans-serif";
+    labelContext.fillText(labelText, 10, 31);
+    const texture = new THREE.CanvasTexture(labelCanvas);
+    const labelMaterial = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+    });
+    const label = new THREE.Sprite(labelMaterial);
+    label.position.copy(position);
+    label.scale.set(scale * 3.4, scale * 0.85, 1);
+    label.renderOrder = 9_650;
+    label.userData.geoseePickIgnore = true;
+    label.userData.captureCameraPathOverlay = true;
+    label.userData.captureCameraPathEquationLabel = labelText;
+    return label;
+  };
+
+  const cancelCaptureCameraPathInteraction = () => {
+    if (!dragCaptureCameraPath) return;
+    dragCaptureCameraPath = null;
+    controls.enabled = true;
+    renderer.domElement.style.cursor = "";
+    suppressNextDrillFocusClick = false;
+    focusPointerDown = null;
+  };
+
+  const disposeCaptureCameraPathOverlayObjects = () => {
+    captureCameraPathOverlay.traverse((node) => {
+      disposeCaptureCameraPathOverlayObject(node);
+    });
+    captureCameraPathOverlay.clear();
+  };
+
+  const clearCaptureCameraPathOverlay = () => {
+    cancelCaptureCameraPathInteraction();
+    disposeCaptureCameraPathOverlayObjects();
+    captureCameraPathOverlay.visible = false;
+    captureCameraPathOverlayEditable = false;
+    captureCameraPathSelectedKeyframeId = null;
+  };
+
+  const captureDirectorLocalTestSeamAllowed = (): boolean =>
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname === "::1");
+
+  const recordCaptureCameraPathOverlayEvent = (options: {
+    trackColor: string;
+    trackLineSize: number;
+    handleScale: number;
+    showCameraFrustum: boolean;
+    previewMonitorMode?: string;
+    equationLabels?: string[];
+  }): void => {
+    if (!captureDirectorLocalTestSeamAllowed()) return;
+    const target = window as Window & {
+      __captureDirectorEvents?: Array<Record<string, unknown>>;
+    };
+    target.__captureDirectorEvents?.push({
+      kind: "camera-path-overlay",
+      renderer: "Line2",
+      trackColor: options.trackColor,
+      trackLineSize: options.trackLineSize,
+      handleScale: options.handleScale,
+      showCameraFrustum: options.showCameraFrustum,
+      previewMonitorMode: options.previewMonitorMode ?? null,
+      equationLabels: options.equationLabels ?? [],
+    });
+  };
+
+  const setCaptureCameraPathOverlay = (
+    options: CaptureCameraPathOverlayState,
+  ) => {
+    if (!options.visible || options.sampledPoints.length === 0) {
+      clearCaptureCameraPathOverlay();
+      return;
+    }
+    if (!options.editable) {
+      cancelCaptureCameraPathInteraction();
+    }
+    disposeCaptureCameraPathOverlayObjects();
+    captureCameraPathOverlayEditable = options.editable;
+    captureCameraPathSelectedKeyframeId = options.selectedKeyframeId;
+    captureCameraPathOverlay.visible =
+      options.visible && options.sampledPoints.length > 0;
+
+    const pathColor = new THREE.Color(options.colors?.path ?? "#ff6b4a");
+    const selectedColor = new THREE.Color(options.colors?.selected ?? "#f8fafc");
+    const keyframeColor = new THREE.Color(options.colors?.keyframe ?? "#d7dde2");
+    const targetColor = new THREE.Color(options.colors?.target ?? "#7dd3fc");
+    const focusColor = new THREE.Color(options.colors?.hover ?? "#facc15");
+    const lineSize = Math.max(1, Math.min(12, options.lineSize ?? 3));
+    const directionRayLength = Math.max(
+      0.25,
+      Math.min(12, options.directionRayLength ?? 1.5),
+    );
+    const handleScale = Math.max(10, options.handleScale ?? 90);
+    const showLookRays = options.showLookRays !== false;
+    const showFocusLockRays = options.showFocusLockRays !== false;
+    const lineResolution = renderer.getSize(new THREE.Vector2());
+
+    const points = options.sampledPoints.map(captureVecToThree);
+    const line = createCaptureCameraPathLine({
+      points,
+      color: pathColor,
+      linewidth: lineSize,
+      opacity: 0.92,
+      renderOrder: 9_500,
+      resolution: lineResolution,
+    });
+    captureCameraPathOverlay.add(line);
+
+    const overlaySegments =
+      options.segments ??
+      options.segmentIds.map((segmentId, index) => {
+        const [fromNodeId, toNodeId] = segmentId.split(":");
+        return {
+          id: segmentId,
+          displayIndex: index + 1,
+          enabled: true,
+          hidden: false,
+          fromNodeId,
+          toNodeId,
+        };
+      });
+
+    for (const segmentMeta of overlaySegments) {
+      if (segmentMeta.hidden) continue;
+      const segmentEnabled = segmentMeta.enabled !== false;
+      if (!segmentEnabled && !options.showTimelineGhost) continue;
+      const startId = segmentMeta.fromNodeId;
+      const endId = segmentMeta.toNodeId;
+      const start = options.keyframes.find((keyframe) => keyframe.id === startId);
+      const end = options.keyframes.find((keyframe) => keyframe.id === endId);
+      if (!start || !end) continue;
+      const selectedSegment = segmentMeta.id === options.selectedSegmentId;
+      const segment = createCaptureCameraPathLine({
+        points: [
+          captureVecToThree(start.position),
+          captureVecToThree(end.position),
+        ],
+        color: selectedSegment ? selectedColor : pathColor,
+        linewidth: Math.max(12, lineSize + (selectedSegment ? 12 : 8)),
+        opacity: segmentEnabled ? 0.001 : 0.0005,
+        renderOrder: 9_501,
+        resolution: lineResolution,
+        userData: { captureCameraPathSegmentId: segmentMeta.id },
+      });
+      captureCameraPathOverlay.add(segment);
+    }
+
+    for (const keyframe of options.keyframes) {
+      if (keyframe.hidden) continue;
+      const enabled = keyframe.enabled !== false;
+      if (!enabled && !options.showTimelineGhost) continue;
+      const selected = keyframe.id === options.selectedKeyframeId;
+      const markerSize =
+        keyframe.nodeKind === "transition" ? handleScale * 0.68 : handleScale;
+      const markerGeometry = new THREE.SphereGeometry(markerSize, 18, 12);
+      const markerMaterial = new THREE.MeshBasicMaterial({
+        color: selected ? selectedColor : keyframeColor,
+        depthTest: false,
+        depthWrite: false,
+        transparent: true,
+        opacity: enabled ? (selected ? 1 : 0.88) : 0.34,
+      });
+      const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+      marker.position.copy(captureVecToThree(keyframe.position));
+      marker.renderOrder = 9_600;
+      marker.userData.geoseePickIgnore = true;
+      marker.userData.captureCameraPathOverlay = true;
+      marker.userData.captureCameraPathKeyframeId = keyframe.id;
+      captureCameraPathOverlay.add(marker);
+
+      if (keyframe.target && showLookRays) {
+        const targetRay = createCaptureCameraPathLine({
+          points: [
+            captureVecToThree(keyframe.position),
+            captureVecToThree(keyframe.target),
+          ],
+          color: targetColor,
+          linewidth: lineSize,
+          opacity: 0.5,
+          renderOrder: 9_520,
+          resolution: lineResolution,
+        });
+        captureCameraPathOverlay.add(targetRay);
+
+        const targetHandleGeometry = new THREE.SphereGeometry(
+          handleScale * 0.72,
+          16,
+          10,
+        );
+        const targetHandleMaterial = new THREE.MeshBasicMaterial({
+          color: targetColor,
+          depthTest: false,
+          depthWrite: false,
+          transparent: true,
+          opacity: selected ? 0.95 : 0.78,
+        });
+        const targetHandle = new THREE.Mesh(
+          targetHandleGeometry,
+          targetHandleMaterial,
+        );
+        targetHandle.position.copy(captureVecToThree(keyframe.target));
+        targetHandle.renderOrder = 9_610;
+        targetHandle.userData.geoseePickIgnore = true;
+        targetHandle.userData.captureCameraPathOverlay = true;
+        targetHandle.userData.captureCameraPathTargetKeyframeId = keyframe.id;
+        captureCameraPathOverlay.add(targetHandle);
+
+        if (showFocusLockRays || keyframe.focusLocked) {
+          const focusHandleGeometry = new THREE.TorusGeometry(
+            handleScale * 1.05,
+            handleScale * 0.08,
+            8,
+            28,
+          );
+          const focusHandleMaterial = new THREE.MeshBasicMaterial({
+            color: keyframe.focusLocked ? focusColor : targetColor,
+            depthTest: false,
+            depthWrite: false,
+            transparent: true,
+            opacity: selected ? 0.9 : 0.42,
+          });
+          const focusHandle = new THREE.Mesh(
+            focusHandleGeometry,
+            focusHandleMaterial,
+          );
+          focusHandle.position.copy(captureVecToThree(keyframe.target));
+          focusHandle.renderOrder = 9_611;
+          focusHandle.userData.geoseePickIgnore = true;
+          focusHandle.userData.captureCameraPathOverlay = true;
+          focusHandle.userData.captureCameraPathFocusKeyframeId = keyframe.id;
+          captureCameraPathOverlay.add(focusHandle);
+        }
+      }
+
+      if (options.showNodeLabels && typeof document !== "undefined") {
+        const labelCanvas = document.createElement("canvas");
+        labelCanvas.width = 192;
+        labelCanvas.height = 48;
+        const labelContext = labelCanvas.getContext("2d");
+        if (labelContext) {
+          labelContext.fillStyle = "rgba(12, 18, 24, 0.72)";
+          labelContext.fillRect(0, 0, labelCanvas.width, labelCanvas.height);
+          labelContext.fillStyle = "#f8fafc";
+          labelContext.font = "22px Inter, system-ui, sans-serif";
+          labelContext.fillText(
+            `${keyframe.nodeKind === "transition" ? "T" : "K"} ${keyframe.id}`,
+            10,
+            31,
+          );
+          const texture = new THREE.CanvasTexture(labelCanvas);
+          const labelMaterial = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            depthTest: false,
+            depthWrite: false,
+          });
+          const label = new THREE.Sprite(labelMaterial);
+          label.position.copy(captureVecToThree(keyframe.position));
+          label.position.z += handleScale * 1.6;
+          label.scale.set(handleScale * 3.4, handleScale * 0.85, 1);
+          label.renderOrder = 9_650;
+          label.userData.geoseePickIgnore = true;
+          label.userData.captureCameraPathOverlay = true;
+          captureCameraPathOverlay.add(label);
+        }
+      }
+    }
+
+    for (const handle of options.splineHandles ?? []) {
+      const handlePosition = captureVecToThree(handle.position);
+      const anchor = captureVecToThree(handle.anchor);
+      const splineColor = handle.side === "out" ? targetColor : focusColor;
+      const splineLine = createCaptureCameraPathLine({
+        points: [anchor, handlePosition],
+        color: splineColor,
+        linewidth: Math.max(1, lineSize * 0.9),
+        opacity: handle.tangentCoupled ? 0.86 : 0.72,
+        renderOrder: 9_735,
+        resolution: lineResolution,
+        userData: {
+          captureCameraPathSplineHandleNodeId: handle.nodeId,
+          captureCameraPathSplineHandleSide: handle.side,
+        },
+      });
+      captureCameraPathOverlay.add(splineLine);
+      const splineHandle = new THREE.Mesh(
+        new THREE.SphereGeometry(handleScale * 0.42, 12, 8),
+        new THREE.MeshBasicMaterial({
+          color: splineColor,
+          depthTest: false,
+          depthWrite: false,
+          transparent: true,
+          opacity: 0.9,
+        }),
+      );
+      splineHandle.position.copy(handlePosition);
+      splineHandle.renderOrder = 9_736;
+      splineHandle.userData.geoseePickIgnore = true;
+      splineHandle.userData.captureCameraPathOverlay = true;
+      splineHandle.userData.captureCameraPathSplineHandleNodeId = handle.nodeId;
+      splineHandle.userData.captureCameraPathSplineHandleSide = handle.side;
+      captureCameraPathOverlay.add(splineHandle);
+      if (options.showNodeLabels && handle.label) {
+        const label = createCaptureCameraPathTextLabel(
+          handle.label,
+          handlePosition.clone().add(new THREE.Vector3(0, 0, handleScale * 0.52)),
+          handleScale * 0.48,
+        );
+        if (label) captureCameraPathOverlay.add(label);
+      }
+    }
+
+    const axisColors: Record<"x" | "y" | "z", THREE.Color> = {
+      x: new THREE.Color("#ef4444"),
+      y: new THREE.Color("#22c55e"),
+      z: new THREE.Color("#3b82f6"),
+    };
+    for (const axisHandle of options.nodeAxisHandles ?? []) {
+      const start = captureVecToThree(axisHandle.start);
+      const end = captureVecToThree(axisHandle.end);
+      const axisLine = createCaptureCameraPathLine({
+        points: [start, end],
+        color: axisColors[axisHandle.axis],
+        linewidth: Math.max(2, lineSize),
+        opacity: 0.88,
+        renderOrder: 9_738,
+        resolution: lineResolution,
+        userData: {
+          captureCameraPathNodeAxisNodeId: axisHandle.nodeId,
+          captureCameraPathNodeAxis: axisHandle.axis,
+        },
+      });
+      captureCameraPathOverlay.add(axisLine);
+      const axisHandleMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(handleScale * 0.36, 12, 8),
+        new THREE.MeshBasicMaterial({
+          color: axisColors[axisHandle.axis],
+          depthTest: false,
+          depthWrite: false,
+          transparent: true,
+          opacity: 0.92,
+        }),
+      );
+      axisHandleMesh.position.copy(end);
+      axisHandleMesh.renderOrder = 9_739;
+      axisHandleMesh.userData.geoseePickIgnore = true;
+      axisHandleMesh.userData.captureCameraPathOverlay = true;
+      axisHandleMesh.userData.captureCameraPathNodeAxisNodeId = axisHandle.nodeId;
+      axisHandleMesh.userData.captureCameraPathNodeAxis = axisHandle.axis;
+      captureCameraPathOverlay.add(axisHandleMesh);
+    }
+
+    const equationOptions = options.equationOptions;
+    const equationOverlayVisible =
+      options.editable && equationOptions?.visible === true;
+    const equationSegmentAllowed = (segmentId?: string): boolean => {
+      if (!equationOverlayVisible) return false;
+      if (!equationOptions?.selectedTransitionOnly) return true;
+      return !!segmentId && segmentId === options.selectedSegmentId;
+    };
+
+    if (equationOverlayVisible && equationOptions) {
+      const equationColor = new THREE.Color("#f8fafc");
+      const tangentColor = new THREE.Color("#a78bfa");
+      const influenceColor = new THREE.Color("#facc15");
+      const curvatureColor = new THREE.Color("#34d399");
+      const focusDistanceColor = new THREE.Color(options.colors?.hover ?? "#facc15");
+
+      if (equationOptions.showTemporalRamp !== false) {
+        for (const equation of options.transitionEquations ?? []) {
+          if (equation.visible === false) continue;
+          if (!equationSegmentAllowed(equation.segmentId)) continue;
+          const labelText =
+            equation.label ??
+            [equation.timeCurve, equation.continuity].filter(Boolean).join(" ");
+          if (equation.position && equation.anchor) {
+            const equationLine = createCaptureCameraPathLine({
+              points: [
+                captureVecToThree(equation.anchor),
+                captureVecToThree(equation.position),
+              ],
+              color: equationColor,
+              linewidth: Math.max(1, lineSize * 0.8),
+              opacity: 0.72,
+              renderOrder: 9_700,
+              resolution: lineResolution,
+              userData: {
+                captureCameraPathEquationKind: "transition-equation",
+                captureCameraPathEquationLabel: labelText || equation.id,
+                captureCameraPathEquationSegmentId: equation.segmentId,
+              },
+            });
+            captureCameraPathOverlay.add(equationLine);
+          }
+          if (equation.position) {
+            const equationHandle = new THREE.Mesh(
+              new THREE.SphereGeometry(handleScale * 0.34, 12, 8),
+              new THREE.MeshBasicMaterial({
+                color: equationColor,
+                depthTest: false,
+                depthWrite: false,
+                transparent: true,
+                opacity: 0.84,
+              }),
+            );
+            equationHandle.position.copy(captureVecToThree(equation.position));
+            equationHandle.renderOrder = 9_705;
+            equationHandle.userData.geoseePickIgnore = true;
+            equationHandle.userData.captureCameraPathOverlay = true;
+            equationHandle.userData.captureCameraPathEquationOverlay = true;
+            equationHandle.userData.captureCameraPathEquationSegmentId =
+              equation.segmentId;
+            captureCameraPathOverlay.add(equationHandle);
+            if (equationOptions.showStackLabels !== false && labelText) {
+              const label = createCaptureCameraPathTextLabel(
+                labelText,
+                captureVecToThree(equation.position).add(
+                  new THREE.Vector3(0, 0, handleScale * 0.8),
+                ),
+                handleScale * 0.68,
+              );
+              if (label) captureCameraPathOverlay.add(label);
+            }
+          }
+        }
+      }
+
+      if (equationOptions.showTangents !== false) {
+        for (const handle of options.tangentHandles ?? []) {
+          if (!equationSegmentAllowed(handle.segmentId)) continue;
+          const tangentLine = createCaptureCameraPathLine({
+            points: [captureVecToThree(handle.start), captureVecToThree(handle.end)],
+            color: tangentColor,
+            linewidth: Math.max(1, lineSize * 0.85),
+            opacity: 0.74,
+            renderOrder: 9_710,
+            resolution: lineResolution,
+            userData: {
+              captureCameraPathEquationKind: "tangent",
+              captureCameraPathEquationLabel: handle.label ?? "T",
+            },
+          });
+          captureCameraPathOverlay.add(tangentLine);
+        }
+      }
+
+      if (equationOptions.showInfluenceHandles !== false) {
+        for (const handle of options.influenceHandles ?? []) {
+          if (!equationSegmentAllowed(handle.segmentId)) continue;
+          const handlePosition = captureVecToThree(handle.position);
+          if (handle.anchor) {
+            const influenceLine = createCaptureCameraPathLine({
+              points: [captureVecToThree(handle.anchor), handlePosition],
+              color: influenceColor,
+              linewidth: Math.max(1, lineSize * 0.8),
+              opacity: 0.72,
+              renderOrder: 9_720,
+              resolution: lineResolution,
+              userData: {
+                captureCameraPathEquationKind: "influence",
+                captureCameraPathEquationLabel: handle.label ?? "Gd",
+                captureCameraPathInfluenceHandleId: handle.id,
+              },
+            });
+            captureCameraPathOverlay.add(influenceLine);
+          }
+          const influenceHandle = new THREE.Mesh(
+            new THREE.SphereGeometry(handleScale * 0.34, 12, 8),
+            new THREE.MeshBasicMaterial({
+              color: influenceColor,
+              depthTest: false,
+              depthWrite: false,
+              transparent: true,
+              opacity: 0.86,
+            }),
+          );
+          influenceHandle.position.copy(handlePosition);
+          influenceHandle.renderOrder = 9_725;
+          influenceHandle.userData.geoseePickIgnore = true;
+          influenceHandle.userData.captureCameraPathOverlay = true;
+          influenceHandle.userData.captureCameraPathEquationOverlay = true;
+          influenceHandle.userData.captureCameraPathInfluenceHandleId = handle.id;
+          captureCameraPathOverlay.add(influenceHandle);
+        }
+      }
+
+      if (equationOptions.showCurvatureComb !== false) {
+        for (const comb of options.curvatureComb ?? []) {
+          if (!equationSegmentAllowed(comb.segmentId)) continue;
+          for (const [index, sample] of comb.samples.entries()) {
+            const start = captureVecToThree(sample.position);
+            const normal = captureVecToThree(sample.normal);
+            if (normal.lengthSq() <= 0.000_001 || sample.length <= 0) continue;
+            const end = start
+              .clone()
+              .add(normal.normalize().multiplyScalar(sample.length));
+            const combLine = createCaptureCameraPathLine({
+              points: [start, end],
+              color: curvatureColor,
+              linewidth: Math.max(1, lineSize * 0.55),
+              opacity: 0.54,
+              renderOrder: 9_715,
+              resolution: lineResolution,
+              userData: {
+                captureCameraPathEquationKind: "curvature-comb",
+                captureCameraPathEquationLabel: `G ${index + 1}`,
+              },
+            });
+            captureCameraPathOverlay.add(combLine);
+          }
+        }
+      }
+
+      if (equationOptions.showFocusDistance !== false) {
+        for (const vector of options.focusDistanceVectors ?? []) {
+          if (!equationSegmentAllowed(vector.segmentId)) continue;
+          const focusLine = createCaptureCameraPathLine({
+            points: [captureVecToThree(vector.start), captureVecToThree(vector.end)],
+            color: focusDistanceColor,
+            linewidth: Math.max(1, lineSize * 0.9),
+            opacity: 0.8,
+            renderOrder: 9_730,
+            resolution: lineResolution,
+            userData: {
+              captureCameraPathEquationKind: "focus-distance",
+              captureCameraPathEquationLabel: vector.label ?? "D",
+              captureCameraPathFocusDistanceId: vector.id,
+            },
+          });
+          captureCameraPathOverlay.add(focusLine);
+        }
+      }
+    }
+
+    if (options.currentSample) {
+      const samplePosition = captureVecToThree(options.currentSample.position);
+      const sampleTarget = captureVecToThree(options.currentSample.target);
+      const sampleGeometry = new THREE.SphereGeometry(handleScale * 0.82, 18, 12);
+      const sampleMaterial = new THREE.MeshBasicMaterial({
+        color: selectedColor,
+        depthTest: false,
+        depthWrite: false,
+        transparent: true,
+        opacity: 0.96,
+      });
+      const sampleMarker = new THREE.Mesh(sampleGeometry, sampleMaterial);
+      sampleMarker.position.copy(samplePosition);
+      sampleMarker.renderOrder = 9_680;
+      sampleMarker.userData.geoseePickIgnore = true;
+      sampleMarker.userData.captureCameraPathOverlay = true;
+      captureCameraPathOverlay.add(sampleMarker);
+
+      if (showLookRays) {
+        const direction = sampleTarget.clone().sub(samplePosition);
+        if (direction.lengthSq() > 0.000_001) {
+          direction.normalize().multiplyScalar(handleScale * 4 * directionRayLength);
+          const ray = createCaptureCameraPathLine({
+            points: [samplePosition, samplePosition.clone().add(direction)],
+            color: targetColor,
+            linewidth: lineSize,
+            opacity: 0.86,
+            renderOrder: 9_690,
+            resolution: lineResolution,
+          });
+          captureCameraPathOverlay.add(ray);
+        }
+      }
+
+      if (options.showCameraFrustum) {
+        const previewCamera = new THREE.PerspectiveCamera(
+          options.currentSample.fov,
+          16 / 9,
+          CAMERA_NEAR_M,
+          CAMERA_FAR_M,
+        );
+        previewCamera.position.copy(samplePosition);
+        previewCamera.up.set(
+          options.currentSample.up[0],
+          options.currentSample.up[1],
+          options.currentSample.up[2],
+        );
+        previewCamera.lookAt(sampleTarget);
+        previewCamera.updateProjectionMatrix();
+        previewCamera.updateMatrixWorld(true);
+        const helper = new THREE.CameraHelper(previewCamera);
+        helper.renderOrder = 9_640;
+        helper.userData.geoseePickIgnore = true;
+        helper.userData.captureCameraPathOverlay = true;
+        for (const child of helper.children) {
+          child.userData.geoseePickIgnore = true;
+        }
+        captureCameraPathOverlay.add(helper);
+      }
+    }
+
+    recordCaptureCameraPathOverlayEvent({
+      trackColor: options.colors?.path ?? "#ff6b4a",
+      trackLineSize: lineSize,
+      handleScale,
+      showCameraFrustum: options.showCameraFrustum === true,
+      previewMonitorMode: options.previewMonitorMode,
+      equationLabels: (options.transitionEquations ?? [])
+        .filter((equation) => equation.visible !== false)
+        .map((equation) => equation.label ?? equation.id),
+    });
+  };
+
+  const setCaptureCameraPathInteraction = (
+    options: CaptureCameraPathInteractionOptions,
+  ) => {
+    captureCameraPathInteraction = options;
+    return () => {
+      if (captureCameraPathInteraction === options) {
+        cancelCaptureCameraPathInteraction();
+        captureCameraPathInteraction = null;
+      }
+    };
+  };
+
+  const pickCaptureCameraPathHandle = (
+    clientX: number,
+    clientY: number,
+  ):
+    | { type: "keyframe"; id: string; world: THREE.Vector3 }
+    | { type: "segment"; id: string; world: THREE.Vector3 }
+    | { type: "target"; id: string; world: THREE.Vector3 }
+    | { type: "focus"; id: string; world: THREE.Vector3 }
+    | { type: "influence"; id: string; world: THREE.Vector3 }
+    | { type: "spline-handle"; id: string; side: "in" | "out"; world: THREE.Vector3 }
+    | { type: "node-axis"; id: string; axis: "x" | "y" | "z"; world: THREE.Vector3 }
+    | { type: "focus-distance"; id: string; world: THREE.Vector3 }
+    | { type: "equation-segment"; id: string; world: THREE.Vector3 }
+    | null => {
+    if (!captureCameraPathOverlay.visible || !captureCameraPathOverlayEditable) return null;
+    const rect = renderer.domElement.getBoundingClientRect();
+    ndc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    ndc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(ndc, camera);
+    const hits = raycaster.intersectObjects(captureCameraPathOverlay.children, true);
+    for (const hit of hits) {
+      const data = hit.object.userData as {
+        captureCameraPathKeyframeId?: string;
+        captureCameraPathSegmentId?: string;
+        captureCameraPathTargetKeyframeId?: string;
+        captureCameraPathFocusKeyframeId?: string;
+        captureCameraPathInfluenceHandleId?: string;
+        captureCameraPathSplineHandleNodeId?: string;
+        captureCameraPathSplineHandleSide?: "in" | "out";
+        captureCameraPathNodeAxisNodeId?: string;
+        captureCameraPathNodeAxis?: "x" | "y" | "z";
+        captureCameraPathFocusDistanceId?: string;
+        captureCameraPathEquationSegmentId?: string;
+      };
+      if (data.captureCameraPathKeyframeId) {
+        return {
+          type: "keyframe",
+          id: data.captureCameraPathKeyframeId,
+          world: hit.point.clone(),
+        };
+      }
+      if (data.captureCameraPathTargetKeyframeId) {
+        return {
+          type: "target",
+          id: data.captureCameraPathTargetKeyframeId,
+          world: hit.point.clone(),
+        };
+      }
+      if (data.captureCameraPathFocusKeyframeId) {
+        return {
+          type: "focus",
+          id: data.captureCameraPathFocusKeyframeId,
+          world: hit.point.clone(),
+        };
+      }
+      if (data.captureCameraPathInfluenceHandleId) {
+        return {
+          type: "influence",
+          id: data.captureCameraPathInfluenceHandleId,
+          world: hit.point.clone(),
+        };
+      }
+      if (
+        data.captureCameraPathSplineHandleNodeId &&
+        data.captureCameraPathSplineHandleSide
+      ) {
+        return {
+          type: "spline-handle",
+          id: data.captureCameraPathSplineHandleNodeId,
+          side: data.captureCameraPathSplineHandleSide,
+          world: hit.point.clone(),
+        };
+      }
+      if (data.captureCameraPathNodeAxisNodeId && data.captureCameraPathNodeAxis) {
+        return {
+          type: "node-axis",
+          id: data.captureCameraPathNodeAxisNodeId,
+          axis: data.captureCameraPathNodeAxis,
+          world: hit.point.clone(),
+        };
+      }
+      if (data.captureCameraPathFocusDistanceId) {
+        return {
+          type: "focus-distance",
+          id: data.captureCameraPathFocusDistanceId,
+          world: hit.point.clone(),
+        };
+      }
+      if (data.captureCameraPathEquationSegmentId) {
+        return {
+          type: "equation-segment",
+          id: data.captureCameraPathEquationSegmentId,
+          world: hit.point.clone(),
+        };
+      }
+      if (data.captureCameraPathSegmentId) {
+        return {
+          type: "segment",
+          id: data.captureCameraPathSegmentId,
+          world: hit.point.clone(),
+        };
+      }
+    }
+    return null;
   };
 
   // Pick the first overlay outline (or its paired texture mesh) under
@@ -1070,6 +2362,21 @@ export function mountScene(
     return projectCursorToPlane(clientX, clientY, fallbackZ, fallback)
       ? fallback.clone()
       : null;
+  };
+
+  const captureCameraPathFocusBindId = (): string | null =>
+    captureCameraPathInteraction?.bindFocusKeyframeId ??
+    captureCameraPathSelectedKeyframeId;
+
+  const resolveCaptureCameraPathFocusPoint = (
+    clientX: number,
+    clientY: number,
+  ): THREE.Vector3 | null => {
+    const sceneTarget = pickSceneTarget(clientX, clientY);
+    if (sceneTarget?.worldPoint) {
+      return captureVecToThree(sceneTarget.worldPoint);
+    }
+    return pickMapPoint(clientX, clientY);
   };
 
   const pickOrbitCenterHandle = (
@@ -1292,6 +2599,68 @@ export function mountScene(
   };
 
   const onCanvasMouseMove = (ev: MouseEvent) => {
+    if (dragCaptureCameraPath) {
+      const cur = new THREE.Vector3();
+      const rect = renderer.domElement.getBoundingClientRect();
+      ndc.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+      ndc.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(ndc, camera);
+      if (raycaster.ray.intersectPlane(dragCaptureCameraPath.dragPlane, cur)) {
+        if (dragCaptureCameraPath.type === "keyframe") {
+          captureCameraPathInteraction?.onMoveKeyframe?.(
+            dragCaptureCameraPath.id,
+            threeToCaptureVec(cur),
+          );
+        } else if (dragCaptureCameraPath.type === "target") {
+          captureCameraPathInteraction?.onMoveTarget?.(
+            dragCaptureCameraPath.id,
+            threeToCaptureVec(cur),
+          );
+        } else if (dragCaptureCameraPath.type === "influence") {
+          captureCameraPathInteraction?.onMoveInfluenceHandle?.(
+            dragCaptureCameraPath.id,
+            threeToCaptureVec(cur),
+          );
+        } else if (dragCaptureCameraPath.type === "spline-handle") {
+          if (dragCaptureCameraPath.side) {
+            captureCameraPathInteraction?.onMoveSplineHandle?.(
+              dragCaptureCameraPath.id,
+              dragCaptureCameraPath.side,
+              threeToCaptureVec(cur),
+            );
+          }
+        } else if (dragCaptureCameraPath.type === "node-axis") {
+          if (dragCaptureCameraPath.axis) {
+            const deltaVector = cur.clone().sub(dragCaptureCameraPath.lastWorld);
+            const axisVector =
+              dragCaptureCameraPath.axis === "x"
+                ? new THREE.Vector3(1, 0, 0)
+                : dragCaptureCameraPath.axis === "y"
+                  ? new THREE.Vector3(0, 1, 0)
+                  : new THREE.Vector3(0, 0, 1);
+            captureCameraPathInteraction?.onMoveNodeAxis?.(
+              dragCaptureCameraPath.id,
+              dragCaptureCameraPath.axis,
+              deltaVector.dot(axisVector),
+            );
+            dragCaptureCameraPath.lastWorld.copy(cur);
+          }
+        } else if (dragCaptureCameraPath.type === "focus-distance") {
+          captureCameraPathInteraction?.onMoveFocusDistance?.(
+            dragCaptureCameraPath.id,
+            threeToCaptureVec(cur),
+          );
+        } else {
+          const delta = cur.clone().sub(dragCaptureCameraPath.lastWorld);
+          captureCameraPathInteraction?.onMoveSegment?.(
+            dragCaptureCameraPath.id,
+            threeToCaptureVec(delta),
+          );
+          dragCaptureCameraPath.lastWorld.copy(cur);
+        }
+      }
+      return;
+    }
     if (dragSceneSectionPlane) {
       const pointerDelta = new THREE.Vector2(
         ev.clientX - dragSceneSectionPlane.startClient.x,
@@ -1470,6 +2839,18 @@ export function mountScene(
     // Editor mode: prefer overlay-outline hover over the regular
     // tooltip pick so authoring handles win where they overlap.
     if (editorMode) {
+      const capturePathHandle = pickCaptureCameraPathHandle(ev.clientX, ev.clientY);
+      if (capturePathHandle) {
+        renderer.domElement.style.cursor =
+          capturePathHandle.type === "focus"
+            ? "crosshair"
+            : capturePathHandle.type === "segment" ||
+                capturePathHandle.type === "equation-segment"
+              ? "grab"
+              : "move";
+        applyHover(null, ev.clientX, ev.clientY);
+        return;
+      }
       if (orbitCenterPick) {
         renderer.domElement.style.cursor = "crosshair";
         applyHover(null, ev.clientX, ev.clientY);
@@ -1583,6 +2964,52 @@ export function mountScene(
       suppressNextDrillFocusClick = true;
       controls.enabled = false;
       renderer.domElement.style.cursor = "crosshair";
+      ev.preventDefault();
+      return;
+    }
+    const capturePathHandle = pickCaptureCameraPathHandle(ev.clientX, ev.clientY);
+    if (capturePathHandle) {
+      suppressNextDrillFocusClick = true;
+      if (capturePathHandle.type === "equation-segment") {
+        captureCameraPathInteraction?.onSelectEquationSegment?.(
+          capturePathHandle.id,
+        );
+        renderer.domElement.style.cursor = "grab";
+        ev.preventDefault();
+        return;
+      }
+      captureCameraPathInteraction?.onSelectKeyframe?.(
+        capturePathHandle.type === "segment" ? "" : capturePathHandle.id,
+      );
+      if (capturePathHandle.type === "focus") {
+        renderer.domElement.style.cursor = "crosshair";
+        ev.preventDefault();
+        return;
+      }
+      const normal = new THREE.Vector3()
+        .subVectors(camera.position, capturePathHandle.world)
+        .normalize();
+      const dragPlane = new THREE.Plane().setFromNormalAndCoplanarPoint(
+        normal.lengthSq() > 0 ? normal : new THREE.Vector3(0, 0, 1),
+        capturePathHandle.world,
+      );
+      dragCaptureCameraPath = {
+        type: capturePathHandle.type,
+        id: capturePathHandle.id,
+        side:
+          capturePathHandle.type === "spline-handle"
+            ? capturePathHandle.side
+            : undefined,
+        axis:
+          capturePathHandle.type === "node-axis"
+            ? capturePathHandle.axis
+            : undefined,
+        startWorld: capturePathHandle.world.clone(),
+        lastWorld: capturePathHandle.world.clone(),
+        dragPlane,
+      };
+      controls.enabled = false;
+      renderer.domElement.style.cursor = "grabbing";
       ev.preventDefault();
       return;
     }
@@ -1764,6 +3191,18 @@ export function mountScene(
       focusPointerDown = null;
       if (Math.hypot(dx, dy) > 8) return;
     }
+    const focusBindId = captureCameraPathFocusBindId();
+    if (captureCameraPathInteraction?.onBindFocusPoint && focusBindId) {
+      const point = resolveCaptureCameraPathFocusPoint(ev.clientX, ev.clientY);
+      if (point) {
+        captureCameraPathInteraction?.onBindFocusPoint?.(
+          focusBindId,
+          threeToCaptureVec(point),
+        );
+        ev.preventDefault();
+        return;
+      }
+    }
     const sceneTarget = pickSceneTarget(ev.clientX, ev.clientY);
     if (sceneTarget) {
       dispatchSceneTargetClick(sceneTarget);
@@ -1796,6 +3235,10 @@ export function mountScene(
   };
 
   const onWindowMouseUp = () => {
+    if (dragCaptureCameraPath) {
+      cancelCaptureCameraPathInteraction();
+      return;
+    }
     if (dragSceneSectionPlane) {
       const positionM =
         dragSceneSectionPlane.kind === "plane"
@@ -1961,6 +3404,7 @@ export function mountScene(
     window.removeEventListener("mouseup", onWindowMouseUp);
     if (hoverTimer !== null) window.clearTimeout(hoverTimer);
     setHoverTooltip(null);
+    clearCaptureCameraPathOverlay();
     controls.dispose();
     manager.disposeTerrainOrthoPhotoTexture();
     renderer.dispose();
@@ -1990,6 +3434,20 @@ export function mountScene(
     controls,
     renderer,
     manager,
+    getCanvas,
+    beginCaptureSize,
+    endCaptureSize,
+    onAfterRender,
+    renderCaptureFrame,
+    getCameraPose,
+    setCameraPose,
+    beginCaptureFidelityLock,
+    endCaptureFidelityLock,
+    setCaptureCameraPathOverlay,
+    clearCaptureCameraPathOverlay,
+    setCaptureCameraPathInteraction,
+    renderCameraPathPreviewFrame,
+    getCaptureCapabilities,
     onTick,
     getFrameLoopDebugState,
     onDrillFocus,

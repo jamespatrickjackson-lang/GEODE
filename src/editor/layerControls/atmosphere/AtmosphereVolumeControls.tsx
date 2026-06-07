@@ -7,8 +7,7 @@ import {
   type PageStyleSetter,
   nestedControlRowStyle,
   nestedFieldLabelStyle,
-  overrideTagActiveStyle,
-  overrideTagStyle,
+  OverrideStateIndicator,
   styleBoolean,
   styleNumber,
   styleString,
@@ -127,9 +126,7 @@ function ControlOverrideRow({
         data-testid="atmosphere-volume-override"
         onChange={(event) => onToggle(event.target.checked)}
       />
-      <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {overridden ? "overridden" : "inherited"}
-      </span>
+      <OverrideStateIndicator active={overridden} />
     </label>
   );
 }

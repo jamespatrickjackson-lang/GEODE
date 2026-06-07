@@ -7,8 +7,7 @@ import {
   nestedControlRowStyle,
   nestedDetailsStyle,
   nestedFieldLabelStyle,
-  overrideTagActiveStyle,
-  overrideTagStyle,
+  OverrideStateIndicator,
   styleBoolean,
   styleNumber,
   styleString,
@@ -398,11 +397,7 @@ export function SeismicBrowserControls({
                 : "hidden"}
             </span>
             {!isEnv ? (
-              <span
-                style={overridden ? overrideTagActiveStyle : overrideTagStyle}
-              >
-                {overridden ? "overridden" : "inherited"}
-              </span>
+              <OverrideStateIndicator active={overridden} />
             ) : null}
           </div>
 

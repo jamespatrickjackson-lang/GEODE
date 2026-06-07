@@ -18,7 +18,7 @@ contract and points to the owning source files. Durable rationale belongs in
 | Viewport legend panel, stack, circular toggles, and row spacing | `src/ui/legendStyles.ts` | Shared legend constants and helpers. |
 | Section frame scale axes | `src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx`, `src/scene/section/sceneSectionController.ts` | Editor controls plus runtime helper generation. |
 | Native range slider height, track, thumb, and fill variables | `src/styles/global.css` | App-wide native slider styling. |
-| MT resistivity ramp trim/feather handles | `src/ui/ResistivityLegend.tsx` | Ramp-specific draggable handle sizing. |
+| MT resistivity window/opacity-ramp handles | `src/ui/ResistivityLegend.tsx` | Ramp-specific draggable handle sizing. |
 | Visual rationale / durable UI choices | `docs/03-decisions.md` | Use decision entries for persistent policy changes. |
 | Current visual review loop | `docs/dev-context/Visual-Review-Current.md` | Keep short and current. |
 
@@ -144,41 +144,45 @@ Current color swatch toggle examples:
   rows keep full color; unavailable child actions may dim only through the
   shared inactive/transparent state.
 - Controls opener buttons use row availability, not popout-open state.
-- `MT Cell Points` uses the same compact quick-legend geometry. Its title
+- `MT Resistivity Cells` uses the same compact quick-legend geometry. Its title
   toggles only `utah-forge-mt-resistivity-full-density`; volume, slices, QA
   preview, Section ISO, scene sections, and threshold products stay under their
   own owners.
-- `Full Cloud` and `Spectrum` are exclusive MT Cell Points modes. Full Cloud
-  hides the compact spectrum body and shows the full point cloud; Spectrum shows
-  the trim/feather controls and enables threshold/filter points. Mode changes
-  use the 1.5s slider-style scalar transition and must preserve authored scalar
-  values for the next Spectrum use.
-- Full Cloud display suppresses scalar edge-line overlays while preserving
-  authored edge-line settings. Final mode persistence writes only
+- `All Valid Cells` and `Log10 Resistivity Window` are exclusive MT Resistivity
+  Cells modes. All Valid Cells hides the compact log10 resistivity window body
+  and shows every valid inversion cell center; Log10 Resistivity Window shows
+  the log10(Ohm-m) window/fade controls and enables filtering by log10
+  resistivity. Mode changes use the 1.5s slider-style scalar transition and
+  must preserve authored scalar values for the next Log10 Resistivity Window
+  use.
+- All Valid Cells display suppresses resistivity isoline overlays while preserving
+  authored isoline settings. Final mode persistence writes only
   `scalarLegendVisible` and `scalarInclusionMode`.
-- Local MT Cell Points mode animations are app-level view transitions. They
+- Local MT Resistivity Cells mode animations are app-level view transitions. They
   must be scoped to the current effective page context and canceled/ignored when
   navigation changes that context, so a stale animation cannot overwrite an
-  already-Spectrum page with an old Full Cloud style.
+  already-windowed page with an old All Valid Cells style.
 - When the editor is on Global Settings/page 00, `previewEnvironmentBase` may
-  strip unrelated page deltas, but it must preserve MT Cell Points authored
-  Spectrum scalar fields for the full-density point cloud. A Spectrum-authored
-  page must load with its scalar window and edge-line detail without requiring a
-  Full Cloud/Spectrum click. Fix this through the Utah FORGE preview field map,
+  strip unrelated page deltas, but it must preserve MT Resistivity Cells authored
+  Log10 Resistivity Window fields for the full-density MT inversion cell
+  centers. A Log10 Resistivity Window-authored page must load with its
+  log10 resistivity window and isoline detail without requiring an All Valid
+  Cells/Log10
+  Resistivity Window click. Fix this through the Utah FORGE preview field map,
   not through page fixtures or transition internals such as
   `scalarInclusionFilterActive`, `SCALAR_TRANSITION_STYLE_FIELDS`, or
   `full-density-scalar`.
-- During page transitions, the MT Cell Points header state is the target
+- During page transitions, the MT Resistivity Cells header state is the target
   authored mode. Interpolated scalar style may drive the ramp and handles only.
-  Spectrum pages with line controls on must use transition-time scalar tween
-  ownership: register the full-density scalar tween at transition setup so
-  scalar edge-line overlays rebuild through the page-transition clock. Do not use
-  a final-commit replay of target visibility or styles to make missing lines
-  appear; that creates a visible jump.
+  Log10 Resistivity Window pages with line controls on must use transition-time
+  scalar tween ownership: register the full-density scalar tween at transition
+  setup so isoline overlays rebuild through the page-transition clock.
+  Do not use a final-commit replay of target visibility or styles to make
+  missing lines appear; that creates a visible jump.
 - Once a page is settled, a suppressed target-page reapply may refresh only the
-  full-density point-cloud style so page-load Spectrum edge lines build. That
-  narrow refresh must skip active scalar tweens and must not replay full page
-  visibility/styles.
+  full-density MT inversion cell-center style so page-load Log10 Resistivity
+  Window isolines build. That narrow refresh must skip active scalar tweens
+  and must not replay full page visibility/styles.
 - No page-id, page-index, fixture-title, project page, or environment fixture
   special cases are allowed for viewport quick legends. Do not edit
   `projects/*/pages/**`, `projects/*/overlays/**`, `projects/*/project.json`,
@@ -201,9 +205,9 @@ Current color swatch toggle examples:
   - Dataset selector belongs in `Options`, not in the main legend body.
   - Do not show selected-target count subtitles such as `2/2 ...`
 - MT resistivity legend:
-  - Live point-cloud bar label: `MT Cell Points`.
-  - The title button is point-cloud visibility only.
-  - `Full Cloud` and `Spectrum` are exclusive mode buttons.
+  - Live MT inversion cell bar label: `MT Resistivity Cells`.
+  - The title button is full-density cell-center visibility only.
+  - `All Valid Cells` and `Log10 Resistivity Window` are exclusive mode buttons.
   - Volume is handled by a separate owner, not this legend.
 - MT threshold boundaries legend:
   - Heading: `MT Threshold Boundaries`
@@ -446,14 +450,14 @@ MT resistivity volume fine controls:
 
 ## MT Resistivity Ramp Handles
 
-The MT resistivity ramp uses four draggable spectral handles:
+The MT resistivity ramp uses four draggable log10 resistivity handles:
 
 | Handle kind | Internal ids | Size |
 | --- | --- | ---: |
-| Trim | `focusMin`, `focusMax` | `5px x 16px` |
-| Feather | `blendMin`, `blendMax` | `5px x 14px` |
+| Window | `focusMin`, `focusMax` | `5px x 16px` |
+| Opacity ramp | `blendMin`, `blendMax` | `5px x 14px` |
 
-- Trim and feather handles stay bottom-aligned on the ramp.
+- Window and opacity-ramp handles stay bottom-aligned on the ramp.
 - Handle dimensions live in `src/ui/ResistivityLegend.tsx`.
 
 ## Sub Master Page Rows And Staff Archive (DEC-079, DEC-094, DEC-095)

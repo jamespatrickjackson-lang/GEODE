@@ -1867,15 +1867,26 @@ function FloatingPreviewToggle({
   const textColor = navigatorOverride
     ? navigator.textColor ?? overlay.textColor ?? vibrancyLabel
     : overlay.textColor ?? vibrancyLabel;
+  const controlButtonSizePx = 36;
+  const controlButtonGapPx = 8;
+  const navigatorControlStackWidthPx =
+    controlButtonSizePx * 3 + controlButtonGapPx * 2;
+  const previewToggleRight = presenterMode
+    ? navBottom
+    : navBottom +
+      navigatorControlStackWidthPx +
+      controlButtonGapPx +
+      controlButtonSizePx +
+      controlButtonGapPx;
   return (
     <button
       style={{
         position: "absolute",
-        right: presenterMode ? navBottom : navBottom + 132,
+        right: previewToggleRight,
         bottom: navBottom,
         zIndex: 35,
-        width: 36,
-        height: 36,
+        width: controlButtonSizePx,
+        height: controlButtonSizePx,
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",

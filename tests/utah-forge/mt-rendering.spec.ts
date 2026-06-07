@@ -31,13 +31,13 @@ import {
 
 test.setTimeout(900_000);
 
-test("MT Cell Points legend toggles full-density points and filters in Spectrum mode", async ({
+test("MT Resistivity Cells legend toggles full-density cells and filters by log10 resistivity", async ({
   page,
 }) => {
   await page.goto("/?project=utah-forge", {
     waitUntil: "networkidle",
   });
-  await expect(page.locator("body")).toContainText("Utah FORGE", {
+  await expect(page.locator("body")).toContainText("MT Resistivity Cells", {
     timeout: 90_000,
   });
 
@@ -47,7 +47,9 @@ test("MT Cell Points legend toggles full-density points and filters in Spectrum 
   const controls = page.getByTestId("resistivity-legend-controls-toggle");
   await expect(toggle).toBeVisible({ timeout: 60_000 });
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
-  await expect(toggle).toHaveText("MT Cell Points");
+  await expect(toggle).toHaveText("MT Resistivity Cells");
+  await expect(fullCloud).toHaveAttribute("title", "All Valid Cells");
+  await expect(spectrum).toHaveAttribute("title", "Log10 Resistivity Window");
   await expect(page.getByTestId("resistivity-legend-track")).toBeVisible();
   await expect(spectrum).toHaveAttribute("aria-checked", "true");
   await expect(fullCloud).toHaveAttribute("aria-checked", "false");
@@ -64,7 +66,6 @@ test("MT Cell Points legend toggles full-density points and filters in Spectrum 
   const thresholdInitiallyVisible = initialVolume.thresholdLayerVisible;
 
   await fullCloud.click();
-  await expect(fullCloud).toHaveAttribute("aria-pressed", "true");
   await expect(fullCloud).toHaveAttribute("aria-checked", "true");
   await expect(spectrum).toHaveAttribute("aria-checked", "false");
   await expect(fullCloud).toBeDisabled();
@@ -83,7 +84,6 @@ test("MT Cell Points legend toggles full-density points and filters in Spectrum 
   );
 
   await spectrum.click();
-  await expect(spectrum).toHaveAttribute("aria-pressed", "true");
   await expect(spectrum).toHaveAttribute("aria-checked", "true");
   await expect(fullCloud).toHaveAttribute("aria-checked", "false");
   await expect(spectrum).toBeDisabled();
@@ -115,17 +115,16 @@ test("MT Cell Points legend toggles full-density points and filters in Spectrum 
     volumeInitiallyVisible,
   );
   await controls.click();
-  const popout = page.getByTestId("resistivity-legend-controls-popout");
+  const popout = page.getByTestId("resistivity-legend-edge-popout");
   await expect(popout).toBeVisible();
-  await expect(popout).toContainText("MT Cell Points full-density model");
-  await expect(popout).toContainText("(point cloud)");
-  await expect(popout).toContainText(
-    "Scalar controls target: MT full-density points",
-  );
+  await expect(popout).toContainText("3D MT inversion resistivity cell centers");
+  await expect(popout).toContainText("(full-density model cells)");
+  await expect(popout).toContainText("Dataset: MT inversion cell centers");
+  await expect(popout).toContainText("Filter by log10 resistivity");
 
   const restoredFullDensity = await mtFullDensityPointSceneState(page);
   expect(restoredFullDensity.layerVisible).toBe(true);
-  const beforeTrimCanvas = await page.locator("canvas").screenshot();
+  const beforeWindowCanvas = await page.locator("canvas").screenshot();
   const trackBox = await page
     .getByTestId("resistivity-legend-track")
     .boundingBox();
@@ -145,8 +144,8 @@ test("MT Cell Points legend toggles full-density points and filters in Spectrum 
     });
     await page.mouse.up();
   }
-  const afterTrimCanvas = await page.locator("canvas").screenshot();
-  expect(changedByteCount(beforeTrimCanvas, afterTrimCanvas)).toBeGreaterThan(
+  const afterWindowCanvas = await page.locator("canvas").screenshot();
+  expect(changedByteCount(beforeWindowCanvas, afterWindowCanvas)).toBeGreaterThan(
     1000,
   );
   await expect
@@ -156,16 +155,16 @@ test("MT Cell Points legend toggles full-density points and filters in Spectrum 
       ),
     )
     .toBeLessThan(restoredFullDensity.totalPointCount);
-  const afterTrimFullDensity = await mtFullDensityPointSceneState(page);
-  expect(afterTrimFullDensity.indexedVisiblePointCount).toBeLessThan(
-    afterTrimFullDensity.totalPointCount,
+  const afterWindowFullDensity = await mtFullDensityPointSceneState(page);
+  expect(afterWindowFullDensity.indexedVisiblePointCount).toBeLessThan(
+    afterWindowFullDensity.totalPointCount,
   );
-  expect(afterTrimFullDensity.totalPointCount).toBe(
+  expect(afterWindowFullDensity.totalPointCount).toBe(
     restoredFullDensity.totalPointCount,
   );
 });
 
-test("Utah FORGE full-density MT point cloud renders all-valid and thresholded states", async ({
+test("Utah FORGE full-density MT inversion cells render all-valid and thresholded states", async ({
   page,
 }) => {
   const mtFullDensityManifest = readJsonFile<{
@@ -211,7 +210,7 @@ test("Utah FORGE full-density MT point cloud renders all-valid and thresholded s
   await page.goto("/?project=utah-forge", {
     waitUntil: "networkidle",
   });
-  await expect(page.locator("body")).toContainText("Utah FORGE", {
+  await expect(page.locator("body")).toContainText("MT Resistivity Cells", {
     timeout: 90_000,
   });
   await expect(page.locator("canvas")).toHaveCount(1);
@@ -379,7 +378,7 @@ test("Utah FORGE data layers follow page camera transitions", async ({
   await page.goto("/?project=utah-forge", {
     waitUntil: "networkidle",
   });
-  await expect(page.locator("body")).toContainText("Utah FORGE", {
+  await expect(page.locator("body")).toContainText("MT Resistivity Cells", {
     timeout: 90_000,
   });
   await expect(page.locator("canvas")).toHaveCount(1);
@@ -573,7 +572,7 @@ test("MT section page transitions do not reveal the hidden volume source", async
   await page.goto("/?project=utah-forge", {
     waitUntil: "networkidle",
   });
-  await expect(page.locator("body")).toContainText("Utah FORGE", {
+  await expect(page.locator("body")).toContainText("MT Resistivity Cells", {
     timeout: 90_000,
   });
 
@@ -660,8 +659,8 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     waitUntil: "networkidle",
   });
 
-  await expect(page.locator("body")).toContainText("Utah FORGE");
-  await expect(page.locator("body")).toContainText("Full-density model");
+  await expect(page.locator("body")).toContainText("MT Resistivity Cells");
+  await expect(page.locator("body")).toContainText("Global Settings");
   await expect(page.locator("canvas")).toHaveCount(1);
 
   await page.getByRole("button", { name: "Forge" }).click();
@@ -818,7 +817,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     }
   });
   await expect(page.locator("body")).toContainText(
-    "3D MT resistivity full-density model",
+    "3D MT inversion resistivity cell centers",
   );
   await expect(page.locator("body")).toContainText("3D MT resistivity preview");
   await expect(page.locator("body")).toContainText("Top surface");
@@ -826,13 +825,13 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   await expect(page.locator("body")).toContainText("Wireframe");
   await expect(page.locator("body")).toContainText("Roughness");
   await expect(page.locator("body")).toContainText("Metalness");
-  await expect(page.locator("body")).toContainText("Feather min");
-  await expect(page.locator("body")).toContainText("Feather max");
-  await expect(page.locator("body")).toContainText("Trim min");
-  await expect(page.locator("body")).toContainText("Trim max");
-  await expect(page.locator("body")).toContainText("Distance light");
+  await expect(page.locator("body")).toContainText("Fade min log10(Ohm-m)");
+  await expect(page.locator("body")).toContainText("Fade max log10(Ohm-m)");
+  await expect(page.locator("body")).toContainText("Window min log10(Ohm-m)");
+  await expect(page.locator("body")).toContainText("Window max log10(Ohm-m)");
+  await expect(page.locator("body")).toContainText("Distance brightness");
   await expect(page.locator("body")).toContainText("Point size");
-  await expect(page.locator("body")).toContainText("Value legend");
+  await expect(page.locator("body")).toContainText("Resistivity legend");
   await expect(page.locator("body")).toContainText("3D MT resistivity volume");
   await expect(page.locator("body")).toContainText("3D volume products");
   await expect(page.locator("body")).toContainText("3D cut window");
@@ -1266,7 +1265,7 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   const initialFocusMaxValue = await page
     .getByTestId("resistivity-legend-focusMax")
     .getAttribute("aria-valuenow");
-  const beforeTrimCanvas = await page.locator("canvas").screenshot();
+  const beforeGlobalWindowCanvas = await page.locator("canvas").screenshot();
 
   const trackBox = await page
     .getByTestId("resistivity-legend-track")
@@ -1330,19 +1329,19 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     await expect(legend).toContainText("8,652 Ohm-m");
   }
 
-  const afterGlobalTrimCanvas = await page.locator("canvas").screenshot();
+  const afterGlobalWindowCanvas = await page.locator("canvas").screenshot();
   expect(
-    changedByteCount(beforeTrimCanvas, afterGlobalTrimCanvas),
+    changedByteCount(beforeGlobalWindowCanvas, afterGlobalWindowCanvas),
   ).toBeGreaterThan(1000);
   const globalLegendAfterDrag = await legend.innerText();
   await page.waitForTimeout(700);
   await expect.poll(() => legend.innerText()).toBe(globalLegendAfterDrag);
   const afterGlobalWaitCanvas = await page.locator("canvas").screenshot();
   expect(
-    changedByteCount(beforeTrimCanvas, afterGlobalWaitCanvas),
+    changedByteCount(beforeGlobalWindowCanvas, afterGlobalWaitCanvas),
   ).toBeGreaterThan(1000);
 
-  const beforeNoiseCanvas = await page.locator("canvas").screenshot();
+  const beforeLateralSupportCanvas = await page.locator("canvas").screenshot();
   await page
     .getByTestId("resistivity-legend-edge-lower")
     .dispatchEvent("dblclick");
@@ -1396,15 +1395,15 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
   await page
     .getByTestId("resistivity-legend-edge-line-style")
     .selectOption("dashed");
-  await expect(page.locator("body")).toContainText("Line 4.2px");
-  await expect(page.locator("body")).toContainText("Avg 72%");
-  await expect(page.locator("body")).toContainText("Fill -55%");
-  await expect(page.locator("body")).toContainText("Noise 35%");
+  await expect(page.locator("body")).toContainText("Isoline 4.2px");
+  await expect(page.locator("body")).toContainText("Smooth 72%");
+  await expect(page.locator("body")).toContainText("Band fill -55%");
+  await expect(page.locator("body")).toContainText("Lateral support 35%");
   await page.waitForTimeout(300);
-  const afterNoiseCanvas = await page.locator("canvas").screenshot();
-  expect(changedByteCount(beforeNoiseCanvas, afterNoiseCanvas)).toBeGreaterThan(
-    1000,
-  );
+  const afterLateralSupportCanvas = await page.locator("canvas").screenshot();
+  expect(
+    changedByteCount(beforeLateralSupportCanvas, afterLateralSupportCanvas),
+  ).toBeGreaterThan(1000);
 
   const currentPageRow = page
     .locator('[data-dev-note*="panelStyles.pageRow"]')
@@ -1449,9 +1448,9 @@ test("Utah FORGE Stage 2 full-density MT layer loads and exposes controls", asyn
     await page.waitForTimeout(700);
     await expect.poll(() => legend.innerText()).toBe(pageLegendAfterDrag);
   }
-  const afterPageTrimCanvas = await page.locator("canvas").screenshot();
+  const afterPageWindowCanvas = await page.locator("canvas").screenshot();
   expect(
-    changedByteCount(afterGlobalWaitCanvas, afterPageTrimCanvas),
+    changedByteCount(afterGlobalWaitCanvas, afterPageWindowCanvas),
   ).toBeGreaterThan(1000);
 
   const beforeCameraTransitionCanvas = await page

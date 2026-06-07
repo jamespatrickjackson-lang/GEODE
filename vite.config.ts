@@ -43,6 +43,80 @@ function copyRuntimeDataPlugin(): Plugin {
   };
 }
 
+const FFMPEG_CORE_PACKAGE = "@ffmpeg/core";
+const FFMPEG_CORE_ASSET_DIR = ["node_modules", "@ffmpeg", "core", "dist", "umd"];
+const FFMPEG_CORE_ASSET_OUTPUT_DIR = ["runtime", "ffmpeg"];
+const FFMPEG_CORE_ASSET_FILES = [
+  "ffmpeg-core.js",
+  "ffmpeg-core.wasm",
+  "ffmpeg-core.worker.js",
+];
+
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await fs.access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function copyFfmpegCoreAssetsPlugin(): Plugin {
+  let config: ResolvedConfig;
+  return {
+    name: "copy-ffmpeg-core-assets",
+    configResolved(resolvedConfig) {
+      config = resolvedConfig;
+    },
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const rawUrl = req.url?.split("?")[0] ?? "";
+        if (!rawUrl.startsWith("/runtime/ffmpeg/")) {
+          next();
+          return;
+        }
+        const filename = decodeURIComponent(rawUrl.split("/").pop() ?? "");
+        if (!FFMPEG_CORE_ASSET_FILES.includes(filename)) {
+          next();
+          return;
+        }
+        const sourcePath = resolve(
+          server.config.root,
+          ...FFMPEG_CORE_ASSET_DIR,
+          filename,
+        );
+        if (!(await fileExists(sourcePath))) {
+          next();
+          return;
+        }
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        if (filename.endsWith(".wasm")) {
+          res.setHeader("Content-Type", "application/wasm");
+        } else {
+          res.setHeader("Content-Type", "text/javascript");
+        }
+        res.end(await fs.readFile(sourcePath));
+      });
+    },
+    async closeBundle() {
+      if (!config) return;
+      const destination = resolve(
+        config.root,
+        config.build.outDir,
+        ...FFMPEG_CORE_ASSET_OUTPUT_DIR,
+      );
+      await fs.mkdir(destination, { recursive: true });
+      for (const filename of FFMPEG_CORE_ASSET_FILES) {
+        const sourcePath = resolve(config.root, ...FFMPEG_CORE_ASSET_DIR, filename);
+        if (!(await fileExists(sourcePath))) {
+          continue;
+        }
+        await fs.copyFile(sourcePath, resolve(destination, filename));
+      }
+    },
+  };
+}
+
 function noStoreProjectAssetsPlugin(): Plugin {
   return {
     name: "geosee-project-assets-no-store",
@@ -198,6 +272,7 @@ export default defineConfig(({ command }) => ({
     react(),
     authorWritePlugin(),
     noStoreProjectAssetsPlugin(),
+    copyFfmpegCoreAssetsPlugin(),
     copyRuntimeDataPlugin(),
     copyProjectsPlugin(),
   ],

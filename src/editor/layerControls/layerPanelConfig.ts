@@ -215,7 +215,7 @@ export const UTAH_FORGE_SCALAR_LAYER_IDS = new Set<string>([
 
 export function scalarControlTargetLabel(layerId: string): string {
   if (layerId === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID) {
-    return "MT full-density points";
+    return "MT inversion cell centers";
   }
   if (layerId === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID) {
     return "MT volume";
@@ -224,9 +224,9 @@ export function scalarControlTargetLabel(layerId: string): string {
     return "MT authored slices";
   }
   if (layerId === UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID) {
-    return "MT point preview";
+    return "MT resistivity preview cells";
   }
-  return "this scalar layer";
+  return "this source-derived layer";
 }
 
 export const SCALAR_RAMP_FIELDS = [

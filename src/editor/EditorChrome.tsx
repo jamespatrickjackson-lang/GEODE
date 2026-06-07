@@ -21,6 +21,9 @@ import { SeismicVolumeLegend } from "../ui/SeismicVolumeLegend";
 import { SurfaceElevationLegend } from "../ui/SurfaceElevationLegend";
 import { SceneSectionLegend } from "../ui/SceneSectionLegend";
 import { ScaleBar } from "../ui/ScaleBar";
+import { CaptureChromeGate } from "../capture/CaptureChromeGate";
+import { CaptureDirectorProvider } from "../capture/CaptureDirectorProvider";
+import { CaptureDirectorToolbar } from "../capture/CaptureDirectorToolbar";
 import {
   LEGEND_BOTTOM_EDGE_OFFSET_PX,
   LEGEND_PAGE_EDGE_MARGIN_PX,
@@ -234,38 +237,57 @@ export function EditorChrome({
         state.selectedPageId !== ENVIRONMENT_SENTINEL && !state.presenterMode
       }
     >
-      <EditorLiveApplyTransitionBridge />
-      <SelectedPageMirror />
-      <NavControls />
-      <ScaleBarWithTransitionState sceneHandle={sceneHandle} />
-      <Suspense fallback={null}>
-        <EditorRoot
-          sceneHandle={sceneHandle}
-          activeAudienceLens={activeAudienceLens}
-          onAudienceLensChange={setActiveAudienceLens}
-        />
-      </Suspense>
-      <LightModeToggle sceneHandle={sceneHandle} onReturnHome={onReturnHome} />
-      <AssayLegend sceneHandle={sceneHandle} />
-      {state.projectSlug === "utah-forge" ? (
-        <UtahForgeLegendStack sceneHandle={sceneHandle} />
-      ) : (
-        <>
-          <ResistivityLegend />
-          <MtSurfaceBoundaryLegend />
-          <SceneSectionLegend />
-          <SectionIsoLegend />
-          <SeismicVolumeLegend />
-          <SurfaceElevationLegend />
-        </>
-      )}
-      <SceneLabels sceneHandle={sceneHandle} />
-      <PresenterLogo />
-      {/* Overlay container is always mounted. In editor mode it's draggable
-          + resizable so the user can position per-page layout (saved to
-          page.overlayLayout). In presenter mode it's inert -- read-only at
-          the saved layout. Pages without overlay content render nothing. */}
-      <OverlayDisplay />
+      <CaptureDirectorProvider sceneHandle={sceneHandle}>
+        <EditorLiveApplyTransitionBridge />
+        <SelectedPageMirror />
+        <CaptureChromeGate group="navControls">
+          <NavControls />
+        </CaptureChromeGate>
+        <CaptureChromeGate group="legends">
+          <ScaleBarWithTransitionState sceneHandle={sceneHandle} />
+        </CaptureChromeGate>
+        <CaptureChromeGate group="editorSidebar">
+          <Suspense fallback={null}>
+            <EditorRoot
+              sceneHandle={sceneHandle}
+              activeAudienceLens={activeAudienceLens}
+              onAudienceLensChange={setActiveAudienceLens}
+            />
+          </Suspense>
+        </CaptureChromeGate>
+        <CaptureChromeGate group="authoringControls">
+          <LightModeToggle sceneHandle={sceneHandle} onReturnHome={onReturnHome} />
+        </CaptureChromeGate>
+        <CaptureChromeGate group="legends">
+          <AssayLegend sceneHandle={sceneHandle} />
+          {state.projectSlug === "utah-forge" ? (
+            <UtahForgeLegendStack sceneHandle={sceneHandle} />
+          ) : (
+            <>
+              <ResistivityLegend />
+              <MtSurfaceBoundaryLegend />
+              <SceneSectionLegend />
+              <SectionIsoLegend />
+              <SeismicVolumeLegend />
+              <SurfaceElevationLegend />
+            </>
+          )}
+        </CaptureChromeGate>
+        <CaptureChromeGate group="sceneLabels">
+          <SceneLabels sceneHandle={sceneHandle} />
+        </CaptureChromeGate>
+        <CaptureChromeGate group="logo">
+          <PresenterLogo />
+        </CaptureChromeGate>
+        {/* Overlay container is always mounted. In editor mode it's draggable
+            + resizable so the user can position per-page layout (saved to
+            page.overlayLayout). In presenter mode it's inert -- read-only at
+            the saved layout. Pages without overlay content render nothing. */}
+        <CaptureChromeGate group="presenterOverlay">
+          <OverlayDisplay />
+        </CaptureChromeGate>
+        <CaptureDirectorToolbar />
+      </CaptureDirectorProvider>
     </PageControllerProvider>
   );
 }

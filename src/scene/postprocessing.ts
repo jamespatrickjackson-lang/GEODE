@@ -393,6 +393,7 @@ export interface PostHandle {
   gradePass: ShaderPass;
   smaaPass: SMAAPass;
   setSize(w: number, h: number): void;
+  setPixelRatio(pixelRatio: number): void;
   baseBloomStrength: number;
   setBloomStrength(s: number): void;
 }
@@ -404,7 +405,9 @@ export function buildPostprocessing(
   initialSize: { w: number; h: number },
 ): PostHandle {
   const composer = new EffectComposer(renderer);
-  const pixelRatio = renderer.getPixelRatio();
+  let pixelRatio = renderer.getPixelRatio();
+  let currentWidth = initialSize.w;
+  let currentHeight = initialSize.h;
   composer.setPixelRatio(pixelRatio);
   composer.setSize(initialSize.w, initialSize.h);
 
@@ -470,6 +473,8 @@ export function buildPostprocessing(
     gradePass: lensGradePass,
     smaaPass,
     setSize(w, h) {
+      currentWidth = w;
+      currentHeight = h;
       composer.setSize(w, h);
       ssaoPass.setSize(w, h);
       bokehPass.setSize(w, h);
@@ -478,6 +483,11 @@ export function buildPostprocessing(
       afterimagePass.setSize(w, h);
       lensGradePass.uniforms.resolution.value.set(w, h);
       smaaPass.setSize(w * pixelRatio, h * pixelRatio);
+    },
+    setPixelRatio(nextPixelRatio) {
+      pixelRatio = nextPixelRatio;
+      composer.setPixelRatio(pixelRatio);
+      smaaPass.setSize(currentWidth * pixelRatio, currentHeight * pixelRatio);
     },
     baseBloomStrength,
     setBloomStrength(s) {

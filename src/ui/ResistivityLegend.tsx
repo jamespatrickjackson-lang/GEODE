@@ -1127,23 +1127,23 @@ export function ResistivityLegend({
               bottom: LEGEND_BOTTOM_EDGE_OFFSET_PX,
             }),
       }}
-      aria-label="MT Cell Points legend"
+      aria-label="MT Resistivity Cells legend"
     >
       <div style={mtCellPointsHeaderStyle}>
         <button
           type="button"
           data-testid={testId("resistivity-legend-master-toggle")}
           aria-pressed={pointCloudVisible}
-          title={pointCloudVisible ? "Hide MT Cell Points" : "Show MT Cell Points"}
+          title={pointCloudVisible ? "Hide MT Resistivity Cells" : "Show MT Resistivity Cells"}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={() => setPointCloudVisible(!pointCloudVisible)}
           style={mtCellPointsPrimaryStyle(pointCloudVisible)}
         >
-          MT Cell Points
+          MT Resistivity Cells
         </button>
         <div
           role="radiogroup"
-          aria-label="MT Cell Points view"
+          aria-label="MT Resistivity Cells view"
           style={{ display: "contents" }}
         >
           <button
@@ -1151,7 +1151,7 @@ export function ResistivityLegend({
             role="radio"
             aria-checked={displayedMode === "full-cloud"}
             data-testid={testId("resistivity-legend-full-cloud-toggle")}
-            title="Full Cloud"
+            title="All Valid Cells"
             disabled={
               !pointCloudVisible ||
               displayedMode === "full-cloud" ||
@@ -1171,7 +1171,7 @@ export function ResistivityLegend({
             role="radio"
             aria-checked={displayedMode === "spectrum"}
             data-testid={testId("resistivity-legend-spectrum-toggle")}
-            title="Spectrum"
+            title="Log10 Resistivity Window"
             disabled={
               !pointCloudVisible ||
               displayedMode === "spectrum" ||
@@ -1191,7 +1191,7 @@ export function ResistivityLegend({
           type="button"
           data-testid={testId("resistivity-legend-controls-toggle")}
           aria-expanded={controlsAvailable && edgePopoverOpen}
-          title="MT Cell Points controls"
+          title="MT Resistivity Cells controls"
           disabled={!controlsAvailable}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={() => setEdgePopoverOpen((open) => !open)}
@@ -1276,25 +1276,25 @@ export function ResistivityLegend({
           <>
             {handleButton(
               "focusMin",
-              "Trim minimum handle",
+              "Log10 resistivity window minimum",
               displayPercentForOverlappedHandles(trimMinPercent, -1, lowOverlap),
               true,
             )}
             {handleButton(
               "blendMin",
-              "Feather minimum handle",
+              "Log10 resistivity fade minimum",
               displayPercentForOverlappedHandles(blendMinPercent, 1, lowOverlap),
               false,
             )}
             {handleButton(
               "blendMax",
-              "Feather maximum handle",
+              "Log10 resistivity fade maximum",
               displayPercentForOverlappedHandles(blendMaxPercent, -1, highOverlap),
               false,
             )}
             {handleButton(
               "focusMax",
-              "Trim maximum handle",
+              "Log10 resistivity window maximum",
               displayPercentForOverlappedHandles(trimMaxPercent, 1, highOverlap),
               true,
             )}
@@ -1302,9 +1302,9 @@ export function ResistivityLegend({
         ) : null}
         <button
           type="button"
-          aria-label="Lower edge line value"
+          aria-label="Lower isoline log10 resistivity"
           data-testid={testId("resistivity-legend-edge-lower")}
-          title="Lower edge line value"
+          title="Lower isoline log10 resistivity"
           onPointerDown={beginEdgeDrag("edgeLower")}
           onDoubleClick={(event) => {
             event.preventDefault();
@@ -1315,9 +1315,9 @@ export function ResistivityLegend({
         />
         <button
           type="button"
-          aria-label="Upper edge line value"
+          aria-label="Upper isoline log10 resistivity"
           data-testid={testId("resistivity-legend-edge-upper")}
-          title="Upper edge line value"
+          title="Upper isoline log10 resistivity"
           onPointerDown={beginEdgeDrag("edgeUpper")}
           onDoubleClick={(event) => {
             event.preventDefault();
@@ -1362,9 +1362,9 @@ export function ResistivityLegend({
         >
           <div style={{ ...edgePopoverHeaderStyle, color: legendTextColors.heading }}>
             <span>
-              3D MT resistivity full-density model
+              3D MT inversion resistivity cell centers
               <br />
-              <span style={{ color: legendTextColors.subtext }}>(point cloud)</span>
+              <span style={{ color: legendTextColors.subtext }}>(full-density model cells)</span>
             </span>
             <button
               type="button"
@@ -1383,12 +1383,12 @@ export function ResistivityLegend({
               color: legendTextColors.subtext,
             }}
           >
-            Scalar controls target: MT full-density points
+            Dataset: MT inversion cell centers
             <br />
             Inclusion:{" "}
             {style.scalarInclusionMode === "thresholded"
-              ? "Threshold/filter points"
-              : "All valid points"}
+              ? "Filter by log10 resistivity"
+              : "All valid resistivity cells"}
           </div>
           <div style={edgePopoverGridStyle}>
             <label
@@ -1398,7 +1398,7 @@ export function ResistivityLegend({
                 color: legendTextColors.body,
               }}
             >
-              Fill {edgeFillOffset === 0 ? "0%" : `${Math.round(edgeFillOffset * 100)}%`}
+              Band fill {edgeFillOffset === 0 ? "0%" : `${Math.round(edgeFillOffset * 100)}%`}
               <input
                 type="range"
                 min={-1}
@@ -1406,7 +1406,7 @@ export function ResistivityLegend({
                 step={0.01}
                 value={edgeFillOffset}
                 data-testid={testId("resistivity-legend-edge-fill-offset")}
-                title="Iso line fill offset"
+                title="Isoline band fill offset"
                 onPointerDown={(event) => event.stopPropagation()}
                 onChange={(event) =>
                   setScalarRenderPatch({
@@ -1421,11 +1421,11 @@ export function ResistivityLegend({
               />
             </label>
             <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
-              Style
+              Isoline style
               <select
                 value={edgeLineStyle}
                 data-testid={testId("resistivity-legend-edge-line-style")}
-                title="Iso line style"
+                title="Isoline style"
                 style={{ color: legendTextColors.body }}
                 onPointerDown={(event) => event.stopPropagation()}
                 onChange={(event) =>
@@ -1440,7 +1440,7 @@ export function ResistivityLegend({
               </select>
             </label>
             <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
-              Line {edgeLineWidth.toFixed(1)}px
+              Isoline {edgeLineWidth.toFixed(1)}px
               <input
                 type="range"
                 min={0}
@@ -1448,7 +1448,7 @@ export function ResistivityLegend({
                 step={0.1}
                 value={edgeLineWidth}
                 data-testid={testId("resistivity-legend-edge-highlight")}
-                title="Edge line thickness"
+                title="Isoline width"
                 onPointerDown={(event) => event.stopPropagation()}
                 onChange={(event) =>
                   setScalarRenderPatch({
@@ -1463,7 +1463,7 @@ export function ResistivityLegend({
               />
             </label>
             <label style={{ ...fineControlLabelStyle, color: legendTextColors.body }}>
-              Avg {Math.round(edgeAverage * 100)}%
+              Smooth {Math.round(edgeAverage * 100)}%
               <input
                 type="range"
                 min={0}
@@ -1471,7 +1471,7 @@ export function ResistivityLegend({
                 step={0.01}
                 value={edgeAverage}
                 data-testid={testId("resistivity-legend-edge-average")}
-                title="Average edge line into a smoother spline"
+                title="Isoline smoothing"
                 onPointerDown={(event) => event.stopPropagation()}
                 onChange={(event) =>
                   setScalarRenderPatch({
@@ -1493,7 +1493,7 @@ export function ResistivityLegend({
                   color: legendTextColors.body,
                 }}
               >
-                Noise {Math.round(noiseThreshold * 100)}%
+                Lateral support {Math.round(noiseThreshold * 100)}%
                 <input
                   type="range"
                   min={0}
@@ -1501,7 +1501,7 @@ export function ResistivityLegend({
                   step={0.01}
                   value={noiseThreshold}
                   data-testid={testId("resistivity-legend-noise-threshold")}
-                  title="Hide scalar points without lateral support"
+                  title="Filter resistivity cells without lateral support"
                   onPointerDown={(event) => event.stopPropagation()}
                   onChange={(event) =>
                     setScalarRenderPatch({

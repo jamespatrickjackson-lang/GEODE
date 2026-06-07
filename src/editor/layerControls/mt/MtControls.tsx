@@ -9,8 +9,7 @@ import {
   nestedControlRowStyle,
   nestedDetailsStyle,
   nestedFieldLabelStyle,
-  overrideTagActiveStyle,
-  overrideTagStyle,
+  OverrideStateIndicator,
   styleBoolean,
   styleNumber,
   styleString,
@@ -113,9 +112,7 @@ export function SurfaceGradientControls({
           }}
         />
         {isPageOverride ? (
-          <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-            {overridden ? "overridden" : "inherited"}
-          </span>
+          <OverrideStateIndicator active={overridden} />
         ) : null}
       </div>
       <div style={nestedControlRowStyle}>
@@ -161,11 +158,16 @@ export function SurfaceGradientControls({
           disabled={disabled}
           onChange={(value) => onChange({ surfaceGradientMidpoint: value })}
           format={(value) => value.toFixed(2)}
-          style={{ flex: 1, opacity: controlOpacity }}
+          style={{
+            flex: "0 1 118px",
+            minWidth: 72,
+            maxWidth: 132,
+            opacity: controlOpacity,
+          }}
         />
       </div>
       <div style={nestedControlRowStyle}>
-        <label style={nestedFieldLabelStyle}>Nuance</label>
+        <label style={nestedFieldLabelStyle}>Ramp contrast</label>
         <TransientSlider
           min={0.35}
           max={2.5}
@@ -174,7 +176,12 @@ export function SurfaceGradientControls({
           disabled={disabled}
           onChange={(value) => onChange({ surfaceGradientContrast: value })}
           format={(value) => value.toFixed(2)}
-          style={{ flex: 1, opacity: controlOpacity }}
+          style={{
+            flex: "0 1 118px",
+            minWidth: 72,
+            maxWidth: 132,
+            opacity: controlOpacity,
+          }}
         />
       </div>
     </>
@@ -234,9 +241,7 @@ export function MtTopSurfaceControls({
           inferred MT topology
         </span>
         {isPageOverride ? (
-          <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-            {overridden ? "overridden" : "inherited"}
-          </span>
+          <OverrideStateIndicator active={overridden} />
         ) : null}
       </div>
       <div style={nestedControlRowStyle}>
@@ -249,7 +254,12 @@ export function MtTopSurfaceControls({
           disabled={disabled}
           onChange={(value) => onChange({ meshSurfaceLiftM: value })}
           format={(value) => `${value.toFixed(0)} m`}
-          style={{ flex: 1, opacity: controlOpacity }}
+          style={{
+            flex: "0 1 118px",
+            minWidth: 72,
+            maxWidth: 132,
+            opacity: controlOpacity,
+          }}
         />
       </div>
       <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
@@ -273,7 +283,12 @@ export function MtTopSurfaceControls({
           disabled={disabled}
           onChange={(value) => onChange({ meshRoughness: value })}
           format={(value) => value.toFixed(2)}
-          style={{ flex: 1, opacity: controlOpacity }}
+          style={{
+            flex: "0 1 118px",
+            minWidth: 72,
+            maxWidth: 132,
+            opacity: controlOpacity,
+          }}
         />
       </div>
       <div style={nestedControlRowStyle}>
@@ -286,7 +301,12 @@ export function MtTopSurfaceControls({
           disabled={disabled}
           onChange={(value) => onChange({ meshMetalness: value })}
           format={(value) => value.toFixed(2)}
-          style={{ flex: 1, opacity: controlOpacity }}
+          style={{
+            flex: "0 1 118px",
+            minWidth: 72,
+            maxWidth: 132,
+            opacity: controlOpacity,
+          }}
         />
       </div>
     </>

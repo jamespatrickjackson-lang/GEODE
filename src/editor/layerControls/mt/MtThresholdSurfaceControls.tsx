@@ -61,12 +61,12 @@ function mtIsosurfaceProductOptions(
   return [
     {
       id: "mt-isosurface-forge-focused",
-      label: "MT FORGE-focused isosurfaces",
+      label: "MT FORGE-focused iso-resistivity surfaces",
       cropStatus: "presentation-crop",
     },
     {
       id: "mt-isosurface-full-extent",
-      label: "MT full-extent isosurfaces",
+      label: "MT full-source iso-resistivity surfaces",
       cropStatus: "full-source",
     },
   ];
@@ -251,10 +251,10 @@ export function MtThresholdSurfaceControls({
   };
   return (
     <details style={nestedDetailsStyle}>
-      <summary style={panelStyles.summary}>Surface boundaries</summary>
+      <summary style={panelStyles.summary}>Iso-resistivity surfaces</summary>
       <div style={detailsContentStyle}>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Surfaces</label>
+          <label style={nestedFieldLabelStyle}>Surface set</label>
           {!isEnv ? (
             <input
               type="checkbox"
@@ -271,11 +271,11 @@ export function MtThresholdSurfaceControls({
               opacity: controlOpacity,
             }}
           >
-            source-derived iso-resistivity
+            source-derived iso-resistivity surfaces
           </span>
         </div>
         <EnvSelectRow<string>
-          label="Product"
+          label="Iso-surface product"
           value={selectedProductId}
           testId="mt-isosurface-product"
           options={productOptions.map((option) => ({
@@ -289,18 +289,18 @@ export function MtThresholdSurfaceControls({
           onChange={(value) => commit({ mtIsosurfaceProductId: value })}
         />
         <EnvSelectRow<"precomputed-bank" | "live-compute">
-          label="Mode"
+          label="Surface source"
           value={boundaryMode}
           testId="mt-surface-boundary-mode"
           options={[
-            { value: "precomputed-bank", label: "Precomputed bank" },
-            { value: "live-compute", label: "Live compute (expert)" },
+            { value: "precomputed-bank", label: "Precomputed surface bank" },
+            { value: "live-compute", label: "Live iso-surface solve (expert)" },
           ]}
           disabled={disabled}
           onChange={(value) => commit({ mtSurfaceBoundaryMode: value })}
         />
         <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-          <span style={nestedFieldLabelStyle}>Legend</span>
+          <span style={nestedFieldLabelStyle}>Boundary legend</span>
           <input
             type="checkbox"
             checked={legendVisible}
@@ -313,7 +313,7 @@ export function MtThresholdSurfaceControls({
           <span style={{ flex: 1 }} />
         </label>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Master opacity</label>
+          <label style={nestedFieldLabelStyle}>Surface opacity</label>
           <input
             data-testid="mt-threshold-opacity"
             type="range"
@@ -366,7 +366,7 @@ export function MtThresholdSurfaceControls({
                 />
               </label>
               <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Label</label>
+                <label style={nestedFieldLabelStyle}>Boundary label</label>
                 <input
                   type="text"
                   value={boundary.label}
@@ -378,7 +378,7 @@ export function MtThresholdSurfaceControls({
                 />
               </div>
               <EnvSelectRow<MtSurfaceBoundaryComparison>
-                label="Compare"
+                label="Threshold relation"
                 value={boundary.comparison}
                 testId={`mt-threshold-comparison-${boundary.id}`}
                 options={[
@@ -391,7 +391,7 @@ export function MtThresholdSurfaceControls({
                 }
               />
               <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Ohm-m</label>
+                <label style={nestedFieldLabelStyle}>Threshold Ohm-m</label>
                 <input
                   type="number"
                   min={0.01}
@@ -410,7 +410,7 @@ export function MtThresholdSurfaceControls({
                 />
               </div>
               <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>log10 rho</label>
+                <label style={nestedFieldLabelStyle}>Threshold log10(Ohm-m)</label>
                 <input
                   type="number"
                   step={0.01}
@@ -455,14 +455,14 @@ export function MtThresholdSurfaceControls({
                 />
               </div>
               <div style={nestedControlRowStyle}>
-                <span style={nestedFieldLabelStyle}>Boundary</span>
+                <span style={nestedFieldLabelStyle}>Boundary action</span>
                 <button
                   type="button"
                   className="editor-action-button"
                   disabled={disabled}
                   onClick={() => removeBoundary(boundary.id)}
                 >
-                  Remove
+                  Remove surface
                 </button>
                 <span style={{ flex: 1 }} />
               </div>
@@ -470,7 +470,7 @@ export function MtThresholdSurfaceControls({
           ))}
         </div>
         <div style={{ ...nestedControlRowStyle, marginTop: 8 }}>
-          <span style={nestedFieldLabelStyle}>Bank</span>
+          <span style={nestedFieldLabelStyle}>Surface bank</span>
           {boundaryMode === "precomputed-bank" ? (
             <select
               value={
@@ -497,7 +497,7 @@ export function MtThresholdSurfaceControls({
             disabled={disabled}
             onClick={addBoundary}
           >
-            Add boundary
+            Add surface
           </button>
           <span style={{ color: vibrancyTertiaryLabel, fontSize: 11 }}>
             {availableBoundaries.length} available
@@ -541,7 +541,7 @@ export function MtThresholdSurfaceControls({
           <span style={{ flex: 1 }} />
         </label>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Roughness</label>
+          <label style={nestedFieldLabelStyle}>Surface roughness</label>
           <input
             type="range"
             min={0}
@@ -564,7 +564,7 @@ export function MtThresholdSurfaceControls({
           />
         </div>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Metalness</label>
+          <label style={nestedFieldLabelStyle}>Surface metalness</label>
           <input
             type="range"
             min={0}
@@ -587,7 +587,7 @@ export function MtThresholdSurfaceControls({
           />
         </div>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Light boost</label>
+          <label style={nestedFieldLabelStyle}>Surface light boost</label>
           <input
             type="range"
             min={0}
@@ -610,7 +610,7 @@ export function MtThresholdSurfaceControls({
           />
         </div>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Wire color</label>
+          <label style={nestedFieldLabelStyle}>Wireframe color</label>
           <input
             type="color"
             value={wireframeColor}
@@ -623,7 +623,7 @@ export function MtThresholdSurfaceControls({
           <span style={{ flex: 1 }} />
         </div>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Wire opacity</label>
+          <label style={nestedFieldLabelStyle}>Wireframe opacity</label>
           <input
             type="range"
             min={0}

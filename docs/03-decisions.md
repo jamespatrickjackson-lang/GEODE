@@ -1312,3 +1312,626 @@ settled MT Cell Points repair path, and do not edit `projects/*/pages/**`,
 `projects/*/overlays/**`, `projects/*/project.json`, or
 `projects/*/environment.json`. The transition path from DEC-115 remains
 authoritative while scalar tweens are active.
+
+## DEC-117 - MT resistivity cell terminology replaces metaphor labels
+
+This decision supersedes DEC-110 through DEC-116 only for user-facing labels and
+documentation terminology. Runtime mode keys, persisted fields, scalar math, and
+transition ownership remain unchanged.
+
+**Considered:** keep the authoring metaphors `MT Cell Points`, `Full Cloud`,
+`Spectrum`, `trim`, `feather`, `noise`, `nuance`, and generic value/distance
+labels, or rename the app-level controls to geophysics terms tied to
+log10(resistivity_ohm_m) and the MT inversion cell-center model.
+
+**Chose:** the viewport legend is named `MT Resistivity Cells`. The exclusive
+mode labels are `All Valid Cells` and `Log10 Resistivity Window`. The editor
+controls use `Filter by log10 resistivity`, `Window min/max log10(Ohm-m)`,
+`Fade min/max log10(Ohm-m)`, `Lateral support filter`, `Ramp contrast`,
+`Resistivity legend`, `Distance brightness`, and `Render count`. The
+full-density target label is `MT inversion cell centers`.
+
+**Why:** the current scalar values are log10(resistivity_ohm_m), and the
+rendered full-density object is an MT inversion cell-center point cloud. Labels
+should name the data and transform directly instead of using visual metaphors
+that imply arbitrary color spectrum editing or generic point filtering.
+
+**Guard:** this is an app-level terminology alignment only. Do not rename or
+mutate `scalarLegendVisible`, `scalarInclusionMode`, `scalarFocus*`,
+`scalarBlend*`, `scalarNoiseThreshold`, `scalarDistanceLightStrength`,
+`scalarInclusionFilterActive`, `SCALAR_TRANSITION_STYLE_FIELDS`, or
+`full-density-scalar`. Do not change source data, scalar transforms, threshold
+conversion, transition logic, page fixture state, project fixture state, or
+environment fixture state for this terminology change.
+
+## DEC-118 - MT resistivity controls use model-cell and isoline terms
+
+This decision supersedes DEC-117 only where DEC-117 still allowed render
+metaphors such as point cloud, edge line, fade, rho, and generic volume density
+to appear in user-facing app-level labels.
+
+**Considered:** keep those remaining labels because they map to implementation
+fields, or finish the source-level rename so visible controls use the same
+geophysical vocabulary as the MT resistivity model.
+
+**Chose:** visible MT resistivity controls use `MT inversion cell centers`,
+`full-density model cells`, `Log10 Resistivity Window`, `Opacity ramp`,
+`isoline`, `Band fill offset`, `Volume attenuation`, `Ray samples`, `Transfer
+function`, `Volume threshold window`, `Iso-resistivity surfaces`, and
+`Threshold log10(Ohm-m)`. Historical decision entries and runtime field names
+remain unchanged unless a separate migration is approved.
+
+**Why:** the source model is an electrical resistivity inversion in Ohm-m, with
+the app displaying log10 resistivity and derived iso-resistivity geometry.
+Visible copy should name the model cells, units, transfer function, and isolines
+instead of renderer or metaphor terms.
+
+**Guard:** this remains an app-level terminology change. Do not edit
+`projects/*/pages/**`, `projects/*/overlays/**`, `projects/*/project.json`, or
+`projects/*/environment.json`. Do not rename persisted `scalar*` fields,
+stable test ids, `scalarInclusionFilterActive`, `SCALAR_TRANSITION_STYLE_FIELDS`,
+or `full-density-scalar`.
+
+## DEC-119 - Capture Director v1 uses app-owned marketing capture
+
+**Considered:** use browser display capture for all recording modes, build a full
+deterministic processware exporter first, or add a smaller capture lab that keeps
+marketing capture owned by the app renderer.
+
+**Chose:** Capture Director v1 records scene-only marketing output from the
+WebGL canvas, records scene-annotation and presentation output through an
+app-owned composited Canvas 2D capture surface, and reserves browser display
+capture for Full UI/tutorial recordings only. The v1 toolbar exposes capture
+mode, 1080p/1440p/4K resolution presets, 30/60 FPS, start/stop, elapsed state,
+and downloadable WebM output. `CaptureRecipeV1` defines the deterministic export
+spine for scene state, camera keyframes, layer visibility/styles, environment
+state, quality preset, supersampling, fixed FPS, and duration.
+
+**Why:** marketing footage needs clean scene output and intentional
+capture-native overlays rather than ordinary DOM clutter or loose screen grabs.
+The capture lab should be real enough for preview recordings while leaving the
+future frame-sequence exporter free to render fixed-timestep frames without
+depending on live browser timing.
+
+**Guard:** display capture remains tutorial/full-app only. Scene-only,
+scene-annotation, and presentation captures must use the scene canvas or
+composited capture canvas. Capture sizing must restore the live renderer,
+camera aspect, postprocessing size, and line-material resolution after recording.
+Do not edit `projects/*/pages/**`, `projects/*/overlays/**`,
+`projects/*/project.json`, or `projects/*/environment.json` for capture mode
+behavior. The deterministic frame-sequence exporter is not complete in v1.
+
+## DEC-120 - Capture frame-sequence exporter writes browser frames
+
+This decision extends DEC-119 with the first deterministic export implementation
+step. The encoder remains deferred.
+
+**Considered:** wire FFmpeg/WebCodecs immediately, record deterministic exports
+through `MediaRecorder`, or make the next step a browser-frame sequence writer
+that produces fixed-timestep still frames first.
+
+**Chose:** the deterministic exporter consumes `CaptureRecipeV1`, rejects
+`full-ui` display capture, applies recipe layer visibility/styles, sizes the
+renderer to the recipe resolution times `supersampleScale`, and renders frames
+at `frameIndex / fps` through `sceneHandle.renderCaptureFrame`. Each frame is
+copied from the WebGL canvas to an output canvas, optionally receives
+capture-native overlays for annotation and presentation modes, and is encoded as
+a PNG or WebP frame with blob URL metadata. The result keeps recipe provenance,
+frame count, resolution, FPS, supersampling, per-frame names, and a cleanup
+method for object URLs.
+
+**Why:** frame sequences are the right deterministic marketing-export spine.
+They separate fixed-time rendering, renderer restoration, and image quality from
+later video encoding decisions, and they avoid reusing realtime `MediaRecorder`
+semantics for deterministic output.
+
+**Guard:** fixed-frame export must not use `Date.now()`, `performance.now()`, or
+`requestAnimationFrame` for frame time. Export cleanup must restore layer
+visibility, layer styles, camera pose, renderer size, camera aspect,
+postprocessing size, and line-material resolution even when frame encoding
+throws or export is aborted. Browser display capture remains tutorial/full-app
+only; the frame-sequence exporter does not support `full-ui`. FFmpeg/WebCodecs
+encoding remains the next task and must consume the frame sequence rather than
+replace it with realtime capture.
+
+## DEC-121 - Capture frame-sequence encoder consumes deterministic frames
+
+This decision extends DEC-120 with the first video-encoding boundary. The
+encoder does not replace fixed-frame rendering.
+
+**Considered:** wire video export back into realtime preview recorders, make
+FFmpeg pull from the WebGL canvas directly, or keep encoding as a downstream
+step that consumes `DeterministicFrameSequenceResult`.
+
+**Chose:** the first encoder boundary validates a complete deterministic frame
+sequence, writes sanitized PNG/WebP frame names into an injected FFmpeg virtual
+filesystem runtime, and builds app-owned MP4/H.264 and WebM/VP9 marketing
+presets. A browser FFmpeg adapter lazily loads `@ffmpeg/ffmpeg`, maps the
+virtual filesystem calls required by the encoder, forwards abort signals, and
+exposes disposal for the FFmpeg worker. The Capture Director toolbar exposes
+deterministic MP4 and WebM export for scene marketing modes, frame-render
+progress, and cancellation while leaving realtime WebM preview recording
+intact. Encoding returns a video blob URL and cleanup hook for the encoded
+output while leaving frame-sequence ownership explicit.
+
+**Why:** deterministic marketing export needs a clean split between fixed-time
+scene rendering and video muxing. The renderer has already handled camera,
+visibility, overlays, supersampling, and restoration before the encoder runs.
+The encoder should therefore validate those frames, preserve FPS and dimensions,
+and provide reproducible FFmpeg arguments without reopening browser timing or
+display-capture paths.
+
+**Guard:** the encoder accepts only `DeterministicFrameSequenceResult`.
+It must reject `off` and `full-ui` sequences, must not use realtime preview
+capture APIs, and must not call scene rendering APIs. The browser FFmpeg adapter
+must remain lazy and downstream-only. Progress detail, cancellation controls,
+and format selection belong in the provider/toolbar layer. Background-worker
+orchestration beyond the FFmpeg worker and WebCodecs muxing remain later
+implementation steps.
+
+## DEC-122 - Capture preview recorders reject empty realtime output
+
+This decision extends DEC-119 with the 4K realtime preview failure contract.
+Deterministic export remains the final-quality marketing path.
+
+**Considered:** allow browser `MediaRecorder` to return a downloadable empty
+WebM when a high-resolution realtime preset fails, silently downgrade 4K60
+preview to a lower preset, or fail the preview recording cleanly while keeping
+the selected preset explicit.
+
+**Chose:** realtime preview recorders must flush pending data with
+`MediaRecorder.requestData()` when available, request canvas capture frames from
+`CanvasCaptureMediaStreamTrack.requestFrame()` when available, and reject
+zero-byte output before creating or keeping a download URL. Scene-only capture
+subscribes to the scene after-render hook so direct canvas capture can request a
+frame for rendered scene updates. Composited annotation and presentation capture
+also request an initial composited frame after recorder start. The provider
+clears stale preview output, restores capture sizing, returns capture mode to
+`off`, and displays a resolution/FPS-specific error when no video data is
+produced.
+
+**Why:** 4K60 realtime preview depends on browser encoder capacity and can fail
+without useful `MediaRecorder` errors. A zero-byte file is not a valid marketing
+output and should not be offered for download. Failing visibly preserves the
+author's selected preset and points final 4K marketing work toward deterministic
+fixed-frame export rather than masking encoder limits with a silent downgrade.
+
+**Guard:** do not silently downgrade realtime preview presets. A failed
+realtime recording must not leave app chrome hidden, renderer size overridden,
+stream tracks running, or stale download links visible. Deterministic
+frame-sequence export remains the correct next implementation step for reliable
+high-quality 4K marketing video.
+
+## DEC-123 - Capture render-out production separates preview from output
+
+This decision extends DEC-119 through DEC-122 with production deterministic
+export controls.
+
+**Considered:** keep one resolution selector for both realtime recording and
+final export, upscale recorded WebM previews into MP4 files, or split realtime
+preview from deterministic render-out.
+
+**Chose:** Capture Director now treats realtime recording as preview and
+deterministic export as render-out. Preview recording remains limited to
+1080p, 1440p, and 4K. Render-out video and app-owned Screen Capture use a
+separate render-output resolution with 1080p, 1440p, 4K, and 8K. `8K` is
+UHD `7680 x 4320` and is deterministic-only. `CaptureRecipeV1.resolution`
+means final render-output resolution; optional `previewResolution` is provenance
+only. Capture recipes can be saved and loaded as portable JSON files, and
+Capture Director owns session-scoped camera keyframes for repeatable marketing
+exports. Browser FFmpeg core assets are self-hosted from `@ffmpeg/core` under
+`/runtime/ffmpeg/`; deterministic MP4/WebM encoding must not depend on CDN
+core defaults.
+
+**Why:** marketing output needs a render pass, not a screen recorder artifact.
+Authors can record a lower-resolution preview to frame timing and then render
+the same scene state, overlays, recipe, and camera keyframes to a higher output
+resolution. Still Screen Capture uses the same deterministic scene sizing,
+overlay, validation, and cleanup path so 8K stills preserve app-owned visual
+state without DOM/browser screenshots.
+
+**Guard:** realtime `MediaRecorder` preview must not expose 8K and must not
+silently upscale. Render-out and Screen Capture must validate output size,
+supersampling, and WebGL/browser limits before mutating scene visibility,
+styles, camera, renderer size, or postprocessing state. Recipe save/load remains
+portable file state in this phase and must not write `projects/*/pages/**`,
+`projects/*/overlays/**`, `projects/*/project.json`, or
+`projects/*/environment.json`. `full-ui` still capture remains a browser
+display-capture tutorial path and must fail cleanly on permission denial.
+
+## DEC-124 - Capture production uses max-detail exact-output rendering
+
+This decision extends DEC-119 through DEC-123 and supersedes DEC-120 and
+DEC-123 only where those entries allow supersampling/downsampling in
+deterministic capture.
+
+**Considered:** keep deterministic render-out quality as a supersampled browser
+frame sequence, rely on realtime preview detail settings for final exports, or
+make Capture Director final-output paths exact-size max-detail renders with an
+external 8K still fallback.
+
+**Chose:** Capture Director now separates four production areas: Realtime
+Capture, Render Out, Still Capture, and Camera Path. Realtime Capture remains a
+quick `MediaRecorder` preview path and may use live-app performance settings.
+Render Out and Still Capture enter a max-detail fidelity lock, set renderer and
+postprocessing dimensions exactly to the requested output, force renderer pixel
+ratio to `1`, update line-material resolution to the exact output dimensions,
+disable capture-system supersampling/downsampling, and restore every changed
+renderer, camera, postprocessing, and overlay setting in `finally`. If a source
+asset is already a preview artifact, capture uses the highest available source
+and reports that provenance instead of reducing it further. App-owned 8K still
+capture first attempts deterministic browser output; when browser/GPU limits
+block a single-pass output, Capture Director creates a `CaptureStillRenderJobV1`
+for the local tiled still renderer. Camera paths are Capture Director recipe
+state only: spline keyframes, path JSON, realtime path preview, and deterministic
+path sampling never write page camera fields or project fixtures.
+
+**Why:** marketing render-out should be a render, not an upscaled recording or a
+blurred preview pass. Exact-output max-detail rendering preserves point density,
+line thickness, postprocessing sharpness, camera aspect, clipping, opacity, and
+scene meaning at the selected final resolution. The 8K still path needs a
+practical fallback because live browser WebGL/canvas limits can prevent a single
+7680 x 4320 render surface even when a tiled local render can produce the file.
+
+**Guard:** no deterministic Render Out or Still Capture path may silently
+downsample, upscale a realtime preview, expose 8K as realtime recording, leave
+the camera-path overlay in exported scene output, write `projects/*/pages/**`,
+`projects/*/overlays/**`, `projects/*/project.json`, or
+`projects/*/environment.json`, or alter authored visual presets. The external
+still renderer is an output fallback, not a project persistence path.
+
+## DEC-125 - Capture Director Camera Path v2 is recipe-only production state
+
+This decision extends DEC-124 for the Camera Path production area.
+
+**Considered:** keep camera paths as v1 spline keyframes only, store timeline
+camera authoring in page camera fields, or make Camera Path v2 a Capture
+Director recipe timeline with explicit node and segment semantics.
+
+**Chose:** Camera Path v2 is a capture-recipe timeline. A timeline contains
+keyframe nodes that hold authored camera poses and transition nodes that define
+the motion boundary between keyframes. Segment transition time belongs to the
+segment/transition node, and hold time belongs to the keyframe node. Lower
+timeline scrub and playback sample the same deterministic timeline used by
+Render Out, so preview playback, timeline scrubbing, and frame-sequence export
+resolve identical camera poses for the same recipe time. Look modes are explicit
+per node/segment state: authored camera target, fixed world focus point,
+follow-bound focus binding, or path tangent look where supported. Focus point
+binding stores recipe references and offsets rather than mutating scene, page,
+or project camera fields.
+
+**Why:** production camera movement needs repeatable render timing and readable
+authoring semantics. Separating keyframe hold time from segment transition time
+prevents a waypoint pause from becoming hidden interpolation state. Separating
+keyframe nodes from transition nodes lets the lower timeline expose the same
+structure that deterministic export samples. Keeping focus binding in the recipe
+allows a path to follow a scene object or fixed point for marketing output
+without converting that path into persistent page authoring state.
+
+**Guard:** Camera Path v2 state is recipe-only. Save/load may create portable
+JSON files and object URLs, but must not write `projects/*/pages/**`,
+`projects/*/overlays/**`, `projects/*/project.json`, or
+`projects/*/environment.json`. The v2 module/schema must preserve stable ids for
+keyframe nodes, transition nodes, segments, look modes, focus bindings, lower
+timeline scrub/playback controls, and deterministic exporter sampling. Render
+Out must sample camera path time from fixed `frameIndex / fps` recipe time, not
+from live clock APIs or page navigation side effects. The camera-path overlay is
+an authoring preview and must remain out of exported scene output.
+
+## DEC-126 - Capture Director camera track options and preview monitor
+
+This decision extends DEC-125 for camera-path authoring preview controls.
+
+**Considered:** keep camera track styling as hard-coded scene constants, store
+preview controls in editor/page state, or make track display options part of the
+Capture Director path/recipe state.
+
+**Chose:** camera track line size, track color, selected color, target color,
+focus color, handle scale, direction ray length, frustum visibility, look-ray
+visibility, focus-lock ray visibility, node labels, timeline ghosting, and
+preview monitor mode are Capture Director display options stored in
+recipe/path JSON. The scene overlay renders node kind, camera position, travel
+direction, look direction, focus-lock state, target/focus markers, and the
+scrubbed sample while Capture Director is open. A floating preview monitor can
+render the selected or scrubbed path camera view without changing the live
+editor camera.
+
+**Why:** camera-path authoring needs clear visual logic separate from final
+marketing output. Authors must see how the camera moves and what it points at,
+including focus-lock behavior, while retaining a clean exported scene.
+
+**Guard:** camera track options and the preview monitor must not write page camera fields,
+project fixtures, visual presets, `projects/*/pages/**`,
+`projects/*/overlays/**`, `projects/*/project.json`, or
+`projects/*/environment.json`. The camera path overlay and preview monitor are
+authoring aids and must remain out of exported scene output unless a future
+explicit export-overlay option is added.
+
+## DEC-127 - Capture Director Line2 camera overlay and external 8K still route
+
+This decision extends DEC-124 through DEC-126 for the next Capture Director
+production step.
+
+**Considered:** draw the camera path overlay with ordinary `THREE.Line`
+helpers, reuse browser single-pass still capture for every 8K output, or add a
+production route that separates authoring overlay preview from final still
+rendering.
+
+**Chose:** the Capture Director camera path overlay uses the Three.js `Line2`
+wide-line path for authoring preview so track width remains readable and
+resolution-aware in the editor. The overlay is Capture Director display state
+only and remains excluded from exported scene output. Still Capture first
+attempts the exact-size browser render required by DEC-124; when browser or GPU
+limits block 8K single-pass output, Capture Director creates a real
+`CaptureStillRenderJobV1` and routes it to the external/local tiled still
+renderer. The tiled renderer consumes the same recipe, scene state, camera
+sample, overlay exclusions, and max-detail output contract as browser Still
+Capture.
+
+**Why:** camera-path authoring needs a visible path overlay without turning that
+overlay into marketing output. 8K still output also needs a concrete render-job
+route rather than a placeholder, browser screenshot, downsampled preview, or
+fixture mutation. A tiled external fallback preserves the requested
+`7680 x 4320` output when a single WebGL surface cannot be allocated.
+
+**Guard:** do not write `projects/*/pages/**`, `projects/*/overlays/**`,
+`projects/*/project.json`, or `projects/*/environment.json` for camera-path
+overlay, still render jobs, tiled fallback setup, output provenance, or preview
+state. Do not leave the Line2 camera-path overlay in exported scene output. Do
+not expose 8K through realtime `MediaRecorder`, silently downsample, upscale
+preview output, or mutate authored visual presets. Static checks and source
+inspection only make this ready for visual check; use the exact status wording
+`ready for visual check` until a running browser inspection or human review
+confirms the rendered result.
+
+## DEC-128 - Capture Director camera paths use rows, transitions, and timeline blocks
+
+This decision tightens DEC-125 after the first Camera Path workflow repair.
+
+**Considered:** keep path playback tied to the legacy keyframe list, serialize
+empty draft paths into recipes, or make `CaptureCameraPathV2` the only editable
+source for path rows, transition timing, playback, recording, recipe export,
+overlay state, and lower-timeline display.
+
+**Chose:** `CaptureCameraPathV2` is the canonical camera-path authoring model.
+An empty v2 path is valid draft state but is not a renderable recipe path.
+Still Capture and Render Out use the current camera pose when no authored,
+enabled, renderable path exists, and recipe snapshots serialize that state as
+`cameraPath: null`. Numbered camera-view rows (`01`, `02`, `03`) own active
+state, authoring-overlay hidden state, node kind, hold time, look mode, focus
+binding, jump/update/delete actions, and row selection. Transition containers
+live between rows and own segment active state, authoring-overlay hidden state,
+transition duration, and easing. The lower timeline displays full-width hold
+and transition blocks, plus position/look/focus lanes, and scrubs through the
+same deterministic v2 sample path used by Render Out.
+
+**Why:** camera-path authoring needs to behave like shot editing rather than a
+flat list of unnamed keyframes. Empty drafts should not block still capture or
+render-out. Per-row active/hidden semantics let an author test path structure
+without deleting rows, while keeping overlay visibility separate from final
+sampling. Transition containers make speed and easing visible where they occur,
+and timeline blocks give direct control over how long camera holds and moves
+last.
+
+**Guard:** `enabled` controls participation in playback, realtime path
+recording, deterministic render-out, Still Capture path sampling, recipe path
+export, and legacy keyframe export. `hidden` controls authoring overlay
+visibility only. Hidden enabled rows remain active in the path. Transition
+nodes cannot hold. Disabled middle nodes are not automatically bridged unless
+an explicit enabled segment exists. Play Path and Record Path Preview must use
+v2 playback validation and must not start on empty, all-disabled, broken-route,
+or zero-duration paths. Camera Path state remains recipe/path JSON state only;
+do not write page camera fields, `projects/*/pages/**`,
+`projects/*/overlays/**`, `projects/*/project.json`, or
+`projects/*/environment.json` for row edits, transition edits, timeline scrubs,
+focus picking, playback, or preview recording.
+
+## DEC-129 - Capture Director camera paths separate temporal easing from geometric continuity
+
+This decision extends DEC-125 through DEC-128 for future camera-path surfacing
+work. Current production code remains `CaptureCameraPathV2` until a future V3
+or compatible extension is implemented.
+
+**Considered:** keep one generic transition easing control, overload
+`segment.easing` to control both speed and path shape, or document separate
+authoring tracks for time, geometry, focus distance, and equation overlays.
+
+**Chose:** Capture Director camera paths separate temporal easing from
+geometric continuity. Temporal easing controls speed, acceleration,
+deceleration, and ramp profile along an already-defined path. Geometric
+continuity controls curve shape and fairing between nodes using surfacing
+language: `G0` positional continuity, `G1` tangent continuity, `G2` curvature
+continuity, `G3` curvature-flow continuity, and `Gd` in/out influence distance.
+Focus distance and aim geometry are a third independent track that resolves
+free look vectors, path-tangent following, target blending, and recipe-local
+focus locks. Equation overlays are editor/session display state for labels such
+as `A`, `T`, `D`, `G`, `Gd`, temporal ramp graphs, tangent handles, influence
+handles, and curvature combs.
+
+**Why:** camera movement needs both animation timing and modeled path quality.
+A soft speed ramp does not make a sharp rail geometrically fair, and a `G2` or
+`G3` rail should not alter transition duration. Treating time easing, path
+fairing, and focus distance as separate tracks lets authors build camera moves
+with video-editor timing and surfacing-editor rail quality.
+
+**Guard:** do not overload current `CaptureCameraPathSegmentV2.easing`; it
+means temporal easing only. Do not implement `G0` through `G3` as a single
+Catmull-Rom tension slider. Do not move authored node positions when changing
+fairing; fairing changes interpolation and handle influence around those nodes.
+Do not write surfacing edits, equation-overlay state, focus-distance controls,
+or direct-manipulation handles to page camera fields, `projects/*/pages/**`,
+`projects/*/overlays/**`, `projects/*/project.json`, or
+`projects/*/environment.json`. Future V3 work must preserve V2 recipe
+compatibility and keep equation overlays out of Render Out and Still Capture
+unless a future explicit export-overlay option is added.
+
+## DEC-130 - Capture Director Camera Path V3 is a surfacing-aware schema
+
+This decision implements the DEC-129 surfacing model while preserving the V1/V2
+capture/export contract.
+
+**Considered:** overload `CaptureCameraPathV2.segment.easing`, add ad hoc
+fairing fields to v2 segments, or introduce a discriminated v3 camera-path
+schema with explicit timing, geometry, aim, and overlay tracks.
+
+**Chose:** add `CaptureCameraPathV3` as a new discriminated camera-path schema.
+V2 remains load-compatible and upgrades into V3 in Capture Director UI state.
+The outer recipe remains `CaptureRecipeV1`; recipe `cameraPath` may be v1, v2,
+v3, or `null` for an empty draft path. Recipe saves use V3 when the authored
+path is renderable and still emit legacy `cameraKeyframes` for compatibility.
+
+**Why:** V3 keeps temporal easing, geometric rail fairing, focus/aim geometry,
+and equation overlays independent. `timeCurve` controls speed only.
+`pathFairing` controls `G0`, `G1`, `G2`, `G3`, `Gd`, tension, bias, and handle
+influence without moving authored node positions or changing segment duration.
+`aimGeometry` controls free direction, path-tangent following, focus-point
+lock, target blending, fixed FOV, maintain-focus-size, and dolly-zoom behavior.
+`equationOverlayOptions` controls authoring visualization without changing
+marketing output.
+
+**Guard:** V2 `segment.easing` remains temporal-only. Render Out and Still
+Capture sample V3 through fixed `frameIndex / fps` and exclude equation
+overlays by default. Equation overlays, direct-manipulation handles, surfacing
+edits, focus-distance edits, and path playback remain Capture Director
+session/recipe state only. Do not write V3 camera-path state to page camera
+fields, `projects/*/pages/**`, `projects/*/overlays/**`,
+`projects/*/project.json`, `projects/*/environment.json`, visual presets, or
+snapshot-sensitive Utah FORGE files.
+
+## DEC-131 - Capture Director Camera Path V3.1 uses node-owned spline controls
+
+This decision repairs the first V3 surfacing implementation from DEC-130.
+
+**Considered:** keep `Gd`, continuity, and fairing authority on individual
+segments, add more per-segment correction rules, or move runtime rail geometry
+to node-owned incoming/outgoing spline handles like standard DCC spline editors.
+
+**Chose:** V3.1 keeps segment `pathFairing` fields for recipe compatibility and
+migration, but runtime geometry reads node-owned `splineControls`. Each node
+owns an incoming handle and outgoing handle with `auto`, `manual`, or `vector`
+mode, plus `tangent` or `non-tangent` coupling. Each segment samples a bounded
+cubic Bezier from `from.position`, `from.out`, `to.in`, and `to.position`.
+`Tangent` coupling keeps handles collinear through a node so pulling one side
+updates both adjacent curve sides. `Non-tangent` coupling breaks the handles so
+pulling one side affects only that adjacent segment. `Vector` mode is the hard
+corner `G0` authoring mode.
+
+**Why:** segment-owned fairing is inherently one-sided at shared nodes. It lets
+two adjacent segments disagree about tangent and influence at the same camera
+view, which makes `G1` through `G3` controls fragile and causes undesirable
+curve extension. Node-owned handles match established animation/surfacing
+authoring behavior, keep node positions as interpolation truth, and give
+authors visible spline handles plus explicit XYZ node movement.
+
+**Guard:** `timeCurve` remains temporal-only. G-continuity, tension, influence
+length, and spline handle pulls must not move authored node positions. Only
+explicit XYZ node handles move nodes, and manual handles translate with that
+node. Spline controls, equation overlays, path video preview, and direct
+manipulation remain Capture Director session/recipe state only. Do not write
+V3.1 camera-path state to page camera fields, `projects/*/pages/**`,
+`projects/*/overlays/**`, `projects/*/project.json`,
+`projects/*/environment.json`, visual presets, or snapshot-sensitive Utah FORGE
+files. Realtime path video may record through preview presets up to 4K;
+deterministic Render Out remains the final-quality video path.
+
+## DEC-132 - Capture Director uses a runtime job layer for production capture work
+
+This decision extends DEC-119 through DEC-131 for Capture Director production
+operations.
+
+**Considered:** keep every capture/export flow as independent provider state,
+reuse realtime `MediaRecorder` path video as the final marketing path, or add a
+shared in-memory job runtime with separate preview and deterministic path-video
+actions.
+
+**Chose:** Capture Director owns an in-memory Capture Job Runtime. Jobs track
+kind, status, progress, diagnostics, cancellation, output blobs, output URLs,
+and cleanup callbacks for realtime preview, path preview, deterministic video,
+rendered path video, still capture, and external still work. Camera Path now
+separates `Record Path Video` from `Render Path Video`: the first is realtime
+WebM preview up to the preview presets, while the second uses deterministic
+fixed-frame rendering, max-detail fidelity, and the FFmpeg frame-sequence
+encoder for final marketing output.
+
+**Why:** path-video preview and final path rendering have different reliability
+and quality contracts. `MediaRecorder` is useful for quick review, but final
+marketing output needs deterministic frame timing, exact render resolution,
+shared diagnostics, cancellation, and output validation. A shared runtime job
+layer keeps these concerns out of page/project fixtures and avoids more
+independent status/output branches in the provider.
+
+**Guard:** job state is runtime-only and must not be written to
+`projects/*/pages/**`, `projects/*/overlays/**`, `projects/*/project.json`,
+`projects/*/environment.json`, browser storage, visual presets, or recipe JSON.
+`Render Path Video` uses the current page and authored `CaptureCameraPathV3`
+timeline for this pass; page-range path rendering is a later extension.
+Equation overlays, spline controls, and authoring handles remain excluded from
+rendered output by default. Long Playwright and visual QA are not required for
+this implementation pass; until the running browser is inspected, report the
+result as `ready for visual check`.
+
+## DEC-133 - Path video outputs require explicit save and encoding visibility
+
+This decision amends DEC-132 after field use of Camera Path video export showed
+that a long 4K MP4 encode could look like a stuck or already-saved render.
+
+**Considered:** continue exposing only `Encoding path video`, attempt to save
+automatically after encode, rely on realtime `MediaRecorder` for MP4, or make
+path-video output ownership explicit in the Camera Path panel.
+
+**Chose:** rendered path video now reports encoding elapsed time and explicitly
+states that no file has been saved until encoding completes. After completion,
+the UI exposes `Save Rendered Video` through the browser save picker when
+available, plus a download link fallback. Realtime path recording remains a WebM
+MediaRecorder preview; MP4 preview output is a separate FFmpeg transcode job
+from the completed WebM preview.
+
+**Why:** browser FFmpeg encodes, especially 4K MP4, can take minutes and do not
+provide reliable progress callbacks through the current runtime seam. A visible
+elapsed watchdog and no-file-saved copy distinguish slow encoding from a saved
+file. The File System Access picker cannot be reliably opened after a long async
+encode without a fresh user action, so saving is a deliberate button press after
+the Blob exists. Browser `MediaRecorder` MP4 support is inconsistent, so MP4
+preview must be a conversion step rather than the primary realtime capture
+promise.
+
+**Guard:** Capture Director must not create stale download links for failed or
+cancelled preview conversions or path renders. Path video save/transcode jobs
+remain runtime-only and must not write project/page fixtures, overlays,
+environment files, browser storage, or recipe JSON.
+
+## DEC-134 - Capture Director V3.1 Gx fairing resolves effective handles with guards
+
+This decision completes the core V3.1 spline surfacing repair from DEC-131.
+
+**Considered:** treat `G2` and `G3` as labels over the same Bezier handles,
+switch to high-degree per-segment curves, or keep cubic Bezier rails and solve
+bounded effective handles with diagnostics.
+
+**Chose:** V3.1 keeps cubic Bezier as the runtime rail primitive:
+`from.position`, effective `from.out`, effective `to.in`, and `to.position`.
+The authored node positions remain immutable interpolation constraints. `G1`
+keeps tangent-coupled in/out handles collinear at shared nodes. `G2` solves
+bounded in/out handle-length ratios to reduce curvature discontinuity at shared
+nodes. `G3` applies an additional bounded fairness pass that reduces
+curvature-flow spikes across neighboring segments while still using cubic
+Bezier segments. Segment `pathFairing` remains compatibility and migration
+state; runtime sampling uses node-owned `splineControls` and the effective
+Bezier resolver.
+
+**Why:** exact high-degree `G3` continuity would add unstable per-segment
+degrees of freedom and undermine the direct spline-handle workflow. Bounded
+effective handles match DCC rail editing expectations better: authors keep
+Bezier-like controls, node positions stay fixed, and the solver can improve
+curvature quality without changing transition timing.
+
+**Guard:** unsafe Gx edits must be diagnosed and stabilized before playback,
+scrub preview, Render Out, or Still Capture sampling. The resolver checks for
+non-finite samples, derivative reversal, non-monotonic projected progress,
+excessive chord-envelope exit, and loopback risk. It damps effective handles
+before falling back from requested `G3` to stable `G2`, then stable `G1` auto
+handles. Transition UI must show compact guard/fallback feedback when effective
+continuity is lower than requested or a guard applied. Gx guards must not move
+authored camera nodes, alter hold time, alter transition duration, overload
+temporal easing, or write page/project fixtures, overlays, environment files,
+visual presets, browser storage, or recipe-external state.

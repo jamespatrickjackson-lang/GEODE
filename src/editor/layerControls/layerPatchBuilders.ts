@@ -66,6 +66,29 @@ export function scalarRampPatchFromStyle(
       style.scalarInclusionMode === "thresholded" ? "thresholded" : "all-valid",
     scalarMidpoint: styleNumber(style, "scalarMidpoint", 0.5),
     scalarContrast: styleNumber(style, "scalarContrast", 1),
+    scalarEdgeLowerValue: styleNumber(
+      style,
+      "scalarEdgeLowerValue",
+      styleNumber(style, "scalarDisplayMin", 0.139879),
+    ),
+    scalarEdgeUpperValue: styleNumber(
+      style,
+      "scalarEdgeUpperValue",
+      styleNumber(style, "scalarDisplayMax", 3.937122),
+    ),
+    scalarEdgeLineWidth: styleNumber(style, "scalarEdgeLineWidth", 0),
+    scalarEdgeAverage: styleNumber(style, "scalarEdgeAverage", 0.45),
+    scalarEdgeFillOffset: styleNumber(style, "scalarEdgeFillOffset", 0),
+    scalarEdgeLineStyle:
+      style.scalarEdgeLineStyle === "dashed" ? "dashed" : "solid",
+    scalarNoiseThreshold: styleNumber(style, "scalarNoiseThreshold", 0),
+    scalarSurfaceMaskEnabled: style.scalarSurfaceMaskEnabled !== false,
+    scalarSurfaceMaskDepthM: styleNumber(style, "scalarSurfaceMaskDepthM", 25),
+    scalarSurfaceMaskFeatherM: styleNumber(
+      style,
+      "scalarSurfaceMaskFeatherM",
+      175,
+    ),
   };
 }
 
@@ -218,4 +241,3 @@ export function mtThresholdSurfacePatchFromStyle(
     opacity: styleNumber(style, "opacity", 0.86),
   };
 }
-

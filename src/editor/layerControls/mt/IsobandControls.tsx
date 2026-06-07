@@ -117,6 +117,10 @@ export function IsobandControls({
       ? activePlane.positionM
       : isobandDefaultPlanePosition(activeAxis);
   const controlOpacity = disabled ? 0.4 : 1;
+  const sourceOpacityLabel =
+    rangeKind === "mt" ? "Source resistivity opacity" : "Source amplitude opacity";
+  const minLabel = rangeKind === "mt" ? "Min log10(Ohm-m)" : "Min amplitude";
+  const maxLabel = rangeKind === "mt" ? "Max log10(Ohm-m)" : "Max amplitude";
   const rangeSpan = sourceMax - sourceMin;
   const rangeFill = (value: number) =>
     `${Math.max(0, Math.min(100, ((value - sourceMin) / rangeSpan) * 100))}%`;
@@ -223,14 +227,14 @@ export function IsobandControls({
               opacity: controlOpacity,
             }}
           >
-            {volumePlanes ? "section plane bands" : "slice overlay bands"}
+            {volumePlanes ? "section plane iso-bands" : "slice overlay iso-bands"}
           </span>
         </label>
 
         {volumePlanes ? (
           <>
             <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Plane</label>
+              <label style={nestedFieldLabelStyle}>Section plane</label>
               <select
                 data-testid="layer-isobands-volume-axis"
                 value={activeAxis}
@@ -246,7 +250,7 @@ export function IsobandControls({
               </select>
             </div>
             <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Plane pos.</label>
+              <label style={nestedFieldLabelStyle}>Plane position</label>
               <input
                 data-testid="layer-isobands-volume-position"
                 type="range"
@@ -282,7 +286,7 @@ export function IsobandControls({
         ) : null}
 
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Original</label>
+          <label style={nestedFieldLabelStyle}>{sourceOpacityLabel}</label>
           <input
             data-testid="layer-isobands-source-opacity"
             type="range"
@@ -306,7 +310,7 @@ export function IsobandControls({
           />
         </div>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Bands</label>
+          <label style={nestedFieldLabelStyle}>Iso-band count</label>
           <input
             data-testid="layer-isobands-count"
             type="range"
@@ -332,7 +336,7 @@ export function IsobandControls({
           />
         </div>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Min</label>
+          <label style={nestedFieldLabelStyle}>{minLabel}</label>
           <input
             data-testid="layer-isobands-min"
             type="range"
@@ -358,7 +362,7 @@ export function IsobandControls({
           />
         </div>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Max</label>
+          <label style={nestedFieldLabelStyle}>{maxLabel}</label>
           <input
             data-testid="layer-isobands-max"
             type="range"
@@ -384,7 +388,7 @@ export function IsobandControls({
           />
         </div>
         <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-          <span style={nestedFieldLabelStyle}>Fill</span>
+          <span style={nestedFieldLabelStyle}>Iso-band fill</span>
           <input
             data-testid="layer-isobands-bands-visible"
             type="checkbox"
@@ -398,7 +402,7 @@ export function IsobandControls({
           <span style={{ flex: 1 }} />
         </label>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Fill alpha</label>
+          <label style={nestedFieldLabelStyle}>Band opacity</label>
           <input
             data-testid="layer-isobands-band-opacity"
             type="range"
@@ -420,7 +424,7 @@ export function IsobandControls({
           />
         </div>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Fill offset</label>
+          <label style={nestedFieldLabelStyle}>Band fill offset</label>
           <input
             data-testid="layer-isobands-fill-offset"
             type="range"
@@ -442,7 +446,7 @@ export function IsobandControls({
           />
         </div>
         <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-          <span style={nestedFieldLabelStyle}>Lines</span>
+          <span style={nestedFieldLabelStyle}>Isolines</span>
           <input
             data-testid="layer-isobands-lines-visible"
             type="checkbox"
@@ -456,7 +460,7 @@ export function IsobandControls({
           <span style={{ flex: 1 }} />
         </label>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Line style</label>
+          <label style={nestedFieldLabelStyle}>Isoline style</label>
           <select
             data-testid="layer-isobands-line-style"
             value={lineStyle}
@@ -478,7 +482,7 @@ export function IsobandControls({
           </select>
         </div>
         <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Line width</label>
+          <label style={nestedFieldLabelStyle}>Isoline width</label>
           <input
             data-testid="layer-isobands-line-width"
             type="range"

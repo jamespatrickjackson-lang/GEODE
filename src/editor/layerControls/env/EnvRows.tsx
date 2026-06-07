@@ -8,8 +8,7 @@ import {
   EditorEyeButton,
   nestedControlRowStyle,
   nestedFieldLabelStyle,
-  overrideTagActiveStyle,
-  overrideTagStyle,
+  OverrideStateIndicator,
 } from "../../styleControls";
 import {
   isStyleFieldOverridden,
@@ -147,9 +146,7 @@ export function PageTreeVisibilityToggle({
           font: "inherit",
         }}
       >
-        <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-          {overridden ? "overridden" : "inherited"}
-        </span>
+        <OverrideStateIndicator active={overridden} />
       </button>
     </div>
   );
@@ -224,7 +221,7 @@ export function EnvAffectedByFogRow({
 }) {
   return (
     <div style={nestedControlRowStyle}>
-      <label style={nestedFieldLabelStyle}>Use fog</label>
+      <label style={nestedFieldLabelStyle}>Fog participation</label>
       <ToggleButton
         active={value}
         onClick={onToggle}
@@ -310,9 +307,7 @@ export function PageLabelKindRow({
           </option>
         ))}
       </select>
-      <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {overridden ? "overridden" : "inherited"}
-      </span>
+      <OverrideStateIndicator active={overridden} />
     </div>
   );
 }
@@ -378,9 +373,7 @@ export function PageLabelPointerVisibleRow({
             : "Toggle the label pointer and create a page override"
         }
       />
-      <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {overridden ? "overridden" : "inherited"}
-      </span>
+      <OverrideStateIndicator active={overridden} />
     </div>
   );
 }
@@ -468,9 +461,7 @@ export function PageLabelPointerSideRow({
           </option>
         ))}
       </select>
-      <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {overridden ? "overridden" : "inherited"}
-      </span>
+      <OverrideStateIndicator active={overridden} />
     </div>
   );
 }
@@ -509,9 +500,7 @@ export function PageShowLabelsRow({
         disabled={!overridden}
         onChange={(e) => onSet(e.target.checked)}
       />
-      <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {overridden ? "overridden" : "inherited"}
-      </span>
+      <OverrideStateIndicator active={overridden} />
     </div>
   );
 }
@@ -534,7 +523,7 @@ export function PageAffectedByFogRow({
   const effective = overridden ? overrideVal : envValue;
   return (
     <div style={nestedControlRowStyle}>
-      <label style={nestedFieldLabelStyle}>Use fog</label>
+      <label style={nestedFieldLabelStyle}>Fog participation</label>
       <input
         type="checkbox"
         checked={overridden}
@@ -553,9 +542,7 @@ export function PageAffectedByFogRow({
             : "Toggle fog and create a page override"
         }
       />
-      <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {overridden ? "overridden" : "inherited"}
-      </span>
+      <OverrideStateIndicator active={overridden} />
     </div>
   );
 }

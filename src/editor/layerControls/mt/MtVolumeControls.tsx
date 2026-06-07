@@ -57,11 +57,11 @@ function mtVolumeProductOptions(
   return [
     {
       id: "mt-resistivity-forge-focused-volume",
-      label: "3D MT resistivity focused volume",
+      label: "3D MT resistivity FORGE-focused volume",
     },
     {
       id: "mt-resistivity-full-extent-volume",
-      label: "3D MT resistivity full-extent volume",
+      label: "3D MT resistivity full-source volume",
     },
   ];
 }
@@ -147,10 +147,10 @@ export function MtVolumeControls({
   return (
     <>
       <details style={nestedDetailsStyle}>
-        <summary style={panelStyles.summary}>3D volume products</summary>
+        <summary style={panelStyles.summary}>3D MT Resistivity Volume</summary>
         <div style={detailsContentStyle}>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Volume</label>
+            <label style={nestedFieldLabelStyle}>Volume product</label>
             {!isEnv ? (
               <input
                 type="checkbox"
@@ -179,7 +179,7 @@ export function MtVolumeControls({
             </select>
           </div>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Opacity</label>
+            <label style={nestedFieldLabelStyle}>Volume opacity</label>
             <input
               data-testid="mt-volume-opacity"
               type="range"
@@ -204,7 +204,7 @@ export function MtVolumeControls({
             />
           </div>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Density</label>
+            <label style={nestedFieldLabelStyle}>Volume attenuation</label>
             <input
               data-testid="mt-volume-density"
               type="range"
@@ -226,7 +226,7 @@ export function MtVolumeControls({
             />
           </div>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Samples</label>
+            <label style={nestedFieldLabelStyle}>Ray samples</label>
             <input
               data-testid="mt-volume-samples"
               type="range"
@@ -248,7 +248,7 @@ export function MtVolumeControls({
             />
           </div>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Transfer</label>
+            <label style={nestedFieldLabelStyle}>Transfer function</label>
             <select
               data-testid="mt-volume-transfer"
               value={transferMode}
@@ -267,7 +267,7 @@ export function MtVolumeControls({
             </select>
           </div>
           <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-            <span style={nestedFieldLabelStyle}>Mask</span>
+            <span style={nestedFieldLabelStyle}>Empty-cell mask</span>
             <input
               data-testid="mt-volume-mask-visible"
               type="checkbox"
@@ -287,10 +287,10 @@ export function MtVolumeControls({
         </div>
       </details>
       <details style={nestedDetailsStyle}>
-        <summary style={panelStyles.summary}>3D cut window</summary>
+        <summary style={panelStyles.summary}>Volume threshold window</summary>
         <div style={detailsContentStyle}>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Min log10</label>
+            <label style={nestedFieldLabelStyle}>Min log10(Ohm-m)</label>
             <input
               data-testid="mt-volume-threshold-min"
               type="range"
@@ -316,7 +316,7 @@ export function MtVolumeControls({
             />
           </div>
           <div style={nestedControlRowStyle}>
-            <label style={nestedFieldLabelStyle}>Max log10</label>
+            <label style={nestedFieldLabelStyle}>Max log10(Ohm-m)</label>
             <input
               data-testid="mt-volume-threshold-max"
               type="range"
@@ -344,7 +344,7 @@ export function MtVolumeControls({
         </div>
       </details>
       <IsobandControls
-        title="3D isobands"
+        title="3D iso-resistivity bands"
         style={style}
         disabled={disabled}
         isEnv={isEnv}

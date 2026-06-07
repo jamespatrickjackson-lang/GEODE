@@ -40,6 +40,8 @@
     "test:utah-forge": "npm run check:workspace && npm run check:utah-runtime && npm run check:utah-snapshot && npm run test:utah:browser"
   },
   "dependencies": {
+    "@ffmpeg/core": "^0.12.9",
+    "@ffmpeg/ffmpeg": "^0.12.15",
     "@tweenjs/tween.js": "^25.0.0",
     "geotiff": "^2.1.3",
     "marked": "^14.1.4",
@@ -55,6 +57,7 @@
     "@types/three": "^0.169.0",
     "@vitejs/plugin-react": "^4.3.3",
     "delaunator": "^5.1.0",
+    "sharp": "^0.34.5",
     "typescript": "^5.6.3",
     "vite": "^5.4.10"
   }

@@ -67,30 +67,34 @@ APIs.
   `docs/dev-context/UI-Visual-Standards.md`; use the compact quick legend helpers
   in `src/ui/legendStyles.ts`; do not hand-tune local quick legend button
   geometry without a documented exception.
-- `MT Cell Points` controls only the full-density point cloud. `Full Cloud` and
-  `Spectrum` are exclusive modes over that same layer: Full Cloud hides the
-  compact spectrum and suppresses scalar edge-line overlays, while Spectrum
-  enables threshold/filter points and controls. Mode clicks use the 1.5s
-  slider-style scalar transition and final persistence writes only
-  `scalarLegendVisible` plus `scalarInclusionMode`.
-- MT Cell Points mode animations are local app-level transitions. Scope them to
-  the current effective page context and cancel or ignore stale RAF ticks when
-  navigation changes that context; do not repair this with page fixture edits.
+- `MT Resistivity Cells` controls only the full-density MT inversion
+  cell centers. `All Valid Cells` and `Log10 Resistivity Window` are
+  exclusive modes over that same layer: All Valid Cells hides the compact log10
+  resistivity window and suppresses resistivity isoline overlays, while Log10
+  Resistivity Window enables filtering by log10 resistivity and controls. Mode
+  clicks use the 1.5s slider-style scalar transition and final persistence
+  writes only `scalarLegendVisible` plus `scalarInclusionMode`.
+- MT Resistivity Cells mode animations are local app-level transitions. Scope
+  them to the current effective page context and cancel or ignore stale RAF
+  ticks when navigation changes that context; do not repair this with page
+  fixture edits.
 - When Global Settings/page 00 is selected, `previewEnvironmentBase` must still
-  preserve MT Cell Points authored Spectrum scalar fields through the Utah FORGE
-  preview field map. A Spectrum-authored page should not require a Full
-  Cloud/Spectrum click to show scalar edge-line detail. Do not fix that load
-  path by mutating `scalarInclusionFilterActive`, `SCALAR_TRANSITION_STYLE_FIELDS`,
+  preserve MT Resistivity Cells authored Log10 Resistivity Window fields
+  through the Utah FORGE preview field map. A Log10 Resistivity Window-authored
+  page should not require an All Valid Cells/Log10 Resistivity Window click to
+  show isoline detail. Do not fix that load path by mutating
+  `scalarInclusionFilterActive`, `SCALAR_TRANSITION_STYLE_FIELDS`,
   `full-density-scalar`, or page fixtures.
-- During page transitions, MT Cell Points Full Cloud/Spectrum buttons must
-  reflect the target authored mode, not transient ramp interpolation. Spectrum
-  pages with line controls on must register the full-density scalar tween so
-  edge-line overlays enter on the page-transition clock, not via a final-commit
-  target-style replay or page-level fixture edits.
-- After a settled/suppressed page reapply, MT Cell Points may refresh only the
-  full-density target style to rebuild page-load Spectrum edge lines. Skip that
-  narrow refresh while a scalar tween is active, and never replace it with broad
-  page visibility/style replay.
+- During page transitions, MT Resistivity Cells All Valid Cells/Log10
+  Resistivity Window buttons must reflect the target authored mode, not
+  transient ramp interpolation. Log10 Resistivity Window pages with line
+  controls on must register the full-density scalar tween so isoline overlays
+  enter on the page-transition clock, not via a final-commit target-style replay
+  or page-level fixture edits.
+- After a settled/suppressed page reapply, MT Resistivity Cells may refresh only
+  the full-density target style to rebuild page-load Log10 Resistivity Window
+  isolines. Skip that narrow refresh while a scalar tween is active, and never
+  replace it with broad page visibility/style replay.
 - MT threshold boundary all-off maps are treated as empty/stale visibility
   state. If the threshold-boundary layer is visible and no canonical or legacy
   boundary is active, the resolver inherits default boundary visibility. Hide

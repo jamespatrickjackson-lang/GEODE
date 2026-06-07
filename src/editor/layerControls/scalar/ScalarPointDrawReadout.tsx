@@ -39,7 +39,7 @@ export function ScalarPointDrawReadout({
 
   return (
     <div style={nestedControlRowStyle}>
-      <label style={nestedFieldLabelStyle}>Draw QA</label>
+      <label style={nestedFieldLabelStyle}>Render count</label>
       <span
         style={{
           flex: 1,
@@ -49,10 +49,9 @@ export function ScalarPointDrawReadout({
         }}
       >
         {hasPoints
-          ? `Drawn ${drawnCount.toLocaleString()} / ${sourceCount.toLocaleString()} points (${inclusionMode})`
-          : `Waiting for scalar point tiles (${inclusionMode})`}
+          ? `Rendered ${drawnCount.toLocaleString()} / ${sourceCount.toLocaleString()} cells (${inclusionMode})`
+          : `Waiting for resistivity cell tiles (${inclusionMode})`}
       </span>
     </div>
   );
 }
-

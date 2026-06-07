@@ -66,23 +66,44 @@ export const nestedControlRowStyle: React.CSSProperties = {
 
 export const nestedFieldLabelStyle: React.CSSProperties = {
   ...panelStyles.fieldLabel,
-  width: 92,
+  width: 142,
   flex: "none",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
+  overflow: "visible",
+  textOverflow: "clip",
+  whiteSpace: "normal",
+  lineHeight: 1.15,
 };
 
-export const overrideTagStyle: React.CSSProperties = {
-  fontSize: 10,
-  color: vibrancyTertiaryLabel,
-  marginLeft: 4,
+const overrideStateIndicatorStyle: React.CSSProperties = {
+  width: 8,
+  height: 8,
+  borderRadius: 999,
+  flex: "0 0 8px",
+  border: "1px solid rgba(244, 240, 232, 0.26)",
+  background: "rgba(244, 240, 232, 0.2)",
 };
 
-export const overrideTagActiveStyle: React.CSSProperties = {
-  ...overrideTagStyle,
-  color: vibrancySecondaryLabel,
-};
+export function OverrideStateIndicator({
+  active,
+}: {
+  active: boolean;
+}) {
+  return (
+    <span
+      aria-label={active ? "Page value set" : "Using base value"}
+      title={active ? "Page value set" : "Using base value"}
+      style={{
+        ...overrideStateIndicatorStyle,
+        ...(active
+          ? {
+              borderColor: "rgba(143, 215, 255, 0.62)",
+              background: "rgba(143, 215, 255, 0.78)",
+            }
+          : {}),
+      }}
+    />
+  );
+}
 
 export const editorDarkSelectStyle: React.CSSProperties = {
   ...panelStyles.textInput,
@@ -383,9 +404,7 @@ export function PageVisibilityRow({
           font: "inherit",
         }}
       >
-        <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-          {overridden ? "overridden" : "inherited"}
-        </span>
+        <OverrideStateIndicator active={overridden} />
       </button>
     </div>
   );
@@ -426,7 +445,7 @@ export function EnvStyleRow({
           testId={testId}
           onChange={(next) => onChange(String(next))}
           format={(next) => next.toFixed(decimals)}
-          style={{ flex: 1 }}
+          style={{ flex: "0 1 118px", minWidth: 72, maxWidth: 132 }}
         />
       ) : (
         <input
@@ -500,7 +519,12 @@ export function PageStyleRow({
           disabled={!isOverridden}
           onChange={(next) => onOverride(String(next))}
           format={(next) => next.toFixed(decimals)}
-          style={{ flex: 1, opacity: isOverridden ? 1 : 0.4 }}
+          style={{
+            flex: "0 1 118px",
+            minWidth: 72,
+            maxWidth: 132,
+            opacity: isOverridden ? 1 : 0.4,
+          }}
         />
       ) : (
         <input
@@ -511,9 +535,7 @@ export function PageStyleRow({
           style={{ opacity: isOverridden ? 1 : 0.4 }}
         />
       )}
-      <span style={isOverridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {isOverridden ? "overridden" : "inherited"}
-      </span>
+      <OverrideStateIndicator active={isOverridden} />
     </div>
   );
 }
@@ -720,9 +742,7 @@ export function LayerBooleanStyleControl({
           })
         }
       />
-      <span style={overridden ? overrideTagActiveStyle : overrideTagStyle}>
-        {overridden ? "overridden" : "inherited"}
-      </span>
+      <OverrideStateIndicator active={overridden} />
     </div>
   );
 }

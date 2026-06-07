@@ -386,6 +386,20 @@ function validateWoodjamPublicLayers() {
   }
 }
 
+function validateCaptureDirectorFfmpegAssets() {
+  const packageLock = readJson("package-lock.json");
+  assert.ok(
+    packageLock.packages?.["node_modules/@ffmpeg/core"],
+    "Capture Director should lock @ffmpeg/core for self-hosted FFmpeg assets",
+  );
+  for (const filename of ["ffmpeg-core.js", "ffmpeg-core.wasm"]) {
+    assertFileExists(
+      `node_modules/@ffmpeg/core/dist/umd/${filename}`,
+      `Capture Director FFmpeg asset ${filename}`,
+    );
+  }
+}
+
 runValidation("runtime asset wiring", () => {
   for (const projectDir of projectDirs()) {
     const project = readJson(`${projectDir}/project.json`);
@@ -396,4 +410,5 @@ runValidation("runtime asset wiring", () => {
   }
 
   validateWoodjamPublicLayers();
+  validateCaptureDirectorFfmpegAssets();
 });
