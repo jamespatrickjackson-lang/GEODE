@@ -165,7 +165,7 @@ export const DEFAULT_CAPTURE_CAMERA_PATH_DISPLAY_OPTIONS_V2: CaptureCameraPathDi
     trackLineSize: 3,
     directionRayLength: 1.5,
     handleScale: 120,
-    showCameraFrustum: true,
+    showCameraFrustum: false,
     showLookRays: true,
     showFocusLockRays: true,
     showNodeLabels: false,
@@ -173,7 +173,7 @@ export const DEFAULT_CAPTURE_CAMERA_PATH_DISPLAY_OPTIONS_V2: CaptureCameraPathDi
     showSplineControls: false,
     showXyzHandles: false,
     defaultSplineCoupling: "tangent",
-    previewMonitorMode: "while-editing",
+    previewMonitorMode: "selected-node",
   };
 
 function isRecord(value: unknown): value is Record<string, unknown> {

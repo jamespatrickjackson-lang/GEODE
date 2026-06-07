@@ -204,6 +204,14 @@ const DEFAULT_FAIRING_V3: CaptureCameraPathFairingV3 = {
   toInfluenceIn: "auto",
   autoHandles: true,
 };
+const CAPTURE_CAMERA_PATH_ARC_LENGTH_STEPS = 64;
+const CAPTURE_CAMERA_PATH_EQUATION_HANDOFF_WINDOW = 0.72;
+const CAPTURE_CAMERA_PATH_SOFT_TIME_CURVE_MODES = new Set<CaptureCameraPathTimeCurveModeV3>([
+  "ease-in",
+  "ease-out",
+  "ease-in-out",
+  "custom-ramp",
+]);
 export const DEFAULT_CAPTURE_CAMERA_PATH_SPLINE_CONTROLS_V3: CaptureCameraPathSplineControlsV3 =
   {
     enabled: true,
@@ -438,6 +446,47 @@ function autoHandleLength(
 ): number {
   const chord = Math.max(0.000_001, adjacentLength);
   return Math.min(chord * controls.maxLengthRatio, chord * controls.autoScale);
+}
+
+const AUTO_BEND_RADIUS_RATIO = 0.35;
+const AUTO_BEND_MIN_HANDLE_RATIO = 0.12;
+const AUTO_BEND_MAX_HANDLE_RATIO = 0.72;
+
+interface CaptureCameraPathAutoBendContext {
+  deflectionRadians: number;
+  shorterAdjacentLength: number;
+}
+
+function softenedAutoHandleLength(
+  handle: CaptureCameraPathSplineSideHandleV3,
+  controls: CaptureCameraPathSplineControlsV3,
+  adjacentLength: number,
+  bendContext?: CaptureCameraPathAutoBendContext | null,
+): number {
+  const baseLength = autoHandleLength(adjacentLength, controls);
+  if (
+    handle.mode !== "auto" ||
+    controls.handleMode !== "auto" ||
+    controls.coupling !== "tangent" ||
+    controls.enabled === false ||
+    !bendContext
+  ) {
+    return baseLength;
+  }
+  const chord = Math.max(0.000_001, adjacentLength);
+  const shorterAdjacent = Math.max(
+    0.000_001,
+    bendContext.shorterAdjacentLength,
+  );
+  const deflection = Math.max(
+    0,
+    Math.min(Math.PI - 0.000_001, bendContext.deflectionRadians),
+  );
+  const minimumBendRadius = shorterAdjacent * AUTO_BEND_RADIUS_RATIO;
+  const radiusReach = minimumBendRadius * Math.tan(deflection / 2);
+  const minimumReach = chord * AUTO_BEND_MIN_HANDLE_RATIO;
+  const maximumReach = chord * AUTO_BEND_MAX_HANDLE_RATIO;
+  return Math.max(minimumReach, Math.min(maximumReach, radiusReach));
 }
 
 function sideHandleRecord(value: unknown): Record<string, unknown> {
@@ -1551,6 +1600,228 @@ function nodeTarget(path: CaptureCameraPathV3, node: CaptureCameraPathNodeV3): C
   return fallbackTarget(node);
 }
 
+function smoothstep01(value: number): number {
+  const t = Math.max(0, Math.min(1, value));
+  return t * t * (3 - 2 * t);
+}
+
+function easeInOutPower01(value: number, exponent = 2.6): number {
+  const t = Math.max(0, Math.min(1, value));
+  return t < 0.5
+    ? Math.pow(2 * t, exponent) / 2
+    : 1 - Math.pow(2 * (1 - t), exponent) / 2;
+}
+
+function directionStress(a: CaptureVec3 | null, b: CaptureVec3 | null): number {
+  if (!a || !b) return 0;
+  return Math.max(0, Math.min(1, (1 - dotVec3(a, b)) / 2));
+}
+
+function nodeTravelTurnStress(
+  previous: CaptureVec3 | null,
+  current: CaptureVec3,
+  next: CaptureVec3 | null,
+): number {
+  if (!previous || !next) return 0;
+  return directionStress(
+    normalizeVec3(subVec3(current, previous)),
+    normalizeVec3(subVec3(next, current)),
+  );
+}
+
+function nodeForwardDirection(
+  path: CaptureCameraPathV3,
+  node: CaptureCameraPathNodeV3,
+): CaptureVec3 | null {
+  return normalizeVec3(subVec3(nodeTarget(path, node), node.position));
+}
+
+function segmentFocalLookDirectionAtProgress(
+  path: CaptureCameraPathV3,
+  segment: CaptureCameraPathSegmentV3,
+  progress: number,
+): CaptureVec3 | null {
+  const neighbors = segmentNeighbors(path, segment);
+  if (!neighbors) return null;
+  const t = Math.max(0, Math.min(1, progress));
+  const geometry =
+    geometrySampleForSegment(path, segment, t) ?? {
+      position: lerpVec3(neighbors.from.position, neighbors.to.position, t),
+      derivative: subVec3(neighbors.to.position, neighbors.from.position),
+    };
+  const target = resolveSegmentTarget(
+    path,
+    neighbors.from,
+    neighbors.to,
+    segment,
+    t,
+    geometry.position,
+    geometry.derivative,
+  );
+  return normalizeVec3(subVec3(target, geometry.position));
+}
+
+export function resolveCaptureCameraPathV3FocalAngularStress(
+  path: CaptureCameraPathV3,
+  segment: CaptureCameraPathSegmentV3,
+  progress: number,
+): number {
+  const neighbors = segmentNeighbors(path, segment);
+  if (!neighbors) return 0;
+  const hasFocalAim =
+    neighbors.from.aimGeometry.mode === "focus-point-lock" ||
+    neighbors.to.aimGeometry.mode === "focus-point-lock" ||
+    neighbors.from.aimGeometry.mode === "target-blend" ||
+    neighbors.to.aimGeometry.mode === "target-blend";
+  if (!hasFocalAim) return 0;
+  const t = Math.max(0, Math.min(1, progress));
+  const window = 0.04;
+  const beforeT = Math.max(0, t - window);
+  const afterT = Math.min(1, t + window);
+  const span = afterT - beforeT;
+  if (span <= 0.000_001) return 0;
+  const before = segmentFocalLookDirectionAtProgress(path, segment, beforeT);
+  const after = segmentFocalLookDirectionAtProgress(path, segment, afterT);
+  if (!before || !after) return 0;
+  const angleRadians = Math.acos(Math.max(-1, Math.min(1, dotVec3(before, after))));
+  const angularSpeed = angleRadians / span;
+  return Math.max(0, Math.min(1, angularSpeed / Math.PI));
+}
+
+export function resolveCaptureCameraPathV3AdaptiveProgress(
+  path: CaptureCameraPathV3,
+  segment: CaptureCameraPathSegmentV3,
+  progress: number,
+): number {
+  const baseProgress = Math.max(0, Math.min(1, progress));
+  if (baseProgress <= 0 || baseProgress >= 1) return baseProgress;
+  const neighbors = segmentNeighbors(path, segment);
+  if (!neighbors) return baseProgress;
+  const startStress = nodeTravelTurnStress(
+    neighbors.previous,
+    neighbors.from.position,
+    neighbors.to.position,
+  );
+  const endStress = nodeTravelTurnStress(
+    neighbors.from.position,
+    neighbors.to.position,
+    neighbors.next,
+  );
+  const lookStress = directionStress(
+    nodeForwardDirection(path, neighbors.from),
+    nodeForwardDirection(path, neighbors.to),
+  );
+  const fovStress = Math.max(0, Math.min(1, Math.abs(neighbors.to.fov - neighbors.from.fov) / 90));
+  const focalAngularStress = resolveCaptureCameraPathV3FocalAngularStress(
+    path,
+    segment,
+    baseProgress,
+  );
+  const centerStress = Math.max(lookStress, focalAngularStress, fovStress * 0.55);
+  if (Math.max(startStress, endStress, centerStress) <= 0.002) {
+    return easeInOutPower01(baseProgress);
+  }
+
+  const startEnvelope = 1 - smoothstep01(baseProgress / 0.42);
+  const endEnvelope = smoothstep01((baseProgress - 0.58) / 0.42);
+  const centerEnvelope = Math.pow(
+    1 - Math.min(1, Math.abs(baseProgress - 0.5) / 0.34),
+    2,
+  );
+  const startCatchup =
+    startStress * 0.28 * startEnvelope * baseProgress * 4;
+  const endLag =
+    endStress * 0.28 * endEnvelope * (1 - baseProgress) * 4;
+  const centered =
+    0.5 +
+    (baseProgress - 0.5) *
+      (1 - Math.min(0.82, centerStress * centerEnvelope * 0.82));
+  const centerDelta = (centered - baseProgress) * centerEnvelope;
+  return Math.max(
+    0,
+    Math.min(1, baseProgress + startCatchup - endLag + centerDelta),
+  );
+}
+
+function previousSegmentFor(
+  path: CaptureCameraPathV3,
+  segment: CaptureCameraPathSegmentV3,
+): CaptureCameraPathSegmentV3 | null {
+  return [...path.segments].reverse().find(
+    (candidate) => candidate.toNodeId === segment.fromNodeId,
+  ) ?? null;
+}
+
+function nextSegmentFor(
+  path: CaptureCameraPathV3,
+  segment: CaptureCameraPathSegmentV3,
+): CaptureCameraPathSegmentV3 | null {
+  return path.segments.find(
+    (candidate) => candidate.fromNodeId === segment.toNodeId,
+  ) ?? null;
+}
+
+function timeCurveEquationStress(
+  a: CaptureCameraPathTimeCurveV3,
+  b: CaptureCameraPathTimeCurveV3,
+): number {
+  if (a.mode === b.mode) {
+    if (a.mode !== "custom-ramp") return 0;
+    return JSON.stringify(a.ramp ?? []) === JSON.stringify(b.ramp ?? []) ? 0 : 0.45;
+  }
+  return CAPTURE_CAMERA_PATH_SOFT_TIME_CURVE_MODES.has(a.mode) ||
+    CAPTURE_CAMERA_PATH_SOFT_TIME_CURVE_MODES.has(b.mode)
+    ? 0.75
+    : 0.35;
+}
+
+function segmentEquationMismatchStress(
+  path: CaptureCameraPathV3,
+  a: CaptureCameraPathSegmentV3,
+  b: CaptureCameraPathSegmentV3,
+): number {
+  const aContinuity = resolveCaptureCameraPathBezierSegment(path, a).diagnostics.effectiveContinuity;
+  const bContinuity = resolveCaptureCameraPathBezierSegment(path, b).diagnostics.effectiveContinuity;
+  const continuityStress = Math.abs(
+    continuityRank(aContinuity) - continuityRank(bContinuity),
+  ) / 3;
+  return Math.max(
+    continuityStress,
+    timeCurveEquationStress(a.timeCurve, b.timeCurve),
+  );
+}
+
+function resolveCaptureCameraPathV3EquationHandoffProgress(
+  path: CaptureCameraPathV3,
+  segment: CaptureCameraPathSegmentV3,
+  localT: number,
+  progress: number,
+): number {
+  const t = Math.max(0, Math.min(1, localT));
+  let nextProgress = Math.max(0, Math.min(1, progress));
+  const nodes = nodeById(path);
+  const from = nodes.get(segment.fromNodeId);
+  const to = nodes.get(segment.toNodeId);
+  const previous = previousSegmentFor(path, segment);
+  const next = nextSegmentFor(path, segment);
+  if (previous && from && from.holdSecondsAfter <= 0) {
+    const stress = segmentEquationMismatchStress(path, previous, segment);
+    const weight =
+      Math.min(1, stress * 1.18) *
+      (1 - smoothstep01(t / CAPTURE_CAMERA_PATH_EQUATION_HANDOFF_WINDOW));
+    nextProgress = lerp(nextProgress, t, weight);
+  }
+  if (next && to && to.holdSecondsAfter <= 0) {
+    const stress = segmentEquationMismatchStress(path, segment, next);
+    const weight =
+      Math.min(1, stress * 1.18) *
+      smoothstep01((t - (1 - CAPTURE_CAMERA_PATH_EQUATION_HANDOFF_WINDOW)) /
+        CAPTURE_CAMERA_PATH_EQUATION_HANDOFF_WINDOW);
+    nextProgress = lerp(nextProgress, t, weight);
+  }
+  return Math.max(0, Math.min(1, nextProgress));
+}
+
 function poseFromNode(
   path: CaptureCameraPathV3,
   node: CaptureCameraPathNodeV3,
@@ -1592,9 +1863,10 @@ function resolvedHandleLength(
   handle: CaptureCameraPathSplineSideHandleV3,
   controls: CaptureCameraPathSplineControlsV3,
   adjacentLength: number,
+  bendContext?: CaptureCameraPathAutoBendContext | null,
 ): number {
   return handle.length === "auto"
-    ? autoHandleLength(adjacentLength, controls)
+    ? softenedAutoHandleLength(handle, controls, adjacentLength, bendContext)
     : Math.max(0, handle.length);
 }
 
@@ -1602,13 +1874,19 @@ function handleWorldPosition(
   node: CaptureCameraPathNodeV3,
   side: CaptureCameraPathSplineHandleSideV3,
   adjacentLength: number,
+  bendContext?: CaptureCameraPathAutoBendContext | null,
 ): CaptureVec3 {
   const controls = node.splineControls;
   const handle = controls[side];
   const fallback = side === "in" ? [-1, 0, 0] as CaptureVec3 : [1, 0, 0] as CaptureVec3;
   const direction =
     normalizeVec3(handle.direction ?? fallback) ?? fallback;
-  const length = resolvedHandleLength(handle, controls, adjacentLength);
+  const length = resolvedHandleLength(
+    handle,
+    controls,
+    adjacentLength,
+    bendContext,
+  );
   if (handle.mode === "manual" && handle.position) {
     return cloneVec3(handle.position);
   }
@@ -1653,6 +1931,49 @@ function evaluateCubicBezierDerivative(
       6 * inv * t * (p2[2] - p1[2]) +
       3 * t * t * (p3[2] - p2[2]),
   ];
+}
+
+function cubicBezierArcLengthSamples(
+  p0: CaptureVec3,
+  p1: CaptureVec3,
+  p2: CaptureVec3,
+  p3: CaptureVec3,
+): Array<{ t: number; length: number }> {
+  const samples: Array<{ t: number; length: number }> = [{ t: 0, length: 0 }];
+  let totalLength = 0;
+  let previous = p0;
+  for (let index = 1; index <= CAPTURE_CAMERA_PATH_ARC_LENGTH_STEPS; index += 1) {
+    const t = index / CAPTURE_CAMERA_PATH_ARC_LENGTH_STEPS;
+    const point = evaluateCubicBezier(p0, p1, p2, p3, t);
+    totalLength += lengthVec3(subVec3(point, previous));
+    samples.push({ t, length: totalLength });
+    previous = point;
+  }
+  return samples;
+}
+
+function cubicBezierParameterAtArcProgress(
+  p0: CaptureVec3,
+  p1: CaptureVec3,
+  p2: CaptureVec3,
+  p3: CaptureVec3,
+  progress: number,
+): number {
+  const safeProgress = Math.max(0, Math.min(1, progress));
+  if (safeProgress <= 0 || safeProgress >= 1) return safeProgress;
+  const samples = cubicBezierArcLengthSamples(p0, p1, p2, p3);
+  const totalLength = samples[samples.length - 1]?.length ?? 0;
+  if (totalLength <= 0.000_001) return safeProgress;
+  const targetLength = totalLength * safeProgress;
+  for (let index = 1; index < samples.length; index += 1) {
+    const previous = samples[index - 1];
+    const current = samples[index];
+    if (targetLength > current.length) continue;
+    const span = Math.max(0.000_001, current.length - previous.length);
+    const local = (targetLength - previous.length) / span;
+    return lerp(previous.t, current.t, local);
+  }
+  return safeProgress;
 }
 
 function evaluateCubicBezierSecondDerivative(
@@ -1837,14 +2158,6 @@ function clampHandleAgainstChord({
   };
 }
 
-function rawHandleWorldPosition(
-  node: CaptureCameraPathNodeV3,
-  side: CaptureCameraPathSplineHandleSideV3,
-  adjacentLength: number,
-): CaptureVec3 {
-  return handleWorldPosition(node, side, adjacentLength);
-}
-
 function nodeAdjacentGeometry(
   path: CaptureCameraPathV3,
   nodeId: string,
@@ -1875,6 +2188,50 @@ function nodeAdjacentGeometry(
   };
 }
 
+function nodeAutoBendContext(
+  geometry: NonNullable<ReturnType<typeof nodeAdjacentGeometry>>,
+): CaptureCameraPathAutoBendContext | null {
+  if (
+    !geometry.previousNode ||
+    !geometry.nextNode ||
+    geometry.incomingLength <= 0 ||
+    geometry.outgoingLength <= 0
+  ) {
+    return null;
+  }
+  const incomingDirection = normalizeVec3(
+    subVec3(geometry.node.position, geometry.previousNode.position),
+  );
+  const outgoingDirection = normalizeVec3(
+    subVec3(geometry.nextNode.position, geometry.node.position),
+  );
+  if (!incomingDirection || !outgoingDirection) return null;
+  return {
+    deflectionRadians: Math.acos(
+      Math.max(-1, Math.min(1, dotVec3(incomingDirection, outgoingDirection))),
+    ),
+    shorterAdjacentLength: Math.min(
+      geometry.incomingLength,
+      geometry.outgoingLength,
+    ),
+  };
+}
+
+function rawHandleWorldPosition(
+  path: CaptureCameraPathV3,
+  node: CaptureCameraPathNodeV3,
+  side: CaptureCameraPathSplineHandleSideV3,
+  adjacentLength: number,
+): CaptureVec3 {
+  const geometry = nodeAdjacentGeometry(path, node.id);
+  return handleWorldPosition(
+    node,
+    side,
+    adjacentLength,
+    geometry ? nodeAutoBendContext(geometry) : null,
+  );
+}
+
 function nodeTangentDirectionsForSolve(
   geometry: NonNullable<ReturnType<typeof nodeAdjacentGeometry>>,
 ): { inDirection: CaptureVec3; outDirection: CaptureVec3 } {
@@ -1897,6 +2254,7 @@ function nodeTangentDirectionsForSolve(
 }
 
 function continuityScoreAtNode({
+  path,
   geometry,
   inLength,
   outLength,
@@ -1904,6 +2262,7 @@ function continuityScoreAtNode({
   outDirection,
   continuity,
 }: {
+  path: CaptureCameraPathV3;
   geometry: NonNullable<ReturnType<typeof nodeAdjacentGeometry>>;
   inLength: number;
   outLength: number;
@@ -1921,6 +2280,7 @@ function continuityScoreAtNode({
   }
   const leftP0 = geometry.previousNode.position;
   const leftP1 = rawHandleWorldPosition(
+    path,
     geometry.previousNode,
     "out",
     geometry.incomingLength,
@@ -1930,6 +2290,7 @@ function continuityScoreAtNode({
   const rightP0 = geometry.node.position;
   const rightP1 = addVec3(geometry.node.position, scaleVec3(outDirection, outLength));
   const rightP2 = rawHandleWorldPosition(
+    path,
     geometry.nextNode,
     "in",
     geometry.outgoingLength,
@@ -1967,16 +2328,41 @@ function solveNodeFairingLengths(
   }
   const controls = geometry.node.splineControls;
   const directions = nodeTangentDirectionsForSolve(geometry);
-  const baseIn = resolvedHandleLength(controls.in, controls, geometry.incomingLength);
-  const baseOut = resolvedHandleLength(controls.out, controls, geometry.outgoingLength);
-  const minIn = Math.max(0.000_001, geometry.incomingLength * 0.08);
-  const minOut = Math.max(0.000_001, geometry.outgoingLength * 0.08);
+  const bendContext = nodeAutoBendContext(geometry);
+  const baseIn = resolvedHandleLength(
+    controls.in,
+    controls,
+    geometry.incomingLength,
+    bendContext,
+  );
+  const baseOut = resolvedHandleLength(
+    controls.out,
+    controls,
+    geometry.outgoingLength,
+    bendContext,
+  );
+  const minIn = Math.max(
+    0.000_001,
+    geometry.incomingLength * 0.08,
+    baseIn,
+  );
+  const minOut = Math.max(
+    0.000_001,
+    geometry.outgoingLength * 0.08,
+    baseOut,
+  );
   const maxIn = Math.max(minIn, geometry.incomingLength * 1.25);
   const maxOut = Math.max(minOut, geometry.outgoingLength * 1.25);
   const averageChord = (geometry.incomingLength + geometry.outgoingLength) / 2;
   const balanced = averageChord * controls.autoScale * (1 - controls.maxLengthRatio * 0.08);
-  const preferredIn = Math.max(minIn, Math.min(maxIn, (baseIn + balanced) / 2));
-  const preferredOut = Math.max(minOut, Math.min(maxOut, (baseOut + balanced) / 2));
+  const preferredIn = Math.max(
+    minIn,
+    Math.min(maxIn, Math.max(baseIn, (baseIn + balanced) / 2)),
+  );
+  const preferredOut = Math.max(
+    minOut,
+    Math.min(maxOut, Math.max(baseOut, (baseOut + balanced) / 2)),
+  );
   const candidates = continuity === "G3"
     ? [0.45, 0.62, 0.78, 0.92, 1, 1.08, 1.22, 1.38]
     : [0.55, 0.72, 0.88, 1, 1.12, 1.28, 1.45];
@@ -1997,6 +2383,7 @@ function solveNodeFairingLengths(
         : 0;
       const score =
         continuityScoreAtNode({
+          path,
           geometry,
           inLength,
           outLength,
@@ -2032,7 +2419,7 @@ function effectiveHandleWorldPosition({
   continuity: CaptureCameraPathContinuityV3;
 }): CaptureVec3 {
   const controls = node.splineControls;
-  const raw = rawHandleWorldPosition(node, side, adjacentLength);
+  const raw = rawHandleWorldPosition(path, node, side, adjacentLength);
   if (
     continuityRank(continuity) < 2 ||
     controls.coupling !== "tangent" ||
@@ -2315,15 +2702,22 @@ function geometrySampleForSegment(
 ): { position: CaptureVec3; derivative: CaptureVec3 } | null {
   const neighbors = segmentNeighbors(path, segment);
   if (!neighbors) return null;
-  const t = Math.max(0, Math.min(1, progress));
+  const travelProgress = Math.max(0, Math.min(1, progress));
   const bezier = resolveCaptureCameraPathBezierSegment(path, segment);
   if (bezier.diagnostics.continuity === "G0") {
     const chord = subVec3(bezier.p3, bezier.p0);
     return {
-      position: addVec3(bezier.p0, scaleVec3(chord, t)),
+      position: addVec3(bezier.p0, scaleVec3(chord, travelProgress)),
       derivative: chord,
     };
   }
+  const t = cubicBezierParameterAtArcProgress(
+    bezier.p0,
+    bezier.p1,
+    bezier.p2,
+    bezier.p3,
+    travelProgress,
+  );
   return {
     position: evaluateCubicBezier(bezier.p0, bezier.p1, bezier.p2, bezier.p3, t),
     derivative: evaluateCubicBezierDerivative(
@@ -2449,7 +2843,18 @@ export function sampleCaptureCameraPathV3(
     entry.durationSeconds <= 0
       ? 1
       : Math.max(0, Math.min(1, (safeTime - entry.startSeconds) / entry.durationSeconds));
-  const progress = applyCaptureCameraPathV3TimeCurve(segment.timeCurve, localT);
+  const timeProgress = applyCaptureCameraPathV3TimeCurve(segment.timeCurve, localT);
+  const adaptiveProgress = resolveCaptureCameraPathV3AdaptiveProgress(
+    path,
+    segment,
+    timeProgress,
+  );
+  const progress = resolveCaptureCameraPathV3EquationHandoffProgress(
+    path,
+    segment,
+    localT,
+    adaptiveProgress,
+  );
   const geometry =
     geometrySampleForSegment(path, segment, progress) ?? {
       position: lerpVec3(from.position, to.position, progress),
@@ -2482,14 +2887,52 @@ export function captureCameraPathV3SampledPoints(
   if (!captureCameraPathV3Renderable(enabledPath)) {
     return enabledPath.nodes.map((node) => cloneVec3(node.position));
   }
-  const timeline = resolveCaptureCameraPathV3Timeline(enabledPath);
   const count = Math.max(2, Math.floor(sampleCount));
-  return Array.from({ length: count }, (_value, index) =>
-    sampleCaptureCameraPathV3(
-      enabledPath,
-      (timeline.durationSeconds * index) / (count - 1),
-    ).position,
+  const nodes = nodeById(enabledPath);
+  const segmentsWithLengths = enabledPath.segments
+    .map((segment) => {
+      const from = nodes.get(segment.fromNodeId);
+      const to = nodes.get(segment.toNodeId);
+      return {
+        segment,
+        length: from && to ? Math.max(0.000_001, lengthVec3(subVec3(to.position, from.position))) : 0,
+      };
+    })
+    .filter((entry) => entry.length > 0);
+  if (segmentsWithLengths.length === 0) {
+    return enabledPath.nodes.map((node) => cloneVec3(node.position));
+  }
+  const totalLength = segmentsWithLengths.reduce(
+    (sum, entry) => sum + entry.length,
+    0,
   );
+  const points: CaptureVec3[] = [];
+  const appendPoint = (point: CaptureVec3) => {
+    const previous = points[points.length - 1];
+    if (!previous || lengthVec3(subVec3(previous, point)) > 0.000_1) {
+      points.push(cloneVec3(point));
+    }
+  };
+  for (const { segment, length } of segmentsWithLengths) {
+    const segmentSamples = Math.max(
+      16,
+      Math.round(((count - 1) * length) / Math.max(0.000_001, totalLength)),
+    );
+    for (let index = 0; index <= segmentSamples; index += 1) {
+      const progress = index / segmentSamples;
+      const geometry = geometrySampleForSegment(enabledPath, segment, progress);
+      if (geometry) {
+        appendPoint(geometry.position);
+        continue;
+      }
+      const from = nodes.get(segment.fromNodeId);
+      const to = nodes.get(segment.toNodeId);
+      if (from && to) {
+        appendPoint(lerpVec3(from.position, to.position, progress));
+      }
+    }
+  }
+  return points;
 }
 
 function poseFromSample(sample: CaptureCameraPathV3Sample): CaptureCameraPathPose {

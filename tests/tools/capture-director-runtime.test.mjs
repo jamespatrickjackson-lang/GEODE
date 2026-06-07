@@ -1165,6 +1165,185 @@ test("Capture Camera Path timeline layout exposes V3 surfacing metadata", async 
   assert.equal(fallback.equationVisible, false);
 });
 
+test("Capture timeline page clips preserve presentation timing and stay independent from camera path", async () => {
+  const {
+    createPageClipFromPresentationPage,
+    createPageClipsFromRange,
+    normalizeCaptureTimelineState,
+    resizeCaptureTimelineBoundary,
+    sampleCaptureTimeline,
+    validateCaptureTimelineState,
+  } = await importBundled("src/capture/captureTimeline.ts");
+  const { normalizeCaptureCameraPathV3 } = await importBundled(
+    "src/capture/captureCameraPathV3.ts",
+  );
+
+  const pages = [
+    {
+      id: "phase3-site",
+      title: "Phase 3 Site",
+      camera: {
+        position: [0, 0, 10],
+        target: [0, 0, 0],
+        up: [0, 1, 0],
+        fov: 50,
+      },
+      transition: { duration: 1200, easing: "ease-in-out" },
+      holdDuration: 2800,
+    },
+    {
+      id: "phase3-mt",
+      title: "Phase 3 MT",
+      camera: {
+        position: [10, 0, 10],
+        target: [5, 0, 0],
+        up: [0, 1, 0],
+        fov: 45,
+      },
+      transition: { duration: 600, easing: "linear" },
+      holdDuration: 2400,
+    },
+    {
+      id: "hidden",
+      title: "Hidden",
+      hidden: true,
+      transition: { duration: 200 },
+      holdDuration: 1000,
+    },
+  ];
+
+  const firstClip = createPageClipFromPresentationPage(pages[0], {
+    startSeconds: 0,
+  });
+  assert.equal(firstClip.pageId, "phase3-site");
+  assert.equal(firstClip.label, "Phase 3 Site");
+  assert.equal(firstClip.transitionSeconds, 1.2);
+  assert.equal(firstClip.holdSeconds, 2.8);
+  assert.equal(firstClip.transitionEasing, "ease-in-out");
+
+  const range = createPageClipsFromRange(pages, "phase3-site", "phase3-mt", {
+    timing: "authored",
+  });
+  assert.deepEqual(
+    range.map((clip) => [clip.pageId, clip.startSeconds, clip.transitionSeconds, clip.holdSeconds]),
+    [
+      ["phase3-site", 0, 1.2, 2.8],
+      ["phase3-mt", 4, 0.6, 2.4],
+    ],
+  );
+
+  const state = normalizeCaptureTimelineState({
+    version: 1,
+    pageClips: range,
+    selectedPageClipId: range[0].id,
+    diagnosticsVisible: true,
+  });
+  assert.equal(validateCaptureTimelineState(state, pages).valid, true);
+
+  const cameraPath = normalizeCaptureCameraPathV3({
+    version: 3,
+    id: "camera-spine",
+    name: "Camera Spine",
+    loop: false,
+    timeline: { durationSeconds: 6 },
+    nodes: [
+      {
+        id: "cam-a",
+        kind: "keyframe",
+        enabled: true,
+        hidden: false,
+        timeSeconds: 0,
+        position: [0, 0, 20],
+        target: [0, 0, 0],
+        up: [0, 1, 0],
+        fov: 50,
+        holdSecondsAfter: 0,
+        aimGeometry: { mode: "free-direction", lensMode: "fixed-fov" },
+      },
+      {
+        id: "cam-b",
+        kind: "keyframe",
+        enabled: true,
+        hidden: false,
+        timeSeconds: 6,
+        position: [6, 0, 20],
+        target: [6, 0, 0],
+        up: [0, 1, 0],
+        fov: 50,
+        holdSecondsAfter: 0,
+        aimGeometry: { mode: "free-direction", lensMode: "fixed-fov" },
+      },
+    ],
+    segments: [
+      {
+        id: "cam-a:cam-b",
+        fromNodeId: "cam-a",
+        toNodeId: "cam-b",
+        enabled: true,
+        hidden: false,
+        transitionSeconds: 6,
+        timeCurve: { mode: "linear" },
+        pathFairing: {
+          continuity: "G1",
+          tension: 0.35,
+          bias: 0,
+          fromInfluenceOut: "auto",
+          toInfluenceIn: "auto",
+          autoHandles: true,
+        },
+      },
+    ],
+  });
+
+  const sample = sampleCaptureTimeline({
+    state,
+    pages,
+    cameraPath,
+    currentPage: pages[0],
+    currentCamera: pages[0].camera,
+    timeSeconds: 4.5,
+  });
+  assert.equal(sample.page.pageId, "phase3-mt");
+  assert.equal(sample.page.transitionEasing, "linear");
+  assert.equal(sample.camera.source, "camera-path");
+  assert.notDeepEqual(sample.camera.pose.position, pages[1].camera.position);
+
+  const resized = resizeCaptureTimelineBoundary({
+    state,
+    boundaryId: `page:${range[0].id}:${range[1].id}`,
+    deltaSeconds: 1,
+  });
+  const beforeDurations = state.pageClips.map(
+    (clip) => clip.transitionSeconds + clip.holdSeconds,
+  );
+  const afterDurations = resized.pageClips.map(
+    (clip) => clip.transitionSeconds + clip.holdSeconds,
+  );
+  assert.deepEqual(afterDurations, [beforeDurations[0] + 1, beforeDurations[1] - 1]);
+  assert.equal(
+    afterDurations.reduce((total, duration) => total + duration, 0),
+    beforeDurations.reduce((total, duration) => total + duration, 0),
+  );
+
+  const disabled = normalizeCaptureTimelineState({
+    ...state,
+    pageClips: state.pageClips.map((clip, index) =>
+      index === 0 ? { ...clip, enabled: false } : clip,
+    ),
+  });
+  assert.equal(
+    sampleCaptureTimeline({
+      state: disabled,
+      pages,
+      cameraPath: null,
+      currentPage: pages[0],
+      currentCamera: pages[0].camera,
+      timeSeconds: 0.5,
+    }).page.pageId,
+    "phase3-mt",
+  );
+});
+
 test("Capture Director toolbar keeps timeline layout blocks when lower helper exists", async () => {
   const toolbarSource = await readFile(
     join(repoRoot, "src/capture/CaptureDirectorToolbar.tsx"),
@@ -1573,6 +1752,12 @@ function fakeSceneHandle({ throwOnRestoreStyle = false, maxTextureSize = 16384 }
     },
     renderCaptureFrame(options) {
       calls.push(["renderCaptureFrame", options]);
+      calls.push([
+        "renderCameraPose",
+        [camera.position.x, camera.position.y, camera.position.z],
+        [controls.target.x, controls.target.y, controls.target.z],
+        camera.fov,
+      ]);
     },
     getCanvas() {
       return new FakeCanvas();
@@ -2023,6 +2208,52 @@ test("deterministic still exporter renders Screen Capture at output resolution",
 
     result.cleanup();
     assert.deepEqual(urlStub.revoked, ["blob:runtime-0"]);
+  } finally {
+    urlStub.restore();
+    restoreDocument();
+  }
+});
+
+test("deterministic still exporter can force Screen Capture to use the live current view", async () => {
+  const restoreDocument = installDocumentStub();
+  const urlStub = installUrlStub();
+  try {
+    const { exportDeterministicStill } = await importBundled(
+      "src/capture/deterministicStillExporter.ts",
+    );
+    const sceneHandle = fakeSceneHandle();
+    const currentView = pose([88, 12, 34], [4, 5, 6]);
+    const recipe = validRecipe({
+      durationSeconds: 2,
+      camera: pose([1, 1, 1]),
+      cameraKeyframes: [
+        { timeSeconds: 0, frameIndex: 0, camera: pose([10, 0, 0]) },
+        { timeSeconds: 1, frameIndex: 30, camera: pose([20, 0, 0]) },
+      ],
+    });
+
+    const result = await exportDeterministicStill({
+      sceneHandle,
+      recipe,
+      cameraPose: currentView,
+      useCurrentSceneState: true,
+    });
+
+    assert.deepEqual(
+      sceneHandle.calls.find((call) => call[0] === "renderCameraPose"),
+      ["renderCameraPose", currentView.position, currentView.target, currentView.fov],
+    );
+    assert.equal(
+      sceneHandle.calls.some((call) => call[0] === "setVisible"),
+      false,
+      "current-view still capture should preserve currently visible scene layers",
+    );
+    assert.equal(
+      sceneHandle.calls.some((call) => call[0] === "applyStyle"),
+      false,
+      "current-view still capture should preserve currently active scene styles",
+    );
+    result.cleanup();
   } finally {
     urlStub.restore();
     restoreDocument();

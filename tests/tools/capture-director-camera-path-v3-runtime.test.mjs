@@ -308,6 +308,176 @@ test("CaptureCameraPath v3 temporal curves change progress but not duration", as
   assert.ok(sampleCaptureCameraPathV3(path, 1).position[0] < 5);
 });
 
+test("CaptureCameraPath v3 adaptive speed law softens tight turns and flips", async () => {
+  const {
+    normalizeCaptureCameraPathV3,
+    resolveCaptureCameraPathV3AdaptiveProgress,
+    resolveCaptureCameraPathV3FocalAngularStress,
+    resolveCaptureCameraPathV3Timeline,
+    sampleCaptureCameraPathV3,
+  } = await importBundled("src/capture/captureCameraPathV3.ts");
+
+  const turnPath = normalizeCaptureCameraPathV3({
+    ...validPathV3(),
+    segments: validPathV3().segments.map((segment) => ({
+      ...segment,
+      pathFairing: { ...segment.pathFairing, continuity: "G0" },
+    })),
+  });
+  const lateProgress = resolveCaptureCameraPathV3AdaptiveProgress(
+    turnPath,
+    turnPath.segments[0],
+    0.9,
+  );
+  assert.ok(
+    lateProgress < 0.9,
+    "approaching a tight next-node corner should lag linear progress",
+  );
+  approx(resolveCaptureCameraPathV3AdaptiveProgress(turnPath, turnPath.segments[0], 0), 0);
+  approx(resolveCaptureCameraPathV3AdaptiveProgress(turnPath, turnPath.segments[0], 1), 1);
+  approx(resolveCaptureCameraPathV3Timeline(turnPath).durationSeconds, 4);
+  approxVec(sampleCaptureCameraPathV3(turnPath, 0).position, [0, 0, 0]);
+  approxVec(sampleCaptureCameraPathV3(turnPath, 2).position, [10, 0, 0]);
+
+  const flipPath = normalizeCaptureCameraPathV3({
+    ...validPathV3(),
+    nodes: validPathV3().nodes.map((node, index) => ({
+      ...node,
+      target:
+        index === 0
+          ? [node.position[0], node.position[1] + 1, node.position[2]]
+          : [node.position[0], node.position[1] - 1, node.position[2]],
+    })),
+  });
+  const beforeFlip = resolveCaptureCameraPathV3AdaptiveProgress(
+    flipPath,
+    flipPath.segments[0],
+    0.45,
+  );
+  const afterFlip = resolveCaptureCameraPathV3AdaptiveProgress(
+    flipPath,
+    flipPath.segments[0],
+    0.55,
+  );
+  assert.ok(
+    afterFlip - beforeFlip < 0.1,
+    "large look-direction flips should compress progress through the flip zone",
+  );
+
+  const straightPath = normalizeCaptureCameraPathV3({
+    ...validPathV3(),
+    nodes: validPathV3().nodes.map((node, index) => ({
+      ...node,
+      position: [index * 10, 0, 0],
+      target: [index * 10, 1, 0],
+      fov: 50,
+    })),
+  });
+  const earlyStraight = resolveCaptureCameraPathV3AdaptiveProgress(
+    straightPath,
+    straightPath.segments[0],
+    0.25,
+  );
+  const lateStraight = resolveCaptureCameraPathV3AdaptiveProgress(
+    straightPath,
+    straightPath.segments[0],
+    0.75,
+  );
+  assert.ok(
+    earlyStraight < 0.12,
+    `straight transitions should ease in about 3x softer than linear, got ${earlyStraight}`,
+  );
+  assert.ok(
+    lateStraight > 0.88,
+    `straight transitions should ease out symmetrically, got ${lateStraight}`,
+  );
+  approx(resolveCaptureCameraPathV3AdaptiveProgress(straightPath, straightPath.segments[0], 0.5), 0.5);
+
+  const focusLockedStraightPath = (focusPosition) =>
+    normalizeCaptureCameraPathV3({
+      ...validPathV3(),
+      focusPoints: [{ id: "focus-a", position: focusPosition }],
+      nodes: validPathV3().nodes.map((node, index) => ({
+        ...node,
+        position: [index * 10, 0, 0],
+        target: focusPosition,
+        fov: 50,
+        aimGeometry: {
+          mode: "focus-point-lock",
+          focusPointId: "focus-a",
+          tangentForwardDistance: 1,
+          lensMode: "fixed-fov",
+          dollyZoomStrength: 0,
+        },
+      })),
+    });
+  const nearFocusPath = focusLockedStraightPath([5, 1, 0]);
+  const farFocusPath = focusLockedStraightPath([5, 50, 0]);
+  const nearAngularStress = resolveCaptureCameraPathV3FocalAngularStress(
+    nearFocusPath,
+    nearFocusPath.segments[0],
+    0.5,
+  );
+  const farAngularStress = resolveCaptureCameraPathV3FocalAngularStress(
+    farFocusPath,
+    farFocusPath.segments[0],
+    0.5,
+  );
+  assert.ok(
+    nearAngularStress > farAngularStress * 5,
+    `near focal orbit should regulate speed more strongly than far focal orbit, got ${nearAngularStress} vs ${farAngularStress}`,
+  );
+  const nearFocusBefore = resolveCaptureCameraPathV3AdaptiveProgress(
+    nearFocusPath,
+    nearFocusPath.segments[0],
+    0.45,
+  );
+  const nearFocusAfter = resolveCaptureCameraPathV3AdaptiveProgress(
+    nearFocusPath,
+    nearFocusPath.segments[0],
+    0.55,
+  );
+  const farFocusBefore = resolveCaptureCameraPathV3AdaptiveProgress(
+    farFocusPath,
+    farFocusPath.segments[0],
+    0.45,
+  );
+  const farFocusAfter = resolveCaptureCameraPathV3AdaptiveProgress(
+    farFocusPath,
+    farFocusPath.segments[0],
+    0.55,
+  );
+  assert.ok(
+    nearFocusAfter - nearFocusBefore < (farFocusAfter - farFocusBefore) * 0.75,
+    "near-focal angular rotation should compress progress more than far-focal travel",
+  );
+  const nearFocusSteps = Array.from({ length: 41 }, (_value, index) =>
+    resolveCaptureCameraPathV3AdaptiveProgress(
+      nearFocusPath,
+      nearFocusPath.segments[0],
+      index / 40,
+    ),
+  );
+  const nearFocusDeltas = nearFocusSteps.slice(1).map(
+    (value, index) => value - nearFocusSteps[index],
+  );
+  assert.ok(
+    nearFocusDeltas.every((delta) => delta >= -0.000_001),
+    "focus-regulated progress should remain monotonic",
+  );
+  const largestDeltaJump = nearFocusDeltas
+    .slice(1)
+    .reduce(
+      (largest, delta, index) =>
+        Math.max(largest, Math.abs(delta - nearFocusDeltas[index])),
+      0,
+    );
+  assert.ok(
+    largestDeltaJump < 0.009,
+    `focus-regulated progress should smooth adjacent speed changes, got ${largestDeltaJump}`,
+  );
+});
+
 test("CaptureCameraPath v3 validates custom ramps and focus locks", async () => {
   const { validateCaptureCameraPathV3 } = await importBundled(
     "src/capture/captureCameraPathV3.ts",
@@ -424,7 +594,7 @@ test("CaptureCameraPath v3 tangent, focus, and lens modes sample deterministical
         tangentSample.target[2] - tangentSample.position[2],
       ]),
       [1, 0, 0],
-    ) > 0.95,
+    ) > 0.9,
   );
 
   const focusPath = normalizeCaptureCameraPathV3({

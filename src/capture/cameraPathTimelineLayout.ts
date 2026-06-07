@@ -40,6 +40,8 @@ export interface CapturePathTimelineBlockLayout {
   equationVisible: boolean;
   nodeId?: string;
   segmentId?: string;
+  fromNodeId?: string;
+  toNodeId?: string;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -137,6 +139,8 @@ export function layoutCapturePathTimeline({
         metadata.equationVisible === true || equationOptions.visible === true,
       nodeId: entry.nodeId,
       segmentId: entry.segmentId,
+      fromNodeId: entry.fromNodeId,
+      toNodeId: entry.toNodeId,
     };
   });
 }

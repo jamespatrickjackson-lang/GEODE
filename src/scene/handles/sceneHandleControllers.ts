@@ -373,12 +373,11 @@ export function updatePageCameraMarkerPoseImpl(this: any, marker: PageCameraMark
   }
 
 export function updatePageCameraMarkerVisibilityImpl(this: any): void {
-    const showGlobal = this.editorMode && this.globalPageCameraMarkers.size > 0;
     for (const marker of this.globalPageCameraMarkers.values()) {
-      marker.group.visible = showGlobal;
+      marker.group.visible = false;
     }
     if (this.pageCameraMarker) {
-      this.pageCameraMarker.group.visible = this.editorMode && !showGlobal;
+      this.pageCameraMarker.group.visible = false;
     }
   }
 

@@ -1,5 +1,6 @@
 import type { SceneHandle } from "../scene";
 import { applyPose, capturePose } from "../pages/capturePose";
+import type { Pose } from "../pages/types";
 import {
   getCaptureFrameTime,
   validateCaptureRecipe,
@@ -19,6 +20,8 @@ export type DeterministicStillMimeType = "image/png" | "image/webp" | "image/jpe
 export interface DeterministicStillExportOptions {
   sceneHandle: SceneHandle;
   recipe: CaptureRecipeV1;
+  cameraPose?: Pose | null;
+  useCurrentSceneState?: boolean;
   timeSeconds?: number;
   frameIndex?: number;
   mimeType?: DeterministicStillMimeType;
@@ -82,6 +85,8 @@ export function validateStillBlob(blob: Blob): void {
 export async function exportDeterministicStill({
   sceneHandle,
   recipe,
+  cameraPose: stillCameraPose,
+  useCurrentSceneState = false,
   timeSeconds,
   frameIndex,
   mimeType = "image/png",
@@ -148,7 +153,7 @@ export async function exportDeterministicStill({
   let completed = false;
 
   try {
-    snapshot = applyRecipeLayerState(sceneHandle, recipe);
+    snapshot = useCurrentSceneState ? null : applyRecipeLayerState(sceneHandle, recipe);
     fidelitySnapshot =
       typeof sceneHandle.beginCaptureFidelityLock === "function"
         ? sceneHandle.beginCaptureFidelityLock({
@@ -166,7 +171,9 @@ export async function exportDeterministicStill({
       });
     }
 
-    const cameraPose = sampleCaptureRecipeCameraPoseAtFrame(recipe, resolvedFrameIndex);
+    const cameraPose =
+      stillCameraPose ??
+      sampleCaptureRecipeCameraPoseAtFrame(recipe, resolvedFrameIndex);
     if (cameraPose) {
       applyPose(sceneHandle.camera, sceneHandle.controls, cameraPose);
     }

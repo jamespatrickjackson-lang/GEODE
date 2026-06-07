@@ -507,8 +507,8 @@ test("Capture Director provider flags hidden authoring nodes in overlay metadata
   const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
   assert.match(
     provider,
-    /sampledPoints:\s*captureCameraPathV3SampledPoints\(captureCameraPathV3,\s*96\)/,
-    "overlay geometry should be sampled from the active v3 path helper",
+    /sampledPoints:\s*captureCameraPathV3SampledPoints\(captureCameraPathV3,\s*192\)/,
+    "overlay geometry should use a finer active v3 path sample density",
   );
   assert.match(
     provider,
@@ -679,6 +679,16 @@ test("Capture Director workflow UI is split into task panels", () => {
 
 test("Capture Camera Path v2 UI exposes row editors, transition editors, and timeline block ids", () => {
   const source = readSource("src", "capture", "CaptureDirectorToolbar.tsx");
+  const providerSource = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  const recipeSource = readSource("src", "capture", "captureRecipe.ts");
+  const deterministicExporterSource = readSource(
+    "src",
+    "capture",
+    "deterministicFrameSequenceExporter.ts",
+  );
+  const displayOptionsSource = readSource("src", "capture", "captureCameraPathV2.ts");
+  const lowerTimelineSource = readSource("src", "capture", "CameraPathTimeline.tsx");
+  const captureTimelineSource = readSource("src", "capture", "captureTimeline.ts");
   for (const expected of [
     "capture-camera-path-panel",
     "capture-path-options-panel",
@@ -716,6 +726,253 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
   ]) {
     assert.ok(source.includes(expected), `toolbar should include ${expected}`);
   }
+  for (const expected of [
+    "CaptureTimelineState",
+    "CaptureTimelinePageClip",
+    "createPageClipFromPresentationPage",
+    "createPageClipsFromRange",
+    "sampleCaptureTimeline",
+    "resizeCaptureTimelineBoundary",
+  ]) {
+    assert.ok(
+      captureTimelineSource.includes(expected),
+      `capture timeline module should include ${expected}`,
+    );
+  }
+  for (const expected of [
+    "captureTimeline",
+    "addCurrentPageClip",
+    "addPageClip",
+    "addPageRangeClips",
+    "resizeTimelineBoundary",
+    "setTimelineDiagnosticsVisible",
+  ]) {
+    assert.ok(providerSource.includes(expected), `provider should expose ${expected}`);
+  }
+  assert.ok(
+    recipeSource.includes("captureTimeline?: CaptureTimelineState"),
+    "recipes should preserve Capture Director Page Bar timeline state",
+  );
+  assert.ok(
+    providerSource.includes("captureTimeline.pageClips.some") &&
+      providerSource.includes("timeOffsetSeconds: clip.startSeconds"),
+    "deterministic render-out should sample Page Bar clips on the shared timeline clock",
+  );
+  assert.ok(
+    deterministicExporterSource.includes("timeOffsetSeconds"),
+    "deterministic frame exporter should support timeline clock offsets",
+  );
+  for (const expected of [
+    "capture-timeline-pages-lane",
+    "capture-timeline-page-add-button",
+    "capture-timeline-page-add-menu",
+    "capture-timeline-camera-path-lane",
+    "capture-timeline-spine-bar",
+    "capture-timeline-spine-thumb",
+    "capture-timeline-spine-graduation",
+    "capture-timeline-time-axis",
+    "capture-timeline-time-axis-tick",
+    "capture-timeline-time-scale",
+    "capture-timeline-time-scale-label",
+    "capture-timeline-spine-play",
+    "capture-timeline-spine-icon-play",
+    "capture-timeline-spine-icon-pause",
+    "capture-timeline-camera-scrub-marker",
+    "cameraScrubMarkerStyle",
+    "timelinePauseIconStyle",
+    "timelineSpinePlayButtonStyle",
+    "capture-timeline-add-current-camera",
+    "capture-timeline-icon-add-camera",
+    "capture-timeline-add-group",
+    "pageLaneAddButtonStyle",
+    "pageLaneContentOffsetPx",
+    "setPageAddMenuOpen",
+    "timelineScaleForDuration",
+    "snapTimelinePercent",
+    "snapTimelineBlockPercent",
+    "capture-timeline-add-current-page",
+    "capture-timeline-add-page-range",
+  ]) {
+    assert.ok(lowerTimelineSource.includes(expected), `timeline should include ${expected}`);
+  }
+  assert.ok(
+    providerSource.includes("const setCameraPathScrubTimeSeconds = useCallback") &&
+      !providerSource.includes(
+        "sceneHandle.setCameraPose(sampleCaptureCameraPathV3(captureCameraPathV3, safeSeconds))",
+      ),
+    "timeline scrub should update the camera-path preview marker without moving the live editor camera",
+  );
+  for (const expected of [
+    "capture-timeline-icon-play",
+    "capture-timeline-icon-pause",
+    "capture-timeline-icon-record",
+  ]) {
+    assert.ok(source.includes(expected), `toolbar should include ${expected}`);
+  }
+  assert.ok(
+    lowerTimelineSource.indexOf('data-testid="capture-timeline-spine-bar"') <
+      lowerTimelineSource.indexOf('data-testid="capture-timeline-time-axis"') &&
+      !lowerTimelineSource.includes('data-testid="capture-timeline-time-graph-lane"') &&
+      !lowerTimelineSource.includes("<span>Capture Timeline</span>") &&
+      !lowerTimelineSource.includes('data-testid="capture-timeline-timecode"'),
+    "timeline should remove the heading/timecode and hide the Time Graph lane",
+  );
+  assert.ok(
+    lowerTimelineSource.includes("left: snapTimelinePercent(") &&
+      lowerTimelineSource.includes("width: snapTimelineBlockPercent(") &&
+      lowerTimelineSource.includes("snapTimelineDeltaSeconds("),
+    "page clips, camera blocks, and time graph curves should align to the shared graduated timeline rail",
+  );
+  assert.ok(
+      lowerTimelineSource.includes("selectTimelineCameraBlock") &&
+      lowerTimelineSource.includes("fromNodeId") &&
+      lowerTimelineSource.includes("toNodeId") &&
+      lowerTimelineSource.includes("forwardBlock") &&
+      lowerTimelineSource.includes("candidate.fromNodeId === block.nodeId") &&
+      lowerTimelineSource.includes("onScrub(block.startSeconds)") &&
+      lowerTimelineSource.includes('data-selected={selected ? "true" : "false"}') &&
+      lowerTimelineSource.includes("data-forward-selected") &&
+      source.includes("selectedNodeId={selectedCameraPathNodeId ?? selectedCameraPathKeyframeId}") &&
+      source.includes("selectedSegmentId={selectedCameraPathSegmentId}") &&
+      lowerTimelineSource.includes("onSelectSegment(block.segmentId, nodeId)") &&
+      source.includes("onSelectSegment={(id, nodeId) =>"),
+    "selecting a camera path transition on the timeline should also select the adjacent camera node",
+  );
+  assert.ok(
+    lowerTimelineSource.includes("data-scale-step") &&
+      lowerTimelineSource.includes("data-scale-major-step") &&
+      lowerTimelineSource.includes("formatTimelineScaleLabel(") &&
+      lowerTimelineSource.includes("timelineRailOffsetStyle") &&
+      lowerTimelineSource.includes("width: `calc(100% - ${pageLaneContentOffsetPx}px)`"),
+    "timeline scale should expose emergent tick metadata and readable labels as duration changes",
+  );
+  assert.ok(
+    lowerTimelineSource.includes("capture-timeline-time-axis-tick") &&
+      lowerTimelineSource.includes("height: graduation.major ? 10 : 5") &&
+      !lowerTimelineSource.includes("<span style={laneLabelStyle}>Ruler</span>"),
+    "timeline should replace the fake Ruler lane with a real graduated time axis under the scrub bar",
+  );
+  assert.ok(
+    source.includes('data-testid="capture-director-bottom-actions"') &&
+      source.includes('data-testid="capture-timeline-transport-actions"') &&
+      source.includes('aria-label="Play timeline"') &&
+      source.includes('aria-label="Pause timeline"') &&
+      source.includes('aria-label="Record path preview"') &&
+      source.indexOf('data-testid="capture-recipe-actions"') <
+        source.indexOf('data-testid="capture-timeline-transport-actions"') &&
+      !lowerTimelineSource.includes('data-testid="capture-timeline-play"') &&
+      !lowerTimelineSource.includes('data-testid="capture-timeline-pause"') &&
+      !lowerTimelineSource.includes('data-testid="capture-timeline-record-preview"') &&
+      lowerTimelineSource.includes('aria-label="Add current camera"') &&
+      lowerTimelineSource.includes("cameraPathLaneAddButtonStyle") &&
+      lowerTimelineSource.includes("cameraPathLaneContentOffsetPx") &&
+      !lowerTimelineSource.includes(">Play<") &&
+      !lowerTimelineSource.includes(">Pause<") &&
+      !lowerTimelineSource.includes(">Record Preview<"),
+    "timeline transport controls should be icon-only footer buttons on the far side of the panel action row",
+  );
+  assert.ok(
+    lowerTimelineSource.indexOf('data-testid="capture-timeline-camera-path-lane"') <
+        lowerTimelineSource.indexOf('data-testid="capture-timeline-add-current-camera"') &&
+      lowerTimelineSource.indexOf('data-testid="capture-timeline-add-current-camera"') <
+        lowerTimelineSource.indexOf('data-testid="capture-timeline-camera-path-content"') &&
+      lowerTimelineSource.indexOf('data-testid="capture-timeline-camera-path-content"') <
+        lowerTimelineSource.indexOf("{blocks.map((block)") &&
+      lowerTimelineSource.includes("left: cameraPathLaneContentOffsetPx") &&
+      lowerTimelineSource.includes("right: 0") &&
+      lowerTimelineSource.includes("cameraPathLaneAddButtonStyle") &&
+      lowerTimelineSource.includes("width: cameraPathLaneContentOffsetPx"),
+    "add current camera should live at the start of the Camera Path bar and camera blocks should offset around it",
+  );
+  assert.ok(
+    lowerTimelineSource.includes('aria-label="Open page add options"') &&
+      lowerTimelineSource.includes("Current") &&
+      lowerTimelineSource.includes("Page") &&
+      lowerTimelineSource.includes("Range") &&
+      lowerTimelineSource.indexOf('data-testid="capture-timeline-pages-lane"') <
+        lowerTimelineSource.indexOf('data-testid="capture-timeline-page-add-button"') &&
+      lowerTimelineSource.indexOf('data-testid="capture-timeline-page-add-button"') <
+        lowerTimelineSource.indexOf('data-testid="capture-timeline-page-add-menu"') &&
+      !lowerTimelineSource.includes(">Add Current<") &&
+      !lowerTimelineSource.includes(">Add Page<") &&
+      !lowerTimelineSource.includes(">Add Range<") &&
+      !lowerTimelineSource.includes(">Show diagnostics<") &&
+      !lowerTimelineSource.includes("capture-timeline-show-diagnostics") &&
+      !lowerTimelineSource.includes("capture-timeline-duration"),
+    "timeline page controls should open from a plus button inside the Pages bar and drop permanent left-rail add clutter",
+  );
+  assert.ok(
+    lowerTimelineSource.includes('pointerEvents: "none"') &&
+      lowerTimelineSource.includes('pointerEvents: "auto"') &&
+      lowerTimelineSource.includes("zIndex: 36"),
+    "timeline shell should not blanket-block other UI and should sit below capture/editor panels",
+  );
+  assert.ok(
+    source.includes("left: 24") &&
+      !source.includes("right: 24,\n  top: 76") &&
+      source.includes('overflowX: "hidden"') &&
+      source.includes("boxSizing: \"border-box\"") &&
+      source.includes("const previewMonitorPanelStyle") &&
+      source.includes("width: \"100%\"") &&
+      source.includes("previewMonitorPanelStyle") &&
+      displayOptionsSource.includes('previewMonitorMode: "selected-node"'),
+    "Capture Director should dock left and the camera preview monitor should default selected and live in the panel footer",
+  );
+  assert.ok(
+    source.indexOf('data-testid="capture-path-preview-monitor"') <
+      source.indexOf('data-testid="capture-director-bottom-actions"') &&
+      source.indexOf('data-testid="capture-director-bottom-actions"') <
+        source.indexOf("<CameraPathTimeline"),
+    "camera preview monitor should render above the icon action row, before the lower timeline",
+  );
+  assert.ok(
+    source.includes("realtime: false") &&
+      source.includes("render: false") &&
+      source.includes("still: false") &&
+      source.includes('"camera-path": false') &&
+      source.includes("onAddCurrentCamera={addCurrentCameraKeyframe}"),
+    "Capture Director panels should start collapsed and timeline plus button should add the current camera",
+  );
+  assert.ok(
+    providerSource.includes(
+      "cameraPathScrubTimeSeconds >= playbackTimeline.durationSeconds - 0.001",
+    ) &&
+      providerSource.includes("cameraPathPlaybackStartScrubSecondsRef.current = playbackStartSeconds") &&
+      lowerTimelineSource.includes('"Play timeline from spine"') &&
+      lowerTimelineSource.includes('"Pause timeline from spine"') &&
+      lowerTimelineSource.includes('"Play timeline from spine"') &&
+      lowerTimelineSource.includes("if (isPlaying)") &&
+      lowerTimelineSource.includes("capture-timeline-spine-icon-pause") &&
+      source.includes("isPlaying={cameraPathTimelinePlaying}") &&
+      source.includes("onPause={stopCameraPathPlayback}") &&
+      source.includes("onPlay={playCameraPath}"),
+    "timeline play should restart from 0s when the scrubber is already at the end",
+  );
+  assert.ok(
+    source.includes('data-testid="capture-recipe-actions"') &&
+      source.includes("const recipeActions") &&
+      source.includes('data-testid="capture-director-bottom-actions"') &&
+      source.includes("{timelineTransportActions}\n              {recipeActions}") &&
+      source.includes('data-testid="capture-save-recipe"') &&
+      source.includes('aria-label="Save recipe"') &&
+      source.includes('data-testid="capture-load-recipe"') &&
+      source.includes('aria-label="Load recipe"') &&
+      source.includes('data-testid="capture-clear-recipe"') &&
+      source.includes('aria-label="Clear recipe"') &&
+      source.includes('testId="capture-recipe-icon-save"') &&
+      source.includes('testId="capture-recipe-icon-load"') &&
+      source.includes('testId="capture-recipe-icon-trash"') &&
+      !source.includes("<span>Recipe</span>") &&
+      !source.includes("Current scene") &&
+      !source.includes(">Save Recipe<") &&
+      !source.includes(">Load Recipe<") &&
+      !source.includes(">Clear Recipe<"),
+    "recipe controls should be compact icon-only footer actions without visible recipe copy",
+  );
+  assert.ok(
+    lowerTimelineSource.includes("diagnosticsVisible &&"),
+    "diagnostic timeline lanes should be hidden by default behind an explicit toggle",
+  );
 
   const lineItemSource = readSource("src", "capture", "CameraPathLineItemEditor.tsx");
   for (const expected of [
@@ -772,13 +1029,11 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
     "export function CameraPathTimeline",
     "capture-timeline-bar",
     "capture-timeline-scrubber",
-    "capture-timeline-ruler",
+    "capture-timeline-time-axis",
     "capture-timeline-playhead",
-    "capture-timeline-ramp-curve",
     "capture-timeline-continuity-marker",
     "capture-timeline-gd-zone",
     "capture-timeline-aim-marker",
-    "capture-timeline-equation-marker",
     "capture-timeline-hold-block",
     "capture-timeline-transition-block",
     "capture-timeline-block-handle",
@@ -929,6 +1184,15 @@ test("camera path authoring overlay uses Line2 screen-space materials", () => {
     sceneSource.includes('renderer: "Line2"'),
     "local test seam should report Line2 overlay construction",
   );
+  assert.ok(
+    sceneSource.includes("cameraPathPreviewBallColor") &&
+      sceneSource.includes("cameraPathPreviewDashColor") &&
+      sceneSource.includes("previewDashSegments") &&
+      sceneSource.includes("captureCameraPathCurrentSampleMarker") &&
+      sceneSource.includes("captureCameraPathCurrentSampleLookDash") &&
+      sceneSource.includes("captureCameraPathCurrentSampleTarget"),
+    "scrub preview should draw a red camera marker, dashed view ray, and view-point target without moving the live camera",
+  );
 });
 
 test("camera path V3 equation overlays are typed and authoring-only", () => {
@@ -1029,6 +1293,14 @@ test("scene handle exposes capture sizing and after-render hooks", () => {
 
 test("scene camera path overlay v2 stays runtime-owned and editor-gated", () => {
   const sceneSource = readSource("src", "scene.ts");
+  const providerSource = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  const sceneHandleControllersSource = readSource(
+    "src",
+    "scene",
+    "handles",
+    "sceneHandleControllers.ts",
+  );
+  const displayOptionsSource = readSource("src", "capture", "captureCameraPathV2.ts");
   for (const expected of [
     "nodeKind?: \"keyframe\" | \"transition\"",
     "currentSample?: CaptureCameraPathOverlaySample | null",
@@ -1036,6 +1308,8 @@ test("scene camera path overlay v2 stays runtime-owned and editor-gated", () => 
     "directionRayLength?: number",
     "showCameraFrustum?: boolean",
     "showLookRays?: boolean",
+    "showCurrentSampleMarker?: boolean",
+    "showCurrentSampleLookRay?: boolean",
     "showFocusLockRays?: boolean",
     "showNodeLabels?: boolean",
     "onMoveTarget?: (id: string, target: CaptureVec3) => void",
@@ -1051,6 +1325,71 @@ test("scene camera path overlay v2 stays runtime-owned and editor-gated", () => 
   ]) {
     assert.ok(sceneSource.includes(expected), `scene source should include ${expected}`);
   }
+  assert.ok(
+    sceneSource.includes("CAPTURE_CAMERA_PATH_WHITE_CROSSHAIR_CURSOR") &&
+      sceneSource.includes("setCaptureCameraPathPickCursor") &&
+      sceneSource.includes("captureCameraPathFocusBindId()"),
+    "camera path focus picking should switch the scene canvas to a white crosshair cursor while waiting for a point",
+  );
+  assert.ok(
+    displayOptionsSource.includes("showCameraFrustum: false"),
+    "camera path frustum/extents helper should default off",
+  );
+  assert.ok(
+    sceneSource.includes("CAPTURE_CAMERA_PATH_NODE_MARKER_SCALE = 8"),
+    "camera path node markers should be 8x larger than the base handle scale",
+  );
+  assert.ok(
+    sceneSource.includes("CAPTURE_CAMERA_PATH_TRANSITION_MARKER_SCALE = 5.44"),
+    "camera path transition markers should keep their relative size at 8x scale",
+  );
+  assert.ok(
+    sceneSource.includes("CAPTURE_CAMERA_PATH_SAMPLE_MARKER_SCALE = 2.44"),
+    "moving camera sample marker should be 2x larger than the previous preview marker",
+  );
+  assert.ok(
+    sceneSource.includes("const cameraPathPreviewBallColor = targetColor") &&
+      sceneSource.includes("const cameraPathPreviewDashColor = selectedColor") &&
+      sceneSource.includes("linewidth: Math.max(1, lineSize * 0.575)"),
+    "moving camera sample marker should stay cyan while the scrub view dash uses off-white at half thickness",
+  );
+  assert.ok(
+    sceneSource.includes("CAPTURE_CAMERA_PATH_NODE_FOCAL_LINE_WIDTH_SCALE = 0.8"),
+    "node-to-focal rays should be 20% thinner than regular path lines",
+  );
+  assert.ok(
+    sceneSource.includes("captureCameraPathNodeFocalDash") &&
+      sceneSource.includes("linewidth: Math.max(1, lineSize * CAPTURE_CAMERA_PATH_NODE_FOCAL_LINE_WIDTH_SCALE)"),
+    "node-to-focal rays should be dashed instead of solid",
+  );
+  assert.ok(
+    sceneSource.includes("CAPTURE_CAMERA_PATH_CLOSE_FADE_START_M") &&
+      sceneSource.includes("CAPTURE_CAMERA_PATH_CLOSE_FADE_MIN_OPACITY") &&
+      sceneSource.includes("captureCameraPathCloseOpacity"),
+    "camera path overlay should define a near-camera opacity falloff",
+  );
+  assert.ok(
+    sceneSource.includes("opacity: captureCameraPathCloseOpacity(points, 0.92)") &&
+      sceneSource.includes("opacity: captureCameraPathCloseOpacity(dash,"),
+    "path and preview direction lines should fade when close to the live camera",
+  );
+  assert.ok(
+    sceneSource.includes("const showCurrentSampleLookRay =") &&
+      sceneSource.includes("if (showCurrentSampleLookRay)") &&
+      providerSource.includes("showCurrentSampleLookRay: !cameraPathPlaying"),
+    "camera path playback should hide the moving preview camera look ray without disabling authored look rays",
+  );
+  assert.ok(
+    sceneSource.includes("const showCurrentSampleMarker =") &&
+      sceneSource.includes("if (options.currentSample && showCurrentSampleMarker)") &&
+      providerSource.includes("showCurrentSampleMarker: !cameraPathPlaying"),
+    "camera path playback should hide the moving preview camera marker from the camera-perspective preview",
+  );
+  assert.match(
+    sceneHandleControllersSource,
+    /for \(const marker of this\.globalPageCameraMarkers\.values\(\)\) \{[\s\S]*marker\.group\.visible = false;[\s\S]*if \(this\.pageCameraMarker\) \{[\s\S]*this\.pageCameraMarker\.group\.visible = false;/,
+    "page camera markers should remain hidden in the director/editing view",
+  );
   assert.match(
     sceneSource,
     /if \(!captureCameraPathOverlay\.visible \|\| !captureCameraPathOverlayEditable\) return null;/,
@@ -1065,6 +1404,34 @@ test("scene camera path overlay v2 stays runtime-owned and editor-gated", () => 
     sceneSource,
     /clearCaptureCameraPathOverlay[\s\S]*cancelCaptureCameraPathInteraction/,
     "clearing the runtime overlay should cancel drags and restore controls",
+  );
+});
+
+test("scene target picking ignores visual labels during focus binding", () => {
+  const sceneSource = readSource("src", "scene.ts");
+  assert.ok(
+    sceneSource.includes("const isSceneLabelTargetNode =") &&
+      sceneSource.includes("isSceneLabelTargetNode(node)"),
+    "scene target picking should route all visual label filtering through a shared helper",
+  );
+  for (const expected of [
+    "data.demoBoreholeLabelAnchor === true",
+    "data.demoZoneLabelAnchor === true",
+    "data.pointMarkerLabelAnchor === true",
+    "data.sceneSectionScaleLabel === true",
+    "data.naipTileDiagnosticLabel === true",
+    "typeof data.captureCameraPathEquationLabel === \"string\"",
+    "data.seismicFigureAnnotation === true && node instanceof THREE.Sprite",
+  ]) {
+    assert.ok(
+      sceneSource.includes(expected),
+      `scene target picking should ignore label metadata: ${expected}`,
+    );
+  }
+  assert.match(
+    sceneSource,
+    /const sceneTarget = pickSceneTarget\(clientX, clientY\);[\s\S]*pickMapPoint\(clientX, clientY\)/,
+    "focus binding should still fall back to terrain/world picking after labels are ignored",
   );
 });
 
@@ -1183,6 +1550,8 @@ test("deterministic still exporter owns app-rendered Screen Capture output", () 
     "renderWidth",
     "renderHeight",
     "supersampleScale",
+    "cameraPose",
+    "useCurrentSceneState",
     "image/jpeg",
   ]) {
     assert.ok(source.includes(expected), `still exporter should include ${expected}`);
@@ -1191,6 +1560,12 @@ test("deterministic still exporter owns app-rendered Screen Capture output", () 
     source,
     /finally\s*{[\s\S]*restoreRecipeLayerState[\s\S]*sceneHandle\.endCaptureSize\(\)/,
     "still exporter should restore scene state and capture size in finally",
+  );
+  const providerSource = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  assert.match(
+    providerSource,
+    /cameraPose:\s*capturePose\(sceneHandle\.camera,\s*sceneHandle\.controls\)[\s\S]*useCurrentSceneState:\s*true/,
+    "Screen Capture should save the current editor camera and live scene state instead of replaying page camera/layer state",
   );
 });
 
@@ -1451,6 +1826,28 @@ test("Capture Director docs record camera path surfacing directive", () => {
   ]) {
     assert.ok(combined.includes(expected), `surfacing docs should include ${expected}`);
   }
+});
+
+test("Capture Director docs record Page Bar and subsystem render queue boundary", () => {
+  const readme = readSource("docs", "capture-director", "README.md");
+  const decisions = readSource("docs", "03-decisions.md");
+  for (const expected of [
+    "Page Bar",
+    "Camera Path is a separate spatial camera spine",
+    "shared capture timeline clock",
+    "Pages lane",
+    "Time Graph lane",
+    "diagnostics are hidden by default",
+    "external frame queue",
+  ]) {
+    assert.ok(readme.includes(expected), `README should document ${expected}`);
+  }
+  assert.ok(
+    decisions.includes(
+      "DEC-135 - Capture Director Page Bar is the scene datum for camera-spine renders",
+    ),
+    "decision log should record the Page Bar and camera spine timeline contract",
+  );
 });
 
 test("browser FFmpeg runtime adapter is lazy and downstream-only", () => {

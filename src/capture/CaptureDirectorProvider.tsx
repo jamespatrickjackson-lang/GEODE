@@ -135,6 +135,14 @@ import {
   type CaptureScope,
 } from "./capturePageRange";
 import {
+  createPageClipFromPresentationPage,
+  createPageClipsFromRange,
+  normalizeCaptureTimelineState,
+  resizeCaptureTimelineBoundary,
+  type CaptureTimelineState,
+  type CaptureTimelineTrack,
+} from "./captureTimeline";
+import {
   captureStillFilename,
   captureStillMimeType,
   normalizeCaptureStillQuality,
@@ -208,6 +216,19 @@ interface CaptureDirectorContextValue {
   setEqualHoldSeconds(seconds: number): void;
   capturePageOptions: Array<{ id: string; label: string }>;
   capturePageRange: CapturePageRangeResolution;
+  captureTimeline: CaptureTimelineState;
+  selectedTimelineTrack: CaptureTimelineTrack;
+  setSelectedTimelineTrack(track: CaptureTimelineTrack): void;
+  addCurrentPageClip(): void;
+  addPageClip(pageId: string): void;
+  addPageRangeClips(startId: string, endId: string): void;
+  removePageClip(clipId: string): void;
+  clearPageClips(): void;
+  setPageClipEnabled(clipId: string, enabled: boolean): void;
+  setPageClipLocked(clipId: string, locked: boolean): void;
+  selectPageClip(clipId: string | null): void;
+  resizeTimelineBoundary(boundaryId: string, deltaSeconds: number): void;
+  setTimelineDiagnosticsVisible(visible: boolean): void;
   cameraKeyframes: CaptureCameraKeyframe[];
   cameraPath: CaptureCameraPathV1;
   captureCameraPathV2: CaptureCameraPathV2;
@@ -675,6 +696,11 @@ export function CaptureDirectorProvider({
   const [pageRangeTiming, setPageRangeTiming] =
     useState<CapturePageRangeTiming>("authored");
   const [equalHoldSeconds, setEqualHoldSecondsState] = useState(4);
+  const [captureTimeline, setCaptureTimeline] = useState<CaptureTimelineState>(
+    () => normalizeCaptureTimelineState(null),
+  );
+  const [selectedTimelineTrack, setSelectedTimelineTrack] =
+    useState<CaptureTimelineTrack>("camera-path");
   const [cameraKeyframes, setCameraKeyframes] = useState<CaptureCameraKeyframe[]>([]);
   const [captureCameraPathV2, setCaptureCameraPathV2] = useState<CaptureCameraPathV2>(
     () =>
@@ -878,6 +904,132 @@ export function CaptureDirectorProvider({
       pages,
     ],
   );
+  const appendPageClips = useCallback(
+    (clips: ReturnType<typeof createPageClipsFromRange>) => {
+      if (clips.length === 0) return;
+      setCaptureTimeline((previous) => {
+        const normalized = normalizeCaptureTimelineState(previous);
+        const suffixBase = normalized.pageClips.length + 1;
+        const appended = clips.map((clip, index) => ({
+          ...clip,
+          id: `${clip.id}:${suffixBase + index}`,
+        }));
+        return normalizeCaptureTimelineState({
+          ...normalized,
+          pageClips: [...normalized.pageClips, ...appended],
+          selectedPageClipId: appended[0]?.id ?? normalized.selectedPageClipId,
+        });
+      });
+      setSelectedTimelineTrack("pages");
+    },
+    [],
+  );
+  const addCurrentPageClip = useCallback(() => {
+    if (!currentPage) return;
+    const clip = createPageClipFromPresentationPage(currentPage, {
+      timing: pageRangeTiming,
+      equalHoldSeconds,
+    });
+    appendPageClips([clip]);
+  }, [appendPageClips, currentPage, equalHoldSeconds, pageRangeTiming]);
+  const addPageClip = useCallback(
+    (pageId: string) => {
+      const page = pages.find((entry) => entry.id === pageId);
+      if (!page) return;
+      const clip = createPageClipFromPresentationPage(page, {
+        timing: pageRangeTiming,
+        equalHoldSeconds,
+      });
+      appendPageClips([clip]);
+    },
+    [appendPageClips, equalHoldSeconds, pageRangeTiming, pages],
+  );
+  const addPageRangeClips = useCallback(
+    (startId: string, endId: string) => {
+      appendPageClips(
+        createPageClipsFromRange(pages, startId, endId, {
+          timing: pageRangeTiming,
+          equalHoldSeconds,
+        }),
+      );
+    },
+    [appendPageClips, equalHoldSeconds, pageRangeTiming, pages],
+  );
+  const removePageClip = useCallback((clipId: string) => {
+    setCaptureTimeline((previous) => {
+      const normalized = normalizeCaptureTimelineState(previous);
+      return normalizeCaptureTimelineState({
+        ...normalized,
+        pageClips: normalized.pageClips.filter((clip) => clip.id !== clipId),
+        selectedPageClipId:
+          normalized.selectedPageClipId === clipId
+            ? null
+            : normalized.selectedPageClipId,
+      });
+    });
+  }, []);
+  const clearPageClips = useCallback(() => {
+    setCaptureTimeline((previous) =>
+      normalizeCaptureTimelineState({
+        ...previous,
+        pageClips: [],
+        selectedPageClipId: null,
+      }),
+    );
+  }, []);
+  const setPageClipEnabled = useCallback((clipId: string, enabled: boolean) => {
+    setCaptureTimeline((previous) => {
+      const normalized = normalizeCaptureTimelineState(previous);
+      return normalizeCaptureTimelineState({
+        ...normalized,
+        pageClips: normalized.pageClips.map((clip) =>
+          clip.id === clipId ? { ...clip, enabled } : clip,
+        ),
+      });
+    });
+  }, []);
+  const setPageClipLocked = useCallback((clipId: string, locked: boolean) => {
+    setCaptureTimeline((previous) => {
+      const normalized = normalizeCaptureTimelineState(previous);
+      return normalizeCaptureTimelineState({
+        ...normalized,
+        pageClips: normalized.pageClips.map((clip) =>
+          clip.id === clipId ? { ...clip, locked } : clip,
+        ),
+      });
+    });
+  }, []);
+  const selectPageClip = useCallback((clipId: string | null) => {
+    setCaptureTimeline((previous) => {
+      const normalized = normalizeCaptureTimelineState(previous);
+      const selectedPageClipId =
+        clipId && normalized.pageClips.some((clip) => clip.id === clipId)
+          ? clipId
+          : null;
+      return { ...normalized, selectedPageClipId };
+    });
+    setSelectedTimelineTrack("pages");
+  }, []);
+  const resizeTimelineBoundary = useCallback(
+    (boundaryId: string, deltaSeconds: number) => {
+      setCaptureTimeline((previous) =>
+        resizeCaptureTimelineBoundary({
+          state: previous,
+          boundaryId,
+          deltaSeconds,
+        }),
+      );
+    },
+    [],
+  );
+  const setTimelineDiagnosticsVisible = useCallback((visible: boolean) => {
+    setCaptureTimeline((previous) =>
+      normalizeCaptureTimelineState({
+        ...previous,
+        diagnosticsVisible: visible,
+      }),
+    );
+  }, []);
   const cameraPath = useMemo(
     () => captureCameraPathV2ToV1(downgradeCaptureCameraPathV3ToV2(captureCameraPathV3)),
     [captureCameraPathV3],
@@ -1779,11 +1931,8 @@ export function CaptureDirectorProvider({
         ? Math.max(0, Math.min(cameraPathDurationSeconds, seconds))
         : 0;
       setCameraPathScrubTimeSecondsState(safeSeconds);
-      if (captureCameraPathV3.nodes.length > 0) {
-        sceneHandle.setCameraPose(sampleCaptureCameraPathV3(captureCameraPathV3, safeSeconds));
-      }
     },
-    [cameraPathDurationSeconds, captureCameraPathV3, sceneHandle],
+    [cameraPathDurationSeconds],
   );
 
   const setDeterministicDurationSeconds = useCallback((seconds: number) => {
@@ -2521,10 +2670,15 @@ export function CaptureDirectorProvider({
     }
     setError(null);
     const playbackTimeline = resolveCaptureCameraPathV3Timeline(captureCameraPathV3);
+    const playbackStartSeconds =
+      cameraPathScrubTimeSeconds >= playbackTimeline.durationSeconds - 0.001
+        ? 0
+        : Math.max(0, cameraPathScrubTimeSeconds);
+    setCameraPathScrubTimeSecondsState(playbackStartSeconds);
     setCameraPathPlaying(true);
     setCameraPathTimelinePlaying(true);
     cameraPathPlaybackStartMsRef.current = null;
-    cameraPathPlaybackStartScrubSecondsRef.current = cameraPathScrubTimeSeconds;
+    cameraPathPlaybackStartScrubSecondsRef.current = playbackStartSeconds;
     cameraPathPlaybackUnsubscribeRef.current = sceneHandle.onTick((timeMs) => {
       if (cameraPathPlaybackStartMsRef.current === null) {
         cameraPathPlaybackStartMsRef.current = timeMs;
@@ -2706,7 +2860,7 @@ export function CaptureDirectorProvider({
       editable: directorPanel === "camera-path",
       selectedKeyframeId: selectedCameraPathNodeId ?? selectedCameraPathKeyframeId,
       selectedSegmentId: selectedCameraPathSegmentId,
-      sampledPoints: captureCameraPathV3SampledPoints(captureCameraPathV3, 96),
+      sampledPoints: captureCameraPathV3SampledPoints(captureCameraPathV3, 192),
       keyframes: captureCameraPathV3.nodes.map((node) => {
         const nodeSample = sampleCaptureCameraPathV3(
           captureCameraPathV3,
@@ -2750,6 +2904,8 @@ export function CaptureDirectorProvider({
       handleScale: cameraPathDisplayOptions.handleScale,
       showCameraFrustum: cameraPathDisplayOptions.showCameraFrustum,
       showLookRays: cameraPathDisplayOptions.showLookRays,
+      showCurrentSampleMarker: !cameraPathPlaying,
+      showCurrentSampleLookRay: !cameraPathPlaying,
       showFocusLockRays: cameraPathDisplayOptions.showFocusLockRays,
       showNodeLabels: cameraPathDisplayOptions.showNodeLabels,
       showTimelineGhost: cameraPathDisplayOptions.showTimelineGhost,
@@ -2960,6 +3116,7 @@ export function CaptureDirectorProvider({
   }, [
     cameraPathVisible,
     cameraPathDisplayOptions,
+    cameraPathPlaying,
     cameraPathScrubTimeSeconds,
     cameraPathFocusPickNodeId,
     captureScope,
@@ -3137,6 +3294,7 @@ export function CaptureDirectorProvider({
     pageRangeEndId?: string | null;
     pageRangeTiming?: CapturePageRangeTiming;
     equalHoldSeconds?: number | null;
+    captureTimeline?: CaptureTimelineState | null;
     useLoadedLayerState?: boolean;
   }): CaptureRecipeV1 => {
     const recipePage = options?.page === undefined ? currentPage : options.page;
@@ -3203,6 +3361,10 @@ export function CaptureDirectorProvider({
           : null,
       pageRangeTiming: options?.pageRangeTiming ?? pageRangeTiming,
       equalHoldSeconds: options?.equalHoldSeconds ?? equalHoldSeconds,
+      captureTimeline:
+        options?.captureTimeline === undefined
+          ? captureTimeline
+          : options.captureTimeline,
     });
     if (!loadedRecipe || !useLoadedLayerState) return currentRecipe;
     return {
@@ -3218,6 +3380,7 @@ export function CaptureDirectorProvider({
     capturePageRange,
     captureScope,
     captureCameraPathV3,
+    captureTimeline,
     currentPage,
     deterministicDurationSeconds,
     equalHoldSeconds,
@@ -3290,6 +3453,7 @@ export function CaptureDirectorProvider({
       setPageRangeEndId(recipe.pageRangeEndId ?? null);
       setPageRangeTiming(recipe.pageRangeTiming ?? "authored");
       setEqualHoldSeconds(recipe.equalHoldSeconds ?? 4);
+      setCaptureTimeline(normalizeCaptureTimelineState(recipe.captureTimeline ?? null));
       const loadedCameraPathV3 =
         recipe.cameraPath && (recipe.cameraPath as { version?: number }).version === 3
           ? normalizeCaptureCameraPathV3(recipe.cameraPath as unknown as CaptureCameraPathV3)
@@ -3358,10 +3522,24 @@ export function CaptureDirectorProvider({
     const abortController = new AbortController();
     let jobId: string | null = null;
     try {
+      const timelineForExport = normalizeCaptureTimelineState(captureTimeline);
+      const timelineClipsForExport = timelineForExport.pageClips.filter(
+        (clip) => clip.enabled,
+      );
+      const hasTimelinePageClips = captureTimeline.pageClips.some(
+        (clip) => clip.enabled,
+      );
+      const timelineDurationSeconds = timelineClipsForExport.reduce(
+        (max, clip) =>
+          Math.max(max, clip.startSeconds + clip.transitionSeconds + clip.holdSeconds),
+        0,
+      );
       const expectedFrames = Math.max(
         1,
         Math.ceil(
-          (captureScope === "page-range" && capturePageRange.valid
+          (hasTimelinePageClips
+            ? timelineDurationSeconds
+            : captureScope === "page-range" && capturePageRange.valid
             ? capturePageRange.totalFrames / fps
             : deterministicDurationSeconds) * fps,
         ),
@@ -3419,8 +3597,30 @@ export function CaptureDirectorProvider({
         1,
         Math.ceil(recipe.durationSeconds * recipe.fps),
       );
+      const timelineForExport = normalizeCaptureTimelineState(captureTimeline);
+      const timelineClipsForExport = timelineForExport.pageClips.filter(
+        (clip) => clip.enabled,
+      );
+      const hasTimelinePageClips = captureTimeline.pageClips.some(
+        (clip) => clip.enabled,
+      );
+      const timelineTotalFrames = Math.max(
+        1,
+        Math.ceil(
+          timelineClipsForExport.reduce(
+            (max, clip) =>
+              Math.max(
+                max,
+                clip.startSeconds + clip.transitionSeconds + clip.holdSeconds,
+              ),
+            0,
+          ) * fps,
+        ),
+      );
       const resolvedTotalFrames =
-        captureScope === "page-range" && capturePageRange.valid
+        hasTimelinePageClips
+          ? timelineTotalFrames
+          : captureScope === "page-range" && capturePageRange.valid
           ? capturePageRange.totalFrames
           : expectedTotalFrames;
       setDeterministicExportProgress({
@@ -3428,7 +3628,66 @@ export function CaptureDirectorProvider({
         totalFrames: resolvedTotalFrames,
       });
       let sequence: DeterministicFrameSequenceResult;
-      if (captureScope === "page-range" && capturePageRange.valid) {
+      if (hasTimelinePageClips) {
+        const segmentSequences: DeterministicFrameSequenceResult[] = [];
+        let renderedFrames = 0;
+        for (const clip of timelineClipsForExport) {
+          const page = pages.find((entry) => entry.id === clip.pageId) as
+            | PresentationPage
+            | undefined;
+          if (!page) {
+            throw new Error(`Page Bar clip "${clip.label}" no longer has a page.`);
+          }
+          const segmentDurationSeconds = Math.max(
+            1 / fps,
+            clip.transitionSeconds + clip.holdSeconds,
+          );
+          const segmentRecipe = createRecipeSnapshot({
+            page,
+            pageId: page.id,
+            durationSeconds: segmentDurationSeconds,
+            camera: clonePoseForCapture(page.camera),
+            cameraKeyframes: [],
+            captureScope: "current-page",
+            captureTimeline: timelineForExport,
+            useLoadedLayerState: false,
+          });
+          const pageIndex = pages.findIndex((entry) => entry.id === page.id);
+          const segment = await exportDeterministicFrameSequence({
+            sceneHandle,
+            recipe: segmentRecipe,
+            signal: abortController.signal,
+            filenamePrefix: `geosee-${recipe.projectSlug}-${page.id}-${recipe.resolution.label}`,
+            timeOffsetSeconds: clip.startSeconds,
+            overlayContext: () => overlayContext(page, pageIndex),
+            onFrame() {
+              renderedFrames += 1;
+              setDeterministicExportProgress({
+                renderedFrames,
+                totalFrames: resolvedTotalFrames,
+              });
+              if (jobId) {
+                updateCaptureJob(jobId, (entry) =>
+                  updateCaptureJobProgress(entry, {
+                    phase: "rendering",
+                    renderedFrames,
+                    totalFrames: resolvedTotalFrames,
+                  }),
+                );
+              }
+            },
+          });
+          segmentSequences.push(segment);
+        }
+        sequence = combineDeterministicSequences({
+          recipe: {
+            ...recipe,
+            captureTimeline: timelineForExport,
+            durationSeconds: Math.max(1 / fps, resolvedTotalFrames / fps),
+          },
+          sequences: segmentSequences,
+        });
+      } else if (captureScope === "page-range" && capturePageRange.valid) {
         const segmentSequences: DeterministicFrameSequenceResult[] = [];
         let renderedFrames = 0;
         for (let index = 0; index < capturePageRange.pages.length; index += 1) {
@@ -3604,6 +3863,7 @@ export function CaptureDirectorProvider({
     beginCaptureJob,
     capturePageRange,
     captureScope,
+    captureTimeline,
     deterministicExportFormat,
     equalHoldSeconds,
     finishCaptureJob,
@@ -4024,6 +4284,8 @@ export function CaptureDirectorProvider({
       const still = await exportDeterministicStill({
         sceneHandle,
         recipe,
+        cameraPose: capturePose(sceneHandle.camera, sceneHandle.controls),
+        useCurrentSceneState: true,
         timeSeconds: Math.min(
           deterministicDurationSeconds,
           cameraKeyframes[0]?.timeSeconds ?? 0,
@@ -4212,6 +4474,19 @@ export function CaptureDirectorProvider({
       setEqualHoldSeconds,
       capturePageOptions,
       capturePageRange,
+      captureTimeline,
+      selectedTimelineTrack,
+      setSelectedTimelineTrack,
+      addCurrentPageClip,
+      addPageClip,
+      addPageRangeClips,
+      removePageClip,
+      clearPageClips,
+      setPageClipEnabled,
+      setPageClipLocked,
+      selectPageClip,
+      resizeTimelineBoundary,
+      setTimelineDiagnosticsVisible,
       cameraKeyframes,
       cameraPath,
       captureCameraPathV2,
@@ -4353,8 +4628,12 @@ export function CaptureDirectorProvider({
       availability,
       cancelPathDeterministicRender,
       captureJobs,
+      captureTimeline,
       directorPanel,
       setDirectorPanel,
+      addCurrentPageClip,
+      addPageClip,
+      addPageRangeClips,
       capturePageOptions,
       capturePageRange,
       captureMode,
@@ -4370,6 +4649,7 @@ export function CaptureDirectorProvider({
       selectedCameraPathKeyframeId,
       selectedCameraPathNodeId,
       selectedCameraPathSegmentId,
+      selectedTimelineTrack,
       cameraPathFocusPickNodeId,
       beginCameraPathFocusPick,
       cameraPathScrubTimeSeconds,
@@ -4426,6 +4706,7 @@ export function CaptureDirectorProvider({
       removeCameraKeyframe,
       clearCameraKeyframes,
       clearCompletedCaptureJob,
+      clearPageClips,
       clearLoadedRecipe,
       deterministicDurationSeconds,
       elapsedSeconds,
@@ -4486,8 +4767,13 @@ export function CaptureDirectorProvider({
       screenCaptureSaveMessage,
       screenCaptureType,
       setEqualHoldSeconds,
+      setPageClipEnabled,
+      setPageClipLocked,
+      selectPageClip,
       setScreenCaptureQuality,
+      setSelectedTimelineTrack,
       setSupersampleScale,
+      setTimelineDiagnosticsVisible,
       startRecording,
       startPathPreviewMp4Transcode,
       cancelPathPreviewMp4Transcode,

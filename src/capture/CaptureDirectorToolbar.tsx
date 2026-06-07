@@ -74,11 +74,13 @@ const toolbarRootStyle: CSSProperties = {
 
 const dockStyle: CSSProperties = {
   position: "absolute",
-  right: 24,
+  left: 24,
   top: 76,
   width: "min(420px, calc(100vw - 48px))",
-  maxHeight: "calc(100vh - 178px)",
+  boxSizing: "border-box",
+  maxHeight: "calc(100vh - 286px)",
   overflowY: "auto",
+  overflowX: "hidden",
   display: "flex",
   flexDirection: "column",
   gap: 8,
@@ -132,6 +134,54 @@ const barHeaderButtonStyle: CSSProperties = {
   fontWeight: 760,
   letterSpacing: 0,
   cursor: "pointer",
+};
+
+const barHeaderRowStyle: CSSProperties = {
+  width: "100%",
+  minHeight: 34,
+  border: 0,
+  borderRadius: 0,
+  background: "rgba(255,255,255,0.05)",
+  color: "rgba(245,248,250,0.94)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 8,
+  padding: "0 8px 0 10px",
+  boxSizing: "border-box",
+};
+
+const barHeaderToggleButtonStyle: CSSProperties = {
+  flex: "1 1 auto",
+  minWidth: 0,
+  minHeight: 34,
+  border: 0,
+  borderRadius: 0,
+  background: "transparent",
+  color: "rgba(245,248,250,0.94)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 8,
+  padding: 0,
+  fontSize: 12,
+  fontWeight: 760,
+  letterSpacing: 0,
+  cursor: "pointer",
+};
+
+const barHeaderTitleStyle: CSSProperties = {
+  minWidth: 0,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+
+const barHeaderActionsStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  flex: "0 0 auto",
 };
 
 const barContentStyle: CSSProperties = {
@@ -242,15 +292,86 @@ const outputLinkStyle: CSSProperties = {
   textDecoration: "none",
 };
 
-const previewMonitorStyle: CSSProperties = {
-  position: "absolute",
-  left: 24,
-  bottom: 148,
-  width: 280,
+const recipeActionsStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 7,
+  minWidth: 0,
+};
+
+const bottomActionRowStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 10,
+  paddingTop: 2,
+  minWidth: 0,
+};
+
+const recipeIconButtonStyle: CSSProperties = {
+  ...buttonStyle,
+  width: 32,
+  minWidth: 32,
+  padding: 0,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const recipeIconLinkStyle: CSSProperties = {
+  ...recipeIconButtonStyle,
+  textDecoration: "none",
+};
+
+const transportActionsStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: 7,
+  flex: "0 0 auto",
+};
+
+const transportButtonStyle: CSSProperties = {
+  ...recipeIconButtonStyle,
+};
+
+const transportPrimaryButtonStyle: CSSProperties = {
+  ...transportButtonStyle,
+  borderColor: "rgba(120,218,196,0.5)",
+  background:
+    "linear-gradient(180deg, rgba(54,158,139,0.9), rgba(30,102,91,0.92))",
+};
+
+const playIconStyle: CSSProperties = {
+  width: 0,
+  height: 0,
+  borderTop: "6px solid transparent",
+  borderBottom: "6px solid transparent",
+  borderLeft: "9px solid rgba(255,255,255,0.94)",
+  marginLeft: 2,
+};
+
+const pauseIconStyle: CSSProperties = {
+  width: 10,
+  height: 12,
+  borderLeft: "4px solid rgba(255,255,255,0.94)",
+  borderRight: "4px solid rgba(255,255,255,0.94)",
+};
+
+const recordIconStyle: CSSProperties = {
+  width: 12,
+  height: 12,
+  borderRadius: 999,
+  background: "#ff3b3b",
+  boxShadow: "0 0 0 2px rgba(255,255,255,0.16)",
+};
+
+const previewMonitorPanelStyle: CSSProperties = {
+  width: "100%",
   borderRadius: 8,
   border: "1px solid rgba(255,255,255,0.18)",
   background: "rgba(12,15,19,0.72)",
-  boxShadow: "0 18px 54px rgba(0,0,0,0.34)",
+  boxShadow: "0 12px 34px rgba(0,0,0,0.24)",
   backdropFilter: "blur(18px) saturate(150%)",
   overflow: "hidden",
   pointerEvents: "auto",
@@ -290,9 +411,43 @@ function pickerAvailable(): boolean {
   );
 }
 
+function RecipeActionIcon({
+  kind,
+  testId,
+}: {
+  kind: "save" | "load" | "trash" | "download";
+  testId: string;
+}) {
+  const path =
+    kind === "save"
+      ? "M5 4h12l2 2v14H5V4Zm3 0v6h8V4M8 20v-6h8v6"
+      : kind === "load"
+        ? "M12 4v11m0 0-4-4m4 4 4-4M5 20h14"
+        : kind === "trash"
+          ? "M6 7h12M9 7V5h6v2m-7 0 1 13h6l1-13M10 10v7m4-7v7"
+          : "M12 4v11m0 0 4-4m-4 4-4-4M5 20h14";
+  return (
+    <svg
+      data-testid={testId}
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d={path} />
+    </svg>
+  );
+}
+
 function CollapsibleCaptureSection({
   children,
   expanded,
+  headerActions,
   headerTestId,
   onToggle,
   panelTestId,
@@ -301,6 +456,7 @@ function CollapsibleCaptureSection({
 }: {
   children: ReactNode;
   expanded: boolean;
+  headerActions?: ReactNode;
   headerTestId: string;
   onToggle(): void;
   panelTestId: string;
@@ -309,16 +465,32 @@ function CollapsibleCaptureSection({
 }) {
   return (
     <section data-testid={panelTestId} style={barStyle}>
-      <button
-        data-testid={headerTestId}
-        type="button"
-        aria-expanded={expanded}
-        onClick={onToggle}
-        style={barHeaderButtonStyle}
-      >
-        <span>{expanded ? "v" : ">"} {title}</span>
-        <span style={statusStyle}>{status}</span>
-      </button>
+      {headerActions ? (
+        <div style={barHeaderRowStyle}>
+          <button
+            data-testid={headerTestId}
+            type="button"
+            aria-expanded={expanded}
+            onClick={onToggle}
+            style={barHeaderToggleButtonStyle}
+          >
+            <span style={barHeaderTitleStyle}>{expanded ? "v" : ">"} {title}</span>
+            <span style={statusStyle}>{status}</span>
+          </button>
+          <div style={barHeaderActionsStyle}>{headerActions}</div>
+        </div>
+      ) : (
+        <button
+          data-testid={headerTestId}
+          type="button"
+          aria-expanded={expanded}
+          onClick={onToggle}
+          style={barHeaderButtonStyle}
+        >
+          <span>{expanded ? "v" : ">"} {title}</span>
+          <span style={statusStyle}>{status}</span>
+        </button>
+      )}
       {expanded && <div style={barContentStyle}>{children}</div>}
     </section>
   );
@@ -331,10 +503,10 @@ export function CaptureDirectorToolbar() {
   const [expandedSections, setExpandedSections] = useState<
     Record<CaptureDirectorSectionId, boolean>
   >({
-    realtime: true,
-    render: true,
-    still: true,
-    "camera-path": true,
+    realtime: false,
+    render: false,
+    still: false,
+    "camera-path": false,
   });
   const {
     directorPanel,
@@ -362,6 +534,17 @@ export function CaptureDirectorToolbar() {
     setEqualHoldSeconds,
     capturePageOptions,
     capturePageRange,
+    captureTimeline,
+    selectedTimelineTrack,
+    setSelectedTimelineTrack,
+    addCurrentPageClip,
+    addPageClip,
+    addPageRangeClips,
+    clearPageClips,
+    setPageClipEnabled,
+    setPageClipLocked,
+    selectPageClip,
+    resizeTimelineBoundary,
     captureCameraPathV2,
     captureCameraPathV3,
     cameraPathEquationOverlayOptions,
@@ -379,6 +562,7 @@ export function CaptureDirectorToolbar() {
     beginCameraPathFocusPick,
     cameraPathScrubTimeSeconds,
     setCameraPathScrubTimeSeconds,
+    cameraPathTimelinePlaying,
     cameraPathVisible,
     setCameraPathVisible,
     cameraPathPlaying,
@@ -417,7 +601,6 @@ export function CaptureDirectorToolbar() {
     jumpToCameraKeyframe,
     removeCameraKeyframe,
     clearCameraKeyframes,
-    loadedRecipeFilename,
     recipeOutputUrl,
     recipeOutputFilename,
     saveRecipe,
@@ -538,6 +721,118 @@ export function CaptureDirectorToolbar() {
     captureCameraPathV2.nodes.find((node) => node.id === selectedCameraPathNodeId) ??
     captureCameraPathV2.nodes.find((node) => node.id === selectedCameraPathKeyframeId) ??
     null;
+  const recipeActions = (
+    <div data-testid="capture-recipe-actions" style={recipeActionsStyle}>
+      <button
+        data-testid="capture-save-recipe"
+        aria-label="Save recipe"
+        title="Save recipe"
+        type="button"
+        onClick={saveRecipe}
+        style={recipeIconButtonStyle}
+      >
+        <RecipeActionIcon kind="save" testId="capture-recipe-icon-save" />
+      </button>
+      <button
+        data-testid="capture-load-recipe"
+        aria-label="Load recipe"
+        title="Load recipe"
+        type="button"
+        onClick={() => recipeFileInputRef.current?.click()}
+        style={recipeIconButtonStyle}
+      >
+        <RecipeActionIcon kind="load" testId="capture-recipe-icon-load" />
+      </button>
+      <button
+        data-testid="capture-clear-recipe"
+        aria-label="Clear recipe"
+        title="Clear recipe"
+        type="button"
+        onClick={clearLoadedRecipe}
+        style={recipeIconButtonStyle}
+      >
+        <RecipeActionIcon kind="trash" testId="capture-recipe-icon-trash" />
+      </button>
+      <input
+        data-testid="capture-recipe-file-input"
+        ref={recipeFileInputRef}
+        type="file"
+        accept="application/json,.json"
+        style={{ display: "none" }}
+        onChange={(event) => {
+          const file = event.currentTarget.files?.[0];
+          if (file) void loadRecipeFromFile(file);
+          event.currentTarget.value = "";
+        }}
+      />
+      {recipeOutputUrl && (
+        <a
+          data-testid="capture-recipe-download"
+          aria-label="Download recipe"
+          title="Download recipe"
+          href={recipeOutputUrl}
+          download={recipeOutputFilename ?? "geosee-capture.capture.json"}
+          style={recipeIconLinkStyle}
+        >
+          <RecipeActionIcon
+            kind="download"
+            testId="capture-recipe-icon-download"
+          />
+        </a>
+      )}
+    </div>
+  );
+  const timelineTransportActions = (
+    <div
+      data-testid="capture-timeline-transport-actions"
+      style={transportActionsStyle}
+    >
+      <button
+        data-testid="capture-timeline-play"
+        aria-label="Play timeline"
+        title="Play"
+        type="button"
+        disabled={!cameraPathPlaybackValidation.valid}
+        onClick={playCameraPath}
+        style={transportButtonStyle}
+      >
+        <span
+          data-testid="capture-timeline-icon-play"
+          aria-hidden="true"
+          style={playIconStyle}
+        />
+      </button>
+      <button
+        data-testid="capture-timeline-pause"
+        aria-label="Pause timeline"
+        title="Pause"
+        type="button"
+        onClick={stopCameraPathPlayback}
+        style={transportButtonStyle}
+      >
+        <span
+          data-testid="capture-timeline-icon-pause"
+          aria-hidden="true"
+          style={pauseIconStyle}
+        />
+      </button>
+      <button
+        data-testid="capture-timeline-record-preview"
+        aria-label="Record path preview"
+        title="Record path preview"
+        type="button"
+        disabled={!cameraPathPlaybackValidation.valid}
+        onClick={() => void startCameraPathPreviewRecording()}
+        style={transportPrimaryButtonStyle}
+      >
+        <span
+          data-testid="capture-timeline-icon-record"
+          aria-hidden="true"
+          style={recordIconStyle}
+        />
+      </button>
+    </div>
+  );
 
   return (
     <>
@@ -1915,80 +2210,21 @@ export function CaptureDirectorToolbar() {
                 )}
               </section>
               </CollapsibleCaptureSection>
-
-              <section data-testid="capture-recipe-panel" style={barStyle}>
-                <div style={barHeaderButtonStyle}>
-                  <span>Recipe</span>
-                  <span style={statusStyle}>{loadedRecipeFilename ?? "Current scene"}</span>
-                </div>
-                <div style={barContentStyle}>
-                  <div style={rowStyle}>
-                <button
-                  data-testid="capture-save-recipe"
-                  type="button"
-                  onClick={saveRecipe}
-                  style={buttonStyle}
-                >
-                  Save Recipe
-                </button>
-                <button
-                  data-testid="capture-load-recipe"
-                  type="button"
-                  onClick={() => recipeFileInputRef.current?.click()}
-                  style={buttonStyle}
-                >
-                  Load Recipe
-                </button>
-                <button
-                  data-testid="capture-clear-recipe"
-                  type="button"
-                  onClick={clearLoadedRecipe}
-                  style={buttonStyle}
-                >
-                  Clear Recipe
-                </button>
-                <input
-                  data-testid="capture-recipe-file-input"
-                  ref={recipeFileInputRef}
-                  type="file"
-                  accept="application/json,.json"
-                  style={{ display: "none" }}
-                  onChange={(event) => {
-                    const file = event.currentTarget.files?.[0];
-                    if (file) void loadRecipeFromFile(file);
-                    event.currentTarget.value = "";
-                  }}
-                />
-                {loadedRecipeFilename && (
-                  <span data-testid="capture-recipe-status" style={statusStyle}>
-                    {loadedRecipeFilename}
-                  </span>
-                )}
-                {recipeOutputUrl && (
-                  <a
-                    data-testid="capture-recipe-download"
-                    href={recipeOutputUrl}
-                    download={recipeOutputFilename ?? "geosee-capture.capture.json"}
-                    style={outputLinkStyle}
-                  >
-                    Download Recipe
-                  </a>
-                )}
-                  </div>
-                </div>
-              </section>
             </div>
+            <div
+              data-testid="capture-director-panel-body"
+              style={{ display: "contents" }}
+            >
             {error && (
               <span data-testid="capture-error" title={error} style={errorStyle}>
                 {error}
               </span>
             )}
-          </div>
-          {cameraPathPreviewMonitor.visible && (
-            <aside
-              data-testid="capture-path-preview-monitor"
-              style={previewMonitorStyle}
-            >
+            {cameraPathPreviewMonitor.visible && (
+              <aside
+                data-testid="capture-path-preview-monitor"
+                style={previewMonitorPanelStyle}
+              >
               {cameraPathPreviewMonitor.imageUrl ? (
                 <img
                   alt="Camera path preview"
@@ -2010,33 +2246,59 @@ export function CaptureDirectorToolbar() {
                   {cameraPathPreviewMonitor.focusLocked ? " / focus locked" : ""}
                 </span>
               </div>
-            </aside>
-          )}
+              </aside>
+            )}
+            <div
+              data-testid="capture-director-bottom-actions"
+              style={bottomActionRowStyle}
+            >
+              {timelineTransportActions}
+              {recipeActions}
+            </div>
+            </div>
+          </div>
           <CameraPathTimeline
             path={captureCameraPathV3}
             timeline={cameraPathTimeline}
+            captureTimeline={captureTimeline}
+            selectedTimelineTrack={selectedTimelineTrack}
+            selectedNodeId={selectedCameraPathNodeId ?? selectedCameraPathKeyframeId}
             selectedSegmentId={selectedCameraPathSegmentId}
-            equationsSelectedOnly={
-              cameraPathEquationOverlayOptions.selectedTransitionOnly
-            }
             scrubSeconds={timelineScrubSeconds}
             canPlay={cameraPathPlaybackValidation.valid}
+            isPlaying={cameraPathTimelinePlaying}
             onScrub={setCameraPathScrubTimeSeconds}
             onPlay={playCameraPath}
-            onStop={stopCameraPathPlayback}
-            onRecordPreview={() => void startCameraPathPreviewRecording()}
+            onPause={stopCameraPathPlayback}
+            onAddCurrentCamera={addCurrentCameraKeyframe}
+            onAddCurrentPageClip={addCurrentPageClip}
+            onAddPageClip={() => {
+              const pageId = pageRangeStartId ?? capturePageOptions[0]?.id;
+              if (pageId) addPageClip(pageId);
+            }}
+            onAddPageRangeClips={() => {
+              const startId = pageRangeStartId ?? capturePageOptions[0]?.id;
+              const endId = pageRangeEndId ?? startId;
+              if (startId && endId) addPageRangeClips(startId, endId);
+            }}
+            onClearPageClips={clearPageClips}
             onSelectNode={(id) => {
               setSelectedCameraPathNodeId(id);
               setSelectedCameraPathKeyframeId(id);
               setSelectedCameraPathSegmentId(null);
             }}
-            onSelectSegment={(id) => {
+            onSelectSegment={(id, nodeId) => {
               setSelectedCameraPathSegmentId(id);
-              setSelectedCameraPathNodeId(null);
-              setSelectedCameraPathKeyframeId(null);
+              setSelectedCameraPathNodeId(nodeId ?? null);
+              setSelectedCameraPathKeyframeId(nodeId ?? null);
             }}
+            onSelectPageClip={selectPageClip}
+            onSelectTimelineTrack={setSelectedTimelineTrack}
             onSetNodeHoldSeconds={setCameraPathNodeHoldSecondsAfter}
             onSetSegmentTransitionSeconds={setCameraPathSegmentTransitionSeconds}
+            onSetPageClipEnabled={setPageClipEnabled}
+            onSetPageClipLocked={setPageClipLocked}
+            onResizeTimelineBoundary={resizeTimelineBoundary}
           />
         </div>
       )}

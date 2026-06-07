@@ -7,6 +7,26 @@ Capture Director separates four workflows:
 - Still Capture: exact-size deterministic still export, including 8K.
 - Camera Path: recipe-owned path authoring with scene overlay and preview monitor.
 
+## Page Bar And Camera Spine Timeline
+
+The Page Bar is the scene datum for Capture Director. It choreographs the
+presentation/page sequence without making Camera Path own page state. Camera Path is a separate spatial camera spine: it controls camera pose, focus, FOV,
+and camera timing while the page track controls scene/page state.
+
+Both tracks sample one shared capture timeline clock. The lower timeline keeps
+that relationship visible through a Pages lane, a Camera Path lane, and a Time
+Graph lane. The Pages lane shows page clips and local page timing. The Camera
+Path lane shows camera holds and transitions. The Time Graph lane shows timing
+curves without becoming a separate state owner. Position, G, Gd, Aim, and Focus
+diagnostics are hidden by default and remain marketing-setup-only.
+
+Render Out and rendered path video may sample the Page Bar and Camera Path
+together at fixed frame time. Empty Page Bar state falls back to current-page
+capture. The long-term external frame queue uses the same contract: queue
+Page Bar plus Camera Path frame references, render exact-size frames, then
+compile those frames into the chosen media format without mutating project
+fixtures.
+
 ## Camera Path Workflow
 
 Camera Path uses `CaptureCameraPathV3` as the editable authoring model. Loaded

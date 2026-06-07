@@ -32,6 +32,10 @@ import {
   validateCaptureCameraPathV3,
   type CaptureCameraPathV3,
 } from "./captureCameraPathV3";
+import {
+  normalizeCaptureTimelineState,
+  type CaptureTimelineState,
+} from "./captureTimeline";
 
 const CAPTURE_RECIPE_MODES = new Set<CaptureMode>([
   "off",
@@ -94,6 +98,7 @@ export interface CaptureRecipeV1 {
   pageRangeEndId?: string | null;
   pageRangeTiming?: CapturePageRangeTiming;
   equalHoldSeconds?: number | null;
+  captureTimeline?: CaptureTimelineState | null;
 }
 
 export interface CaptureRecipeCreateInput {
@@ -120,6 +125,7 @@ export interface CaptureRecipeCreateInput {
   pageRangeEndId?: string | null;
   pageRangeTiming?: CapturePageRangeTiming;
   equalHoldSeconds?: number | null;
+  captureTimeline?: CaptureTimelineState | null;
 }
 
 export interface CaptureRecipeValidationResult {
@@ -326,6 +332,9 @@ export function createCaptureRecipeFromCurrentState(
       input.captureScope === "page-range" ? (input.pageRangeEndId ?? null) : null,
     pageRangeTiming: input.pageRangeTiming ?? "authored",
     equalHoldSeconds: input.equalHoldSeconds ?? null,
+    captureTimeline: input.captureTimeline
+      ? normalizeCaptureTimelineState(input.captureTimeline)
+      : null,
   };
 }
 
@@ -489,6 +498,21 @@ export function validateCaptureRecipe(
   ) {
     errors.push("equalHoldSeconds must be greater than zero when provided.");
   }
+  if (recipe.captureTimeline !== undefined && recipe.captureTimeline !== null) {
+    const timeline = normalizeCaptureTimelineState(recipe.captureTimeline);
+    if (timeline.version !== 1) {
+      errors.push("captureTimeline.version must be 1.");
+    }
+    for (const [index, clip] of timeline.pageClips.entries()) {
+      if (!clip.pageId) errors.push(`captureTimeline.pageClips[${index}].pageId is required.`);
+      if (clip.transitionSeconds < 0) {
+        errors.push(`captureTimeline.pageClips[${index}].transitionSeconds must be non-negative.`);
+      }
+      if (clip.holdSeconds < 0) {
+        errors.push(`captureTimeline.pageClips[${index}].holdSeconds must be non-negative.`);
+      }
+    }
+  }
   if (
     recipe.qualityPreset === undefined ||
     !CAPTURE_RECIPE_QUALITY_PRESETS.has(recipe.qualityPreset)
@@ -597,6 +621,9 @@ export function normalizeCaptureRecipe(recipe: CaptureRecipeV1): CaptureRecipeV1
         : null,
     pageRangeTiming: recipe.pageRangeTiming ?? "authored",
     equalHoldSeconds: recipe.equalHoldSeconds ?? null,
+    captureTimeline: recipe.captureTimeline
+      ? normalizeCaptureTimelineState(recipe.captureTimeline)
+      : null,
     cameraPath,
     cameraTimeline: cameraTimelineMetadata(cameraPath, {
       durationSeconds: recipe.durationSeconds,

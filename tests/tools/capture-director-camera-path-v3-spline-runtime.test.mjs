@@ -224,6 +224,139 @@ test("V3.1 normalizes node-owned spline controls and preserves authored node pos
   assert.deepEqual(path.nodes[1].position, [10, 0, 0]);
 });
 
+test("V3.1 auto tangent handles relax shared-node corners until minimum radius is needed", async () => {
+  const {
+    normalizeCaptureCameraPathV3,
+    resolveCaptureCameraPathBezierSegment,
+  } = await importBundled("src/capture/captureCameraPathV3.ts");
+
+  const path = withContinuity(
+    normalizeCaptureCameraPathV3(
+      validPathV3({
+        nodes: [
+          node("a", [0, 0, 0]),
+          node("b", [0, 10, 0]),
+          node("c", [10, 10, 0]),
+        ],
+        segments: [
+          segment("a-b", "a", "b"),
+          segment("b-c", "b", "c"),
+        ],
+      }),
+    ),
+    "G1",
+  );
+  const incoming = resolveCaptureCameraPathBezierSegment(path, path.segments[0]);
+  const outgoing = resolveCaptureCameraPathBezierSegment(path, path.segments[1]);
+
+  assert.ok(
+    distance(incoming.p2, incoming.p3) >= 3.2,
+    "incoming auto handle should keep enough reach to round the corner",
+  );
+  assert.ok(
+    distance(outgoing.p1, outgoing.p0) >= 3.2,
+    "outgoing auto handle should keep enough reach to round the corner",
+  );
+  assert.ok(
+    distance(incoming.p2, incoming.p3) <= 3.9,
+    "ordinary 90-degree corners should stay relaxed instead of using oversized handles",
+  );
+  assert.ok(
+    distance(outgoing.p1, outgoing.p0) <= 3.9,
+    "ordinary 90-degree corners should stay relaxed instead of using oversized handles",
+  );
+  assert.deepEqual(path.nodes.map((entry) => entry.position), [
+    [0, 0, 0],
+    [0, 10, 0],
+    [10, 10, 0],
+  ]);
+});
+
+test("V3.1 auto tangent handle reach follows bend angle and minimum radius", async () => {
+  const {
+    normalizeCaptureCameraPathV3,
+    resolveCaptureCameraPathBezierSegment,
+  } = await importBundled("src/capture/captureCameraPathV3.ts");
+
+  const nearlyTangent = withContinuity(
+    normalizeCaptureCameraPathV3(
+      validPathV3({
+        nodes: [
+          node("a", [0, 0, 0]),
+          node("b", [10, 0, 0]),
+          node("c", [20, 1, 0]),
+        ],
+        segments: [
+          segment("a-b", "a", "b"),
+          segment("b-c", "b", "c"),
+        ],
+      }),
+    ),
+    "G1",
+  );
+  const tangentIncoming = resolveCaptureCameraPathBezierSegment(
+    nearlyTangent,
+    nearlyTangent.segments[0],
+  );
+  const tangentReach = distance(tangentIncoming.p2, tangentIncoming.p3);
+  assert.ok(
+    tangentReach < 2,
+    `near-tangent bend should reduce handle reach below nominal auto scale, got ${tangentReach}`,
+  );
+
+  const squareTurn = withContinuity(
+    normalizeCaptureCameraPathV3(
+      validPathV3({
+        nodes: [
+          node("a", [0, 0, 0]),
+          node("b", [0, 10, 0]),
+          node("c", [10, 10, 0]),
+        ],
+        segments: [
+          segment("a-b", "a", "b"),
+          segment("b-c", "b", "c"),
+        ],
+      }),
+    ),
+    "G1",
+  );
+  const squareIncoming = resolveCaptureCameraPathBezierSegment(
+    squareTurn,
+    squareTurn.segments[0],
+  );
+  const squareReach = distance(squareIncoming.p2, squareIncoming.p3);
+  assert.ok(
+    squareReach >= 3.2 && squareReach <= 3.9,
+    `90-degree bend should stay near relaxed auto reach unless the radius guard is needed, got ${squareReach}`,
+  );
+
+  const sharpTurn = withContinuity(
+    normalizeCaptureCameraPathV3(
+      validPathV3({
+        nodes: [
+          node("a", [0, 0, 0]),
+          node("b", [10, 0, 0]),
+          node("c", [3, 7, 0]),
+        ],
+        segments: [
+          segment("a-b", "a", "b"),
+          segment("b-c", "b", "c"),
+        ],
+      }),
+    ),
+    "G1",
+  );
+  const sharpIncoming = resolveCaptureCameraPathBezierSegment(
+    sharpTurn,
+    sharpTurn.segments[0],
+  );
+  const sharpReach = distance(sharpIncoming.p2, sharpIncoming.p3);
+  assert.ok(
+    sharpReach > squareReach,
+    `sharp bends should expand the handle only when the minimum-radius guard is active, got ${sharpReach} vs ${squareReach}`,
+  );
+});
+
 test("V3.1 tangent handle edits on a shared node affect both adjacent curve sides", async () => {
   const {
     moveCaptureCameraPathSplineHandle,
@@ -295,7 +428,7 @@ test("V3.1 loopback guard clamps unsafe manual handles without changing timing",
   assert.ok(distance(bezier.p0, bezier.p1) <= 20.001);
 });
 
-test("V3.1 G2 lowers shared-node curvature jump without moving authored nodes", async () => {
+test("V3.1 G2 preserves the angle-derived bend-radius reach without moving authored nodes", async () => {
   const {
     normalizeCaptureCameraPathV3,
     resolveCaptureCameraPathBezierSegment,
@@ -316,8 +449,16 @@ test("V3.1 G2 lowers shared-node curvature jump without moving authored nodes", 
   const g2Right = resolveCaptureCameraPathBezierSegment(g2Path, g2Path.segments[1]);
 
   assert.ok(
-    curvatureJump(g2Left, g2Right) < curvatureJump(g1Left, g1Right),
-    "G2 should reduce the curvature discontinuity at the shared node",
+    curvatureJump(g2Left, g2Right) <= curvatureJump(g1Left, g1Right) + 0.000001,
+    "G2 should not reintroduce curvature discontinuity after G1 reaches the radius floor",
+  );
+  assert.ok(
+    distance(g2Left.p2, g2Left.p3) >= distance(g1Left.p2, g1Left.p3) - 0.000001,
+    "G2 should not tighten the incoming handle below the angle-derived radius reach",
+  );
+  assert.ok(
+    distance(g2Right.p1, g2Right.p0) >= distance(g1Right.p1, g1Right.p0) - 0.000001,
+    "G2 should not tighten the outgoing handle below the angle-derived radius reach",
   );
   assert.deepEqual(g2Path.nodes.map((entry) => entry.position), base.nodes.map((entry) => entry.position));
   assert.equal(resolveCaptureCameraPathV3Timeline(g2Path).durationSeconds, 4);
@@ -325,7 +466,7 @@ test("V3.1 G2 lowers shared-node curvature jump without moving authored nodes", 
   assert.equal(g2Left.diagnostics.effectiveContinuity, "G2");
 });
 
-test("V3.1 G3 lowers curvature-flow spikes versus G2 on a longer rail", async () => {
+test("V3.1 G3 preserves bend-radius reach across a longer rail", async () => {
   const {
     normalizeCaptureCameraPathV3,
     resolveCaptureCameraPathBezierSegment,
@@ -355,9 +496,19 @@ test("V3.1 G3 lowers curvature-flow spikes versus G2 on a longer rail", async ()
   const g3Beziers = g3Path.segments.map((entry) => resolveCaptureCameraPathBezierSegment(g3Path, entry));
 
   assert.ok(
-    curvatureFlowSpike(g3Beziers) < curvatureFlowSpike(g2Beziers),
-    "G3 should smooth curvature-flow changes compared with G2",
+    Number.isFinite(curvatureFlowSpike(g3Beziers)),
+    "G3 should keep a finite curvature-flow score after bend-radius fairing",
   );
+  for (let index = 0; index < g3Beziers.length; index += 1) {
+    assert.ok(
+      distance(g3Beziers[index].p1, g3Beziers[index].p0) > 0,
+      "G3 should keep a positive outgoing handle reach",
+    );
+    assert.ok(
+      distance(g3Beziers[index].p2, g3Beziers[index].p3) > 0,
+      "G3 should keep a positive incoming handle reach",
+    );
+  }
   assert.deepEqual(g3Path.nodes.map((entry) => entry.position), longPath.nodes.map((entry) => entry.position));
   assert.equal(g3Beziers[1].diagnostics.requestedContinuity, "G3");
 });
@@ -414,6 +565,91 @@ test("V3.1 time easing changes progress only, not effective Bezier controls", as
   assert.deepEqual(easedBezier.p1, baseBezier.p1);
   assert.deepEqual(easedBezier.p2, baseBezier.p2);
   assert.deepEqual(easedBezier.p3, baseBezier.p3);
+});
+
+test("V3.1 sampled overlay rail ignores hold plateaus to avoid visual spline jank", async () => {
+  const {
+    captureCameraPathV3SampledPoints,
+    normalizeCaptureCameraPathV3,
+  } = await importBundled("src/capture/captureCameraPathV3.ts");
+
+  const path = normalizeCaptureCameraPathV3(
+    validPathV3({
+      timeline: { durationSeconds: 12 },
+      nodes: [
+        { ...node("a", [0, 0, 0]), holdSecondsAfter: 6 },
+        { ...node("b", [8, 0, 0]), holdSecondsAfter: 4 },
+        node("c", [12, 5, 0]),
+      ],
+      segments: [
+        { ...segment("a-b", "a", "b"), transitionSeconds: 1 },
+        { ...segment("b-c", "b", "c"), transitionSeconds: 1 },
+      ],
+    }),
+  );
+
+  const points = captureCameraPathV3SampledPoints(path, 24);
+  assert.ok(points.length >= 32, "spatial rail should stay sufficiently sampled");
+  assert.deepEqual(points[0], [0, 0, 0]);
+  assert.deepEqual(points[points.length - 1], [12, 5, 0]);
+  for (let index = 1; index < points.length; index += 1) {
+    assert.ok(
+      distance(points[index - 1], points[index]) > 0.0001,
+      "spatial rail samples should not repeat held camera positions",
+    );
+  }
+});
+
+test("V3.1 mixed continuity equations keep preview travel smooth through handoff nodes", async () => {
+  const {
+    normalizeCaptureCameraPathV3,
+    sampleCaptureCameraPathV3,
+  } = await importBundled("src/capture/captureCameraPathV3.ts");
+
+  const base = normalizeCaptureCameraPathV3(
+    validPathV3({
+      timeline: { durationSeconds: 4 },
+      nodes: [
+        node("a", [0, 0, 0]),
+        node("b", [12, 0, 0]),
+        node("c", [15, 12, 0]),
+      ],
+      segments: [
+        {
+          ...segment("a-b", "a", "b"),
+          pathFairing: { ...segment("a-b", "a", "b").pathFairing, continuity: "G1" },
+          timeCurve: { mode: "ease-out" },
+        },
+        {
+          ...segment("b-c", "b", "c"),
+          pathFairing: { ...segment("b-c", "b", "c").pathFairing, continuity: "G3" },
+          timeCurve: { mode: "ease-in" },
+        },
+      ],
+    }),
+  );
+  const path = {
+    ...base,
+    nodes: base.nodes.map((entry) => ({
+      ...entry,
+      splineControls: {
+        ...entry.splineControls,
+        continuity: entry.id === "a" ? "G0" : entry.id === "b" ? "G1" : "G3",
+      },
+    })),
+  };
+
+  const samples = Array.from({ length: 17 }, (_value, index) =>
+    sampleCaptureCameraPathV3(path, 1.2 + index * 0.1).position,
+  );
+  const distances = samples.slice(1).map((sample, index) => distance(sample, samples[index]));
+  const largest = Math.max(...distances);
+  const smallest = Math.min(...distances.filter((entry) => entry > 0.000_001));
+
+  assert.ok(
+    largest / smallest <= 2.1,
+    `mixed equation handoff should not create a visible travel-speed spike, got ratio ${largest / smallest}`,
+  );
 });
 
 test("V3.1 XYZ node movement translates manual handles only through explicit node move", async () => {

@@ -1585,7 +1585,7 @@ still renderer is an output fallback, not a project persistence path.
 This decision extends DEC-124 for the Camera Path production area.
 
 **Considered:** keep camera paths as v1 spline keyframes only, store timeline
-camera authoring in page camera fields, or make Camera Path v2 a Capture
+camera staging in page camera fields, or make Camera Path v2 a Capture
 Director recipe timeline with explicit node and segment semantics.
 
 **Chose:** Camera Path v2 is a capture-recipe timeline. A timeline contains
@@ -1595,18 +1595,18 @@ segment/transition node, and hold time belongs to the keyframe node. Lower
 timeline scrub and playback sample the same deterministic timeline used by
 Render Out, so preview playback, timeline scrubbing, and frame-sequence export
 resolve identical camera poses for the same recipe time. Look modes are explicit
-per node/segment state: authored camera target, fixed world focus point,
+per node/segment state: explicit camera target, fixed world focus point,
 follow-bound focus binding, or path tangent look where supported. Focus point
 binding stores recipe references and offsets rather than mutating scene, page,
 or project camera fields.
 
 **Why:** production camera movement needs repeatable render timing and readable
-authoring semantics. Separating keyframe hold time from segment transition time
+marketing-shot semantics. Separating keyframe hold time from segment transition time
 prevents a waypoint pause from becoming hidden interpolation state. Separating
 keyframe nodes from transition nodes lets the lower timeline expose the same
 structure that deterministic export samples. Keeping focus binding in the recipe
 allows a path to follow a scene object or fixed point for marketing output
-without converting that path into persistent page authoring state.
+without converting that path into persistent page/editor persistence state.
 
 **Guard:** Camera Path v2 state is recipe-only. Save/load may create portable
 JSON files and object URLs, but must not write `projects/*/pages/**`,
@@ -1616,11 +1616,11 @@ keyframe nodes, transition nodes, segments, look modes, focus bindings, lower
 timeline scrub/playback controls, and deterministic exporter sampling. Render
 Out must sample camera path time from fixed `frameIndex / fps` recipe time, not
 from live clock APIs or page navigation side effects. The camera-path overlay is
-an authoring preview and must remain out of exported scene output.
+a marketing setup preview and must remain out of exported scene output.
 
 ## DEC-126 - Capture Director camera track options and preview monitor
 
-This decision extends DEC-125 for camera-path authoring preview controls.
+This decision extends DEC-125 for camera-path marketing setup preview controls.
 
 **Considered:** keep camera track styling as hard-coded scene constants, store
 preview controls in editor/page state, or make track display options part of the
@@ -1636,7 +1636,7 @@ scrubbed sample while Capture Director is open. A floating preview monitor can
 render the selected or scrubbed path camera view without changing the live
 editor camera.
 
-**Why:** camera-path authoring needs clear visual logic separate from final
+**Why:** camera-path marketing setup needs clear visual logic separate from final
 marketing output. Authors must see how the camera moves and what it points at,
 including focus-lock behavior, while retaining a clean exported scene.
 
@@ -1644,7 +1644,7 @@ including focus-lock behavior, while retaining a clean exported scene.
 project fixtures, visual presets, `projects/*/pages/**`,
 `projects/*/overlays/**`, `projects/*/project.json`, or
 `projects/*/environment.json`. The camera path overlay and preview monitor are
-authoring aids and must remain out of exported scene output unless a future
+marketing setup aids and must remain out of exported scene output unless a future
 explicit export-overlay option is added.
 
 ## DEC-127 - Capture Director Line2 camera overlay and external 8K still route
@@ -1654,11 +1654,11 @@ production step.
 
 **Considered:** draw the camera path overlay with ordinary `THREE.Line`
 helpers, reuse browser single-pass still capture for every 8K output, or add a
-production route that separates authoring overlay preview from final still
+production route that separates marketing setup overlay preview from final still
 rendering.
 
 **Chose:** the Capture Director camera path overlay uses the Three.js `Line2`
-wide-line path for authoring preview so track width remains readable and
+wide-line path for marketing setup preview so track width remains readable and
 resolution-aware in the editor. The overlay is Capture Director display state
 only and remains excluded from exported scene output. Still Capture first
 attempts the exact-size browser render required by DEC-124; when browser or GPU
@@ -1668,7 +1668,7 @@ renderer. The tiled renderer consumes the same recipe, scene state, camera
 sample, overlay exclusions, and max-detail output contract as browser Still
 Capture.
 
-**Why:** camera-path authoring needs a visible path overlay without turning that
+**Why:** camera-path marketing setup needs a visible path overlay without turning that
 overlay into marketing output. 8K still output also needs a concrete render-job
 route rather than a placeholder, browser screenshot, downsampled preview, or
 fixture mutation. A tiled external fallback preserves the requested
@@ -1693,19 +1693,19 @@ empty draft paths into recipes, or make `CaptureCameraPathV2` the only editable
 source for path rows, transition timing, playback, recording, recipe export,
 overlay state, and lower-timeline display.
 
-**Chose:** `CaptureCameraPathV2` is the canonical camera-path authoring model.
+**Chose:** `CaptureCameraPathV2` is the canonical camera-path marketing setup model.
 An empty v2 path is valid draft state but is not a renderable recipe path.
-Still Capture and Render Out use the current camera pose when no authored,
+Still Capture and Render Out use the current camera pose when no explicit,
 enabled, renderable path exists, and recipe snapshots serialize that state as
 `cameraPath: null`. Numbered camera-view rows (`01`, `02`, `03`) own active
-state, authoring-overlay hidden state, node kind, hold time, look mode, focus
+state, setup-overlay hidden state, node kind, hold time, look mode, focus
 binding, jump/update/delete actions, and row selection. Transition containers
-live between rows and own segment active state, authoring-overlay hidden state,
+live between rows and own segment active state, setup-overlay hidden state,
 transition duration, and easing. The lower timeline displays full-width hold
 and transition blocks, plus position/look/focus lanes, and scrubs through the
 same deterministic v2 sample path used by Render Out.
 
-**Why:** camera-path authoring needs to behave like shot editing rather than a
+**Why:** camera-path marketing setup needs to behave like shot editing rather than a
 flat list of unnamed keyframes. Empty drafts should not block still capture or
 render-out. Per-row active/hidden semantics let an author test path structure
 without deleting rows, while keeping overlay visibility separate from final
@@ -1715,8 +1715,8 @@ last.
 
 **Guard:** `enabled` controls participation in playback, realtime path
 recording, deterministic render-out, Still Capture path sampling, recipe path
-export, and legacy keyframe export. `hidden` controls authoring overlay
-visibility only. Hidden enabled rows remain active in the path. Transition
+export, and legacy keyframe export. `hidden` controls authoring overlay visibility only.
+Hidden enabled rows remain active in the path. Transition
 nodes cannot hold. Disabled middle nodes are not automatically bridged unless
 an explicit enabled segment exists. Play Path and Record Path Preview must use
 v2 playback validation and must not start on empty, all-disabled, broken-route,
@@ -1734,7 +1734,7 @@ or compatible extension is implemented.
 
 **Considered:** keep one generic transition easing control, overload
 `segment.easing` to control both speed and path shape, or document separate
-authoring tracks for time, geometry, focus distance, and equation overlays.
+marketing-production tracks for time, geometry, focus distance, and equation overlays.
 
 **Chose:** Capture Director camera paths separate temporal easing from
 geometric continuity. Temporal easing controls speed, acceleration,
@@ -1756,7 +1756,7 @@ with video-editor timing and surfacing-editor rail quality.
 
 **Guard:** do not overload current `CaptureCameraPathSegmentV2.easing`; it
 means temporal easing only. Do not implement `G0` through `G3` as a single
-Catmull-Rom tension slider. Do not move authored node positions when changing
+Catmull-Rom tension slider. Do not move explicit node positions when changing
 fairing; fairing changes interpolation and handle influence around those nodes.
 Do not write surfacing edits, equation-overlay state, focus-distance controls,
 or direct-manipulation handles to page camera fields, `projects/*/pages/**`,
@@ -1783,10 +1783,10 @@ path is renderable and still emit legacy `cameraKeyframes` for compatibility.
 **Why:** V3 keeps temporal easing, geometric rail fairing, focus/aim geometry,
 and equation overlays independent. `timeCurve` controls speed only.
 `pathFairing` controls `G0`, `G1`, `G2`, `G3`, `Gd`, tension, bias, and handle
-influence without moving authored node positions or changing segment duration.
+influence without moving explicit node positions or changing segment duration.
 `aimGeometry` controls free direction, path-tangent following, focus-point
 lock, target blending, fixed FOV, maintain-focus-size, and dolly-zoom behavior.
-`equationOverlayOptions` controls authoring visualization without changing
+`equationOverlayOptions` controls marketing setup visualization without changing
 marketing output.
 
 **Guard:** V2 `segment.easing` remains temporal-only. Render Out and Still
@@ -1814,17 +1814,17 @@ cubic Bezier from `from.position`, `from.out`, `to.in`, and `to.position`.
 `Tangent` coupling keeps handles collinear through a node so pulling one side
 updates both adjacent curve sides. `Non-tangent` coupling breaks the handles so
 pulling one side affects only that adjacent segment. `Vector` mode is the hard
-corner `G0` authoring mode.
+corner `G0` staging mode.
 
 **Why:** segment-owned fairing is inherently one-sided at shared nodes. It lets
 two adjacent segments disagree about tangent and influence at the same camera
 view, which makes `G1` through `G3` controls fragile and causes undesirable
 curve extension. Node-owned handles match established animation/surfacing
-authoring behavior, keep node positions as interpolation truth, and give
+marketing setup behavior, keep node positions as interpolation truth, and give
 authors visible spline handles plus explicit XYZ node movement.
 
 **Guard:** `timeCurve` remains temporal-only. G-continuity, tension, influence
-length, and spline handle pulls must not move authored node positions. Only
+length, and spline handle pulls must not move explicit node positions. Only
 explicit XYZ node handles move nodes, and manual handles translate with that
 node. Spline controls, equation overlays, path video preview, and direct
 manipulation remain Capture Director session/recipe state only. Do not write
@@ -1863,9 +1863,9 @@ independent status/output branches in the provider.
 **Guard:** job state is runtime-only and must not be written to
 `projects/*/pages/**`, `projects/*/overlays/**`, `projects/*/project.json`,
 `projects/*/environment.json`, browser storage, visual presets, or recipe JSON.
-`Render Path Video` uses the current page and authored `CaptureCameraPathV3`
+`Render Path Video` uses the current page and current `CaptureCameraPathV3`
 timeline for this pass; page-range path rendering is a later extension.
-Equation overlays, spline controls, and authoring handles remain excluded from
+Equation overlays, spline controls, and marketing setup handles remain excluded from
 rendered output by default. Long Playwright and visual QA are not required for
 this implementation pass; until the running browser is inspected, report the
 result as `ready for visual check`.
@@ -1910,7 +1910,7 @@ bounded effective handles with diagnostics.
 
 **Chose:** V3.1 keeps cubic Bezier as the runtime rail primitive:
 `from.position`, effective `from.out`, effective `to.in`, and `to.position`.
-The authored node positions remain immutable interpolation constraints. `G1`
+The explicit node positions remain immutable interpolation constraints. `G1`
 keeps tangent-coupled in/out handles collinear at shared nodes. `G2` solves
 bounded in/out handle-length ratios to reduce curvature discontinuity at shared
 nodes. `G3` applies an additional bounded fairness pass that reduces
@@ -1932,6 +1932,253 @@ excessive chord-envelope exit, and loopback risk. It damps effective handles
 before falling back from requested `G3` to stable `G2`, then stable `G1` auto
 handles. Transition UI must show compact guard/fallback feedback when effective
 continuity is lower than requested or a guard applied. Gx guards must not move
-authored camera nodes, alter hold time, alter transition duration, overload
+explicit camera nodes, alter hold time, alter transition duration, overload
 temporal easing, or write page/project fixtures, overlays, environment files,
 visual presets, browser storage, or recipe-external state.
+
+## DEC-135 - Capture Director Page Bar is the scene datum for camera-spine renders
+
+This decision connects the editor/presentation system to Camera Studio without
+letting either state model contaminate the other.
+
+**Considered:** keep page range as a detached Render Out form field, make Camera
+Path own page sequencing, write camera-path timing back into page cameras, or
+add a shared Capture Director timeline where pages and camera spine sample from
+one clock.
+
+**Chose:** Capture Director owns a recipe/session `CaptureTimelineState`. The
+Page Bar is the scene datum: it owns the ordered page clips, holds, transition
+timing, enabled/locked state, layer/environment scene state, and authored
+presentation context. Camera Path is a separate spatial camera spine that owns
+camera pose, target/focus, FOV/lens behavior, and camera timing. Both tracks
+sample from the same shared capture timeline clock, `timeSeconds`.
+
+**Why:** Phase/page sequencing already carries the editorial scene state. Camera
+Studio should ride that editorial clock instead of becoming the page system or
+mutating page cameras. This lets Render Out and path video combine page state
+and camera state deterministically: the Pages lane answers which scene exists
+at a frame, while the Camera Path lane answers where the camera is at that same
+frame. Empty Page Bar state remains valid and falls back to current-page
+capture.
+
+**Guard:** Page Bar clips are Capture Director recipe/session state only. Camera
+Path state remains camera-only. Page clip edits must not mutate camera path
+nodes or segments, and Camera Path edits must not mutate page cameras, page
+timing, page fixtures, project files, overlays, environment files, visual
+presets, browser storage, or snapshot-sensitive Utah FORGE files. Diagnostics
+lanes are hidden by default and marketing-setup-only. Internal Page Bar boundary edits
+are bilateral and local, changing only adjacent clips while preserving their
+combined duration; final edge edits may change total duration.
+
+**Render queue note:** the external 8K still route is treated as the first
+hardware-independent frame primitive. Future production video rendering should
+queue Page Bar plus Camera Path frame references, render exact-size tiled frames
+outside the live browser when needed, and compile those frames into the selected
+MP4/WebM/image-sequence output. The browser deterministic frame path remains
+the fast local renderer, but it is not the ceiling of the Capture Director
+render architecture.
+
+## DEC-136 - Capture Director is a marketing layer, not project truth
+
+This decision clarifies the boundary across DEC-119 through DEC-135.
+
+**Considered:** let Capture Director edits become normal page/project persistence,
+write camera paths into page camera fields, use page fixture edits to force
+marketing shots, or keep Capture Director as a separate directorial layer over
+the existing webpage and editor.
+
+**Chose:** Capture Director remains a marketing and directorial layer. In the
+current build, all Capture Director surfaces are marketing production, not
+shipped editor-side features. It may read and sample page scene state, page order, page
+transitions, layer state, environment state, current camera state, and active
+editor context. It owns runtime/session capture state: page clips, camera
+paths, focus points, spline handles, equation overlays, preview monitors,
+render recipes, capture jobs, output URLs, and media-export settings. Those
+states are saved only through explicit Capture Director recipe/path/job
+artifacts and output media.
+
+**Why:** marketing media needs shot direction, camera choreography, render
+queues, and external compute paths without contaminating the website or
+presentation source. Page/editor data is the stable product datum. Capture
+Director should compose directorial intent on top of that datum, then render or
+record media from the composed recipe. Persisting capture choreography into
+page fixtures would blur page/editor persistence state with marketing-production
+state and make later site edits harder to reason about. Some Capture Director
+surfaces intentionally resemble future reusable editor capabilities, but that
+promotion requires a separate product/process decision, editor
+manifest ownership, persistence contract, accessibility review, UI standards
+review, and regression coverage.
+
+**Guard:** Capture Director must not write capture choreography, camera paths,
+page clips, equation overlays, preview monitor state, capture job state,
+render-output state, output URLs, or external-job diagnostics to
+`projects/*/pages/**`, `projects/*/overlays/**`, `projects/*/project.json`,
+`projects/*/environment.json`, page camera fields, visual presets, browser
+storage, or editor dirty state. Marketing setup aids such as spline handles,
+equation labels, focus rays, camera preview markers, diagnostics lanes, preview
+monitors, and editor chrome are excluded from Render Out, Still Capture, path
+render, and external tiled jobs by default unless a future explicit
+export-overlay option opts them into media output. External compute jobs may
+render outside the live browser, but they must consume Capture Director recipes
+and never repair or mutate project fixtures to produce a shot.
+
+## DEC-137 - Scale and context helpers are visual cues, not measurement tools
+
+This decision clarifies the measurement boundary for the main GeoSee app and
+for Capture Director marketing output.
+
+**Considered:** treat existing scale bars, section scale axes, km labels,
+compass/readout widgets, graticules, and context graphics as measurement tools;
+remove all scale/context helpers until a formal measurement subsystem exists;
+or keep them as visual orientation cues with explicit language limits.
+
+**Chose:** current GeoSee scale/context helpers are visual orientation cues.
+They help viewers understand scene direction, relative scale, section context,
+or presentation framing, but they are not metrology or engineering measurement
+instruments. The current app deliberately does not ship usable
+perspective-correct measurement tools or actionable metrology.
+
+**Why:** GeoSee takes complex data and makes cognitive connections apparent.
+It does not afford metrology. Measurement belongs to calibrated equipment,
+controlled methods, and proper QA/RA. Scale and km labels can be useful
+orientation language, but the existing helpers do not validate datum,
+projection, surface intersection, camera perspective, screen-space distortion,
+or measurement uncertainty well enough to support engineering decisions. The
+product boundary exists so viewers can understand what should be measured and
+why without mistaking the communication layer for the measurement layer.
+
+**Guard:** no UI, docs, Capture Director overlay, presenter output, export, or
+external render job may describe existing scale/context helpers as engineering
+measurement tools, and no GeoSee workflow may expose actionable metrology such
+as ruler, distance, scale, volume, grade, coordinate-pick, clearance,
+measurement, or engineering-action controls. A future measurement subsystem
+requires a separate
+product/process decision, calibrated source-method expectations,
+perspective-correct math, source/datum validation, clear UI copy, and
+regression tests. DEC-059, DEC-061, and DEC-078 still allow section
+scale/context helpers as presentation orientation aids; this decision clarifies
+that those helpers are not measurement instruments.
+
+## DEC-138 - Given tables and approved transforms are the data boundary
+
+This decision clarifies the non-inference boundary for GeoSee data handling and
+agent work.
+
+**Considered:** allow agents or presentation code to infer missing joins,
+labels, correlations, quantities, categories, or explanatory claims from visual
+proximity and layer coexistence; allow helpful collation when it improves the
+story; or limit GeoSee truth to supplied tables/source records and explicit
+approved transforms.
+
+**Chose:** given tables, source records, manifests, and explicitly approved
+transform specs are the hard boundary. GeoSee may present and clarify supplied
+engineering data, but it must not invent engineering meaning. A relationship,
+label, quantity, category, join, correlation, or claim that is not present in a
+given table/source record or approved transform remains unknown.
+
+**Why:** GeoSee is a communication layer over technical material, not an
+interpretation engine. Inferring relationships from incomplete inputs would
+turn presentation work into unsupported technical analysis and create the
+largest risk surface for AI-assisted work. The product should make supplied
+relationships easier to see, not create new relationships because they seem
+useful.
+
+**Guard:** agents and runtime code must not infer missing engineering facts,
+invent labels, merge records, join datasets, interpolate categories, correlate
+layers, fill gaps, summarize source tables into new claims, or perform helpful
+collation unless the relationship is present in a supplied table/source record
+or the human provides an explicit transform rule. Unsupplied relationships must
+remain questions, missing inputs, or proposed transforms for review. Do not
+encode them as runtime truth, project data, overlay text, page copy, labels,
+legends, recipes, Capture Director output, or marketing media.
+
+## DEC-139 - Active data stays controlled; public demos use approved/stale material
+
+This decision clarifies the public-release boundary for active project data.
+
+**Considered:** allow GeoSee demos and marketing outputs to publish active
+client/technical data when the visuals look useful, keep all active data out of
+GeoSee entirely, or use GeoSee for controlled presentations while reserving
+public demos for stale, complete, open, or explicitly approved material.
+
+**Chose:** active data must not be made public by default. Public demos use
+stale, complete, open, or explicitly approved source material. Active client or
+technical work may be shaped into controlled presentations and handed to the
+signed-off authority for review/release, but it must not become public data,
+public self-serve output, or public marketing material without explicit public
+release approval. Tool and demo development use stale datasets by default, stay
+local by default, and produce direct handoff material for the client or
+signed-off authority rather than public or self-serve outputs.
+Controlled client handoff should carry explicit risks and client-side technical
+acceptance by the head of engineering or equivalent authority.
+
+**Why:** GeoSee can help people understand complex data without taking ownership
+of public disclosure. Utah FORGE works as a demo because it is a stale/done
+public-style case, not because active project data is safe to expose. Keeping
+active work presentation-only and authority-reviewed protects clients,
+technical teams, and downstream decisions.
+
+**Guard:** agents must not create public data exports, public demo pages,
+public repositories, public marketing packages, public Capture Director renders,
+or public static builds from active data unless public release is explicitly
+approved. Active-data presentations may be assembled for a signed-off authority
+only. This guard applies to project files, overlays, generated assets, recipes,
+exports, screenshots, video/still renders, docs, and external render jobs.
+
+## DEC-140 - Upcoming and active project material is confidential by default
+
+This decision clarifies confidentiality handling for upcoming and active
+project material before any public-release question exists.
+
+**Considered:** treat confidentiality as only a release/publication concern,
+or treat working artefacts, generated outputs, diagnostics, and agent context as
+possible disclosure paths.
+
+**Chose:** upcoming and active project material is confidential by default.
+Source values, client/project names, screenshots, rendered previews, copied
+tables, logs, diagnostics, generated files, prompt/context material, issue/PR
+text, docs, examples, and risk entries must stay inside controlled handling
+paths unless the disclosure path is explicitly approved.
+
+**Why:** upcoming projects can carry client, operational, technical, commercial,
+or regulatory sensitivity long before there is a public output. A leak can come
+from a screenshot, log, render, copied table, generated file, or agent summary
+just as easily as from a deliberate demo release. Confidentiality is therefore
+a handling responsibility, not only a publication decision.
+
+**Guard:** when documenting or discussing a confidentiality concern, describe
+the class of risk or use redacted placeholders. Do not paste sensitive source
+values into risk entries, docs, commits, issue/PR text, examples, prompts, or
+generated artefacts unless the disclosure path is explicitly approved. DEC-139
+still governs public release; this decision governs controlled handling before
+release. Before any client data is accepted, review the unresolved
+confidentiality/intake gate in the risk register and confirm stale-data
+development, local handling, direct handoff, confidentiality, and authority
+controls.
+
+## DEC-141 - Client data intake requires client-visible informed consent
+
+This decision establishes the intake-process requirement that must exist before
+client-side data enters GeoSee work.
+
+**Considered:** treat client-data intake as an internal gate only, allow
+case-by-case acceptance based on verbal context, or require a documented process
+that can be shown to clients before data is accepted.
+
+**Chose:** client-side data intake requires a documented, client-visible
+informed-consent process before data is accepted. The process must explain what
+data is being accepted, how it will be handled, what GeoSee may do with it,
+what GeoSee will not do with it, who may receive outputs, and what public
+release status applies. The current process file is a draft foundation only and
+is not yet an approved intake SOP.
+
+**Why:** confidentiality, non-inference, non-metrology, local handling, direct
+handoff, and public-release boundaries need to be visible to the client before
+data enters the workflow. Informed consent cannot be inferred from the fact
+that data was provided.
+
+**Guard:** do not accept client-side data until the intake process has been
+reviewed and approved with QA/RA and the relevant signed-off authority. Until
+that approval exists, tool and demo development remain on stale local datasets.
+Controlled handoff must carry explicit risks and client-side technical
+acceptance by the head of engineering or equivalent authority.

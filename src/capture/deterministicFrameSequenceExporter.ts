@@ -48,6 +48,7 @@ export interface DeterministicFrameSequenceExportOptions {
   mimeType?: DeterministicFrameMimeType;
   imageQuality?: number;
   filenamePrefix?: string;
+  timeOffsetSeconds?: number;
   signal?: AbortSignal;
   overlayContext?: (
     frame: Pick<DeterministicFrameSequenceFrame, "frameIndex" | "timeSeconds">,
@@ -238,8 +239,10 @@ function interpolateCameraKeyframes(
 export function sampleCaptureRecipeCameraPoseAtFrame(
   recipe: CaptureRecipeV1,
   frameIndex: number,
+  timeOffsetSeconds = 0,
 ): Pose | null {
-  const timeSeconds = getCaptureFrameTime(frameIndex, recipe.fps);
+  const timeSeconds =
+    getCaptureFrameTime(frameIndex, recipe.fps) + timeOffsetSeconds;
   if (recipe.cameraPath) {
     if (recipe.cameraPath.version === 1) {
       return poseFromCaptureCameraPathKeyframe(
@@ -294,6 +297,7 @@ export async function exportDeterministicFrameSequence({
   imageQuality = 0.92,
   filenamePrefix = "geosee-capture",
   signal,
+  timeOffsetSeconds = 0,
   overlayContext,
   onFrame,
 }: DeterministicFrameSequenceExportOptions): Promise<DeterministicFrameSequenceResult> {
@@ -369,8 +373,17 @@ export async function exportDeterministicFrameSequence({
 
     for (let frameIndex = 0; frameIndex < totalFrames; frameIndex += 1) {
       throwIfAborted(signal);
-      const cameraPose = sampleCaptureRecipeCameraPoseAtFrame(recipe, frameIndex);
-      const timeSeconds = getCaptureFrameTime(frameIndex, recipe.fps);
+      const baseCameraPose = sampleCaptureRecipeCameraPoseAtFrame(recipe, frameIndex);
+      const timeSeconds =
+        getCaptureFrameTime(frameIndex, recipe.fps) + timeOffsetSeconds;
+      const cameraPose =
+        timeOffsetSeconds === 0
+          ? baseCameraPose
+          : sampleCaptureRecipeCameraPoseAtFrame(
+              recipe,
+              frameIndex,
+              timeOffsetSeconds,
+            );
       if (cameraPose) {
         applyPose(sceneHandle.camera, sceneHandle.controls, cameraPose);
       }
