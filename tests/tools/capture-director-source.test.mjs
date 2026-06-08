@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 const repoRoot = process.cwd();
 
 function readSource(...parts) {
-  return readFileSync(join(repoRoot, ...parts), "utf8");
+  return readFileSync(join(repoRoot, ...parts), "utf8").replace(/\r\n/g, "\n");
 }
 
 const requiredCaptureFiles = [
