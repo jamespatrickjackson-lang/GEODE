@@ -89,7 +89,12 @@ function copyFfmpegCoreAssetsPlugin(): Plugin {
           filename,
         );
         if (!(await fileExists(sourcePath))) {
-          next();
+          // Known FFmpeg core filename but no file on disk (e.g. the
+          // single-threaded core ships no ffmpeg-core.worker.js). Return 404
+          // rather than falling through to the SPA index.html, which would hand
+          // the loader a misleading 200 text/html response.
+          res.statusCode = 404;
+          res.end();
           return;
         }
         res.setHeader("Cache-Control", "no-store, max-age=0");
