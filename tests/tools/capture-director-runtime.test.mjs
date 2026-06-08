@@ -2399,6 +2399,33 @@ function fakeFfmpegRuntime({ failExec = false } = {}) {
   };
 }
 
+function fakePendingFfmpegRuntime() {
+  const calls = [];
+  const files = new Map();
+  return {
+    calls,
+    files,
+    async writeFile(path, data) {
+      calls.push(["writeFile", path, data.length]);
+      files.set(path, data);
+    },
+    async exec(args, options) {
+      calls.push(["exec", args, options]);
+      await new Promise(() => {});
+    },
+    async readFile(path) {
+      calls.push(["readFile", path]);
+      const data = files.get(path);
+      if (!data) throw new Error(`missing file ${path}`);
+      return data;
+    },
+    async deleteFile(path) {
+      calls.push(["deleteFile", path]);
+      files.delete(path);
+    },
+  };
+}
+
 test("frame-sequence encoder validates deterministic frame integrity", async () => {
   const {
     validateDeterministicFrameSequenceForEncoding,
@@ -2537,6 +2564,34 @@ test("frame-sequence encoder cleans virtual files when FFmpeg fails", async () =
     runtime.calls.filter((call) => call[0] === "deleteFile").length,
     4,
   );
+});
+
+test("frame-sequence encoder rejects stalled FFmpeg exec and cleans virtual files", async () => {
+  const {
+    encodeDeterministicFrameSequenceWithFfmpeg,
+  } = await importBundled("src/capture/frameSequenceVideoEncoder.ts");
+  const runtime = fakePendingFfmpegRuntime();
+  const progress = [];
+
+  await assert.rejects(
+    encodeDeterministicFrameSequenceWithFfmpeg({
+      sequence: fakeEncodingSequence(),
+      runtime,
+      preset: "mp4-h264-marketing",
+      stallTimeoutMs: 15,
+      execTimeoutMs: 1000,
+      onProgress: (event) => progress.push(event),
+    }),
+    /Encoding stalled/,
+  );
+
+  assert.equal(runtime.calls.filter((call) => call[0] === "exec").length, 1);
+  assert.equal(
+    runtime.calls.filter((call) => call[0] === "deleteFile").length,
+    4,
+  );
+  assert.equal(progress.some((event) => event.phase === "writing-frames"), true);
+  assert.equal(progress.some((event) => event.phase === "encoding"), true);
 });
 
 test("frame-sequence encoder cleans input frames when encode planning fails", async () => {
@@ -2814,6 +2869,14 @@ test("browser FFmpeg runtime adapter forwards abort signals to FFmpeg calls", as
       calls.push(["writeFile", path, data.length, runtimeOptions?.signal === controller.signal]);
     }
 
+    on(event, handler) {
+      calls.push(["on", event, typeof handler]);
+    }
+
+    off(event, handler) {
+      calls.push(["off", event, typeof handler]);
+    }
+
     async exec(args, timeout, runtimeOptions) {
       calls.push(["exec", args, timeout, runtimeOptions?.signal === controller.signal]);
       return 0;
@@ -2834,7 +2897,11 @@ test("browser FFmpeg runtime adapter forwards abort signals to FFmpeg calls", as
     loadModule: async () => ({ FFmpeg: FakeFFmpeg }),
   });
   await handle.runtime.writeFile("/frame.png", new Uint8Array([1]));
-  await handle.runtime.exec(["-version"]);
+  const progressEvents = [];
+  await handle.runtime.exec(["-version"], {
+    timeoutMs: 1234,
+    onProgress: (event) => progressEvents.push(event),
+  });
   await handle.runtime.readFile("/output.mp4");
   await handle.runtime.deleteFile?.("/frame.png");
 
@@ -2844,8 +2911,140 @@ test("browser FFmpeg runtime adapter forwards abort signals to FFmpeg calls", as
   assert.match(calls[0][1].wasmURL, /\/runtime\/ffmpeg\/ffmpeg-core\.wasm$/);
   assert.deepEqual(calls.slice(1), [
     ["writeFile", "/frame.png", 1, true],
-    ["exec", ["-version"], undefined, true],
+    ["on", "progress", "function"],
+    ["on", "log", "function"],
+    ["exec", ["-version"], 1234, true],
+    ["off", "progress", "function"],
+    ["off", "log", "function"],
     ["readFile", "/output.mp4", undefined, true],
     ["deleteFile", "/frame.png", true],
   ]);
+  assert.deepEqual(progressEvents, []);
+});
+
+test("external video render jobs validate 4K deterministic video metadata", async () => {
+  const {
+    createExternalVideoRenderJob,
+    externalVideoRenderCommand,
+    externalVideoRenderJobFilename,
+    parseExternalVideoRenderJobJson,
+    serializeExternalVideoRenderJob,
+    shouldDefaultToExternalVideoRenderJob,
+    validateExternalVideoRenderJob,
+  } = await importBundled("src/capture/externalVideoRenderJob.ts");
+
+  const recipe = validRecipe({
+    mode: "scene-annotations",
+    resolution: { width: 3840, height: 2160, label: "4K" },
+    durationSeconds: 2,
+    fps: 30,
+  });
+  const job = createExternalVideoRenderJob({
+    recipe,
+    format: "mp4",
+    appUrl: "http://127.0.0.1:5173/?project=runtime-test",
+    createdAt: "2026-06-07T00:00:00.000Z",
+  });
+
+  assert.equal(job.schema, "CaptureVideoRenderJobV1");
+  assert.equal(job.video.width, 3840);
+  assert.equal(job.video.height, 2160);
+  assert.equal(job.video.totalFrames, 60);
+  assert.equal(job.video.format, "mp4");
+  assert.equal(job.fidelity, "max-detail-render");
+  assert.equal(validateExternalVideoRenderJob(job).valid, true);
+  assert.equal(shouldDefaultToExternalVideoRenderJob(recipe), true);
+  assert.match(externalVideoRenderJobFilename(job), /external-video/);
+  assert.match(
+    externalVideoRenderCommand("job.json", job),
+    /node tools\\render-capture-video-job\.mjs --job job\.json --out .*\.mp4/,
+  );
+
+  const parsed = parseExternalVideoRenderJobJson(serializeExternalVideoRenderJob(job));
+  assert.equal(parsed.validation.valid, true);
+  assert.equal(parsed.job?.jobId, job.jobId);
+
+  const invalid = validateExternalVideoRenderJob({
+    ...job,
+    recipe: { ...job.recipe, mode: "full-ui" },
+  });
+  assert.equal(invalid.valid, false);
+  assert.match(invalid.errors.join(" "), /full-ui/);
+});
+
+test("local video render runner starts, polls, and cancels the dev renderer endpoint", async () => {
+  const {
+    cancelLocalVideoRenderJob,
+    localRendererAvailable,
+    pollLocalVideoRenderJob,
+    startLocalVideoRenderJob,
+  } = await importBundled("src/capture/localVideoRenderRunner.ts");
+
+  const {
+    createExternalVideoRenderJob,
+  } = await importBundled("src/capture/externalVideoRenderJob.ts");
+
+  const job = createExternalVideoRenderJob({
+    recipe: validRecipe({
+      mode: "scene-only",
+      resolution: { width: 3840, height: 2160, label: "4K" },
+      durationSeconds: 1,
+      fps: 30,
+    }),
+    format: "mp4",
+    appUrl: "http://127.0.0.1:5173/?project=runtime-test",
+    createdAt: "2026-06-07T00:00:00.000Z",
+  });
+
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, options = {}) => {
+    const body = options.body ? JSON.parse(String(options.body)) : null;
+    calls.push({ url: String(url), body });
+    if (String(url).endsWith("/video-renderer-availability")) {
+      return new Response(JSON.stringify({ available: true }), { status: 200 });
+    }
+    return new Response(
+      JSON.stringify({
+        runId: body?.runId ?? "local-run-1",
+        status: String(url).endsWith("/cancel-video") ? "cancelled" : "rendering",
+        phase: "rendering",
+        startedAt: "2026-06-07T00:00:00.000Z",
+        completedAt: null,
+        outputFilename: job.video.filename,
+        outputPath: "C:\\GeoSee\\GeoSee_Dev\\.tmp\\capture-video-outputs\\out.mp4",
+        outputUrl: "/api/capture/video-output?runId=local-run-1",
+        diagnosticsPath:
+          "C:\\GeoSee\\GeoSee_Dev\\.tmp\\capture-video-outputs\\out.mp4.capture-diagnostics.json",
+        elapsedSeconds: 1,
+      }),
+      { status: 200 },
+    );
+  };
+
+  try {
+    const availability = await localRendererAvailable();
+    assert.equal(availability.available, true);
+    const started = await startLocalVideoRenderJob({ job });
+    assert.equal(started.runId, "local-run-1");
+    assert.match(started.outputUrl, /\/api\/capture\/video-output/);
+    const polled = await pollLocalVideoRenderJob(started.runId);
+    assert.equal(polled.status, "rendering");
+    const cancelled = await cancelLocalVideoRenderJob(started.runId);
+    assert.equal(cancelled.status, "cancelled");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.deepEqual(
+    calls.map((call) => call.url),
+    [
+      "/api/capture/video-renderer-availability",
+      "/api/capture/render-video",
+      "/api/capture/video-status",
+      "/api/capture/cancel-video",
+    ],
+  );
+  assert.equal(calls[1].body.job.schema, "CaptureVideoRenderJobV1");
+  assert.equal(calls[1].body.outputFilename, job.video.filename);
 });

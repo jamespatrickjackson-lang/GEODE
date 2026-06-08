@@ -5,7 +5,8 @@ export type CaptureJobKind =
   | "deterministic-video"
   | "path-video"
   | "still"
-  | "external-still";
+  | "external-still"
+  | "external-video";
 
 export type CaptureJobStatus =
   | "idle"
@@ -18,9 +19,16 @@ export type CaptureJobStatus =
   | "cancelled";
 
 export interface CaptureJobProgress {
-  phase?: "preparing" | "rendering" | "encoding" | "complete";
+  phase?:
+    | "preparing"
+    | "rendering"
+    | "writing-frames"
+    | "encoding"
+    | "finalizing"
+    | "complete";
   renderedFrames?: number;
   totalFrames?: number;
+  writtenFrames?: number;
   percent?: number;
   message?: string;
 }

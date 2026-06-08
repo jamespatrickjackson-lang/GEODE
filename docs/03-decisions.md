@@ -2182,3 +2182,37 @@ reviewed and approved with QA/RA and the relevant signed-off authority. Until
 that approval exists, tool and demo development remain on stale local datasets.
 Controlled handoff must carry explicit risks and client-side technical
 acceptance by the head of engineering or equivalent authority.
+
+## DEC-142 - Capture Director 4K video uses external deterministic render jobs
+
+This decision records the 4K video production boundary after browser FFmpeg
+encoding proved ambiguous for large page-sequence renders.
+
+**Considered:** keep 4K final Render Out and Render Path Video inside browser
+FFmpeg, only improve status copy, or route final 4K video through an external
+local render job while keeping browser encoding for smaller/preview outputs.
+
+**Chose:** 4K-or-higher deterministic video starts a dev-only local external
+renderer by default. Capture Director posts a `CaptureVideoRenderJobV1` to
+`/api/capture/render-video`; the Vite dev server runs
+`tools/render-capture-video-job.mjs`, writes the MP4/WebM under
+`.tmp/capture-video-outputs/`, and reports output and diagnostics paths back to
+the in-app job runtime. The job preserves the CaptureRecipe, Page Bar, Camera
+Path, resolution, FPS, format, app URL, and max-detail no-downsampling fidelity.
+Browser FFmpeg remains available for shorter/smaller deterministic videos, but
+it now has explicit frame-writing, encoding, finalizing, timeout, and
+stall-failure handling. JSON job download is a fallback/export artifact, not
+the normal result of pressing Render.
+
+**Why:** final marketing video must not hang behind a browser worker with no
+clear destination. The external route renders deterministic frames from the
+real app state, encodes through local FFmpeg, writes diagnostics, and gives the
+operator a concrete output path. Browser output exists only after a blob has
+been successfully encoded.
+
+**Guard:** do not use browser display capture or browser FFmpeg as the only
+4K/page-sequence final-video route. Do not write project/page fixtures while
+creating or running external video jobs; local outputs live under `.tmp/`.
+Equation, spline, camera-path, and editor overlays remain authoring/session aids
+and are excluded from marketing output unless explicitly enabled in a future
+export-overlay option.

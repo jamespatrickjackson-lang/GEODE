@@ -211,13 +211,40 @@ resolution, current FPS, current MP4/WebM format, and the resolved
 display/tutorial capture, not app-owned deterministic scene rendering. Page
 range path rendering remains a later extension.
 
-No path video is written to disk while frames are rendering or FFmpeg is
-encoding. The output exists only after encoding completes, then the Camera Path
-panel exposes explicit save/download controls. `Save Rendered Video` uses the
-browser File System Access picker when available; otherwise the download link is
-the fallback. Long 4K MP4 encodes report elapsed encoding time and a clear
-"no file has been saved yet" status so a slow encode is not confused with a
-completed save.
+No path video is written to disk while browser frames are rendering or FFmpeg
+is encoding. Browser output exists only after encoding completes, then the
+Camera Path panel exposes explicit save/download controls. `Save Rendered
+Video` uses the browser File System Access picker when available; otherwise the
+download link is the fallback. Browser FFmpeg now reports frame-writing,
+encoding, and finalizing progress, and a stalled encode fails cleanly instead
+of leaving the UI in an indefinite encoding state.
+
+4K final video is not browser-first. When Render Out or Render Path Video is
+configured at 4K or higher in the local dev app, Capture Director posts a
+`CaptureVideoRenderJobV1` to the dev-only local renderer endpoint. The Vite
+dev server spawns `tools/render-capture-video-job.mjs`, writes the MP4/WebM
+under `.tmp/capture-video-outputs/`, and reports the output path, diagnostics
+path, elapsed time, and download URL back to the Capture Director job runtime.
+
+The JSON job is now fallback/export evidence, not the normal result of pressing
+Render. It is produced only when the local renderer endpoint is unavailable or
+when an operator explicitly needs to run the job by hand. Manual execution from
+the repo root remains:
+
+```powershell
+node tools\render-capture-video-job.mjs --job path\to\job.json --out path\to\output.mp4
+```
+
+The video tool also supports a synthetic fixture path for quick verification:
+
+```powershell
+node tools\render-capture-video-job.mjs --job tests\fixtures\capture-video-render-job-v1.json --out .tmp\capture-video-self-test.mp4 --synthetic
+```
+
+The local external route renders deterministic frames outside the live browser
+UI, encodes through local FFmpeg (`ffmpeg-static`, `FFMPEG_PATH`, or `ffmpeg`
+on PATH), and writes `<output>.capture-diagnostics.json`. It is the intended
+route for final 4K page-sequence and camera-path marketing videos.
 
 This pass intentionally avoids long Playwright and browser visual QA runs.
 Source/runtime checks and build output make the feature ready for visual check;

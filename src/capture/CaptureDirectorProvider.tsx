@@ -165,6 +165,20 @@ import {
   type CaptureStillTileSpec,
 } from "./externalStillRenderJob";
 import {
+  createExternalVideoRenderJob,
+  externalVideoRenderCommand,
+  externalVideoRenderJobFilename,
+  serializeExternalVideoRenderJob,
+  shouldDefaultToExternalVideoRenderJob,
+  type CaptureVideoRenderJobV1,
+} from "./externalVideoRenderJob";
+import {
+  cancelLocalVideoRenderJob,
+  pollLocalVideoRenderJob,
+  startLocalVideoRenderJob,
+  type LocalVideoRenderRunStatus,
+} from "./localVideoRenderRunner";
+import {
   capturePathJobDiagnostics,
   captureVideoOutputDiagnostics,
 } from "./captureJobDiagnostics";
@@ -383,6 +397,9 @@ interface CaptureDirectorContextValue {
   externalStillJobUrl: string | null;
   externalStillJobFilename: string | null;
   externalStillJobCommand: string | null;
+  externalVideoJobUrl: string | null;
+  externalVideoJobFilename: string | null;
+  externalVideoJobCommand: string | null;
   captureJobs: CaptureJobRecord[];
   activeCaptureJobId: string | null;
   pathRenderStatus: CaptureJobStatus;
@@ -441,6 +458,15 @@ function formatCaptureError(error: unknown): string {
   return "Capture recording failed.";
 }
 
+// Reduce a verbose ANGLE renderer string to the GPU name, e.g.
+// "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER ... D3D11)" -> "RTX 4070 Ti SUPER".
+function shortGpuName(renderer: string): string {
+  if (/swiftshader|software|llvmpipe/i.test(renderer)) return "software (no GPU)";
+  const model = renderer.match(/(?:GeForce |Radeon |Arc )([^(,]+)/);
+  if (model?.[1]) return model[1].trim();
+  return renderer.length > 40 ? `${renderer.slice(0, 37)}…` : renderer;
+}
+
 function recorderOutputContextForMode({
   mode,
   resolution,
@@ -475,6 +501,7 @@ declare global {
       renderTile(
         job: CaptureStillRenderJobV1,
         tile: CaptureStillTileSpec,
+        frameIndex?: number,
       ): ReturnType<typeof exportDeterministicStillTile>;
       capabilities(): ReturnType<SceneHandle["getCaptureCapabilities"]> & {
         supportsViewOffsetTiles: true;
@@ -816,6 +843,11 @@ export function CaptureDirectorProvider({
     useState<string | null>(null);
   const [externalStillJobCommand, setExternalStillJobCommand] =
     useState<string | null>(null);
+  const [externalVideoJobUrl, setExternalVideoJobUrl] = useState<string | null>(null);
+  const [externalVideoJobFilename, setExternalVideoJobFilename] =
+    useState<string | null>(null);
+  const [externalVideoJobCommand, setExternalVideoJobCommand] =
+    useState<string | null>(null);
   const [captureJobs, setCaptureJobs] = useState<CaptureJobRecord[]>([]);
   const [activeCaptureJobId, setActiveCaptureJobId] = useState<string | null>(null);
   const [pathRenderOutputBlob, setPathRenderOutputBlob] =
@@ -838,6 +870,7 @@ export function CaptureDirectorProvider({
   const deterministicOutputCleanupRef = useRef<(() => void) | null>(null);
   const screenCaptureOutputCleanupRef = useRef<(() => void) | null>(null);
   const externalStillJobUrlRef = useRef<string | null>(null);
+  const externalVideoJobUrlRef = useRef<string | null>(null);
   const recipeOutputUrlRef = useRef<string | null>(null);
   const cameraPathOutputUrlRef = useRef<string | null>(null);
   const pathRenderOutputCleanupRef = useRef<(() => void) | null>(null);
@@ -852,6 +885,8 @@ export function CaptureDirectorProvider({
   const pathPreviewMp4AbortRef = useRef<AbortController | null>(null);
   const deterministicAbortRef = useRef<AbortController | null>(null);
   const pathRenderAbortRef = useRef<AbortController | null>(null);
+  const deterministicLocalVideoRunIdRef = useRef<string | null>(null);
+  const pathRenderLocalVideoRunIdRef = useRef<string | null>(null);
   const pathRenderEncodingTimerRef = useRef<number | null>(null);
   const deterministicRuntimeHandleRef =
     useRef<BrowserFfmpegRuntimeHandle | null>(null);
@@ -1100,6 +1135,10 @@ export function CaptureDirectorProvider({
     externalStillJobUrlRef.current = externalStillJobUrl;
   }, [externalStillJobUrl]);
 
+  useEffect(() => {
+    externalVideoJobUrlRef.current = externalVideoJobUrl;
+  }, [externalVideoJobUrl]);
+
   const revokeOutputUrl = useCallback(() => {
     if (outputUrlRef.current) {
       URL.revokeObjectURL(outputUrlRef.current);
@@ -1151,6 +1190,16 @@ export function CaptureDirectorProvider({
     setExternalStillJobCommand(null);
   }, []);
 
+  const revokeExternalVideoJobUrl = useCallback(() => {
+    if (externalVideoJobUrlRef.current) {
+      URL.revokeObjectURL(externalVideoJobUrlRef.current);
+      externalVideoJobUrlRef.current = null;
+    }
+    setExternalVideoJobUrl(null);
+    setExternalVideoJobFilename(null);
+    setExternalVideoJobCommand(null);
+  }, []);
+
   const clearElapsedTimer = useCallback(() => {
     if (elapsedTimerRef.current !== null) {
       window.clearInterval(elapsedTimerRef.current);
@@ -1194,11 +1243,12 @@ export function CaptureDirectorProvider({
 
   const clearPathRenderOutput = useCallback(() => {
     revokePathRenderOutputUrl();
+    revokeExternalVideoJobUrl();
     setPathRenderOutputBlob(null);
     setPathRenderOutputUrl(null);
     setPathRenderOutputFilename(null);
     setPathRenderSaveMessage(null);
-  }, [revokePathRenderOutputUrl]);
+  }, [revokeExternalVideoJobUrl, revokePathRenderOutputUrl]);
 
   const updateCaptureJob = useCallback(
     (jobId: string, updater: (job: CaptureJobRecord) => CaptureJobRecord) => {
@@ -1860,6 +1910,14 @@ export function CaptureDirectorProvider({
 
   const cancelDeterministicExport = useCallback(() => {
     deterministicAbortRef.current?.abort();
+    const localRunId = deterministicLocalVideoRunIdRef.current;
+    if (localRunId) {
+      void cancelLocalVideoRenderJob(localRunId).finally(() => {
+        if (deterministicLocalVideoRunIdRef.current === localRunId) {
+          deterministicLocalVideoRunIdRef.current = null;
+        }
+      });
+    }
     deterministicRuntimeHandleRef.current?.dispose();
     deterministicRuntimeHandleRef.current = null;
   }, []);
@@ -3213,8 +3271,11 @@ export function CaptureDirectorProvider({
       return;
     }
     const bridge = {
-      renderTile: (job: CaptureStillRenderJobV1, tile: CaptureStillTileSpec) =>
-        exportDeterministicStillTile({ sceneHandle, job, tile }),
+      renderTile: (
+        job: CaptureStillRenderJobV1,
+        tile: CaptureStillTileSpec,
+        frameIndex?: number,
+      ) => exportDeterministicStillTile({ sceneHandle, job, tile, frameIndex }),
       capabilities: () => ({
         ...sceneHandle.getCaptureCapabilities(),
         supportsViewOffsetTiles: true as const,
@@ -3279,6 +3340,154 @@ export function CaptureDirectorProvider({
       screenCaptureQuality,
       screenCaptureType,
     ],
+  );
+
+  const publishExternalVideoJob = useCallback(
+    ({
+      recipe,
+      format,
+      message,
+    }: {
+      recipe: CaptureRecipeV1;
+      format: CaptureDeterministicExportFormat;
+      message: string;
+    }) => {
+      revokeExternalVideoJobUrl();
+      const job = createExternalVideoRenderJob({
+        recipe,
+        format,
+        appUrl:
+          typeof window === "undefined"
+            ? null
+            : `${window.location.origin}${window.location.pathname}?project=${encodeURIComponent(
+                recipe.projectSlug,
+              )}`,
+      });
+      const blob = new Blob([serializeExternalVideoRenderJob(job)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const filename = externalVideoRenderJobFilename(job);
+      externalVideoJobUrlRef.current = url;
+      setExternalVideoJobUrl(url);
+      setExternalVideoJobFilename(filename);
+      setExternalVideoJobCommand(externalVideoRenderCommand(filename, job));
+      setPathRenderSaveMessage(message);
+      return { job, blob, url, filename };
+    },
+    [revokeExternalVideoJobUrl],
+  );
+
+  const runExternalVideoRenderJob = useCallback(
+    async ({
+      job,
+      captureJobId,
+      abortController,
+      totalFrames,
+      target,
+    }: {
+      job: CaptureVideoRenderJobV1;
+      captureJobId: string;
+      abortController: AbortController;
+      totalFrames: number;
+      target: "render-out" | "path-video";
+    }): Promise<LocalVideoRenderRunStatus> => {
+      const run = await startLocalVideoRenderJob({
+        job,
+        outputFilename: job.video.filename,
+      });
+      if (target === "path-video") {
+        pathRenderLocalVideoRunIdRef.current = run.runId;
+        setPathRenderSaveMessage(`External renderer started. Output: ${run.outputPath}`);
+      } else {
+        deterministicLocalVideoRunIdRef.current = run.runId;
+      }
+      updateCaptureJob(captureJobId, (entry) =>
+        ({
+          ...updateCaptureJobStatus(entry, "rendering", {
+            progress: {
+              phase: "rendering",
+              renderedFrames: 0,
+              totalFrames,
+              percent: 0.02,
+              message: `External renderer started. Output: ${run.outputPath}`,
+            },
+          }),
+          diagnostics: {
+            ...entry.diagnostics,
+            localExternalVideoRunId: run.runId,
+            outputPath: run.outputPath,
+            diagnosticsPath: run.diagnosticsPath,
+          },
+        }),
+      );
+
+      let latest = run;
+      while (latest.status !== "complete") {
+        if (abortController.signal.aborted) {
+          await cancelLocalVideoRenderJob(latest.runId).catch(() => null);
+          throw new DOMException("External video render was cancelled.", "AbortError");
+        }
+        await new Promise<void>((resolve) => {
+          window.setTimeout(resolve, 1000);
+        });
+        latest = await pollLocalVideoRenderJob(latest.runId);
+        const isEncoding = latest.status === "encoding" || latest.phase === "encoding";
+        const liveTotal = latest.totalFrames ?? totalFrames;
+        const liveRendered = latest.renderedFrames ?? 0;
+        const renderFraction = liveTotal > 0 ? liveRendered / liveTotal : 0;
+        const percent = isEncoding
+          ? Math.max(0.9, Math.min(0.98, 0.9 + renderFraction * 0.08))
+          : Math.max(0.02, Math.min(0.88, renderFraction * 0.88));
+        const gpuNote = latest.renderer ? ` · ${shortGpuName(latest.renderer)}` : "";
+        const message =
+          latest.status === "complete"
+            ? `External render complete: ${latest.outputPath}`
+            : isEncoding
+              ? `Encoding ${liveTotal} frames${gpuNote}.`
+              : `Rendering frame ${liveRendered}/${liveTotal}${gpuNote} (${
+                  latest.elapsedSeconds ?? 0
+                }s)`;
+        updateCaptureJob(captureJobId, (entry) =>
+          ({
+            ...updateCaptureJobStatus(entry, isEncoding ? "encoding" : "rendering", {
+              progress: {
+                phase: isEncoding ? "encoding" : "rendering",
+                renderedFrames: liveRendered,
+                totalFrames: liveTotal,
+                percent,
+                message,
+              },
+            }),
+            diagnostics: {
+              ...entry.diagnostics,
+              localExternalVideoRunId: latest.runId,
+              outputPath: latest.outputPath,
+              diagnosticsPath: latest.diagnosticsPath,
+              masterPath: latest.masterPath ?? null,
+              masterUrl: latest.masterUrl ?? null,
+              frameSequenceDir: latest.frameSequenceDir ?? null,
+              renderer: latest.renderer ?? null,
+              superscale: latest.superscale ?? null,
+              externalStatus: latest.status,
+            },
+          }),
+        );
+        if (latest.status === "failed") {
+          throw new Error(latest.error ?? "External video renderer failed.");
+        }
+        if (latest.status === "cancelled") {
+          throw new DOMException("External video render was cancelled.", "AbortError");
+        }
+      }
+      if (target === "path-video") {
+        pathRenderLocalVideoRunIdRef.current = null;
+      } else {
+        deterministicLocalVideoRunIdRef.current = null;
+      }
+      return latest;
+    },
+    [updateCaptureJob],
   );
 
   const createRecipeSnapshot = useCallback((options?: {
@@ -3623,6 +3832,125 @@ export function CaptureDirectorProvider({
           : captureScope === "page-range" && capturePageRange.valid
           ? capturePageRange.totalFrames
           : expectedTotalFrames;
+      const videoRecipe = {
+        ...recipe,
+        durationSeconds: Math.max(1 / fps, resolvedTotalFrames / fps),
+      };
+      if (shouldDefaultToExternalVideoRenderJob(videoRecipe)) {
+        const externalJob = createExternalVideoRenderJob({
+          recipe: videoRecipe,
+          format: deterministicExportFormat,
+          appUrl:
+            typeof window === "undefined"
+              ? null
+              : `${window.location.origin}${window.location.pathname}?project=${encodeURIComponent(
+                  videoRecipe.projectSlug,
+                )}`,
+        });
+        setDeterministicExportProgress({
+          renderedFrames: 0,
+          totalFrames: resolvedTotalFrames,
+        });
+        setDeterministicExportStatus("rendering");
+        try {
+          if (!jobId) throw new Error("Capture job id missing.");
+          const rendered = await runExternalVideoRenderJob({
+            job: externalJob,
+            captureJobId: jobId,
+            abortController,
+            totalFrames: resolvedTotalFrames,
+            target: "render-out",
+          });
+          setDeterministicOutputBlob(null);
+          setDeterministicOutputUrl(rendered.outputUrl);
+          setDeterministicOutputFilename(rendered.outputFilename);
+          setDeterministicExportStatus("complete");
+          setCaptureMode("off");
+          finishCaptureJob(jobId, (entry) =>
+            completeCaptureJob(entry, {
+              output: {
+                blob: null,
+                url: rendered.outputUrl,
+                filename: rendered.outputFilename,
+                mimeType:
+                  deterministicExportFormat === "webm" ? "video/webm" : "video/mp4",
+              },
+              diagnostics: {
+                externalVideoJob: true,
+                localExternalVideoRunId: rendered.runId,
+                outputPath: rendered.outputPath,
+                diagnosticsPath: rendered.diagnosticsPath,
+                masterUrl: rendered.masterUrl ?? null,
+                masterPath: rendered.masterPath ?? null,
+                frameSequenceDir: rendered.frameSequenceDir ?? null,
+                renderer: rendered.renderer ?? null,
+                superscale: rendered.superscale ?? null,
+                totalFrames: resolvedTotalFrames,
+                format: deterministicExportFormat,
+                width: videoRecipe.resolution.width,
+                height: videoRecipe.resolution.height,
+              },
+              progress: {
+                phase: "complete",
+                renderedFrames: resolvedTotalFrames,
+                totalFrames: resolvedTotalFrames,
+                percent: 1,
+                message: `External video render complete: ${rendered.outputPath}`,
+              },
+            }),
+          );
+        } catch (localRenderError) {
+          if (
+            abortController.signal.aborted ||
+            (localRenderError instanceof DOMException &&
+              localRenderError.name === "AbortError")
+          ) {
+            throw localRenderError;
+          }
+          const external = publishExternalVideoJob({
+            recipe: videoRecipe,
+            format: deterministicExportFormat,
+            message: `Local renderer unavailable: ${formatCaptureError(
+              localRenderError,
+            )}. External video job JSON ready as fallback.`,
+          });
+          setDeterministicExportStatus("idle");
+          setCaptureMode("off");
+          if (jobId) {
+            finishCaptureJob(jobId, (entry) =>
+              completeCaptureJob(entry, {
+                output: {
+                  blob: external.blob,
+                  url: external.url,
+                  filename: external.filename,
+                  mimeType: "application/json",
+                  byteLength: external.blob.size,
+                },
+                diagnostics: {
+                  externalVideoJob: true,
+                  fallbackOnly: true,
+                  localRendererError: formatCaptureError(localRenderError),
+                  externalVideoJobId: external.job.jobId,
+                  outputByteLength: external.blob.size,
+                  totalFrames: resolvedTotalFrames,
+                  format: deterministicExportFormat,
+                  width: videoRecipe.resolution.width,
+                  height: videoRecipe.resolution.height,
+                },
+                progress: {
+                  phase: "complete",
+                  renderedFrames: 0,
+                  totalFrames: resolvedTotalFrames,
+                  percent: 1,
+                  message:
+                    "Local renderer unavailable. External video job JSON ready as fallback.",
+                },
+              }),
+            );
+          }
+        }
+        return;
+      }
       setDeterministicExportProgress({
         renderedFrames: 0,
         totalFrames: resolvedTotalFrames,
@@ -3792,6 +4120,21 @@ export function CaptureDirectorProvider({
           sequence,
           runtime: runtimeHandle.runtime,
           signal: abortController.signal,
+          execTimeoutMs: 10 * 60 * 1000,
+          stallTimeoutMs: 2 * 60 * 1000,
+          onProgress(progress) {
+            if (!jobId) return;
+            updateCaptureJob(jobId, (entry) =>
+              updateCaptureJobProgress(entry, {
+                phase: progress.phase,
+                renderedFrames: resolvedTotalFrames,
+                totalFrames: resolvedTotalFrames,
+                writtenFrames: progress.framesWritten,
+                percent: progress.percent,
+                message: progress.message,
+              }),
+            );
+          },
           preset:
             deterministicExportFormat === "webm"
               ? "webm-vp9-marketing"
@@ -3876,6 +4219,7 @@ export function CaptureDirectorProvider({
     pageRangeStartId,
     pageRangeTiming,
     pages,
+    publishExternalVideoJob,
     renderResolution,
     revokeDeterministicOutputUrl,
     sceneHandle,
@@ -3885,6 +4229,14 @@ export function CaptureDirectorProvider({
   const cancelPathDeterministicRender = useCallback(() => {
     clearPathRenderEncodingTimer();
     pathRenderAbortRef.current?.abort();
+    const localRunId = pathRenderLocalVideoRunIdRef.current;
+    if (localRunId) {
+      void cancelLocalVideoRenderJob(localRunId).finally(() => {
+        if (pathRenderLocalVideoRunIdRef.current === localRunId) {
+          pathRenderLocalVideoRunIdRef.current = null;
+        }
+      });
+    }
     pathRenderRuntimeHandleRef.current?.dispose();
     pathRenderRuntimeHandleRef.current = null;
   }, [clearPathRenderEncodingTimer]);
@@ -3966,6 +4318,112 @@ export function CaptureDirectorProvider({
         pageRangeEndId: null,
         useLoadedLayerState: true,
       });
+      if (shouldDefaultToExternalVideoRenderJob(recipe)) {
+        const externalJob = createExternalVideoRenderJob({
+          recipe,
+          format: deterministicExportFormat,
+          appUrl:
+            typeof window === "undefined"
+              ? null
+              : `${window.location.origin}${window.location.pathname}?project=${encodeURIComponent(
+                  recipe.projectSlug,
+                )}`,
+        });
+        try {
+          const rendered = await runExternalVideoRenderJob({
+            job: externalJob,
+            captureJobId: pathRenderJobId,
+            abortController,
+            totalFrames,
+            target: "path-video",
+          });
+          setPathRenderOutputBlob(null);
+          setPathRenderOutputUrl(rendered.outputUrl);
+          setPathRenderOutputFilename(rendered.outputFilename);
+          setPathRenderSaveMessage(`External path video render complete: ${rendered.outputPath}`);
+          setCaptureMode("off");
+          finishCaptureJob(pathRenderJobId, (entry) =>
+            completeCaptureJob(entry, {
+              output: {
+                blob: null,
+                url: rendered.outputUrl,
+                filename: rendered.outputFilename,
+                mimeType:
+                  deterministicExportFormat === "webm" ? "video/webm" : "video/mp4",
+              },
+              diagnostics: {
+                externalVideoJob: true,
+                localExternalVideoRunId: rendered.runId,
+                outputPath: rendered.outputPath,
+                diagnosticsPath: rendered.diagnosticsPath,
+                masterUrl: rendered.masterUrl ?? null,
+                masterPath: rendered.masterPath ?? null,
+                frameSequenceDir: rendered.frameSequenceDir ?? null,
+                renderer: rendered.renderer ?? null,
+                superscale: rendered.superscale ?? null,
+                totalFrames,
+                format: deterministicExportFormat,
+                width: recipe.resolution.width,
+                height: recipe.resolution.height,
+              },
+              progress: {
+                phase: "complete",
+                renderedFrames: totalFrames,
+                totalFrames,
+                percent: 1,
+                message: `External path video render complete: ${rendered.outputPath}`,
+              },
+            }),
+          );
+        } catch (localRenderError) {
+          if (
+            abortController.signal.aborted ||
+            (localRenderError instanceof DOMException &&
+              localRenderError.name === "AbortError")
+          ) {
+            throw localRenderError;
+          }
+          const external = publishExternalVideoJob({
+            recipe,
+            format: deterministicExportFormat,
+            message: `Local renderer unavailable: ${formatCaptureError(
+              localRenderError,
+            )}. External path video job JSON ready as fallback.`,
+          });
+          setCaptureMode("off");
+          finishCaptureJob(pathRenderJobId, (entry) =>
+            completeCaptureJob(entry, {
+              output: {
+                blob: external.blob,
+                url: external.url,
+                filename: external.filename,
+                mimeType: "application/json",
+                byteLength: external.blob.size,
+              },
+              diagnostics: {
+                externalVideoJob: true,
+                fallbackOnly: true,
+                localRendererError: formatCaptureError(localRenderError),
+                externalVideoJobId: external.job.jobId,
+                outputByteLength: external.blob.size,
+                totalFrames,
+                format: deterministicExportFormat,
+                width: recipe.resolution.width,
+                height: recipe.resolution.height,
+              },
+              progress: {
+                phase: "complete",
+                renderedFrames: 0,
+                totalFrames,
+                percent: 1,
+                message:
+                  "Local renderer unavailable. External path video job JSON ready as fallback.",
+              },
+            }),
+          );
+        }
+        return;
+      }
       const sequence = await exportDeterministicFrameSequence({
         sceneHandle,
         recipe,
@@ -4008,6 +4466,20 @@ export function CaptureDirectorProvider({
           sequence,
           runtime: runtimeHandle.runtime,
           signal: abortController.signal,
+          execTimeoutMs: 10 * 60 * 1000,
+          stallTimeoutMs: 2 * 60 * 1000,
+          onProgress(progress) {
+            updateCaptureJob(pathRenderJobId, (entry) =>
+              updateCaptureJobProgress(entry, {
+                phase: progress.phase,
+                renderedFrames: totalFrames,
+                totalFrames,
+                writtenFrames: progress.framesWritten,
+                percent: progress.percent,
+                message: progress.message,
+              }),
+            );
+          },
           preset:
             deterministicExportFormat === "webm"
               ? "webm-vp9-marketing"
@@ -4088,6 +4560,7 @@ export function CaptureDirectorProvider({
     isDeterministicExporting,
     isRecording,
     overlayContext,
+    publishExternalVideoJob,
     renderResolution,
     sceneHandle,
     screenCaptureStatus,
@@ -4598,6 +5071,9 @@ export function CaptureDirectorProvider({
       externalStillJobUrl,
       externalStillJobFilename,
       externalStillJobCommand,
+      externalVideoJobUrl,
+      externalVideoJobFilename,
+      externalVideoJobCommand,
       captureJobs,
       activeCaptureJobId,
       pathRenderStatus,
@@ -4724,6 +5200,9 @@ export function CaptureDirectorProvider({
       externalStillJobFilename,
       externalStillJobCommand,
       externalStillJobUrl,
+      externalVideoJobFilename,
+      externalVideoJobCommand,
+      externalVideoJobUrl,
       isRecording,
       isDeterministicExporting,
       outputBlob,
