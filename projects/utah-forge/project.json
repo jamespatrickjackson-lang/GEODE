@@ -998,7 +998,22 @@
           "computationRole": "visual-context",
           "notes": "Default editable single cloud for Topo > Environment > Clouds visual QA."
         },
-        "notes": "Default editable visual cloud bank for Topo Environment. It is a local atmosphere impostor, not measured weather, plume, or geoscience data."
+        "notes": "Default editable visual cloud bank for Topo Environment. It is a local atmosphere impostor, not measured weather, plume, or geoscience data.",
+        "crsRegistration": {
+          "horizontalCrs": "scene-local",
+          "verticalDatum": "none",
+          "units": "m",
+          "coordinateBasis": "model-origin",
+          "origin": {
+            "easting_m": 341467.35,
+            "northing_m": 4273374.5,
+            "elevation_m": 0
+          },
+          "rotationDeg": 0,
+          "registrationStatus": "unverified",
+          "accuracyClaimStatus": "not-applicable",
+          "notes": "Local atmosphere impostor positioned in scene-local model space; not a georeferenced data layer."
+        }
       }
     },
     {
@@ -1146,7 +1161,22 @@
             ]
           }
         ],
-        "notes": "Temporary diagnostic overlay for locating NAIP county-source seams and missing-tile artifacts. Rectangles show source raster bounds for the current 9-county regional overview, not a crop request."
+        "notes": "Temporary diagnostic overlay for locating NAIP county-source seams and missing-tile artifacts. Rectangles show source raster bounds for the current 9-county regional overview, not a crop request.",
+        "crsRegistration": {
+          "horizontalCrs": "EPSG:26912",
+          "verticalDatum": "diagnostic-lift applied (700 m); not a terrain-elevation datum",
+          "units": "m",
+          "coordinateBasis": "utm",
+          "origin": {
+            "easting_m": 341467.35,
+            "northing_m": 4273374.5,
+            "elevation_m": 0
+          },
+          "rotationDeg": 0,
+          "registrationStatus": "unverified",
+          "accuracyClaimStatus": "CRS/datum review required",
+          "notes": "NAIP county tile bounds in EPSG:26912; rendered as diagnostic overlay, not a data-accurate boundary."
+        }
       }
     },
     {
@@ -7481,6 +7511,21 @@
           "renderingRole": "topo-environment-cloud-impostor",
           "computationRole": "visual-context",
           "notes": "Authored from Topo > Environment > Clouds."
+        },
+        "crsRegistration": {
+          "horizontalCrs": "scene-local",
+          "verticalDatum": "none",
+          "units": "m",
+          "coordinateBasis": "model-origin",
+          "origin": {
+            "easting_m": 341467.35,
+            "northing_m": 4273374.5,
+            "elevation_m": 0
+          },
+          "rotationDeg": 0,
+          "registrationStatus": "unverified",
+          "accuracyClaimStatus": "not-applicable",
+          "notes": "Local atmosphere impostor positioned in scene-local model space; not a georeferenced data layer."
         }
       }
     },
@@ -7515,6 +7560,21 @@
           "renderingRole": "topo-environment-cloud-impostor",
           "computationRole": "visual-context",
           "notes": "Authored from Topo > Environment > Clouds."
+        },
+        "crsRegistration": {
+          "horizontalCrs": "scene-local",
+          "verticalDatum": "none",
+          "units": "m",
+          "coordinateBasis": "model-origin",
+          "origin": {
+            "easting_m": 341467.35,
+            "northing_m": 4273374.5,
+            "elevation_m": 0
+          },
+          "rotationDeg": 0,
+          "registrationStatus": "unverified",
+          "accuracyClaimStatus": "not-applicable",
+          "notes": "Local atmosphere impostor positioned in scene-local model space; not a georeferenced data layer."
         }
       }
     }

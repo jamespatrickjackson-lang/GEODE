@@ -17,6 +17,20 @@
         -8059.5,
         2045.3
       ]
+    },
+    "registration": {
+      "horizontalCrs": "EPSG:26912",
+      "verticalDatum": "source SP1 survey elevation in metres",
+      "units": "m",
+      "coordinateBasis": "utm",
+      "origin": {
+        "easting_m": 341467.35,
+        "northing_m": 4273374.5,
+        "elevation_m": 0
+      },
+      "rotationDeg": 0,
+      "registrationStatus": "unverified",
+      "notes": "Shot-point navigation coordinates share the same UTM EPSG:26912 frame as crs.registration; scene-local positions produced by subtracting GeoSee project origin."
     }
   },
   "crs": {
@@ -4880,7 +4894,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L11",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -5052,7 +5066,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L11",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -5224,7 +5238,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L11",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -5396,7 +5410,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L5",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -5568,7 +5582,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L5",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -5740,7 +5754,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L5",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -5912,7 +5926,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L5",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -7044,7 +7058,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L11",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -7216,7 +7230,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L11",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -7388,7 +7402,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L11",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -7560,7 +7574,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L5",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -7732,7 +7746,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L5",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -7904,7 +7918,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L5",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -8740,7 +8754,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L11",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
@@ -8920,7 +8934,7 @@
           ],
           "navigationPlacement": {
             "navigationSource": "fallback",
-            "placementAccuracy": "unknown",
+            "placementAccuracy": "approximate",
             "canClaimPreciseRegistration": false,
             "lineId": "L5",
             "statusLabel": "Approximate legacy line placement; precise registration not validated.",
