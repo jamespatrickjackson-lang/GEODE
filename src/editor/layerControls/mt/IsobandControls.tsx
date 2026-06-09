@@ -80,6 +80,11 @@ export function IsobandControls({
     Math.min(1, styleNumber(style, "sectionIsoFillOffset", 0)),
   );
   const lineStyle = style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid";
+  const bandSelection = Array.isArray(style.sectionIsoBandSelection)
+    ? style.sectionIsoBandSelection
+    : [];
+  // sectionIsoLevels makes levelCount interior levels -> levelCount + 1 bands.
+  const numBands = bandCount + 1;
   const sourceMin = rangeKind === "seismic" ? 0 : SCALAR_SOURCE_MIN;
   const sourceMax = rangeKind === "seismic" ? 1 : SCALAR_SOURCE_MAX;
   const fallbackMin =
@@ -334,6 +339,77 @@ export function IsobandControls({
               } as React.CSSProperties
             }
           />
+        </div>
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>3D bands (cells)</label>
+          <div
+            data-testid="layer-isobands-3d-select"
+            style={{
+              flex: 1,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 4,
+              opacity: enabled ? controlOpacity : 0.35,
+            }}
+          >
+            {Array.from({ length: numBands }, (_, index) => {
+              const selected = bandSelection.includes(index);
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  title={`Show iso-band ${index} cells in 3D`}
+                  disabled={disabled || !enabled}
+                  onClick={() => {
+                    const next = new Set(bandSelection);
+                    if (next.has(index)) next.delete(index);
+                    else next.add(index);
+                    commit({
+                      sectionIsoBandSelection: Array.from(next).sort(
+                        (a, b) => a - b,
+                      ),
+                    });
+                  }}
+                  style={{
+                    minWidth: 22,
+                    height: 22,
+                    padding: "0 5px",
+                    borderRadius: 6,
+                    border: "1px solid rgba(255, 255, 255, 0.16)",
+                    background: selected
+                      ? "rgba(120, 200, 255, 0.34)"
+                      : "rgba(255, 255, 255, 0.05)",
+                    color: "inherit",
+                    fontSize: 10,
+                    fontVariantNumeric: "tabular-nums",
+                    cursor: "pointer",
+                  }}
+                >
+                  {index}
+                </button>
+              );
+            })}
+            {bandSelection.length > 0 ? (
+              <button
+                type="button"
+                data-testid="layer-isobands-3d-clear"
+                disabled={disabled}
+                onClick={() => commit({ sectionIsoBandSelection: [] })}
+                style={{
+                  height: 22,
+                  padding: "0 8px",
+                  borderRadius: 6,
+                  border: "1px solid rgba(255, 131, 112, 0.4)",
+                  background: "rgba(194, 71, 55, 0.22)",
+                  color: "inherit",
+                  fontSize: 10,
+                  cursor: "pointer",
+                }}
+              >
+                clear
+              </button>
+            ) : null}
+          </div>
         </div>
         <div style={nestedControlRowStyle}>
           <label style={nestedFieldLabelStyle}>{minLabel}</label>

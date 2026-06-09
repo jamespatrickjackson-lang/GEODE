@@ -112,6 +112,52 @@ export function scalarLateralSupportValues(
   return values;
 }
 
+export interface ScalarBand {
+  min: number;
+  max: number;
+}
+
+// Iso-band windows, derived with the SAME level math the section uses
+// (sectionIsoLevels): `levelCount` interior levels split [isoMin, isoMax] into
+// `levelCount + 1` bands. Band index b (0-based) spans [edge_b, edge_{b+1}].
+// Returning only the selected band ranges keeps 2D section bands and the 3D
+// cloud reading one source of truth.
+export function scalarBandRanges(
+  isoMin: number,
+  isoMax: number,
+  levelCount: number,
+  selected: ReadonlyArray<number> | null | undefined,
+): ScalarBand[] {
+  if (!selected || selected.length === 0) return [];
+  const safeCount = Math.max(2, Math.round(levelCount));
+  const lo = Math.min(isoMin, isoMax);
+  const hi = Math.max(isoMin, isoMax);
+  const range = Math.max(0.000001, hi - lo);
+  const edges: number[] = [lo];
+  for (let i = 1; i <= safeCount; i += 1) {
+    edges.push(lo + (range * i) / (safeCount + 1));
+  }
+  edges.push(hi);
+  const bandCount = edges.length - 1; // safeCount + 1
+  const wanted = new Set(selected.map((n) => Math.round(n)));
+  const ranges: ScalarBand[] = [];
+  for (let b = 0; b < bandCount; b += 1) {
+    if (wanted.has(b)) ranges.push({ min: edges[b], max: edges[b + 1] });
+  }
+  return ranges;
+}
+
+export function scalarValueInBands(
+  value: number,
+  bands: ReadonlyArray<ScalarBand>,
+): boolean {
+  if (!Number.isFinite(value)) return false;
+  for (let b = 0; b < bands.length; b += 1) {
+    if (value >= bands[b].min && value <= bands[b].max) return true;
+  }
+  return false;
+}
+
 export function scalarInclusionVisibleCount(
   values: Float32Array | number[],
   window: ScalarFocusWindow,

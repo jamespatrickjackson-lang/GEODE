@@ -256,10 +256,11 @@ test("Utah FORGE Bore Holes container keeps priority records honest", () => {
   assert.match(layerPanel, /boreholePriorityRegistry/);
   assert.match(layerPanel, /Source rows:/);
   assert.match(siteDetailsPanel, /Source Locations/);
-  assert.match(siteDetailsPanel, /SOURCE_LOCATION_MODE_OPTIONS/);
-  assert.match(siteDetailsPanel, /Source visibility/);
+  assert.match(siteDetailsPanel, /site-details-borehole-line-visible/);
+  assert.match(siteDetailsPanel, /Per-borehole show \/ hide/);
   assert.match(siteDetailsPanel, /updateSourceLocationItem/);
-  assert.match(siteDetailsPanel, /Top toroid/);
+  assert.match(siteDetailsPanel, /Ground torus/);
+  assert.match(siteDetailsPanel, /site-details-borehole-icon-upload/);
   assert.match(boreholeGenerator, /build_priority_registry/);
   assert.match(boreholeGenerator, /58-32-WELL/);
   assert.match(boreholeGenerator, /78B-32-WELL/);

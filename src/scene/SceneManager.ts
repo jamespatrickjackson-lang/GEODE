@@ -33,6 +33,7 @@ import type { SceneOverlayDef } from "../pages/types";
 import { disposeObjectTree } from "./disposeObjectTree";
 import {
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
   UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
@@ -3998,7 +3999,21 @@ export class SceneManager {
   }
 
   applyStyle(id: string, style: EditableStyle): void {
-    return applyStyleImpl.call(this, id, style);
+    applyStyleImpl.call(this, id, style);
+    // The full-density MT cloud isolates to the iso-bands selected on the volume
+    // layer's section config (the source of truth). applyStyle only re-styles the
+    // one layer, so refresh the cloud when the volume changes — otherwise band
+    // toggles authored on the volume never cross to the cloud.
+    if (id === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID) {
+      for (const cloudId of [
+        UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+        UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
+      ]) {
+        if (this.layers.has(cloudId)) {
+          applyStyleImpl.call(this, cloudId, this.styleForLayer(cloudId));
+        }
+      }
+    }
   }
 
   applyEffectiveStylesForPage(

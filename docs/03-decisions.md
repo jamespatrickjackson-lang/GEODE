@@ -2216,3 +2216,48 @@ creating or running external video jobs; local outputs live under `.tmp/`.
 Equation, spline, camera-path, and editor overlays remain authoring/session aids
 and are excluded from marketing output unless explicitly enabled in a future
 export-overlay option.
+
+## DEC-143 - Boreholes use an app-level composable element kit; pages carry per-borehole diffs
+
+This decision records the borehole visualization model after source-location
+boreholes (`58-32`, `78B-32`, the unnamed `BOR` seismic candidates) were found
+hidden on most pages: the app-level `demoBoreholeSourceLocations.visible` was
+`false`, and the shallow env→page style merge meant only the three pages that
+re-authored the whole block showed any source markers.
+
+**Considered:** keep the conservative default-off stance and enable boreholes
+page by page; keep the exclusive `mode` shape selector; or make the visual model
+an app-level, composable element kit shared across every borehole with
+per-borehole show/hide.
+
+**Chose:** every borehole carries a shared, composable element kit — line
+(location/trajectory/depth, with width/color/opacity/dashed + dash settings),
+ground torus, ground ball, ground crosshair, depth trace, label, and an optional
+loadable SVG icon on top (axis or billboard). Element styling is shared across
+all boreholes; show/hide is per borehole (`items[id]` for source-location
+boreholes, the well `visible` for trajectory wells). The exclusive `mode` enum is
+retained only for back-compat and is migrated to the per-element `*Visible` flags
+by the resolver. App-level defaults are line + ground torus on. Trajectory wells
+`16A(78)-32` / `16B(78)-32` keep their pipe + centerline and gain the same kit
+layered at the collar.
+
+**Why:** "pages are disposable presentation boards"; the canonical element kit
+and default visibility belong at the app level (environment layer style), not in
+page fixtures. The composable element set replaces the all-or-nothing shape mode
+so multiple elements can show at once.
+
+**Trade-off accepted:** the env→page style merge for `demoBoreholeSourceLocations`,
+`demoBoreholeWells`, and `demoBoreholeBlock` is now a targeted deep merge
+(including nested `items`/`icon`), so a page diff layers over the shared kit
+instead of replacing it. This narrows the shallow-merge composition rule (#023)
+for these specific keys only.
+
+**Claim safety:** `58-32` / `78B-32` / `BOR*` render as source-location markers
+from GDR 1358 surface coordinates only (no trajectory or calibration claim).
+`Acord-1` and `FDST / FORGE test drill site` remain registry-only with no source
+geometry. `16A`/`16B`/`16B` keep orientation-only status.
+
+**Guard:** do not move the canonical borehole element kit or default visibility
+into page fixtures. Keep the per-key deep merge for borehole style objects.
+Source-location boreholes must not be relabeled as trajectory or
+survey-validated geometry.

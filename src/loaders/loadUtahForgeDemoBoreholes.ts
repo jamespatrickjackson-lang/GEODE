@@ -89,6 +89,7 @@ const TUBE_RENDER_ORDER = 7.2;
 const LINE_RENDER_ORDER = 7.5;
 const COLLAR_RENDER_ORDER = 7.8;
 const SOURCE_LOCATION_TRACE_RENDER_ORDER = 7.9;
+const ICON_RENDER_ORDER = 8.2;
 const BLOCK_RENDER_ORDER = 6.4;
 
 function finiteNumber(value: unknown): value is number {
@@ -396,6 +397,76 @@ function shortPriorityLabel(entry: DemoBoreholePriorityEntry): string {
   return entry.label || entry.id;
 }
 
+// SVG icon mount for the "icon on top" element. Builds both an axis-aligned
+// plane (lies on the borehole axis, facing up) and a camera-facing sprite; the
+// styler shows whichever matches the authored orientation and applies the
+// loaded texture. Hidden until an icon source is authored.
+function addBoreholeIconMount(
+  parent: THREE.Group,
+  ownerId: string,
+  label: string,
+  position: THREE.Vector3,
+  categoryUserData: ReturnType<typeof boreholeCategoryUserData>,
+): void {
+  const mount = new THREE.Group();
+  mount.name = `${label} icon`;
+  mount.position.copy(position);
+  mount.visible = false;
+  mount.renderOrder = ICON_RENDER_ORDER;
+  mount.userData = {
+    ...categoryUserData,
+    displayName: label,
+    sceneLabelEligible: false,
+    demoBoreholeSourceLocationId: ownerId,
+    demoBoreholeSourceIconMount: true,
+  };
+
+  const planeMaterial = new THREE.MeshBasicMaterial({
+    color: "#ffffff",
+    transparent: true,
+    opacity: 0,
+    depthTest: false,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    toneMapped: false,
+    fog: false,
+  });
+  planeMaterial.userData.preserveMaterialColor = true;
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), planeMaterial);
+  plane.name = `${label} icon plane`;
+  plane.renderOrder = ICON_RENDER_ORDER;
+  plane.visible = false;
+  plane.userData = {
+    ...mount.userData,
+    demoBoreholeSourceIcon: true,
+    demoBoreholeSourceIconKind: "axis",
+  };
+  mount.add(plane);
+
+  const spriteMaterial = new THREE.SpriteMaterial({
+    color: "#ffffff",
+    transparent: true,
+    opacity: 0,
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false,
+    fog: false,
+  });
+  spriteMaterial.userData.preserveMaterialColor = true;
+  const sprite = new THREE.Sprite(spriteMaterial);
+  sprite.name = `${label} icon sprite`;
+  sprite.renderOrder = ICON_RENDER_ORDER;
+  sprite.visible = false;
+  sprite.userData = {
+    ...mount.userData,
+    demoBoreholeSourceIcon: true,
+    demoBoreholeSourceIconKind: "billboard",
+  };
+  mount.add(sprite);
+
+  parent.add(mount);
+}
+
 function addSourceLocationMarker(
   group: THREE.Group,
   entry: DemoBoreholePriorityEntry,
@@ -547,6 +618,8 @@ function addSourceLocationMarker(
   };
   markerGroup.add(ring);
 
+  addBoreholeIconMount(markerGroup, location.id, label, position, categoryUserData);
+
   addLabelAnchor(
     markerGroup,
     `${location.id} source label`,
@@ -585,6 +658,92 @@ function addPrioritySourceMarkers(
       );
     }
   }
+}
+
+// Shared decorative element kit (ground ball, ground crosshair, ground torus)
+// attached at a trajectory well's collar. The well keeps its pipe + centerline
+// + collar; these layer the shared kit on top, tagged with the same source
+// userData flags so applyDemoBoreholeStyle styles them as kit elements gated by
+// the shared kit + the well's per-borehole visibility.
+function addTrajectoryWellKit(
+  wellGroup: THREE.Group,
+  well: DemoBoreholeWell,
+  position: THREE.Vector3,
+  categoryUserData: ReturnType<typeof boreholeCategoryUserData>,
+): void {
+  const baseUserData = {
+    ...categoryUserData,
+    displayName: well.label,
+    sceneLabelEligible: false,
+    demoBoreholeSourceLocationId: well.id,
+    demoBoreholeSourceBaseColor: well.color,
+  };
+
+  const ballRadius = DEFAULT_SOURCE_LOCATION_TRACE_DIAMETER_M * 0.5 * 1.25;
+  const ball = new THREE.Mesh(
+    new THREE.SphereGeometry(ballRadius, 28, 16),
+    makeSourceTraceMaterial(well.color),
+  );
+  ball.name = `${well.id} ground ball`;
+  ball.position.copy(position);
+  ball.renderOrder = SOURCE_LOCATION_TRACE_RENDER_ORDER + 0.02;
+  ball.userData = {
+    ...baseUserData,
+    demoBoreholeSourcePinHead: true,
+    demoBoreholeBaseSourceTraceDiameterM: DEFAULT_SOURCE_LOCATION_TRACE_DIAMETER_M,
+  };
+  wellGroup.add(ball);
+
+  for (const [axis, points] of [
+    [
+      "x",
+      [
+        new THREE.Vector3(-DEFAULT_SOURCE_LOCATION_CROSSHAIR_LENGTH_M * 0.5, 0, 0),
+        new THREE.Vector3(DEFAULT_SOURCE_LOCATION_CROSSHAIR_LENGTH_M * 0.5, 0, 0),
+      ],
+    ],
+    [
+      "y",
+      [
+        new THREE.Vector3(0, -DEFAULT_SOURCE_LOCATION_CROSSHAIR_LENGTH_M * 0.5, 0),
+        new THREE.Vector3(0, DEFAULT_SOURCE_LOCATION_CROSSHAIR_LENGTH_M * 0.5, 0),
+      ],
+    ],
+  ] as const) {
+    const crosshair = makeSourceLocationLine(points, well.color, 6);
+    crosshair.name = `${well.id} ground crosshair ${axis}`;
+    crosshair.position.copy(position);
+    crosshair.renderOrder = SOURCE_LOCATION_TRACE_RENDER_ORDER + 0.03;
+    crosshair.userData = {
+      ...baseUserData,
+      demoBoreholeSourceCrosshair: true,
+      demoBoreholeSourceCrosshairAxis: axis,
+      demoBoreholeBaseSourceCrosshairLengthM: DEFAULT_SOURCE_LOCATION_CROSSHAIR_LENGTH_M,
+    };
+    wellGroup.add(crosshair);
+  }
+
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(
+      DEFAULT_SOURCE_LOCATION_RING_RADIUS_M,
+      DEFAULT_SOURCE_LOCATION_RING_TUBE_M,
+      12,
+      72,
+    ),
+    makeSourceTraceMaterial("#ffffff"),
+  );
+  ring.name = `${well.id} ground toroid`;
+  ring.position.copy(position);
+  ring.renderOrder = SOURCE_LOCATION_TRACE_RENDER_ORDER + 0.04;
+  ring.userData = {
+    ...baseUserData,
+    demoBoreholeSourceTopRing: true,
+    demoBoreholeBaseSourceRingRadiusM: DEFAULT_SOURCE_LOCATION_RING_RADIUS_M,
+    demoBoreholeBaseSourceRingTubeM: DEFAULT_SOURCE_LOCATION_RING_TUBE_M,
+  };
+  wellGroup.add(ring);
+
+  addBoreholeIconMount(wellGroup, well.id, well.label, position, categoryUserData);
 }
 
 function addWell(
@@ -686,6 +845,8 @@ function addWell(
     well.id,
     40,
   );
+
+  addTrajectoryWellKit(wellGroup, well, points[0], categoryUserData);
 
   group.add(wellGroup);
 }

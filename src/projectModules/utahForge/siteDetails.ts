@@ -1,4 +1,6 @@
 import type {
+  DemoBoreholeElementOffset,
+  DemoBoreholeIconOrientation,
   DemoBoreholePathTreatment,
   DemoBoreholeSourceLocationItemStyle,
   DemoBoreholeSourceLocationMode,
@@ -59,21 +61,61 @@ export interface ResolvedDemoOrientationBlockStyle {
   labelLiftM: number;
 }
 
+export type ResolvedSceneOffset = [number, number, number];
+
+export interface ResolvedDemoBoreholeIconStyle {
+  visible: boolean;
+  src: string | null;
+  sizeM: number;
+  opacity: number;
+  color: string;
+  orientation: DemoBoreholeIconOrientation;
+  offsetM: ResolvedSceneOffset;
+}
+
 export interface ResolvedDemoBoreholeSourceLocationStyle {
   visible: boolean;
   mode: DemoBoreholeSourceLocationMode;
   color: string;
   opacity: number;
+  labelVisible: boolean;
+  labelLiftM: number;
+  // Line element (location / trajectory / depth).
+  lineVisible: boolean;
+  lineColor: string;
+  lineOpacity: number;
+  lineWidth: number;
+  lineDashed: boolean;
+  lineDashLengthM: number;
+  lineDashGapM: number;
+  depthM: number;
+  // Depth trace (rounded cylinder).
+  depthTraceVisible: boolean;
+  depthTraceColor: string;
+  depthTraceOpacity: number;
   diameterM: number;
   lengthM: number;
-  lineWidth: number;
+  // Ground ball.
+  groundBallVisible: boolean;
+  groundBallRadiusM: number;
+  groundBallColor: string;
+  groundBallOpacity: number;
+  groundBallOffsetM: ResolvedSceneOffset;
+  // Ground torus (legacy topRing fields).
   topRingVisible: boolean;
   topRingRadiusM: number;
   topRingTubeM: number;
   topRingColor: string;
   topRingOpacity: number;
-  labelVisible: boolean;
-  labelLiftM: number;
+  topRingOffsetM: ResolvedSceneOffset;
+  // Ground crosshair.
+  crosshairVisible: boolean;
+  crosshairLengthM: number;
+  crosshairWidth: number;
+  crosshairColor: string;
+  crosshairOpacity: number;
+  // SVG icon on top.
+  icon: ResolvedDemoBoreholeIconStyle;
 }
 
 export interface ResolvedDemoBoreholeSourceLocationItemStyle {
@@ -145,19 +187,55 @@ export const UTAH_FORGE_DEMO_ORIENTATION_BLOCK_DEFAULT: ResolvedDemoOrientationB
 export const UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT: ResolvedDemoBoreholeSourceLocationStyle =
   {
     visible: true,
-    mode: "rounded-trace",
+    mode: "line",
     color: "#f6d365",
     opacity: 0.92,
+    labelVisible: false,
+    labelLiftM: 130,
+    // Line element: default-on (location / trajectory / depth).
+    lineVisible: true,
+    lineColor: "#f6d365",
+    lineOpacity: 0.92,
+    lineWidth: 8,
+    lineDashed: false,
+    lineDashLengthM: 260,
+    lineDashGapM: 150,
+    depthM: 900,
+    // Depth trace: default-off.
+    depthTraceVisible: false,
+    depthTraceColor: "#f6d365",
+    depthTraceOpacity: 0.92,
     diameterM: 72,
     lengthM: 900,
-    lineWidth: 8,
-    topRingVisible: false,
+    // Ground ball: default-off.
+    groundBallVisible: false,
+    groundBallRadiusM: 45,
+    groundBallColor: "#f6d365",
+    groundBallOpacity: 0.92,
+    groundBallOffsetM: [0, 0, 0],
+    // Ground torus: default-on.
+    topRingVisible: true,
     topRingRadiusM: 135,
     topRingTubeM: 12,
     topRingColor: "#ffffff",
     topRingOpacity: 0.88,
-    labelVisible: true,
-    labelLiftM: 130,
+    topRingOffsetM: [0, 0, 0],
+    // Crosshair: default-off.
+    crosshairVisible: false,
+    crosshairLengthM: 320,
+    crosshairWidth: 6,
+    crosshairColor: "#f6d365",
+    crosshairOpacity: 0.92,
+    // SVG icon: default-off (until an icon is uploaded).
+    icon: {
+      visible: false,
+      src: null,
+      sizeM: 200,
+      opacity: 1,
+      color: "#ffffff",
+      orientation: "axis",
+      offsetM: [0, 0, 0],
+    },
   };
 
 function finiteNumber(value: unknown): value is number {
@@ -211,6 +289,44 @@ function sourceLocationMode(
     value === "hidden"
     ? value
     : fallback;
+}
+
+function offsetTuple(
+  value: DemoBoreholeElementOffset | undefined,
+): ResolvedSceneOffset {
+  return [
+    numberValue(value?.x, 0, -20000, 20000),
+    numberValue(value?.y, 0, -20000, 20000),
+    numberValue(value?.z, 0, -20000, 20000),
+  ];
+}
+
+interface DemoBoreholeElementFlags {
+  line: boolean;
+  depthTrace: boolean;
+  groundBall: boolean;
+  crosshair: boolean;
+}
+
+// Back-compat: map the legacy exclusive `mode` onto the composable element
+// flags. Ground torus and icon are independent of mode and keep their own
+// authored/default values.
+function elementFlagsFromMode(
+  mode: DemoBoreholeSourceLocationMode,
+): DemoBoreholeElementFlags {
+  switch (mode) {
+    case "line":
+      return { line: true, depthTrace: false, groundBall: false, crosshair: false };
+    case "pin":
+      return { line: true, depthTrace: false, groundBall: true, crosshair: false };
+    case "crosshair":
+      return { line: false, depthTrace: false, groundBall: false, crosshair: true };
+    case "hidden":
+      return { line: false, depthTrace: false, groundBall: false, crosshair: false };
+    case "rounded-trace":
+    default:
+      return { line: false, depthTrace: true, groundBall: false, crosshair: false };
+  }
 }
 
 export function resolveDemoBoreholeWellStyle(
@@ -403,79 +519,130 @@ export function resolveDemoBoreholeSourceLocationStyle(
   style: EditableStyle,
 ): ResolvedDemoBoreholeSourceLocationStyle {
   const authored = style.demoBoreholeSourceLocations ?? {};
+  const D = UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT;
+  const sharedColor = stringValue(authored.color, D.color);
+  const sharedOpacity = numberValue(authored.opacity, D.opacity, 0, 1);
+  const icon = authored.icon ?? {};
+
+  // Only derive per-element visibility from the legacy `mode` when none of the
+  // new element flags are explicitly authored.
+  const hasElementFlags =
+    typeof authored.lineVisible === "boolean" ||
+    typeof authored.depthTraceVisible === "boolean" ||
+    typeof authored.groundBallVisible === "boolean" ||
+    typeof authored.crosshairVisible === "boolean";
+  const modeFlags =
+    !hasElementFlags && typeof authored.mode === "string"
+      ? elementFlagsFromMode(sourceLocationMode(authored.mode, D.mode))
+      : null;
+
   return {
-    visible: booleanValue(
-      authored.visible,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.visible,
+    visible: booleanValue(authored.visible, D.visible),
+    mode: sourceLocationMode(authored.mode, D.mode),
+    color: sharedColor,
+    opacity: sharedOpacity,
+    labelVisible: booleanValue(authored.labelVisible, D.labelVisible),
+    labelLiftM: numberValue(authored.labelLiftM, D.labelLiftM, -250, 1000),
+    // Line element.
+    lineVisible: booleanValue(
+      authored.lineVisible,
+      modeFlags ? modeFlags.line : D.lineVisible,
     ),
-    mode: sourceLocationMode(
-      authored.mode,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.mode,
+    lineColor: stringValue(authored.lineColor, sharedColor),
+    lineOpacity: numberValue(authored.lineOpacity, sharedOpacity, 0, 1),
+    lineWidth: numberValue(authored.lineWidth, D.lineWidth, 1, 28),
+    lineDashed: booleanValue(authored.lineDashed, D.lineDashed),
+    lineDashLengthM: numberValue(
+      authored.lineDashLengthM,
+      D.lineDashLengthM,
+      20,
+      1500,
     ),
-    color: stringValue(
-      authored.color,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.color,
+    lineDashGapM: numberValue(authored.lineDashGapM, D.lineDashGapM, 10, 1500),
+    depthM: numberValue(authored.depthM ?? authored.lengthM, D.depthM, 50, 4000),
+    // Depth trace.
+    depthTraceVisible: booleanValue(
+      authored.depthTraceVisible,
+      modeFlags ? modeFlags.depthTrace : D.depthTraceVisible,
     ),
-    opacity: numberValue(
-      authored.opacity,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.opacity,
+    depthTraceColor: stringValue(authored.depthTraceColor, sharedColor),
+    depthTraceOpacity: numberValue(
+      authored.depthTraceOpacity,
+      sharedOpacity,
       0,
       1,
     ),
-    diameterM: numberValue(
-      authored.diameterM,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.diameterM,
-      8,
-      400,
+    diameterM: numberValue(authored.diameterM, D.diameterM, 8, 400),
+    lengthM: numberValue(authored.lengthM, D.lengthM, 50, 4000),
+    // Ground ball.
+    groundBallVisible: booleanValue(
+      authored.groundBallVisible,
+      modeFlags ? modeFlags.groundBall : D.groundBallVisible,
     ),
-    lengthM: numberValue(
-      authored.lengthM,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.lengthM,
-      50,
-      4000,
+    groundBallRadiusM: numberValue(
+      authored.groundBallRadiusM,
+      D.groundBallRadiusM,
+      4,
+      600,
     ),
-    lineWidth: numberValue(
-      authored.lineWidth,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.lineWidth,
+    groundBallColor: stringValue(authored.groundBallColor, sharedColor),
+    groundBallOpacity: numberValue(
+      authored.groundBallOpacity,
+      sharedOpacity,
+      0,
       1,
-      28,
     ),
-    topRingVisible: booleanValue(
-      authored.topRingVisible,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.topRingVisible,
-    ),
+    groundBallOffsetM: offsetTuple(authored.groundBallOffsetM),
+    // Ground torus.
+    topRingVisible: booleanValue(authored.topRingVisible, D.topRingVisible),
     topRingRadiusM: numberValue(
       authored.topRingRadiusM,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.topRingRadiusM,
+      D.topRingRadiusM,
       20,
       1200,
     ),
-    topRingTubeM: numberValue(
-      authored.topRingTubeM,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.topRingTubeM,
-      2,
-      120,
-    ),
-    topRingColor: stringValue(
-      authored.topRingColor,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.topRingColor,
-    ),
+    topRingTubeM: numberValue(authored.topRingTubeM, D.topRingTubeM, 2, 120),
+    topRingColor: stringValue(authored.topRingColor, D.topRingColor),
     topRingOpacity: numberValue(
       authored.topRingOpacity,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.topRingOpacity,
+      D.topRingOpacity,
       0,
       1,
     ),
-    labelVisible: booleanValue(
-      authored.labelVisible,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.labelVisible,
+    topRingOffsetM: offsetTuple(authored.topRingOffsetM),
+    // Crosshair.
+    crosshairVisible: booleanValue(
+      authored.crosshairVisible,
+      modeFlags ? modeFlags.crosshair : D.crosshairVisible,
     ),
-    labelLiftM: numberValue(
-      authored.labelLiftM,
-      UTAH_FORGE_DEMO_SOURCE_LOCATION_DEFAULT.labelLiftM,
-      -250,
-      1000,
+    crosshairLengthM: numberValue(
+      authored.crosshairLengthM,
+      D.crosshairLengthM,
+      40,
+      2000,
     ),
+    crosshairWidth: numberValue(authored.crosshairWidth, D.crosshairWidth, 1, 28),
+    crosshairColor: stringValue(authored.crosshairColor, sharedColor),
+    crosshairOpacity: numberValue(
+      authored.crosshairOpacity,
+      sharedOpacity,
+      0,
+      1,
+    ),
+    // SVG icon.
+    icon: {
+      visible: booleanValue(icon.visible, D.icon.visible),
+      src:
+        typeof icon.src === "string" && icon.src.trim() ? icon.src : D.icon.src,
+      sizeM: numberValue(icon.sizeM, D.icon.sizeM, 10, 4000),
+      opacity: numberValue(icon.opacity, D.icon.opacity, 0, 1),
+      color: stringValue(icon.color, D.icon.color),
+      orientation:
+        icon.orientation === "billboard" || icon.orientation === "axis"
+          ? icon.orientation
+          : D.icon.orientation,
+      offsetM: offsetTuple(icon.offsetM),
+    },
   };
 }
 

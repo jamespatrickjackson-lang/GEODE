@@ -9,7 +9,7 @@ import {
   scalarSourceRange,
 } from "./colorScales";
 import { clamp01, clampRange, styleColor, styleNumber } from "./styleUtils";
-import { scalarVisibilityWeight } from "../scalarFocus";
+import { scalarBandRanges, scalarVisibilityWeight } from "../scalarFocus";
 import {
   scalarFullDensityAllValidMode,
   scalarInclusionFilterActive,
@@ -24,9 +24,14 @@ import {
   isScalarSectionMesh,
   updateScalarSectionIsoOverlay,
 } from "../isoOverlays/sectionIsoOverlay";
+import { UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID } from "../../projectModules/utahForge/layerIds";
 
 type ScalarPreviewStyleHost = {
   layers: Map<string, THREE.Group>;
+  // The MT section's iso-band config (the source of truth) lives on the volume
+  // layer; clouds on other layers read it through here so band selection
+  // crosses layers instead of only filtering the layer that owns the control.
+  styleForLayer?: (id: string) => EditableStyle;
 };
 
 export function applyScalarPreviewStyle(this: unknown, id: string, style: EditableStyle): void {
@@ -236,6 +241,43 @@ export function applyScalarPreviewStyle(this: unknown, id: string, style: Editab
         ? scalarLateralSupport(geometry)
         : null;
 
+    // Selective isobands in 3D: isolate the cloud to the cells inside the
+    // selected band windows, derived from the SAME section iso levels (one
+    // source of truth). Points only; overrides the single focus window.
+    const ownBandSelection = Array.isArray(style.sectionIsoBandSelection)
+      ? (style.sectionIsoBandSelection as number[])
+      : [];
+    const isoSourceStyle =
+      ownBandSelection.length > 0
+        ? style
+        : id !== UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID &&
+            typeof host.styleForLayer === "function"
+          ? host.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID)
+          : style;
+    const bandSelection = Array.isArray(isoSourceStyle.sectionIsoBandSelection)
+      ? (isoSourceStyle.sectionIsoBandSelection as number[])
+      : [];
+    const bandLevelCount = Math.round(
+      styleNumber(isoSourceStyle, "sectionIsoLevelCount", 5, 2, 32),
+    );
+    const bandIsoMin = clampRange(
+      styleNumber(isoSourceStyle, "sectionIsoMin", colorMin, sourceRange.min, sourceRange.max),
+      sourceRange.min,
+      sourceRange.max,
+    );
+    const bandIsoMax = clampRange(
+      Math.max(
+        styleNumber(isoSourceStyle, "sectionIsoMax", colorMax, sourceRange.min, sourceRange.max),
+        bandIsoMin + 0.000001,
+      ),
+      bandIsoMin + 0.000001,
+      sourceRange.max,
+    );
+    const selectedBandRanges =
+      obj instanceof THREE.Points && bandSelection.length > 0
+        ? scalarBandRanges(bandIsoMin, bandIsoMax, bandLevelCount, bandSelection)
+        : [];
+
     for (let i = 0; i < position.count; i += 1) {
       const value = values[i];
       scalarColorAt(
@@ -281,6 +323,7 @@ export function applyScalarPreviewStyle(this: unknown, id: string, style: Editab
       inclusionFilterActive,
       supportValues,
       inclusionFilterActive ? noiseThreshold : 0,
+      selectedBandRanges,
     );
     if (obj instanceof THREE.Points) {
       updateScalarEdgeLineOverlay(obj, values, {
