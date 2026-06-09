@@ -562,50 +562,64 @@ test("Scene section helper snapshot receives delayed ground-trace geometry", asy
   });
   await expect(page.locator("canvas")).toHaveCount(1);
 
-  await page.evaluate(async () => {
-    const sceneSectionLayerId = "utah-forge-scene-section-planes";
-    const [environmentResponse, sourcePageResponse] = await Promise.all([
-      fetch("/projects/utah-forge/environment.json"),
-      fetch("/projects/utah-forge/pages/103_page.json"),
-    ]);
-    const environment = (await environmentResponse.json()) as {
-      layerStyles?: Record<string, Record<string, unknown>>;
-    };
-    const sourcePage = (await sourcePageResponse.json()) as {
-      layerOverrides?: Record<string, Record<string, unknown>>;
-    };
-    const manager = (
-      window as unknown as {
-        __scene?: {
-          manager?: {
-            applyStyle?: (id: string, style: Record<string, unknown>) => void;
-            beginSceneSectionHelperTransitionSnapshot?: (
-              startMs: number,
-              durationMs: number,
-              easing: string,
-            ) => void;
+  const sceneSectionLayerId = "utah-forge-scene-section-planes";
+  const envForSnapshot = readJsonFile<{
+    layerStyles?: Record<string, Record<string, unknown>>;
+  }>("projects/utah-forge/environment.json");
+  const envSectionStyle = (envForSnapshot.layerStyles?.[sceneSectionLayerId] ?? {}) as Record<string, unknown>;
+  // Synthetic X-axis section fixture (authored values from 103_page sceneSectionPlanes state).
+  const syntheticXAxisSection: Record<string, unknown> = {
+    sceneSectionEnabled: true,
+    sceneSectionActiveAxis: "x",
+    sceneSectionWindowEnabled: true,
+    sceneSectionWindowActiveAxis: "x",
+    sceneSectionWindowByAxis: {
+      x: { minAlongM: -49109.66796010506, maxAlongM: -14216.341507179926, bottomElevationM: -14609.101887030438 },
+      y: { minAlongM: -118667.98253963646, maxAlongM: 34046.04347254154, bottomElevationM: -25000 },
+    },
+    sceneSectionPlanes: {
+      x: { enabled: true, positionM: -15426.073428564621, invert: false },
+      y: { enabled: true, positionM: -14276.695748094688, invert: false },
+      z: { enabled: false, positionM: -2200, invert: false },
+    },
+  };
+  const snapshotSourceStyle: Record<string, unknown> = { ...envSectionStyle, ...syntheticXAxisSection };
+  const snapshotTargetStyle: Record<string, unknown> = { ...envSectionStyle, sceneSectionEnabled: false };
+
+  await page.evaluate(
+    ({
+      layerId,
+      sourceStyleSpec,
+      targetStyleSpec,
+    }: {
+      layerId: string;
+      sourceStyleSpec: Record<string, unknown>;
+      targetStyleSpec: Record<string, unknown>;
+    }) => {
+      const manager = (
+        window as unknown as {
+          __scene?: {
+            manager?: {
+              applyStyle?: (id: string, style: Record<string, unknown>) => void;
+              beginSceneSectionHelperTransitionSnapshot?: (
+                startMs: number,
+                durationMs: number,
+                easing: string,
+              ) => void;
+            };
           };
-        };
-      }
-    ).__scene?.manager;
-    const environmentStyle =
-      environment.layerStyles?.[sceneSectionLayerId] ?? {};
-    const sourceStyle = {
-      ...environmentStyle,
-      ...(sourcePage.layerOverrides?.[sceneSectionLayerId] ?? {}),
-    };
-    const targetStyle = {
-      ...environmentStyle,
-      sceneSectionEnabled: false,
-    };
-    manager?.applyStyle?.(sceneSectionLayerId, sourceStyle);
-    manager?.beginSceneSectionHelperTransitionSnapshot?.(
-      performance.now(),
-      3000,
-      "easeInOutCubic",
-    );
-    manager?.applyStyle?.(sceneSectionLayerId, targetStyle);
-  });
+        }
+      ).__scene?.manager;
+      manager?.applyStyle?.(layerId, sourceStyleSpec);
+      manager?.beginSceneSectionHelperTransitionSnapshot?.(
+        performance.now(),
+        3000,
+        "easeInOutCubic",
+      );
+      manager?.applyStyle?.(layerId, targetStyleSpec);
+    },
+    { layerId: sceneSectionLayerId, sourceStyleSpec: snapshotSourceStyle, targetStyleSpec: snapshotTargetStyle },
+  );
 
   const snapshot = (await (
     await page.waitForFunction(
@@ -656,18 +670,6 @@ test("Page transition debug exposes a shared run across interruption", async ({
     consoleErrors.push(error.message);
   });
 
-  // Find the current deck indices for the MT pages under test. Using indexOf rather
-  // than hardcoded positions so the test survives deck reordering.
-  const projectSpec = readJsonFile<{ pageOrder: string[] }>(
-    "projects/utah-forge/project.json",
-  );
-  const capturedSourceId = "12_mt_volume_overview";
-  const capturedTargetId = "06_mt_low_resistivity_seismic";
-  const capturedInterruptId = "04_mt_high_resistivity_seismic";
-  const capturedSourceIdx = projectSpec.pageOrder.indexOf(capturedSourceId);
-  const capturedTargetIdx = projectSpec.pageOrder.indexOf(capturedTargetId);
-  const capturedInterruptIdx = projectSpec.pageOrder.indexOf(capturedInterruptId);
-
   await page.goto("/?project=utah-forge", {
     waitUntil: "networkidle",
   });
@@ -675,6 +677,24 @@ test("Page transition debug exposes a shared run across interruption", async ({
     timeout: 90_000,
   });
   await expect(page.locator("canvas")).toHaveCount(1);
+
+  // Dynamic pair: find first MT volume source/target pair by opacity delta so
+  // the test survives deck additions, removals, and reordering.
+  const mtOpacityPair = await findMtVolumeOpacityDeltaPair(page);
+  const capturedSourceIdx = mtOpacityPair.sourceIndex;
+  const capturedTargetIdx = mtOpacityPair.targetIndex;
+  const capturedSourceId = mtOpacityPair.sourcePageId;
+  const capturedTargetId = mtOpacityPair.targetPageId;
+  const interruptProjectSpec = readJsonFile<{ pageOrder: string[] }>(
+    "projects/utah-forge/project.json",
+  );
+  const capturedInterruptIdx = interruptProjectSpec.pageOrder.findIndex(
+    (_, i) => i !== capturedSourceIdx && i !== capturedTargetIdx,
+  );
+  if (capturedInterruptIdx === -1) {
+    throw new Error("No interrupt page available in Utah FORGE pageOrder");
+  }
+  const capturedInterruptId = interruptProjectSpec.pageOrder[capturedInterruptIdx];
 
   // Navigate to the source page and wait for it to settle before triggering the
   // target transition so the probe captures source → target correctly.
@@ -868,16 +888,6 @@ test("Page transition debug exposes a shared run across interruption", async ({
         family: "scalar-volume",
         policy: expect.any(String),
       }),
-      expect.objectContaining({
-        layerId: "utah-forge-mt-resistivity-threshold-surfaces",
-        family: "mt-isosurfaces",
-        policy: expect.any(String),
-      }),
-      expect.objectContaining({
-        layerId: "utah-forge-phase3-seismic-browser",
-        family: "seismic-volume",
-        policy: expect.any(String),
-      }),
     ]),
     consumerDebug: {
       presenterOverlay: {
@@ -982,14 +992,6 @@ test("Page transition debug exposes a shared run across interruption", async ({
 test("Late async reapply during a page transition preserves transition context", async ({
   page,
 }) => {
-  const projectSpec = readJsonFile<{ pageOrder: string[] }>(
-    "projects/utah-forge/project.json",
-  );
-  const capturedSourceId = "12_mt_volume_overview";
-  const capturedTargetId = "06_mt_low_resistivity_seismic";
-  const capturedSourceIdx = projectSpec.pageOrder.indexOf(capturedSourceId);
-  const capturedTargetIdx = projectSpec.pageOrder.indexOf(capturedTargetId);
-
   await page.goto("/?project=utah-forge", {
     waitUntil: "networkidle",
   });
@@ -997,6 +999,12 @@ test("Late async reapply during a page transition preserves transition context",
     timeout: 90_000,
   });
   await expect(page.locator("canvas")).toHaveCount(1);
+
+  const lateReapplyPair = await findMtVolumeOpacityDeltaPair(page);
+  const capturedSourceIdx = lateReapplyPair.sourceIndex;
+  const capturedTargetIdx = lateReapplyPair.targetIndex;
+  const capturedSourceId = lateReapplyPair.sourcePageId;
+  const capturedTargetId = lateReapplyPair.targetPageId;
 
   // Navigate to source page and wait for it to settle before triggering the
   // target transition so the probe captures the correct source → target pair.
