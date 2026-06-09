@@ -37,7 +37,7 @@
     "test:utah:topo": "playwright test tests/utah-forge/topo-title-editor.spec.ts",
     "test:utah:sections": "playwright test tests/utah-forge/section-iso.spec.ts",
     "test:utah:mt": "playwright test tests/utah-forge/mt-rendering.spec.ts",
-    "test:utah-forge": "npm run check:workspace && npm run check:utah-runtime && npm run check:utah-snapshot && npm run test:utah:browser"
+    "test:utah-forge": "npm run check:workspace && npm run check:utah-runtime && npm run test:utah:browser"
   },
   "dependencies": {
     "@ffmpeg/core": "^0.12.9",

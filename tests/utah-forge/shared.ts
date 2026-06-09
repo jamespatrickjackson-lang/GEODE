@@ -21,14 +21,12 @@ import {
 export const MT_FULL_DENSITY_MANIFEST_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json";
 export const UTAH_FORGE_ENVIRONMENT_PATH = "projects/utah-forge/environment.json";
-export const UTAH_FORGE_PAGE04_PATH =
-  "projects/utah-forge/pages/04_mt_high_resistivity_seismic.json";
-export const UTAH_FORGE_PAGE05_PATH =
-  "projects/utah-forge/pages/05_mt_threshold_focus.json";
-export const UTAH_FORGE_PAGE06_PATH =
-  "projects/utah-forge/pages/06_mt_low_resistivity_seismic.json";
-export const UTAH_FORGE_PAGE12_PATH =
-  "projects/utah-forge/pages/12_mt_volume_overview.json";
+
+export function readForgePageSpec(pageId: string): PresentationPage {
+  return readJsonFile<PresentationPage>(
+    `projects/utah-forge/pages/${pageId}.json`,
+  );
+}
 
 export function readJsonFile<T>(path: string): T {
   return JSON.parse(readFileSync(resolve(process.cwd(), path), "utf8")) as T;

@@ -45,6 +45,12 @@ Shared vocabulary for these states lives in `docs/dev-context/GeoSee-Terms.md`.
 - Browser/render/editor behavior: run `npm run check:visual-qa-clean` before opening the app and again after closing the app, then use the smallest targeted Utah browser script that covers the changed behavior. If the after-check finds snapshot-sensitive files, stop and treat the browser evidence as contaminated by disposable page or overlay state until those files are reverted, stashed, or intentionally accepted.
 - Full `npm run test:utah-forge` is broad regression only, not default iteration. Treat it as committed-state evidence only when `npm run check:workspace` reports no relevant local sketch files.
 
+## Page Disposability Rule
+
+`projects/utah-forge/pages/*.json` are disposable authoring state. Deleting, rebuilding, or reordering deck pages must not break app-behavior tests. App-behavior tests (`test:utah:browser` and the individual Utah test scripts) must not hardcode deck page IDs or assume specific deck positions. Synthetic in-memory fixtures or dynamic project.json-based lookups must be used instead.
+
+`check:utah-snapshot` is the deck snapshot check — it intentionally hardcodes page IDs and deck order as content evidence. It is NOT an app-behavior check and must not be included in `test:utah-forge`.
+
 ## Dev Server Rule
 
 Agents should not run `Launch GeoSee.bat`. It is a human-facing launcher and it force-kills any process listening on port `5173`, which may interrupt the user's live app session.

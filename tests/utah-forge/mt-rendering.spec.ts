@@ -12,6 +12,7 @@ import {
   mtVolumeSceneState,
   openForgeDataEditorContainers,
   pageControllerState,
+  readForgePageSpec,
   readJsonFile,
   runForgeDataTransitionProbe,
   sceneRendererState,
@@ -22,10 +23,6 @@ import {
   setForgeLayerVisible,
   transitionSnapshotState,
   UTAH_FORGE_ENVIRONMENT_PATH,
-  UTAH_FORGE_PAGE04_PATH,
-  UTAH_FORGE_PAGE05_PATH,
-  UTAH_FORGE_PAGE06_PATH,
-  UTAH_FORGE_PAGE12_PATH,
   utahForgeRuntimePresentationState,
 } from "./shared";
 
@@ -182,9 +179,25 @@ test("Utah FORGE full-density MT inversion cells render all-valid and thresholde
   const forgeEnvironment = readJsonFile<EnvironmentSetup>(
     UTAH_FORGE_ENVIRONMENT_PATH,
   );
-  const page06Spec = readJsonFile<PresentationPage>(UTAH_FORGE_PAGE06_PATH);
+  // Synthetic fixture: MT low-resistivity thresholded state (authored values from 06_mt_low_resistivity_seismic)
+  const syntheticPage06Spec = {
+    id: "test-fixture-mt-low-resistivity",
+    layerOverrides: {
+      "utah-forge-mt-resistivity-full-density": {
+        scalarFocusMin: 1.3177084813101363,
+        scalarFocusMax: 2.2656248520231967,
+        scalarBlendMin: 1.3177084813101363,
+        scalarBlendMax: 2.2656248520231967,
+        scalarInclusionMode: "thresholded",
+        scalarEdgeLineWidth: 3,
+        scalarNoiseThreshold: 0.6,
+        opacity: 0.05,
+        scalarLegendVisible: true,
+      },
+    },
+  } as unknown as PresentationPage;
   const expectedPage06IndexedPointCount =
-    expectedMtFullDensityIndexedPointCount(forgeEnvironment, page06Spec);
+    expectedMtFullDensityIndexedPointCount(forgeEnvironment, syntheticPage06Spec);
   const consoleErrors: string[] = [];
   const failedResponses: string[] = [];
   const loadedUrls: string[] = [];
@@ -342,28 +355,24 @@ test("Utah FORGE data layers follow page camera transitions", async ({
   const forgeEnvironment = readJsonFile<EnvironmentSetup>(
     UTAH_FORGE_ENVIRONMENT_PATH,
   );
-  const page06Spec = readJsonFile<PresentationPage>(
-    UTAH_FORGE_PAGE06_PATH,
+  const projectSpec = readJsonFile<{ pageOrder: string[] }>(
+    "projects/utah-forge/project.json",
   );
-  const page04Spec = readJsonFile<PresentationPage>(
-    UTAH_FORGE_PAGE04_PATH,
-  );
-  const page05Spec = readJsonFile<PresentationPage>(
-    UTAH_FORGE_PAGE05_PATH,
-  );
-  const page12Spec = readJsonFile<PresentationPage>(
-    UTAH_FORGE_PAGE12_PATH,
-  );
+  // Read pages at current deck positions 1-3 to compute expected indexed point counts.
+  // Navigation test selects "01." and steps through the next three pages sequentially.
+  const deckPage1Spec = readForgePageSpec(projectSpec.pageOrder[1]);
+  const deckPage2Spec = readForgePageSpec(projectSpec.pageOrder[2]);
+  const deckPage3Spec = readForgePageSpec(projectSpec.pageOrder[3]);
   const expectedFullDensityPointCount = mtFullDensityManifest.tiles.reduce(
     (total, tile) => total + tile.pointCount,
     0,
   );
-  const expectedPage06IndexedPointCount =
-    expectedMtFullDensityIndexedPointCount(forgeEnvironment, page06Spec);
-  const expectedPage04IndexedPointCount =
-    expectedMtFullDensityIndexedPointCount(forgeEnvironment, page04Spec);
-  const expectedPage05IndexedPointCount =
-    expectedMtFullDensityIndexedPointCount(forgeEnvironment, page05Spec);
+  const expectedPage1IndexedPointCount =
+    expectedMtFullDensityIndexedPointCount(forgeEnvironment, deckPage1Spec);
+  const expectedPage2IndexedPointCount =
+    expectedMtFullDensityIndexedPointCount(forgeEnvironment, deckPage2Spec);
+  const expectedPage3IndexedPointCount =
+    expectedMtFullDensityIndexedPointCount(forgeEnvironment, deckPage3Spec);
   const consoleErrors: string[] = [];
 
   page.on("console", (message) => {
@@ -403,7 +412,7 @@ test("Utah FORGE data layers follow page camera transitions", async ({
   await expect
     .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
     .toMatchObject({
-      indexedVisiblePointCount: expectedPage06IndexedPointCount,
+      indexedVisiblePointCount: expectedPage1IndexedPointCount,
       firstMaterial: {
         opacity: 0.3,
         size: 1,
@@ -422,7 +431,7 @@ test("Utah FORGE data layers follow page camera transitions", async ({
   await expect
     .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
     .toMatchObject({
-      indexedVisiblePointCount: expectedPage04IndexedPointCount,
+      indexedVisiblePointCount: expectedPage2IndexedPointCount,
     });
   await page.waitForTimeout(2400);
   await expect(legend).toBeHidden();
@@ -438,7 +447,6 @@ test("Utah FORGE data layers follow page camera transitions", async ({
             state.targetIndex === 3 &&
             state.isTransitioning) ||
           (state.currentIndex === 3 &&
-            state.currentPageId === "05_mt_threshold_focus" &&
             state.targetIndex === null &&
             !state.isTransitioning)
         );
@@ -451,7 +459,7 @@ test("Utah FORGE data layers follow page camera transitions", async ({
   await expect
     .poll(() => mtFullDensityPointSceneState(page), { timeout: 90_000 })
     .toMatchObject({
-      indexedVisiblePointCount: expectedPage05IndexedPointCount,
+      indexedVisiblePointCount: expectedPage3IndexedPointCount,
     });
 
   await page.waitForTimeout(2200);
@@ -463,11 +471,6 @@ test("Utah FORGE data layers follow page camera transitions", async ({
   const firstInterruptTargetIndex =
     beforeInterruptState.currentIndex === 0 ? 1 : 0;
   const secondInterruptTargetIndex = firstInterruptTargetIndex === 1 ? 2 : 1;
-  const pageIdByIndex = [
-    "12_mt_volume_overview",
-    "06_mt_low_resistivity_seismic",
-    "04_mt_high_resistivity_seismic",
-  ];
   await page.evaluate(
     ({ firstTargetIndex, secondTargetIndex }) =>
       new Promise<void>((resolve) => {
@@ -487,8 +490,8 @@ test("Utah FORGE data layers follow page camera transitions", async ({
       secondTargetIndex: secondInterruptTargetIndex,
     },
   );
-  const firstTargetPageId = pageIdByIndex[firstInterruptTargetIndex];
-  const secondTargetPageId = pageIdByIndex[secondInterruptTargetIndex];
+  const firstTargetPageId = projectSpec.pageOrder[firstInterruptTargetIndex];
+  const secondTargetPageId = projectSpec.pageOrder[secondInterruptTargetIndex];
   await expect
     .poll(async () => {
       const state = await pageControllerState(page);
@@ -515,11 +518,49 @@ test("Utah FORGE data layers follow page camera transitions", async ({
     )
     .toBe(true);
 
+  // Synthetic fixtures: MT low-resistivity → MT volume overview transition probe.
+  // Authored values are fixed behavior constants independent of current deck page IDs.
+  const probeFromPage = {
+    id: "test-fixture-mt-low-resistivity-seismic",
+    layerOverrides: {
+      "utah-forge-mt-resistivity-full-density": {
+        scalarFocusMin: 1.3177084813101363,
+        scalarFocusMax: 2.2656248520231967,
+        scalarBlendMin: 1.3177084813101363,
+        scalarBlendMax: 2.2656248520231967,
+        scalarInclusionMode: "thresholded",
+        opacity: 0.05,
+        scalarLegendVisible: true,
+      },
+      "utah-forge-phase3-seismic-browser": { visible: true },
+    },
+    visibilityOverrides: {
+      "utah-forge-phase3-seismic-browser": true,
+    },
+  } as unknown as PresentationPage;
+  const probeToPage = {
+    id: "test-fixture-mt-volume-overview",
+    layerOverrides: {
+      "utah-forge-mt-resistivity-full-density": {
+        scalarInclusionMode: "all-valid",
+        opacity: 0.48,
+        pointSizePx: 1.25,
+        scalarFocusMin: -2,
+        scalarFocusMax: 4.5,
+        scalarBlendMin: 0.139879,
+        scalarBlendMax: 3.937122,
+        scalarLegendVisible: true,
+      },
+    },
+    visibilityOverrides: {
+      "utah-forge-phase3-seismic-browser": false,
+    },
+  } as unknown as PresentationPage;
   await runForgeDataTransitionProbe(
     page,
     forgeEnvironment,
-    page06Spec,
-    page12Spec,
+    probeFromPage,
+    probeToPage,
   );
   await expect
     .poll(
@@ -562,12 +603,66 @@ test("MT section page transitions do not reveal the hidden volume source", async
   const forgeEnvironment = readJsonFile<EnvironmentSetup>(
     UTAH_FORGE_ENVIRONMENT_PATH,
   );
-  const sectionPageA = readJsonFile<PresentationPage>(
-    "projects/utah-forge/pages/102_page.json",
-  );
-  const sectionPageB = readJsonFile<PresentationPage>(
-    "projects/utah-forge/pages/103_page.json",
-  );
+  // Synthetic section fixtures: two MT section pages with active scene section planes
+  // and the MT full-density layer hidden. Behavioral test only — exact plane positions
+  // and threshold-surface settings are representative authored values.
+  const sectionPageA = {
+    id: "test-fixture-section-a",
+    transition: { duration: 3000, easing: "easeInOutCubic" },
+    layerOverrides: {
+      "utah-forge-scene-section-planes": {
+        sceneSectionEnabled: true,
+        sceneSectionActiveAxis: "y",
+        sceneSectionWindowEnabled: true,
+        sceneSectionWindowActiveAxis: "x",
+        sceneSectionWindowByAxis: {
+          x: { minAlongM: -49109.668, maxAlongM: -14216.342, bottomElevationM: -14609.102 },
+          y: { minAlongM: -118668.0, maxAlongM: 34046.043, bottomElevationM: -25000 },
+        },
+        sceneSectionPlanes: {
+          x: { enabled: true, positionM: 29760.837, invert: false },
+          y: { enabled: true, positionM: -14276.696, invert: false },
+          z: { enabled: false, positionM: -2200, invert: false },
+        },
+        sceneSectionHelperVisible: false,
+      },
+      "utah-forge-mt-resistivity-full-density": { opacity: 0.05, scalarLegendVisible: true },
+    },
+    visibilityOverrides: {
+      "utah-forge-mt-resistivity-threshold-surfaces": true,
+      "utah-forge-phase3-seismic-browser": true,
+      "utah-forge-mt-resistivity-full-density": false,
+      "utah-forge-mt-top-surface": true,
+      "utah-forge-mt-resistivity-slices": true,
+    },
+  } as unknown as PresentationPage;
+  const sectionPageB = {
+    id: "test-fixture-section-b",
+    transition: { duration: 3000, easing: "easeInOutCubic" },
+    layerOverrides: {
+      "utah-forge-scene-section-planes": {
+        sceneSectionEnabled: true,
+        sceneSectionActiveAxis: "x",
+        sceneSectionWindowEnabled: true,
+        sceneSectionWindowActiveAxis: "x",
+        sceneSectionWindowByAxis: {
+          x: { minAlongM: -49109.668, maxAlongM: -14216.342, bottomElevationM: -14609.102 },
+          y: { minAlongM: -118668.0, maxAlongM: 34046.043, bottomElevationM: -25000 },
+        },
+        sceneSectionPlanes: {
+          x: { enabled: true, positionM: -15426.073, invert: false },
+          y: { enabled: true, positionM: -14276.696, invert: false },
+          z: { enabled: false, positionM: -2200, invert: false },
+        },
+      },
+      "utah-forge-mt-resistivity-full-density": { opacity: 0.05, scalarLegendVisible: true },
+    },
+    visibilityOverrides: {
+      "utah-forge-mt-resistivity-threshold-surfaces": true,
+      "utah-forge-phase3-seismic-browser": true,
+      "utah-forge-mt-resistivity-full-density": false,
+    },
+  } as unknown as PresentationPage;
 
   await page.goto("/?project=utah-forge", {
     waitUntil: "networkidle",

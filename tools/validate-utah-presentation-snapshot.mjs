@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
 import { assertSubset, readJson, runValidation } from "./lib/validation.mjs";
 
-// Fixture boundary: this validates one Utah FORGE presentation snapshot. Literal
-// page ids and page-order expectations here are content evidence only, not
-// global transition acceptance criteria or allowed runtime special cases.
+// DECK SNAPSHOT — not app runtime health. This tool checks that the current
+// Utah FORGE deck page order and authored MT states match a known snapshot.
+// It must NOT be used to assess app behavior correctness; use test:utah:browser
+// for that. Run it only when intentionally reviewing deck/authoring drift.
+//
+// Fixture boundary: literal page ids and page-order expectations here are
+// content evidence only, not global transition acceptance criteria or allowed
+// runtime special cases.
 
 function layerOverride(pageId, layerId) {
   const page = readJson(`projects/utah-forge/pages/${pageId}.json`);

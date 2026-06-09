@@ -7,7 +7,6 @@ import {
   sceneSectionState,
   selectForgePageRow,
   UTAH_FORGE_ENVIRONMENT_PATH,
-  UTAH_FORGE_PAGE06_PATH,
   workingAreaFocusSceneState
 } from "./shared";
 
@@ -134,14 +133,9 @@ test("Utah FORGE working area focus clips outside context with page-local contro
   const environment = readJsonFile<Record<string, unknown>>(
     UTAH_FORGE_ENVIRONMENT_PATH,
   );
-  const basePage = readJsonFile<Record<string, unknown>>(
-    UTAH_FORGE_PAGE06_PATH,
-  );
-  const baseOverrides =
-    typeof basePage.layerOverrides === "object" &&
-    basePage.layerOverrides !== null
-      ? (basePage.layerOverrides as Record<string, unknown>)
-      : {};
+  // Working-area-focus behavior assertions do not depend on any specific MT scalar
+  // or seismic state from a real deck page. Use an empty base to avoid page-ID coupling.
+  const baseOverrides: Record<string, unknown> = {};
   const focusedOverride = {
     workingAreaFocusEnabled: true,
     workingAreaFocusMode: "outside-context",
@@ -159,7 +153,6 @@ test("Utah FORGE working area focus clips outside context with page-local contro
     workingAreaFocusHelperVisible: true,
   };
   const unfocusedPage = {
-    ...basePage,
     id: "working-area-focus-transition-from",
     layerOverrides: {
       ...baseOverrides,
@@ -170,7 +163,6 @@ test("Utah FORGE working area focus clips outside context with page-local contro
     },
   };
   const focusedPage = {
-    ...basePage,
     id: "working-area-focus-transition-to",
     layerOverrides: {
       ...baseOverrides,

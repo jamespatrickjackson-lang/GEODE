@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mtVolumeSceneState, pageControllerState, sectionIsoSceneState } from "./shared";
+import { mtVolumeSceneState, pageControllerState, readJsonFile, sectionIsoSceneState } from "./shared";
 
 test.setTimeout(180_000);
 
@@ -656,6 +656,18 @@ test("Page transition debug exposes a shared run across interruption", async ({
     consoleErrors.push(error.message);
   });
 
+  // Find the current deck indices for the MT pages under test. Using indexOf rather
+  // than hardcoded positions so the test survives deck reordering.
+  const projectSpec = readJsonFile<{ pageOrder: string[] }>(
+    "projects/utah-forge/project.json",
+  );
+  const capturedSourceId = "12_mt_volume_overview";
+  const capturedTargetId = "06_mt_low_resistivity_seismic";
+  const capturedInterruptId = "04_mt_high_resistivity_seismic";
+  const capturedSourceIdx = projectSpec.pageOrder.indexOf(capturedSourceId);
+  const capturedTargetIdx = projectSpec.pageOrder.indexOf(capturedTargetId);
+  const capturedInterruptIdx = projectSpec.pageOrder.indexOf(capturedInterruptId);
+
   await page.goto("/?project=utah-forge", {
     waitUntil: "networkidle",
   });
@@ -664,18 +676,44 @@ test("Page transition debug exposes a shared run across interruption", async ({
   });
   await expect(page.locator("canvas")).toHaveCount(1);
 
-  await page.evaluate(() => {
-    const controller = (
-      window as unknown as {
-        __pageController?: { goto?: (index: number) => void };
-      }
-    ).__pageController;
-    controller?.goto?.(1);
-  });
+  // Navigate to the source page and wait for it to settle before triggering the
+  // target transition so the probe captures source → target correctly.
+  await page.evaluate(
+    ({ idx }) => {
+      const controller = (
+        window as unknown as {
+          __pageController?: { goto?: (index: number) => void };
+        }
+      ).__pageController;
+      controller?.goto?.(idx);
+    },
+    { idx: capturedSourceIdx },
+  );
+  await expect
+    .poll(
+      async () => {
+        const state = await pageControllerState(page);
+        return state.currentIndex === capturedSourceIdx && !state.isTransitioning;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+
+  await page.evaluate(
+    ({ idx }) => {
+      const controller = (
+        window as unknown as {
+          __pageController?: { goto?: (index: number) => void };
+        }
+      ).__pageController;
+      controller?.goto?.(idx);
+    },
+    { idx: capturedTargetIdx },
+  );
 
   const runPair = (await (
     await page.waitForFunction(
-      () => {
+      (args: { sourceId: string; targetId: string; interruptIdx: number }) => {
         const controller = (
           window as unknown as {
             __pageController?: {
@@ -758,16 +796,16 @@ test("Page transition debug exposes a shared run across interruption", async ({
         if (
           probe.mode === "page" &&
           probe.status === "active" &&
-          probe.sourcePageId === "12_mt_volume_overview" &&
-          probe.targetPageId === "06_mt_low_resistivity_seismic" &&
+          probe.sourcePageId === args.sourceId &&
+          probe.targetPageId === args.targetId &&
           probe.reason === "page-click" &&
           probe.durationMs === 3000 &&
           probe.easing === "easeInOutCubic" &&
           probe.progressMatchesState === true &&
-          probe.sceneSourcePageId === "12_mt_volume_overview" &&
-          probe.sceneTargetPageId === "06_mt_low_resistivity_seismic"
+          probe.sceneSourcePageId === args.sourceId &&
+          probe.sceneTargetPageId === args.targetId
         ) {
-          controller?.goto?.(2);
+          controller?.goto?.(args.interruptIdx);
           const interruptedState = controller?.getState?.() as
             | {
                 transitionProgress: number;
@@ -802,7 +840,7 @@ test("Page transition debug exposes a shared run across interruption", async ({
         }
         return null;
       },
-      undefined,
+      { sourceId: capturedSourceId, targetId: capturedTargetId, interruptIdx: capturedInterruptIdx },
       { timeout: 15_000 },
     )
   ).jsonValue()) as {
@@ -816,14 +854,14 @@ test("Page transition debug exposes a shared run across interruption", async ({
     runId: expect.any(String),
     mode: "page",
     status: "active",
-    sourcePageId: "12_mt_volume_overview",
-    targetPageId: "06_mt_low_resistivity_seismic",
+    sourcePageId: capturedSourceId,
+    targetPageId: capturedTargetId,
     reason: "page-click",
     durationMs: 3000,
     easing: "easeInOutCubic",
     progressMatchesState: true,
-    sceneSourcePageId: "12_mt_volume_overview",
-    sceneTargetPageId: "06_mt_low_resistivity_seismic",
+    sceneSourcePageId: capturedSourceId,
+    sceneTargetPageId: capturedTargetId,
     productFamilies: expect.arrayContaining([
       expect.objectContaining({
         layerId: "utah-forge-mt-resistivity-volume",
@@ -845,33 +883,33 @@ test("Page transition debug exposes a shared run across interruption", async ({
       presenterOverlay: {
         policy: "crossfade-slide",
         active: true,
-        sourcePageId: "12_mt_volume_overview",
-        targetPageId: "06_mt_low_resistivity_seismic",
+        sourcePageId: capturedSourceId,
+        targetPageId: capturedTargetId,
       },
       sceneOverlays: {
         policy: "fixed-duration-linear-fade",
         fadeDurationMs: 800,
         lastPhase: "transition-start",
-        lastPageId: "06_mt_low_resistivity_seismic",
+        lastPageId: capturedTargetId,
       },
       labels: {
         policy: "hold-source-until-threshold",
         switchThreshold: 0.92,
-        sourcePageId: "12_mt_volume_overview",
-        targetPageId: "06_mt_low_resistivity_seismic",
+        sourcePageId: capturedSourceId,
+        targetPageId: capturedTargetId,
       },
       assays: {
         policy: "hold-source-until-threshold",
         switchThreshold: 0.92,
-        sourcePageId: "12_mt_volume_overview",
-        targetPageId: "06_mt_low_resistivity_seismic",
+        sourcePageId: capturedSourceId,
+        targetPageId: capturedTargetId,
       },
       legends: {
         stackPolicy: "phased-layout-slide",
         resistivityPolicy: "interpolate-source-target",
         defaultPolicy: "target-from-start",
-        sourcePageId: "12_mt_volume_overview",
-        targetPageId: "06_mt_low_resistivity_seismic",
+        sourcePageId: capturedSourceId,
+        targetPageId: capturedTargetId,
       },
       lateReapply: {
         totalCount: expect.any(Number),
@@ -884,30 +922,30 @@ test("Page transition debug exposes a shared run across interruption", async ({
     runId: expect.any(String),
     mode: "page",
     status: "active",
-    sourcePageId: "06_mt_low_resistivity_seismic",
-    targetPageId: "04_mt_high_resistivity_seismic",
+    sourcePageId: capturedTargetId,
+    targetPageId: capturedInterruptId,
     reason: "interrupted",
     interruptedRunIds: [firstRun.runId],
     progressMatchesState: true,
-    sceneSourcePageId: "06_mt_low_resistivity_seismic",
-    sceneTargetPageId: "04_mt_high_resistivity_seismic",
+    sceneSourcePageId: capturedTargetId,
+    sceneTargetPageId: capturedInterruptId,
     runChanged: true,
     consumerDebug: {
       presenterOverlay: {
         policy: "crossfade-slide",
         active: true,
-        sourcePageId: "06_mt_low_resistivity_seismic",
-        targetPageId: "04_mt_high_resistivity_seismic",
+        sourcePageId: capturedTargetId,
+        targetPageId: capturedInterruptId,
       },
       labels: {
         policy: "hold-source-until-threshold",
         switchThreshold: 0.92,
-        sourcePageId: "06_mt_low_resistivity_seismic",
-        targetPageId: "04_mt_high_resistivity_seismic",
+        sourcePageId: capturedTargetId,
+        targetPageId: capturedInterruptId,
       },
       legends: {
-        sourcePageId: "06_mt_low_resistivity_seismic",
-        targetPageId: "04_mt_high_resistivity_seismic",
+        sourcePageId: capturedTargetId,
+        targetPageId: capturedInterruptId,
       },
     },
   });
@@ -930,12 +968,12 @@ test("Page transition debug exposes a shared run across interruption", async ({
       { timeout: 8_000 },
     )
     .toMatchObject({
-      currentPageId: "04_mt_high_resistivity_seismic",
+      currentPageId: capturedInterruptId,
       isTransitioning: false,
       transitionRun: null,
       lastStatus: "completed",
       lastRunId: interruptedRun.runId,
-      lastTargetPageId: "04_mt_high_resistivity_seismic",
+      lastTargetPageId: capturedInterruptId,
     });
 
   expect(consoleErrors).toEqual([]);
@@ -944,6 +982,14 @@ test("Page transition debug exposes a shared run across interruption", async ({
 test("Late async reapply during a page transition preserves transition context", async ({
   page,
 }) => {
+  const projectSpec = readJsonFile<{ pageOrder: string[] }>(
+    "projects/utah-forge/project.json",
+  );
+  const capturedSourceId = "12_mt_volume_overview";
+  const capturedTargetId = "06_mt_low_resistivity_seismic";
+  const capturedSourceIdx = projectSpec.pageOrder.indexOf(capturedSourceId);
+  const capturedTargetIdx = projectSpec.pageOrder.indexOf(capturedTargetId);
+
   await page.goto("/?project=utah-forge", {
     waitUntil: "networkidle",
   });
@@ -952,18 +998,44 @@ test("Late async reapply during a page transition preserves transition context",
   });
   await expect(page.locator("canvas")).toHaveCount(1);
 
-  await page.evaluate(() => {
-    const controller = (
-      window as unknown as {
-        __pageController?: { goto?: (index: number) => void };
-      }
-    ).__pageController;
-    controller?.goto?.(1);
-  });
+  // Navigate to source page and wait for it to settle before triggering the
+  // target transition so the probe captures the correct source → target pair.
+  await page.evaluate(
+    ({ idx }) => {
+      const controller = (
+        window as unknown as {
+          __pageController?: { goto?: (index: number) => void };
+        }
+      ).__pageController;
+      controller?.goto?.(idx);
+    },
+    { idx: capturedSourceIdx },
+  );
+  await expect
+    .poll(
+      async () => {
+        const state = await pageControllerState(page);
+        return state.currentIndex === capturedSourceIdx && !state.isTransitioning;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+
+  await page.evaluate(
+    ({ idx }) => {
+      const controller = (
+        window as unknown as {
+          __pageController?: { goto?: (index: number) => void };
+        }
+      ).__pageController;
+      controller?.goto?.(idx);
+    },
+    { idx: capturedTargetIdx },
+  );
 
   const probe = (await (
     await page.waitForFunction(
-      () => {
+      (args: { sourceId: string; targetId: string }) => {
         const scene = (
           window as unknown as {
             __scene?: {
@@ -992,8 +1064,8 @@ test("Late async reapply during a page transition preserves transition context",
         if (
           run?.mode !== "page" ||
           run.status !== "active" ||
-          run.sourcePageId !== "12_mt_volume_overview" ||
-          run.targetPageId !== "06_mt_low_resistivity_seismic"
+          run.sourcePageId !== args.sourceId ||
+          run.targetPageId !== args.targetId
         ) {
           return null;
         }
@@ -1022,7 +1094,7 @@ test("Late async reapply during a page transition preserves transition context",
           lastEvent,
         };
       },
-      undefined,
+      { sourceId: capturedSourceId, targetId: capturedTargetId },
       { timeout: 15_000 },
     )
   ).jsonValue()) as {
@@ -1044,15 +1116,15 @@ test("Late async reapply during a page transition preserves transition context",
   expect(probe).toMatchObject({
     mode: "page",
     status: "active",
-    sourcePageId: "12_mt_volume_overview",
-    targetPageId: "06_mt_low_resistivity_seismic",
+    sourcePageId: capturedSourceId,
+    targetPageId: capturedTargetId,
     totalCount: expect.any(Number),
     duringTransitionCount: expect.any(Number),
     lastEvent: {
       action: "transition-aware-current-page-state",
       duringTransition: true,
-      transitionSourcePageId: "12_mt_volume_overview",
-      transitionTargetPageId: "06_mt_low_resistivity_seismic",
+      transitionSourcePageId: capturedSourceId,
+      transitionTargetPageId: capturedTargetId,
       transitionProgress: expect.any(Number),
     },
   });
