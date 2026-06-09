@@ -220,6 +220,10 @@
           "source": "precomputed"
         }
       }
+    },
+    "utah-forge-mt-resistivity-full-density": {
+      "scalarLegendVisible": false,
+      "scalarInclusionMode": "all-valid"
     }
   }
 }

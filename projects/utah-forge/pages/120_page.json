@@ -4,21 +4,21 @@
   "subtitle": "Proposed / needs_review implementation checkpoint",
   "camera": {
     "position": [
-      66383.80073293328,
-      12759.656923338756,
-      43318.944919697016
+      74441.89209152703,
+      35120.4486762638,
+      32292.775698909318
     ],
     "target": [
-      1722,
-      -16285,
-      5045
+      -7151.579957093937,
+      -6090.952029054092,
+      -5472.437707535982
     ],
     "up": [
       0,
       0,
       1
     ],
-    "fov": 52
+    "fov": 49
   },
   "transition": {
     "duration": 3000,
@@ -65,9 +65,9 @@
       "sceneSectionWindowActiveAxis": "x",
       "sceneSectionWindowByAxis": {
         "x": {
-          "minAlongM": -33487.51903582346,
-          "maxAlongM": 10899.413500988101,
-          "bottomElevationM": -14609.101887030438
+          "minAlongM": -99911.03033381779,
+          "maxAlongM": 115608.08048071683,
+          "bottomElevationM": -122975.10077987715
         },
         "y": {
           "minAlongM": -61778.81228623845,
@@ -78,7 +78,7 @@
       "sceneSectionPlanes": {
         "x": {
           "enabled": true,
-          "positionM": 5225.232337648249,
+          "positionM": 57082.90454211609,
           "invert": false
         },
         "y": {
@@ -104,7 +104,7 @@
           "axis": "x",
           "plane": {
             "enabled": true,
-            "positionM": 5225.232337648249,
+            "positionM": 57082.90454211609,
             "invert": false
           },
           "frame": {
@@ -112,9 +112,12 @@
             "axisAHeading": "Latitude (°)",
             "axisBHeading": "Elevation (km)",
             "axisDatum": "latlon",
-            "maxAM": 10899.413500988101,
-            "minAM": -33487.51903582346,
-            "controlsVisible": false
+            "maxAM": 115608.08048071683,
+            "minAM": -99911.03033381779,
+            "controlsVisible": true,
+            "minBM": -122975.10077987715,
+            "groundTraceVisible": false,
+            "axesVisible": false
           }
         },
         {
@@ -142,7 +145,9 @@
             "positionM": -2200,
             "invert": false
           },
-          "frame": {}
+          "frame": {
+            "controlsVisible": true
+          }
         }
       ],
       "sceneSectionFrameEnabled": true,
@@ -152,9 +157,12 @@
           "axisAHeading": "Latitude (°)",
           "axisBHeading": "Elevation (km)",
           "axisDatum": "latlon",
-          "maxAM": 10899.413500988101,
-          "minAM": -33487.51903582346,
-          "controlsVisible": false
+          "maxAM": 115608.08048071683,
+          "minAM": -99911.03033381779,
+          "controlsVisible": true,
+          "minBM": -122975.10077987715,
+          "groundTraceVisible": false,
+          "axesVisible": false
         },
         "y": {
           "maxAM": 38434.765542233654,
@@ -167,8 +175,8 @@
     "utah-forge-mt-resistivity-threshold-surfaces": {
       "mtThresholdSurfaceVisibility": {
         "conductive-le-10-ohm-m": false,
-        "conductive-le-30-ohm-m": true,
-        "resistive-ge-1000-ohm-m": true,
+        "conductive-le-30-ohm-m": false,
+        "resistive-ge-1000-ohm-m": false,
         "bank-ge-5461-ohm-m": true
       },
       "mtIsosurfaceProductId": "mt-isosurface-full-extent",
@@ -190,7 +198,7 @@
           "source": "precomputed"
         },
         "conductive-le-30-ohm-m": {
-          "visible": true,
+          "visible": false,
           "label": "<=30 Ohm-m",
           "color": "#b6cda7",
           "comparison": "<=",
@@ -200,7 +208,7 @@
           "source": "precomputed"
         },
         "resistive-ge-1000-ohm-m": {
-          "visible": true,
+          "visible": false,
           "label": ">=1000 Ohm-m",
           "color": "#d8967f",
           "comparison": ">=",
@@ -228,13 +236,46 @@
     },
     "utah-forge-mt-resistivity-full-density": {
       "opacity": 0.05,
-      "scalarLegendVisible": true
+      "scalarLegendVisible": true,
+      "scalarInclusionMode": "thresholded",
+      "scalarFocusMin": 1.449606377308763,
+      "scalarFocusMax": 2.677952834001676,
+      "scalarBlendMin": 1.736220472440945,
+      "scalarBlendMax": 2.309449053186131,
+      "scalarEdgeLowerValue": 1.6133857486754888,
+      "scalarEdgeUpperValue": 2.5551181102362204
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "sectionIsoSourceOpacity": 0
     }
   },
   "visibilityOverrides": {
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-phase3-seismic-browser": true,
-    "utah-forge-mt-resistivity-full-density": false,
-    "utah-forge-topo-graticule": false
+    "utah-forge-mt-resistivity-full-density": true,
+    "utah-forge-topo-graticule": false,
+    "utah-forge-mt-resistivity-volume": true,
+    "utah-forge-mt-top-surface": false
+  },
+  "sceneOverrides": {
+    "depthOfField": {
+      "enabled": false,
+      "focusMode": "manual-distance",
+      "focusDistanceM": 1,
+      "focusOffsetM": -13375,
+      "aperture": 0.00013,
+      "maxBlur": 0,
+      "debugFocusPlane": false
+    },
+    "tiltShift": {
+      "enabled": false
+    },
+    "vignette": {
+      "strength": 0.95,
+      "smoothness": 1.5
+    },
+    "colorGrade": {
+      "filterPreset": "none"
+    }
   }
 }

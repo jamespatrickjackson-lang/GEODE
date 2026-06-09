@@ -35,7 +35,7 @@
       "scalarEdgeAverage": 1,
       "scalarEdgeLowerValue": 3.0555553761897336,
       "scalarNoiseThreshold": 0.65,
-      "scalarLegendVisible": false,
+      "scalarLegendVisible": true,
       "opacity": 0.05
     },
     "utah-forge-phase3-seismic-browser": {
@@ -103,7 +103,12 @@
       "showLabels": true
     },
     "utah-forge-mt-resistivity-volume": {
-      "scalarLegendVisible": false
+      "scalarLegendVisible": false,
+      "sectionIsoBandSelection": [
+        4,
+        18,
+        19
+      ]
     },
     "utah-forge-mt-resistivity-slices": {
       "scalarLegendVisible": false
@@ -141,8 +146,8 @@
     "terrain": false,
     "utah-forge-phase3-working-area": false,
     "utah-forge-phase3-demo-boreholes": true,
-    "utah-forge-mt-resistivity-threshold-surfaces": true,
-    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-resistivity-volume": true,
     "utah-forge-mt-resistivity-slices": false,
     "utah-forge-mt-top-surface": false
   },
