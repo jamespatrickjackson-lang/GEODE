@@ -272,7 +272,7 @@ test("validateProjectPages accepts archived master as active child inheritance s
       archivedPages: [
         {
           id: "archived-master",
-          title: "Untitled page",
+          title: "Draft fixture page",
           parentMasterId: "global",
           envSnapshot: { layerStyles: {} },
           camera: { position: [0, 0, 1], target: [0, 0, 0], up: [0, 0, 1] },
