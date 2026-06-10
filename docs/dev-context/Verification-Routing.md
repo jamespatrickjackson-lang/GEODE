@@ -1,4 +1,4 @@
-# Verification Routing
+﻿# Verification Routing
 
 Status: active verification and workspace-state routing
 
@@ -47,9 +47,9 @@ Shared vocabulary for these states lives in `docs/dev-context/GeoSee-Terms.md`.
 
 ## Page Disposability Rule
 
-`projects/utah-forge/pages/*.json` are disposable authoring state. Deleting, rebuilding, or reordering deck pages must not break app-behavior tests. App-behavior tests (`test:utah:browser` and the individual Utah test scripts) must not hardcode deck page IDs or assume specific deck positions. Synthetic in-memory fixtures or dynamic project.json-based lookups must be used instead.
+`projects/utah-forge/pages/*.json` are disposable authoring state. Deleting, rebuilding, or reordering deck pages must not break app-behavior tests. App-behavior tests (`test:utah:browser` and the individual Utah test scripts) must not hardcode deck page IDs or assume specific deck positions. Synthetic in-memory fixtures or fixture builders must be used instead.
 
-`check:utah-snapshot` is the deck snapshot check — it intentionally hardcodes page IDs and deck order as content evidence. It is NOT an app-behavior check and must not be included in `test:utah-forge`.
+`check:utah-snapshot` is the deck snapshot check â€” it intentionally hardcodes page IDs and deck order as content evidence. It is NOT an app-behavior check and must not be included in `test:utah-forge`.
 
 ## Dev Server Rule
 
@@ -61,3 +61,14 @@ For agent-run checks, prefer a scoped dev server command such as `npm run dev --
 ## Disposable Page Fixture Rule
 
 Utah FORGE pages are disposable authoring state. App-behavior tests must not use live Utah pageOrder, current deck page files, page ids, page titles, page indexes, or page-to-page pairs as proof of generic behavior. Use synthetic fixtures or fixture builders for app behavior. Deck snapshot or deck integration checks must be explicitly named as deck-state checks and kept out of app-health verification.
+
+## Page-to-page false-fix ban
+
+Utah FORGE pages are disposable authoring state. App behavior, runtime behavior, editor behavior, tests that claim app behavior, and agent fixes must not depend on current page IDs, page filenames, page numbers, page titles, page order positions, live pageOrder discovery, or source/target page pairs.
+
+App-behavior tests must use synthetic in-memory fixtures or fixture builders. Dynamic selection from live project.json pageOrder is deck-state coupling, not app-behavior proof.
+
+Deck snapshot, deck matrix, and presentation audit tools may inspect live pageOrder only when explicitly named as deck-state tools and excluded from app-health verification.
+
+If a failing behavior is observed on a page pair, the fix must be filed against the reusable behavior family: transition entity matching, effective-state resolution, layer style composition, visibility resolution, camera policy, legend state, save/persistence, or validation. Never fix by targeting the observed page pair.
+

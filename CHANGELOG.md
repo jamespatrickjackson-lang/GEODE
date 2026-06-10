@@ -1,4 +1,4 @@
-# GeoSee Change Log
+﻿# GeoSee Change Log
 
 ## 2026-06-04 - Utah FORGE Seismic Figure Annotations And Site Detail Alignment
 
@@ -25,7 +25,7 @@
 - Added cinematic scene/post and dynamic camera transition work, including
   page-local shot motion and `main-camera/cinematic-post` blending.
 - Added a visible Utah FORGE one-puff `Topo test cloud` QA fixture and kept
-  page `12_mt_volume_overview` showing it.
+  page `<disposable-utah-page>` showing it.
 - Updated the standalone GUI editor, GUI editor docs, schema/tool docs, source
   guard tests, Base GUI atmosphere sample, and Utah FORGE project defaults.
 - Verified targeted source guards, `npm run check:pages`, `npm run build`,
@@ -133,7 +133,7 @@
 
 ## 2026-05-13 - Utah FORGE Investor Seismic Demo Roadmap
 
-- Added a seismic “White bg” toggle that removes neutral/white fill from section curtains and raymarch sampling while preserving strong amplitude colors.
+- Added a seismic â€œWhite bgâ€ toggle that removes neutral/white fill from section curtains and raymarch sampling while preserving strong amplitude colors.
 - Section curtains now use a small shader with per-vertex alpha so the neutral seismic background can be hidden without deleting or changing the source-derived amplitude data.
 - Added a generated Utah FORGE seismic demo recipe artifact at `projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_demo_recipes.json`.
 - Extended the Phase 3 seismic manifest with `displayRecipes`, `audiencePresets`, `derivedViews`, `interpretationLayers`, and `exportLayouts`.
@@ -149,3 +149,4 @@
 Earlier session-snapshot entries (2026-05-11 and 2026-05-12) moved to
 [CHANGELOG-Archive.md](./CHANGELOG-Archive.md) on 2026-05-26 to keep
 this log scannable.
+

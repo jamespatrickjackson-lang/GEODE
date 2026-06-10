@@ -1,4 +1,4 @@
-# GeoSee Agent Operating Contract
+﻿# GeoSee Agent Operating Contract
 
 This file is the agent operating contract. `README.md` is the human repo
 landing page, `docs/START-HERE.md` is stable product/system orientation, and
@@ -109,18 +109,18 @@ Default search scope is `src/`, `docs/` (top level only), `tools/`,
 `tests/`, and root config files. Do not `Grep` or `Glob` into the
 following paths unless the task explicitly requires them:
 
-- `projects/*/data/**` — large GeoJSON, .bin scalar/position tiles, WebP,
+- `projects/*/data/**` â€” large GeoJSON, .bin scalar/position tiles, WebP,
   raster manifests. Single search can stream tens of MB of vector text.
-- `data/**` — root vector data (includes `hydrography_streams.geojson`
+- `data/**` â€” root vector data (includes `hydrography_streams.geojson`
   at 17 MB).
-- `dist/**`, `dist-tsbuild/**`, `node_modules/**` — build output and
+- `dist/**`, `dist-tsbuild/**`, `node_modules/**` â€” build output and
   dependencies; gitignored but reachable by Glob.
 - `docs/dev-context/Archive/**`,
   `docs/dev-context/Change-Receipts/**`,
   `docs/dev-context/Verification-Receipts/**`,
   `docs/dev-context/Generated-Reports/**`,
-  `docs/dev-context/Audits/**` — historical receipts and audit evidence.
-- `playwright-report/**`, `test-results/**` — Playwright artefacts.
+  `docs/dev-context/Audits/**` â€” historical receipts and audit evidence.
+- `playwright-report/**`, `test-results/**` â€” Playwright artefacts.
 
 When a search must hit those paths, scope it: pass `glob` or `path`
 arguments narrowed to the specific subtree.
@@ -164,3 +164,14 @@ the user explicitly asks for a persistence architecture change.
 ## Disposable Page Fixture Rule
 
 Utah FORGE pages are disposable authoring state. App-behavior tests must not use live Utah pageOrder, current deck page files, page ids, page titles, page indexes, or page-to-page pairs as proof of generic behavior. Use synthetic fixtures or fixture builders for app behavior. Deck snapshot or deck integration checks must be explicitly named as deck-state checks and kept out of app-health verification.
+
+## Page-to-page false-fix ban
+
+Utah FORGE pages are disposable authoring state. App behavior, runtime behavior, editor behavior, tests that claim app behavior, and agent fixes must not depend on current page IDs, page filenames, page numbers, page titles, page order positions, live pageOrder discovery, or source/target page pairs.
+
+App-behavior tests must use synthetic in-memory fixtures or fixture builders. Dynamic selection from live project.json pageOrder is deck-state coupling, not app-behavior proof.
+
+Deck snapshot, deck matrix, and presentation audit tools may inspect live pageOrder only when explicitly named as deck-state tools and excluded from app-health verification.
+
+If a failing behavior is observed on a page pair, the fix must be filed against the reusable behavior family: transition entity matching, effective-state resolution, layer style composition, visibility resolution, camera policy, legend state, save/persistence, or validation. Never fix by targeting the observed page pair.
+

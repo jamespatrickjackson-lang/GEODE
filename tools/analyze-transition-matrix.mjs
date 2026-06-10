@@ -1,3 +1,8 @@
+﻿// DECK-STATE TOOL ONLY.
+// This tool may inspect live project pageOrder as presentation/deck evidence.
+// Its output is not app-behavior proof and must not be used to justify
+// page-id, page-index, page-title, or page-pair runtime fixes.
+// App behavior must be tested with synthetic fixtures or fixture builders.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -1885,3 +1890,4 @@ if (process.argv[1] && path.resolve(process.argv[1]) === thisFile) {
 }
 
 export { analyzeManifest, formatAnalysisMarkdown };
+
