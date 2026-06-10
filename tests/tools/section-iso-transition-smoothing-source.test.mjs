@@ -1,4 +1,4 @@
-﻿import { readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -167,3 +167,46 @@ test("durable docs lock Section ISO root crossfade after validation", () => {
   );
 });
 
+
+
+test("SceneManager injects non-destructive Section ISO options during active target transitions", () => {
+  const sceneManager = readFileSync("src/scene/SceneManager.ts", "utf8");
+
+  assert.match(
+    sceneManager,
+    /private transitionAwareSectionIsoOverlayUpdateOptions\([\s\S]*?style: EditableStyle,[\s\S]*?options\?: SectionIsoOverlayUpdateOptions/,
+    "SceneManager should centralize transition-aware Section ISO update options.",
+  );
+
+  assert.match(
+    sceneManager,
+    /style\.sectionIsoEnabled !== true/,
+    "Inactive Section ISO target styles must not receive preserveExisting.",
+  );
+
+  assert.match(
+    sceneManager,
+    /!!sceneSectionStyle[\s\S]*?sceneSectionStyle\.sceneSectionEnabled === true[\s\S]*?sceneSectionActivePlanes\(sceneSectionStyle\)\.length > 0/,
+    "Preserve-existing injection must be target-section-active, not just transition-active.",
+  );
+
+  assert.match(
+    sceneManager,
+    /preserveExisting:\s*options\?\.preserveExisting \?\? true/,
+    "Active target preparation should preserve existing source roots for crossfade.",
+  );
+
+  assert.match(
+    sceneManager,
+    /initialTransitionOpacity:\s*options\?\.initialTransitionOpacity \?\? transition\.targetOpacity/,
+    "Active target preparation should attach target roots at the current transition opacity.",
+  );
+
+  const wrapperCalls =
+    sceneManager.match(/this\.transitionAwareSectionIsoOverlayUpdateOptions\(style, options\)/g) ?? [];
+
+  assert.ok(
+    wrapperCalls.length >= 3,
+    "MT, seismic-volume, and seismic-resistivity ISO update wrappers should all inject transition-aware options.",
+  );
+});

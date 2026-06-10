@@ -3351,11 +3351,38 @@ export class SceneManager {
     return buildMtVolumeCutMeshImpl.call(this, mesh, plane, options);
   }
 
+  private transitionAwareSectionIsoOverlayUpdateOptions(
+    style: EditableStyle,
+    options?: SectionIsoOverlayUpdateOptions,
+  ): SectionIsoOverlayUpdateOptions | undefined {
+    const transition = this.sectionIsoOverlayTransition;
+    if (!transition || style.sectionIsoEnabled !== true) return options;
+
+    const sceneSectionStyle = this.lastSceneSectionStyle;
+    const targetSectionActive =
+      !!sceneSectionStyle &&
+      sceneSectionStyle.sceneSectionEnabled === true &&
+      this.sceneSectionActivePlanes(sceneSectionStyle).length > 0;
+
+    if (!targetSectionActive) return options;
+
+    return {
+      ...(options ?? {}),
+      preserveExisting: options?.preserveExisting ?? true,
+      initialTransitionOpacity:
+        options?.initialTransitionOpacity ?? transition.targetOpacity,
+    };
+  }
+
   updateMtVolumeCutIsoOverlays(
     style: EditableStyle,
     options?: SectionIsoOverlayUpdateOptions,
   ): void {
-    return updateMtVolumeCutIsoOverlaysImpl.call(this, style, options);
+    return updateMtVolumeCutIsoOverlaysImpl.call(
+      this,
+      style,
+      this.transitionAwareSectionIsoOverlayUpdateOptions(style, options),
+    );
   }
 
   seismicVolumeIsoOverlayGroup(seismicLayer: THREE.Group): THREE.Group {
@@ -3395,14 +3422,22 @@ export class SceneManager {
     style: EditableStyle,
     options?: SectionIsoOverlayUpdateOptions,
   ): void {
-    return updateSeismicVolumeCutIsoOverlaysImpl.call(this, style, options);
+    return updateSeismicVolumeCutIsoOverlaysImpl.call(
+      this,
+      style,
+      this.transitionAwareSectionIsoOverlayUpdateOptions(style, options),
+    );
   }
 
   updateSeismicResistivityIsoOverlays(
     style: EditableStyle,
     options?: SectionIsoOverlayUpdateOptions,
   ): void {
-    return updateSeismicResistivityIsoOverlaysImpl.call(this, style, options);
+    return updateSeismicResistivityIsoOverlaysImpl.call(
+      this,
+      style,
+      this.transitionAwareSectionIsoOverlayUpdateOptions(style, options),
+    );
   }
 
   mtSurfaceBoundaryDefinitionsFromGroup(
