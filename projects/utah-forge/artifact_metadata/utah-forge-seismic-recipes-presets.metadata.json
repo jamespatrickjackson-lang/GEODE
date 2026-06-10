@@ -110,9 +110,7 @@
   "relatedLayers": [
     "utah-forge-phase3-seismic-browser"
   ],
-  "relatedPages": [
-    "05_mt_threshold_focus"
-  ],
+  "relatedPages": [],
   "review": {
     "requiredBy": "human",
     "questions": [

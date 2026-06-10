@@ -17,7 +17,7 @@ Status: current thread receipt for the implementation committed as `d6110dd`.
 
 - Utah FORGE has a visible default test cloud layer named `Topo test cloud`.
 - Current visible test style is intentionally obvious for review: one white puff, high opacity/density, `depthTest: false`, `affectedByFog: false`, and high render order.
-- Page `12_mt_volume_overview` explicitly keeps `utah-forge-topo-clouds` visible.
+- Page `<disposable-utah-page>` explicitly keeps `utah-forge-topo-clouds` visible.
 - Human review in this thread accepted the visible cloud state with "it worked."
 
 ## Render-Stack Trace From The Visual Check

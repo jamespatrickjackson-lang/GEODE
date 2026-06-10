@@ -486,7 +486,7 @@ Effective raster bounds:
 
 The current terrain edge treatment uses a `rounded-square` edge fade with
 `10000m` distance, `10000m` inset, and `75000m` corner radius. Edge outline is
-enabled. The current render-stack trace for page `12_mt_volume_overview`
+enabled. The current render-stack trace for page `<disposable-utah-page>`
 reports public clip enabled with center `[0, 0, 2000]` and size
 `[1395706.5, 1139445, 12600]`, while also reporting a
 `layer.terrain.publicSurfaceClipEnabled` authority conflict between the

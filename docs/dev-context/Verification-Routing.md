@@ -56,3 +56,8 @@ Shared vocabulary for these states lives in `docs/dev-context/GeoSee-Terms.md`.
 Agents should not run `Launch GeoSee.bat`. It is a human-facing launcher and it force-kills any process listening on port `5173`, which may interrupt the user's live app session.
 
 For agent-run checks, prefer a scoped dev server command such as `npm run dev -- --host 127.0.0.1 --port <free-port>` and report the URL. If port `5173` is already in use, assume it may belong to the user unless the user explicitly asks to restart it.
+
+
+## Disposable Page Fixture Rule
+
+Utah FORGE pages are disposable authoring state. App-behavior tests must not use live Utah pageOrder, current deck page files, page ids, page titles, page indexes, or page-to-page pairs as proof of generic behavior. Use synthetic fixtures or fixture builders for app behavior. Deck snapshot or deck integration checks must be explicitly named as deck-state checks and kept out of app-health verification.

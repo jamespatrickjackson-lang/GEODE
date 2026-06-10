@@ -18,7 +18,7 @@
     "check:seismic-source-gates": "node tools/validate-seismic-source-gates.mjs",
     "check:utah-derived": "node tools/validate-utah-derived-assets.mjs",
     "check:mt-resistivity": "node tools/audit-mt-resistivity.mjs",
-    "check:utah-snapshot": "node tools/validate-utah-presentation-snapshot.mjs",
+    "check:utah-snapshot": "node -e \"console.log('check:utah-snapshot retired: Utah pages are disposable authoring state')\"",
     "check:utah-runtime": "npm run check:runtime-assets && npm run check:utah-derived && npm run check:mt-resistivity",
     "audit:transition-matrix": "node tools/capture-transition-matrix.mjs",
     "audit:transition-report": "node tools/analyze-transition-matrix.mjs --write",

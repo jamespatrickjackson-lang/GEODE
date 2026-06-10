@@ -22,12 +22,6 @@ export const MT_FULL_DENSITY_MANIFEST_PATH =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/full_density/manifest.json";
 export const UTAH_FORGE_ENVIRONMENT_PATH = "projects/utah-forge/environment.json";
 
-export function readForgePageSpec(pageId: string): PresentationPage {
-  return readJsonFile<PresentationPage>(
-    `projects/utah-forge/pages/${pageId}.json`,
-  );
-}
-
 export function readJsonFile<T>(path: string): T {
   return JSON.parse(readFileSync(resolve(process.cwd(), path), "utf8")) as T;
 }

@@ -162,3 +162,8 @@ unless the user explicitly asks for a persistence architecture change.
 - Treat old repo-relative source paths in provenance as historical
   identifiers and resolve them through `docs/archive-map.md` and
   `docs/archive-manifest.json`.
+
+
+## Disposable Page Fixture Rule
+
+Utah FORGE pages are disposable authoring state. App-behavior tests must not use live Utah pageOrder, current deck page files, page ids, page titles, page indexes, or page-to-page pairs as proof of generic behavior. Use synthetic fixtures or fixture builders for app behavior. Deck snapshot or deck integration checks must be explicitly named as deck-state checks and kept out of app-health verification.
