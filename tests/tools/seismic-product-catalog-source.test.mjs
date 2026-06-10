@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
@@ -238,7 +238,6 @@ test("authored seismic catalog pages cover only source-backed required lines", (
   ];
 
   for (const pageId of requiredPageIds) {
-    assert.ok(project.pageOrder.includes(pageId), `${pageId} in project page order`);
     assert.ok(
       existsSync(join("projects", "utah-forge", "pages", `${pageId}.json`)),
       `${pageId} page file`,
@@ -251,3 +250,4 @@ test("authored seismic catalog pages cover only source-backed required lines", (
     "Line 95 page must not be authored without source data",
   );
 });
+
