@@ -280,3 +280,11 @@ Deck snapshot, deck matrix, and presentation audit tools may inspect live pageOr
 
 If a failing behavior is observed on a page pair, the fix must be filed against the reusable behavior family: transition entity matching, effective-state resolution, layer style composition, visibility resolution, camera policy, legend state, save/persistence, or validation. Never fix by targeting the observed page pair.
 
+## Transition Runtime Operating Spec
+
+Before transition runtime, editor/save transition gating, scene-section, Section ISO, working-area focus, opacity, or page-navigation work, read:
+
+docs/dev-context/Transition-Runtime-Operating-Spec.md
+
+This spec is the active operating contract for current transition work. Older audits and matrix logs are evidence only.
+

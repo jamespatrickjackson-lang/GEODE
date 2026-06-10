@@ -1,4 +1,4 @@
-# Page Transitions and Section-Frame Helper Visuals
+﻿# Page Transitions and Section-Frame Helper Visuals
 
 Status: directives doc. Canonical for the page-transition / section-frame helper
 contract. Cross-referenced from `CLAUDE.md` Source Of Truth,
@@ -19,7 +19,7 @@ Open this file before touching any of:
 - `src/scene/transitions/layerTweenRuntime.ts`
 - `src/scene/transitions/transitionStyles.ts`
 - `src/scene/transitions/transitionEffectiveLayersForPage.ts`
-- `src/scene/section/sceneSectionController.ts` — especially
+- `src/scene/section/sceneSectionController.ts` â€” especially
   `rebuildSceneSectionHelpers`, `applySceneSectionPlanes`, and
   `applySceneSectionHelperTransitionOpacity`
 - `src/scene/isoOverlays/sectionIsoOverlay.ts`
@@ -128,16 +128,16 @@ Section ISO line and band materials never overwrite opacity. Effective opacity
 is **composed**:
 
 ```text
-composed = authored × transition × threshold-surface attenuation
+composed = authored Ã— transition Ã— threshold-surface attenuation
 ```
 
-- `authored` — the value set by the editor / project JSON.
-- `transition` — the page/layer fade contribution during a tween.
-- `threshold-surface attenuation` — `0.8^surfaceCount` with short-frame
+- `authored` â€” the value set by the editor / project JSON.
+- `transition` â€” the page/layer fade contribution during a tween.
+- `threshold-surface attenuation` â€” `0.8^surfaceCount` with short-frame
   smoothing so camera motion does not flicker the result.
 
 Codified by DEC-071 in [docs/03-decisions.md](../03-decisions.md). Runtime
-exposes the components on overlay material `userData` for inspection — see
+exposes the components on overlay material `userData` for inspection â€” see
 [Runtime-Diagnostics.md](Runtime-Diagnostics.md) for the field names.
 
 Section ISO / MT / seismic cut identities include the section frame id so
@@ -162,7 +162,7 @@ The contract:
    at tween end (from the end style). It must **not** be rebuilt every frame
    during the tween. Mid-tween rebuilds re-instantiate materials, recompute
    lighting state, and read interpolated authored opacity as if it were the
-   final authored opacity — that is the source of the visible flicker.
+   final authored opacity â€” that is the source of the visible flicker.
 2. Helper **material instances** must remain stable across a tween. This
    applies in particular to:
    - `makeSceneSectionIsoBandMaterial()` `ShaderMaterial` in
@@ -206,7 +206,7 @@ The contract:
    ([sceneSectionController.ts:2423-2442](../../src/scene/section/sceneSectionController.ts#L2423-L2442)).
    The `BoxGeometry` at line 2455 is an invisible pick proxy at opacity 0.
    When a handle reads as a flat cube mid-transition, the geometry has not
-   changed — the cone material's shading state has been rebuilt. The fix is
+   changed â€” the cone material's shading state has been rebuilt. The fix is
    material-instance stability, not geometry replacement.
 
 Runtime transition frames route `tickLayerTweens()` through the section
@@ -250,7 +250,7 @@ Per DEC-071:
   to the target opacity on the page transition clock.
 
 `transitionEffectiveLayersForPage.ts` is the classifier. The crossfade path
-fades **between two pre-built helper snapshots** — not between a snapshot and
+fades **between two pre-built helper snapshots** â€” not between a snapshot and
 a per-frame rebuild. The same stability contract applies on both branches.
 
 ## Verification recipe
@@ -281,7 +281,7 @@ Before claiming a transition fix:
 | Dashed frame-intersection trace flickers / dashes drift | [sceneSectionController.ts:2768-2857](../../src/scene/section/sceneSectionController.ts#L2768-L2857) | Same rebuild cause; dash phase reset per rebuild. |
 | Ground trace width pulses across a page transition | rebuild path | Authored width re-applied through the interpolated style each frame; ribbon mesh re-instantiated. |
 | Authored "slide" between two pages does nothing | [transitionEffectiveLayersForPage.ts:160-166](../../src/scene/transitions/transitionEffectiveLayersForPage.ts#L160-L166), [layerTweenRuntime.ts:24-32](../../src/scene/transitions/layerTweenRuntime.ts#L24-L32) | No formal `slide` kind exists. Diagnose: classification, envelope membership, snapshot pair. Do not add a new kind without a decision entry. |
-| ISO overlay swaps abruptly between source and target resolved states | composition path | DEC-071 composition violated; an overlay write went through `material.opacity` directly instead of the `authored × transition × attenuation` path. |
+| ISO overlay swaps abruptly between source and target resolved states | composition path | DEC-071 composition violated; an overlay write went through `material.opacity` directly instead of the `authored Ã— transition Ã— attenuation` path. |
 
 ## Cross-reference index
 
@@ -289,30 +289,30 @@ Before claiming a transition fix:
   companion audit mapping page-transition clocks, state owners, divergence
   paths, and the recommended repair order before transition smoothing work.
 - `docs/03-decisions.md`:
-  - DEC-053 through DEC-075 — section-frame policy, ISO band geometry, scale
+  - DEC-053 through DEC-075 â€” section-frame policy, ISO band geometry, scale
     axes, ground trace, intersection traces, MT / seismic cut composition.
-  - DEC-071 — grid and section ISO transition composition. **Load-bearing
+  - DEC-071 â€” grid and section ISO transition composition. **Load-bearing
     sibling to this doc.**
-  - DEC-076 — names this doc as canonical; codifies the helper-stability
+  - DEC-076 â€” names this doc as canonical; codifies the helper-stability
     contract above.
-  - DEC-097 — targeted topo context participates in scene-section clipping by
+  - DEC-097 â€” targeted topo context participates in scene-section clipping by
     default.
-  - DEC-098 — section masks and section studio controls transition as scene
+  - DEC-098 â€” section masks and section studio controls transition as scene
     overlay channels.
-- `docs/dev-context/UI-Visual-Standards.md` — "Section Frame Scale Axes" and
+- `docs/dev-context/UI-Visual-Standards.md` â€” "Section Frame Scale Axes" and
   "Scene Overlay And Transition Rendering" sections carry the visual rules
   themselves (numeric ranges, defaults).
-- `docs/dev-context/Active-Build-Context.md` lines 60–92 — transition product
+- `docs/dev-context/Active-Build-Context.md` lines 60â€“92 â€” transition product
   awareness and rendering contract for the active build mode.
-- `docs/dev-context/Runtime-Diagnostics.md` "Transition Diagnostics" — fields
+- `docs/dev-context/Runtime-Diagnostics.md` "Transition Diagnostics" â€” fields
   the runtime exposes for inspection during transition regressions.
-- `docs/schemas/page.json.md` lines 119–132 — page schema for
+- `docs/schemas/page.json.md` lines 119â€“132 â€” page schema for
   `transition.duration` and `transition.easing`.
 
 ## Glossary
 
 - **Helper**: any on-canvas visual attached to a section frame that is not
-  layer data itself — ISO bands, ISO lines, ground trace, dashed
+  layer data itself â€” ISO bands, ISO lines, ground trace, dashed
   frame-intersection traces, push/pull cone handles, scale-axis tick lines,
   axis labels, axis headings, frame outline / crop box.
 - **Helper rebuild**: `rebuildSceneSectionHelpers()`. Disposes existing helper
@@ -329,3 +329,12 @@ Before claiming a transition fix:
   attenuation, never overwritten. Root lifecycle follows TRD-011 and TRD-012:
   target-active transitions crossfade source/target roots, while inactive or
   unrelated target pages discard transition roots at transition start.
+
+## Transition Runtime Operating Spec
+
+Before transition runtime, editor/save transition gating, scene-section, Section ISO, working-area focus, opacity, or page-navigation work, read:
+
+docs/dev-context/Transition-Runtime-Operating-Spec.md
+
+This spec is the active operating contract for current transition work. Older audits and matrix logs are evidence only.
+

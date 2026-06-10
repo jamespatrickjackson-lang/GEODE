@@ -1,0 +1,6006 @@
+﻿# Transition Code Audit Map
+
+Status: generated read-only code audit map.
+
+Purpose: locate transition ownership surfaces before code edits.
+
+Generated: 06/09/2026 20:32:36
+
+
+## Page transition orchestration
+
+- src\pages\PageController.tsx:35 — //   - which page is "captured" as current (currentIndex)
+- src\pages\PageController.tsx:47 — currentIndex: number;
+- src\pages\PageController.tsx:48 — targetIndex: number | null;
+- src\pages\PageController.tsx:49 — transitionProgress: number;
+- src\pages\PageController.tsx:77 — targetIndex: number | null;
+- src\pages\PageController.tsx:78 — sourcePageId: string | null;
+- src\pages\PageController.tsx:79 — targetPageId: string | null;
+- src\pages\PageController.tsx:87 — sourcePageId: string | null;
+- src\pages\PageController.tsx:88 — targetPageId: string | null;
+- src\pages\PageController.tsx:96 — type TransitionRunMode =
+- src\pages\PageController.tsx:101 — type TransitionRunStatus = "active" | "completed" | "cancelled";
+- src\pages\PageController.tsx:106 — interface TransitionRunDebugState {
+- src\pages\PageController.tsx:108 — mode: TransitionRunMode;
+- src\pages\PageController.tsx:109 — status: TransitionRunStatus;
+- src\pages\PageController.tsx:111 — targetIndex: number | null;
+- src\pages\PageController.tsx:112 — sourcePageId: string | null;
+- src\pages\PageController.tsx:113 — targetPageId: string | null;
+- src\pages\PageController.tsx:133 — sourcePageId: string | null;
+- src\pages\PageController.tsx:134 — targetPageId: string | null;
+- src\pages\PageController.tsx:144 — sourcePageId: string | null;
+- src\pages\PageController.tsx:145 — targetPageId: string | null;
+- src\pages\PageController.tsx:151 — sourcePageId: string | null;
+- src\pages\PageController.tsx:152 — targetPageId: string | null;
+- src\pages\PageController.tsx:158 — sourcePageId: string | null;
+- src\pages\PageController.tsx:159 — targetPageId: string | null;
+- src\pages\PageController.tsx:178 — sourcePageId: string | null;
+- src\pages\PageController.tsx:179 — targetPageId: string | null;
+- src\pages\PageController.tsx:203 — sourcePageId: string | null;
+- src\pages\PageController.tsx:204 — targetPageId: string | null;
+- src\pages\PageController.tsx:313 — pageTransitionProgressMs: number;
+- src\pages\PageController.tsx:331 — currentIndex: number;
+- src\pages\PageController.tsx:333 — targetIndex: number | null;
+- src\pages\PageController.tsx:334 — targetPageId: string | null;
+- src\pages\PageController.tsx:336 — transitionProgress: number;
+- src\pages\PageController.tsx:339 — runStatus: TransitionRunStatus | null;
+- src\pages\PageController.tsx:340 — runMode: TransitionRunMode | null;
+- src\pages\PageController.tsx:341 — runSourcePageId: string | null;
+- src\pages\PageController.tsx:342 — runTargetPageId: string | null;
+- src\pages\PageController.tsx:345 — sceneSourcePageId: string | null;
+- src\pages\PageController.tsx:346 — sceneTargetPageId: string | null;
+- src\pages\PageController.tsx:376 — type TransitionRunStart = Omit<
+- src\pages\PageController.tsx:377 — TransitionRunDebugState,
+- src\pages\PageController.tsx:464 — sourcePageId: sceneTransition?.sourcePageId ?? null,
+- src\pages\PageController.tsx:465 — targetPageId: sceneTransition?.targetPageId ?? null,
+- src\pages\PageController.tsx:490 — latestEvent?.transitionProgress,
+- src\pages\PageController.tsx:522 — sourcePageId: transition.sourcePageId,
+- src\pages\PageController.tsx:523 — targetPageId: transition.targetPageId,
+- src\pages\PageController.tsx:859 — function pageTransitionProgress(value: number, easing: PresentationPage["transition"]["easing"]): number {
+- src\pages\PageController.tsx:968 — const [currentIndex, setCurrentIndex] = useState(0);
+- src\pages\PageController.tsx:969 — const [targetIndex, setTargetIndex] = useState<number | null>(null);
+- src\pages\PageController.tsx:970 — const [transitionProgress, setTransitionProgress] = useState(1);
+- src\pages\PageController.tsx:1014 — const transitionRunSerialRef = useRef(0);
+- src\pages\PageController.tsx:1015 — const transitionRunRef = useRef<TransitionRunDebugState | null>(null);
+- src\pages\PageController.tsx:1016 — const lastTransitionRunRef = useRef<TransitionRunDebugState | null>(null);
+- src\pages\PageController.tsx:1026 — const transitionProgressRef = useRef(1);
+- src\pages\PageController.tsx:1036 — const currentIndexRef = useRef(currentIndex);
+- src\pages\PageController.tsx:1037 — const targetIndexRef = useRef<number | null>(targetIndex);
+- src\pages\PageController.tsx:1048 — currentIndexRef.current = currentIndex;
+- src\pages\PageController.tsx:1049 — targetIndexRef.current = targetIndex;
+- src\pages\PageController.tsx:1150 — (runOverride?: TransitionRunDebugState | null): PageTransitionFrame => {
+- src\pages\PageController.tsx:1152 — runOverride === undefined ? transitionRunRef.current : runOverride;
+- src\pages\PageController.tsx:1156 — activeRun.targetIndex !== null
+- src\pages\PageController.tsx:1161 — targetIndex: activeRun.targetIndex,
+- src\pages\PageController.tsx:1162 — sourcePageId: activeRun.sourcePageId,
+- src\pages\PageController.tsx:1163 — targetPageId: activeRun.targetPageId,
+- src\pages\PageController.tsx:1171 — const sourceIndex = currentIndexRef.current;
+- src\pages\PageController.tsx:1172 — const targetIndex = targetIndexRef.current;
+- src\pages\PageController.tsx:1173 — const sourcePageId = pagesRef.current[sourceIndex]?.id ?? null;
+- src\pages\PageController.tsx:1174 — const targetPageId =
+- src\pages\PageController.tsx:1175 — targetIndex !== null ? pagesRef.current[targetIndex]?.id ?? null : null;
+- src\pages\PageController.tsx:1176 — const progress = clamp01(transitionProgressRef.current);
+- src\pages\PageController.tsx:1179 — targetIndex !== null &&
+- src\pages\PageController.tsx:1180 — sourcePageId !== null &&
+- src\pages\PageController.tsx:1181 — targetPageId !== null &&
+- src\pages\PageController.tsx:1182 — sourcePageId !== targetPageId;
+- src\pages\PageController.tsx:1187 — targetIndex,
+- src\pages\PageController.tsx:1188 — sourcePageId,
+- src\pages\PageController.tsx:1189 — targetPageId: active ? targetPageId : null,
+- src\pages\PageController.tsx:1201 — runOverride?: TransitionRunDebugState | null,
+- src\pages\PageController.tsx:1205 — const targetIndex = frame.targetIndex;
+- src\pages\PageController.tsx:1206 — const sourcePageId = frame.sourcePageId;
+- src\pages\PageController.tsx:1207 — const targetPageId = frame.targetPageId;
+- src\pages\PageController.tsx:1211 — targetIndex !== null && progress >= PAGE_BOUND_UI_SWITCH_THRESHOLD
+- src\pages\PageController.tsx:1212 — ? targetPageId ?? sourcePageId
+- src\pages\PageController.tsx:1213 — : sourcePageId;
+- src\pages\PageController.tsx:1220 — sourcePageId,
+- src\pages\PageController.tsx:1221 — targetPageId: pageTransitionActive ? targetPageId : null,
+- src\pages\PageController.tsx:1224 — !pageTransitionActive || targetIndex === null
+- src\pages\PageController.tsx:1226 — : targetIndex < sourceIndex
+- src\pages\PageController.tsx:1236 — sourcePageId,
+- src\pages\PageController.tsx:1237 — targetPageId,
+- src\pages\PageController.tsx:1243 — sourcePageId,
+- src\pages\PageController.tsx:1244 — targetPageId,
+- src\pages\PageController.tsx:1250 — sourcePageId,
+- src\pages\PageController.tsx:1251 — targetPageId,
+- src\pages\PageController.tsx:1263 — const snapshotTransitionRun = useCallback(
+- src\pages\PageController.tsx:1265 — run: TransitionRunDebugState | null,
+- src\pages\PageController.tsx:1267 — ): TransitionRunDebugState | null => {
+- src\pages\PageController.tsx:1271 — transitionRunRef.current?.runId === run.runId;
+- src\pages\PageController.tsx:1284 — ? pageTransitionProgress(rawProgress, run.easing)
+- src\pages\PageController.tsx:1287 — const snapshot: TransitionRunDebugState = {
+- src\pages\PageController.tsx:1622 — const activeRun = snapshotTransitionRun(transitionRunRef.current, timeMs);
+- src\pages\PageController.tsx:1623 — const run = activeRun ?? snapshotTransitionRun(lastTransitionRunRef.current);
+- src\pages\PageController.tsx:1644 — currentIndex: currentIndexRef.current,
+- src\pages\PageController.tsx:1645 — currentPageId: pagesRef.current[currentIndexRef.current]?.id ?? null,
+- src\pages\PageController.tsx:1646 — targetIndex: targetIndexRef.current,
+- src\pages\PageController.tsx:1647 — targetPageId:
+- src\pages\PageController.tsx:1648 — targetIndexRef.current !== null
+- src\pages\PageController.tsx:1649 — ? pagesRef.current[targetIndexRef.current]?.id ?? null
+- src\pages\PageController.tsx:1652 — transitionProgress: traceNumber(transitionFrame.progress),
+- src\pages\PageController.tsx:1657 — runSourcePageId: run?.sourcePageId ?? null,
+- src\pages\PageController.tsx:1658 — runTargetPageId: run?.targetPageId ?? null,
+- src\pages\PageController.tsx:1661 — sceneSourcePageId: sceneTransition?.sourcePageId ?? null,
+- src\pages\PageController.tsx:1662 — sceneTargetPageId: sceneTransition?.targetPageId ?? null,
+- src\pages\PageController.tsx:1702 — transitionRunRef.current === null &&
+- src\pages\PageController.tsx:1722 — snapshotTransitionRun,
+- src\pages\PageController.tsx:1827 — const startTransitionRun = useCallback(
+- src\pages\PageController.tsx:1828 — (input: TransitionRunStart): TransitionRunDebugState => {
+- src\pages\PageController.tsx:1829 — const run: TransitionRunDebugState = {
+- src\pages\PageController.tsx:1831 — runId: `${input.mode}-${++transitionRunSerialRef.current}`,
+- src\pages\PageController.tsx:1834 — easedProgress: input.mode === "page" ? transitionProgressRef.current : 0,
+- src\pages\PageController.tsx:1840 — transitionRunRef.current = run;
+- src\pages\PageController.tsx:1847 — const cancelActiveTransitionRun = useCallback(
+- src\pages\PageController.tsx:1849 — const run = transitionRunRef.current;
+- src\pages\PageController.tsx:1851 — const snapshot = snapshotTransitionRun(run, cancelledAtMs);
+- src\pages\PageController.tsx:1853 — const cancelled: TransitionRunDebugState = {
+- src\pages\PageController.tsx:1860 — transitionRunRef.current = null;
+- src\pages\PageController.tsx:1861 — lastTransitionRunRef.current = cancelled;
+- src\pages\PageController.tsx:1864 — [snapshotTransitionRun],
+- src\pages\PageController.tsx:1867 — const completeTransitionRun = useCallback(
+- src\pages\PageController.tsx:1869 — const run = transitionRunRef.current;
+- src\pages\PageController.tsx:1871 — const snapshot = snapshotTransitionRun(run, completedAtMs);
+- src\pages\PageController.tsx:1873 — const completed: TransitionRunDebugState = {
+- src\pages\PageController.tsx:1882 — transitionRunRef.current = null;
+- src\pages\PageController.tsx:1883 — lastTransitionRunRef.current = completed;
+- src\pages\PageController.tsx:1886 — [snapshotTransitionRun],
+- src\pages\PageController.tsx:1968 — const page = pagesRef.current[currentIndexRef.current];
+- src\pages\PageController.tsx:2054 — const applyPageTransitionProgress = (timeMs: number) => {
+- src\pages\PageController.tsx:2064 — : pageTransitionProgress(raw, transition.easing);
+- src\pages\PageController.tsx:2065 — const activeRun = transitionRunRef.current;
+- src\pages\PageController.tsx:2072 — Math.abs(nextProgress - transitionProgressRef.current) >= 0.003
+- src\pages\PageController.tsx:2074 — transitionProgressRef.current = nextProgress;
+- src\pages\PageController.tsx:2075 — setTransitionProgress(nextProgress);
+- src\pages\PageController.tsx:2107 — pageTransitionProgressMs: 0,
+- src\pages\PageController.tsx:2118 — | "pageTransitionProgressMs"
+- src\pages\PageController.tsx:2135 — "pageTransitionProgressMs",
+- src\pages\PageController.tsx:2136 — () => applyPageTransitionProgress(t),
+- src\pages\PageController.tsx:2194 — const cancelledRun = cancelActiveTransitionRun(transitionStartMs);
+- src\pages\PageController.tsx:2195 — const currentPageIndex = currentIndexRef.current;
+- src\pages\PageController.tsx:2199 — const transitionRun = startTransitionRun({
+- src\pages\PageController.tsx:2202 — targetIndex: null,
+- src\pages\PageController.tsx:2203 — sourcePageId: currentPage?.id ?? null,
+- src\pages\PageController.tsx:2204 — targetPageId: null,
+- src\pages\PageController.tsx:2224 — completeTransitionRun(transitionRun.runId, performance.now());
+- src\pages\PageController.tsx:2241 — cancelActiveTransitionRun,
+- src\pages\PageController.tsx:2242 — completeTransitionRun,
+- src\pages\PageController.tsx:2245 — startTransitionRun,
+- src\pages\PageController.tsx:2297 — const currentPageForReapply = authoringPreviewPage ?? pages[currentIndex];
+- src\pages\PageController.tsx:2313 — const page = previewPage ?? pagesRef.current[currentIndexRef.current];
+- src\pages\PageController.tsx:2436 — currentIndex,
+- src\pages\PageController.tsx:2449 — const activeTargetIndex = targetIndexRef.current;
+- src\pages\PageController.tsx:2450 — if (isTransitioningRef.current && index === activeTargetIndex) return;
+- src\pages\PageController.tsx:2454 — index === currentIndexRef.current &&
+- src\pages\PageController.tsx:2470 — ? activeTargetIndex ?? currentIndexRef.current
+- src\pages\PageController.tsx:2471 — : currentIndexRef.current;
+- src\pages\PageController.tsx:2472 — const source = pages[sourceIndex] ?? pages[currentIndexRef.current];
+- src\pages\PageController.tsx:2504 — const cancelledRun = cancelActiveTransitionRun(transitionStartMs);
+- src\pages\PageController.tsx:2511 — targetIndexRef.current = index;
+- src\pages\PageController.tsx:2513 — sourcePageId: source?.id ?? null,
+- src\pages\PageController.tsx:2514 — targetPageId: target.id,
+- src\pages\PageController.tsx:2522 — setTargetIndex(index);
+- src\pages\PageController.tsx:2523 — setTransitionProgress(0);
+- src\pages\PageController.tsx:2524 — transitionProgressRef.current = 0;
+- src\pages\PageController.tsx:2528 — const transitionRun = startTransitionRun({
+- src\pages\PageController.tsx:2531 — targetIndex: index,
+- src\pages\PageController.tsx:2532 — sourcePageId: source?.id ?? null,
+- src\pages\PageController.tsx:2533 — targetPageId: target.id,
+- src\pages\PageController.tsx:2554 — transitionRun.runId,
+- src\pages\PageController.tsx:2722 — completeTransitionRun(transitionRun.runId, performance.now());
+- src\pages\PageController.tsx:2726 — transitionProgressRef.current = 1;
+- src\pages\PageController.tsx:2727 — setTransitionProgress(1);
+- src\pages\PageController.tsx:2729 — currentIndexRef.current = index;
+- src\pages\PageController.tsx:2730 — targetIndexRef.current = null;
+- src\pages\PageController.tsx:2733 — setCurrentIndex(index);
+- src\pages\PageController.tsx:2735 — setTargetIndex(null);
+- src\pages\PageController.tsx:2737 — sceneHandle.manager.finalizePageTransitionCommit(
+- src\pages\PageController.tsx:2765 — cancelActiveTransitionRun,
+- src\pages\PageController.tsx:2766 — completeTransitionRun,
+- src\pages\PageController.tsx:2767 — startTransitionRun,
+- src\pages\PageController.tsx:2773 — const baseIndex = targetIndexRef.current ?? currentIndexRef.current;
+- src\pages\PageController.tsx:2774 — goto(findVisiblePageIndex(pages, baseIndex, 1), "keyboard");
+- src\pages\PageController.tsx:2778 — const baseIndex = targetIndexRef.current ?? currentIndexRef.current;
+- src\pages\PageController.tsx:2779 — goto(findVisiblePageIndex(pages, baseIndex, -1), "keyboard");
+- src\pages\PageController.tsx:2791 — const cancelledRun = cancelActiveTransitionRun(transitionStartMs);
+- src\pages\PageController.tsx:2792 — const currentPageIndex = currentIndexRef.current;
+- src\pages\PageController.tsx:2794 — const transitionRun = startTransitionRun({
+- src\pages\PageController.tsx:2797 — targetIndex: null,
+- src\pages\PageController.tsx:2798 — sourcePageId: currentPage?.id ?? null,
+- src\pages\PageController.tsx:2799 — targetPageId: null,
+- src\pages\PageController.tsx:2810 — targetIndexRef.current = null;
+- src\pages\PageController.tsx:2814 — setTargetIndex(null);
+- src\pages\PageController.tsx:2815 — setTransitionProgress(1);
+- src\pages\PageController.tsx:2816 — transitionProgressRef.current = 1;
+- src\pages\PageController.tsx:2832 — const page = pagesRef.current[currentIndexRef.current];
+- src\pages\PageController.tsx:2838 — targetIndexRef.current = null;
+- src\pages\PageController.tsx:2839 — completeTransitionRun(transitionRun.runId, performance.now());
+- src\pages\PageController.tsx:2841 — setTargetIndex(null);
+- src\pages\PageController.tsx:2846 — cancelActiveTransitionRun,
+- src\pages\PageController.tsx:2847 — completeTransitionRun,
+- src\pages\PageController.tsx:2850 — startTransitionRun,
+- src\pages\PageController.tsx:2862 — const cancelledRun = cancelActiveTransitionRun(transitionStartMs);
+- src\pages\PageController.tsx:2863 — const currentPageIndex = currentIndexRef.current;
+- src\pages\PageController.tsx:2865 — const transitionRun = startTransitionRun({
+- src\pages\PageController.tsx:2868 — targetIndex: null,
+- src\pages\PageController.tsx:2869 — sourcePageId: currentPage?.id ?? null,
+- src\pages\PageController.tsx:2870 — targetPageId: null,
+- src\pages\PageController.tsx:2881 — targetIndexRef.current = null;
+- src\pages\PageController.tsx:2885 — setTargetIndex(null);
+- src\pages\PageController.tsx:2886 — setTransitionProgress(1);
+- src\pages\PageController.tsx:2887 — transitionProgressRef.current = 1;
+- src\pages\PageController.tsx:2902 — const page = pagesRef.current[currentIndexRef.current];
+- src\pages\PageController.tsx:2908 — targetIndexRef.current = null;
+- src\pages\PageController.tsx:2909 — completeTransitionRun(transitionRun.runId, performance.now());
+- src\pages\PageController.tsx:2911 — setTargetIndex(null);
+- src\pages\PageController.tsx:2915 — cancelActiveTransitionRun,
+- src\pages\PageController.tsx:2916 — completeTransitionRun,
+- src\pages\PageController.tsx:2919 — startTransitionRun,
+- src\pages\PageController.tsx:2928 — const page = pages[currentIndex];
+- src\pages\PageController.tsx:2940 — currentIndex,
+- src\pages\PageController.tsx:2959 — const transitionRun = snapshotTransitionRun(transitionRunRef.current);
+- src\pages\PageController.tsx:2960 — const transitionFrame = transitionFrameState(transitionRun);
+- src\pages\PageController.tsx:2962 — currentIndex: currentIndexRef.current,
+- src\pages\PageController.tsx:2963 — currentPageId: pagesRef.current[currentIndexRef.current]?.id ?? null,
+- src\pages\PageController.tsx:2964 — targetIndex: targetIndexRef.current,
+- src\pages\PageController.tsx:2965 — targetPageId:
+- src\pages\PageController.tsx:2966 — targetIndexRef.current !== null
+- src\pages\PageController.tsx:2967 — ? pagesRef.current[targetIndexRef.current]?.id ?? null
+- src\pages\PageController.tsx:2969 — transitionProgress: transitionFrame.progress,
+- src\pages\PageController.tsx:2974 — transitionRun,
+- src\pages\PageController.tsx:2975 — lastTransitionRun: snapshotTransitionRun(lastTransitionRunRef.current),
+- src\pages\PageController.tsx:2993 — snapshotTransitionRun,
+- src\pages\PageController.tsx:3025 — if (index >= 0) goto(index, "keyboard");
+- src\pages\PageController.tsx:3029 — if (index >= 0) goto(index, "keyboard");
+- src\pages\PageController.tsx:3040 — currentIndex,
+- src\pages\PageController.tsx:3041 — targetIndex,
+- src\pages\PageController.tsx:3042 — transitionProgress,
+- src\pages\PageController.tsx:3059 — currentIndex,
+- src\pages\PageController.tsx:3060 — targetIndex,
+- src\pages\PageController.tsx:3061 — transitionProgress,
+- src\scene\SceneManager.ts:258 — type CinematicSceneTransitionRuntime,
+- src\scene\SceneManager.ts:265 — type EnvironmentSceneTransitionRuntime,
+- src\scene\SceneManager.ts:504 — transitionSourcePageId: string | null;
+- src\scene\SceneManager.ts:505 — transitionTargetPageId: string | null;
+- src\scene\SceneManager.ts:507 — transitionProgress: number | null;
+- src\scene\SceneManager.ts:777 — private cinematicSceneTransition: CinematicSceneTransitionRuntime | null = null;
+- src\scene\SceneManager.ts:778 — private environmentSceneTransition: EnvironmentSceneTransitionRuntime | null =
+- src\scene\SceneManager.ts:2718 — sourcePageId: string | null;
+- src\scene\SceneManager.ts:2719 — targetPageId: string | null;
+- src\scene\SceneManager.ts:2752 — sourcePageId: transition?.sourcePageId ?? null,
+- src\scene\SceneManager.ts:2753 — targetPageId: transition?.targetPageId ?? null,
+- src\scene\SceneManager.ts:2810 — const transitionProgress = this.activeTransitionEasedProgress();
+- src\scene\SceneManager.ts:2819 — transitionSourcePageId: transition?.sourcePageId ?? null,
+- src\scene\SceneManager.ts:2820 — transitionTargetPageId: transition?.targetPageId ?? null,
+- src\scene\SceneManager.ts:2822 — transitionProgress,
+- src\scene\SceneManager.ts:2909 — state.targetPageId !== pageId ||
+- src\scene\SceneManager.ts:2929 — if (!state?.hasFinalized || !page || state.targetPageId !== page.id) {
+- src\scene\SceneManager.ts:2966 — finalizePageTransitionCommit(
+- src\scene\SceneManager.ts:2982 — attemptedBy: "SceneManager.finalizePageTransitionCommit",
+- src\scene\SceneManager.ts:2989 — attemptedBy: "SceneManager.finalizePageTransitionCommit",
+- src\scene\SceneManager.ts:3010 — attemptedBy: "SceneManager.finalizePageTransitionCommit",
+- src\scene\SceneManager.ts:4182 — sourcePageId: fromPage.id,
+- src\scene\SceneManager.ts:4183 — targetPageId: toPage.id,
+- src\scene\terrainMaterial.ts:548 — uSceneSectionTransitionProgress: { value: 0 },
+- src\scene\terrainMaterial.ts:744 — uniform float uSceneSectionTransitionProgress;
+- src\scene\terrainMaterial.ts:1159 — sectionAlpha = mix(sourceAlpha, targetAlpha, clamp(uSceneSectionTransitionProgress, 0.0, 1.0));
+- src\scene\section\sceneSectionController.ts:1924 — ensure<number>("uSceneSectionTransitionProgress", 0).value = clamp01(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:43 — ensure<number>("uSceneSectionTransitionProgress", 0).value = clamp01(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:309 — "uniform float uSceneSectionTransitionProgress;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:376 — "  return mix(sourceAlpha, targetAlpha, clamp(uSceneSectionTransitionProgress, 0.0, 1.0));",
+- src\scene\styles\scalarEdgeLines.ts:21 — const currentIndex = geometry.getIndex();
+- src\scene\styles\scalarEdgeLines.ts:23 — if (currentIndex) {
+- src\scene\styles\scalarEdgeLines.ts:24 — storedIndex = new Uint32Array(currentIndex.count);
+- src\scene\styles\scalarEdgeLines.ts:25 — for (let i = 0; i < currentIndex.count; i += 1) {
+- src\scene\styles\scalarEdgeLines.ts:26 — storedIndex[i] = currentIndex.getX(i);
+- src\scene\transitions\cinematicSceneTransitions.ts:120 — export interface CinematicSceneTransitionRuntime {
+- src\scene\transitions\cinematicSceneTransitions.ts:121 — sourcePageId: string;
+- src\scene\transitions\cinematicSceneTransitions.ts:122 — targetPageId: string;
+- src\scene\transitions\cinematicSceneTransitions.ts:144 — sourcePageId: string | null;
+- src\scene\transitions\cinematicSceneTransitions.ts:145 — targetPageId: string | null;
+- src\scene\transitions\cinematicSceneTransitions.ts:327 — function transitionProgress(
+- src\scene\transitions\cinematicSceneTransitions.ts:328 — transition: CinematicSceneTransitionRuntime,
+- src\scene\transitions\cinematicSceneTransitions.ts:371 — ): CinematicSceneTransitionRuntime {
+- src\scene\transitions\cinematicSceneTransitions.ts:373 — sourcePageId: fromPage.id,
+- src\scene\transitions\cinematicSceneTransitions.ts:374 — targetPageId: toPage.id,
+- src\scene\transitions\cinematicSceneTransitions.ts:388 — transition: CinematicSceneTransitionRuntime,
+- src\scene\transitions\cinematicSceneTransitions.ts:391 — const { progress, done } = transitionProgress(transition, nowMs);
+- src\scene\transitions\cinematicSceneTransitions.ts:640 — sourcePageId: null,
+- src\scene\transitions\cinematicSceneTransitions.ts:641 — targetPageId: null,
+- src\scene\transitions\cinematicSceneTransitions.ts:652 — transition: CinematicSceneTransitionRuntime,
+- src\scene\transitions\cinematicSceneTransitions.ts:658 — sourcePageId: transition.sourcePageId,
+- src\scene\transitions\cinematicSceneTransitions.ts:659 — targetPageId: transition.targetPageId,
+- src\scene\transitions\environmentSceneTransition.ts:19 — export interface EnvironmentSceneTransitionRuntime {
+- src\scene\transitions\environmentSceneTransition.ts:20 — sourcePageId: string;
+- src\scene\transitions\environmentSceneTransition.ts:21 — targetPageId: string;
+- src\scene\transitions\environmentSceneTransition.ts:62 — function transitionProgress(
+- src\scene\transitions\environmentSceneTransition.ts:64 — EnvironmentSceneTransitionRuntime,
+- src\scene\transitions\environmentSceneTransition.ts:104 — sourcePageId,
+- src\scene\transitions\environmentSceneTransition.ts:105 — targetPageId,
+- src\scene\transitions\environmentSceneTransition.ts:112 — sourcePageId: string;
+- src\scene\transitions\environmentSceneTransition.ts:113 — targetPageId: string;
+- src\scene\transitions\environmentSceneTransition.ts:119 — }): EnvironmentSceneTransitionRuntime {
+- src\scene\transitions\environmentSceneTransition.ts:121 — sourcePageId,
+- src\scene\transitions\environmentSceneTransition.ts:122 — targetPageId,
+- src\scene\transitions\environmentSceneTransition.ts:132 — transition: EnvironmentSceneTransitionRuntime,
+- src\scene\transitions\environmentSceneTransition.ts:135 — const { progress, done } = transitionProgress(transition, nowMs);
+- src\scene\transitions\layerTweenRuntime.ts:57 — sourcePageId: transition.sourcePageId,
+- src\scene\transitions\layerTweenRuntime.ts:58 — targetPageId: transition.targetPageId,
+- src\scene\transitions\transitionCommitGate.ts:71 — sourcePageId: string | null;
+- src\scene\transitions\transitionCommitGate.ts:72 — targetPageId: string | null;
+- src\scene\transitions\transitionCommitGate.ts:89 — sourcePageId?: string | null;
+- src\scene\transitions\transitionCommitGate.ts:90 — targetPageId?: string | null;
+- src\scene\transitions\transitionCommitGate.ts:393 — sourcePageId: input.sourcePageId ?? null,
+- src\scene\transitions\transitionCommitGate.ts:394 — targetPageId: input.targetPageId ?? null,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:525 — sourcePageId: fromPage.id,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:526 — targetPageId: toPage.id,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:531 — sourcePageId: fromPage.id,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:532 — targetPageId: toPage.id,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:548 — sourcePageId: fromPage.id,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:549 — targetPageId: toPage.id,
+- src\scene\transitions\transitionRenderGraphAdapter.ts:59 — sourcePageId?: string | null;
+- src\scene\transitions\transitionRenderGraphAdapter.ts:60 — targetPageId?: string | null;
+- src\scene\transitions\transitionStyles.ts:186 — sourcePageId: string;
+- src\scene\transitions\transitionStyles.ts:187 — targetPageId: string;
+- src\editor\authoringTarget.ts:25 — currentIndex,
+- src\editor\authoringTarget.ts:27 — targetIndex,
+- src\editor\authoringTarget.ts:30 — currentIndex: number;
+- src\editor\authoringTarget.ts:32 — targetIndex: number | null;
+- src\editor\authoringTarget.ts:36 — selectedPageIndex === currentIndex &&
+- src\editor\authoringTarget.ts:38 — targetIndex === null
+- src\editor\EditorChrome.tsx:298 — targetIndex,
+- src\editor\EditorChrome.tsx:303 — const active = isTransitioning && targetIndex !== null;
+- src\editor\EditorChrome.tsx:342 — currentIndex,
+- src\editor\EditorChrome.tsx:347 — typeof transitionFrame.targetIndex === "number"
+- src\editor\EditorChrome.tsx:348 — ? pages[transitionFrame.targetIndex] ?? null
+- src\editor\EditorChrome.tsx:357 — : pages[currentIndex] ?? null;
+- src\editor\EditorChrome.tsx:529 — // Mirrors PageController.currentIndex to EditorContext.selectedPageId only when
+- src\editor\EditorChrome.tsx:535 — const { pages, currentIndex, authoringPreviewPageId } = usePageController();
+- src\editor\EditorChrome.tsx:547 — const id = pages[currentIndex]?.id;
+- src\editor\EditorChrome.tsx:549 — }, [pages, currentIndex, selectPage, authoringPreviewPageId]);
+- src\editor\EditorContext.tsx:168 — targetPageId: string,
+- src\editor\EditorContext.tsx:173 — targetPageId?: string,
+- src\editor\EditorContext.tsx:178 — targetPageId?: string,
+- src\editor\EditorContext.tsx:183 — targetPageId: string,
+- src\editor\EditorContext.tsx:1534 — if (action.pageId === action.targetPageId) return state;
+- src\editor\EditorContext.tsx:1536 — const target = state.pages.find((p) => p.id === action.targetPageId);
+- src\editor\EditorContext.tsx:1542 — const targetIndex = order.indexOf(target.id);
+- src\editor\EditorContext.tsx:1543 — if (sourceIndex < 0 || targetIndex < 0) return state;
+- src\editor\EditorContext.tsx:1554 — const nextTargetIndex = withoutSource.indexOf(target.id);
+- src\editor\EditorContext.tsx:1555 — if (nextTargetIndex < 0) return state;
+- src\editor\EditorContext.tsx:1557 — action.insertPosition ?? (sourceIndex < targetIndex ? "after" : "before");
+- src\editor\EditorContext.tsx:1559 — insertPosition === "after" ? nextTargetIndex + 1 : nextTargetIndex;
+- src\editor\EditorContext.tsx:1610 — const targetIndex =
+- src\editor\EditorContext.tsx:1611 — action.targetPageId !== undefined
+- src\editor\EditorContext.tsx:1612 — ? nextArchivedOrder.indexOf(action.targetPageId)
+- src\editor\EditorContext.tsx:1615 — targetIndex >= 0
+- src\editor\EditorContext.tsx:1617 — ? targetIndex + 1
+- src\editor\EditorContext.tsx:1618 — : targetIndex
+- src\editor\EditorContext.tsx:1645 — const targetIndex =
+- src\editor\EditorContext.tsx:1646 — action.targetPageId !== undefined
+- src\editor\EditorContext.tsx:1647 — ? nextPageOrder.indexOf(action.targetPageId)
+- src\editor\EditorContext.tsx:1650 — targetIndex >= 0
+- src\editor\EditorContext.tsx:1652 — ? targetIndex + 1
+- src\editor\EditorContext.tsx:1653 — : targetIndex
+- src\editor\EditorContext.tsx:1671 — if (action.pageId === action.targetPageId) return state;
+- src\editor\EditorContext.tsx:1673 — const target = state.archivedPages.find((p) => p.id === action.targetPageId);
+- src\editor\EditorContext.tsx:1679 — const targetIndex = withoutSource.indexOf(target.id);
+- src\editor\EditorContext.tsx:1680 — if (targetIndex < 0) return state;
+- src\editor\EditorContext.tsx:1682 — action.insertPosition === "after" ? targetIndex + 1 : targetIndex;
+- src\editor\EditorContext.tsx:3543 — (pageId, targetPageId, insertPosition) =>
+- src\editor\EditorContext.tsx:3544 — dispatch({ type: "MOVE_PAGE_BLOCK", pageId, targetPageId, insertPosition }),
+- src\editor\EditorContext.tsx:3549 — (pageId, targetPageId, insertPosition) =>
+- src\editor\EditorContext.tsx:3550 — dispatch({ type: "ARCHIVE_PAGE", pageId, targetPageId, insertPosition }),
+- src\editor\EditorContext.tsx:3557 — (pageId, targetPageId, insertPosition) =>
+- src\editor\EditorContext.tsx:3561 — targetPageId,
+- src\editor\EditorContext.tsx:3568 — (pageId, targetPageId, insertPosition) =>
+- src\editor\EditorContext.tsx:3572 — targetPageId,
+- src\editor\EditorContext.tsx:3695 — // its real currentIndex). Camera and currentIndex are untouched.
+- src\editor\EditorRoot.tsx:513 — currentIndex,
+- src\editor\EditorRoot.tsx:515 — targetIndex,
+- src\editor\EditorRoot.tsx:543 — selectedPageIndex === currentIndex &&
+- src\editor\EditorRoot.tsx:545 — targetIndex === null;
+- src\editor\LayerPanel.tsx:356 — currentIndex,
+- src\editor\LayerPanel.tsx:358 — targetIndex,
+- src\editor\LayerPanel.tsx:369 — currentIndex,
+- src\editor\LayerPanel.tsx:371 — targetIndex,
+- src\editor\LayerPanelGroups.tsx:114 — currentIndex,
+- src\editor\LayerPanelGroups.tsx:116 — targetIndex,
+- src\editor\LayerPanelGroups.tsx:127 — currentIndex,
+- src\editor\LayerPanelGroups.tsx:129 — targetIndex,
+- src\editor\PagePanel.tsx:258 — currentIndex,
+- src\editor\PagePanel.tsx:261 — targetIndex,
+- src\editor\PagePanel.tsx:271 — const pageStructureLocked = isTransitioning || targetIndex !== null;
+- src\editor\PagePanel.tsx:336 — goto(index);
+- src\editor\PagePanel.tsx:412 — const targetPageId = relationshipTargetForPage(page);
+- src\editor\PagePanel.tsx:413 — if (targetPageId) revealPageRow(targetPageId);
+- src\editor\PagePanel.tsx:422 — const targetPageId = relationshipTargetForPage(page);
+- src\editor\PagePanel.tsx:429 — style={pageRelationshipBadgeStyle(!targetPageId)}
+- src\editor\PagePanel.tsx:430 — disabled={!targetPageId}
+- src\editor\PagePanel.tsx:432 — targetPageId ? "Reveal first child page" : "No child page to reveal"
+- src\editor\PagePanel.tsx:450 — style={pageRelationshipBadgeStyle(!targetPageId)}
+- src\editor\PagePanel.tsx:451 — disabled={!targetPageId}
+- src\editor\PagePanel.tsx:453 — targetPageId
+- src\editor\PagePanel.tsx:475 — goto(idx);
+- src\editor\PagePanel.tsx:603 — const targetIndex = state.pages.findIndex(
+- src\editor\PagePanel.tsx:607 — targetIndex >= 0 && target.insertPosition === "after"
+- src\editor\PagePanel.tsx:608 — ? targetIndex + 1
+- src\editor\PagePanel.tsx:609 — : targetIndex;
+- src\editor\PagePanel.tsx:834 — i === currentIndex &&
+- src\editor\PagePanel.tsx:836 — targetIndex === null;
+- src\editor\PagePanel.tsx:1270 — targetIndex === null;
+- src\editor\types.ts:225 — targetPageId: string;
+- src\editor\types.ts:231 — targetPageId?: string;
+- src\editor\types.ts:237 — targetPageId?: string;
+- src\editor\types.ts:243 — targetPageId: string;
+- src\ui\AssayLegend.tsx:97 — const targetIndex = transitionFrame.targetIndex;
+- src\ui\AssayLegend.tsx:99 — targetIndex !== null && transitionFrame.progress >= 0.92
+- src\ui\AssayLegend.tsx:100 — ? pages[targetIndex] ?? pages[sourceIndex]
+- src\ui\MtSurfaceBoundaryLegend.tsx:74 — const { pages, currentIndex, transitionFrame } = usePageController();
+- src\ui\MtSurfaceBoundaryLegend.tsx:77 — const targetIndex = transitionFrame.targetIndex;
+- src\ui\MtSurfaceBoundaryLegend.tsx:80 — pages[targetIndex ?? transitionFrame.sourceIndex] ??
+- src\ui\MtSurfaceBoundaryLegend.tsx:82 — pages[currentIndex];
+- src\ui\MtSurfaceBoundaryLegend.tsx:94 — (transitionFrame.active && targetIndex !== null
+- src\ui\NavControls.tsx:157 — currentIndex,
+- src\ui\NavControls.tsx:185 — goto(lastVisibleIndex);
+- src\ui\NavControls.tsx:193 — goto(firstVisibleIndex);
+- src\ui\NavControls.tsx:200 — : (pages[currentIndex]?.title ?? "");
+- src\ui\ResistivityLegend.tsx:588 — const { pages, currentIndex, transitionFrame } = usePageController();
+- src\ui\ResistivityLegend.tsx:628 — const targetIndex = transitionFrame.targetIndex;
+- src\ui\ResistivityLegend.tsx:633 — pages[targetIndex ?? sourceIndex] ??
+- src\ui\ResistivityLegend.tsx:635 — pages[currentIndex];
+- src\ui\ResistivityLegend.tsx:647 — (transitionActive && targetIndex !== null
+- src\ui\ResistivityLegend.tsx:705 — pageOverride ?? pages[sourceIndex] ?? pages[currentIndex] ?? page;
+- src\ui\ResistivityLegend.tsx:715 — !pageOverride && !editingEnvironment && transitionActive && targetIndex !== null
+- src\ui\SceneLabels.tsx:1077 — const targetIndex = transitionFrame.targetIndex;
+- src\ui\SceneLabels.tsx:1079 — targetIndex !== null && transitionFrame.progress >= 0.92
+- src\ui\SceneLabels.tsx:1080 — ? pages[targetIndex] ?? pages[sourceIndex]
+- src\ui\SceneSectionLegend.tsx:292 — const { pages, currentIndex, transitionFrame } = usePageController();
+- src\ui\SceneSectionLegend.tsx:296 — const targetIndex = transitionFrame.targetIndex;
+- src\ui\SceneSectionLegend.tsx:299 — pages[targetIndex ?? transitionFrame.sourceIndex] ??
+- src\ui\SceneSectionLegend.tsx:301 — pages[currentIndex];
+- src\ui\SceneSectionLegend.tsx:313 — (transitionFrame.active && targetIndex !== null
+- src\ui\SectionIsoLegend.tsx:444 — const { pages, currentIndex, transitionFrame } = usePageController();
+- src\ui\SectionIsoLegend.tsx:507 — const targetIndex = transitionFrame.targetIndex;
+- src\ui\SectionIsoLegend.tsx:510 — pages[targetIndex ?? transitionFrame.sourceIndex] ??
+- src\ui\SectionIsoLegend.tsx:512 — pages[currentIndex];
+- src\ui\SectionIsoLegend.tsx:524 — (transitionFrame.active && targetIndex !== null
+- src\ui\SeismicVolumeLegend.tsx:358 — const { pages, currentIndex, transitionFrame } = usePageController();
+- src\ui\SeismicVolumeLegend.tsx:365 — const targetIndex = transitionFrame.targetIndex;
+- src\ui\SeismicVolumeLegend.tsx:368 — pages[targetIndex ?? transitionFrame.sourceIndex] ??
+- src\ui\SeismicVolumeLegend.tsx:370 — pages[currentIndex];
+- src\ui\SeismicVolumeLegend.tsx:382 — (transitionFrame.active && targetIndex !== null
+- src\ui\SurfaceElevationLegend.tsx:132 — const { pages, currentIndex, transitionFrame } = usePageController();
+- src\ui\SurfaceElevationLegend.tsx:138 — const targetIndex = transitionFrame.targetIndex;
+- src\ui\SurfaceElevationLegend.tsx:141 — pages[targetIndex ?? transitionFrame.sourceIndex] ??
+- src\ui\SurfaceElevationLegend.tsx:143 — pages[currentIndex];
+- src\ui\SurfaceElevationLegend.tsx:154 — (transitionFrame.active && targetIndex !== null
+
+## Layer transition classifier/runtime
+
+- src\scene\CLAUDE.md:21 — and `transitions/layerTweenRuntime.ts` — R2 extracted helpers.
+- src\scene\layerDiagnostics.ts:9 — export interface LayerDiagnosticsSnapshot {
+- src\scene\layerDiagnostics.ts:32 — getSnapshot: () => LayerDiagnosticsSnapshot;
+- src\scene\layerDiagnostics.ts:33 — logSnapshot: () => LayerDiagnosticsSnapshot;
+- src\scene\layerDiagnostics.ts:34 — getLastSnapshot: () => LayerDiagnosticsSnapshot | null;
+- src\scene\layerDiagnostics.ts:140 — export function collectLayerDiagnosticsSnapshot(
+- src\scene\layerDiagnostics.ts:143 — ): LayerDiagnosticsSnapshot {
+- src\scene\layerDiagnostics.ts:234 — let lastSnapshot: LayerDiagnosticsSnapshot | null = null;
+- src\scene\layerDiagnostics.ts:236 — getSnapshot: () => {
+- src\scene\layerDiagnostics.ts:237 — lastSnapshot = collectLayerDiagnosticsSnapshot(handle, context);
+- src\scene\layerDiagnostics.ts:238 — return lastSnapshot;
+- src\scene\layerDiagnostics.ts:240 — logSnapshot: () => {
+- src\scene\layerDiagnostics.ts:241 — const snapshot = hook.getSnapshot();
+- src\scene\layerDiagnostics.ts:242 — console.log("[GeoVox diagnostics]", snapshot);
+- src\scene\layerDiagnostics.ts:243 — return snapshot;
+- src\scene\layerDiagnostics.ts:245 — getLastSnapshot: () => lastSnapshot,
+- src\scene\SceneManager.ts:88 — type LayerTransitionSnapshot,
+- src\scene\SceneManager.ts:186 — sceneSectionHelperSnapshotAllowedForTween as sceneSectionHelperSnapshotAllowedForTweenImpl,
+- src\scene\SceneManager.ts:250 — import { transitionEffectiveLayersForPage as transitionEffectiveLayersForPageImpl } from "./transitions/transitionEffectiveLayersForPage";
+- src\scene\SceneManager.ts:270 — tickLayerTweensImpl,
+- src\scene\SceneManager.ts:271 — transitionEnvelopeAllowsLayerImpl,
+- src\scene\SceneManager.ts:274 — } from "./transitions/layerTweenRuntime";
+- src\scene\SceneManager.ts:609 — interface LayerTweenTickDebugState {
+- src\scene\SceneManager.ts:617 — snapshotMs: number;
+- src\scene\SceneManager.ts:618 — helperSnapshotMs: number;
+- src\scene\SceneManager.ts:622 — layerTweenIds: string[];
+- src\scene\SceneManager.ts:624 — snapshotIds: string[];
+- src\scene\SceneManager.ts:625 — layerTweenCountBefore: number;
+- src\scene\SceneManager.ts:627 — snapshotCountBefore: number;
+- src\scene\SceneManager.ts:629 — helperSnapshotActiveBefore: boolean;
+- src\scene\SceneManager.ts:637 — layerTweensMs: number;
+- src\scene\SceneManager.ts:666 — groundTracePolicy: "mirror-delayed-ground-trace-into-helper-snapshot";
+- src\scene\SceneManager.ts:668 — snapshotGroundTraceCount: number;
+- src\scene\SceneManager.ts:669 — snapshotActive: boolean;
+- src\scene\SceneManager.ts:752 — private sceneSectionHelperTransitionSnapshot: LayerTransitionSnapshot | null =
+- src\scene\SceneManager.ts:768 — private layerTweens = new Map<string, LayerOpacityTween>();
+- src\scene\SceneManager.ts:770 — private layerTransitionSnapshots = new Map<string, LayerTransitionSnapshot>();
+- src\scene\SceneManager.ts:805 — private lastLayerTweenTickDebug: LayerTweenTickDebugState | null = null;
+- src\scene\SceneManager.ts:1399 — const snapshot = this.layerTransitionSnapshots.get(id);
+- src\scene\SceneManager.ts:1400 — const snapshotOpacity = snapshot
+- src\scene\SceneManager.ts:1401 — ? this.currentRenderOpacityForTree(snapshot.group, snapshot.from)
+- src\scene\SceneManager.ts:1403 — const useSnapshot =
+- src\scene\SceneManager.ts:1404 — !!snapshot &&
+- src\scene\SceneManager.ts:1405 — snapshotOpacity > opacity + 0.001 &&
+- src\scene\SceneManager.ts:1406 — snapshot.style !== undefined;
+- src\scene\SceneManager.ts:1410 — ? (group.visible && opacity > 0.001) || snapshotOpacity > 0.001
+- src\scene\SceneManager.ts:1412 — opacity: Math.max(opacity, snapshotOpacity),
+- src\scene\SceneManager.ts:1413 — style: { ...(useSnapshot ? snapshot.style! : appliedStyle) },
+- src\scene\SceneManager.ts:1606 — let snapshot: THREE.Object3D;
+- src\scene\SceneManager.ts:1608 — snapshot = source.clone(false);
+- src\scene\SceneManager.ts:1612 — snapshot.userData = {
+- src\scene\SceneManager.ts:1614 — transitionSnapshotForLayer: id,
+- src\scene\SceneManager.ts:1620 — const snapshotRenderable = snapshot as THREE.Object3D & {
+- src\scene\SceneManager.ts:1625 — snapshotRenderable.geometry = this.cloneTransitionGeometry(
+- src\scene\SceneManager.ts:1630 — snapshotRenderable.material = Array.isArray(sourceRenderable.material)
+- src\scene\SceneManager.ts:1637 — snapshot.add(this.cloneTransitionObjectTree(id, child));
+- src\scene\SceneManager.ts:1639 — return snapshot;
+- src\scene\SceneManager.ts:1642 — cloneLayerTransitionSnapshot(
+- src\scene\SceneManager.ts:1646 — const snapshot = this.cloneTransitionObjectTree(id, source) as THREE.Group;
+- src\scene\SceneManager.ts:1647 — snapshot.name = `${id}-transition-snapshot`;
+- src\scene\SceneManager.ts:1648 — snapshot.userData = {
+- src\scene\SceneManager.ts:1649 — ...snapshot.userData,
+- src\scene\SceneManager.ts:1650 — transitionSnapshotForLayer: id,
+- src\scene\SceneManager.ts:1652 — this.scene.add(snapshot);
+- src\scene\SceneManager.ts:1653 — return snapshot;
+- src\scene\SceneManager.ts:1656 — private removeLayerTransitionSnapshot(id: string): void {
+- src\scene\SceneManager.ts:1657 — const snapshot = this.layerTransitionSnapshots.get(id);
+- src\scene\SceneManager.ts:1658 — if (!snapshot) return;
+- src\scene\SceneManager.ts:1659 — this.layerTransitionSnapshots.delete(id);
+- src\scene\SceneManager.ts:1660 — snapshot.group.parent?.remove(snapshot.group);
+- src\scene\SceneManager.ts:1661 — disposeObjectTree(snapshot.group);
+- src\scene\SceneManager.ts:1664 — private clearLayerTransitionSnapshots(): void {
+- src\scene\SceneManager.ts:1665 — for (const id of Array.from(this.layerTransitionSnapshots.keys())) {
+- src\scene\SceneManager.ts:1666 — this.removeLayerTransitionSnapshot(id);
+- src\scene\SceneManager.ts:1668 — this.removeSceneSectionHelperTransitionSnapshot();
+- src\scene\SceneManager.ts:1671 — private removeSceneSectionHelperTransitionSnapshot(): void {
+- src\scene\SceneManager.ts:1672 — const snapshot = this.sceneSectionHelperTransitionSnapshot;
+- src\scene\SceneManager.ts:1673 — if (!snapshot) return;
+- src\scene\SceneManager.ts:1674 — this.sceneSectionHelperTransitionSnapshot = null;
+- src\scene\SceneManager.ts:1675 — snapshot.group.parent?.remove(snapshot.group);
+- src\scene\SceneManager.ts:1676 — disposeObjectTree(snapshot.group);
+- src\scene\SceneManager.ts:1679 — beginSceneSectionHelperTransitionSnapshot(
+- src\scene\SceneManager.ts:1684 — this.removeSceneSectionHelperTransitionSnapshot();
+- src\scene\SceneManager.ts:1693 — const snapshot = this.cloneTransitionObjectTree(
+- src\scene\SceneManager.ts:1697 — snapshot.name = "scene-section-helper-transition-snapshot";
+- src\scene\SceneManager.ts:1698 — snapshot.userData = {
+- src\scene\SceneManager.ts:1699 — ...snapshot.userData,
+- src\scene\SceneManager.ts:1700 — transitionSnapshotForLayer: UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+- src\scene\SceneManager.ts:1701 — sceneSectionHelperTransitionSnapshot: true,
+- src\scene\SceneManager.ts:1703 — this.scene.add(snapshot);
+- src\scene\SceneManager.ts:1704 — this.applyRenderOpacityToTree(snapshot, 1);
+- src\scene\SceneManager.ts:1705 — this.sceneSectionHelperTransitionSnapshot = {
+- src\scene\SceneManager.ts:1707 — group: snapshot,
+- src\scene\SceneManager.ts:1807 — const snapshot = this.cloneTransitionObjectTree(
+- src\scene\SceneManager.ts:1811 — snapshot.name = `${group.name || "section-iso-overlay"}-transition-source`;
+- src\scene\SceneManager.ts:1812 — snapshot.userData = {
+- src\scene\SceneManager.ts:1813 — ...snapshot.userData,
+- src\scene\SceneManager.ts:1818 — parent.add(snapshot);
+- src\scene\SceneManager.ts:1819 — this.applyRenderOpacityToTree(snapshot, 1, 1);
+- src\scene\SceneManager.ts:1823 — group: snapshot,
+- src\scene\SceneManager.ts:1905 — addSceneSectionHelperObjectToTransitionSnapshot(
+- src\scene\SceneManager.ts:1908 — const snapshot = this.sceneSectionHelperTransitionSnapshot;
+- src\scene\SceneManager.ts:1909 — if (!snapshot) return false;
+- src\scene\SceneManager.ts:1911 — snapshot.durationMs <= 0
+- src\scene\SceneManager.ts:1913 — : (performance.now() - snapshot.startMs) / snapshot.durationMs;
+- src\scene\SceneManager.ts:1915 — const eased = easeProgress(elapsed, snapshot.easing);
+- src\scene\SceneManager.ts:1916 — const opacity = snapshot.from + (snapshot.to - snapshot.from) * eased;
+- src\scene\SceneManager.ts:1923 — sceneSectionLateHelperSnapshotObject: true,
+- src\scene\SceneManager.ts:1925 — snapshot.group.add(clone);
+- src\scene\SceneManager.ts:2214 — sceneSectionHelperSnapshotAllowedForTween(
+- src\scene\SceneManager.ts:2217 — return sceneSectionHelperSnapshotAllowedForTweenImpl.call(this, tween);
+- src\scene\SceneManager.ts:2704 — groundTracePolicy: "mirror-delayed-ground-trace-into-helper-snapshot",
+- src\scene\SceneManager.ts:2708 — snapshotGroundTraceCount: this.countGroundTraceObjects(
+- src\scene\SceneManager.ts:2709 — this.sceneSectionHelperTransitionSnapshot?.group,
+- src\scene\SceneManager.ts:2711 — snapshotActive: this.sceneSectionHelperTransitionSnapshot !== null,
+- src\scene\SceneManager.ts:2722 — snapshotCount: number;
+- src\scene\SceneManager.ts:2724 — layerTweenCount: number;
+- src\scene\SceneManager.ts:2727 — sceneSectionHelperTransitionSnapshotActive: boolean;
+- src\scene\SceneManager.ts:2729 — layerTweenTick: LayerTweenTickDebugState | null;
+- src\scene\SceneManager.ts:2756 — this.layerTweens.size +
+- src\scene\SceneManager.ts:2759 — snapshotCount: this.layerTransitionSnapshots.size,
+- src\scene\SceneManager.ts:2761 — layerTweenCount: this.layerTweens.size,
+- src\scene\SceneManager.ts:2764 — sceneSectionHelperTransitionSnapshotActive:
+- src\scene\SceneManager.ts:2765 — this.sceneSectionHelperTransitionSnapshot !== null,
+- src\scene\SceneManager.ts:2767 — layerTweenTick: this.lastLayerTweenTickDebug,
+- src\scene\SceneManager.ts:3039 — if (!this.transitionEnvelopeAllowsLayer(id)) continue;
+- src\scene\SceneManager.ts:4023 — this.layerTweens.clear();
+- src\scene\SceneManager.ts:4029 — this.clearLayerTransitionSnapshots();
+- src\scene\SceneManager.ts:4049 — this.layerTweens.clear();
+- src\scene\SceneManager.ts:4055 — this.clearLayerTransitionSnapshots();
+- src\scene\SceneManager.ts:4066 — transitionEffectiveLayersForPage(
+- src\scene\SceneManager.ts:4078 — return transitionEffectiveLayersForPageImpl.call(this, fromEnvironment, toEnvironment, fromPage, toPage, durationMs, easing, scalarStyleDurationMs, scalarStyleEasing, reason, transitionId);
+- src\scene\SceneManager.ts:4404 — transitionEnvelopeAllowsLayer(id: string): boolean {
+- src\scene\SceneManager.ts:4405 — return transitionEnvelopeAllowsLayerImpl.call(this, id);
+- src\scene\SceneManager.ts:4416 — tickLayerTweens(nowMs: number): void {
+- src\scene\SceneManager.ts:4417 — return tickLayerTweensImpl.call(this, nowMs);
+- src\scene\SceneManager.ts:4524 — const snapshot = this.layerTransitionSnapshots.get(
+- src\scene\SceneManager.ts:4527 — if (snapshot) this.collectMtThresholdSurfacesFromRoot(snapshot.group);
+- src\scene\SceneManager.ts:4552 — for (const snapshot of this.layerTransitionSnapshots.values()) {
+- src\scene\SceneManager.ts:4553 — this.collectSectionIsoLineOverlaysFromRoot(snapshot.group);
+- src\scene\SceneManager.ts:4706 — this.tickLayerTweens(nowMs);
+- src\scene\SceneManager.ts:4707 — const layerTweensMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\SceneManager.ts:4781 — layerTweensMs,
+- src\scene\section\sceneSectionController.ts:2465 — export function sceneSectionHelperSnapshotAllowedForTween(
+- src\scene\section\sceneSectionController.ts:3353 — const snapshotTargetActive =
+- src\scene\section\sceneSectionController.ts:3354 — this.sceneSectionHelperTransitionSnapshot !== null;
+- src\scene\section\sceneSectionController.ts:3355 — if (!traceGroup.parent && !snapshotTargetActive) return;
+- src\scene\section\sceneSectionController.ts:3392 — const addedToSnapshot =
+- src\scene\section\sceneSectionController.ts:3393 — this.addSceneSectionHelperObjectToTransitionSnapshot?.(mesh) === true;
+- src\scene\section\sceneSectionController.ts:3394 — if (!addToLiveTrace && !addedToSnapshot) {
+- src\scene\terrain\applyLakesToTerrain.ts:168 — // overrides against a previous snapshot.
+- src\scene\transitions\layerTweenRuntime.ts:64 — export function transitionEnvelopeAllowsLayerImpl(this: any, id: string): boolean {
+- src\scene\transitions\layerTweenRuntime.ts:71 — this.layerTransitionSnapshots.has(id)
+- src\scene\transitions\layerTweenRuntime.ts:102 — if (this.transitionEnvelopeAllowsLayer(id)) {
+- src\scene\transitions\layerTweenRuntime.ts:104 — !this.layerTweens.has(id) &&
+- src\scene\transitions\layerTweenRuntime.ts:105 — !this.layerTransitionSnapshots.has(id)
+- src\scene\transitions\layerTweenRuntime.ts:121 — export function tickLayerTweensImpl(this: any, nowMs: number): void {
+- src\scene\transitions\layerTweenRuntime.ts:123 — const layerTweenIdsBefore = Array.from(this.layerTweens.keys());
+- src\scene\transitions\layerTweenRuntime.ts:125 — const snapshotIdsBefore = Array.from(this.layerTransitionSnapshots.keys());
+- src\scene\transitions\layerTweenRuntime.ts:127 — const helperSnapshotActiveBefore =
+- src\scene\transitions\layerTweenRuntime.ts:128 — !!this.sceneSectionHelperTransitionSnapshot;
+- src\scene\transitions\layerTweenRuntime.ts:131 — this.layerTweens.size === 0 &&
+- src\scene\transitions\layerTweenRuntime.ts:133 — this.layerTransitionSnapshots.size === 0 &&
+- src\scene\transitions\layerTweenRuntime.ts:135 — !this.sceneSectionHelperTransitionSnapshot &&
+- src\scene\transitions\layerTweenRuntime.ts:139 — this.lastLayerTweenTickDebug = {
+- src\scene\transitions\layerTweenRuntime.ts:147 — snapshotMs: 0,
+- src\scene\transitions\layerTweenRuntime.ts:148 — helperSnapshotMs: 0,
+- src\scene\transitions\layerTweenRuntime.ts:152 — layerTweenIds: [],
+- src\scene\transitions\layerTweenRuntime.ts:154 — snapshotIds: [],
+- src\scene\transitions\layerTweenRuntime.ts:155 — layerTweenCountBefore: 0,
+- src\scene\transitions\layerTweenRuntime.ts:157 — snapshotCountBefore: 0,
+- src\scene\transitions\layerTweenRuntime.ts:159 — helperSnapshotActiveBefore: false,
+- src\scene\transitions\layerTweenRuntime.ts:251 — for (const [id, tween] of this.layerTweens) {
+- src\scene\transitions\layerTweenRuntime.ts:263 — if (done) this.layerTweens.delete(id);
+- src\scene\transitions\layerTweenRuntime.ts:268 — for (const [id, snapshot] of this.layerTransitionSnapshots) {
+- src\scene\transitions\layerTweenRuntime.ts:270 — snapshot.durationMs <= 0
+- src\scene\transitions\layerTweenRuntime.ts:272 — : (nowMs - snapshot.startMs) / snapshot.durationMs;
+- src\scene\transitions\layerTweenRuntime.ts:274 — const eased = done ? 1 : easeProgress(t, snapshot.easing);
+- src\scene\transitions\layerTweenRuntime.ts:275 — const opacity = snapshot.from + (snapshot.to - snapshot.from) * eased;
+- src\scene\transitions\layerTweenRuntime.ts:277 — snapshot.group,
+- src\scene\transitions\layerTweenRuntime.ts:278 — done ? snapshot.to : opacity,
+- src\scene\transitions\layerTweenRuntime.ts:280 — snapshot.from,
+- src\scene\transitions\layerTweenRuntime.ts:281 — snapshot.to,
+- src\scene\transitions\layerTweenRuntime.ts:282 — done ? snapshot.to : opacity,
+- src\scene\transitions\layerTweenRuntime.ts:285 — if (done) this.removeLayerTransitionSnapshot(id);
+- src\scene\transitions\layerTweenRuntime.ts:287 — const snapshotMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\transitions\layerTweenRuntime.ts:290 — if (this.sceneSectionHelperTransitionSnapshot) {
+- src\scene\transitions\layerTweenRuntime.ts:291 — const snapshot = this.sceneSectionHelperTransitionSnapshot;
+- src\scene\transitions\layerTweenRuntime.ts:293 — snapshot.durationMs <= 0
+- src\scene\transitions\layerTweenRuntime.ts:295 — : (nowMs - snapshot.startMs) / snapshot.durationMs;
+- src\scene\transitions\layerTweenRuntime.ts:297 — const eased = done ? 1 : easeProgress(t, snapshot.easing);
+- src\scene\transitions\layerTweenRuntime.ts:298 — const opacity = snapshot.from + (snapshot.to - snapshot.from) * eased;
+- src\scene\transitions\layerTweenRuntime.ts:300 — snapshot.group,
+- src\scene\transitions\layerTweenRuntime.ts:301 — done ? snapshot.to : opacity,
+- src\scene\transitions\layerTweenRuntime.ts:303 — if (done) this.removeSceneSectionHelperTransitionSnapshot();
+- src\scene\transitions\layerTweenRuntime.ts:305 — const helperSnapshotMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\transitions\layerTweenRuntime.ts:312 — this.lastLayerTweenTickDebug = {
+- src\scene\transitions\layerTweenRuntime.ts:320 — snapshotMs,
+- src\scene\transitions\layerTweenRuntime.ts:321 — helperSnapshotMs,
+- src\scene\transitions\layerTweenRuntime.ts:325 — layerTweenIds: layerTweenIdsBefore.slice(0, 16),
+- src\scene\transitions\layerTweenRuntime.ts:327 — snapshotIds: snapshotIdsBefore.slice(0, 16),
+- src\scene\transitions\layerTweenRuntime.ts:328 — layerTweenCountBefore: layerTweenIdsBefore.length,
+- src\scene\transitions\layerTweenRuntime.ts:330 — snapshotCountBefore: snapshotIdsBefore.length,
+- src\scene\transitions\layerTweenRuntime.ts:332 — helperSnapshotActiveBefore,
+- src\scene\transitions\layerTweenRuntime.ts:337 — this.layerTweens.size === 0 &&
+- src\scene\transitions\layerTweenRuntime.ts:339 — this.layerTransitionSnapshots.size === 0 &&
+- src\scene\transitions\layerTweenRuntime.ts:341 — !this.sceneSectionHelperTransitionSnapshot &&
+- src\scene\transitions\layerTweenRuntime.ts:353 — attemptedBy: "layerTweenRuntime.tickLayerTweens",
+- src\scene\transitions\productFamilyRegistry.ts:15 — LayerTransitionKind,
+- src\scene\transitions\productFamilyRegistry.ts:90 — transitionKind: LayerTransitionKind,
+- src\scene\transitions\productFamilyRegistry.ts:100 — if (transitionKind === "discrete-crossfade") return "crossfade-discrete";
+- src\scene\transitions\productFamilyRegistry.ts:101 — if (transitionKind === "full-density-scalar") {
+- src\scene\transitions\productFamilyRegistry.ts:102 — return "interpolate-full-density-scalar";
+- src\scene\transitions\productFamilyRegistry.ts:109 — return "fade-opacity";
+- src\scene\transitions\productFamilyRegistry.ts:115 — transitionKind: LayerTransitionKind,
+- src\scene\transitions\productFamilyRegistry.ts:129 — if (transitionKind === "discrete-crossfade") {
+- src\scene\transitions\productFamilyRegistry.ts:130 — return "discrete data/style changed, using snapshot crossfade";
+- src\scene\transitions\productFamilyRegistry.ts:132 — if (transitionKind === "full-density-scalar") {
+- src\scene\transitions\productFamilyRegistry.ts:152 — transitionKind: LayerTransitionKind;
+- src\scene\transitions\transitionCommitGate.ts:12 — export interface TransitionCommitChannelSnapshot {
+- src\scene\transitions\transitionCommitGate.ts:26 — channels?: Readonly<Record<string, TransitionCommitChannelSnapshot | unknown>>;
+- src\scene\transitions\transitionCommitGate.ts:180 — const snapshot = value as TransitionCommitChannelSnapshot;
+- src\scene\transitions\transitionCommitGate.ts:182 — channelClass: snapshot.channelClass ?? null,
+- src\scene\transitions\transitionCommitGate.ts:183 — value: snapshot.value,
+- src\scene\transitions\transitionCommitGate.ts:184 — coverage: snapshot.coverage ?? "known",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:25 — type LayerTransitionKind,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:336 — export function transitionEffectiveLayersForPage(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:377 — this.layerTweens.clear();
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:383 — this.clearLayerTransitionSnapshots();
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:397 — const layerKinds: Record<string, LayerTransitionKind> = {};
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:558 — transitionKind: LayerTransitionKind,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:589 — ): LayerTransitionKind => {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:599 — return "discrete-crossfade";
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:608 — ? "full-density-scalar"
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:654 — this.sceneSectionHelperSnapshotAllowedForTween?.(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:658 — this.beginSceneSectionHelperTransitionSnapshot?.(now, duration, easing);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:706 — const shouldCrossfadeDiscreteData =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:716 — const shouldCrossfadeSceneSection =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:728 — !shouldCrossfadeDiscreteData &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:729 — !shouldCrossfadeSceneSection &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:736 — const shouldCrossfadeScalarStyle =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:742 — const transitionSnapshot =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:743 — shouldCrossfadeDiscreteData ||
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:744 — shouldCrossfadeScalarStyle ||
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:745 — shouldCrossfadeSceneSection
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:746 — ? this.cloneLayerTransitionSnapshot(id, group)
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:748 — const transitionKind: LayerTransitionKind =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:749 — shouldCrossfadeDiscreteData ||
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:750 — shouldCrossfadeScalarStyle ||
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:751 — shouldCrossfadeSceneSection
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:752 — ? "discrete-crossfade"
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:755 — ? "full-density-scalar"
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:786 — if (transitionSnapshot) {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:787 — this.applyRenderOpacityToTree(transitionSnapshot, fromOpacity, 1);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:789 — this.layerTweens.set(id, {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:796 — this.layerTransitionSnapshots.set(id, {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:798 — group: transitionSnapshot,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:826 — this.layerTweens.set(id, {
+- src\scene\transitions\transitionEntityPolicy.ts:30 — | "crossfade"
+- src\scene\transitions\transitionEntityPolicy.ts:39 — | "crossfade"
+- src\scene\transitions\transitionEntityPolicy.ts:64 — | "crossfade"
+- src\scene\transitions\transitionEntityPolicy.ts:218 — if (changedChannels.some((channel) => channel.capability === "crossfade")) {
+- src\scene\transitions\transitionEntityPolicy.ts:219 — return "crossfade";
+- src\scene\transitions\transitionEntityPolicy.ts:264 — case "crossfade":
+- src\scene\transitions\transitionEntityPolicy.ts:265 — return "crossfade";
+- src\scene\transitions\transitionEntityPolicy.ts:330 — assignment = "crossfade";
+- src\scene\transitions\transitionEntityPolicy.ts:333 — assignment = "crossfade";
+- src\scene\transitions\transitionStyles.ts:17 — import { UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS } from "../../projectModules/utahForge/crossfadeFields";
+- src\scene\transitions\transitionStyles.ts:87 — export interface LayerTransitionSnapshot extends LayerOpacityTween {
+- src\scene\transitions\transitionStyles.ts:135 — export type LayerTransitionKind =
+- src\scene\transitions\transitionStyles.ts:137 — | "discrete-crossfade"
+- src\scene\transitions\transitionStyles.ts:138 — | "full-density-scalar"
+- src\scene\transitions\transitionStyles.ts:155 — | "fade-opacity"
+- src\scene\transitions\transitionStyles.ts:157 — | "interpolate-full-density-scalar"
+- src\scene\transitions\transitionStyles.ts:158 — | "crossfade-discrete"
+- src\scene\transitions\transitionStyles.ts:168 — transitionKind: LayerTransitionKind;
+- src\scene\transitions\transitionStyles.ts:192 — layerKinds: Record<string, LayerTransitionKind>;
+- src\scene\transitions\transitionStyles.ts:647 — if (!UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS.has(layerId)) return false;
+- src\pages\effective.ts:349 — page.envSnapshot != null &&
+- src\pages\effective.ts:351 — if (isSubMaster) return applyPageSceneOverrides(page.envSnapshot!, page);
+- src\pages\effective.ts:355 — if (parent?.envSnapshot) {
+- src\pages\effective.ts:356 — return applyPageSceneOverrides(parent.envSnapshot, page);
+- src\pages\loadPages.ts:18 — // modify those files, import.meta.glob keeps returning the stale snapshot
+- src\pages\PageController.tsx:131 — policy: "crossfade-slide";
+- src\pages\PageController.tsx:181 — snapshotCount: number;
+- src\pages\PageController.tsx:183 — layerTweenCount: number;
+- src\pages\PageController.tsx:186 — sceneSectionHelperTransitionSnapshotActive: boolean;
+- src\pages\PageController.tsx:193 — layerTweenTick: NonNullable<SceneTransitionDebugState>["layerTweenTick"];
+- src\pages\PageController.tsx:467 — snapshotCount: sceneTransition?.snapshotCount ?? 0,
+- src\pages\PageController.tsx:469 — layerTweenCount: sceneTransition?.layerTweenCount ?? 0,
+- src\pages\PageController.tsx:474 — sceneSectionHelperTransitionSnapshotActive:
+- src\pages\PageController.tsx:475 — sceneTransition?.sceneSectionHelperTransitionSnapshotActive === true,
+- src\pages\PageController.tsx:482 — layerTweenTick: sceneTransition?.layerTweenTick ?? null,
+- src\pages\PageController.tsx:1059 — // own frozen envSnapshot as the base. A child of a Sub Master uses
+- src\pages\PageController.tsx:1060 — // the parent's envSnapshot. Global children (no parentMasterId, or
+- src\pages\PageController.tsx:1065 — page.envSnapshot != null &&
+- src\pages\PageController.tsx:1068 — resolvedBase = page.envSnapshot!;
+- src\pages\PageController.tsx:1073 — if (parent?.envSnapshot) {
+- src\pages\PageController.tsx:1074 — resolvedBase = parent.envSnapshot;
+- src\pages\PageController.tsx:1218 — policy: "crossfade-slide",
+- src\pages\PageController.tsx:1263 — const snapshotTransitionRun = useCallback(
+- src\pages\PageController.tsx:1287 — const snapshot: TransitionRunDebugState = {
+- src\pages\PageController.tsx:1301 — ...snapshot,
+- src\pages\PageController.tsx:1303 — ? transitionConsumerDebugState(snapshot)
+- src\pages\PageController.tsx:1622 — const activeRun = snapshotTransitionRun(transitionRunRef.current, timeMs);
+- src\pages\PageController.tsx:1623 — const run = activeRun ?? snapshotTransitionRun(lastTransitionRunRef.current);
+- src\pages\PageController.tsx:1722 — snapshotTransitionRun,
+- src\pages\PageController.tsx:1851 — const snapshot = snapshotTransitionRun(run, cancelledAtMs);
+- src\pages\PageController.tsx:1852 — if (!snapshot) return null;
+- src\pages\PageController.tsx:1854 — ...snapshot,
+- src\pages\PageController.tsx:1864 — [snapshotTransitionRun],
+- src\pages\PageController.tsx:1871 — const snapshot = snapshotTransitionRun(run, completedAtMs);
+- src\pages\PageController.tsx:1872 — if (!snapshot) return null;
+- src\pages\PageController.tsx:1874 — ...snapshot,
+- src\pages\PageController.tsx:1886 — [snapshotTransitionRun],
+- src\pages\PageController.tsx:2287 — // children, "resolved environment" is the Sub Master's frozen envSnapshot,
+- src\pages\PageController.tsx:2544 — sceneHandle.manager.transitionEffectiveLayersForPage(
+- src\pages\PageController.tsx:2959 — const transitionRun = snapshotTransitionRun(transitionRunRef.current);
+- src\pages\PageController.tsx:2975 — lastTransitionRun: snapshotTransitionRun(lastTransitionRunRef.current),
+- src\pages\PageController.tsx:2993 — snapshotTransitionRun,
+- src\pages\types.ts:1733 — // Master page (a page whose envSnapshot is present). DEC-079.
+- src\pages\types.ts:1735 — // Frozen environment snapshot at the moment this page became a Sub Master.
+- src\pages\types.ts:1737 — // or undefined when envSnapshot is present. DEC-079.
+- src\pages\types.ts:1738 — envSnapshot?: EnvironmentSetup;
+- src\pages\types.ts:1753 — // This is deliberately separate from envSnapshot, which remains Sub Master
+
+## Opacity ownership
+
+- src\scene\captureCameraPathOverlayLine.ts:10 — opacity: number;
+- src\scene\captureCameraPathOverlayLine.ts:23 — opacity,
+- src\scene\captureCameraPathOverlayLine.ts:37 — opacity,
+- src\scene\CLAUDE.md:32 — - Layer registration, opacity, and transition logic in `SceneManager.ts`
+- src\scene\CLAUDE.md:35 — or opacity behaviour.
+- src\scene\CLAUDE.md:36 — - The transition opacity regression test must continue to pass after any
+- src\scene\CLAUDE.md:37 — change touching opacity, transitions, or product opacity base.
+- src\scene\layerLoaders.ts:105 — opacity: 0.16,
+- src\scene\layerLoaders.ts:121 — opacity: 0.42,
+- src\scene\layerLoaders.ts:268 — opacity?: number;
+- src\scene\layerLoaders.ts:274 — lineMaterial.opacity = 1;
+- src\scene\layerLoaders.ts:307 — opacity: 0.92,
+- src\scene\postprocessing.ts:123 — frameOpacity: { value: 0.72 },
+- src\scene\postprocessing.ts:169 — uniform float frameOpacity;
+- src\scene\postprocessing.ts:238 — if (frameEnabled < 0.5 || frameAspectRatio <= 0.0 || frameOpacity <= 0.0001) {
+- src\scene\postprocessing.ts:252 — return mix(framed, frameColor, outside * clamp(frameOpacity, 0.0, 1.0));
+- src\scene\SceneManager.ts:28 — applyMtThresholdSurfaceMaterialOpacity,
+- src\scene\SceneManager.ts:87 — type LayerOpacityTween,
+- src\scene\SceneManager.ts:157 — applySceneSectionHelperTransitionOpacity as applySceneSectionHelperTransitionOpacityImpl,
+- src\scene\SceneManager.ts:185 — sceneSectionHelperOpacityForTween as sceneSectionHelperOpacityForTweenImpl,
+- src\scene\SceneManager.ts:207 — workingAreaFocusOutsideOpacityImpl,
+- src\scene\SceneManager.ts:235 — applyTerrainCompositeOpacityImpl,
+- src\scene\SceneManager.ts:272 — transitionFrameOpacityForLayerImpl,
+- src\scene\SceneManager.ts:322 — const DEFAULT_CONTOUR_FAR_OPACITY = 0.72;
+- src\scene\SceneManager.ts:452 — outsideOpacityByAxis: Record<SceneSectionAxis, number>;
+- src\scene\SceneManager.ts:453 — outsideOpacityByFrameId: Record<string, number>;
+- src\scene\SceneManager.ts:455 — hasSoftOpacity: boolean;
+- src\scene\SceneManager.ts:527 — helperOpacityMs: number;
+- src\scene\SceneManager.ts:621 — sceneSectionApplyMode: "none" | "full" | "helper-opacity-only";
+- src\scene\SceneManager.ts:654 — opacityPolicy: "split-section-iso-overlay-opacity-from-layer-opacity";
+- src\scene\SceneManager.ts:659 — layerRenderOpacityMin: number | null;
+- src\scene\SceneManager.ts:660 — layerRenderOpacityMax: number | null;
+- src\scene\SceneManager.ts:661 — transitionOpacityMin: number | null;
+- src\scene\SceneManager.ts:662 — transitionOpacityMax: number | null;
+- src\scene\SceneManager.ts:670 — transitionOpacity: number;
+- src\scene\SceneManager.ts:767 — // opacity and terrain-composite uniforms until the target page state settles.
+- src\scene\SceneManager.ts:768 — private layerTweens = new Map<string, LayerOpacityTween>();
+- src\scene\SceneManager.ts:775 — sceneSectionHelperTransitionOpacity = 1;
+- src\scene\SceneManager.ts:788 — private materialBaseOpacity = new WeakMap<THREE.Material, number>();
+- src\scene\SceneManager.ts:986 — makeLightingHandleMaterial(color: THREE.ColorRepresentation, opacity = 0.92): THREE.MeshBasicMaterial {
+- src\scene\SceneManager.ts:987 — return makeLightingHandleMaterialImpl.call(this, color, opacity);
+- src\scene\SceneManager.ts:1002 — makeOrbitCenterMaterial(color: THREE.ColorRepresentation, opacity = 0.9): THREE.MeshStandardMaterial {
+- src\scene\SceneManager.ts:1003 — return makeOrbitCenterMaterialImpl.call(this, color, opacity);
+- src\scene\SceneManager.ts:1201 — private targetOpacityForLayer(
+- src\scene\SceneManager.ts:1209 — return typeof style.opacity === "number"
+- src\scene\SceneManager.ts:1210 — ? style.opacity
+- src\scene\SceneManager.ts:1211 — : this.baseOpacityForLayer(layerId);
+- src\scene\SceneManager.ts:1214 — private baseOpacityForMaterial(material: THREE.Material): number {
+- src\scene\SceneManager.ts:1215 — const stored = this.materialBaseOpacity.get(material);
+- src\scene\SceneManager.ts:1217 — this.materialBaseOpacity.set(material, material.opacity);
+- src\scene\SceneManager.ts:1218 — return material.opacity;
+- src\scene\SceneManager.ts:1221 — private shaderOpacityForMaterial(material: THREE.Material): number | null {
+- src\scene\SceneManager.ts:1224 — typeof material.uniforms?.uOpacity?.value === "number" &&
+- src\scene\SceneManager.ts:1225 — Number.isFinite(material.uniforms.uOpacity.value)
+- src\scene\SceneManager.ts:1227 — return material.uniforms.uOpacity.value;
+- src\scene\SceneManager.ts:1232 — private productOpacityBaseForMaterial(material: THREE.Material): number {
+- src\scene\SceneManager.ts:1233 — const authoredBase = material.userData?.preserveMaterialOpacityBase;
+- src\scene\SceneManager.ts:1237 — const shaderOpacity = this.shaderOpacityForMaterial(material);
+- src\scene\SceneManager.ts:1238 — if (shaderOpacity !== null) return clamp01(shaderOpacity);
+- src\scene\SceneManager.ts:1239 — return clamp01(this.baseOpacityForMaterial(material));
+- src\scene\SceneManager.ts:1242 — setProductOpacityBaseForMaterial(
+- src\scene\SceneManager.ts:1244 — opacity: number,
+- src\scene\SceneManager.ts:1246 — if (material.userData?.preserveMaterialOpacity !== true) return;
+- src\scene\SceneManager.ts:1247 — if (!Number.isFinite(opacity)) return;
+- src\scene\SceneManager.ts:1248 — material.userData.preserveMaterialOpacityBase = clamp01(opacity);
+- src\scene\SceneManager.ts:1251 — private baseOpacityForLayer(id: string): number {
+- src\scene\SceneManager.ts:1254 — let opacity: number | null = null;
+- src\scene\SceneManager.ts:1256 — if (opacity !== null) return;
+- src\scene\SceneManager.ts:1263 — if (first) opacity = this.baseOpacityForMaterial(first);
+- src\scene\SceneManager.ts:1265 — return opacity ?? 1;
+- src\scene\SceneManager.ts:1268 — private currentRenderOpacityForTree(
+- src\scene\SceneManager.ts:1273 — let opacity: number | null = null;
+- src\scene\SceneManager.ts:1293 — const shaderOpacity = this.shaderOpacityForMaterial(material);
+- src\scene\SceneManager.ts:1294 — const rawOpacity =
+- src\scene\SceneManager.ts:1295 — typeof shaderOpacity === "number" && Number.isFinite(shaderOpacity)
+- src\scene\SceneManager.ts:1296 — ? shaderOpacity
+- src\scene\SceneManager.ts:1297 — : material.opacity;
+- src\scene\SceneManager.ts:1298 — const preserveProductOpacity =
+- src\scene\SceneManager.ts:1299 — material.userData?.preserveMaterialOpacity === true;
+- src\scene\SceneManager.ts:1300 — const productBase = preserveProductOpacity
+- src\scene\SceneManager.ts:1301 — ? this.productOpacityBaseForMaterial(material)
+- src\scene\SceneManager.ts:1304 — preserveProductOpacity && productBase > 0
+- src\scene\SceneManager.ts:1305 — ? rawOpacity / productBase
+- src\scene\SceneManager.ts:1306 — : rawOpacity;
+- src\scene\SceneManager.ts:1308 — opacity = Math.max(opacity ?? 0, next);
+- src\scene\SceneManager.ts:1311 — return clamp01(opacity ?? fallback);
+- src\scene\SceneManager.ts:1314 — private sectionIsoAuthoredOpacity(material: THREE.Material): number {
+- src\scene\SceneManager.ts:1315 — const authored = material.userData?.sectionIsoBaseOpacity;
+- src\scene\SceneManager.ts:1321 — typeof material.uniforms.uOpacity?.value === "number"
+- src\scene\SceneManager.ts:1323 — const value = clamp01(material.uniforms.uOpacity.value);
+- src\scene\SceneManager.ts:1324 — material.userData.sectionIsoBaseOpacity = value;
+- src\scene\SceneManager.ts:1328 — typeof material.opacity === "number" && Number.isFinite(material.opacity)
+- src\scene\SceneManager.ts:1329 — ? clamp01(material.opacity)
+- src\scene\SceneManager.ts:1331 — material.userData.sectionIsoBaseOpacity = value;
+- src\scene\SceneManager.ts:1335 — private applySectionIsoOverlayMaterialOpacity(
+- src\scene\SceneManager.ts:1337 — opacity: number,
+- src\scene\SceneManager.ts:1338 — layerRenderOpacity?: number,
+- src\scene\SceneManager.ts:1339 — mode: "layer-render-opacity" | "transition-envelope" =
+- src\scene\SceneManager.ts:1340 — "layer-render-opacity",
+- src\scene\SceneManager.ts:1342 — const transitionOpacity = clamp01(opacity);
+- src\scene\SceneManager.ts:1343 — const opacityMode =
+- src\scene\SceneManager.ts:1344 — mode === "layer-render-opacity" &&
+- src\scene\SceneManager.ts:1345 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:1346 — "transition-envelope-opacity" &&
+- src\scene\SceneManager.ts:1347 — transitionOpacity < 0.999
+- src\scene\SceneManager.ts:1350 — const parentLayerOpacity =
+- src\scene\SceneManager.ts:1351 — typeof layerRenderOpacity === "number" && Number.isFinite(layerRenderOpacity)
+- src\scene\SceneManager.ts:1352 — ? clamp01(layerRenderOpacity)
+- src\scene\SceneManager.ts:1353 — : typeof material.userData?.sectionIsoLayerRenderOpacity === "number" &&
+- src\scene\SceneManager.ts:1354 — Number.isFinite(material.userData.sectionIsoLayerRenderOpacity)
+- src\scene\SceneManager.ts:1355 — ? clamp01(material.userData.sectionIsoLayerRenderOpacity)
+- src\scene\SceneManager.ts:1356 — : transitionOpacity;
+- src\scene\SceneManager.ts:1357 — const authoredOpacity = this.sectionIsoAuthoredOpacity(material);
+- src\scene\SceneManager.ts:1364 — const nextOpacity = clamp01(authoredOpacity * transitionOpacity * occlusion);
+- src\scene\SceneManager.ts:1365 — material.userData.sectionIsoTransitionOpacity = transitionOpacity;
+- src\scene\SceneManager.ts:1366 — material.userData.sectionIsoLayerRenderOpacity = parentLayerOpacity;
+- src\scene\SceneManager.ts:1367 — material.userData.sectionIsoOpacityPolicy =
+- src\scene\SceneManager.ts:1368 — transitionOpacity <= 0.001
+- src\scene\SceneManager.ts:1370 — : opacityMode === "transition-envelope"
+- src\scene\SceneManager.ts:1371 — ? "transition-envelope-opacity"
+- src\scene\SceneManager.ts:1372 — : "independent-of-layer-render-opacity";
+- src\scene\SceneManager.ts:1373 — material.userData.sectionIsoComposedOpacity = nextOpacity;
+- src\scene\SceneManager.ts:1374 — material.opacity = nextOpacity;
+- src\scene\SceneManager.ts:1376 — if (material instanceof THREE.ShaderMaterial && material.uniforms.uOpacity) {
+- src\scene\SceneManager.ts:1377 — material.uniforms.uOpacity.value = nextOpacity;
+- src\scene\SceneManager.ts:1392 — const fallbackOpacity = visibleSet.has(id)
+- src\scene\SceneManager.ts:1393 — ? this.targetOpacityForLayer(environment, page, id)
+- src\scene\SceneManager.ts:1396 — const opacity = group
+- src\scene\SceneManager.ts:1397 — ? this.currentRenderOpacityForTree(group, fallbackOpacity)
+- src\scene\SceneManager.ts:1398 — : fallbackOpacity;
+- src\scene\SceneManager.ts:1400 — const snapshotOpacity = snapshot
+- src\scene\SceneManager.ts:1401 — ? this.currentRenderOpacityForTree(snapshot.group, snapshot.from)
+- src\scene\SceneManager.ts:1405 — snapshotOpacity > opacity + 0.001 &&
+- src\scene\SceneManager.ts:1410 — ? (group.visible && opacity > 0.001) || snapshotOpacity > 0.001
+- src\scene\SceneManager.ts:1411 — : visibleSet.has(id) && fallbackOpacity > 0.001,
+- src\scene\SceneManager.ts:1412 — opacity: Math.max(opacity, snapshotOpacity),
+- src\scene\SceneManager.ts:1419 — private applyRenderOpacityToTree(
+- src\scene\SceneManager.ts:1421 — opacity: number,
+- src\scene\SceneManager.ts:1422 — sectionIsoTransitionOpacity?: number,
+- src\scene\SceneManager.ts:1424 — const next = clamp01(opacity);
+- src\scene\SceneManager.ts:1426 — typeof sectionIsoTransitionOpacity === "number" &&
+- src\scene\SceneManager.ts:1427 — Number.isFinite(sectionIsoTransitionOpacity)
+- src\scene\SceneManager.ts:1428 — ? clamp01(sectionIsoTransitionOpacity)
+- src\scene\SceneManager.ts:1446 — this.applySectionIsoOverlayMaterialOpacity(
+- src\scene\SceneManager.ts:1451 — ? "layer-render-opacity"
+- src\scene\SceneManager.ts:1456 — const preserveProductOpacity =
+- src\scene\SceneManager.ts:1457 — m.userData?.preserveMaterialOpacity === true;
+- src\scene\SceneManager.ts:1458 — const productBase = preserveProductOpacity
+- src\scene\SceneManager.ts:1459 — ? this.productOpacityBaseForMaterial(m)
+- src\scene\SceneManager.ts:1461 — const materialOpacity = preserveProductOpacity
+- src\scene\SceneManager.ts:1464 — this.baseOpacityForMaterial(m);
+- src\scene\SceneManager.ts:1468 — applyMtThresholdSurfaceMaterialOpacity(
+- src\scene\SceneManager.ts:1470 — materialOpacity,
+- src\scene\SceneManager.ts:1476 — m.opacity = materialOpacity;
+- src\scene\SceneManager.ts:1478 — m.userData?.forceTransparent === true || materialOpacity < 1;
+- src\scene\SceneManager.ts:1480 — if (m instanceof THREE.ShaderMaterial && m.uniforms.uOpacity) {
+- src\scene\SceneManager.ts:1481 — m.uniforms.uOpacity.value = materialOpacity;
+- src\scene\SceneManager.ts:1485 — m.depthWrite = materialOpacity >= 0.999;
+- src\scene\SceneManager.ts:1492 — applyLayerRenderOpacity(id: string, opacity: number): void {
+- src\scene\SceneManager.ts:1494 — const next = clamp01(opacity);
+- src\scene\SceneManager.ts:1499 — this.applyRenderOpacityToTree(group, next);
+- src\scene\SceneManager.ts:1500 — this.applyTerrainCompositeOpacity(id, next);
+- src\scene\SceneManager.ts:1504 — applyLayerTransitionRenderOpacity(
+- src\scene\SceneManager.ts:1506 — opacity: number,
+- src\scene\SceneManager.ts:1507 — transitionOpacity: number,
+- src\scene\SceneManager.ts:1510 — const next = clamp01(opacity);
+- src\scene\SceneManager.ts:1511 — const envelope = clamp01(transitionOpacity);
+- src\scene\SceneManager.ts:1516 — this.applyRenderOpacityToTree(group, next, envelope);
+- src\scene\SceneManager.ts:1517 — this.applyTerrainCompositeOpacity(id, next);
+- src\scene\SceneManager.ts:1704 — this.applyRenderOpacityToTree(snapshot, 1);
+- src\scene\SceneManager.ts:1819 — this.applyRenderOpacityToTree(snapshot, 1, 1);
+- src\scene\SceneManager.ts:1834 — targetOpacity: 0,
+- src\scene\SceneManager.ts:1838 — currentSectionIsoOverlayTransitionOpacity(): number {
+- src\scene\SceneManager.ts:1839 — return this.sectionIsoOverlayTransition?.targetOpacity ?? 1;
+- src\scene\SceneManager.ts:1850 — this.applyRenderOpacityToTree(group, 1, transition.targetOpacity);
+- src\scene\SceneManager.ts:1861 — this.applyRenderOpacityToTree(group, 1, transition.targetOpacity);
+- src\scene\SceneManager.ts:1876 — const targetOpacity = clamp01(progress);
+- src\scene\SceneManager.ts:1877 — const sourceOpacity = 1 - targetOpacity;
+- src\scene\SceneManager.ts:1878 — transition.targetOpacity = targetOpacity;
+- src\scene\SceneManager.ts:1880 — this.applyRenderOpacityToTree(root.group, 1, sourceOpacity);
+- src\scene\SceneManager.ts:1883 — this.applyRenderOpacityToTree(root.group, 1, targetOpacity);
+- src\scene\SceneManager.ts:1896 — this.applyRenderOpacityToTree(root.group, 1, 1);
+- src\scene\SceneManager.ts:1916 — const opacity = snapshot.from + (snapshot.to - snapshot.from) * eased;
+- src\scene\SceneManager.ts:1926 — this.applyRenderOpacityToTree(clone, opacity);
+- src\scene\SceneManager.ts:1930 — applyTerrainCompositeOpacity(layerId: string, opacity: number): void {
+- src\scene\SceneManager.ts:1931 — return applyTerrainCompositeOpacityImpl.call(this, layerId, opacity);
+- src\scene\SceneManager.ts:2207 — sceneSectionHelperOpacityForTween(
+- src\scene\SceneManager.ts:2211 — return sceneSectionHelperOpacityForTweenImpl.call(this, tween, eased);
+- src\scene\SceneManager.ts:2227 — applySceneSectionHelperTransitionOpacity(): void {
+- src\scene\SceneManager.ts:2228 — return applySceneSectionHelperTransitionOpacityImpl.call(this);
+- src\scene\SceneManager.ts:2318 — renderOpacity?: number,
+- src\scene\SceneManager.ts:2328 — const layerOpacity =
+- src\scene\SceneManager.ts:2329 — renderOpacity !== undefined
+- src\scene\SceneManager.ts:2330 — ? clamp01(renderOpacity)
+- src\scene\SceneManager.ts:2332 — ? clamp01(typeof style.opacity === "number" ? style.opacity : 1)
+- src\scene\SceneManager.ts:2349 — ? layerOpacity > 0.001 && showLabels
+- src\scene\SceneManager.ts:2350 — : layerOpacity > 0.001;
+- src\scene\SceneManager.ts:2357 — if (typeof material.userData.caseBDemoBaseOpacity !== "number") {
+- src\scene\SceneManager.ts:2358 — material.userData.caseBDemoBaseOpacity =
+- src\scene\SceneManager.ts:2359 — typeof material.userData.demoBaseOpacity === "number"
+- src\scene\SceneManager.ts:2360 — ? material.userData.demoBaseOpacity
+- src\scene\SceneManager.ts:2361 — : this.baseOpacityForMaterial(material);
+- src\scene\SceneManager.ts:2363 — const baseOpacity = material.userData.caseBDemoBaseOpacity as number;
+- src\scene\SceneManager.ts:2364 — const nextOpacity = clamp01(baseOpacity * layerOpacity);
+- src\scene\SceneManager.ts:2377 — material.opacity = nextOpacity;
+- src\scene\SceneManager.ts:2379 — material.userData?.forceTransparent === true || nextOpacity < 1;
+- src\scene\SceneManager.ts:2398 — workingAreaFocusOutsideOpacity(style: EditableStyle, layerId: string): number {
+- src\scene\SceneManager.ts:2399 — return workingAreaFocusOutsideOpacityImpl.call(this, style, layerId);
+- src\scene\SceneManager.ts:2429 — setKnownShaderWorkingAreaFocus(material: THREE.ShaderMaterial, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): boolean {
+- src\scene\SceneManager.ts:2430 — return setKnownShaderWorkingAreaFocusImpl.call(this, material, enabled, state, outsideOpacity);
+- src\scene\SceneManager.ts:2433 — applyWorkingAreaFocusMaterial(material: THREE.Material, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): void {
+- src\scene\SceneManager.ts:2434 — return applyWorkingAreaFocusMaterialImpl.call(this, material, enabled, state, outsideOpacity);
+- src\scene\SceneManager.ts:2458 — outsideOpacityByLayerId: Record<string, number>;
+- src\scene\SceneManager.ts:2615 — let layerRenderOpacityMin: number | null = null;
+- src\scene\SceneManager.ts:2616 — let layerRenderOpacityMax: number | null = null;
+- src\scene\SceneManager.ts:2617 — let transitionOpacityMin: number | null = null;
+- src\scene\SceneManager.ts:2618 — let transitionOpacityMax: number | null = null;
+- src\scene\SceneManager.ts:2649 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:2650 — "independent-of-layer-render-opacity"
+- src\scene\SceneManager.ts:2655 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:2656 — "transition-envelope-opacity"
+- src\scene\SceneManager.ts:2661 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:2666 — [layerRenderOpacityMin, layerRenderOpacityMax] = addRangeValue(
+- src\scene\SceneManager.ts:2667 — material.userData?.sectionIsoLayerRenderOpacity,
+- src\scene\SceneManager.ts:2668 — layerRenderOpacityMin,
+- src\scene\SceneManager.ts:2669 — layerRenderOpacityMax,
+- src\scene\SceneManager.ts:2671 — [transitionOpacityMin, transitionOpacityMax] = addRangeValue(
+- src\scene\SceneManager.ts:2672 — material.userData?.sectionIsoTransitionOpacity,
+- src\scene\SceneManager.ts:2673 — transitionOpacityMin,
+- src\scene\SceneManager.ts:2674 — transitionOpacityMax,
+- src\scene\SceneManager.ts:2681 — opacityPolicy: "split-section-iso-overlay-opacity-from-layer-opacity",
+- src\scene\SceneManager.ts:2686 — layerRenderOpacityMin,
+- src\scene\SceneManager.ts:2687 — layerRenderOpacityMax,
+- src\scene\SceneManager.ts:2688 — transitionOpacityMin,
+- src\scene\SceneManager.ts:2689 — transitionOpacityMax,
+- src\scene\SceneManager.ts:2712 — transitionOpacity: this.sceneSectionHelperTransitionOpacity,
+- src\scene\SceneManager.ts:2728 — sceneSectionHelperTransitionOpacity: number;
+- src\scene\SceneManager.ts:2766 — sceneSectionHelperTransitionOpacity: this.sceneSectionHelperTransitionOpacity,
+- src\scene\SceneManager.ts:3020 — tween: Pick<LayerOpacityTween, "startMs" | "durationMs" | "easing">,
+- src\scene\SceneManager.ts:3028 — private transitionTerrainOpacityOverrides(): Map<string, number> {
+- src\scene\SceneManager.ts:3040 — overrides.set(id, this.transitionFrameOpacityForLayer(id));
+- src\scene\SceneManager.ts:3077 — this.sceneSectionHelperTransitionOpacity =
+- src\scene\SceneManager.ts:3078 — this.sceneSectionHelperOpacityForTween(
+- src\scene\SceneManager.ts:3100 — this.transitionTerrainOpacityOverrides(),
+- src\scene\SceneManager.ts:3600 — opacity: styleNumber(style, "opacity", 0.86, 0, 1) * boundary.opacity,
+- src\scene\SceneManager.ts:3912 — "contourFarOpacity",
+- src\scene\SceneManager.ts:3913 — DEFAULT_CONTOUR_FAR_OPACITY,
+- src\scene\SceneManager.ts:3930 — const lineOpacity =
+- src\scene\SceneManager.ts:3931 — typeof style.contourPresetOpacity === "number"
+- src\scene\SceneManager.ts:3932 — ? clamp01(style.contourPresetOpacity)
+- src\scene\SceneManager.ts:3933 — : typeof style.opacity === "number"
+- src\scene\SceneManager.ts:3934 — ? clamp01(style.opacity)
+- src\scene\SceneManager.ts:3958 — if (lineOpacity !== null) {
+- src\scene\SceneManager.ts:3959 — m.opacity = lineOpacity;
+- src\scene\SceneManager.ts:3960 — m.transparent = lineOpacity < 1;
+- src\scene\SceneManager.ts:4027 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\SceneManager.ts:4053 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\SceneManager.ts:4093 — opacityOverrides: ReadonlyMap<string, number> = new Map(),
+- src\scene\SceneManager.ts:4095 — return applyLakesToTerrainImpl.call(this, environment, page, opacityOverrides);
+- src\scene\SceneManager.ts:4408 — transitionFrameOpacityForLayer(id: string): number {
+- src\scene\SceneManager.ts:4409 — return transitionFrameOpacityForLayerImpl.call(this, id);
+- src\scene\SceneManager.ts:4491 — opacity?: number;
+- src\scene\SceneManager.ts:4498 — const effectiveOpacity =
+- src\scene\SceneManager.ts:4499 — typeof m.userData?.mtThresholdSurfaceEffectiveOpacity === "number"
+- src\scene\SceneManager.ts:4500 — ? m.userData.mtThresholdSurfaceEffectiveOpacity
+- src\scene\SceneManager.ts:4501 — : typeof typed.opacity === "number"
+- src\scene\SceneManager.ts:4502 — ? typed.opacity
+- src\scene\SceneManager.ts:4504 — return effectiveOpacity > 0.001;
+- src\scene\SceneManager.ts:4578 — const baseOpacity =
+- src\scene\SceneManager.ts:4579 — typeof m.userData?.sectionIsoBaseOpacity === "number"
+- src\scene\SceneManager.ts:4580 — ? m.userData.sectionIsoBaseOpacity
+- src\scene\SceneManager.ts:4581 — : m.opacity;
+- src\scene\SceneManager.ts:4582 — m.userData.sectionIsoBaseOpacity = baseOpacity;
+- src\scene\SceneManager.ts:4585 — const transitionOpacity =
+- src\scene\SceneManager.ts:4586 — typeof m.userData?.sectionIsoTransitionOpacity === "number"
+- src\scene\SceneManager.ts:4587 — ? m.userData.sectionIsoTransitionOpacity
+- src\scene\SceneManager.ts:4589 — this.applySectionIsoOverlayMaterialOpacity(m, transitionOpacity);
+- src\scene\SceneManager.ts:4694 — * Per-frame tick. Drives scene-overlay opacity tweens and any
+- src\scene\terrainMaterial.ts:88 — edgeOutlineOpacity?: number;
+- src\scene\terrainMaterial.ts:93 — orthoPhotoOpacity?: number;
+- src\scene\terrainMaterial.ts:103 — orthoPhotoOutsideOpacity?: number;
+- src\scene\terrainMaterial.ts:108 — projectedMapShadowOpacity?: number;
+- src\scene\terrainMaterial.ts:116 — gridOpacity?: number;
+- src\scene\terrainMaterial.ts:119 — undersideOpacity?: number;
+- src\scene\terrainMaterial.ts:130 — setOpacity(opacity: number): void;
+- src\scene\terrainMaterial.ts:148 — opacity?: number,
+- src\scene\terrainMaterial.ts:164 — setLakeOpacity(opacity: number): void;
+- src\scene\terrainMaterial.ts:178 — setTargetOpacity(slot: TargetSlotId, opacity: number): void;
+- src\scene\terrainMaterial.ts:190 — setClaimOpacity(opacity: number): void;
+- src\scene\terrainMaterial.ts:196 — // the per-texel alpha multiplied by uGeologyOpacity.
+- src\scene\terrainMaterial.ts:202 — setGeologyOpacity(opacity: number): void;
+- src\scene\terrainMaterial.ts:215 — setForestFillOpacity(opacity: number): void;
+- src\scene\terrainMaterial.ts:216 — setForestOutlineOpacity(opacity: number): void;
+- src\scene\terrainMaterial.ts:322 — uOpacity: { value: 1 },
+- src\scene\terrainMaterial.ts:390 — uEdgeOutlineOpacity: {
+- src\scene\terrainMaterial.ts:391 — value: THREE.MathUtils.clamp(initial.edgeOutlineOpacity ?? 0, 0, 1),
+- src\scene\terrainMaterial.ts:407 — uOrthoPhotoOpacity: {
+- src\scene\terrainMaterial.ts:408 — value: THREE.MathUtils.clamp(initial.orthoPhotoOpacity ?? 0, 0, 1),
+- src\scene\terrainMaterial.ts:443 — uOrthoPhotoOutsideOpacity: {
+- src\scene\terrainMaterial.ts:444 — value: THREE.MathUtils.clamp(initial.orthoPhotoOutsideOpacity ?? 0, 0, 1),
+- src\scene\terrainMaterial.ts:455 — uProjectedMapShadowOpacity: {
+- src\scene\terrainMaterial.ts:458 — ? THREE.MathUtils.clamp(initial.projectedMapShadowOpacity ?? 0.45, 0, 1)
+- src\scene\terrainMaterial.ts:465 — uTopoImageDetailOpacity: { value: 1 },
+- src\scene\terrainMaterial.ts:481 — uGridOpacity: { value: initial.gridOpacity ?? 0.18 },
+- src\scene\terrainMaterial.ts:484 — uUndersideOpacity: { value: initial.undersideOpacity ?? 0 },
+- src\scene\terrainMaterial.ts:486 — // sample it unconditionally. uLakeOpacity defaults to 0 so no lake
+- src\scene\terrainMaterial.ts:492 — uLakeOpacity: { value: 0 },
+- src\scene\terrainMaterial.ts:500 — uTarget0Opacity: { value: 0 },
+- src\scene\terrainMaterial.ts:508 — uTarget1Opacity: { value: 0 },
+- src\scene\terrainMaterial.ts:517 — uClaimOpacity: { value: 0 },
+- src\scene\terrainMaterial.ts:522 — // at texel.a * uGeologyOpacity.
+- src\scene\terrainMaterial.ts:526 — uGeologyOpacity: { value: 0 },
+- src\scene\terrainMaterial.ts:536 — uForestFillOpacity: { value: 0 },
+- src\scene\terrainMaterial.ts:537 — uForestOutlineOpacity: { value: 0 },
+- src\scene\terrainMaterial.ts:556 — uSceneSectionPlaneOutsideOpacity: {
+- src\scene\terrainMaterial.ts:563 — uSceneSectionFrameOutsideOpacity: {
+- src\scene\terrainMaterial.ts:570 — uSceneSectionTargetPlaneOutsideOpacity: {
+- src\scene\terrainMaterial.ts:577 — uSceneSectionTargetFrameOutsideOpacity: {
+- src\scene\terrainMaterial.ts:617 — uniform float uOpacity;
+- src\scene\terrainMaterial.ts:648 — uniform float uEdgeOutlineOpacity;
+- src\scene\terrainMaterial.ts:657 — uniform float uOrthoPhotoOpacity;
+- src\scene\terrainMaterial.ts:667 — uniform float uOrthoPhotoOutsideOpacity;
+- src\scene\terrainMaterial.ts:671 — uniform float uProjectedMapShadowOpacity;
+- src\scene\terrainMaterial.ts:676 — uniform float uTopoImageDetailOpacity;
+- src\scene\terrainMaterial.ts:688 — uniform float uGridOpacity;
+- src\scene\terrainMaterial.ts:691 — uniform float uUndersideOpacity;
+- src\scene\terrainMaterial.ts:696 — uniform float uLakeOpacity;
+- src\scene\terrainMaterial.ts:703 — uniform float uTarget0Opacity;
+- src\scene\terrainMaterial.ts:710 — uniform float uTarget1Opacity;
+- src\scene\terrainMaterial.ts:717 — uniform float uClaimOpacity;
+- src\scene\terrainMaterial.ts:723 — uniform float uGeologyOpacity;
+- src\scene\terrainMaterial.ts:731 — uniform float uForestFillOpacity;
+- src\scene\terrainMaterial.ts:732 — uniform float uForestOutlineOpacity;
+- src\scene\terrainMaterial.ts:751 — uniform float uSceneSectionPlaneOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:756 — uniform float uSceneSectionFrameOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:761 — uniform float uSceneSectionTargetPlaneOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:766 — uniform float uSceneSectionTargetFrameOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:997 — float opacity = clamp(uProjectedMapShadowOpacity, 0.0, 1.0);
+- src\scene\terrainMaterial.ts:998 — if (opacity <= 0.001) return surface;
+- src\scene\terrainMaterial.ts:1000 — float shadowAmount = (1.0 - shadowMask) * opacity;
+- src\scene\terrainMaterial.ts:1086 — alpha = min(alpha, clamp(uSceneSectionPlaneOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1098 — alpha = min(alpha, clamp(uSceneSectionFrameOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1112 — alpha = min(alpha, clamp(uSceneSectionTargetPlaneOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1124 — alpha = min(alpha, clamp(uSceneSectionTargetFrameOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1232 — if (uOrthoPhotoEnabled > 0.5 && uOrthoPhotoOpacity > 0.001) {
+- src\scene\terrainMaterial.ts:1243 — uOrthoPhotoOpacity * orthoSample.a * edgeWeight,
+- src\scene\terrainMaterial.ts:1252 — uOrthoPhotoOutsideOpacity > 0.001
+- src\scene\terrainMaterial.ts:1255 — uOrthoPhotoOutsideOpacity,
+- src\scene\terrainMaterial.ts:1278 — if (uTopoImageDetailEnabled > 0.5 && uTopoImageDetailOpacity > 0.001) {
+- src\scene\terrainMaterial.ts:1293 — uTopoImageDetailOpacity * detailSample.a * edgeWeight,
+- src\scene\terrainMaterial.ts:1333 — if (uLakeOpacity > 0.001) {
+- src\scene\terrainMaterial.ts:1345 — lakeMaskAlpha * uLakeOpacity
+- src\scene\terrainMaterial.ts:1351 — // layer's opacity. NOT additive; not lighting-modulated. Reads
+- src\scene\terrainMaterial.ts:1355 — if (uTarget0Opacity > 0.001) {
+- src\scene\terrainMaterial.ts:1361 — surface = mix(surface, uTarget0Color, a * uTarget0Opacity);
+- src\scene\terrainMaterial.ts:1364 — if (uTarget1Opacity > 0.001) {
+- src\scene\terrainMaterial.ts:1370 — surface = mix(surface, uTarget1Color, a * uTarget1Opacity);
+- src\scene\terrainMaterial.ts:1376 — // RGBA and mix into surface at texel.a * uGeologyOpacity.
+- src\scene\terrainMaterial.ts:1379 — if (uGeologyOpacity > 0.001) {
+- src\scene\terrainMaterial.ts:1385 — surface = mix(surface, g.rgb, g.a * uGeologyOpacity);
+- src\scene\terrainMaterial.ts:1393 — // fine because target opacity is much higher than claim.
+- src\scene\terrainMaterial.ts:1395 — if (uClaimOpacity > 0.001) {
+- src\scene\terrainMaterial.ts:1401 — surface = mix(surface, uClaimColor, a * uClaimOpacity);
+- src\scene\terrainMaterial.ts:1419 — if (uLakeOpacity > 0.001) {
+- src\scene\terrainMaterial.ts:1429 — surface = mix(surface, lakeShaded, lakeMaskAlpha * uLakeOpacity);
+- src\scene\terrainMaterial.ts:1432 — if (uTarget0Opacity > 0.001) {
+- src\scene\terrainMaterial.ts:1441 — surface = mix(surface, targetColor, a * uTarget0Opacity);
+- src\scene\terrainMaterial.ts:1444 — if (uTarget1Opacity > 0.001) {
+- src\scene\terrainMaterial.ts:1453 — surface = mix(surface, targetColor, a * uTarget1Opacity);
+- src\scene\terrainMaterial.ts:1456 — if (uGeologyOpacity > 0.001) {
+- src\scene\terrainMaterial.ts:1465 — surface = mix(surface, geologyColor, g.a * uGeologyOpacity);
+- src\scene\terrainMaterial.ts:1468 — if (uClaimOpacity > 0.001) {
+- src\scene\terrainMaterial.ts:1477 — surface = mix(surface, claimColor, a * uClaimOpacity);
+- src\scene\terrainMaterial.ts:1480 — if (uForestFillOpacity > 0.001 || uForestOutlineOpacity > 0.001) {
+- src\scene\terrainMaterial.ts:1495 — float forestOpacity = max(uForestFillOpacity, uForestOutlineOpacity);
+- src\scene\terrainMaterial.ts:1499 — surface = mix(surface, forestColor, forestMask * forestOpacity);
+- src\scene\terrainMaterial.ts:1508 — if (uEdgeOutlineEnabled > 0.5 && uEdgeOutlineOpacity > 0.001) {
+- src\scene\terrainMaterial.ts:1515 — clamp(lineAlpha * uEdgeOutlineOpacity, 0.0, 1.0)
+- src\scene\terrainMaterial.ts:1543 — float alpha = clamp(max(uUndersideOpacity, uOpacity), 0.0, 1.0);
+- src\scene\terrainMaterial.ts:1548 — gl_FragColor = vec4(surface, clamp(uOpacity, 0.0, 1.0) * sectionAlpha);
+- src\scene\terrainMaterial.ts:1557 — setOpacity(opacity) {
+- src\scene\terrainMaterial.ts:1558 — const next = THREE.MathUtils.clamp(opacity, 0, 1);
+- src\scene\terrainMaterial.ts:1559 — uniforms.uOpacity.value = next;
+- src\scene\terrainMaterial.ts:1560 — material.opacity = next;
+- src\scene\terrainMaterial.ts:1653 — if (typeof p.edgeOutlineOpacity === "number")
+- src\scene\terrainMaterial.ts:1654 — uniforms.uEdgeOutlineOpacity.value = THREE.MathUtils.clamp(
+- src\scene\terrainMaterial.ts:1655 — p.edgeOutlineOpacity,
+- src\scene\terrainMaterial.ts:1677 — if (typeof p.orthoPhotoOpacity === "number") {
+- src\scene\terrainMaterial.ts:1678 — uniforms.uOrthoPhotoOpacity.value = THREE.MathUtils.clamp(
+- src\scene\terrainMaterial.ts:1679 — p.orthoPhotoOpacity,
+- src\scene\terrainMaterial.ts:1734 — if (typeof p.orthoPhotoOutsideOpacity === "number") {
+- src\scene\terrainMaterial.ts:1735 — uniforms.uOrthoPhotoOutsideOpacity.value = THREE.MathUtils.clamp(
+- src\scene\terrainMaterial.ts:1736 — p.orthoPhotoOutsideOpacity,
+- src\scene\terrainMaterial.ts:1759 — typeof p.projectedMapShadowOpacity === "number"
+- src\scene\terrainMaterial.ts:1764 — uniforms.uProjectedMapShadowOpacity.value > 0);
+- src\scene\terrainMaterial.ts:1765 — uniforms.uProjectedMapShadowOpacity.value =
+- src\scene\terrainMaterial.ts:1767 — ? THREE.MathUtils.clamp(p.projectedMapShadowOpacity ?? 0.45, 0, 1)
+- src\scene\terrainMaterial.ts:1774 — if (typeof p.gridOpacity === "number")
+- src\scene\terrainMaterial.ts:1775 — uniforms.uGridOpacity.value = p.gridOpacity;
+- src\scene\terrainMaterial.ts:1780 — if (typeof p.undersideOpacity === "number")
+- src\scene\terrainMaterial.ts:1781 — uniforms.uUndersideOpacity.value = p.undersideOpacity;
+- src\scene\terrainMaterial.ts:1821 — setTopoImageDetailOverlay(texture, boundsMin, boundsMax, opacity, edgeFeatherM) {
+- src\scene\terrainMaterial.ts:1826 — uniforms.uTopoImageDetailOpacity.value = THREE.MathUtils.clamp(
+- src\scene\terrainMaterial.ts:1827 — opacity ?? 1,
+- src\scene\terrainMaterial.ts:1853 — setLakeOpacity(opacity) {
+- src\scene\terrainMaterial.ts:1854 — uniforms.uLakeOpacity.value = opacity;
+- src\scene\terrainMaterial.ts:1882 — setTargetOpacity(slot, opacity) {
+- src\scene\terrainMaterial.ts:1885 — ? uniforms.uTarget0Opacity
+- src\scene\terrainMaterial.ts:1886 — : uniforms.uTarget1Opacity;
+- src\scene\terrainMaterial.ts:1887 — o.value = opacity;
+- src\scene\terrainMaterial.ts:1912 — setClaimOpacity(opacity) {
+- src\scene\terrainMaterial.ts:1913 — uniforms.uClaimOpacity.value = opacity;
+- src\scene\terrainMaterial.ts:1927 — setGeologyOpacity(opacity) {
+- src\scene\terrainMaterial.ts:1928 — uniforms.uGeologyOpacity.value = opacity;
+- src\scene\terrainMaterial.ts:1948 — setForestFillOpacity(opacity) {
+- src\scene\terrainMaterial.ts:1949 — uniforms.uForestFillOpacity.value = opacity;
+- src\scene\terrainMaterial.ts:1951 — setForestOutlineOpacity(opacity) {
+- src\scene\terrainMaterial.ts:1952 — uniforms.uForestOutlineOpacity.value = opacity;
+- src\scene\atmosphere\atmosphereTypes.ts:33 — opacity: number;
+- src\scene\atmosphere\localAtmosphereDefaults.ts:19 — opacity: 0.28,
+- src\scene\atmosphere\localAtmosphereDefaults.ts:180 — opacity: clamp(
+- src\scene\atmosphere\localAtmosphereDefaults.ts:181 — finiteNumber(style.opacity, DEFAULT_LOCAL_ATMOSPHERE_STYLE.opacity),
+- src\scene\atmosphere\localAtmosphereVolume.ts:121 — opacity: resolved.opacity,
+- src\scene\atmosphere\localAtmosphereVolume.ts:143 — function helperMaterial(color = "#7dd3fc", opacity = 0.86): THREE.MeshBasicMaterial {
+- src\scene\atmosphere\localAtmosphereVolume.ts:147 — opacity,
+- src\scene\atmosphere\localAtmosphereVolume.ts:162 — opacity: 0.62,
+- src\scene\atmosphere\localAtmosphereVolume.ts:361 — const baseOpacity =
+- src\scene\atmosphere\localAtmosphereVolume.ts:371 — opacity: THREE.MathUtils.clamp(baseOpacity * resolved.opacity, 0, 1),
+- src\scene\atmosphere\localAtmosphereVolume.ts:377 — material.userData.preserveMaterialOpacity = true;
+- src\scene\atmosphere\localAtmosphereVolume.ts:378 — material.userData.preserveMaterialOpacityBase = THREE.MathUtils.clamp(baseOpacity, 0, 1);
+- src\scene\atmosphere\localAtmosphereVolume.ts:380 — material.userData.localAtmosphereBaseOpacity = material.userData.preserveMaterialOpacityBase;
+- src\scene\atmosphere\localAtmosphereVolume.ts:389 — sprite.userData.localAtmosphereBaseOpacity = material.userData.preserveMaterialOpacityBase;
+- src\scene\atmosphere\localAtmosphereVolume.ts:441 — const baseOpacity =
+- src\scene\atmosphere\localAtmosphereVolume.ts:442 — typeof material.userData.localAtmosphereBaseOpacity === "number"
+- src\scene\atmosphere\localAtmosphereVolume.ts:443 — ? material.userData.localAtmosphereBaseOpacity
+- src\scene\atmosphere\localAtmosphereVolume.ts:444 — : typeof material.userData.preserveMaterialOpacityBase === "number"
+- src\scene\atmosphere\localAtmosphereVolume.ts:445 — ? material.userData.preserveMaterialOpacityBase
+- src\scene\atmosphere\localAtmosphereVolume.ts:448 — typeof material.userData.preserveMaterialOpacityBase === "number"
+- src\scene\atmosphere\localAtmosphereVolume.ts:449 — ? material.userData.preserveMaterialOpacityBase
+- src\scene\atmosphere\localAtmosphereVolume.ts:450 — : baseOpacity;
+- src\scene\atmosphere\localAtmosphereVolume.ts:451 — const currentLayerOpacity =
+- src\scene\atmosphere\localAtmosphereVolume.ts:453 — ? THREE.MathUtils.clamp(material.opacity / previousBase, 0, 1)
+- src\scene\atmosphere\localAtmosphereVolume.ts:454 — : resolved.opacity;
+- src\scene\atmosphere\localAtmosphereVolume.ts:455 — const nextLayerOpacity =
+- src\scene\atmosphere\localAtmosphereVolume.ts:456 — previousResolved && previousResolved.opacity === resolved.opacity
+- src\scene\atmosphere\localAtmosphereVolume.ts:457 — ? currentLayerOpacity
+- src\scene\atmosphere\localAtmosphereVolume.ts:458 — : resolved.opacity;
+- src\scene\atmosphere\localAtmosphereVolume.ts:460 — material.opacity = THREE.MathUtils.clamp(baseOpacity * nextLayerOpacity, 0, 1);
+- src\scene\atmosphere\localAtmosphereVolume.ts:464 — material.userData.preserveMaterialOpacity = true;
+- src\scene\atmosphere\localAtmosphereVolume.ts:465 — material.userData.preserveMaterialOpacityBase = baseOpacity;
+- src\scene\atmosphere\localAtmosphereVolume.ts:466 — material.userData.localAtmosphereBaseOpacity = baseOpacity;
+- src\scene\environment\applyEnvironment.ts:312 — opacity: 0.16,
+- src\scene\environment\applyEnvironment.ts:328 — const opacity = clampRange(dof.debugFocusPlaneOpacity ?? 0.16, 0.02, 0.5);
+- src\scene\environment\applyEnvironment.ts:333 — if ("opacity" in material) {
+- src\scene\environment\applyEnvironment.ts:334 — material.opacity = opacity;
+- src\scene\environment\applyEnvironment.ts:421 — debugFocusPlaneOpacity: dof.debugFocusPlaneOpacity ?? 0.16,
+- src\scene\environment\applyEnvironment.ts:501 — gp.frameOpacity.value = clampRange(frame.matteOpacity ?? 0.72, 0, 1);
+- src\scene\environment\applyEnvironment.ts:626 — const projectedMapShadowOpacity = clampRange(
+- src\scene\environment\applyEnvironment.ts:627 — terrainSettings.projectedMapShadowOpacity ?? 0.45,
+- src\scene\environment\applyEnvironment.ts:672 — projectedMapShadowOpacity > 0.001 &&
+- src\scene\environment\applyEnvironment.ts:688 — k.shadow.intensity = projectedMapShadowOpacity;
+- src\scene\environment\sunVisual.ts:11 — orbOpacity: number;
+- src\scene\environment\sunVisual.ts:16 — orbHaloOpacity: number;
+- src\scene\environment\sunVisual.ts:20 — sourceMarkerOpacity: number;
+- src\scene\environment\sunVisual.ts:41 — const orbOpacity = clampRange(numberOrDefault(sun.orbOpacity, 0.9), 0, 1);
+- src\scene\environment\sunVisual.ts:42 — const markerOpacity = clampRange(
+- src\scene\environment\sunVisual.ts:43 — numberOrDefault(sun.sourceMarkerOpacity, 0.72),
+- src\scene\environment\sunVisual.ts:50 — orbOpacity,
+- src\scene\environment\sunVisual.ts:63 — orbHaloOpacity: clampRange(numberOrDefault(sun.orbHaloOpacity, 0.28), 0, 1),
+- src\scene\environment\sunVisual.ts:69 — sourceMarkerOpacity: markerOpacity,
+- src\scene\environment\sunVisual.ts:149 — opacity: number,
+- src\scene\environment\sunVisual.ts:154 — opacity,
+- src\scene\environment\sunVisual.ts:175 — makeSpriteMaterial(haloTexture, options.orbHaloColor, options.orbHaloOpacity),
+- src\scene\environment\sunVisual.ts:179 — makeSpriteMaterial(orbTexture, options.orbColor, options.orbOpacity),
+- src\scene\environment\sunVisual.ts:183 — makeSpriteMaterial(markerTexture, options.orbColor, options.sourceMarkerOpacity),
+- src\scene\environment\sunVisual.ts:198 — opacity: number,
+- src\scene\environment\sunVisual.ts:202 — material.opacity = opacity;
+- src\scene\environment\sunVisual.ts:219 — runtime.halo.visible = options.orbVisible && options.orbHaloOpacity > 0.001;
+- src\scene\environment\sunVisual.ts:220 — runtime.orb.visible = options.orbVisible && options.orbOpacity > 0.001;
+- src\scene\environment\sunVisual.ts:222 — options.sourceMarkerVisible && options.sourceMarkerOpacity > 0.001;
+- src\scene\environment\sunVisual.ts:240 — orbOpacity: options.orbOpacity,
+- src\scene\environment\sunVisual.ts:245 — orbHaloOpacity: options.orbHaloOpacity,
+- src\scene\environment\sunVisual.ts:283 — updateSpriteMaterial(nextRuntime.halo, options.orbHaloColor, options.orbHaloOpacity);
+- src\scene\environment\sunVisual.ts:284 — updateSpriteMaterial(nextRuntime.orb, options.orbColor, options.orbOpacity);
+- src\scene\environment\sunVisual.ts:288 — options.sourceMarkerOpacity,
+- src\scene\handles\sceneHandleControllers.ts:270 — opacity: 0.95,
+- src\scene\handles\sceneHandleControllers.ts:314 — opacity: 0.82,
+- src\scene\handles\sceneHandleControllers.ts:751 — export function makeLightingHandleMaterialImpl(this: any, color: THREE.ColorRepresentation, opacity = 0.92): THREE.MeshBasicMaterial {
+- src\scene\handles\sceneHandleControllers.ts:754 — transparent: opacity < 1,
+- src\scene\handles\sceneHandleControllers.ts:755 — opacity,
+- src\scene\handles\sceneHandleControllers.ts:782 — export function makeOrbitCenterMaterialImpl(this: any, color: THREE.ColorRepresentation, opacity = 0.9): THREE.MeshStandardMaterial {
+- src\scene\handles\sceneHandleControllers.ts:790 — transparent: opacity < 1,
+- src\scene\handles\sceneHandleControllers.ts:791 — opacity,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:101 — bandOpacity: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1084 — const authoredOpacity = clampRange(options.bandOpacity, 0, 0.85);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1101 — uOpacity: { value: authoredOpacity },
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1147 — uniform float uOpacity;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1223 — gl_FragColor = vec4(color, uOpacity * saturate(vSectionIsoAlpha));
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1229 — material.userData.sectionIsoBaseOpacity = authoredOpacity;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1336 — if (options.bandsVisible && options.bandOpacity > 0.001) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1378 — opacity: 0.96,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1388 — lineMaterial.userData.sectionIsoBaseOpacity = 0.96;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:36 — initialTransitionOpacity?: number;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1016 — initialTransitionOpacity:
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1017 — this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1100 — bandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32, 0, 0.85),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1185 — this.applyRenderOpacityToTree?.(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1188 — options?.initialTransitionOpacity ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1189 — this.currentSectionIsoOverlayTransitionOpacity?.() ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1590 — initialTransitionOpacity:
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1591 — this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1658 — bandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32, 0, 0.85),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1727 — this.applyRenderOpacityToTree?.(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1730 — options?.initialTransitionOpacity ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1731 — this.currentSectionIsoOverlayTransitionOpacity?.() ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1822 — bandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32, 0, 0.85),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1908 — initialTransitionOpacity:
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1909 — this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:2007 — this.applyRenderOpacityToTree?.(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:2010 — options?.initialTransitionOpacity ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:2011 — this.currentSectionIsoOverlayTransitionOpacity?.() ??
+- src\scene\outlines\AreaOutlineController.ts:154 — opacity: 0.82,
+- src\scene\outlines\AreaOutlineController.ts:246 — opacity: clampRange(outline.fillOpacity ?? 0.2, 0, 1),
+- src\scene\outlines\AreaOutlineController.ts:353 — const opacity = clampRange(outline.outlineOpacity ?? 0.95, 0, 1);
+- src\scene\outlines\AreaOutlineController.ts:369 — opacity,
+- src\scene\overlays\SceneOverlaysController.ts:42 — opacity: number;
+- src\scene\overlays\SceneOverlaysController.ts:43 — targetOpacity: number;
+- src\scene\overlays\SceneOverlaysController.ts:45 — outlineOpacity: number;
+- src\scene\overlays\SceneOverlaysController.ts:46 — outlineTargetOpacity: number;
+- src\scene\overlays\SceneOverlaysController.ts:92 — // opacity 0 because PageController's mount-time apply found an
+- src\scene\overlays\SceneOverlaysController.ts:165 — prev.outlineMaterial.opacity = prev.outlineTarget;
+- src\scene\overlays\SceneOverlaysController.ts:171 — handle.outlineMaterial.opacity = Math.min(
+- src\scene\overlays\SceneOverlaysController.ts:186 — opacity: handle.material.opacity,
+- src\scene\overlays\SceneOverlaysController.ts:187 — targetOpacity: handle.target,
+- src\scene\overlays\SceneOverlaysController.ts:189 — outlineOpacity: handle.outlineMaterial.opacity,
+- src\scene\overlays\SceneOverlaysController.ts:190 — outlineTargetOpacity: handle.outlineTarget,
+- src\scene\overlays\SceneOverlaysController.ts:200 — visibleHandleCount: handles.filter((handle) => handle.targetOpacity > 0)
+- src\scene\overlays\SceneOverlaysController.ts:216 — // left overlays stuck at opacity 0.
+- src\scene\overlays\SceneOverlaysController.ts:237 — opacity: r.opacity,
+- src\scene\overlays\SceneOverlaysController.ts:247 — fadeSceneOverlayTo(handle, r.opacity, now, SCENE_OVERLAY_FADE_MS);
+- src\scene\overlays\SceneOverlaysController.ts:271 — if (r.opacity < handle.target) {
+- src\scene\overlays\SceneOverlaysController.ts:272 — fadeSceneOverlayTo(handle, r.opacity, now, SCENE_OVERLAY_FADE_MS);
+- src\scene\overlays\SceneOverlaysController.ts:298 — // skipped by the start half, plus opacity-shifts on overlays
+- src\scene\overlays\SceneOverlaysController.ts:300 — if (r.opacity !== handle.target) {
+- src\scene\overlays\SceneOverlaysController.ts:301 — fadeSceneOverlayTo(handle, r.opacity, now, SCENE_OVERLAY_FADE_MS);
+- src\scene\section\sceneSectionController.ts:167 — opacity: 0.96,
+- src\scene\section\sceneSectionController.ts:195 — opacity: 0.96,
+- src\scene\section\sceneSectionController.ts:629 — opacity: number,
+- src\scene\section\sceneSectionController.ts:633 — transparent: opacity < 1,
+- src\scene\section\sceneSectionController.ts:634 — opacity,
+- src\scene\section\sceneSectionController.ts:655 — opacity: number,
+- src\scene\section\sceneSectionController.ts:662 — transparent: opacity < 1,
+- src\scene\section\sceneSectionController.ts:663 — opacity,
+- src\scene\section\sceneSectionController.ts:884 — function sceneSectionAxisOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:891 — const value = entry?.outsideOpacity;
+- src\scene\section\sceneSectionController.ts:1045 — function sceneSectionFrameOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1054 — ?.outsideOpacity;
+- src\scene\section\sceneSectionController.ts:1058 — return sceneSectionAxisOutsideOpacity(style, axis, objectId, legacyTargeted);
+- src\scene\section\sceneSectionController.ts:1062 — Record<string, { outsideOpacity?: number }>;
+- src\scene\section\sceneSectionController.ts:1064 — function sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1069 — const value = entries?.[objectId]?.outsideOpacity;
+- src\scene\section\sceneSectionController.ts:1087 — const fromOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1092 — const toOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1098 — outsideOpacity:
+- src\scene\section\sceneSectionController.ts:1099 — fromOutsideOpacity + (toOutsideOpacity - fromOutsideOpacity) * t,
+- src\scene\section\sceneSectionController.ts:1161 — const outsideOpacityByAxis = {
+- src\scene\section\sceneSectionController.ts:1162 — x: sceneSectionAxisOutsideOpacity(style, "x", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1163 — y: sceneSectionAxisOutsideOpacity(style, "y", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1164 — z: sceneSectionAxisOutsideOpacity(style, "z", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1166 — const outsideOpacityByFrameId: Record<string, number> = {};
+- src\scene\section\sceneSectionController.ts:1168 — const value = sceneSectionFrameOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1175 — outsideOpacityByFrameId[entry.id] = value;
+- src\scene\section\sceneSectionController.ts:1176 — outsideOpacityByAxis[entry.axis] = Math.min(
+- src\scene\section\sceneSectionController.ts:1177 — outsideOpacityByAxis[entry.axis],
+- src\scene\section\sceneSectionController.ts:1181 — const opacityValues = [
+- src\scene\section\sceneSectionController.ts:1182 — ...Object.values(outsideOpacityByAxis),
+- src\scene\section\sceneSectionController.ts:1183 — ...Object.values(outsideOpacityByFrameId),
+- src\scene\section\sceneSectionController.ts:1185 — const active = opacityValues.some(
+- src\scene\section\sceneSectionController.ts:1188 — const hasSoftOpacity = opacityValues.some(
+- src\scene\section\sceneSectionController.ts:1193 — outsideOpacityByAxis,
+- src\scene\section\sceneSectionController.ts:1194 — outsideOpacityByFrameId,
+- src\scene\section\sceneSectionController.ts:1196 — hasSoftOpacity,
+- src\scene\section\sceneSectionController.ts:1967 — const planeOpacityUniform = ensure<number[]>(
+- src\scene\section\sceneSectionController.ts:1968 — "uSceneSectionPlaneOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:1973 — planeOpacityUniform.value[i] = plane
+- src\scene\section\sceneSectionController.ts:1975 — visibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\section\sceneSectionController.ts:1976 — visibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\section\sceneSectionController.ts:2023 — const frameOpacityUniform = ensure<number[]>(
+- src\scene\section\sceneSectionController.ts:2024 — "uSceneSectionFrameOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2029 — frameOpacityUniform.value[i] = frame
+- src\scene\section\sceneSectionController.ts:2031 — visibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\section\sceneSectionController.ts:2032 — visibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\section\sceneSectionController.ts:2059 — const targetPlaneOpacityUniform = ensure<number[]>(
+- src\scene\section\sceneSectionController.ts:2060 — "uSceneSectionTargetPlaneOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2071 — targetPlaneOpacityUniform.value[i] = plane
+- src\scene\section\sceneSectionController.ts:2073 — targetVisibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\section\sceneSectionController.ts:2074 — targetVisibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\section\sceneSectionController.ts:2093 — const targetFrameOpacityUniform = ensure<number[]>(
+- src\scene\section\sceneSectionController.ts:2094 — "uSceneSectionTargetFrameOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2120 — targetFrameOpacityUniform.value[i] = frame
+- src\scene\section\sceneSectionController.ts:2122 — targetVisibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\section\sceneSectionController.ts:2123 — targetVisibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\section\sceneSectionController.ts:2163 — (frameId) => (visibility.outsideOpacityByFrameId[frameId] ?? 1) < 0.999,
+- src\scene\section\sceneSectionController.ts:2166 — (axis) => (visibility.outsideOpacityByAxis[axis] ?? 1) < 0.999,
+- src\scene\section\sceneSectionController.ts:2176 — (Object.values(maskTransition.source.visibility.outsideOpacityByAxis).some(
+- src\scene\section\sceneSectionController.ts:2177 — (opacity) => opacity < 0.999,
+- src\scene\section\sceneSectionController.ts:2180 — maskTransition.source.visibility.outsideOpacityByFrameId,
+- src\scene\section\sceneSectionController.ts:2181 — ).some((opacity) => opacity < 0.999) ||
+- src\scene\section\sceneSectionController.ts:2182 — Object.values(maskTransition.target.visibility.outsideOpacityByAxis).some(
+- src\scene\section\sceneSectionController.ts:2183 — (opacity) => opacity < 0.999,
+- src\scene\section\sceneSectionController.ts:2186 — maskTransition.target.visibility.outsideOpacityByFrameId,
+- src\scene\section\sceneSectionController.ts:2187 — ).some((opacity) => opacity < 0.999));
+- src\scene\section\sceneSectionController.ts:2195 — (visibility.outsideOpacityByFrameId[frameId] ?? 1) > 0.001,
+- src\scene\section\sceneSectionController.ts:2198 — (axis) => (visibility.outsideOpacityByAxis[axis] ?? 1) > 0.001,
+- src\scene\section\sceneSectionController.ts:2480 — export function sceneSectionHelperOpacityForTween(this: any,
+- src\scene\section\sceneSectionController.ts:2510 — export function applySceneSectionHelperTransitionOpacity(this: any): void {
+- src\scene\section\sceneSectionController.ts:2513 — const opacity = clamp01(this.sceneSectionHelperTransitionOpacity);
+- src\scene\section\sceneSectionController.ts:2521 — const baseOpacity = this.baseOpacityForMaterial(material);
+- src\scene\section\sceneSectionController.ts:2522 — material.opacity = baseOpacity * opacity;
+- src\scene\section\sceneSectionController.ts:2525 — material.opacity < 0.999;
+- src\scene\section\sceneSectionController.ts:2528 — material.uniforms.uOpacity
+- src\scene\section\sceneSectionController.ts:2530 — material.uniforms.uOpacity.value = material.opacity;
+- src\scene\section\sceneSectionController.ts:2642 — opacity: 0.96,
+- src\scene\section\sceneSectionController.ts:2694 — opacity: 0.94,
+- src\scene\section\sceneSectionController.ts:2953 — const outlineOpacity = frame
+- src\scene\section\sceneSectionController.ts:2962 — outlineOpacity,
+- src\scene\section\sceneSectionController.ts:3040 — const material = makeSceneSectionConeMaterial(color, outlineOpacity);
+- src\scene\section\sceneSectionController.ts:3068 — opacity: 0,
+- src\scene\section\sceneSectionController.ts:3234 — opacity: 0.82,
+- src\scene\section\sceneSectionController.ts:3481 — (visibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\section\sceneSectionController.ts:3482 — visibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\section\sceneSectionController.ts:3489 — (visibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\section\sceneSectionController.ts:3490 — visibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\section\sceneSectionController.ts:3562 — this.applySceneSectionHelperTransitionOpacity();
+- src\scene\section\sceneSectionController.ts:3563 — const helperOpacityMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\section\sceneSectionController.ts:3591 — helperOpacityMs,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:67 — const planeOpacityUniform = ensure<number[]>(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:68 — "uSceneSectionObjectVisibilityPlaneOpacity",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:77 — planeOpacityUniform.value[i] = plane
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:79 — sourceVisibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:80 — sourceVisibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:112 — const frameOpacityUniform = ensure<number[]>(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:113 — "uSceneSectionObjectVisibilityFrameOpacity",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:139 — frameOpacityUniform.value[i] = frame
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:141 — sourceVisibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:142 — sourceVisibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:173 — const targetPlaneOpacityUniform = ensure<number[]>(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:174 — "uSceneSectionObjectVisibilityTargetPlaneOpacity",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:185 — targetPlaneOpacityUniform.value[i] = plane
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:187 — targetVisibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:188 — targetVisibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:216 — const targetFrameOpacityUniform = ensure<number[]>(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:217 — "uSceneSectionObjectVisibilityTargetFrameOpacity",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:243 — targetFrameOpacityUniform.value[i] = frame
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:245 — targetVisibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:246 — targetVisibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:283 — outsideOpacityByAxis: { x: 1, y: 1, z: 1 },
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:284 — outsideOpacityByFrameId: {},
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:286 — hasSoftOpacity: false,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:314 — "uniform float uSceneSectionObjectVisibilityPlaneOpacity[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:319 — "uniform float uSceneSectionObjectVisibilityFrameOpacity[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:324 — "uniform float uSceneSectionObjectVisibilityTargetPlaneOpacity[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:329 — "uniform float uSceneSectionObjectVisibilityTargetFrameOpacity[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:338 — "    if (distance > 0.0) alpha = min(alpha, clamp(uSceneSectionObjectVisibilityTargetPlaneOpacity[i], 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:348 — "    if (!inside) alpha = min(alpha, clamp(uSceneSectionObjectVisibilityTargetFrameOpacity[i], 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:360 — "      if (distance > 0.0) alpha = min(alpha, clamp(uSceneSectionObjectVisibilityPlaneOpacity[i], 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:370 — "      if (!inside) alpha = min(alpha, clamp(uSceneSectionObjectVisibilityFrameOpacity[i], 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:421 — if ((enabled && visibility.hasSoftOpacity) || maskTransition) {
+- src\scene\shaders\workingAreaFocusShader.ts:19 — outsideOpacity: number,
+- src\scene\shaders\workingAreaFocusShader.ts:35 — ensure<number>("uWorkingAreaFocusOutsideOpacity", 1).value =
+- src\scene\shaders\workingAreaFocusShader.ts:36 — clamp01(outsideOpacity);
+- src\scene\shaders\workingAreaFocusShader.ts:44 — outsideOpacity: number,
+- src\scene\shaders\workingAreaFocusShader.ts:49 — material.userData.workingAreaFocusOutsideOpacity = clamp01(outsideOpacity);
+- src\scene\shaders\workingAreaFocusShader.ts:64 — typeof material.userData.workingAreaFocusOutsideOpacity === "number"
+- src\scene\shaders\workingAreaFocusShader.ts:65 — ? material.userData.workingAreaFocusOutsideOpacity
+- src\scene\shaders\workingAreaFocusShader.ts:86 — "uniform float uWorkingAreaFocusOutsideOpacity;",
+- src\scene\shaders\workingAreaFocusShader.ts:91 — "  return inside ? 1.0 : clamp(uWorkingAreaFocusOutsideOpacity, 0.0, 1.0);",
+- src\scene\shaders\workingAreaFocusShader.ts:132 — outsideOpacity,
+- src\scene\styles\applyLayerStyle.ts:41 — const targetOpacity =
+- src\scene\styles\applyLayerStyle.ts:43 — typeof style.fillOpacity === "number"
+- src\scene\styles\applyLayerStyle.ts:44 — ? clamp01(style.fillOpacity)
+- src\scene\styles\applyLayerStyle.ts:45 — : typeof style.opacity === "number"
+- src\scene\styles\applyLayerStyle.ts:46 — ? style.opacity
+- src\scene\styles\applyLayerStyle.ts:47 — : this.baseOpacityForMaterial(m);
+- src\scene\styles\applyLayerStyle.ts:58 — const preserveMaterialOpacity =
+- src\scene\styles\applyLayerStyle.ts:59 — m.userData?.preserveMaterialOpacity === true;
+- src\scene\styles\applyLayerStyle.ts:126 — if (!preserveMaterialOpacity) {
+- src\scene\styles\applyLayerStyle.ts:127 — m.opacity = targetOpacity;
+- src\scene\styles\applyLayerStyle.ts:129 — m.userData?.forceTransparent === true || targetOpacity < 1;
+- src\scene\styles\applyLayerStyle.ts:130 — if (m instanceof THREE.ShaderMaterial && m.uniforms.uOpacity) {
+- src\scene\styles\applyLayerStyle.ts:131 — m.uniforms.uOpacity.value = targetOpacity;
+- src\scene\styles\applyLayerStyle.ts:135 — m.depthWrite = targetOpacity >= 0.999;
+- src\scene\styles\applyLayerStyle.ts:191 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\styles\drillingAndTopoDisplay.ts:32 — const boreLineOpacity = clampRange(assays.boreLineOpacity ?? 0.72, 0, 1);
+- src\scene\styles\drillingAndTopoDisplay.ts:40 — const boreTubeOpacity = clampRange(assays.boreTubeOpacity ?? 0.88, 0, 1);
+- src\scene\styles\drillingAndTopoDisplay.ts:66 — const lithologyOpacity = clampRange(assays.lithologyOpacity ?? 0.56, 0, 1);
+- src\scene\styles\drillingAndTopoDisplay.ts:69 — const assaySideOpacity = clampRange(assays.assaySideOpacity ?? 1, 0, 1);
+- src\scene\styles\drillingAndTopoDisplay.ts:70 — const assayCapOpacity = clampRange(assays.assayCapOpacity ?? 1, 0, 1);
+- src\scene\styles\drillingAndTopoDisplay.ts:81 — const boreLensOpacity = clampRange(assays.boreLensOpacity ?? 0.16, 0, 1);
+- src\scene\styles\drillingAndTopoDisplay.ts:156 — lensMaterial.opacity = boreLensOpacity;
+- src\scene\styles\drillingAndTopoDisplay.ts:197 — m.opacity = boreTubeOpacity;
+- src\scene\styles\drillingAndTopoDisplay.ts:221 — m.opacity =
+- src\scene\styles\drillingAndTopoDisplay.ts:222 — surface === "cap" ? assayCapOpacity : assaySideOpacity;
+- src\scene\styles\drillingAndTopoDisplay.ts:232 — m.opacity = boreLineOpacity;
+- src\scene\styles\drillingAndTopoDisplay.ts:240 — m.opacity = lithologyOpacity;
+- src\scene\styles\drillingAndTopoDisplay.ts:272 — const minAlpha = clampRange(topo.farOpacity ?? 0.2, 0, 1);
+- src\scene\styles\mtThresholdSurfaceStyle.ts:2 — import { applyMtThresholdSurfaceMaterialOpacity } from "../../loaders/surfaceRenderPolicy";
+- src\scene\styles\mtThresholdSurfaceStyle.ts:20 — const opacity = styleNumber(style, "opacity", 0.86, 0, 1);
+- src\scene\styles\mtThresholdSurfaceStyle.ts:52 — const wireframeOpacity = styleNumber(
+- src\scene\styles\mtThresholdSurfaceStyle.ts:54 — "mtThresholdSurfaceWireframeOpacity",
+- src\scene\styles\mtThresholdSurfaceStyle.ts:127 — const boundaryOpacity = boundary?.opacity ?? 1;
+- src\scene\styles\mtThresholdSurfaceStyle.ts:128 — const effectiveOpacity = wireframe
+- src\scene\styles\mtThresholdSurfaceStyle.ts:129 — ? wireframeOpacity
+- src\scene\styles\mtThresholdSurfaceStyle.ts:130 — : opacity * boundaryOpacity;
+- src\scene\styles\mtThresholdSurfaceStyle.ts:131 — applyMtThresholdSurfaceMaterialOpacity(
+- src\scene\styles\mtThresholdSurfaceStyle.ts:133 — effectiveOpacity,
+- src\scene\styles\mtThresholdSurfaceStyle.ts:137 — m.userData.mtThresholdSurfaceMasterOpacity = opacity;
+- src\scene\styles\mtThresholdSurfaceStyle.ts:138 — m.userData.mtThresholdSurfaceBoundaryOpacity = boundaryOpacity;
+- src\scene\styles\scalarEdgeLines.ts:540 — opacity: 0.95,
+- src\scene\styles\scalarEdgeLines.ts:571 — material.opacity = clampRange(0.4 + options.edgeLineWidth / 10, 0.4, 0.96);
+- src\scene\styles\scalarPreviewStyle.ts:84 — const sectionIsoSourceOpacity = sectionIsoEnabled
+- src\scene\styles\scalarPreviewStyle.ts:85 — ? styleNumber(style, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\scalarPreviewStyle.ts:87 — const layerOpacity = styleNumber(style, "opacity", 1, 0, 1);
+- src\scene\styles\scalarPreviewStyle.ts:97 — const sectionIsoBandOpacity = styleNumber(
+- src\scene\styles\scalarPreviewStyle.ts:99 — "sectionIsoBandOpacity",
+- src\scene\styles\scalarPreviewStyle.ts:382 — bandOpacity: sectionIsoBandOpacity,
+- src\scene\styles\scalarPreviewStyle.ts:399 — if (isScalarSectionMesh(obj) && "opacity" in m) {
+- src\scene\styles\scalarPreviewStyle.ts:400 — (m as THREE.Material & { opacity: number }).opacity =
+- src\scene\styles\scalarPreviewStyle.ts:401 — layerOpacity * sectionIsoSourceOpacity;
+- src\scene\styles\scalarPreviewStyle.ts:404 — layerOpacity * sectionIsoSourceOpacity < 1;
+- src\scene\styles\scalarVolumeStyle.ts:58 — const opacity = styleNumber(
+- src\scene\styles\scalarVolumeStyle.ts:60 — "scalarVolumeOpacity",
+- src\scene\styles\scalarVolumeStyle.ts:61 — styleNumber(style, "opacity", 0.48, 0, 1),
+- src\scene\styles\scalarVolumeStyle.ts:65 — const isoSourceOpacity =
+- src\scene\styles\scalarVolumeStyle.ts:67 — ? styleNumber(style, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\scalarVolumeStyle.ts:69 — const renderOpacity = opacity * isoSourceOpacity;
+- src\scene\styles\scalarVolumeStyle.ts:141 — if (uniforms.uOpacity) uniforms.uOpacity.value = renderOpacity;
+- src\scene\styles\scalarVolumeStyle.ts:142 — this.setProductOpacityBaseForMaterial(m, renderOpacity);
+- src\scene\styles\scalarVolumeStyle.ts:154 — opacity: renderOpacity,
+- src\scene\styles\scalarVolumeStyle.ts:155 — sourceOpacity: opacity,
+- src\scene\styles\scalarVolumeStyle.ts:156 — sectionIsoSourceOpacity: isoSourceOpacity,
+- src\scene\styles\seismicBrowserStyle.ts:42 — setProductOpacityBaseForMaterial(material: THREE.Material, opacity: number): void;
+- src\scene\styles\seismicBrowserStyle.ts:170 — ...(typeof productState.opacity === "number"
+- src\scene\styles\seismicBrowserStyle.ts:171 — ? { opacity: productState.opacity }
+- src\scene\styles\seismicBrowserStyle.ts:255 — const opacity = styleNumber(effectiveStyle, "opacity", 0.62, 0, 1);
+- src\scene\styles\seismicBrowserStyle.ts:291 — const sectionIsoSourceOpacity = sectionIsoEnabled
+- src\scene\styles\seismicBrowserStyle.ts:292 — ? styleNumber(effectiveStyle, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\seismicBrowserStyle.ts:294 — const sectionSourceOpacity = opacity;
+- src\scene\styles\seismicBrowserStyle.ts:295 — const volumeSourceOpacity = opacity * sectionIsoSourceOpacity;
+- src\scene\styles\seismicBrowserStyle.ts:338 — bandOpacity: styleNumber(
+- src\scene\styles\seismicBrowserStyle.ts:340 — "sectionIsoBandOpacity",
+- src\scene\styles\seismicBrowserStyle.ts:598 — if (uniforms.uOpacity) uniforms.uOpacity.value = volumeSourceOpacity;
+- src\scene\styles\seismicBrowserStyle.ts:599 — host.setProductOpacityBaseForMaterial(obj.material, volumeSourceOpacity);
+- src\scene\styles\seismicBrowserStyle.ts:711 — if (material.uniforms.uOpacity) {
+- src\scene\styles\seismicBrowserStyle.ts:712 — material.uniforms.uOpacity.value = sectionSourceOpacity;
+- src\scene\styles\seismicBrowserStyle.ts:733 — host.setProductOpacityBaseForMaterial(material, sectionSourceOpacity);
+- src\scene\styles\seismicBrowserStyle.ts:734 — } else if ("opacity" in material) {
+- src\scene\styles\seismicBrowserStyle.ts:735 — material.opacity = sectionSourceOpacity;
+- src\scene\styles\seismicBrowserStyle.ts:737 — host.setProductOpacityBaseForMaterial(material, sectionSourceOpacity);
+- src\scene\styles\seismicFigureAnnotations.ts:80 — opacity = 1,
+- src\scene\styles\seismicFigureAnnotations.ts:85 — transparent: opacity < 1,
+- src\scene\styles\seismicFigureAnnotations.ts:86 — opacity,
+- src\scene\styles\seismicFigureAnnotations.ts:214 — opacity: 0.96,
+- src\scene\styles\seismicFigureAnnotations.ts:239 — opacity: number,
+- src\scene\styles\seismicFigureAnnotations.ts:245 — opacity,
+- src\scene\styles\seismicFigureAnnotations.ts:627 — clamp(styleNumber(style, "seismicFigureCaptionBoxOpacity", 0.54), 0, 1),
+- src\scene\styles\siteDetailStyles.ts:91 — nextOpacity: number,
+- src\scene\styles\siteDetailStyles.ts:106 — mat.opacity = clamp01(nextOpacity);
+- src\scene\styles\siteDetailStyles.ts:108 — mat.userData?.forceTransparent === true || mat.opacity < 1;
+- src\scene\styles\siteDetailStyles.ts:130 — const panelOpacity = clampRange(
+- src\scene\styles\siteDetailStyles.ts:131 — typeof style.gammaPanelOpacity === "number" ? style.gammaPanelOpacity : 0,
+- src\scene\styles\siteDetailStyles.ts:135 — const panelVisible = bool(style.gammaPanelVisible, panelOpacity > 0.001);
+- src\scene\styles\siteDetailStyles.ts:141 — const collarOpacity = numeric(style.gammaCollarOpacity, 0.94, 0, 1);
+- src\scene\styles\siteDetailStyles.ts:148 — opacity: numeric(style.gammaSurveyTubeOpacity, 0.34, 0, 1),
+- src\scene\styles\siteDetailStyles.ts:155 — opacity: numeric(style.gammaLoggedOverburdenOpacity, 0.42, 0, 1),
+- src\scene\styles\siteDetailStyles.ts:162 — opacity: numeric(style.gammaBedrockIntervalOpacity, 0.46, 0, 1),
+- src\scene\styles\siteDetailStyles.ts:182 — opacity: numeric(style.gammaContact1Opacity, 0.86, 0, 1),
+- src\scene\styles\siteDetailStyles.ts:187 — opacity: numeric(style.gammaContact2Opacity, 0.55, 0, 1),
+- src\scene\styles\siteDetailStyles.ts:197 — const traceOpacity = numeric(style.gammaTraceOpacity, 0.92, 0, 1);
+- src\scene\styles\siteDetailStyles.ts:216 — applyMaterial(obj, collarColor, collarOpacity);
+- src\scene\styles\siteDetailStyles.ts:233 — applyMaterial(obj, setting.color, setting.opacity);
+- src\scene\styles\siteDetailStyles.ts:253 — applyMaterial(obj, setting.color, setting.opacity);
+- src\scene\styles\siteDetailStyles.ts:261 — obj.visible = panelVisible && panelOpacity > 0.001;
+- src\scene\styles\siteDetailStyles.ts:268 — applyMaterial(obj, panelColor, panelOpacity);
+- src\scene\styles\siteDetailStyles.ts:282 — material.opacity = traceOpacity;
+- src\scene\styles\siteDetailStyles.ts:298 — const layerOpacity = clamp01(
+- src\scene\styles\siteDetailStyles.ts:299 — typeof style.opacity === "number" ? style.opacity : 1,
+- src\scene\styles\siteDetailStyles.ts:313 — sourceLocationStyle.visible && layerOpacity > 0.001;
+- src\scene\styles\siteDetailStyles.ts:348 — opacity: number,
+- src\scene\styles\siteDetailStyles.ts:355 — material.opacity = clamp01(opacity);
+- src\scene\styles\siteDetailStyles.ts:364 — opacity: number,
+- src\scene\styles\siteDetailStyles.ts:374 — material.opacity = clamp01(opacity);
+- src\scene\styles\siteDetailStyles.ts:431 — opacity: wellStyle.opacity * layerOpacity,
+- src\scene\styles\siteDetailStyles.ts:467 — line.material.opacity = wellStyle.centerlineOpacity * layerOpacity;
+- src\scene\styles\siteDetailStyles.ts:492 — material.opacity = wellStyle.opacity * layerOpacity;
+- src\scene\styles\siteDetailStyles.ts:559 — sourceLocationStyle.depthTraceOpacity * layerOpacity,
+- src\scene\styles\siteDetailStyles.ts:577 — sourceLocationStyle.lineOpacity * layerOpacity,
+- src\scene\styles\siteDetailStyles.ts:609 — sourceLocationStyle.groundBallOpacity * layerOpacity,
+- src\scene\styles\siteDetailStyles.ts:629 — sourceLocationStyle.crosshairOpacity * layerOpacity,
+- src\scene\styles\siteDetailStyles.ts:670 — sourceLocationStyle.topRingOpacity * layerOpacity,
+- src\scene\styles\siteDetailStyles.ts:718 — const targetOpacity = clamp01(
+- src\scene\styles\siteDetailStyles.ts:719 — sourceLocationStyle.icon.opacity * layerOpacity,
+- src\scene\styles\siteDetailStyles.ts:725 — material.opacity = 0;
+- src\scene\styles\siteDetailStyles.ts:727 — material.opacity = material.map ? targetOpacity : 0;
+- src\scene\styles\siteDetailStyles.ts:733 — material.opacity = texture ? targetOpacity : 0;
+- src\scene\styles\siteDetailStyles.ts:776 — opacity?: number;
+- src\scene\styles\siteDetailStyles.ts:788 — colored.opacity =
+- src\scene\styles\siteDetailStyles.ts:790 — ? blockStyle.outlineOpacity
+- src\scene\styles\siteDetailStyles.ts:791 — : blockStyle.opacity) * layerOpacity;
+- src\scene\styles\siteDetailStyles.ts:924 — const opacity = numeric(
+- src\scene\styles\siteDetailStyles.ts:925 — style.geochemOpacity ?? style.opacity,
+- src\scene\styles\siteDetailStyles.ts:926 — typeof style.opacity === "number" ? style.opacity : 0.92,
+- src\scene\styles\siteDetailStyles.ts:931 — const outlineOpacity = showOutline
+- src\scene\styles\siteDetailStyles.ts:932 — ? numeric(style.geochemOutlineOpacity, 0.65, 0, 1)
+- src\scene\styles\siteDetailStyles.ts:963 — nextOpacity: number,
+- src\scene\styles\siteDetailStyles.ts:974 — mat.opacity = clamp01(nextOpacity);
+- src\scene\styles\siteDetailStyles.ts:1007 — child.visible = opacity > 0.001;
+- src\scene\styles\siteDetailStyles.ts:1009 — applyMaterial(child, fillColor, opacity);
+- src\scene\styles\siteDetailStyles.ts:1012 — child.visible = showOutline && outlineOpacity > 0.001;
+- src\scene\styles\siteDetailStyles.ts:1015 — applyMaterial(child, outlineColor, outlineOpacity);
+- src\scene\styles\siteDetailStyles.ts:1041 — const opacity = clampRange(
+- src\scene\styles\siteDetailStyles.ts:1042 — typeof style.opacity === "number" ? style.opacity : 0.72,
+- src\scene\styles\siteDetailStyles.ts:1055 — obj.visible = opacity > 0.001;
+- src\scene\styles\siteDetailStyles.ts:1058 — obj.visible = endpointVisible && opacity > 0.001;
+- src\scene\styles\siteDetailStyles.ts:1074 — mat.opacity = opacity;
+- src\scene\styles\siteDetailStyles.ts:1098 — const opacity = clampRange(
+- src\scene\styles\siteDetailStyles.ts:1099 — typeof style.opacity === "number" ? style.opacity : 0.95,
+- src\scene\styles\siteDetailStyles.ts:1106 — obj.visible = cornerVisible && opacity > 0.001 && cornerRadius > 0.001;
+- src\scene\terrain\applyLakesToTerrain.ts:20 — opacityOverrides: ReadonlyMap<string, number> = new Map(),
+- src\scene\terrain\applyLakesToTerrain.ts:27 — const lakeFillOpacity =
+- src\scene\terrain\applyLakesToTerrain.ts:28 — typeof lakeStyle.fillOpacity === "number"
+- src\scene\terrain\applyLakesToTerrain.ts:29 — ? lakeStyle.fillOpacity
+- src\scene\terrain\applyLakesToTerrain.ts:30 — : typeof lakeStyle.opacity === "number"
+- src\scene\terrain\applyLakesToTerrain.ts:31 — ? lakeStyle.opacity
+- src\scene\terrain\applyLakesToTerrain.ts:34 — opacityOverrides.get("hydrography-lakes") ??
+- src\scene\terrain\applyLakesToTerrain.ts:35 — (visibleSet.has("hydrography-lakes") ? 1 : 0) * lakeFillOpacity;
+- src\scene\terrain\applyLakesToTerrain.ts:40 — opacityOverrides.get("three-firs-target") ??
+- src\scene\terrain\applyLakesToTerrain.ts:42 — (typeof tfStyle.opacity === "number" ? tfStyle.opacity : 1);
+- src\scene\terrain\applyLakesToTerrain.ts:46 — opacityOverrides.get("great-plains-target") ??
+- src\scene\terrain\applyLakesToTerrain.ts:48 — (typeof gpStyle.opacity === "number" ? gpStyle.opacity : 1);
+- src\scene\terrain\applyLakesToTerrain.ts:52 — opacityOverrides.get("claim-boundary") ??
+- src\scene\terrain\applyLakesToTerrain.ts:54 — (typeof claimStyle.opacity === "number" ? claimStyle.opacity : 1);
+- src\scene\terrain\applyLakesToTerrain.ts:58 — opacityOverrides.get("bedrock-geology") ??
+- src\scene\terrain\applyLakesToTerrain.ts:60 — (typeof geologyStyle.opacity === "number"
+- src\scene\terrain\applyLakesToTerrain.ts:61 — ? geologyStyle.opacity
+- src\scene\terrain\applyLakesToTerrain.ts:65 — const forestOpacity =
+- src\scene\terrain\applyLakesToTerrain.ts:66 — typeof forestStyle.opacity === "number" ? forestStyle.opacity : 0.4;
+- src\scene\terrain\applyLakesToTerrain.ts:68 — opacityOverrides.get("trees-vri") ??
+- src\scene\terrain\applyLakesToTerrain.ts:80 — handle.setLakeOpacity(lakeOp);
+- src\scene\terrain\applyLakesToTerrain.ts:91 — handle.setTargetOpacity("target-three-firs", tfOp);
+- src\scene\terrain\applyLakesToTerrain.ts:102 — handle.setTargetOpacity("target-great-plains", gpOp);
+- src\scene\terrain\applyLakesToTerrain.ts:109 — handle.setClaimOpacity(claimOp);
+- src\scene\terrain\applyLakesToTerrain.ts:114 — handle.setGeologyOpacity(geologyOp);
+- src\scene\terrain\applyLakesToTerrain.ts:131 — handle.setForestFillOpacity(forestOp * forestOpacity);
+- src\scene\terrain\applyLakesToTerrain.ts:132 — handle.setForestOutlineOpacity(forestOp * forestOpacity);
+- src\scene\terrain\applyLakesToTerrain.ts:178 — { visible?: boolean; opacity?: number }
+- src\scene\terrain\terrainStyleController.ts:30 — export function applyTerrainCompositeOpacityImpl(this: any, layerId: string, opacity: number): void {
+- src\scene\terrain\terrainStyleController.ts:50 — handle.setLakeOpacity(opacity);
+- src\scene\terrain\terrainStyleController.ts:53 — handle.setTargetOpacity("target-three-firs", opacity);
+- src\scene\terrain\terrainStyleController.ts:56 — handle.setTargetOpacity("target-great-plains", opacity);
+- src\scene\terrain\terrainStyleController.ts:59 — handle.setClaimOpacity(opacity);
+- src\scene\terrain\terrainStyleController.ts:62 — handle.setGeologyOpacity(opacity);
+- src\scene\terrain\terrainStyleController.ts:65 — handle.setForestFillOpacity(opacity);
+- src\scene\terrain\terrainStyleController.ts:66 — handle.setForestOutlineOpacity(opacity);
+- src\scene\terrain\terrainStyleController.ts:71 — this.applyStreamLakeOcclusion(opacity > 0.001);
+- src\scene\terrain\terrainStyleController.ts:364 — const fillOpacity =
+- src\scene\terrain\terrainStyleController.ts:365 — typeof style.fillOpacity === "number" ? clamp01(style.fillOpacity) : 0.08;
+- src\scene\terrain\terrainStyleController.ts:368 — const outlineOpacity =
+- src\scene\terrain\terrainStyleController.ts:369 — typeof style.opacity === "number" ? clamp01(style.opacity) : 1;
+- src\scene\terrain\terrainStyleController.ts:397 — material.opacity = outlineOpacity;
+- src\scene\terrain\terrainStyleController.ts:416 — if (!ring || fillOpacity <= 0.0001) {
+- src\scene\terrain\terrainStyleController.ts:433 — opacity: fillOpacity,
+- src\scene\terrain\terrainStyleController.ts:457 — material.opacity = fillOpacity;
+- src\scene\terrain\terrainStyleController.ts:500 — const opacity =
+- src\scene\terrain\terrainStyleController.ts:501 — typeof style.opacity === "number" ? clamp01(style.opacity) : 1;
+- src\scene\terrain\terrainStyleController.ts:502 — const fillOpacity =
+- src\scene\terrain\terrainStyleController.ts:503 — typeof style.fillOpacity === "number"
+- src\scene\terrain\terrainStyleController.ts:504 — ? clamp01(style.fillOpacity)
+- src\scene\terrain\terrainStyleController.ts:505 — : opacity;
+- src\scene\terrain\terrainStyleController.ts:518 — handle.setLakeOpacity(fillOpacity);
+- src\scene\terrain\terrainStyleController.ts:526 — handle.setTargetOpacity("target-three-firs", opacity);
+- src\scene\terrain\terrainStyleController.ts:534 — handle.setTargetOpacity("target-great-plains", opacity);
+- src\scene\terrain\terrainStyleController.ts:541 — handle.setClaimOpacity(opacity);
+- src\scene\terrain\terrainStyleController.ts:546 — handle.setGeologyOpacity(opacity);
+- src\scene\terrain\terrainStyleController.ts:563 — handle.setForestFillOpacity(opacity);
+- src\scene\terrain\terrainStyleController.ts:564 — handle.setForestOutlineOpacity(opacity);
+- src\scene\terrain\terrainStyleController.ts:595 — this.applyStreamLakeOcclusion(opacity > 0.001);
+- src\scene\transitions\cinematicSceneTransitions.ts:175 — debugFocusPlaneOpacity: 0.16,
+- src\scene\transitions\cinematicSceneTransitions.ts:194 — matteOpacity: 0.72,
+- src\scene\transitions\cinematicSceneTransitions.ts:451 — debugFocusPlaneOpacity: blendNumberField(
+- src\scene\transitions\cinematicSceneTransitions.ts:454 — "debugFocusPlaneOpacity",
+- src\scene\transitions\cinematicSceneTransitions.ts:557 — "matteOpacity",
+- src\scene\transitions\layerTweenRuntime.ts:13 — function transitionEnvelopeOpacity(
+- src\scene\transitions\layerTweenRuntime.ts:34 — const from = transition.sourceLayers.get(id)?.opacity ?? 0;
+- src\scene\transitions\layerTweenRuntime.ts:40 — ? this.targetOpacityForLayer(
+- src\scene\transitions\layerTweenRuntime.ts:46 — return transitionEnvelopeOpacity(from, to, current);
+- src\scene\transitions\layerTweenRuntime.ts:75 — export function transitionFrameOpacityForLayerImpl(this: any, id: string): number {
+- src\scene\transitions\layerTweenRuntime.ts:83 — const from = transition.sourceLayers.get(id)?.opacity ?? 0;
+- src\scene\transitions\layerTweenRuntime.ts:89 — ? this.targetOpacityForLayer(
+- src\scene\transitions\layerTweenRuntime.ts:107 — const opacity = this.transitionFrameOpacityForLayer(id);
+- src\scene\transitions\layerTweenRuntime.ts:108 — this.applyLayerTransitionRenderOpacity(
+- src\scene\transitions\layerTweenRuntime.ts:110 — opacity,
+- src\scene\transitions\layerTweenRuntime.ts:111 — transitionEnvelopeForLayerFrame.call(this, id, opacity),
+- src\scene\transitions\layerTweenRuntime.ts:117 — this.applyLayerTransitionRenderOpacity(id, 0, 0);
+- src\scene\transitions\layerTweenRuntime.ts:169 — | "helper-opacity-only" = "none";
+- src\scene\transitions\layerTweenRuntime.ts:190 — this.sceneSectionHelperTransitionOpacity = done
+- src\scene\transitions\layerTweenRuntime.ts:192 — : this.sceneSectionHelperOpacityForTween(tween, eased);
+- src\scene\transitions\layerTweenRuntime.ts:211 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\transitions\layerTweenRuntime.ts:256 — const opacity = tween.from + (tween.to - tween.from) * eased;
+- src\scene\transitions\layerTweenRuntime.ts:257 — const nextOpacity = done ? tween.to : opacity;
+- src\scene\transitions\layerTweenRuntime.ts:258 — this.applyLayerTransitionRenderOpacity(
+- src\scene\transitions\layerTweenRuntime.ts:260 — nextOpacity,
+- src\scene\transitions\layerTweenRuntime.ts:261 — transitionEnvelopeForLayerFrame.call(this, id, nextOpacity),
+- src\scene\transitions\layerTweenRuntime.ts:275 — const opacity = snapshot.from + (snapshot.to - snapshot.from) * eased;
+- src\scene\transitions\layerTweenRuntime.ts:276 — this.applyRenderOpacityToTree(
+- src\scene\transitions\layerTweenRuntime.ts:278 — done ? snapshot.to : opacity,
+- src\scene\transitions\layerTweenRuntime.ts:279 — transitionEnvelopeOpacity(
+- src\scene\transitions\layerTweenRuntime.ts:282 — done ? snapshot.to : opacity,
+- src\scene\transitions\layerTweenRuntime.ts:298 — const opacity = snapshot.from + (snapshot.to - snapshot.from) * eased;
+- src\scene\transitions\layerTweenRuntime.ts:299 — this.applyRenderOpacityToTree(
+- src\scene\transitions\layerTweenRuntime.ts:301 — done ? snapshot.to : opacity,
+- src\scene\transitions\layerTweenRuntime.ts:366 — typeof fromStyle.opacity === "number" &&
+- src\scene\transitions\layerTweenRuntime.ts:367 — Number.isFinite(fromStyle.opacity) &&
+- src\scene\transitions\layerTweenRuntime.ts:368 — typeof toStyle.opacity === "number" &&
+- src\scene\transitions\layerTweenRuntime.ts:369 — Number.isFinite(toStyle.opacity)
+- src\scene\transitions\layerTweenRuntime.ts:371 — next.opacity = fromStyle.opacity + (toStyle.opacity - fromStyle.opacity) * t;
+- src\scene\transitions\layerTweenRuntime.ts:379 — typeof fromBoundary.opacity === "number" &&
+- src\scene\transitions\layerTweenRuntime.ts:380 — Number.isFinite(fromBoundary.opacity) &&
+- src\scene\transitions\layerTweenRuntime.ts:381 — typeof toBoundary.opacity === "number" &&
+- src\scene\transitions\layerTweenRuntime.ts:382 — Number.isFinite(toBoundary.opacity)
+- src\scene\transitions\layerTweenRuntime.ts:386 — opacity: fromBoundary.opacity + (toBoundary.opacity - fromBoundary.opacity) * t,
+- src\scene\transitions\productFamilyRegistry.ts:93 — sourceOpacity: number,
+- src\scene\transitions\productFamilyRegistry.ts:94 — targetOpacity: number,
+- src\scene\transitions\productFamilyRegistry.ts:107 — Math.abs(targetOpacity - sourceOpacity) > 0.001
+- src\scene\transitions\productFamilyRegistry.ts:109 — return "fade-opacity";
+- src\scene\transitions\productFamilyRegistry.ts:118 — sourceOpacity: number,
+- src\scene\transitions\productFamilyRegistry.ts:119 — targetOpacity: number,
+- src\scene\transitions\productFamilyRegistry.ts:141 — if (Math.abs(targetOpacity - sourceOpacity) > 0.001) {
+- src\scene\transitions\productFamilyRegistry.ts:142 — return "layer opacity changed";
+- src\scene\transitions\productFamilyRegistry.ts:155 — sourceOpacity: number;
+- src\scene\transitions\productFamilyRegistry.ts:156 — targetOpacity: number;
+- src\scene\transitions\productFamilyRegistry.ts:169 — sourceOpacity,
+- src\scene\transitions\productFamilyRegistry.ts:170 — targetOpacity,
+- src\scene\transitions\productFamilyRegistry.ts:195 — sourceOpacity,
+- src\scene\transitions\productFamilyRegistry.ts:196 — targetOpacity,
+- src\scene\transitions\productFamilyRegistry.ts:204 — sourceOpacity,
+- src\scene\transitions\productFamilyRegistry.ts:205 — targetOpacity,
+- src\scene\transitions\productFamilyRegistry.ts:210 — sourceOpacity,
+- src\scene\transitions\productFamilyRegistry.ts:211 — targetOpacity,
+- src\scene\transitions\productFamilyRegistry.ts:233 — sourceOpacity,
+- src\scene\transitions\productFamilyRegistry.ts:234 — targetOpacity,
+- src\scene\transitions\productFamilyRegistry.ts:246 — sourceOpacity: number;
+- src\scene\transitions\productFamilyRegistry.ts:247 — targetOpacity: number;
+- src\scene\transitions\productFamilyRegistry.ts:259 — sourceOpacity: input.sourceOpacity,
+- src\scene\transitions\productFamilyRegistry.ts:260 — targetOpacity: input.targetOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:107 — "workingAreaFocusOutsideOpacityByLayerId",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:156 — opacity: number;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:160 — if (input.opacity > 0.001) return "visible";
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:381 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:390 — if (state.visible && state.opacity > 0.001) {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:407 — const sourceOpacity = sourceState?.opacity ?? 0;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:409 — const targetOpacity = targetAuthoredVisible
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:410 — ? this.targetOpacityForLayer(toEnvironment, toPage, id)
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:434 — opacity: sourceOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:439 — opacity: sourceOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:440 — opacityOwnerKey: sourceOwnerKey,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:441 — opacityOwnerPriority: sourceOwnerPriority,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:477 — opacity: targetOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:482 — opacity: targetOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:483 — opacityOwnerKey: targetOwnerKey,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:484 — opacityOwnerPriority: targetOwnerPriority,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:527 — observedCaseFamily: "layer-visibility-opacity",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:561 — sourceOpacity: number,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:562 — targetOpacity: number,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:575 — sourceOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:576 — targetOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:650 — this.sceneSectionHelperTransitionOpacity =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:651 — this.sceneSectionHelperOpacityForTween(this.sceneSectionStyleTween, 0);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:662 — this.sceneSectionHelperTransitionOpacity = 0;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:671 — sourceOpacity: fromSceneSectionStyle.sceneSectionEnabled === true ? 1 : 0,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:672 — targetOpacity:
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:689 — const fromOpacity = sourceState?.opacity ?? 0;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:690 — const toOpacity = toVisible.has(id)
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:691 — ? this.targetOpacityForLayer(toEnvironment, toPage, id)
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:705 — if (group) group.visible = fromOpacity > 0.001 || toOpacity > 0.001;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:709 — fromOpacity > 0.001 &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:721 — fromOpacity > 0.001 &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:731 — fromOpacity > 0.001 &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:732 — toOpacity > 0.001 &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:739 — fromOpacity > 0.001 &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:764 — fromOpacity > 0.001,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:765 — toOpacity > 0.001,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:766 — fromOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:767 — toOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:772 — // visual opacity to the old page value before the fade begins.
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:787 — this.applyRenderOpacityToTree(transitionSnapshot, fromOpacity, 1);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:788 — this.applyLayerTransitionRenderOpacity(id, 0, sectionIsoStable ? 1 : 0);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:791 — to: toOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:799 — from: fromOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:809 — this.applyLayerTransitionRenderOpacity(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:811 — fromOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:812 — sectionIsoStable ? 1 : fromOpacity > 0.001 ? 1 : 0,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:814 — terrainOverrides.set(id, fromOpacity);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:816 — if (duration <= 0 || Math.abs(fromOpacity - toOpacity) < 0.001) {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:817 — this.applyLayerTransitionRenderOpacity(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:819 — toOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:820 — toOpacity > 0.001 ? 1 : 0,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:822 — terrainOverrides.set(id, toOpacity);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:827 — from: fromOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:828 — to: toOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:838 — const fromOpacity = fromVisible.has(id)
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:839 — ? this.targetOpacityForLayer(fromEnvironment, fromPage, id)
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:841 — const toOpacity = toVisible.has(id)
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:842 — ? this.targetOpacityForLayer(toEnvironment, toPage, id)
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:844 — const sourceVisible = fromOpacity > 0.001;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:845 — const targetVisible = toOpacity > 0.001;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:860 — fromOpacity,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:861 — toOpacity,
+- src\scene\transitions\transitionRenderGraphAdapter.ts:49 — opacity?: number;
+- src\scene\transitions\transitionRenderGraphAdapter.ts:50 — opacityOwnerKey?: string;
+- src\scene\transitions\transitionRenderGraphAdapter.ts:51 — opacityOwnerPriority?: number;
+- src\scene\transitions\transitionRenderGraphAdapter.ts:110 — function opacityChannel(
+- src\scene\transitions\transitionRenderGraphAdapter.ts:113 — if (typeof state.opacity !== "number" || !Number.isFinite(state.opacity)) {
+- src\scene\transitions\transitionRenderGraphAdapter.ts:117 — key: "opacity",
+- src\scene\transitions\transitionRenderGraphAdapter.ts:118 — ownerKey: state.opacityOwnerKey,
+- src\scene\transitions\transitionRenderGraphAdapter.ts:119 — ownerPriority: state.opacityOwnerPriority,
+- src\scene\transitions\transitionRenderGraphAdapter.ts:122 — value: state.opacity,
+- src\scene\transitions\transitionRenderGraphAdapter.ts:217 — const opacity = opacityChannel(state);
+- src\scene\transitions\transitionRenderGraphAdapter.ts:222 — channels: opacity ? [opacity, ...(state.channels ?? [])] : state.channels,
+- src\scene\transitions\transitionStyles.ts:79 — export interface LayerOpacityTween {
+- src\scene\transitions\transitionStyles.ts:87 — export interface LayerTransitionSnapshot extends LayerOpacityTween {
+- src\scene\transitions\transitionStyles.ts:111 — targetOpacity: number;
+- src\scene\transitions\transitionStyles.ts:114 — export interface ScalarStyleTween extends LayerOpacityTween {
+- src\scene\transitions\transitionStyles.ts:155 — | "fade-opacity"
+- src\scene\transitions\transitionStyles.ts:173 — sourceOpacity: number;
+- src\scene\transitions\transitionStyles.ts:174 — targetOpacity: number;
+- src\scene\transitions\transitionStyles.ts:181 — opacity: number;
+- src\scene\transitions\transitionStyles.ts:235 — "scalarVolumeOpacity",
+- src\scene\transitions\transitionStyles.ts:241 — "sectionIsoBandOpacity",
+- src\scene\transitions\transitionStyles.ts:243 — "sectionIsoSourceOpacity",
+- src\scene\transitions\transitionStyles.ts:338 — if (field === "sectionIsoBandOpacity") return 0.32;
+- src\scene\transitions\transitionStyles.ts:340 — if (field === "sectionIsoSourceOpacity") return 0;
+- src\scene\workingArea\workingAreaFocusController.ts:18 — WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY,
+- src\scene\workingArea\workingAreaFocusController.ts:41 — outsideOpacityByLayerId: Map<string, number>;
+- src\scene\workingArea\workingAreaFocusController.ts:58 — export function workingAreaFocusOutsideOpacityImpl(this: any, style: EditableStyle, layerId: string): number {
+- src\scene\workingArea\workingAreaFocusController.ts:61 — const map = style.workingAreaFocusOutsideOpacityByLayerId ?? {};
+- src\scene\workingArea\workingAreaFocusController.ts:65 — : WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY;
+- src\scene\workingArea\workingAreaFocusController.ts:125 — const outsideOpacityByLayerId = new Map<string, number>();
+- src\scene\workingArea\workingAreaFocusController.ts:127 — outsideOpacityByLayerId.set(
+- src\scene\workingArea\workingAreaFocusController.ts:129 — this.workingAreaFocusOutsideOpacity(style, layerId),
+- src\scene\workingArea\workingAreaFocusController.ts:142 — outsideOpacityByLayerId,
+- src\scene\workingArea\workingAreaFocusController.ts:191 — opacity: 0.72,
+- src\scene\workingArea\workingAreaFocusController.ts:230 — export function setKnownShaderWorkingAreaFocusImpl(this: any, material: THREE.ShaderMaterial, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): boolean {
+- src\scene\workingArea\workingAreaFocusController.ts:238 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:244 — export function applyWorkingAreaFocusMaterialImpl(this: any, material: THREE.Material, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): void {
+- src\scene\workingArea\workingAreaFocusController.ts:252 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:265 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:278 — const outsideOpacity = state.outsideOpacityByLayerId.get(layerId) ?? 1;
+- src\scene\workingArea\workingAreaFocusController.ts:290 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:307 — const outsideOpacityByLayerId: Record<string, number> = {};
+- src\scene\workingArea\workingAreaFocusController.ts:309 — const from = this.workingAreaFocusOutsideOpacity(fromStyle, layerId);
+- src\scene\workingArea\workingAreaFocusController.ts:310 — const to = this.workingAreaFocusOutsideOpacity(toStyle, layerId);
+- src\scene\workingArea\workingAreaFocusController.ts:311 — outsideOpacityByLayerId[layerId] = from + (to - from) * t;
+- src\scene\workingArea\workingAreaFocusController.ts:320 — workingAreaFocusOutsideOpacityByLayerId: outsideOpacityByLayerId,
+- src\scene\workingArea\workingAreaFocusController.ts:340 — function sameOpacityMap(
+- src\scene\workingArea\workingAreaFocusController.ts:366 — sameOpacityMap(a.outsideOpacityByLayerId, b.outsideOpacityByLayerId)
+- src\scene\workingArea\workingAreaFocusController.ts:409 — outsideOpacityByLayerId: Record<string, number>;
+- src\scene\workingArea\workingAreaFocusController.ts:421 — outsideOpacityByLayerId: Object.fromEntries(
+- src\scene\workingArea\workingAreaFocusController.ts:422 — state.outsideOpacityByLayerId,
+- src\ui\AssayLegend.tsx:27 — opacity: 0,
+- src\ui\AssayLegend.tsx:28 — transition: "opacity 180ms ease",
+- src\ui\AssayLegend.tsx:77 — path.style.opacity = "0";
+- src\ui\AssayLegend.tsx:146 — svg.style.opacity = "0";
+- src\ui\AssayLegend.tsx:148 — if (targetRef.current) targetRef.current.style.opacity = "0";
+- src\ui\AssayLegend.tsx:165 — svg.style.opacity = "0";
+- src\ui\AssayLegend.tsx:167 — if (targetRef.current) targetRef.current.style.opacity = "0";
+- src\ui\AssayLegend.tsx:173 — svg.style.opacity = "1";
+- src\ui\AssayLegend.tsx:178 — targetRef.current.style.opacity = "0.9";
+- src\ui\AssayLegend.tsx:194 — path.style.opacity = "0.78";
+- src\ui\AssayLegend.tsx:231 — style={{ opacity: 0, transition: "opacity 160ms ease" }}
+- src\ui\AssayLegend.tsx:241 — style={{ opacity: 0, transition: "opacity 160ms ease" }}
+- src\ui\HoverTooltip.tsx:58 — transition: "opacity 200ms ease",
+- src\ui\HoverTooltip.tsx:71 — opacity: 1,
+- src\ui\LightModeToggle.tsx:431 — opacity: 0.78,
+- src\ui\MtSurfaceBoundaryLegend.tsx:120 — (boundary) => boundary.opacity > 0.001,
+- src\ui\NavControls.tsx:343 — opacity: 0.62,
+- src\ui\ResistivityLegend.tsx:179 — opacity: visible ? 1 : 0.82,
+- src\ui\ResistivityLegend.tsx:195 — opacity: available ? 1 : 0.68,
+- src\ui\SceneLabels.tsx:97 — opacity: number;
+- src\ui\SceneLabels.tsx:104 — labelTextOpacity: number;
+- src\ui\SceneLabels.tsx:105 — labelOutlineOpacity: number;
+- src\ui\SceneLabels.tsx:106 — labelFillOpacity: number;
+- src\ui\SceneLabels.tsx:180 — textOpacity: 1,
+- src\ui\SceneLabels.tsx:182 — outlineOpacity: 1,
+- src\ui\SceneLabels.tsx:184 — fillOpacity: 0,
+- src\ui\SceneLabels.tsx:190 — textOpacity: 1,
+- src\ui\SceneLabels.tsx:192 — outlineOpacity: 0.34,
+- src\ui\SceneLabels.tsx:194 — fillOpacity: 0.82,
+- src\ui\SceneLabels.tsx:200 — textOpacity: 1,
+- src\ui\SceneLabels.tsx:202 — outlineOpacity: 0.76,
+- src\ui\SceneLabels.tsx:204 — fillOpacity: 0.68,
+- src\ui\SceneLabels.tsx:210 — textOpacity: 1,
+- src\ui\SceneLabels.tsx:212 — outlineOpacity: 0.82,
+- src\ui\SceneLabels.tsx:214 — fillOpacity: 0.76,
+- src\ui\SceneLabels.tsx:450 — "white-space:nowrap;will-change:transform,opacity;line-height:14px;" +
+- src\ui\SceneLabels.tsx:451 — "transition:opacity 180ms ease;" +
+- src\ui\SceneLabels.tsx:493 — function cssColorWithOpacity(color: string, opacity: number): string {
+- src\ui\SceneLabels.tsx:494 — const alpha = clamp(opacity, 0, 1);
+- src\ui\SceneLabels.tsx:517 — textOpacity: number,
+- src\ui\SceneLabels.tsx:518 — outlineOpacity: number,
+- src\ui\SceneLabels.tsx:519 — fillOpacity: number,
+- src\ui\SceneLabels.tsx:521 — const textCss = cssColorWithOpacity(textColor, textOpacity);
+- src\ui\SceneLabels.tsx:523 — ? cssColorWithOpacity(outlineColor, outlineOpacity)
+- src\ui\SceneLabels.tsx:525 — const fillCss = cssColorWithOpacity(fillColor ?? "#14161c", fillOpacity);
+- src\ui\SceneLabels.tsx:714 — "will-change:transform,width,opacity;pointer-events:none;" +
+- src\ui\SceneLabels.tsx:715 — "transition:opacity 180ms ease;";
+- src\ui\SceneLabels.tsx:731 — el.style.opacity = "0";
+- src\ui\SceneLabels.tsx:737 — el.style.opacity = "1";
+- src\ui\SceneLabels.tsx:1178 — const labelTextOpacity =
+- src\ui\SceneLabels.tsx:1179 — typeof eff.labelTextOpacity === "number"
+- src\ui\SceneLabels.tsx:1180 — ? clamp(eff.labelTextOpacity, 0, 1)
+- src\ui\SceneLabels.tsx:1181 — : defaultLabelStyle.textOpacity;
+- src\ui\SceneLabels.tsx:1182 — const labelOutlineOpacity =
+- src\ui\SceneLabels.tsx:1183 — typeof eff.labelOutlineOpacity === "number"
+- src\ui\SceneLabels.tsx:1184 — ? clamp(eff.labelOutlineOpacity, 0, 1)
+- src\ui\SceneLabels.tsx:1185 — : defaultLabelStyle.outlineOpacity;
+- src\ui\SceneLabels.tsx:1186 — const labelFillOpacity =
+- src\ui\SceneLabels.tsx:1187 — typeof eff.labelFillOpacity === "number"
+- src\ui\SceneLabels.tsx:1188 — ? clamp(eff.labelFillOpacity, 0, 1)
+- src\ui\SceneLabels.tsx:1189 — : defaultLabelStyle.fillOpacity;
+- src\ui\SceneLabels.tsx:1249 — opacity: fade,
+- src\ui\SceneLabels.tsx:1256 — labelTextOpacity,
+- src\ui\SceneLabels.tsx:1257 — labelOutlineOpacity,
+- src\ui\SceneLabels.tsx:1258 — labelFillOpacity,
+- src\ui\SceneLabels.tsx:1335 — pair.chip.style.opacity = "0";
+- src\ui\SceneLabels.tsx:1336 — pair.leader.style.opacity = "0";
+- src\ui\SceneLabels.tsx:1361 — pair.chip.style.opacity = "0";
+- src\ui\SceneLabels.tsx:1362 — pair.leader.style.opacity = "0";
+- src\ui\SceneLabels.tsx:1405 — pair.chip.style.opacity = v.opacity.toFixed(3);
+- src\ui\SceneLabels.tsx:1411 — v.labelTextOpacity,
+- src\ui\SceneLabels.tsx:1412 — v.labelOutlineOpacity,
+- src\ui\SceneLabels.tsx:1413 — v.labelFillOpacity,
+- src\ui\SceneLabels.tsx:1431 — pair.leader.style.opacity = "0";
+- src\ui\SceneLabels.tsx:1447 — // Leader inherits chip opacity so distance fade affects both.
+- src\ui\SceneLabels.tsx:1448 — const baseOp = parseFloat(pair.leader.style.opacity || "1");
+- src\ui\SceneLabels.tsx:1450 — pair.leader.style.opacity = (v.opacity * 0.85).toFixed(3);
+- src\ui\SceneSectionLegend.tsx:108 — opacity: available ? 1 : 0.82,
+- src\ui\SceneSectionLegend.tsx:162 — opacity="0.72"
+- src\ui\SectionIsoLegend.tsx:192 — opacity: 1,
+- src\ui\SectionIsoLegend.tsx:211 — opacity: 1,
+- src\ui\SectionIsoLegend.tsx:228 — opacity: 1,
+- src\ui\SectionIsoLegend.tsx:558 — const bandOpacity = clamp(
+- src\ui\SectionIsoLegend.tsx:559 — styleNumber(style, "sectionIsoBandOpacity", 0.32),
+- src\ui\SectionIsoLegend.tsx:568 — const sourceOpacity = clamp(
+- src\ui\SectionIsoLegend.tsx:569 — styleNumber(style, "sectionIsoSourceOpacity", 0),
+- src\ui\SectionIsoLegend.tsx:573 — const showVolume = sourceOpacity > 0.001;
+- src\ui\SectionIsoLegend.tsx:668 — sectionIsoSourceOpacity: showVolume ? 0 : 1,
+- src\ui\SectionIsoLegend.tsx:964 — Band {Math.round(bandOpacity * 100)}%
+- src\ui\SectionIsoLegend.tsx:970 — value={bandOpacity}
+- src\ui\SectionIsoLegend.tsx:971 — data-testid="section-iso-band-opacity"
+- src\ui\SectionIsoLegend.tsx:975 — sectionIsoBandOpacity: clamp(
+- src\ui\SeismicVolumeLegend.tsx:430 — const opacity = clamp(styleNumber(style, "opacity", 0.62), 0, 1);
+- src\ui\SeismicVolumeLegend.tsx:645 — Opacity {Math.round(opacity * 100)}%
+- src\ui\SeismicVolumeLegend.tsx:647 — data-testid="seismic-legend-opacity"
+- src\ui\SeismicVolumeLegend.tsx:652 — value={opacity}
+- src\ui\SeismicVolumeLegend.tsx:653 — onChange={(event) => patchStyle({ opacity: parseFloat(event.target.value) })}
+- src\ui\SeismicVolumeLegend.tsx:654 — style={sliderStyle(opacity, 0, 1)}
+- src\projectModules\caseStudyB\audienceLenses.ts:64 — labelFillOpacity: 0.78,
+- src\projectModules\caseStudyB\audienceLenses.ts:66 — "quarry-ore-grade-heatmap": { opacity: 0.82 },
+- src\projectModules\caseStudyB\audienceLenses.ts:67 — [TLS_SURFACE_LAYER_ID]: { opacity: 0.68, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:68 — [TLS_CONTOUR_LAYER_ID]: { opacity: 0.9, lineWidth: 1.6, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:69 — "quarry-drill-traces": { opacity: 1, showLabels: true },
+- src\projectModules\caseStudyB\audienceLenses.ts:70 — "stockpile-volume-zones": { opacity: 0.94, showLabels: true },
+- src\projectModules\caseStudyB\audienceLenses.ts:71 — "slope-stability-anomaly": { opacity: 0.86, showLabels: true },
+- src\projectModules\caseStudyB\audienceLenses.ts:72 — "restoration-preview": { opacity: 0.18, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:73 — "public-viewshed-overlay": { opacity: 0.12, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:87 — zoneOpacity: {
+- src\projectModules\caseStudyB\audienceLenses.ts:133 — labelFillOpacity: 0.82,
+- src\projectModules\caseStudyB\audienceLenses.ts:135 — "restoration-preview": { opacity: 0.86, showLabels: true },
+- src\projectModules\caseStudyB\audienceLenses.ts:136 — [TLS_SURFACE_LAYER_ID]: { opacity: 0.55, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:137 — [TLS_CONTOUR_LAYER_ID]: { opacity: 0.38, lineWidth: 1.1, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:138 — "public-viewshed-overlay": { opacity: 0.72 },
+- src\projectModules\caseStudyB\audienceLenses.ts:139 — "erosion-runoff-planning": { opacity: 0.48 },
+- src\projectModules\caseStudyB\audienceLenses.ts:140 — "quarry-ore-grade-heatmap": { opacity: 0.08, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:141 — "quarry-drill-traces": { opacity: 0.08, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:142 — "slope-stability-anomaly": { opacity: 0.1, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:156 — zoneOpacity: {
+- src\projectModules\caseStudyB\audienceLenses.ts:202 — labelFillOpacity: 0.76,
+- src\projectModules\caseStudyB\audienceLenses.ts:204 — "haul-route-equipment-demo": { opacity: 0.92 },
+- src\projectModules\caseStudyB\audienceLenses.ts:205 — [TLS_SURFACE_LAYER_ID]: { opacity: 0.62, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:206 — [TLS_CONTOUR_LAYER_ID]: { opacity: 0.78, lineWidth: 1.35, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:207 — "stockpile-volume-zones": { opacity: 0.9, showLabels: true },
+- src\projectModules\caseStudyB\audienceLenses.ts:208 — "erosion-runoff-planning": { opacity: 0.9 },
+- src\projectModules\caseStudyB\audienceLenses.ts:209 — "bench-conformance-overlay": { opacity: 0.76, showLabels: true },
+- src\projectModules\caseStudyB\audienceLenses.ts:210 — "quarry-ore-grade-heatmap": { opacity: 0.16 },
+- src\projectModules\caseStudyB\audienceLenses.ts:224 — zoneOpacity: {
+- src\projectModules\caseStudyB\audienceLenses.ts:270 — labelFillOpacity: 0.88,
+- src\projectModules\caseStudyB\audienceLenses.ts:272 — "bench-conformance-overlay": { opacity: 0.95, showLabels: true },
+- src\projectModules\caseStudyB\audienceLenses.ts:273 — "slope-stability-anomaly": { opacity: 0.95, showLabels: true },
+- src\projectModules\caseStudyB\audienceLenses.ts:274 — "erosion-runoff-planning": { opacity: 0.92 },
+- src\projectModules\caseStudyB\audienceLenses.ts:275 — [TLS_SURFACE_LAYER_ID]: { opacity: 0.66, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:276 — [TLS_CONTOUR_LAYER_ID]: { opacity: 0.92, lineWidth: 1.55, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:277 — "quarry-ore-grade-heatmap": { opacity: 0.1, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:278 — "restoration-preview": { opacity: 0.16, showLabels: false },
+- src\projectModules\caseStudyB\audienceLenses.ts:292 — zoneOpacity: {
+- src\projectModules\utahForge\editorPreviewFields.ts:54 — "sectionIsoBandOpacity",
+- src\projectModules\utahForge\editorPreviewFields.ts:56 — "sectionIsoSourceOpacity",
+- src\projectModules\utahForge\editorPreviewFields.ts:63 — "scalarVolumeOpacity",
+- src\projectModules\utahForge\editorPreviewFields.ts:71 — "opacity",
+- src\projectModules\utahForge\editorPreviewFields.ts:88 — "opacity",
+- src\projectModules\utahForge\editorPreviewFields.ts:105 — "mtThresholdSurfaceWireframeOpacity",
+- src\projectModules\utahForge\editorPreviewFields.ts:106 — "opacity",
+- src\projectModules\utahForge\editorPreviewFields.ts:144 — "sectionIsoBandOpacity",
+- src\projectModules\utahForge\editorPreviewFields.ts:146 — "sectionIsoSourceOpacity",
+- src\projectModules\utahForge\editorPreviewFields.ts:147 — "opacity",
+- src\projectModules\utahForge\editorPreviewFields.ts:180 — "workingAreaFocusOutsideOpacityByLayerId",
+- src\projectModules\utahForge\mtSurfaceBoundaries.ts:23 — opacity: number;
+- src\projectModules\utahForge\mtSurfaceBoundaries.ts:289 — opacity: clamp01(finiteNumber(override.opacity) ?? 1),
+- src\projectModules\utahForge\mtSurfaceBoundaries.ts:308 — opacity: 1,
+- src\projectModules\utahForge\siteDetails.ts:26 — opacity: number;
+- src\projectModules\utahForge\siteDetails.ts:32 — centerlineOpacity: number;
+- src\projectModules\utahForge\siteDetails.ts:54 — opacity: number;
+- src\projectModules\utahForge\siteDetails.ts:58 — outlineOpacity: number;
+- src\projectModules\utahForge\siteDetails.ts:70 — opacity: number;
+- src\projectModules\utahForge\siteDetails.ts:80 — opacity: number;
+- src\projectModules\utahForge\siteDetails.ts:86 — lineOpacity: number;
+- src\projectModules\utahForge\siteDetails.ts:95 — depthTraceOpacity: number;
+- src\projectModules\utahForge\siteDetails.ts:102 — groundBallOpacity: number;
+- src\projectModules\utahForge\siteDetails.ts:109 — topRingOpacity: number;
+- src\projectModules\utahForge\siteDetails.ts:116 — crosshairOpacity: number;
+- src\projectModules\utahForge\siteDetails.ts:132 — opacity: 0.92,
+- src\projectModules\utahForge\siteDetails.ts:138 — centerlineOpacity: 0.82,
+- src\projectModules\utahForge\siteDetails.ts:177 — opacity: 0.82,
+- src\projectModules\utahForge\siteDetails.ts:181 — outlineOpacity: 0.92,
+- src\projectModules\utahForge\siteDetails.ts:192 — opacity: 0.92,
+- src\projectModules\utahForge\siteDetails.ts:198 — lineOpacity: 0.92,
+- src\projectModules\utahForge\siteDetails.ts:207 — depthTraceOpacity: 0.92,
+- src\projectModules\utahForge\siteDetails.ts:214 — groundBallOpacity: 0.92,
+- src\projectModules\utahForge\siteDetails.ts:221 — topRingOpacity: 0.88,
+- src\projectModules\utahForge\siteDetails.ts:228 — crosshairOpacity: 0.92,
+- src\projectModules\utahForge\siteDetails.ts:234 — opacity: 1,
+- src\projectModules\utahForge\siteDetails.ts:353 — opacity: numberValue(authored.opacity, defaultStyle.opacity, 0, 1),
+- src\projectModules\utahForge\siteDetails.ts:372 — centerlineOpacity: numberValue(
+- src\projectModules\utahForge\siteDetails.ts:373 — authored.centerlineOpacity,
+- src\projectModules\utahForge\siteDetails.ts:374 — defaultStyle.centerlineOpacity,
+- src\projectModules\utahForge\siteDetails.ts:475 — opacity: numberValue(
+- src\projectModules\utahForge\siteDetails.ts:476 — authored.opacity,
+- src\projectModules\utahForge\siteDetails.ts:477 — UTAH_FORGE_DEMO_ORIENTATION_BLOCK_DEFAULT.opacity,
+- src\projectModules\utahForge\siteDetails.ts:495 — outlineOpacity: numberValue(
+- src\projectModules\utahForge\siteDetails.ts:496 — authored.outlineOpacity,
+- src\projectModules\utahForge\siteDetails.ts:497 — UTAH_FORGE_DEMO_ORIENTATION_BLOCK_DEFAULT.outlineOpacity,
+- src\projectModules\utahForge\siteDetails.ts:524 — const sharedOpacity = numberValue(authored.opacity, D.opacity, 0, 1);
+- src\projectModules\utahForge\siteDetails.ts:543 — opacity: sharedOpacity,
+- src\projectModules\utahForge\siteDetails.ts:552 — lineOpacity: numberValue(authored.lineOpacity, sharedOpacity, 0, 1),
+- src\projectModules\utahForge\siteDetails.ts:569 — depthTraceOpacity: numberValue(
+- src\projectModules\utahForge\siteDetails.ts:570 — authored.depthTraceOpacity,
+- src\projectModules\utahForge\siteDetails.ts:571 — sharedOpacity,
+- src\projectModules\utahForge\siteDetails.ts:589 — groundBallOpacity: numberValue(
+- src\projectModules\utahForge\siteDetails.ts:590 — authored.groundBallOpacity,
+- src\projectModules\utahForge\siteDetails.ts:591 — sharedOpacity,
+- src\projectModules\utahForge\siteDetails.ts:606 — topRingOpacity: numberValue(
+- src\projectModules\utahForge\siteDetails.ts:607 — authored.topRingOpacity,
+- src\projectModules\utahForge\siteDetails.ts:608 — D.topRingOpacity,
+- src\projectModules\utahForge\siteDetails.ts:626 — crosshairOpacity: numberValue(
+- src\projectModules\utahForge\siteDetails.ts:627 — authored.crosshairOpacity,
+- src\projectModules\utahForge\siteDetails.ts:628 — sharedOpacity,
+- src\projectModules\utahForge\siteDetails.ts:638 — opacity: numberValue(icon.opacity, D.icon.opacity, 0, 1),
+- src\projectModules\utahForge\workingAreaFocus.ts:20 — export const WORKING_AREA_FOCUS_DEFAULT_OUTSIDE_OPACITY = 0.15;
+
+## Scene section and helpers
+
+- src\scene\CLAUDE.md:4 — the target and moved scene subsystems into focused helper modules.
+- src\scene\CLAUDE.md:17 — - `section/sceneSectionController.ts` — ~1,180 lines; largest extracted
+- src\scene\CLAUDE.md:18 — scene helper and still below the 1,200-line cap.
+- src\scene\CLAUDE.md:21 — and `transitions/layerTweenRuntime.ts` — R2 extracted helpers.
+- src\scene\CLAUDE.md:24 — - `disposeObjectTree.ts` — Three.js cleanup helper.
+- src\scene\CLAUDE.md:28 — - `scalarFocus.ts` — scalar focus / working-area clip helpers.
+- src\scene\SceneManager.ts:95 — type SceneSectionStyleTween,
+- src\scene\SceneManager.ts:157 — applySceneSectionHelperTransitionOpacity as applySceneSectionHelperTransitionOpacityImpl,
+- src\scene\SceneManager.ts:158 — applySceneSectionMaterial as applySceneSectionMaterialImpl,
+- src\scene\SceneManager.ts:159 — applySceneSectionPlanes as applySceneSectionPlanesImpl,
+- src\scene\SceneManager.ts:160 — createSceneSectionLabel as createSceneSectionLabelImpl,
+- src\scene\SceneManager.ts:161 — createSceneSectionScaleLabel as createSceneSectionScaleLabelImpl,
+- src\scene\SceneManager.ts:162 — currentSceneSectionStyle as currentSceneSectionStyleImpl,
+- src\scene\SceneManager.ts:163 — ensureSceneSectionRuntime as ensureSceneSectionRuntimeImpl,
+- src\scene\SceneManager.ts:164 — getSceneSectionPlaneNormal as getSceneSectionPlaneNormalImpl,
+- src\scene\SceneManager.ts:165 — getSceneSectionPlanePosition as getSceneSectionPlanePositionImpl,
+- src\scene\SceneManager.ts:166 — getSceneSectionPlaneScalar as getSceneSectionPlaneScalarImpl,
+- src\scene\SceneManager.ts:167 — getSceneSectionWindowNormal as getSceneSectionWindowNormalImpl,
+- src\scene\SceneManager.ts:168 — getSceneSectionWindowValue as getSceneSectionWindowValueImpl,
+- src\scene\SceneManager.ts:169 — interpolatedSceneSectionStyle as interpolatedSceneSectionStyleImpl,
+- src\scene\SceneManager.ts:170 — listSceneSectionObjectTargets as listSceneSectionObjectTargetsImpl,
+- src\scene\SceneManager.ts:171 — listSceneSectionPlanePickables as listSceneSectionPlanePickablesImpl,
+- src\scene\SceneManager.ts:172 — previewSceneSectionPlane as previewSceneSectionPlaneImpl,
+- src\scene\SceneManager.ts:173 — previewSceneSectionWindow as previewSceneSectionWindowImpl,
+- src\scene\SceneManager.ts:174 — rebuildSceneSectionHelpers as rebuildSceneSectionHelpersImpl,
+- src\scene\SceneManager.ts:175 — reapplySceneSectionPlanes as reapplySceneSectionPlanesImpl,
+- src\scene\SceneManager.ts:176 — resolveSceneSectionFrames as resolveSceneSectionFramesImpl,
+- src\scene\SceneManager.ts:177 — resolveSceneSectionPlanes as resolveSceneSectionPlanesImpl,
+- src\scene\SceneManager.ts:178 — resolveSceneSectionWindow as resolveSceneSectionWindowImpl,
+- src\scene\SceneManager.ts:179 — sceneSectionActivePlanes as sceneSectionActivePlanesImpl,
+- src\scene\SceneManager.ts:180 — sceneSectionAxisAlongIndex as sceneSectionAxisAlongIndexImpl,
+- src\scene\SceneManager.ts:181 — sceneSectionBounds as sceneSectionBoundsImpl,
+- src\scene\SceneManager.ts:182 — sceneSectionClippingPlanes as sceneSectionClippingPlanesImpl,
+- src\scene\SceneManager.ts:183 — sceneSectionFrameClippingPlanes as sceneSectionFrameClippingPlanesImpl,
+- src\scene\SceneManager.ts:184 — sceneSectionFrameForObject as sceneSectionFrameForObjectImpl,
+- src\scene\SceneManager.ts:185 — sceneSectionHelperOpacityForTween as sceneSectionHelperOpacityForTweenImpl,
+- src\scene\SceneManager.ts:186 — sceneSectionHelperSnapshotAllowedForTween as sceneSectionHelperSnapshotAllowedForTweenImpl,
+- src\scene\SceneManager.ts:187 — sceneSectionMaskTransitionForTween as sceneSectionMaskTransitionForTweenImpl,
+- src\scene\SceneManager.ts:188 — sceneSectionLayerIds as sceneSectionLayerIdsImpl,
+- src\scene\SceneManager.ts:189 — sceneSectionObjectVisibilityForObject as sceneSectionObjectVisibilityForObjectImpl,
+- src\scene\SceneManager.ts:190 — sceneSectionObjectTargeted as sceneSectionObjectTargetedImpl,
+- src\scene\SceneManager.ts:191 — sceneSectionProductIds as sceneSectionProductIdsImpl,
+- src\scene\SceneManager.ts:192 — setSceneSectionUniforms as setSceneSectionUniformsImpl,
+- src\scene\SceneManager.ts:193 — updateSceneSectionPlanarTextFacing as updateSceneSectionPlanarTextFacingImpl,
+- src\scene\SceneManager.ts:194 — } from "./section/sceneSectionController";
+- src\scene\SceneManager.ts:202 — rebuildWorkingAreaFocusHelperImpl,
+- src\scene\SceneManager.ts:296 — updateLightingStudioHelpersImpl,
+- src\scene\SceneManager.ts:350 — export type SceneSectionAxis = "x" | "y" | "z";
+- src\scene\SceneManager.ts:351 — export type SceneSectionWindowHandleKind =
+- src\scene\SceneManager.ts:382 — export interface ResolvedSceneSectionPlane {
+- src\scene\SceneManager.ts:385 — axis: SceneSectionAxis;
+- src\scene\SceneManager.ts:396 — export interface ResolvedSceneSectionWindow {
+- src\scene\SceneManager.ts:397 — axis: Exclude<SceneSectionAxis, "z">;
+- src\scene\SceneManager.ts:404 — export interface ResolvedSceneSectionFrame {
+- src\scene\SceneManager.ts:407 — axis: SceneSectionAxis;
+- src\scene\SceneManager.ts:427 — groundTraceVisible: boolean;
+- src\scene\SceneManager.ts:428 — groundTraceWidthM: number;
+- src\scene\SceneManager.ts:440 — export interface SceneSectionObjectTarget {
+- src\scene\SceneManager.ts:447 — axes: SceneSectionAxis[];
+- src\scene\SceneManager.ts:450 — export interface SceneSectionObjectVisibility {
+- src\scene\SceneManager.ts:452 — outsideOpacityByAxis: Record<SceneSectionAxis, number>;
+- src\scene\SceneManager.ts:458 — export interface SceneSectionMaskUniformState {
+- src\scene\SceneManager.ts:459 — planes: ResolvedSceneSectionPlane[];
+- src\scene\SceneManager.ts:460 — frames: ResolvedSceneSectionFrame[];
+- src\scene\SceneManager.ts:461 — visibility: SceneSectionObjectVisibility;
+- src\scene\SceneManager.ts:464 — export interface SceneSectionMaskTransition {
+- src\scene\SceneManager.ts:466 — source: SceneSectionMaskUniformState;
+- src\scene\SceneManager.ts:467 — target: SceneSectionMaskUniformState;
+- src\scene\SceneManager.ts:470 — export interface SceneSectionStyleMaskTransition {
+- src\scene\SceneManager.ts:476 — export interface SceneSectionApplyOptions {
+- src\scene\SceneManager.ts:478 — maskTransition?: SceneSectionStyleMaskTransition | null;
+- src\scene\SceneManager.ts:481 — export interface SceneSectionRuntime {
+- src\scene\SceneManager.ts:521 — interface SceneSectionApplyDebugState {
+- src\scene\SceneManager.ts:526 — helperRebuildMs: number;
+- src\scene\SceneManager.ts:527 — helperOpacityMs: number;
+- src\scene\SceneManager.ts:533 — helperObjectCount: number;
+- src\scene\SceneManager.ts:612 — sceneSectionMs: number;
+- src\scene\SceneManager.ts:613 — sceneSectionApply: SceneSectionApplyDebugState | null;
+- src\scene\SceneManager.ts:618 — helperSnapshotMs: number;
+- src\scene\SceneManager.ts:621 — sceneSectionApplyMode: "none" | "full" | "helper-opacity-only";
+- src\scene\SceneManager.ts:628 — sceneSectionStyleTweenActiveBefore: boolean;
+- src\scene\SceneManager.ts:629 — helperSnapshotActiveBefore: boolean;
+- src\scene\SceneManager.ts:645 — sceneSectionTextFacingMs: number;
+- src\scene\SceneManager.ts:665 — interface SceneSectionHelperDebugState {
+- src\scene\SceneManager.ts:666 — groundTracePolicy: "mirror-delayed-ground-trace-into-helper-snapshot";
+- src\scene\SceneManager.ts:667 — liveGroundTraceCount: number;
+- src\scene\SceneManager.ts:668 — snapshotGroundTraceCount: number;
+- src\scene\SceneManager.ts:687 — envLightHelperGroup: THREE.Group | null = null;
+- src\scene\SceneManager.ts:695 — private sceneSectionRuntime: SceneSectionRuntime | null = null;
+- src\scene\SceneManager.ts:698 — private lastSceneSectionStyle: EditableStyle = {};
+- src\scene\SceneManager.ts:701 — private sceneSectionClippingActive = false;
+- src\scene\SceneManager.ts:752 — private sceneSectionHelperTransitionSnapshot: LayerTransitionSnapshot | null =
+- src\scene\SceneManager.ts:774 — sceneSectionStyleTween: SceneSectionStyleTween | null = null;
+- src\scene\SceneManager.ts:775 — sceneSectionHelperTransitionOpacity = 1;
+- src\scene\SceneManager.ts:787 — sceneSectionReapplySuspended = false;
+- src\scene\SceneManager.ts:806 — lastSceneSectionApplyDebug: SceneSectionApplyDebugState | null = null;
+- src\scene\SceneManager.ts:883 — if (this.envLightHelperGroup) {
+- src\scene\SceneManager.ts:884 — this.envLightHelperGroup.visible =
+- src\scene\SceneManager.ts:890 — if (this.sceneSectionRuntime) {
+- src\scene\SceneManager.ts:891 — const helperVisible =
+- src\scene\SceneManager.ts:892 — typeof this.lastSceneSectionStyle.sceneSectionHelperVisible === "boolean"
+- src\scene\SceneManager.ts:893 — ? this.lastSceneSectionStyle.sceneSectionHelperVisible
+- src\scene\SceneManager.ts:895 — this.sceneSectionRuntime.group.visible =
+- src\scene\SceneManager.ts:896 — this.lastSceneSectionStyle.sceneSectionEnabled === true &&
+- src\scene\SceneManager.ts:897 — helperVisible;
+- src\scene\SceneManager.ts:905 — enabled && focusState.enabled && focusState.helperVisible;
+- src\scene\SceneManager.ts:994 — addLightingStudioHandle(sourceId: string, kind: LightingHandleKind, position: THREE.Vector3, color: THREE.Color, helperGroup: THREE.Group): void {
+- src\scene\SceneManager.ts:995 — return addLightingStudioHandleImpl.call(this, sourceId, kind, position, color, helperGroup);
+- src\scene\SceneManager.ts:998 — updateLightingStudioHelpers(): void {
+- src\scene\SceneManager.ts:999 — return updateLightingStudioHelpersImpl.call(this);
+- src\scene\SceneManager.ts:1105 — addLightingStudioSource(source: PresentationLightSource, helperGroup: THREE.Group): void {
+- src\scene\SceneManager.ts:1106 — return addLightingStudioSourceImpl.call(this, source, helperGroup);
+- src\scene\SceneManager.ts:1148 — this.updateLightingStudioHelpers();
+- src\scene\SceneManager.ts:1197 — this.reapplySceneSectionPlanes();
+- src\scene\SceneManager.ts:1668 — this.removeSceneSectionHelperTransitionSnapshot();
+- src\scene\SceneManager.ts:1671 — private removeSceneSectionHelperTransitionSnapshot(): void {
+- src\scene\SceneManager.ts:1672 — const snapshot = this.sceneSectionHelperTransitionSnapshot;
+- src\scene\SceneManager.ts:1674 — this.sceneSectionHelperTransitionSnapshot = null;
+- src\scene\SceneManager.ts:1679 — beginSceneSectionHelperTransitionSnapshot(
+- src\scene\SceneManager.ts:1684 — this.removeSceneSectionHelperTransitionSnapshot();
+- src\scene\SceneManager.ts:1685 — const runtime = this.sceneSectionRuntime;
+- src\scene\SceneManager.ts:1697 — snapshot.name = "scene-section-helper-transition-snapshot";
+- src\scene\SceneManager.ts:1701 — sceneSectionHelperTransitionSnapshot: true,
+- src\scene\SceneManager.ts:1705 — this.sceneSectionHelperTransitionSnapshot = {
+- src\scene\SceneManager.ts:1778 — fromSceneSectionStyle: EditableStyle,
+- src\scene\SceneManager.ts:1779 — toSceneSectionStyle: EditableStyle,
+- src\scene\SceneManager.ts:1781 — const sourceActive = fromSceneSectionStyle.sceneSectionEnabled === true;
+- src\scene\SceneManager.ts:1782 — const targetActive = toSceneSectionStyle.sceneSectionEnabled === true;
+- src\scene\SceneManager.ts:1789 — fromSceneSectionStyle: EditableStyle,
+- src\scene\SceneManager.ts:1790 — toSceneSectionStyle: EditableStyle,
+- src\scene\SceneManager.ts:1799 — fromSceneSectionStyle,
+- src\scene\SceneManager.ts:1800 — toSceneSectionStyle,
+- src\scene\SceneManager.ts:1905 — addSceneSectionHelperObjectToTransitionSnapshot(
+- src\scene\SceneManager.ts:1908 — const snapshot = this.sceneSectionHelperTransitionSnapshot;
+- src\scene\SceneManager.ts:1923 — sceneSectionLateHelperSnapshotObject: true,
+- src\scene\SceneManager.ts:2082 — sceneSectionProductIds(style: EditableStyle): Set<string> {
+- src\scene\SceneManager.ts:2083 — return sceneSectionProductIdsImpl.call(this, style);
+- src\scene\SceneManager.ts:2086 — sceneSectionLayerIds(style: EditableStyle): Set<string> {
+- src\scene\SceneManager.ts:2087 — return sceneSectionLayerIdsImpl.call(this, style);
+- src\scene\SceneManager.ts:2090 — listSceneSectionObjectTargets(): SceneSectionObjectTarget[] {
+- src\scene\SceneManager.ts:2091 — return listSceneSectionObjectTargetsImpl.call(this);
+- src\scene\SceneManager.ts:2094 — resolveSceneSectionPlanes(
+- src\scene\SceneManager.ts:2096 — ): ResolvedSceneSectionPlane[] {
+- src\scene\SceneManager.ts:2097 — return resolveSceneSectionPlanesImpl.call(this, style);
+- src\scene\SceneManager.ts:2100 — sceneSectionActivePlanes(
+- src\scene\SceneManager.ts:2102 — ): ResolvedSceneSectionPlane[] {
+- src\scene\SceneManager.ts:2103 — return sceneSectionActivePlanesImpl.call(this, style);
+- src\scene\SceneManager.ts:2106 — sceneSectionObjectTargeted(
+- src\scene\SceneManager.ts:2113 — return sceneSectionObjectTargetedImpl.call(this, layerId, obj, style, layerTargets, productTargets);
+- src\scene\SceneManager.ts:2116 — sceneSectionObjectVisibilityForObject(
+- src\scene\SceneManager.ts:2122 — ): SceneSectionObjectVisibility {
+- src\scene\SceneManager.ts:2123 — return sceneSectionObjectVisibilityForObjectImpl.call(
+- src\scene\SceneManager.ts:2133 — sceneSectionClippingPlanes(
+- src\scene\SceneManager.ts:2134 — planes: ResolvedSceneSectionPlane[],
+- src\scene\SceneManager.ts:2136 — return sceneSectionClippingPlanesImpl.call(this, planes);
+- src\scene\SceneManager.ts:2139 — sceneSectionAxisAlongIndex(
+- src\scene\SceneManager.ts:2140 — axis: SceneSectionAxis,
+- src\scene\SceneManager.ts:2142 — return sceneSectionAxisAlongIndexImpl.call(this, axis);
+- src\scene\SceneManager.ts:2145 — resolveSceneSectionWindow(
+- src\scene\SceneManager.ts:2148 — ): ResolvedSceneSectionWindow | null {
+- src\scene\SceneManager.ts:2149 — return resolveSceneSectionWindowImpl.call(this, style, bounds);
+- src\scene\SceneManager.ts:2152 — resolveSceneSectionFrames(
+- src\scene\SceneManager.ts:2155 — ): ResolvedSceneSectionFrame[] {
+- src\scene\SceneManager.ts:2156 — return resolveSceneSectionFramesImpl.call(this, style, bounds);
+- src\scene\SceneManager.ts:2159 — sceneSectionFrameClippingPlanes(
+- src\scene\SceneManager.ts:2160 — frame: ResolvedSceneSectionFrame | null,
+- src\scene\SceneManager.ts:2162 — return sceneSectionFrameClippingPlanesImpl.call(this, frame);
+- src\scene\SceneManager.ts:2165 — sceneSectionFrameForObject(
+- src\scene\SceneManager.ts:2168 — frames: ResolvedSceneSectionFrame[],
+- src\scene\SceneManager.ts:2169 — ): ResolvedSceneSectionFrame | null {
+- src\scene\SceneManager.ts:2170 — return sceneSectionFrameForObjectImpl.call(this, layerId, obj, frames);
+- src\scene\SceneManager.ts:2173 — setSceneSectionUniforms(
+- src\scene\SceneManager.ts:2175 — planes: ResolvedSceneSectionPlane[],
+- src\scene\SceneManager.ts:2176 — visibility: SceneSectionObjectVisibility,
+- src\scene\SceneManager.ts:2177 — frames: ResolvedSceneSectionFrame[],
+- src\scene\SceneManager.ts:2178 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\SceneManager.ts:2180 — return setSceneSectionUniformsImpl.call(this, material, planes, visibility, frames, maskTransition);
+- src\scene\SceneManager.ts:2183 — applySceneSectionMaterial(
+- src\scene\SceneManager.ts:2185 — planes: ResolvedSceneSectionPlane[],
+- src\scene\SceneManager.ts:2186 — visibility: SceneSectionObjectVisibility,
+- src\scene\SceneManager.ts:2188 — frames: ResolvedSceneSectionFrame[],
+- src\scene\SceneManager.ts:2190 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\SceneManager.ts:2192 — return applySceneSectionMaterialImpl.call(this, material, planes, visibility, clippingPlanes, frames, frameClippingPlanes, maskTransition);
+- src\scene\SceneManager.ts:2195 — interpolatedSceneSectionStyle(
+- src\scene\SceneManager.ts:2200 — return interpolatedSceneSectionStyleImpl.call(this, fromStyle, toStyle, amount);
+- src\scene\SceneManager.ts:2203 — currentSceneSectionStyle(nowMs = performance.now()): EditableStyle {
+- src\scene\SceneManager.ts:2204 — return currentSceneSectionStyleImpl.call(this, nowMs);
+- src\scene\SceneManager.ts:2207 — sceneSectionHelperOpacityForTween(
+- src\scene\SceneManager.ts:2208 — tween: SceneSectionStyleTween,
+- src\scene\SceneManager.ts:2211 — return sceneSectionHelperOpacityForTweenImpl.call(this, tween, eased);
+- src\scene\SceneManager.ts:2214 — sceneSectionHelperSnapshotAllowedForTween(
+- src\scene\SceneManager.ts:2215 — tween: SceneSectionStyleTween,
+- src\scene\SceneManager.ts:2217 — return sceneSectionHelperSnapshotAllowedForTweenImpl.call(this, tween);
+- src\scene\SceneManager.ts:2220 — sceneSectionMaskTransitionForTween(
+- src\scene\SceneManager.ts:2221 — tween: SceneSectionStyleTween,
+- src\scene\SceneManager.ts:2223 — ): SceneSectionStyleMaskTransition {
+- src\scene\SceneManager.ts:2224 — return sceneSectionMaskTransitionForTweenImpl.call(this, tween, eased);
+- src\scene\SceneManager.ts:2227 — applySceneSectionHelperTransitionOpacity(): void {
+- src\scene\SceneManager.ts:2228 — return applySceneSectionHelperTransitionOpacityImpl.call(this);
+- src\scene\SceneManager.ts:2231 — sceneSectionBounds(
+- src\scene\SceneManager.ts:2236 — return sceneSectionBoundsImpl.call(this, style, layerTargets, productTargets);
+- src\scene\SceneManager.ts:2239 — ensureSceneSectionRuntime(): SceneSectionRuntime {
+- src\scene\SceneManager.ts:2240 — return ensureSceneSectionRuntimeImpl.call(this);
+- src\scene\SceneManager.ts:2243 — createSceneSectionLabel(text: string, color: string): THREE.Mesh {
+- src\scene\SceneManager.ts:2244 — return createSceneSectionLabelImpl.call(this, text, color);
+- src\scene\SceneManager.ts:2247 — createSceneSectionScaleLabel(
+- src\scene\SceneManager.ts:2252 — return createSceneSectionScaleLabelImpl.call(this, text, textScale, color);
+- src\scene\SceneManager.ts:2255 — rebuildSceneSectionHelpers(
+- src\scene\SceneManager.ts:2257 — planes: ResolvedSceneSectionPlane[],
+- src\scene\SceneManager.ts:2261 — return rebuildSceneSectionHelpersImpl.call(this, style, planes, layerTargets, productTargets);
+- src\scene\SceneManager.ts:2264 — applySceneSectionPlanes(
+- src\scene\SceneManager.ts:2266 — options?: SceneSectionApplyOptions,
+- src\scene\SceneManager.ts:2268 — return applySceneSectionPlanesImpl.call(this, style, options);
+- src\scene\SceneManager.ts:2271 — updateSceneSectionPlanarTextFacing(camera: THREE.Camera): void {
+- src\scene\SceneManager.ts:2272 — return updateSceneSectionPlanarTextFacingImpl.call(this, camera);
+- src\scene\SceneManager.ts:2275 — reapplySceneSectionPlanes(): void {
+- src\scene\SceneManager.ts:2276 — return reapplySceneSectionPlanesImpl.call(this);
+- src\scene\SceneManager.ts:2279 — listSceneSectionPlanePickables(): THREE.Object3D[] {
+- src\scene\SceneManager.ts:2280 — return listSceneSectionPlanePickablesImpl.call(this);
+- src\scene\SceneManager.ts:2283 — getSceneSectionPlanePosition(axis: SceneSectionAxis, frameId?: string): THREE.Vector3 | null {
+- src\scene\SceneManager.ts:2284 — return getSceneSectionPlanePositionImpl.call(this, axis, frameId);
+- src\scene\SceneManager.ts:2287 — getSceneSectionPlaneScalar(axis: SceneSectionAxis, frameId?: string): number | null {
+- src\scene\SceneManager.ts:2288 — return getSceneSectionPlaneScalarImpl.call(this, axis, frameId);
+- src\scene\SceneManager.ts:2291 — getSceneSectionPlaneNormal(axis: SceneSectionAxis, frameId?: string): THREE.Vector3 | null {
+- src\scene\SceneManager.ts:2292 — return getSceneSectionPlaneNormalImpl.call(this, axis, frameId);
+- src\scene\SceneManager.ts:2295 — getSceneSectionWindowValue(
+- src\scene\SceneManager.ts:2296 — axis: SceneSectionAxis,
+- src\scene\SceneManager.ts:2297 — kind: SceneSectionWindowHandleKind,
+- src\scene\SceneManager.ts:2300 — return getSceneSectionWindowValueImpl.call(this, axis, kind, frameId);
+- src\scene\SceneManager.ts:2303 — getSceneSectionWindowNormal(
+- src\scene\SceneManager.ts:2304 — axis: SceneSectionAxis,
+- src\scene\SceneManager.ts:2305 — kind: SceneSectionWindowHandleKind,
+- src\scene\SceneManager.ts:2308 — return getSceneSectionWindowNormalImpl.call(this, axis, kind, frameId);
+- src\scene\SceneManager.ts:2311 — previewSceneSectionPlane(axis: SceneSectionAxis, positionM: number, frameId?: string): void {
+- src\scene\SceneManager.ts:2312 — return previewSceneSectionPlaneImpl.call(this, axis, positionM, frameId);
+- src\scene\SceneManager.ts:2391 — this.sceneSectionClippingActive || this.publicSurfaceClippingActive;
+- src\scene\SceneManager.ts:2425 — rebuildWorkingAreaFocusHelper(state: WorkingAreaFocusState): void {
+- src\scene\SceneManager.ts:2426 — return rebuildWorkingAreaFocusHelperImpl.call(this, state);
+- src\scene\SceneManager.ts:2459 — helperVisible: boolean;
+- src\scene\SceneManager.ts:2460 — helperRenderable: boolean;
+- src\scene\SceneManager.ts:2501 — previewSceneSectionWindow(
+- src\scene\SceneManager.ts:2502 — axis: SceneSectionAxis,
+- src\scene\SceneManager.ts:2503 — kind: SceneSectionWindowHandleKind,
+- src\scene\SceneManager.ts:2507 — return previewSceneSectionWindowImpl.call(this, axis, kind, valueM, frameId);
+- src\scene\SceneManager.ts:2693 — private countGroundTraceObjects(root: THREE.Object3D | null | undefined): number {
+- src\scene\SceneManager.ts:2697 — if (obj.userData?.sceneSectionGroundTrace === true) count += 1;
+- src\scene\SceneManager.ts:2702 — getSceneSectionHelperDebugState(): SceneSectionHelperDebugState {
+- src\scene\SceneManager.ts:2704 — groundTracePolicy: "mirror-delayed-ground-trace-into-helper-snapshot",
+- src\scene\SceneManager.ts:2705 — liveGroundTraceCount: this.countGroundTraceObjects(
+- src\scene\SceneManager.ts:2706 — this.sceneSectionRuntime?.group,
+- src\scene\SceneManager.ts:2708 — snapshotGroundTraceCount: this.countGroundTraceObjects(
+- src\scene\SceneManager.ts:2709 — this.sceneSectionHelperTransitionSnapshot?.group,
+- src\scene\SceneManager.ts:2711 — snapshotActive: this.sceneSectionHelperTransitionSnapshot !== null,
+- src\scene\SceneManager.ts:2712 — transitionOpacity: this.sceneSectionHelperTransitionOpacity,
+- src\scene\SceneManager.ts:2726 — sceneSectionStyleTweenActive: boolean;
+- src\scene\SceneManager.ts:2727 — sceneSectionHelperTransitionSnapshotActive: boolean;
+- src\scene\SceneManager.ts:2728 — sceneSectionHelperTransitionOpacity: number;
+- src\scene\SceneManager.ts:2732 — sceneSectionHelpers: SceneSectionHelperDebugState;
+- src\scene\SceneManager.ts:2763 — sceneSectionStyleTweenActive: this.sceneSectionStyleTween !== null,
+- src\scene\SceneManager.ts:2764 — sceneSectionHelperTransitionSnapshotActive:
+- src\scene\SceneManager.ts:2765 — this.sceneSectionHelperTransitionSnapshot !== null,
+- src\scene\SceneManager.ts:2766 — sceneSectionHelperTransitionOpacity: this.sceneSectionHelperTransitionOpacity,
+- src\scene\SceneManager.ts:2770 — sceneSectionHelpers: this.getSceneSectionHelperDebugState(),
+- src\scene\SceneManager.ts:3055 — this.sceneSectionReapplySuspended = true;
+- src\scene\SceneManager.ts:3073 — this.sceneSectionReapplySuspended = false;
+- src\scene\SceneManager.ts:3076 — if (this.sceneSectionStyleTween) {
+- src\scene\SceneManager.ts:3077 — this.sceneSectionHelperTransitionOpacity =
+- src\scene\SceneManager.ts:3078 — this.sceneSectionHelperOpacityForTween(
+- src\scene\SceneManager.ts:3079 — this.sceneSectionStyleTween,
+- src\scene\SceneManager.ts:3080 — this.transitionTweenEasedProgress(this.sceneSectionStyleTween, nowMs),
+- src\scene\SceneManager.ts:3083 — this.reapplySceneSectionPlanes();
+- src\scene\SceneManager.ts:3324 — buildMtVolumeCutMesh(mesh: THREE.Mesh, plane: ResolvedSceneSectionPlane, options: {
+- src\scene\SceneManager.ts:3331 — sectionFrame?: ResolvedSceneSectionFrame | null;
+- src\scene\SceneManager.ts:3377 — buildSeismicVolumeCutMesh(mesh: THREE.Mesh, plane: ResolvedSceneSectionPlane, options: {
+- src\scene\SceneManager.ts:3384 — sectionFrame?: ResolvedSceneSectionFrame | null;
+- src\scene\SceneManager.ts:4026 — this.sceneSectionStyleTween = null;
+- src\scene\SceneManager.ts:4027 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\SceneManager.ts:4036 — this.applySceneSectionPlanes(
+- src\scene\SceneManager.ts:4052 — this.sceneSectionStyleTween = null;
+- src\scene\SceneManager.ts:4053 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\SceneManager.ts:4384 — this.reapplySceneSectionPlanes();
+- src\scene\SceneManager.ts:4748 — this.updateSceneSectionPlanarTextFacing(camera);
+- src\scene\SceneManager.ts:4749 — const sceneSectionTextFacingMs = transitionDebugMs(
+- src\scene\SceneManager.ts:4789 — sceneSectionTextFacingMs,
+- src\scene\terrainMaterial.ts:22 — function sceneSectionVectorSlots(): THREE.Vector3[] {
+- src\scene\terrainMaterial.ts:29 — function sceneSectionVector4Slots(): THREE.Vector4[] {
+- src\scene\terrainMaterial.ts:36 — function sceneSectionNumberSlots(value: number): number[] {
+- src\scene\terrainMaterial.ts:547 — uSceneSectionTransitionEnabled: { value: 0 },
+- src\scene\terrainMaterial.ts:548 — uSceneSectionTransitionProgress: { value: 0 },
+- src\scene\terrainMaterial.ts:549 — uSceneSectionEnabled: { value: 0 },
+- src\scene\terrainMaterial.ts:550 — uSceneSectionMode: { value: 0 },
+- src\scene\terrainMaterial.ts:551 — uSceneSectionPlaneCount: { value: 0 },
+- src\scene\terrainMaterial.ts:552 — uSceneSectionNormals: { value: sceneSectionVectorSlots() },
+- src\scene\terrainMaterial.ts:553 — uSceneSectionPositions: { value: sceneSectionNumberSlots(0) },
+- src\scene\terrainMaterial.ts:554 — uSceneSectionThickness: { value: sceneSectionNumberSlots(1) },
+- src\scene\terrainMaterial.ts:555 — uSceneSectionInvert: { value: sceneSectionNumberSlots(0) },
+- src\scene\terrainMaterial.ts:556 — uSceneSectionPlaneOutsideOpacity: {
+- src\scene\terrainMaterial.ts:557 — value: sceneSectionNumberSlots(1),
+- src\scene\terrainMaterial.ts:559 — uSceneSectionFrameCount: { value: 0 },
+- src\scene\terrainMaterial.ts:560 — uSceneSectionFrameAxisA: { value: sceneSectionVectorSlots() },
+- src\scene\terrainMaterial.ts:561 — uSceneSectionFrameAxisB: { value: sceneSectionVectorSlots() },
+- src\scene\terrainMaterial.ts:562 — uSceneSectionFrameBounds: { value: sceneSectionVector4Slots() },
+- src\scene\terrainMaterial.ts:563 — uSceneSectionFrameOutsideOpacity: {
+- src\scene\terrainMaterial.ts:564 — value: sceneSectionNumberSlots(1),
+- src\scene\terrainMaterial.ts:566 — uSceneSectionTargetPlaneCount: { value: 0 },
+- src\scene\terrainMaterial.ts:567 — uSceneSectionTargetNormals: { value: sceneSectionVectorSlots() },
+- src\scene\terrainMaterial.ts:568 — uSceneSectionTargetPositions: { value: sceneSectionNumberSlots(0) },
+- src\scene\terrainMaterial.ts:569 — uSceneSectionTargetInvert: { value: sceneSectionNumberSlots(0) },
+- src\scene\terrainMaterial.ts:570 — uSceneSectionTargetPlaneOutsideOpacity: {
+- src\scene\terrainMaterial.ts:571 — value: sceneSectionNumberSlots(1),
+- src\scene\terrainMaterial.ts:573 — uSceneSectionTargetFrameCount: { value: 0 },
+- src\scene\terrainMaterial.ts:574 — uSceneSectionTargetFrameAxisA: { value: sceneSectionVectorSlots() },
+- src\scene\terrainMaterial.ts:575 — uSceneSectionTargetFrameAxisB: { value: sceneSectionVectorSlots() },
+- src\scene\terrainMaterial.ts:576 — uSceneSectionTargetFrameBounds: { value: sceneSectionVector4Slots() },
+- src\scene\terrainMaterial.ts:577 — uSceneSectionTargetFrameOutsideOpacity: {
+- src\scene\terrainMaterial.ts:578 — value: sceneSectionNumberSlots(1),
+- src\scene\terrainMaterial.ts:742 — uniform int uSceneSectionEnabled;
+- src\scene\terrainMaterial.ts:743 — uniform int uSceneSectionTransitionEnabled;
+- src\scene\terrainMaterial.ts:744 — uniform float uSceneSectionTransitionProgress;
+- src\scene\terrainMaterial.ts:745 — uniform int uSceneSectionMode;
+- src\scene\terrainMaterial.ts:746 — uniform int uSceneSectionPlaneCount;
+- src\scene\terrainMaterial.ts:747 — uniform vec3 uSceneSectionNormals[8];
+- src\scene\terrainMaterial.ts:748 — uniform float uSceneSectionPositions[8];
+- src\scene\terrainMaterial.ts:749 — uniform float uSceneSectionThickness[8];
+- src\scene\terrainMaterial.ts:750 — uniform int uSceneSectionInvert[8];
+- src\scene\terrainMaterial.ts:751 — uniform float uSceneSectionPlaneOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:752 — uniform int uSceneSectionFrameCount;
+- src\scene\terrainMaterial.ts:753 — uniform vec3 uSceneSectionFrameAxisA[8];
+- src\scene\terrainMaterial.ts:754 — uniform vec3 uSceneSectionFrameAxisB[8];
+- src\scene\terrainMaterial.ts:755 — uniform vec4 uSceneSectionFrameBounds[8];
+- src\scene\terrainMaterial.ts:756 — uniform float uSceneSectionFrameOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:757 — uniform int uSceneSectionTargetPlaneCount;
+- src\scene\terrainMaterial.ts:758 — uniform vec3 uSceneSectionTargetNormals[8];
+- src\scene\terrainMaterial.ts:759 — uniform float uSceneSectionTargetPositions[8];
+- src\scene\terrainMaterial.ts:760 — uniform int uSceneSectionTargetInvert[8];
+- src\scene\terrainMaterial.ts:761 — uniform float uSceneSectionTargetPlaneOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:762 — uniform int uSceneSectionTargetFrameCount;
+- src\scene\terrainMaterial.ts:763 — uniform vec3 uSceneSectionTargetFrameAxisA[8];
+- src\scene\terrainMaterial.ts:764 — uniform vec3 uSceneSectionTargetFrameAxisB[8];
+- src\scene\terrainMaterial.ts:765 — uniform vec4 uSceneSectionTargetFrameBounds[8];
+- src\scene\terrainMaterial.ts:766 — uniform float uSceneSectionTargetFrameOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:1075 — float sceneSectionTargetAlpha(vec3 position);
+- src\scene\terrainMaterial.ts:1077 — float sceneSectionAlpha(vec3 position) {
+- src\scene\terrainMaterial.ts:1078 — if (uSceneSectionEnabled == 0) return 1.0;
+- src\scene\terrainMaterial.ts:1081 — if (i >= uSceneSectionPlaneCount) break;
+- src\scene\terrainMaterial.ts:1082 — vec3 normal = normalize(uSceneSectionNormals[i]);
+- src\scene\terrainMaterial.ts:1083 — float distance = dot(position, normal) - uSceneSectionPositions[i];
+- src\scene\terrainMaterial.ts:1084 — if (uSceneSectionInvert[i] == 1) distance = -distance;
+- src\scene\terrainMaterial.ts:1086 — alpha = min(alpha, clamp(uSceneSectionPlaneOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1090 — if (i >= uSceneSectionFrameCount) break;
+- src\scene\terrainMaterial.ts:1091 — vec3 axisA = normalize(uSceneSectionFrameAxisA[i]);
+- src\scene\terrainMaterial.ts:1092 — vec3 axisB = normalize(uSceneSectionFrameAxisB[i]);
+- src\scene\terrainMaterial.ts:1095 — vec4 bounds = uSceneSectionFrameBounds[i];
+- src\scene\terrainMaterial.ts:1098 — alpha = min(alpha, clamp(uSceneSectionFrameOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1104 — float sceneSectionTargetAlpha(vec3 position) {
+- src\scene\terrainMaterial.ts:1107 — if (i >= uSceneSectionTargetPlaneCount) break;
+- src\scene\terrainMaterial.ts:1108 — vec3 normal = normalize(uSceneSectionTargetNormals[i]);
+- src\scene\terrainMaterial.ts:1109 — float distance = dot(position, normal) - uSceneSectionTargetPositions[i];
+- src\scene\terrainMaterial.ts:1110 — if (uSceneSectionTargetInvert[i] == 1) distance = -distance;
+- src\scene\terrainMaterial.ts:1112 — alpha = min(alpha, clamp(uSceneSectionTargetPlaneOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1116 — if (i >= uSceneSectionTargetFrameCount) break;
+- src\scene\terrainMaterial.ts:1117 — vec3 axisA = normalize(uSceneSectionTargetFrameAxisA[i]);
+- src\scene\terrainMaterial.ts:1118 — vec3 axisB = normalize(uSceneSectionTargetFrameAxisB[i]);
+- src\scene\terrainMaterial.ts:1121 — vec4 bounds = uSceneSectionTargetFrameBounds[i];
+- src\scene\terrainMaterial.ts:1124 — alpha = min(alpha, clamp(uSceneSectionTargetFrameOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1155 — float sectionAlpha = sceneSectionAlpha(vWorldPos);
+- src\scene\terrainMaterial.ts:1156 — if (uSceneSectionTransitionEnabled != 0) {
+- src\scene\terrainMaterial.ts:1157 — float sourceAlpha = sceneSectionAlpha(vWorldPos);
+- src\scene\terrainMaterial.ts:1158 — float targetAlpha = sceneSectionTargetAlpha(vWorldPos);
+- src\scene\terrainMaterial.ts:1159 — sectionAlpha = mix(sourceAlpha, targetAlpha, clamp(uSceneSectionTransitionProgress, 0.0, 1.0));
+- src\scene\atmosphere\atmosphereTypes.ts:47 — boundsHelperVisible: boolean;
+- src\scene\atmosphere\localAtmosphereDefaults.ts:35 — atmosphereBoundsHelperVisible: false,
+- src\scene\atmosphere\localAtmosphereDefaults.ts:257 — boundsHelperVisible:
+- src\scene\atmosphere\localAtmosphereDefaults.ts:258 — style.atmosphereBoundsHelperVisible === true ||
+- src\scene\atmosphere\localAtmosphereDefaults.ts:259 — DEFAULT_LOCAL_ATMOSPHERE_STYLE.atmosphereBoundsHelperVisible,
+- src\scene\atmosphere\localAtmosphereVolume.ts:132 — boundsHelperVisible: resolved.boundsHelperVisible,
+- src\scene\atmosphere\localAtmosphereVolume.ts:143 — function helperMaterial(color = "#7dd3fc", opacity = 0.86): THREE.MeshBasicMaterial {
+- src\scene\atmosphere\localAtmosphereVolume.ts:158 — function helperLineMaterial(): THREE.LineBasicMaterial {
+- src\scene\atmosphere\localAtmosphereVolume.ts:186 — function removeEditorHelper(group: THREE.Group): void {
+- src\scene\atmosphere\localAtmosphereVolume.ts:195 — function setHelperTransform(
+- src\scene\atmosphere\localAtmosphereVolume.ts:196 — helper: THREE.Group,
+- src\scene\atmosphere\localAtmosphereVolume.ts:199 — const previewSize = (helper.userData.localAtmospherePreviewSize ??
+- src\scene\atmosphere\localAtmosphereVolume.ts:207 — const outline = helper.children.find(
+- src\scene\atmosphere\localAtmosphereVolume.ts:214 — for (const child of helper.children) {
+- src\scene\atmosphere\localAtmosphereVolume.ts:230 — function updateEditorHelper(
+- src\scene\atmosphere\localAtmosphereVolume.ts:235 — removeEditorHelper(group);
+- src\scene\atmosphere\localAtmosphereVolume.ts:236 — group.userData.localAtmosphereBoundsHelperVisible =
+- src\scene\atmosphere\localAtmosphereVolume.ts:237 — resolved.boundsHelperVisible;
+- src\scene\atmosphere\localAtmosphereVolume.ts:239 — if (!resolved.boundsHelperVisible) return;
+- src\scene\atmosphere\localAtmosphereVolume.ts:241 — const helper = new THREE.Group();
+- src\scene\atmosphere\localAtmosphereVolume.ts:242 — helper.name = `${spec.id}-bounds-helper`;
+- src\scene\atmosphere\localAtmosphereVolume.ts:243 — helper.userData.localAtmosphereEditorRoot = true;
+- src\scene\atmosphere\localAtmosphereVolume.ts:249 — const outline = new THREE.LineSegments(outlineGeometry, helperLineMaterial());
+- src\scene\atmosphere\localAtmosphereVolume.ts:253 — helper.add(outline);
+- src\scene\atmosphere\localAtmosphereVolume.ts:268 — helperMaterial("#38bdf8", 0.92),
+- src\scene\atmosphere\localAtmosphereVolume.ts:271 — helper.add(move);
+- src\scene\atmosphere\localAtmosphereVolume.ts:286 — helperMaterial(color, 0.88),
+- src\scene\atmosphere\localAtmosphereVolume.ts:289 — helper.add(handle);
+- src\scene\atmosphere\localAtmosphereVolume.ts:292 — helper.userData.localAtmospherePreviewSize = resolved.bounds.size;
+- src\scene\atmosphere\localAtmosphereVolume.ts:293 — setHelperTransform(helper, resolved);
+- src\scene\atmosphere\localAtmosphereVolume.ts:294 — group.add(helper);
+- src\scene\atmosphere\localAtmosphereVolume.ts:404 — updateEditorHelper(group, spec, resolved);
+- src\scene\atmosphere\localAtmosphereVolume.ts:436 — updateEditorHelper(group, spec, resolved);
+- src\scene\atmosphere\localAtmosphereVolume.ts:473 — function localAtmosphereHelper(group: THREE.Group): THREE.Group | null {
+- src\scene\atmosphere\localAtmosphereVolume.ts:474 — const helper = group.children.find(
+- src\scene\atmosphere\localAtmosphereVolume.ts:477 — return helper instanceof THREE.Group ? helper : null;
+- src\scene\atmosphere\localAtmosphereVolume.ts:489 — if (!group?.userData.localAtmosphereBoundsHelperVisible) continue;
+- src\scene\atmosphere\localAtmosphereVolume.ts:544 — const helper = localAtmosphereHelper(group);
+- src\scene\atmosphere\localAtmosphereVolume.ts:545 — if (!helper) return;
+- src\scene\atmosphere\localAtmosphereVolume.ts:571 — helper.userData.localAtmospherePreviewSize = nextSize;
+- src\scene\atmosphere\localAtmosphereVolume.ts:572 — setHelperTransform(helper, resolved);
+- src\scene\environment\applyEnvironment.ts:198 — function hardenStudioHelperMaterial(material: THREE.Material): void {
+- src\scene\environment\applyEnvironment.ts:208 — function hardenStudioHelperTree(obj: THREE.Object3D): void {
+- src\scene\environment\applyEnvironment.ts:217 — for (const mat of mats) hardenStudioHelperMaterial(mat);
+- src\scene\environment\applyEnvironment.ts:722 — const helperGroup = new THREE.Group();
+- src\scene\environment\applyEnvironment.ts:723 — helperGroup.name = "__lighting_studio_helpers__";
+- src\scene\environment\applyEnvironment.ts:724 — helperGroup.visible = showStudioSceneElements;
+- src\scene\environment\applyEnvironment.ts:726 — this.addLightingStudioSource(source, helperGroup);
+- src\scene\environment\applyEnvironment.ts:728 — hardenStudioHelperTree(helperGroup);
+- src\scene\environment\applyEnvironment.ts:729 — if (helperGroup.children.length > 0) {
+- src\scene\environment\applyEnvironment.ts:730 — this.scene.add(helperGroup);
+- src\scene\environment\applyEnvironment.ts:731 — this.envLightHelperGroup = helperGroup;
+- src\scene\environment\applyEnvironment.ts:733 — disposeObjectTree(helperGroup);
+- src\scene\handles\sceneHandleControllers.ts:2 — import { RectAreaLightHelper } from "three/examples/jsm/helpers/RectAreaLightHelper.js";
+- src\scene\handles\sceneHandleControllers.ts:20 — helper?: THREE.Object3D;
+- src\scene\handles\sceneHandleControllers.ts:105 — function hardenStudioHelperMaterial(material: THREE.Material): void {
+- src\scene\handles\sceneHandleControllers.ts:115 — function hardenStudioHelperTree(obj: THREE.Object3D): void {
+- src\scene\handles\sceneHandleControllers.ts:124 — for (const mat of mats) hardenStudioHelperMaterial(mat);
+- src\scene\handles\sceneHandleControllers.ts:130 — if (this.envLightHelperGroup) {
+- src\scene\handles\sceneHandleControllers.ts:131 — this.envLightHelperGroup.visible = this.editorMode && enabled;
+- src\scene\handles\sceneHandleControllers.ts:148 — if (this.envLightHelperGroup) {
+- src\scene\handles\sceneHandleControllers.ts:149 — this.scene.remove(this.envLightHelperGroup);
+- src\scene\handles\sceneHandleControllers.ts:150 — disposeObjectTree(this.envLightHelperGroup);
+- src\scene\handles\sceneHandleControllers.ts:151 — this.envLightHelperGroup = null;
+- src\scene\handles\sceneHandleControllers.ts:155 — export function addLightingStudioHandleImpl(this: any, sourceId: string, kind: LightingHandleKind, position: THREE.Vector3, color: THREE.Color, helperGroup: THREE.Group): void {
+- src\scene\handles\sceneHandleControllers.ts:232 — helperGroup.add(group);
+- src\scene\handles\sceneHandleControllers.ts:233 — hardenStudioHelperTree(group);
+- src\scene\handles\sceneHandleControllers.ts:276 — hardenStudioHelperMaterial(material);
+- src\scene\handles\sceneHandleControllers.ts:322 — hardenStudioHelperMaterial(lineMaterial);
+- src\scene\handles\sceneHandleControllers.ts:372 — hardenStudioHelperTree(marker.group);
+- src\scene\handles\sceneHandleControllers.ts:478 — hardenStudioHelperTree(group);
+- src\scene\handles\sceneHandleControllers.ts:544 — export function addLightingStudioSourceImpl(this: any, source: PresentationLightSource, helperGroup: THREE.Group): void {
+- src\scene\handles\sceneHandleControllers.ts:565 — const helper = new THREE.PointLightHelper(light, 300, color);
+- src\scene\handles\sceneHandleControllers.ts:566 — hardenStudioHelperTree(helper);
+- src\scene\handles\sceneHandleControllers.ts:567 — helperGroup.add(helper);
+- src\scene\handles\sceneHandleControllers.ts:568 — this.envLightRuntimes.set(source.id, { type, light, helper });
+- src\scene\handles\sceneHandleControllers.ts:574 — helperGroup,
+- src\scene\handles\sceneHandleControllers.ts:597 — const helper = new RectAreaLightHelper(light);
+- src\scene\handles\sceneHandleControllers.ts:598 — hardenStudioHelperTree(helper);
+- src\scene\handles\sceneHandleControllers.ts:599 — helperGroup.add(helper);
+- src\scene\handles\sceneHandleControllers.ts:600 — this.envLightRuntimes.set(source.id, { type, light, target, helper });
+- src\scene\handles\sceneHandleControllers.ts:606 — helperGroup,
+- src\scene\handles\sceneHandleControllers.ts:613 — helperGroup,
+- src\scene\handles\sceneHandleControllers.ts:629 — const helper = new THREE.DirectionalLightHelper(light, 650, color);
+- src\scene\handles\sceneHandleControllers.ts:630 — hardenStudioHelperTree(helper);
+- src\scene\handles\sceneHandleControllers.ts:631 — helperGroup.add(helper);
+- src\scene\handles\sceneHandleControllers.ts:636 — helper,
+- src\scene\handles\sceneHandleControllers.ts:643 — helperGroup,
+- src\scene\handles\sceneHandleControllers.ts:650 — helperGroup,
+- src\scene\handles\sceneHandleControllers.ts:672 — const helper = new THREE.SpotLightHelper(light, color);
+- src\scene\handles\sceneHandleControllers.ts:673 — helper.update();
+- src\scene\handles\sceneHandleControllers.ts:674 — hardenStudioHelperTree(helper);
+- src\scene\handles\sceneHandleControllers.ts:675 — helperGroup.add(helper);
+- src\scene\handles\sceneHandleControllers.ts:680 — helper,
+- src\scene\handles\sceneHandleControllers.ts:687 — helperGroup,
+- src\scene\handles\sceneHandleControllers.ts:694 — helperGroup,
+- src\scene\handles\sceneHandleControllers.ts:699 — if (!this.envLightHelperGroup || !this.studioSceneElementsVisible) return;
+- src\scene\handles\sceneHandleControllers.ts:761 — hardenStudioHelperMaterial(mat);
+- src\scene\handles\sceneHandleControllers.ts:774 — export function updateLightingStudioHelpersImpl(this: any): void {
+- src\scene\handles\sceneHandleControllers.ts:775 — if (!this.envLightHelperGroup) return;
+- src\scene\handles\sceneHandleControllers.ts:776 — this.envLightHelperGroup.traverse((obj: THREE.Object3D) => {
+- src\scene\handles\sceneHandleControllers.ts:779 — hardenStudioHelperTree(this.envLightHelperGroup);
+- src\scene\handles\sceneHandleControllers.ts:798 — hardenStudioHelperMaterial(mat);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:14 — type SceneSectionAxis = "x" | "y" | "z";
+- src\scene\isoOverlays\sectionIsoOverlay.ts:95 — skipSceneSectionClipping?: boolean;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:216 — axis: SceneSectionAxis,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:229 — axis: SceneSectionAxis,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:239 — axis: SceneSectionAxis,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:252 — axis: SceneSectionAxis,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1276 — if (options.skipSceneSectionClipping) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1277 — mesh.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1279 — mesh.material.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1328 — if (options.skipSceneSectionClipping) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1329 — root.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1398 — if (options.skipSceneSectionClipping) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1399 — line.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1400 — lineMaterial.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:39 — ResolvedSceneSectionFrame,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:40 — ResolvedSceneSectionPlane,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:268 — plane: ResolvedSceneSectionPlane,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:271 — frame?: ResolvedSceneSectionFrame | null,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:359 — plane: ResolvedSceneSectionPlane,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:360 — frame?: ResolvedSceneSectionFrame | null,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:362 — if (plane.axis === "z" || frame?.groundTraceVisible !== true) return null;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:394 — planes: ResolvedSceneSectionPlane[],
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:395 — frames: ResolvedSceneSectionFrame[],
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:400 — (frame) => frame.frameId === plane.frameId && frame.groundTraceVisible,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:423 — return this.sceneSectionActivePlanes(this.lastSceneSectionStyle).map(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:424 — (plane: ResolvedSceneSectionPlane) => ({
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:456 — return this.sceneSectionActivePlanes(this.lastSceneSectionStyle).map(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:457 — (plane: ResolvedSceneSectionPlane) => ({
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:543 — return this.sceneSectionActivePlanes(this.lastSceneSectionStyle).map(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:544 — (plane: ResolvedSceneSectionPlane) => ({
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:578 — group.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:745 — export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: ResolvedSceneSectionPlane, options: {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:752 — sectionFrame?: ResolvedSceneSectionFrame | null;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:794 — options.sectionFrame,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:804 — options.sectionFrame,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:905 — material.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:911 — cut.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:990 — const planes = this.sceneSectionActivePlanes(this.lastSceneSectionStyle);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:998 — const sectionBounds = this.sceneSectionBounds(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:999 — this.lastSceneSectionStyle,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1000 — this.sceneSectionLayerIds(this.lastSceneSectionStyle),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1001 — this.sceneSectionProductIds(this.lastSceneSectionStyle),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1003 — const sectionFrames = this.resolveSceneSectionFrames(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1004 — this.lastSceneSectionStyle,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1008 — sectionGroundTrimRequested(planes, sectionFrames) &&
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1113 — skipSceneSectionClipping: true,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1137 — sectionFrame:
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1138 — sectionFrames.find(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1139 — (frame: ResolvedSceneSectionFrame) =>
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1202 — group.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1229 — group.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1251 — export function buildSeismicVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: ResolvedSceneSectionPlane, options: {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1258 — sectionFrame?: ResolvedSceneSectionFrame | null;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1294 — options.sectionFrame,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1304 — options.sectionFrame,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1391 — material.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1395 — cut.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1546 — material.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1547 — const helper = new THREE.Mesh(geometry, material);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1548 — helper.name = `${section.name || "seismic section"} resistivity ISO helper`;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1549 — helper.userData.ignoreLayerStyle = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1550 — helper.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1551 — helper.userData.sectionIsoTargetKey = options.targetKey;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1552 — helper.userData.sectionIsoSourceSectionId = seismicSectionIdForIso(section);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1553 — return { mesh: helper, values, alphaValues, hardMaskValues };
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1570 — const planes = this.sceneSectionActivePlanes(this.lastSceneSectionStyle);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1572 — const sectionBounds = this.sceneSectionBounds(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1573 — this.lastSceneSectionStyle,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1574 — this.sceneSectionLayerIds(this.lastSceneSectionStyle),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1575 — this.sceneSectionProductIds(this.lastSceneSectionStyle),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1577 — const sectionFrames = this.resolveSceneSectionFrames(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1578 — this.lastSceneSectionStyle,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1582 — sectionGroundTrimRequested(planes, sectionFrames) &&
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1669 — skipSceneSectionClipping: true,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1688 — sectionFrame:
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1689 — sectionFrames.find(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1690 — (frame: ResolvedSceneSectionFrame) =>
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1835 — skipSceneSectionClipping: true,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1860 — const helper = buildSeismicSectionResistivityIsoMesh(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1869 — if (!helper) return;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1870 — updateScalarSectionIsoOverlay(helper.mesh, helper.values, {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1873 — alphaValues: helper.alphaValues,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1874 — hardMaskValues: helper.hardMaskValues,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1876 — if (helper.mesh.userData.scalarSectionIsoOverlayRoot) {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1878 — helper.mesh,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1881 — overlayGroup.add(helper.mesh);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1883 — disposeObjectTree(helper.mesh);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1888 — const planes = this.sceneSectionActivePlanes(this.lastSceneSectionStyle);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1890 — const sectionBounds = this.sceneSectionBounds(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1891 — this.lastSceneSectionStyle,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1892 — this.sceneSectionLayerIds(this.lastSceneSectionStyle),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1893 — this.sceneSectionProductIds(this.lastSceneSectionStyle),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1895 — const sectionFrames = this.resolveSceneSectionFrames(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1896 — this.lastSceneSectionStyle,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1900 — sectionGroundTrimRequested(planes, sectionFrames) &&
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1954 — sectionFrame:
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1955 — sectionFrames.find(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1956 — (frame: ResolvedSceneSectionFrame) =>
+- src\scene\outlines\AreaOutlineController.ts:23 — function hardenAreaOutlineHelperMaterial(material: THREE.Material): void {
+- src\scene\outlines\AreaOutlineController.ts:160 — hardenAreaOutlineHelperMaterial(mat);
+- src\scene\section\sceneSectionController.ts:4 — SceneSectionAxisAlignment,
+- src\scene\section\sceneSectionController.ts:5 — SceneSectionAxisDatum,
+- src\scene\section\sceneSectionController.ts:27 — type SceneSectionStyleTween,
+- src\scene\section\sceneSectionController.ts:30 — ResolvedSceneSectionFrame,
+- src\scene\section\sceneSectionController.ts:31 — ResolvedSceneSectionPlane,
+- src\scene\section\sceneSectionController.ts:32 — ResolvedSceneSectionWindow,
+- src\scene\section\sceneSectionController.ts:33 — SceneSectionApplyOptions,
+- src\scene\section\sceneSectionController.ts:34 — SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:35 — SceneSectionMaskTransition,
+- src\scene\section\sceneSectionController.ts:36 — SceneSectionObjectTarget,
+- src\scene\section\sceneSectionController.ts:37 — SceneSectionObjectVisibility,
+- src\scene\section\sceneSectionController.ts:38 — SceneSectionRuntime,
+- src\scene\section\sceneSectionController.ts:39 — SceneSectionStyleMaskTransition,
+- src\scene\section\sceneSectionController.ts:40 — SceneSectionWindowHandleKind,
+- src\scene\section\sceneSectionController.ts:43 — applySceneSectionObjectVisibilityBuiltInMaterial,
+- src\scene\section\sceneSectionController.ts:44 — setSceneSectionObjectVisibilityUniforms,
+- src\scene\section\sceneSectionController.ts:45 — } from "../shaders/sceneSectionObjectVisibilityShader";
+- src\scene\section\sceneSectionController.ts:52 — type SceneSectionApplyTransitionFrameOptions = SceneSectionApplyOptions & {
+- src\scene\section\sceneSectionController.ts:67 — SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:106 — const SCENE_SECTION_MIN_HELPER_SIZE_M = 1200;
+- src\scene\section\sceneSectionController.ts:107 — const SCENE_SECTION_HELPER_PADDING = 1.14;
+- src\scene\section\sceneSectionController.ts:152 — function hardenStudioHelperMaterial(material: THREE.Material): void {
+- src\scene\section\sceneSectionController.ts:163 — function makeSceneSectionIntersectionDashMaterial(): THREE.LineDashedMaterial {
+- src\scene\section\sceneSectionController.ts:175 — hardenStudioHelperMaterial(material);
+- src\scene\section\sceneSectionController.ts:176 — material.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:180 — function withSceneSectionHeightSampler(
+- src\scene\section\sceneSectionController.ts:191 — function makeSceneSectionTraceRibbonMaterial(): THREE.MeshBasicMaterial {
+- src\scene\section\sceneSectionController.ts:202 — hardenStudioHelperMaterial(material);
+- src\scene\section\sceneSectionController.ts:203 — material.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:207 — function appendSceneSectionTraceRibbonSegment(
+- src\scene\section\sceneSectionController.ts:233 — function buildSceneSectionDashedTraceRibbonGeometry(
+- src\scene\section\sceneSectionController.ts:260 — appendSceneSectionTraceRibbonSegment(
+- src\scene\section\sceneSectionController.ts:288 — function sceneSectionAxes(): SceneSectionAxis[] {
+- src\scene\section\sceneSectionController.ts:292 — function sceneSectionBuiltInFrameId(axis: SceneSectionAxis): string {
+- src\scene\section\sceneSectionController.ts:296 — function sceneSectionValidAxis(value: unknown): value is SceneSectionAxis {
+- src\scene\section\sceneSectionController.ts:300 — function sceneSectionDefaultFrameLabel(
+- src\scene\section\sceneSectionController.ts:302 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:304 — if (id === sceneSectionBuiltInFrameId(axis)) {
+- src\scene\section\sceneSectionController.ts:347 — function sceneSectionVectorComponentIndex(
+- src\scene\section\sceneSectionController.ts:356 — function sceneSectionHorizontalComponentIndex(
+- src\scene\section\sceneSectionController.ts:362 — function sceneSectionRotateHorizontal(
+- src\scene\section\sceneSectionController.ts:372 — type SceneSectionGeoContext = {
+- src\scene\section\sceneSectionController.ts:378 — function sceneSectionSourceCrs(this: any): string | undefined {
+- src\scene\section\sceneSectionController.ts:391 — function sceneSectionGeoContext(this: any): SceneSectionGeoContext {
+- src\scene\section\sceneSectionController.ts:395 — const sourceCrs = sceneSectionSourceCrs.call(this);
+- src\scene\section\sceneSectionController.ts:403 — function sceneSectionWorldToUtm(
+- src\scene\section\sceneSectionController.ts:414 — function sceneSectionAxisTicks(
+- src\scene\section\sceneSectionController.ts:442 — function sceneSectionAxisValueLabel(
+- src\scene\section\sceneSectionController.ts:454 — function sceneSectionAxisHeading(componentIndex: 0 | 1 | 2): string {
+- src\scene\section\sceneSectionController.ts:460 — function sceneSectionDefaultAxisHeading(
+- src\scene\section\sceneSectionController.ts:461 — datum: SceneSectionAxisDatum,
+- src\scene\section\sceneSectionController.ts:464 — const component = sceneSectionVectorComponentIndex(vector);
+- src\scene\section\sceneSectionController.ts:468 — return sceneSectionHorizontalComponentIndex(vector) === 0
+- src\scene\section\sceneSectionController.ts:472 — return sceneSectionAxisHeading(component);
+- src\scene\section\sceneSectionController.ts:475 — function formatSceneSectionLonLat(value: number, positive: string, negative: string, decimals: number): string {
+- src\scene\section\sceneSectionController.ts:479 — function sceneSectionAxisValueLabelForPoint(
+- src\scene\section\sceneSectionController.ts:480 — frame: ResolvedSceneSectionFrame,
+- src\scene\section\sceneSectionController.ts:486 — const component = sceneSectionVectorComponentIndex(vector);
+- src\scene\section\sceneSectionController.ts:498 — const utm = sceneSectionWorldToUtm(point, origin);
+- src\scene\section\sceneSectionController.ts:501 — return sceneSectionHorizontalComponentIndex(vector) === 0
+- src\scene\section\sceneSectionController.ts:502 — ? formatSceneSectionLonLat(latLon.lon, "E", "W", decimals)
+- src\scene\section\sceneSectionController.ts:503 — : formatSceneSectionLonLat(latLon.lat, "N", "S", decimals);
+- src\scene\section\sceneSectionController.ts:505 — return sceneSectionAxisValueLabel(component, point.getComponent(component), origin);
+- src\scene\section\sceneSectionController.ts:508 — function sceneSectionAxisTickOffset(
+- src\scene\section\sceneSectionController.ts:509 — frame: ResolvedSceneSectionFrame,
+- src\scene\section\sceneSectionController.ts:513 — const component = sceneSectionVectorComponentIndex(vector);
+- src\scene\section\sceneSectionController.ts:528 — function sceneSectionOutlineWidthM(width: number, height: number): number {
+- src\scene\section\sceneSectionController.ts:542 — function buildSceneSectionOutlineGeometry(
+- src\scene\section\sceneSectionController.ts:627 — function makeSceneSectionOutlineMaterial(
+- src\scene\section\sceneSectionController.ts:641 — hardenStudioHelperMaterial(material);
+- src\scene\section\sceneSectionController.ts:648 — material.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:653 — function makeSceneSectionConeMaterial(
+- src\scene\section\sceneSectionController.ts:670 — hardenStudioHelperMaterial(material);
+- src\scene\section\sceneSectionController.ts:672 — material.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:678 — kind: SceneSectionWindowHandleKind,
+- src\scene\section\sceneSectionController.ts:687 — frames: ResolvedSceneSectionFrame[],
+- src\scene\section\sceneSectionController.ts:688 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:689 — ): ResolvedSceneSectionFrame | null {
+- src\scene\section\sceneSectionController.ts:694 — frames: ResolvedSceneSectionFrame[],
+- src\scene\section\sceneSectionController.ts:695 — plane: ResolvedSceneSectionPlane,
+- src\scene\section\sceneSectionController.ts:696 — ): ResolvedSceneSectionFrame | null {
+- src\scene\section\sceneSectionController.ts:703 — export function sceneSectionProductIds(this: any, style: EditableStyle): Set<string> {
+- src\scene\section\sceneSectionController.ts:711 — if (style.sceneSectionTargetScope === "all-visible") {
+- src\scene\section\sceneSectionController.ts:719 — const configured = Array.isArray(style.sceneSectionTargetProductIds)
+- src\scene\section\sceneSectionController.ts:720 — ? style.sceneSectionTargetProductIds.filter(
+- src\scene\section\sceneSectionController.ts:724 — if (style.sceneSectionTargetScope === "active-selection") {
+- src\scene\section\sceneSectionController.ts:732 — export function sceneSectionLayerIds(this: any, style: EditableStyle): Set<string> {
+- src\scene\section\sceneSectionController.ts:733 — if (style.sceneSectionTargetScope === "all-visible") {
+- src\scene\section\sceneSectionController.ts:740 — const configured = Array.isArray(style.sceneSectionTargetLayerIds)
+- src\scene\section\sceneSectionController.ts:741 — ? style.sceneSectionTargetLayerIds.filter((id) => typeof id === "string")
+- src\scene\section\sceneSectionController.ts:743 — if (style.sceneSectionTargetScope === "active-selection") {
+- src\scene\section\sceneSectionController.ts:756 — const SCENE_SECTION_OBJECT_AXES: SceneSectionAxis[] = ["x", "y", "z"];
+- src\scene\section\sceneSectionController.ts:758 — function sceneSectionLayerObjectId(layerId: string): string {
+- src\scene\section\sceneSectionController.ts:762 — function sceneSectionProductObjectId(layerId: string, productId: string): string {
+- src\scene\section\sceneSectionController.ts:766 — function sceneSectionObjectIdForObject(
+- src\scene\section\sceneSectionController.ts:776 — return sceneSectionProductObjectId(layerId, productId);
+- src\scene\section\sceneSectionController.ts:778 — return sceneSectionLayerObjectId(layerId);
+- src\scene\section\sceneSectionController.ts:781 — function sceneSectionTargetLabel(this: any, layerId: string): string {
+- src\scene\section\sceneSectionController.ts:803 — export function listSceneSectionObjectTargets(this: any): SceneSectionObjectTarget[] {
+- src\scene\section\sceneSectionController.ts:804 — const targets = new Map<string, SceneSectionObjectTarget>();
+- src\scene\section\sceneSectionController.ts:807 — const objectId = sceneSectionLayerObjectId(layerId);
+- src\scene\section\sceneSectionController.ts:810 — label: sceneSectionTargetLabel.call(this, layerId),
+- src\scene\section\sceneSectionController.ts:848 — const objectId = sceneSectionProductObjectId(
+- src\scene\section\sceneSectionController.ts:865 — function sceneSectionLegacyObjectTargeted(
+- src\scene\section\sceneSectionController.ts:872 — if (obj.userData?.sceneSectionHelper === true) return false;
+- src\scene\section\sceneSectionController.ts:873 — if (style.sceneSectionTargetScope === "all-visible") return true;
+- src\scene\section\sceneSectionController.ts:884 — function sceneSectionAxisOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:886 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:890 — const entry = style.sceneSectionObjectVisibilityByAxis?.[axis]?.[objectId];
+- src\scene\section\sceneSectionController.ts:899 — type SceneSectionResolvedFrameEntry = {
+- src\scene\section\sceneSectionController.ts:905 — axis: SceneSectionAxis;
+- src\scene\section\sceneSectionController.ts:906 — plane: NonNullable<EditableStyle["sceneSectionPlanes"]>[SceneSectionAxis];
+- src\scene\section\sceneSectionController.ts:907 — frame: NonNullable<EditableStyle["sceneSectionFrameByAxis"]>[SceneSectionAxis];
+- src\scene\section\sceneSectionController.ts:910 — function sceneSectionResolvedFrameEntries(
+- src\scene\section\sceneSectionController.ts:912 — ): SceneSectionResolvedFrameEntry[] {
+- src\scene\section\sceneSectionController.ts:913 — const explicitEntries = Array.isArray(style.sceneSectionFrames)
+- src\scene\section\sceneSectionController.ts:914 — ? style.sceneSectionFrames
+- src\scene\section\sceneSectionController.ts:921 — const planes = style.sceneSectionPlanes ?? {};
+- src\scene\section\sceneSectionController.ts:922 — const frames = style.sceneSectionFrameByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:923 — const resolved: SceneSectionResolvedFrameEntry[] = [];
+- src\scene\section\sceneSectionController.ts:924 — for (const axis of sceneSectionAxes()) {
+- src\scene\section\sceneSectionController.ts:925 — const id = sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:936 — : typeof style.sceneSectionHelperVisible === "boolean"
+- src\scene\section\sceneSectionController.ts:937 — ? style.sceneSectionHelperVisible
+- src\scene\section\sceneSectionController.ts:944 — : sceneSectionDefaultFrameLabel(id, axis),
+- src\scene\section\sceneSectionController.ts:962 — !sceneSectionValidAxis(entry.axis)
+- src\scene\section\sceneSectionController.ts:971 — : sceneSectionDefaultFrameLabel(entry.id, entry.axis),
+- src\scene\section\sceneSectionController.ts:978 — : typeof style.sceneSectionHelperVisible === "boolean"
+- src\scene\section\sceneSectionController.ts:979 — ? style.sceneSectionHelperVisible
+- src\scene\section\sceneSectionController.ts:991 — function sceneSectionFrameListWithPatch(
+- src\scene\section\sceneSectionController.ts:994 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:996 — plane?: NonNullable<EditableStyle["sceneSectionPlanes"]>[SceneSectionAxis];
+- src\scene\section\sceneSectionController.ts:997 — frame?: NonNullable<EditableStyle["sceneSectionFrameByAxis"]>[SceneSectionAxis];
+- src\scene\section\sceneSectionController.ts:999 — ): NonNullable<EditableStyle["sceneSectionFrames"]> {
+- src\scene\section\sceneSectionController.ts:1000 — const entries = sceneSectionResolvedFrameEntries(style);
+- src\scene\section\sceneSectionController.ts:1032 — const builtIn = frameId === sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:1035 — label: sceneSectionDefaultFrameLabel(frameId, axis),
+- src\scene\section\sceneSectionController.ts:1045 — function sceneSectionFrameOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1048 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:1053 — style.sceneSectionObjectVisibilityByFrameId?.[frameId]?.[objectId]
+- src\scene\section\sceneSectionController.ts:1058 — return sceneSectionAxisOutsideOpacity(style, axis, objectId, legacyTargeted);
+- src\scene\section\sceneSectionController.ts:1061 — type SceneSectionObjectVisibilityMap =
+- src\scene\section\sceneSectionController.ts:1064 — function sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1065 — entries: SceneSectionObjectVisibilityMap | undefined,
+- src\scene\section\sceneSectionController.ts:1075 — function interpolatedSceneSectionObjectVisibilityMap(
+- src\scene\section\sceneSectionController.ts:1076 — fromEntries: SceneSectionObjectVisibilityMap | undefined,
+- src\scene\section\sceneSectionController.ts:1077 — toEntries: SceneSectionObjectVisibilityMap | undefined,
+- src\scene\section\sceneSectionController.ts:1079 — ): SceneSectionObjectVisibilityMap | undefined {
+- src\scene\section\sceneSectionController.ts:1085 — const next: SceneSectionObjectVisibilityMap = {};
+- src\scene\section\sceneSectionController.ts:1087 — const fromOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1092 — const toOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1105 — function interpolatedSceneSectionObjectVisibilityByAxis(
+- src\scene\section\sceneSectionController.ts:1109 — ): EditableStyle["sceneSectionObjectVisibilityByAxis"] {
+- src\scene\section\sceneSectionController.ts:1110 — const next: NonNullable<EditableStyle["sceneSectionObjectVisibilityByAxis"]> =
+- src\scene\section\sceneSectionController.ts:1112 — for (const axis of sceneSectionAxes()) {
+- src\scene\section\sceneSectionController.ts:1113 — const entries = interpolatedSceneSectionObjectVisibilityMap(
+- src\scene\section\sceneSectionController.ts:1114 — fromStyle.sceneSectionObjectVisibilityByAxis?.[axis],
+- src\scene\section\sceneSectionController.ts:1115 — toStyle.sceneSectionObjectVisibilityByAxis?.[axis],
+- src\scene\section\sceneSectionController.ts:1123 — function interpolatedSceneSectionObjectVisibilityByFrameId(
+- src\scene\section\sceneSectionController.ts:1127 — ): EditableStyle["sceneSectionObjectVisibilityByFrameId"] {
+- src\scene\section\sceneSectionController.ts:1129 — ...Object.keys(fromStyle.sceneSectionObjectVisibilityByFrameId ?? {}),
+- src\scene\section\sceneSectionController.ts:1130 — ...Object.keys(toStyle.sceneSectionObjectVisibilityByFrameId ?? {}),
+- src\scene\section\sceneSectionController.ts:1133 — const next: NonNullable<EditableStyle["sceneSectionObjectVisibilityByFrameId"]> =
+- src\scene\section\sceneSectionController.ts:1136 — const entries = interpolatedSceneSectionObjectVisibilityMap(
+- src\scene\section\sceneSectionController.ts:1137 — fromStyle.sceneSectionObjectVisibilityByFrameId?.[frameId],
+- src\scene\section\sceneSectionController.ts:1138 — toStyle.sceneSectionObjectVisibilityByFrameId?.[frameId],
+- src\scene\section\sceneSectionController.ts:1146 — export function sceneSectionObjectVisibilityForObject(this: any,
+- src\scene\section\sceneSectionController.ts:1152 — ): SceneSectionObjectVisibility {
+- src\scene\section\sceneSectionController.ts:1153 — const objectId = sceneSectionObjectIdForObject(layerId, obj);
+- src\scene\section\sceneSectionController.ts:1154 — const legacyTargeted = sceneSectionLegacyObjectTargeted(
+- src\scene\section\sceneSectionController.ts:1162 — x: sceneSectionAxisOutsideOpacity(style, "x", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1163 — y: sceneSectionAxisOutsideOpacity(style, "y", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1164 — z: sceneSectionAxisOutsideOpacity(style, "z", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1167 — for (const entry of sceneSectionResolvedFrameEntries(style)) {
+- src\scene\section\sceneSectionController.ts:1168 — const value = sceneSectionFrameOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1200 — type SceneSectionFrameBasis = {
+- src\scene\section\sceneSectionController.ts:1210 — alignment: SceneSectionAxisAlignment;
+- src\scene\section\sceneSectionController.ts:1211 — datum: SceneSectionAxisDatum;
+- src\scene\section\sceneSectionController.ts:1218 — function sceneSectionAlignment(value: unknown): SceneSectionAxisAlignment {
+- src\scene\section\sceneSectionController.ts:1222 — function sceneSectionDatum(value: unknown): SceneSectionAxisDatum {
+- src\scene\section\sceneSectionController.ts:1226 — function sceneSectionBasisVectors(
+- src\scene\section\sceneSectionController.ts:1227 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:1228 — alignment: SceneSectionAxisAlignment,
+- src\scene\section\sceneSectionController.ts:1237 — ? sceneSectionRotateHorizontal(axisComponentVector(0), convergenceRad)
+- src\scene\section\sceneSectionController.ts:1241 — ? sceneSectionRotateHorizontal(axisComponentVector(1), convergenceRad)
+- src\scene\section\sceneSectionController.ts:1253 — function sceneSectionFrameCenterFromRanges(
+- src\scene\section\sceneSectionController.ts:1254 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:1269 — function sceneSectionResolvedFrameBasis(
+- src\scene\section\sceneSectionController.ts:1270 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:1271 — frame: NonNullable<EditableStyle["sceneSectionFrameByAxis"]>[SceneSectionAxis] | undefined,
+- src\scene\section\sceneSectionController.ts:1277 — geo: SceneSectionGeoContext,
+- src\scene\section\sceneSectionController.ts:1278 — ): SceneSectionFrameBasis {
+- src\scene\section\sceneSectionController.ts:1279 — const alignment = sceneSectionAlignment(frame?.axisAlignment);
+- src\scene\section\sceneSectionController.ts:1280 — const datum = sceneSectionDatum(frame?.axisDatum);
+- src\scene\section\sceneSectionController.ts:1281 — const center = sceneSectionFrameCenterFromRanges(
+- src\scene\section\sceneSectionController.ts:1289 — const centerUtm = sceneSectionWorldToUtm(center, geo.origin);
+- src\scene\section\sceneSectionController.ts:1294 — const vectors = sceneSectionBasisVectors(axis, alignment, convergenceRad);
+- src\scene\section\sceneSectionController.ts:1323 — export function resolveSceneSectionPlanes(this: any,
+- src\scene\section\sceneSectionController.ts:1326 — ): ResolvedSceneSectionPlane[] {
+- src\scene\section\sceneSectionController.ts:1329 — this.sceneSectionBounds(
+- src\scene\section\sceneSectionController.ts:1331 — this.sceneSectionLayerIds(style),
+- src\scene\section\sceneSectionController.ts:1332 — this.sceneSectionProductIds(style),
+- src\scene\section\sceneSectionController.ts:1334 — const geo = sceneSectionGeoContext.call(this);
+- src\scene\section\sceneSectionController.ts:1335 — const frames = new Map<string, ResolvedSceneSectionFrame>(
+- src\scene\section\sceneSectionController.ts:1337 — .resolveSceneSectionFrames(style, resolvedBounds)
+- src\scene\section\sceneSectionController.ts:1338 — .map((frame: ResolvedSceneSectionFrame) => [frame.frameId, frame]),
+- src\scene\section\sceneSectionController.ts:1340 — return sceneSectionResolvedFrameEntries(style).map((entry) => {
+- src\scene\section\sceneSectionController.ts:1352 — const basis: SceneSectionFrameBasis | ResolvedSceneSectionFrame =
+- src\scene\section\sceneSectionController.ts:1367 — return sceneSectionResolvedFrameBasis(
+- src\scene\section\sceneSectionController.ts:1394 — export function sceneSectionActivePlanes(this: any,
+- src\scene\section\sceneSectionController.ts:1396 — ): ResolvedSceneSectionPlane[] {
+- src\scene\section\sceneSectionController.ts:1397 — if (style.sceneSectionEnabled !== true) return [];
+- src\scene\section\sceneSectionController.ts:1398 — return this.resolveSceneSectionPlanes(style).filter(
+- src\scene\section\sceneSectionController.ts:1399 — (plane: ResolvedSceneSectionPlane) => plane.enabled,
+- src\scene\section\sceneSectionController.ts:1403 — export function sceneSectionObjectTargeted(this: any,
+- src\scene\section\sceneSectionController.ts:1410 — return sceneSectionLegacyObjectTargeted(
+- src\scene\section\sceneSectionController.ts:1419 — export function sceneSectionClippingPlanes(this: any,
+- src\scene\section\sceneSectionController.ts:1420 — planes: ResolvedSceneSectionPlane[],
+- src\scene\section\sceneSectionController.ts:1434 — function sceneSectionLabelAnchorPosition(
+- src\scene\section\sceneSectionController.ts:1453 — function sceneSectionPointClippedByPlanes(
+- src\scene\section\sceneSectionController.ts:1462 — function updateSceneSectionLabelCullState(
+- src\scene\section\sceneSectionController.ts:1471 — sceneSectionLabelHidden?: boolean;
+- src\scene\section\sceneSectionController.ts:1472 — sceneSectionLabelHiddenBy?: string;
+- src\scene\section\sceneSectionController.ts:1481 — data.sceneSectionLabelHidden = false;
+- src\scene\section\sceneSectionController.ts:1482 — delete data.sceneSectionLabelHiddenBy;
+- src\scene\section\sceneSectionController.ts:1485 — sceneSectionLabelAnchorPosition(obj, anchorPoint);
+- src\scene\section\sceneSectionController.ts:1486 — const hidden = sceneSectionPointClippedByPlanes(anchorPoint, activePlanes);
+- src\scene\section\sceneSectionController.ts:1487 — data.sceneSectionLabelHidden = hidden;
+- src\scene\section\sceneSectionController.ts:1489 — data.sceneSectionLabelHiddenBy = "scene-section";
+- src\scene\section\sceneSectionController.ts:1491 — delete data.sceneSectionLabelHiddenBy;
+- src\scene\section\sceneSectionController.ts:1495 — type SceneSectionSurfaceTraceSegment = {
+- src\scene\section\sceneSectionController.ts:1503 — frame: ResolvedSceneSectionFrame,
+- src\scene\section\sceneSectionController.ts:1504 — ): SceneSectionSurfaceTraceSegment | null {
+- src\scene\section\sceneSectionController.ts:1541 — type SceneSectionFrameIntersectionTrace = SceneSectionSurfaceTraceSegment & {
+- src\scene\section\sceneSectionController.ts:1542 — axes: [SceneSectionAxis, SceneSectionAxis];
+- src\scene\section\sceneSectionController.ts:1547 — function sectionFrameIntersectionTrace(
+- src\scene\section\sceneSectionController.ts:1548 — firstPlane: ResolvedSceneSectionPlane,
+- src\scene\section\sceneSectionController.ts:1549 — firstFrame: ResolvedSceneSectionFrame,
+- src\scene\section\sceneSectionController.ts:1550 — secondPlane: ResolvedSceneSectionPlane,
+- src\scene\section\sceneSectionController.ts:1551 — secondFrame: ResolvedSceneSectionFrame,
+- src\scene\section\sceneSectionController.ts:1552 — ): SceneSectionFrameIntersectionTrace | null {
+- src\scene\section\sceneSectionController.ts:1596 — freeAxisIndex: sceneSectionVectorComponentIndex(lineDir),
+- src\scene\section\sceneSectionController.ts:1599 — (firstFrame.groundTraceVisible || secondFrame.groundTraceVisible),
+- src\scene\section\sceneSectionController.ts:1603 — function sectionFrameIntersectionTraces(
+- src\scene\section\sceneSectionController.ts:1604 — planes: ResolvedSceneSectionPlane[],
+- src\scene\section\sceneSectionController.ts:1605 — frames: ResolvedSceneSectionFrame[],
+- src\scene\section\sceneSectionController.ts:1606 — ): SceneSectionFrameIntersectionTrace[] {
+- src\scene\section\sceneSectionController.ts:1607 — const traces: SceneSectionFrameIntersectionTrace[] = [];
+- src\scene\section\sceneSectionController.ts:1620 — const trace = sectionFrameIntersectionTrace(
+- src\scene\section\sceneSectionController.ts:1632 — export function sceneSectionAxisAlongIndex(this: any,
+- src\scene\section\sceneSectionController.ts:1633 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:1640 — export function resolveSceneSectionFrames(this: any,
+- src\scene\section\sceneSectionController.ts:1643 — ): ResolvedSceneSectionFrame[] {
+- src\scene\section\sceneSectionController.ts:1645 — style.sceneSectionFrameEnabled !== true &&
+- src\scene\section\sceneSectionController.ts:1646 — style.sceneSectionWindowEnabled !== true &&
+- src\scene\section\sceneSectionController.ts:1647 — !Array.isArray(style.sceneSectionFrames)
+- src\scene\section\sceneSectionController.ts:1651 — const windowByAxis = style.sceneSectionWindowByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:1652 — const frames: ResolvedSceneSectionFrame[] = [];
+- src\scene\section\sceneSectionController.ts:1653 — const geo = sceneSectionGeoContext.call(this);
+- src\scene\section\sceneSectionController.ts:1654 — const explicitFrameEnabled = style.sceneSectionFrameEnabled === true;
+- src\scene\section\sceneSectionController.ts:1656 — explicitFrameEnabled || style.sceneSectionWindowEnabled === true;
+- src\scene\section\sceneSectionController.ts:1657 — for (const entry of sceneSectionResolvedFrameEntries(style)) {
+- src\scene\section\sceneSectionController.ts:1705 — const basis = sceneSectionResolvedFrameBasis(
+- src\scene\section\sceneSectionController.ts:1717 — finiteNumber(style.sceneSectionAxisIntervalM) ??
+- src\scene\section\sceneSectionController.ts:1724 — finiteNumber(style.sceneSectionAxisTextScale) ??
+- src\scene\section\sceneSectionController.ts:1747 — const groundTraceWidthM = clampRange(
+- src\scene\section\sceneSectionController.ts:1748 — finiteNumber(frame?.groundTraceWidthM) ??
+- src\scene\section\sceneSectionController.ts:1781 — groundTraceVisible:
+- src\scene\section\sceneSectionController.ts:1782 — typeof frame?.groundTraceVisible === "boolean"
+- src\scene\section\sceneSectionController.ts:1783 — ? frame.groundTraceVisible
+- src\scene\section\sceneSectionController.ts:1784 — : style.sceneSectionGroundTraceVisible === true,
+- src\scene\section\sceneSectionController.ts:1785 — groundTraceWidthM,
+- src\scene\section\sceneSectionController.ts:1789 — : style.sceneSectionAxesVisible === true,
+- src\scene\section\sceneSectionController.ts:1796 — : sceneSectionDefaultAxisHeading(basis.datum, basis.axisAVector),
+- src\scene\section\sceneSectionController.ts:1800 — : sceneSectionDefaultAxisHeading(basis.datum, basis.axisBVector),
+- src\scene\section\sceneSectionController.ts:1809 — export function resolveSceneSectionWindow(this: any,
+- src\scene\section\sceneSectionController.ts:1812 — ): ResolvedSceneSectionWindow | null {
+- src\scene\section\sceneSectionController.ts:1813 — const frames = this.resolveSceneSectionFrames(style, bounds).filter(
+- src\scene\section\sceneSectionController.ts:1814 — (frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:1819 — style.sceneSectionWindowActiveAxis === "x" ||
+- src\scene\section\sceneSectionController.ts:1820 — style.sceneSectionWindowActiveAxis === "y"
+- src\scene\section\sceneSectionController.ts:1821 — ? style.sceneSectionWindowActiveAxis
+- src\scene\section\sceneSectionController.ts:1822 — : style.sceneSectionActiveAxis === "x" ||
+- src\scene\section\sceneSectionController.ts:1823 — style.sceneSectionActiveAxis === "y"
+- src\scene\section\sceneSectionController.ts:1824 — ? style.sceneSectionActiveAxis
+- src\scene\section\sceneSectionController.ts:1829 — axis: frame.axis as Exclude<SceneSectionAxis, "z">,
+- src\scene\section\sceneSectionController.ts:1837 — export function sceneSectionFrameClippingPlanes(this: any,
+- src\scene\section\sceneSectionController.ts:1838 — frame: ResolvedSceneSectionFrame | null,
+- src\scene\section\sceneSectionController.ts:1849 — export function sceneSectionFrameForObject(this: any,
+- src\scene\section\sceneSectionController.ts:1852 — frames: ResolvedSceneSectionFrame[],
+- src\scene\section\sceneSectionController.ts:1853 — ): ResolvedSceneSectionFrame | null {
+- src\scene\section\sceneSectionController.ts:1866 — (frame: ResolvedSceneSectionFrame) => frame.frameId === overlayFrameId,
+- src\scene\section\sceneSectionController.ts:1872 — ? (obj.userData.sectionIsoPlaneAxis as SceneSectionAxis)
+- src\scene\section\sceneSectionController.ts:1900 — export function setSceneSectionUniforms(this: any,
+- src\scene\section\sceneSectionController.ts:1902 — planes: ResolvedSceneSectionPlane[],
+- src\scene\section\sceneSectionController.ts:1903 — visibility: SceneSectionObjectVisibility,
+- src\scene\section\sceneSectionController.ts:1904 — frames: ResolvedSceneSectionFrame[],
+- src\scene\section\sceneSectionController.ts:1905 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\section\sceneSectionController.ts:1921 — ensure<number>("uSceneSectionTransitionEnabled", 0).value = maskTransition
+- src\scene\section\sceneSectionController.ts:1924 — ensure<number>("uSceneSectionTransitionProgress", 0).value = clamp01(
+- src\scene\section\sceneSectionController.ts:1927 — ensure<number>("uSceneSectionEnabled", 0).value =
+- src\scene\section\sceneSectionController.ts:1929 — ensure<number>("uSceneSectionMode", 0).value = 0;
+- src\scene\section\sceneSectionController.ts:1930 — ensure<number>("uSceneSectionPlaneCount", 0).value = targeted
+- src\scene\section\sceneSectionController.ts:1933 — const normalUniform = ensure<THREE.Vector3[]>("uSceneSectionNormals", [
+- src\scene\section\sceneSectionController.ts:1944 — "uSceneSectionPositions",
+- src\scene\section\sceneSectionController.ts:1948 — "uSceneSectionThickness",
+- src\scene\section\sceneSectionController.ts:1952 — "uSceneSectionInvert",
+- src\scene\section\sceneSectionController.ts:1968 — "uSceneSectionPlaneOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:1981 — ensure<number>("uSceneSectionFrameCount", 0).value = activeFrames.length;
+- src\scene\section\sceneSectionController.ts:1983 — "uSceneSectionFrameAxisA",
+- src\scene\section\sceneSectionController.ts:1987 — "uSceneSectionFrameAxisB",
+- src\scene\section\sceneSectionController.ts:1991 — "uSceneSectionFrameBounds",
+- src\scene\section\sceneSectionController.ts:2024 — "uSceneSectionFrameOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2043 — ensure<number>("uSceneSectionTargetPlaneCount", 0).value =
+- src\scene\section\sceneSectionController.ts:2048 — "uSceneSectionTargetNormals",
+- src\scene\section\sceneSectionController.ts:2052 — "uSceneSectionTargetPositions",
+- src\scene\section\sceneSectionController.ts:2056 — "uSceneSectionTargetInvert",
+- src\scene\section\sceneSectionController.ts:2060 — "uSceneSectionTargetPlaneOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2079 — ensure<number>("uSceneSectionTargetFrameCount", 0).value =
+- src\scene\section\sceneSectionController.ts:2082 — "uSceneSectionTargetFrameAxisA",
+- src\scene\section\sceneSectionController.ts:2086 — "uSceneSectionTargetFrameAxisB",
+- src\scene\section\sceneSectionController.ts:2090 — "uSceneSectionTargetFrameBounds",
+- src\scene\section\sceneSectionController.ts:2094 — "uSceneSectionTargetFrameOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2131 — ensure<number>("uSceneSectionWindowEnabled", 0).value =
+- src\scene\section\sceneSectionController.ts:2133 — ensure<number>("uSceneSectionWindowAxis", 0).value =
+- src\scene\section\sceneSectionController.ts:2135 — ensure<number>("uSceneSectionWindowMinAlong", -250_000).value =
+- src\scene\section\sceneSectionController.ts:2137 — ensure<number>("uSceneSectionWindowMaxAlong", 250_000).value =
+- src\scene\section\sceneSectionController.ts:2139 — ensure<number>("uSceneSectionWindowBottomZ", -250_000).value =
+- src\scene\section\sceneSectionController.ts:2143 — export function applySceneSectionMaterial(this: any,
+- src\scene\section\sceneSectionController.ts:2145 — planes: ResolvedSceneSectionPlane[],
+- src\scene\section\sceneSectionController.ts:2146 — visibility: SceneSectionObjectVisibility,
+- src\scene\section\sceneSectionController.ts:2148 — frames: ResolvedSceneSectionFrame[],
+- src\scene\section\sceneSectionController.ts:2150 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\section\sceneSectionController.ts:2152 — if (material.userData?.sceneSectionHelper === true) return;
+- src\scene\section\sceneSectionController.ts:2153 — const affectedAxes = new Set<SceneSectionAxis>([
+- src\scene\section\sceneSectionController.ts:2210 — this.setSceneSectionUniforms(material, planes, visibility, frames, maskTransition);
+- src\scene\section\sceneSectionController.ts:2212 — this.setSceneSectionUniforms(material, planes, visibility, frames);
+- src\scene\section\sceneSectionController.ts:2218 — this.setSceneSectionUniforms(material, planes, visibility, frames, maskTransition);
+- src\scene\section\sceneSectionController.ts:2219 — setSceneSectionObjectVisibilityUniforms(
+- src\scene\section\sceneSectionController.ts:2237 — applySceneSectionObjectVisibilityBuiltInMaterial(
+- src\scene\section\sceneSectionController.ts:2251 — if (material.userData?.sceneSectionObjectVisibilityPatched === true) {
+- src\scene\section\sceneSectionController.ts:2252 — applySceneSectionObjectVisibilityBuiltInMaterial(
+- src\scene\section\sceneSectionController.ts:2271 — export function interpolatedSceneSectionStyle(this: any,
+- src\scene\section\sceneSectionController.ts:2278 — const axes: SceneSectionAxis[] = ["x", "y", "z"];
+- src\scene\section\sceneSectionController.ts:2279 — const fromPlanes = fromStyle.sceneSectionPlanes ?? {};
+- src\scene\section\sceneSectionController.ts:2280 — const toPlanes = toStyle.sceneSectionPlanes ?? {};
+- src\scene\section\sceneSectionController.ts:2281 — const sceneSectionPlanes: NonNullable<EditableStyle["sceneSectionPlanes"]> =
+- src\scene\section\sceneSectionController.ts:2293 — sceneSectionPlanes[axis] = {
+- src\scene\section\sceneSectionController.ts:2300 — next.sceneSectionPlanes = sceneSectionPlanes;
+- src\scene\section\sceneSectionController.ts:2302 — const fromWindowByAxis = fromStyle.sceneSectionWindowByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:2303 — const toWindowByAxis = toStyle.sceneSectionWindowByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:2304 — const windowByAxis: NonNullable<EditableStyle["sceneSectionWindowByAxis"]> =
+- src\scene\section\sceneSectionController.ts:2329 — next.sceneSectionWindowByAxis = windowByAxis;
+- src\scene\section\sceneSectionController.ts:2331 — const fromFrameByAxis = fromStyle.sceneSectionFrameByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:2332 — const toFrameByAxis = toStyle.sceneSectionFrameByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:2333 — const frameByAxis: NonNullable<EditableStyle["sceneSectionFrameByAxis"]> =
+- src\scene\section\sceneSectionController.ts:2350 — "groundTraceWidthM",
+- src\scene\section\sceneSectionController.ts:2365 — next.sceneSectionFrameByAxis = frameByAxis;
+- src\scene\section\sceneSectionController.ts:2366 — if (Array.isArray(toStyle.sceneSectionFrames)) {
+- src\scene\section\sceneSectionController.ts:2368 — sceneSectionResolvedFrameEntries(fromStyle).map((entry) => [
+- src\scene\section\sceneSectionController.ts:2373 — next.sceneSectionFrames = toStyle.sceneSectionFrames.map((entry) => {
+- src\scene\section\sceneSectionController.ts:2397 — "groundTraceWidthM",
+- src\scene\section\sceneSectionController.ts:2417 — next.sceneSectionObjectVisibilityByAxis =
+- src\scene\section\sceneSectionController.ts:2418 — interpolatedSceneSectionObjectVisibilityByAxis(fromStyle, toStyle, t);
+- src\scene\section\sceneSectionController.ts:2419 — next.sceneSectionObjectVisibilityByFrameId =
+- src\scene\section\sceneSectionController.ts:2420 — interpolatedSceneSectionObjectVisibilityByFrameId(fromStyle, toStyle, t);
+- src\scene\section\sceneSectionController.ts:2424 — export function currentSceneSectionStyle(this: any, nowMs = performance.now()): EditableStyle {
+- src\scene\section\sceneSectionController.ts:2425 — const tween = this.sceneSectionStyleTween;
+- src\scene\section\sceneSectionController.ts:2430 — return this.interpolatedSceneSectionStyle(
+- src\scene\section\sceneSectionController.ts:2437 — function sceneSectionReferenceHelperVisible(
+- src\scene\section\sceneSectionController.ts:2441 — const helperVisible =
+- src\scene\section\sceneSectionController.ts:2442 — typeof style.sceneSectionHelperVisible === "boolean"
+- src\scene\section\sceneSectionController.ts:2443 — ? style.sceneSectionHelperVisible
+- src\scene\section\sceneSectionController.ts:2446 — helperVisible ||
+- src\scene\section\sceneSectionController.ts:2447 — style.sceneSectionGroundTraceVisible === true ||
+- src\scene\section\sceneSectionController.ts:2448 — style.sceneSectionAxesVisible === true ||
+- src\scene\section\sceneSectionController.ts:2449 — style.sceneSectionFrameEnabled === true ||
+- src\scene\section\sceneSectionController.ts:2450 — style.sceneSectionWindowEnabled === true ||
+- src\scene\section\sceneSectionController.ts:2455 — function sceneSectionHelperActiveForStyle(
+- src\scene\section\sceneSectionController.ts:2460 — style.sceneSectionEnabled === true &&
+- src\scene\section\sceneSectionController.ts:2461 — sceneSectionReferenceHelperVisible(style, editorMode)
+- src\scene\section\sceneSectionController.ts:2465 — export function sceneSectionHelperSnapshotAllowedForTween(
+- src\scene\section\sceneSectionController.ts:2467 — tween: SceneSectionStyleTween,
+- src\scene\section\sceneSectionController.ts:2469 — const sourceActive = sceneSectionHelperActiveForStyle(
+- src\scene\section\sceneSectionController.ts:2473 — const targetActive = sceneSectionHelperActiveForStyle(
+- src\scene\section\sceneSectionController.ts:2480 — export function sceneSectionHelperOpacityForTween(this: any,
+- src\scene\section\sceneSectionController.ts:2481 — tween: SceneSectionStyleTween,
+- src\scene\section\sceneSectionController.ts:2484 — const fromActive = sceneSectionHelperActiveForStyle(
+- src\scene\section\sceneSectionController.ts:2488 — const toActive = sceneSectionHelperActiveForStyle(
+- src\scene\section\sceneSectionController.ts:2498 — export function sceneSectionMaskTransitionForTween(
+- src\scene\section\sceneSectionController.ts:2500 — tween: SceneSectionStyleTween,
+- src\scene\section\sceneSectionController.ts:2502 — ): SceneSectionStyleMaskTransition {
+- src\scene\section\sceneSectionController.ts:2510 — export function applySceneSectionHelperTransitionOpacity(this: any): void {
+- src\scene\section\sceneSectionController.ts:2511 — const runtime = this.sceneSectionRuntime;
+- src\scene\section\sceneSectionController.ts:2513 — const opacity = clamp01(this.sceneSectionHelperTransitionOpacity);
+- src\scene\section\sceneSectionController.ts:2520 — if (material.userData?.sceneSectionHelper !== true) continue;
+- src\scene\section\sceneSectionController.ts:2537 — const sceneSectionTextWorldPosition = new THREE.Vector3();
+- src\scene\section\sceneSectionController.ts:2538 — const sceneSectionTextToCamera = new THREE.Vector3();
+- src\scene\section\sceneSectionController.ts:2540 — export function updateSceneSectionPlanarTextFacing(
+- src\scene\section\sceneSectionController.ts:2544 — const runtime = this.sceneSectionRuntime;
+- src\scene\section\sceneSectionController.ts:2547 — if (obj.userData?.sceneSectionPlanarText !== true) return;
+- src\scene\section\sceneSectionController.ts:2548 — const baseQuaternion = obj.userData.sceneSectionBaseQuaternion;
+- src\scene\section\sceneSectionController.ts:2549 — const planeNormal = obj.userData.sceneSectionPlaneNormal;
+- src\scene\section\sceneSectionController.ts:2557 — obj.getWorldPosition(sceneSectionTextWorldPosition);
+- src\scene\section\sceneSectionController.ts:2558 — sceneSectionTextToCamera
+- src\scene\section\sceneSectionController.ts:2560 — .sub(sceneSectionTextWorldPosition);
+- src\scene\section\sceneSectionController.ts:2561 — if (sceneSectionTextToCamera.dot(planeNormal) < 0) {
+- src\scene\section\sceneSectionController.ts:2567 — export function sceneSectionBounds(this: any,
+- src\scene\section\sceneSectionController.ts:2577 — if (!obj.visible || obj.userData?.sceneSectionHelper === true) return;
+- src\scene\section\sceneSectionController.ts:2579 — !this.sceneSectionObjectTargeted(
+- src\scene\section\sceneSectionController.ts:2621 — export function createSceneSectionLabel(this: any, text: string, color: string): THREE.Mesh {
+- src\scene\section\sceneSectionController.ts:2649 — hardenStudioHelperMaterial(material);
+- src\scene\section\sceneSectionController.ts:2650 — material.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2659 — mesh.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2664 — export function createSceneSectionScaleLabel(this: any,
+- src\scene\section\sceneSectionController.ts:2701 — hardenStudioHelperMaterial(material);
+- src\scene\section\sceneSectionController.ts:2702 — material.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2707 — mesh.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2708 — mesh.userData.sceneSectionScaleLabel = true;
+- src\scene\section\sceneSectionController.ts:2709 — mesh.userData.sceneSectionAxisTextScale = scale;
+- src\scene\section\sceneSectionController.ts:2710 — mesh.userData.sceneSectionLabelColor = color;
+- src\scene\section\sceneSectionController.ts:2715 — function makeSceneSectionPlanarTextCameraAware(
+- src\scene\section\sceneSectionController.ts:2721 — obj.userData.sceneSectionPlanarText = true;
+- src\scene\section\sceneSectionController.ts:2722 — obj.userData.sceneSectionBaseQuaternion = baseQuaternion.clone();
+- src\scene\section\sceneSectionController.ts:2723 — obj.userData.sceneSectionPlaneNormal = planeNormal.clone().normalize();
+- src\scene\section\sceneSectionController.ts:2726 — export function ensureSceneSectionRuntime(this: any): SceneSectionRuntime {
+- src\scene\section\sceneSectionController.ts:2727 — if (this.sceneSectionRuntime) return this.sceneSectionRuntime;
+- src\scene\section\sceneSectionController.ts:2731 — group.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2733 — this.sceneSectionRuntime = {
+- src\scene\section\sceneSectionController.ts:2738 — return this.sceneSectionRuntime;
+- src\scene\section\sceneSectionController.ts:2741 — export function rebuildSceneSectionHelpers(this: any,
+- src\scene\section\sceneSectionController.ts:2743 — planes: ResolvedSceneSectionPlane[],
+- src\scene\section\sceneSectionController.ts:2747 — const runtime = this.ensureSceneSectionRuntime();
+- src\scene\section\sceneSectionController.ts:2756 — const helperVisible =
+- src\scene\section\sceneSectionController.ts:2757 — typeof style.sceneSectionHelperVisible === "boolean"
+- src\scene\section\sceneSectionController.ts:2758 — ? style.sceneSectionHelperVisible
+- src\scene\section\sceneSectionController.ts:2760 — const bounds = this.sceneSectionBounds(style, layerTargets, productTargets);
+- src\scene\section\sceneSectionController.ts:2763 — style.sceneSectionActiveAxis === "x" ||
+- src\scene\section\sceneSectionController.ts:2764 — style.sceneSectionActiveAxis === "y" ||
+- src\scene\section\sceneSectionController.ts:2765 — style.sceneSectionActiveAxis === "z"
+- src\scene\section\sceneSectionController.ts:2766 — ? style.sceneSectionActiveAxis
+- src\scene\section\sceneSectionController.ts:2769 — typeof style.sceneSectionActiveFrameId === "string" &&
+- src\scene\section\sceneSectionController.ts:2770 — style.sceneSectionActiveFrameId.trim()
+- src\scene\section\sceneSectionController.ts:2771 — ? style.sceneSectionActiveFrameId
+- src\scene\section\sceneSectionController.ts:2772 — : sceneSectionBuiltInFrameId(activeAxis);
+- src\scene\section\sceneSectionController.ts:2774 — planes.map((plane: ResolvedSceneSectionPlane) => plane.frameId),
+- src\scene\section\sceneSectionController.ts:2776 — const sectionFrames = this
+- src\scene\section\sceneSectionController.ts:2777 — .resolveSceneSectionFrames(style, bounds)
+- src\scene\section\sceneSectionController.ts:2778 — .filter((frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:2781 — const showGroundTrace = sectionFrames.some(
+- src\scene\section\sceneSectionController.ts:2782 — (frame: ResolvedSceneSectionFrame) => frame.groundTraceVisible,
+- src\scene\section\sceneSectionController.ts:2784 — const showAxes = sectionFrames.some(
+- src\scene\section\sceneSectionController.ts:2785 — (frame: ResolvedSceneSectionFrame) => frame.axesVisible,
+- src\scene\section\sceneSectionController.ts:2787 — const frameIntersectionTraces = sectionFrameIntersectionTraces(
+- src\scene\section\sceneSectionController.ts:2789 — sectionFrames,
+- src\scene\section\sceneSectionController.ts:2794 — style.sceneSectionEnabled === true &&
+- src\scene\section\sceneSectionController.ts:2795 — (helperVisible || showGroundTrace || showAxes || showFrameIntersections) &&
+- src\scene\section\sceneSectionController.ts:2799 — const referenceOutlineWidthM = sceneSectionOutlineWidthM(
+- src\scene\section\sceneSectionController.ts:2801 — SCENE_SECTION_MIN_HELPER_SIZE_M,
+- src\scene\section\sceneSectionController.ts:2802 — size.y * SCENE_SECTION_HELPER_PADDING,
+- src\scene\section\sceneSectionController.ts:2805 — SCENE_SECTION_MIN_HELPER_SIZE_M,
+- src\scene\section\sceneSectionController.ts:2806 — size.z * SCENE_SECTION_HELPER_PADDING,
+- src\scene\section\sceneSectionController.ts:2813 — traceGroup.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2814 — traceGroup.userData.sceneSectionIsoIntersectionTrace = true;
+- src\scene\section\sceneSectionController.ts:2817 — trace: SceneSectionFrameIntersectionTrace,
+- src\scene\section\sceneSectionController.ts:2828 — const material = makeSceneSectionIntersectionDashMaterial();
+- src\scene\section\sceneSectionController.ts:2834 — line.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2835 — line.userData.sceneSectionIsoIntersectionTrace = true;
+- src\scene\section\sceneSectionController.ts:2836 — line.userData.sceneSectionIntersectionAxes = trace.axes;
+- src\scene\section\sceneSectionController.ts:2837 — line.userData.sceneSectionFreeAxisIndex = trace.freeAxisIndex;
+- src\scene\section\sceneSectionController.ts:2844 — withSceneSectionHeightSampler((sampleHeight) => {
+- src\scene\section\sceneSectionController.ts:2880 — sectionFrames.find(
+- src\scene\section\sceneSectionController.ts:2881 — (candidate: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:2893 — SCENE_SECTION_MIN_HELPER_SIZE_M,
+- src\scene\section\sceneSectionController.ts:2894 — rawWidth * SCENE_SECTION_HELPER_PADDING,
+- src\scene\section\sceneSectionController.ts:2897 — SCENE_SECTION_MIN_HELPER_SIZE_M,
+- src\scene\section\sceneSectionController.ts:2898 — rawHeight * SCENE_SECTION_HELPER_PADDING,
+- src\scene\section\sceneSectionController.ts:2935 — style.sceneSectionFrameEnabled === true;
+- src\scene\section\sceneSectionController.ts:2936 — const controlHandlesVisible = helperVisible && frameControlsVisible;
+- src\scene\section\sceneSectionController.ts:2942 — controlGroup.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2946 — const outlineGeometry = buildSceneSectionOutlineGeometry(
+- src\scene\section\sceneSectionController.ts:2960 — const outlineMaterial = makeSceneSectionOutlineMaterial(
+- src\scene\section\sceneSectionController.ts:2971 — outline.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2972 — outline.userData.sceneSectionOutline = true;
+- src\scene\section\sceneSectionController.ts:2973 — outline.userData.sceneSectionFrameOutline = frame !== null;
+- src\scene\section\sceneSectionController.ts:2974 — outline.userData.sceneSectionAxis = plane.axis;
+- src\scene\section\sceneSectionController.ts:2975 — outline.userData.sceneSectionFrameId = plane.frameId;
+- src\scene\section\sceneSectionController.ts:2976 — outline.userData.sceneSectionPlaneCoordinateIndex = spec.positionIndex;
+- src\scene\section\sceneSectionController.ts:2977 — outline.userData.sceneSectionPlanePositionM = plane.positionM;
+- src\scene\section\sceneSectionController.ts:2978 — outline.userData.sceneSectionPlaneSignedDistanceM = plane.signedDistanceM;
+- src\scene\section\sceneSectionController.ts:2979 — outline.userData.sceneSectionFrameColor = color;
+- src\scene\section\sceneSectionController.ts:2980 — outline.userData.sceneSectionFrameLineWidthM = outlineWidthM;
+- src\scene\section\sceneSectionController.ts:2981 — outline.userData.sceneSectionFrameBounds = frame
+- src\scene\section\sceneSectionController.ts:3017 — kind: "push-pull" | SceneSectionWindowHandleKind,
+- src\scene\section\sceneSectionController.ts:3030 — group.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3031 — group.userData.sceneSectionPlaneHandle = true;
+- src\scene\section\sceneSectionController.ts:3032 — group.userData.sceneSectionAxis = plane.axis;
+- src\scene\section\sceneSectionController.ts:3033 — group.userData.sceneSectionFrameId = plane.frameId;
+- src\scene\section\sceneSectionController.ts:3034 — group.userData.sceneSectionPlaneHandleKind = kind;
+- src\scene\section\sceneSectionController.ts:3035 — group.userData.sceneSectionHandleVisual = "double-arrow";
+- src\scene\section\sceneSectionController.ts:3036 — group.userData.sceneSectionHandleScale =
+- src\scene\section\sceneSectionController.ts:3040 — const material = makeSceneSectionConeMaterial(color, outlineOpacity);
+- src\scene\section\sceneSectionController.ts:3054 — topCone.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3061 — bottomCone.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3074 — pickMaterial.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3080 — pickProxy.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3081 — pickProxy.userData.sceneSectionPlaneHandle = true;
+- src\scene\section\sceneSectionController.ts:3082 — pickProxy.userData.sceneSectionAxis = plane.axis;
+- src\scene\section\sceneSectionController.ts:3083 — pickProxy.userData.sceneSectionFrameId = plane.frameId;
+- src\scene\section\sceneSectionController.ts:3084 — pickProxy.userData.sceneSectionPlaneHandleKind = kind;
+- src\scene\section\sceneSectionController.ts:3085 — pickProxy.userData.sceneSectionHandleVisual = "double-arrow";
+- src\scene\section\sceneSectionController.ts:3086 — pickProxy.userData.sceneSectionHandleScale =
+- src\scene\section\sceneSectionController.ts:3088 — pickProxy.userData.sceneSectionPickProxy = true;
+- src\scene\section\sceneSectionController.ts:3089 — pickProxy.userData.sceneSectionPickRadius = pickSize * 0.5;
+- src\scene\section\sceneSectionController.ts:3091 — pickProxy.userData.sceneSectionPlaneHandleDirection = direction;
+- src\scene\section\sceneSectionController.ts:3146 — const label = this.createSceneSectionLabel(
+- src\scene\section\sceneSectionController.ts:3173 — const axisATicks = sceneSectionAxisTicks(
+- src\scene\section\sceneSectionController.ts:3177 — sceneSectionAxisTickOffset(frame, tangentA, origin),
+- src\scene\section\sceneSectionController.ts:3179 — const axisBTicks = sceneSectionAxisTicks(
+- src\scene\section\sceneSectionController.ts:3183 — sceneSectionAxisTickOffset(frame, tangentB, origin),
+- src\scene\section\sceneSectionController.ts:3240 — hardenStudioHelperMaterial(axisMaterial);
+- src\scene\section\sceneSectionController.ts:3241 — axisMaterial.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3247 — axisLine.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3248 — axisLine.userData.sceneSectionScaleAxes = true;
+- src\scene\section\sceneSectionController.ts:3249 — axisLine.userData.sceneSectionAxisIntervalM = frame.axisIntervalM;
+- src\scene\section\sceneSectionController.ts:3250 — axisLine.userData.sceneSectionAxisTextScale = frame.axisTextScale;
+- src\scene\section\sceneSectionController.ts:3262 — const axisAHeading = this.createSceneSectionScaleLabel(
+- src\scene\section\sceneSectionController.ts:3272 — makeSceneSectionPlanarTextCameraAware(
+- src\scene\section\sceneSectionController.ts:3279 — const axisBHeading = this.createSceneSectionScaleLabel(
+- src\scene\section\sceneSectionController.ts:3289 — makeSceneSectionPlanarTextCameraAware(
+- src\scene\section\sceneSectionController.ts:3301 — const labelMesh = this.createSceneSectionScaleLabel(
+- src\scene\section\sceneSectionController.ts:3302 — sceneSectionAxisValueLabelForPoint(
+- src\scene\section\sceneSectionController.ts:3312 — makeSceneSectionPlanarTextCameraAware(
+- src\scene\section\sceneSectionController.ts:3324 — const labelMesh = this.createSceneSectionScaleLabel(
+- src\scene\section\sceneSectionController.ts:3325 — sceneSectionAxisValueLabelForPoint(
+- src\scene\section\sceneSectionController.ts:3335 — makeSceneSectionPlanarTextCameraAware(
+- src\scene\section\sceneSectionController.ts:3344 — if (frame && frame.groundTraceVisible && plane.axis !== "z") {
+- src\scene\section\sceneSectionController.ts:3347 — traceGroup.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3352 — withSceneSectionHeightSampler((sampleHeight) => {
+- src\scene\section\sceneSectionController.ts:3354 — this.sceneSectionHelperTransitionSnapshot !== null;
+- src\scene\section\sceneSectionController.ts:3373 — const geometry = buildSceneSectionDashedTraceRibbonGeometry(
+- src\scene\section\sceneSectionController.ts:3375 — frame.groundTraceWidthM,
+- src\scene\section\sceneSectionController.ts:3381 — makeSceneSectionTraceRibbonMaterial(),
+- src\scene\section\sceneSectionController.ts:3384 — mesh.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3385 — mesh.userData.sceneSectionGroundTrace = true;
+- src\scene\section\sceneSectionController.ts:3386 — mesh.userData.sceneSectionGroundTraceWidthM = frame.groundTraceWidthM;
+- src\scene\section\sceneSectionController.ts:3393 — this.addSceneSectionHelperObjectToTransitionSnapshot?.(mesh) === true;
+- src\scene\section\sceneSectionController.ts:3402 — function resolveSceneSectionMaskContext(this: any, style: EditableStyle) {
+- src\scene\section\sceneSectionController.ts:3403 — const planes = this.sceneSectionActivePlanes(style);
+- src\scene\section\sceneSectionController.ts:3404 — const layerTargets = this.sceneSectionLayerIds(style);
+- src\scene\section\sceneSectionController.ts:3405 — const productTargets = this.sceneSectionProductIds(style);
+- src\scene\section\sceneSectionController.ts:3406 — const bounds = this.sceneSectionBounds(style, layerTargets, productTargets);
+- src\scene\section\sceneSectionController.ts:3408 — planes.map((plane: ResolvedSceneSectionPlane) => plane.frameId),
+- src\scene\section\sceneSectionController.ts:3411 — .resolveSceneSectionFrames(style, bounds)
+- src\scene\section\sceneSectionController.ts:3412 — .filter((frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3424 — export function applySceneSectionPlanes(
+- src\scene\section\sceneSectionController.ts:3427 — options?: SceneSectionApplyTransitionFrameOptions,
+- src\scene\section\sceneSectionController.ts:3431 — this.lastSceneSectionStyle = style;
+- src\scene\section\sceneSectionController.ts:3432 — const planes = this.sceneSectionActivePlanes(style);
+- src\scene\section\sceneSectionController.ts:3433 — const clippingPlanes = this.sceneSectionClippingPlanes(planes);
+- src\scene\section\sceneSectionController.ts:3434 — const layerTargets = this.sceneSectionLayerIds(style);
+- src\scene\section\sceneSectionController.ts:3435 — const productTargets = this.sceneSectionProductIds(style);
+- src\scene\section\sceneSectionController.ts:3436 — const bounds = this.sceneSectionBounds(style, layerTargets, productTargets);
+- src\scene\section\sceneSectionController.ts:3440 — planes.map((plane: ResolvedSceneSectionPlane) => plane.frameId),
+- src\scene\section\sceneSectionController.ts:3442 — const sectionFrames = this
+- src\scene\section\sceneSectionController.ts:3443 — .resolveSceneSectionFrames(style, bounds)
+- src\scene\section\sceneSectionController.ts:3444 — .filter((frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3447 — this.sceneSectionClippingActive =
+- src\scene\section\sceneSectionController.ts:3448 — planes.length > 0 || sectionFrames.length > 0;
+- src\scene\section\sceneSectionController.ts:3454 — const allFrameClippingPlanes = sectionFrames.flatMap(
+- src\scene\section\sceneSectionController.ts:3455 — (frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3456 — this.sceneSectionFrameClippingPlanes(frame),
+- src\scene\section\sceneSectionController.ts:3459 — ? resolveSceneSectionMaskContext.call(this, options.maskTransition.fromStyle)
+- src\scene\section\sceneSectionController.ts:3462 — ? resolveSceneSectionMaskContext.call(this, options.maskTransition.toStyle)
+- src\scene\section\sceneSectionController.ts:3469 — const visibility = this.sceneSectionObjectVisibilityForObject(
+- src\scene\section\sceneSectionController.ts:3480 — (plane: ResolvedSceneSectionPlane) =>
+- src\scene\section\sceneSectionController.ts:3485 — const hardPlaneClippingPlanes = this.sceneSectionClippingPlanes(hardPlanes);
+- src\scene\section\sceneSectionController.ts:3486 — const hardFrameClippingPlanes = sectionFrames
+- src\scene\section\sceneSectionController.ts:3488 — (frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3493 — .flatMap((frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3494 — this.sceneSectionFrameClippingPlanes(frame),
+- src\scene\section\sceneSectionController.ts:3503 — visibility: this.sceneSectionObjectVisibilityForObject(
+- src\scene\section\sceneSectionController.ts:3514 — visibility: this.sceneSectionObjectVisibilityForObject(
+- src\scene\section\sceneSectionController.ts:3522 — } satisfies SceneSectionMaskTransition
+- src\scene\section\sceneSectionController.ts:3524 — updateSceneSectionLabelCullState(
+- src\scene\section\sceneSectionController.ts:3538 — this.applySceneSectionMaterial(
+- src\scene\section\sceneSectionController.ts:3543 — sectionFrames,
+- src\scene\section\sceneSectionController.ts:3553 — this.rebuildSceneSectionHelpers(
+- src\scene\section\sceneSectionController.ts:3560 — const helperRebuildMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\section\sceneSectionController.ts:3562 — this.applySceneSectionHelperTransitionOpacity();
+- src\scene\section\sceneSectionController.ts:3563 — const helperOpacityMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\section\sceneSectionController.ts:3581 — let helperObjectCount = 0;
+- src\scene\section\sceneSectionController.ts:3582 — this.sceneSectionRuntime?.group.traverse(() => {
+- src\scene\section\sceneSectionController.ts:3583 — helperObjectCount += 1;
+- src\scene\section\sceneSectionController.ts:3585 — this.lastSceneSectionApplyDebug = {
+- src\scene\section\sceneSectionController.ts:3590 — helperRebuildMs,
+- src\scene\section\sceneSectionController.ts:3591 — helperOpacityMs,
+- src\scene\section\sceneSectionController.ts:3597 — helperObjectCount,
+- src\scene\section\sceneSectionController.ts:3601 — export function reapplySceneSectionPlanes(this: any): void {
+- src\scene\section\sceneSectionController.ts:3602 — if (this.sceneSectionReapplySuspended) return;
+- src\scene\section\sceneSectionController.ts:3603 — this.applySceneSectionPlanes(this.currentSceneSectionStyle());
+- src\scene\section\sceneSectionController.ts:3606 — export function listSceneSectionPlanePickables(this: any): THREE.Object3D[] {
+- src\scene\section\sceneSectionController.ts:3607 — const runtime = this.sceneSectionRuntime;
+- src\scene\section\sceneSectionController.ts:3611 — export function getSceneSectionPlanePosition(this: any, axis: SceneSectionAxis, frameId?: string): THREE.Vector3 | null {
+- src\scene\section\sceneSectionController.ts:3612 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3614 — this.sceneSectionRuntime?.planes.get(targetFrameId) ??
+- src\scene\section\sceneSectionController.ts:3615 — this.sceneSectionRuntime?.planes.get(axis);
+- src\scene\section\sceneSectionController.ts:3619 — export function getSceneSectionPlaneScalar(this: any, axis: SceneSectionAxis, frameId?: string): number | null {
+- src\scene\section\sceneSectionController.ts:3620 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3621 — const plane = this.resolveSceneSectionPlanes(
+- src\scene\section\sceneSectionController.ts:3622 — this.lastSceneSectionStyle,
+- src\scene\section\sceneSectionController.ts:3624 — (candidate: ResolvedSceneSectionPlane) =>
+- src\scene\section\sceneSectionController.ts:3630 — export function getSceneSectionPlaneNormal(this: any, axis: SceneSectionAxis, frameId?: string): THREE.Vector3 | null {
+- src\scene\section\sceneSectionController.ts:3631 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3632 — const plane = this.resolveSceneSectionPlanes(
+- src\scene\section\sceneSectionController.ts:3633 — this.lastSceneSectionStyle,
+- src\scene\section\sceneSectionController.ts:3635 — (candidate: ResolvedSceneSectionPlane) =>
+- src\scene\section\sceneSectionController.ts:3641 — export function getSceneSectionWindowValue(this: any,
+- src\scene\section\sceneSectionController.ts:3642 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:3643 — kind: SceneSectionWindowHandleKind,
+- src\scene\section\sceneSectionController.ts:3646 — const bounds = this.sceneSectionBounds(
+- src\scene\section\sceneSectionController.ts:3647 — this.lastSceneSectionStyle,
+- src\scene\section\sceneSectionController.ts:3648 — this.sceneSectionLayerIds(this.lastSceneSectionStyle),
+- src\scene\section\sceneSectionController.ts:3649 — this.sceneSectionProductIds(this.lastSceneSectionStyle),
+- src\scene\section\sceneSectionController.ts:3651 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3653 — .resolveSceneSectionFrames(
+- src\scene\section\sceneSectionController.ts:3655 — ...this.lastSceneSectionStyle,
+- src\scene\section\sceneSectionController.ts:3656 — sceneSectionActiveAxis: axis,
+- src\scene\section\sceneSectionController.ts:3657 — sceneSectionActiveFrameId: targetFrameId,
+- src\scene\section\sceneSectionController.ts:3658 — sceneSectionFrameEnabled: true,
+- src\scene\section\sceneSectionController.ts:3663 — (candidate: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3674 — export function getSceneSectionWindowNormal(this: any,
+- src\scene\section\sceneSectionController.ts:3675 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:3676 — kind: SceneSectionWindowHandleKind,
+- src\scene\section\sceneSectionController.ts:3679 — const bounds = this.sceneSectionBounds(
+- src\scene\section\sceneSectionController.ts:3680 — this.lastSceneSectionStyle,
+- src\scene\section\sceneSectionController.ts:3681 — this.sceneSectionLayerIds(this.lastSceneSectionStyle),
+- src\scene\section\sceneSectionController.ts:3682 — this.sceneSectionProductIds(this.lastSceneSectionStyle),
+- src\scene\section\sceneSectionController.ts:3684 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3686 — .resolveSceneSectionFrames(
+- src\scene\section\sceneSectionController.ts:3688 — ...this.lastSceneSectionStyle,
+- src\scene\section\sceneSectionController.ts:3689 — sceneSectionActiveAxis: axis,
+- src\scene\section\sceneSectionController.ts:3690 — sceneSectionActiveFrameId: targetFrameId,
+- src\scene\section\sceneSectionController.ts:3691 — sceneSectionFrameEnabled: true,
+- src\scene\section\sceneSectionController.ts:3696 — (candidate: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3706 — export function previewSceneSectionPlane(this: any, axis: SceneSectionAxis, positionM: number, frameId?: string): void {
+- src\scene\section\sceneSectionController.ts:3707 — const style = this.lastSceneSectionStyle;
+- src\scene\section\sceneSectionController.ts:3708 — const planes = style.sceneSectionPlanes ?? {};
+- src\scene\section\sceneSectionController.ts:3709 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3710 — const isBuiltIn = targetFrameId === sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3711 — const frameList = sceneSectionFrameListWithPatch(style, targetFrameId, axis, {
+- src\scene\section\sceneSectionController.ts:3717 — this.applySceneSectionPlanes({
+- src\scene\section\sceneSectionController.ts:3719 — sceneSectionEnabled: true,
+- src\scene\section\sceneSectionController.ts:3720 — sceneSectionActiveAxis: axis,
+- src\scene\section\sceneSectionController.ts:3721 — sceneSectionActiveFrameId: targetFrameId,
+- src\scene\section\sceneSectionController.ts:3722 — sceneSectionFrames: frameList,
+- src\scene\section\sceneSectionController.ts:3723 — sceneSectionPlanes: isBuiltIn
+- src\scene\section\sceneSectionController.ts:3736 — export function previewSceneSectionWindow(this: any,
+- src\scene\section\sceneSectionController.ts:3737 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:3738 — kind: SceneSectionWindowHandleKind,
+- src\scene\section\sceneSectionController.ts:3742 — const style = this.lastSceneSectionStyle;
+- src\scene\section\sceneSectionController.ts:3743 — const frameByAxis = style.sceneSectionFrameByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:3744 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3745 — const currentEntry = sceneSectionResolvedFrameEntries(style).find(
+- src\scene\section\sceneSectionController.ts:3752 — const legacyByAxis = style.sceneSectionWindowByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:3766 — const frameList = sceneSectionFrameListWithPatch(style, targetFrameId, axis, {
+- src\scene\section\sceneSectionController.ts:3769 — const isBuiltIn = targetFrameId === sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3773 — sceneSectionWindowEnabled: true,
+- src\scene\section\sceneSectionController.ts:3774 — sceneSectionWindowActiveAxis: axis,
+- src\scene\section\sceneSectionController.ts:3775 — sceneSectionWindowByAxis: {
+- src\scene\section\sceneSectionController.ts:3787 — this.applySceneSectionPlanes({
+- src\scene\section\sceneSectionController.ts:3789 — sceneSectionEnabled: true,
+- src\scene\section\sceneSectionController.ts:3790 — sceneSectionActiveAxis: axis,
+- src\scene\section\sceneSectionController.ts:3791 — sceneSectionActiveFrameId: targetFrameId,
+- src\scene\section\sceneSectionController.ts:3792 — sceneSectionFrameEnabled: true,
+- src\scene\section\sceneSectionController.ts:3793 — sceneSectionFrames: frameList,
+- src\scene\section\sceneSectionController.ts:3794 — sceneSectionFrameByAxis: isBuiltIn
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:3 — ResolvedSceneSectionFrame,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:4 — ResolvedSceneSectionPlane,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:5 — SceneSectionMaskTransition,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:6 — SceneSectionObjectVisibility,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:11 — interface SceneSectionObjectVisibilityShader {
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:21 — export function setSceneSectionObjectVisibilityUniforms(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:24 — planes: ResolvedSceneSectionPlane[],
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:25 — frames: ResolvedSceneSectionFrame[],
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:26 — visibility: SceneSectionObjectVisibility,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:27 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:40 — ensure<number>("uSceneSectionTransitionEnabled", 0).value = maskTransition
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:43 — ensure<number>("uSceneSectionTransitionProgress", 0).value = clamp01(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:46 — ensure<number>("uSceneSectionObjectVisibilityEnabled", 0).value = enabled
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:49 — ensure<number>("uSceneSectionObjectVisibilityPlaneCount", 0).value = sourceEnabled
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:53 — "uSceneSectionObjectVisibilityNormals",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:60 — "uSceneSectionObjectVisibilityPositions",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:64 — "uSceneSectionObjectVisibilityInvert",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:68 — "uSceneSectionObjectVisibilityPlaneOpacity",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:89 — ensure<number>("uSceneSectionObjectVisibilityFrameCount", 0).value =
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:92 — "uSceneSectionObjectVisibilityFrameAxisA",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:99 — "uSceneSectionObjectVisibilityFrameAxisB",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:106 — "uSceneSectionObjectVisibilityFrameBounds",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:113 — "uSceneSectionObjectVisibilityFrameOpacity",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:154 — ensure<number>("uSceneSectionObjectVisibilityTargetPlaneCount", 0).value =
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:159 — "uSceneSectionObjectVisibilityTargetNormals",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:166 — "uSceneSectionObjectVisibilityTargetPositions",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:170 — "uSceneSectionObjectVisibilityTargetInvert",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:174 — "uSceneSectionObjectVisibilityTargetPlaneOpacity",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:193 — ensure<number>("uSceneSectionObjectVisibilityTargetFrameCount", 0).value =
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:196 — "uSceneSectionObjectVisibilityTargetFrameAxisA",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:203 — "uSceneSectionObjectVisibilityTargetFrameAxisB",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:210 — "uSceneSectionObjectVisibilityTargetFrameBounds",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:217 — "uSceneSectionObjectVisibilityTargetFrameOpacity",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:253 — export function applySceneSectionObjectVisibilityBuiltInMaterial(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:256 — planes: ResolvedSceneSectionPlane[],
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:257 — frames: ResolvedSceneSectionFrame[],
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:258 — visibility: SceneSectionObjectVisibility,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:259 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:261 — material.userData.sceneSectionObjectVisibilityEnabled = enabled;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:262 — material.userData.sceneSectionObjectVisibilityPlanes = planes;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:263 — material.userData.sceneSectionObjectVisibilityFrames = frames;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:264 — material.userData.sceneSectionObjectVisibility = visibility;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:265 — material.userData.sceneSectionObjectVisibilityMaskTransition =
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:268 — if (material.userData.sceneSectionObjectVisibilityPatched !== true) {
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:273 — const patchedShader = shader as SceneSectionObjectVisibilityShader;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:274 — setSceneSectionObjectVisibilityUniforms(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:276 — material.userData.sceneSectionObjectVisibilityEnabled === true,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:277 — (material.userData.sceneSectionObjectVisibilityPlanes ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:278 — []) as ResolvedSceneSectionPlane[],
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:279 — (material.userData.sceneSectionObjectVisibilityFrames ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:280 — []) as ResolvedSceneSectionFrame[],
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:282 — .sceneSectionObjectVisibility as SceneSectionObjectVisibility) ?? {
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:289 — .sceneSectionObjectVisibilityMaskTransition as SceneSectionMaskTransition | null) ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:299 — "varying vec3 vSceneSectionObjectVisibilityWorldPosition;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:301 — "  vSceneSectionObjectVisibilityWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:307 — "uniform int uSceneSectionObjectVisibilityEnabled;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:308 — "uniform int uSceneSectionTransitionEnabled;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:309 — "uniform float uSceneSectionTransitionProgress;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:310 — "uniform int uSceneSectionObjectVisibilityPlaneCount;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:311 — "uniform vec3 uSceneSectionObjectVisibilityNormals[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:312 — "uniform float uSceneSectionObjectVisibilityPositions[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:313 — "uniform int uSceneSectionObjectVisibilityInvert[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:314 — "uniform float uSceneSectionObjectVisibilityPlaneOpacity[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:315 — "uniform int uSceneSectionObjectVisibilityFrameCount;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:316 — "uniform vec3 uSceneSectionObjectVisibilityFrameAxisA[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:317 — "uniform vec3 uSceneSectionObjectVisibilityFrameAxisB[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:318 — "uniform vec4 uSceneSectionObjectVisibilityFrameBounds[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:319 — "uniform float uSceneSectionObjectVisibilityFrameOpacity[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:320 — "uniform int uSceneSectionObjectVisibilityTargetPlaneCount;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:321 — "uniform vec3 uSceneSectionObjectVisibilityTargetNormals[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:322 — "uniform float uSceneSectionObjectVisibilityTargetPositions[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:323 — "uniform int uSceneSectionObjectVisibilityTargetInvert[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:324 — "uniform float uSceneSectionObjectVisibilityTargetPlaneOpacity[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:325 — "uniform int uSceneSectionObjectVisibilityTargetFrameCount;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:326 — "uniform vec3 uSceneSectionObjectVisibilityTargetFrameAxisA[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:327 — "uniform vec3 uSceneSectionObjectVisibilityTargetFrameAxisB[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:328 — "uniform vec4 uSceneSectionObjectVisibilityTargetFrameBounds[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:329 — "uniform float uSceneSectionObjectVisibilityTargetFrameOpacity[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:330 — "varying vec3 vSceneSectionObjectVisibilityWorldPosition;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:331 — "float sceneSectionObjectVisibilityTargetAlpha(vec3 position) {",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:334 — "    if (i >= uSceneSectionObjectVisibilityTargetPlaneCount) break;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:335 — "    vec3 normal = normalize(uSceneSectionObjectVisibilityTargetNormals[i]);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:336 — "    float distance = dot(position, normal) - uSceneSectionObjectVisibilityTargetPositions[i];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:337 — "    if (uSceneSectionObjectVisibilityTargetInvert[i] == 1) distance = -distance;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:338 — "    if (distance > 0.0) alpha = min(alpha, clamp(uSceneSectionObjectVisibilityTargetPlaneOpacity[i], 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:341 — "    if (i >= uSceneSectionObjectVisibilityTargetFrameCount) break;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:342 — "    vec3 axisA = normalize(uSceneSectionObjectVisibilityTargetFrameAxisA[i]);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:343 — "    vec3 axisB = normalize(uSceneSectionObjectVisibilityTargetFrameAxisB[i]);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:344 — "    vec4 bounds = uSceneSectionObjectVisibilityTargetFrameBounds[i];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:348 — "    if (!inside) alpha = min(alpha, clamp(uSceneSectionObjectVisibilityTargetFrameOpacity[i], 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:352 — "float sceneSectionObjectVisibilityAlpha(vec3 position) {",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:354 — "  if (uSceneSectionObjectVisibilityEnabled != 0) {",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:356 — "      if (i >= uSceneSectionObjectVisibilityPlaneCount) break;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:357 — "      vec3 normal = normalize(uSceneSectionObjectVisibilityNormals[i]);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:358 — "      float distance = dot(position, normal) - uSceneSectionObjectVisibilityPositions[i];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:359 — "      if (uSceneSectionObjectVisibilityInvert[i] == 1) distance = -distance;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:360 — "      if (distance > 0.0) alpha = min(alpha, clamp(uSceneSectionObjectVisibilityPlaneOpacity[i], 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:363 — "      if (i >= uSceneSectionObjectVisibilityFrameCount) break;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:364 — "      vec3 axisA = normalize(uSceneSectionObjectVisibilityFrameAxisA[i]);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:365 — "      vec3 axisB = normalize(uSceneSectionObjectVisibilityFrameAxisB[i]);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:366 — "      vec4 bounds = uSceneSectionObjectVisibilityFrameBounds[i];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:370 — "      if (!inside) alpha = min(alpha, clamp(uSceneSectionObjectVisibilityFrameOpacity[i], 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:374 — "  if (uSceneSectionTransitionEnabled == 0) return sourceAlpha;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:375 — "  float targetAlpha = sceneSectionObjectVisibilityTargetAlpha(position);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:376 — "  return mix(sourceAlpha, targetAlpha, clamp(uSceneSectionTransitionProgress, 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:382 — "float sceneSectionObjectVisibilityLayerAlpha = sceneSectionObjectVisibilityAlpha(vSceneSectionObjectVisibilityWorldPosition);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:383 — "diffuseColor.a *= sceneSectionObjectVisibilityLayerAlpha;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:400 — material.userData.sceneSectionObjectVisibilityShader = patchedShader;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:404 — material.userData.sceneSectionObjectVisibilityPatched = true;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:408 — const shader = material.userData.sceneSectionObjectVisibilityShader as
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:409 — | SceneSectionObjectVisibilityShader
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:412 — setSceneSectionObjectVisibilityUniforms(
+- src\scene\styles\applyLayerStyle.ts:190 — this.sceneSectionStyleTween = null;
+- src\scene\styles\applyLayerStyle.ts:191 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\styles\applyLayerStyle.ts:192 — this.applySceneSectionPlanes(style);
+- src\scene\styles\applyLayerStyle.ts:194 — this.reapplySceneSectionPlanes();
+- src\scene\styles\seismicBrowserStyle.ts:355 — skipSceneSectionClipping: true,
+- src\scene\transitions\layerTweenRuntime.ts:126 — const sceneSectionStyleTweenActiveBefore = !!this.sceneSectionStyleTween;
+- src\scene\transitions\layerTweenRuntime.ts:127 — const helperSnapshotActiveBefore =
+- src\scene\transitions\layerTweenRuntime.ts:128 — !!this.sceneSectionHelperTransitionSnapshot;
+- src\scene\transitions\layerTweenRuntime.ts:134 — !this.sceneSectionStyleTween &&
+- src\scene\transitions\layerTweenRuntime.ts:135 — !this.sceneSectionHelperTransitionSnapshot &&
+- src\scene\transitions\layerTweenRuntime.ts:142 — sceneSectionMs: 0,
+- src\scene\transitions\layerTweenRuntime.ts:143 — sceneSectionApply: null,
+- src\scene\transitions\layerTweenRuntime.ts:148 — helperSnapshotMs: 0,
+- src\scene\transitions\layerTweenRuntime.ts:151 — sceneSectionApplyMode: "none",
+- src\scene\transitions\layerTweenRuntime.ts:158 — sceneSectionStyleTweenActiveBefore: false,
+- src\scene\transitions\layerTweenRuntime.ts:159 — helperSnapshotActiveBefore: false,
+- src\scene\transitions\layerTweenRuntime.ts:165 — let sceneSectionApplyMode:
+- src\scene\transitions\layerTweenRuntime.ts:169 — | "helper-opacity-only" = "none";
+- src\scene\transitions\layerTweenRuntime.ts:170 — let sceneSectionApplyDebug = null;
+- src\scene\transitions\layerTweenRuntime.ts:171 — if (this.sceneSectionStyleTween) {
+- src\scene\transitions\layerTweenRuntime.ts:172 — const tween = this.sceneSectionStyleTween;
+- src\scene\transitions\layerTweenRuntime.ts:181 — : this.interpolatedSceneSectionStyle(
+- src\scene\transitions\layerTweenRuntime.ts:188 — ? this.sceneSectionMaskTransitionForTween(tween, eased)
+- src\scene\transitions\layerTweenRuntime.ts:190 — this.sceneSectionHelperTransitionOpacity = done
+- src\scene\transitions\layerTweenRuntime.ts:192 — : this.sceneSectionHelperOpacityForTween(tween, eased);
+- src\scene\transitions\layerTweenRuntime.ts:195 — this.applySceneSectionPlanes(style, {
+- src\scene\transitions\layerTweenRuntime.ts:199 — sceneSectionApplyDebug = this.lastSceneSectionApplyDebug ?? null;
+- src\scene\transitions\layerTweenRuntime.ts:200 — sceneSectionApplyMode = "transition-frame";
+- src\scene\transitions\layerTweenRuntime.ts:204 — this.applySceneSectionPlanes(style);
+- src\scene\transitions\layerTweenRuntime.ts:205 — sceneSectionApplyDebug = this.lastSceneSectionApplyDebug ?? null;
+- src\scene\transitions\layerTweenRuntime.ts:206 — sceneSectionApplyMode = "full";
+- src\scene\transitions\layerTweenRuntime.ts:210 — this.sceneSectionStyleTween = null;
+- src\scene\transitions\layerTweenRuntime.ts:211 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\transitions\layerTweenRuntime.ts:214 — const sceneSectionMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\transitions\layerTweenRuntime.ts:290 — if (this.sceneSectionHelperTransitionSnapshot) {
+- src\scene\transitions\layerTweenRuntime.ts:291 — const snapshot = this.sceneSectionHelperTransitionSnapshot;
+- src\scene\transitions\layerTweenRuntime.ts:303 — if (done) this.removeSceneSectionHelperTransitionSnapshot();
+- src\scene\transitions\layerTweenRuntime.ts:305 — const helperSnapshotMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\transitions\layerTweenRuntime.ts:315 — sceneSectionMs,
+- src\scene\transitions\layerTweenRuntime.ts:316 — sceneSectionApply: sceneSectionApplyDebug,
+- src\scene\transitions\layerTweenRuntime.ts:321 — helperSnapshotMs,
+- src\scene\transitions\layerTweenRuntime.ts:324 — sceneSectionApplyMode,
+- src\scene\transitions\layerTweenRuntime.ts:331 — sceneSectionStyleTweenActiveBefore,
+- src\scene\transitions\layerTweenRuntime.ts:332 — helperSnapshotActiveBefore,
+- src\scene\transitions\layerTweenRuntime.ts:340 — !this.sceneSectionStyleTween &&
+- src\scene\transitions\layerTweenRuntime.ts:341 — !this.sceneSectionHelperTransitionSnapshot &&
+- src\scene\transitions\productFamilyRegistry.ts:80 — return "scene-section-helpers";
+- src\scene\transitions\productFamilyRegistry.ts:242 — export function sceneSectionHelperDecision(input: {
+- src\scene\transitions\productFamilyRegistry.ts:252 — family: "scene-section-helpers",
+- src\scene\transitions\productFamilyRegistry.ts:253 — policy: "translate-section-helpers",
+- src\scene\transitions\productFamilyRegistry.ts:255 — stateSource: "scene-section-helper",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:10 — sceneSectionHelperDecision,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:23 — sceneSectionDiscreteStyleChanged,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:24 — sceneSectionTransitionStyleChanged,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:83 — "sceneSectionEnabled",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:84 — "sceneSectionMode",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:85 — "sceneSectionTargetScope",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:86 — "sceneSectionActiveAxis",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:87 — "sceneSectionWindowEnabled",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:88 — "sceneSectionWindowActiveAxis",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:89 — "sceneSectionFrameEnabled",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:90 — "sceneSectionActiveFrameId",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:91 — "sceneSectionGroundTraceVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:92 — "sceneSectionAxesVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:97 — "atmosphereBoundsHelperVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:101 — "sceneSectionPlanes",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:102 — "sceneSectionWindowByAxis",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:103 — "sceneSectionFrames",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:104 — "sceneSectionFrameByAxis",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:105 — "sceneSectionObjectVisibilityByAxis",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:106 — "sceneSectionObjectVisibilityByFrameId",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:177 — function sceneSectionTransitionActiveForStyle(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:180 — return style.sceneSectionEnabled === true;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:183 — function sceneSectionBuiltInFrameEntry(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:187 — return Array.isArray(style.sceneSectionFrames)
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:188 — ? style.sceneSectionFrames.find((entry) => entry?.id === `axis:${axis}`)
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:192 — function sceneSectionFrameState(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:196 — const entry = sceneSectionBuiltInFrameEntry(style, axis);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:198 — ...(style.sceneSectionFrameByAxis?.[axis] ?? {}),
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:203 — function sceneSectionPlaneShown(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:207 — const entry = sceneSectionBuiltInFrameEntry(style, axis);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:210 — ...(style.sceneSectionPlanes?.[axis] ?? {}),
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:215 — function sceneSectionAnyFrameBoolean(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:217 — key: "groundTraceVisible" | "axesVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:221 — if (!sceneSectionPlaneShown(style, axis)) return false;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:222 — const frame = sceneSectionFrameState(style, axis);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:228 — function sceneSectionDerivedEntities(input: {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:237 — const sectionEnabled = input.style.sceneSectionEnabled === true;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:239 — sectionEnabled && input.style.sceneSectionFrameEnabled === true;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:240 — const groundTraceVisible =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:242 — sceneSectionAnyFrameBoolean(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:244 — "groundTraceVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:245 — input.style.sceneSectionGroundTraceVisible !== false,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:249 — sceneSectionAnyFrameBoolean(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:252 — input.style.sceneSectionAxesVisible !== false,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:285 — entityKey: `layer:${input.layerId}:derived:scene-section-helpers`,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:286 — representationKey: "derived:scene-section-helper",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:303 — presenceState: derivedPresence(groundTraceVisible),
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:380 — this.sceneSectionStyleTween = null;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:381 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:461 — derivedEntities: sceneSectionDerivedEntities({
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:508 — derivedEntities: sceneSectionDerivedEntities({
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:614 — const fromSceneSectionStyle = effectiveStyle(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:619 — const targetSceneSectionStyle = effectiveStyle(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:624 — const sceneSectionStyleChanged = sceneSectionTransitionStyleChanged(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:625 — fromSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:626 — targetSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:628 — const sceneSectionDiscreteChanged =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:629 — sceneSectionStyleChanged &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:630 — sceneSectionDiscreteStyleChanged(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:631 — fromSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:632 — targetSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:634 — const targetSceneSectionTransitionActive =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:635 — sceneSectionTransitionActiveForStyle(targetSceneSectionStyle);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:637 — sceneSectionStyleChanged &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:639 — targetSceneSectionTransitionActive
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:641 — this.sceneSectionStyleTween = {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:642 — fromStyle: fromSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:643 — toStyle: targetSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:647 — discreteChanged: sceneSectionDiscreteChanged,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:648 — maskMode: sceneSectionDiscreteChanged ? "dual-mask" : "interpolated",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:650 — this.sceneSectionHelperTransitionOpacity =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:651 — this.sceneSectionHelperOpacityForTween(this.sceneSectionStyleTween, 0);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:653 — sceneSectionDiscreteChanged &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:654 — this.sceneSectionHelperSnapshotAllowedForTween?.(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:655 — this.sceneSectionStyleTween,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:658 — this.beginSceneSectionHelperTransitionSnapshot?.(now, duration, easing);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:660 — } else if (sceneSectionStyleChanged && !targetSceneSectionTransitionActive) {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:661 — this.sceneSectionStyleTween = null;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:662 — this.sceneSectionHelperTransitionOpacity = 0;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:663 — this.applySceneSectionPlanes(targetSceneSectionStyle);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:665 — if (sceneSectionStyleChanged) {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:667 — sceneSectionHelperDecision({
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:669 — sourceVisible: fromSceneSectionStyle.sceneSectionEnabled === true,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:670 — targetVisible: targetSceneSectionStyle.sceneSectionEnabled === true,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:671 — sourceOpacity: fromSceneSectionStyle.sceneSectionEnabled === true ? 1 : 0,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:673 — targetSceneSectionStyle.sceneSectionEnabled === true ? 1 : 0,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:678 — fromSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:679 — targetSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:685 — this.sceneSectionReapplySuspended = true;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:716 — const shouldCrossfadeSceneSection =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:719 — sceneSectionDiscreteChanged &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:720 — targetSceneSectionTransitionActive &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:729 — !shouldCrossfadeSceneSection &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:745 — shouldCrossfadeSceneSection
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:751 — shouldCrossfadeSceneSection
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:866 — this.sceneSectionReapplySuspended = false;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:868 — if (this.sceneSectionStyleTween?.maskMode === "dual-mask") {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:869 — this.applySceneSectionPlanes(this.sceneSectionStyleTween.toStyle, {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:870 — maskTransition: this.sceneSectionMaskTransitionForTween(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:871 — this.sceneSectionStyleTween,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:876 — this.reapplySceneSectionPlanes();
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:878 — if (this.sceneSectionStyleTween?.discreteChanged) {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:879 — this.sceneSectionStyleTween.appliedDiscreteTarget = true;
+- src\scene\transitions\transitionStyles.ts:6 — SceneSectionFrameState,
+- src\scene\transitions\transitionStyles.ts:151 — | "scene-section-helpers";
+- src\scene\transitions\transitionStyles.ts:160 — | "translate-section-helpers"
+- src\scene\transitions\transitionStyles.ts:169 — stateSource: "loaded-layer" | "authored-layer" | "scene-section-helper";
+- src\scene\transitions\transitionStyles.ts:204 — export interface SceneSectionStyleTween {
+- src\scene\transitions\transitionStyles.ts:380 — "sceneSectionEnabled",
+- src\scene\transitions\transitionStyles.ts:381 — "sceneSectionMode",
+- src\scene\transitions\transitionStyles.ts:382 — "sceneSectionTargetScope",
+- src\scene\transitions\transitionStyles.ts:383 — "sceneSectionActiveAxis",
+- src\scene\transitions\transitionStyles.ts:384 — "sceneSectionPlanes",
+- src\scene\transitions\transitionStyles.ts:385 — "sceneSectionWindowEnabled",
+- src\scene\transitions\transitionStyles.ts:386 — "sceneSectionWindowActiveAxis",
+- src\scene\transitions\transitionStyles.ts:387 — "sceneSectionWindowByAxis",
+- src\scene\transitions\transitionStyles.ts:388 — "sceneSectionFrameEnabled",
+- src\scene\transitions\transitionStyles.ts:389 — "sceneSectionActiveFrameId",
+- src\scene\transitions\transitionStyles.ts:390 — "sceneSectionFrames",
+- src\scene\transitions\transitionStyles.ts:391 — "sceneSectionFrameByAxis",
+- src\scene\transitions\transitionStyles.ts:392 — "sceneSectionObjectVisibilityByAxis",
+- src\scene\transitions\transitionStyles.ts:393 — "sceneSectionObjectVisibilityByFrameId",
+- src\scene\transitions\transitionStyles.ts:394 — "sceneSectionTargetLayerIds",
+- src\scene\transitions\transitionStyles.ts:395 — "sceneSectionTargetProductIds",
+- src\scene\transitions\transitionStyles.ts:396 — "sceneSectionHelperVisible",
+- src\scene\transitions\transitionStyles.ts:397 — "sceneSectionGroundTraceVisible",
+- src\scene\transitions\transitionStyles.ts:398 — "sceneSectionAxesVisible",
+- src\scene\transitions\transitionStyles.ts:399 — "sceneSectionAxisIntervalM",
+- src\scene\transitions\transitionStyles.ts:400 — "sceneSectionAxisTextScale",
+- src\scene\transitions\transitionStyles.ts:412 — function sceneSectionFrameAlignmentSignature(
+- src\scene\transitions\transitionStyles.ts:413 — frame: Partial<SceneSectionFrameState>,
+- src\scene\transitions\transitionStyles.ts:418 — function sceneSectionFrameDatumSignature(
+- src\scene\transitions\transitionStyles.ts:419 — frame: Partial<SceneSectionFrameState>,
+- src\scene\transitions\transitionStyles.ts:426 — function finiteSceneSectionFrameNumber(value: unknown): number | null {
+- src\scene\transitions\transitionStyles.ts:430 — function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
+- src\scene\transitions\transitionStyles.ts:437 — groundTraceVisible: boolean | null;
+- src\scene\transitions\transitionStyles.ts:447 — const planes = style.sceneSectionPlanes ?? {};
+- src\scene\transitions\transitionStyles.ts:448 — const frames = style.sceneSectionFrameByAxis ?? {};
+- src\scene\transitions\transitionStyles.ts:449 — const explicit = Array.isArray(style.sceneSectionFrames)
+- src\scene\transitions\transitionStyles.ts:450 — ? style.sceneSectionFrames
+- src\scene\transitions\transitionStyles.ts:464 — groundTraceVisible: boolean | null;
+- src\scene\transitions\transitionStyles.ts:479 — const axisDatum = sceneSectionFrameDatumSignature(frame);
+- src\scene\transitions\transitionStyles.ts:491 — groundTraceVisible:
+- src\scene\transitions\transitionStyles.ts:492 — typeof frame.groundTraceVisible === "boolean"
+- src\scene\transitions\transitionStyles.ts:493 — ? frame.groundTraceVisible
+- src\scene\transitions\transitionStyles.ts:503 — axisAlignment: sceneSectionFrameAlignmentSignature(frame),
+- src\scene\transitions\transitionStyles.ts:507 — ? finiteSceneSectionFrameNumber(frame.axisDatumOriginEastingM)
+- src\scene\transitions\transitionStyles.ts:511 — ? finiteSceneSectionFrameNumber(frame.axisDatumOriginNorthingM)
+- src\scene\transitions\transitionStyles.ts:515 — ? finiteSceneSectionFrameNumber(frame.axisDatumLatLonDecimals) ?? 3
+- src\scene\transitions\transitionStyles.ts:530 — const axisDatum = sceneSectionFrameDatumSignature(frame);
+- src\scene\transitions\transitionStyles.ts:545 — groundTraceVisible:
+- src\scene\transitions\transitionStyles.ts:546 — typeof frame.groundTraceVisible === "boolean"
+- src\scene\transitions\transitionStyles.ts:547 — ? frame.groundTraceVisible
+- src\scene\transitions\transitionStyles.ts:557 — axisAlignment: sceneSectionFrameAlignmentSignature(frame),
+- src\scene\transitions\transitionStyles.ts:561 — ? finiteSceneSectionFrameNumber(frame.axisDatumOriginEastingM)
+- src\scene\transitions\transitionStyles.ts:565 — ? finiteSceneSectionFrameNumber(frame.axisDatumOriginNorthingM)
+- src\scene\transitions\transitionStyles.ts:569 — ? finiteSceneSectionFrameNumber(frame.axisDatumLatLonDecimals) ?? 3
+- src\scene\transitions\transitionStyles.ts:576 — export function sceneSectionDiscreteSignature(style: EditableStyle): string {
+- src\scene\transitions\transitionStyles.ts:578 — enabled: style.sceneSectionEnabled === true,
+- src\scene\transitions\transitionStyles.ts:579 — mode: style.sceneSectionMode ?? null,
+- src\scene\transitions\transitionStyles.ts:580 — targetScope: style.sceneSectionTargetScope ?? null,
+- src\scene\transitions\transitionStyles.ts:581 — windowEnabled: style.sceneSectionWindowEnabled === true,
+- src\scene\transitions\transitionStyles.ts:582 — windowActiveAxis: style.sceneSectionWindowActiveAxis ?? null,
+- src\scene\transitions\transitionStyles.ts:583 — frameEnabled: style.sceneSectionFrameEnabled === true,
+- src\scene\transitions\transitionStyles.ts:584 — frames: sceneSectionFrameDiscreteSignature(style),
+- src\scene\transitions\transitionStyles.ts:585 — targetLayerIds: style.sceneSectionTargetLayerIds ?? [],
+- src\scene\transitions\transitionStyles.ts:586 — targetProductIds: style.sceneSectionTargetProductIds ?? [],
+- src\scene\transitions\transitionStyles.ts:587 — groundTraceVisible: style.sceneSectionGroundTraceVisible === true,
+- src\scene\transitions\transitionStyles.ts:591 — export function sceneSectionTransitionStyleChanged(
+- src\scene\transitions\transitionStyles.ts:602 — export function sceneSectionDiscreteStyleChanged(
+- src\scene\transitions\transitionStyles.ts:607 — sceneSectionDiscreteSignature(fromStyle) !==
+- src\scene\transitions\transitionStyles.ts:608 — sceneSectionDiscreteSignature(toStyle)
+- src\scene\workingArea\workingAreaFocusController.ts:42 — helperVisible: boolean;
+- src\scene\workingArea\workingAreaFocusController.ts:143 — helperVisible: style.workingAreaFocusHelperVisible !== false,
+- src\scene\workingArea\workingAreaFocusController.ts:205 — line.userData.workingAreaFocusHelper = true;
+- src\scene\workingArea\workingAreaFocusController.ts:209 — group.userData.workingAreaFocusHelper = true;
+- src\scene\workingArea\workingAreaFocusController.ts:216 — export function rebuildWorkingAreaFocusHelperImpl(this: any, state: WorkingAreaFocusState): void {
+- src\scene\workingArea\workingAreaFocusController.ts:219 — this.editorMode && state.enabled && state.helperVisible;
+- src\scene\workingArea\workingAreaFocusController.ts:245 — if (material.userData?.workingAreaFocusHelper === true) return;
+- src\scene\workingArea\workingAreaFocusController.ts:295 — this.rebuildWorkingAreaFocusHelper(state);
+- src\scene\workingArea\workingAreaFocusController.ts:362 — a.helperVisible === b.helperVisible &&
+- src\scene\workingArea\workingAreaFocusController.ts:410 — helperVisible: boolean;
+- src\scene\workingArea\workingAreaFocusController.ts:411 — helperRenderable: boolean;
+- src\scene\workingArea\workingAreaFocusController.ts:424 — helperVisible: state.helperVisible,
+- src\scene\workingArea\workingAreaFocusController.ts:425 — helperRenderable: this.workingAreaFocusRuntime?.group.visible === true,
+- src\ui\SceneLabels.tsx:399 — sceneSectionLabelHidden?: boolean;
+- src\ui\SceneLabels.tsx:406 — if (data.sceneSectionLabelHidden === true) return;
+- src\ui\SceneSectionLegend.tsx:22 — SceneSectionFrameEntry,
+- src\ui\SceneSectionLegend.tsx:23 — SceneSectionFrameState,
+- src\ui\SceneSectionLegend.tsx:24 — SceneSectionPlaneState,
+- src\ui\SceneSectionLegend.tsx:36 — type SceneSectionLegendAxis = (typeof SCENE_SECTION_AXES)[number];
+- src\ui\SceneSectionLegend.tsx:37 — type LegendToggleKind = "flip" | "controls" | "groundTrace" | "axes";
+- src\ui\SceneSectionLegend.tsx:78 — frame: SceneSectionFrameState,
+- src\ui\SceneSectionLegend.tsx:79 — key: keyof SceneSectionFrameState,
+- src\ui\SceneSectionLegend.tsx:88 — axis: SceneSectionLegendAxis,
+- src\ui\SceneSectionLegend.tsx:145 — if (kind === "groundTrace") {
+- src\ui\SceneSectionLegend.tsx:181 — function builtInFrameId(axis: SceneSectionLegendAxis): string {
+- src\ui\SceneSectionLegend.tsx:185 — function builtInFrameLabel(axis: SceneSectionLegendAxis): string {
+- src\ui\SceneSectionLegend.tsx:191 — axis: SceneSectionLegendAxis,
+- src\ui\SceneSectionLegend.tsx:192 — planePatch: Partial<SceneSectionPlaneState> = {},
+- src\ui\SceneSectionLegend.tsx:193 — framePatch: Partial<SceneSectionFrameState> = {},
+- src\ui\SceneSectionLegend.tsx:194 — ): SceneSectionFrameEntry[] {
+- src\ui\SceneSectionLegend.tsx:195 — const explicit = Array.isArray(style.sceneSectionFrames)
+- src\ui\SceneSectionLegend.tsx:196 — ? style.sceneSectionFrames
+- src\ui\SceneSectionLegend.tsx:208 — ...(style.sceneSectionPlanes?.[entryAxis] ?? {}),
+- src\ui\SceneSectionLegend.tsx:212 — ...(style.sceneSectionFrameByAxis?.[entryAxis] ?? {}),
+- src\ui\SceneSectionLegend.tsx:237 — function axisModel(style: EditableStyle, axis: SceneSectionLegendAxis) {
+- src\ui\SceneSectionLegend.tsx:238 — const entry = Array.isArray(style.sceneSectionFrames)
+- src\ui\SceneSectionLegend.tsx:239 — ? style.sceneSectionFrames.find((candidate) => candidate?.id === builtInFrameId(axis))
+- src\ui\SceneSectionLegend.tsx:243 — ...(style.sceneSectionPlanes?.[axis] ?? {}),
+- src\ui\SceneSectionLegend.tsx:246 — ...(style.sceneSectionFrameByAxis?.[axis] ?? {}),
+- src\ui\SceneSectionLegend.tsx:254 — : styleBoolean(style, "sceneSectionHelperVisible", true);
+- src\ui\SceneSectionLegend.tsx:265 — groundTraceVisible: frameBoolean(
+- src\ui\SceneSectionLegend.tsx:267 — "groundTraceVisible",
+- src\ui\SceneSectionLegend.tsx:268 — styleBoolean(style, "sceneSectionGroundTraceVisible", true),
+- src\ui\SceneSectionLegend.tsx:273 — styleBoolean(style, "sceneSectionAxesVisible", true),
+- src\ui\SceneSectionLegend.tsx:278 — export function SceneSectionLegend({
+- src\ui\SceneSectionLegend.tsx:325 — if (style.sceneSectionEnabled !== true) return null;
+- src\ui\SceneSectionLegend.tsx:326 — if (!styleBoolean(style, "sceneSectionLegendVisible", true)) return null;
+- src\ui\SceneSectionLegend.tsx:342 — axis: SceneSectionLegendAxis,
+- src\ui\SceneSectionLegend.tsx:343 — planePatch: Partial<SceneSectionPlaneState>,
+- src\ui\SceneSectionLegend.tsx:346 — ...(style.sceneSectionPlanes?.[axis] ?? {}),
+- src\ui\SceneSectionLegend.tsx:350 — sceneSectionEnabled: true,
+- src\ui\SceneSectionLegend.tsx:351 — sceneSectionMode: "cutaway",
+- src\ui\SceneSectionLegend.tsx:352 — sceneSectionActiveAxis: axis,
+- src\ui\SceneSectionLegend.tsx:353 — sceneSectionActiveFrameId: builtInFrameId(axis),
+- src\ui\SceneSectionLegend.tsx:354 — sceneSectionPlanes: {
+- src\ui\SceneSectionLegend.tsx:355 — ...(style.sceneSectionPlanes ?? {}),
+- src\ui\SceneSectionLegend.tsx:358 — sceneSectionFrames: builtInFrameEntries(style, axis, planePatch),
+- src\ui\SceneSectionLegend.tsx:362 — axis: SceneSectionLegendAxis,
+- src\ui\SceneSectionLegend.tsx:363 — framePatch: Partial<SceneSectionFrameState>,
+- src\ui\SceneSectionLegend.tsx:366 — ...(style.sceneSectionFrameByAxis?.[axis] ?? {}),
+- src\ui\SceneSectionLegend.tsx:370 — sceneSectionEnabled: true,
+- src\ui\SceneSectionLegend.tsx:371 — sceneSectionMode: "cutaway",
+- src\ui\SceneSectionLegend.tsx:372 — sceneSectionActiveAxis: axis,
+- src\ui\SceneSectionLegend.tsx:373 — sceneSectionActiveFrameId: builtInFrameId(axis),
+- src\ui\SceneSectionLegend.tsx:374 — sceneSectionFrameEnabled: true,
+- src\ui\SceneSectionLegend.tsx:375 — sceneSectionFrameByAxis: {
+- src\ui\SceneSectionLegend.tsx:376 — ...(style.sceneSectionFrameByAxis ?? {}),
+- src\ui\SceneSectionLegend.tsx:379 — sceneSectionFrames: builtInFrameEntries(style, axis, {}, framePatch),
+- src\ui\SceneSectionLegend.tsx:465 — aria-pressed={model.groundTraceVisible}
+- src\ui\SceneSectionLegend.tsx:471 — groundTraceVisible: !model.groundTraceVisible,
+- src\ui\SceneSectionLegend.tsx:476 — <LegendToggleIcon kind="groundTrace" />
+- src\editor\EditorChrome.tsx:22 — import { SceneSectionLegend } from "../ui/SceneSectionLegend";
+- src\editor\EditorChrome.tsx:160 — const sceneSectionStyle = styleFor(UTAH_FORGE_SCENE_SECTION_LAYER_ID);
+- src\editor\EditorChrome.tsx:183 — sceneSectionStyle.sceneSectionEnabled === true &&
+- src\editor\EditorChrome.tsx:184 — styleBoolean(sceneSectionStyle, "sceneSectionLegendVisible", true),
+- src\editor\EditorChrome.tsx:269 — <SceneSectionLegend />
+- src\editor\EditorChrome.tsx:515 — return <SceneSectionLegend stacked pageOverride={pageOverride} />;
+- src\editor\EditorContext.tsx:589 — // ---- Sub Master helpers (DEC-079) ----
+- src\editor\EditorContext.tsx:2980 — sceneHandle.setSceneSectionPlaneCommitHandler((axis, positionM, frameId) => {
+- src\editor\EditorContext.tsx:2994 — const currentPlanes = currentStyle.sceneSectionPlanes ?? {};
+- src\editor\EditorContext.tsx:2997 — const currentFrames = Array.isArray(currentStyle.sceneSectionFrames)
+- src\editor\EditorContext.tsx:2998 — ? currentStyle.sceneSectionFrames
+- src\editor\EditorContext.tsx:3003 — plane: currentStyle.sceneSectionPlanes?.[entryAxis] ?? {},
+- src\editor\EditorContext.tsx:3004 — frame: currentStyle.sceneSectionFrameByAxis?.[entryAxis] ?? {},
+- src\editor\EditorContext.tsx:3020 — sceneSectionEnabled: true,
+- src\editor\EditorContext.tsx:3021 — sceneSectionActiveAxis: axis,
+- src\editor\EditorContext.tsx:3022 — sceneSectionActiveFrameId: targetFrameId,
+- src\editor\EditorContext.tsx:3023 — sceneSectionFrames: nextFrames,
+- src\editor\EditorContext.tsx:3024 — sceneSectionPlanes: isBuiltIn
+- src\editor\EditorContext.tsx:3059 — return () => sceneHandle.setSceneSectionPlaneCommitHandler(null);
+- src\editor\EditorContext.tsx:3063 — sceneHandle.setSceneSectionWindowCommitHandler((axis, kind, valueM, frameId) => {
+- src\editor\EditorContext.tsx:3077 — const currentByAxis = currentStyle.sceneSectionWindowByAxis ?? {};
+- src\editor\EditorContext.tsx:3078 — const currentFrameByAxis = currentStyle.sceneSectionFrameByAxis ?? {};
+- src\editor\EditorContext.tsx:3081 — const currentFrames = Array.isArray(currentStyle.sceneSectionFrames)
+- src\editor\EditorContext.tsx:3082 — ? currentStyle.sceneSectionFrames
+- src\editor\EditorContext.tsx:3087 — plane: currentStyle.sceneSectionPlanes?.[entryAxis] ?? {},
+- src\editor\EditorContext.tsx:3088 — frame: currentStyle.sceneSectionFrameByAxis?.[entryAxis] ?? {},
+- src\editor\EditorContext.tsx:3126 — sceneSectionWindowEnabled: true,
+- src\editor\EditorContext.tsx:3127 — sceneSectionWindowActiveAxis: axis,
+- src\editor\EditorContext.tsx:3128 — sceneSectionWindowByAxis: {
+- src\editor\EditorContext.tsx:3141 — sceneSectionEnabled: true,
+- src\editor\EditorContext.tsx:3142 — sceneSectionActiveAxis: axis,
+- src\editor\EditorContext.tsx:3143 — sceneSectionActiveFrameId: targetFrameId,
+- src\editor\EditorContext.tsx:3144 — sceneSectionFrameEnabled: true,
+- src\editor\EditorContext.tsx:3145 — sceneSectionFrames: nextFrames,
+- src\editor\EditorContext.tsx:3146 — sceneSectionFrameByAxis: isBuiltIn
+- src\editor\EditorContext.tsx:3180 — return () => sceneHandle.setSceneSectionWindowCommitHandler(null);
+- src\editor\EditorRoot.tsx:843 — return style.sceneSectionEnabled === true;
+- src\editor\EditorRoot.tsx:1029 — if (sectionStyle?.sceneSectionTargetScope === "active-selection") {
+- src\editor\EditorRoot.tsx:1031 — sceneSectionTargetProductIds: [detail.productId],
+- src\editor\LayerPanel.tsx:454 — const effectiveSceneSectionStyle = currentPage
+- src\editor\LayerPanel.tsx:2099 — sceneSectionStyle={effectiveSceneSectionStyle}
+- src\editor\LayerPanel.tsx:2174 — sceneSectionStyle={effectiveSceneSectionStyle}
+- src\editor\LayerPanelGroups.tsx:28 — import { SceneSectionPlanesContainer, SeismicCapabilityLayerContainers } from "./layerControls/seismic/SeismicControls";
+- src\editor\LayerPanelGroups.tsx:270 — const sceneSectionStyle =
+- src\editor\LayerPanelGroups.tsx:284 — const sceneSectionDisabled =
+- src\editor\LayerPanelGroups.tsx:356 — const sceneSectionOpenSignal =
+- src\editor\LayerPanelGroups.tsx:359 — sceneSectionStyle.sceneSectionEnabled === true
+- src\editor\LayerPanelGroups.tsx:395 — sceneSectionOpenSignal &&
+- src\editor\LayerPanelGroups.tsx:398 — ? `${sceneSectionOpenSignal}:${revealTargetId}`
+- src\editor\LayerPanelGroups.tsx:399 — : (sceneSectionOpenSignal ??
+- src\editor\LayerPanelGroups.tsx:405 — <SceneSectionPlanesContainer
+- src\editor\LayerPanelGroups.tsx:408 — style={sceneSectionStyle}
+- src\editor\LayerPanelGroups.tsx:409 — disabled={sceneSectionDisabled}
+- src\editor\UtahForgeAddToProjectDrop.tsx:533 — <div style={helperStyle}>
+- src\editor\UtahForgeAddToProjectDrop.tsx:632 — <div style={helperStyle}>
+- src\editor\UtahForgeAddToProjectDrop.tsx:851 — <div style={helperStyle}>{aiReview.plan.summary}</div>
+- src\editor\UtahForgeAddToProjectDrop.tsx:1465 — const helperStyle: React.CSSProperties = {
+- src\editor\layerControls\layerPanelConfig.ts:338 — "atmosphereBoundsHelperVisible",
+- src\editor\layerControls\atmosphere\AtmosphereVolumeControls.tsx:45 — | "atmosphereBoundsHelperVisible";
+- src\editor\layerControls\atmosphere\AtmosphereVolumeControls.tsx:356 — atmosphereBoundsHelperVisible: styleBoolean(
+- src\editor\layerControls\atmosphere\AtmosphereVolumeControls.tsx:358 — "atmosphereBoundsHelperVisible",
+- src\editor\layerControls\atmosphere\AtmosphereVolumeControls.tsx:511 — checked={styleBoolean(style, "atmosphereBoundsHelperVisible", false)}
+- src\editor\layerControls\atmosphere\AtmosphereVolumeControls.tsx:515 — patchBoolean("atmosphereBoundsHelperVisible", value)
+- src\editor\layerControls\mt\IsobandControls.tsx:40 — sceneSectionStyle,
+- src\editor\layerControls\mt\IsobandControls.tsx:53 — sceneSectionStyle?: EditableStyle;
+- src\editor\layerControls\mt\IsobandControls.tsx:109 — const sceneStyle = sceneSectionStyle ?? {};
+- src\editor\layerControls\mt\IsobandControls.tsx:110 — const scenePlanes = sceneStyle.sceneSectionPlanes ?? {};
+- src\editor\layerControls\mt\IsobandControls.tsx:112 — sceneStyle.sceneSectionActiveAxis === "x" ||
+- src\editor\layerControls\mt\IsobandControls.tsx:113 — sceneStyle.sceneSectionActiveAxis === "y" ||
+- src\editor\layerControls\mt\IsobandControls.tsx:114 — sceneStyle.sceneSectionActiveAxis === "z"
+- src\editor\layerControls\mt\IsobandControls.tsx:115 — ? sceneStyle.sceneSectionActiveAxis
+- src\editor\layerControls\mt\IsobandControls.tsx:170 — Array.isArray(sceneStyle.sceneSectionTargetLayerIds)
+- src\editor\layerControls\mt\IsobandControls.tsx:171 — ? sceneStyle.sceneSectionTargetLayerIds
+- src\editor\layerControls\mt\IsobandControls.tsx:176 — sceneSectionEnabled: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:177 — sceneSectionMode: "cutaway",
+- src\editor\layerControls\mt\IsobandControls.tsx:178 — sceneSectionActiveAxis: axis,
+- src\editor\layerControls\mt\IsobandControls.tsx:179 — sceneSectionTargetScope: "selected-targets",
+- src\editor\layerControls\mt\IsobandControls.tsx:180 — sceneSectionTargetLayerIds: Array.from(targetLayerIds),
+- src\editor\layerControls\mt\IsobandControls.tsx:181 — sceneSectionHelperVisible: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:182 — sceneSectionLegendVisible: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:183 — sceneSectionPlanes: {
+- src\editor\layerControls\mt\IsobandControls.tsx:269 — sceneSectionEnabled: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:270 — sceneSectionActiveAxis: activeAxis,
+- src\editor\layerControls\mt\IsobandControls.tsx:271 — sceneSectionPlanes: {
+- src\editor\layerControls\mt\MtVolumeControls.tsx:76 — sceneSectionStyle,
+- src\editor\layerControls\mt\MtVolumeControls.tsx:88 — sceneSectionStyle: EditableStyle;
+- src\editor\layerControls\mt\MtVolumeControls.tsx:355 — sceneSectionStyle={sceneSectionStyle}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:20 — SceneSectionAxisAlignment,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:21 — SceneSectionAxisDatum,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:22 — SceneSectionFrameEntry,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:23 — SceneSectionFrameState,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:24 — SceneSectionPlaneState,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:41 — const sceneSectionAxisColors = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:47 — const sceneSectionDefaultPositions = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:54 — const sceneSectionAxes = ["x", "y", "z"] as const;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:56 — const builtInFrameId = (axis: SceneSectionAxis) => `axis:${axis}`;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:58 — type SceneSectionFrameUiEntry = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:63 — axis: SceneSectionAxis;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:65 — plane: SceneSectionPlaneState;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:66 — frame: SceneSectionFrameState;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:121 — const sectionFrameListStyle: React.CSSProperties = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:133 — type SceneSectionAxis = "x" | "y" | "z";
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:135 — type SceneSectionObjectTarget = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:142 — axes: SceneSectionAxis[];
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:227 — function sceneSectionGeneratedHeading(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:228 — axis: SceneSectionAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:230 — datum: SceneSectionAxisDatum,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:247 — function sceneSectionKnownGeneratedHeadings(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:248 — axis: SceneSectionAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:253 — sceneSectionGeneratedHeading(axis, slot, datum),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:259 — axis: SceneSectionAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:260 — current: SceneSectionFrameState,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:261 — patch: Partial<SceneSectionFrameState>,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:262 — ): Partial<SceneSectionFrameState> {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:264 — const nextPatch: Partial<SceneSectionFrameState> = { ...patch };
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:268 — const known = sceneSectionKnownGeneratedHeadings(axis, slot);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:274 — nextPatch[key] = sceneSectionGeneratedHeading(axis, slot, nextDatum);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:300 — target: SceneSectionObjectTarget;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:314 — axis: SceneSectionAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:316 — target: SceneSectionObjectTarget,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:322 — style.sceneSectionObjectVisibilityByFrameId?.[frameId]?.[target.objectId]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:328 — style.sceneSectionObjectVisibilityByAxis?.[axis]?.[target.objectId]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:340 — function frameDefaultLabel(id: string, axis: SceneSectionAxis): string {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:346 — function normalizeSceneSectionFrameEntries(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:348 — ): SceneSectionFrameUiEntry[] {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:349 — const explicit = Array.isArray(style.sceneSectionFrames)
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:350 — ? style.sceneSectionFrames
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:357 — const planes = style.sceneSectionPlanes ?? {};
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:358 — const frameByAxis = style.sceneSectionFrameByAxis ?? {};
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:359 — const builtIns: SceneSectionFrameUiEntry[] = sceneSectionAxes.map((axis) => {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:371 — : styleBoolean(style, "sceneSectionHelperVisible", true);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:389 — const custom: SceneSectionFrameUiEntry[] = [];
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:411 — : styleBoolean(style, "sceneSectionHelperVisible", true),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:423 — entries: SceneSectionFrameUiEntry[],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:424 — ): SceneSectionFrameEntry[] {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:440 — export function SceneSectionPlanesContainer({
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:466 — const enabled = styleBoolean(style, "sceneSectionEnabled", false);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:468 — style.sceneSectionTargetScope === "all-visible" ||
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:469 — style.sceneSectionTargetScope === "active-selection"
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:470 — ? style.sceneSectionTargetScope
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:473 — style.sceneSectionActiveAxis === "x" ||
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:474 — style.sceneSectionActiveAxis === "y" ||
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:475 — style.sceneSectionActiveAxis === "z"
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:476 — ? style.sceneSectionActiveAxis
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:479 — Array.isArray(style.sceneSectionTargetLayerIds)
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:480 — ? style.sceneSectionTargetLayerIds
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:488 — Array.isArray(style.sceneSectionTargetProductIds)
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:489 — ? style.sceneSectionTargetProductIds
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:494 — const legendVisible = styleBoolean(style, "sceneSectionLegendVisible", true);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:497 — "sceneSectionFrameEnabled",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:498 — styleBoolean(style, "sceneSectionWindowEnabled", false),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:500 — const defaultGroundTraceVisible = styleBoolean(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:502 — "sceneSectionGroundTraceVisible",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:505 — const defaultAxesVisible = styleBoolean(style, "sceneSectionAxesVisible", true);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:507 — style.sceneSectionAxisIntervalM,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:513 — style.sceneSectionAxisTextScale,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:518 — const windowByAxis = style.sceneSectionWindowByAxis ?? {};
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:519 — const frameEntries = normalizeSceneSectionFrameEntries(style);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:521 — typeof style.sceneSectionActiveFrameId === "string" &&
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:522 — style.sceneSectionActiveFrameId.trim()
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:523 — ? style.sceneSectionActiveFrameId
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:525 — const fallbackObjectTargets: SceneSectionObjectTarget[] = [
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:536 — axes: ["x", "y", "z"] as SceneSectionAxis[],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:562 — axes: ["x", "y", "z"] as SceneSectionAxis[],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:566 — const objectTargetMap = new Map<string, SceneSectionObjectTarget>();
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:568 — for (const target of sceneHandle.manager.listSceneSectionObjectTargets()) {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:572 — axes: target.axes as SceneSectionAxis[],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:607 — sceneSectionTargetScope: "selected-targets",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:608 — sceneSectionTargetProductIds: Array.from(next),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:612 — entries: SceneSectionFrameUiEntry[],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:616 — sceneSectionFrames: serializeFrameEntries(entries),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:623 — axis?: SceneSectionAxis;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:624 — plane?: Partial<SceneSectionPlaneState>;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:625 — frame?: Partial<SceneSectionFrameState>;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:630 — const currentEntries = normalizeSceneSectionFrameEntries(liveStyleRef.current);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:664 — sceneSectionActiveAxis: nextAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:665 — sceneSectionPlanes: {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:666 — ...(liveStyleRef.current.sceneSectionPlanes ?? {}),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:669 — sceneSectionFrameByAxis: {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:670 — ...(liveStyleRef.current.sceneSectionFrameByAxis ?? {}),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:675 — sceneSectionActiveAxis: nextAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:682 — sceneSectionWindowEnabled: true,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:683 — sceneSectionWindowActiveAxis: nextAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:684 — sceneSectionWindowByAxis: {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:685 — ...(liveStyleRef.current.sceneSectionWindowByAxis ?? {}),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:687 — ...(liveStyleRef.current.sceneSectionWindowByAxis?.[nextAxis] ??
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:691 — liveStyleRef.current.sceneSectionWindowByAxis?.[nextAxis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:695 — liveStyleRef.current.sceneSectionWindowByAxis?.[nextAxis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:699 — liveStyleRef.current.sceneSectionWindowByAxis?.[nextAxis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:710 — sceneSectionEnabled: nextSectionEnabled,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:711 — sceneSectionMode: "cutaway",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:715 — sceneSectionActiveFrameId: id,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:716 — sceneSectionFrameEnabled: true,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:724 — patch: Partial<SceneSectionFrameState>,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:727 — entry: SceneSectionFrameUiEntry,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:728 — patch: Partial<SceneSectionFrameState>,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:737 — patch: Partial<SceneSectionPlaneState>,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:740 — const currentEntries = normalizeSceneSectionFrameEntries(liveStyleRef.current);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:756 — const nextEntry: SceneSectionFrameUiEntry = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:773 — sceneSectionEnabled: true,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:774 — sceneSectionFrameEnabled: true,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:775 — sceneSectionActiveAxis: source.axis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:776 — sceneSectionActiveFrameId: id,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:780 — axis: SceneSectionAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:787 — liveStyleRef.current.sceneSectionObjectVisibilityByFrameId ?? {};
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:789 — sceneSectionActiveAxis: axis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:790 — sceneSectionActiveFrameId: frameId,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:791 — sceneSectionObjectVisibilityByFrameId: {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:828 — const setGroundTraceWidthM = (frameId: string, rawM: number) => {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:831 — groundTraceWidthM: clampNumber(rawM, 30, 2000),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:930 — sceneSectionEnabled: e.target.checked,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:931 — sceneSectionMode: "cutaway",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:944 — commit({ sceneSectionLegendVisible: e.target.checked })
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:983 — <div data-testid="scene-section-window" style={sectionFrameListStyle}>
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:996 — : sceneSectionDefaultPositions[axis];
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1048 — const axisGroundTraceVisible =
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1049 — typeof axisFrame.groundTraceVisible === "boolean"
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1050 — ? axisFrame.groundTraceVisible
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1051 — : defaultGroundTraceVisible;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1052 — const axisGroundTraceWidthM = finiteStyleNumber(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1053 — axisFrame.groundTraceWidthM,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1077 — const axisAlignment: SceneSectionAxisAlignment =
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1079 — const axisDatum: SceneSectionAxisDatum =
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1094 — : sceneSectionGeneratedHeading(axis, "a", axisDatum);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1099 — : sceneSectionGeneratedHeading(axis, "b", axisDatum);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1114 — sceneSectionAxisColors[axis],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1161 — color: sceneSectionAxisColors[axis],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1178 — color: sceneSectionAxisColors[axis],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1252 — sceneSectionActiveAxis: axis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1253 — sceneSectionActiveFrameId: frame.id,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1259 — ? sceneSectionAxisColors[axis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1291 — : sceneSectionDefaultPositions[nextAxis];
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1351 — checked={axisGroundTraceVisible}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1354 — groundTraceVisible: e.target.checked,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1370 — !axisGroundTraceVisible
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1372 — value={axisGroundTraceWidthM}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1374 — setGroundTraceWidthM(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1391 — !axisGroundTraceVisible
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1393 — value={Math.round(axisGroundTraceWidthM)}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1395 — setGroundTraceWidthM(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1442 — ? sceneSectionAxisColors[axis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1446 — ? sceneSectionAxisColors[axis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1483 — ? sceneSectionAxisColors[axis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1487 — ? sceneSectionAxisColors[axis]
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:45 — sceneSectionStyle,
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:58 — sceneSectionStyle: EditableStyle;
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:701 — sceneSectionStyle={sceneSectionStyle}
+- src\editor\layerControls\seismic\SeismicControls.tsx:1 — export { SceneSectionPlanesContainer } from "./SceneSectionPlanesContainer";
+- src\editor\layerControls\seismic\SeismicDisplayTuningControls.tsx:25 — sceneSectionStyle,
+- src\editor\layerControls\seismic\SeismicDisplayTuningControls.tsx:49 — sceneSectionStyle: EditableStyle;
+- src\editor\layerControls\seismic\SeismicDisplayTuningControls.tsx:80 — sceneSectionStyle={sceneSectionStyle}
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:186 — workingAreaFocusHelperVisible: styleBoolean(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:188 — "workingAreaFocusHelperVisible",
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:221 — const helperVisible = styleBoolean(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:223 — "workingAreaFocusHelperVisible",
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:345 — data-testid="working-area-focus-helper-visible"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:348 — checked={helperVisible}
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:350 — commit({ workingAreaFocusHelperVisible: event.target.checked })
+- src\editor\topoMap\TopoMapPanel.tsx:862 — atmosphereBoundsHelperVisible: true,
+- src\editor\topoMap\TopoMapPanel.tsx:884 — atmosphereBoundsHelperVisible: true,
+
+## Section ISO roots
+
+- src\scene\captureCameraPathOverlayLine.ts:76 — export function disposeCaptureCameraPathOverlayObject(node: THREE.Object3D): void {
+- src\scene\captureCameraPathOverlayLine.ts:79 — geometry.dispose();
+- src\scene\captureCameraPathOverlayLine.ts:86 — spriteMap.dispose();
+- src\scene\captureCameraPathOverlayLine.ts:88 — item.dispose();
+- src\scene\CLAUDE.md:19 — - `handles/sceneHandleControllers.ts`, `isoOverlays/volumeCutIsoOverlays.ts`,
+- src\scene\CLAUDE.md:22 — - `heightSampler.ts` — terrain height lookup.
+- src\scene\CLAUDE.md:24 — - `disposeObjectTree.ts` — Three.js cleanup helper.
+- src\scene\CLAUDE.md:38 — - Three.js disposal: route through `disposeObjectTree.ts`; do not invent
+- src\scene\CLAUDE.md:39 — ad-hoc dispose loops.
+- src\scene\disposeObjectTree.ts:3 — export function disposeObjectTree(root: THREE.Object3D): void {
+- src\scene\disposeObjectTree.ts:9 — disposable.geometry?.dispose?.();
+- src\scene\disposeObjectTree.ts:19 — withMap.map?.dispose?.();
+- src\scene\disposeObjectTree.ts:20 — material.dispose?.();
+- src\scene\heightSampler.ts:5 — //   - HeightSampler: terrain GeoTIFF -> bilinear height query. Used by
+- src\scene\heightSampler.ts:15 — export type HeightSampler = (utmX: number, utmY: number) => number;
+- src\scene\heightSampler.ts:23 — // ---- HeightSampler --------------------------------------------------------
+- src\scene\heightSampler.ts:25 — let currentSampler: HeightSampler | null = null;
+- src\scene\heightSampler.ts:26 — let samplerWaiters: Array<(s: HeightSampler) => void> = [];
+- src\scene\heightSampler.ts:28 — export function setHeightSampler(s: HeightSampler): void {
+- src\scene\heightSampler.ts:35 — export function getHeightSampler(): Promise<HeightSampler> {
+- src\scene\heightSampler.ts:37 — return new Promise<HeightSampler>((resolve) => samplerWaiters.push(resolve));
+- src\scene\heightSampler.ts:40 — export function peekHeightSampler(): HeightSampler | null {
+- src\scene\scalarFocus.ts:121 — // (sectionIsoLevels): `levelCount` interior levels split [isoMin, isoMax] into
+- src\scene\SceneManager.ts:33 — import { disposeObjectTree } from "./disposeObjectTree";
+- src\scene\SceneManager.ts:66 — } from "./isoOverlays/sectionIsoOverlay";
+- src\scene\SceneManager.ts:70 — clearMtVolumeCutIsoOverlaysImpl,
+- src\scene\SceneManager.ts:71 — clearSeismicResistivityIsoOverlaysImpl,
+- src\scene\SceneManager.ts:72 — clearSeismicVolumeCutIsoOverlaysImpl,
+- src\scene\SceneManager.ts:74 — listSeismicResistivitySectionIsoTargetsImpl,
+- src\scene\SceneManager.ts:78 — scalarVolumeIsoOverlayGroupImpl,
+- src\scene\SceneManager.ts:79 — seismicResistivityIsoOverlayGroupImpl,
+- src\scene\SceneManager.ts:80 — seismicVolumeIsoOverlayGroupImpl,
+- src\scene\SceneManager.ts:81 — updateMtVolumeCutIsoOverlaysImpl,
+- src\scene\SceneManager.ts:82 — updateSeismicResistivityIsoOverlaysImpl,
+- src\scene\SceneManager.ts:83 — updateSeismicVolumeCutIsoOverlaysImpl,
+- src\scene\SceneManager.ts:84 — type SectionIsoOverlayUpdateOptions,
+- src\scene\SceneManager.ts:85 — } from "./isoOverlays/volumeCutIsoOverlays";
+- src\scene\SceneManager.ts:93 — type SectionIsoOverlayTransition,
+- src\scene\SceneManager.ts:94 — type SectionIsoOverlayTransitionRootKind,
+- src\scene\SceneManager.ts:223 — import { peekHeightSampler } from "./heightSampler";
+- src\scene\SceneManager.ts:359 — export type SectionIsoTargetGroup =
+- src\scene\SceneManager.ts:367 — export interface ScalarSectionIsoTarget {
+- src\scene\SceneManager.ts:373 — group: SectionIsoTargetGroup;
+- src\scene\SceneManager.ts:553 — overlayDebug: ScalarSectionIsoOverlayUpdateDebugState;
+- src\scene\SceneManager.ts:555 — disposeMs: number;
+- src\scene\SceneManager.ts:564 — interface ScalarSectionIsoOverlayUpdateDebugState {
+- src\scene\SceneManager.ts:566 — disposeMs: number;
+- src\scene\SceneManager.ts:572 — lineGeometryDebug: ScalarSectionIsoLineGeometryDebugState;
+- src\scene\SceneManager.ts:584 — interface ScalarSectionIsoLineGeometryDebugState {
+- src\scene\SceneManager.ts:646 — sectionIsoThresholdOcclusionMs: number;
+- src\scene\SceneManager.ts:653 — interface SectionIsoOverlayDebugState {
+- src\scene\SceneManager.ts:654 — opacityPolicy: "split-section-iso-overlay-opacity-from-layer-opacity";
+- src\scene\SceneManager.ts:740 — private readonly sectionIsoThresholdRaycaster = new THREE.Raycaster();
+- src\scene\SceneManager.ts:741 — private readonly sectionIsoThresholdRayOrigin = new THREE.Vector3();
+- src\scene\SceneManager.ts:742 — private readonly sectionIsoThresholdRayTarget = new THREE.Vector3();
+- src\scene\SceneManager.ts:743 — private readonly sectionIsoThresholdRayDirection = new THREE.Vector3();
+- src\scene\SceneManager.ts:744 — private readonly sectionIsoThresholdSurfaces: THREE.Object3D[] = [];
+- src\scene\SceneManager.ts:745 — private readonly sectionIsoThresholdLineOverlays: THREE.Mesh[] = [];
+- src\scene\SceneManager.ts:746 — private readonly sectionIsoThresholdSeenSurfaceIds = new Set<string>();
+- src\scene\SceneManager.ts:747 — private readonly sectionIsoThresholdSamplePoints = [
+- src\scene\SceneManager.ts:771 — private sectionIsoOverlayTransition: SectionIsoOverlayTransition | null =
+- src\scene\SceneManager.ts:1057 — disposeObjectTree(this.orbitCenterHandle.group);
+- src\scene\SceneManager.ts:1174 — disposeObjectTree(group);
+- src\scene\SceneManager.ts:1284 — const isSectionIsoOverlay =
+- src\scene\SceneManager.ts:1285 — obj.userData?.scalarSectionIsoOverlay === true ||
+- src\scene\SceneManager.ts:1286 — material.userData?.scalarSectionIsoOverlay === true;
+- src\scene\SceneManager.ts:1287 — if (isSectionIsoOverlay) continue;
+- src\scene\SceneManager.ts:1314 — private sectionIsoAuthoredOpacity(material: THREE.Material): number {
+- src\scene\SceneManager.ts:1315 — const authored = material.userData?.sectionIsoBaseOpacity;
+- src\scene\SceneManager.ts:1324 — material.userData.sectionIsoBaseOpacity = value;
+- src\scene\SceneManager.ts:1331 — material.userData.sectionIsoBaseOpacity = value;
+- src\scene\SceneManager.ts:1335 — private applySectionIsoOverlayMaterialOpacity(
+- src\scene\SceneManager.ts:1345 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:1353 — : typeof material.userData?.sectionIsoLayerRenderOpacity === "number" &&
+- src\scene\SceneManager.ts:1354 — Number.isFinite(material.userData.sectionIsoLayerRenderOpacity)
+- src\scene\SceneManager.ts:1355 — ? clamp01(material.userData.sectionIsoLayerRenderOpacity)
+- src\scene\SceneManager.ts:1357 — const authoredOpacity = this.sectionIsoAuthoredOpacity(material);
+- src\scene\SceneManager.ts:1359 — typeof material.userData?.sectionIsoThresholdOcclusionAttenuation ===
+- src\scene\SceneManager.ts:1361 — Number.isFinite(material.userData.sectionIsoThresholdOcclusionAttenuation)
+- src\scene\SceneManager.ts:1362 — ? clamp01(material.userData.sectionIsoThresholdOcclusionAttenuation)
+- src\scene\SceneManager.ts:1365 — material.userData.sectionIsoTransitionOpacity = transitionOpacity;
+- src\scene\SceneManager.ts:1366 — material.userData.sectionIsoLayerRenderOpacity = parentLayerOpacity;
+- src\scene\SceneManager.ts:1367 — material.userData.sectionIsoOpacityPolicy =
+- src\scene\SceneManager.ts:1373 — material.userData.sectionIsoComposedOpacity = nextOpacity;
+- src\scene\SceneManager.ts:1422 — sectionIsoTransitionOpacity?: number,
+- src\scene\SceneManager.ts:1425 — const sectionIsoEnvelope =
+- src\scene\SceneManager.ts:1426 — typeof sectionIsoTransitionOpacity === "number" &&
+- src\scene\SceneManager.ts:1427 — Number.isFinite(sectionIsoTransitionOpacity)
+- src\scene\SceneManager.ts:1428 — ? clamp01(sectionIsoTransitionOpacity)
+- src\scene\SceneManager.ts:1430 — root.visible = next > 0.001 || (sectionIsoEnvelope ?? 0) > 0.001;
+- src\scene\SceneManager.ts:1439 — const isSectionIsoOverlay =
+- src\scene\SceneManager.ts:1440 — obj.userData?.scalarSectionIsoOverlay === true ||
+- src\scene\SceneManager.ts:1441 — m.userData?.scalarSectionIsoOverlay === true;
+- src\scene\SceneManager.ts:1442 — if (m.userData?.ignoreLayerStyle === true && !isSectionIsoOverlay) {
+- src\scene\SceneManager.ts:1445 — if (isSectionIsoOverlay) {
+- src\scene\SceneManager.ts:1446 — this.applySectionIsoOverlayMaterialOpacity(
+- src\scene\SceneManager.ts:1448 — sectionIsoEnvelope ?? (next <= 0.001 ? 0 : 1),
+- src\scene\SceneManager.ts:1450 — sectionIsoEnvelope === null
+- src\scene\SceneManager.ts:1661 — disposeObjectTree(snapshot.group);
+- src\scene\SceneManager.ts:1676 — disposeObjectTree(snapshot.group);
+- src\scene\SceneManager.ts:1716 — private sectionIsoOverlayGroupsForTransition(): Array<{
+- src\scene\SceneManager.ts:1717 — kind: SectionIsoOverlayTransitionRootKind;
+- src\scene\SceneManager.ts:1722 — kind: SectionIsoOverlayTransitionRootKind;
+- src\scene\SceneManager.ts:1727 — const mtGroup = mtLayer?.userData.mtVolumeSectionIsoOverlayGroup as
+- src\scene\SceneManager.ts:1739 — .seismicVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
+- src\scene\SceneManager.ts:1748 — .seismicResistivitySectionIsoOverlayGroup as THREE.Group | undefined;
+- src\scene\SceneManager.ts:1759 — discardSectionIsoOverlayTransition(): void {
+- src\scene\SceneManager.ts:1760 — const transition = this.sectionIsoOverlayTransition;
+- src\scene\SceneManager.ts:1762 — for (const root of transition.targetRoots) {
+- src\scene\SceneManager.ts:1764 — disposeObjectTree(root.group);
+- src\scene\SceneManager.ts:1766 — for (const root of transition.sourceRoots) {
+- src\scene\SceneManager.ts:1768 — disposeObjectTree(root.group);
+- src\scene\SceneManager.ts:1770 — this.sectionIsoOverlayTransition = null;
+- src\scene\SceneManager.ts:1773 — clearSectionIsoOverlayTransition(): void {
+- src\scene\SceneManager.ts:1774 — this.discardSectionIsoOverlayTransition();
+- src\scene\SceneManager.ts:1777 — private sectionIsoOverlayTransitionShouldStart(
+- src\scene\SceneManager.ts:1788 — beginSectionIsoOverlayTransition(
+- src\scene\SceneManager.ts:1795 — this.discardSectionIsoOverlayTransition();
+- src\scene\SceneManager.ts:1798 — !this.sectionIsoOverlayTransitionShouldStart(
+- src\scene\SceneManager.ts:1805 — const sourceRoots = this.sectionIsoOverlayGroupsForTransition().map(
+- src\scene\SceneManager.ts:1811 — snapshot.name = `${group.name || "section-iso-overlay"}-transition-source`;
+- src\scene\SceneManager.ts:1814 — sectionIsoOverlayTransitionRoot: true,
+- src\scene\SceneManager.ts:1815 — sectionIsoOverlayTransitionRole: "source",
+- src\scene\SceneManager.ts:1828 — this.sectionIsoOverlayTransition = {
+- src\scene\SceneManager.ts:1829 — sourceRoots,
+- src\scene\SceneManager.ts:1830 — targetRoots: [],
+- src\scene\SceneManager.ts:1838 — currentSectionIsoOverlayTransitionOpacity(): number {
+- src\scene\SceneManager.ts:1839 — return this.sectionIsoOverlayTransition?.targetOpacity ?? 1;
+- src\scene\SceneManager.ts:1842 — registerSectionIsoOverlayTransitionTargetRoot(
+- src\scene\SceneManager.ts:1843 — kind: SectionIsoOverlayTransitionRootKind,
+- src\scene\SceneManager.ts:1847 — const transition = this.sectionIsoOverlayTransition;
+- src\scene\SceneManager.ts:1849 — if (transition.targetRoots.some((root) => root.group === group)) {
+- src\scene\SceneManager.ts:1853 — group.userData.sectionIsoOverlayTransitionRoot = true;
+- src\scene\SceneManager.ts:1854 — group.userData.sectionIsoOverlayTransitionRole = "target";
+- src\scene\SceneManager.ts:1855 — transition.targetRoots.push({
+- src\scene\SceneManager.ts:1864 — tickSectionIsoOverlayTransition(nowMs: number, eased?: number): boolean {
+- src\scene\SceneManager.ts:1865 — const transition = this.sectionIsoOverlayTransition;
+- src\scene\SceneManager.ts:1879 — for (const root of transition.sourceRoots) {
+- src\scene\SceneManager.ts:1882 — for (const root of transition.targetRoots) {
+- src\scene\SceneManager.ts:1888 — commitSectionIsoOverlayTransition(): void {
+- src\scene\SceneManager.ts:1889 — const transition = this.sectionIsoOverlayTransition;
+- src\scene\SceneManager.ts:1891 — this.tickSectionIsoOverlayTransition(
+- src\scene\SceneManager.ts:1895 — for (const root of transition.targetRoots) {
+- src\scene\SceneManager.ts:1898 — for (const root of transition.sourceRoots) {
+- src\scene\SceneManager.ts:1900 — disposeObjectTree(root.group);
+- src\scene\SceneManager.ts:1902 — this.sectionIsoOverlayTransition = null;
+- src\scene\SceneManager.ts:1958 — const sampleHeight = peekHeightSampler();
+- src\scene\SceneManager.ts:1978 — const sampleHeight = peekHeightSampler();
+- src\scene\SceneManager.ts:2610 — getSectionIsoOverlayDebugState(): SectionIsoOverlayDebugState {
+- src\scene\SceneManager.ts:2643 — const isSectionIsoOverlay =
+- src\scene\SceneManager.ts:2644 — obj.userData?.scalarSectionIsoOverlay === true ||
+- src\scene\SceneManager.ts:2645 — material.userData?.scalarSectionIsoOverlay === true;
+- src\scene\SceneManager.ts:2646 — if (!isSectionIsoOverlay) continue;
+- src\scene\SceneManager.ts:2649 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:2655 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:2661 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:2667 — material.userData?.sectionIsoLayerRenderOpacity,
+- src\scene\SceneManager.ts:2672 — material.userData?.sectionIsoTransitionOpacity,
+- src\scene\SceneManager.ts:2681 — opacityPolicy: "split-section-iso-overlay-opacity-from-layer-opacity",
+- src\scene\SceneManager.ts:2731 — sectionIsoOverlays: SectionIsoOverlayDebugState;
+- src\scene\SceneManager.ts:2769 — sectionIsoOverlays: this.getSectionIsoOverlayDebugState(),
+- src\scene\SceneManager.ts:3105 — private listAuthoredScalarSectionIsoTargets(
+- src\scene\SceneManager.ts:3107 — ): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3108 — const targets: ScalarSectionIsoTarget[] = [];
+- src\scene\SceneManager.ts:3137 — private listSeismicSectionIsoTargets(
+- src\scene\SceneManager.ts:3139 — ): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3143 — const targets: ScalarSectionIsoTarget[] = [];
+- src\scene\SceneManager.ts:3223 — listMtVolumeCutIsoTargets(layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3227 — listSeismicVolumeCutIsoTargets(layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3231 — listSeismicResistivitySectionIsoTargets(
+- src\scene\SceneManager.ts:3233 — ): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3234 — return listSeismicResistivitySectionIsoTargetsImpl.call(this, layerId);
+- src\scene\SceneManager.ts:3239 — ): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3243 — listSectionIsoTargets(layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3245 — ...this.listAuthoredScalarSectionIsoTargets(layerId),
+- src\scene\SceneManager.ts:3247 — ...this.listSeismicSectionIsoTargets(layerId),
+- src\scene\SceneManager.ts:3249 — ...this.listSeismicResistivitySectionIsoTargets(layerId),
+- src\scene\SceneManager.ts:3252 — const groupOrder: Record<SectionIsoTargetGroup, number> = {
+- src\scene\SceneManager.ts:3269 — listScalarSectionIsoTargets(layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3270 — return this.listAuthoredScalarSectionIsoTargets(layerId).sort((a, b) => {
+- src\scene\SceneManager.ts:3312 — scalarVolumeIsoOverlayGroup(volumeLayer: THREE.Group): THREE.Group {
+- src\scene\SceneManager.ts:3313 — return scalarVolumeIsoOverlayGroupImpl.call(this, volumeLayer);
+- src\scene\SceneManager.ts:3316 — clearMtVolumeCutIsoOverlays(volumeLayer?: THREE.Group): void {
+- src\scene\SceneManager.ts:3317 — return clearMtVolumeCutIsoOverlaysImpl.call(this, volumeLayer);
+- src\scene\SceneManager.ts:3354 — updateMtVolumeCutIsoOverlays(
+- src\scene\SceneManager.ts:3356 — options?: SectionIsoOverlayUpdateOptions,
+- src\scene\SceneManager.ts:3358 — return updateMtVolumeCutIsoOverlaysImpl.call(this, style, options);
+- src\scene\SceneManager.ts:3361 — seismicVolumeIsoOverlayGroup(seismicLayer: THREE.Group): THREE.Group {
+- src\scene\SceneManager.ts:3362 — return seismicVolumeIsoOverlayGroupImpl.call(this, seismicLayer);
+- src\scene\SceneManager.ts:3365 — seismicResistivityIsoOverlayGroup(seismicLayer: THREE.Group): THREE.Group {
+- src\scene\SceneManager.ts:3366 — return seismicResistivityIsoOverlayGroupImpl.call(this, seismicLayer);
+- src\scene\SceneManager.ts:3369 — clearSeismicVolumeCutIsoOverlays(seismicLayer?: THREE.Group): void {
+- src\scene\SceneManager.ts:3370 — return clearSeismicVolumeCutIsoOverlaysImpl.call(this, seismicLayer);
+- src\scene\SceneManager.ts:3373 — clearSeismicResistivityIsoOverlays(seismicLayer?: THREE.Group): void {
+- src\scene\SceneManager.ts:3374 — return clearSeismicResistivityIsoOverlaysImpl.call(this, seismicLayer);
+- src\scene\SceneManager.ts:3394 — updateSeismicVolumeCutIsoOverlays(
+- src\scene\SceneManager.ts:3396 — options?: SectionIsoOverlayUpdateOptions,
+- src\scene\SceneManager.ts:3398 — return updateSeismicVolumeCutIsoOverlaysImpl.call(this, style, options);
+- src\scene\SceneManager.ts:3401 — updateSeismicResistivityIsoOverlays(
+- src\scene\SceneManager.ts:3403 — options?: SectionIsoOverlayUpdateOptions,
+- src\scene\SceneManager.ts:3405 — return updateSeismicResistivityIsoOverlaysImpl.call(this, style, options);
+- src\scene\SceneManager.ts:3518 — disposeObjectTree(child);
+- src\scene\SceneManager.ts:3566 — disposeObjectTree(child);
+- src\scene\SceneManager.ts:3584 — disposeObjectTree(child);
+- src\scene\SceneManager.ts:4028 — this.clearSectionIsoOverlayTransition();
+- src\scene\SceneManager.ts:4054 — this.clearSectionIsoOverlayTransition();
+- src\scene\SceneManager.ts:4516 — this.sectionIsoThresholdSurfaces.push(obj);
+- src\scene\SceneManager.ts:4521 — this.sectionIsoThresholdSurfaces.length = 0;
+- src\scene\SceneManager.ts:4528 — return this.sectionIsoThresholdSurfaces;
+- src\scene\SceneManager.ts:4531 — private collectSectionIsoLineOverlaysFromRoot(root: THREE.Object3D): void {
+- src\scene\SceneManager.ts:4536 — obj.userData?.sectionIsoLineOverlay !== true &&
+- src\scene\SceneManager.ts:4537 — obj.name !== "scalar-section-iso-line-overlay"
+- src\scene\SceneManager.ts:4543 — this.sectionIsoThresholdLineOverlays.push(obj);
+- src\scene\SceneManager.ts:4547 — private collectSectionIsoLineOverlays(): THREE.Mesh[] {
+- src\scene\SceneManager.ts:4548 — this.sectionIsoThresholdLineOverlays.length = 0;
+- src\scene\SceneManager.ts:4550 — this.collectSectionIsoLineOverlaysFromRoot(group);
+- src\scene\SceneManager.ts:4553 — this.collectSectionIsoLineOverlaysFromRoot(snapshot.group);
+- src\scene\SceneManager.ts:4555 — return this.sectionIsoThresholdLineOverlays;
+- src\scene\SceneManager.ts:4558 — private sectionIsoThresholdSurfaceId(obj: THREE.Object3D): string {
+- src\scene\SceneManager.ts:4570 — private setSectionIsoLineThresholdOcclusion(
+- src\scene\SceneManager.ts:4579 — typeof m.userData?.sectionIsoBaseOpacity === "number"
+- src\scene\SceneManager.ts:4580 — ? m.userData.sectionIsoBaseOpacity
+- src\scene\SceneManager.ts:4582 — m.userData.sectionIsoBaseOpacity = baseOpacity;
+- src\scene\SceneManager.ts:4583 — m.userData.sectionIsoThresholdOcclusionCount = occlusionCount;
+- src\scene\SceneManager.ts:4584 — m.userData.sectionIsoThresholdOcclusionAttenuation = attenuation;
+- src\scene\SceneManager.ts:4586 — typeof m.userData?.sectionIsoTransitionOpacity === "number"
+- src\scene\SceneManager.ts:4587 — ? m.userData.sectionIsoTransitionOpacity
+- src\scene\SceneManager.ts:4589 — this.applySectionIsoOverlayMaterialOpacity(m, transitionOpacity);
+- src\scene\SceneManager.ts:4591 — line.userData.sectionIsoThresholdOcclusionCount = occlusionCount;
+- src\scene\SceneManager.ts:4592 — line.userData.sectionIsoThresholdOcclusionAttenuation = attenuation;
+- src\scene\SceneManager.ts:4595 — private stableSectionIsoThresholdOcclusionCount(
+- src\scene\SceneManager.ts:4600 — typeof line.userData.sectionIsoThresholdOcclusionCount === "number"
+- src\scene\SceneManager.ts:4601 — ? line.userData.sectionIsoThresholdOcclusionCount
+- src\scene\SceneManager.ts:4604 — typeof line.userData.sectionIsoThresholdRawOcclusionCount === "number"
+- src\scene\SceneManager.ts:4605 — ? line.userData.sectionIsoThresholdRawOcclusionCount
+- src\scene\SceneManager.ts:4611 — line.userData.sectionIsoThresholdRawOcclusionCount = rawCount;
+- src\scene\SceneManager.ts:4612 — line.userData.sectionIsoThresholdStableOcclusionCount = stable;
+- src\scene\SceneManager.ts:4616 — private sectionIsoLineSamplePoints(line: THREE.Mesh): THREE.Vector3[] {
+- src\scene\SceneManager.ts:4620 — if (!box) return this.sectionIsoThresholdSamplePoints.slice(0, 1);
+- src\scene\SceneManager.ts:4621 — const size = box.getSize(this.sectionIsoThresholdSamplePoints[0]);
+- src\scene\SceneManager.ts:4626 — const center = box.getCenter(this.sectionIsoThresholdSamplePoints[0]);
+- src\scene\SceneManager.ts:4627 — this.sectionIsoThresholdSamplePoints[1].copy(center);
+- src\scene\SceneManager.ts:4628 — this.sectionIsoThresholdSamplePoints[1].setComponent(
+- src\scene\SceneManager.ts:4632 — this.sectionIsoThresholdSamplePoints[2].copy(center);
+- src\scene\SceneManager.ts:4633 — this.sectionIsoThresholdSamplePoints[2].setComponent(
+- src\scene\SceneManager.ts:4637 — for (const point of this.sectionIsoThresholdSamplePoints) {
+- src\scene\SceneManager.ts:4640 — return this.sectionIsoThresholdSamplePoints;
+- src\scene\SceneManager.ts:4643 — private updateSectionIsoThresholdOcclusion(camera: THREE.Camera): void {
+- src\scene\SceneManager.ts:4644 — const lines = this.collectSectionIsoLineOverlays();
+- src\scene\SceneManager.ts:4650 — this.setSectionIsoLineThresholdOcclusion(line, 1, 0);
+- src\scene\SceneManager.ts:4655 — camera.getWorldPosition(this.sectionIsoThresholdRayOrigin);
+- src\scene\SceneManager.ts:4657 — this.sectionIsoThresholdSeenSurfaceIds.clear();
+- src\scene\SceneManager.ts:4658 — const samplePoints = this.sectionIsoLineSamplePoints(line);
+- src\scene\SceneManager.ts:4660 — this.sectionIsoThresholdRayTarget.copy(samplePoint);
+- src\scene\SceneManager.ts:4661 — this.sectionIsoThresholdRayDirection
+- src\scene\SceneManager.ts:4662 — .copy(this.sectionIsoThresholdRayTarget)
+- src\scene\SceneManager.ts:4663 — .sub(this.sectionIsoThresholdRayOrigin);
+- src\scene\SceneManager.ts:4664 — const distance = this.sectionIsoThresholdRayDirection.length();
+- src\scene\SceneManager.ts:4666 — this.sectionIsoThresholdRayDirection.multiplyScalar(1 / distance);
+- src\scene\SceneManager.ts:4667 — this.sectionIsoThresholdRaycaster.set(
+- src\scene\SceneManager.ts:4668 — this.sectionIsoThresholdRayOrigin,
+- src\scene\SceneManager.ts:4669 — this.sectionIsoThresholdRayDirection,
+- src\scene\SceneManager.ts:4671 — this.sectionIsoThresholdRaycaster.near = 0;
+- src\scene\SceneManager.ts:4672 — this.sectionIsoThresholdRaycaster.far = Math.max(0, distance - 1);
+- src\scene\SceneManager.ts:4674 — this.sectionIsoThresholdRaycaster.intersectObjects(surfaces, false);
+- src\scene\SceneManager.ts:4676 — this.sectionIsoThresholdSeenSurfaceIds.add(
+- src\scene\SceneManager.ts:4677 — this.sectionIsoThresholdSurfaceId(hit.object),
+- src\scene\SceneManager.ts:4681 — const occlusionCount = this.stableSectionIsoThresholdOcclusionCount(
+- src\scene\SceneManager.ts:4683 — this.sectionIsoThresholdSeenSurfaceIds.size,
+- src\scene\SceneManager.ts:4685 — this.setSectionIsoLineThresholdOcclusion(
+- src\scene\SceneManager.ts:4754 — this.updateSectionIsoThresholdOcclusion(camera);
+- src\scene\SceneManager.ts:4755 — const sectionIsoThresholdOcclusionMs = transitionDebugMs(
+- src\scene\SceneManager.ts:4790 — sectionIsoThresholdOcclusionMs,
+- src\scene\SceneManager.ts:4816 — disposeTerrainOrthoPhotoTexture(): void {
+- src\scene\SceneManager.ts:4817 — this.topoRuntime.disposeOrthoPhotoTexture();
+- src\scene\SceneManager.ts:4822 — * Awaits the heightSampler internally (via the loader) so the
+- src\scene\atmosphere\localAtmosphereVolume.ts:3 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\atmosphere\localAtmosphereVolume.ts:136 — function disposeChildren(group: THREE.Group): void {
+- src\scene\atmosphere\localAtmosphereVolume.ts:138 — disposeObjectTree(child);
+- src\scene\atmosphere\localAtmosphereVolume.ts:192 — disposeObjectTree(existing);
+- src\scene\atmosphere\localAtmosphereVolume.ts:342 — disposeChildren(group);
+- src\scene\environment\applyEnvironment.ts:15 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\environment\applyEnvironment.ts:296 — existing.geometry.dispose();
+- src\scene\environment\applyEnvironment.ts:298 — if (Array.isArray(material)) material.forEach((mat) => mat.dispose());
+- src\scene\environment\applyEnvironment.ts:299 — else material.dispose();
+- src\scene\environment\applyEnvironment.ts:608 — (light as { dispose?: () => void }).dispose?.();
+- src\scene\environment\applyEnvironment.ts:733 — disposeObjectTree(helperGroup);
+- src\scene\environment\sunVisual.ts:3 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\environment\sunVisual.ts:190 — function disposeRuntime(scene: THREE.Scene, runtime: EnvironmentSunVisualRuntime) {
+- src\scene\environment\sunVisual.ts:192 — disposeObjectTree(runtime.group);
+- src\scene\environment\sunVisual.ts:269 — if (runtime) disposeRuntime(scene, runtime);
+- src\scene\environment\sunVisual.ts:276 — if (nextRuntime) disposeRuntime(scene, nextRuntime);
+- src\scene\handles\sceneHandleControllers.ts:5 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\handles\sceneHandleControllers.ts:138 — (light as { dispose?: () => void }).dispose?.();
+- src\scene\handles\sceneHandleControllers.ts:150 — disposeObjectTree(this.envLightHelperGroup);
+- src\scene\handles\sceneHandleControllers.ts:356 — marker.line.geometry.dispose();
+- src\scene\handles\sceneHandleControllers.ts:487 — disposeObjectTree(this.pageCameraMarker.group);
+- src\scene\handles\sceneHandleControllers.ts:509 — disposeObjectTree(marker.group);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:3 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\isoOverlays\sectionIsoOverlay.ts:31 — function sectionIsoDebugMs(value: number): number {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:35 — export interface ScalarSectionIsoLineGeometryDebugState {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:60 — export interface ScalarSectionIsoOverlayUpdateDebugState {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:62 — disposeMs: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:68 — lineGeometryDebug: ScalarSectionIsoLineGeometryDebugState;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:80 — export interface ScalarSectionIsoOptions {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:110 — debug?: ScalarSectionIsoOverlayUpdateDebugState;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:262 — if (obj.userData?.scalarSectionIsoOverlay === true) return false;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:277 — if (obj.userData?.scalarSectionIsoOverlay === true) return false;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:286 — function sectionIsoAlphaAt(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:295 — function sectionIsoTriangleMasked(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:303 — sectionIsoAlphaAt(alphaValues, ia) <= 0.01 ||
+- src\scene\isoOverlays\sectionIsoOverlay.ts:304 — sectionIsoAlphaAt(alphaValues, ib) <= 0.01 ||
+- src\scene\isoOverlays\sectionIsoOverlay.ts:305 — sectionIsoAlphaAt(alphaValues, ic) <= 0.01
+- src\scene\isoOverlays\sectionIsoOverlay.ts:309 — function sectionIsoVisibleTriangleIndices(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:325 — if (sectionIsoTriangleMasked(alphaValues, ia, ib, ic)) continue;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:331 — export function sectionIsoAttributeValues(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:345 — export function disposeScalarSectionIsoOverlay(obj: THREE.Mesh): void {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:346 — const root = obj.userData.scalarSectionIsoOverlayRoot as
+- src\scene\isoOverlays\sectionIsoOverlay.ts:351 — disposeObjectTree(root);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:352 — delete obj.userData.scalarSectionIsoOverlayRoot;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:355 — function sectionIsoLevels(min: number, max: number, count: number): number[] {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:365 — function sectionIsoColorAt(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:367 — options: ScalarSectionIsoOptions,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:431 — function sectionIsoTriangleIntersections(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:486 — type SectionIsoContourSegment = {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:493 — type SectionIsoContourNode = {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:503 — type SectionIsoPolyline = {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:509 — function sectionIsoSnapTolerance(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:523 — function sectionIsoPointHash(qx: number, qy: number, qz: number): number {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:531 — function sectionIsoPolylineLength(points: THREE.Vector3[]): number {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:539 — function sectionIsoPointLineDistance(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:551 — function simplifySectionIsoPolyline(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:565 — const distance = sectionIsoPointLineDistance(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:583 — function stitchSectionIsoSegments(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:584 — segments: SectionIsoContourSegment[],
+- src\scene\isoOverlays\sectionIsoOverlay.ts:587 — debug?: ScalarSectionIsoLineGeometryDebugState,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:588 — ): SectionIsoPolyline[] {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:596 — const nodeBuckets = new Map<number, SectionIsoContourNode[]>();
+- src\scene\isoOverlays\sectionIsoOverlay.ts:597 — const nodes: SectionIsoContourNode[] = [];
+- src\scene\isoOverlays\sectionIsoOverlay.ts:598 — const nodeFor = (point: THREE.Vector3): SectionIsoContourNode => {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:602 — const hash = sectionIsoPointHash(qx, qy, qz);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:646 — debug.stitchNodeBuildMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:681 — const polylines: SectionIsoPolyline[] = [];
+- src\scene\isoOverlays\sectionIsoOverlay.ts:696 — debug.stitchTraversalMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:708 — debug.stitchPointAssemblyMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:714 — points.length < 2 ? 0 : sectionIsoPolylineLength(points);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:716 — debug.stitchLengthFilterMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:729 — debug.stitchNormalMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:742 — function appendSectionIsoRibbonSegment(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:787 — function appendSectionIsoPolylineRibbon(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:800 — appendSectionIsoRibbonSegment(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:832 — appendSectionIsoRibbonSegment(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:850 — function buildSectionIsoLineGeometry(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:853 — options: ScalarSectionIsoOptions,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:869 — debug.totalMs += sectionIsoDebugMs(performance.now() - startedAt);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:870 — debug.setupMs += sectionIsoDebugMs(setupMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:871 — debug.contourPassMs += sectionIsoDebugMs(contourPassMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:872 — debug.triangleScanMs += sectionIsoDebugMs(triangleScanMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:873 — debug.triangleIntersectionMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:876 — debug.segmentRecordMs += sectionIsoDebugMs(segmentRecordMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:877 — debug.segmentStitchMs += sectionIsoDebugMs(segmentStitchMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:878 — debug.polylineSimplifyMs += sectionIsoDebugMs(polylineSimplifyMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:879 — debug.ribbonExtrudeMs += sectionIsoDebugMs(ribbonExtrudeMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:880 — debug.geometryCreateMs += sectionIsoDebugMs(geometryCreateMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:896 — const levels = sectionIsoLevels(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:908 — const segmentsByLevel = new Map<number, SectionIsoContourSegment[]>();
+- src\scene\isoOverlays\sectionIsoOverlay.ts:916 — const snapToleranceM = sectionIsoSnapTolerance(position);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:931 — if (sectionIsoTriangleMasked(options.hardMaskValues, ia, ib, ic)) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:969 — sectionIsoTriangleIntersections(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1009 — const polylines = stitchSectionIsoSegments(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1020 — const simplified = simplifySectionIsoPolyline(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1024 — const simplifiedLength = sectionIsoPolylineLength(simplified);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1034 — sectionIsoColorAt(level, options, color);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1038 — appendSectionIsoPolylineRibbon(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1066 — geometry.userData.sectionIsoRenderPolicy = SECTION_ISO_OVERLAY_POLICY.name;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1067 — geometry.userData.sectionIsoSourceSegmentCount = sourceSegmentCount;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1068 — geometry.userData.sectionIsoTinySegmentCount = tinySegmentCount;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1069 — geometry.userData.sectionIsoPolylineCount = polylineCount;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1070 — geometry.userData.sectionIsoSimplifiedPointCount = simplifiedPointCount;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1071 — geometry.userData.sectionIsoRibbonSegmentCount = positions.length / 12;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1072 — geometry.userData.sectionIsoSnapToleranceM = snapToleranceM;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1080 — function makeSectionIsoBandMaterial(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1081 — options: ScalarSectionIsoOptions,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1127 — attribute float sectionIsoScalar;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1128 — attribute float sectionIsoAlpha;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1130 — varying float vSectionIsoScalar;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1131 — varying float vSectionIsoAlpha;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1133 — vSectionIsoScalar = sectionIsoScalar;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1134 — vSectionIsoAlpha = sectionIsoAlpha;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1142 — varying float vSectionIsoScalar;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1143 — varying float vSectionIsoAlpha;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1208 — if (vSectionIsoAlpha <= 0.01) discard;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1209 — if (vSectionIsoScalar < uIsoMin || vSectionIsoScalar > uIsoMax) discard;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1214 — floor(saturate((vSectionIsoScalar - uIsoMin) / range) * bandCount),
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1223 — gl_FragColor = vec4(color, uOpacity * saturate(vSectionIsoAlpha));
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1228 — material.userData.scalarSectionIsoOverlay = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1229 — material.userData.sectionIsoBaseOpacity = authoredOpacity;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1234 — function buildSectionIsoBandMesh(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1237 — options: ScalarSectionIsoOptions,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1253 — const visibleIndices = sectionIsoVisibleTriangleIndices(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1262 — "sectionIsoScalar",
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1266 — "sectionIsoAlpha",
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1270 — const mesh = new THREE.Mesh(geometry, makeSectionIsoBandMaterial(options));
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1271 — mesh.name = "scalar-section-iso-band-overlay";
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1274 — mesh.userData.scalarSectionIsoOverlay = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1285 — export function updateScalarSectionIsoOverlay(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1288 — options: ScalarSectionIsoOptions,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1295 — debug.totalMs = sectionIsoDebugMs(performance.now() - startedAt);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1306 — const disposeStartedAt = performance.now();
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1307 — disposeScalarSectionIsoOverlay(obj);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1309 — debug.disposeMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1310 — performance.now() - disposeStartedAt,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1318 — disposeScalarSectionIsoOverlay(obj);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1320 — debug.disposeMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1324 — root.name = "scalar-section-iso-overlay";
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1326 — root.userData.scalarSectionIsoOverlay = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1327 — root.userData.sectionIsoTargetKey = targetKey;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1333 — debug.rootCreateMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1338 — const band = buildSectionIsoBandMesh(obj, values, options);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1340 — debug.bandMeshMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1347 — debug.attachMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1354 — const lineGeometry = buildSectionIsoLineGeometry(obj, values, options);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1356 — debug.lineGeometryMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1361 — lineGeometry.userData.sectionIsoSourceSegmentCount ?? 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1363 — lineGeometry.userData.sectionIsoTinySegmentCount ?? 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1365 — lineGeometry.userData.sectionIsoPolylineCount ?? 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1367 — lineGeometry.userData.sectionIsoSimplifiedPointCount ?? 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1369 — lineGeometry.userData.sectionIsoRibbonSegmentCount ?? 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1371 — lineGeometry.userData.sectionIsoSnapToleranceM ?? 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1387 — lineMaterial.userData.scalarSectionIsoOverlay = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1388 — lineMaterial.userData.sectionIsoBaseOpacity = 0.96;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1392 — line.name = "scalar-section-iso-line-overlay";
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1395 — line.userData.scalarSectionIsoOverlay = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1396 — line.userData.sectionIsoLineOverlay = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1403 — debug.lineMaterialMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1411 — debug.attachMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1418 — disposeObjectTree(root);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1420 — debug.disposeMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1426 — obj.userData.scalarSectionIsoOverlayRoot = root;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1429 — debug.attachMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:7 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:9 — getHeightSampler,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:10 — peekHeightSampler,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:11 — type HeightSampler,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:12 — } from "../heightSampler";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:28 — updateScalarSectionIsoOverlay,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:29 — type ScalarSectionIsoLineGeometryDebugState,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:30 — type ScalarSectionIsoOverlayUpdateDebugState,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:31 — type ScalarSectionIsoOptions,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:32 — } from "./sectionIsoOverlay";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:34 — export interface SectionIsoOverlayUpdateOptions {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:41 — ScalarSectionIsoTarget,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:70 — sampleHeight: HeightSampler;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:91 — overlayDebug: ScalarSectionIsoOverlayUpdateDebugState;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:93 — disposeMs: number;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:152 — function emptyScalarSectionIsoLineGeometryDebug(): ScalarSectionIsoLineGeometryDebugState {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:179 — function emptyScalarSectionIsoOverlayDebug(): ScalarSectionIsoOverlayUpdateDebugState {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:182 — disposeMs: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:188 — lineGeometryDebug: emptyScalarSectionIsoLineGeometryDebug(),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:201 — function addScalarSectionIsoOverlayDebug(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:202 — target: ScalarSectionIsoOverlayUpdateDebugState,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:203 — source: ScalarSectionIsoOverlayUpdateDebugState,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:206 — target.disposeMs += source.disposeMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:363 — const sampleHeight = peekHeightSampler();
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:405 — export function listMtVolumeCutIsoTargetsImpl(this: any, layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:444 — export function listSeismicVolumeCutIsoTargetsImpl(this: any, layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:483 — export function listSeismicResistivitySectionIsoTargetsImpl(this: any, layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:489 — const targets: ScalarSectionIsoTarget[] = [];
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:529 — export function listSeismicResistivityVolumeCutIsoTargetsImpl(this: any, layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:570 — export function scalarVolumeIsoOverlayGroupImpl(this: any, volumeLayer: THREE.Group): THREE.Group {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:571 — const existing = volumeLayer.userData.mtVolumeSectionIsoOverlayGroup as
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:576 — group.name = "mt-volume-section-iso-overlays";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:579 — group.userData.mtVolumeSectionIsoOverlayGroup = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:580 — volumeLayer.userData.mtVolumeSectionIsoOverlayGroup = group;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:585 — export function clearMtVolumeCutIsoOverlaysImpl(this: any, volumeLayer?: THREE.Group): void {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:588 — )?.userData.mtVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:592 — disposeObjectTree(group);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:593 — if (volumeLayer) delete volumeLayer.userData.mtVolumeSectionIsoOverlayGroup;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:731 — const root = mesh.userData.scalarSectionIsoOverlayRoot as
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:735 — root.userData.sectionIsoSource = "mt-resistivity";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:736 — root.userData.sectionIsoSourceLayerId =
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:738 — root.userData.sectionIsoTargetGroup = group;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:739 — mesh.userData.sectionIsoSource = "mt-resistivity";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:740 — mesh.userData.sectionIsoSourceLayerId =
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:742 — mesh.userData.sectionIsoTargetGroup = group;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:912 — cut.userData.sectionIsoTargetKey = options.targetKey;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:913 — cut.userData.sectionIsoPlaneAxis = plane.axis;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:914 — cut.userData.sectionIsoFrameId = plane.frameId;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:915 — cut.userData.sectionIsoFrameLabel = plane.label;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:916 — cut.userData.sectionIsoPlanePositionM = plane.positionM;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:924 — export function updateMtVolumeCutIsoOverlaysImpl(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:927 — options?: SectionIsoOverlayUpdateOptions,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:947 — overlayDebug: emptyScalarSectionIsoOverlayDebug(),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:949 — disposeMs: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:973 — this.clearMtVolumeCutIsoOverlays(volumeLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:977 — if (style.sectionIsoEnabled !== true) {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:978 — finish("section-iso-disabled");
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1009 — !peekHeightSampler()
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1011 — void getHeightSampler().then(() => {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1012 — this.updateMtVolumeCutIsoOverlays(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1017 — this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1028 — typeof style.sectionIsoTargetIds === "object" &&
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1029 — style.sectionIsoTargetIds !== null
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1030 — ? (style.sectionIsoTargetIds as Record<string, boolean>)
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1075 — styleNumber(style, "sectionIsoMin", thresholdMin, sourceMin, sourceMax),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1081 — styleNumber(style, "sectionIsoMax", thresholdMax, sourceMin, sourceMax),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1090 — linesVisible: style.sectionIsoLinesVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1091 — bandsVisible: style.sectionIsoBandsVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1096 — styleNumber(style, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1098 — lineWidth: styleNumber(style, "sectionIsoLineWidth", 2.6, 0, 12),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1099 — lineStyle: style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1100 — bandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32, 0, 0.85),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1101 — fillOffset: styleNumber(style, "sectionIsoFillOffset", 0, -1, 1),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1114 — } satisfies Omit<ScalarSectionIsoOptions, "targetKey" | "alphaValues">;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1118 — const overlayGroup = this.scalarVolumeIsoOverlayGroup(volumeLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1147 — const overlayDebug = emptyScalarSectionIsoOverlayDebug();
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1149 — updateScalarSectionIsoOverlay(cut.mesh, cut.values, {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1156 — addScalarSectionIsoOverlayDebug(debug.overlayDebug, overlayDebug);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1159 — if (cut.mesh.userData.scalarSectionIsoOverlayRoot) {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1163 — const disposeStartedAt = performance.now();
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1164 — disposeObjectTree(cut.mesh);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1165 — debug.disposeMs += cutIsoDebugMs(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1166 — performance.now() - disposeStartedAt,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1174 — this.clearMtVolumeCutIsoOverlays(volumeLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1176 — debug.disposeMs += cutIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1180 — this.registerSectionIsoOverlayTransitionTargetRoot?.(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1189 — this.currentSectionIsoOverlayTransitionOpacity?.() ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1195 — export function seismicVolumeIsoOverlayGroupImpl(this: any, seismicLayer: THREE.Group): THREE.Group {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1197 — .seismicVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1200 — group.name = "seismic-volume-section-iso-overlays";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1203 — group.userData.seismicVolumeSectionIsoOverlayGroup = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1204 — seismicLayer.userData.seismicVolumeSectionIsoOverlayGroup = group;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1209 — export function clearSeismicVolumeCutIsoOverlaysImpl(this: any, seismicLayer?: THREE.Group): void {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1212 — )?.userData.seismicVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1216 — disposeObjectTree(group);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1218 — delete seismicLayer.userData.seismicVolumeSectionIsoOverlayGroup;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1222 — export function seismicResistivityIsoOverlayGroupImpl(this: any, seismicLayer: THREE.Group): THREE.Group {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1224 — .seismicResistivitySectionIsoOverlayGroup as THREE.Group | undefined;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1230 — group.userData.seismicResistivitySectionIsoOverlayGroup = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1231 — seismicLayer.userData.seismicResistivitySectionIsoOverlayGroup = group;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1236 — export function clearSeismicResistivityIsoOverlaysImpl(this: any, seismicLayer?: THREE.Group): void {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1239 — )?.userData.seismicResistivitySectionIsoOverlayGroup as
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1245 — disposeObjectTree(group);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1247 — delete seismicLayer.userData.seismicResistivitySectionIsoOverlayGroup;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1396 — cut.userData.sectionIsoTargetKey = options.targetKey;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1397 — cut.userData.sectionIsoPlaneAxis = plane.axis;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1398 — cut.userData.sectionIsoFrameId = plane.frameId;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1399 — cut.userData.sectionIsoFrameLabel = plane.label;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1400 — cut.userData.sectionIsoPlanePositionM = plane.positionM;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1551 — helper.userData.sectionIsoTargetKey = options.targetKey;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1552 — helper.userData.sectionIsoSourceSectionId = seismicSectionIdForIso(section);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1556 — export function updateSeismicVolumeCutIsoOverlaysImpl(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1559 — options?: SectionIsoOverlayUpdateOptions,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1564 — this.clearSeismicVolumeCutIsoOverlays(seismicLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1567 — if (style.sectionIsoEnabled !== true || !seismicLayer.visible) return;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1583 — !peekHeightSampler()
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1585 — void getHeightSampler().then(() => {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1586 — this.updateSeismicVolumeCutIsoOverlays(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1591 — this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1602 — typeof style.sectionIsoTargetIds === "object" &&
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1603 — style.sectionIsoTargetIds !== null
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1604 — ? (style.sectionIsoTargetIds as Record<string, boolean>)
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1626 — const rawIsoMin = styleNumber(style, "sectionIsoMin", amplitudeMin, 0, 1);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1628 — const rawIsoMax = styleNumber(style, "sectionIsoMax", amplitudeMax, 0, 1);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1648 — linesVisible: style.sectionIsoLinesVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1649 — bandsVisible: style.sectionIsoBandsVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1654 — styleNumber(style, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1656 — lineWidth: styleNumber(style, "sectionIsoLineWidth", 2.6, 0, 12),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1657 — lineStyle: style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1658 — bandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32, 0, 0.85),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1659 — fillOffset: styleNumber(style, "sectionIsoFillOffset", 0, -1, 1),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1670 — } satisfies Omit<ScalarSectionIsoOptions, "targetKey" | "alphaValues">;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1672 — const overlayGroup = this.seismicVolumeIsoOverlayGroup(seismicLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1695 — updateScalarSectionIsoOverlay(cut.mesh, cut.values, {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1701 — if (cut.mesh.userData.scalarSectionIsoOverlayRoot) {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1702 — const root = cut.mesh.userData.scalarSectionIsoOverlayRoot as
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1706 — root.userData.sectionIsoSource = "seismic-amplitude";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1707 — root.userData.sectionIsoSourceLayerId =
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1709 — root.userData.sectionIsoTargetGroup = "seismic-volume-cuts";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1713 — disposeObjectTree(cut.mesh);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1718 — this.clearSeismicVolumeCutIsoOverlays(seismicLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1722 — this.registerSectionIsoOverlayTransitionTargetRoot?.(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1731 — this.currentSectionIsoOverlayTransitionOpacity?.() ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1736 — export function updateSeismicResistivityIsoOverlaysImpl(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1739 — options?: SectionIsoOverlayUpdateOptions,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1744 — this.clearSeismicResistivityIsoOverlays(seismicLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1747 — if (style.sectionIsoEnabled !== true || !seismicLayer.visible) return;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1792 — styleNumber(style, "sectionIsoMin", thresholdMin, sourceMin, sourceMax),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1798 — styleNumber(style, "sectionIsoMax", thresholdMax, sourceMin, sourceMax),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1805 — typeof style.sectionIsoTargetIds === "object" &&
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1806 — style.sectionIsoTargetIds !== null
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1807 — ? (style.sectionIsoTargetIds as Record<string, boolean>)
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1812 — linesVisible: style.sectionIsoLinesVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1813 — bandsVisible: style.sectionIsoBandsVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1818 — styleNumber(style, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1820 — lineWidth: styleNumber(style, "sectionIsoLineWidth", 2.6, 0, 12),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1821 — lineStyle: style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1822 — bandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32, 0, 0.85),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1823 — fillOffset: styleNumber(style, "sectionIsoFillOffset", 0, -1, 1),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1836 — } satisfies Omit<ScalarSectionIsoOptions, "targetKey" | "alphaValues">;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1844 — const overlayGroup = this.seismicResistivityIsoOverlayGroup(seismicLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1870 — updateScalarSectionIsoOverlay(helper.mesh, helper.values, {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1876 — if (helper.mesh.userData.scalarSectionIsoOverlayRoot) {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1883 — disposeObjectTree(helper.mesh);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1901 — !peekHeightSampler()
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1903 — void getHeightSampler().then(() => {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1904 — this.updateSeismicResistivityIsoOverlays(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1909 — this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1963 — disposeObjectTree(cut.mesh);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1978 — updateScalarSectionIsoOverlay(cut.mesh, cut.values, {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1984 — if (cut.mesh.userData.scalarSectionIsoOverlayRoot) {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1991 — disposeObjectTree(cut.mesh);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1998 — this.clearSeismicResistivityIsoOverlays(seismicLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:2002 — this.registerSectionIsoOverlayTransitionTargetRoot?.(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:2011 — this.currentSectionIsoOverlayTransitionOpacity?.() ??
+- src\scene\outlines\AreaOutlineController.ts:4 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\outlines\AreaOutlineController.ts:5 — import { getHeightSampler } from "../heightSampler";
+- src\scene\outlines\AreaOutlineController.ts:193 — disposeObjectTree(child);
+- src\scene\outlines\AreaOutlineController.ts:196 — getHeightSampler()
+- src\scene\overlays\SceneOverlaysController.ts:5 — disposeSceneOverlay,
+- src\scene\overlays\SceneOverlaysController.ts:14 — import { getHeightSampler } from "../heightSampler";
+- src\scene\overlays\SceneOverlaysController.ts:141 — disposeSceneOverlay(handle);
+- src\scene\overlays\SceneOverlaysController.ts:151 — const sample = await getHeightSampler();
+- src\scene\section\sceneSectionController.ts:8 — getHeightSampler,
+- src\scene\section\sceneSectionController.ts:9 — peekHeightSampler,
+- src\scene\section\sceneSectionController.ts:10 — type HeightSampler,
+- src\scene\section\sceneSectionController.ts:11 — } from "../heightSampler";
+- src\scene\section\sceneSectionController.ts:12 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\section\sceneSectionController.ts:180 — function withSceneSectionHeightSampler(
+- src\scene\section\sceneSectionController.ts:181 — callback: (sampleHeight: HeightSampler) => void,
+- src\scene\section\sceneSectionController.ts:183 — const cached = peekHeightSampler();
+- src\scene\section\sceneSectionController.ts:188 — void getHeightSampler().then(callback);
+- src\scene\section\sceneSectionController.ts:1860 — typeof obj.userData?.sectionIsoFrameId === "string"
+- src\scene\section\sceneSectionController.ts:1861 — ? obj.userData.sectionIsoFrameId
+- src\scene\section\sceneSectionController.ts:1871 — typeof obj.userData?.sectionIsoPlaneAxis === "string"
+- src\scene\section\sceneSectionController.ts:1872 — ? (obj.userData.sectionIsoPlaneAxis as SceneSectionAxis)
+- src\scene\section\sceneSectionController.ts:1875 — obj.userData?.scalarSectionIsoOverlay === true &&
+- src\scene\section\sceneSectionController.ts:2451 — style.sectionIsoEnabled === true
+- src\scene\section\sceneSectionController.ts:2751 — disposeObjectTree(child);
+- src\scene\section\sceneSectionController.ts:2792 — style.sectionIsoEnabled === true && frameIntersectionTraces.length > 0;
+- src\scene\section\sceneSectionController.ts:2814 — traceGroup.userData.sceneSectionIsoIntersectionTrace = true;
+- src\scene\section\sceneSectionController.ts:2835 — line.userData.sceneSectionIsoIntersectionTrace = true;
+- src\scene\section\sceneSectionController.ts:2844 — withSceneSectionHeightSampler((sampleHeight) => {
+- src\scene\section\sceneSectionController.ts:3352 — withSceneSectionHeightSampler((sampleHeight) => {
+- src\scene\section\sceneSectionController.ts:3395 — disposeObjectTree(mesh);
+- src\scene\section\sceneSectionController.ts:3566 — this.updateMtVolumeCutIsoOverlays(
+- src\scene\section\sceneSectionController.ts:3576 — this.updateSeismicVolumeCutIsoOverlays(
+- src\scene\styles\mtResistivityStyles.ts:11 — import { getHeightSampler } from "../heightSampler";
+- src\scene\styles\mtResistivityStyles.ts:55 — void getHeightSampler().then((sampleHeight) => {
+- src\scene\styles\scalarEdgeLines.ts:275 — export function disposeScalarEdgeLine(obj: THREE.Points): void {
+- src\scene\styles\scalarEdgeLines.ts:279 — line.geometry.dispose();
+- src\scene\styles\scalarEdgeLines.ts:282 — for (const item of material) item.dispose();
+- src\scene\styles\scalarEdgeLines.ts:284 — material.dispose();
+- src\scene\styles\scalarEdgeLines.ts:295 — disposeScalarEdgeLine(obj);
+- src\scene\styles\scalarEdgeLines.ts:301 — disposeScalarEdgeLine(obj);
+- src\scene\styles\scalarEdgeLines.ts:448 — disposeScalarEdgeLine(obj);
+- src\scene\styles\scalarEdgeLines.ts:532 — disposeScalarEdgeLine(obj);
+- src\scene\styles\scalarEdgeLines.ts:568 — line.geometry.dispose();
+- src\scene\styles\scalarPreviewStyle.ts:23 — disposeScalarSectionIsoOverlay,
+- src\scene\styles\scalarPreviewStyle.ts:25 — updateScalarSectionIsoOverlay,
+- src\scene\styles\scalarPreviewStyle.ts:26 — } from "../isoOverlays/sectionIsoOverlay";
+- src\scene\styles\scalarPreviewStyle.ts:73 — const sectionIsoSelectedTargets =
+- src\scene\styles\scalarPreviewStyle.ts:74 — typeof style.sectionIsoTargetIds === "object" &&
+- src\scene\styles\scalarPreviewStyle.ts:75 — style.sectionIsoTargetIds !== null
+- src\scene\styles\scalarPreviewStyle.ts:76 — ? (style.sectionIsoTargetIds as Record<string, boolean>)
+- src\scene\styles\scalarPreviewStyle.ts:78 — const sectionIsoEnabled = style.sectionIsoEnabled === true;
+- src\scene\styles\scalarPreviewStyle.ts:79 — const sectionIsoLinesVisible = style.sectionIsoLinesVisible !== false;
+- src\scene\styles\scalarPreviewStyle.ts:80 — const sectionIsoBandsVisible = style.sectionIsoBandsVisible !== false;
+- src\scene\styles\scalarPreviewStyle.ts:81 — const sectionIsoLevelCount = Math.round(
+- src\scene\styles\scalarPreviewStyle.ts:82 — styleNumber(style, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\styles\scalarPreviewStyle.ts:84 — const sectionIsoSourceOpacity = sectionIsoEnabled
+- src\scene\styles\scalarPreviewStyle.ts:85 — ? styleNumber(style, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\scalarPreviewStyle.ts:88 — const sectionIsoLineWidth = styleNumber(
+- src\scene\styles\scalarPreviewStyle.ts:90 — "sectionIsoLineWidth",
+- src\scene\styles\scalarPreviewStyle.ts:95 — const sectionIsoLineStyle =
+- src\scene\styles\scalarPreviewStyle.ts:96 — style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid";
+- src\scene\styles\scalarPreviewStyle.ts:97 — const sectionIsoBandOpacity = styleNumber(
+- src\scene\styles\scalarPreviewStyle.ts:99 — "sectionIsoBandOpacity",
+- src\scene\styles\scalarPreviewStyle.ts:104 — const sectionIsoFillOffset = styleNumber(
+- src\scene\styles\scalarPreviewStyle.ts:106 — "sectionIsoFillOffset",
+- src\scene\styles\scalarPreviewStyle.ts:117 — if (obj.userData?.scalarSectionIsoOverlay === true) return;
+- src\scene\styles\scalarPreviewStyle.ts:247 — const ownBandSelection = Array.isArray(style.sectionIsoBandSelection)
+- src\scene\styles\scalarPreviewStyle.ts:248 — ? (style.sectionIsoBandSelection as number[])
+- src\scene\styles\scalarPreviewStyle.ts:257 — const bandSelection = Array.isArray(isoSourceStyle.sectionIsoBandSelection)
+- src\scene\styles\scalarPreviewStyle.ts:258 — ? (isoSourceStyle.sectionIsoBandSelection as number[])
+- src\scene\styles\scalarPreviewStyle.ts:261 — styleNumber(isoSourceStyle, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\styles\scalarPreviewStyle.ts:264 — styleNumber(isoSourceStyle, "sectionIsoMin", colorMin, sourceRange.min, sourceRange.max),
+- src\scene\styles\scalarPreviewStyle.ts:270 — styleNumber(isoSourceStyle, "sectionIsoMax", colorMax, sourceRange.min, sourceRange.max),
+- src\scene\styles\scalarPreviewStyle.ts:353 — "sectionIsoMin",
+- src\scene\styles\scalarPreviewStyle.ts:361 — "sectionIsoMax",
+- src\scene\styles\scalarPreviewStyle.ts:371 — updateScalarSectionIsoOverlay(obj, values, {
+- src\scene\styles\scalarPreviewStyle.ts:373 — enabled: sectionIsoEnabled,
+- src\scene\styles\scalarPreviewStyle.ts:374 — linesVisible: sectionIsoLinesVisible,
+- src\scene\styles\scalarPreviewStyle.ts:375 — bandsVisible: sectionIsoBandsVisible,
+- src\scene\styles\scalarPreviewStyle.ts:376 — selectedTargetIds: sectionIsoSelectedTargets,
+- src\scene\styles\scalarPreviewStyle.ts:379 — levelCount: sectionIsoLevelCount,
+- src\scene\styles\scalarPreviewStyle.ts:380 — lineWidth: sectionIsoLineWidth,
+- src\scene\styles\scalarPreviewStyle.ts:381 — lineStyle: sectionIsoLineStyle,
+- src\scene\styles\scalarPreviewStyle.ts:382 — bandOpacity: sectionIsoBandOpacity,
+- src\scene\styles\scalarPreviewStyle.ts:383 — fillOffset: sectionIsoFillOffset,
+- src\scene\styles\scalarPreviewStyle.ts:393 — disposeScalarSectionIsoOverlay(obj);
+- src\scene\styles\scalarPreviewStyle.ts:401 — layerOpacity * sectionIsoSourceOpacity;
+- src\scene\styles\scalarPreviewStyle.ts:404 — layerOpacity * sectionIsoSourceOpacity < 1;
+- src\scene\styles\scalarVolumeStyle.ts:66 — style.sectionIsoEnabled === true
+- src\scene\styles\scalarVolumeStyle.ts:67 — ? styleNumber(style, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\scalarVolumeStyle.ts:156 — sectionIsoSourceOpacity: isoSourceOpacity,
+- src\scene\styles\scalarVolumeStyle.ts:165 — this.updateMtVolumeCutIsoOverlays(style);
+- src\scene\styles\seismicBrowserStyle.ts:11 — disposeScalarSectionIsoOverlay,
+- src\scene\styles\seismicBrowserStyle.ts:13 — updateScalarSectionIsoOverlay,
+- src\scene\styles\seismicBrowserStyle.ts:14 — type ScalarSectionIsoOptions,
+- src\scene\styles\seismicBrowserStyle.ts:15 — } from "../isoOverlays/sectionIsoOverlay";
+- src\scene\styles\seismicBrowserStyle.ts:17 — disposeSeismicFigureAnnotations,
+- src\scene\styles\seismicBrowserStyle.ts:43 — updateSeismicVolumeCutIsoOverlays(style: EditableStyle): void;
+- src\scene\styles\seismicBrowserStyle.ts:44 — updateSeismicResistivityIsoOverlays(style: EditableStyle): void;
+- src\scene\styles\seismicBrowserStyle.ts:290 — const sectionIsoEnabled = effectiveStyle.sectionIsoEnabled === true;
+- src\scene\styles\seismicBrowserStyle.ts:291 — const sectionIsoSourceOpacity = sectionIsoEnabled
+- src\scene\styles\seismicBrowserStyle.ts:292 — ? styleNumber(effectiveStyle, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\seismicBrowserStyle.ts:295 — const volumeSourceOpacity = opacity * sectionIsoSourceOpacity;
+- src\scene\styles\seismicBrowserStyle.ts:301 — typeof effectiveStyle.sectionIsoTargetIds === "object" &&
+- src\scene\styles\seismicBrowserStyle.ts:302 — effectiveStyle.sectionIsoTargetIds !== null
+- src\scene\styles\seismicBrowserStyle.ts:303 — ? effectiveStyle.sectionIsoTargetIds
+- src\scene\styles\seismicBrowserStyle.ts:305 — const sectionIsoMin = clampRange(
+- src\scene\styles\seismicBrowserStyle.ts:306 — styleNumber(effectiveStyle, "sectionIsoMin", amplitudeMin, 0, 1),
+- src\scene\styles\seismicBrowserStyle.ts:310 — const sectionIsoMax = clampRange(
+- src\scene\styles\seismicBrowserStyle.ts:312 — styleNumber(effectiveStyle, "sectionIsoMax", amplitudeMax, 0, 1),
+- src\scene\styles\seismicBrowserStyle.ts:313 — sectionIsoMin + 0.000001,
+- src\scene\styles\seismicBrowserStyle.ts:315 — sectionIsoMin + 0.000001,
+- src\scene\styles\seismicBrowserStyle.ts:318 — const sectionIsoColorMode =
+- src\scene\styles\seismicBrowserStyle.ts:324 — const sectionIsoBaseOptions = {
+- src\scene\styles\seismicBrowserStyle.ts:327 — linesVisible: effectiveStyle.sectionIsoLinesVisible !== false,
+- src\scene\styles\seismicBrowserStyle.ts:328 — bandsVisible: effectiveStyle.sectionIsoBandsVisible !== false,
+- src\scene\styles\seismicBrowserStyle.ts:330 — isoMin: sectionIsoMin,
+- src\scene\styles\seismicBrowserStyle.ts:331 — isoMax: sectionIsoMax,
+- src\scene\styles\seismicBrowserStyle.ts:333 — styleNumber(effectiveStyle, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\styles\seismicBrowserStyle.ts:335 — lineWidth: styleNumber(effectiveStyle, "sectionIsoLineWidth", 2.6, 0, 12),
+- src\scene\styles\seismicBrowserStyle.ts:337 — effectiveStyle.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\scene\styles\seismicBrowserStyle.ts:340 — "sectionIsoBandOpacity",
+- src\scene\styles\seismicBrowserStyle.ts:345 — fillOffset: styleNumber(effectiveStyle, "sectionIsoFillOffset", 0, -1, 1),
+- src\scene\styles\seismicBrowserStyle.ts:346 — colorMode: sectionIsoColorMode,
+- src\scene\styles\seismicBrowserStyle.ts:356 — } satisfies Omit<ScalarSectionIsoOptions, "targetKey" | "alphaValues">;
+- src\scene\styles\seismicBrowserStyle.ts:746 — const sectionIsoAmplitudeValues =
+- src\scene\styles\seismicBrowserStyle.ts:749 — sectionIsoEnabled &&
+- src\scene\styles\seismicBrowserStyle.ts:752 — sectionIsoAmplitudeValues &&
+- src\scene\styles\seismicBrowserStyle.ts:753 — sectionIsoAmplitudeValues.length === position.count
+- src\scene\styles\seismicBrowserStyle.ts:761 — const amplitude = sectionIsoAmplitudeValues[i] ?? 0;
+- src\scene\styles\seismicBrowserStyle.ts:768 — updateScalarSectionIsoOverlay(obj, sectionIsoAmplitudeValues, {
+- src\scene\styles\seismicBrowserStyle.ts:769 — ...sectionIsoBaseOptions,
+- src\scene\styles\seismicBrowserStyle.ts:773 — const root = obj.userData.scalarSectionIsoOverlayRoot as
+- src\scene\styles\seismicBrowserStyle.ts:777 — root.userData.sectionIsoSource = "seismic-amplitude";
+- src\scene\styles\seismicBrowserStyle.ts:778 — root.userData.sectionIsoSourceLayerId =
+- src\scene\styles\seismicBrowserStyle.ts:780 — root.userData.sectionIsoTargetGroup = "seismic-sections";
+- src\scene\styles\seismicBrowserStyle.ts:782 — obj.userData.seismicSectionIsoDisabledReason = null;
+- src\scene\styles\seismicBrowserStyle.ts:784 — obj.userData.seismicSectionIsoDisabledReason =
+- src\scene\styles\seismicBrowserStyle.ts:787 — : "section-iso-disabled";
+- src\scene\styles\seismicBrowserStyle.ts:788 — disposeScalarSectionIsoOverlay(obj);
+- src\scene\styles\seismicBrowserStyle.ts:793 — disposeSeismicFigureAnnotations(obj);
+- src\scene\styles\seismicBrowserStyle.ts:797 — host.updateSeismicVolumeCutIsoOverlays(effectiveStyle);
+- src\scene\styles\seismicBrowserStyle.ts:798 — host.updateSeismicResistivityIsoOverlays(effectiveStyle);
+- src\scene\styles\seismicFigureAnnotations.ts:47 — function disposeObjectTree(root: THREE.Object3D): void {
+- src\scene\styles\seismicFigureAnnotations.ts:50 — mesh.geometry?.dispose?.();
+- src\scene\styles\seismicFigureAnnotations.ts:60 — mapped.map?.dispose();
+- src\scene\styles\seismicFigureAnnotations.ts:61 — material.dispose();
+- src\scene\styles\seismicFigureAnnotations.ts:66 — export function disposeSeismicFigureAnnotations(target: THREE.Object3D): void {
+- src\scene\styles\seismicFigureAnnotations.ts:72 — disposeObjectTree(root);
+- src\scene\styles\seismicFigureAnnotations.ts:321 — disposeSeismicFigureAnnotations(mesh);
+- src\scene\styles\seismicFigureAnnotations.ts:326 — disposeSeismicFigureAnnotations(mesh);
+- src\scene\styles\seismicFigureAnnotations.ts:331 — disposeSeismicFigureAnnotations(mesh);
+- src\scene\styles\seismicFigureAnnotations.ts:335 — disposeSeismicFigureAnnotations(mesh);
+- src\scene\styles\siteDetailStyles.ts:655 — mesh.geometry.dispose();
+- src\scene\terrain\terrainStyleController.ts:11 — import { getHeightSampler } from "../heightSampler";
+- src\scene\terrain\terrainStyleController.ts:13 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\terrain\terrainStyleController.ts:419 — disposeObjectTree(fill);
+- src\scene\terrain\terrainStyleController.ts:451 — fill.geometry.dispose();
+- src\scene\terrain\terrainStyleController.ts:468 — void getHeightSampler().then((sampleHeight) => {
+- src\scene\transitions\layerTweenRuntime.ts:33 — if (transition.sectionIsoStableLayerIds?.has(id)) return 1;
+- src\scene\transitions\layerTweenRuntime.ts:194 — this.tickSectionIsoOverlayTransition(nowMs, eased);
+- src\scene\transitions\layerTweenRuntime.ts:203 — this.tickSectionIsoOverlayTransition(nowMs, 1);
+- src\scene\transitions\layerTweenRuntime.ts:209 — this.commitSectionIsoOverlayTransition();
+- src\scene\transitions\layerTweenRuntime.ts:309 — this.tickSectionIsoOverlayTransition(nowMs);
+- src\scene\transitions\layerTweenRuntime.ts:350 — this.commitSectionIsoOverlayTransition?.();
+- src\scene\transitions\productFamilyRegistry.ts:32 — function sectionIsoEnabled(style: EditableStyle): boolean {
+- src\scene\transitions\productFamilyRegistry.ts:34 — style.sectionIsoEnabled === true &&
+- src\scene\transitions\productFamilyRegistry.ts:35 — (style.sectionIsoBandsVisible !== false ||
+- src\scene\transitions\productFamilyRegistry.ts:36 — style.sectionIsoLinesVisible !== false)
+- src\scene\transitions\productFamilyRegistry.ts:221 — (sectionIsoEnabled(fromStyle) || sectionIsoEnabled(toStyle))
+- src\scene\transitions\productFamilyRegistry.ts:226 — family: "section-iso-overlays",
+- src\scene\transitions\productFamilyRegistry.ts:227 — policy: "follow-section-iso-style",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:60 — "sectionIsoEnabled",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:61 — "sectionIsoLinesVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:62 — "sectionIsoBandsVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:63 — "sectionIsoTargetIds",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:64 — "sectionIsoLineStyle",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:116 — function sectionIsoOverlayVisible(style: ReturnType<typeof effectiveStyle>): boolean {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:117 — if (style.sectionIsoEnabled !== true) return false;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:119 — style.sectionIsoLinesVisible === false &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:120 — style.sectionIsoBandsVisible === false
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:124 — const targetIds = style.sectionIsoTargetIds;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:254 — const sectionIsoEnabled = sectionIsoOverlayVisible(input.style);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:256 — input.style.sectionIsoEnabled === true &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:257 — input.style.sectionIsoLinesVisible !== false;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:259 — input.style.sectionIsoEnabled === true &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:260 — input.style.sectionIsoBandsVisible !== false;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:317 — entityKey: `layer:${input.layerId}:derived:section-iso-lines`,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:318 — representationKey: "derived:section-iso-line",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:319 — presenceState: derivedPresence(sectionIsoEnabled && lineIsoVisible),
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:326 — entityKey: `layer:${input.layerId}:derived:section-iso-bands`,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:327 — representationKey: "derived:section-iso-band",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:328 — presenceState: derivedPresence(sectionIsoEnabled && bandIsoVisible),
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:382 — this.discardSectionIsoOverlayTransition?.();
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:543 — sectionIsoStableLayerIds: new Set<string>(),
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:677 — this.beginSectionIsoOverlayTransition(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:696 — const sectionIsoStable =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:699 — sectionIsoOverlayVisible(fromStyle) &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:700 — sectionIsoOverlayVisible(targetStyle);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:701 — if (sectionIsoStable) {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:702 — this.activeSceneTransitionContext.sectionIsoStableLayerIds.add(id);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:788 — this.applyLayerTransitionRenderOpacity(id, 0, sectionIsoStable ? 1 : 0);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:812 — sectionIsoStable ? 1 : fromOpacity > 0.001 ? 1 : 0,
+- src\scene\transitions\transitionStyles.ts:93 — export type SectionIsoOverlayTransitionRootKind =
+- src\scene\transitions\transitionStyles.ts:98 — export interface SectionIsoOverlayTransitionRoot {
+- src\scene\transitions\transitionStyles.ts:99 — kind: SectionIsoOverlayTransitionRootKind;
+- src\scene\transitions\transitionStyles.ts:105 — export interface SectionIsoOverlayTransition {
+- src\scene\transitions\transitionStyles.ts:106 — sourceRoots: SectionIsoOverlayTransitionRoot[];
+- src\scene\transitions\transitionStyles.ts:107 — targetRoots: SectionIsoOverlayTransitionRoot[];
+- src\scene\transitions\transitionStyles.ts:150 — | "section-iso-overlays"
+- src\scene\transitions\transitionStyles.ts:161 — | "follow-section-iso-style";
+- src\scene\transitions\transitionStyles.ts:198 — sectionIsoStableLayerIds: Set<string>;
+- src\scene\transitions\transitionStyles.ts:237 — "sectionIsoMin",
+- src\scene\transitions\transitionStyles.ts:238 — "sectionIsoMax",
+- src\scene\transitions\transitionStyles.ts:239 — "sectionIsoLevelCount",
+- src\scene\transitions\transitionStyles.ts:240 — "sectionIsoLineWidth",
+- src\scene\transitions\transitionStyles.ts:241 — "sectionIsoBandOpacity",
+- src\scene\transitions\transitionStyles.ts:242 — "sectionIsoFillOffset",
+- src\scene\transitions\transitionStyles.ts:243 — "sectionIsoSourceOpacity",
+- src\scene\transitions\transitionStyles.ts:334 — if (field === "sectionIsoMin") return displayMin;
+- src\scene\transitions\transitionStyles.ts:335 — if (field === "sectionIsoMax") return displayMax;
+- src\scene\transitions\transitionStyles.ts:336 — if (field === "sectionIsoLevelCount") return 5;
+- src\scene\transitions\transitionStyles.ts:337 — if (field === "sectionIsoLineWidth") return 2.6;
+- src\scene\transitions\transitionStyles.ts:338 — if (field === "sectionIsoBandOpacity") return 0.32;
+- src\scene\transitions\transitionStyles.ts:339 — if (field === "sectionIsoFillOffset") return 0;
+- src\scene\transitions\transitionStyles.ts:340 — if (field === "sectionIsoSourceOpacity") return 0;
+- src\scene\transitions\transitionStyles.ts:686 — "sectionIsoEnabled",
+- src\scene\transitions\transitionStyles.ts:687 — "sectionIsoTargetIds",
+- src\scene\workingArea\workingAreaFocusController.ts:225 — runtime.line.geometry.dispose();
+- src\ui\SectionIsoLegend.tsx:30 — ScalarSectionIsoTarget,
+- src\ui\SectionIsoLegend.tsx:31 — SectionIsoTargetGroup,
+- src\ui\SectionIsoLegend.tsx:338 — function targetSignature(targets: ScalarSectionIsoTarget[]): string {
+- src\ui\SectionIsoLegend.tsx:369 — targets: ScalarSectionIsoTarget[],
+- src\ui\SectionIsoLegend.tsx:370 — ): Array<{ id: SectionIsoTargetGroup; label: string }> {
+- src\ui\SectionIsoLegend.tsx:371 — const groups = new Map<SectionIsoTargetGroup, string>();
+- src\ui\SectionIsoLegend.tsx:380 — group: SectionIsoTargetGroup,
+- src\ui\SectionIsoLegend.tsx:402 — group: SectionIsoTargetGroup,
+- src\ui\SectionIsoLegend.tsx:422 — function groupSupportsVolumeToggle(group: SectionIsoTargetGroup): boolean {
+- src\ui\SectionIsoLegend.tsx:430 — export function SectionIsoLegend({
+- src\ui\SectionIsoLegend.tsx:447 — const [targets, setTargets] = useState<ScalarSectionIsoTarget[]>([]);
+- src\ui\SectionIsoLegend.tsx:448 — const [activeGroup, setActiveGroup] = useState<SectionIsoTargetGroup | "">("");
+- src\ui\SectionIsoLegend.tsx:459 — .listSectionIsoTargets()
+- src\ui\SectionIsoLegend.tsx:545 — styleNumber(style, "sectionIsoMin", displayMin),
+- src\ui\SectionIsoLegend.tsx:550 — Math.max(styleNumber(style, "sectionIsoMax", displayMax), isoMin + 0.01),
+- src\ui\SectionIsoLegend.tsx:555 — clamp(styleNumber(style, "sectionIsoLevelCount", 5), 2, 32),
+- src\ui\SectionIsoLegend.tsx:557 — const lineWidth = clamp(styleNumber(style, "sectionIsoLineWidth", 2.6), 0, 12);
+- src\ui\SectionIsoLegend.tsx:559 — styleNumber(style, "sectionIsoBandOpacity", 0.32),
+- src\ui\SectionIsoLegend.tsx:563 — const fillOffset = clamp(styleNumber(style, "sectionIsoFillOffset", 0), -1, 1);
+- src\ui\SectionIsoLegend.tsx:564 — const lineStyle = style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid";
+- src\ui\SectionIsoLegend.tsx:565 — const enabled = style.sectionIsoEnabled === true;
+- src\ui\SectionIsoLegend.tsx:566 — const linesVisible = styleBoolean(style, "sectionIsoLinesVisible", true);
+- src\ui\SectionIsoLegend.tsx:567 — const bandsVisible = styleBoolean(style, "sectionIsoBandsVisible", true);
+- src\ui\SectionIsoLegend.tsx:569 — styleNumber(style, "sectionIsoSourceOpacity", 0),
+- src\ui\SectionIsoLegend.tsx:579 — typeof style.sectionIsoTargetIds === "object" &&
+- src\ui\SectionIsoLegend.tsx:580 — style.sectionIsoTargetIds !== null
+- src\ui\SectionIsoLegend.tsx:581 — ? (style.sectionIsoTargetIds as Record<string, boolean>)
+- src\ui\SectionIsoLegend.tsx:600 — typeof patch.sectionIsoLinesVisible === "boolean"
+- src\ui\SectionIsoLegend.tsx:601 — ? patch.sectionIsoLinesVisible
+- src\ui\SectionIsoLegend.tsx:604 — typeof patch.sectionIsoBandsVisible === "boolean"
+- src\ui\SectionIsoLegend.tsx:605 — ? patch.sectionIsoBandsVisible
+- src\ui\SectionIsoLegend.tsx:608 — typeof patch.sectionIsoTargetIds === "object" &&
+- src\ui\SectionIsoLegend.tsx:609 — patch.sectionIsoTargetIds !== null
+- src\ui\SectionIsoLegend.tsx:610 — ? (patch.sectionIsoTargetIds as Record<string, boolean>)
+- src\ui\SectionIsoLegend.tsx:617 — const commitIsoOverlayPatch = (patch: Partial<EditableStyle>) => {
+- src\ui\SectionIsoLegend.tsx:619 — sectionIsoEnabled: overlayVisibleForPatch(patch),
+- src\ui\SectionIsoLegend.tsx:625 — sectionIsoEnabled: nextEnabled ? overlayVisibleForPatch({}) : false,
+- src\ui\SectionIsoLegend.tsx:628 — const setTargetSelected = (target: ScalarSectionIsoTarget, checked: boolean) => {
+- src\ui\SectionIsoLegend.tsx:634 — sectionIsoEnabled:
+- src\ui\SectionIsoLegend.tsx:636 — ? overlayVisibleForPatch({ sectionIsoTargetIds: nextTargetIds })
+- src\ui\SectionIsoLegend.tsx:638 — sectionIsoTargetIds: nextTargetIds,
+- src\ui\SectionIsoLegend.tsx:655 — data-testid="section-iso-legend"
+- src\ui\SectionIsoLegend.tsx:663 — data-testid="section-iso-show-volume"
+- src\ui\SectionIsoLegend.tsx:668 — sectionIsoSourceOpacity: showVolume ? 0 : 1,
+- src\ui\SectionIsoLegend.tsx:683 — data-testid="section-iso-volume-controls"
+- src\ui\SectionIsoLegend.tsx:698 — data-testid="section-iso-remove-empty"
+- src\ui\SectionIsoLegend.tsx:720 — data-testid="section-iso-section-toggle"
+- src\ui\SectionIsoLegend.tsx:732 — data-testid="section-iso-configure"
+- src\ui\SectionIsoLegend.tsx:745 — data-testid="section-iso-lines-quick"
+- src\ui\SectionIsoLegend.tsx:748 — commitIsoOverlayPatch({ sectionIsoLinesVisible: !linesActive })
+- src\ui\SectionIsoLegend.tsx:761 — data-testid="section-iso-bands-quick"
+- src\ui\SectionIsoLegend.tsx:764 — commitIsoOverlayPatch({ sectionIsoBandsVisible: !bandsActive })
+- src\ui\SectionIsoLegend.tsx:785 — data-testid="section-iso-popout"
+- src\ui\SectionIsoLegend.tsx:810 — data-testid="section-iso-popout-dataset"
+- src\ui\SectionIsoLegend.tsx:815 — event.currentTarget.value as SectionIsoTargetGroup,
+- src\ui\SectionIsoLegend.tsx:831 — data-testid="section-iso-lines-visible"
+- src\ui\SectionIsoLegend.tsx:834 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:835 — sectionIsoLinesVisible: event.currentTarget.checked,
+- src\ui\SectionIsoLegend.tsx:847 — data-testid="section-iso-bands-visible"
+- src\ui\SectionIsoLegend.tsx:850 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:851 — sectionIsoBandsVisible: event.currentTarget.checked,
+- src\ui\SectionIsoLegend.tsx:867 — data-testid="section-iso-min"
+- src\ui\SectionIsoLegend.tsx:870 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:871 — sectionIsoMin: clamp(
+- src\ui\SectionIsoLegend.tsx:889 — data-testid="section-iso-max"
+- src\ui\SectionIsoLegend.tsx:892 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:893 — sectionIsoMax: clamp(
+- src\ui\SectionIsoLegend.tsx:911 — data-testid="section-iso-level-count"
+- src\ui\SectionIsoLegend.tsx:914 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:915 — sectionIsoLevelCount: Math.round(
+- src\ui\SectionIsoLegend.tsx:927 — data-testid="section-iso-line-style"
+- src\ui\SectionIsoLegend.tsx:931 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:932 — sectionIsoLineStyle:
+- src\ui\SectionIsoLegend.tsx:949 — data-testid="section-iso-line-width"
+- src\ui\SectionIsoLegend.tsx:952 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:953 — sectionIsoLineWidth: clamp(
+- src\ui\SectionIsoLegend.tsx:971 — data-testid="section-iso-band-opacity"
+- src\ui\SectionIsoLegend.tsx:974 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:975 — sectionIsoBandOpacity: clamp(
+- src\ui\SectionIsoLegend.tsx:999 — data-testid="section-iso-fill-offset"
+- src\ui\SectionIsoLegend.tsx:1002 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:1003 — sectionIsoFillOffset: clamp(
+- src\ui\SectionIsoLegend.tsx:1038 — data-testid={`section-iso-target-${target.sectionId}`}
+- src\editor\EditorChrome.tsx:19 — import { SectionIsoLegend } from "../ui/SectionIsoLegend";
+- src\editor\EditorChrome.tsx:81 — | "section-iso"
+- src\editor\EditorChrome.tsx:89 — "section-iso",
+- src\editor\EditorChrome.tsx:129 — sectionIsoTargetsVisible: boolean,
+- src\editor\EditorChrome.tsx:135 — "section-iso": false,
+- src\editor\EditorChrome.tsx:173 — const possibleSectionIsoTargetVisible =
+- src\editor\EditorChrome.tsx:185 — "section-iso": possibleSectionIsoTargetVisible && sectionIsoTargetsVisible,
+- src\editor\EditorChrome.tsx:270 — <SectionIsoLegend />
+- src\editor\EditorChrome.tsx:359 — const sectionIsoTargetsVisible = sceneHandle.manager
+- src\editor\EditorChrome.tsx:360 — .listSectionIsoTargets()
+- src\editor\EditorChrome.tsx:367 — sectionIsoTargetsVisible,
+- src\editor\EditorChrome.tsx:397 — sectionIsoTargetsVisible,
+- src\editor\EditorChrome.tsx:402 — sectionIsoTargetsVisible,
+- src\editor\EditorChrome.tsx:516 — case "section-iso":
+- src\editor\EditorChrome.tsx:517 — return <SectionIsoLegend stacked pageOverride={pageOverride} />;
+- src\editor\layerControls\layerPanelConfig.ts:257 — "sectionIsoEnabled",
+- src\editor\layerControls\layerPanelConfig.ts:258 — "sectionIsoLinesVisible",
+- src\editor\layerControls\layerPanelConfig.ts:259 — "sectionIsoBandsVisible",
+- src\editor\layerControls\layerPanelConfig.ts:260 — "sectionIsoTargetIds",
+- src\editor\layerControls\layerPanelConfig.ts:261 — "sectionIsoMin",
+- src\editor\layerControls\layerPanelConfig.ts:262 — "sectionIsoMax",
+- src\editor\layerControls\layerPanelConfig.ts:263 — "sectionIsoLevelCount",
+- src\editor\layerControls\layerPanelConfig.ts:264 — "sectionIsoLineWidth",
+- src\editor\layerControls\layerPanelConfig.ts:265 — "sectionIsoLineStyle",
+- src\editor\layerControls\layerPanelConfig.ts:266 — "sectionIsoBandOpacity",
+- src\editor\layerControls\layerPanelConfig.ts:267 — "sectionIsoFillOffset",
+- src\editor\layerControls\layerPanelConfig.ts:268 — "sectionIsoSourceOpacity",
+- src\editor\layerControls\layerPanelConfig.ts:299 — "sectionIsoEnabled",
+- src\editor\layerControls\layerPanelConfig.ts:300 — "sectionIsoLinesVisible",
+- src\editor\layerControls\layerPanelConfig.ts:301 — "sectionIsoBandsVisible",
+- src\editor\layerControls\layerPanelConfig.ts:302 — "sectionIsoTargetIds",
+- src\editor\layerControls\layerPanelConfig.ts:303 — "sectionIsoMin",
+- src\editor\layerControls\layerPanelConfig.ts:304 — "sectionIsoMax",
+- src\editor\layerControls\layerPanelConfig.ts:305 — "sectionIsoLevelCount",
+- src\editor\layerControls\layerPanelConfig.ts:306 — "sectionIsoLineWidth",
+- src\editor\layerControls\layerPanelConfig.ts:307 — "sectionIsoLineStyle",
+- src\editor\layerControls\layerPanelConfig.ts:308 — "sectionIsoBandOpacity",
+- src\editor\layerControls\layerPanelConfig.ts:309 — "sectionIsoFillOffset",
+- src\editor\layerControls\layerPanelConfig.ts:310 — "sectionIsoSourceOpacity",
+- src\editor\layerControls\layerPanelConfig.ts:386 — "sectionIsoEnabled",
+- src\editor\layerControls\layerPanelConfig.ts:387 — "sectionIsoLinesVisible",
+- src\editor\layerControls\layerPanelConfig.ts:388 — "sectionIsoBandsVisible",
+- src\editor\layerControls\layerPanelConfig.ts:389 — "sectionIsoTargetIds",
+- src\editor\layerControls\layerPanelConfig.ts:390 — "sectionIsoMin",
+- src\editor\layerControls\layerPanelConfig.ts:391 — "sectionIsoMax",
+- src\editor\layerControls\layerPanelConfig.ts:392 — "sectionIsoLevelCount",
+- src\editor\layerControls\layerPanelConfig.ts:393 — "sectionIsoLineWidth",
+- src\editor\layerControls\layerPanelConfig.ts:394 — "sectionIsoLineStyle",
+- src\editor\layerControls\layerPanelConfig.ts:395 — "sectionIsoBandOpacity",
+- src\editor\layerControls\layerPanelConfig.ts:396 — "sectionIsoFillOffset",
+- src\editor\layerControls\layerPanelConfig.ts:397 — "sectionIsoSourceOpacity",
+- src\editor\layerControls\layerPatchBuilders.ts:39 — ...sectionIsoPatchFromStyle(style),
+- src\editor\layerControls\layerPatchBuilders.ts:95 — export function sectionIsoPatchFromStyle(
+- src\editor\layerControls\layerPatchBuilders.ts:99 — sectionIsoEnabled: styleBoolean(style, "sectionIsoEnabled", false),
+- src\editor\layerControls\layerPatchBuilders.ts:100 — sectionIsoLinesVisible: styleBoolean(style, "sectionIsoLinesVisible", true),
+- src\editor\layerControls\layerPatchBuilders.ts:101 — sectionIsoBandsVisible: styleBoolean(style, "sectionIsoBandsVisible", true),
+- src\editor\layerControls\layerPatchBuilders.ts:102 — sectionIsoTargetIds:
+- src\editor\layerControls\layerPatchBuilders.ts:103 — typeof style.sectionIsoTargetIds === "object" &&
+- src\editor\layerControls\layerPatchBuilders.ts:104 — style.sectionIsoTargetIds !== null
+- src\editor\layerControls\layerPatchBuilders.ts:105 — ? { ...(style.sectionIsoTargetIds as Record<string, boolean>) }
+- src\editor\layerControls\layerPatchBuilders.ts:107 — sectionIsoMin: styleNumber(style, "sectionIsoMin", SCALAR_SOURCE_MIN),
+- src\editor\layerControls\layerPatchBuilders.ts:108 — sectionIsoMax: styleNumber(style, "sectionIsoMax", SCALAR_SOURCE_MAX),
+- src\editor\layerControls\layerPatchBuilders.ts:109 — sectionIsoLevelCount: Math.max(
+- src\editor\layerControls\layerPatchBuilders.ts:111 — Math.min(32, Math.round(styleNumber(style, "sectionIsoLevelCount", 32))),
+- src\editor\layerControls\layerPatchBuilders.ts:113 — sectionIsoLineWidth: styleNumber(style, "sectionIsoLineWidth", 2.6),
+- src\editor\layerControls\layerPatchBuilders.ts:114 — sectionIsoLineStyle:
+- src\editor\layerControls\layerPatchBuilders.ts:115 — style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\editor\layerControls\layerPatchBuilders.ts:116 — sectionIsoBandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32),
+- src\editor\layerControls\layerPatchBuilders.ts:117 — sectionIsoFillOffset: styleNumber(style, "sectionIsoFillOffset", 0),
+- src\editor\layerControls\layerPatchBuilders.ts:118 — sectionIsoSourceOpacity: styleNumber(style, "sectionIsoSourceOpacity", 0),
+- src\editor\layerControls\mt\IsobandControls.tsx:59 — const enabled = styleBoolean(style, "sectionIsoEnabled", false);
+- src\editor\layerControls\mt\IsobandControls.tsx:60 — const linesVisible = styleBoolean(style, "sectionIsoLinesVisible", true);
+- src\editor\layerControls\mt\IsobandControls.tsx:61 — const bandsVisible = styleBoolean(style, "sectionIsoBandsVisible", true);
+- src\editor\layerControls\mt\IsobandControls.tsx:64 — Math.min(1, styleNumber(style, "sectionIsoSourceOpacity", 0)),
+- src\editor\layerControls\mt\IsobandControls.tsx:68 — Math.min(32, Math.round(styleNumber(style, "sectionIsoLevelCount", 32))),
+- src\editor\layerControls\mt\IsobandControls.tsx:72 — Math.min(12, styleNumber(style, "sectionIsoLineWidth", 2.6)),
+- src\editor\layerControls\mt\IsobandControls.tsx:76 — Math.min(0.85, styleNumber(style, "sectionIsoBandOpacity", 0.32)),
+- src\editor\layerControls\mt\IsobandControls.tsx:80 — Math.min(1, styleNumber(style, "sectionIsoFillOffset", 0)),
+- src\editor\layerControls\mt\IsobandControls.tsx:82 — const lineStyle = style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid";
+- src\editor\layerControls\mt\IsobandControls.tsx:83 — const bandSelection = Array.isArray(style.sectionIsoBandSelection)
+- src\editor\layerControls\mt\IsobandControls.tsx:84 — ? style.sectionIsoBandSelection
+- src\editor\layerControls\mt\IsobandControls.tsx:86 — // sectionIsoLevels makes levelCount interior levels -> levelCount + 1 bands.
+- src\editor\layerControls\mt\IsobandControls.tsx:102 — styleNumber(style, "sectionIsoMin", fallbackMin),
+- src\editor\layerControls\mt\IsobandControls.tsx:107 — Math.min(sourceMax, styleNumber(style, "sectionIsoMax", fallbackMax)),
+- src\editor\layerControls\mt\IsobandControls.tsx:201 — sectionIsoEnabled: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:202 — sectionIsoBandsVisible: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:203 — sectionIsoLinesVisible: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:204 — sectionIsoLevelCount: 32,
+- src\editor\layerControls\mt\IsobandControls.tsx:205 — sectionIsoSourceOpacity: 0,
+- src\editor\layerControls\mt\IsobandControls.tsx:206 — sectionIsoMin: fallbackMin,
+- src\editor\layerControls\mt\IsobandControls.tsx:207 — sectionIsoMax: Math.max(fallbackMin + 0.001, fallbackMax),
+- src\editor\layerControls\mt\IsobandControls.tsx:209 — : { sectionIsoEnabled: false },
+- src\editor\layerControls\mt\IsobandControls.tsx:305 — sectionIsoSourceOpacity: parseFloat(event.target.value),
+- src\editor\layerControls\mt\IsobandControls.tsx:329 — sectionIsoLevelCount: Math.round(
+- src\editor\layerControls\mt\IsobandControls.tsx:368 — sectionIsoBandSelection: Array.from(next).sort(
+- src\editor\layerControls\mt\IsobandControls.tsx:397 — onClick={() => commit({ sectionIsoBandSelection: [] })}
+- src\editor\layerControls\mt\IsobandControls.tsx:427 — sectionIsoMin: next,
+- src\editor\layerControls\mt\IsobandControls.tsx:428 — sectionIsoMax: Math.max(isoMax, next + 0.001),
+- src\editor\layerControls\mt\IsobandControls.tsx:453 — sectionIsoMin: Math.min(isoMin, next - 0.001),
+- src\editor\layerControls\mt\IsobandControls.tsx:454 — sectionIsoMax: next,
+- src\editor\layerControls\mt\IsobandControls.tsx:474 — commit({ sectionIsoBandsVisible: event.target.checked })
+- src\editor\layerControls\mt\IsobandControls.tsx:491 — commit({ sectionIsoBandOpacity: parseFloat(event.target.value) })
+- src\editor\layerControls\mt\IsobandControls.tsx:513 — commit({ sectionIsoFillOffset: parseFloat(event.target.value) })
+- src\editor\layerControls\mt\IsobandControls.tsx:532 — commit({ sectionIsoLinesVisible: event.target.checked })
+- src\editor\layerControls\mt\IsobandControls.tsx:546 — sectionIsoLineStyle:
+- src\editor\layerControls\mt\IsobandControls.tsx:571 — commit({ sectionIsoLineWidth: parseFloat(event.target.value) })
+- src\editor\layerControls\seismic\seismicModel.ts:616 — export function sectionIsoPatchFromStyle(
+- src\editor\layerControls\seismic\seismicModel.ts:620 — sectionIsoEnabled: styleBoolean(style, "sectionIsoEnabled", false),
+- src\editor\layerControls\seismic\seismicModel.ts:621 — sectionIsoLinesVisible: styleBoolean(style, "sectionIsoLinesVisible", true),
+- src\editor\layerControls\seismic\seismicModel.ts:622 — sectionIsoBandsVisible: styleBoolean(style, "sectionIsoBandsVisible", true),
+- src\editor\layerControls\seismic\seismicModel.ts:623 — sectionIsoTargetIds:
+- src\editor\layerControls\seismic\seismicModel.ts:624 — typeof style.sectionIsoTargetIds === "object" &&
+- src\editor\layerControls\seismic\seismicModel.ts:625 — style.sectionIsoTargetIds !== null
+- src\editor\layerControls\seismic\seismicModel.ts:626 — ? { ...(style.sectionIsoTargetIds as Record<string, boolean>) }
+- src\editor\layerControls\seismic\seismicModel.ts:628 — sectionIsoMin: styleNumber(style, "sectionIsoMin", SCALAR_SOURCE_MIN),
+- src\editor\layerControls\seismic\seismicModel.ts:629 — sectionIsoMax: styleNumber(style, "sectionIsoMax", SCALAR_SOURCE_MAX),
+- src\editor\layerControls\seismic\seismicModel.ts:630 — sectionIsoLevelCount: Math.max(
+- src\editor\layerControls\seismic\seismicModel.ts:632 — Math.min(32, Math.round(styleNumber(style, "sectionIsoLevelCount", 32))),
+- src\editor\layerControls\seismic\seismicModel.ts:634 — sectionIsoLineWidth: styleNumber(style, "sectionIsoLineWidth", 2.6),
+- src\editor\layerControls\seismic\seismicModel.ts:635 — sectionIsoLineStyle:
+- src\editor\layerControls\seismic\seismicModel.ts:636 — style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\editor\layerControls\seismic\seismicModel.ts:637 — sectionIsoBandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32),
+- src\editor\layerControls\seismic\seismicModel.ts:638 — sectionIsoFillOffset: styleNumber(style, "sectionIsoFillOffset", 0),
+- src\editor\layerControls\seismic\seismicModel.ts:639 — sectionIsoSourceOpacity: styleNumber(style, "sectionIsoSourceOpacity", 0),
+- src\editor\layerControls\seismic\seismicModel.ts:658 — ...sectionIsoPatchFromStyle(style),
+- src\editor\layerControls\seismic\seismicModel.ts:750 — sectionIsoMin: styleNumber(
+- src\editor\layerControls\seismic\seismicModel.ts:752 — "sectionIsoMin",
+- src\editor\layerControls\seismic\seismicModel.ts:755 — sectionIsoMax: styleNumber(
+- src\editor\layerControls\seismic\seismicModel.ts:757 — "sectionIsoMax",
+
+## Working area focus
+
+- src\scene\CLAUDE.md:20 — `terrain/terrainStyleController.ts`, `workingArea/workingAreaFocusController.ts`,
+- src\scene\CLAUDE.md:28 — - `scalarFocus.ts` — scalar focus / working-area clip helpers.
+- src\scene\layerLoaders.ts:145 — function workingAreaSceneBounds(spec: ProjectLayerSpec): {
+- src\scene\layerLoaders.ts:150 — const workingArea =
+- src\scene\layerLoaders.ts:151 — metadata.phase3WorkingArea && typeof metadata.phase3WorkingArea === "object"
+- src\scene\layerLoaders.ts:152 — ? (metadata.phase3WorkingArea as Record<string, unknown>)
+- src\scene\layerLoaders.ts:155 — workingArea?.sceneBounds && typeof workingArea.sceneBounds === "object"
+- src\scene\layerLoaders.ts:156 — ? (workingArea.sceneBounds as Record<string, unknown>)
+- src\scene\layerLoaders.ts:197 — function applyWorkingAreaTopLinePolicy(
+- src\scene\layerLoaders.ts:208 — phase3WorkingArea: true,
+- src\scene\layerLoaders.ts:235 — phase3WorkingArea: true,
+- src\scene\layerLoaders.ts:294 — function loadUtahForgePhase3WorkingAreaBox(
+- src\scene\layerLoaders.ts:298 — const bounds = workingAreaSceneBounds(spec);
+- src\scene\layerLoaders.ts:324 — phase3WorkingAreaBoundingBox: true,
+- src\scene\layerLoaders.ts:333 — phase3WorkingArea: true,
+- src\scene\layerLoaders.ts:342 — id: "utah-forge-phase3-working-area",
+- src\scene\layerLoaders.ts:343 — matches: (spec) => spec.id === "utah-forge-phase3-working-area",
+- src\scene\layerLoaders.ts:346 — const bounds = workingAreaSceneBounds(context.spec);
+- src\scene\layerLoaders.ts:351 — "loadUtahForgePhase3WorkingArea",
+- src\scene\layerLoaders.ts:353 — applyWorkingAreaTopLinePolicy(
+- src\scene\layerLoaders.ts:363 — context.onLoaded(loadUtahForgePhase3WorkingAreaBox(context.spec));
+- src\scene\SceneManager.ts:97 — type WorkingAreaFocusStyleTween,
+- src\scene\SceneManager.ts:196 — applyWorkingAreaFocusMaterialImpl,
+- src\scene\SceneManager.ts:197 — applyWorkingAreaFocusStyleImpl,
+- src\scene\SceneManager.ts:198 — cleanWorkingAreaFocusVectorImpl,
+- src\scene\SceneManager.ts:199 — ensureWorkingAreaFocusRuntimeImpl,
+- src\scene\SceneManager.ts:200 — getWorkingAreaFocusDebugStateImpl,
+- src\scene\SceneManager.ts:201 — interpolatedWorkingAreaFocusStyleImpl,
+- src\scene\SceneManager.ts:202 — rebuildWorkingAreaFocusHelperImpl,
+- src\scene\SceneManager.ts:203 — reapplyWorkingAreaFocusImpl,
+- src\scene\SceneManager.ts:204 — resolveWorkingAreaFocusBoundsImpl,
+- src\scene\SceneManager.ts:205 — setKnownShaderWorkingAreaFocusImpl,
+- src\scene\SceneManager.ts:206 — transitionWorkingAreaFocusForPageImpl,
+- src\scene\SceneManager.ts:207 — workingAreaFocusOutsideOpacityImpl,
+- src\scene\SceneManager.ts:208 — workingAreaFocusSegmentPositionsImpl,
+- src\scene\SceneManager.ts:209 — workingAreaFocusStateImpl,
+- src\scene\SceneManager.ts:210 — workingAreaFocusTargetLayerIdsImpl,
+- src\scene\SceneManager.ts:211 — type WorkingAreaFocusRuntime,
+- src\scene\SceneManager.ts:212 — type WorkingAreaFocusState,
+- src\scene\SceneManager.ts:213 — } from "./workingArea/workingAreaFocusController";
+- src\scene\SceneManager.ts:452 — outsideOpacityByAxis: Record<SceneSectionAxis, number>;
+- src\scene\SceneManager.ts:453 — outsideOpacityByFrameId: Record<string, number>;
+- src\scene\SceneManager.ts:614 — workingAreaMs: number;
+- src\scene\SceneManager.ts:630 — workingAreaFocusTweenActiveBefore: boolean;
+- src\scene\SceneManager.ts:697 — private workingAreaFocusRuntime: WorkingAreaFocusRuntime | null = null;
+- src\scene\SceneManager.ts:699 — private lastWorkingAreaFocusStyle: EditableStyle = {};
+- src\scene\SceneManager.ts:700 — currentWorkingAreaFocusStyle: EditableStyle = {};
+- src\scene\SceneManager.ts:773 — private workingAreaFocusTween: WorkingAreaFocusStyleTween | null = null;
+- src\scene\SceneManager.ts:900 — if (this.workingAreaFocusRuntime) {
+- src\scene\SceneManager.ts:901 — const focusState = this.workingAreaFocusState(
+- src\scene\SceneManager.ts:902 — this.lastWorkingAreaFocusStyle,
+- src\scene\SceneManager.ts:904 — this.workingAreaFocusRuntime.group.visible =
+- src\scene\SceneManager.ts:1198 — this.reapplyWorkingAreaFocus();
+- src\scene\SceneManager.ts:2394 — workingAreaFocusTargetLayerIds(style: EditableStyle): Set<string> {
+- src\scene\SceneManager.ts:2395 — return workingAreaFocusTargetLayerIdsImpl.call(this, style);
+- src\scene\SceneManager.ts:2398 — workingAreaFocusOutsideOpacity(style: EditableStyle, layerId: string): number {
+- src\scene\SceneManager.ts:2399 — return workingAreaFocusOutsideOpacityImpl.call(this, style, layerId);
+- src\scene\SceneManager.ts:2402 — cleanWorkingAreaFocusVector(value: unknown): THREE.Vector3 | null {
+- src\scene\SceneManager.ts:2403 — return cleanWorkingAreaFocusVectorImpl.call(this, value);
+- src\scene\SceneManager.ts:2406 — resolveWorkingAreaFocusBounds(boundsLayerId: string): {
+- src\scene\SceneManager.ts:2410 — return resolveWorkingAreaFocusBoundsImpl.call(this, boundsLayerId);
+- src\scene\SceneManager.ts:2413 — workingAreaFocusState(style: EditableStyle): WorkingAreaFocusState {
+- src\scene\SceneManager.ts:2414 — return workingAreaFocusStateImpl.call(this, style);
+- src\scene\SceneManager.ts:2417 — workingAreaFocusSegmentPositions(min: THREE.Vector3, max: THREE.Vector3): number[] {
+- src\scene\SceneManager.ts:2418 — return workingAreaFocusSegmentPositionsImpl.call(this, min, max);
+- src\scene\SceneManager.ts:2421 — ensureWorkingAreaFocusRuntime(): WorkingAreaFocusRuntime {
+- src\scene\SceneManager.ts:2422 — return ensureWorkingAreaFocusRuntimeImpl.call(this);
+- src\scene\SceneManager.ts:2425 — rebuildWorkingAreaFocusHelper(state: WorkingAreaFocusState): void {
+- src\scene\SceneManager.ts:2426 — return rebuildWorkingAreaFocusHelperImpl.call(this, state);
+- src\scene\SceneManager.ts:2429 — setKnownShaderWorkingAreaFocus(material: THREE.ShaderMaterial, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): boolean {
+- src\scene\SceneManager.ts:2430 — return setKnownShaderWorkingAreaFocusImpl.call(this, material, enabled, state, outsideOpacity);
+- src\scene\SceneManager.ts:2433 — applyWorkingAreaFocusMaterial(material: THREE.Material, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): void {
+- src\scene\SceneManager.ts:2434 — return applyWorkingAreaFocusMaterialImpl.call(this, material, enabled, state, outsideOpacity);
+- src\scene\SceneManager.ts:2437 — applyWorkingAreaFocusStyle(style: EditableStyle): void {
+- src\scene\SceneManager.ts:2438 — return applyWorkingAreaFocusStyleImpl.call(this, style);
+- src\scene\SceneManager.ts:2441 — reapplyWorkingAreaFocus(): void {
+- src\scene\SceneManager.ts:2442 — return reapplyWorkingAreaFocusImpl.call(this);
+- src\scene\SceneManager.ts:2445 — interpolatedWorkingAreaFocusStyle(fromStyle: EditableStyle, toStyle: EditableStyle, t: number): EditableStyle {
+- src\scene\SceneManager.ts:2446 — return interpolatedWorkingAreaFocusStyleImpl.call(this, fromStyle, toStyle, t);
+- src\scene\SceneManager.ts:2449 — transitionWorkingAreaFocusForPage(fromEnvironment: EnvironmentSetup, toEnvironment: EnvironmentSetup, fromPage: PresentationPage, toPage: PresentationPage, durationMs: number, easing: EasingName): void {
+- src\scene\SceneManager.ts:2450 — return transitionWorkingAreaFocusForPageImpl.call(this, fromEnvironment, toEnvironment, fromPage, toPage, durationMs, easing);
+- src\scene\SceneManager.ts:2453 — getWorkingAreaFocusDebugState(): {
+- src\scene\SceneManager.ts:2457 — targetLayerIds: string[];
+- src\scene\SceneManager.ts:2458 — outsideOpacityByLayerId: Record<string, number>;
+- src\scene\SceneManager.ts:2464 — return getWorkingAreaFocusDebugStateImpl.call(this);
+- src\scene\SceneManager.ts:2725 — workingAreaFocusTweenActive: boolean;
+- src\scene\SceneManager.ts:2758 — (this.workingAreaFocusTween ? 1 : 0),
+- src\scene\SceneManager.ts:2762 — workingAreaFocusTweenActive: this.workingAreaFocusTween !== null,
+- src\scene\SceneManager.ts:3085 — if (this.workingAreaFocusTween) {
+- src\scene\SceneManager.ts:3086 — this.applyWorkingAreaFocusStyle(
+- src\scene\SceneManager.ts:3087 — this.interpolatedWorkingAreaFocusStyle(
+- src\scene\SceneManager.ts:3088 — this.workingAreaFocusTween.fromStyle,
+- src\scene\SceneManager.ts:3089 — this.workingAreaFocusTween.toStyle,
+- src\scene\SceneManager.ts:3090 — this.transitionTweenEasedProgress(this.workingAreaFocusTween, nowMs),
+- src\scene\SceneManager.ts:3094 — this.reapplyWorkingAreaFocus();
+- src\scene\SceneManager.ts:4025 — this.workingAreaFocusTween = null;
+- src\scene\SceneManager.ts:4039 — this.applyWorkingAreaFocusStyle(
+- src\scene\SceneManager.ts:4051 — this.workingAreaFocusTween = null;
+- src\scene\SceneManager.ts:4060 — this.applyWorkingAreaFocusStyle(
+- src\scene\SceneManager.ts:4385 — this.reapplyWorkingAreaFocus();
+- src\scene\SceneManager.ts:4903 — const focusMaterial = this.workingAreaFocusRuntime?.line.material;
+- src\scene\terrainMaterial.ts:103 — orthoPhotoOutsideOpacity?: number;
+- src\scene\terrainMaterial.ts:443 — uOrthoPhotoOutsideOpacity: {
+- src\scene\terrainMaterial.ts:444 — value: THREE.MathUtils.clamp(initial.orthoPhotoOutsideOpacity ?? 0, 0, 1),
+- src\scene\terrainMaterial.ts:556 — uSceneSectionPlaneOutsideOpacity: {
+- src\scene\terrainMaterial.ts:563 — uSceneSectionFrameOutsideOpacity: {
+- src\scene\terrainMaterial.ts:570 — uSceneSectionTargetPlaneOutsideOpacity: {
+- src\scene\terrainMaterial.ts:577 — uSceneSectionTargetFrameOutsideOpacity: {
+- src\scene\terrainMaterial.ts:667 — uniform float uOrthoPhotoOutsideOpacity;
+- src\scene\terrainMaterial.ts:751 — uniform float uSceneSectionPlaneOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:756 — uniform float uSceneSectionFrameOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:761 — uniform float uSceneSectionTargetPlaneOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:766 — uniform float uSceneSectionTargetFrameOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:1086 — alpha = min(alpha, clamp(uSceneSectionPlaneOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1098 — alpha = min(alpha, clamp(uSceneSectionFrameOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1112 — alpha = min(alpha, clamp(uSceneSectionTargetPlaneOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1124 — alpha = min(alpha, clamp(uSceneSectionTargetFrameOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1252 — uOrthoPhotoOutsideOpacity > 0.001
+- src\scene\terrainMaterial.ts:1255 — uOrthoPhotoOutsideOpacity,
+- src\scene\terrainMaterial.ts:1734 — if (typeof p.orthoPhotoOutsideOpacity === "number") {
+- src\scene\terrainMaterial.ts:1735 — uniforms.uOrthoPhotoOutsideOpacity.value = THREE.MathUtils.clamp(
+- src\scene\terrainMaterial.ts:1736 — p.orthoPhotoOutsideOpacity,
+- src\scene\section\sceneSectionController.ts:740 — const configured = Array.isArray(style.sceneSectionTargetLayerIds)
+- src\scene\section\sceneSectionController.ts:741 — ? style.sceneSectionTargetLayerIds.filter((id) => typeof id === "string")
+- src\scene\section\sceneSectionController.ts:884 — function sceneSectionAxisOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:891 — const value = entry?.outsideOpacity;
+- src\scene\section\sceneSectionController.ts:1045 — function sceneSectionFrameOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1054 — ?.outsideOpacity;
+- src\scene\section\sceneSectionController.ts:1058 — return sceneSectionAxisOutsideOpacity(style, axis, objectId, legacyTargeted);
+- src\scene\section\sceneSectionController.ts:1062 — Record<string, { outsideOpacity?: number }>;
+- src\scene\section\sceneSectionController.ts:1064 — function sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1069 — const value = entries?.[objectId]?.outsideOpacity;
+- src\scene\section\sceneSectionController.ts:1087 — const fromOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1092 — const toOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1098 — outsideOpacity:
+- src\scene\section\sceneSectionController.ts:1099 — fromOutsideOpacity + (toOutsideOpacity - fromOutsideOpacity) * t,
+- src\scene\section\sceneSectionController.ts:1161 — const outsideOpacityByAxis = {
+- src\scene\section\sceneSectionController.ts:1162 — x: sceneSectionAxisOutsideOpacity(style, "x", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1163 — y: sceneSectionAxisOutsideOpacity(style, "y", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1164 — z: sceneSectionAxisOutsideOpacity(style, "z", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1166 — const outsideOpacityByFrameId: Record<string, number> = {};
+- src\scene\section\sceneSectionController.ts:1168 — const value = sceneSectionFrameOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1175 — outsideOpacityByFrameId[entry.id] = value;
+- src\scene\section\sceneSectionController.ts:1176 — outsideOpacityByAxis[entry.axis] = Math.min(
+- src\scene\section\sceneSectionController.ts:1177 — outsideOpacityByAxis[entry.axis],
+- src\scene\section\sceneSectionController.ts:1182 — ...Object.values(outsideOpacityByAxis),
+- src\scene\section\sceneSectionController.ts:1183 — ...Object.values(outsideOpacityByFrameId),
+- src\scene\section\sceneSectionController.ts:1193 — outsideOpacityByAxis,
+- src\scene\section\sceneSectionController.ts:1194 — outsideOpacityByFrameId,
+- src\scene\section\sceneSectionController.ts:1968 — "uSceneSectionPlaneOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:1975 — visibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\section\sceneSectionController.ts:1976 — visibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\section\sceneSectionController.ts:2024 — "uSceneSectionFrameOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2031 — visibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\section\sceneSectionController.ts:2032 — visibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\section\sceneSectionController.ts:2060 — "uSceneSectionTargetPlaneOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2073 — targetVisibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\section\sceneSectionController.ts:2074 — targetVisibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\section\sceneSectionController.ts:2094 — "uSceneSectionTargetFrameOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2122 — targetVisibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\section\sceneSectionController.ts:2123 — targetVisibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\section\sceneSectionController.ts:2163 — (frameId) => (visibility.outsideOpacityByFrameId[frameId] ?? 1) < 0.999,
+- src\scene\section\sceneSectionController.ts:2166 — (axis) => (visibility.outsideOpacityByAxis[axis] ?? 1) < 0.999,
+- src\scene\section\sceneSectionController.ts:2176 — (Object.values(maskTransition.source.visibility.outsideOpacityByAxis).some(
+- src\scene\section\sceneSectionController.ts:2180 — maskTransition.source.visibility.outsideOpacityByFrameId,
+- src\scene\section\sceneSectionController.ts:2182 — Object.values(maskTransition.target.visibility.outsideOpacityByAxis).some(
+- src\scene\section\sceneSectionController.ts:2186 — maskTransition.target.visibility.outsideOpacityByFrameId,
+- src\scene\section\sceneSectionController.ts:2195 — (visibility.outsideOpacityByFrameId[frameId] ?? 1) > 0.001,
+- src\scene\section\sceneSectionController.ts:2198 — (axis) => (visibility.outsideOpacityByAxis[axis] ?? 1) > 0.001,
+- src\scene\section\sceneSectionController.ts:3481 — (visibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\section\sceneSectionController.ts:3482 — visibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\section\sceneSectionController.ts:3489 — (visibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\section\sceneSectionController.ts:3490 — visibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:79 — sourceVisibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:80 — sourceVisibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:141 — sourceVisibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:142 — sourceVisibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:187 — targetVisibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:188 — targetVisibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:245 — targetVisibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:246 — targetVisibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:283 — outsideOpacityByAxis: { x: 1, y: 1, z: 1 },
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:284 — outsideOpacityByFrameId: {},
+- src\scene\shaders\workingAreaFocusShader.ts:2 — import { WORKING_AREA_FOCUS_DEFAULT_BOUNDS } from "../../projectModules/utahForge/workingAreaFocus";
+- src\scene\shaders\workingAreaFocusShader.ts:4 — interface WorkingAreaFocusShader {
+- src\scene\shaders\workingAreaFocusShader.ts:14 — export function setWorkingAreaFocusShaderUniforms(
+- src\scene\shaders\workingAreaFocusShader.ts:19 — outsideOpacity: number,
+- src\scene\shaders\workingAreaFocusShader.ts:26 — ensure<number>("uWorkingAreaFocusEnabled", 0).value = enabled ? 1 : 0;
+- src\scene\shaders\workingAreaFocusShader.ts:28 — "uWorkingAreaFocusBoundsMin",
+- src\scene\shaders\workingAreaFocusShader.ts:32 — "uWorkingAreaFocusBoundsMax",
+- src\scene\shaders\workingAreaFocusShader.ts:35 — ensure<number>("uWorkingAreaFocusOutsideOpacity", 1).value =
+- src\scene\shaders\workingAreaFocusShader.ts:36 — clamp01(outsideOpacity);
+- src\scene\shaders\workingAreaFocusShader.ts:39 — export function applyWorkingAreaFocusBuiltInMaterial(
+- src\scene\shaders\workingAreaFocusShader.ts:44 — outsideOpacity: number,
+- src\scene\shaders\workingAreaFocusShader.ts:46 — material.userData.workingAreaFocusEnabled = enabled;
+- src\scene\shaders\workingAreaFocusShader.ts:47 — material.userData.workingAreaFocusBoundsMin = boundsMin.clone();
+- src\scene\shaders\workingAreaFocusShader.ts:48 — material.userData.workingAreaFocusBoundsMax = boundsMax.clone();
+- src\scene\shaders\workingAreaFocusShader.ts:49 — material.userData.workingAreaFocusOutsideOpacity = clamp01(outsideOpacity);
+- src\scene\shaders\workingAreaFocusShader.ts:51 — if (material.userData.workingAreaFocusPatched !== true) {
+- src\scene\shaders\workingAreaFocusShader.ts:56 — const patchedShader = shader as WorkingAreaFocusShader;
+- src\scene\shaders\workingAreaFocusShader.ts:57 — setWorkingAreaFocusShaderUniforms(
+- src\scene\shaders\workingAreaFocusShader.ts:59 — material.userData.workingAreaFocusEnabled === true,
+- src\scene\shaders\workingAreaFocusShader.ts:60 — (material.userData.workingAreaFocusBoundsMin as THREE.Vector3) ??
+- src\scene\shaders\workingAreaFocusShader.ts:62 — (material.userData.workingAreaFocusBoundsMax as THREE.Vector3) ??
+- src\scene\shaders\workingAreaFocusShader.ts:64 — typeof material.userData.workingAreaFocusOutsideOpacity === "number"
+- src\scene\shaders\workingAreaFocusShader.ts:65 — ? material.userData.workingAreaFocusOutsideOpacity
+- src\scene\shaders\workingAreaFocusShader.ts:75 — "varying vec3 vWorkingAreaFocusWorldPosition;",
+- src\scene\shaders\workingAreaFocusShader.ts:77 — "  vWorkingAreaFocusWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;",
+- src\scene\shaders\workingAreaFocusShader.ts:83 — "uniform int uWorkingAreaFocusEnabled;",
+- src\scene\shaders\workingAreaFocusShader.ts:84 — "uniform vec3 uWorkingAreaFocusBoundsMin;",
+- src\scene\shaders\workingAreaFocusShader.ts:85 — "uniform vec3 uWorkingAreaFocusBoundsMax;",
+- src\scene\shaders\workingAreaFocusShader.ts:86 — "uniform float uWorkingAreaFocusOutsideOpacity;",
+- src\scene\shaders\workingAreaFocusShader.ts:87 — "varying vec3 vWorkingAreaFocusWorldPosition;",
+- src\scene\shaders\workingAreaFocusShader.ts:88 — "float workingAreaFocusAlpha(vec3 position) {",
+- src\scene\shaders\workingAreaFocusShader.ts:89 — "  if (uWorkingAreaFocusEnabled == 0) return 1.0;",
+- src\scene\shaders\workingAreaFocusShader.ts:90 — "  bool inside = all(greaterThanEqual(position, uWorkingAreaFocusBoundsMin)) && all(lessThanEqual(position, uWorkingAreaFocusBoundsMax));",
+- src\scene\shaders\workingAreaFocusShader.ts:91 — "  return inside ? 1.0 : clamp(uWorkingAreaFocusOutsideOpacity, 0.0, 1.0);",
+- src\scene\shaders\workingAreaFocusShader.ts:97 — "float workingAreaFocusLayerAlpha = workingAreaFocusAlpha(vWorkingAreaFocusWorldPosition);",
+- src\scene\shaders\workingAreaFocusShader.ts:98 — "diffuseColor.a *= workingAreaFocusLayerAlpha;",
+- src\scene\shaders\workingAreaFocusShader.ts:115 — material.userData.workingAreaFocusShader = patchedShader;
+- src\scene\shaders\workingAreaFocusShader.ts:118 — `${previousKey()}|geosee-working-area-focus-v1`;
+- src\scene\shaders\workingAreaFocusShader.ts:119 — material.userData.workingAreaFocusPatched = true;
+- src\scene\shaders\workingAreaFocusShader.ts:123 — const shader = material.userData.workingAreaFocusShader as
+- src\scene\shaders\workingAreaFocusShader.ts:124 — | WorkingAreaFocusShader
+- src\scene\shaders\workingAreaFocusShader.ts:127 — setWorkingAreaFocusShaderUniforms(
+- src\scene\shaders\workingAreaFocusShader.ts:132 — outsideOpacity,
+- src\scene\styles\applyLayerStyle.ts:24 — this.applyWorkingAreaFocusStyle(style);
+- src\scene\styles\applyLayerStyle.ts:196 — this.reapplyWorkingAreaFocus();
+- src\scene\transitions\layerTweenRuntime.ts:129 — const workingAreaFocusTweenActiveBefore = !!this.workingAreaFocusTween;
+- src\scene\transitions\layerTweenRuntime.ts:136 — !this.workingAreaFocusTween &&
+- src\scene\transitions\layerTweenRuntime.ts:144 — workingAreaMs: 0,
+- src\scene\transitions\layerTweenRuntime.ts:160 — workingAreaFocusTweenActiveBefore: false,
+- src\scene\transitions\layerTweenRuntime.ts:217 — if (this.workingAreaFocusTween) {
+- src\scene\transitions\layerTweenRuntime.ts:218 — const tween = this.workingAreaFocusTween;
+- src\scene\transitions\layerTweenRuntime.ts:223 — this.applyWorkingAreaFocusStyle(
+- src\scene\transitions\layerTweenRuntime.ts:226 — : this.interpolatedWorkingAreaFocusStyle(
+- src\scene\transitions\layerTweenRuntime.ts:232 — if (done) this.workingAreaFocusTween = null;
+- src\scene\transitions\layerTweenRuntime.ts:234 — const workingAreaMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\transitions\layerTweenRuntime.ts:317 — workingAreaMs,
+- src\scene\transitions\layerTweenRuntime.ts:333 — workingAreaFocusTweenActiveBefore,
+- src\scene\transitions\layerTweenRuntime.ts:342 — !this.workingAreaFocusTween
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:107 — "workingAreaFocusOutsideOpacityByLayerId",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:379 — this.workingAreaFocusTween = null;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:882 — this.transitionWorkingAreaFocusForPage(
+- src\scene\transitions\transitionStyles.ts:120 — export interface WorkingAreaFocusStyleTween {
+- src\scene\transitions\transitionStyles.ts:394 — "sceneSectionTargetLayerIds",
+- src\scene\transitions\transitionStyles.ts:585 — targetLayerIds: style.sceneSectionTargetLayerIds ?? [],
+- src\scene\workingArea\workingAreaFocusController.ts:20 — } from "../../projectModules/utahForge/workingAreaFocus";
+- src\scene\workingArea\workingAreaFocusController.ts:22 — applyWorkingAreaFocusBuiltInMaterial,
+- src\scene\workingArea\workingAreaFocusController.ts:23 — setWorkingAreaFocusShaderUniforms,
+- src\scene\workingArea\workingAreaFocusController.ts:24 — } from "../shaders/workingAreaFocusShader";
+- src\scene\workingArea\workingAreaFocusController.ts:29 — export interface WorkingAreaFocusRuntime {
+- src\scene\workingArea\workingAreaFocusController.ts:34 — export interface WorkingAreaFocusState {
+- src\scene\workingArea\workingAreaFocusController.ts:40 — targetLayerIds: Set<string>;
+- src\scene\workingArea\workingAreaFocusController.ts:41 — outsideOpacityByLayerId: Map<string, number>;
+- src\scene\workingArea\workingAreaFocusController.ts:45 — export function workingAreaFocusTargetLayerIdsImpl(this: any, style: EditableStyle): Set<string> {
+- src\scene\workingArea\workingAreaFocusController.ts:46 — const configured = Array.isArray(style.workingAreaFocusTargetLayerIds)
+- src\scene\workingArea\workingAreaFocusController.ts:47 — ? style.workingAreaFocusTargetLayerIds.filter(
+- src\scene\workingArea\workingAreaFocusController.ts:58 — export function workingAreaFocusOutsideOpacityImpl(this: any, style: EditableStyle, layerId: string): number {
+- src\scene\workingArea\workingAreaFocusController.ts:59 — if (style.workingAreaFocusEnabled !== true) return 1;
+- src\scene\workingArea\workingAreaFocusController.ts:60 — if (style.workingAreaFocusMode === "inside-only") return 0;
+- src\scene\workingArea\workingAreaFocusController.ts:61 — const map = style.workingAreaFocusOutsideOpacityByLayerId ?? {};
+- src\scene\workingArea\workingAreaFocusController.ts:68 — export function cleanWorkingAreaFocusVectorImpl(this: any, value: unknown): THREE.Vector3 | null {
+- src\scene\workingArea\workingAreaFocusController.ts:95 — export function resolveWorkingAreaFocusBoundsImpl(this: any, boundsLayerId: string): {
+- src\scene\workingArea\workingAreaFocusController.ts:108 — const min = this.cleanWorkingAreaFocusVector(bounds.min);
+- src\scene\workingArea\workingAreaFocusController.ts:109 — const max = this.cleanWorkingAreaFocusVector(bounds.max);
+- src\scene\workingArea\workingAreaFocusController.ts:118 — export function workingAreaFocusStateImpl(this: any, style: EditableStyle): WorkingAreaFocusState {
+- src\scene\workingArea\workingAreaFocusController.ts:120 — typeof style.workingAreaFocusBoundsLayerId === "string"
+- src\scene\workingArea\workingAreaFocusController.ts:121 — ? style.workingAreaFocusBoundsLayerId
+- src\scene\workingArea\workingAreaFocusController.ts:123 — const bounds = this.resolveWorkingAreaFocusBounds(boundsLayerId);
+- src\scene\workingArea\workingAreaFocusController.ts:124 — const targetLayerIds = this.workingAreaFocusTargetLayerIds(style);
+- src\scene\workingArea\workingAreaFocusController.ts:125 — const outsideOpacityByLayerId = new Map<string, number>();
+- src\scene\workingArea\workingAreaFocusController.ts:126 — for (const layerId of targetLayerIds) {
+- src\scene\workingArea\workingAreaFocusController.ts:127 — outsideOpacityByLayerId.set(
+- src\scene\workingArea\workingAreaFocusController.ts:129 — this.workingAreaFocusOutsideOpacity(style, layerId),
+- src\scene\workingArea\workingAreaFocusController.ts:133 — enabled: style.workingAreaFocusEnabled === true,
+- src\scene\workingArea\workingAreaFocusController.ts:135 — style.workingAreaFocusMode === "inside-only"
+- src\scene\workingArea\workingAreaFocusController.ts:141 — targetLayerIds,
+- src\scene\workingArea\workingAreaFocusController.ts:142 — outsideOpacityByLayerId,
+- src\scene\workingArea\workingAreaFocusController.ts:143 — helperVisible: style.workingAreaFocusHelperVisible !== false,
+- src\scene\workingArea\workingAreaFocusController.ts:147 — export function workingAreaFocusSegmentPositionsImpl(this: any, min: THREE.Vector3, max: THREE.Vector3): number[] {
+- src\scene\workingArea\workingAreaFocusController.ts:182 — export function ensureWorkingAreaFocusRuntimeImpl(this: any): WorkingAreaFocusRuntime {
+- src\scene\workingArea\workingAreaFocusController.ts:183 — if (this.workingAreaFocusRuntime) return this.workingAreaFocusRuntime;
+- src\scene\workingArea\workingAreaFocusController.ts:205 — line.userData.workingAreaFocusHelper = true;
+- src\scene\workingArea\workingAreaFocusController.ts:209 — group.userData.workingAreaFocusHelper = true;
+- src\scene\workingArea\workingAreaFocusController.ts:212 — this.workingAreaFocusRuntime = { group, line };
+- src\scene\workingArea\workingAreaFocusController.ts:213 — return this.workingAreaFocusRuntime;
+- src\scene\workingArea\workingAreaFocusController.ts:216 — export function rebuildWorkingAreaFocusHelperImpl(this: any, state: WorkingAreaFocusState): void {
+- src\scene\workingArea\workingAreaFocusController.ts:217 — const runtime = this.ensureWorkingAreaFocusRuntime();
+- src\scene\workingArea\workingAreaFocusController.ts:223 — this.workingAreaFocusSegmentPositions(state.boundsMin, state.boundsMax),
+- src\scene\workingArea\workingAreaFocusController.ts:230 — export function setKnownShaderWorkingAreaFocusImpl(this: any, material: THREE.ShaderMaterial, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): boolean {
+- src\scene\workingArea\workingAreaFocusController.ts:232 — if (!uniforms.uWorkingAreaFocusEnabled) return false;
+- src\scene\workingArea\workingAreaFocusController.ts:233 — setWorkingAreaFocusShaderUniforms(
+- src\scene\workingArea\workingAreaFocusController.ts:238 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:244 — export function applyWorkingAreaFocusMaterialImpl(this: any, material: THREE.Material, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): void {
+- src\scene\workingArea\workingAreaFocusController.ts:245 — if (material.userData?.workingAreaFocusHelper === true) return;
+- src\scene\workingArea\workingAreaFocusController.ts:248 — this.setKnownShaderWorkingAreaFocus(
+- src\scene\workingArea\workingAreaFocusController.ts:252 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:257 — material.userData.workingAreaFocusUnsupported = enabled;
+- src\scene\workingArea\workingAreaFocusController.ts:260 — applyWorkingAreaFocusBuiltInMaterial(
+- src\scene\workingArea\workingAreaFocusController.ts:265 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:269 — export function applyWorkingAreaFocusStyleImpl(this: any, style: EditableStyle): void {
+- src\scene\workingArea\workingAreaFocusController.ts:270 — this.lastWorkingAreaFocusStyle = style;
+- src\scene\workingArea\workingAreaFocusController.ts:271 — this.currentWorkingAreaFocusStyle = style;
+- src\scene\workingArea\workingAreaFocusController.ts:272 — const state = this.workingAreaFocusState(style);
+- src\scene\workingArea\workingAreaFocusController.ts:276 — state.targetLayerIds.has(layerId) &&
+- src\scene\workingArea\workingAreaFocusController.ts:278 — const outsideOpacity = state.outsideOpacityByLayerId.get(layerId) ?? 1;
+- src\scene\workingArea\workingAreaFocusController.ts:286 — this.applyWorkingAreaFocusMaterial(
+- src\scene\workingArea\workingAreaFocusController.ts:290 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:295 — this.rebuildWorkingAreaFocusHelper(state);
+- src\scene\workingArea\workingAreaFocusController.ts:298 — export function reapplyWorkingAreaFocusImpl(this: any): void {
+- src\scene\workingArea\workingAreaFocusController.ts:299 — this.applyWorkingAreaFocusStyle(this.lastWorkingAreaFocusStyle);
+- src\scene\workingArea\workingAreaFocusController.ts:302 — export function interpolatedWorkingAreaFocusStyleImpl(this: any, fromStyle: EditableStyle, toStyle: EditableStyle, t: number): EditableStyle {
+- src\scene\workingArea\workingAreaFocusController.ts:303 — const targetLayerIds = new Set<string>([
+- src\scene\workingArea\workingAreaFocusController.ts:304 — ...this.workingAreaFocusTargetLayerIds(fromStyle),
+- src\scene\workingArea\workingAreaFocusController.ts:305 — ...this.workingAreaFocusTargetLayerIds(toStyle),
+- src\scene\workingArea\workingAreaFocusController.ts:307 — const outsideOpacityByLayerId: Record<string, number> = {};
+- src\scene\workingArea\workingAreaFocusController.ts:308 — for (const layerId of targetLayerIds) {
+- src\scene\workingArea\workingAreaFocusController.ts:309 — const from = this.workingAreaFocusOutsideOpacity(fromStyle, layerId);
+- src\scene\workingArea\workingAreaFocusController.ts:310 — const to = this.workingAreaFocusOutsideOpacity(toStyle, layerId);
+- src\scene\workingArea\workingAreaFocusController.ts:311 — outsideOpacityByLayerId[layerId] = from + (to - from) * t;
+- src\scene\workingArea\workingAreaFocusController.ts:315 — workingAreaFocusEnabled:
+- src\scene\workingArea\workingAreaFocusController.ts:316 — fromStyle.workingAreaFocusEnabled === true ||
+- src\scene\workingArea\workingAreaFocusController.ts:317 — toStyle.workingAreaFocusEnabled === true,
+- src\scene\workingArea\workingAreaFocusController.ts:318 — workingAreaFocusMode: "outside-context",
+- src\scene\workingArea\workingAreaFocusController.ts:319 — workingAreaFocusTargetLayerIds: Array.from(targetLayerIds),
+- src\scene\workingArea\workingAreaFocusController.ts:320 — workingAreaFocusOutsideOpacityByLayerId: outsideOpacityByLayerId,
+- src\scene\workingArea\workingAreaFocusController.ts:354 — function sameWorkingAreaFocusState(
+- src\scene\workingArea\workingAreaFocusController.ts:355 — a: WorkingAreaFocusState,
+- src\scene\workingArea\workingAreaFocusController.ts:356 — b: WorkingAreaFocusState,
+- src\scene\workingArea\workingAreaFocusController.ts:365 — sameStringSet(a.targetLayerIds, b.targetLayerIds) &&
+- src\scene\workingArea\workingAreaFocusController.ts:366 — sameOpacityMap(a.outsideOpacityByLayerId, b.outsideOpacityByLayerId)
+- src\scene\workingArea\workingAreaFocusController.ts:370 — export function transitionWorkingAreaFocusForPageImpl(this: any, fromEnvironment: EnvironmentSetup, toEnvironment: EnvironmentSetup, fromPage: PresentationPage, toPage: PresentationPage, durationMs: number, easing: EasingName): void {
+- src\scene\workingArea\workingAreaFocusController.ts:372 — Object.keys(this.currentWorkingAreaFocusStyle).length > 0
+- src\scene\workingArea\workingAreaFocusController.ts:373 — ? this.currentWorkingAreaFocusStyle
+- src\scene\workingArea\workingAreaFocusController.ts:384 — const fromState = this.workingAreaFocusState(fromStyle);
+- src\scene\workingArea\workingAreaFocusController.ts:385 — const toState = this.workingAreaFocusState(toStyle);
+- src\scene\workingArea\workingAreaFocusController.ts:387 — if (duration <= 0 || sameWorkingAreaFocusState(fromState, toState)) {
+- src\scene\workingArea\workingAreaFocusController.ts:388 — this.workingAreaFocusTween = null;
+- src\scene\workingArea\workingAreaFocusController.ts:389 — this.applyWorkingAreaFocusStyle(toStyle);
+- src\scene\workingArea\workingAreaFocusController.ts:392 — this.workingAreaFocusTween = {
+- src\scene\workingArea\workingAreaFocusController.ts:399 — this.applyWorkingAreaFocusStyle(
+- src\scene\workingArea\workingAreaFocusController.ts:400 — this.interpolatedWorkingAreaFocusStyle(fromStyle, toStyle, 0),
+- src\scene\workingArea\workingAreaFocusController.ts:404 — export function getWorkingAreaFocusDebugStateImpl(this: any): {
+- src\scene\workingArea\workingAreaFocusController.ts:408 — targetLayerIds: string[];
+- src\scene\workingArea\workingAreaFocusController.ts:409 — outsideOpacityByLayerId: Record<string, number>;
+- src\scene\workingArea\workingAreaFocusController.ts:415 — const state = this.workingAreaFocusState(this.currentWorkingAreaFocusStyle);
+- src\scene\workingArea\workingAreaFocusController.ts:420 — targetLayerIds: Array.from(state.targetLayerIds),
+- src\scene\workingArea\workingAreaFocusController.ts:421 — outsideOpacityByLayerId: Object.fromEntries(
+- src\scene\workingArea\workingAreaFocusController.ts:422 — state.outsideOpacityByLayerId,
+- src\scene\workingArea\workingAreaFocusController.ts:425 — helperRenderable: this.workingAreaFocusRuntime?.group.visible === true,
+- src\projectModules\utahForge\editorPreviewFields.ts:169 — "sceneSectionTargetLayerIds",
+- src\projectModules\utahForge\editorPreviewFields.ts:176 — "workingAreaFocusEnabled",
+- src\projectModules\utahForge\editorPreviewFields.ts:177 — "workingAreaFocusMode",
+- src\projectModules\utahForge\editorPreviewFields.ts:178 — "workingAreaFocusBoundsLayerId",
+- src\projectModules\utahForge\editorPreviewFields.ts:179 — "workingAreaFocusTargetLayerIds",
+- src\projectModules\utahForge\editorPreviewFields.ts:180 — "workingAreaFocusOutsideOpacityByLayerId",
+- src\projectModules\utahForge\editorPreviewFields.ts:181 — "workingAreaFocusHelperVisible",
+- src\projectModules\utahForge\layerIds.ts:45 — "utah-forge-phase3-working-area";
+- src\projectModules\utahForge\layerIds.ts:55 — "utah-forge-working-area-focus";
+- src\projectModules\utahForge\workingAreaFocus.ts:1 — // Utah FORGE working-area focus defaults.
+- src\projectModules\utahForge\workingAreaFocus.ts:4 — // doesn't override the working-area focus explicitly. The bounds are
+- src\editor\CLAUDE.md:30 — `seismic/`, `workingArea/`, and `geology/` hold the extracted
+- src\editor\EditorRoot.tsx:846 — return style.workingAreaFocusEnabled === true;
+- src\editor\LayerPanelGroups.tsx:29 — import { WorkingAreaFocusContainer } from "./layerControls/workingArea/WorkingAreaFocusContainer";
+- src\editor\LayerPanelGroups.tsx:286 — const workingAreaFocusStyle =
+- src\editor\LayerPanelGroups.tsx:302 — const workingAreaFocusDisabled =
+- src\editor\LayerPanelGroups.tsx:362 — const workingAreaFocusOpenSignal =
+- src\editor\LayerPanelGroups.tsx:365 — workingAreaFocusStyle.workingAreaFocusEnabled === true
+- src\editor\LayerPanelGroups.tsx:521 — resolvedGroupOpenSignal ?? workingAreaFocusOpenSignal;
+- src\editor\LayerPanelGroups.tsx:526 — devSource="src/editor/LayerPanel.tsx:sections-cropping-working-area"
+- src\editor\LayerPanelGroups.tsx:532 — <WorkingAreaFocusContainer
+- src\editor\LayerPanelGroups.tsx:534 — style={workingAreaFocusStyle}
+- src\editor\LayerPanelGroups.tsx:535 — disabled={workingAreaFocusDisabled}
+- src\editor\layerControls\mt\IsobandControls.tsx:169 — const targetLayerIds = new Set(
+- src\editor\layerControls\mt\IsobandControls.tsx:170 — Array.isArray(sceneStyle.sceneSectionTargetLayerIds)
+- src\editor\layerControls\mt\IsobandControls.tsx:171 — ? sceneStyle.sceneSectionTargetLayerIds
+- src\editor\layerControls\mt\IsobandControls.tsx:174 — targetLayerIds.add(layerId);
+- src\editor\layerControls\mt\IsobandControls.tsx:180 — sceneSectionTargetLayerIds: Array.from(targetLayerIds),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:297 — targetLayerIds,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:302 — targetLayerIds: Set<string>;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:309 — return targetLayerIds.has(target.layerId) ? 0 : 1;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:318 — targetLayerIds: Set<string>,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:323 — ?.outsideOpacity;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:329 — ?.outsideOpacity;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:335 — targetLayerIds,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:478 — const targetLayerIds = new Set(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:479 — Array.isArray(style.sceneSectionTargetLayerIds)
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:480 — ? style.sceneSectionTargetLayerIds
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:797 — outsideOpacity: clampNumber(value, 0, 1),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1904 — targetLayerIds,
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:33 — } from "../../../projectModules/utahForge/workingAreaFocus";
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:35 — type WorkingAreaFocusCapability = "two-zone" | "fallback" | "unsupported";
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:37 — interface WorkingAreaFocusLayerOption {
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:40 — capability: WorkingAreaFocusCapability;
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:44 — function workingAreaFocusCapabilityForLayer(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:46 — ): Pick<WorkingAreaFocusLayerOption, "capability" | "capabilityLabel"> {
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:70 — function workingAreaFocusLayerOptions(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:72 — ): WorkingAreaFocusLayerOption[] {
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:93 — const capability = workingAreaFocusCapabilityForLayer(id);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:103 — .filter((layer): layer is WorkingAreaFocusLayerOption => layer !== null);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:106 — function workingAreaFocusDefaultTargets(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:107 — options: WorkingAreaFocusLayerOption[],
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:115 — function workingAreaFocusTargetSet(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:117 — options: WorkingAreaFocusLayerOption[],
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:119 — const configured = Array.isArray(style.workingAreaFocusTargetLayerIds)
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:120 — ? style.workingAreaFocusTargetLayerIds.filter(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:123 — : workingAreaFocusDefaultTargets(options);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:132 — function workingAreaFocusOpacityForLayer(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:136 — const value = style.workingAreaFocusOutsideOpacityByLayerId?.[layerId];
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:142 — function completeWorkingAreaFocusOpacityMap(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:144 — options: WorkingAreaFocusLayerOption[],
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:158 — : workingAreaFocusOpacityForLayer(style, option.id),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:165 — function workingAreaFocusPatchFromStyle(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:167 — options: WorkingAreaFocusLayerOption[],
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:169 — const targetLayerIds = workingAreaFocusTargetSet(style, options);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:171 — workingAreaFocusEnabled: styleBoolean(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:173 — "workingAreaFocusEnabled",
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:176 — workingAreaFocusMode:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:177 — style.workingAreaFocusMode === "inside-only"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:180 — workingAreaFocusBoundsLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:181 — style.workingAreaFocusBoundsLayerId ??
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:183 — workingAreaFocusTargetLayerIds: Array.from(targetLayerIds),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:184 — workingAreaFocusOutsideOpacityByLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:185 — completeWorkingAreaFocusOpacityMap(style, options),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:186 — workingAreaFocusHelperVisible: styleBoolean(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:188 — "workingAreaFocusHelperVisible",
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:194 — export function WorkingAreaFocusContainer({
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:214 — const layerOptions = workingAreaFocusLayerOptions(allLayers);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:215 — const targetLayerIds = workingAreaFocusTargetSet(style, layerOptions);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:216 — const enabled = styleBoolean(style, "workingAreaFocusEnabled", false);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:218 — style.workingAreaFocusMode === "inside-only"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:223 — "workingAreaFocusHelperVisible",
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:236 — workingAreaFocusBoundsLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:237 — base.workingAreaFocusBoundsLayerId ??
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:239 — workingAreaFocusOutsideOpacityByLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:240 — completeWorkingAreaFocusOpacityMap(base, layerOptions),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:250 — const persistedPatch = workingAreaFocusPatchFromStyle(merged, layerOptions);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:262 — const commitTargetLayerIds = (nextTargets: Set<string>) => {
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:264 — workingAreaFocusTargetLayerIds: Array.from(nextTargets),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:265 — workingAreaFocusOutsideOpacityByLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:266 — completeWorkingAreaFocusOpacityMap(liveStyleRef.current, layerOptions),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:271 — const next = new Set(targetLayerIds);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:274 — commitTargetLayerIds(next);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:277 — const updateOutsideOpacity = (id: string, value: number) => {
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:279 — workingAreaFocusOutsideOpacityByLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:280 — completeWorkingAreaFocusOpacityMap(liveStyleRef.current, layerOptions, {
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:290 — testId="working-area-focus-container"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:297 — data-testid="working-area-focus-enabled"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:303 — workingAreaFocusEnabled: event.target.checked,
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:304 — workingAreaFocusMode: mode,
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:305 — workingAreaFocusBoundsLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:307 — workingAreaFocusTargetLayerIds: Array.from(targetLayerIds),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:308 — workingAreaFocusOutsideOpacityByLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:309 — completeWorkingAreaFocusOpacityMap(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:320 — data-testid="working-area-focus-mode"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:325 — workingAreaFocusMode:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:329 — workingAreaFocusOutsideOpacityByLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:330 — completeWorkingAreaFocusOpacityMap(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:345 — data-testid="working-area-focus-helper-visible"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:350 — commit({ workingAreaFocusHelperVisible: event.target.checked })
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:359 — const checked = supported && targetLayerIds.has(layer.id);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:360 — const opacity = workingAreaFocusOpacityForLayer(style, layer.id);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:378 — data-testid={`working-area-focus-target-${layer.id}`}
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:398 — data-testid={`working-area-focus-opacity-${layer.id}`}
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:406 — updateOutsideOpacity(
+- src\editor\topoMap\TopoMapPanel.tsx:723 — const targetLayerIds =
+- src\editor\topoMap\TopoMapPanel.tsx:727 — for (const id of targetLayerIds) setEnvLayerStyle(id, patch);
+- src\editor\topoMap\TopoMapPanel.tsx:729 — for (const id of targetLayerIds) {
+- src\editor\topoMap\TopoMapPanel.tsx:748 — for (const id of targetLayerIds) {
+- src\editor\topoMap\TopoMapPanel.tsx:1515 — orthoPhotoOutsideOpacity:
+- src\editor\topoMap\TopoMapPanel.tsx:1517 — (terrain.orthoPhotoOutsideOpacity ?? 0) <= 0.001
+- src\editor\topoMap\TopoMapPanel.tsx:1519 — : (terrain.orthoPhotoOutsideOpacity ?? 0),
+- src\editor\topoMap\TopoMapPanel.tsx:1544 — value={String(terrain.orthoPhotoOutsideOpacity ?? 0)}
+- src\editor\topoMap\TopoMapPanel.tsx:1551 — setTerrain({ orthoPhotoOutsideOpacity: parseFloat(v) })
+
+## Global/default fallback risk
+
+- src\pages\effective.ts:124 — //                page.visibilityOverrides, force-show on true / force-hide
+- src\pages\effective.ts:126 — //   styling:     shallow-merge env.layerStyles[id] then page.layerOverrides[id]
+- src\pages\effective.ts:163 — export function effectiveStyle(
+- src\pages\effective.ts:181 — const override = page.layerOverrides?.[layerId] ?? {};
+- src\pages\effective.ts:219 — export function effectiveVisibility(
+- src\pages\effective.ts:224 — const overrides = page.visibilityOverrides ?? {};
+- src\pages\effective.ts:363 — export function effectiveStyleForPage(
+- src\pages\effective.ts:369 — return effectiveStyle(resolveEnvironmentForPage(environment, pages, page), page, layerId);
+- src\pages\effective.ts:372 — export function effectiveVisibilityForPage(
+- src\pages\effective.ts:377 — return effectiveVisibility(resolveEnvironmentForPage(environment, pages, page), page);
+- src\pages\effective.ts:389 — const o = page.layerOverrides?.[layerId];
+- src\pages\effective.ts:398 — return page.visibilityOverrides?.[layerId] !== undefined;
+- src\pages\PageController.tsx:662 — previewEnvironmentBase?: boolean;
+- src\pages\PageController.tsx:667 — context: { previewEnvironmentBase: boolean },
+- src\pages\PageController.tsx:687 — if (!page.layerOverrides && !page.visibilityOverrides) return page;
+- src\pages\PageController.tsx:689 — delete next.visibilityOverrides;
+- src\pages\PageController.tsx:691 — if (!page.layerOverrides || !previewLayerOverrideFields) {
+- src\pages\PageController.tsx:692 — delete next.layerOverrides;
+- src\pages\PageController.tsx:696 — const preservedLayerOverrides: Record<string, EditableStyle> = {};
+- src\pages\PageController.tsx:698 — const source = page.layerOverrides[layerId];
+- src\pages\PageController.tsx:705 — preservedLayerOverrides[layerId] = preserved;
+- src\pages\PageController.tsx:709 — if (Object.keys(preservedLayerOverrides).length > 0) {
+- src\pages\PageController.tsx:710 — next.layerOverrides = preservedLayerOverrides;
+- src\pages\PageController.tsx:712 — delete next.layerOverrides;
+- src\pages\PageController.tsx:963 — previewEnvironmentBase = false,
+- src\pages\PageController.tsx:1087 — const layerPage = previewEnvironmentBase
+- src\pages\PageController.tsx:1092 — ? transform(resolvedBase, layerPage, { previewEnvironmentBase })
+- src\pages\PageController.tsx:1095 — [previewEnvironmentBase, previewLayerOverrideFields],
+- src\pages\PageController.tsx:1910 — manager.applyEffectiveVisibilityForPage(
+- src\pages\PageController.tsx:1914 — manager.applyEffectiveStylesForPage(
+- src\pages\PageController.tsx:2330 — sceneHandle.manager.applyEffectiveVisibilityForPage(
+- src\pages\PageController.tsx:2334 — sceneHandle.manager.applyEffectiveStylesForPage(
+- src\pages\PageController.tsx:2397 — sceneHandle.manager.applyEffectiveVisibilityForPage(
+- src\pages\PageController.tsx:2401 — sceneHandle.manager.applyEffectiveStylesForPage(
+- src\pages\PageController.tsx:2438 — previewEnvironmentBase,
+- src\pages\types.ts:10 — //     environment as `layerOverrides` and `visibilityOverrides` deltas.
+- src\pages\types.ts:274 — // values are authored through environment.layerStyles and page layerOverrides.
+- src\pages\types.ts:1747 — layerOverrides?: Record<string, EditableStyle>;
+- src\pages\types.ts:1750 — visibilityOverrides?: Record<string, boolean>;
+- src\editor\EditorChrome.tsx:33 — effectiveStyle,
+- src\editor\EditorChrome.tsx:34 — effectiveVisibility,
+- src\editor\EditorChrome.tsx:146 — const visible = effectiveVisibility(environment, page);
+- src\editor\EditorChrome.tsx:148 — effectiveStyle(environment, page, layerId);
+- src\editor\EditorChrome.tsx:154 — (layerId) => page.visibilityOverrides?.[layerId] !== undefined,
+- src\editor\EditorChrome.tsx:209 — context: { previewEnvironmentBase: boolean },
+- src\editor\EditorChrome.tsx:213 — if (context.previewEnvironmentBase) {
+- src\editor\EditorChrome.tsx:229 — previewEnvironmentBase={state.selectedPageId === ENVIRONMENT_SENTINEL}
+- src\editor\EditorChrome.tsx:533 — // Skips the mirror when the user has explicitly selected Global Settings.
+- src\editor\EditorContext.tsx:47 — effectiveStyle,
+- src\editor\EditorContext.tsx:48 — effectiveVisibility,
+- src\editor\EditorContext.tsx:51 — import { selectedPageWriteBlocked } from "./authoringTarget";
+- src\editor\EditorContext.tsx:663 — ...Object.keys(page.layerOverrides ?? {}),
+- src\editor\EditorContext.tsx:669 — layerStyles[layerId] = effectiveStyle(base, page, layerId);
+- src\editor\EditorContext.tsx:673 — defaultVisibleLayers: Array.from(effectiveVisibility(base, page)),
+- src\editor\EditorContext.tsx:683 — const overrides = { ...(page.layerOverrides ?? {}) };
+- src\editor\EditorContext.tsx:695 — const next: PresentationPage = { ...page, layerOverrides: overrides };
+- src\editor\EditorContext.tsx:696 — if (Object.keys(overrides).length === 0) delete next.layerOverrides;
+- src\editor\EditorContext.tsx:704 — const visibilityOverrides = { ...(page.visibilityOverrides ?? {}) };
+- src\editor\EditorContext.tsx:705 — delete visibilityOverrides[layerId];
+- src\editor\EditorContext.tsx:706 — const next: PresentationPage = { ...page, visibilityOverrides };
+- src\editor\EditorContext.tsx:707 — if (Object.keys(visibilityOverrides).length === 0) {
+- src\editor\EditorContext.tsx:708 — delete next.visibilityOverrides;
+- src\editor\EditorContext.tsx:817 — if (page.layerOverrides) {
+- src\editor\EditorContext.tsx:818 — const layerOverrides = normalizeMtBoundaryVisibilityLayerStyles(
+- src\editor\EditorContext.tsx:819 — page.layerOverrides,
+- src\editor\EditorContext.tsx:821 — if (layerOverrides !== page.layerOverrides) {
+- src\editor\EditorContext.tsx:822 — next = { ...next, layerOverrides };
+- src\editor\EditorContext.tsx:840 — for (const [layerId, patch] of Object.entries(page.layerOverrides ?? {})) {
+- src\editor\EditorContext.tsx:846 — for (const [layerId, visible] of Object.entries(page.visibilityOverrides ?? {})) {
+- src\editor\EditorContext.tsx:856 — delete next.layerOverrides;
+- src\editor\EditorContext.tsx:857 — delete next.visibilityOverrides;
+- src\editor\EditorContext.tsx:1107 — if (next.layerOverrides?.[action.layerId]) {
+- src\editor\EditorContext.tsx:1108 — const layerOverrides = { ...next.layerOverrides };
+- src\editor\EditorContext.tsx:1109 — delete layerOverrides[action.layerId];
+- src\editor\EditorContext.tsx:1110 — if (Object.keys(layerOverrides).length > 0) {
+- src\editor\EditorContext.tsx:1111 — next.layerOverrides = layerOverrides;
+- src\editor\EditorContext.tsx:1113 — delete next.layerOverrides;
+- src\editor\EditorContext.tsx:1117 — if (next.visibilityOverrides?.[action.layerId] !== undefined) {
+- src\editor\EditorContext.tsx:1118 — const visibilityOverrides = { ...next.visibilityOverrides };
+- src\editor\EditorContext.tsx:1119 — delete visibilityOverrides[action.layerId];
+- src\editor\EditorContext.tsx:1120 — if (Object.keys(visibilityOverrides).length > 0) {
+- src\editor\EditorContext.tsx:1121 — next.visibilityOverrides = visibilityOverrides;
+- src\editor\EditorContext.tsx:1123 — delete next.visibilityOverrides;
+- src\editor\EditorContext.tsx:1169 — const overrides = { ...(p.layerOverrides ?? {}) };
+- src\editor\EditorContext.tsx:1174 — return { ...p, layerOverrides: overrides };
+- src\editor\EditorContext.tsx:1193 — const overrides = { ...(p.layerOverrides ?? {}) };
+- src\editor\EditorContext.tsx:1205 — const next: PresentationPage = { ...p, layerOverrides: overrides };
+- src\editor\EditorContext.tsx:1206 — if (Object.keys(overrides).length === 0) delete next.layerOverrides;
+- src\editor\EditorContext.tsx:1222 — const overrides = { ...(p.visibilityOverrides ?? {}) };
+- src\editor\EditorContext.tsx:1224 — return { ...p, visibilityOverrides: overrides };
+- src\editor\EditorContext.tsx:1239 — const overrides = { ...(p.visibilityOverrides ?? {}) };
+- src\editor\EditorContext.tsx:1241 — const next: PresentationPage = { ...p, visibilityOverrides: overrides };
+- src\editor\EditorContext.tsx:1242 — if (Object.keys(overrides).length === 0) delete next.visibilityOverrides;
+- src\editor\EditorContext.tsx:1810 — delete converted.layerOverrides;
+- src\editor\EditorContext.tsx:1811 — delete converted.visibilityOverrides;
+- src\editor\EditorContext.tsx:2055 — p.layerOverrides !== undefined ||
+- src\editor\EditorContext.tsx:2056 — p.visibilityOverrides !== undefined ||
+- src\editor\EditorContext.tsx:2062 — delete next.layerOverrides;
+- src\editor\EditorContext.tsx:2063 — delete next.visibilityOverrides;
+- src\editor\EditorContext.tsx:2081 — // Strip layerOverrides, visibilityOverrides, cinematicExposure, and
+- src\editor\EditorContext.tsx:2088 — p.layerOverrides !== undefined ||
+- src\editor\EditorContext.tsx:2089 — p.visibilityOverrides !== undefined ||
+- src\editor\EditorContext.tsx:2096 — delete next.layerOverrides;
+- src\editor\EditorContext.tsx:2097 — delete next.visibilityOverrides;
+- src\editor\EditorContext.tsx:2267 — // Open the editor on the editor-only Global Settings pseudo-page so
+- src\editor\EditorContext.tsx:2514 — const previewEnvironmentBase =
+- src\editor\EditorContext.tsx:2530 — const previewPage = previewEnvironmentBase
+- src\editor\EditorContext.tsx:2533 — layerOverrides: undefined,
+- src\editor\EditorContext.tsx:2536 — const previewEnvironment = previewEnvironmentBase
+- src\editor\EditorContext.tsx:2545 — effectiveStyle(previewEnvironment, previewPage, layerId),
+- src\editor\EditorContext.tsx:2568 — : effectiveVisibility(
+- src\editor\EditorContext.tsx:2957 — ? effectiveStyle(pageEnvironment, page, layerId)
+- src\editor\EditorContext.tsx:2992 — ? effectiveStyle(pageEnvironment, page, layerId)
+- src\editor\EditorContext.tsx:3075 — ? effectiveStyle(pageEnvironment, page, layerId)
+- src\editor\EditorContext.tsx:3233 — effectiveStyle(pageEnvironment, displayPage, layer.id),
+- src\editor\EditorContext.tsx:3236 — effectiveVisibility(pageEnvironment, displayPage),
+- src\editor\EditorContext.tsx:3281 — ...(page.layerOverrides?.[layerId] ?? {}),
+- src\editor\EditorContext.tsx:3284 — const merged = effectiveStyle(
+- src\editor\EditorContext.tsx:3288 — layerOverrides: {
+- src\editor\EditorContext.tsx:3289 — ...(page.layerOverrides ?? {}),
+- src\editor\EditorContext.tsx:3325 — const overrides = { ...(page.layerOverrides ?? {}) };
+- src\editor\EditorContext.tsx:3339 — layerOverrides: overrides,
+- src\editor\EditorContext.tsx:3342 — delete nextPage.layerOverrides;
+- src\editor\EditorContext.tsx:3346 — effectiveStyle(pageEnvironment, nextPage, layerId),
+- src\editor\EditorContext.tsx:3377 — const merged = effectiveVisibility(pageEnvironment, {
+- src\editor\EditorContext.tsx:3379 — visibilityOverrides: {
+- src\editor\EditorContext.tsx:3380 — ...(page.visibilityOverrides ?? {}),
+- src\editor\EditorContext.tsx:3419 — const overrides = { ...(page.visibilityOverrides ?? {}) };
+- src\editor\EditorContext.tsx:3421 — const merged = effectiveVisibility(pageEnvironment, {
+- src\editor\EditorContext.tsx:3423 — visibilityOverrides: overrides,
+- src\editor\EditorRoot.tsx:44 — effectiveStyle,
+- src\editor\EditorRoot.tsx:45 — effectiveVisibility,
+- src\editor\EditorRoot.tsx:48 — import { selectedAuthoringPage } from "./authoringTarget";
+- src\editor\EditorRoot.tsx:834 — ? effectiveVisibility(selectedPageEnvironment, selectedPage)
+- src\editor\EditorRoot.tsx:840 — ? effectiveStyle(selectedPageEnvironment, selectedPage, layerId)
+- src\editor\EditorRoot.tsx:988 — page?.layerOverrides?.[UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID]
+- src\editor\EditorRoot.tsx:1026 — ? page.layerOverrides?.[UTAH_FORGE_SCENE_SECTION_LAYER_ID] ??
+- src\editor\EnvironmentScenePanel.tsx:52 — data-dev-note="Row controls Global Settings label/control alignment."
+- src\editor\EnvironmentScenePanel.tsx:860 — data-dev-note="environmentGroupStyle controls the Global Settings subheading inset."
+- src\editor\LayerPanel.tsx:111 — effectiveStyle,
+- src\editor\LayerPanel.tsx:121 — import { pageSelectionHasLanded, selectedAuthoringPage } from "./authoringTarget";
+- src\editor\LayerPanel.tsx:325 — //                         active and edits page.layerOverrides.
+- src\editor\LayerPanel.tsx:386 — ? currentPage.visibilityOverrides?.[layer.id] === true
+- src\editor\LayerPanel.tsx:452 — ? effectiveStyle(currentPageEnvironment, currentPage, layer.id)
+- src\editor\LayerPanel.tsx:455 — ? effectiveStyle(
+- src\editor\LayerPanel.tsx:620 — effectiveStyle(
+- src\editor\LayerPanel.tsx:632 — currentPage.layerOverrides?.[layer.id]?.color as
+- src\editor\LayerPanel.tsx:708 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:713 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:726 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:729 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:767 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:772 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:784 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:822 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:834 — currentPage.layerOverrides?.[layer.id]?.opacity !==
+- src\editor\LayerPanel.tsx:837 — currentPage.layerOverrides[layer.id].opacity,
+- src\editor\LayerPanel.tsx:1088 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:1100 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1103 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1161 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1164 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1222 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1225 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1312 — ((effectiveStyle(
+- src\editor\LayerPanel.tsx:1325 — currentPage.layerOverrides?.[layer.id]?.fogDensity !==
+- src\editor\LayerPanel.tsx:1328 — (currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1376 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:1389 — currentPage.layerOverrides?.[layer.id]?.lineWidth !==
+- src\editor\LayerPanel.tsx:1392 — currentPage.layerOverrides[layer.id].lineWidth,
+- src\editor\LayerPanel.tsx:1625 — currentPage.layerOverrides?.[layer.id]?.[
+- src\editor\LayerPanel.tsx:1629 — currentPage.layerOverrides[layer.id][
+- src\editor\LayerPanel.tsx:1690 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1693 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1751 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1754 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1811 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1814 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1872 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1875 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:2013 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:2026 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2029 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:2242 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2245 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:2345 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2357 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2377 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:2389 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2392 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:2414 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2426 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2447 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2460 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2463 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:2469 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2494 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2506 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2510 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2536 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2549 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2552 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:2558 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2646 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2653 — effectiveStyle(
+- src\editor\LayerPanelGroups.tsx:8 — effectiveStyle,
+- src\editor\LayerPanelGroups.tsx:9 — effectiveVisibility,
+- src\editor\LayerPanelGroups.tsx:54 — import { pageSelectionHasLanded, selectedAuthoringPage } from "./authoringTarget";
+- src\editor\LayerPanelGroups.tsx:276 — ? effectiveStyle(
+- src\editor\LayerPanelGroups.tsx:293 — ? effectiveStyle(
+- src\editor\LayerPanelGroups.tsx:317 — ? currentPage.visibilityOverrides?.[publicTopoTerrainLayerId] === true
+- src\editor\LayerPanelGroups.tsx:321 — ? effectiveVisibility(currentPageEnvironment, currentPage)
+- src\editor\LayerPanelGroups.tsx:336 — ? effectiveStyle(currentPageEnvironment, currentPage, layerId)
+- src\editor\LayerPanelGroups.tsx:377 — Select global settings or a page in Pages.
+- src\editor\LayerPanelGroups.tsx:444 — ? effectiveStyle(currentPageEnvironment, currentPage, seismicLayer.id)
+- src\editor\LayerPanelGroups.tsx:479 — ? effectiveStyle(
+- src\editor\PagePanel.tsx:13 — import { selectedAuthoringPage } from "./authoringTarget";
+- src\editor\PagePanel.tsx:740 — data-dev-note="PagePanel contains Global Settings plus the Pages select/order list."
+- src\editor\PagePanel.tsx:745 — data-dev-note="globalSettingsSelectorStyle aligns the Global Settings selector with the Global Settings containers."
+- src\editor\PagePanel.tsx:750 — data-dev-note="Global Settings is an editor-only pseudo-page. It selects environment/global controls and is not part of presenter navigation."
+- src\editor\PagePanel.tsx:799 — <span>Global Settings</span>
+- src\editor\PagePanel.tsx:1162 — `Reset page "${selectedActionPage.title}" to Global Settings defaults? Camera, dynamic camera, title, timing, and text/image overlays will be preserved.`,
+- src\editor\PagePanel.tsx:4139 — // Row text aligns with Global Settings section labels like Atmosphere:
+- src\editor\styleControls.tsx:369 — const overrideVal = page.visibilityOverrides?.[layerId];
+- src\editor\styleControls.tsx:663 — currentPage.layerOverrides?.[layerId]?.[field] !== undefined
+- src\editor\styleControls.tsx:664 — ? String(currentPage.layerOverrides[layerId][field])
+- src\editor\styleControls.tsx:795 — currentPage.layerOverrides?.[layerId]?.[field] !== undefined
+- src\editor\styleControls.tsx:796 — ? String(currentPage.layerOverrides[layerId][field])
+- src\editor\types.ts:24 — // Sentinel for the "Global Settings" pseudo-page. selectedPageId can hold
+- src\editor\layerControls\env\EnvRows.tsx:111 — const overrideVal = page.visibilityOverrides?.[layerId];
+- src\editor\layerControls\env\EnvRows.tsx:275 — const overrideVal = page.layerOverrides?.[layerId]?.labelKind;
+- src\editor\layerControls\env\EnvRows.tsx:353 — page.layerOverrides?.[layerId]?.labelPointerVisible !== false;
+- src\editor\layerControls\env\EnvRows.tsx:424 — const overrideVal = page.layerOverrides?.[layerId]?.labelPointerSide;
+- src\editor\layerControls\env\EnvRows.tsx:483 — const overrideVal = page.layerOverrides?.[layerId]?.showLabels === true;
+- src\editor\layerControls\env\EnvRows.tsx:522 — const overrideVal = page.layerOverrides?.[layerId]?.affectedByFog !== false;
+- src\editor\layerControls\layout\LayoutControls.tsx:3 — import { effectiveStyle } from "../../../pages/effective";
+- src\editor\layerControls\layout\LayoutControls.tsx:354 — ? effectiveStyle(environment, currentPage, id)
+- src\editor\topoMap\TopoMapPanel.tsx:28 — import { effectiveStyle, isVisibilityOverridden } from "../../pages/effective";
+- src\editor\topoMap\TopoMapPanel.tsx:781 — const atmosphereEffectiveStyle =
+- src\editor\topoMap\TopoMapPanel.tsx:783 — ? effectiveStyle(environment, currentPage, atmosphereLayer.id)
+- src\editor\topoMap\TopoMapPanel.tsx:787 — ? (currentPage.layerOverrides?.[atmosphereLayer.id] ?? {})
+- src\editor\topoMap\TopoMapPanel.tsx:799 — ? currentPage.visibilityOverrides?.[atmosphereLayer.id]
+- src\editor\topoMap\TopoMapPanel.tsx:872 — const source = atmosphereVolumePatchFromStyle(atmosphereEffectiveStyle);
+- src\editor\topoMap\TopoMapPanel.tsx:1886 — isEnv ? atmosphereEnvStyle : atmosphereEffectiveStyle
+- src\editor\topoMap\TopoMapPanel.tsx:1900 — atmosphereEffectiveStyle,
+- src\editor\topoMap\TopoMapPanel.tsx:2880 — ? effectiveStyle(environment, currentPage, layerId)
+- src\editor\topoMap\TopoMapPanel.tsx:2885 — ? currentPage.visibilityOverrides?.[layerId] === true
+- src\scene\SceneManager.ts:14 — effectiveStyle,
+- src\scene\SceneManager.ts:15 — effectiveVisibility,
+- src\scene\SceneManager.ts:795 — // Geology layer handle. Stashed so applyEffectiveStylesForPage can
+- src\scene\SceneManager.ts:1206 — const visible = effectiveVisibility(environment, page).has(layerId);
+- src\scene\SceneManager.ts:1208 — const style = effectiveStyle(environment, page, layerId);
+- src\scene\SceneManager.ts:1387 — const visibleSet = effectiveVisibility(environment, page);
+- src\scene\SceneManager.ts:1390 — const fallbackStyle = effectiveStyle(environment, page, id);
+- src\scene\SceneManager.ts:1942 — return effectiveStyle(this.lastEffectiveEnv, this.lastEffectivePage, id);
+- src\scene\SceneManager.ts:2958 — effectiveStyle(
+- src\scene\SceneManager.ts:3070 — this.applyStyle(id, effectiveStyle(environment, page, id));
+- src\scene\SceneManager.ts:4019 — applyEffectiveStylesForPage(
+- src\scene\SceneManager.ts:4034 — this.applyStyle(id, effectiveStyle(environment, page, id));
+- src\scene\SceneManager.ts:4037 — effectiveStyle(environment, page, UTAH_FORGE_SCENE_SECTION_LAYER_ID),
+- src\scene\SceneManager.ts:4040 — effectiveStyle(environment, page, UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID),
+- src\scene\SceneManager.ts:4045 — applyEffectiveVisibilityForPage(
+- src\scene\SceneManager.ts:4059 — this.setVisible(effectiveVisibility(environment, page));
+- src\scene\SceneManager.ts:4061 — effectiveStyle(environment, page, UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID),
+- src\scene\SceneManager.ts:4112 — this.applyEffectiveStylesForPage(
+- src\scene\SceneManager.ts:4394 — this.applyEffectiveVisibilityForPage(env, page);
+- src\scene\SceneManager.ts:4395 — this.applyEffectiveStylesForPage(env, page);
+- src\scene\styles\seismicBrowserStyle.ts:168 — const effectiveStyle: EditableStyle = {
+- src\scene\styles\seismicBrowserStyle.ts:215 — typeof effectiveStyle.seismicProductVisibility === "object" &&
+- src\scene\styles\seismicBrowserStyle.ts:216 — effectiveStyle.seismicProductVisibility !== null
+- src\scene\styles\seismicBrowserStyle.ts:217 — ? (effectiveStyle.seismicProductVisibility as Record<string, boolean>)
+- src\scene\styles\seismicBrowserStyle.ts:239 — effectiveStyle.seismicRenderMode === "raymarch" ? "raymarch" : "slice";
+- src\scene\styles\seismicBrowserStyle.ts:243 — effectiveStyle.seismicSliceAxis === "crossline" ||
+- src\scene\styles\seismicBrowserStyle.ts:244 — effectiveStyle.seismicSliceAxis === "sample" ||
+- src\scene\styles\seismicBrowserStyle.ts:245 — effectiveStyle.seismicSliceAxis === "line"
+- src\scene\styles\seismicBrowserStyle.ts:246 — ? effectiveStyle.seismicSliceAxis
+- src\scene\styles\seismicBrowserStyle.ts:249 — effectiveStyle,
+- src\scene\styles\seismicBrowserStyle.ts:255 — const opacity = styleNumber(effectiveStyle, "opacity", 0.62, 0, 1);
+- src\scene\styles\seismicBrowserStyle.ts:257 — effectiveStyle,
+- src\scene\styles\seismicBrowserStyle.ts:265 — styleNumber(effectiveStyle, "seismicAmplitudeMax", 0.92, 0, 1),
+- src\scene\styles\seismicBrowserStyle.ts:268 — effectiveStyle,
+- src\scene\styles\seismicBrowserStyle.ts:275 — effectiveStyle.seismicColormap === "grayscale" ||
+- src\scene\styles\seismicBrowserStyle.ts:276 — effectiveStyle.seismicColormap === "velocity"
+- src\scene\styles\seismicBrowserStyle.ts:277 — ? effectiveStyle.seismicColormap
+- src\scene\styles\seismicBrowserStyle.ts:279 — const removeBackground = effectiveStyle.seismicRemoveBackground === true;
+- src\scene\styles\seismicBrowserStyle.ts:281 — effectiveStyle,
+- src\scene\styles\seismicBrowserStyle.ts:288 — styleNumber(effectiveStyle, "seismicVolumeSampleSteps", 96, 24, 160),
+- src\scene\styles\seismicBrowserStyle.ts:290 — const sectionIsoEnabled = effectiveStyle.sectionIsoEnabled === true;
+- src\scene\styles\seismicBrowserStyle.ts:292 — ? styleNumber(effectiveStyle, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\seismicBrowserStyle.ts:297 — effectiveStyle.seismicIsoSource === "mt-resistivity"
+- src\scene\styles\seismicBrowserStyle.ts:301 — typeof effectiveStyle.sectionIsoTargetIds === "object" &&
+- src\scene\styles\seismicBrowserStyle.ts:302 — effectiveStyle.sectionIsoTargetIds !== null
+- src\scene\styles\seismicBrowserStyle.ts:303 — ? effectiveStyle.sectionIsoTargetIds
+- src\scene\styles\seismicBrowserStyle.ts:306 — styleNumber(effectiveStyle, "sectionIsoMin", amplitudeMin, 0, 1),
+- src\scene\styles\seismicBrowserStyle.ts:312 — styleNumber(effectiveStyle, "sectionIsoMax", amplitudeMax, 0, 1),
+- src\scene\styles\seismicBrowserStyle.ts:327 — linesVisible: effectiveStyle.sectionIsoLinesVisible !== false,
+- src\scene\styles\seismicBrowserStyle.ts:328 — bandsVisible: effectiveStyle.sectionIsoBandsVisible !== false,
+- src\scene\styles\seismicBrowserStyle.ts:333 — styleNumber(effectiveStyle, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\styles\seismicBrowserStyle.ts:335 — lineWidth: styleNumber(effectiveStyle, "sectionIsoLineWidth", 2.6, 0, 12),
+- src\scene\styles\seismicBrowserStyle.ts:337 — effectiveStyle.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\scene\styles\seismicBrowserStyle.ts:339 — effectiveStyle,
+- src\scene\styles\seismicBrowserStyle.ts:345 — fillOffset: styleNumber(effectiveStyle, "sectionIsoFillOffset", 0, -1, 1),
+- src\scene\styles\seismicBrowserStyle.ts:358 — effectiveStyle.seismicComparisonMode === "side-by-side"
+- src\scene\styles\seismicBrowserStyle.ts:362 — typeof effectiveStyle.seismicComparisonProductId === "string"
+- src\scene\styles\seismicBrowserStyle.ts:363 — ? effectiveStyle.seismicComparisonProductId
+- src\scene\styles\seismicBrowserStyle.ts:366 — effectiveStyle,
+- src\scene\styles\seismicBrowserStyle.ts:372 — const timeScale = styleNumber(effectiveStyle, "seismicTimeScale", 2, 0.25, 8);
+- src\scene\styles\seismicBrowserStyle.ts:373 — const navigationVisible = effectiveStyle.seismicNavigationVisible !== false;
+- src\scene\styles\seismicBrowserStyle.ts:375 — typeof effectiveStyle.seismicNavigationRoleVisibility === "object" &&
+- src\scene\styles\seismicBrowserStyle.ts:376 — effectiveStyle.seismicNavigationRoleVisibility !== null
+- src\scene\styles\seismicBrowserStyle.ts:377 — ? effectiveStyle.seismicNavigationRoleVisibility
+- src\scene\styles\seismicBrowserStyle.ts:386 — const sliceThroughVolume = effectiveStyle.seismicSliceThroughVolume === true;
+- src\scene\styles\seismicBrowserStyle.ts:791 — updateSeismicFigureAnnotations(obj, effectiveStyle);
+- src\scene\styles\seismicBrowserStyle.ts:797 — host.updateSeismicVolumeCutIsoOverlays(effectiveStyle);
+- src\scene\styles\seismicBrowserStyle.ts:798 — host.updateSeismicResistivityIsoOverlays(effectiveStyle);
+- src\scene\terrain\applyLakesToTerrain.ts:3 — import { effectiveStyle, effectiveVisibility } from "../../pages/effective";
+- src\scene\terrain\applyLakesToTerrain.ts:24 — const visibleSet = effectiveVisibility(environment, page);
+- src\scene\terrain\applyLakesToTerrain.ts:26 — const lakeStyle = effectiveStyle(environment, page, "hydrography-lakes");
+- src\scene\terrain\applyLakesToTerrain.ts:38 — const tfStyle = effectiveStyle(environment, page, "three-firs-target");
+- src\scene\terrain\applyLakesToTerrain.ts:44 — const gpStyle = effectiveStyle(environment, page, "great-plains-target");
+- src\scene\terrain\applyLakesToTerrain.ts:50 — const claimStyle = effectiveStyle(environment, page, "claim-boundary");
+- src\scene\terrain\applyLakesToTerrain.ts:56 — const geologyStyle = effectiveStyle(environment, page, "bedrock-geology");
+- src\scene\terrain\applyLakesToTerrain.ts:64 — const forestStyle = effectiveStyle(environment, page, "trees-vri");
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:2 — import { effectiveStyle, effectiveVisibility } from "../../pages/effective";
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:30 — type EffectiveLayerStyle = ReturnType<typeof effectiveStyle>;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:116 — function sectionIsoOverlayVisible(style: ReturnType<typeof effectiveStyle>): boolean {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:353 — const fromVisible = effectiveVisibility(fromEnvironment, fromPage);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:354 — const toVisible = effectiveVisibility(toEnvironment, toPage);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:357 — fromPage.layerOverrides,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:358 — toPage.layerOverrides,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:359 — fromPage.visibilityOverrides,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:360 — toPage.visibilityOverrides,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:413 — sourceState?.style ?? effectiveStyle(fromEnvironment, fromPage, id);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:414 — const targetStyle = effectiveStyle(toEnvironment, toPage, id);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:556 — fromStyle: ReturnType<typeof effectiveStyle>,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:557 — targetStyle: ReturnType<typeof effectiveStyle>,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:585 — fromStyle: ReturnType<typeof effectiveStyle>,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:586 — targetStyle: ReturnType<typeof effectiveStyle>,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:614 — const fromSceneSectionStyle = effectiveStyle(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:619 — const targetSceneSectionStyle = effectiveStyle(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:694 — sourceState?.style ?? effectiveStyle(fromEnvironment, fromPage, id);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:695 — const targetStyle = effectiveStyle(toEnvironment, toPage, id);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:836 — const fromStyle = effectiveStyle(fromEnvironment, fromPage, id);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:837 — const targetStyle = effectiveStyle(toEnvironment, toPage, id);
+- src\scene\workingArea\workingAreaFocusController.ts:11 — import { effectiveStyle } from "../../pages/effective";
+- src\scene\workingArea\workingAreaFocusController.ts:374 — : effectiveStyle(
+- src\scene\workingArea\workingAreaFocusController.ts:379 — const toStyle = effectiveStyle(
+
+## Final commit / delayed reapply
+
+- src\pages\PageController.tsx:165 — lateReapply: NonNullable<SceneTransitionDebugState>["lateReapply"] | null;
+- src\pages\PageController.tsx:195 — lateReapplyTotalCount: number;
+- src\pages\PageController.tsx:196 — lateReapplyDuringTransitionCount: number;
+- src\pages\PageController.tsx:197 — latestLateReapplyAction: string | null;
+- src\pages\PageController.tsx:198 — latestLateReapplyReason: string | null;
+- src\pages\PageController.tsx:199 — latestLateReapplyProgress: number | null;
+- src\pages\PageController.tsx:459 — const latestEvents = sceneTransition?.lateReapply?.events ?? [];
+- src\pages\PageController.tsx:484 — lateReapplyTotalCount: sceneTransition?.lateReapply?.totalCount ?? 0,
+- src\pages\PageController.tsx:485 — lateReapplyDuringTransitionCount:
+- src\pages\PageController.tsx:486 — sceneTransition?.lateReapply?.duringTransitionCount ?? 0,
+- src\pages\PageController.tsx:487 — latestLateReapplyAction: latestEvent?.action ?? null,
+- src\pages\PageController.tsx:488 — latestLateReapplyReason: latestEvent?.reason ?? null,
+- src\pages\PageController.tsx:489 — latestLateReapplyProgress: traceOptionalNumber(
+- src\pages\PageController.tsx:1257 — lateReapply: sceneTransition?.lateReapply ?? null,
+- src\pages\PageController.tsx:2737 — sceneHandle.manager.finalizePageTransitionCommit(
+- src\pages\types.ts:1627 — // (figure 4) but rendering for that case is deferred.
+- src\scene\SceneManager.ts:105 — type TransitionCommitTrace,
+- src\scene\SceneManager.ts:495 — interface LateReapplyDebugEvent {
+- src\scene\SceneManager.ts:511 — interface LateReapplyDebugState {
+- src\scene\SceneManager.ts:514 — events: LateReapplyDebugEvent[];
+- src\scene\SceneManager.ts:802 — private lateReapplyDebugSequence = 0;
+- src\scene\SceneManager.ts:803 — private lateReapplyDebugDuringTransitionCount = 0;
+- src\scene\SceneManager.ts:804 — private readonly lateReapplyDebugEvents: LateReapplyDebugEvent[] = [];
+- src\scene\SceneManager.ts:2737 — lateReapply: LateReapplyDebugState;
+- src\scene\SceneManager.ts:2742 — hasFinalized: boolean;
+- src\scene\SceneManager.ts:2743 — finalizedAt: number | null;
+- src\scene\SceneManager.ts:2746 — commitTraces: TransitionCommitTrace[];
+- src\scene\SceneManager.ts:2775 — lateReapply: this.getLateReapplyDebugState(),
+- src\scene\SceneManager.ts:2781 — hasFinalized: commitState.hasFinalized,
+- src\scene\SceneManager.ts:2782 — finalizedAt: commitState.finalizedAt,
+- src\scene\SceneManager.ts:2787 — commitTraces: commitState?.commitTraces.slice() ?? [],
+- src\scene\SceneManager.ts:2795 — getLateReapplyDebugState(): LateReapplyDebugState {
+- src\scene\SceneManager.ts:2797 — totalCount: this.lateReapplyDebugSequence,
+- src\scene\SceneManager.ts:2798 — duringTransitionCount: this.lateReapplyDebugDuringTransitionCount,
+- src\scene\SceneManager.ts:2799 — events: this.lateReapplyDebugEvents.slice(),
+- src\scene\SceneManager.ts:2803 — private recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:2804 — reason: LateReapplyDebugEvent["reason"],
+- src\scene\SceneManager.ts:2805 — action: LateReapplyDebugEvent["action"],
+- src\scene\SceneManager.ts:2809 — if (duringTransition) this.lateReapplyDebugDuringTransitionCount += 1;
+- src\scene\SceneManager.ts:2813 — this.lateReapplyDebugEvents.push({
+- src\scene\SceneManager.ts:2814 — sequence: ++this.lateReapplyDebugSequence,
+- src\scene\SceneManager.ts:2825 — if (this.lateReapplyDebugEvents.length > 25) {
+- src\scene\SceneManager.ts:2826 — this.lateReapplyDebugEvents.shift();
+- src\scene\SceneManager.ts:2874 — | "overlay-end-application"
+- src\scene\SceneManager.ts:2875 — | "editor-deferred-reapply"
+- src\scene\SceneManager.ts:2876 — | "tween-completion"
+- src\scene\SceneManager.ts:2877 — | "post-commit-graph-check";
+- src\scene\SceneManager.ts:2883 — }): TransitionCommitTrace | null {
+- src\scene\SceneManager.ts:2895 — if (commitState.hasFinalized) {
+- src\scene\SceneManager.ts:2907 — !state?.hasFinalized ||
+- src\scene\SceneManager.ts:2918 — reason: "post-transition target assertion suppressed after final commit",
+- src\scene\SceneManager.ts:2929 — if (!state?.hasFinalized || !page || state.targetPageId !== page.id) {
+- src\scene\SceneManager.ts:2934 — phase: "editor-deferred-reapply",
+- src\scene\SceneManager.ts:2936 — reason: "post-transition target reapply suppressed after final commit",
+- src\scene\SceneManager.ts:2966 — finalizePageTransitionCommit(
+- src\scene\SceneManager.ts:2969 — ): TransitionCommitTrace | null {
+- src\scene\SceneManager.ts:2982 — attemptedBy: "SceneManager.finalizePageTransitionCommit",
+- src\scene\SceneManager.ts:2985 — reason: "terminal graph captured before final commit owner runs",
+- src\scene\SceneManager.ts:2989 — attemptedBy: "SceneManager.finalizePageTransitionCommit",
+- src\scene\SceneManager.ts:2993 — reason: "SceneManager owns page-transition final commit",
+- src\scene\SceneManager.ts:3009 — phase: "post-commit-graph-check",
+- src\scene\SceneManager.ts:3010 — attemptedBy: "SceneManager.finalizePageTransitionCommit",
+- src\scene\SceneManager.ts:3014 — reason: "post-commit graph comparison is observational only",
+- src\scene\SceneManager.ts:4108 — this.recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:4340 — const activeTransitionHasFinalized =
+- src\scene\SceneManager.ts:4341 — this.activeSceneTransitionContext?.commitState.hasFinalized === true;
+- src\scene\SceneManager.ts:4342 — if (activeTransitionHasFinalized && !isAsyncLayerResolve) {
+- src\scene\SceneManager.ts:4343 — this.recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:4348 — phase: "editor-deferred-reapply",
+- src\scene\SceneManager.ts:4350 — reason: "active transition reapply suppressed after final commit",
+- src\scene\SceneManager.ts:4359 — this.recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:4367 — !activeTransitionHasFinalized &&
+- src\scene\SceneManager.ts:4371 — this.recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:4378 — if (this.activeSceneTransitionContext && !activeTransitionHasFinalized) {
+- src\scene\SceneManager.ts:4379 — this.recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:4388 — this.recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:4874 — phase: "overlay-end-application",
+- src\scene\transitions\layerTweenRuntime.ts:352 — phase: "tween-completion",
+- src\scene\transitions\layerTweenRuntime.ts:355 — if (!transition || transition.commitState?.hasFinalized) {
+- src\scene\transitions\transitionCommitGate.ts:5 — | "overlay-end-application"
+- src\scene\transitions\transitionCommitGate.ts:6 — | "editor-deferred-reapply"
+- src\scene\transitions\transitionCommitGate.ts:7 — | "tween-completion"
+- src\scene\transitions\transitionCommitGate.ts:8 — | "post-commit-graph-check";
+- src\scene\transitions\transitionCommitGate.ts:52 — export interface TransitionCommitTrace {
+- src\scene\transitions\transitionCommitGate.ts:81 — hasFinalized: boolean;
+- src\scene\transitions\transitionCommitGate.ts:82 — finalizedAt: number | null;
+- src\scene\transitions\transitionCommitGate.ts:84 — commitTraces: TransitionCommitTrace[];
+- src\scene\transitions\transitionCommitGate.ts:112 — recordCommitAttempt(attempt: TransitionCommitAttempt): TransitionCommitTrace;
+- src\scene\transitions\transitionCommitGate.ts:124 — "overlay-end-application",
+- src\scene\transitions\transitionCommitGate.ts:125 — "editor-deferred-reapply",
+- src\scene\transitions\transitionCommitGate.ts:126 — "tween-completion",
+- src\scene\transitions\transitionCommitGate.ts:364 — ): TransitionCommitTrace {
+- src\scene\transitions\transitionCommitGate.ts:403 — hasFinalized: false,
+- src\scene\transitions\transitionCommitGate.ts:404 — finalizedAt: null,
+- src\scene\transitions\transitionCommitGate.ts:406 — commitTraces: [],
+- src\scene\transitions\transitionCommitGate.ts:411 — recordCommitAttempt(attempt: TransitionCommitAttempt): TransitionCommitTrace {
+- src\scene\transitions\transitionCommitGate.ts:420 — ): TransitionCommitTrace {
+- src\scene\transitions\transitionCommitGate.ts:422 — const suppress = state.hasFinalized && TARGET_ASSERTION_PHASES.has(phase);
+- src\scene\transitions\transitionCommitGate.ts:428 — ? `transition already finalized by ${state.commitOwner}`
+- src\scene\transitions\transitionCommitGate.ts:430 — ? "final commit owner accepted target assertion"
+- src\scene\transitions\transitionCommitGate.ts:435 — if (allowed && phase === "final-commit" && !state.hasFinalized) {
+- src\scene\transitions\transitionCommitGate.ts:436 — state.hasFinalized = true;
+- src\scene\transitions\transitionCommitGate.ts:437 — state.finalizedAt = attempt.nowMs ?? nowMs();
+- src\scene\transitions\transitionCommitGate.ts:441 — state.commitTraces.push(trace);
+- src\editor\EditorChrome.tsx:301 — const { setLiveApplyTransitionActive, flushDeferredLiveSceneEdits } =
+- src\editor\EditorChrome.tsx:306 — if (!active && flushDeferredLiveSceneEdits()) {
+- src\editor\EditorChrome.tsx:312 — flushDeferredLiveSceneEdits,
+- src\editor\EditorContext.tsx:207 — flushDeferredLiveSceneEdits: () => boolean;
+- src\editor\EditorContext.tsx:2289 — const deferredLiveSceneApplyRef = useRef(false);
+- src\editor\EditorContext.tsx:2302 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:2308 — const flushDeferredLiveSceneEdits = useCallback(() => {
+- src\editor\EditorContext.tsx:2310 — if (!deferredLiveSceneApplyRef.current) return false;
+- src\editor\EditorContext.tsx:2311 — deferredLiveSceneApplyRef.current = false;
+- src\editor\EditorContext.tsx:3043 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:3164 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:3270 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:3315 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:3367 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:3409 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:3796 — flushDeferredLiveSceneEdits,
+- src\editor\EditorContext.tsx:3854 — flushDeferredLiveSceneEdits,
