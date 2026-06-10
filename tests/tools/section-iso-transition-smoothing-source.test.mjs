@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+﻿import { readFileSync } from "node:fs";
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -28,7 +28,7 @@ const transitionDecisionLog = readFileSync(
   "utf8",
 );
 const tempLog = readFileSync(
-  "docs/dev-context/Section-Iso-Transition-Smoothing-Temp-Log-2026-06-05.md",
+  "docs/dev-context/Archive/Section-Iso-Transition-Smoothing-Temp-Log-2026-06-05.md",
   "utf8",
 );
 
@@ -166,3 +166,4 @@ test("durable docs lock Section ISO root crossfade after validation", () => {
     "Temporary log should preserve the manual visual verification status.",
   );
 });
+
