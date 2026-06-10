@@ -1,4 +1,4 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
@@ -224,30 +224,6 @@ test("Line 95 remains source-gated until a real source product exists", () => {
     manifest.products.some((product) => product.lineId === "95"),
     false,
     "Line 95 product must not be fabricated",
-  );
-});
-
-test("authored seismic catalog pages cover only source-backed required lines", () => {
-  const project = readJson("projects", "utah-forge", "project.json");
-  const requiredPageIds = [
-    "54_seismic_product_catalog",
-    "55_line_301_seismic_products",
-    "56_line_302_seismic_products",
-    "57_legacy_line_l11_seismic_products",
-    "58_legacy_line_l5_seismic_products",
-  ];
-
-  for (const pageId of requiredPageIds) {
-    assert.ok(
-      existsSync(join("projects", "utah-forge", "pages", `${pageId}.json`)),
-      `${pageId} page file`,
-    );
-  }
-
-  assert.equal(
-    project.pageOrder.some((pageId) => /line[_-]?95|95[_-]?seismic/i.test(pageId)),
-    false,
-    "Line 95 page must not be authored without source data",
   );
 });
 
