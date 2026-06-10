@@ -50,6 +50,27 @@ handles, focus points, or final path shape.
 V3 names this explicitly as `timeCurve` and does not reuse generic `easing`
 for both time and geometry.
 
+## Temporal Authority And Motion Guard
+
+The authored `timeCurve` is the motion authority (DEC-144). Sampling applies
+the authored curve first, then a bounded motion guard, and nothing else:
+
+- On calm geometry the guard is identity. `linear` plays at constant speed and
+  each easing mode reads exactly as authored.
+- Approaching or leaving a sharp travel corner, the guard reduces endpoint
+  speed through a monotonic, endpoint-exact cubic warp, so the camera
+  decelerates into the corner instead of whipping through it.
+- Large look-direction flips, near-focal orbits, and big FOV moves compress
+  mid-segment speed through a monotonic sine warp.
+- Guard warps never reverse progress, never move authored node positions, and
+  never change transition duration.
+
+There is no boundary handoff stage. Adjacent transitions meet exactly as their
+authored boundary equations dictate: ease-out into ease-in reads as an authored
+soft pause at the shared node, and matching authored speeds read as continuous
+travel. Newly authored transitions default to `ease-in-out`; loaded paths keep
+their stored easing.
+
 ## Geometric Continuity And Fairing
 
 Path fairing controls the curve shape between nodes. Use surfacing/modeling

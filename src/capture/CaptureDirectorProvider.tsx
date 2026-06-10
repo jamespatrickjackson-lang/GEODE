@@ -2055,7 +2055,7 @@ export function CaptureDirectorProvider({
         enabled: true,
         hidden: false,
         transitionSeconds: 2,
-        easing: "linear",
+        easing: "ease-in-out",
       });
     }
     const next = applyCaptureCameraPathV2({

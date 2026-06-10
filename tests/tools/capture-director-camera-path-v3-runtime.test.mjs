@@ -308,7 +308,7 @@ test("CaptureCameraPath v3 temporal curves change progress but not duration", as
   assert.ok(sampleCaptureCameraPathV3(path, 1).position[0] < 5);
 });
 
-test("CaptureCameraPath v3 adaptive speed law softens tight turns and flips", async () => {
+test("CaptureCameraPath v3 motion guard honors authored curves and softens stressed geometry", async () => {
   const {
     normalizeCaptureCameraPathV3,
     resolveCaptureCameraPathV3AdaptiveProgress,
@@ -330,8 +330,15 @@ test("CaptureCameraPath v3 adaptive speed law softens tight turns and flips", as
     0.9,
   );
   assert.ok(
-    lateProgress < 0.9,
-    "approaching a tight next-node corner should lag linear progress",
+    lateProgress > 0.9,
+    "approaching a tight next-node corner should run ahead of linear progress so terminal speed drops",
+  );
+  const terminalTravel =
+    1 -
+    resolveCaptureCameraPathV3AdaptiveProgress(turnPath, turnPath.segments[0], 0.96);
+  assert.ok(
+    terminalTravel < 0.04,
+    `arrival speed into a tight corner should sit below linear speed, got ${terminalTravel}`,
   );
   approx(resolveCaptureCameraPathV3AdaptiveProgress(turnPath, turnPath.segments[0], 0), 0);
   approx(resolveCaptureCameraPathV3AdaptiveProgress(turnPath, turnPath.segments[0], 1), 1);
@@ -373,25 +380,11 @@ test("CaptureCameraPath v3 adaptive speed law softens tight turns and flips", as
       fov: 50,
     })),
   });
-  const earlyStraight = resolveCaptureCameraPathV3AdaptiveProgress(
-    straightPath,
-    straightPath.segments[0],
-    0.25,
-  );
-  const lateStraight = resolveCaptureCameraPathV3AdaptiveProgress(
-    straightPath,
-    straightPath.segments[0],
-    0.75,
-  );
-  assert.ok(
-    earlyStraight < 0.12,
-    `straight transitions should ease in about 3x softer than linear, got ${earlyStraight}`,
-  );
-  assert.ok(
-    lateStraight > 0.88,
-    `straight transitions should ease out symmetrically, got ${lateStraight}`,
-  );
+  // Calm geometry: the authored time curve is the only speed authority, so
+  // the guard must return the authored progress unchanged.
+  approx(resolveCaptureCameraPathV3AdaptiveProgress(straightPath, straightPath.segments[0], 0.25), 0.25);
   approx(resolveCaptureCameraPathV3AdaptiveProgress(straightPath, straightPath.segments[0], 0.5), 0.5);
+  approx(resolveCaptureCameraPathV3AdaptiveProgress(straightPath, straightPath.segments[0], 0.75), 0.75);
 
   const focusLockedStraightPath = (focusPosition) =>
     normalizeCaptureCameraPathV3({
@@ -557,7 +550,12 @@ test("CaptureCameraPath v3 continuity changes curve shape without moving nodes",
 
   const g0Mid = sampleCaptureCameraPathV3(g0, 1).position;
   const g2Mid = sampleCaptureCameraPathV3(g2, 1).position;
-  approxVec(g0Mid, [5, 0, 0]);
+  approx(g0Mid[1], 0);
+  approx(g0Mid[2], 0);
+  assert.ok(
+    g0Mid[0] > 5 && g0Mid[0] < 6.5,
+    `motion guard should run ahead of linear progress while decelerating into the authored corner, got ${g0Mid[0]}`,
+  );
   assert.notDeepEqual(
     g2Mid.map((value) => Number(value.toFixed(3))),
     g0Mid.map((value) => Number(value.toFixed(3))),
@@ -675,11 +673,14 @@ test("CaptureCameraPath v3 recipes roundtrip and sample by fixed frame time", as
 
   const normalized = normalizeCaptureRecipe(recipe);
   assert.equal(normalized.cameraPath?.version, 3);
-  assert.deepEqual(sampleCaptureRecipeCameraPoseAtFrame(normalized, 30)?.position, [
-    5,
-    0,
-    0,
-  ]);
+  const midFramePosition = sampleCaptureRecipeCameraPoseAtFrame(normalized, 30)?.position;
+  assert.ok(midFramePosition, "mid-transition frame should sample a camera pose");
+  approx(midFramePosition[1], 0);
+  approx(midFramePosition[2], 0);
+  assert.ok(
+    midFramePosition[0] > 5 && midFramePosition[0] < 6.5,
+    `fixed frame sampling should match the guarded V3 sampler, got ${midFramePosition[0]}`,
+  );
 });
 
 test("CaptureCameraPath v3 empty draft recipe stores cameraPath null", async () => {

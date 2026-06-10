@@ -125,6 +125,13 @@ continuity controls rail shape through nodes using surfacing language such as
 `G0`, `G1`, `G2`, `G3`, and `Gd` influence distance. Focus distance and aim
 geometry are a third independent track.
 
+The authored transition `timeCurve` is the motion authority (DEC-144). The
+runtime adds only a bounded motion guard: identity on calm geometry,
+deceleration into sharp travel corners, and mid-segment compression for large
+look-direction flips and near-focal orbits. Guard warps are monotonic and
+endpoint-exact, and there is no boundary stage that rewrites authored easing.
+Newly authored transitions default to `ease-in-out`.
+
 Transition containers expose `Timing`, `Path Shape`, `Aim`, and `Overlay`
 controls. The lower timeline surfaces temporal ramp, continuity, `Gd`, and
 focus/aim metadata while still using the same fixed-time V3 sampler as Render

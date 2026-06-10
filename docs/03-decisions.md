@@ -2261,3 +2261,46 @@ geometry. `16A`/`16B`/`16B` keep orientation-only status.
 into page fixtures. Keep the per-key deep merge for borehole style objects.
 Source-location boreholes must not be relabeled as trajectory or
 survey-validated geometry.
+
+## DEC-144 - Camera Path authored time curves are the motion authority
+
+This decision repairs Capture Director camera-path transition motion so the
+authored `timeCurve` on each transition container is the temporal authority
+for playback, scrub preview, Render Out, and Still Capture sampling.
+
+**Considered:** keep the v3 adaptive speed law that re-eased every transition
+with a hidden power ease and blended segment boundaries back toward raw linear
+time, gate that law behind an authoring option, or reduce it to a bounded
+guard that never overrides the authored curve.
+
+**Chose:** `sampleCaptureCameraPathV3` applies the authored `timeCurve` and
+then a bounded motion guard only. The guard is identity on calm geometry, so
+`linear` means constant time progression and each easing mode reads exactly as
+authored. On stressed geometry the guard applies monotonic, endpoint-exact
+warps: deceleration into and out of sharp travel corners (cubic Hermite with
+reduced endpoint slope) and mid-segment compression for large look-direction
+flips, near-focal orbits, and big FOV moves (sine-based warp, slope bounded
+above zero). The equation-handoff stage that rewrote up to 72% of each segment
+toward raw linear time was removed; adjacent segments meet exactly as their
+authored boundary equations dictate. Newly authored transitions default to
+`ease-in-out`; loaded paths keep their stored easing.
+
+**Why:** the previous pipeline composed the authored curve with an
+unconditional power-2.6 ease and boundary rewrites, so a default `linear`
+transition crawled through roughly the first quarter of its duration, rushed
+the middle at almost four times average speed, and the Timing easing control
+produced no visible change. The corner law was also inverted: progress lagged
+linear approaching a sharp corner, so arrival speed at the corner exceeded
+average speed. The surfacing model and agent guide define `T` as an authored
+stack; hidden time warps that override it break that contract and make
+transition feel un-authorable.
+
+**Guard:** `tests/tools/capture-director-camera-path-v3-runtime.test.mjs`
+asserts guard identity on calm geometry, ahead-of-linear deceleration into
+tight corners, flip-zone compression, monotonic focus-regulated progress, and
+endpoint exactness. `tests/tools/capture-director-camera-path-v3-spline-runtime.test.mjs`
+asserts that authored boundary equations meet in a continuous, symmetric soft
+pause at handoff nodes with no speed spike. Do not reintroduce time-warp
+stages that replace or rewrite the authored `timeCurve`; new motion shaping
+must stay bounded, monotonic, endpoint-exact, and documented in
+`docs/capture-director/camera-path-surfacing-model.md`.

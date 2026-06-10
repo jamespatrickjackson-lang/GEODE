@@ -89,6 +89,11 @@ Capture unless a future export option explicitly includes them.
 ## Do Not
 
 - Do not overload `CaptureCameraPathSegmentV2.easing` to mean path fairing.
+- Do not add hidden time-warp stages that replace or rewrite the authored
+  `timeCurve`. The motion guard (DEC-144) is identity on calm geometry and any
+  new shaping must stay bounded, monotonic, and endpoint-exact.
+- Do not blend segment boundaries back toward raw linear time. Adjacent
+  transitions meet exactly as their authored boundary equations dictate.
 - Do not implement `G0` to `G3` as a single Catmull-Rom tension slider.
 - Do not make segment `pathFairing` the primary runtime geometry source after
   V3.1; segment fields are compatibility inputs for node handles.
